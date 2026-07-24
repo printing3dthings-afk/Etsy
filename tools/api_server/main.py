@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f7c2e91-v254"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b3d5a70-v255"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7147,8 +7147,10 @@ async def get_cogs_status(_token: str = Depends(_auth_session_or_bearer)):
 @app.get("/api/business-tracker.xlsx")
 async def get_business_tracker(_token: str = Depends(_auth_session_or_bearer)):
     """Live, multi-tab Business Tracker workbook — Products (from
-    data/product_catalog.json), COGS & Profit and Orders (live Etsy data,
-    same functions powering the HUD status cards), plus manual-fill
+    data/product_catalog.json, merged with any Create-screen "+ new one"
+    products registered only in the product_catalog_overrides.json sidecar
+    -- see the 2026-07-25 merge below), COGS & Profit and Orders (live Etsy
+    data, same functions powering the HUD status cards), plus manual-fill
     inventory/supplier/expense templates. See tools/business_tracker.py for
     the sheet builders. Generated fresh in memory on every request, never
     written to disk (the archived one-off predecessor wrote to the
@@ -7178,6 +7180,29 @@ async def get_business_tracker(_token: str = Depends(_auth_session_or_bearer)):
         except (OSError, json.JSONDecodeError) as exc:
             print(f"[business-tracker] product_catalog.json read failed: {exc}", flush=True)
             catalog = []
+        # (2026-07-25) A product built via the Create screen's "+ new one" flow
+        # (e.g. a Coloring Pages new-theme listing) has no base-catalog entry --
+        # it only ever exists in the product_catalog_overrides.json sidecar (see
+        # _register_new_product_overlay()). Without this merge it silently never
+        # appears in the downloaded workbook even though it's real, built, and
+        # already visible in Products/Files. Mirrors the exact synthesis
+        # _build_products_status() already does for /api/products
+        # (main.py:_build_products_status), reshaped to the flatter row dict
+        # business_tracker.py's _build_products() reads.
+        overrides = _product_catalog_overrides()
+        known_ids = {e.get("product_id") for e in catalog}
+        for ov_pid, ov in overrides.items():
+            if ov.get("is_new_product") and ov_pid not in known_ids:
+                catalog.append({
+                    "product_id": ov_pid,
+                    "name": ov.get("name", ov_pid),
+                    "category": ov.get("category", "uncategorized"),
+                    "status": ov.get("status", "draft"),
+                    "price": ov.get("price"),
+                    "etsy_listing_id": ov.get("etsy_listing_id", ""),
+                    "last_updated": ov.get("created_at", ""),
+                    "note": "Built via Create screen — not yet published",
+                })
         buf = business_tracker.build_workbook(
             listings, sales, orders_raw, catalog, _estimate_listing_economics
         )
@@ -10625,12 +10650,25 @@ def _produce_build_product(inp: dict) -> dict:
     used subjects itself, checked against a permanent cross-listing registry
     so no coloring-page subject is ever generated twice across the whole
     catalog (Scott: "It will be a set of 20 individual coloring pages. Never
-    to repeat a creation."). Packaged into exactly one 20-page ZIP."""
+    to repeat a creation."). Packaged into exactly one 20-page ZIP.
+
+    (2026-07-25) For coloring_pages specifically, `pid` is now OPTIONAL --
+    Scott: "It should auto generate the code." Omit it (empty string) along
+    with a `description` and Frank picks the next free COLOR#### code itself
+    via _next_coloring_pid() before continuing exactly as if that code had
+    been typed by hand. Every other category still requires an explicit pid,
+    unchanged."""
     pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not pid:
-        return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
     category = _resolve_build_category(pid, (inp or {}).get("category"))
     description = str((inp or {}).get("description", "")).strip()
+    if not pid:
+        if category == "coloring_pages" and description:
+            pid = _next_coloring_pid()
+        elif category == "coloring_pages":
+            return {"error": "Describe a theme first (e.g. 'ocean animals') and Frank "
+                              "will pick the code and generate 20 subjects from it."}
+        else:
+            return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
     extra_args: list[str] = []
     reg_name: str | None = None
     reg_price: float | None = None
@@ -11084,6 +11122,23 @@ def _find_catalog_product(product_id: str) -> dict | None:
             "files": ov.get("files", []),
         }
     return None
+
+
+def _next_coloring_pid() -> str:
+    """(2026-07-25) Scott: "It should auto generate the code" -- the Create
+    screen's Coloring Pages new-theme panel no longer asks him to hand-type
+    a code. Scans for the lowest unused COLOR#### numeric code (this
+    generator's own naming convention -- distinct from the 2 legacy fixed
+    packs' descriptive COLOR_* slugs, e.g. COLOR_KAWAII_COLORING_PAGES_SET_11,
+    which never collide with a purely-numeric suffix). Reuses
+    _find_catalog_product() -- the same base-catalog + overlay dual-source
+    uniqueness check every other pid-collision guard in this file already
+    uses -- so a collision with ANY category's existing pid, not just
+    coloring_pages, is caught too."""
+    n = 1001
+    while _find_catalog_product(f"COLOR{n}") is not None:
+        n += 1
+    return f"COLOR{n}"
 
 
 # Deliverable files are what a buyer actually downloads (the two dated/undated PDFs

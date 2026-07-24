@@ -11714,6 +11714,18 @@ Implementation: `NEW_THEME_SET_SIZE = 20` added as a fully separate constant fro
 **Tests:** `python tests/run_all.py` (75/75) -- new `tests/test_coloring_theme_registry.py` (15 tests: normalize/read/write/record round-trips, mocked subject generation, the retry-on-repeat and give-up-with-clear-error paths) and `tests/test_qc_sweep_coloring.py` (4 tests: exact-count PASS, undercount FAIL, dispatch correctly routes old-pack vs. dynamic ZIPs). Updated `tests/test_coloring_dynamic_theme.py` and `tests/test_produce_qc.py`'s coloring section for the new constant/flow (the latter's real-registry-write test was caught polluting the actual `data/coloring_theme_registry.json` sidecar during dev and fixed to patch the path before shipping). 3 consecutive clean `tools/playwright_smoke.py` runs, including a new assertion that the Coloring Pages placeholder promises "20" subjects.
 
 
+## 2026-07-25 — Coloring Pages: auto-generated product code, new products merged into the Excel workbook
+**What shipped:** Scott sent a screenshot of the Coloring Pages "+ new one" panel asking what the top text field (placeholder "e.g. COLOR1030") was for -- it's the product code/ID field, not a color picker. He then said: "It should auto generate the code and document it in the excel file and files tab."
+
+Research confirmed the Files tab already handles this automatically (traced the full path from `_register_new_product_overlay()` through `_build_file_owner_index()` to `GET /api/files` -- no gap there, proven when the 20-page feature shipped the day before), so only two things actually needed building:
+
+1. **Auto-generated code:** new `_next_coloring_pid()` in `main.py` scans for the lowest unused `COLOR####` numeric code (this generator's own convention, distinct from the 2 legacy fixed packs' descriptive `COLOR_*` slugs) by reusing `_find_catalog_product()` -- the same base-catalog + overlay dual-source uniqueness check every other pid-collision guard in the file already uses. `_produce_build_product()`'s top-of-function pid-required check was reordered so an empty pid + a real theme for `coloring_pages` auto-assigns a code before continuing exactly as if it had been typed by hand; every other category still requires an explicit pid, unchanged. On the frontend, `#bx-pid` becomes `type="hidden"` for this category (never removed -- `buildProductRun()`/`_createPidSelectChanged()` both still read/write it regardless of category) with a note explaining the code is auto-assigned, and opening "+ new one" now focuses the theme textarea instead since the (hidden) pid input can never receive focus.
+
+2. **Excel workbook:** `GET /api/business-tracker.xlsx`'s `_gather_and_build()` read `data/product_catalog.json` directly and never merged `product_catalog_overrides.json` -- so any Create-screen "+ new one" product (which only ever exists in the overlay sidecar) silently never appeared in the downloaded Products sheet, even though it was fully real and already visible in Products/Files. Fixed by merging in any `is_new_product` overlay entry not already in the base catalog, mirroring the exact synthesis `_build_products_status()` already does for `/api/products` -- reshaped to the flatter row dict `business_tracker.py`'s `_build_products()` reads. `business_tracker.py` itself is untouched.
+
+**Tests:** `python tests/run_all.py` (75/75) -- new tests in `tests/test_produce_qc.py` (auto-generate on missing pid+theme, theme-specific error on missing pid+theme, explicit-pid regression guard, direct `_next_coloring_pid()` scanning tests) and `tests/test_business_tracker.py` (overlay-only product appears in Products sheet, an override for an already-catalogued pid is never duplicated). 3 consecutive clean `tools/playwright_smoke.py` runs -- caught and fixed one real regression in an existing test along the way: an older assertion expected Coloring Pages' empty-pid error to say "COLOR1030," which is now correctly a theme-prompt message since there's no code field left to reference.
+
+
 ## 2026-07-24 — Mobile header cleanup: bigger wordmark, removed the dark box, added a real divider
 **What shipped:** Scott sent a screenshot of the mobile Home screen with three asks: bigger/nicer "OnBrandCraftz" wordmark, remove the dark rectangular section behind the header icons (top-right), and a clean straight header line below the icon row.
 
@@ -11839,6 +11851,134 @@ hourly health loop reaped a failed background build: build_planner:TESTCRASH (pi
 
 ## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
 hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 7343). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpbu0uhq_v/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpbu0uhq_v/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp3hv5kzv2/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 13236). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 13238). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmp3pdjpzap/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp3pdjpzap/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpkuqao7ut/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 19910). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 19912). Killed after running 930s, past the 900s ceiling.
 
 
 ## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi

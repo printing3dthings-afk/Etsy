@@ -8,6 +8,7 @@ Self-contained TestClient-against-the-real-app pattern, same as
 tests/test_voice_config.py. Run: python tests/test_produce_qc.py
 """
 import os
+import re
 import sys
 import tempfile
 import traceback
@@ -370,6 +371,81 @@ def test_coloring_subjects_recorded_before_spawn():
     check(recorded.get("product_id") == "COLOR_RECORD_TEST_PID", f"got {recorded}")
     check(recorded.get("theme") == "woodland animals", f"got {recorded}")
     check(recorded.get("subjects") == fake_subjects, f"got {recorded}")
+
+
+# ── Coloring Pages auto-generated code (2026-07-25) ─────────────────────────
+# Scott: "It should auto generate the code" -- the Create screen no longer
+# collects a typed pid for a new coloring-pages theme. These cover
+# _produce_build_product()'s reordered pid-required logic and
+# _next_coloring_pid()'s own scanning behavior.
+
+def test_coloring_auto_generates_pid_when_none_typed():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900004
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server, "_next_coloring_pid", return_value="COLOR9001"), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "category": "coloring_pages", "description": "ocean animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900004, None)
+    check(out.get("started") is True, f"an auto-generated pid must still start the build, got {out}")
+    check(out.get("pid") == "COLOR9001", f"the assigned pid must be echoed back, got {out}")
+    check("coloring pages (new theme)" in out.get("steps", []), f"got {out}")
+
+
+def test_coloring_no_pid_no_description_gets_theme_specific_error():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({"category": "coloring_pages"})
+    check("error" in out and not out.get("started"), f"got {out}")
+    check("theme" in out["error"].lower(), f"the error should point at describing a theme, not a code, got {out}")
+    check(not mock_popen.called, "must be caught before any subprocess spawns")
+
+
+def test_coloring_explicit_pid_bypasses_auto_generation():
+    """Regression guard on the reordered top-of-function logic: an explicitly
+    typed pid must still be used verbatim, never overridden by the
+    auto-generator."""
+    fake_proc = MagicMock()
+    fake_proc.pid = 900005
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server, "_next_coloring_pid") as mock_next_pid, \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_EXPLICIT_TEST", "category": "coloring_pages",
+                "description": "ocean animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900005, None)
+    check(out.get("pid") == "COLOR_EXPLICIT_TEST", f"got {out}")
+    check(not mock_next_pid.called, "an explicit pid must never trigger auto-generation")
+
+
+def test_next_coloring_pid_skips_used_codes():
+    taken = {"COLOR1001", "COLOR1002"}
+
+    def _fake_find(product_id):
+        return {"product_id": product_id} if product_id in taken else None
+
+    with patch.object(server, "_find_catalog_product", side_effect=_fake_find):
+        pid = server._next_coloring_pid()
+    check(pid == "COLOR1003", f"expected the first free code after the taken ones, got {pid}")
+
+
+def test_next_coloring_pid_returns_lowest_when_none_taken():
+    with patch.object(server, "_find_catalog_product", return_value=None):
+        pid = server._next_coloring_pid()
+    check(pid == "COLOR1001", f"got {pid}")
+    check(re.fullmatch(r"COLOR\d+", pid), f"expected a COLOR#### shape, got {pid!r}")
 
 
 def run():

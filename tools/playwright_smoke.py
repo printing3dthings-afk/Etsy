@@ -884,8 +884,12 @@ async def _run_browser_checks() -> None:
             }""")
             check("planner" not in wrong_category_error.get("coloringMsg", "").lower() and "DP1030" not in wrong_category_error.get("coloringMsg", ""),
                   f"Coloring Pages' empty-pid error must not reference planners/DP1030: {wrong_category_error}")
-            check("COLOR1030" in wrong_category_error.get("coloringMsg", ""),
-                  f"Coloring Pages' empty-pid error should use its own category example: {wrong_category_error}")
+            # (2026-07-25) Coloring Pages no longer has a typed-code field at
+            # all (Scott: "It should auto generate the code") -- an empty pid
+            # here means the theme was never described, so the message must
+            # point at describing a theme, not at a "COLOR1030"-style code.
+            check("theme" in wrong_category_error.get("coloringMsg", "").lower(),
+                  f"Coloring Pages' empty-pid error should point at describing a theme: {wrong_category_error}")
             check("planner" not in wrong_category_error.get("wallArtMsg", "").lower() and "DP1030" not in wrong_category_error.get("wallArtMsg", ""),
                   f"Wall Art's empty-pid error must not reference planners/DP1030: {wrong_category_error}")
             check("WA1030" in wrong_category_error.get("wallArtMsg", ""),
@@ -1019,6 +1023,54 @@ async def _run_browser_checks() -> None:
             check(captured_body.get("description") == "a real description for the request body",
                   f"buildProductRun() must send the typed description in the POST body: {captured_body}")
             check(captured_body.get("category") == "wall_art", f"got: {captured_body}")
+
+            # Coloring Pages auto-generated code (2026-07-25): Scott: "It
+            # should auto generate the code" -- opening "+ new one" must NOT
+            # show a visible/focusable #bx-pid, and typing only a theme
+            # (never a code) must still successfully kick off a build, with
+            # the server-assigned pid coming back in the response.
+            coloring_pid_field = await page.evaluate("""() => {
+                createOpenCategory('coloring_pages');
+                _createToggleNewCode(true);
+                const el = document.getElementById('bx-pid');
+                const result = {
+                    type: el && el.type,
+                    visible: !!el && el.offsetParent !== null,
+                    hasNote: document.getElementById('create-pid-freetext-wrap').textContent.toLowerCase().includes('automatically'),
+                };
+                createOpenCategory('coloring_pages'); // close
+                return result;
+            }""")
+            check(coloring_pid_field.get("type") == "hidden",
+                  f"Coloring Pages' new-theme panel must never show a typed-code field: {coloring_pid_field}")
+            check(coloring_pid_field.get("visible") is False, f"got: {coloring_pid_field}")
+            check(coloring_pid_field.get("hasNote") is True,
+                  f"the panel should explain the code is auto-assigned: {coloring_pid_field}")
+
+            coloring_captured_body = {}
+
+            async def _capture_coloring_build_request(route):
+                import json as _json
+                coloring_captured_body.update(_json.loads(route.request.post_data or "{}"))
+                await route.fulfill(status=200, content_type="application/json",
+                                     body='{"pid": "COLOR9042", "started": true, "os_pid": 424243, '
+                                          '"log_file": "COLOR9042_coloring_build.log", '
+                                          '"steps": ["coloring pages (new theme)"], "message": "ok"}')
+            await page.route("**/api/produce/build-product", _capture_coloring_build_request)
+            coloring_result_html = await page.evaluate("""async () => {
+                createOpenCategory('coloring_pages');
+                _createToggleNewCode(true);
+                document.getElementById('bx-description').value = 'ocean animals';
+                await buildProductRun();
+                return document.getElementById('bx-result').innerHTML;
+            }""")
+            await page.unroute("**/api/produce/build-product")
+            check(coloring_captured_body.get("pid") == "",
+                  f"the frontend must send an empty pid, letting the server auto-generate it: {coloring_captured_body}")
+            check(coloring_captured_body.get("category") == "coloring_pages", f"got: {coloring_captured_body}")
+            check(coloring_captured_body.get("description") == "ocean animals", f"got: {coloring_captured_body}")
+            check("COLOR9042" in coloring_result_html,
+                  f"the server-assigned pid must render in the success banner: {coloring_result_html}")
 
             # Coming-soon tiles: never blank, never a dead click -- must show a
             # specific, honest explanation.

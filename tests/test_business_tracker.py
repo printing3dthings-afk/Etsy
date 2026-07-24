@@ -16,6 +16,7 @@ Covers three layers:
 Run: python tests/test_business_tracker.py
 """
 import io
+import json
 import os
 import sys
 import tempfile
@@ -227,6 +228,73 @@ def test_endpoint_degrades_gracefully_when_etsy_is_unreachable():
         check("COGS & Profit" in wb.sheetnames, "the workbook must still build with an empty COGS & Profit sheet")
     finally:
         server._listings_sync = orig_listings
+
+
+# ── 4. Create-screen overlay entries merged into the Products sheet (2026-07-25) ──
+# Scott: "document it in the excel file" -- a product built via the Create
+# screen's "+ new one" flow only ever exists in product_catalog_overrides.json,
+# never in the git-tracked data/product_catalog.json this endpoint reads
+# directly. Without the merge in get_business_tracker()'s _gather_and_build(),
+# it silently never showed up in the downloaded workbook.
+
+def test_products_sheet_includes_new_product_overlay_entries():
+    orig_overrides = server._product_catalog_overrides
+    orig_listings = server._listings_sync
+    orig_orders = server._get_recent_orders_raw
+    orig_sales = server._sales_by_listing_sync
+    try:
+        server._product_catalog_overrides = lambda: {
+            "COLOR9999": {
+                "is_new_product": True, "product_id": "COLOR9999",
+                "name": "ocean animals", "category": "coloring_pages",
+                "status": "draft", "price": None, "etsy_listing_id": "",
+                "created_at": "2026-07-25T00:00:00+00:00",
+            },
+        }
+        server._listings_sync = lambda state="active": {"listings": _LISTINGS, "count": 1, "state": "active"}
+        server._get_recent_orders_raw = lambda: _ORDERS_RAW
+        server._sales_by_listing_sync = lambda: _SALES
+
+        c = TestClient(server.app, base_url="https://testserver")
+        resp = c.get("/api/business-tracker.xlsx", headers={"Authorization": f"Bearer {os.environ['APP_SECRET_TOKEN']}"})
+        check(resp.status_code == 200, f"expected 200, got {resp.status_code}: {resp.text[:300]}")
+        wb = load_workbook(io.BytesIO(resp.content))
+        ws = wb["Products"]
+        rows = [[c.value for c in row] for row in ws.iter_rows(min_row=5)]
+        matches = [r for r in rows if r[0] == "COLOR9999"]
+        check(len(matches) == 1, f"the overlay-only product must appear exactly once in Products, got {matches}")
+        if matches:
+            check(matches[0][2] == "coloring_pages", f"got row {matches[0]}")
+            check(matches[0][3] == "draft", f"got row {matches[0]}")
+    finally:
+        server._product_catalog_overrides = orig_overrides
+        server._listings_sync = orig_listings
+        server._get_recent_orders_raw = orig_orders
+        server._sales_by_listing_sync = orig_sales
+
+
+def test_products_sheet_does_not_duplicate_overlay_entry_already_in_base_catalog():
+    """An override entry whose pid ALREADY exists in the real base catalog
+    (e.g. a status patch on a published product, not a Create-screen new
+    product) must never be synthesized into a second row."""
+    orig_overrides = server._product_catalog_overrides
+    orig_catalog_read = Path("data/product_catalog.json").read_text
+    try:
+        real_catalog = json.loads(orig_catalog_read())
+        known_pid = real_catalog[0]["product_id"] if real_catalog else "DP1026"
+        server._product_catalog_overrides = lambda: {
+            known_pid: {"is_new_product": True, "product_id": known_pid, "etsy_listing_id": "999"},
+        }
+        c = TestClient(server.app, base_url="https://testserver")
+        resp = c.get("/api/business-tracker.xlsx", headers={"Authorization": f"Bearer {os.environ['APP_SECRET_TOKEN']}"})
+        check(resp.status_code == 200, f"expected 200, got {resp.status_code}")
+        wb = load_workbook(io.BytesIO(resp.content))
+        ws = wb["Products"]
+        rows = [[c.value for c in row] for row in ws.iter_rows(min_row=5)]
+        matches = [r for r in rows if r[0] == known_pid]
+        check(len(matches) == 1, f"an override for an existing base-catalog pid must not be duplicated, got {matches}")
+    finally:
+        server._product_catalog_overrides = orig_overrides
 
 
 def run() -> None:

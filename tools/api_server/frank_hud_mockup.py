@@ -3803,6 +3803,13 @@ const _CREATE_CATEGORIES = {
     // generation (usesNewArtDescription) is the separate new-code path.
     icon: '🎨', label: 'Coloring Pages', real: true, usesEngine: false,
     usesNewArtDescription: true,
+    // autoGenerateCode (2026-07-25): Scott: "It should auto generate the
+    // code" -- unlike Wall Art, the new-theme path never shows a typed-code
+    // field at all; Frank assigns the next free COLOR#### code itself once
+    // a theme is described (see _renderCategoryPanelHtml()'s
+    // autoGenerateCode branch and _next_coloring_pid() in main.py).
+    autoGenerateCode: true,
+    newCodeLinkLabel: '＋ This is a new one — describe it and I\\'ll build it',
     newArtPlaceholder: 'One general theme, e.g. "ocean animals" -- Frank turns it into 20 distinct coloring-page subjects, never repeating a subject used before.',
     blurb: 'A themed set of 20 individual coloring pages, packaged into one ZIP and ready to sell.',
     placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
@@ -3875,11 +3882,23 @@ function _renderCategoryPanelHtml(key){
   html += '<select id="create-pid-select" aria-label="Choose an existing ' + escHtml(cfg.label) + '" onchange="_createPidSelectChanged()" style="width:100%;margin-bottom:6px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">'
     + '<option value="">Choose one you already have…</option></select>';
   if (cfg.allowNewCode !== false) {
-    html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)">＋ This is a new one — I\\'ll type the code</span>';
+    const newCodeLabel = cfg.newCodeLinkLabel || '＋ This is a new one — I\\'ll type the code';
+    html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)">' + newCodeLabel + '</span>';
   }
   html += '</div>';
-  html += '<div id="create-pid-freetext-wrap" style="display:none;margin-bottom:6px">'
-    + '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  html += '<div id="create-pid-freetext-wrap" style="display:none;margin-bottom:6px">';
+  // autoGenerateCode (2026-07-25): no typed-code field at all for this
+  // category -- Frank assigns the code itself once a theme is described
+  // (see _next_coloring_pid() in main.py). #bx-pid still has to exist with
+  // this exact id (buildProductRun() and _createPidSelectChanged() both
+  // read/write it regardless of category) -- type="hidden" keeps it inert
+  // (never focusable, never shown) rather than removing the element.
+  if (cfg.autoGenerateCode) {
+    html += '<div class="hub-listing-meta" style="margin-bottom:6px">Frank picks the code automatically once you describe a theme below.</div>'
+      + '<input id="bx-pid" type="hidden" value="" />';
+  } else {
+    html += '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  }
   // usesNewArtDescription (2026-07-22): Wall Art / Coloring Pages can now
   // actually generate genuinely new art/pages for a brand-new code, not just
   // reject it -- but that needs a description of what to make (a bare code
@@ -3948,7 +3967,17 @@ function _createToggleNewCode(showFreeText){
   const pid = document.getElementById('bx-pid');
   if (showFreeText && pid) {
     pid.value = '';
-    pid.focus();
+    // autoGenerateCode (2026-07-25): #bx-pid is a hidden input for this
+    // category -- it can never receive focus, so focus the description
+    // textarea instead so opening "+ new one" still lands the cursor
+    // somewhere useful.
+    const openCfg = _CREATE_CATEGORIES[_createOpenCat];
+    if (openCfg && openCfg.autoGenerateCode) {
+      const descEl = document.getElementById('bx-description');
+      if (descEl) descEl.focus();
+    } else {
+      pid.focus();
+    }
   } else if (!showFreeText) {
     // Switching back to the picker: a code typed into the free-text field must
     // not silently survive into the build -- resync the hidden #bx-pid to
@@ -4332,15 +4361,22 @@ async function buildProductRun(){
   const engine=(engEl&&engEl.value)||'gemini';
   const descEl=document.getElementById('bx-description');
   const description=((descEl&&descEl.value)||'').trim();
-  if(!pid){
+  const cfg = _CREATE_CATEGORIES[_createOpenCat];
+  const autoGen = !!(cfg && cfg.autoGenerateCode);
+  if(!pid && !autoGen){
     // buildProductRun() is the ONE main build button shared by every real
     // category (Digital Planner, Wall Art, Coloring Pages) -- the empty-pid
     // message must not hardcode "planner code"/DP1030 for all of them (Scott
     // reported this live on Coloring Pages, 2026-07-22). Use the currently
     // open category's own placeholder/label instead.
-    const cfg = _CREATE_CATEGORIES[_createOpenCat];
     const example = (cfg && cfg.placeholder) || 'e.g. DP1030';
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a code first (' + escHtml(example) + ').</div>';
+    return;
+  }
+  if(!pid && autoGen && !description){
+    // autoGenerateCode (2026-07-25): there's no code to check anymore -- the
+    // only thing that can be missing is the theme itself.
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Describe a theme first — Frank will pick the code automatically.</div>';
     return;
   }
   if(btn) btn.disabled=true;
