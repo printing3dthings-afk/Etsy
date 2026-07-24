@@ -254,7 +254,7 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 #stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
 #stage{
   position:relative;width:1440px;height:900px;flex-shrink:0;transform-origin:center center;
-  background:radial-gradient(ellipse at 50% -10%, #3d2a42 0%, var(--bg) 55%);
+  background:var(--bg); /* 2026-07-23: flattened per Scott -- "all backgrounds solid" */
   display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px 1fr 54px;
 }
 
@@ -311,7 +311,7 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
   display:flex;align-items:center;justify-content:center;padding:0 3px}
 .operator{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:var(--r-pill);
   padding:3px 10px 3px 3px;background:var(--panel)}
-.operator .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#8a6d2b);
+.operator .av{width:24px;height:24px;border-radius:50%;background:var(--gold);
   display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0a1420;flex-shrink:0}
 .operator .ol1{font-size:11px;font-weight:600;line-height:1.1}
 .operator .ol2{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
@@ -328,7 +328,7 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 .nav-item .ic{width:16px;text-align:center;font-size:13px}
 .nav-item:hover{background:var(--panel);color:var(--text)}
 .nav-item:active{transform:scale(.98)}
-.nav-item.active{background:linear-gradient(90deg,rgba(242,160,181,.18),transparent);
+.nav-item.active{background:var(--panel3); /* 2026-07-23: flattened per Scott, was a hardcoded (not theme-reactive) gradient */
   color:var(--cyan2);border-left:2px solid var(--cyan)}
 .nav-item .nbadge{margin-left:auto;background:var(--panel2);color:var(--cyan2);
   font-size:9.5px;font-weight:700;border-radius:var(--r-sm);padding:1px 7px;border:1px solid var(--border)}
@@ -449,7 +449,7 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
 #orb-view{
   position:absolute;inset:0;z-index:50;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse at 50% 40%, rgba(242,160,181,.10), transparent 60%);
+  background:var(--bg); /* 2026-07-23: flattened per Scott -- mirrors the mobile-popup override below, already solid for the same reason */
 }
 /* Bumped 85vw->92vw to partly compensate for the camera pull-back (z=6.5) that now
    frames the full silhouette with margin: a slightly larger canvas keeps the on-screen
@@ -779,7 +779,7 @@ body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:8px 2
    wanted directly reachable). Mobile affordance only — on desktop the Home screen
    already IS the chat, so it's hidden there. Stays visible inside the mobile
    "Talk to Frank" popup (unlike .orb-input-row, which the popup hides). */
-.orb-open-chat{margin-top:16px;background:linear-gradient(90deg,rgba(242,160,181,.22),rgba(96,220,255,.14));border:1px solid var(--border);color:var(--text);border-radius:var(--r-pill);padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.3px}
+.orb-open-chat{margin-top:16px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-pill);padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.3px}
 .orb-open-chat:hover{filter:brightness(1.14)}
 .orb-open-chat:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 body:not(.is-mobile) .orb-open-chat{display:none}
@@ -1129,11 +1129,12 @@ body.is-mobile.frank-popup-open #orb-view{
      (see .main,.screen rule above) so centered orb content doesn't sit under it. */
   padding-bottom:calc(84px + env(safe-area-inset-bottom));
   padding-top:env(safe-area-inset-top);
-  /* #orb-view's own background (further up this file) is a translucent radial
-     gradient designed for the desktop view, where it always sits over the fixed
-     1440x900 stage -- on phone it let the tab bar visibly bleed through underneath
-     (z-index alone doesn't hide a transparent element's background). Solid here so
-     "full-screen overlay" (Scott's choice) actually reads as full-screen. */
+  /* #orb-view's own background (further up this file) was originally a translucent
+     radial gradient designed for the desktop view -- on phone it let the tab bar
+     visibly bleed through underneath (z-index alone doesn't hide a transparent
+     element's background), so it was made solid here first. 2026-07-23: the base
+     rule is now solid var(--bg) too (Scott: "all backgrounds solid"), so this
+     override is redundant in value but kept for clarity/explicitness on this path. */
   background:var(--bg);
   /* "Lock in position" (Scott, 2026-07-10): the orb's own idle animation should
      keep running, but the screen itself must not scroll or rubber-band -- iOS
@@ -1299,7 +1300,7 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 /* 2026-07-18: Star Seller "on track" milestone badge -- a rare, genuinely
    earned moment (unlike the constant-frequency tiles/cards around it), so
    it gets a soft gold glow instead of matching their quiet treatment. */
-.pmilestone{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(228,177,85,.16),rgba(228,177,85,.05));border:1px solid var(--gold);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;animation:milestone-in .5s ease-out}
+.pmilestone{display:flex;gap:10px;align-items:center;background:var(--panel2);border:1px solid var(--gold);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;animation:milestone-in .5s ease-out}
 .pmilestone-glow{font-size:20px;flex-shrink:0;animation:milestone-pulse 2.4s ease-in-out infinite}
 .pmilestone-t{font-size:12.5px;font-weight:700;color:var(--gold)}
 .pmilestone-s{font-size:11px;color:var(--muted);margin-top:1px}
@@ -2170,11 +2171,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What would you like to make? Frank builds it, you review it, then you approve it before anything goes live.</div>
 
       <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
-        <div class="create-choice" data-cat="digital_planner" role="button" tabindex="0" onclick="createOpenCategory('digital_planner')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+        <div class="create-choice" data-cat="digital_planner" role="button" tabindex="0" onclick="createOpenCategory('digital_planner')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:700;margin-top:6px">Digital Planner</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">PDF, cover, and matching stickers</div></div>
-        <div class="create-choice" data-cat="wall_art" role="button" tabindex="0" onclick="createOpenCategory('wall_art')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+        <div class="create-choice" data-cat="wall_art" role="button" tabindex="0" onclick="createOpenCategory('wall_art')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:700;margin-top:6px">Wall Art</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Every print size, ready to sell</div></div>
-        <div class="create-choice" data-cat="coloring_pages" role="button" tabindex="0" onclick="createOpenCategory('coloring_pages')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+        <div class="create-choice" data-cat="coloring_pages" role="button" tabindex="0" onclick="createOpenCategory('coloring_pages')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🎨</div><div style="font-weight:700;margin-top:6px">Coloring Pages</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">A themed set, packaged and ready</div></div>
         <div class="create-choice soon" data-cat="sticker_pack" role="button" tabindex="0" onclick="createOpenCategory('sticker_pack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🌈</div><div style="font-weight:600;margin-top:6px">Sticker Pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>

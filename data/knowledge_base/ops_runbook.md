@@ -11564,3 +11564,77 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Fix:** Moved the `phone-home-open` cleanup from `phoneOpenScreen()` into `showScreen()` itself (`tools/api_server/frank_hud_mockup.py`) -- `showScreen()` is the one function every navigation path funnels through (both `phoneOpenScreen()`'s own call at its end, and every bare `onclick="showScreen(...)"` in the header/sidebar that never touches `phoneOpenScreen()` at all), so fixing it there covers all current and future call sites at once instead of chasing down each one individually.
 
 **Tests:** New Playwright regression in `tools/playwright_smoke.py` reproducing the exact reported path -- from Home, call `showScreen('settings')` directly (simulating the gear-icon tap) and assert `phone-home-open` clears, the ticker hides, and the tab bar / return button reappear. Full suite 73/73, 3 consecutive clean Playwright runs.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpmqbp0vjh/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpmqbp0vjh/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp5yvdkwrr/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 3704). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 3706). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Flattened all background/button gradients to solid colors
+**What shipped:** Scott: "I want all of the background to be a solid color. Also no gradient colors on the buttons. I want everything to look visually clean." Inventoried every `gradient` occurrence in `frank_hud_mockup.py` (22 raw matches, all reviewed), found 8 clear background-fill/button gradients and confirmed scope with Scott before touching anything -- he wanted just those 8, not the 4 smaller functional gradients (loading shimmer, mini-chart area fill, orb glow effect, dashed divider line), which are unchanged.
+
+Flattened: `#stage` (desktop stage background), `#orb-view` (orb/voice popup background), `.operator .av` (header avatar swatch), `.nav-item.active` (sidebar selected-item highlight), `.pmilestone` (Star Seller milestone badge), `.orb-open-chat` (mobile "Open full chat" button), and all 3 `.create-choice` Create-screen category tiles. Every replacement uses an existing theme token (`var(--bg)`, `var(--panel2)`, `var(--panel3)`, `var(--gold)`) rather than a new hardcoded color, so all 12 selectable themes stay correctly in sync automatically.
+
+**Bug fixed as a side effect:** the 3 `.create-choice` tiles referenced `var(--accent, #7c5cbf)` for both background and border -- `--accent` was never defined in `:root` or any `html.theme-*` block (confirmed via grep), so it silently fell back to a hardcoded purple in every theme regardless of Scott's selected color. Flattening the background to `var(--panel2)` also meant fixing the now-mismatched border to `var(--border)` (a real theme token) instead of leaving the dead `--accent` reference in place -- `--accent` no longer appears anywhere in the file.
+
+**Tests:** `python tests/run_all.py` (73/73, no test changes needed -- CSS-only change). 3 consecutive clean `tools/playwright_smoke.py` runs.
