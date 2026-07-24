@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "db763bf-v258"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e91a4c2-v259"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2830,6 +2830,40 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "deep_research",
+        "description": (
+            "Iterative, multi-round web research on any topic — generates search "
+            "queries, researches each via web search, extracts learnings, and goes "
+            "deeper based on what it finds, then compiles a sourced markdown report "
+            "saved to the Files tab. Use for open-ended research questions that need "
+            "more than a single web search (e.g. 'research the top competitors "
+            "selling ADHD planners on Etsy and their pricing strategies', or a "
+            "general market/trend question with no Etsy-specific angle). Costs "
+            "multiple LLM calls (breadth × depth + 1) and can take a minute or more "
+            "to finish — use get_comparable_listings/search_etsy first for anything "
+            "Etsy-specific and cheap; reserve this for broader research that "
+            "genuinely needs multiple search rounds. Read-only — writes only an "
+            "internal report file, touches no Etsy listing, contacts no buyer."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "The research question."},
+                "breadth": {
+                    "type": "integer",
+                    "description": "How many distinct search queries to research per round. Default 4, max 6.",
+                    "minimum": 2, "maximum": 6,
+                },
+                "depth": {
+                    "type": "integer",
+                    "description": "How many research rounds to run, each going deeper based on prior findings. Default 2, max 3.",
+                    "minimum": 1, "maximum": 3,
+                },
+            },
+            "required": ["query"],
+        },
+    },
+    {
         "name": "qc_check_product",
         "description": (
             "Run the pre-publish Quality Check on a product's files — the same gates "
@@ -4013,6 +4047,22 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return asyncio.run(_apply_conversion_fixes_core(int(lid)))
         if name == "get_comparable_listings":
             return _get_comparable_listings(tool_input or {})
+        if name == "deep_research":
+            ti = tool_input or {}
+            query = (ti.get("query") or "").strip()
+            if not query:
+                return {"error": "query is required"}
+            result = asyncio.run(_run_deep_research_core(query, ti.get("breadth", 4), ti.get("depth", 2)))
+            filename = _write_deep_research_report(result)
+            return {
+                "query": result["query"],
+                "breadth": result["breadth"],
+                "depth": result["depth"],
+                "learning_count": len(result["learnings"]),
+                "source_count": len(result["sources"]),
+                "report_file": filename,
+                "report_md": result["report_md"],
+            }
         if name == "register_command":
             ti = tool_input or {}
             payload = {
@@ -6828,6 +6878,229 @@ def _run_competitor_research_refresh() -> str:
         f"Live search terms used: {', '.join(_COMPETITOR_RESEARCH_SEARCH_TERMS)}.",
     )
     return f"refreshed competitor_research_2026.md ({len(new_report)} chars)"
+
+
+# 2026-07-25 (deep_research tool): same shape as _run_competitor_research_refresh
+# above (hosted web_search_20250305 tool, already proven in production there and
+# permanently in AGENT_TOOLS), made iterative/recursive per dzhng/deep-research's
+# own algorithm -- generate `breadth` queries, research each (concurrently, each
+# with its own web_search-enabled call), fold the learnings into the next level's
+# query generation, repeat for `depth` levels, then synthesize one sourced report.
+# Total LLM calls = breadth*depth + 1 (query-gen once per level + 1 synthesis;
+# see _run_deep_research_core). Scott chose this over dzhng/deep-research's own
+# CLI (AskUserQuestion) specifically to avoid a new paid Firecrawl signup -- the
+# Anthropic web_search tool is already configured and billed through the existing
+# key.
+_DEEP_RESEARCH_MAX_BREADTH = 6
+_DEEP_RESEARCH_MAX_DEPTH = 3
+
+
+def _generate_research_queries(
+    query: str, breadth: int, prior_learnings: list[str] | None = None,
+) -> list[str]:
+    """One non-web_search call: ask the model for `breadth` distinct, non-
+    overlapping search queries that would advance research on `query`. When
+    `prior_learnings` is given (every level after the first), the new queries
+    are informed by what's already been learned -- this is what makes the
+    research "go deeper" instead of repeating the same searches each level."""
+    if not ANTHROPIC_KEY:
+        return [query][:breadth]
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    learnings_block = (
+        f"\n\nLearnings so far from earlier research rounds:\n"
+        + "\n".join(f"- {l}" for l in prior_learnings[-30:])
+        if prior_learnings else ""
+    )
+    prompt = (
+        f"Research goal: {query}{learnings_block}\n\n"
+        f"Generate exactly {breadth} distinct, specific search queries that would "
+        f"each surface different, non-overlapping information relevant to the "
+        f"research goal above. "
+        + ("Go deeper than the earlier rounds -- target gaps or open questions the "
+           "learnings above didn't resolve, not the same ground again. "
+           if prior_learnings else "")
+        + 'Return ONLY a JSON array of strings, e.g. ["query one", "query two"], '
+        f"nothing else."
+    )
+    try:
+        response = _anthropic_create(
+            client,
+            model=business_config.MODEL_PRIMARY,
+            max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except Exception:  # noqa: BLE001
+        return [query][:breadth]
+
+    text = "".join(getattr(b, "text", "") for b in response.content if getattr(b, "type", "") == "text")
+    parsed = _extract_json_object(text)
+    if not isinstance(parsed, list) or not parsed:
+        return [query][:breadth]
+    queries = [str(q).strip() for q in parsed if str(q).strip()]
+    return queries[:breadth] or [query][:breadth]
+
+
+def _research_one_query(q: str) -> dict:
+    """One web_search-enabled call for a single query. Returns
+    {"learnings": [...], "sources": [...]} -- never raises; a failed sub-query
+    degrades to an empty result so one bad query can't sink the whole research
+    run (same non-fatal-per-item pattern as _run_competitor_research_refresh's
+    per-term search_listings loop above)."""
+    if not ANTHROPIC_KEY:
+        return {"learnings": [], "sources": []}
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    prompt = (
+        f'Research this query using web search: "{q}"\n\n'
+        f"Return ONLY a JSON object of the exact shape "
+        f'{{"learnings": ["concise factual finding 1", "..."], "sources": '
+        f'["https://...", "..."]}}. Learnings must be specific and information-'
+        f"dense (include real numbers/names/dates where you found them), not "
+        f"vague summaries. List every source URL you actually used."
+    )
+    try:
+        response = _anthropic_create(
+            client,
+            model=business_config.MODEL_PRIMARY,
+            max_tokens=2048,
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 3,
+                "user_location": {"type": "approximate", "country": "US"},
+            }],
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"learnings": [], "sources": [], "error": str(exc)}
+
+    text = "".join(getattr(b, "text", "") for b in response.content if getattr(b, "type", "") == "text")
+    parsed = _extract_json_object(text)
+    if not isinstance(parsed, dict):
+        return {"learnings": [], "sources": []}
+    learnings = [str(l).strip() for l in (parsed.get("learnings") or []) if str(l).strip()]
+    sources = [str(s).strip() for s in (parsed.get("sources") or []) if str(s).strip()]
+    return {"learnings": learnings, "sources": sources}
+
+
+def _synthesize_research_report(query: str, learnings: list[str], sources: list[str]) -> str:
+    """Final non-web_search call: compile every learning gathered across all
+    levels into one sourced markdown report. Same marker-delimited extraction
+    idiom as _run_competitor_research_refresh -- returns the raw markdown
+    string; the caller decides where (if anywhere) to persist it."""
+    if not learnings:
+        return f"# Deep Research: {query}\n\n_No learnings were gathered -- research produced no results._\n"
+    if not ANTHROPIC_KEY:
+        return (
+            f"# Deep Research: {query}\n\n## Learnings (unsynthesized -- no API key)\n"
+            + "\n".join(f"- {l}" for l in learnings)
+            + "\n\n## Sources\n" + "\n".join(f"- {s}" for s in sources)
+        )
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    learnings_block = "\n".join(f"- {l}" for l in learnings)
+    sources_block = "\n".join(f"- {s}" for s in sorted(set(sources)))
+    prompt = (
+        f"Research goal: {query}\n\n"
+        f"All learnings gathered across this research run:\n{learnings_block}\n\n"
+        f"All sources used:\n{sources_block}\n\n"
+        f"Compile these into one well-organized markdown report answering the research "
+        f"goal. Use headers to group related learnings, cite sources inline where a "
+        f"specific claim came from a specific source, and include a final 'Sources' "
+        f"section listing every URL. Do not invent facts not present in the learnings "
+        f"above.\n\n"
+        f"Return the COMPLETE report between the exact markers ===BEGIN_REPORT=== and "
+        f"===END_REPORT===, nothing else outside the markers."
+    )
+    try:
+        response = _anthropic_create(
+            client,
+            model=business_config.MODEL_PRIMARY,
+            max_tokens=4096,
+            system=[{"type": "text", "text": (
+                "You are a research analyst compiling a sourced markdown report from "
+                "raw research findings. Be accurate -- use only the learnings and "
+                "sources given to you, never invent statistics or citations."
+            )}],
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except Exception as exc:  # noqa: BLE001
+        return (
+            f"# Deep Research: {query}\n\n_Synthesis call failed ({exc}) -- raw learnings below._\n\n"
+            + "\n".join(f"- {l}" for l in learnings)
+            + "\n\n## Sources\n" + "\n".join(f"- {s}" for s in sorted(set(sources)))
+        )
+
+    text = "".join(getattr(b, "text", "") for b in response.content if getattr(b, "type", "") == "text")
+    match = _re.search(r"===BEGIN_REPORT===(.*?)===END_REPORT===", text, _re.DOTALL)
+    if not match:
+        return (
+            f"# Deep Research: {query}\n\n_Model did not return the expected markers -- raw "
+            f"learnings below._\n\n" + "\n".join(f"- {l}" for l in learnings)
+            + "\n\n## Sources\n" + "\n".join(f"- {s}" for s in sorted(set(sources)))
+        )
+    return match.group(1).strip() + "\n"
+
+
+async def _run_deep_research_core(query: str, breadth: int, depth: int) -> dict:
+    """Orchestrates the full iterative research run (linear cost: breadth*depth
+    LLM research calls + depth query-gen calls + 1 synthesis call). Runs each
+    level's `breadth` per-query research calls concurrently via
+    asyncio.gather(asyncio.to_thread(...)) -- the same bridge-into-async
+    pattern used elsewhere for a blocking Anthropic call inside async code
+    (see _dispatch_to_relay's docstring for the analogous relay-timeout
+    reasoning). Called via asyncio.run() from the sync _execute_agent_tool
+    dispatch branch, matching the existing _autofix_tags_core/
+    _diagnose_listing_core precedent for bridging a sync tool-dispatch branch
+    into async code -- _execute_agent_tool always runs inside its own worker
+    thread (via asyncio.to_thread from the chat loop), so starting a fresh
+    event loop here can never collide with the main loop."""
+    breadth = max(1, min(int(breadth), _DEEP_RESEARCH_MAX_BREADTH))
+    depth = max(1, min(int(depth), _DEEP_RESEARCH_MAX_DEPTH))
+
+    learnings: list[str] = []
+    sources: list[str] = []
+    queries = await asyncio.to_thread(_generate_research_queries, query, breadth)
+
+    for level in range(depth):
+        results = await asyncio.gather(*[asyncio.to_thread(_research_one_query, q) for q in queries])
+        for r in results:
+            learnings.extend(r.get("learnings") or [])
+            sources.extend(r.get("sources") or [])
+        if level < depth - 1:
+            queries = await asyncio.to_thread(_generate_research_queries, query, breadth, learnings)
+
+    report_md = await asyncio.to_thread(_synthesize_research_report, query, learnings, sources)
+    return {
+        "query": query,
+        "breadth": breadth,
+        "depth": depth,
+        "learnings": learnings,
+        "sources": sorted(set(sources)),
+        "report_md": report_md,
+    }
+
+
+def _write_deep_research_report(result: dict) -> str:
+    """Writes a completed _run_deep_research_core() result to a new file under
+    _FILE_ROOTS["deep_research"] (registered near :13934, alongside the other
+    durable roots) and returns its filename. Each report is its own file keyed
+    by a slug of the query plus today's date -- unlike competitor_research_2026.md
+    (a single living reference doc this same web_search pattern refreshes in
+    place), deep-research reports are ad-hoc one-offs Scott may run repeatedly
+    with different queries, so nothing here should ever overwrite a prior run."""
+    root = _FILE_ROOTS["deep_research"]
+    root.mkdir(parents=True, exist_ok=True)
+    slug = _re.sub(r"[^a-z0-9]+", "-", result["query"].lower()).strip("-")[:60] or "research"
+    base_name = f"{slug}-{date.today().isoformat()}"
+    filename = f"{base_name}.md"
+    suffix = 2
+    while (root / filename).exists():
+        filename = f"{base_name}-{suffix}.md"
+        suffix += 1
+    (root / filename).write_text(result["report_md"], encoding="utf-8")
+    return filename
 
 
 def _check_ads_thresholds() -> str:
@@ -13728,6 +14001,17 @@ _FILE_ROOTS["svg_conversions"] = ROOT / "data" / "social" / "svg_conversions"
 # root + Action Center approval, not this one — this is the standalone generation
 # tool's own scratch output before anything is staged for a real listing.
 _FILE_ROOTS["lifestyle_photos"] = ROOT / "data" / "social" / "lifestyle_photos"
+
+# deep_research tool output (2026-07-25) — durable under the volume, same
+# reasoning as reference_images below: a saved research report is a real
+# artifact Scott may want to come back to later, not scratch/regeneratable
+# working output. Registering the key here also makes every report
+# browsable/downloadable from the Files screen for free via the GET
+# /api/files scan below, with zero new UI needed.
+_FILE_ROOTS["deep_research"] = (
+    (_FILE_ROOTS["volume"] / "deep_research") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "deep_research")
+)
 
 # Reference Photos library (2026-07-22 Create-screen redesign) — Scott's own
 # curated inspiration/style-reference images, organized by product category.

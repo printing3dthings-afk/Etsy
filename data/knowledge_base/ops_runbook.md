@@ -12352,3 +12352,81 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 - `frank_hud_mockup.py`: moved (not duplicated) the existing "Product video" + "Post to social" markup out of the collapsed Advanced tools disclosure into its own 9th Create-screen tile ("Product Video" 🎬), following the same special-case `_renderCategoryPanelHtml()` branch pattern already used for the "Etsy Listing" tile. Every element ID (`studio-generate-btn`, `studio-stage-btn`, `studio-ig-btn`, etc.) is unchanged, so `studioGenerate()`/`studioStageToEtsy()`/`studioPostInstagram()`/`studioPostFacebook()` needed zero JS changes.
 
 **Verification:** New `tests/test_video_staging_durability.py` sets `HUB_FILES_DIR` before importing `main` (the only way to exercise the volume-present branch of a module-level constant computed once at import) and confirms all three roots nest under the mounted volume, plus a literal regression test that stages a video, then runs the real `_execute_staged_action` apply path and confirms it still finds the file and calls `upload_listing_video`. `tools/playwright_smoke.py` updated: tile count 8→9, new dedicated block confirming the Product Video panel renders with every original control intact and that `create-video`/`create-social` no longer live inside `#create-advanced-body`. Full suite (77/77) and 3x Playwright smoke green (one unrelated pre-existing flake on a premium-voice checkbox, not reproducible, not touched by this change).
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpg5owayuj/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpg5owayuj/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpfrlgo44z/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 8905). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 8907). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-25 — Native deep_research agent tool added (no new Firecrawl signup)
+
+**Ask:** Scott wanted dzhng/deep-research's iterative multi-round web research capability. That project requires a paid Firecrawl API key purely for web search/scraping — a new third-party signup. Scott chose (via AskUserQuestion) to build the same capability natively instead.
+
+**What shipped:** A new `deep_research` chat tool (AGENT_TOOLS + `_execute_agent_tool` dispatch branch) that reuses the Anthropic-hosted `web_search_20250305` tool already wired in and in production use via `_run_competitor_research_refresh` — no new dependency, no new signup. Algorithm (dzhng's own shape, linear cost not exponential): generate `breadth` search queries, research each concurrently (each its own web_search-enabled call), fold learnings into the next level's query generation, repeat for `depth` levels, then synthesize one sourced markdown report. Total LLM calls = breadth*depth + depth + 1. Hard-capped at breadth≤6, depth≤3 (enforced server-side in `_run_deep_research_core`, not just the input schema) to keep worst-case wall time well under the existing 480s tool-dispatch timeout ceiling (task #198, `_TOOL_DISPATCH_TIMEOUT_S`).
+
+**Implementation notes for future reference:**
+- `_execute_agent_tool()` is a plain sync function, always dispatched from the chat loop inside its own worker thread (`asyncio.wait_for(asyncio.to_thread(_execute_agent_tool, ...), timeout=480.0)`). Bridging into the async `_run_deep_research_core()` uses `asyncio.run(...)` from the sync dispatch branch — the same established pattern as `_autofix_tags_core`/`_diagnose_listing_core`/`_apply_conversion_fixes_core`. Safe because a fresh event loop in a worker thread never collides with the main loop.
+- Per-level concurrency (`breadth` per-query research calls running at once) uses `asyncio.gather(*[asyncio.to_thread(_research_one_query, q) for q in queries])`.
+- New durable sidecar `_FILE_ROOTS["deep_research"]` (volume-aware, same pattern as `staged_photos`/`reference_images`) — each report is its own file (`{slug}-{date}.md`, deduped with a numeric suffix on same-day re-runs), unlike `competitor_research_2026.md` which is a single living doc overwritten in place. Registering the root makes every report browsable/downloadable from the Files tab for free, zero new UI.
+- Every sub-step degrades non-fatally instead of raising: a failed per-query research call returns empty learnings/sources, a missing-markers synthesis response falls back to raw learnings, no API key returns a graceful stub — so a total Anthropic outage still returns a normal dict from `_execute_agent_tool`, never a raised exception.
+
+**Verification:** `tests/test_deep_research.py` (new, 16 tests) — query-gen/per-query-research/synthesis unit coverage, the breadth*depth+depth+1 call-count math with hard-cap clamping (both above and below range), volume-aware durable file writes with no-overwrite dedup, AGENT_TOOLS schema registration, and the full dispatch path including a total-outage degrade check. Full suite 78/78 passed. 3x clean Playwright smoke (no frontend surface for this change — chat tool only, matching `get_comparable_listings`/`search_etsy`).
