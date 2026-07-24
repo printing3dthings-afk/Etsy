@@ -429,6 +429,14 @@ async def _run_browser_checks() -> None:
             # ── First-time-user simplification (2026-07-11) regression guards ──
             simp = await page.evaluate("""() => {
                 const hidden = el => !el || el.offsetParent === null;
+                // (2026-07-25) #setting-video-engine now only exists once the Product
+                // Video tile's panel is rendered (it moved out of the always-in-DOM
+                // Advanced tools disclosure into #create-detail, populated on demand
+                // by createOpenCategory()) -- open it here so the check below can find
+                // it, then close it again (toggle) to leave state clean.
+                createOpenCategory('product_video');
+                const videoEngineSelect = (()=>{ const s=document.getElementById('setting-video-engine'); return !!s && [...s.options].some(o=>o.value==='veo'); })();
+                createOpenCategory('product_video');
                 return {
                     createNav: !!document.querySelector('.nav-item[data-screen="create"]'),
                     createScreen: !!document.getElementById('screen-create'),
@@ -439,7 +447,7 @@ async def _run_browser_checks() -> None:
                     advancedItemsHiddenByDefault: hidden(document.querySelector('.nav-item[data-tier="advanced"]')),
                     homeLabeled: !![...document.querySelectorAll('.nav-item')].find(n => n.dataset.screen === 'cmd' && n.textContent.includes('Home')),
                     imageEngineSelect: (()=>{ const s=document.getElementById('setting-image-engine'); return !!s && [...s.options].some(o=>o.value==='gemini'); })(),
-                    videoEngineSelect: (()=>{ const s=document.getElementById('setting-video-engine'); return !!s && [...s.options].some(o=>o.value==='veo'); })(),
+                    videoEngineSelect,
                 };
             }""")
             check(simp.get("createNav") and simp.get("createScreen"),
@@ -808,6 +816,46 @@ async def _run_browser_checks() -> None:
                   f"once content exists (and files/QC pass) Publish should now be offered: {lookup_and_generate}")
             await page.evaluate("document.body.classList.remove('product-review-open')")
 
+            # ── "Product Video" Create-screen tile (2026-07-25) -- Scott: "I'm also
+            # missing my section to make my ai videos". The video generate/stage/
+            # post-to-social panel already existed (studioGenerate/studioStageToEtsy/
+            # studioPostInstagram/studioPostFacebook, all unchanged) but the 2026-07-22
+            # redesign buried it inside the collapsed "Advanced tools" disclosure with
+            # zero indication it was there. Moved (not duplicated) into its own tile,
+            # same special-case pattern as etsy_listing_lookup above. Confirms the tile
+            # opens the real panel with every original control intact, and that the
+            # markup no longer also lives inside #create-advanced-body. ──
+            await page.evaluate("showScreen('create')")
+            await page.wait_for_timeout(200)
+            video_panel = await page.evaluate("""() => {
+                createOpenCategory('product_video');
+                const panel = document.getElementById('create-detail');
+                const advBody = document.getElementById('create-advanced-body');
+                return {
+                    tileOpen: document.querySelector('.create-choice[data-cat="product_video"]').classList.contains('open'),
+                    panelHtml: panel ? panel.innerHTML : '',
+                    advancedBodyHtml: advBody ? advBody.innerHTML : '',
+                    hasFileInput: !!document.getElementById('studio-file-input'),
+                    hasListingIdInput: !!document.getElementById('studio-listing-id'),
+                    hasStyleSelect: !!document.getElementById('studio-style'),
+                    hasAspectSelect: !!document.getElementById('studio-aspect-ratio'),
+                    hasEngineSelect: !!document.getElementById('setting-video-engine'),
+                    hasGenerateBtn: !!document.getElementById('studio-generate-btn'),
+                    hasStageBtn: !!document.getElementById('studio-stage-btn'),
+                    hasIgBtn: !!document.getElementById('studio-ig-btn'),
+                    hasFbBtn: !!document.getElementById('studio-fb-btn'),
+                    hasVideosList: !!document.getElementById('studio-videos-list'),
+                };
+            }""")
+            check(video_panel.get("tileOpen"), f"tapping the Product Video tile should mark it .open: {video_panel}")
+            for key in ("hasFileInput", "hasListingIdInput", "hasStyleSelect", "hasAspectSelect",
+                        "hasEngineSelect", "hasGenerateBtn", "hasStageBtn", "hasIgBtn", "hasFbBtn", "hasVideosList"):
+                check(video_panel.get(key), f"Product Video panel missing an original control ({key}): {video_panel}")
+            check("studio-generate-btn" not in video_panel.get("advancedBodyHtml", ""),
+                  f"the video panel must no longer live inside #create-advanced-body after the move: {video_panel}")
+            check("studio-videos-list" not in video_panel.get("advancedBodyHtml", ""),
+                  f"the video-list preview must also have moved out of #create-advanced-body: {video_panel}")
+
             # ── Create-screen redesign (2026-07-22) -- Scott: "There is currently too
             # much on this page ... needs to be used by someone that does not know
             # what frank is." Replaced the old always-open tool-card stack with 7
@@ -837,12 +885,16 @@ async def _run_browser_checks() -> None:
                 };
             }""")
             # (2026-07-25) 8th tile added: "Etsy Listing" -- type a product ID,
-            # jump straight into the existing review/publish pipeline.
-            check(tile_grid.get("count") == 8, f"Create screen must show exactly 8 category tiles, got: {tile_grid}")
+            # jump straight into the existing review/publish pipeline. 9th tile
+            # added same day: "Product Video" -- re-exposes the video generation/
+            # staging/social-posting pipeline that the 2026-07-22 redesign buried
+            # in the collapsed Advanced tools disclosure with zero indication it
+            # was there (Scott: "I'm also missing my section to make my ai videos").
+            check(tile_grid.get("count") == 9, f"Create screen must show exactly 9 category tiles, got: {tile_grid}")
             check(set(tile_grid.get("cats", [])) == {
                 "digital_planner", "wall_art", "coloring_pages",
                 "sticker_pack", "svg_3dprint_pack", "sublimation", "3d_print_physical",
-                "etsy_listing_lookup",
+                "etsy_listing_lookup", "product_video",
             }, f"unexpected tile category set: {tile_grid}")
             check(tile_grid.get("soonCount") == 4, f"exactly 4 tiles should be 'coming soon', got: {tile_grid}")
             check("paper_pack" not in tile_grid.get("cats", []), "paper_pack must never appear as a tile (Scott's explicit exclusion)")
@@ -1194,6 +1246,10 @@ async def _run_browser_checks() -> None:
 
             # Advanced Tools disclosure: collapsed by default, and expanding it must
             # reveal every relocated-but-unchanged tool with its IDs intact.
+            # (2026-07-25) create-video/create-social moved OUT of this disclosure
+            # entirely into their own "Product Video" tile (see the dedicated
+            # video_panel check above) -- only SVG converter + Quality Check remain
+            # here now, so this must confirm their absence, not their presence.
             advanced = await page.evaluate("""() => {
                 const body = document.getElementById('create-advanced-body');
                 const collapsedByDefault = body ? body.style.display === 'none' : null;
@@ -1211,8 +1267,10 @@ async def _run_browser_checks() -> None:
             }""")
             check(advanced.get("collapsedByDefault"), f"Advanced Tools must be collapsed by default: {advanced}")
             check(advanced.get("expandedNow"), f"clicking the Advanced Tools toggle must expand it: {advanced}")
-            check(all(advanced.get(k) for k in ("svgPresent", "qcPresent", "videoPresent", "socialPresent")),
-                  f"all 4 relocated tool sections must still be present: {advanced}")
+            check(all(advanced.get(k) for k in ("svgPresent", "qcPresent")),
+                  f"the 2 remaining relocated tool sections (SVG, QC) must still be present: {advanced}")
+            check(not advanced.get("videoPresent") and not advanced.get("socialPresent"),
+                  f"create-video/create-social must no longer live inside Advanced tools -- they moved to the Product Video tile: {advanced}")
             check(advanced.get("svgDropzonePresent") and advanced.get("qcRunBtnPresent"),
                   f"relocated tools' inner controls (dropzone, run button) must survive the move too: {advanced}")
 
@@ -1896,7 +1954,7 @@ async def _run_browser_checks() -> None:
                 };
             }""")
             check(mobile_create.get("active") == "screen-create", f"phoneOpenScreen('create') should land on #screen-create: {mobile_create}")
-            check(mobile_create.get("tileCount") == 8, f"mobile Create screen must show all 8 tiles too: {mobile_create}")
+            check(mobile_create.get("tileCount") == 9, f"mobile Create screen must show all 9 tiles too: {mobile_create}")
 
             mobile_soon_tap = await page.evaluate("""() => {
                 document.querySelector('.create-choice[data-cat="sublimation"]').click();

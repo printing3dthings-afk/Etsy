@@ -2202,6 +2202,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">🏺</div><div style="font-weight:600;margin-top:6px">3D-Print Items</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
         <div class="create-choice" data-cat="etsy_listing_lookup" role="button" tabindex="0" onclick="createOpenCategory('etsy_listing_lookup')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">📝</div><div style="font-weight:700;margin-top:6px">Etsy Listing</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Look up a product, generate its full listing</div></div>
+        <div class="create-choice" data-cat="product_video" role="button" tabindex="0" onclick="createOpenCategory('product_video')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🎬</div><div style="font-weight:700;margin-top:6px">Product Video</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Generate a video, attach it to a listing</div></div>
       </div>
 
       <div id="create-detail"></div>
@@ -2301,79 +2303,6 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <button class="act-btn primary" onclick="qcRunCheck()" id="qc-run-btn" style="white-space:nowrap">Run Check</button>
           </div>
           <div id="qc-result" style="margin-top:12px"></div>
-        </div>
-        <div class="studio-grid" style="flex-wrap:wrap">
-          <div style="flex:1;min-width:320px">
-            <video id="studio-player" controls style="aspect-ratio:16/9"></video>
-            <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a video from the list to preview it here.</div>
-          </div>
-          <div style="flex:0 0 300px">
-            <div class="panel-title" style="margin-top:0">Your videos</div>
-            <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
-          </div>
-        </div>
-
-        <div class="hub-section-title" id="create-video" style="margin-top:18px">Product video</div>
-        <div class="hub-card">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
-          <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
-          <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
-          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-            <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-              <option value="showcase">Showcase</option>
-              <option value="new-drop">New Drop</option>
-              <option value="feature">Feature</option>
-              <option value="minimal">Minimal</option>
-              <option value="ai-scene">✨ AI Scene (cinematic)</option>
-            </select>
-          </div>
-          <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
-            <textarea id="studio-scene-prompt" rows="3"
-              placeholder="Scene description — auto-filled from title, edit before generating"
-              aria-label="Scene description"
-              style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
-            <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-              <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
-              <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
-            </select>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-            <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
-          </div>
-          <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video engine</label>
-          <select id="setting-video-engine" aria-label="Video engine" onchange="saveEngines()" style="width:100%;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <option value="sora">Standard (default)</option>
-            <option value="veo">Alternative — needs an extra API key set up</option>
-          </select>
-          <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
-          <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-        </div>
-
-        <div class="hub-section-title" id="create-social" style="margin-top:18px">Post to social</div>
-        <div class="hub-card" style="margin-bottom:6px"><div style="font-size:11px;color:var(--muted)">Make or pick a video above first — then Instagram / Facebook options appear right below.</div></div>
-        <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
-        <div class="hub-card" id="studio-actions-card" style="display:none">
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after you approve it in Approvals.</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-            <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          </div>
-          <button class="act-btn primary" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
-          <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
-          <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
-          <button class="act-btn primary" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
-          <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-
-          <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
-          <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
-          <button class="act-btn primary" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
-          <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
         </div>
 
         <div class="hub-section-title" id="create-svg" style="margin-top:18px">Cutting File (SVG) — trace a photo to vector</div>
@@ -3876,6 +3805,14 @@ function _renderCategoryPanelHtml(key){
   // that's all for kicking off a BUILD, not an ID lookup, and reusing it
   // here would be more code for a worse fit.
   if (key === 'etsy_listing_lookup') return _renderListingLookupPanelHtml();
+  // product_video (2026-07-25): same reasoning as etsy_listing_lookup above --
+  // generating/staging/posting a video isn't a _produce_build_product() build
+  // category, it's the existing Studio tab's video pipeline (studioGenerate/
+  // studioStageToEtsy/studioPostInstagram/studioPostFacebook, all unchanged),
+  // relocated verbatim out of the "Advanced tools" disclosure where the
+  // 2026-07-22 Create-screen redesign buried it with zero indication it was
+  // there (Scott: "I'm also missing my section to make my ai videos").
+  if (key === 'product_video') return _renderProductVideoPanelHtml();
   const cfg = _CREATE_CATEGORIES[key];
   if (!cfg) return '';
   if (!cfg.real) {
@@ -3964,6 +3901,84 @@ function ellLookup(){
   openProductReviewModal({id: id, title: id});
 }
 
+function _renderProductVideoPanelHtml(){
+  return `<div style="font-weight:700;margin-bottom:4px">🎬 Product Video</div>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Generate a video from a listing's photos or your own images, preview it, then optionally stage it onto an Etsy listing or post it to Instagram/Facebook — nothing goes live until you approve it in Approvals.</div>
+    <div class="studio-grid" style="flex-wrap:wrap">
+      <div style="flex:1;min-width:320px">
+        <video id="studio-player" controls style="aspect-ratio:16/9"></video>
+        <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a video from the list to preview it here.</div>
+      </div>
+      <div style="flex:0 0 300px">
+        <div class="panel-title" style="margin-top:0">Your videos</div>
+        <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="hub-section-title" id="create-video" style="margin-top:18px">Generate a video</div>
+    <div class="hub-card">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
+      <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+      <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+        <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <option value="showcase">Showcase</option>
+          <option value="new-drop">New Drop</option>
+          <option value="feature">Feature</option>
+          <option value="minimal">Minimal</option>
+          <option value="ai-scene">✨ AI Scene (cinematic)</option>
+        </select>
+      </div>
+      <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
+        <textarea id="studio-scene-prompt" rows="3"
+          placeholder="Scene description — auto-filled from title, edit before generating"
+          aria-label="Scene description"
+          style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
+        <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
+          <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+        <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
+      </div>
+      <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video engine</label>
+      <select id="setting-video-engine" aria-label="Video engine" onchange="saveEngines()" style="width:100%;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+        <option value="sora">Standard (default)</option>
+        <option value="veo">Alternative — needs an extra API key set up</option>
+      </select>
+      <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
+      <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+    </div>
+
+    <div class="hub-section-title" id="create-social" style="margin-top:18px">Post to social</div>
+    <div class="hub-card" style="margin-bottom:6px"><div style="font-size:11px;color:var(--muted)">Make or pick a video above first — then Instagram / Facebook options appear right below.</div></div>
+    <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
+    <div class="hub-card" id="studio-actions-card" style="display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after you approve it in Approvals.</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+        <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+      </div>
+      <button class="act-btn primary" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
+      <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
+      <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+      <button class="act-btn primary" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
+      <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
+      <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+      <button class="act-btn primary" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
+      <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+    </div>`;
+}
+
 function createOpenCategory(key){
   const panel = document.getElementById('create-detail');
   if (!panel) return;
@@ -3979,6 +3994,14 @@ function createOpenCategory(key){
   panel.className = 'create-detail';
   panel.innerHTML = _renderCategoryPanelHtml(key);
   _createSyncProductPicker(key);
+  // product_video (2026-07-25): #studio-videos-list / #setting-video-engine only
+  // exist in the DOM once this panel is open -- the create-screen show hook
+  // (SCREEN_LOAD_HOOKS.create) already calls loadStudioVideos()/loadCreateEngines()
+  // on every visit to Create, but that fires before this panel's markup exists if
+  // the tile wasn't already open, so re-run them here now that it does. Both
+  // functions no-op safely when their target elements are absent (see their own
+  // early-return guards), so calling them redundantly on every tile open is safe.
+  if (key === 'product_video') { loadStudioVideos(); loadCreateEngines(); }
   panel.scrollIntoView({behavior:'smooth', block:'start'});
 }
 function _createPidSelectChanged(){

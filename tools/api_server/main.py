@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a4f8d21-v257"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "db763bf-v258"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13700,11 +13700,26 @@ _FILE_ROOTS["staged_photos"] = (
 
 # Studio tab — generated videos (video_generator.py's own OUTPUT_DIR), source images
 # a user uploads before generation, and videos staged for Etsy/Instagram/Facebook
-# review. Not placed under the durable volume: these are regeneratable working
-# files, not source-of-truth product assets.
-_FILE_ROOTS["videos"] = ROOT / "data" / "social" / "videos"
-_FILE_ROOTS["studio_uploads"] = ROOT / "data" / "social" / "studio_uploads"
-_FILE_ROOTS["staged_videos"] = ROOT / "data" / "social" / "staged_videos"
+# review. (2026-07-25) Previously hardcoded to the ephemeral local dir on the theory
+# that these are "regeneratable working files" — but staged_videos/{listing_id}/...
+# is the sole copy of a video between "Stage for Approval" and Scott actually
+# approving it in the Action Center, a window that can span a redeploy; when it did,
+# the staged DB action survived but the file didn't, and approval hit a
+# FileNotFoundError (main.py's listing_video action-apply handler). videos/ and
+# studio_uploads/ carry the same risk for generate-now-post-to-social-later. Same
+# fix as COLOR1001 (coloring pages) and the same reason staged_photos is durable.
+_FILE_ROOTS["videos"] = (
+    (_FILE_ROOTS["volume"] / "social" / "videos") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "social" / "videos")
+)
+_FILE_ROOTS["studio_uploads"] = (
+    (_FILE_ROOTS["volume"] / "social" / "studio_uploads") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "social" / "studio_uploads")
+)
+_FILE_ROOTS["staged_videos"] = (
+    (_FILE_ROOTS["volume"] / "social" / "staged_videos") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "social" / "staged_videos")
+)
 # SVG Converter tool output — regeneratable (re-run the conversion any time), not
 # source-of-truth product assets, so same non-durable local dir as studio_uploads.
 _FILE_ROOTS["svg_conversions"] = ROOT / "data" / "social" / "svg_conversions"

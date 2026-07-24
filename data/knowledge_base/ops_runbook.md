@@ -12276,3 +12276,79 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **COLOR1001 itself is unrecoverable** — no backup copy exists anywhere; it needs to be rebuilt (Products tab → tap it → Regenerate, or redo it from Create → Coloring Pages) now that the fix is live.
 
 **Tests:** `python tests/run_all.py` (76/76) — 4 new tests in `tests/test_qc_sweep_coloring.py` (`_resolve_dp_base()`'s env-override/volume-mount/local-fallback precedence, and that `COLORING_DIR`/`SETS_DIR` stay in lockstep with `qc_sweep.py`'s own scan path — this exact "written in the wrong place" bug class is now covered, not just the symptom). 3 consecutive clean `tools/playwright_smoke.py` runs (Python-only change, run to confirm the app still boots/renders cleanly).
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpix039c8m/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpix039c8m/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp77jys2rc/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 17269). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 17271). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Video generation/staging: same durability bug class as COLOR1001, fixed before it could bite
+**Symptom:** Scott: "I'm also missing my section to make my ai videos for the different media types. These also need to be save and able to be attached to a listing." Investigation found the video pipeline (generate via Sora/Veo, stage to a listing with an ID, attach on approval, post to Instagram/Facebook) already existed end-to-end and worked — the 2026-07-22 Create-screen redesign had relocated it verbatim into a collapsed "Advanced tools" disclosure with zero indication it was there.
+
+**Root cause (the actual bug, found while re-exposing the UI):** `_FILE_ROOTS["videos"]`, `["studio_uploads"]`, and `["staged_videos"]` (main.py, near :13712) were hardcoded to the ephemeral local `data/social/...` dir unconditionally — never checking the persistent Railway volume the way `staged_photos` correctly does. `staged_videos/{listing_id}/...` is the sole copy of a video between "Stage for Approval" and Scott's actual approval in the Action Center, a window that can span a redeploy. If a redeploy happened in that window, the staged DB action would survive but the file wouldn't — approval would hit a FileNotFoundError in the `listing_video` branch of `_execute_staged_action`. Same bug class as the COLOR1001 incident (2026-07-25, coloring pages), caught here proactively before a real video was lost.
+
+**Fix:**
+- `main.py`: all three roots now resolve under `_FILE_ROOTS["volume"] / "social" / <name>` when a volume is mounted, else the same local fallback as before — mirrors `staged_photos`'s existing pattern exactly.
+- `frank_hud_mockup.py`: moved (not duplicated) the existing "Product video" + "Post to social" markup out of the collapsed Advanced tools disclosure into its own 9th Create-screen tile ("Product Video" 🎬), following the same special-case `_renderCategoryPanelHtml()` branch pattern already used for the "Etsy Listing" tile. Every element ID (`studio-generate-btn`, `studio-stage-btn`, `studio-ig-btn`, etc.) is unchanged, so `studioGenerate()`/`studioStageToEtsy()`/`studioPostInstagram()`/`studioPostFacebook()` needed zero JS changes.
+
+**Verification:** New `tests/test_video_staging_durability.py` sets `HUB_FILES_DIR` before importing `main` (the only way to exercise the volume-present branch of a module-level constant computed once at import) and confirms all three roots nest under the mounted volume, plus a literal regression test that stages a video, then runs the real `_execute_staged_action` apply path and confirms it still finds the file and calls `upload_listing_video`. `tools/playwright_smoke.py` updated: tile count 8→9, new dedicated block confirming the Product Video panel renders with every original control intact and that `create-video`/`create-social` no longer live inside `#create-advanced-body`. Full suite (77/77) and 3x Playwright smoke green (one unrelated pre-existing flake on a premium-voice checkbox, not reproducible, not touched by this change).
