@@ -765,7 +765,7 @@ body.is-mobile #chat-voice-btn{display:flex}
    (initOrbGL()) -- duplicating that render loop just for a static header label
    would be wasted GPU cost for no visual gain here. */
 .mobile-shop-header{display:none}
-body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:8px 2px 2px;font-family:var(--font-display);color:var(--cyan);font-size:15px;font-weight:700;letter-spacing:.5px}
+body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:14px 2px 8px;font-family:var(--font-display);color:var(--cyan);font-size:24px;font-weight:800;letter-spacing:.3px}
 /* Phone "Ask" tab (#orb-view) has no chat transcript, just the orb -- so Scott can
    still type to %%AGENT_SHORT%% even when voice isn't practical (loud room, no mic
    permission, etc). Same #chat-input/#chat-send visual treatment, own IDs since a
@@ -966,7 +966,16 @@ body:not(.is-mobile) .orb-open-chat{display:none}
      build (never reproduced locally, but 3/3 failures on GitHub's runner after
      this landed); visibility:hidden hides it identically while leaving its
      layout box, and everything below it, byte-for-byte unchanged. */
-  .hdr-logo{visibility:hidden}
+  .hdr-logo{visibility:hidden;position:relative}
+  /* 2026-07-24: Scott -- "top right [has] that dark section [...] put a straight
+     header line below the buttons." .hdr-bar (the icon column, right below) already
+     has its own border-bottom, but .hdr-logo's matching border is suppressed by the
+     visibility:hidden above, so the line used to stop dead at the icon column's left
+     edge instead of running the full header width. A pseudo-element can override an
+     inherited visibility:hidden for itself only (standard CSS) -- this renders just
+     a 1px bottom strip, position:absolute so it never touches layout/height and can't
+     revive the 2026-07-18 CI regression documented above. */
+  .hdr-logo::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--border);visibility:visible}
   .hamburger-fixed{
     display:flex;
     position:fixed;
@@ -975,7 +984,13 @@ body:not(.is-mobile) .orb-open-chat{display:none}
   }
   #orb-desktop-btn{display:none}
 
-  .hdr-bar{padding:0 10px;gap:8px}
+  /* background:var(--bg) (2026-07-24, Scott: remove "that dark section") --
+     overrides .hdr-bar's desktop-only rgba(8,16,26,.5) HUD-panel look (line 277)
+     specifically on mobile, matching the already-invisible .hdr-logo column so the
+     whole header row reads as one plain surface instead of a half-dark box. Icon
+     buttons keep their own var(--panel) background (line ~302) so they still read
+     clearly against the page. */
+  .hdr-bar{padding:0 10px;gap:8px;background:var(--bg)}
   .hdr-bar .search,.hdr-bar .clockwrap{display:none}
 
   .sidebar{

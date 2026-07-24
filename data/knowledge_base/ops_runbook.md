@@ -11638,3 +11638,77 @@ Flattened: `#stage` (desktop stage background), `#orb-view` (orb/voice popup bac
 **Bug fixed as a side effect:** the 3 `.create-choice` tiles referenced `var(--accent, #7c5cbf)` for both background and border -- `--accent` was never defined in `:root` or any `html.theme-*` block (confirmed via grep), so it silently fell back to a hardcoded purple in every theme regardless of Scott's selected color. Flattening the background to `var(--panel2)` also meant fixing the now-mismatched border to `var(--border)` (a real theme token) instead of leaving the dead `--accent` reference in place -- `--accent` no longer appears anywhere in the file.
 
 **Tests:** `python tests/run_all.py` (73/73, no test changes needed -- CSS-only change). 3 consecutive clean `tools/playwright_smoke.py` runs.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpjjtvmfzr/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpjjtvmfzr/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpmnmhyjsv/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 2983). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 2985). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Mobile header cleanup: bigger wordmark, removed the dark box, added a real divider
+**What shipped:** Scott sent a screenshot of the mobile Home screen with three asks: bigger/nicer "OnBrandCraftz" wordmark, remove the dark rectangular section behind the header icons (top-right), and a clean straight header line below the icon row.
+
+Root cause of the dark box: `.hdr-bar` (holds the bell/?/gear/owner icons) has `background:rgba(8,16,26,.5)`, a hardcoded dark overlay that renders on every mobile screen (shared header chrome gated by `body.cc-open`, not Home-specific). Its sibling column `.hdr-logo` (the desktop wordmark lockup, 92px wide) is `visibility:hidden` on mobile -- a deliberate 2026-07-18 fix, chosen over `display:none` specifically because removing it from the grid shifted the header row's computed height just enough to break the back-to-top scroll tests on CI's Chromium runner. That's why the screenshot showed a plain background on the left 92px and a solid dark rectangle on the right -- two mismatched treatments of the same row.
+
+Fixed without touching that `visibility:hidden` mechanism or the mobile grid column widths (both are protecting a real, previously-reproduced CI regression): (1) `.mobile-shop-header` bumped from 15px/700-weight to 24px/800-weight with more padding; (2) `.hdr-bar` gets `background:var(--bg)` on mobile only, matching the already-invisible `.hdr-logo` column so the header reads as one plain surface instead of a half-dark box; (3) added `.hdr-logo::after` -- a pseudo-element that explicitly sets `visibility:visible` on itself (a descendant can override an inherited `visibility:hidden`, standard CSS) to paint a 1px `position:absolute` bottom-border strip. Being absolutely-positioned, it never touches layout/height, so it can't revive the 2026-07-18 regression. Combined with `.hdr-bar`'s existing border-bottom, this gives one continuous straight line across the full header width.
+
+**Tests:** `python tests/run_all.py` (73/73, CSS-only change). 3 consecutive clean `tools/playwright_smoke.py` runs, including the back-to-top scroll tests -- specifically watched for the exact regression class the 2026-07-18 fix was protecting against; none occurred.
