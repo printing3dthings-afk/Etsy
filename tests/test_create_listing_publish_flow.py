@@ -287,7 +287,12 @@ def test_stage_publish_refuses_if_already_has_listing():
 
 
 def test_stage_publish_refuses_unsupported_category():
-    with patch.object(server, "_gather_product_review", lambda pid: _fake_review(category="wall_art")):
+    # (2026-07-25) Was category="wall_art" -- the "Etsy Listing" tile feature
+    # extended _PRODUCT_TAXONOMY_BY_CATEGORY to cover wall_art and
+    # coloring_pages, so wall_art is no longer an unsupported-category case.
+    # "sublimation" is a real category name in _CREATE_CATEGORIES that has
+    # no build pipeline and, correctly, still has no taxonomy entry either.
+    with patch.object(server, "_gather_product_review", lambda pid: _fake_review(category="sublimation")):
         resp = client.post("/api/products/DPX/stage-publish", headers=_AUTH)
     check(resp.status_code == 400 and "category" in resp.text, f"got {resp.status_code}: {resp.text[:200]}")
 

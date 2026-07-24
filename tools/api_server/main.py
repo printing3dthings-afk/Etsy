@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b3d5a70-v255"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e91a3c7-v256"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -11141,11 +11141,20 @@ def _next_coloring_pid() -> str:
     return f"COLOR{n}"
 
 
-# Deliverable files are what a buyer actually downloads (the two dated/undated PDFs
-# and the sticker ZIP) -- distinct from listing photos (path contains
-# "_listing_images/") and from source art like a standalone cover PNG, neither of
-# which gets uploaded as an Etsy digital file.
-_PRODUCT_DELIVERABLE_SUFFIXES = (".pdf", "_sticker_pack.zip")
+# Deliverable files are what a buyer actually downloads -- distinct from listing
+# photos (path contains "_listing_images/") and from source art like a standalone
+# cover PNG, neither of which gets uploaded as an Etsy digital file.
+#
+# (2026-07-25) Was (".pdf", "_sticker_pack.zip") -- found during the "Etsy Listing"
+# tile planning pass to silently drop EVERY Wall Art (*_print_sizes.zip) and
+# Coloring Pages (coloring_*_set_NN.zip) deliverable from both `photos` and
+# `deliverables`, since neither matched this suffix tuple. stage_product_publish
+# would always fail "no deliverable files found" for those categories even after
+# their taxonomy gate was fixed. Broadened to any .zip -- confirmed safe by
+# checking every .zip currently listed in product_catalog.json across every
+# category (digital_planner, wall_art, coloring_pages, svg_bundle, paper_pack,
+# svg_3dprint_pack): none are stray/backup files, all are real deliverables.
+_PRODUCT_DELIVERABLE_SUFFIXES = (".pdf", ".zip")
 
 
 def _gather_product_review(product_id: str) -> dict | None:
@@ -11166,6 +11175,13 @@ def _gather_product_review(product_id: str) -> dict | None:
         content = json.loads(listing_json_path.read_text())
     except (OSError, json.JSONDecodeError):
         pass
+    if content is None:
+        # (2026-07-25) Fall back to AI-generated content saved via the "Etsy
+        # Listing" tile's generate-listing-content endpoint. The hand-authored
+        # git-tracked file above always wins when both exist -- it's presumably
+        # human-vetted; this sidecar exists for the other 174+ products that
+        # will never get one hand-written.
+        content = _generated_listing_content().get(product_id)
 
     photos: list[dict] = []
     deliverables: list[dict] = []
@@ -11217,14 +11233,239 @@ async def get_product_review(product_id: str, _token: str = Depends(_auth_sessio
     return review
 
 
+def _extract_grounding_facts(product_id: str, entry: dict) -> tuple[dict, list[str]]:
+    """Real, computed facts about product_id's actual deliverable files --
+    the ONLY numbers _build_listing_content_prompt()'s prompt is allowed to
+    state affirmatively (CLAUDE.md's "never lie to the customer" rule,
+    enforced in code here rather than left to the model's discretion).
+    Read-only, no LLM call, no network. Returns (facts, problems) --
+    problems is non-empty when a deliverable this category needs is
+    missing/unreadable, in which case the caller must refuse to generate
+    rather than fall back to vague copy."""
+    import qc_sweep
+    category = entry.get("category", "")
+    facts: dict = {"product_id": product_id, "category": category,
+                   "name": entry.get("name", product_id)}
+    problems: list[str] = []
+    for f in (entry.get("files") or []):
+        name = Path(f).name
+        if "_listing_images/" in f:
+            continue
+        abs_path = _catalog_file_abs_path(f)
+        if abs_path is None:
+            continue
+        if name.lower().endswith(".pdf"):
+            try:
+                pdf_facts = etsy_api.validate_digital_file(str(abs_path), expected_ext=".pdf")
+                facts["pdf_pages"] = pdf_facts["pdf_pages"]
+            except etsy_api.FileContentError as exc:
+                problems.append(f"{name}: {exc}")
+        elif name.lower().endswith(".zip"):
+            try:
+                zip_facts = etsy_api.validate_digital_file(str(abs_path), expected_ext=".zip")
+                facts["zip_members"] = zip_facts["zip_members"]
+            except etsy_api.FileContentError as exc:
+                problems.append(f"{name}: {exc}")
+                continue
+            with zipfile.ZipFile(abs_path) as zf:
+                names = zf.namelist()
+            if name.endswith("_sticker_pack.zip"):
+                counts = qc_sweep.sticker_zip_counts(names)
+                facts["sticker_sheets"] = counts["sheet_count"]
+                facts["individual_stickers"] = counts["individual_sticker_count"]
+            elif category == "coloring_pages":
+                facts["coloring_page_count"] = qc_sweep.coloring_zip_page_count(names)
+    required = {"digital_planner": ("pdf_pages",), "wall_art": ("zip_members",),
+                "coloring_pages": ("coloring_page_count",)}.get(category, ())
+    for key in required:
+        if key not in facts:
+            problems.append(f"no readable {key.replace('_', ' ')} found for {product_id} — "
+                             f"build/sync its deliverable file(s) first")
+    return facts, problems
+
+
+_CONTENT_PRICE_BY_CATEGORY = {
+    # Code decides price, never the model -- mirrors pre_publish_gate()'s
+    # existing philosophy that price format/floor is a hard code gate, not
+    # prompt text. digital_planner: the niche-planner tier from CLAUDE.md's
+    # pricing table (a freshly-generated planner is more likely niche than
+    # a flagship, which has no single "default" price anyway). wall_art:
+    # CLAUDE.md Gate 7 "Single print" tier ($4.99-$7.99) -- picks the tier
+    # midpoint. coloring_pages: CLAUDE.md has NO documented price table for
+    # this category at all (confirmed 2026-07-25) -- $6.99 is a code-level
+    # judgment call for the 20-page dynamic sets, not invented by the LLM.
+    # Scott can adjust any of these via a normal price-fix action after
+    # a listing is generated -- this is a starting point, not gospel.
+    "digital_planner": 12.99,
+    "wall_art": 6.99,
+    "coloring_pages": 6.99,
+}
+
+
 _PRODUCT_TAXONOMY_BY_CATEGORY = {
-    # Only category verified end-to-end against a real dpXXXX_listing.json
+    # digital_planner: verified end-to-end against a real dpXXXX_listing.json
     # (data/dp1030_listing.json) -- matches both CLAUDE.md's own taxonomy
     # table and etsy_listing_tools.py's (unwired) TAXONOMY_BY_TYPE["planner"].
-    # Other categories are out of scope for create_listing until their own
-    # content-source convention is verified the same way.
+    # wall_art / coloring_pages (2026-07-25): CLAUDE.md documents 2078
+    # ("Craft Supplies & Tools > Patterns & How To > Digital Files") for TWO
+    # already-confirmed categories (Digital Planners and SS-Series SVG
+    # Packs), so it's used here too rather than left unset -- but this
+    # sandbox has no live Etsy credentials to verify against directly (see
+    # _resolve_category_taxonomy_id()), so the value self-corrects against
+    # a real live listing the first time each category actually stages,
+    # instead of trusting the guess forever.
     "digital_planner": 2078,
+    "wall_art": 2078,
+    "coloring_pages": 2078,
 }
+
+_CATEGORY_TAXONOMY_VERIFIED: set[str] = set()  # in-process cache -- see _resolve_category_taxonomy_id()
+
+
+def _resolve_category_taxonomy_id(category: str) -> int | None:
+    """Returns the taxonomy_id to publish `category` under, self-correcting
+    the hardcoded _PRODUCT_TAXONOMY_BY_CATEGORY default against a real live
+    Etsy listing the first time this process ever stages that category --
+    at most once per category per process lifetime (_CATEGORY_TAXONOMY_
+    VERIFIED), never blocking staging on the live check itself. If the
+    live check disagrees, logs a clear ops_runbook-style warning and uses
+    the REAL value going forward (both in-memory for this process and
+    persisted via _write_product_catalog_override-style durable state
+    is deliberately NOT done here -- a wrong guess should be visible in
+    logs and fixed in code, not silently self-healing across deploys)."""
+    default = _PRODUCT_TAXONOMY_BY_CATEGORY.get(category)
+    if default is None or category in _CATEGORY_TAXONOMY_VERIFIED:
+        return default
+    _CATEGORY_TAXONOMY_VERIFIED.add(category)  # at most one live-check attempt per category
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        return default
+    live_id = next((e.get("etsy_listing_id") for e in catalog
+                     if e.get("category") == category and e.get("etsy_listing_id")), None)
+    if not live_id:
+        return default  # nothing live yet in this category -- nothing to verify against
+    try:
+        real_taxonomy = EtsyAPIClient().get_listing(live_id).get("taxonomy_id")
+    except Exception as exc:
+        print(f"[taxonomy] could not verify {category} against live listing {live_id}: {exc}", flush=True)
+        return default
+    if real_taxonomy and real_taxonomy != default:
+        print(
+            f"[taxonomy] MISMATCH — {category}'s hardcoded taxonomy_id {default} disagrees "
+            f"with live listing {live_id}'s real taxonomy_id {real_taxonomy}. Using the real "
+            f"value for this process; update _PRODUCT_TAXONOMY_BY_CATEGORY in code to make "
+            f"this permanent.", flush=True
+        )
+        return real_taxonomy
+    return default
+
+
+def _build_listing_content_prompt(product_id: str, entry: dict, facts: dict,
+                                   feedback: str = "") -> str:
+    """Category-aware prompt for _generate_product_listing_content_core().
+    Every fact interpolated below is real (from _extract_grounding_facts());
+    the model is explicitly told it may NEVER state a page/sheet/sticker/
+    coloring-page count that isn't one of these. `feedback` carries the
+    prior attempt's grounding-check mismatches on a retry."""
+    category = entry.get("category", "")
+    name = entry.get("name", product_id)
+    facts_block = "\n".join(f"- {k}: {v}" for k, v in facts.items()
+                             if k not in ("product_id", "category", "name"))
+    grounding_rule = (
+        "GROUNDING RULE -- read carefully:\n"
+        "The REAL FACTS above are the ONLY numbers you may state as counts in the description "
+        "(page count, sticker sheet count, individual sticker count, coloring page count). "
+        "If a fact isn't listed above, do NOT invent a number for it -- describe it qualitatively "
+        "instead (e.g. 'a full kawaii sticker pack' rather than a made-up sheet count). "
+        "This is a hard rule: OnBrandCraftz has zero tolerance for lying to the customer, and "
+        "every numeric claim you make will be checked against these exact facts before this is saved."
+    )
+    if category == "digital_planner":
+        template = (
+            "Write a complete Etsy listing for a digital planner, following these EXACT "
+            "9 description sections in order: Hook, WHAT'S INCLUDED, COMPATIBLE APPS, "
+            "HOW TO USE STICKERS, HOW TO USE THE PLANNER, SECTIONS INCLUDED, TECHNICAL DETAILS, "
+            "FAQ (min 5 Qs), COPYRIGHT. Use ━━━ emoji section dividers. First sentence must hook "
+            "the buyer AND contain the primary keyword. Title: 30-70 chars, must contain "
+            "'Instant Download', comma-separated (never pipes), lead with the primary search "
+            "keyword in the first 20-30 chars, mention GoodNotes/iPad compatibility. "
+            "Tags: exactly 13, each ≤20 chars, no special characters, none may duplicate a "
+            "title phrase, cover style/app/audience/format/use-case."
+        )
+    elif category == "wall_art":
+        template = (
+            "Write a complete Etsy listing for printable wall art. Description's first sentence "
+            "MUST state (verbatim or close variant): \"Instant download printable wall art — "
+            "digital download delivered immediately after purchase, ready to print at home or at "
+            "any print shop.\" Title formula: [Primary search phrase] Printable Wall Art, Instant "
+            "Download, [Style/room] -- 55-70 chars, comma-separated. Tags: exactly 13, each ≤20 "
+            "chars, covering style/room-type/medium/occasion/recipient/format, none duplicating "
+            "a title phrase."
+        )
+    elif category == "coloring_pages":
+        # No CLAUDE.md template exists for this category (confirmed 2026-07-25) -- adapted
+        # from the documented digital_planner 9-section shape, dropping app-compatibility
+        # sections that don't apply to a printable PNG page set.
+        template = (
+            "Write a complete Etsy listing for a themed printable coloring page set, using "
+            "these sections in order: Hook (primary keyword in sentence 1), WHAT'S INCLUDED "
+            "(page count, format, theme), HOW TO USE (print at home or any print shop; screen "
+            "coloring apps), THEME & SUBJECTS (what's depicted), TECHNICAL DETAILS (file "
+            "format/size/page count), FAQ (min 5 Qs), COPYRIGHT (personal use only). Title: "
+            "must include 'printable' and 'instant download', 55-70 chars, comma-separated. "
+            "Tags: exactly 13, each ≤20 chars, covering theme/audience/occasion/format, none "
+            "duplicating a title phrase."
+        )
+    else:
+        raise ValueError(f"no content template for category {category!r}")
+
+    prompt = (
+        f"{template}\n\nPRODUCT: {name} (id: {product_id})\n\nREAL FACTS:\n{facts_block}\n\n"
+        f"{grounding_rule}\n\n"
+        "Respond with ONLY a JSON object: "
+        '{"title": str, "description": str, "tags": [13 strings]}. No price -- price is fixed by us.'
+    )
+    if feedback:
+        prompt += f"\n\nYOUR PREVIOUS ATTEMPT WAS REJECTED FOR THIS REASON — fix it:\n{feedback}"
+    return prompt
+
+
+_SHEET_CLAIM_RE = _re.compile(r"(\d{1,3})\s*(?:png\s+)?sticker\s+sheets?\b", _re.IGNORECASE)
+_INDIV_STICKER_CLAIM_RE = _re.compile(r"(\d{1,4})\+?\s*(?:individual\s+)?stickers?\b", _re.IGNORECASE)
+_COLORING_PAGE_CLAIM_RE = _re.compile(r"(\d{1,3})\s*(?:individual\s+)?coloring\s+pages?\b", _re.IGNORECASE)
+
+
+def _check_generated_content_grounding(description: str, facts: dict) -> list[str]:
+    """Extra generation-time checks layered ON TOP of etsy_api.
+    check_description_count_claims() (which stays upload-time, PDF-page/
+    zip-member-floor only, unchanged) -- these check sheet/individual-
+    sticker/coloring-page-count claims against the REAL counts
+    _extract_grounding_facts() just computed, which check_description_
+    count_claims() has no concept of. Exact-match (not floor-check)
+    because these ARE the ground-truth numbers at generation time, unlike
+    upload time where only the file's existence is known. Returns [] when
+    the description is clean."""
+    problems: list[str] = []
+    if "sticker_sheets" in facts:
+        bad = {m for m in (int(x) for x in _SHEET_CLAIM_RE.findall(description))
+               if m != facts["sticker_sheets"]}
+        if bad:
+            problems.append(f"claims {sorted(bad)} sticker sheet(s) but the real pack has "
+                             f"{facts['sticker_sheets']}")
+    if "individual_stickers" in facts:
+        bad = {m for m in (int(x) for x in _INDIV_STICKER_CLAIM_RE.findall(description))
+               if m > facts["individual_stickers"]}
+        if bad:
+            problems.append(f"claims up to {max(bad)}+ stickers but the real pack only has "
+                             f"{facts['individual_stickers']}")
+    if "coloring_page_count" in facts:
+        bad = {m for m in (int(x) for x in _COLORING_PAGE_CLAIM_RE.findall(description))
+               if m != facts["coloring_page_count"]}
+        if bad:
+            problems.append(f"claims {sorted(bad)} coloring page(s) but the ZIP has exactly "
+                             f"{facts['coloring_page_count']}")
+    return problems
 
 
 @app.post("/api/products/{product_id}/stage-publish")
@@ -11242,7 +11483,7 @@ async def stage_product_publish(product_id: str, _token: str = Depends(_auth_ses
     if review["listing_id"]:
         raise HTTPException(status_code=409, detail=f"{product_id} already has an Etsy listing ({review['listing_id']})")
 
-    taxonomy_id = _PRODUCT_TAXONOMY_BY_CATEGORY.get(review["category"])
+    taxonomy_id = await asyncio.to_thread(_resolve_category_taxonomy_id, review["category"])
     if taxonomy_id is None:
         raise HTTPException(status_code=400, detail=f"publishing isn't supported yet for category '{review['category']}'")
 
@@ -11298,6 +11539,21 @@ async def stage_product_publish(product_id: str, _token: str = Depends(_auth_ses
         _cache.pop("actions", None)
     return {"staged": True, "action_id": action_id, "product_id": product_id, "summary": summary}
 
+
+@app.post("/api/products/{product_id}/generate-listing-content")
+async def generate_product_listing_content(product_id: str, _token: str = Depends(_rate_limited_auth)):
+    """The review modal's "✨ Generate listing content" button. Writes a real,
+    grounded title/description/13 tags/price into the generated-content
+    sidecar (never the git-tracked data/{id}_listing.json) for a product
+    with no listing content yet. Costs LLM $ and writes durable state, so
+    it's rate-limited auth like every other AI-spend endpoint. Returns the
+    FRESH review payload (not just the raw generated content) so the
+    frontend can re-render in one round trip."""
+    result = await _generate_product_listing_content_core(product_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    review = await asyncio.to_thread(_gather_product_review, product_id)
+    return review
 
 
 @app.post("/api/studio/post-instagram")
@@ -13092,6 +13348,93 @@ def _write_product_catalog_override(product_id: str, updates: dict) -> None:
     tmp = _PRODUCT_CATALOG_OVERRIDES_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(overrides, indent=2))
     tmp.replace(_PRODUCT_CATALOG_OVERRIDES_PATH)
+
+
+# Same volume-or-local-data-dir pattern as _PRODUCT_CATALOG_OVERRIDES_PATH,
+# but a DISTINCT file -- this holds AI-generated listing content, never the
+# git-tracked, hand-authored data/{id}_listing.json files (see
+# _gather_product_review()'s fallback logic). The server must never write
+# to a git-tracked path at runtime -- it would vanish on the next Railway
+# redeploy (fresh git checkout) and silently diverge from git history.
+_GENERATED_LISTING_CONTENT_PATH = (
+    (_FILE_ROOTS["volume"] / "generated_listing_content.json") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "generated_listing_content.json")
+)
+
+
+def _generated_listing_content() -> dict:
+    """dict keyed by product_id -> {title, description, tags, price,
+    generated_at}. Read via the same read-with-empty-dict-fallback
+    convention as _product_catalog_overrides()."""
+    try:
+        return json.loads(_GENERATED_LISTING_CONTENT_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _write_generated_listing_content(product_id: str, content: dict) -> None:
+    """Atomic write (temp file + replace), same idiom as
+    _write_product_catalog_override()."""
+    all_content = _generated_listing_content()
+    all_content[product_id] = {**content, "generated_at": datetime.now(timezone.utc).isoformat()}
+    _GENERATED_LISTING_CONTENT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _GENERATED_LISTING_CONTENT_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(all_content, indent=2))
+    tmp.replace(_GENERATED_LISTING_CONTENT_PATH)
+
+
+async def _generate_product_listing_content_core(product_id: str, max_attempts: int = 3) -> dict:
+    """Generate grounded title/description/13 tags for product_id and save to
+    the durable sidecar. Never invents a count not in _extract_grounding_
+    facts()'s real facts; regenerates with feedback (max `max_attempts`) if
+    the model states a mismatched count. Returns {"error": str} on any
+    failure -- never raises."""
+    if not ANTHROPIC_KEY:
+        return {"error": "ANTHROPIC_API_KEY not configured"}
+    entry = _find_catalog_product(product_id)
+    if entry is None:
+        return {"error": f"unknown product_id: {product_id}"}
+    category = entry.get("category", "")
+    if category not in _CONTENT_PRICE_BY_CATEGORY:
+        return {"error": f"content generation isn't supported yet for category '{category}'"}
+    facts, problems = _extract_grounding_facts(product_id, entry)
+    if problems:
+        return {"error": "can't generate grounded content — " + "; ".join(problems)}
+
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    feedback = ""
+    last_problems: list[str] = []
+    for attempt in range(max_attempts):
+        prompt = _build_listing_content_prompt(product_id, entry, facts, feedback)
+        try:
+            response = await asyncio.wait_for(
+                asyncio.to_thread(lambda: _anthropic_create(
+                    ai_client, model=business_config.MODEL_CHEAP, max_tokens=3000,
+                    messages=[{"role": "user", "content": prompt}],
+                )), timeout=60.0)
+        except asyncio.TimeoutError:
+            return {"error": "content generation timed out"}
+        except Exception as exc:
+            return {"error": f"content generation failed: {exc}"}
+        raw = "".join(getattr(b, "text", "") for b in response.content)
+        parsed = _extract_json_object(raw)
+        if not isinstance(parsed, dict) or not all(k in parsed for k in ("title", "description", "tags")):
+            feedback = "your last response wasn't valid JSON with title/description/tags — return ONLY the JSON object"
+            continue
+        title = str(parsed["title"]).strip()
+        description = str(parsed["description"]).strip()
+        tags = [_clean_tag(t) for t in parsed.get("tags", []) if str(t).strip()]
+        last_problems = (etsy_api.check_description_count_claims(description, facts)
+                          + _check_generated_content_grounding(description, facts))
+        if not last_problems:
+            content = {"product_id": product_id, "title": title, "description": description,
+                       "tags": tags, "price": _CONTENT_PRICE_BY_CATEGORY[category]}
+            await asyncio.to_thread(_write_generated_listing_content, product_id, content)
+            return {"content": content, "attempts": attempt + 1}
+        feedback = "; ".join(last_problems)
+
+    return {"error": f"could not generate content that matches the real facts after "
+                      f"{max_attempts} attempts: {'; '.join(last_problems)}"}
 
 
 def _register_new_product_overlay(product_id: str, category: str, name: str,

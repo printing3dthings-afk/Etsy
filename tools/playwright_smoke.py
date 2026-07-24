@@ -32,6 +32,7 @@ Exit code 0 = all pass, non-zero = a regression (prints which).
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import signal
 import subprocess
@@ -699,13 +700,113 @@ async def _run_browser_checks() -> None:
             }""")
             check("haven" in review_no_content.get("body", "").lower(),
                   f"DP1031 has no dpXXXX_listing.json, review modal should say content isn't written yet: {review_no_content}")
-            check("Ask Frank to draft it" in review_no_content.get("actions", ""),
-                  f"missing content should offer the chat hand-off button, not Publish: {review_no_content}")
+            # (2026-07-25) Was "Ask Frank to draft it" -- replaced by a real
+            # generator (productReviewGenerateContent) that actually writes
+            # grounded content, not a chat hand-off dead end.
+            check("Generate listing content" in review_no_content.get("actions", ""),
+                  f"missing content should offer the real generate-content button, not Publish: {review_no_content}")
             check("Publish to Etsy" not in review_no_content.get("actions", ""),
                   f"Publish must not appear with no content: {review_no_content}")
             # Leave the DOM clean for later checks in this same page session (the
             # modal otherwise intercepts pointer events for unrelated later clicks).
             await page.evaluate("productReviewClose(); document.body.classList.remove('product-sheet-open')")
+
+            # ── "Etsy Listing" Create-screen tile (2026-07-25) -- Scott: type a
+            # product ID, jump straight into the existing review/publish pipeline.
+            # Deliberately NOT the build-panel machinery (_CREATE_CATEGORIES /
+            # buildProductRun) -- a purpose-built one-input-one-button panel that
+            # calls openProductReviewModal() directly. authGet() monkeypatch for
+            # the GET /review call (frank-sw.js intercepts GETs); page.route() for
+            # the POST /generate-listing-content call (the service worker only
+            # wraps GET, confirmed by this file's own earlier convention notes). ──
+            await page.evaluate("showScreen('create')")
+            await page.wait_for_timeout(200)
+            lookup_panel = await page.evaluate("""() => {
+                createOpenCategory('etsy_listing_lookup');
+                const panel = document.getElementById('create-detail');
+                return {
+                    tileOpen: document.querySelector('.create-choice[data-cat="etsy_listing_lookup"]').classList.contains('open'),
+                    hasEllInput: !!document.getElementById('ell-pid'),
+                    hasBuildPidInput: !!document.getElementById('bx-pid'),
+                    panelHtml: panel ? panel.innerHTML : '',
+                };
+            }""")
+            check(lookup_panel.get("tileOpen"), f"tapping the Etsy Listing tile should mark it .open: {lookup_panel}")
+            check(lookup_panel.get("hasEllInput"), f"the lookup panel must render #ell-pid: {lookup_panel}")
+            check(not lookup_panel.get("hasBuildPidInput"),
+                  f"the lookup panel must NOT reuse the build-panel's #bx-pid machinery: {lookup_panel}")
+            check("Look Up" in lookup_panel.get("panelHtml", ""), f"expected a Look Up button: {lookup_panel}")
+
+            empty_lookup = await page.evaluate("""() => {
+                document.getElementById('ell-pid').value = '';
+                ellLookup();
+                return {
+                    modalOpen: document.body.classList.contains('product-review-open'),
+                    resultHtml: document.getElementById('ell-result').innerHTML,
+                };
+            }""")
+            check(not empty_lookup.get("modalOpen"), f"an empty ID must never open the review modal: {empty_lookup}")
+            check("Enter a product ID" in empty_lookup.get("resultHtml", ""),
+                  f"an empty ID should show an inline prompt, not silently no-op: {empty_lookup}")
+
+            async def _mock_generate_content(route):
+                await route.fulfill(status=200, content_type="application/json", body=json.dumps({
+                    "product_id": "DP9042", "category": "digital_planner", "status": "draft",
+                    "listing_id": None, "has_content": True,
+                    "content": {"title": "Generated Test Title", "description": "A generated description.",
+                                "tags": ["a"] * 13, "price": 12.99},
+                    "photos": [], "deliverables": [{"name": "DP9042.pdf", "rel": "x", "exists": True}],
+                    "qc": {"verdict": "pass", "message": "ok"},
+                }))
+            await page.route("**/api/products/*/generate-listing-content", _mock_generate_content)
+
+            lookup_and_generate = await page.evaluate("""async () => {
+                window._origAuthGetEll = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/products/DP9042/review') === 0) {
+                        const payload = {
+                            product_id: 'DP9042', category: 'digital_planner', status: 'draft',
+                            listing_id: null, has_content: false, content: null,
+                            photos: [], deliverables: [{name: 'DP9042.pdf', rel: 'x', exists: true}],
+                            qc: {verdict: 'pass', message: 'ok'},
+                        };
+                        return Promise.resolve({ok: true, status: 200, json: async () => payload});
+                    }
+                    return window._origAuthGetEll(path, ms);
+                };
+                document.getElementById('ell-pid').value = 'dp9042';
+                ellLookup();
+                await new Promise(r => setTimeout(r, 300));
+                const opened = {
+                    modalOpen: document.body.classList.contains('product-review-open'),
+                    actionsHtml: document.getElementById('prm-actions').innerHTML,
+                };
+                // Fire without awaiting so the synchronous "Generating…" state is observable.
+                productReviewGenerateContent('DP9042');
+                const midFlight = {
+                    disabled: document.getElementById('prm-gen-btn') ? document.getElementById('prm-gen-btn').disabled : null,
+                    text: document.getElementById('prm-gen-btn') ? document.getElementById('prm-gen-btn').textContent : null,
+                };
+                await new Promise(r => setTimeout(r, 400));
+                const after = {
+                    bodyHtml: document.getElementById('prm-body').innerHTML,
+                    actionsHtml: document.getElementById('prm-actions').innerHTML,
+                };
+                productReviewClose();
+                window.authGet = window._origAuthGetEll;
+                return {opened, midFlight, after};
+            }""")
+            check(lookup_and_generate["opened"].get("modalOpen"),
+                  f"typing a lowercase id must uppercase + open the review modal: {lookup_and_generate}")
+            check("Generate listing content" in lookup_and_generate["opened"].get("actionsHtml", ""),
+                  f"a has_content:false product should show the generate button: {lookup_and_generate}")
+            check(lookup_and_generate["midFlight"].get("disabled") is True and "Generating" in (lookup_and_generate["midFlight"].get("text") or ""),
+                  f"the button must disable + show 'Generating…' synchronously before the mocked response resolves: {lookup_and_generate}")
+            check("Generated Test Title" in lookup_and_generate["after"].get("bodyHtml", ""),
+                  f"after generation the modal must re-render with the real generated title: {lookup_and_generate}")
+            check("Publish to Etsy" in lookup_and_generate["after"].get("actionsHtml", ""),
+                  f"once content exists (and files/QC pass) Publish should now be offered: {lookup_and_generate}")
+            await page.evaluate("document.body.classList.remove('product-review-open')")
 
             # ── Create-screen redesign (2026-07-22) -- Scott: "There is currently too
             # much on this page ... needs to be used by someone that does not know
@@ -735,10 +836,13 @@ async def _run_browser_checks() -> None:
                     soonCount: tiles.filter(t => t.classList.contains('soon')).length,
                 };
             }""")
-            check(tile_grid.get("count") == 7, f"Create screen must show exactly 7 category tiles, got: {tile_grid}")
+            # (2026-07-25) 8th tile added: "Etsy Listing" -- type a product ID,
+            # jump straight into the existing review/publish pipeline.
+            check(tile_grid.get("count") == 8, f"Create screen must show exactly 8 category tiles, got: {tile_grid}")
             check(set(tile_grid.get("cats", [])) == {
                 "digital_planner", "wall_art", "coloring_pages",
                 "sticker_pack", "svg_3dprint_pack", "sublimation", "3d_print_physical",
+                "etsy_listing_lookup",
             }, f"unexpected tile category set: {tile_grid}")
             check(tile_grid.get("soonCount") == 4, f"exactly 4 tiles should be 'coming soon', got: {tile_grid}")
             check("paper_pack" not in tile_grid.get("cats", []), "paper_pack must never appear as a tile (Scott's explicit exclusion)")
@@ -1792,7 +1896,7 @@ async def _run_browser_checks() -> None:
                 };
             }""")
             check(mobile_create.get("active") == "screen-create", f"phoneOpenScreen('create') should land on #screen-create: {mobile_create}")
-            check(mobile_create.get("tileCount") == 7, f"mobile Create screen must show all 7 tiles too: {mobile_create}")
+            check(mobile_create.get("tileCount") == 8, f"mobile Create screen must show all 8 tiles too: {mobile_create}")
 
             mobile_soon_tap = await page.evaluate("""() => {
                 document.querySelector('.create-choice[data-cat="sublimation"]').click();

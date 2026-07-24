@@ -124,23 +124,35 @@ def check_planner_pdf(path: Path, rows_add):
             rows_add("PASS", path.name, "page_count", f"{pages}pp (~{expected})")
 
 
+def sticker_zip_counts(names: list[str]) -> dict:
+    """Pure counting logic shared by check_sticker_zip() (severity judgment
+    stays there) and main.py's listing-content generator, which needs the
+    same real numbers to write grounded copy. Takes namelist() rather than a
+    Path so callers control archive-opening -- no duplicate zipfile.ZipFile
+    calls, no PIL dependency for counting alone."""
+    sheets = [n for n in names if "png_sheets/" in n and n.endswith(".png")]
+    indiv = [n for n in names if "individual_stickers/" in n and n.endswith(".png")]
+    # Legacy packs may store sheets flat (no png_sheets/ folder)
+    if not sheets:
+        sheets = [n for n in names if n.lower().endswith((".png", ".jpg")) and "/" not in n]
+    return {"sheet_count": len(sheets), "individual_sticker_count": len(indiv)}
+
+
 def check_sticker_zip(path: Path, rows_add):
     facts = gate(path, rows_add, expected_ext=".zip")
     if not facts:
         return
     with zipfile.ZipFile(path) as zf:
         names = zf.namelist()
-        sheets = [n for n in names if "png_sheets/" in n and n.endswith(".png")]
-        indiv = [n for n in names if "individual_stickers/" in n and n.endswith(".png")]
-        # Legacy packs may store sheets flat (no png_sheets/ folder)
-        if not sheets:
-            sheets = [n for n in names if n.lower().endswith((".png", ".jpg")) and "/" not in n]
+        counts = sticker_zip_counts(names)
+        sheet_count = counts["sheet_count"]
+        indiv_count = counts["individual_sticker_count"]
 
-        if len(sheets) < 5:
+        if sheet_count < 5:
             rows_add("WARN", path.name, "sheet_count",
-                     f"{len(sheets)} sheets (standard is 5+)")
+                     f"{sheet_count} sheets (standard is 5+)")
         else:
-            rows_add("PASS", path.name, "sheet_count", f"{len(sheets)} sheets")
+            rows_add("PASS", path.name, "sheet_count", f"{sheet_count} sheets")
 
         # Transparency check on the first sheet found inside png_sheets/
         png_sheet = next((n for n in names if n.endswith(".png") and "png_sheets/" in n), None)
@@ -156,21 +168,21 @@ def check_sticker_zip(path: Path, rows_add):
             rows_add("WARN", path.name, "transparency",
                      "no png_sheets/*.png to verify (legacy JPG pack — white-box risk)")
 
-        if indiv:
+        if indiv_count:
             # Below 50 is not "a smaller pack" — it's the background-removal blob
             # defect (found 2026-07-09 on DP1030-1034: 9 sheets x 1 sticker each,
             # because the sheet background was never stripped so every sheet fused
             # into a single connected component). A real, working pack never comes
             # in this low, so this is a hard FAIL, not a soft undercount warning.
-            if len(indiv) < 50:
+            if indiv_count < 50:
                 label = "FAIL"
-                detail = f"{len(indiv)} individual stickers (<50 — looks like the background-removal blob defect, not a real pack)"
-            elif len(indiv) < 200:
+                detail = f"{indiv_count} individual stickers (<50 — looks like the background-removal blob defect, not a real pack)"
+            elif indiv_count < 200:
                 label = "WARN"
-                detail = f"{len(indiv)} individual stickers (<200 target)"
+                detail = f"{indiv_count} individual stickers (<200 target)"
             else:
                 label = "PASS"
-                detail = f"{len(indiv)} individual stickers"
+                detail = f"{indiv_count} individual stickers"
             rows_add(label, path.name, "sticker_count", detail)
 
 
@@ -205,6 +217,13 @@ def check_other_zip(path: Path, rows_add):
     gate(path, rows_add, expected_ext=".zip")
 
 
+def coloring_zip_page_count(names: list[str]) -> int:
+    """Pure counting logic shared by check_coloring_zip() and main.py's
+    listing-content generator. Counts root-level PNG page files (the same
+    definition check_coloring_zip() already enforces exactly == NEW_THEME_SET_SIZE)."""
+    return len([n for n in names if n.lower().endswith(".png") and "/" not in n])
+
+
 def check_coloring_zip(path: Path, rows_add):
     """coloring_pages ZIP built via the dynamic new-theme path (Scott types
     one theme, Frank generates NEW_THEME_SET_SIZE distinct subjects and
@@ -228,13 +247,13 @@ def check_coloring_zip(path: Path, rows_add):
     # (see the `from PIL import Image` local import above).
     from tools.generate_coloring_pages import NEW_THEME_SET_SIZE
     with zipfile.ZipFile(path) as zf:
-        pages = [n for n in zf.namelist() if n.lower().endswith(".png") and "/" not in n]
-    if len(pages) != NEW_THEME_SET_SIZE:
+        page_count = coloring_zip_page_count(zf.namelist())
+    if page_count != NEW_THEME_SET_SIZE:
         rows_add("FAIL", path.name, "page_count",
-                 f"{len(pages)} individual page files (expected exactly {NEW_THEME_SET_SIZE} -- "
+                 f"{page_count} individual page files (expected exactly {NEW_THEME_SET_SIZE} -- "
                  f"the listing promises {NEW_THEME_SET_SIZE} individual coloring pages)")
     else:
-        rows_add("PASS", path.name, "page_count", f"{len(pages)} individual page files")
+        rows_add("PASS", path.name, "page_count", f"{page_count} individual page files")
 
 
 def sweep(only: str | None = None) -> list[dict]:

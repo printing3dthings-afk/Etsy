@@ -2200,6 +2200,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">🧣</div><div style="font-weight:600;margin-top:6px">Sublimation</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
         <div class="create-choice soon" data-cat="3d_print_physical" role="button" tabindex="0" onclick="createOpenCategory('3d_print_physical')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🏺</div><div style="font-weight:600;margin-top:6px">3D-Print Items</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
+        <div class="create-choice" data-cat="etsy_listing_lookup" role="button" tabindex="0" onclick="createOpenCategory('etsy_listing_lookup')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">📝</div><div style="font-weight:700;margin-top:6px">Etsy Listing</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Look up a product, generate its full listing</div></div>
       </div>
 
       <div id="create-detail"></div>
@@ -3866,6 +3868,14 @@ function _createSecondaryRowsHtml(key){
 }
 
 function _renderCategoryPanelHtml(key){
+  // etsy_listing_lookup (2026-07-25): not a build category at all -- typing
+  // an ID here jumps straight into the existing product-review/publish
+  // pipeline (openProductReviewModal()), so it deliberately skips
+  // _CREATE_CATEGORIES/the build-picker machinery below (product-code
+  // picker, description textarea, engine select, buildProductRun()) --
+  // that's all for kicking off a BUILD, not an ID lookup, and reusing it
+  // here would be more code for a worse fit.
+  if (key === 'etsy_listing_lookup') return _renderListingLookupPanelHtml();
   const cfg = _CREATE_CATEGORIES[key];
   if (!cfg) return '';
   if (!cfg.real) {
@@ -3934,6 +3944,24 @@ function _renderCategoryPanelHtml(key){
     html += '<div class="cd-advanced-body">' + secondary + '</div></div>';
   }
   return html;
+}
+
+function _renderListingLookupPanelHtml(){
+  let html = '<div style="font-weight:700;margin-bottom:4px">📝 Etsy Listing</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Type an existing product ID (e.g. DP1030, WA1032, COLOR1042) to review it, generate its listing content, and publish — nothing goes live until you approve it in the Action Center.</div>';
+  html += '<input id="ell-pid" type="text" placeholder="e.g. DP1030" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="ellLookup()">Look Up</button></div>';
+  html += '<div id="ell-result" style="margin-top:12px"></div>';
+  return html;
+}
+
+function ellLookup(){
+  const inp = document.getElementById('ell-pid');
+  const id = (inp && inp.value || '').trim().toUpperCase();
+  const result = document.getElementById('ell-result');
+  if (!id) { if (result) result.innerHTML = '<div class="hub-empty">Enter a product ID first (e.g. DP1030).</div>'; return; }
+  if (result) result.innerHTML = '';
+  openProductReviewModal({id: id, title: id});
 }
 
 function createOpenCategory(key){
@@ -8150,7 +8178,10 @@ async function openProductReviewModal(p){
   let review;
   try {
     const r = await authGet('/api/products/' + p.id + '/review', 20000);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (!r.ok) {
+      const d = await r.json().catch(()=>({}));
+      throw new Error(d.detail || ('HTTP ' + r.status));
+    }
     review = await r.json();
   } catch(e) {
     document.getElementById('prm-body').innerHTML =
@@ -8181,6 +8212,15 @@ function _renderProductReview(review){
     html += '<div class="prm-photo-grid">' + review.photos.filter(ph => ph.url).map(ph =>
       '<img src="' + ph.url + '" alt="' + escHtml(ph.name) + '" onclick="window.open(\\'' + ph.url + '\\',\\'_blank\\')">'
     ).join('') + '</div>';
+  } else if (review.category === 'wall_art' || review.category === 'coloring_pages') {
+    // (2026-07-25) Honest scope note, never a blocker -- listing photos
+    // aren't auto-generated for these categories yet (their pipelines are
+    // scene-specific, not a single product-id-only call like the planner
+    // one). Says so plainly rather than pretending it's automated.
+    const catLabel = review.category === 'wall_art' ? 'Wall Art' : 'Coloring Pages';
+    html += '<div class="prm-blocking" style="opacity:.8">ℹ️ Listing photos aren\\'t auto-generated for ' +
+      escHtml(catLabel) + ' yet — build them from the Create screen\\'s ' + escHtml(catLabel) +
+      ' panel before publishing, or publish content-only and add photos on Etsy directly.</div>';
   }
 
   html += '<div class="prm-block-title">Files</div><div>' +
@@ -8194,13 +8234,14 @@ function _renderProductReview(review){
   // Actions
   let btns = '';
   if (!review.has_content) {
-    btns += '<button class="psheet-btn primary" onclick="productReviewAskFrankToDraft(\\'' + review.product_id + '\\')">✍️ Ask Frank to draft it</button>';
+    btns += '<button class="psheet-btn primary" onclick="productReviewGenerateContent(\\'' + review.product_id + '\\')" id="prm-gen-btn">✨ Generate listing content</button>';
   } else if (review.listing_id) {
     btns += '<div class="hub-listing-meta" style="margin-bottom:2px">Etsy draft #' + escHtml(String(review.listing_id)) + ' — not yet live.</div>';
     btns += '<button class="psheet-btn primary" onclick="productReviewActivate(\\'' + review.product_id + '\\',\\'' + review.listing_id + '\\')">🚀 Activate on Etsy</button>';
   } else {
     const blocking = [];
-    if (review.category !== 'digital_planner') blocking.push('publishing isn\\'t supported yet for category "' + review.category + '"');
+    const PUBLISH_SUPPORTED_CATEGORIES = ['digital_planner', 'wall_art', 'coloring_pages'];
+    if (!PUBLISH_SUPPORTED_CATEGORIES.includes(review.category)) blocking.push('publishing isn\\'t supported yet for category "' + review.category + '"');
     if (review.qc.verdict === 'fail') blocking.push('QC gate failed: ' + review.qc.message);
     const missingFiles = review.deliverables.filter(d => !d.exists);
     if (missingFiles.length) blocking.push('missing deliverable file(s): ' + missingFiles.map(d=>d.name).join(', '));
@@ -8212,17 +8253,24 @@ function _renderProductReview(review){
   }
   actions.innerHTML = btns;
 }
-function productReviewAskFrankToDraft(productId){
-  const prompt = 'Draft the full Etsy listing content (title, description, all 13 tags, price) ' +
-    'for ' + productId + ' following the conventions in CLAUDE.md\\'s Pre-Written Listing Content ' +
-    'and Etsy Listing Format Requirements sections. Show me the draft here in chat for review ' +
-    '-- do not publish anything.';
-  productReviewClose();
-  _productGoToScreen('cmd');
-  const inp = document.getElementById('chat-input');
-  if (inp) inp.value = prompt;
-  if (typeof sendMsg === 'function') sendMsg();
-  showToast('Sent — %%AGENT_SHORT%% is drafting it. His reply will appear in the chat below.', 'info', 5000);
+async function productReviewGenerateContent(productId){
+  // (2026-07-25) Replaces the old productReviewAskFrankToDraft(), which just
+  // pasted a prompt into chat and saved nothing -- a real dead end. This
+  // calls the real generator, which writes grounded content into a durable
+  // sidecar and returns the fresh review so the modal re-renders in place.
+  const btn = document.getElementById('prm-gen-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+  try {
+    const r = await fetchWithTimeout(BASE + '/api/products/' + productId + '/generate-listing-content',
+      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN}}, 90000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    _renderProductReview(d);
+    showToast('Listing content generated — review before publishing.', 'ok', 5000);
+  } catch(e) {
+    showToast('Could not generate content: ' + (e.message||e), 'err', 7000);
+    if (btn) { btn.disabled = false; btn.textContent = '✨ Generate listing content'; }
+  }
 }
 async function productReviewPublish(productId){
   const c = (_products.find(x => x.id === productId) || {});

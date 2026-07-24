@@ -11990,3 +11990,212 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
 
 **Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpcpcvh80d/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpcpcvh80d/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpcw1kunon/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 23505). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 23507). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpzkwnuzps/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpzkwnuzps/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp07qfmgrw/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 28940). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 28942). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — "Etsy Listing" Create-screen tile: type a product ID, get a full AI-generated listing
+
+**What shipped:** Scott sent a screenshot of the Create screen's tile grid, which has one empty slot in the last row, and asked for it to become an "Etsy Listing" button: type a product ID and it creates a full Etsy listing. Confirmed via `AskUserQuestion` he wanted the real thing (a working AI content generator staged for approval), not just a UI shortcut to a mostly-nonfunctional pipeline.
+
+Research before building surfaced the existing review/publish skeleton (P1-P6, shipped earlier) was far more limited than it looked: no content generator existed anywhere (the old "Ask Frank to draft it" button just pasted a prompt into chat and saved nothing); publishing was hard-gated to `digital_planner` only (`_PRODUCT_TAXONOMY_BY_CATEGORY` had exactly one entry); and a real bug was found — `_PRODUCT_DELIVERABLE_SUFFIXES = (".pdf", "_sticker_pack.zip")` silently dropped every Wall Art (`*_print_sizes.zip`) and Coloring Pages (`coloring_*_set_NN.zip`) deliverable from the review payload, so `stage_product_publish` would always fail "no deliverable files found" for those categories even after the taxonomy gate was fixed.
+
+**What was built:**
+1. **Real fact grounding**: `qc_sweep.py`'s inline sticker/coloring-page counting logic was extracted into two pure functions (`sticker_zip_counts()`, `coloring_zip_page_count()`) so both the existing QC checks and the new generator share one source of truth for real counts, never duplicated logic.
+2. **AI content generator**: `_extract_grounding_facts()` (main.py) computes real page/sticker/coloring-page counts per product from its actual files; `_build_listing_content_prompt()` builds a category-aware prompt (digital_planner's documented 9-section template, wall_art's Gate 6 rules, a new coloring_pages template adapted from digital_planner's shape since CLAUDE.md has no dedicated one) with a hard GROUNDING RULE forbidding any count the model wasn't handed. `_generate_product_listing_content_core()` calls the LLM (same `_anthropic_create` convention as the existing autofix functions), checks the result against both the real facts and the existing upload-time `check_description_count_claims()`, and retries with the specific mismatch fed back (max 3 attempts) rather than ever saving unverified content. Price is fixed in code (`_CONTENT_PRICE_BY_CATEGORY`), never left to the model.
+3. **New durable sidecar**: `data/generated_listing_content.json` (same volume-or-local pattern as `product_catalog_overrides.json` — never the git-tracked, hand-authored `data/{id}_listing.json` files). `_gather_product_review()` now falls back to this sidecar when no hand-authored file exists; the hand-authored file always wins if both are present.
+4. **Two surgical fixes**: broadened `_PRODUCT_DELIVERABLE_SUFFIXES` to `(".pdf", ".zip")` (confirmed safe — every `.zip` in every category's real catalog entries is a genuine deliverable); extended `_PRODUCT_TAXONOMY_BY_CATEGORY` to `wall_art`/`coloring_pages` at `2078` (matching the two already-confirmed digital-download categories) with a new self-correcting `_resolve_category_taxonomy_id()` that does a one-time best-effort live-listing check per category and logs (not blocks) a mismatch — no local Etsy credentials were available in this environment to hand-verify the exact taxonomy_id, so this trades a hard manual prerequisite for a safe default plus automatic drift detection.
+5. **New endpoint**: `POST /api/products/{id}/generate-listing-content` (rate-limited auth — costs LLM $), runs the generator and returns the refreshed review payload.
+6. **Frontend**: new 8th Create-screen tile ("Etsy Listing") with a minimal purpose-built lookup panel (one input, one "Look Up" button) — deliberately not the build-panel machinery, since this jumps straight into `openProductReviewModal()` (already standalone-callable) rather than kicking off a build. The old dead-end "Ask Frank to draft it" button was replaced with a real "✨ Generate listing content" button wired to the new endpoint — fixing the same dead end for the pre-existing Products-tab tap flow too, not just the new tile. Added an honest (never-blocking) note when Wall Art/Coloring Pages have no listing photos yet, since their photo pipelines aren't a single product-id-only call the way the planner's is — explicitly scoped out of this pass rather than faked.
+
+**Tests:** `python tests/run_all.py` (76/76) — new `tests/test_listing_content_generator.py` (fact extraction against real tiny fixture PDF/ZIPs, the grounding retry-then-succeed and give-up-never-writes paths mocking `_anthropic_create`, sidecar precedence over the hand-authored file, a literal regression test reproducing the deliverable-suffix bug, taxonomy extension + `stage_product_publish` gating, endpoint auth/error gating). Caught and fixed one real regression along the way: `test_create_listing_publish_flow.py`'s `test_stage_publish_refuses_unsupported_category` asserted the *old* behavior that Wall Art always gets rejected — switched its fixture to `sublimation`, a category that's still genuinely unsupported. Also updated `playwright_smoke.py`'s tile-count assertions (7→8) and its stale "Ask Frank to draft it" assertion. 3 consecutive clean `tools/playwright_smoke.py` runs.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmp35g7cszj/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp35g7cszj/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp2l8drtii/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 4901). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 4903). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.

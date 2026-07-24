@@ -62,6 +62,12 @@ data/product_catalog_overrides.json
 # of truth.
 data/file_audit_report.json
 
+# Same pattern again -- AI-generated listing content (title/description/
+# tags/price) written by the "Etsy Listing" tile's generate-listing-content
+# endpoint. Distinct from the git-tracked, hand-authored data/{id}_listing.json
+# files -- this is runtime-generated, never the git source of truth.
+data/generated_listing_content.json
+
 # Drafted review responses (tools/review_monitor.py) and the seen-reviews
 # dedupe state -- can reference real buyer review text. 2026-07-15 security
 # audit: these were the only two data/ paths with buyer-adjacent content and
