@@ -70,6 +70,13 @@ PAGE_TOLERANCE = 8  # generated count may differ slightly from the catalog figur
 
 PRINT_SUBFOLDERS = {"2x3", "4x5", "a_series", "square"}
 
+# The 2 old fixed coloring-pages packs' real ZIP filename prefixes (2026-07-24)
+# -- build_sets() names kawaii ZIPs "coloring_set_NN.zip" and fun_basic ZIPs
+# "coloring_fun_basic_set_NN.zip"; a dynamic new-theme build always uses
+# pack=pid.lower() (e.g. "coloring_color1042_set_01.zip"), which can never
+# collide with either given the existing COLOR#### pid convention.
+_OLD_COLORING_PACK_PREFIXES = ("coloring_set_", "coloring_fun_basic_set_")
+
 
 def _rows():
     """Yield (severity, file, check, detail). severity in PASS/WARN/FAIL."""
@@ -198,6 +205,38 @@ def check_other_zip(path: Path, rows_add):
     gate(path, rows_add, expected_ext=".zip")
 
 
+def check_coloring_zip(path: Path, rows_add):
+    """coloring_pages ZIP built via the dynamic new-theme path (Scott types
+    one theme, Frank generates NEW_THEME_SET_SIZE distinct subjects and
+    packages them into exactly one ZIP -- build_coloring_product.py's
+    --description branch) must contain exactly that many individual page
+    image files. The listing copy literally promises "N individual coloring
+    pages" -- CLAUDE.md's top rule is never lie to the customer, so an
+    undercount is a hard FAIL, not a soft WARN (mirrors check_sticker_zip()'s
+    individual_stickers hard-FAIL-below-50 pattern, added after a real past
+    defect, not a hypothetical one).
+
+    Scoped to ONLY the dynamic path -- see sweep()'s dispatch, which routes
+    the 2 old fixed packs (kawaii/fun_basic) to check_other_zip() instead by
+    filename, so this assertion never false-FAILs an existing 5-page-per-ZIP
+    product."""
+    facts = gate(path, rows_add, expected_ext=".zip")
+    if not facts:
+        return
+    # Deferred import -- generate_coloring_pages.py hard-imports PIL at module
+    # level, which this module deliberately avoids until sweep() itself runs
+    # (see the `from PIL import Image` local import above).
+    from tools.generate_coloring_pages import NEW_THEME_SET_SIZE
+    with zipfile.ZipFile(path) as zf:
+        pages = [n for n in zf.namelist() if n.lower().endswith(".png") and "/" not in n]
+    if len(pages) != NEW_THEME_SET_SIZE:
+        rows_add("FAIL", path.name, "page_count",
+                 f"{len(pages)} individual page files (expected exactly {NEW_THEME_SET_SIZE} -- "
+                 f"the listing promises {NEW_THEME_SET_SIZE} individual coloring pages)")
+    else:
+        rows_add("PASS", path.name, "page_count", f"{len(pages)} individual page files")
+
+
 def sweep(only: str | None = None) -> list[dict]:
     """Run the full pre-publish QC sweep and return the raw rows
     (list of {severity, file, check, detail}). `only` filters to files whose
@@ -232,11 +271,22 @@ def sweep(only: str | None = None) -> list[dict]:
         if want(z):
             check_print_zip(z, add)
 
-    # Other deliverable ZIPs (coloring pages, digital paper)
-    for sub in ("coloring_pages/sets", "digital_paper"):
-        for z in sorted((DP_BASE / sub).glob("*.zip")):
-            if want(z):
-                check_other_zip(z, add)
+    # Coloring-pages ZIPs: the 2 old fixed packs (kawaii/fun_basic) keep the
+    # generic content-only gate (5-page batches, untouched -- Scott: leave
+    # the old packs exactly as they are); anything else in this dir is a
+    # dynamic new-theme ZIP and gets the exact-page-count hard gate.
+    for z in sorted((DP_BASE / "coloring_pages" / "sets").glob("*.zip")):
+        if not want(z):
+            continue
+        if z.stem.startswith(_OLD_COLORING_PACK_PREFIXES):
+            check_other_zip(z, add)
+        else:
+            check_coloring_zip(z, add)
+
+    # Other deliverable ZIPs (digital paper)
+    for z in sorted((DP_BASE / "digital_paper").glob("*.zip")):
+        if want(z):
+            check_other_zip(z, add)
 
     return rows
 

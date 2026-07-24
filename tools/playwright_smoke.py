@@ -973,6 +973,8 @@ async def _run_browser_checks() -> None:
                   f"Coloring Pages' new-code panel must show the subjects-description field: {new_code_affordances}")
             check("subject" in new_code_affordances.get("coloringDescPlaceholder", "").lower(),
                   f"Coloring Pages' description placeholder should explain the one-subject-per-line convention: {new_code_affordances}")
+            check("20" in new_code_affordances.get("coloringDescPlaceholder", ""),
+                  f"Coloring Pages' placeholder should promise 20 auto-generated subjects (2026-07-24): {new_code_affordances}")
 
             # Regression guard: switching from "+ new one" back to the picker
             # must clear a typed description too (not just the pid) -- a

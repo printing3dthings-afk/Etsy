@@ -113,21 +113,59 @@ def test_build_coloring_product_description_branch_bypasses_catalog_lookup():
     check(called["n"] == 0, "the --description branch must never call _catalog_lookup()")
 
 
-def test_build_coloring_product_description_caps_at_pages_per_set():
+def test_build_coloring_product_description_caps_at_new_theme_set_size():
     captured = {}
 
     def _capture(pid, subjects, engine=None):
         captured["subjects"] = subjects
         return []
 
-    many_subjects = "\n".join(f"subject {i}" for i in range(10))
+    many_subjects = "\n".join(f"subject {i}" for i in range(25))
     with patch.object(gcp, "generate_dynamic_theme_set", side_effect=_capture), \
          patch("sys.argv", ["build_coloring_product.py", "COLOR_MANY", "--description", many_subjects]), \
          patch("qc_sweep.sweep", return_value=[]), \
          patch("backup_digital_products.run"):
         bcp.main()
-    check(len(captured.get("subjects", [])) == gcp.PAGES_PER_SET,
-          f"subjects must be capped at PAGES_PER_SET ({gcp.PAGES_PER_SET}), got {len(captured.get('subjects', []))}")
+    check(len(captured.get("subjects", [])) == gcp.NEW_THEME_SET_SIZE,
+          f"subjects must be capped at NEW_THEME_SET_SIZE ({gcp.NEW_THEME_SET_SIZE}), "
+          f"got {len(captured.get('subjects', []))}")
+
+
+def test_build_sets_new_theme_batch_size_produces_one_zip():
+    with tempfile.TemporaryDirectory() as tmp:
+        pages = []
+        for i in range(gcp.NEW_THEME_SET_SIZE):
+            p = Path(tmp) / f"page_{i:02d}.png"
+            p.write_bytes(b"fake png bytes")
+            pages.append(p)
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = Path(tmp) / "sets"
+        try:
+            zip_paths = gcp.build_sets(pages, pack="colornew", batch_size=gcp.NEW_THEME_SET_SIZE)
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check(len(zip_paths) == 1, f"20 pages with batch_size=20 must produce exactly 1 ZIP, got {len(zip_paths)}")
+    check(zip_paths[0].name == "coloring_colornew_set_01.zip", f"got {zip_paths[0].name}")
+
+
+def test_build_sets_default_batch_size_unchanged_for_old_packs():
+    """Regression guard: the 2 old fixed packs (kawaii/fun_basic) must keep
+    batching at PAGES_PER_SET (5) when build_sets() is called with no
+    batch_size arg (exactly how their own rebuild path calls it) -- proves
+    this whole 20-page feature never touched their behavior."""
+    with tempfile.TemporaryDirectory() as tmp:
+        pages = []
+        for i in range(20):
+            p = Path(tmp) / f"page_{i:02d}.png"
+            p.write_bytes(b"fake png bytes")
+            pages.append(p)
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = Path(tmp) / "sets"
+        try:
+            zip_paths = gcp.build_sets(pages, pack="kawaii")
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check(len(zip_paths) == 4, f"20 pages with no batch_size arg must still produce 4 ZIPs of 5, got {len(zip_paths)}")
 
 
 def test_catalog_lookup_overlay_fallback_prefers_explicit_pack():
@@ -174,8 +212,9 @@ def run() -> None:
         sys.exit(1)
     print("COLORING DYNAMIC THEME TESTS OK — new-theme prompt construction reuses the "
           "existing style DNA, --description bypasses catalog lookup and caps at "
-          "PAGES_PER_SET, and the overlay fallback in _catalog_lookup() resolves a "
-          "previously-registered dynamic product correctly.")
+          "NEW_THEME_SET_SIZE, build_sets() batches 20 pages into 1 ZIP for the new-theme "
+          "path while old packs still batch at 5, and the overlay fallback in "
+          "_catalog_lookup() resolves a previously-registered dynamic product correctly.")
 
 
 if __name__ == "__main__":

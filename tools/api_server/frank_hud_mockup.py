@@ -3803,8 +3803,8 @@ const _CREATE_CATEGORIES = {
     // generation (usesNewArtDescription) is the separate new-code path.
     icon: '🎨', label: 'Coloring Pages', real: true, usesEngine: false,
     usesNewArtDescription: true,
-    newArtPlaceholder: 'One coloring-page subject per line (up to 5), e.g.\\nA sleepy fox curled under an oak tree\\nA hot air balloon drifting over mountains',
-    blurb: 'A themed coloring-page set, packaged and ready to sell.',
+    newArtPlaceholder: 'One general theme, e.g. "ocean animals" -- Frank turns it into 20 distinct coloring-page subjects, never repeating a subject used before.',
+    blurb: 'A themed set of 20 individual coloring pages, packaged into one ZIP and ready to sell.',
     placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
   },
   sticker_pack: {

@@ -21,13 +21,21 @@ Deliberately does NOT generate lifestyle listing photos in this one-tap flow
 separate, already category-agnostic tool exists for that).
 
 (2026-07-22) A brand-new, uncataloged pid can now also be built: pass
---description (one subject per line, up to generate_coloring_pages.PAGES_PER_SET)
+--description (subject lines, up to generate_coloring_pages.NEW_THEME_SET_SIZE)
 and this generates genuinely new coloring-page art via
 generate_dynamic_theme_set() instead of the fixed kawaii/fun_basic packs --
 see that function's own docstring. This is what makes the Create screen's
 "+ new one" flow for Coloring Pages genuinely work end-to-end instead of
 dead-ending on "not in the catalog" (Scott reported that dead end live,
 2026-07-22 -- "every action on this page has to work").
+
+(2026-07-24) main.py's coloring_pages branch now expands Scott's ONE typed
+theme into exactly NEW_THEME_SET_SIZE (20) distinct, never-before-used
+subjects itself (an LLM call, checked against a permanent cross-listing
+registry -- see main.py's _resolve_coloring_subjects()) before spawning this
+script, so --description always arrives here as 20 literal subject lines
+already. This script's own job stays unchanged: one page per line, packaged
+into one ZIP via build_sets(..., batch_size=gcp.NEW_THEME_SET_SIZE) below.
 
 Usage:  python tools/build_coloring_product.py COLOR_KAWAII_COLORING_PAGES_SET_05
         python tools/build_coloring_product.py COLOR_NEW_SET --description "A sleepy fox under an oak tree
@@ -123,7 +131,7 @@ def main() -> int:
         except Exception as exc:  # noqa: BLE001
             print(f"[build_coloring_product] ✗ coloring-pages generator unavailable: {exc}")
             return 2
-        subjects = subjects[:gcp.PAGES_PER_SET]
+        subjects = subjects[:gcp.NEW_THEME_SET_SIZE]
         if not subjects:
             print("[build_coloring_product] ✗ no subjects provided in --description")
             return 2
@@ -135,7 +143,8 @@ def main() -> int:
             generated = gcp.generate_dynamic_theme_set(pid, subjects, engine=args.engine)
             pages_ok = bool(generated)
             if generated:
-                zip_paths = gcp.build_sets(generated, pack=pid.lower())
+                zip_paths = gcp.build_sets(generated, pack=pid.lower(),
+                                            batch_size=gcp.NEW_THEME_SET_SIZE)
                 expected_stems = [z.stem for z in zip_paths]
                 print(f"[build_coloring_product] generated {len(generated)}/{len(subjects)} pages, "
                       f"{len(zip_paths)} ZIP(s)", flush=True)

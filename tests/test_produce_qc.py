@@ -297,19 +297,79 @@ def test_coloring_new_pid_no_catalog_no_description_rejected_cleanly():
 
 
 def test_coloring_new_pid_with_description_starts_generation_steps():
+    # (2026-07-24) main.py's coloring_pages branch now expands the typed theme
+    # into NEW_THEME_SET_SIZE distinct subjects itself via _resolve_coloring_subjects()
+    # -- a real Anthropic call -- before spawning the build. Mock it so this test
+    # stays a pure pre-flight/kickoff-shape check, not an integration test of the
+    # subject-generation LLM call (that's covered by test_coloring_theme_registry.py).
+    # _record_used_coloring_subjects() is left real (not mocked) here on purpose --
+    # it's cheap, synchronous local-file I/O -- but must be pointed at a throwaway
+    # registry path, never the real data/coloring_theme_registry.json sidecar.
     fake_proc = MagicMock()
     fake_proc.pid = 900002
+    fake_subjects = [f"subject {i}" for i in range(20)]
     with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
         with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
              patch.object(server.subprocess, "Popen", return_value=fake_proc):
             out = server._produce_build_product({
                 "pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages",
-                "description": "A sleepy fox under an oak tree\nA hot air balloon over mountains",
+                "description": "woodland animals",
             })
     server._LONG_RUNNING_PROCS.pop(900002, None)
-    check(out.get("started") is True, f"a new pid with subjects must start, got {out}")
+    check(out.get("started") is True, f"a new pid with a theme must start, got {out}")
     check("coloring pages (new theme)" in out.get("steps", []), f"steps must flag the new-theme path, got {out}")
     check(out.get("needs_visual_qc") is True, f"got {out}")
+
+
+def test_coloring_subject_generation_failure_blocks_build_before_spawn():
+    """_resolve_coloring_subjects() returning an error (e.g. the registry
+    couldn't produce enough non-repeating subjects, or ANTHROPIC_KEY is unset)
+    must reject the build BEFORE any subprocess spawns -- mirrors
+    test_wallart_description_with_bad_engine_rejected_before_spawning's shape."""
+    with patch.object(server, "_resolve_coloring_subjects",
+                       return_value=([], "Could only generate 3/20 distinct new subjects.")), \
+         patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages",
+            "description": "woodland animals",
+        })
+    check("error" in out and not out.get("started"),
+          f"a subject-generation failure must error without starting, got {out}")
+    check(not mock_popen.called, "a subject-generation failure must be caught BEFORE any subprocess spawns")
+
+
+def test_coloring_subjects_recorded_before_spawn():
+    """The registry reservation (_record_used_coloring_subjects) must happen
+    as part of a successful kickoff, using the exact subjects returned by
+    _resolve_coloring_subjects() -- see that function's docstring for why
+    eager (not deferred-to-success) recording is the correct tradeoff here."""
+    fake_proc = MagicMock()
+    fake_proc.pid = 900003
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    recorded = {}
+
+    def _fake_record(product_id, theme, subjects):
+        recorded["product_id"] = product_id
+        recorded["theme"] = theme
+        recorded["subjects"] = subjects
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_record_used_coloring_subjects", side_effect=_fake_record), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_RECORD_TEST_PID", "category": "coloring_pages",
+                "description": "woodland animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900003, None)
+    check(out.get("started") is True, f"got {out}")
+    check(recorded.get("product_id") == "COLOR_RECORD_TEST_PID", f"got {recorded}")
+    check(recorded.get("theme") == "woodland animals", f"got {recorded}")
+    check(recorded.get("subjects") == fake_subjects, f"got {recorded}")
 
 
 def run():

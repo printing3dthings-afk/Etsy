@@ -42,6 +42,14 @@ BASE = Path(__file__).parent.parent.resolve()
 COLORING_DIR = BASE / "data" / "digital_products" / "coloring_pages"
 SETS_DIR = COLORING_DIR / "sets"
 PAGES_PER_SET = 5
+# NEW_THEME_SET_SIZE (2026-07-24): the dynamic Scott-typed-theme path (see
+# generate_dynamic_theme_set()) always produces exactly this many pages, packaged
+# into exactly one ZIP -- deliberately a SEPARATE constant from PAGES_PER_SET,
+# which stays 5 and keeps batching the 2 old fixed kawaii/fun_basic packs into
+# 4 ZIPs each, untouched (Scott: leave the old packs exactly as they are). Do
+# not merge these two constants -- see build_sets()'s batch_size param, which is
+# how the two call sites stopped sharing one global.
+NEW_THEME_SET_SIZE = 20
 
 # ---------------------------------------------------------------------------
 # Style DNA injected into every prompt for consistency
@@ -491,14 +499,20 @@ def generate_dynamic_theme_set(product_id: str, subjects: list[str],
 # ZIP packaging
 # ---------------------------------------------------------------------------
 
-def build_sets(coloring_files: list[Path], pack: str = "kawaii") -> list[Path]:
-    """Package coloring PNGs into ZIP sets of PAGES_PER_SET."""
+def build_sets(coloring_files: list[Path], pack: str = "kawaii",
+                batch_size: int | None = None) -> list[Path]:
+    """Package coloring PNGs into ZIP sets of `batch_size` pages each. Defaults
+    to PAGES_PER_SET (5) -- the old fixed-pack behavior, unchanged. The dynamic
+    new-theme path (build_coloring_product.py) passes batch_size=
+    NEW_THEME_SET_SIZE (20) explicitly so its 20 pages land in ONE ZIP instead
+    of being sliced into 4 like the old packs."""
+    batch_size = batch_size or PAGES_PER_SET
     SETS_DIR.mkdir(parents=True, exist_ok=True)
     prefix = "coloring_set" if pack == "kawaii" else f"coloring_{pack}_set"
     zip_paths: list[Path] = []
-    for i in range(0, len(coloring_files), PAGES_PER_SET):
-        batch = coloring_files[i : i + PAGES_PER_SET]
-        set_num = (i // PAGES_PER_SET) + 1
+    for i in range(0, len(coloring_files), batch_size):
+        batch = coloring_files[i : i + batch_size]
+        set_num = (i // batch_size) + 1
         zip_path = SETS_DIR / f"{prefix}_{set_num:02d}.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for page in batch:

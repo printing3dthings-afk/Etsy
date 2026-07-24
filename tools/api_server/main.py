@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a19d4b3-v253"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f7c2e91-v254"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -10612,13 +10612,20 @@ def _produce_build_product(inp: dict) -> dict:
 
     (2026-07-22) A genuinely new wall_art/coloring_pages pid with no existing
     source art / catalog entry can now actually be BUILT, not just cleanly
-    rejected: pass `description` (free text describing the art, or for
-    coloring_pages one subject per line) and this generates real new art via
-    the same approved-engine pipeline every other AI image call in this app
-    uses, before continuing into the existing build chain. On a clean exit,
-    a background watcher thread durably registers the new product (as a
-    `status: "draft"`, never auto-published) so it shows up in Products for
-    review -- see _register_new_product_overlay()."""
+    rejected: pass `description` (free text describing the art) and this
+    generates real new art via the same approved-engine pipeline every other
+    AI image call in this app uses, before continuing into the existing
+    build chain. On a clean exit, a background watcher thread durably
+    registers the new product (as a `status: "draft"`, never auto-published)
+    so it shows up in Products for review -- see _register_new_product_overlay().
+
+    (2026-07-24) For coloring_pages specifically, `description` is now ONE
+    general theme (e.g. "ocean animals"), not literal subject lines --
+    _resolve_coloring_subjects() expands it into 20 distinct, never-before-
+    used subjects itself, checked against a permanent cross-listing registry
+    so no coloring-page subject is ever generated twice across the whole
+    catalog (Scott: "It will be a set of 20 individual coloring pages. Never
+    to repeat a creation."). Packaged into exactly one 20-page ZIP."""
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
@@ -10688,10 +10695,22 @@ def _produce_build_product(inp: dict) -> dict:
             engine, eng_err = _resolve_art_engine(inp)
             if eng_err:
                 return {"error": eng_err}
-            extra_args = ["--description", description, "--engine", engine]
+            # (2026-07-24) `description` is now ONE theme, not literal subjects -- Frank
+            # expands it into NEW_THEME_SET_SIZE (20) distinct, never-before-used subjects
+            # itself, checked against the permanent cross-listing registry -- see
+            # _resolve_coloring_subjects()'s docstring. Scott: "It will be a set of 20
+            # individual coloring pages. Never to repeat a creation."
+            subjects, subj_err = _resolve_coloring_subjects(description)
+            if subj_err:
+                return {"error": subj_err}
+            extra_args = ["--description", "\n".join(subjects), "--engine", engine]
             reg_name, reg_price = description.splitlines()[0][:120] or pid, None
-            # PAGES_PER_SET caps subjects at 5 -> always exactly one ZIP, deterministic.
+            # NEW_THEME_SET_SIZE always caps at 20 subjects -> always exactly one ZIP, deterministic.
             reg_files = [f"data/digital_products/coloring_pages/sets/coloring_{pid.lower()}_set_01.zip"]
+            # Record the reservation NOW, before the subprocess spawns -- see
+            # _record_used_coloring_subjects()'s own docstring for why eager (not
+            # deferred-to-success) is the correct tradeoff for a permanent registry.
+            _record_used_coloring_subjects(pid, description, subjects)
         script_name, log_suffix, proc_label = "build_coloring_product.py", "coloring_build", "build_coloring_product"
         steps = (["coloring pages (new theme)", "quality check"] if extra_args
                   else ["coloring pages", "quality check"])
@@ -13056,6 +13075,175 @@ def _register_new_product_overlay(product_id: str, category: str, name: str,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "source": "create_screen_new_code",
     })
+
+
+# ── Coloring-pages theme registry (2026-07-24) — Scott: "It will be a set of
+# 20 individual coloring pages. Never to repeat a creation." A permanent,
+# catalog-wide, forward-only record of every individual coloring-page SUBJECT
+# ever generated via the Create screen's dynamic new-theme path. Deliberately
+# NOT retroactively seeded with the 40 prompts the 2 old fixed kawaii/
+# fun_basic packs already reuse across all 13 live catalog listings
+# (ops_runbook.md's "all 13 real catalog products were confirmed to be
+# repackagings of those same 2 packs") -- those are explicitly out of scope
+# (Scott: leave the old packs exactly as they are), and seeding them in would
+# poison the registry with 40 already-shipped prompts on day one that were
+# never meant to count against a "never generate again" rule. Same
+# volume-or-local sidecar pattern as _PRODUCT_CATALOG_OVERRIDES_PATH above --
+# never a git-tracked file (a Railway redeploy is a fresh git checkout). ──
+
+def _normalize_subject(s: str) -> str:
+    """Lowercased, whitespace-collapsed form used for exact-match dedup
+    comparisons against the coloring-theme registry -- catches trivial
+    formatting drift (extra spaces, casing) without fuzzy/semantic matching,
+    which would need a second LLM call to judge and isn't worth the cost for
+    what's fundamentally a literal-repeat guard."""
+    return " ".join(s.strip().lower().split())
+
+
+_COLORING_THEME_REGISTRY_PATH = (
+    (_FILE_ROOTS["volume"] / "coloring_theme_registry.json") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "coloring_theme_registry.json")
+)
+
+
+def _coloring_theme_registry() -> list[dict]:
+    """Each entry: {subject, normalized, product_id, theme, created_at}.
+    Tolerant of a missing/corrupt file -- an empty registry (before the
+    first-ever dynamic build) is valid, not an error."""
+    try:
+        data = json.loads(_COLORING_THEME_REGISTRY_PATH.read_text())
+        return data if isinstance(data, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def _write_coloring_theme_registry(entries: list[dict]) -> None:
+    """Atomic write (temp file + replace) -- same pattern as
+    _write_product_catalog_override()."""
+    _COLORING_THEME_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _COLORING_THEME_REGISTRY_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(entries, indent=2))
+    tmp.replace(_COLORING_THEME_REGISTRY_PATH)
+
+
+def _record_used_coloring_subjects(product_id: str, theme: str, subjects: list[str]) -> None:
+    """Appends one registry entry per finalized subject. Called from
+    _produce_build_product()'s coloring_pages branch BEFORE the build
+    subprocess spawns -- a subject reserved for a build that later fails is
+    simply never reused again (mildly wasteful, never wrong); writing only
+    after success would leave a window where two builds kicked off close
+    together could both read an empty exclude-diff and land on the same
+    subject, which is the worse failure under a "never repeat, permanent,
+    catalog-wide" rule."""
+    registry = _coloring_theme_registry()
+    now = datetime.now(timezone.utc).isoformat()
+    for s in subjects:
+        registry.append({
+            "subject": s, "normalized": _normalize_subject(s),
+            "product_id": product_id, "theme": theme, "created_at": now,
+        })
+    _write_coloring_theme_registry(registry)
+
+
+_COLORING_SUBJECT_PROMPT = (
+    "You generate individual coloring-book PAGE SUBJECTS for an Etsy coloring-pages listing. "
+    "Given ONE general theme typed by the shop owner, invent the requested number of distinct "
+    "page subjects, each clearly on-theme, each meaningfully different from every other subject "
+    "in this batch AND from every subject in the 'already used -- never repeat these' list "
+    "(a genuinely different specific scene/subject, not just a reworded synonym of one already "
+    "used). Each subject is a short, concrete single-page scene description, 5-20 words, e.g. "
+    "'A sleepy fox curled under an oak tree'. "
+    'Respond with ONLY a JSON object of the exact shape {"subjects": ["...", "..."]} '
+    "containing exactly the requested number of strings -- no commentary, no markdown fence."
+)
+_COLORING_REGISTRY_PROMPT_CAP = 400  # most recent registry entries sent as "already used"
+# context -- the registry grows unbounded over years of use; this bounds prompt/token cost
+# while still covering everything recent. The defensive post-check in
+# _resolve_coloring_subjects() below checks the FULL registry (cheap in-memory set, no
+# token cost) so nothing older can slip through just because it aged out of this prompt
+# window -- belt-and-suspenders per CLAUDE.md: code-verified gates, not trust in AI output.
+
+
+def _generate_coloring_subjects(theme: str, exclude: list[str], count: int,
+                                 already_accepted: list[str] | None = None) -> list[str]:
+    """One Anthropic call: expand Scott's one-line theme into `count` distinct,
+    on-theme coloring-page subjects, steered away from `exclude` (recent slice
+    of the durable cross-listing registry) and from `already_accepted` (this
+    call's own earlier accepted subjects, used by _resolve_coloring_subjects()'s
+    retry pass). Returns [] on no API key / empty theme / call failure /
+    unparseable response -- caller decides what an empty result means."""
+    if not ANTHROPIC_KEY or not theme.strip() or count <= 0:
+        return []
+    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    exclude_block = "\n".join(f"- {s}" for s in exclude[-_COLORING_REGISTRY_PROMPT_CAP:]) or "(none yet)"
+    accepted_block = "\n".join(f"- {s}" for s in (already_accepted or [])) or "(none)"
+    dynamic_block = (
+        f"\n\nTHEME: {theme}\nREQUESTED COUNT: {count}\n\n"
+        f"ALREADY USED -- NEVER REPEAT THESE:\n{exclude_block}\n\n"
+        f"ALREADY ACCEPTED THIS BATCH -- must also differ from these:\n{accepted_block}"
+    )
+    try:
+        msg = _anthropic_create(
+            client, model=business_config.MODEL_CHEAP, max_tokens=2000,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": _COLORING_SUBJECT_PROMPT, "cache_control": {"type": "ephemeral"}},
+                    {"type": "text", "text": dynamic_block},
+                ],
+            }],
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"[coloring-subjects] generation call failed: {exc}", flush=True)
+        return []
+    raw = msg.content[0].text.strip()
+    parsed = _extract_json_object(raw)
+    subjects = parsed.get("subjects") if isinstance(parsed, dict) else None
+    if not isinstance(subjects, list):
+        return []
+    return [str(s).strip() for s in subjects if str(s).strip()]
+
+
+def _resolve_coloring_subjects(theme: str) -> tuple[list[str], str | None]:
+    """Turns Scott's one-line theme into exactly generate_coloring_pages.
+    NEW_THEME_SET_SIZE (20) subjects, never repeating anything in the durable,
+    catalog-wide, forward-only registry (2026-07-24, "never repeat a
+    creation"). Belt-and-suspenders: even though the prompt is given the
+    exclude list, this ALSO code-verifies every returned subject against the
+    FULL registry (normalized exact match) and silently drops anything that
+    slips past the LLM, retrying once for the shortfall. Returns
+    (subjects, error) -- error is None on success, else subjects is []."""
+    if not ANTHROPIC_KEY:
+        return [], ("Frank's AI provider isn't configured (ANTHROPIC_API_KEY unset), so it "
+                     "can't turn a theme into subjects yet.")
+    import generate_coloring_pages as gcp
+    n_needed = gcp.NEW_THEME_SET_SIZE
+    registry = _coloring_theme_registry()
+    used_normalized = {e["normalized"] for e in registry}
+    exclude_prompt = [e["subject"] for e in registry]
+    accepted: list[str] = []
+    accepted_normalized: set[str] = set()
+
+    for _attempt in range(2):  # 1 initial + 1 retry for any shortfall
+        shortfall = n_needed - len(accepted)
+        if shortfall <= 0:
+            break
+        batch = _generate_coloring_subjects(theme, exclude=exclude_prompt, count=shortfall,
+                                             already_accepted=accepted)
+        for s in batch:
+            norm = _normalize_subject(s)
+            if norm in used_normalized or norm in accepted_normalized:
+                continue  # the LLM slipped and repeated something -- drop it, don't trust it
+            accepted.append(s)
+            accepted_normalized.add(norm)
+            if len(accepted) == n_needed:
+                break
+
+    if len(accepted) < n_needed:
+        return [], (f"Could only generate {len(accepted)}/{n_needed} distinct new subjects for "
+                     f"'{theme}' without repeating something already used shop-wide. Try a "
+                     f"broader or different theme.")
+    return accepted, None
 
 
 # File-ownership index for the Files screen (2026-07-22) — lets /api/files
