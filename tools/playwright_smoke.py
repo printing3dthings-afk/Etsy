@@ -719,6 +719,34 @@ async def _run_browser_checks() -> None:
             # modal otherwise intercepts pointer events for unrelated later clicks).
             await page.evaluate("productReviewClose(); document.body.classList.remove('product-sheet-open')")
 
+            # ── Coloring-pages "stage listing photos from pack" button (2026-07-25) --
+            # Scott: COLOR1003 published with zero listing photos (no AI photo pipeline
+            # for this category); the fix stages the product's own real pack pages
+            # instead. Button must appear ONLY for coloring_pages + an existing
+            # listing_id + no photos yet -- never for wall_art (still genuinely
+            # unsupported) and never before a listing exists (nothing to stage
+            # against). Calls _renderProductReview() directly with fake review
+            # objects -- #prm-body/#prm-actions exist statically, no need to open
+            # the modal via network first.
+            color_photo_states = await page.evaluate("""() => {
+                const base = {has_content: true, content: {title: 't', description: 'd', tags: [], price: 6.99},
+                              photos: [], deliverables: [], qc: {verdict: 'pass', message: ''}};
+                _renderProductReview({...base, product_id: 'COLOR1003', category: 'coloring_pages', listing_id: 555});
+                const withListing = document.getElementById('prm-actions').innerHTML;
+                _renderProductReview({...base, product_id: 'COLOR9999', category: 'wall_art', listing_id: 555});
+                const wallArt = document.getElementById('prm-actions').innerHTML;
+                _renderProductReview({...base, product_id: 'COLOR1003', category: 'coloring_pages', listing_id: null});
+                const noListingYet = document.getElementById('prm-body').innerHTML;
+                return {withListing, wallArt, noListingYet};
+            }""")
+            check("prm-color-photo-btn" in color_photo_states.get("withListing", ""),
+                  f"a coloring_pages product with a real listing_id and no photos must offer the stage-photos button: {color_photo_states}")
+            check("prm-color-photo-btn" not in color_photo_states.get("wallArt", ""),
+                  f"wall_art must NOT get the coloring-pages-specific button: {color_photo_states}")
+            check("publish first" in color_photo_states.get("noListingYet", "").lower(),
+                  f"with no listing_id yet the info text should say publish first, not offer the button: {color_photo_states}")
+            await page.evaluate("document.body.classList.remove('product-review-open')")
+
             # ── "Etsy Listing" Create-screen tile (2026-07-25) -- Scott: type a
             # product ID, jump straight into the existing review/publish pipeline.
             # Deliberately NOT the build-panel machinery (_CREATE_CATEGORIES /

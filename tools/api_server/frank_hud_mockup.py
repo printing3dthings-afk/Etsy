@@ -8235,15 +8235,25 @@ function _renderProductReview(review){
     html += '<div class="prm-photo-grid">' + review.photos.filter(ph => ph.url).map(ph =>
       '<img src="' + ph.url + '" alt="' + escHtml(ph.name) + '" onclick="window.open(\\'' + ph.url + '\\',\\'_blank\\')">'
     ).join('') + '</div>';
-  } else if (review.category === 'wall_art' || review.category === 'coloring_pages') {
+  } else if (review.category === 'wall_art') {
     // (2026-07-25) Honest scope note, never a blocker -- listing photos
-    // aren't auto-generated for these categories yet (their pipelines are
-    // scene-specific, not a single product-id-only call like the planner
-    // one). Says so plainly rather than pretending it's automated.
-    const catLabel = review.category === 'wall_art' ? 'Wall Art' : 'Coloring Pages';
+    // aren't auto-generated for wall_art yet (its pipeline is scene-
+    // specific, not a single product-id-only call like the planner one).
+    // Says so plainly rather than pretending it's automated.
     html += '<div class="prm-blocking" style="opacity:.8">ℹ️ Listing photos aren\\'t auto-generated for ' +
-      escHtml(catLabel) + ' yet — build them from the Create screen\\'s ' + escHtml(catLabel) +
-      ' panel before publishing, or publish content-only and add photos on Etsy directly.</div>';
+      'Wall Art yet — build them from the Create screen\\'s Wall Art panel before publishing, or ' +
+      'publish content-only and add photos on Etsy directly.</div>';
+  } else if (review.category === 'coloring_pages') {
+    // (2026-07-25) Unlike wall_art, coloring_pages CAN get real listing
+    // photos with no AI pipeline needed -- the "Stage listing photos from
+    // pack" button (below, once a listing_id exists) uses the product's own
+    // real pack pages. Before publish there's no listing_id to stage
+    // against yet, so this stays informational-only until then.
+    html += '<div class="prm-blocking" style="opacity:.8">ℹ️ No listing photos yet — ' +
+      (review.listing_id
+        ? 'use the "Stage listing photos from pack" button below to add the real pack pages.'
+        : 'publish first, then stage the real pack pages as photos from this screen.') +
+      '</div>';
   }
 
   html += '<div class="prm-block-title">Files</div><div>' +
@@ -8260,6 +8270,13 @@ function _renderProductReview(review){
     btns += '<button class="psheet-btn primary" onclick="productReviewGenerateContent(\\'' + review.product_id + '\\')" id="prm-gen-btn">✨ Generate listing content</button>';
   } else if (review.listing_id) {
     btns += '<div class="hub-listing-meta" style="margin-bottom:2px">Etsy draft #' + escHtml(String(review.listing_id)) + ' — not yet live.</div>';
+    // (2026-07-25) coloring_pages has no AI listing-photo pipeline (unlike
+    // digital_planner) -- this stages the product's own real pack pages
+    // instead, so a listing published content-only isn't stuck with zero
+    // photos forever. Only offered once photos are actually missing.
+    if (review.category === 'coloring_pages' && !(review.photos && review.photos.length)) {
+      btns += '<button class="psheet-btn secondary" onclick="productReviewGenerateColoringPhotos(\\'' + review.product_id + '\\')" id="prm-color-photo-btn">📸 Stage listing photos from pack</button>';
+    }
     btns += '<button class="psheet-btn primary" onclick="productReviewActivate(\\'' + review.product_id + '\\',\\'' + review.listing_id + '\\')">🚀 Activate on Etsy</button>';
   } else {
     const blocking = [];
@@ -8275,6 +8292,34 @@ function _renderProductReview(review){
     }
   }
   actions.innerHTML = btns;
+}
+async function productReviewGenerateColoringPhotos(productId){
+  // (2026-07-25) Stages the product's own real coloring-pack pages as Etsy
+  // listing photos -- reuses the existing /api/produce/listing-photos
+  // endpoint, which now dispatches to the coloring_pages-specific path
+  // server-side (see _produce_listing_photos()'s category check). Each
+  // staged photo needs Scott's one-tap approval in the Action Center same
+  // as every other Etsy write, so this re-fetches the review (to show any
+  // now-staged photo state) and points at Approvals, mirroring
+  // productReviewPublish()'s pattern.
+  const btn = document.getElementById('prm-color-photo-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Staging…'; }
+  try {
+    const r = await fetchWithTimeout(BASE + '/api/produce/listing-photos',
+      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+       body: JSON.stringify({pid: productId})}, 60000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    if (d.error) throw new Error(d.error);
+    const r2 = await authGet('/api/products/' + productId + '/review', 20000);
+    if (r2.ok) _renderProductReview(await r2.json());
+    showToast(d.message || 'Listing photos staged for approval.', 'ok', 7000);
+    if (typeof phoneTab === 'function') phoneTab('appr');
+    if (typeof loadActions === 'function') loadActions();
+  } catch(e) {
+    showToast('Could not stage listing photos: ' + (e.message||e), 'err', 7000);
+    if (btn) { btn.disabled = false; btn.textContent = '📸 Stage listing photos from pack'; }
+  }
 }
 async function productReviewGenerateContent(productId){
   // (2026-07-25) Replaces the old productReviewAskFrankToDraft(), which just

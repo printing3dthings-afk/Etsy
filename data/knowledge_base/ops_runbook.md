@@ -12646,3 +12646,151 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Test fixture correction:** `tests/test_create_listing_publish_flow.py` had to be updated — its fixtures used bare paths like `"product_files/DPX.pdf"` and mocked `_product_file_abs_path` directly, encoding the exact same wrong assumption that caused the bug. Updated every fixture to the real prefixed shape (`"data/digital_products/product_files/DPX.pdf"`) so the mocks actually exercise the code path that runs in production.
 
 **Verification:** 2 new regression tests in `tests/test_listing_content_generator.py` reproduce the exact COLOR1003 shape (a real file on disk under a nested nonstandard path, referenced by its full prefixed catalog string) for both `_validate_staged_action` and `_execute_create_listing_staged_action`. Full suite 78/78 passed, 3x clean Playwright.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpxfrm_w4d/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpxfrm_w4d/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpo7yvvhll/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 4436). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 4438). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmp5p_i48l2/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp5p_i48l2/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpmc_vyf8x/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 6094). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 6096). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-25 — Coloring pages: stage real pack pages as Etsy listing photos (COLOR1003 had none)
+
+**Symptom (Scott, live):** COLOR1003 published successfully as an Etsy draft but had zero listing photos. Not a bug — a known, already-disclosed gap (the review modal's own info banner already said "Listing photos aren't auto-generated for Coloring Pages yet"), since the only existing AI listing-photo pipeline (`_produce_listing_photos()` / `gen_planner_listing_photos.py`) is hardcoded to digital planners only.
+
+**Scott's direction:** "You upload the images from that pack to the Etsy" — use the real individual coloring-page PNGs already inside the product's own delivered ZIP as the listing photos, not an AI-generated lifestyle mockup. Honest by construction (literally the files the customer receives).
+
+**Real wrinkle found while building this:** the existing photo-staging quality gate (`_check_no_pale_background()`, in `_validate_staged_action`'s `listing_photo` branch) hard-rejects any photo whose 4 corners average >217/255 luminance ("too pale/washed out") — meant to catch lazy/blank AI renders. A raw coloring page is white printer paper by design, so its corners are near-pure-white and would systematically fail this gate. Asked Scott directly (`AskUserQuestion`): raw pages + relax the gate for this category, vs. a composited flat-lay mockup (passes the gate unmodified, more build effort, needs the AI image engine). **Scott chose: raw pages, relax the gate.**
+
+**What shipped:**
+- `_check_no_pale_background(path, category="")` — skips the check entirely when `category == "coloring_pages"`, with a dated comment explaining why a pale background is the honest, correct look for this product type. The bypass is category-scoped, not global — confirmed with a regression test that a near-white photo still fails the gate by default and for every other category.
+- `category` threaded through `_stage_photo_action()` → the `listing_photo` staged-action payload → `_validate_staged_action`'s pale-background call, so only photos explicitly staged as `coloring_pages` skip the check.
+- New `_extract_coloring_page_images(zip_path, n)` — reuses `qc_sweep.coloring_zip_page_count()`'s exact "root-level PNG" file definition (never re-derived by hand); samples up to 10 pages evenly across the pack (not just the first 10) when there are more than Etsy's 10-photo cap.
+- New `_produce_coloring_pages_listing_photos(pid)` — resolves the real Etsy `listing_id` via `_gather_product_review()` (reused, not re-derived), finds the product's ZIP via `_catalog_file_abs_path()` (the same three-convention resolver from the file-resolution fix above), extracts real pages, and stages each via `_stage_photo_action(..., category="coloring_pages")` for Scott's one-tap approval — nothing uploads to Etsy without his approval, same as every other mutation.
+- `_produce_listing_photos()` now dispatches to the new coloring_pages path at the top (before the planner-specific lookup) — so the *existing* `generate_listing_photos` chat tool and `POST /api/produce/listing-photos` endpoint automatically do the right thing for coloring_pages, zero new tool/endpoint wiring.
+- Frontend: the Products review modal's coloring_pages branch now offers a real **"📸 Stage listing photos from pack"** button (only once a `listing_id` exists — nothing to stage against otherwise), wired to `productReviewGenerateColoringPhotos()`. `wall_art`'s photo gap is untouched (separate, still-unsupported issue, out of scope here).
+
+**Verification:** `tests/test_coloring_listing_photos.py` (new, 13 tests) — page extraction/sampling, the category-scoped gate bypass (and that it stays scoped), the core staging function's success/error paths, the `_produce_listing_photos()` dispatch, and the end-to-end `_validate_staged_action` bypass. Full suite 79/79 passed, 3x clean Playwright (new block confirms the button renders only for coloring_pages + a real listing_id, never for wall_art or before publish).
+
+**For Scott:** open COLOR1003's review card and tap "📸 Stage listing photos from pack", then approve the resulting photos in Approvals.

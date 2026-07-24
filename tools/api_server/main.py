@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c7a91f4-v261"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d4e88b0-v262"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9246,11 +9246,19 @@ _STAGED_ACTION_TYPES = (
 _EXPECTED_LISTING_PHOTO_SIZE = (2400, 2400)  # CLAUDE.md standard listing photo spec
 
 
-def _check_no_pale_background(path: Path) -> str | None:
+def _check_no_pale_background(path: Path, category: str = "") -> str | None:
     """Port of QualityGate.check_no_pale_background (business_pipeline.py) — samples the
     4 corners and rejects a washed-out/pale background (CARDINAL CHECK spirit: a listing
     photo that looks AI-blank or low-effort is always wrong). Returns an error message on
-    failure, None on pass. Hard block, not a warning -- unlike the dimension check below."""
+    failure, None on pass. Hard block, not a warning -- unlike the dimension check below.
+
+    (2026-07-25) category="coloring_pages" skips this entirely -- a printable
+    coloring page is legitimately mostly-white paper by design (that IS the
+    real, honest product; not an AI-blank/low-effort render this check exists
+    to catch). Confirmed with Scott after COLOR1003's real pack pages hit
+    exactly this false-positive rejection when staged as listing photos."""
+    if category == "coloring_pages":
+        return None
     try:
         from PIL import Image
         img = Image.open(path).convert("RGB")
@@ -9375,7 +9383,7 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             return False, f"path escapes the staged_photos root: {path}"
         if not target.is_file():
             return False, f"staged photo file not found: {path}"
-        pale_msg = _check_no_pale_background(target)
+        pale_msg = _check_no_pale_background(target, category=p.get("category", ""))
         if pale_msg:
             return False, pale_msg
         _warn_if_unexpected_photo_dimensions(target)
@@ -10093,9 +10101,15 @@ async def _refix_listing_photo(action: dict, reason: str) -> dict:
 async def _stage_photo_action(
     listing_id, rank: int, sku: str, rel_path: str, summary: str,
     physics: str, scene_prompt: str, design_paths: list, fixes_action_id: int | None = None,
+    category: str = "",
 ) -> int:
     """Validate and enqueue a listing_photo staged action. rel_path is relative to the
-    staged_photos root (e.g. 'P3D_SCULPTURAL_MESH_LAMP/photo_ab12cd34.jpg')."""
+    staged_photos root (e.g. 'P3D_SCULPTURAL_MESH_LAMP/photo_ab12cd34.jpg').
+
+    category (2026-07-25): threaded through to _validate_staged_action's
+    pale-background check, which is category-aware (coloring_pages skips it --
+    see _check_no_pale_background's docstring). Omit for every other product
+    type -- the check applies normally."""
     payload = {
         "listing_id": listing_id,
         "rank": rank,
@@ -10105,6 +10119,8 @@ async def _stage_photo_action(
         "scene_prompt": scene_prompt,
         "design_paths": design_paths,
     }
+    if category:
+        payload["category"] = category
     if fixes_action_id is not None:
         payload["fixes_action_id"] = fixes_action_id
     fake_action = {"type": "listing_photo", "payload": payload}
@@ -10505,6 +10521,90 @@ async def produce_qc_check(body: dict, _token: str = Depends(_rate_limited_auth)
     return await asyncio.to_thread(_qc_check_product, body or {})
 
 
+_MAX_COLORING_LISTING_PHOTOS = 10  # Etsy's hard per-listing photo cap
+
+
+def _extract_coloring_page_images(zip_path: Path, n: int) -> list[tuple[str, bytes]]:
+    """Pick up to n individual page images straight from a coloring-pages
+    product ZIP -- the exact "root-level PNG" file definition qc_sweep.
+    coloring_zip_page_count() already uses (reused here, not re-derived).
+    When the pack has more than n pages, samples n evenly across the whole
+    set (not just the first n) so the listing photos represent the full
+    pack. Returns (filename, bytes) pairs in page order."""
+    with zipfile.ZipFile(zip_path) as zf:
+        names = sorted(nm for nm in zf.namelist() if nm.lower().endswith(".png") and "/" not in nm)
+        if len(names) > n:
+            step = len(names) / n
+            names = [names[int(i * step)] for i in range(n)]
+        return [(name, zf.read(name)) for name in names]
+
+
+def _produce_coloring_pages_listing_photos(pid: str) -> dict:
+    """Stage up to _MAX_COLORING_LISTING_PHOTOS real individual coloring
+    pages -- straight from the product's own delivered ZIP, the exact files
+    the customer receives, never an AI-generated stand-in -- as this
+    product's Etsy listing photos. Added 2026-07-25 after COLOR1003
+    published with zero listing photos (coloring_pages has no AI photo
+    pipeline like digital_planner's) -- Scott's direct instruction was to
+    use the real pack images rather than build a lifestyle-photo pipeline.
+
+    Requires the product to already have a real Etsy listing_id (there must
+    be a listing to stage photos against) -- publish first via the Products
+    review modal, then run this."""
+    entry = _find_catalog_product(pid)
+    if entry is None:
+        return {"error": f"unknown product_id: {pid}"}
+    if entry.get("category") != "coloring_pages":
+        return {"error": f"{pid} is category '{entry.get('category')}', not coloring_pages"}
+
+    review = _gather_product_review(pid)
+    listing_id = review.get("listing_id") if review else None
+    if not listing_id:
+        return {"error": f"{pid} has no Etsy listing yet — publish it first, then stage photos"}
+
+    zip_entry = next((f for f in (entry.get("files") or [])
+                       if f.lower().endswith(".zip") and "_listing_images/" not in f), None)
+    if zip_entry is None:
+        return {"error": f"no coloring-pages ZIP found in {pid}'s catalog files"}
+    zip_path = _catalog_file_abs_path(zip_entry)
+    if zip_path is None:
+        return {"error": f"coloring-pages ZIP not found on disk: {zip_entry}"}
+
+    pages = _extract_coloring_page_images(zip_path, _MAX_COLORING_LISTING_PHOTOS)
+    if not pages:
+        return {"error": f"no individual page PNGs found in {zip_path.name}"}
+
+    staged_root = _FILE_ROOTS["staged_photos"] / pid
+    staged_root.mkdir(parents=True, exist_ok=True)
+    staged: list[dict] = []
+    stage_errors: list[dict] = []
+    for rank, (name, data) in enumerate(pages, start=1):
+        dest_name = f"page_{rank:02d}.png"
+        (staged_root / dest_name).write_bytes(data)
+        try:
+            action_id = asyncio.run(_stage_photo_action(
+                listing_id=listing_id, rank=rank, sku=pid,
+                rel_path=f"{pid}/{dest_name}",
+                summary=f"Coloring page {rank}/{len(pages)} listing photo: {pid} (from {Path(name).name})",
+                physics="", scene_prompt="", design_paths=[zip_entry],
+                category="coloring_pages",
+            ))
+            staged.append({"rank": rank, "action_id": action_id, "source": name})
+        except Exception as exc:  # noqa: BLE001
+            stage_errors.append({"rank": rank, "source": name, "error": str(exc)[:200]})
+
+    message = (
+        f"Staged {len(staged)}/{len(pages)} real coloring-page photos for {pid}'s Etsy listing "
+        f"(#{listing_id}) — review and approve in the Action Center."
+    )
+    if stage_errors:
+        message += f" {len(stage_errors)} failed to stage — see errors."
+    return {
+        "pid": pid, "listing_id": listing_id, "staged": staged,
+        "errors": stage_errors, "message": message,
+    }
+
+
 def _produce_listing_photos(inp: dict) -> dict:
     """Generate a planner's full 10-photo listing set — real, self-verifying
     AI-rendered lifestyle photos via tools/listing_photo_pipeline.py (THE
@@ -10523,10 +10623,17 @@ def _produce_listing_photos(inp: dict) -> dict:
     on the photos Scott actually looks at" gap the same audit found. Products
     with no listing_id yet (e.g. DP1030-1034, still pre-publish drafts) have
     nowhere to stage a photo update TO, so those fall back to the existing
-    Files-screen folder-drop UX unchanged."""
+    Files-screen folder-drop UX unchanged.
+
+    coloring_pages (2026-07-25): delegates entirely to
+    _produce_coloring_pages_listing_photos() -- real pack pages, not an AI
+    render, since this pipeline (below) is planner-specific."""
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030')"}
+    entry = _find_catalog_product(pid)
+    if entry and entry.get("category") == "coloring_pages":
+        return _produce_coloring_pages_listing_photos(pid)
     engine, eng_err = _resolve_art_engine(inp)
     if eng_err:
         return {"error": eng_err}
