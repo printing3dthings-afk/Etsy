@@ -179,7 +179,16 @@ def main() -> int:
             rows.extend(qc_sweep.sweep(only=stem))
         fails = [r for r in rows if r["severity"] == "FAIL"]
         warns = [r for r in rows if r["severity"] == "WARN"]
-        verdict = "FAIL" if fails else ("WARN" if warns else "PASS")
+        # (2026-07-25) Zero rows means qc_sweep matched NOTHING -- generation
+        # failed and left no ZIPs, or expected_stems was empty. The old
+        # expression turned that into a "PASS" (the exact "silently checks
+        # nothing and reports a false PASS" failure mode the docstring above
+        # warns about, just via the empty-rows path instead of the stem
+        # mismatch it guarded against). Never report PASS for zero checks.
+        if not rows:
+            verdict = "NOT CHECKED"
+        else:
+            verdict = "FAIL" if fails else ("WARN" if warns else "PASS")
         for r in fails + warns:
             print(f"  [{r['severity']}] {Path(str(r['file'])).name}: {r['check']} — {r['detail']}", flush=True)
         print(f"[build_coloring_product] QC verdict for {pid}: {verdict} "

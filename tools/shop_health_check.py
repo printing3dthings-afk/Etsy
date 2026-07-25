@@ -220,7 +220,18 @@ def check_shop(client):
     # from the raw art even when the correct art is used. The composite_smart()
     # guard in lifestyle_composite.py prevents wrong-art generation at source.
     print("\nHERO-ART AUDIT")
-    MANIFEST_PATH = ROOT / 'data/listing_image_manifest.json'
+    # (2026-07-25) Was the git-tracked repo path unconditionally -- on Railway
+    # the hash baseline reset to the committed values every redeploy, so drift
+    # detection compared against stale hashes: recurring false "hero has
+    # changed" warnings for listings that never changed, or silence about one
+    # that genuinely did. resolve_persistent_path seeds the committed baseline
+    # to the volume once; locally (no /data) behavior is unchanged.
+    from tools.api_server import db as _db
+    MANIFEST_PATH = _db.resolve_persistent_path(
+        'listing_image_manifest.json',
+        fallback=ROOT / 'data/listing_image_manifest.json',
+        seed_from=ROOT / 'data/listing_image_manifest.json',
+    )
     hero_warns    = []
     hero_hashes: dict[str, tuple[str, int]] = {}  # lid → (title_short, hash)
 
@@ -289,8 +300,12 @@ def check_shop(client):
         manifest[lid_str]['hero_checked_at'] = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     try:
         MANIFEST_PATH.write_text(json.dumps(manifest, indent=2))
-    except Exception:
-        pass
+    except Exception as exc:
+        # (2026-07-25) Was a bare `pass` -- a failed baseline write silently
+        # guaranteed the NEXT run compares against stale hashes and reports
+        # false drift. Never swallow an error that changes reported truth.
+        print(f"  ⚠  could not save hero-hash baseline to {MANIFEST_PATH}: {exc} — "
+              f"next run's drift detection will compare against stale hashes")
 
     if hero_warns:
         print(f"\n  ⚠  {len(hero_warns)} hero-art issue(s) found:")

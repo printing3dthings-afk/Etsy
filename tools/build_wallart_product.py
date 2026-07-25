@@ -90,7 +90,13 @@ def main() -> int:
         rows = list(qc_sweep.sweep(only=pid))
         fails = [r for r in rows if r["severity"] == "FAIL"]
         warns = [r for r in rows if r["severity"] == "WARN"]
-        verdict = "FAIL" if fails else ("WARN" if warns else "PASS")
+        # (2026-07-25) Zero rows = sweep matched nothing (e.g. the print-zip
+        # step failed above and left no ZIP) -- never report PASS for zero
+        # checks. Same guard as build_coloring_product.py.
+        if not rows:
+            verdict = "NOT CHECKED"
+        else:
+            verdict = "FAIL" if fails else ("WARN" if warns else "PASS")
         for r in fails + warns:
             print(f"  [{r['severity']}] {Path(str(r['file'])).name}: {r['check']} — {r['detail']}", flush=True)
         print(f"[build_wallart_product] QC verdict for {pid}: {verdict} "

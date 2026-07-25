@@ -12794,3 +12794,89 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Verification:** `tests/test_coloring_listing_photos.py` (new, 13 tests) — page extraction/sampling, the category-scoped gate bypass (and that it stays scoped), the core staging function's success/error paths, the `_produce_listing_photos()` dispatch, and the end-to-end `_validate_staged_action` bypass. Full suite 79/79 passed, 3x clean Playwright (new block confirms the button renders only for coloring_pages + a real listing_id, never for wall_art or before publish).
 
 **For Scott:** open COLOR1003's review card and tap "📸 Stage listing photos from pack", then approve the resulting photos in Approvals.
+
+
+## 2026-07-25 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Durable volume not writable
+hourly health loop found /tmp/tmp_a5_thos/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp_a5_thos/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpf5tr0tu9/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 11340). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-25 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 11342). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-25 — Full code audit sweep: 9 bugs fixed across the recurring classes (Scott: "Check all of franks code")
+
+Two thorough scans across the full in-scope surface (~47k lines) hunted the bug classes this week already produced three incidents of (ephemeral-path durability, wrong file resolver, runtime writes to git-tracked files, swallowed errors, blocking work in async routes). Findings and fixes, triage order:
+
+**P0 (was actively broken in production):** `tools/video_generator.py` and `tools/ai_video.py` wrote generated videos to the hardcoded ephemeral repo dir, while commit f6a78c7 had moved the READ side (`_FILE_ROOTS["videos"]`: Studio list, Instagram/Facebook posting) to the durable volume — so on the hosted deploy a generated video never appeared in the Studio sidebar and social posting 404'd on it. Both write sides now resolve via the identical HUB_FILES_DIR-or-/data detection main.py uses (and `ai_video.py`'s path is now repo-anchored instead of cwd-relative). Regression test asserts write == read path *exactly*, not just volume-nesting.
+
+**P1:** `tools/post_scheduled_art.py` wrote scheduler state (next_post_date/subjects_used/post_history) back to the git-tracked `data/art_schedule.json` — every redeploy reset it to the committed June values, so the daily art scheduler would think it was overdue and regenerate already-used subjects (duplicate-listing risk). Now resolved via `db.resolve_persistent_path(..., seed_from=...)`, which migrates the committed state to the volume on first run.
+
+**P2:** `tools/build_coloring_product.py` and `tools/build_wallart_product.py` computed the QC verdict as PASS when `qc_sweep.sweep()` matched zero files — so a failed generation logged `DONE: pages=✗ qc=PASS` (the exact false-PASS failure mode build_coloring_product's own docstring warns about, via the empty-rows path its guard missed). Zero rows now reports "NOT CHECKED", never PASS.
+
+**P3:** `tools/trash.py`'s vault was the hardcoded repo dir — on Railway, runtime archives (main.py archiving a deleted todo/allowed-folder, the SOLE copy between delete and restore) vanished on redeploy, silently defeating the "nothing deleted is unrecoverable" guarantee. Vault now resolves to the volume on the hosted runtime; local repo behavior (committed vault, CLAUDE.md's model) unchanged.
+
+**P4:** `tools/shop_health_check.py` wrote the hero-image hash baseline to the git-tracked manifest inside `except Exception: pass` — on Railway the baseline reset every redeploy, producing recurring false "hero has changed" warnings (or silence about a real change), and a failed write was invisible. Now durable via `resolve_persistent_path` with seeding, and a write failure prints a visible warning.
+
+**P5:** Event-loop hygiene in `main.py`: `studio_list_videos`'s glob+stat, `stage_photo`/`stage_video`'s up-to-30MB synchronous writes (and rollback unlinks), plus minor mkdir/stat/write_text in three studio routes, all moved off the event loop via the established `_scan()`/`_write()`+`to_thread` shape. Dated comments added at the two `asyncio.run(_stage_photo_action)` sites explaining exactly why they're safe today and what would break them.
+
+**P6:** `_validate_staged_action`'s create_listing at-approval re-check was the last caller still passing the old prefix-only `_product_file_exists` (harmless today — only listing_id is read off the result — but the same landmine class as COLOR1003). Switched to `_catalog_file_exists`; that bug class is now fully closed.
+
+**Found but deliberately not fixed (follow-up candidates for Scott):** test-coverage gaps — the relay/WebSocket subsystem (biggest; it executes commands on Scott's machine), voice endpoints, studio/social routes, auth admin surface; ~20k lines of orphaned tools/*.py (led by art_creation_tools.py at 5,178 lines) that could be archived; minor accepted noise (listing_manifest.json stamps, review_batches/ reports, tracked image_cache/ JPGs, _zip_entries returning [] for a corrupt ZIP).
+
+**Verification:** new `tests/test_audit_sweep_fixes.py` (12 tests, one literal regression per finding, including first-ever coverage for the stage-photo and studio-videos routes). Full suite 80/80 passed, 3x clean Playwright.

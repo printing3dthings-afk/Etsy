@@ -81,7 +81,18 @@ def _resolve_dp_base() -> Path:
 
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-SCHEDULE_PATH  = str(_ROOT / "data" / "art_schedule.json")
+# (2026-07-25) SCHEDULE_PATH was the git-tracked repo file unconditionally.
+# save_schedule() writes next_post_date/subjects_used/post_history back after
+# every run -- on Railway that file resets to the committed June values on
+# every redeploy, so the scheduler thought it was overdue and would regenerate
+# already-used subjects (duplicate listings). resolve_persistent_path's
+# seed_from migrates the committed file's current state to the volume on the
+# first durable run; locally (no /data) behavior is unchanged.
+SCHEDULE_PATH  = str(_db.resolve_persistent_path(
+    "art_schedule.json",
+    fallback=_ROOT / "data" / "art_schedule.json",
+    seed_from=_ROOT / "data" / "art_schedule.json",
+))
 ART_DIR        = str(_resolve_dp_base() / "product_files")
 LOG_DIR        = str(_ROOT / "logs")
 OPENAI_KEY     = os.environ.get('OPENAI_API_KEY', '')

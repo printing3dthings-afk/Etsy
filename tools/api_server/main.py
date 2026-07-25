@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d4e88b0-v262"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f2c07a5-v263"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9484,7 +9484,11 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             if entry is None:
                 return False, f"product {product_id} no longer exists in the catalog"
             overrides = _product_catalog_overrides()
-            current = _build_products_status([entry], _product_file_exists, overrides)[0]
+            # (2026-07-25) _catalog_file_exists, not the older prefix-only
+            # _product_file_exists -- this was the last caller still passing
+            # the old resolver (harmless here since only listing_id is read,
+            # but the COLOR1003 incident showed how these landmines go off).
+            current = _build_products_status([entry], _catalog_file_exists, overrides)[0]
             if current.get("listing_id"):
                 return False, (
                     f"product {product_id} already has an Etsy listing "
@@ -10176,9 +10180,17 @@ async def stage_photo(
 
     safe_sku = _re.sub(r"[^A-Za-z0-9_.-]", "_", sku) or "unknown"
     out_dir = _FILE_ROOTS["staged_photos"] / safe_sku
-    out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"photo_{uuid.uuid4().hex[:8]}.jpg"
-    out_path.write_bytes(body)
+
+    # (2026-07-25) Up to _MAX_UPLOAD_BYTES (30 MB) written synchronously to
+    # the network volume, previously inline on the event loop -- blocks every
+    # other request while it runs. Same _write()+to_thread shape as
+    # upload_to_volume below; the rollback unlink goes off-loop too.
+    def _write() -> None:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(body)
+
+    await asyncio.to_thread(_write)
 
     try:
         action_id = await _stage_photo_action(
@@ -10192,7 +10204,7 @@ async def stage_photo(
             design_paths=design_paths_list,
         )
     except ValueError as exc:
-        out_path.unlink(missing_ok=True)
+        await asyncio.to_thread(lambda: out_path.unlink(missing_ok=True))
         raise HTTPException(status_code=422, detail=str(exc))
     return {"action_id": action_id, "path": f"{safe_sku}/{out_path.name}"}
 
@@ -10215,9 +10227,15 @@ async def stage_video(
         raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
 
     out_dir = _FILE_ROOTS["staged_videos"] / str(listing_id)
-    out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"video_{uuid.uuid4().hex[:8]}.mp4"
-    out_path.write_bytes(body)
+
+    # (2026-07-25) Same off-loop write as stage_photo above -- a 30 MB video
+    # written synchronously on the event loop blocked every other request.
+    def _write() -> None:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(body)
+
+    await asyncio.to_thread(_write)
 
     try:
         action_id = await _stage_video_action(
@@ -10227,7 +10245,7 @@ async def stage_video(
             rank=rank,
         )
     except ValueError as exc:
-        out_path.unlink(missing_ok=True)
+        await asyncio.to_thread(lambda: out_path.unlink(missing_ok=True))
         raise HTTPException(status_code=422, detail=str(exc))
     return {"action_id": action_id, "path": f"{listing_id}/{out_path.name}"}
 
@@ -10400,9 +10418,13 @@ async def studio_convert_svg(request: Request, mode: str = "color", _token: str 
     quality = etsy_api.check_svg_quality(svg_text)
 
     root = _FILE_ROOTS["svg_conversions"]
-    root.mkdir(parents=True, exist_ok=True)
     out_name = f"{uuid.uuid4().hex[:8]}_{mode}.svg"
-    (root / out_name).write_text(svg_text, encoding="utf-8")
+
+    def _save() -> None:
+        root.mkdir(parents=True, exist_ok=True)
+        (root / out_name).write_text(svg_text, encoding="utf-8")
+
+    await asyncio.to_thread(_save)
 
     return {
         "ok": True,
@@ -10447,7 +10469,7 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
         design_paths.append(p)
 
     out_root = _FILE_ROOTS["lifestyle_photos"]
-    out_root.mkdir(parents=True, exist_ok=True)
+    await asyncio.to_thread(lambda: out_root.mkdir(parents=True, exist_ok=True))
     out_name = f"{uuid.uuid4().hex[:8]}_lifestyle.jpg"
     out_path = out_root / out_name
 
@@ -10582,6 +10604,11 @@ def _produce_coloring_pages_listing_photos(pid: str) -> dict:
         dest_name = f"page_{rank:02d}.png"
         (staged_root / dest_name).write_bytes(data)
         try:
+            # asyncio.run here is safe ONLY because this sync function always
+            # runs off the event loop (dispatched via asyncio.to_thread), so
+            # it spins a fresh loop on the worker thread. It would deadlock/
+            # break if _stage_photo_action ever awaited something bound to
+            # the main server loop (today it only awaits its own to_thread).
             action_id = asyncio.run(_stage_photo_action(
                 listing_id=listing_id, rank=rank, sku=pid,
                 rel_path=f"{pid}/{dest_name}",
@@ -10672,6 +10699,8 @@ def _produce_listing_photos(inp: dict) -> dict:
                 summary = f"AI listing photo {rank}/10 ({p['slot']}): {pid}"
                 if p.get("realism_issues"):
                     summary += " ⚠ realism notes"
+                # Same asyncio.run-on-a-worker-thread caveat as
+                # _produce_coloring_pages_listing_photos above.
                 action_id = asyncio.run(_stage_photo_action(
                     listing_id=listing_id, rank=rank, sku=pid,
                     rel_path=f"{pid}/{p['filename']}", summary=summary,
@@ -11352,31 +11381,39 @@ async def studio_generate_video(body: dict, _token: str = Depends(_rate_limited_
         print(f"studio_generate_video error: {type(exc).__name__}: {exc}", flush=True)
         raise HTTPException(status_code=500, detail=f"Video generation failed: {type(exc).__name__}: {str(exc)[:200]}")
 
+    size = await asyncio.to_thread(lambda: out_path.stat().st_size)
     return {
         "ok": True,
         "path": out_path.name,
-        "size": out_path.stat().st_size,
-        "size_human": _human_size(out_path.stat().st_size),
+        "size": size,
+        "size_human": _human_size(size),
     }
 
 
 @app.get("/api/studio/videos")
 async def studio_list_videos(_token: str = Depends(_auth_session_or_bearer)):
     """List generated videos under data/social/videos/ for the Studio sidebar."""
-    root = _FILE_ROOTS["videos"]
-    files = []
-    if root.exists():
-        for p in sorted(root.glob("*.mp4")):
-            stat = p.stat()
-            files.append({
-                "path": p.name,
-                "root": "videos",
-                "size": stat.st_size,
-                "size_human": _human_size(stat.st_size),
-                "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
-            })
-    files.sort(key=lambda f: f["modified"], reverse=True)
-    return {"videos": files}
+    # (2026-07-25) glob + per-file stat() ran inline in the async body -- real
+    # filesystem I/O against large files on a network volume, blocking the
+    # whole single-process server. Same _scan()+to_thread shape list_files()
+    # already uses.
+    def _scan() -> list[dict]:
+        root = _FILE_ROOTS["videos"]
+        files = []
+        if root.exists():
+            for p in sorted(root.glob("*.mp4")):
+                stat = p.stat()
+                files.append({
+                    "path": p.name,
+                    "root": "videos",
+                    "size": stat.st_size,
+                    "size_human": _human_size(stat.st_size),
+                    "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                })
+        files.sort(key=lambda f: f["modified"], reverse=True)
+        return files
+
+    return {"videos": await asyncio.to_thread(_scan)}
 
 
 _PRODUCT_FILES_PREFIX = "data/digital_products/"
