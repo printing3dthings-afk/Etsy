@@ -12880,3 +12880,113 @@ Two thorough scans across the full in-scope surface (~47k lines) hunted the bug 
 **Found but deliberately not fixed (follow-up candidates for Scott):** test-coverage gaps — the relay/WebSocket subsystem (biggest; it executes commands on Scott's machine), voice endpoints, studio/social routes, auth admin surface; ~20k lines of orphaned tools/*.py (led by art_creation_tools.py at 5,178 lines) that could be archived; minor accepted noise (listing_manifest.json stamps, review_batches/ reports, tracked image_cache/ JPGs, _zip_entries returning [] for a corrupt ZIP).
 
 **Verification:** new `tests/test_audit_sweep_fixes.py` (12 tests, one literal regression per finding, including first-ever coverage for the stage-photo and studio-videos routes). Full suite 80/80 passed, 3x clean Playwright.
+
+
+## 2026-07-25 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Durable volume not writable
+hourly health loop found /tmp/tmphxhm142m/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmphxhm142m/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp56d6a661/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 32203). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-25 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 32205). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+---
+
+## 2026-07-25 — tools/*.py orphan cleanup: only 1 of ~20 flagged files was real
+
+Following the full code audit, Scott asked to clean up the ~20,000 lines of
+`tools/*.py` the audit's inventory scan had flagged as orphaned (led by
+`art_creation_tools.py`, 5,178 lines). That scan only checked for direct
+`import`/`subprocess` hits inside `main.py`, which misses transitive imports
+(a script reached only through another script `main.py` does invoke), CI
+workflow-only invocation, and documented manual/operator entrypoints
+(CLAUDE.md prose, runtime error messages) — the same blind spot that
+already produced 3 false positives elsewhere this session
+(`playwright_smoke.py`, `rollback.py`, `build_wallart_product.py`, all
+confirmed in active use).
+
+A dedicated re-verification pass checked every file directly under `tools/`
+against `main.py`, cross-references from other `tools/*.py` files,
+CLAUDE.md, all 4 CI workflow files, `tests/*.py`, and this runbook's own
+2026-07-11 decluttering history (which already documents one file,
+`gen_room_library.py`, that was trashed and then explicitly restored after
+being wrongly judged orphaned).
+
+**Result: only `tools/health_check.py` (372 lines) was genuinely orphaned** —
+zero references anywhere, superseded by `shop_health_check.py` (which IS
+wired into `_EXEC_COMMANDS` and CLAUDE.md's automation table) plus main.py's
+own built-in health loop. Archived via `tools/trash.py` (`archive_file()`,
+id `20260725-001`), fully recoverable via
+`python tools/trash.py --restore 20260725-001`.
+
+Everything else the scan flagged — including `art_creation_tools.py` itself
+— turned out to have a real, verifiable reference once transitive imports
+were traced (`art_creation_tools.py` ← `build_wallart_product.py:69` ←
+`main.py:11131` subprocess call). 9 further files were flagged AMBIGUOUS
+(a real but only-transitive reference through an already-dead file, or a
+possibly-still-manual workflow tool) and deliberately left untouched pending
+Scott's explicit go-ahead per file: `gen_room_library.py`,
+`competitor_intel.py`, `etsy_listing_tools.py`, `fetch_market_examples.py`,
+`pinterest_batch_poster.py`, `pinterest_post_queue.py`,
+`gen_lifestyle_scene.py`, `gen_sticker_listing_photos.py`,
+`approve_listing.py`.
+
+**Lesson for future cleanup sweeps:** a naive `main.py`-only reference scan
+is not a safe basis for deletion in this codebase — always trace transitive
+imports through other `tools/*.py` files and check CI workflows + CLAUDE.md
+prose before archiving anything flagged as "orphaned."

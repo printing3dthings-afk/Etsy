@@ -6,196 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260623-001 date=2026-06-23 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="dead CSS: old voice-widget mic UI (.wave-row/.mic-circle/.vw-sub/.vw-tap/.focus-btn) — replaced by QUICK COMMANDS buttons + bottom talk-pill; no HTML uses these" -->
-## 20260623-001 · 2026-06-23 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** dead CSS: old voice-widget mic UI (.wave-row/.mic-circle/.vw-sub/.vw-tap/.focus-btn) — replaced by QUICK COMMANDS buttons + bottom talk-pill; no HTML uses these  
-**Payload:** `data/trash/files/20260623-001__snippet.txt`
-
-```python
-.wave-row{display:flex;align-items:center;justify-content:center;gap:3px;height:22px;margin-bottom:10px}
-.wave-row span{width:3px;background:var(--cyan);border-radius:2px;animation:wave 1.1s ease-in-out infinite}
-.mic-circle{width:78px;height:78px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;
-  justify-content:center;cursor:pointer;background:radial-gradient(circle,rgba(58,214,255,.18),transparent 70%);
-  border:2px solid rgba(58,214,255,.5);font-size:26px;color:var(--cyan2);
-  box-shadow:0 0 22px rgba(58,214,255,.35), inset 0 0 18px rgba(58,214,255,.15)}
-.mic-circle.live{animation:micpulse 1.2s ease-in-out infinite}
-.voice-widget .vw-sub{font-size:10px;color:var(--muted);margin-bottom:2px}
-.voice-widget .vw-tap{font-size:11px;color:var(--cyan2);letter-spacing:1px;font-weight:700}
-.focus-btn{margin-top:12px;width:100%;background:transparent;border:1px solid var(--border);
-  color:var(--muted);border-radius:20px;padding:8px;font-size:10.5px;letter-spacing:.5px;cursor:pointer}
-.focus-btn.on{color:var(--amber);border-color:rgba(224,168,58,.5);background:rgba(224,168,58,.08)}
-```
-
-<!-- /TRASH 20260623-001 -->
-
-<!-- TRASH id=20260623-002 date=2026-06-23 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="dead CSS: @keyframes micpulse — only used by now-removed .mic-circle.live" -->
-## 20260623-002 · 2026-06-23 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** dead CSS: @keyframes micpulse — only used by now-removed .mic-circle.live  
-**Payload:** `data/trash/files/20260623-002__snippet.txt`
-
-```python
-@keyframes micpulse{0%,100%{box-shadow:0 0 22px rgba(58,214,255,.35), inset 0 0 18px rgba(58,214,255,.15)}
-  50%{box-shadow:0 0 34px rgba(122,232,255,.6), inset 0 0 22px rgba(122,232,255,.3)}}
-```
-
-<!-- /TRASH 20260623-002 -->
-
-<!-- TRASH id=20260623-003 date=2026-06-23 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="dead CSS: .col-quick — never applied to any HTML element" -->
-## 20260623-003 · 2026-06-23 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** dead CSS: .col-quick — never applied to any HTML element  
-**Payload:** `data/trash/files/20260623-003__snippet.txt`
-
-```python
-.col-quick{flex:0.85}
-```
-
-<!-- /TRASH 20260623-003 -->
-
-<!-- TRASH id=20260623-004 date=2026-06-23 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="dead JS: openDrawer() — never called (hamburger uses toggleDrawer, backdrop uses closeDrawer)" -->
-## 20260623-004 · 2026-06-23 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** dead JS: openDrawer() — never called (hamburger uses toggleDrawer, backdrop uses closeDrawer)  
-**Payload:** `data/trash/files/20260623-004__snippet.txt`
-
-```python
-function openDrawer(){ document.body.classList.add('drawer-open'); }
-```
-
-<!-- /TRASH 20260623-004 -->
-
-<!-- TRASH id=20260623-005 date=2026-06-23 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="dead JS: #focus-toggle handler — no element with id 'focus-toggle' exists in the HTML" -->
-## 20260623-005 · 2026-06-23 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** dead JS: #focus-toggle handler — no element with id 'focus-toggle' exists in the HTML  
-**Payload:** `data/trash/files/20260623-005__snippet.txt`
-
-```python
-// ── Focus mode toggle (visual only; element only present when the voice widget is shown) ──
-const focusToggle = document.getElementById('focus-toggle');
-if(focusToggle) focusToggle.addEventListener('click', function(){
-  this.classList.toggle('on');
-  this.textContent = this.classList.contains('on') ? 'FOCUS MODE: ON' : 'FOCUS MODE: OFF';
-});
-```
-
-<!-- /TRASH 20260623-005 -->
-
-<!-- TRASH id=20260624-001 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
-## 20260624-001 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
-**Payload:** `data/trash/files/20260624-001__snippet.txt`
-
-```python
-.drawer-toggle{display:none}
-.drawer-search{display:none}
-#drawer-backdrop{display:none}
-```
-
-<!-- /TRASH 20260624-001 -->
-
-<!-- TRASH id=20260624-002 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
-## 20260624-002 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
-**Payload:** `data/trash/files/20260624-002__snippet.txt`
-
-```python
-  .drawer-toggle{display:flex}
-```
-
-<!-- /TRASH 20260624-002 -->
-
-<!-- TRASH id=20260624-003 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
-## 20260624-003 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
-**Payload:** `data/trash/files/20260624-003__snippet.txt`
-
-```python
-  #drawer-backdrop{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;
-  }
-  body.drawer-open #drawer-backdrop{display:block}
-```
-
-<!-- /TRASH 20260624-003 -->
-
-<!-- TRASH id=20260624-004 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
-## 20260624-004 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
-**Payload:** `data/trash/files/20260624-004__snippet.txt`
-
-```python
-    <input class="search drawer-search" placeholder="Search listings, orders, tools, knowledge base…">
-```
-
-<!-- /TRASH 20260624-004 -->
-
-<!-- TRASH id=20260624-005 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
-## 20260624-005 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
-**Payload:** `data/trash/files/20260624-005__snippet.txt`
-
-```python
-  <div id="drawer-backdrop"></div>
-```
-
-<!-- /TRASH 20260624-005 -->
-
-<!-- TRASH id=20260624-006 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
-## 20260624-006 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
-**Payload:** `data/trash/files/20260624-006__snippet.txt`
-
-```python
-  <div id="drawer-backdrop"></div>
-```
-
-<!-- /TRASH 20260624-006 -->
-
-<!-- TRASH id=20260624-007 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced fake System Monitor placeholder (hardcoded conic-gradient CPU/RAM/DISK gauges, zero backend) with real Dependency Health panel backed by /api/system/dependencies" -->
-## 20260624-007 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Replaced fake System Monitor placeholder (hardcoded conic-gradient CPU/RAM/DISK gauges, zero backend) with real Dependency Health panel backed by /api/system/dependencies  
-**Payload:** `data/trash/files/20260624-007__snippet.txt`
-
-```python
-        <div class="panel brk col-sysmon">
-          <div class="panel-title">System Monitor <span class="src">server stats</span></div>
-          <div class="gauge-row">
-            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 22%, var(--border) 22% 100%)"></div><div class="inner"><div class="num">22%</div><div class="lab">CPU</div></div></div>
-            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 54%, var(--border) 54% 100%)"></div><div class="inner"><div class="num">54%</div><div class="lab">RAM</div></div></div>
-            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 40%, var(--border) 40% 100%)"></div><div class="inner"><div class="num">40%</div><div class="lab">DISK</div></div></div>
-          </div>
-        </div>
-```
-
-<!-- /TRASH 20260624-007 -->
-
-<!-- TRASH id=20260624-008 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Orphaned .gauge/.gauge-row/.ring CSS — only consumer was the removed fake System Monitor gauge markup" -->
-## 20260624-008 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Orphaned .gauge/.gauge-row/.ring CSS — only consumer was the removed fake System Monitor gauge markup  
-**Payload:** `data/trash/files/20260624-008__snippet.txt`
-
-```python
-.gauge-row{display:flex;gap:10px;flex:1;align-items:center;justify-content:space-around}
-.gauge{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  position:relative;flex-shrink:0}
-.gauge .ring{position:absolute;inset:0;border-radius:50%}
-.gauge .inner{position:relative;width:56px;height:56px;border-radius:50%;background:var(--panel2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center}
-.gauge .inner .num{font-size:13px;font-weight:700;color:var(--cyan2)}
-.gauge .inner .lab{font-size:8px;color:var(--muted);letter-spacing:.5px}
-```
-
-<!-- /TRASH 20260624-008 -->
-
-<!-- TRASH id=20260624-009 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Dead topbar icon — no handler, no discoverable intent anywhere in the codebase; removed per Scott's 2026-06-24 audit decision" -->
-## 20260624-009 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Dead topbar icon — no handler, no discoverable intent anywhere in the codebase; removed per Scott's 2026-06-24 audit decision  
-**Payload:** `data/trash/files/20260624-009__snippet.txt`
-
-```python
-<div class="icon-btn">▦</div>
-```
-
-<!-- /TRASH 20260624-009 -->
-
 <!-- TRASH id=20260625-001 date=2026-06-25 kind=snippet source="tools/api_server/main.py" reason="Dead endpoint - zero callers found anywhere in the codebase (Frank, Hub _WEB_UI, or any tools/ script); superseded by /api/analytics which returns a superset of the same data. Removed per audit decision 2026-06-25." -->
 ## 20260625-001 · 2026-06-25 · snippet · `tools/api_server/main.py`
 **Reason:** Dead endpoint - zero callers found anywhere in the codebase (Frank, Hub _WEB_UI, or any tools/ script); superseded by /api/analytics which returns a superset of the same data. Removed per audit decision 2026-06-25.  
@@ -218,7 +28,6 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
 ```
 
 <!-- /TRASH 20260625-001 -->
-
 <!-- TRASH id=20260701-001 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: replaced mrow flex rows with col-left/col-center/col-right CSS grid" -->
 ## 20260701-001 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v83 3-column layout: replaced mrow flex rows with col-left/col-center/col-right CSS grid  
@@ -233,7 +42,6 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
 ```
 
 <!-- /TRASH 20260701-001 -->
-
 <!-- TRASH id=20260701-002 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: old rowA column sizes replaced by new column-context flex rules" -->
 ## 20260701-002 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v83 3-column layout: old rowA column sizes replaced by new column-context flex rules  
@@ -247,7 +55,6 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
 ```
 
 <!-- /TRASH 20260701-002 -->
-
 <!-- TRASH id=20260701-003 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: old rowB column sizes replaced by new column-context flex rules" -->
 ## 20260701-003 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v83 3-column layout: old rowB column sizes replaced by new column-context flex rules  
@@ -260,7 +67,6 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
 ```
 
 <!-- /TRASH 20260701-003 -->
-
 <!-- TRASH id=20260701-004 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: old rowC column sizes replaced by new column-context flex rules" -->
 ## 20260701-004 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v83 3-column layout: old rowC column sizes replaced by new column-context flex rules  
@@ -274,7 +80,6 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
 ```
 
 <!-- /TRASH 20260701-004 -->
-
 <!-- TRASH id=20260702-001 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead mem-canvas code, element removed in v85" -->
 ## 20260702-001 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead mem-canvas code, element removed in v85  
@@ -303,7 +108,6 @@ function drawMem(points){
 ```
 
 <!-- /TRASH 20260702-001 -->
-
 <!-- TRASH id=20260702-002 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead updateMemoryWidget, mem-stat-memories/turns elements removed in v85" -->
 ## 20260702-002 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead updateMemoryWidget, mem-stat-memories/turns elements removed in v85  
@@ -320,7 +124,6 @@ function updateMemoryWidget(d) {
 ```
 
 <!-- /TRASH 20260702-002 -->
-
 <!-- TRASH id=20260702-003 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead isControlCenterOpen — no callers remain" -->
 ## 20260702-003 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead isControlCenterOpen — no callers remain  
@@ -331,7 +134,6 @@ function isControlCenterOpen(){ return document.body.classList.contains('cc-open
 ```
 
 <!-- /TRASH 20260702-003 -->
-
 <!-- TRASH id=20260702-004 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead openControlCenter — no callers remain" -->
 ## 20260702-004 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead openControlCenter — no callers remain  
@@ -342,7 +144,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-004 -->
-
 <!-- TRASH id=20260702-005 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead .orb-col CSS — element removed" -->
 ## 20260702-005 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead .orb-col CSS — element removed  
@@ -353,7 +154,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-005 -->
-
 <!-- TRASH id=20260702-006 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead .orb-hero CSS — element removed" -->
 ## 20260702-006 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead .orb-hero CSS — element removed  
@@ -368,7 +168,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-006 -->
-
 <!-- TRASH id=20260702-007 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead .mem-row/.mem-canvas-wrap/.mem-stats/.mem-stat CSS — elements removed in v85" -->
 ## 20260702-007 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead .mem-row/.mem-canvas-wrap/.mem-stats/.mem-stat CSS — elements removed in v85  
@@ -383,7 +182,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-007 -->
-
 <!-- TRASH id=20260702-008 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead .placeholder-screen CSS — elements removed" -->
 ## 20260702-008 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead .placeholder-screen CSS — elements removed  
@@ -398,7 +196,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-008 -->
-
 <!-- TRASH id=20260702-009 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead mobile .orb-hero — element removed" -->
 ## 20260702-009 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead mobile .orb-hero — element removed  
@@ -409,7 +206,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-009 -->
-
 <!-- TRASH id=20260702-010 date=2026-07-02 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v88 cleanup: dead mobile .mem-canvas-wrap — element removed" -->
 ## 20260702-010 · 2026-07-02 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v88 cleanup: dead mobile .mem-canvas-wrap — element removed  
@@ -420,7 +216,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-010 -->
-
 <!-- TRASH id=20260702-011 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix6: logger NameError - logger not defined, replaced with print()" -->
 ## 20260702-011 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix6: logger NameError - logger not defined, replaced with print()  
@@ -431,7 +226,6 @@ function openControlCenter(){ document.body.classList.add('cc-open'); }
 ```
 
 <!-- /TRASH 20260702-011 -->
-
 <!-- TRASH id=20260702-012 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old mobile PWA dashboard _WEB_UI constant replaced by /frank HUD" -->
 ## 20260702-012 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old mobile PWA dashboard _WEB_UI constant replaced by /frank HUD  
@@ -2316,7 +2110,6 @@ fetch(BASE + '/health').then(r => r.json()).then(h => {
 ```
 
 <!-- /TRASH 20260702-012 -->
-
 <!-- TRASH id=20260702-013 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old mobile PWA '/' route removed - served _WEB_UI which is deleted" -->
 ## 20260702-013 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old mobile PWA '/' route removed - served _WEB_UI which is deleted  
@@ -2334,7 +2127,6 @@ def web_ui(request: Request):
 ```
 
 <!-- /TRASH 20260702-013 -->
-
 <!-- TRASH id=20260702-014 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old mobile PWA _SW_JS service worker constant removed" -->
 ## 20260702-014 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old mobile PWA _SW_JS service worker constant removed  
@@ -2345,7 +2137,6 @@ def web_ui(request: Request):
 ```
 
 <!-- /TRASH 20260702-014 -->
-
 <!-- TRASH id=20260702-015 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old PWA service worker route removed - _SW_JS constant deleted" -->
 ## 20260702-015 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old PWA service worker route removed - _SW_JS constant deleted  
@@ -2362,7 +2153,6 @@ def service_worker():
 ```
 
 <!-- /TRASH 20260702-015 -->
-
 <!-- TRASH id=20260702-016 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old mobile PWA _MANIFEST constant removed (root '/' PWA)" -->
 ## 20260702-016 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old mobile PWA _MANIFEST constant removed (root '/' PWA)  
@@ -2387,7 +2177,6 @@ _MANIFEST = {
 ```
 
 <!-- /TRASH 20260702-016 -->
-
 <!-- TRASH id=20260702-017 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old mobile PWA manifest route removed - _MANIFEST deleted" -->
 ## 20260702-017 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old mobile PWA manifest route removed - _MANIFEST deleted  
@@ -2400,7 +2189,6 @@ def manifest():
 ```
 
 <!-- /TRASH 20260702-017 -->
-
 <!-- TRASH id=20260702-018 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix8: dead _auth() infrastructure removed - unused since _auth_session_or_bearer was introduced" -->
 ## 20260702-018 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix8: dead _auth() infrastructure removed - unused since _auth_session_or_bearer was introduced  
@@ -2411,7 +2199,6 @@ security = HTTPBearer()
 ```
 
 <!-- /TRASH 20260702-018 -->
-
 <!-- TRASH id=20260702-019 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix8: dead _auth() function removed - superseded by _auth_session_or_bearer" -->
 ## 20260702-019 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix8: dead _auth() function removed - superseded by _auth_session_or_bearer  
@@ -2425,7 +2212,6 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
 ```
 
 <!-- /TRASH 20260702-019 -->
-
 <!-- TRASH id=20260702-020 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix9: local _revenue() helper in _build_metrics replaced by module-level _order_revenue()" -->
 ## 20260702-020 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix9: local _revenue() helper in _build_metrics replaced by module-level _order_revenue()  
@@ -2443,7 +2229,6 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
 ```
 
 <!-- /TRASH 20260702-020 -->
-
 <!-- TRASH id=20260702-021 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix9: inline grandtotal calc in recent_sales replaced by _order_revenue()" -->
 ## 20260702-021 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix9: inline grandtotal calc in recent_sales replaced by _order_revenue()  
@@ -2456,7 +2241,6 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
 ```
 
 <!-- /TRASH 20260702-021 -->
-
 <!-- TRASH id=20260702-022 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix9: local _rev() helper in star seller eligibility replaced by module-level _order_revenue()" -->
 ## 20260702-022 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix9: local _rev() helper in star seller eligibility replaced by module-level _order_revenue()  
@@ -2474,7 +2258,6 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
 ```
 
 <!-- /TRASH 20260702-022 -->
-
 <!-- TRASH id=20260702-023 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix12: /api/studio/diagnose endpoint removed - imageio_ffmpeg dependency causes import errors on deploys without ffmpeg" -->
 ## 20260702-023 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix12: /api/studio/diagnose endpoint removed - imageio_ffmpeg dependency causes import errors on deploys without ffmpeg  
@@ -2552,7 +2335,6 @@ async def studio_diagnose(_token: str = Depends(_auth_session_or_bearer)):
 ```
 
 <!-- /TRASH 20260702-023 -->
-
 <!-- TRASH id=20260702-024 date=2026-07-02 kind=snippet source="tools/api_server/main.py" reason="v88 fix7: old mobile PWA _SW_JS service worker constant removed" -->
 ## 20260702-024 · 2026-07-02 · snippet · `tools/api_server/main.py`
 **Reason:** v88 fix7: old mobile PWA _SW_JS service worker constant removed  
@@ -2579,7 +2361,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-024 -->
-
 <!-- TRASH id=20260702-025 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead method, never called in codebase" -->
 ## 20260702-025 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead method, never called in codebase  
@@ -2593,7 +2374,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-025 -->
-
 <!-- TRASH id=20260702-026 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead method, never called in codebase" -->
 ## 20260702-026 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead method, never called in codebase  
@@ -2607,7 +2387,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-026 -->
-
 <!-- TRASH id=20260702-027 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead method, never called in codebase" -->
 ## 20260702-027 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead method, never called in codebase  
@@ -2651,7 +2430,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-027 -->
-
 <!-- TRASH id=20260702-028 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead method, never called in codebase" -->
 ## 20260702-028 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead method, never called in codebase  
@@ -2665,7 +2443,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-028 -->
-
 <!-- TRASH id=20260702-029 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead method, never called in codebase" -->
 ## 20260702-029 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead method, never called in codebase  
@@ -2722,7 +2499,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-029 -->
-
 <!-- TRASH id=20260702-030 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead method (deprecated), immediately raises EtsyAPIError" -->
 ## 20260702-030 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead method (deprecated), immediately raises EtsyAPIError  
@@ -2744,7 +2520,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-030 -->
-
 <!-- TRASH id=20260702-031 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead methods (get_shipping_profiles, create_shipping_profile), never called in codebase" -->
 ## 20260702-031 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead methods (get_shipping_profiles, create_shipping_profile), never called in codebase  
@@ -2788,7 +2563,6 @@ _SW_JS = (
 ```
 
 <!-- /TRASH 20260702-031 -->
-
 <!-- TRASH id=20260702-032 date=2026-07-02 kind=snippet source="tools/etsy_api.py" reason="v88 cleanup: dead module-level get_client(), never called anywhere" -->
 ## 20260702-032 · 2026-07-02 · snippet · `tools/etsy_api.py`
 **Reason:** v88 cleanup: dead module-level get_client(), never called anywhere  
@@ -2800,7 +2574,6 @@ def get_client() -> EtsyAPIClient:
 ```
 
 <!-- /TRASH 20260702-032 -->
-
 <!-- TRASH id=20260702-033 date=2026-07-02 kind=file source="tools/fix_kawaii_tag_mismatch.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-033 · 2026-07-02 · file · `tools/fix_kawaii_tag_mismatch.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -2885,7 +2658,6 @@ NEW_TAGS = {
 ```
 
 <!-- /TRASH 20260702-033 -->
-
 <!-- TRASH id=20260702-034 date=2026-07-02 kind=file source="tools/fix_svg_listing_photos.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-034 · 2026-07-02 · file · `tools/fix_svg_listing_photos.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3019,7 +2791,6 @@ def build_grid_photo(bundle: dict) -> Path | None:
 ```
 
 <!-- /TRASH 20260702-034 -->
-
 <!-- TRASH id=20260702-035 date=2026-07-02 kind=file source="tools/fix_taxonomy.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-035 · 2026-07-02 · file · `tools/fix_taxonomy.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3144,7 +2915,6 @@ def run(dry_run: bool) -> None:
 ```
 
 <!-- /TRASH 20260702-035 -->
-
 <!-- TRASH id=20260702-036 date=2026-07-02 kind=file source="tools/fix_tropical_leaves_photos.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-036 · 2026-07-02 · file · `tools/fix_tropical_leaves_photos.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3242,7 +3012,6 @@ def main():
 ```
 
 <!-- /TRASH 20260702-036 -->
-
 <!-- TRASH id=20260702-037 date=2026-07-02 kind=file source="tools/fix_undated_claims.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-037 · 2026-07-02 · file · `tools/fix_undated_claims.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3336,7 +3105,6 @@ EDITS = {
 ```
 
 <!-- /TRASH 20260702-037 -->
-
 <!-- TRASH id=20260702-038 date=2026-07-02 kind=file source="tools/generate_3d_sign_svgs.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-038 · 2026-07-02 · file · `tools/generate_3d_sign_svgs.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3468,7 +3236,6 @@ def _p(d: str, fr: str = "evenodd") -> str:
 ```
 
 <!-- /TRASH 20260702-038 -->
-
 <!-- TRASH id=20260702-039 date=2026-07-02 kind=file source="tools/generate_adhd_assets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-039 · 2026-07-02 · file · `tools/generate_adhd_assets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3555,7 +3322,6 @@ SHEETS = {
 ```
 
 <!-- /TRASH 20260702-039 -->
-
 <!-- TRASH id=20260702-040 date=2026-07-02 kind=file source="tools/generate_celestial_assets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-040 · 2026-07-02 · file · `tools/generate_celestial_assets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3639,7 +3405,6 @@ SHEETS = {
 ```
 
 <!-- /TRASH 20260702-040 -->
-
 <!-- TRASH id=20260702-041 date=2026-07-02 kind=file source="tools/generate_dashboard.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-041 · 2026-07-02 · file · `tools/generate_dashboard.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3777,7 +3542,6 @@ def load_weekly_revenue() -> dict:
 ```
 
 <!-- /TRASH 20260702-041 -->
-
 <!-- TRASH id=20260702-042 date=2026-07-02 kind=file source="tools/generate_digital_paper.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-042 · 2026-07-02 · file · `tools/generate_digital_paper.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -3920,7 +3684,6 @@ THEME_ALIASES = {
 ```
 
 <!-- /TRASH 20260702-042 -->
-
 <!-- TRASH id=20260702-043 date=2026-07-02 kind=file source="tools/generate_flat_preview.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-043 · 2026-07-02 · file · `tools/generate_flat_preview.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4045,7 +3808,6 @@ def verify_hash(dp_id: str, preview_path: Path, src_path: Path) -> int:
 ```
 
 <!-- /TRASH 20260702-043 -->
-
 <!-- TRASH id=20260702-044 date=2026-07-02 kind=file source="tools/generate_midnight_kawaii_assets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-044 · 2026-07-02 · file · `tools/generate_midnight_kawaii_assets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4133,7 +3895,6 @@ SHEETS = {
 ```
 
 <!-- /TRASH 20260702-044 -->
-
 <!-- TRASH id=20260702-045 date=2026-07-02 kind=file source="tools/generate_planner.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-045 · 2026-07-02 · file · `tools/generate_planner.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4235,7 +3996,6 @@ PLANNER_CONFIGS = {
 ```
 
 <!-- /TRASH 20260702-045 -->
-
 <!-- TRASH id=20260702-046 date=2026-07-02 kind=file source="tools/generate_planner_v2.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-046 · 2026-07-02 · file · `tools/generate_planner_v2.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4357,7 +4117,6 @@ def _draw_binding(c, BG, PH, x=15.0, top=78.0, bottom=40.0, spacing=26.0):
 ```
 
 <!-- /TRASH 20260702-046 -->
-
 <!-- TRASH id=20260702-047 date=2026-07-02 kind=file source="tools/generate_raw_wall_art_batch.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-047 · 2026-07-02 · file · `tools/generate_raw_wall_art_batch.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4471,7 +4230,6 @@ ARTWORKS = [
 ```
 
 <!-- /TRASH 20260702-047 -->
-
 <!-- TRASH id=20260702-048 date=2026-07-02 kind=file source="tools/generate_sage_garden_assets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-048 · 2026-07-02 · file · `tools/generate_sage_garden_assets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4558,7 +4316,6 @@ SHEETS = {
 ```
 
 <!-- /TRASH 20260702-048 -->
-
 <!-- TRASH id=20260702-049 date=2026-07-02 kind=file source="tools/generate_sign_collection_photo.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-049 · 2026-07-02 · file · `tools/generate_sign_collection_photo.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4669,7 +4426,6 @@ def panel_with_shadow(design_path: Path, size: int) -> tuple[Image.Image, Image.
 ```
 
 <!-- /TRASH 20260702-049 -->
-
 <!-- TRASH id=20260702-050 date=2026-07-02 kind=file source="tools/generate_sign_info_graphics.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-050 · 2026-07-02 · file · `tools/generate_sign_info_graphics.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4786,7 +4542,6 @@ def photo_07():
 ```
 
 <!-- /TRASH 20260702-050 -->
-
 <!-- TRASH id=20260702-051 date=2026-07-02 kind=file source="tools/generate_sign_lifestyle_photos.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-051 · 2026-07-02 · file · `tools/generate_sign_lifestyle_photos.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -4884,7 +4639,6 @@ f
 ```
 
 <!-- /TRASH 20260702-051 -->
-
 <!-- TRASH id=20260702-052 date=2026-07-02 kind=file source="tools/generate_ss1001_originals_4c.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-052 · 2026-07-02 · file · `tools/generate_ss1001_originals_4c.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5009,7 +4763,6 @@ def annular_pie(cx: float, cy: float, r_in: float, r_out: float,
 ```
 
 <!-- /TRASH 20260702-052 -->
-
 <!-- TRASH id=20260702-053 date=2026-07-02 kind=file source="tools/generate_ss1001_photos.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-053 · 2026-07-02 · file · `tools/generate_ss1001_photos.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5119,7 +4872,6 @@ def _fonts():
 ```
 
 <!-- /TRASH 20260702-053 -->
-
 <!-- TRASH id=20260702-054 date=2026-07-02 kind=file source="tools/generate_ss1001_vol2_designs.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-054 · 2026-07-02 · file · `tools/generate_ss1001_vol2_designs.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5217,7 +4969,6 @@ DESIGNS = [
 ```
 
 <!-- /TRASH 20260702-054 -->
-
 <!-- TRASH id=20260702-055 date=2026-07-02 kind=file source="tools/generate_ss1001_vol2_lifestyle_photos.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-055 · 2026-07-02 · file · `tools/generate_ss1001_vol2_lifestyle_photos.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5338,7 +5089,6 @@ def generate(images: list[Path], prompt: str, out_path: Path) -> Path:
 ```
 
 <!-- /TRASH 20260702-055 -->
-
 <!-- TRASH id=20260702-056 date=2026-07-02 kind=file source="tools/generate_sublimation_wraps.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-056 · 2026-07-02 · file · `tools/generate_sublimation_wraps.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5449,7 +5199,6 @@ No photograph elements. No studio equipment. Print-ready quality.
 ```
 
 <!-- /TRASH 20260702-056 -->
-
 <!-- TRASH id=20260702-057 date=2026-07-02 kind=file source="tools/generate_sunflower_studio_assets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-057 · 2026-07-02 · file · `tools/generate_sunflower_studio_assets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5536,7 +5285,6 @@ SHEETS = {
 ```
 
 <!-- /TRASH 20260702-057 -->
-
 <!-- TRASH id=20260702-058 date=2026-07-02 kind=file source="tools/generate_svg_designs.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-058 · 2026-07-02 · file · `tools/generate_svg_designs.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5626,7 +5374,6 @@ BUNDLES = {
 ```
 
 <!-- /TRASH 20260702-058 -->
-
 <!-- TRASH id=20260702-059 date=2026-07-02 kind=file source="tools/generate_tumbler_mockups.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-059 · 2026-07-02 · file · `tools/generate_tumbler_mockups.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5728,7 +5475,6 @@ DESIGNS = {
 ```
 
 <!-- /TRASH 20260702-059 -->
-
 <!-- TRASH id=20260702-060 date=2026-07-02 kind=file source="tools/generate_wall_art_mockups.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-060 · 2026-07-02 · file · `tools/generate_wall_art_mockups.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5835,7 +5581,6 @@ ROOM_SCENES = {
 ```
 
 <!-- /TRASH 20260702-060 -->
-
 <!-- TRASH id=20260702-061 date=2026-07-02 kind=file source="tools/build_art_registry.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-061 · 2026-07-02 · file · `tools/build_art_registry.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -5965,7 +5710,6 @@ def main():
 ```
 
 <!-- /TRASH 20260702-061 -->
-
 <!-- TRASH id=20260702-062 date=2026-07-02 kind=file source="tools/build_manifest.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-062 · 2026-07-02 · file · `tools/build_manifest.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6091,7 +5835,6 @@ def find_art_file(dp_code: str) -> Path | None:
 ```
 
 <!-- /TRASH 20260702-062 -->
-
 <!-- TRASH id=20260702-063 date=2026-07-02 kind=file source="tools/build_review_batches.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-063 · 2026-07-02 · file · `tools/build_review_batches.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6214,7 +5957,6 @@ h1 { font-size: 19px; margin-bottom: 4px; }
 ```
 
 <!-- /TRASH 20260702-063 -->
-
 <!-- TRASH id=20260702-064 date=2026-07-02 kind=file source="tools/build_review_html.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-064 · 2026-07-02 · file · `tools/build_review_html.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6324,7 +6066,6 @@ def main():
 ```
 
 <!-- /TRASH 20260702-064 -->
-
 <!-- TRASH id=20260702-065 date=2026-07-02 kind=file source="tools/build_review_html_embedded.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-065 · 2026-07-02 · file · `tools/build_review_html_embedded.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6433,7 +6174,6 @@ def main():
 ```
 
 <!-- /TRASH 20260702-065 -->
-
 <!-- TRASH id=20260702-066 date=2026-07-02 kind=file source="tools/build_ss1001_vol2_zip.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-066 · 2026-07-02 · file · `tools/build_ss1001_vol2_zip.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6565,7 +6305,6 @@ def _build_3mf_xml(named_meshes: list[tuple[str, trimesh.Trimesh]]) -> str:
 ```
 
 <!-- /TRASH 20260702-066 -->
-
 <!-- TRASH id=20260702-067 date=2026-07-02 kind=file source="tools/build_ss1001_zip.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-067 · 2026-07-02 · file · `tools/build_ss1001_zip.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6686,7 +6425,6 @@ def svg_to_mesh(svg_path: Path, z_bottom: float, z_top: float,
 ```
 
 <!-- /TRASH 20260702-067 -->
-
 <!-- TRASH id=20260702-068 date=2026-07-02 kind=file source="tools/build_wrong_art_audit_html.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-068 · 2026-07-02 · file · `tools/build_wrong_art_audit_html.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6815,7 +6553,6 @@ def render_card(r):
 ```
 
 <!-- /TRASH 20260702-068 -->
-
 <!-- TRASH id=20260702-069 date=2026-07-02 kind=file source="tools/create_art_listing_new.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-069 · 2026-07-02 · file · `tools/create_art_listing_new.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -6932,7 +6669,6 @@ def paste_fill(bg_img, art_path, l, t, r, b):
 ```
 
 <!-- /TRASH 20260702-069 -->
-
 <!-- TRASH id=20260702-070 date=2026-07-02 kind=file source="tools/create_bundle_photos.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-070 · 2026-07-02 · file · `tools/create_bundle_photos.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7063,7 +6799,6 @@ def make_ipad_mockup(planner_img, ipad_w=680, ipad_h=900):
 ```
 
 <!-- /TRASH 20260702-070 -->
-
 <!-- TRASH id=20260702-071 date=2026-07-02 kind=file source="tools/create_gallery_wall_sets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-071 · 2026-07-02 · file · `tools/create_gallery_wall_sets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7185,7 +6920,6 @@ SETS = [
 ```
 
 <!-- /TRASH 20260702-071 -->
-
 <!-- TRASH id=20260702-072 date=2026-07-02 kind=file source="tools/create_new_art_listings.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-072 · 2026-07-02 · file · `tools/create_new_art_listings.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7296,7 +7030,6 @@ def composite(bg_path, art_path, out_path, fc, art_pct=0.33):
 ```
 
 <!-- /TRASH 20260702-072 -->
-
 <!-- TRASH id=20260702-073 date=2026-07-02 kind=file source="tools/create_svg_bundle_heroes.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-073 · 2026-07-02 · file · `tools/create_svg_bundle_heroes.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7437,7 +7170,6 @@ def create_cell(svg_img: Image.Image) -> Image.Image:
 ```
 
 <!-- /TRASH 20260702-073 -->
-
 <!-- TRASH id=20260702-074 date=2026-07-02 kind=file source="tools/create_svg_product_heroes.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-074 · 2026-07-02 · file · `tools/create_svg_product_heroes.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7530,7 +7262,6 @@ PRODUCT_EDIT_PROMPTS = {
 ```
 
 <!-- /TRASH 20260702-074 -->
-
 <!-- TRASH id=20260702-075 date=2026-07-02 kind=file source="tools/update_standalone_sticker_listings.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-075 · 2026-07-02 · file · `tools/update_standalone_sticker_listings.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7661,7 +7392,6 @@ def updat
 ```
 
 <!-- /TRASH 20260702-075 -->
-
 <!-- TRASH id=20260702-076 date=2026-07-02 kind=file source="tools/publish_coloring_and_paper.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-076 · 2026-07-02 · file · `tools/publish_coloring_and_paper.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7779,7 +7509,6 @@ THEME_COLORS = {
 ```
 
 <!-- /TRASH 20260702-076 -->
-
 <!-- TRASH id=20260702-077 date=2026-07-02 kind=file source="tools/publish_coloring_drafts.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-077 · 2026-07-02 · file · `tools/publish_coloring_drafts.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -7891,7 +7620,6 @@ def page_pat
 ```
 
 <!-- /TRASH 20260702-077 -->
-
 <!-- TRASH id=20260702-078 date=2026-07-02 kind=file source="tools/publish_ss1001_draft.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-078 · 2026-07-02 · file · `tools/publish_ss1001_draft.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8017,7 +7745,6 @@ def main():
 ```
 
 <!-- /TRASH 20260702-078 -->
-
 <!-- TRASH id=20260702-079 date=2026-07-02 kind=file source="tools/shorten_titles.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-079 · 2026-07-02 · file · `tools/shorten_titles.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8147,7 +7874,6 @@ def main():
 ```
 
 <!-- /TRASH 20260702-079 -->
-
 <!-- TRASH id=20260702-080 date=2026-07-02 kind=file source="tools/rebuild_sticker_pack.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-080 · 2026-07-02 · file · `tools/rebuild_sticker_pack.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8278,7 +8004,6 @@ def rebuild_zip(pid, num_sheets):
 ```
 
 <!-- /TRASH 20260702-080 -->
-
 <!-- TRASH id=20260702-081 date=2026-07-02 kind=file source="tools/process_sticker_sheets.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-081 · 2026-07-02 · file · `tools/process_sticker_sheets.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8385,7 +8110,6 @@ def remove_white_background(img: Image.Image) -> Image.Image:
 ```
 
 <!-- /TRASH 20260702-081 -->
-
 <!-- TRASH id=20260702-082 date=2026-07-02 kind=file source="tools/gen_listing_images.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-082 · 2026-07-02 · file · `tools/gen_listing_images.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8508,7 +8232,6 @@ def make_flat_mockup(art_path: str, bg_color: tuple, frame_color: tuple, out_pat
 ```
 
 <!-- /TRASH 20260702-082 -->
-
 <!-- TRASH id=20260702-083 date=2026-07-02 kind=file source="tools/gen_sticker_sheet.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-083 · 2026-07-02 · file · `tools/gen_sticker_sheet.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8578,7 +8301,6 @@ SHEET_PROMPTS = {
 ```
 
 <!-- /TRASH 20260702-083 -->
-
 <!-- TRASH id=20260702-084 date=2026-07-02 kind=file source="tools/ads_monitor.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-084 · 2026-07-02 · file · `tools/ads_monitor.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8705,7 +8427,6 @@ def _order_revenue(order: dict) -> float:
 ```
 
 <!-- /TRASH 20260702-084 -->
-
 <!-- TRASH id=20260702-085 date=2026-07-02 kind=file source="tools/message_monitor.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-085 · 2026-07-02 · file · `tools/message_monitor.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8828,7 +8549,6 @@ def check_messages(client: EtsyAPIClient, threshold_hours: float = DEFAULT_HOURS
 ```
 
 <!-- /TRASH 20260702-085 -->
-
 <!-- TRASH id=20260702-086 date=2026-07-02 kind=file source="tools/analytics_tracker.py" reason="v88 cleanup: one-off script, run-once or superseded" -->
 ## 20260702-086 · 2026-07-02 · file · `tools/analytics_tracker.py`
 **Reason:** v88 cleanup: one-off script, run-once or superseded  
@@ -8966,7 +8686,6 @@ def get_trend(listing_id: int | str, metric: str, days: int = 7) -> dict:
 ```
 
 <!-- /TRASH 20260702-086 -->
-
 <!-- TRASH id=20260702-087 date=2026-07-02 kind=file source="tools/agents/ceo_agent.py" reason="v88 cleanup: standalone CLI superseded by HUD chat interface" -->
 ## 20260702-087 · 2026-07-02 · file · `tools/agents/ceo_agent.py`
 **Reason:** v88 cleanup: standalone CLI superseded by HUD chat interface  
@@ -9065,7 +8784,6 @@ QUALITY_STANDARDS: dict[str, dict] = {
 ```
 
 <!-- /TRASH 20260702-087 -->
-
 <!-- TRASH id=20260703-001 date=2026-07-03 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Phone Mode v1 phoneTab reused desktop screens (cramped); replaced by v2 native panels" -->
 ## 20260703-001 · 2026-07-03 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** Phone Mode v1 phoneTab reused desktop screens (cramped); replaced by v2 native panels  
@@ -9087,7 +8805,6 @@ function phoneTab(which){
 ```
 
 <!-- /TRASH 20260703-001 -->
-
 <!-- TRASH id=20260708-001 date=2026-07-08 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced by Three.js/WebGL noise-sphere orb (round 6, 2026-07-08) — the plain lat/lon-grid Canvas2D sphere generator and its particles/edges arrays are superseded by a GPU noise-displaced icosphere; resetOrbToDefault now just toggles canvas visibility instead of rebuilding a particle grid." -->
 ## 20260708-001 · 2026-07-08 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** Replaced by Three.js/WebGL noise-sphere orb (round 6, 2026-07-08) — the plain lat/lon-grid Canvas2D sphere generator and its particles/edges arrays are superseded by a GPU noise-displaced icosphere; resetOrbToDefault now just toggles canvas visibility instead of rebuilding a particle grid.  
@@ -9129,7 +8846,6 @@ function resetOrbToDefault(){
 ```
 
 <!-- /TRASH 20260708-001 -->
-
 <!-- TRASH id=20260708-002 date=2026-07-08 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Removed the dead lat/lon-sphere Canvas2D draw branch (round 6, 2026-07-08) — orbMode==sphere now renders via the new WebGL noise-icosphere on #orb-gl, so the 2D canvas frame() early-returns in that mode and this branch would never execute. The image-mode branch is preserved unchanged, just un-nested from the if/else." -->
 ## 20260708-002 · 2026-07-08 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** Removed the dead lat/lon-sphere Canvas2D draw branch (round 6, 2026-07-08) — orbMode==sphere now renders via the new WebGL noise-icosphere on #orb-gl, so the 2D canvas frame() early-returns in that mode and this branch would never execute. The image-mode branch is preserved unchanged, just un-nested from the if/else.  
@@ -9214,7 +8930,6 @@ function resetOrbToDefault(){
 ```
 
 <!-- /TRASH 20260708-002 -->
-
 <!-- TRASH id=20260708-003 date=2026-07-08 kind=file source="agents/__init__.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-003 · 2026-07-08 · file · `agents/__init__.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9277,7 +8992,6 @@ __all__ = [
 ```
 
 <!-- /TRASH 20260708-003 -->
-
 <!-- TRASH id=20260708-004 date=2026-07-08 kind=file source="agents/analytics_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-004 · 2026-07-08 · file · `agents/analytics_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9371,7 +9085,6 @@ If you say "conversion is 0.8%", also say "that means 992 out of 1000 visitors l
 ````
 
 <!-- /TRASH 20260708-004 -->
-
 <!-- TRASH id=20260708-005 date=2026-07-08 kind=file source="agents/api_connections_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-005 · 2026-07-08 · file · `agents/api_connections_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9455,7 +9168,6 @@ class APIConnectionsAgent(BaseAgent):
 ````
 
 <!-- /TRASH 20260708-005 -->
-
 <!-- TRASH id=20260708-006 date=2026-07-08 kind=file source="agents/art_creation_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-006 · 2026-07-08 · file · `agents/art_creation_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9530,7 +9242,6 @@ Every piece must feel like it was made by a human hand with a specific medium �
 ```
 
 <!-- /TRASH 20260708-006 -->
-
 <!-- TRASH id=20260708-007 date=2026-07-08 kind=file source="agents/base_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-007 · 2026-07-08 · file · `agents/base_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9650,7 +9361,6 @@ class BaseAgent:
 ```
 
 <!-- /TRASH 20260708-007 -->
-
 <!-- TRASH id=20260708-008 date=2026-07-08 kind=file source="agents/brand_design_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-008 · 2026-07-08 · file · `agents/brand_design_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9733,7 +9443,6 @@ Every listing needs at minimum 2 images:
 ```
 
 <!-- /TRASH 20260708-008 -->
-
 <!-- TRASH id=20260708-009 date=2026-07-08 kind=file source="agents/ceo_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-009 · 2026-07-08 · file · `agents/ceo_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9815,7 +9524,6 @@ Never automate 3D print production. Flag as "
 ```
 
 <!-- /TRASH 20260708-009 -->
-
 <!-- TRASH id=20260708-010 date=2026-07-08 kind=file source="agents/customer_retention_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-010 · 2026-07-08 · file · `agents/customer_retention_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9871,7 +9579,6 @@ class CustomerRetentionAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-010 -->
-
 <!-- TRASH id=20260708-011 date=2026-07-08 kind=file source="agents/customer_service_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-011 · 2026-07-08 · file · `agents/customer_service_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -9951,7 +9658,6 @@ class CustomerServiceAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-011 -->
-
 <!-- TRASH id=20260708-012 date=2026-07-08 kind=file source="agents/email_marketing_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-012 · 2026-07-08 · file · `agents/email_marketing_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10025,7 +9731,6 @@ class EmailMarketingAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-012 -->
-
 <!-- TRASH id=20260708-013 date=2026-07-08 kind=file source="agents/etsy_ads_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-013 · 2026-07-08 · file · `agents/etsy_ads_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10090,7 +9795,6 @@ class EtsyAdsAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-013 -->
-
 <!-- TRASH id=20260708-014 date=2026-07-08 kind=file source="agents/etsy_listing_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-014 · 2026-07-08 · file · `agents/etsy_listing_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10166,7 +9870,6 @@ ALWAYS run `customer_ready_check` before calling a listing complete. Every item 
 ````
 
 <!-- /TRASH 20260708-014 -->
-
 <!-- TRASH id=20260708-015 date=2026-07-08 kind=file source="agents/financial_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-015 · 2026-07-08 · file · `agents/financial_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10242,7 +9945,6 @@ Offsite Ads fee:    15% of sale price if shop earns < $10,000/yr (optional)
 ````
 
 <!-- /TRASH 20260708-015 -->
-
 <!-- TRASH id=20260708-016 date=2026-07-08 kind=file source="agents/marketing_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-016 · 2026-07-08 · file · `agents/marketing_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10324,7 +10026,6 @@ Average price: $X (our price: $Y — recommendation: [rai
 ````
 
 <!-- /TRASH 20260708-016 -->
-
 <!-- TRASH id=20260708-017 date=2026-07-08 kind=file source="agents/planner_design_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-017 · 2026-07-08 · file · `agents/planner_design_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10377,7 +10078,6 @@ Every planner brief maps to one of three buyer types. Name the persona in your `
 ```
 
 <!-- /TRASH 20260708-017 -->
-
 <!-- TRASH id=20260708-018 date=2026-07-08 kind=file source="agents/print_production_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-018 · 2026-07-08 · file · `agents/print_production_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10470,7 +10170,6 @@ Etsy (updated June 2025) requires ALL 3D-printed products to use ORIGINAL design
 ```
 
 <!-- /TRASH 20260708-018 -->
-
 <!-- TRASH id=20260708-019 date=2026-07-08 kind=file source="agents/product_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-019 · 2026-07-08 · file · `agents/product_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10563,7 +10262,6 @@ Typical breakdown:
 ````
 
 <!-- /TRASH 20260708-019 -->
-
 <!-- TRASH id=20260708-020 date=2026-07-08 kind=file source="agents/quality_check_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-020 · 2026-07-08 · file · `agents/quality_check_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10649,7 +10347,6 @@ OnBrandCraftz sells 5 product lines. Know which you are reviewing:
 ```
 
 <!-- /TRASH 20260708-020 -->
-
 <!-- TRASH id=20260708-021 date=2026-07-08 kind=file source="agents/sales_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-021 · 2026-07-08 · file · `agents/sales_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10721,7 +10418,6 @@ class SalesAgent(BaseAgent):
 ````
 
 <!-- /TRASH 20260708-021 -->
-
 <!-- TRASH id=20260708-022 date=2026-07-08 kind=file source="agents/sales_processor_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-022 · 2026-07-08 · file · `agents/sales_processor_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10809,7 +10505,6 @@ class SalesProcessorAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-022 -->
-
 <!-- TRASH id=20260708-023 date=2026-07-08 kind=file source="agents/social_media_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-023 · 2026-07-08 · file · `agents/social_media_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10859,7 +10554,6 @@ class SocialMediaAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-023 -->
-
 <!-- TRASH id=20260708-024 date=2026-07-08 kind=file source="agents/store_manager_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-024 · 2026-07-08 · file · `agents/store_manager_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10952,7 +10646,6 @@ class StoreManagerAgent(BaseAgent):
 ````
 
 <!-- /TRASH 20260708-024 -->
-
 <!-- TRASH id=20260708-025 date=2026-07-08 kind=file source="agents/supervisor_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-025 · 2026-07-08 · file · `agents/supervisor_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -10995,7 +10688,6 @@ class SupervisorAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-025 -->
-
 <!-- TRASH id=20260708-026 date=2026-07-08 kind=file source="agents/system_improvement_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-026 · 2026-07-08 · file · `agents/system_improvement_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11090,7 +10782,6 @@ class SystemImprovementAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-026 -->
-
 <!-- TRASH id=20260708-027 date=2026-07-08 kind=file source="agents/tax_compliance_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-027 · 2026-07-08 · file · `agents/tax_compliance_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11163,7 +10854,6 @@ class TaxComplianceAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-027 -->
-
 <!-- TRASH id=20260708-028 date=2026-07-08 kind=file source="agents/trend_forecasting_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-028 · 2026-07-08 · file · `agents/trend_forecasting_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11243,7 +10933,6 @@ class TrendForecastingAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-028 -->
-
 <!-- TRASH id=20260708-029 date=2026-07-08 kind=file source="agents/workflow_coordinator_agent.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-029 · 2026-07-08 · file · `agents/workflow_coordinator_agent.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11308,7 +10997,6 @@ class WorkflowCoordinatorAgent(BaseAgent):
 ```
 
 <!-- /TRASH 20260708-029 -->
-
 <!-- TRASH id=20260708-030 date=2026-07-08 kind=file source="hub.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-030 · 2026-07-08 · file · `hub.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11394,7 +11082,6 @@ Synthesize everything into an executive daily briefing. Lead with the most urgen
 ```
 
 <!-- /TRASH 20260708-030 -->
-
 <!-- TRASH id=20260708-031 date=2026-07-08 kind=file source="web/app.py" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-031 · 2026-07-08 · file · `web/app.py`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11507,7 +11194,6 @@ def api_chat():
 ```
 
 <!-- /TRASH 20260708-031 -->
-
 <!-- TRASH id=20260708-032 date=2026-07-08 kind=file source="START_HUB.bat" reason="Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey." -->
 ## 20260708-032 · 2026-07-08 · file · `START_HUB.bat`
 **Reason:** Dead parallel agent framework — never imported by the live server (tools/api_server/main.py has its own separate AGENT_TOOLS/_execute_agent_tool dispatch). Only consumer was web/app.py (launched via START_HUB.bat, superseded 2026-06-22 by Start Frank Local.bat -> tools/api_server/main.py). Archived 2026-07-08 as part of dead-code cleanup identified in the post-security-pass upgrade survey.  
@@ -11527,7 +11213,6 @@ pause
 ```
 
 <!-- /TRASH 20260708-032 -->
-
 <!-- TRASH id=20260708-033 date=2026-07-08 kind=file source="web/static/app.js" reason="Frontend assets for the dead web/app.py Flask hub prototype (already archived 2026-07-08, entry 20260708-031). Archived alongside it — no other consumer." -->
 ## 20260708-033 · 2026-07-08 · file · `web/static/app.js`
 **Reason:** Frontend assets for the dead web/app.py Flask hub prototype (already archived 2026-07-08, entry 20260708-031). Archived alongside it — no other consumer.  
@@ -11663,7 +11348,6 @@ function buildMessageEl(m) {
 ```
 
 <!-- /TRASH 20260708-033 -->
-
 <!-- TRASH id=20260708-034 date=2026-07-08 kind=file source="web/static/style.css" reason="Frontend assets for the dead web/app.py Flask hub prototype (already archived 2026-07-08, entry 20260708-031). Archived alongside it — no other consumer." -->
 ## 20260708-034 · 2026-07-08 · file · `web/static/style.css`
 **Reason:** Frontend assets for the dead web/app.py Flask hub prototype (already archived 2026-07-08, entry 20260708-031). Archived alongside it — no other consumer.  
@@ -11809,7 +11493,6 @@ body {
 ```
 
 <!-- /TRASH 20260708-034 -->
-
 <!-- TRASH id=20260708-035 date=2026-07-08 kind=file source="web/templates/index.html" reason="Frontend assets for the dead web/app.py Flask hub prototype (already archived 2026-07-08, entry 20260708-031). Archived alongside it — no other consumer." -->
 ## 20260708-035 · 2026-07-08 · file · `web/templates/index.html`
 **Reason:** Frontend assets for the dead web/app.py Flask hub prototype (already archived 2026-07-08, entry 20260708-031). Archived alongside it — no other consumer.  
@@ -11931,7 +11614,6 @@ body {
 ```
 
 <!-- /TRASH 20260708-035 -->
-
 <!-- TRASH id=20260709-001 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1030_sticker_pack.zip" reason="Regenerating DP1030 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
 ## 20260709-001 · 2026-07-09 · file · `data/digital_products/product_files/DP1030_sticker_pack.zip`
 **Reason:** Regenerating DP1030 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
@@ -11942,7 +11624,6 @@ body {
 ```
 
 <!-- /TRASH 20260709-001 -->
-
 <!-- TRASH id=20260709-002 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1031_sticker_pack.zip" reason="Regenerating DP1031 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
 ## 20260709-002 · 2026-07-09 · file · `data/digital_products/product_files/DP1031_sticker_pack.zip`
 **Reason:** Regenerating DP1031 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
@@ -11953,7 +11634,6 @@ body {
 ```
 
 <!-- /TRASH 20260709-002 -->
-
 <!-- TRASH id=20260709-003 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1032_sticker_pack.zip" reason="Regenerating DP1032 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
 ## 20260709-003 · 2026-07-09 · file · `data/digital_products/product_files/DP1032_sticker_pack.zip`
 **Reason:** Regenerating DP1032 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
@@ -11964,7 +11644,6 @@ body {
 ```
 
 <!-- /TRASH 20260709-003 -->
-
 <!-- TRASH id=20260709-004 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1033_sticker_pack.zip" reason="Regenerating DP1033 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
 ## 20260709-004 · 2026-07-09 · file · `data/digital_products/product_files/DP1033_sticker_pack.zip`
 **Reason:** Regenerating DP1033 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
@@ -11975,7 +11654,6 @@ body {
 ```
 
 <!-- /TRASH 20260709-004 -->
-
 <!-- TRASH id=20260709-005 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1034_sticker_pack.zip" reason="Regenerating DP1034 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
 ## 20260709-005 · 2026-07-09 · file · `data/digital_products/product_files/DP1034_sticker_pack.zip`
 **Reason:** Regenerating DP1034 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
@@ -11986,7 +11664,6 @@ body {
 ```
 
 <!-- /TRASH 20260709-005 -->
-
 <!-- TRASH id=20260709-006 date=2026-07-09 kind=file source="tools/api_server/requirements.txt" reason="Confirmed unused (2026-07-09 weakness-audit fix) — Dockerfile only installs from root requirements.txt; this stale duplicate had drifted versions (python-dotenv==1.0.1 vs root loose >=1.0.0, anthropic>=0.28.0 vs root >=0.40.0) and could mislead someone editing dependencies into thinking it matters." -->
 ## 20260709-006 · 2026-07-09 · file · `tools/api_server/requirements.txt`
 **Reason:** Confirmed unused (2026-07-09 weakness-audit fix) — Dockerfile only installs from root requirements.txt; this stale duplicate had drifted versions (python-dotenv==1.0.1 vs root loose >=1.0.0, anthropic>=0.28.0 vs root >=0.40.0) and could mislead someone editing dependencies into thinking it matters.  
@@ -12006,7 +11683,6 @@ google-genai>=1.0.0
 ```
 
 <!-- /TRASH 20260709-006 -->
-
 <!-- TRASH id=20260709-007 date=2026-07-09 kind=file source="tools/customer_service_tools.py" reason="Confirmed fully orphaned (2026-07-09 weakness-audit fix) — its only consumer, customer_service_agent.py, was already deliberately trashed 2026-07-08 (data/trash/files/20260708-011__customer_service_agent.py); never imported/referenced anywhere in live code since. Archiving rather than leaving dead code in tools/." -->
 ## 20260709-007 · 2026-07-09 · file · `tools/customer_service_tools.py`
 **Reason:** Confirmed fully orphaned (2026-07-09 weakness-audit fix) — its only consumer, customer_service_agent.py, was already deliberately trashed 2026-07-08 (data/trash/files/20260708-011__customer_service_agent.py); never imported/referenced anywhere in live code since. Archiving rather than leaving dead code in tools/.  
@@ -12126,7 +11802,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260709-007 -->
-
 <!-- TRASH id=20260711-001 date=2026-07-11 kind=file source="tools/analytics_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-001 · 2026-07-11 · file · `tools/analytics_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12254,7 +11929,6 @@ def _get_sales_report(period: str, store: DataStore) -> s
 ```
 
 <!-- /TRASH 20260711-001 -->
-
 <!-- TRASH id=20260711-002 date=2026-07-11 kind=file source="tools/api_connections_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-002 · 2026-07-11 · file · `tools/api_connections_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12379,7 +12053,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-002 -->
-
 <!-- TRASH id=20260711-003 date=2026-07-11 kind=file source="tools/ab_testing_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-003 · 2026-07-11 · file · `tools/ab_testing_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12476,7 +12149,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-003 -->
-
 <!-- TRASH id=20260711-004 date=2026-07-11 kind=file source="tools/brand_design_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-004 · 2026-07-11 · file · `tools/brand_design_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12575,7 +12247,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-004 -->
-
 <!-- TRASH id=20260711-005 date=2026-07-11 kind=file source="tools/customer_retention_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-005 · 2026-07-11 · file · `tools/customer_retention_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12679,7 +12350,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-005 -->
-
 <!-- TRASH id=20260711-006 date=2026-07-11 kind=file source="tools/email_marketing_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-006 · 2026-07-11 · file · `tools/email_marketing_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12788,7 +12458,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-006 -->
-
 <!-- TRASH id=20260711-007 date=2026-07-11 kind=file source="tools/financial_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-007 · 2026-07-11 · file · `tools/financial_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -12893,7 +12562,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-007 -->
-
 <!-- TRASH id=20260711-008 date=2026-07-11 kind=file source="tools/learning_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-008 · 2026-07-11 · file · `tools/learning_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13015,7 +12683,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-008 -->
-
 <!-- TRASH id=20260711-009 date=2026-07-11 kind=file source="tools/marketing_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-009 · 2026-07-11 · file · `tools/marketing_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13122,7 +12789,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-009 -->
-
 <!-- TRASH id=20260711-010 date=2026-07-11 kind=file source="tools/print_production_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-010 · 2026-07-11 · file · `tools/print_production_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13228,7 +12894,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-010 -->
-
 <!-- TRASH id=20260711-011 date=2026-07-11 kind=file source="tools/product_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-011 · 2026-07-11 · file · `tools/product_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13347,7 +13012,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-011 -->
-
 <!-- TRASH id=20260711-012 date=2026-07-11 kind=file source="tools/promotions_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-012 · 2026-07-11 · file · `tools/promotions_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13454,7 +13118,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-012 -->
-
 <!-- TRASH id=20260711-013 date=2026-07-11 kind=file source="tools/quality_check_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-013 · 2026-07-11 · file · `tools/quality_check_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13578,7 +13241,6 @@ def execut
 ```
 
 <!-- /TRASH 20260711-013 -->
-
 <!-- TRASH id=20260711-014 date=2026-07-11 kind=file source="tools/returns_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-014 · 2026-07-11 · file · `tools/returns_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13690,7 +13352,6 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
 ```
 
 <!-- /TRASH 20260711-014 -->
-
 <!-- TRASH id=20260711-015 date=2026-07-11 kind=file source="tools/sales_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-015 · 2026-07-11 · file · `tools/sales_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13809,7 +13470,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-015 -->
-
 <!-- TRASH id=20260711-016 date=2026-07-11 kind=file source="tools/store_management_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-016 · 2026-07-11 · file · `tools/store_management_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -13930,7 +13590,6 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
 ```
 
 <!-- /TRASH 20260711-016 -->
-
 <!-- TRASH id=20260711-017 date=2026-07-11 kind=file source="tools/supply_chain_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-017 · 2026-07-11 · file · `tools/supply_chain_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14027,7 +13686,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-017 -->
-
 <!-- TRASH id=20260711-018 date=2026-07-11 kind=file source="tools/system_improvement_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-018 · 2026-07-11 · file · `tools/system_improvement_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14148,7 +13806,6 @@ def _patch_file(filepath: str, old_text: str, new_text: str) -> str:
 ```
 
 <!-- /TRASH 20260711-018 -->
-
 <!-- TRASH id=20260711-019 date=2026-07-11 kind=file source="tools/trend_forecasting_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-019 · 2026-07-11 · file · `tools/trend_forecasting_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14253,7 +13910,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-019 -->
-
 <!-- TRASH id=20260711-020 date=2026-07-11 kind=file source="tools/workflow_coordinator_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-020 · 2026-07-11 · file · `tools/workflow_coordinator_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14382,7 +14038,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-020 -->
-
 <!-- TRASH id=20260711-021 date=2026-07-11 kind=file source="tools/competitor_intel_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-021 · 2026-07-11 · file · `tools/competitor_intel_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14498,7 +14153,6 @@ def execute_tool(tool_name:
 ```
 
 <!-- /TRASH 20260711-021 -->
-
 <!-- TRASH id=20260711-022 date=2026-07-11 kind=file source="tools/web_research_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-022 · 2026-07-11 · file · `tools/web_research_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14626,7 +14280,6 @@ TOOL_DEFINITIONS = [
 ```
 
 <!-- /TRASH 20260711-022 -->
-
 <!-- TRASH id=20260711-023 date=2026-07-11 kind=file source="tools/digital_delivery_tools.py" reason="Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers." -->
 ## 20260711-023 · 2026-07-11 · file · `tools/digital_delivery_tools.py`
 **Reason:** Declutter Frank (2026-07-11): orphan multi-agent *_tools.py layer, never wired into AGENT_TOOLS; superseded architecture. Verified zero live importers.  
@@ -14744,7 +14397,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-023 -->
-
 <!-- TRASH id=20260711-024 date=2026-07-11 kind=file source="tools/kdp_publisher.py" reason="Declutter Frank (2026-07-11): unused non-capability tooling (Amazon KDP / Printify POD / filament tracking). Zero references." -->
 ## 20260711-024 · 2026-07-11 · file · `tools/kdp_publisher.py`
 **Reason:** Declutter Frank (2026-07-11): unused non-capability tooling (Amazon KDP / Printify POD / filament tracking). Zero references.  
@@ -14854,7 +14506,6 @@ KDP_PLANNERS = {
 ```
 
 <!-- /TRASH 20260711-024 -->
-
 <!-- TRASH id=20260711-025 date=2026-07-11 kind=file source="tools/printify_publisher.py" reason="Declutter Frank (2026-07-11): unused non-capability tooling (Amazon KDP / Printify POD / filament tracking). Zero references." -->
 ## 20260711-025 · 2026-07-11 · file · `tools/printify_publisher.py`
 **Reason:** Declutter Frank (2026-07-11): unused non-capability tooling (Amazon KDP / Printify POD / filament tracking). Zero references.  
@@ -14965,7 +14616,6 @@ _KNOWN_TITLES: dict[str, str] = {
 ```
 
 <!-- /TRASH 20260711-025 -->
-
 <!-- TRASH id=20260711-026 date=2026-07-11 kind=file source="tools/filament_tracker.py" reason="Declutter Frank (2026-07-11): unused non-capability tooling (Amazon KDP / Printify POD / filament tracking). Zero references." -->
 ## 20260711-026 · 2026-07-11 · file · `tools/filament_tracker.py`
 **Reason:** Declutter Frank (2026-07-11): unused non-capability tooling (Amazon KDP / Printify POD / filament tracking). Zero references.  
@@ -15093,7 +14743,6 @@ def cogs_report(data: dict, sku: str | None = None) -> None:
 ```
 
 <!-- /TRASH 20260711-026 -->
-
 <!-- TRASH id=20260711-027 date=2026-07-11 kind=file source="tools/etsy_oauth_manual.py" reason="Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references." -->
 ## 20260711-027 · 2026-07-11 · file · `tools/etsy_oauth_manual.py`
 **Reason:** Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references.  
@@ -15224,7 +14873,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-027 -->
-
 <!-- TRASH id=20260711-028 date=2026-07-11 kind=file source="tools/lifestyle_composite_upload.py" reason="Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references." -->
 ## 20260711-028 · 2026-07-11 · file · `tools/lifestyle_composite_upload.py`
 **Reason:** Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references.  
@@ -15343,7 +14991,6 @@ def get_rank_image_ids(listing_id, ranks=(6, 7)):
 ```
 
 <!-- /TRASH 20260711-028 -->
-
 <!-- TRASH id=20260711-029 date=2026-07-11 kind=file source="tools/svg_text_to_paths.py" reason="Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references." -->
 ## 20260711-029 · 2026-07-11 · file · `tools/svg_text_to_paths.py`
 **Reason:** Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references.  
@@ -15477,7 +15124,6 @@ def convert_svg(src_path, dst_path):
 ```
 
 <!-- /TRASH 20260711-029 -->
-
 <!-- TRASH id=20260711-030 date=2026-07-11 kind=file source="tools/commercial_license_photos.py" reason="Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references." -->
 ## 20260711-030 · 2026-07-11 · file · `tools/commercial_license_photos.py`
 **Reason:** Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references.  
@@ -15599,7 +15245,6 @@ def _draw_shield(draw: ImageDraw.Draw, cx: int, cy: int, size: int, col
 ```
 
 <!-- /TRASH 20260711-030 -->
-
 <!-- TRASH id=20260711-031 date=2026-07-11 kind=file source="tools/commercial_license_tool.py" reason="Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references." -->
 ## 20260711-031 · 2026-07-11 · file · `tools/commercial_license_tool.py`
 **Reason:** Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references.  
@@ -15723,7 +15368,6 @@ Q: How d
 ```
 
 <!-- /TRASH 20260711-031 -->
-
 <!-- TRASH id=20260711-032 date=2026-07-11 kind=file source="tools/record_pinterest_demo.py" reason="Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references." -->
 ## 20260711-032 · 2026-07-11 · file · `tools/record_pinterest_demo.py`
 **Reason:** Declutter Frank (2026-07-11): duplicate/dev-artifact scripts superseded by live equivalents. Zero references.  
@@ -15819,7 +15463,6 @@ if __name__ == "__main__":
 ```
 
 <!-- /TRASH 20260711-032 -->
-
 <!-- TRASH id=20260711-033 date=2026-07-11 kind=file source="tools/add_digital_badge.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-033 · 2026-07-11 · file · `tools/add_digital_badge.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -15893,7 +15536,6 @@ if __name__ == "__main__":
 ```
 
 <!-- /TRASH 20260711-033 -->
-
 <!-- TRASH id=20260711-034 date=2026-07-11 kind=file source="tools/audit_fix_activate.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-034 · 2026-07-11 · file · `tools/audit_fix_activate.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16030,7 +15672,6 @@ def _fix_title(
 ```
 
 <!-- /TRASH 20260711-034 -->
-
 <!-- TRASH id=20260711-035 date=2026-07-11 kind=file source="tools/audit_listing_art_sources.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-035 · 2026-07-11 · file · `tools/audit_listing_art_sources.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16151,7 +15792,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-035 -->
-
 <!-- TRASH id=20260711-036 date=2026-07-11 kind=file source="tools/audit_shipping.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-036 · 2026-07-11 · file · `tools/audit_shipping.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16272,7 +15912,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-036 -->
-
 <!-- TRASH id=20260711-037 date=2026-07-11 kind=file source="tools/listing_accuracy_audit.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-037 · 2026-07-11 · file · `tools/listing_accuracy_audit.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16392,7 +16031,6 @@ def check_title(listing: dict) -> list[str]:
 ```
 
 <!-- /TRASH 20260711-037 -->
-
 <!-- TRASH id=20260711-038 date=2026-07-11 kind=file source="tools/shop_audit.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-038 · 2026-07-11 · file · `tools/shop_audit.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16522,7 +16160,6 @@ def load
 ```
 
 <!-- /TRASH 20260711-038 -->
-
 <!-- TRASH id=20260711-039 date=2026-07-11 kind=file source="tools/close_duplicate_listings.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-039 · 2026-07-11 · file · `tools/close_duplicate_listings.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16662,7 +16299,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-039 -->
-
 <!-- TRASH id=20260711-040 date=2026-07-11 kind=file source="tools/reactivate_listings.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-040 · 2026-07-11 · file · `tools/reactivate_listings.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16771,7 +16407,6 @@ WAVE2_IDS = WRONG_SOURCE_FILE_LISTINGS
 ```
 
 <!-- /TRASH 20260711-040 -->
-
 <!-- TRASH id=20260711-041 date=2026-07-11 kind=file source="tools/restore_sections.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-041 · 2026-07-11 · file · `tools/restore_sections.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16872,7 +16507,6 @@ LISTING_SECTION_MAP = {
 ```
 
 <!-- /TRASH 20260711-041 -->
-
 <!-- TRASH id=20260711-042 date=2026-07-11 kind=file source="tools/sync_product_catalog.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-042 · 2026-07-11 · file · `tools/sync_product_catalog.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -16981,7 +16615,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-042 -->
-
 <!-- TRASH id=20260711-043 date=2026-07-11 kind=file source="tools/extend_manifest_from_catalog.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-043 · 2026-07-11 · file · `tools/extend_manifest_from_catalog.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17095,7 +16728,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-043 -->
-
 <!-- TRASH id=20260711-044 date=2026-07-11 kind=file source="tools/planner_page_adder.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-044 · 2026-07-11 · file · `tools/planner_page_adder.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17202,7 +16834,6 @@ PLANNERS = {
 ```
 
 <!-- /TRASH 20260711-044 -->
-
 <!-- TRASH id=20260711-045 date=2026-07-11 kind=file source="tools/planner_hyperlinker.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-045 · 2026-07-11 · file · `tools/planner_hyperlinker.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17311,7 +16942,6 @@ def _cover_palette(theme_rgb=None, accent_rgb=None, bg_rgb=None, dark_rgb=None):
 ```
 
 <!-- /TRASH 20260711-045 -->
-
 <!-- TRASH id=20260711-046 date=2026-07-11 kind=file source="tools/upgrade_faith_fonts.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-046 · 2026-07-11 · file · `tools/upgrade_faith_fonts.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17385,7 +17015,6 @@ OVERRIDES = {
 ```
 
 <!-- /TRASH 20260711-046 -->
-
 <!-- TRASH id=20260711-047 date=2026-07-11 kind=file source="tools/gen_room_library.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-047 · 2026-07-11 · file · `tools/gen_room_library.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17485,7 +17114,6 @@ ROOMS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-047 -->
-
 <!-- TRASH id=20260711-048 date=2026-07-11 kind=file source="tools/generate_business_tracker.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-048 · 2026-07-11 · file · `tools/generate_business_tracker.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17586,7 +17214,6 @@ def build_products(wb):
 ```
 
 <!-- /TRASH 20260711-048 -->
-
 <!-- TRASH id=20260711-049 date=2026-07-11 kind=file source="tools/etsy_shop_updates.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-049 · 2026-07-11 · file · `tools/etsy_shop_updates.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17698,7 +17325,6 @@ def categorize(listing: dict) -> str:
 ```
 
 <!-- /TRASH 20260711-049 -->
-
 <!-- TRASH id=20260711-050 date=2026-07-11 kind=file source="tools/stage_p3d_photo_approvals.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-050 · 2026-07-11 · file · `tools/stage_p3d_photo_approvals.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17808,7 +17434,6 @@ def stage_sku(sku: str, catalog: dict[str, dict], client) -> None:
 ```
 
 <!-- /TRASH 20260711-050 -->
-
 <!-- TRASH id=20260711-051 date=2026-07-11 kind=file source="tools/listing_drop_monitor.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-051 · 2026-07-11 · file · `tools/listing_drop_monitor.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -17887,7 +17512,6 @@ PRICE_FLOORS: list[tuple[str, float, float | None, str]] = [
 ```
 
 <!-- /TRASH 20260711-051 -->
-
 <!-- TRASH id=20260711-052 date=2026-07-11 kind=file source="tools/listing_performance_monitor.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-052 · 2026-07-11 · file · `tools/listing_performance_monitor.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -18027,7 +17651,6 @@ def run(category_filter: str = "", save_only: bool = False) -> dict:
 ```
 
 <!-- /TRASH 20260711-052 -->
-
 <!-- TRASH id=20260711-053 date=2026-07-11 kind=file source="tools/review_monitor.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-053 · 2026-07-11 · file · `tools/review_monitor.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -18162,7 +17785,6 @@ def run(show_all: bool = False, check_only: bool = False) -> int:
 ```
 
 <!-- /TRASH 20260711-053 -->
-
 <!-- TRASH id=20260711-054 date=2026-07-11 kind=file source="tools/social_content_generator.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-054 · 2026-07-11 · file · `tools/social_content_generator.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -18284,7 +17906,6 @@ CATEGORIES = {
 ```
 
 <!-- /TRASH 20260711-054 -->
-
 <!-- TRASH id=20260711-055 date=2026-07-11 kind=file source="tools/weekly_market_research.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-055 · 2026-07-11 · file · `tools/weekly_market_research.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -18408,7 +18029,6 @@ def search_category(client: EtsyAPIClient, category: str, queries: list[str]) ->
 ```
 
 <!-- /TRASH 20260711-055 -->
-
 <!-- TRASH id=20260711-056 date=2026-07-11 kind=file source="tools/seasonal_sales_scheduler.py" reason="Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references." -->
 ## 20260711-056 · 2026-07-11 · file · `tools/seasonal_sales_scheduler.py`
 **Reason:** Declutter Frank (2026-07-11): completed one-off migration/audit scripts + monitors never wired to a scheduler. Zero references.  
@@ -18538,7 +18158,6 @@ class SaleDefinition:
 ```
 
 <!-- /TRASH 20260711-056 -->
-
 <!-- TRASH id=20260711-057 date=2026-07-11 kind=file source="tools/canva_api.py" reason="Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out." -->
 ## 20260711-057 · 2026-07-11 · file · `tools/canva_api.py`
 **Reason:** Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out.  
@@ -18656,7 +18275,6 @@ class CanvaAPIClient:
 ```
 
 <!-- /TRASH 20260711-057 -->
-
 <!-- TRASH id=20260711-058 date=2026-07-11 kind=file source="tools/canva_oauth.py" reason="Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out." -->
 ## 20260711-058 · 2026-07-11 · file · `tools/canva_oauth.py`
 **Reason:** Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out.  
@@ -18772,7 +18390,6 @@ def step1_generate_url():
 ```
 
 <!-- /TRASH 20260711-058 -->
-
 <!-- TRASH id=20260711-059 date=2026-07-11 kind=file source="tools/canva_tools.py" reason="Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out." -->
 ## 20260711-059 · 2026-07-11 · file · `tools/canva_tools.py`
 **Reason:** Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out.  
@@ -18870,7 +18487,6 @@ TOOL_DEFINITIONS: list[dict] = [
 ```
 
 <!-- /TRASH 20260711-059 -->
-
 <!-- TRASH id=20260711-060 date=2026-07-11 kind=file source="tools/email_leadmagnet.py" reason="Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out." -->
 ## 20260711-060 · 2026-07-11 · file · `tools/email_leadmagnet.py`
 **Reason:** Declutter Frank (2026-07-11): Canva integration + email lead-magnet, never called by Frank. Referencing lines in installer/command_center edited out.  
@@ -18973,7 +18589,6 @@ WELCOME_EMAIL_HTML = """\
 ```
 
 <!-- /TRASH 20260711-060 -->
-
 <!-- TRASH id=20260711-061 date=2026-07-11 kind=file source="data/kdp/DP1026_kdp_submission.json" reason="Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py." -->
 ## 20260711-061 · 2026-07-11 · file · `data/kdp/DP1026_kdp_submission.json`
 **Reason:** Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py.  
@@ -19118,7 +18733,6 @@ WELCOME_EMAIL_HTML = """\
 ```
 
 <!-- /TRASH 20260711-061 -->
-
 <!-- TRASH id=20260711-062 date=2026-07-11 kind=file source="data/kdp/DP1027_kdp_submission.json" reason="Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py." -->
 ## 20260711-062 · 2026-07-11 · file · `data/kdp/DP1027_kdp_submission.json`
 **Reason:** Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py.  
@@ -19257,7 +18871,6 @@ WELCOME_EMAIL_HTML = """\
 ```
 
 <!-- /TRASH 20260711-062 -->
-
 <!-- TRASH id=20260711-063 date=2026-07-11 kind=file source="data/kdp/DP1028_kdp_submission.json" reason="Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py." -->
 ## 20260711-063 · 2026-07-11 · file · `data/kdp/DP1028_kdp_submission.json`
 **Reason:** Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py.  
@@ -19394,7 +19007,6 @@ WELCOME_EMAIL_HTML = """\
 ```
 
 <!-- /TRASH 20260711-063 -->
-
 <!-- TRASH id=20260711-064 date=2026-07-11 kind=file source="data/kdp/DP1029_kdp_submission.json" reason="Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py." -->
 ## 20260711-064 · 2026-07-11 · file · `data/kdp/DP1029_kdp_submission.json`
 **Reason:** Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py.  
@@ -19531,7 +19143,6 @@ WELCOME_EMAIL_HTML = """\
 ```
 
 <!-- /TRASH 20260711-064 -->
-
 <!-- TRASH id=20260711-065 date=2026-07-11 kind=file source="data/kdp/kdp_setup_guide.md" reason="Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py." -->
 ## 20260711-065 · 2026-07-11 · file · `data/kdp/kdp_setup_guide.md`
 **Reason:** Declutter Frank (2026-07-11): companion data artifacts for removed kdp_publisher.py.  
@@ -19645,7 +19256,6 @@ For each planner:
 ````
 
 <!-- /TRASH 20260711-065 -->
-
 <!-- TRASH id=20260711-066 date=2026-07-11 kind=file source="tools/_archive/batch_fix_lifestyle.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-066 · 2026-07-11 · file · `tools/_archive/batch_fix_lifestyle.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -19768,7 +19378,6 @@ def get_image_ranks(listing_id, headers):
 ```
 
 <!-- /TRASH 20260711-066 -->
-
 <!-- TRASH id=20260711-067 date=2026-07-11 kind=file source="tools/_archive/batch_fix_wall_art_lifestyle.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-067 · 2026-07-11 · file · `tools/_archive/batch_fix_wall_art_lifestyle.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -19862,7 +19471,6 @@ FRAME_COLORS = {
 ```
 
 <!-- /TRASH 20260711-067 -->
-
 <!-- TRASH id=20260711-068 date=2026-07-11 kind=file source="tools/_archive/create_art_listings_10.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-068 · 2026-07-11 · file · `tools/_archive/create_art_listings_10.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -19976,7 +19584,6 @@ def _load_fonts():
 ```
 
 <!-- /TRASH 20260711-068 -->
-
 <!-- TRASH id=20260711-069 date=2026-07-11 kind=file source="tools/_archive/create_art_listings_9.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-069 · 2026-07-11 · file · `tools/_archive/create_art_listings_9.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20099,7 +19706,6 @@ def composite_into_ai_room(bg_
 ```
 
 <!-- /TRASH 20260711-069 -->
-
 <!-- TRASH id=20260711-070 date=2026-07-11 kind=file source="tools/_archive/fill_all_listing_photos.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-070 · 2026-07-11 · file · `tools/_archive/fill_all_listing_photos.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20215,7 +19821,6 @@ def resolve_art(lid: int, title: str, imgs: list, lmap: dict) -> Path | None:
 ```
 
 <!-- /TRASH 20260711-070 -->
-
 <!-- TRASH id=20260711-071 date=2026-07-11 kind=file source="tools/_archive/fill_missing_listing_photos.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-071 · 2026-07-11 · file · `tools/_archive/fill_missing_listing_photos.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20332,7 +19937,6 @@ def find_art_file(dp_id, files_list):
 ```
 
 <!-- /TRASH 20260711-071 -->
-
 <!-- TRASH id=20260711-072 date=2026-07-11 kind=file source="tools/_archive/final_cdn_cleanup.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-072 · 2026-07-11 · file · `tools/_archive/final_cdn_cleanup.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20445,7 +20049,6 @@ def make_art_raw(art_path: Path, out: Path) -> bool:
 ```
 
 <!-- /TRASH 20260711-072 -->
-
 <!-- TRASH id=20260711-073 date=2026-07-11 kind=file source="tools/_archive/fix_3d_listings.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-073 · 2026-07-11 · file · `tools/_archive/fix_3d_listings.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20566,7 +20169,6 @@ hea
 ```
 
 <!-- /TRASH 20260711-073 -->
-
 <!-- TRASH id=20260711-074 date=2026-07-11 kind=file source="tools/_archive/fix_boho_botanical_listing.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-074 · 2026-07-11 · file · `tools/_archive/fix_boho_botanical_listing.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20681,7 +20283,6 @@ def create_gallery_grid(out_path):
 ```
 
 <!-- /TRASH 20260711-074 -->
-
 <!-- TRASH id=20260711-075 date=2026-07-11 kind=file source="tools/_archive/fix_cdn_listing_photos.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-075 · 2026-07-11 · file · `tools/_archive/fix_cdn_listing_photos.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20803,7 +20404,6 @@ def make_frame_options(art_path: Path, out: Path) -> bool:
 ```
 
 <!-- /TRASH 20260711-075 -->
-
 <!-- TRASH id=20260711-076 date=2026-07-11 kind=file source="tools/_archive/fix_descriptions.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-076 · 2026-07-11 · file · `tools/_archive/fix_descriptions.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -20924,7 +20524,6 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 ```
 
 <!-- /TRASH 20260711-076 -->
-
 <!-- TRASH id=20260711-077 date=2026-07-11 kind=file source="tools/_archive/fix_faith_svgs.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-077 · 2026-07-11 · file · `tools/_archive/fix_faith_svgs.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21005,7 +20604,6 @@ def fix_02():
 ```
 
 <!-- /TRASH 20260711-077 -->
-
 <!-- TRASH id=20260711-078 date=2026-07-11 kind=file source="tools/_archive/fix_gallery_wall_scenes.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-078 · 2026-07-11 · file · `tools/_archive/fix_gallery_wall_scenes.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21119,7 +20717,6 @@ def shift_background_down(bg_path, shift_y):
 ```
 
 <!-- /TRASH 20260711-078 -->
-
 <!-- TRASH id=20260711-079 date=2026-07-11 kind=file source="tools/_archive/fix_lifestyle_scenes.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-079 · 2026-07-11 · file · `tools/_archive/fix_lifestyle_scenes.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21226,7 +20823,6 @@ def composite_into_ai_room(bg_path, art_path, out_path, frame_color=(139,110,80)
 ```
 
 <!-- /TRASH 20260711-079 -->
-
 <!-- TRASH id=20260711-080 date=2026-07-11 kind=file source="tools/_archive/fix_missing_files.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-080 · 2026-07-11 · file · `tools/_archive/fix_missing_files.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21336,7 +20932,6 @@ def fetch_listing_image_url(client: EtsyAPIClient, listing_id: int) -> str | Non
 ```
 
 <!-- /TRASH 20260711-080 -->
-
 <!-- TRASH id=20260711-081 date=2026-07-11 kind=file source="tools/_archive/fix_printify_listings.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-081 · 2026-07-11 · file · `tools/_archive/fix_printify_listings.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21432,7 +21027,6 @@ LISTING_DATA: dict[str, dict] = {
 ```
 
 <!-- /TRASH 20260711-081 -->
-
 <!-- TRASH id=20260711-082 date=2026-07-11 kind=file source="tools/_archive/fix_printify_shipping.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-082 · 2026-07-11 · file · `tools/_archive/fix_printify_shipping.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21552,7 +21146,6 @@ def apply_free_shipping(client: EtsyAPIClient, listings: list[dict], free_pid: i
 ```
 
 <!-- /TRASH 20260711-082 -->
-
 <!-- TRASH id=20260711-083 date=2026-07-11 kind=file source="tools/_archive/fix_sticker_counts.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-083 · 2026-07-11 · file · `tools/_archive/fix_sticker_counts.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21682,7 +21275,6 @@ def fix_listing(name, lid, pid=None):
 ```
 
 <!-- /TRASH 20260711-083 -->
-
 <!-- TRASH id=20260711-084 date=2026-07-11 kind=file source="tools/_archive/fix_wrong_source_files.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-084 · 2026-07-11 · file · `tools/_archive/fix_wrong_source_files.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21787,7 +21379,6 @@ if __name__ == '__main__':
 ```
 
 <!-- /TRASH 20260711-084 -->
-
 <!-- TRASH id=20260711-085 date=2026-07-11 kind=file source="tools/_archive/generate_groovy_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-085 · 2026-07-11 · file · `tools/_archive/generate_groovy_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -21911,7 +21502,6 @@ def d03_spread_love():
 ```
 
 <!-- /TRASH 20260711-085 -->
-
 <!-- TRASH id=20260711-086 date=2026-07-11 kind=file source="tools/_archive/generate_mom_life_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-086 · 2026-07-11 · file · `tools/_archive/generate_mom_life_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22022,7 +21612,6 @@ def star_burst_ring(cx, cy, r, count=8, fill="black"):
 ```
 
 <!-- /TRASH 20260711-086 -->
-
 <!-- TRASH id=20260711-087 date=2026-07-11 kind=file source="tools/_archive/generate_retro_moms_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-087 · 2026-07-11 · file · `tools/_archive/generate_retro_moms_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22142,7 +21731,6 @@ def football(cx, cy, w=160, h=105, fill="#7B3F00"):
 ```
 
 <!-- /TRASH 20260711-087 -->
-
 <!-- TRASH id=20260711-088 date=2026-07-11 kind=file source="tools/_archive/publish_groovy_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-088 · 2026-07-11 · file · `tools/_archive/publish_groovy_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22254,7 +21842,6 @@ def make_3up(f1, f2, f3, out_path, gap=20):
 ```
 
 <!-- /TRASH 20260711-088 -->
-
 <!-- TRASH id=20260711-089 date=2026-07-11 kind=file source="tools/_archive/publish_mom_life_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-089 · 2026-07-11 · file · `tools/_archive/publish_mom_life_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22367,7 +21954,6 @@ def make_2up(f1, f2, out_path):
 ```
 
 <!-- /TRASH 20260711-089 -->
-
 <!-- TRASH id=20260711-090 date=2026-07-11 kind=file source="tools/_archive/publish_retro_moms_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-090 · 2026-07-11 · file · `tools/_archive/publish_retro_moms_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22484,7 +22070,6 @@ All text is converted to paths — no fonts to install, no missing font errors, 
 ```
 
 <!-- /TRASH 20260711-090 -->
-
 <!-- TRASH id=20260711-091 date=2026-07-11 kind=file source="tools/_archive/publish_sublimation_pack.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-091 · 2026-07-11 · file · `tools/_archive/publish_sublimation_pack.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22595,7 +22180,6 @@ Each file: PNG, 2798×2438px (9.325×8.125 inches), 300 DPI, sRGB, ready to prin
 ```
 
 <!-- /TRASH 20260711-091 -->
-
 <!-- TRASH id=20260711-092 date=2026-07-11 kind=file source="tools/_archive/publish_svg_bundle.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-092 · 2026-07-11 · file · `tools/_archive/publish_svg_bundle.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22710,7 +22294,6 @@ Q: Do these wo
 ```
 
 <!-- /TRASH 20260711-092 -->
-
 <!-- TRASH id=20260711-093 date=2026-07-11 kind=file source="tools/_archive/redo_lifestyle_rooms.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-093 · 2026-07-11 · file · `tools/_archive/redo_lifestyle_rooms.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22833,7 +22416,6 @@ def upload(listing_id, img_path, rank):
 ```
 
 <!-- /TRASH 20260711-093 -->
-
 <!-- TRASH id=20260711-094 date=2026-07-11 kind=file source="tools/_archive/regen_svg_bundles.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-094 · 2026-07-11 · file · `tools/_archive/regen_svg_bundles.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -22933,7 +22515,6 @@ BUNDLES = {
 ```
 
 <!-- /TRASH 20260711-094 -->
-
 <!-- TRASH id=20260711-095 date=2026-07-11 kind=file source="tools/_archive/regen_wall_art_bgs.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-095 · 2026-07-11 · file · `tools/_archive/regen_wall_art_bgs.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -23050,7 +22631,6 @@ def gen_bg(prompt, out_path):
 ```
 
 <!-- /TRASH 20260711-095 -->
-
 <!-- TRASH id=20260711-096 date=2026-07-11 kind=file source="tools/_archive/reupload_lifestyle_scenes.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-096 · 2026-07-11 · file · `tools/_archive/reupload_lifestyle_scenes.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -23174,7 +22754,6 @@ if __name__ == '__main__':
 ```
 
 <!-- /TRASH 20260711-096 -->
-
 <!-- TRASH id=20260711-097 date=2026-07-11 kind=file source="tools/_archive/upload_bundle_listing.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-097 · 2026-07-11 · file · `tools/_archive/upload_bundle_listing.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -23303,7 +22882,6 @@ def upload_digital_file(listing_id, file_path, rank):
 ```
 
 <!-- /TRASH 20260711-097 -->
-
 <!-- TRASH id=20260711-098 date=2026-07-11 kind=file source="tools/_archive/upload_flat_previews.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-098 · 2026-07-11 · file · `tools/_archive/upload_flat_previews.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -23432,7 +23010,6 @@ def main():
 ```
 
 <!-- /TRASH 20260711-098 -->
-
 <!-- TRASH id=20260711-099 date=2026-07-11 kind=file source="tools/_archive/upload_sticker_listings.py" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-099 · 2026-07-11 · file · `tools/_archive/upload_sticker_listings.py`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -23562,7 +23139,6 @@ def process_listing(api, listing):
 ```
 
 <!-- /TRASH 20260711-099 -->
-
 <!-- TRASH id=20260711-100 date=2026-07-11 kind=file source="tools/_archive/README.md" reason="Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it." -->
 ## 20260711-100 · 2026-07-11 · file · `tools/_archive/README.md`
 **Reason:** Declutter Frank (2026-07-11): tools/_archive/ self-labeled graveyard of superseded scripts; nothing imports from it.  
@@ -23582,7 +23158,6 @@ Archived 2026-06-09 during the reliability audit.
 ```
 
 <!-- /TRASH 20260711-100 -->
-
 <!-- TRASH id=20260711-101 date=2026-07-11 kind=snippet source="tools/installer/setup_wizard.py" reason="Declutter Frank (2026-07-11): removed Canva setup step alongside deletion of tools/canva_*.py." -->
 ## 20260711-101 · 2026-07-11 · snippet · `tools/installer/setup_wizard.py`
 **Reason:** Declutter Frank (2026-07-11): removed Canva setup step alongside deletion of tools/canva_*.py.  
@@ -23617,7 +23192,6 @@ def configure_canva(summary):
 ```
 
 <!-- /TRASH 20260711-101 -->
-
 <!-- TRASH id=20260711-102 date=2026-07-11 kind=snippet source="tools/api_server/db.py" reason="Declutter Frank (2026-07-11): dead DB function, zero callers anywhere in repo. Table/write-path left intact." -->
 ## 20260711-102 · 2026-07-11 · snippet · `tools/api_server/db.py`
 **Reason:** Declutter Frank (2026-07-11): dead DB function, zero callers anywhere in repo. Table/write-path left intact.  
@@ -23638,7 +23212,6 @@ def get_listing_history(listing_id: int, days: int = 30) -> list:
 ```
 
 <!-- /TRASH 20260711-102 -->
-
 <!-- TRASH id=20260711-103 date=2026-07-11 kind=snippet source="tools/api_server/db.py" reason="Declutter Frank (2026-07-11): dead DB function, zero callers anywhere in repo. Table/write-path left intact." -->
 ## 20260711-103 · 2026-07-11 · snippet · `tools/api_server/db.py`
 **Reason:** Declutter Frank (2026-07-11): dead DB function, zero callers anywhere in repo. Table/write-path left intact.  
@@ -23659,7 +23232,6 @@ def get_rate_limit_history(limit: int = 500) -> list:
 ```
 
 <!-- /TRASH 20260711-103 -->
-
 <!-- TRASH id=20260711-104 date=2026-07-11 kind=snippet source="tools/api_server/db.py" reason="Declutter Frank (2026-07-11): dead DB function, zero callers anywhere in repo. Table/write-path left intact." -->
 ## 20260711-104 · 2026-07-11 · snippet · `tools/api_server/db.py`
 **Reason:** Declutter Frank (2026-07-11): dead DB function, zero callers anywhere in repo. Table/write-path left intact.  
@@ -23679,4 +23251,115 @@ def delete_agent_heartbeat(name: str) -> None:
 ```
 
 <!-- /TRASH 20260711-104 -->
+<!-- TRASH id=20260725-001 date=2026-07-25 kind=file source="tools/health_check.py" reason="orphaned -- zero references anywhere (not imported/subprocess-invoked by main.py or any other tools/*.py file, no CLAUDE.md mention, no CI workflow reference, no real test coverage); superseded by shop_health_check.py + main.py builtin health loop (2026-07-25 cleanup pass, verified via dedicated read-only cross-reference agent)" -->
+## 20260725-001 · 2026-07-25 · file · `tools/health_check.py`
+**Reason:** orphaned -- zero references anywhere (not imported/subprocess-invoked by main.py or any other tools/*.py file, no CLAUDE.md mention, no CI workflow reference, no real test coverage); superseded by shop_health_check.py + main.py builtin health loop (2026-07-25 cleanup pass, verified via dedicated read-only cross-reference agent)  
+**Payload:** `data/trash/files/20260725-001__health_check.py`
 
+```
+#!/usr/bin/env python3
+"""
+health_check.py
+
+Daily automated health check for the OnBrandCraftz pipeline.
+Catches silent failures before they cost a week of sales.
+
+Checks:
+  1. Etsy OAuth token — valid and not near expiry
+  2. OpenAI API — reachable and not billing-limited
+  3. Active listings — none incorrectly in draft state
+  4. SVG bundles — manifests valid, ZIPs under 20MB
+  5. Sublimation ZIPs — under 20MB each
+  6. Tag compliance — all listing titles ≤70 chars
+  7. Decision log — confirm autonomous actions are being logged
+  8. Report freshness — warn if no report in 8+ days
+
+Outputs a health summary and appends to data/health_log.json.
+Exits with code 1 if any critical issue is found (for cron alerting).
+
+Usage:
+  python tools/health_check.py              # full check, verbose
+  python tools/health_check.py --quiet      # only print failures
+  python tools/health_check.py --json       # machine-readable JSON output
+"""
+
+import json, os, sys, re, time
+from datetime import date, datetime, timedelta
+from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+_env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+with open(_env_path) as _f:
+    for _line in _f:
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
+HEALTH_LOG      = Path("data/health_log.json")
+REPORTS_DIR     = Path("data/reports")
+SVG_BUNDLES_DIR = Path("data/svg_bundles")
+SUBLIM_DIR      = Path("data/sublimation_pack")
+DECISION_LOG    = Path("data/decision_log.json")
+
+MAX_ZIP_MB = 20
+
+
+# ── Individual checks ─────────────────────────────────────────────────────────
+
+def check_etsy_token() -> dict:
+    try:
+        from etsy_api import EtsyAPIClient, EtsyAPIError
+        client = EtsyAPIClient()
+        if not client.access_token:
+            return {"name": "Etsy OAuth token", "status": "CRITICAL",
+                    "detail": "ETSY_ACCESS_TOKEN is empty — run: python tools/etsy_oauth.py"}
+        # Make a lightweight authenticated call
+        client._require_oauth()
+        client.get_shop()
+        return {"name": "Etsy OAuth token", "status": "OK",
+                "detail": "Token valid — authenticated API call succeeded"}
+    except Exception as e:
+        err = str(e)
+        if "401" in err or "Unauthorized" in err:
+            return {"name": "Etsy OAuth token", "status": "CRITICAL",
+                    "detail": f"Token expired or invalid — run: python tools/etsy_oauth.py"}
+        return {"name": "Etsy OAuth token", "status": "WARN",
+                "detail": f"Check failed (may be network): {err[:100]}"}
+
+
+def check_openai_api() -> dict:
+    try:
+        import openai
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+        if not api_key:
+            return {"name": "OpenAI API", "status": "CRITICAL",
+                    "detail": "OPENAI_API_KEY missing from .env"}
+        client = openai.OpenAI(api_key=api_key)
+        # Use a tiny cheap call to test billing status
+        r = client.models.list()
+        return {"name": "OpenAI API", "status": "OK",
+                "detail": "API reachable and billing active"}
+    except Exception as e:
+        err = str(e)
+        if "billing" in err.lower() or "hard_limit" in err.lower():
+            return {"name": "OpenAI API", "status": "CRITICAL",
+                    "detail": "Billing hard limit reached — top up at platform.openai.com"}
+        if "401" in err or "auth" in err.lower():
+            return {"name": "OpenAI API", "status": "CRITICAL",
+                    "detail": "API key invalid — check OPENAI_API_KEY in .env"}
+        return {"name": "OpenAI API", "status": "WARN",
+                "detail": f"API check failed: {err[:100]}"}
+
+
+def check_active_listings() -> dict:
+    try:
+        from etsy_api import EtsyAPIClient, EtsyAPIError
+        client = EtsyAPIClient()
+        if not client.access_token:
+  
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260725-001 -->
