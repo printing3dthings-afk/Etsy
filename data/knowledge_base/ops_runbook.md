@@ -12990,3 +12990,190 @@ Scott's explicit go-ahead per file: `gen_room_library.py`,
 is not a safe basis for deletion in this codebase — always trace transitive
 imports through other `tools/*.py` files and check CI workflows + CLAUDE.md
 prose before archiving anything flagged as "orphaned."
+
+
+## 2026-07-25 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Durable volume not writable
+hourly health loop found /tmp/tmpdl2iuuc8/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpdl2iuuc8/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpfero81mi/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 16460). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-25 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 16462). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Durable volume not writable
+hourly health loop found /tmp/tmpn7_0avhm/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpn7_0avhm/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpxjrajptk/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 18143). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-25 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 18145). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+---
+
+## 2026-07-26 — SKU + category (taxonomy_id) backfill across every Etsy listing
+
+Scott: "I need every listing on Etsy to be categorized and have skus so we
+can track everything better." Before this, SKU had zero infrastructure
+anywhere (nothing in `EtsyAPIClient`, `product_catalog.json`, or listing
+creation ever touched it), and category (`taxonomy_id`) coverage was
+partial — only 3 of ~10 categories had a hardcoded default, and even the
+existing self-correcting live-check (`_resolve_category_taxonomy_id()`)
+only ran for categories that already had a guess in the dict, skipping
+exactly the categories that needed it most.
+
+**Two real bugs fixed in `_resolve_category_taxonomy_id()` along the way**
+(main.py ~11740): (1) it never attempted the live-listing verification for
+a category with no hardcoded default at all — broadened so any category
+with ≥1 live listing gets checked/discovered, not just ones already in
+`_PRODUCT_TAXONOMY_BY_CATEGORY`. (2) `_CATEGORY_TAXONOMY_VERIFIED` only
+cached "did we check," not the resolved value — meaning a live-discovered
+correction applied to exactly one call, then reverted to the stale
+hardcoded default on every subsequent call in the same process. Now caches
+the actual resolved value.
+
+**Shipped:**
+- New `update_sku_and_category` staged-action type (main.py
+  `_execute_staged_action`) — one combined `update_listing` PATCH when both
+  fields need fixing, not two, to minimize edit-count/ranking-signal cost
+  per listing (CLAUDE.md Ranking Recovery Playbook). Wired into both
+  allowed-type sets, the `stage_action` chat tool, and
+  `db._RANKING_RECOVERY_TYPES` (a sku/taxonomy edit resets the same
+  ~2-3-week re-index recovery window a tags/title/description edit does).
+- Durable work queue (`sku_taxonomy_backfill_queue.json`, volume-or-local
+  sidecar) + new weekly loop `_sku_taxonomy_backfill_loop()`
+  (`base_interval=604_800`) staging up to 18 fixes/week — the pacing Scott
+  approved (~15-20/week) so a ~170-listing sweep doesn't compound-edit the
+  whole shop's search ranking at once. Staging makes no Etsy calls and
+  carries no ranking risk; only Scott's own approval actually edits a
+  listing, so this controls how many NEW actions appear per week, not
+  approval itself.
+- `stage_product_publish()` now sets `sku` = `product_id` on every new
+  listing at creation time, so this never needs a backfill again going
+  forward.
+- `check_attributes()` (`tools/listing_integrity_check.py`) gained a SKU
+  WARN check alongside the existing taxonomy_id WARN — the standing
+  guardrail that catches drift after the one-time sweep completes. Only
+  checked when a listing maps to exactly one `dp_code` (ambiguous for
+  bundles, skipped rather than guessed).
+- SKU convention: reuse `product_catalog.json`'s existing `product_id` as
+  the SKU verbatim (Scott's choice) — no new catalog field, no renaming of
+  the inconsistent/verbose existing product_ids.
+
+**13 `uncategorized` catalog entries** (`MISC_*` product_ids, all
+`etsy_sync`-imported, never assigned a category) were inspected and are all
+unambiguously `wall_art` — every one's name says "Art Print... Wall
+Decor... Multiple Sizes," every file is a `DP####_print_sizes.zip` (the
+documented wall-art print-ZIP convention), and every price matches wall-art
+tiers. Proposed to Scott directly rather than auto-applied; excluded from
+the automatic weekly queue until he confirms.

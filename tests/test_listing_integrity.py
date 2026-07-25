@@ -89,6 +89,7 @@ _GOOD_LISTING = {
     "is_supply": False,
     "taxonomy_id": 2078,
     "price": {"amount": 799, "divisor": 100, "currency_code": "USD"},
+    "sku": "DP1001",  # matches _GOOD_ENTRY's single dp_code -- 2026-07-26 SKU backfill check
 }
 _GOOD_FILES = [{"filename": "DP1001_print_sizes.zip"}]
 _GOOD_IMAGES = [{"rank": i, "url_fullxfull": f"https://example.test/{i}.jpg"} for i in range(1, 6)]

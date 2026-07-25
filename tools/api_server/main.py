@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f2c07a5-v263"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a819e2c-v264"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2563,6 +2563,7 @@ AGENT_TOOLS = [
                     "enum": [
                         "update_tags", "update_title", "update_description", "publish_listing",
                         "deactivate_listing", "toggle_listing_state", "update_price",
+                        "update_sku_and_category",
                     ],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
@@ -2596,6 +2597,17 @@ AGENT_TOOLS = [
                         f"changes on more than 5 listings in one session; for more than one "
                         "listing use stage_batch_price_update instead, which enforces that cap."
                     ),
+                },
+                "sku": {
+                    "type": "string",
+                    "description": (
+                        "New SKU for update_sku_and_category — OnBrandCraftz convention is "
+                        "the product's product_catalog.json product_id (e.g. 'DP1026')."
+                    ),
+                },
+                "taxonomy_id": {
+                    "type": "integer",
+                    "description": "New Etsy taxonomy_id (category) for update_sku_and_category.",
                 },
             },
             "required": ["action_type", "listing_id", "summary"],
@@ -3700,6 +3712,10 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["new_state"] = ti["new_state"]
             if ti.get("price") is not None:
                 payload["price"] = ti["price"]
+            if ti.get("sku") is not None:
+                payload["sku"] = ti["sku"]
+            if ti.get("taxonomy_id") is not None:
+                payload["taxonomy_id"] = ti["taxonomy_id"]
             listing_for_baseline = None
             if ti.get("action_type") in _ETSY_STAGED_ACTION_TYPES and ti.get("listing_id"):
                 # Best-effort baseline for the approval-time freshness re-check
@@ -6333,6 +6349,104 @@ async def _file_audit_loop() -> None:
         await asyncio.sleep(delay)
 
 
+def _run_sku_taxonomy_backfill_batch() -> dict:
+    """One weekly batch of the SKU/category backfill sweep (2026-07-26,
+    "every listing categorized and has a SKU" -- Scott). Builds the durable
+    queue on first run (a real ~170-listing Etsy sweep, hence this whole
+    function is dispatched via asyncio.to_thread from the loop below, never
+    called directly on the event loop), then stages up to
+    _BACKFILL_BATCH_SIZE new update_sku_and_category actions for approval --
+    the pacing Scott asked for (~15-20/week) so this doesn't compound-edit
+    the whole shop's search ranking at once (CLAUDE.md Ranking Recovery
+    Playbook). Staging itself makes no Etsy calls and carries no ranking
+    risk -- only Scott's own approval (via the normal Action Center flow,
+    including bulk-approve) actually edits a listing, so the real pacing
+    control is how many NEW actions appear here per run, not anything that
+    blocks approval itself."""
+    queue = _read_sku_taxonomy_backfill_queue()
+    if not queue:
+        queue = _build_sku_taxonomy_backfill_queue()
+        _write_sku_taxonomy_backfill_queue(queue)
+    needs_fix = [pid for pid, e in queue.items() if e["status"] == "needs_fix"]
+    if not needs_fix:
+        done = sum(1 for e in queue.values() if e["status"] in ("ok", "done"))
+        return {"status": "ok", "staged": 0, "detail": f"backfill complete — {done}/{len(queue)} listings already correct or fixed"}
+
+    pending = db.list_actions("pending")
+    pending_listing_ids = {
+        str((a.get("payload") or {}).get("listing_id"))
+        for a in pending if a.get("type") == "update_sku_and_category"
+    }
+    staged = 0
+    errors = []
+    for pid in needs_fix:
+        if staged >= _BACKFILL_BATCH_SIZE:
+            break
+        entry = queue[pid]
+        lid = entry["listing_id"]
+        if str(lid) in pending_listing_ids:
+            continue  # already staged and awaiting approval -- don't duplicate
+        payload = {"listing_id": lid}
+        try:
+            live = EtsyAPIClient().get_listing(lid)
+        except Exception as exc:
+            errors.append(f"{pid}: could not re-fetch listing {lid}: {exc}")
+            continue
+        if live.get("sku") != entry["target_sku"]:
+            payload["sku"] = entry["target_sku"]
+        if entry["target_taxonomy_id"] is not None and live.get("taxonomy_id") != entry["target_taxonomy_id"]:
+            payload["taxonomy_id"] = entry["target_taxonomy_id"]
+        if "sku" not in payload and "taxonomy_id" not in payload:
+            entry["status"] = "ok"  # already correct on a re-check -- nothing to stage
+            continue
+        payload["_state_at_staging"] = live.get("state")
+        candidate = {"type": "update_sku_and_category", "payload": payload}
+        ok, msg = _validate_staged_action(candidate)
+        if not ok:
+            errors.append(f"{pid}: {msg}")
+            continue
+        parts = []
+        if "sku" in payload:
+            parts.append(f"sku→{payload['sku']}")
+        if "taxonomy_id" in payload:
+            parts.append(f"category→{payload['taxonomy_id']}")
+        summary = f"SKU/category fix ({', '.join(parts)}): {pid} (listing {lid})"
+        db.enqueue_action("update_sku_and_category", summary, payload)
+        entry["status"] = "staged"
+        staged += 1
+    _write_sku_taxonomy_backfill_queue(queue)
+    with _cache_lock:
+        _cache.pop("actions", None)
+    if staged:
+        remaining = sum(1 for e in queue.values() if e["status"] == "needs_fix")
+        db.add_todo(
+            f"SKU/category backfill: staged {staged} listing fix(es) this week for your approval "
+            f"in the Action Center — {remaining} still queued for future weeks.",
+            added_by="frank", category="general",
+        )
+    detail = f"staged:{staged} errors:{len(errors)}"
+    if errors:
+        detail += f" ({'; '.join(errors[:3])}{'...' if len(errors) > 3 else ''})"
+    return {"status": "warning" if errors else "ok", "staged": staged, "detail": detail}
+
+
+async def _sku_taxonomy_backfill_loop() -> None:
+    """Weekly pass staging SKU/taxonomy_id fixes for listings that are
+    missing or wrong (see _run_sku_taxonomy_backfill_batch's docstring).
+    base_interval=604_800 (7 days) is the pacing mechanism Scott approved
+    for this ~170-listing sweep."""
+    await asyncio.sleep(300)  # let the app finish booting, behind every other startup loop
+    while True:
+        delay = await _run_loop_iteration(
+            "sku_taxonomy_backfill", "SKU + Category Backfill",
+            lambda: asyncio.to_thread(_run_sku_taxonomy_backfill_batch),
+            on_success_status=lambda r: r["status"],
+            on_success_detail=lambda r: r["detail"],
+            base_interval=604_800,
+        )
+        await asyncio.sleep(delay)
+
+
 #   A tracked build stuck running past this is treated as hung and killed.
 #   Every build_planner/build_sticker_pack/build_product run finishes in 2-10
 #   min per their own docstrings; 15 min gives real headroom without letting a
@@ -8001,6 +8115,7 @@ async def _startup() -> None:
     asyncio.create_task(_daily_brief_loop())
     asyncio.create_task(_calendar_tasks_loop())
     asyncio.create_task(_file_audit_loop())
+    asyncio.create_task(_sku_taxonomy_backfill_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -9215,6 +9330,7 @@ async def post_snapshot(_token: str = Depends(_auth_session_or_bearer)):
 _ETSY_STAGED_ACTION_TYPES = (
     "update_tags", "update_title", "update_description", "publish_listing",
     "deactivate_listing", "toggle_listing_state", "update_price",
+    "update_sku_and_category",
 )
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
@@ -9355,6 +9471,19 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                 return False, "description is empty"
             if len(description) > 100_000:
                 return False, f"description is {len(description)} chars — implausibly long, refusing"
+        if t == "update_sku_and_category":
+            sku = p.get("sku")
+            taxonomy_id = p.get("taxonomy_id")
+            if sku is None and taxonomy_id is None:
+                return False, "must set at least one of sku or taxonomy_id"
+            if sku is not None and (not isinstance(sku, str) or not sku.strip()):
+                return False, "sku must be a non-empty string"
+            if sku is not None and len(sku) > 100:
+                return False, f"sku is {len(sku)} chars — implausibly long, refusing"
+            if taxonomy_id is not None and (
+                not isinstance(taxonomy_id, int) or isinstance(taxonomy_id, bool) or taxonomy_id <= 0
+            ):
+                return False, "taxonomy_id must be a positive integer"
         if at_approval:
             try:
                 current = EtsyAPIClient().get_listing(int(p["listing_id"]))
@@ -9590,6 +9719,13 @@ def _execute_staged_action(a: dict) -> dict:
         res = _retry(lambda: client.update_listing(lid, {"state": p["new_state"]}))
     elif t == "update_price":
         res = _retry(lambda: client.update_listing(lid, {"price": round(float(p["price"]), 2)}))
+    elif t == "update_sku_and_category":
+        # One PATCH combining both fields when both are present, not two
+        # separate edits -- minimizes edit-count/ranking-signal cost per
+        # listing (CLAUDE.md Ranking Recovery Playbook), which matters most
+        # here given the SKU/category backfill sweep touches ~170 listings.
+        updates = {k: v for k, v in (("sku", p.get("sku")), ("taxonomy_id", p.get("taxonomy_id"))) if v is not None}
+        res = _retry(lambda: client.update_listing(lid, updates))
     elif t == "listing_photo":
         abs_path = _resolve_in_root("staged_photos", p["path"])
         if not abs_path.is_file():
@@ -9628,12 +9764,14 @@ def _execute_staged_action(a: dict) -> dict:
     with _cache_lock:
         for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
             _cache.pop(k, None)
-    if t in ("update_tags", "update_title", "update_description", "update_price"):
+    if t in ("update_tags", "update_title", "update_description", "update_price", "update_sku_and_category"):
         # Ranking Recovery cooldown tracker (2026-07-15) — record at EXECUTION
         # time (not staging time), since that's when the content actually
         # changed on Etsy. Read back by db.enqueue_action() to warn against
         # compounding edits inside the ~2-3 week recovery window.
         db.note_listing_edited(lid)
+        if t == "update_sku_and_category":
+            _mark_backfill_queue_done(lid)
     return {
         "listing_id": lid,
         "etsy": {
@@ -11752,47 +11890,85 @@ _PRODUCT_TAXONOMY_BY_CATEGORY = {
     "digital_planner": 2078,
     "wall_art": 2078,
     "coloring_pages": 2078,
+    # svg_bundle/svg_bundle_license/sticker_pack/sticker_pack_license/
+    # paper_pack (2026-07-26, SKU/category backfill): all digital-download
+    # categories, so 2078 is the reasonable starting guess -- but every one
+    # of these already has live listings on Etsy, so _resolve_category_
+    # taxonomy_id() below will verify (and self-correct if wrong) against a
+    # real listing the first time each category is actually processed.
+    # Deliberately NOT guessed the same way: 3d_print_physical -- 2078 is a
+    # digital-goods taxonomy and would be actively wrong for a physical
+    # good (data/listing_rules.json already nulls this check for that exact
+    # reason). Left out of this dict on purpose so it's discovered from a
+    # real live listing instead (see the broadened live-check below, which
+    # no longer requires a hardcoded default to attempt discovery).
+    "svg_bundle": 2078,
+    "svg_bundle_license": 2078,
+    "sticker_pack": 2078,
+    "sticker_pack_license": 2078,
+    "paper_pack": 2078,
 }
 
-_CATEGORY_TAXONOMY_VERIFIED: set[str] = set()  # in-process cache -- see _resolve_category_taxonomy_id()
+# In-process cache of RESOLVED (possibly live-corrected) taxonomy_id per
+# category -- see _resolve_category_taxonomy_id(). Was a set[str] ("have we
+# already checked") until 2026-07-26: that meant a live-discovered
+# correction only ever applied to the ONE call that triggered it -- every
+# subsequent call in the same process fell through to the stale hardcoded
+# default again, since "already checked" short-circuited before the
+# corrected value was ever consulted. Now caches the actual resolved value
+# (which may be None if no default and no live listing exists yet).
+_CATEGORY_TAXONOMY_RESOLVED: dict[str, int | None] = {}
 
 
 def _resolve_category_taxonomy_id(category: str) -> int | None:
     """Returns the taxonomy_id to publish `category` under, self-correcting
-    the hardcoded _PRODUCT_TAXONOMY_BY_CATEGORY default against a real live
-    Etsy listing the first time this process ever stages that category --
-    at most once per category per process lifetime (_CATEGORY_TAXONOMY_
-    VERIFIED), never blocking staging on the live check itself. If the
-    live check disagrees, logs a clear ops_runbook-style warning and uses
-    the REAL value going forward (both in-memory for this process and
-    persisted via _write_product_catalog_override-style durable state
-    is deliberately NOT done here -- a wrong guess should be visible in
-    logs and fixed in code, not silently self-healing across deploys)."""
+    (or, for a category with no hardcoded guess at all, self-DISCOVERING)
+    against a real live Etsy listing the first time this process ever needs
+    that category -- at most one live-check attempt per category per
+    process lifetime (_CATEGORY_TAXONOMY_RESOLVED), never blocking staging
+    on the live check itself. If the live check disagrees with (or fills in
+    a missing) hardcoded default, logs a clear ops_runbook-style message and
+    uses the REAL value for every call in this process going forward
+    (persisting it back into _PRODUCT_TAXONOMY_BY_CATEGORY in code is
+    deliberately NOT done here -- a wrong guess should be visible in logs
+    and fixed in code, not silently self-healing across deploys).
+
+    2026-07-26: broadened to attempt the live check for ANY category with a
+    live listing to check against, not just categories that already have a
+    hardcoded default -- previously `if default is None: return default`
+    skipped the live check entirely for exactly the categories that needed
+    it most (svg_bundle, sticker_pack, paper_pack, 3d_print_physical, etc.,
+    none of which had a guess in the dict at all)."""
+    if category in _CATEGORY_TAXONOMY_RESOLVED:
+        return _CATEGORY_TAXONOMY_RESOLVED[category]
     default = _PRODUCT_TAXONOMY_BY_CATEGORY.get(category)
-    if default is None or category in _CATEGORY_TAXONOMY_VERIFIED:
-        return default
-    _CATEGORY_TAXONOMY_VERIFIED.add(category)  # at most one live-check attempt per category
     try:
         catalog = json.loads(Path("data/product_catalog.json").read_text())
     except OSError:
+        _CATEGORY_TAXONOMY_RESOLVED[category] = default
         return default
     live_id = next((e.get("etsy_listing_id") for e in catalog
                      if e.get("category") == category and e.get("etsy_listing_id")), None)
     if not live_id:
-        return default  # nothing live yet in this category -- nothing to verify against
+        _CATEGORY_TAXONOMY_RESOLVED[category] = default
+        return default  # nothing live yet in this category -- nothing to verify/discover against
     try:
         real_taxonomy = EtsyAPIClient().get_listing(live_id).get("taxonomy_id")
     except Exception as exc:
         print(f"[taxonomy] could not verify {category} against live listing {live_id}: {exc}", flush=True)
+        _CATEGORY_TAXONOMY_RESOLVED[category] = default
         return default
     if real_taxonomy and real_taxonomy != default:
+        verb = "MISMATCH" if default is not None else "DISCOVERED"
         print(
-            f"[taxonomy] MISMATCH — {category}'s hardcoded taxonomy_id {default} disagrees "
-            f"with live listing {live_id}'s real taxonomy_id {real_taxonomy}. Using the real "
-            f"value for this process; update _PRODUCT_TAXONOMY_BY_CATEGORY in code to make "
-            f"this permanent.", flush=True
+            f"[taxonomy] {verb} — {category}'s hardcoded taxonomy_id {default!r} disagrees "
+            f"with (or was missing vs.) live listing {live_id}'s real taxonomy_id {real_taxonomy}. "
+            f"Using the real value for this process; update _PRODUCT_TAXONOMY_BY_CATEGORY in code "
+            f"to make this permanent.", flush=True
         )
+        _CATEGORY_TAXONOMY_RESOLVED[category] = real_taxonomy
         return real_taxonomy
+    _CATEGORY_TAXONOMY_RESOLVED[category] = default
     return default
 
 
@@ -11953,6 +12129,13 @@ async def stage_product_publish(product_id: str, _token: str = Depends(_auth_ses
         "taxonomy_id": taxonomy_id,
         "quantity": 999,
         "type": "download",
+        # SKU convention (2026-07-26, "every listing categorized and has a
+        # SKU" -- Scott): reuse the catalog's own product_id, confirmed with
+        # Scott rather than inventing a separate SKU scheme -- keeps every
+        # new listing correct from creation instead of needing a later
+        # backfill (see _sku_taxonomy_backfill_loop for the one-time sweep
+        # over listings created before this).
+        "sku": product_id,
     }
     if content.get("shop_section_id"):
         listing_data["shop_section_id"] = content["shop_section_id"]
@@ -13816,6 +13999,93 @@ def _write_generated_listing_content(product_id: str, content: dict) -> None:
     tmp = _GENERATED_LISTING_CONTENT_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(all_content, indent=2))
     tmp.replace(_GENERATED_LISTING_CONTENT_PATH)
+
+
+# Same volume-or-local-data-dir pattern as _PRODUCT_CATALOG_OVERRIDES_PATH --
+# 2026-07-26, SKU/category backfill sweep. Tracks, per product_id, whether
+# its live Etsy listing's sku/taxonomy_id already match the target (product_
+# id-as-sku, _resolve_category_taxonomy_id(category)) so the weekly drip
+# loop below (_sku_taxonomy_backfill_loop) knows what's left to stage
+# without re-fetching all ~170 listings from Etsy every run.
+_SKU_TAXONOMY_BACKFILL_QUEUE_PATH = (
+    (_FILE_ROOTS["volume"] / "sku_taxonomy_backfill_queue.json") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "sku_taxonomy_backfill_queue.json")
+)
+_BACKFILL_BATCH_SIZE = 18  # Scott-approved pace: ~15-20 listings staged/week
+
+
+def _read_sku_taxonomy_backfill_queue() -> dict:
+    """dict keyed by product_id -> {listing_id, category, target_sku,
+    target_taxonomy_id, status}. status is one of needs_fix/ok/staged/done."""
+    try:
+        return json.loads(_SKU_TAXONOMY_BACKFILL_QUEUE_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _write_sku_taxonomy_backfill_queue(queue: dict) -> None:
+    """Atomic write (temp file + replace), same idiom as
+    _write_product_catalog_override()."""
+    _SKU_TAXONOMY_BACKFILL_QUEUE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _SKU_TAXONOMY_BACKFILL_QUEUE_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(queue, indent=2))
+    tmp.replace(_SKU_TAXONOMY_BACKFILL_QUEUE_PATH)
+
+
+def _build_sku_taxonomy_backfill_queue() -> dict:
+    """One-time (per queue-file lifetime) sweep of every live-Etsy catalog
+    entry, comparing its real sku/taxonomy_id against the target. Excludes
+    `uncategorized` entries -- those need a real category identified by a
+    human before any target can be computed at all (see Phase G / the
+    13-product proposal delivered separately). Never raises on a single
+    listing's fetch failure -- that entry is just skipped this round and
+    picked up the next time the queue is rebuilt (queue files aren't
+    rebuilt once they exist, so a transient failure here would otherwise
+    permanently drop that listing from tracking)."""
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        return {}
+    client = EtsyAPIClient()
+    queue: dict = {}
+    for entry in catalog:
+        pid = entry.get("product_id")
+        lid = entry.get("etsy_listing_id")
+        category = entry.get("category")
+        if not pid or not lid or not category or category == "uncategorized":
+            continue
+        target_taxonomy_id = _resolve_category_taxonomy_id(category)
+        try:
+            live = client.get_listing(lid)
+        except Exception as exc:
+            print(f"[sku-backfill] could not fetch listing {lid} ({pid}) — skipping this round: {exc}", flush=True)
+            continue
+        current_sku = live.get("sku")
+        current_taxonomy_id = live.get("taxonomy_id")
+        needs_sku = current_sku != pid
+        needs_taxonomy = target_taxonomy_id is not None and current_taxonomy_id != target_taxonomy_id
+        queue[pid] = {
+            "listing_id": lid,
+            "category": category,
+            "target_sku": pid,
+            "target_taxonomy_id": target_taxonomy_id,
+            "status": "needs_fix" if (needs_sku or needs_taxonomy) else "ok",
+        }
+    return queue
+
+
+def _mark_backfill_queue_done(listing_id) -> None:
+    """Called right after _execute_staged_action()'s update_sku_and_category
+    branch succeeds -- marks the matching queue entry `done` so the weekly
+    loop stops re-staging it. Non-fatal if the queue doesn't have this
+    listing (e.g. a one-off manual sku/category fix via the chat tool that
+    was never part of the automated sweep)."""
+    queue = _read_sku_taxonomy_backfill_queue()
+    for pid, e in queue.items():
+        if str(e.get("listing_id")) == str(listing_id):
+            e["status"] = "done"
+            _write_sku_taxonomy_backfill_queue(queue)
+            return
 
 
 async def _generate_product_listing_content_core(product_id: str, max_attempts: int = 3) -> dict:

@@ -456,7 +456,15 @@ def get_status_history(panel: str, days: int = 30) -> list:
 # edited" anywhere before this. Content-mutating types only -- state toggles
 # (deactivate/publish/toggle_listing_state) aren't the kind of "edit" that
 # triggers Etsy's re-index recovery window.
-_RANKING_RECOVERY_TYPES = frozenset({"update_tags", "update_title", "update_description"})
+_RANKING_RECOVERY_TYPES = frozenset({
+    "update_tags", "update_title", "update_description",
+    # update_sku_and_category (2026-07-26, SKU/category backfill sweep) --
+    # a taxonomy_id/sku PATCH is a real listing edit like any other, so it
+    # resets Etsy's re-index recovery window the same way tags/title/
+    # description do -- omitting it here would let the backfill sweep
+    # compound-edit a listing without ever seeing the cooldown warning.
+    "update_sku_and_category",
+})
 _RANKING_RECOVERY_COOLDOWN_DAYS = 21
 
 

@@ -16,6 +16,15 @@ from tools.etsy_api import EtsyAPIClient, EtsyAPIError, is_configured
 
 # Etsy taxonomy IDs by product type
 # Source: Etsy Open API v3 taxonomy — verified numeric IDs
+#
+# 2026-07-26: this table is dead/unwired (only run_wall_art_workflow.py, a
+# standalone script, and tests reference it — main.py's live publish path
+# never imports it) and disagrees with the canonical, actively-used table,
+# tools/api_server/main.py's _PRODUCT_TAXONOMY_BY_CATEGORY (which
+# self-verifies against real live listings via _resolve_category_taxonomy_
+# id() — see that function for the source of truth). Left as-is rather than
+# deleted since run_wall_art_workflow.py still depends on it, but do not
+# trust this table over main.py's if the two ever disagree again.
 TAXONOMY_BY_TYPE: dict[str, int] = {
     "digital_art":  2097,   # Art & Collectibles > Prints > Digital Prints
     "wall_art":     2097,   # Art & Collectibles > Prints > Digital Prints

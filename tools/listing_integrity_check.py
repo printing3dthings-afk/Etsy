@@ -165,7 +165,7 @@ _DEFAULT_TAXONOMY_ID = 2078  # Craft Supplies & Tools > Patterns & How To > Digi
 _PRICE_OK_CENTS = {99, 97, 49}  # same set as tools/listing_qc.py's _PRICE_OK_CENTS
 
 
-def check_attributes(listing: dict, rule: dict) -> list[dict]:
+def check_attributes(listing: dict, rule: dict, dp_codes: list[str] | None = None) -> list[dict]:
     """Verify the Etsy attribute fields CLAUDE.md's AI-disclosure protocol and
     SS-Series Category section mandate. Added 2026-07-15 — previously nothing
     checked these anywhere; they were only ever set (correctly or not) at
@@ -177,6 +177,15 @@ def check_attributes(listing: dict, rule: dict) -> list[dict]:
     a style nit. taxonomy_id is WARN only: a handful of listings may
     legitimately sit in a different (but still correct) category, so a
     mismatch is worth a human look rather than an automatic FAIL.
+
+    sku (2026-07-26, "every listing categorized and has a SKU" backfill):
+    WARN only, same severity as taxonomy_id — a tracking gap, not a policy
+    violation. Only checked when `dp_codes` has EXACTLY one entry (the
+    OnBrandCraftz SKU convention is product_catalog.json's product_id,
+    which only has one unambiguous value per listing for a non-bundle
+    listing) — a listing mapped to zero or multiple dp_codes is silently
+    skipped rather than guessed at, same "can't verify, don't guess"
+    caution check_registry_coverage() already uses for dp_codes lists.
     """
     issues = []
     who_made = listing.get("who_made")
@@ -210,6 +219,16 @@ def check_attributes(listing: dict, rule: dict) -> list[dict]:
             "detail": f"taxonomy_id is {taxonomy_id}, expected {expected_taxonomy_id} — "
                        f"verify this listing is in the right Etsy category"
         })
+    if dp_codes and len(dp_codes) == 1:
+        expected_sku = dp_codes[0]
+        sku = listing.get("sku")
+        if sku != expected_sku:
+            issues.append({
+                "severity": "WARN",
+                "check": "sku",
+                "detail": f"sku is {sku!r}, expected {expected_sku!r} — "
+                           f"tracking gap, not a policy violation"
+            })
     return issues
 
 
@@ -699,9 +718,9 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
     result["issues"].extend(check_title(title))
     result["issues"].extend(check_tags(tags))
 
-    # who_made/when_made/is_supply/taxonomy_id — all already present on the
-    # listing dict fetched above, zero extra API calls.
-    result["issues"].extend(check_attributes(listing, rule))
+    # who_made/when_made/is_supply/taxonomy_id/sku — all already present on
+    # the listing dict fetched above, zero extra API calls.
+    result["issues"].extend(check_attributes(listing, rule, dp_codes=result["dp_codes"]))
 
     # Live price vs. CLAUDE.md's documented tiers + .99/.97/.49 suffix rule.
     price = listing.get("price") or {}

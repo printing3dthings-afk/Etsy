@@ -457,20 +457,41 @@ def test_resolve_category_taxonomy_id_unknown_category_returns_none():
           "a category with no hardcoded default at all must return None (never guess)")
 
 
-def test_resolve_category_taxonomy_id_short_circuits_once_verified():
+def test_resolve_category_taxonomy_id_short_circuits_once_resolved():
     # Once a category has been through one live-check attempt this process
     # lifetime, _resolve_category_taxonomy_id() must return the cached
-    # default directly without touching the catalog file or Etsy again --
-    # verified by patching EtsyAPIClient and confirming it's never called.
-    server._CATEGORY_TAXONOMY_VERIFIED.add("wall_art")
+    # RESOLVED value directly without touching the catalog file or Etsy
+    # again -- verified by patching EtsyAPIClient and confirming it's never
+    # called. Uses a resolved value that DIFFERS from the hardcoded default
+    # to also prove the cache stores the corrected value, not just "checked".
+    server._CATEGORY_TAXONOMY_RESOLVED["wall_art"] = 9999999
     try:
         with patch.object(server, "EtsyAPIClient") as mock_client_cls:
             result = server._resolve_category_taxonomy_id("wall_art")
-        check(not mock_client_cls.called, "an already-verified category must never call EtsyAPIClient again")
-        check(result == server._PRODUCT_TAXONOMY_BY_CATEGORY["wall_art"],
-              f"should return the hardcoded default, got {result}")
+        check(not mock_client_cls.called, "an already-resolved category must never call EtsyAPIClient again")
+        check(result == 9999999,
+              f"should return the cached RESOLVED value (not the stale hardcoded default), got {result}")
     finally:
-        server._CATEGORY_TAXONOMY_VERIFIED.discard("wall_art")
+        server._CATEGORY_TAXONOMY_RESOLVED.pop("wall_art", None)
+
+
+def test_resolve_category_taxonomy_id_caches_a_live_correction_for_later_calls():
+    # Regression test for the 2026-07-26 bug: a corrected/discovered value
+    # from a live check must apply to every subsequent call in this process,
+    # not just the one call that happened to trigger the live check.
+    server._CATEGORY_TAXONOMY_RESOLVED.pop("wall_art", None)
+    try:
+        with patch.object(server, "EtsyAPIClient") as mock_client_cls:
+            mock_client_cls.return_value.get_listing.return_value = {"taxonomy_id": 2097}
+            first = server._resolve_category_taxonomy_id("wall_art")
+            check(mock_client_cls.called, "first call for an unresolved category must attempt the live check")
+        check(first == 2097, f"first call should return the live-discovered value, got {first}")
+        with patch.object(server, "EtsyAPIClient") as mock_client_cls2:
+            second = server._resolve_category_taxonomy_id("wall_art")
+        check(not mock_client_cls2.called, "second call must use the cached resolved value, not re-check")
+        check(second == 2097, f"second call must also return the corrected value, got {second}")
+    finally:
+        server._CATEGORY_TAXONOMY_RESOLVED.pop("wall_art", None)
 
 
 def test_resolve_category_taxonomy_id_falls_back_when_live_check_fails():
@@ -479,7 +500,7 @@ def test_resolve_category_taxonomy_id_falls_back_when_live_check_fails():
     # call itself fails (e.g. no credentials in this environment), the
     # resolver must fall back to the hardcoded default rather than raise
     # or return None.
-    server._CATEGORY_TAXONOMY_VERIFIED.discard("wall_art")
+    server._CATEGORY_TAXONOMY_RESOLVED.pop("wall_art", None)
     try:
         with patch.object(server, "EtsyAPIClient") as mock_client_cls:
             mock_client_cls.return_value.get_listing.side_effect = Exception("no credentials in this environment")
@@ -487,7 +508,31 @@ def test_resolve_category_taxonomy_id_falls_back_when_live_check_fails():
         check(result == server._PRODUCT_TAXONOMY_BY_CATEGORY["wall_art"],
               f"a failed live check must fall back to the hardcoded default, got {result}")
     finally:
-        server._CATEGORY_TAXONOMY_VERIFIED.discard("wall_art")
+        server._CATEGORY_TAXONOMY_RESOLVED.pop("wall_art", None)
+
+
+def test_resolve_category_taxonomy_id_discovers_value_for_category_with_no_default():
+    # 2026-07-26 broadening: a category with NO entry in
+    # _PRODUCT_TAXONOMY_BY_CATEGORY at all (e.g. 3d_print_physical --
+    # deliberately left unset since 2078 would be actively wrong for a
+    # physical good) must still attempt a live check if the catalog has a
+    # live listing for it -- previously this short-circuited to None before
+    # ever looking.
+    server._CATEGORY_TAXONOMY_RESOLVED.pop("3d_print_physical", None)
+    check("3d_print_physical" not in server._PRODUCT_TAXONOMY_BY_CATEGORY,
+          "test assumes 3d_print_physical has no hardcoded default -- update this test if that changes")
+    fake_catalog = json.dumps([
+        {"category": "3d_print_physical", "etsy_listing_id": "5551234"},
+    ])
+    try:
+        with patch.object(server, "EtsyAPIClient") as mock_client_cls, \
+             patch.object(Path, "read_text", return_value=fake_catalog):
+            mock_client_cls.return_value.get_listing.return_value = {"taxonomy_id": 1633}
+            result = server._resolve_category_taxonomy_id("3d_print_physical")
+        check(result == 1633,
+              f"a category with no hardcoded default must still discover a real value from a live listing, got {result}")
+    finally:
+        server._CATEGORY_TAXONOMY_RESOLVED.pop("3d_print_physical", None)
 
 
 def test_stage_product_publish_stages_wall_art_when_fully_fixtured():
