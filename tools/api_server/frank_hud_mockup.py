@@ -1539,6 +1539,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <input class="search" id="global-search" aria-label="Search listings, orders, products, tools, tasks, and knowledge base" placeholder="Search listings, orders, products, tools…" autocomplete="off" onkeydown="if(event.key==='Enter'){runGlobalSearch(this.value)}else if(event.key==='Escape'){closeSearchDropdown()}">
         <div id="search-dropdown" class="search-dropdown" style="display:none" onclick="event.stopPropagation()" role="listbox" aria-label="Search results"></div>
       </div>
+      <a href="/cmd" style="color:var(--gold);border:1px solid var(--border);background:var(--panel);padding:4px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px">💻 Command Center</a>
       <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
       <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">

@@ -4655,6 +4655,24 @@ def frank_hud_mockup(request: Request):
     )
 
 
+@app.get("/cmd", response_class=HTMLResponse)
+def desktop_command_center(request: Request):
+    if not _check_session(request):
+        return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
+    from jinja2 import Template
+    from command_center import HTML, COMMANDS, OWNER_NAME
+    sections = [{
+        "id": s["category"].lower().replace(" ", "_").replace("&", "and"),
+        "category": s["category"],
+        "color": s["color"],
+        "icon": s["icon"],
+        "commands": s["commands"],
+    } for s in COMMANDS]
+    rendered = Template(HTML).render(commands=sections, cloud_mode=True, owner_name=OWNER_NAME, csrf_token="")
+    return HTMLResponse(content=rendered, headers={"Cache-Control": "private, no-cache"})
+
+
+
 @app.get("/api/me")
 async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Return the username/role/email/name associated with the current session.

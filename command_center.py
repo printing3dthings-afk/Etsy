@@ -701,6 +701,7 @@ HTML = """<!DOCTYPE html>
     <div class="sub" id="greeting"></div>
   </div>
   <div class="theme-select-wrap" style="margin-left: auto;">
+    <a href="/frank" style="background: var(--surface); border: 1px solid var(--border); color: var(--text-main); padding: 5px 12px; border-radius: 20px; font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 4px; font-weight: 500;">📱 Phone/HUD View</a>
     <select class="theme-select" onchange="setTheme(this.value)">
       <option value="navy">🌌 Deep Navy (Default)</option>
       <option value="warm">🍇 Studio Warm (Plum)</option>
