@@ -4672,6 +4672,60 @@ def desktop_command_center(request: Request):
     return HTMLResponse(content=rendered, headers={"Cache-Control": "private, no-cache"})
 
 
+@app.get("/run")
+def api_run_command(request: Request, id: str = ""):
+    if not _check_session(request):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    from command_center import _find_cmd, BASE_DIR
+    from fastapi.responses import StreamingResponse
+    cmd_def = _find_cmd(id)
+    if not cmd_def:
+        async def _not_found():
+            yield 'data: {"done":true,"ok":false}\n\n'
+        return StreamingResponse(_not_found(), media_type="text/event-stream")
+
+    cmd = cmd_def.get("cmd")
+    if not cmd:
+        async def _empty():
+            msg = json.dumps({"line": "No command defined.\n", "err": True})
+            yield f"data: {msg}\n\n"
+            yield f'data: {json.dumps({"done": True, "ok": False})}\n\n'
+        return StreamingResponse(_empty(), media_type="text/event-stream")
+
+    cmd_args = shlex.split(cmd)
+
+    def generate():
+        import select as sel
+        proc = subprocess.Popen(
+            cmd_args,
+            shell=False,
+            cwd=BASE_DIR,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1
+        )
+        fds = {proc.stdout.fileno(): False, proc.stderr.fileno(): True}
+        open_fds = set(fds.keys())
+        while open_fds:
+            readable, _, _ = sel.select(list(open_fds), [], [], 0.1)
+            for fd in readable:
+                is_err = fds[fd]
+                line = os.read(fd, 4096).decode("utf-8", errors="replace")
+                if not line:
+                    open_fds.discard(fd)
+                    continue
+                for ln in line.splitlines(keepends=True):
+                    payload = json.dumps({"line": ln, "err": is_err})
+                    yield f"data: {payload}\n\n"
+        proc.wait()
+        ok = proc.returncode == 0
+        yield f"data: {json.dumps({'done': True, 'ok': ok})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+
 
 @app.get("/api/me")
 async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer)):
