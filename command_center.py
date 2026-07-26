@@ -91,6 +91,20 @@ COMMANDS = [
             },
         ]
     },
+    # ── 3D PRINTING & CAD AUTOMATION ──────────────────────────────────────────
+    {
+        "category": "3D Printing & CAD",
+        "color": "#FF9800",
+        "icon": "🖨️",
+        "commands": [
+            {
+                "id": "generate_3d_keychain",
+                "label": "Generate 3D Custom STL",
+                "cmd": "./venv/bin/python3 tools/3d_cad_generator.py 'OnBrandCraftz'",
+                "desc": "Programmatically generates custom 3D printable SCAD/STL models for personalized Etsy orders.",
+            },
+        ]
+    },
     # ── ART PRODUCTION ───────────────────────────────────────────────────────
     {
         "category": "Art Production",
