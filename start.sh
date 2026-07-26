@@ -27,7 +27,13 @@ echo "  Anthropic API: loaded (${ANTHROPIC_API_KEY:0:12}...)"
 
 # Start server in background
 echo "  Starting server on port $PORT..."
-python town_app/server.py &
+PYTHON_CMD="python3"
+if [ -d venv ]; then
+  PYTHON_CMD="./venv/bin/python"
+elif command -v python &>/dev/null; then
+  PYTHON_CMD="python"
+fi
+$PYTHON_CMD town_app/server.py &
 SERVER_PID=$!
 
 # Give server a moment to bind
@@ -39,8 +45,21 @@ if $TUNNEL; then
   echo "  (public URL will appear below — share it or open on phone)"
   echo ""
 
+  # Check if cloudflared is installed globally or locally
+  CF_CMD="cloudflared"
+  if ! command -v cloudflared &>/dev/null; then
+    if [ ! -f ./cloudflared ]; then
+      echo "  cloudflared not found. Downloading (~40 MB, one time)..."
+      curl -L -o ./cloudflared "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64"
+      chmod +x ./cloudflared
+      echo "  cloudflared downloaded."
+      echo ""
+    fi
+    CF_CMD="./cloudflared"
+  fi
+
   # Run cloudflared, parse the URL from its output, post it to the server
-  cloudflared tunnel --url "http://localhost:$PORT" --no-autoupdate 2>&1 | while IFS= read -r line; do
+  $CF_CMD tunnel --url "http://localhost:$PORT" --no-autoupdate 2>&1 | while IFS= read -r line; do
     echo "  [tunnel] $line"
     # cloudflared prints the URL like: https://xxxx.trycloudflare.com
     if [[ "$line" =~ (https://[a-z0-9-]+\.trycloudflare\.com) ]]; then

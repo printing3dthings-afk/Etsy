@@ -12,6 +12,8 @@ import subprocess
 import os
 import json
 import io
+import secrets
+import shlex
 from flask import Flask, Response, request, render_template_string, session, redirect, jsonify
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,8 +45,19 @@ if IS_CLOUD:
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", os.urandom(24).hex())
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
 
 CENTER_PASSWORD = os.environ.get("CENTER_PASSWORD", "")
+OWNER_NAME = os.environ.get("OWNER_NAME", "Scott")
+
+
+def get_csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_hex(16)
+    return session["csrf_token"]
 
 
 # ── Command registry ──────────────────────────────────────────────────────────
@@ -300,69 +313,62 @@ LOGIN_HTML = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>OnBrandCraftz — Command Center</title>
+  <title>OnBrandCraftz — Sign in</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0B1120;
-      --surface: rgba(30, 41, 59, 0.7);
-      --border: rgba(148, 163, 184, 0.15);
-      --text-main: #F8FAFC;
-      --text-muted: #94A3B8;
-      --accent: #38BDF8;
-      --accent-hover: #0EA5E9;
-      --error: #EF4444;
+      --bg: #0D1B2A;
+      --surface: rgba(22, 32, 51, 0.8);
+      --border: rgba(42, 64, 96, 0.5);
+      --text-main: #F5EDD0;
+      --text-muted: #8A9BAE;
+      --accent: #C9A84C;
+      --accent-hover: #E8C870;
+      --accent-glow: rgba(201, 168, 76, 0.3);
+      --error: #E05252;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
     body {
       background: var(--bg);
-      background-image: radial-gradient(circle at 50% 0%, #1E3A8A 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, #312E81 0%, transparent 40%);
-      background-attachment: fixed;
       display: flex; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 20px; color: var(--text-main);
+      min-height: 100vh; padding: 20px; color: var(--text-main); overflow: hidden;
     }
+
     .card {
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 24px; padding: 48px 40px; max-width: 400px; width: 100%;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center;
+      background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 24px; padding: 48px 40px;
+      max-width: 420px; width: 100%;
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6), 0 0 40px rgba(201,168,76,0.05);
+      text-align: center; position: relative; z-index: 1;
       animation: floatIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes floatIn {
-      0% { opacity: 0; transform: translateY(20px) scale(0.95); }
-      100% { opacity: 1; transform: translateY(0) scale(1); }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--accent); opacity: 0.6; border-radius: 2px;
     }
-    .logo {
-      font-size: 48px; margin-bottom: 20px;
-      filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.4));
-    }
+    @keyframes floatIn { 0% { opacity:0; transform:translateY(20px) scale(0.95); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+    .logo { font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--accent-glow)); }
     h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
     p { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; }
     input {
-      width: 100%; padding: 14px 16px; background: rgba(15, 23, 42, 0.6);
+      width: 100%; padding: 14px 16px; background: rgba(13, 27, 42, 0.6);
       border: 1px solid var(--border); border-radius: 12px; color: var(--text-main);
-      font-size: 15px; outline: none; transition: all 0.2s;
+      font-size: 15px; outline: none; transition: all 0.3s;
     }
-    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); }
-    input::placeholder { color: #64748B; }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder { color: #4A6580; }
     button {
-      width: 100%; margin-top: 16px; padding: 14px; background: var(--accent); color: #fff;
-      border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;
-      transition: all 0.2s; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+      width: 100%; margin-top: 16px; padding: 14px;
+      background: var(--accent);
+      color: #0D1B2A; border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 14px var(--accent-glow);
     }
-    button:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5); }
+    button:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,0.5); }
     button:active { transform: translateY(1px); }
     .err { color: var(--error); font-size: 13px; margin-top: 12px; font-weight: 500; animation: shake 0.4s; }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      75% { transform: translateX(4px); }
-    }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
   </style>
 </head>
 <body>
@@ -391,95 +397,198 @@ HTML = """<!DOCTYPE html>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0B1120;
-      --bg-panel: rgba(15, 23, 42, 0.6);
-      --surface: rgba(30, 41, 59, 0.7);
-      --border: rgba(148, 163, 184, 0.15);
-      --border-hover: rgba(148, 163, 184, 0.3);
-      --text-main: #F8FAFC;
-      --text-muted: #94A3B8;
-      --accent: #38BDF8;
-      --header-bg: rgba(11, 17, 32, 0.85);
+      --bg: #0B1320;
+      --bg-panel: rgba(13, 27, 42, 0.7);
+      --surface: rgba(22, 34, 56, 0.75);
+      --border: rgba(42, 64, 96, 0.5);
+      --border-hover: rgba(201, 168, 76, 0.4);
+      --text-main: #F5EDD0;
+      --text-muted: #8A9BAE;
+      --text-dim: #4A6580;
+      --accent: #C9A84C;
+      --accent-light: #E8C870;
+      --accent-glow: rgba(201, 168, 76, 0.3);
+      --navy: #1B3A68;
+      --header-bg: rgba(11, 19, 32, 0.94);
+      --success: #4CAF8C;
+      --error: #E05252;
+      --card-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 8px 24px rgba(0,0,0,0.35);
     }
+    html.theme-warm {
+      --bg: #241c2e; --surface: rgba(45, 36, 56, 0.8); --border: #3d3248; --text-main: #f5eef2;
+      --text-muted: #bfa3b5; --accent: #f2a0b5; --accent-light: #f7c3d0; --accent-glow: rgba(242, 160, 181, 0.3);
+      --header-bg: rgba(36, 28, 46, 0.94);
+    }
+    html.theme-sakura {
+      --bg: #140a10; --surface: rgba(31, 15, 24, 0.8); --border: #311826; --text-main: #f5e8ee;
+      --text-muted: #a4758a; --accent: #f4a7b9; --accent-light: #ffd0db; --accent-glow: rgba(244, 167, 185, 0.3);
+      --header-bg: rgba(20, 10, 16, 0.94);
+    }
+    html.theme-matcha {
+      --bg: #0b120c; --surface: rgba(18, 28, 20, 0.8); --border: #1e2e21; --text-main: #e9f2e6;
+      --text-muted: #7c9172; --accent: #8bc34a; --accent-light: #bce88e; --accent-glow: rgba(139, 195, 74, 0.3);
+      --header-bg: rgba(11, 18, 12, 0.94);
+    }
+    html.theme-ocean {
+      --bg: #07120f; --surface: rgba(13, 29, 26, 0.8); --border: #16312c; --text-main: #e6f2f0;
+      --text-muted: #6f948c; --accent: #3ad6c8; --accent-light: #7ceee2; --accent-glow: rgba(58, 214, 200, 0.3);
+      --header-bg: rgba(7, 18, 15, 0.94);
+    }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Outfit', sans-serif;
-      background: var(--bg);
-      background-image: radial-gradient(circle at 10% 10%, #1E3A8A 0%, transparent 40%),
-                        radial-gradient(circle at 90% 90%, #312E81 0%, transparent 40%);
+      background: radial-gradient(circle at 15% 15%, rgba(27, 58, 104, 0.35) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 75%, rgba(201, 168, 76, 0.08) 0%, transparent 50%),
+                  var(--bg);
       background-attachment: fixed;
       color: var(--text-main); padding: 0; min-height: 100vh; display: flex; flex-direction: column;
+      transition: background 0.3s, color 0.3s;
     }
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
     
     .topbar {
-      background: var(--header-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      background: var(--header-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       padding: 16px 32px; display: flex; align-items: center; gap: 16px;
       position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border);
     }
     .topbar h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
     .topbar .sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; font-weight: 300; }
     .topbar .status { margin-left: auto; font-size: 13px; display: flex; align-items: center; gap: 8px; font-weight: 500; background: var(--surface); padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 10px #4ADE80; animation: pulse 2s infinite; }
-    .dot.cloud { background: #38BDF8; box-shadow: 0 0 10px #38BDF8; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); animation: pulse 2s infinite; }
+    .dot.cloud { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     
+    .theme-select-wrap { display: flex; align-items: center; gap: 6px; }
+    .theme-select {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-main);
+      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-family: 'Outfit', sans-serif;
+      outline: none; cursor: pointer; transition: all 0.2s;
+    }
+    .theme-select:hover { border-color: var(--accent); }
+
     {% if cloud_mode %}
     .cloud-banner {
-      background: linear-gradient(90deg, rgba(2, 132, 199, 0.2), rgba(37, 99, 235, 0.2));
-      backdrop-filter: blur(8px); border-bottom: 1px solid rgba(56, 189, 248, 0.2);
-      color: var(--text-main); padding: 12px 32px; font-size: 13px; display: flex; align-items: center; gap: 12px;
+      background: rgba(27, 58, 104, 0.35);
+      backdrop-filter: blur(8px); border-bottom: 1px solid var(--border);
+      color: var(--text-main); padding: 10px 32px; font-size: 13px; display: flex; align-items: center; gap: 12px;
     }
-    .cloud-banner strong { color: #38BDF8; }
-    .cloud-badge { background: rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); }
+    .cloud-banner strong { color: var(--accent); }
+    .cloud-badge { background: rgba(201,168,76,0.1); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-weight: 600; border: 1px solid rgba(201,168,76,0.2); color: var(--accent); }
     {% endif %}
+
+    /* Executive KPI Strip */
+    .kpi-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--surface); backdrop-filter: blur(12px); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+      box-shadow: var(--card-shadow); transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); border-color: var(--border-hover); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+    .kpi-icon { font-size: 24px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+    .kpi-info { display: flex; flex-direction: column; }
+    .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); font-weight: 600; }
+    .kpi-val { font-size: 14px; font-weight: 700; color: var(--text-main); margin-top: 2px; }
     
     .main { display: flex; flex: 1; }
     
     .sidebar {
-      width: 240px; background: rgba(15, 23, 42, 0.4); border-right: 1px solid var(--border);
+      width: 250px; background: rgba(11, 19, 32, 0.6); border-right: 1px solid var(--border);
       padding: 24px 16px; flex-shrink: 0; position: sticky; top: 73px;
-      height: calc(100vh - 73px); overflow-y: auto; backdrop-filter: blur(8px);
+      height: calc(100vh - 73px); overflow-y: auto; backdrop-filter: blur(12px);
     }
     .sidebar a {
       display: flex; align-items: center; gap: 12px; padding: 12px 16px;
       font-size: 14px; color: var(--text-muted); text-decoration: none; border-radius: 12px;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 4px; border: 1px solid transparent;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 4px;
+      border: 1px solid transparent; border-left: 3px solid transparent;
     }
-    .sidebar a:hover, .sidebar a.active {
+    .sidebar a:hover {
       background: var(--surface); color: var(--text-main); border-color: var(--border);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .sidebar .icon { font-size: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .sidebar a.active {
+      background: rgba(201, 168, 76, 0.08); color: var(--accent-light);
+      border-left-color: var(--accent); border-color: rgba(201, 168, 76, 0.2);
+    }
+    .sidebar .icon { font-size: 18px; }
+    .sidebar .nav-count { margin-left: auto; font-size: 11px; background: rgba(201,168,76,0.12); color: var(--accent); padding: 2px 7px; border-radius: 8px; font-weight: 600; }
     
-    .content { flex: 1; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
-    .section { margin-bottom: 48px; scroll-margin-top: 100px; }
+    .content { flex: 1; padding: 36px 40px; max-width: 1240px; margin: 0 auto; width: 100%; }
+
+    /* Search & Filter Controls */
+    .controls-bar { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+    .search-wrap { position: relative; width: 100%; }
+    .search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
+    .search-wrap input {
+      width: 100%; padding: 14px 100px 14px 44px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px; color: var(--text-main);
+      font-size: 15px; font-family: 'Outfit', sans-serif; outline: none; transition: all 0.3s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .search-wrap input::placeholder { color: var(--text-dim); }
+    .search-badge {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      font-family: 'Fira Code', monospace; font-size: 11px; color: var(--text-dim);
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px;
+      pointer-events: none;
+    }
+
+    .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-btn {
+      background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+      padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 6px;
+    }
+    .filter-btn:hover, .filter-btn.active { background: rgba(201,168,76,0.15); color: var(--accent-light); border-color: var(--accent); }
+
+    .section { margin-bottom: 44px; scroll-margin-top: 100px; }
     .section-header {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
-      padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+      padding-bottom: 12px; border-bottom: 1px solid rgba(201,168,76,0.12);
     }
     .section-header h2 { font-size: 20px; font-weight: 600; color: var(--text-main); }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
     
+    /* ── Sci-Fi HUD Corner Brackets ── */
+    .brk { position: relative; }
+    .brk::before, .brk::after {
+      content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none; opacity: 0.6; transition: all 0.3s;
+    }
+    .brk::before {
+      top: -1px; left: -1px; border-top: 2px solid var(--cat-color, var(--accent)); border-left: 2px solid var(--cat-color, var(--accent)); border-top-left-radius: 6px;
+    }
+    .brk::after {
+      bottom: -1px; right: -1px; border-bottom: 2px solid var(--cat-color, var(--accent)); border-right: 2px solid var(--cat-color, var(--accent)); border-bottom-right-radius: 6px;
+    }
+    .card:hover.brk::before, .card:hover.brk::after { opacity: 1; width: 15px; height: 15px; }
+
     .card {
       background: var(--surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border); border-radius: 16px; padding: 24px;
-      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--card-shadow); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex; flex-direction: column; position: relative; overflow: hidden;
+      animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: calc(var(--i, 0) * 50ms);
     }
+    @keyframes cardIn { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
     .card::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: var(--c); opacity: 0.5; transition: opacity 0.3s;
+      background: var(--cat-color, var(--accent)); opacity: 0.5; transition: opacity 0.3s;
     }
-    .card:hover { transform: translateY(-4px); border-color: var(--border-hover); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4); }
+    .card:hover { transform: translateY(-4px); border-color: var(--cat-color, var(--border-hover)); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.4), 0 0 20px rgba(201,168,76,0.15); }
     .card:hover::before { opacity: 1; }
-    .card.local-card { opacity: 0.6; }
-    
-    .card-label { font-size: 16px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-    .local-badge { background: rgba(245, 158, 11, 0.1); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+    .card.local-card { opacity: 0.65; }
+    .card.is-executing { border-color: var(--accent) !important; box-shadow: 0 0 25px var(--accent-glow) !important; animation: cardPulse 1.5s infinite; }
+    @keyframes cardPulse { 0%, 100% { border-color: var(--accent); } 50% { border-color: var(--accent-light); } }
+
+    .card-label { font-size: 16px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; color: var(--text-main); }
+    .local-badge { background: rgba(232, 160, 48, 0.1); color: #E8A030; border: 1px solid rgba(232, 160, 48, 0.2); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
     .card-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 20px; flex: 1; }
     
     .card-cmd {
@@ -493,18 +602,23 @@ HTML = """<!DOCTYPE html>
     .card-cmd:hover { background: rgba(0, 0, 0, 0.6); border-color: var(--border-hover); }
     .copy-hint { font-family: 'Outfit', sans-serif; font-size: 10px; color: var(--text-muted); margin-left: 12px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
     
-    .flags { font-size: 12px; color: var(--text-muted); margin-top: -8px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .flags span { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 2px 8px; font-family: 'Fira Code', monospace; font-size: 10px; cursor: help; }
-    
+    .flags { font-size: 12px; color: var(--text-muted); margin-top: -6px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .flag-pill {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+      padding: 3px 8px; font-family: 'Fira Code', monospace; font-size: 10px; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s; outline: none;
+    }
+    .flag-pill:hover, .flag-pill.active { background: rgba(201,168,76,0.15); color: var(--accent-light); border-color: var(--accent); }
+
     .btn-run {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1);
+      background: transparent; color: var(--accent); border: 1px solid var(--accent);
       border-radius: 10px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
       transition: all 0.2s; text-decoration: none; width: 100%; font-family: 'Outfit', sans-serif;
     }
-    .btn-run:hover { background: var(--c); border-color: var(--c); color: #fff; box-shadow: 0 4px 15px var(--c-glow); }
+    .btn-run:hover { background: var(--accent); color: #0D1B2A; box-shadow: 0 4px 15px var(--accent-glow); }
     .btn-run:active { transform: scale(0.98); }
-    .btn-run.running { background: rgba(255,255,255,0.1); color: var(--text-muted); cursor: not-allowed; border-color: transparent; box-shadow: none; pointer-events: none; }
+    .btn-run.running { background: rgba(201,168,76,0.1); color: var(--text-muted); cursor: not-allowed; border-color: var(--border); box-shadow: none; pointer-events: none; }
     
     .btn-local {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -512,39 +626,67 @@ HTML = """<!DOCTYPE html>
       padding: 10px 20px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: not-allowed; width: 100%;
     }
     
-    /* Output panel */
+    /* IDE-Grade Terminal Output panel */
     #output-panel {
-      position: fixed; bottom: 24px; right: 24px; width: 600px; max-width: calc(100vw - 48px);
-      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      position: fixed; bottom: 24px; right: 24px; width: 640px; max-width: calc(100vw - 48px);
+      background: rgba(11, 19, 32, 0.96); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 30px 60px -15px rgba(0,0,0,0.7);
       transform: translateY(150%); opacity: 0; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 200;
-      display: flex; flex-direction: column; height: 400px;
+      display: flex; flex-direction: column; height: 420px;
     }
     #output-panel.open { transform: translateY(0); opacity: 1; }
+    #output-panel.fullscreen {
+      top: 0; bottom: 0; left: 0; right: 0; width: 100vw; height: 100vh; max-width: 100vw;
+      border-radius: 0; border: none; transform: none !important;
+    }
+
     #output-header {
-      display: flex; align-items: center; padding: 16px 20px;
+      display: flex; align-items: center; padding: 14px 20px; gap: 12px;
       border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);
       border-top-left-radius: 16px; border-top-right-radius: 16px; position: relative;
     }
     #output-header::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: var(--active-color, #4ADE80); border-top-left-radius: 16px; border-top-right-radius: 16px;
-      box-shadow: 0 0 10px var(--active-color, #4ADE80);
+      background: var(--accent); border-top-left-radius: 16px; border-top-right-radius: 16px;
+      box-shadow: 0 0 10px var(--accent-glow);
     }
-    #output-title { font-size: 14px; font-weight: 600; color: #fff; flex: 1; font-family: 'Outfit', sans-serif; letter-spacing: 0.5px; }
-    #btn-close { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; color: #fff; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
-    #btn-close:hover { background: rgba(239, 68, 68, 0.8); }
-    #output-body {
-      font-family: 'Fira Code', monospace; font-size: 12px; padding: 16px 20px; flex: 1;
-      overflow-y: auto; white-space: pre-wrap; line-height: 1.6; color: #e2e8f0;
-    }
-    .out-ok { color: #86efac; }
-    .out-err { color: #fca5a5; }
-    .out-info { color: #7dd3fc; opacity: 0.8; }
     
+    .mac-dots { display: flex; gap: 6px; margin-right: 4px; }
+    .mac-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mac-dot.red { background: #FF5F56; }
+    .mac-dot.yellow { background: #FFBD2E; }
+    .mac-dot.green { background: #27C93F; }
+
+    #output-title { font-size: 13px; font-weight: 600; color: var(--text-main); flex: 1; font-family: 'Fira Code', monospace; letter-spacing: 0.3px; }
+    
+    .term-controls { display: flex; align-items: center; gap: 8px; }
+    .term-btn {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+      color: var(--text-muted); padding: 4px 10px; font-size: 11px; font-family: 'Outfit', sans-serif;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;
+    }
+    .term-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-main); }
+
+    #output-body {
+      font-family: 'Fira Code', monospace; font-size: 12px; padding: 18px 20px; flex: 1;
+      overflow-y: auto; white-space: pre-wrap; line-height: 1.6; color: #c8d6e5;
+    }
+    .out-ok { color: var(--success); }
+    .out-err { color: var(--error); }
+    .out-info { color: var(--accent); opacity: 0.9; }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    @media(max-width: 1024px) {
+      .sidebar { width: 60px; padding: 24px 8px; }
+      .sidebar a { justify-content: center; padding: 12px; gap: 0; }
+      .sidebar a span:not(.icon) { display: none; }
+      .sidebar .nav-count { display: none; }
+    }
     @media(max-width: 800px) {
       .sidebar { display: none; }
-      .content { padding: 24px; }
+      .content { padding: 20px; }
+      .cards { grid-template-columns: 1fr; }
       #output-panel { bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; }
     }
   </style>
@@ -553,11 +695,21 @@ HTML = """<!DOCTYPE html>
 
 <div class="topbar">
   <div>
-    <div style="font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+    <div style="font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--accent);">
       🏪 OnBrandCraftz Command Center
     </div>
-    <div class="sub">Select a tool below to execute. Output will stream in real-time.</div>
+    <div class="sub" id="greeting"></div>
   </div>
+  <div class="theme-select-wrap" style="margin-left: auto;">
+    <select class="theme-select" onchange="setTheme(this.value)">
+      <option value="navy">🌌 Deep Navy (Default)</option>
+      <option value="warm">🍇 Studio Warm (Plum)</option>
+      <option value="sakura">🌸 Sakura (Pink)</option>
+      <option value="matcha">🍵 Matcha (Emerald)</option>
+      <option value="ocean">🌊 Ocean (Teal)</option>
+    </select>
+  </div>
+  <span id="clock" style="color: var(--text-muted); font-size: 13px; font-family: 'Fira Code', monospace;"></span>
   {% if cloud_mode %}
   <div class="status"><div class="dot cloud"></div> Cloud Connected</div>
   {% else %}
@@ -574,24 +726,73 @@ HTML = """<!DOCTYPE html>
 <div class="main">
   <nav class="sidebar" id="sidebar">
     {% for section in commands %}
-    <a href="#{{ section.id }}" style="--c: {{ section.color }}">
+    <a href="#{{ section.id }}">
       <span class="icon">{{ section.icon }}</span>
       {{ section.category }}
+      <span class="nav-count">{{ section.commands|length }}</span>
     </a>
     {% endfor %}
   </nav>
 
   <div class="content">
+
+    <!-- KPI Metric Strip -->
+    <div class="kpi-strip">
+      <div class="kpi-card brk">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-info">
+          <span class="kpi-label">Active Catalog</span>
+          <span class="kpi-val">70+ Digital Items</span>
+        </div>
+      </div>
+      <div class="kpi-card brk">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-info">
+          <span class="kpi-label">Monthly Target</span>
+          <span class="kpi-val">$5,000 Revenue Goal</span>
+        </div>
+      </div>
+      <div class="kpi-card brk">
+        <div class="kpi-icon">⚡</div>
+        <div class="kpi-info">
+          <span class="kpi-label">Automation Engine</span>
+          <span class="kpi-val">100% Operational</span>
+        </div>
+      </div>
+      <div class="kpi-card brk">
+        <div class="kpi-icon">🤖</div>
+        <div class="kpi-info">
+          <span class="kpi-label">Agent Controller</span>
+          <span class="kpi-val">Frank Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="controls-bar">
+      <div class="search-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="search-input" placeholder="Search commands..." oninput="filterCommands(this.value)">
+        <span class="search-badge">Press / or ⌘K</span>
+      </div>
+      <div class="filter-pills">
+        <button class="filter-btn active" onclick="filterCategory('all', this)">⚡ All</button>
+        {% for section in commands %}
+        <button class="filter-btn" onclick="filterCategory('{{ section.id }}', this)">{{ section.icon }} {{ section.category }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
     {% for section in commands %}
-    <div class="section" id="{{ section.id }}">
+    <div class="section" id="{{ section.id }}" style="--cat-color: {{ section.color }};">
       <div class="section-header">
-        <span class="sicon" style="filter: drop-shadow(0 2px 4px {{ section.color }}66);">{{ section.icon }}</span>
+        <span class="sicon">{{ section.icon }}</span>
         <h2>{{ section.category }}</h2>
       </div>
       <div class="cards">
         {% for cmd in section.commands %}
         {% set is_local = cmd.local_only and cloud_mode %}
-        <div class="card {% if is_local %}local-card{% endif %}" style="--c: {{ section.color }}; --c-glow: {{ section.color }}40;">
+        <div class="card brk {% if is_local %}local-card{% endif %}" id="card-{{ cmd.id }}" data-cmd-base="{{ cmd.cmd }}" data-cmd-current="{{ cmd.cmd }}" style="--cat-color: {{ section.color }};">
           <div class="card-label">
             {{ cmd.label }}
             {% if is_local %}<span class="local-badge">💻 Local PC</span>{% endif %}
@@ -599,7 +800,7 @@ HTML = """<!DOCTYPE html>
           <div class="card-desc">{{ cmd.desc }}</div>
           
           {% if not cmd.tool_url %}
-          <div class="card-cmd" onclick="copyCmd(this, '{{ cmd.cmd }}')" title="Click to copy">
+          <div class="card-cmd" id="cmd-display-{{ cmd.id }}" onclick="copyCmd(this, '{{ cmd.id }}')" title="Click to copy">
             <span>$ {{ cmd.cmd }}</span>
             <span class="copy-hint">Copy</span>
           </div>
@@ -607,7 +808,11 @@ HTML = """<!DOCTYPE html>
           
           {% if cmd.flags %}
           <div class="flags">
-            {% for f in cmd.flags %}<span title="{{ f.desc }}">{{ f.flag }}</span>{% endfor %}
+            {% for f in cmd.flags %}
+            <button type="button" class="flag-pill {% if loop.first %}active{% endif %}" onclick="selectFlag(this, '{{ cmd.id }}', '{{ f.flag }}')" title="{{ f.desc }}">
+              {{ f.flag }}
+            </button>
+            {% endfor %}
           </div>
           {% endif %}
           
@@ -621,7 +826,7 @@ HTML = """<!DOCTYPE html>
               🔒 Local Only
             </button>
             {% else %}
-            <button class="btn-run" onclick="runCmd('{{ cmd.id }}', '{{ cmd.cmd | replace("'", "\'") }}', '{{ cmd.label | replace("'", "\'") }}', '{{ section.color }}', this)">
+            <button class="btn-run" id="btn-run-{{ cmd.id }}" onclick="runCmd('{{ cmd.id }}', '{{ cmd.label | replace("'", "\'") }}', '{{ section.color }}', this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               Execute
             </button>
@@ -637,69 +842,188 @@ HTML = """<!DOCTYPE html>
 
 <div id="output-panel">
   <div id="output-header">
+    <div class="mac-dots">
+      <span class="mac-dot red"></span>
+      <span class="mac-dot yellow"></span>
+      <span class="mac-dot green"></span>
+    </div>
     <span id="output-title">Terminal Output</span>
-    <button id="btn-close" onclick="closeOutput()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-    </button>
+    <div class="term-controls">
+      <button class="term-btn" onclick="copyOutput()">📋 Copy</button>
+      <button class="term-btn" onclick="clearOutput()">🧹 Clear</button>
+      <button class="term-btn" onclick="toggleFullscreen()">⤢ Expand</button>
+      <button id="btn-close" onclick="closeOutput()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
   </div>
   <div id="output-body"></div>
 </div>
 
 <script>
+const CSRF_TOKEN = "{{ csrf_token }}";
+const OWNER_NAME = "{{ owner_name }}";
 let activeBtn = null;
+let activeCard = null;
 
-function copyCmd(el, cmd) {
-  navigator.clipboard.writeText(cmd).then(() => {
+// Theme Switcher (Navy, Studio Warm Plum, Sakura Pink, Matcha Emerald, Ocean Teal)
+function setTheme(t) {
+  document.documentElement.className = t === 'navy' ? '' : 'theme-' + t;
+  localStorage.setItem('command_center_theme', t);
+  const select = document.querySelector('.theme-select');
+  if (select) select.value = t;
+}
+const savedTheme = localStorage.getItem('command_center_theme') || 'navy';
+setTheme(savedTheme);
+
+// Greeting & Clock
+function updateGreeting() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = g + ', ' + OWNER_NAME + ' 👋';
+}
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+updateGreeting(); updateClock(); setInterval(updateClock, 60000);
+
+// Keyboard Shortcuts (/ or Cmd+K)
+document.addEventListener('keydown', e => {
+  if ((e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey))) && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
+
+// Staggered card entrance
+document.querySelectorAll('.card').forEach((c, i) => c.style.setProperty('--i', i));
+
+// Category Filter Pills
+function filterCategory(catId, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.section').forEach(sec => {
+    sec.style.display = (catId === 'all' || sec.id === catId) ? '' : 'none';
+  });
+}
+
+// Search filter
+function filterCommands(q) {
+  const query = q.toLowerCase().trim();
+  document.querySelectorAll('.card').forEach(card => {
+    const text = (card.querySelector('.card-label').textContent + ' ' + card.querySelector('.card-desc').textContent).toLowerCase();
+    card.style.display = (!query || text.includes(query)) ? '' : 'none';
+  });
+  document.querySelectorAll('.section').forEach(section => {
+    const visible = section.querySelectorAll('.cards .card:not([style*="display: none"])').length;
+    section.style.display = (!query || visible > 0) ? '' : 'none';
+  });
+}
+
+// Interactive Flag Selection
+function selectFlag(btn, cmdId, flagStr) {
+  const card = document.getElementById('card-' + cmdId);
+  if (!card) return;
+  card.querySelectorAll('.flag-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+
+  const baseCmd = card.getAttribute('data-cmd-base');
+  // Replace existing --pid or append
+  let newCmd = baseCmd;
+  if (baseCmd.includes('--pid')) {
+    newCmd = baseCmd.replace(/--pid\\s+\\S+/, flagStr);
+  } else {
+    newCmd = baseCmd + ' ' + flagStr;
+  }
+  card.setAttribute('data-cmd-current', newCmd);
+  const displayEl = document.getElementById('cmd-display-' + cmdId);
+  if (displayEl) {
+    displayEl.querySelector('span').textContent = '$ ' + newCmd;
+  }
+}
+
+function copyCmd(el, cmdId) {
+  const card = document.getElementById('card-' + cmdId);
+  const cmdText = card ? card.getAttribute('data-cmd-current') : el.querySelector('span').textContent.replace('$ ', '');
+  navigator.clipboard.writeText(cmdText).then(() => {
     const hint = el.querySelector('.copy-hint');
     hint.textContent = 'Copied';
-    hint.style.color = '#4ADE80';
+    hint.style.color = '#4CAF8C';
     setTimeout(() => { hint.textContent = 'Copy'; hint.style.color = ''; }, 2000);
   });
 }
 
-function runCmd(id, cmd, label, color, btn) {
+function copyOutput() {
+  const body = document.getElementById('output-body');
+  navigator.clipboard.writeText(body.textContent).then(() => {
+    alert('Terminal output copied to clipboard!');
+  });
+}
+
+function clearOutput() {
+  document.getElementById('output-body').innerHTML = '<span class="out-info">Console cleared.</span>\n';
+}
+
+function toggleFullscreen() {
+  const panel = document.getElementById('output-panel');
+  panel.classList.toggle('fullscreen');
+}
+
+function runCmd(id, label, color, btn) {
   const panel = document.getElementById('output-panel');
   const body = document.getElementById('output-body');
   const title = document.getElementById('output-title');
-  const header = document.getElementById('output-header');
+  const card = document.getElementById('card-' + id);
+  const cmdToRun = card ? card.getAttribute('data-cmd-current') : '';
 
   if (activeBtn && activeBtn !== btn) {
     activeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Execute';
     activeBtn.classList.remove('running');
     activeBtn.disabled = false;
   }
+  if (activeCard) {
+    activeCard.classList.remove('is-executing');
+  }
+
   activeBtn = btn;
+  activeCard = card;
+  if (card) card.classList.add('is-executing');
+
   btn.innerHTML = '<svg class="spinner" style="margin-right:8px; animation: spin 1s linear infinite;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg> Running...';
   btn.classList.add('running');
   btn.disabled = true;
 
-  body.innerHTML = '<span class="out-info">🚀 Initializing task: ' + label + '\n$ ' + cmd + '\n\n</span>';
-  header.style.setProperty('--active-color', color);
-  title.textContent = label;
+  body.innerHTML = '<span class="out-info">🚀 Initializing task: ' + label + '\n$ ' + cmdToRun + '\n\n</span>';
+  title.textContent = 'Executing: ' + label;
   panel.classList.add('open');
   body.scrollTop = 0;
 
-  const es = new EventSource('/run?id=' + encodeURIComponent(id));
+  const es = new EventSource('/run?id=' + encodeURIComponent(id) + '&csrf_token=' + encodeURIComponent(CSRF_TOKEN));
   es.onmessage = function(e) {
     const data = JSON.parse(e.data);
     if (data.done) {
       es.close();
-      if(data.ok) {
+      if (activeCard) activeCard.classList.remove('is-executing');
+      if (data.ok) {
         btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M20 6L9 17l-5-5"></path></svg> Success';
-        btn.style.background = 'rgba(74, 222, 128, 0.1)';
-        btn.style.color = '#4ADE80';
+        btn.style.background = 'rgba(76, 175, 140, 0.15)';
+        btn.style.color = '#4CAF8C';
+        btn.style.borderColor = 'rgba(76, 175, 140, 0.4)';
       } else {
         btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Failed';
-        btn.style.background = 'rgba(239, 68, 68, 0.1)';
-        btn.style.color = '#F87171';
+        btn.style.background = 'rgba(224, 82, 82, 0.15)';
+        btn.style.color = '#E05252';
+        btn.style.borderColor = 'rgba(224, 82, 82, 0.4)';
       }
       btn.classList.remove('running');
       setTimeout(() => {
         btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Execute';
         btn.style.background = '';
         btn.style.color = '';
+        btn.style.borderColor = '';
         btn.disabled = false;
         activeBtn = null;
+        activeCard = null;
       }, 4000);
     } else {
       const span = document.createElement('span');
@@ -711,9 +1035,12 @@ function runCmd(id, cmd, label, color, btn) {
   };
   es.onerror = function() {
     es.close();
+    if (activeCard) activeCard.classList.remove('is-executing');
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Execute';
     btn.classList.remove('running');
     btn.disabled = false;
+    activeBtn = null;
+    activeCard = null;
   };
 }
 
@@ -798,11 +1125,20 @@ def index():
             "icon": section["icon"],
             "commands": section["commands"],
         })
-    return render_template_string(HTML, commands=sections, cloud_mode=IS_CLOUD)
+    return render_template_string(HTML, commands=sections, cloud_mode=IS_CLOUD, csrf_token=get_csrf_token(), owner_name=OWNER_NAME)
 
 
 @app.route("/run")
 def run_command():
+    token = request.args.get("csrf_token", "")
+    if not token or token != session.get("csrf_token"):
+        def _unauthorized():
+            msg = json.dumps({"line": "403 Forbidden: Invalid or missing CSRF token.\n", "err": True})
+            yield f"data: {msg}\n\n"
+            yield f'data: {json.dumps({"done": True, "ok": False})}\n\n'
+        return Response(_unauthorized(), mimetype="text/event-stream", status=403,
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
     cmd_id = request.args.get("id", "")
     cmd_def = _find_cmd(cmd_id)
     if not cmd_def:
@@ -817,11 +1153,20 @@ def run_command():
                         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     cmd = cmd_def["cmd"]
+    if not cmd:
+        def _empty():
+            msg = json.dumps({"line": "No command defined.\n", "err": True})
+            yield f"data: {msg}\n\n"
+            yield f'data: {json.dumps({"done": True, "ok": False})}\n\n'
+        return Response(_empty(), mimetype="text/event-stream",
+                        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+    cmd_args = shlex.split(cmd)
 
     def generate():
         proc = subprocess.Popen(
-            cmd,
-            shell=True,
+            cmd_args,
+            shell=False,
             cwd=BASE_DIR,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -867,24 +1212,22 @@ SVG_PAGE_HTML = r"""<!DOCTYPE html>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0B1120;
-      --surface: rgba(30, 41, 59, 0.7);
-      --border: rgba(148, 163, 184, 0.15);
-      --border-hover: rgba(56, 189, 248, 0.5);
-      --text-main: #F8FAFC;
-      --text-muted: #94A3B8;
-      --accent: #38BDF8;
-      --accent-hover: #0EA5E9;
-      --header-bg: rgba(11, 17, 32, 0.85);
-      --success: #4ADE80;
-      --error: #F87171;
+      --bg: #0D1B2A;
+      --surface: rgba(22, 32, 51, 0.75);
+      --border: rgba(42, 64, 96, 0.5);
+      --border-hover: rgba(201, 168, 76, 0.4);
+      --text-main: #F5EDD0;
+      --text-muted: #8A9BAE;
+      --accent: #C9A84C;
+      --accent-hover: #E8C870;
+      --header-bg: rgba(13, 27, 42, 0.92);
+      --success: #4CAF8C;
+      --error: #E05252;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Outfit', sans-serif;
       background: var(--bg);
-      background-image: radial-gradient(circle at 50% 0%, #1E3A8A 0%, transparent 50%);
-      background-attachment: fixed;
       color: var(--text-main); min-height: 100vh;
     }
     .topbar {
@@ -1197,16 +1540,17 @@ async function doConvert() {
     if (data.error) throw new Error(data.error);
 
     const blob = new Blob([data.svg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
+    if (window._currentSvgUrl) { URL.revokeObjectURL(window._currentSvgUrl); }
+    window._currentSvgUrl = URL.createObjectURL(blob);
     const img = new Image();
-    img.src = url;
+    img.src = window._currentSvgUrl;
     const svgPrev = document.getElementById('svg-preview');
     svgPrev.innerHTML = '';
     svgPrev.appendChild(img);
     document.getElementById('svg-meta').textContent = fmt(data.svg_size);
 
     const dlBtn = document.getElementById('btn-download');
-    dlBtn.href = URL.createObjectURL(blob);
+    dlBtn.href = window._currentSvgUrl;
     dlBtn.download = currentFile.name.replace(/\.[^.]+$/, '') + '.svg';
     dlBtn.style.display = 'inline-flex';
 
@@ -1257,8 +1601,8 @@ def convert_svg():
         raw_bytes = f.read()
         img = Image.open(io.BytesIO(raw_bytes))
 
-        # Resize very large images (vtracer is slow on 4K+)
-        max_side = 2000
+        # Resize large images so vtracer finishes under 5s on shared CPU
+        max_side = 1200 if mode == "color" else 1600
         if max(img.size) > max_side:
             ratio = max_side / max(img.size)
             img = img.resize(
@@ -1293,16 +1637,11 @@ def convert_svg():
             svg_str = vtracer.convert_raw_image_to_svg(png_bytes, img_format="png", **params)
 
         else:  # color — maximum quality pipeline with 3x upscale
-            arr = np.array(img.convert("RGB"))
-            r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
-            # Quantize to the dominant color clusters to remove JPEG compression noise
-            # Use vtracer's own color quantization at high precision
-            # Then 3x NEAREST upscale so vtracer fits smoother bezier curves
+            # First pass: get quantized flat-color version
             buf_orig = io.BytesIO()
             img.convert("RGB").save(buf_orig, "PNG")
             png_orig = buf_orig.getvalue()
 
-            # First pass: get quantized flat-color version
             svg_q = vtracer.convert_raw_image_to_svg(
                 png_orig, img_format="png",
                 colormode="color", hierarchical="stacked", mode="spline",
@@ -1312,8 +1651,7 @@ def convert_svg():
             )
 
             # Second pass: 3x upscale of a median-filtered version → smoother curves
-            from PIL import ImageFilter as _IF
-            img_med = img.convert("RGB").filter(_IF.MedianFilter(3))
+            img_med = img.convert("RGB").filter(ImageFilter.MedianFilter(3))
             W3, H3 = width * 3, height * 3
             img_3x = img_med.resize((W3, H3), Image.NEAREST)
             buf_3x = io.BytesIO()
