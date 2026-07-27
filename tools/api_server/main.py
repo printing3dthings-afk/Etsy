@@ -8269,6 +8269,45 @@ async def run_brief_now(request: Request):
     return {"status": result}
 
 
+@app.post("/api/email/test")
+async def test_email_system_endpoint(request: Request):
+    """Test SMTP connection, verify credentials, update env if requested, and send test email."""
+    token = request.headers.get("X-App-Token", "")
+    if not token or not secrets.compare_digest(token, APP_TOKEN):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    import test_email_system
+    user = body.get("user") or os.getenv("SMTP_USER", "")
+    password = body.get("password") or os.getenv("SMTP_PASSWORD", "")
+    host = body.get("host") or os.getenv("SMTP_HOST", "")
+    port = int(body.get("port") or os.getenv("SMTP_PORT") or 587)
+    recipient = body.get("recipient") or user or "Printing3dthings@outlook.com"
+
+    if not host:
+        host, port = test_email_system.infer_smtp_settings(user)
+
+    success, msg = await asyncio.to_thread(
+        test_email_system.test_smtp_connection, host, port, user, password, recipient
+    )
+
+    if success:
+        os.environ["SMTP_HOST"] = host
+        os.environ["SMTP_PORT"] = str(port)
+        os.environ["SMTP_USER"] = user
+        os.environ["SMTP_PASSWORD"] = password
+        test_email_system.update_env_file("SMTP_HOST", host)
+        test_email_system.update_env_file("SMTP_PORT", str(port))
+        test_email_system.update_env_file("SMTP_USER", user)
+        test_email_system.update_env_file("SMTP_PASSWORD", password)
+
+    return {"success": success, "message": msg, "host": host, "port": port, "user": user}
+
+
+
 @app.post("/api/file-audit/run")
 async def run_file_audit_now(request: Request):
     """Manually trigger the live-Etsy file-integrity audit (for testing, or
