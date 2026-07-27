@@ -103,6 +103,35 @@ _STYLE_BOLD = (
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
 )
 
+# ---------------------------------------------------------------------------
+# ADULT difficulty — intricate, dense patterns, fine detail, like the Halloween packs
+# ---------------------------------------------------------------------------
+_STYLE_ADULT = (
+    "STYLE: INTRICATE adult coloring book illustration — high complexity. "
+    "Extremely detailed, dense patterns with many small elements to color. "
+    "Fine line weight 1.5-2px, precise hatching, layered textures, ornate borders. "
+    "ONLY clean black lines on pure white background — absolutely ZERO fills, "
+    "ZERO shading, ZERO gray tones. Designed for experienced adult colorists who want "
+    "a challenging, meditative, time-intensive coloring experience. "
+    "Think zentangle, mandala complexity, botanical illustration density. "
+    "Pure #000000 black outlines on pure #FFFFFF white only. "
+    "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
+)
+
+# ---------------------------------------------------------------------------
+# KIDS difficulty — big bold shapes, very simple, easy for ages 3-8
+# ---------------------------------------------------------------------------
+_STYLE_KIDS = (
+    "STYLE: Simple coloring page for young children ages 3-8. "
+    "ONLY clean black lines on pure white background — absolutely ZERO fills. "
+    "Line weight 4-5px, EXTRA THICK and bold. Very simple shapes, very few details. "
+    "Large open areas easy to color inside the lines with crayons. "
+    "NO intricate patterns, NO small details, NO background clutter. "
+    "ONE main subject per page, big and centered. "
+    "Pure #000000 black outlines on pure #FFFFFF white only. "
+    "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
+)
+
 
 def _basic_theme(id_, title, subject):
     """One big, bold, simple subject — generous white space, no border. For young kids / quick coloring."""
@@ -408,9 +437,175 @@ COLORING_THEMES = [
 # ---------------------------------------------------------------------------
 # Pack registry — id prefix is also used to namespace ZIPs/listing JSON per pack
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# ADULT pack — intricate, challenging designs for experienced colorists
+# ---------------------------------------------------------------------------
+def _adult_theme(id_, title, subject, border="ornate filigree"):
+    """Intricate adult-difficulty coloring page — dense detail, fine lines."""
+    return {
+        "id": id_,
+        "title": title,
+        "prompt": (
+            f"SUBJECT: {subject} "
+            f"COMPOSITION: Extremely detailed and intricate illustration filling 90% of the page. "
+            f"Dense layered patterns, fine textures, many small elements to individually color. "
+            f"Elaborate {border} border on all four edges. "
+            + _STYLE_ADULT
+        ),
+    }
+
+ADULT_THEMES = [
+    _adult_theme("AD001", "Gothic Cathedral Interior",
+        "Grand gothic cathedral interior with soaring ribbed vaulted ceilings, ornate rose windows "
+        "with intricate tracery, carved stone pillars with detailed capital decorations, pointed arches, "
+        "floor tiles with geometric patterns, candelabras, stained glass panel outlines"),
+    _adult_theme("AD002", "Steampunk Clockwork City",
+        "A massive steampunk clockwork city — interlocking gears of varying sizes, brass pipes with "
+        "rivets, pressure gauges, Victorian-era buildings with ornate ironwork balconies, a clock tower "
+        "with exposed mechanical innards, airships with propellers, steam vents"),
+    _adult_theme("AD003", "Enchanted Mushroom Forest",
+        "Dense enchanted forest floor covered in intricate mushrooms of every variety — morels, "
+        "fly agaric, chanterelles — each with detailed gill patterns under their caps, fern fronds "
+        "with individual leaflets, moss textures, a fairy cottage hidden among the roots, tiny "
+        "woodland creatures, spiderwebs with dewdrops"),
+    _adult_theme("AD004", "Day of the Dead Sugar Skull",
+        "Extremely ornate Day of the Dead sugar skull filling the page — intricate floral eye sockets, "
+        "detailed petal patterns on the forehead, geometric jaw designs, surrounded by marigolds with "
+        "layered petals, candles with dripping wax patterns, papel picado banner details"),
+    _adult_theme("AD005", "Victorian Botanical Garden",
+        "Lush Victorian botanical garden illustration — detailed roses with layered petals and thorns, "
+        "ferns with individual frond segments, ornate iron garden gate with scrollwork, a stone fountain "
+        "with carved cherub details, wisteria hanging from a trellis, butterflies with wing patterns"),
+    _adult_theme("AD006", "Underwater Coral Kingdom",
+        "Extremely detailed coral reef ecosystem — branching coral with polyp textures, sea anemones "
+        "with individual tentacles, schools of tropical fish with scale patterns, a sea turtle with "
+        "intricate shell hexagons, jellyfish with trailing tentacles, seahorses with bony plate details"),
+    _adult_theme("AD007", "Japanese Temple Garden",
+        "Serene Japanese zen garden — a pagoda temple with layered roof tile details, cherry blossom "
+        "branches with hundreds of individual blossoms, a koi pond with detailed fish scales, "
+        "a torii gate, stone lanterns, raked sand patterns, bamboo grove, a wooden bridge with railings"),
+    _adult_theme("AD008", "Haunted Victorian Mansion",
+        "Sprawling Victorian haunted mansion — ornate gingerbread trim on every eave, a wraparound "
+        "porch with turned spindle railings, Gothic windows with intricate frames, bare gnarled trees, "
+        "a crumbling stone wall with ivy, bats, a full moon, jack-o-lanterns, wrought iron fence"),
+    _adult_theme("AD009", "Art Nouveau Floral Woman",
+        "Art Nouveau portrait of a woman — flowing hair interwoven with lilies, irises, and poppies, "
+        "each flower with detailed stamen and petals, decorative Mucha-style geometric halo behind her, "
+        "vine and leaf border in classic Art Nouveau curves and organic shapes"),
+    _adult_theme("AD010", "Celestial Map of the Cosmos",
+        "Intricate celestial star map — constellations connected by fine lines, the sun with detailed "
+        "corona rays, the moon with crater details, planets with ring systems and surface features, "
+        "zodiac symbols in ornate frames, decorative compass rose, scrollwork cartouche borders"),
+    _adult_theme("AD011", "Moroccan Tile Patterns",
+        "Full-page Moroccan zellige tile pattern — interlocking geometric stars, hexagons, and "
+        "arabesques in traditional Islamic geometric art style, extremely precise symmetry, "
+        "layered borders of different pattern scales, central medallion with radiating designs"),
+    _adult_theme("AD012", "Dragon's Hoard",
+        "A massive dragon coiled atop a mountain of treasure — individual scales covering the entire "
+        "body, each with fine texture, coins and gems piled with visible engravings, ornate crowns, "
+        "chalices with jewel settings, swords with detailed hilts, chains, the dragon's wings with "
+        "membrane vein patterns"),
+    _adult_theme("AD013", "Apothecary Cabinet",
+        "Detailed apothecary/witch's cabinet — shelves of potion bottles with different shapes and "
+        "labels, dried herb bundles, a mortar and pestle, crystals with facets, an open spell book "
+        "with swirling magical text lines, candles in ornate holders, a black cat on the shelf, "
+        "botanical specimens pinned under glass, jars of ingredients"),
+    _adult_theme("AD014", "Peacock in Full Display",
+        "A magnificent peacock with tail feathers fully fanned — each feather eye with concentric "
+        "oval details and fine barb lines, the body with individual feather scale patterns, perched "
+        "on an ornate garden balustrade with carved stone details, surrounded by climbing roses"),
+    _adult_theme("AD015", "Mechanical Butterfly Collection",
+        "Display case of steampunk mechanical butterflies — each with different wing patterns made of "
+        "tiny gears, clock parts, springs, and filigree metal wings, mounted on pins with hand-written "
+        "labels, the case itself has ornate wooden frame details and brass corner fittings"),
+    _adult_theme("AD016", "Ancient Library",
+        "Grand ancient library interior — towering bookshelves with thousands of book spines, a "
+        "spiral staircase with ornate iron railings, reading desks with open books and quill pens, "
+        "a globe with geographic details, hanging oil lamps, stained glass windows, a sleeping owl"),
+    _adult_theme("AD017", "Samurai Warrior",
+        "Highly detailed samurai in full ornate armor — intricate lacing patterns on the chest piece, "
+        "detailed kabuto helmet with crest, layered shoulder guards with rivets, a katana with "
+        "wrapped handle detail, standing before a Japanese castle with layered roofs and stone walls"),
+    _adult_theme("AD018", "Vintage Pocket Watch",
+        "Massive vintage pocket watch with case open revealing the movement — every gear, spring, "
+        "jewel bearing, and escapement mechanism drawn with precision, the watch face with Roman "
+        "numerals and decorative hands, surrounded by roses and ribbon with scroll details"),
+    _adult_theme("AD019", "Mermaid's Grotto",
+        "Intricate mermaid resting in a sea cave — detailed scale pattern covering her entire tail, "
+        "flowing hair interwoven with pearls and seaweed strands, the grotto walls covered in "
+        "barnacles and anemones, treasure scattered on the floor, coral formations, light rays"),
+    _adult_theme("AD020", "Norse Viking Ship",
+        "Detailed Viking longship on stormy seas — carved dragon prow with intertwined knotwork, "
+        "overlapping shield designs along the hull, intricate sail patterns, rope rigging details, "
+        "waves with Celtic spiral patterns, a raven in flight, Norse rune border around the page"),
+]
+
+# ---------------------------------------------------------------------------
+# KIDS pack — big, bold, simple shapes for ages 3-8
+# ---------------------------------------------------------------------------
+def _kids_theme(id_, title, subject):
+    """Simple bold kids coloring page — one big subject, very easy."""
+    return {
+        "id": id_,
+        "title": title,
+        "prompt": (
+            f"SUBJECT: {subject} "
+            "COMPOSITION: ONE large, simple subject centered on the page, fills 50-60% of page. "
+            "Very few details, big open areas easy to color with crayons. NO background elements. "
+            "NO border. Maximum white space around the subject. "
+            + _STYLE_KIDS
+        ),
+    }
+
+KIDS_THEMES = [
+    _kids_theme("KD001", "Happy Dinosaur", "One big friendly cartoon T-Rex with round body, "
+                "big smile, tiny arms, standing upright"),
+    _kids_theme("KD002", "Big Fire Truck", "One simple fire truck with ladder, big wheels, "
+                "two windows, a flashing light on top"),
+    _kids_theme("KD003", "Smiling Cat", "One simple round cat sitting down, big eyes, "
+                "whiskers, short tail curled around its body"),
+    _kids_theme("KD004", "Happy Dog", "One simple cartoon dog with floppy ears, big nose, "
+                "wagging tail, sitting and looking forward"),
+    _kids_theme("KD005", "Simple Butterfly", "One large butterfly with symmetrical wings, "
+                "big round shapes on wings, small body, two antennae"),
+    _kids_theme("KD006", "Big Star", "One enormous five-pointed star with a happy face, "
+                "small sparkle lines around it"),
+    _kids_theme("KD007", "Friendly Fish", "One big simple cartoon fish with round body, "
+                "big eye, simple fins, three bubble circles above it"),
+    _kids_theme("KD008", "Ice Cream Cone", "One big ice cream cone with two scoops, "
+                "simple waffle cone pattern, a cherry on top"),
+    _kids_theme("KD009", "Simple House", "One simple house with triangle roof, square windows, "
+                "a door, a chimney with small smoke puff"),
+    _kids_theme("KD010", "Rocket Ship", "One simple cartoon rocket with round window, "
+                "three small fins, simple flame at the bottom"),
+    _kids_theme("KD011", "Happy Sun", "One giant smiling sun with simple ray lines extending "
+                "outward, two small clouds on the sides"),
+    _kids_theme("KD012", "Cute Bunny", "One round bunny rabbit sitting up, long ears, "
+                "cotton tail, holding a simple carrot"),
+    _kids_theme("KD013", "Simple Train", "One cartoon steam train engine with big smokestack, "
+                "three wheels, one window, small puff of steam"),
+    _kids_theme("KD014", "Big Flower", "One enormous simple flower with round center, "
+                "six large petals, one straight stem, two leaves"),
+    _kids_theme("KD015", "Friendly Elephant", "One simple cartoon elephant with big round body, "
+                "long trunk curled up, big ears, small tail"),
+    _kids_theme("KD016", "Simple Airplane", "One cartoon airplane with two wings, round nose, "
+                "two windows, a small tail fin"),
+    _kids_theme("KD017", "Teddy Bear", "One simple teddy bear sitting down, round head, "
+                "round ears, round belly, small paws"),
+    _kids_theme("KD018", "Cupcake", "One big cupcake with swirled frosting on top, "
+                "sprinkles dots, paper wrapper with simple lines"),
+    _kids_theme("KD019", "Simple Turtle", "One cartoon turtle with hexagon pattern shell, "
+                "four stubby legs, smiling face poking out"),
+    _kids_theme("KD020", "Sailboat", "One simple sailboat on gentle waves, triangular sail, "
+                "small flag on top, three wave curves underneath"),
+]
+
+
 PACKS = {
     "kawaii": COLORING_THEMES,
     "fun_basic": FUN_BASIC_THEMES,
+    "adult": ADULT_THEMES,
+    "kids": KIDS_THEMES,
 }
 
 
@@ -617,6 +812,70 @@ _LISTING_META = {
             "Pure black outline on white background — zero fills, zero shading",
             "Themes: dinosaurs, race cars, pirates, robots, knights, space, animals & more",
             "Instant digital download — no physical item shipped",
+        ],
+    },
+    "adult": {
+        "title": "Intricate Adult Coloring Pages Printable, Detailed Coloring Book, Instant Download",
+        "price": 3.99,
+        "tags": [
+            "adult coloring pages",
+            "intricate coloring",
+            "detailed coloring pdf",
+            "coloring page download",
+            "instant download",
+            "stress relief art",
+            "mandala coloring",
+            "gothic coloring page",
+            "botanical coloring",
+            "coloring book pdf",
+            "mindful coloring",
+            "digital coloring",
+            "complex line art",
+        ],
+        "hook": (
+            "🧘 Instant download intricate adult coloring pages — ultimate stress relief & creative relaxation!\n\n"
+            "20 highly detailed, complex coloring pages designed for experienced colorists. Features "
+            "Gothic architecture, steampunk clockwork, intricate mandalas, botanical gardens, and mythic dragons. "
+            "Fine black line work on crisp white background — perfect for fine-tip markers or colored pencils."
+        ),
+        "whats_included": [
+            "20 unique intricate adult coloring page PNG files",
+            "High resolution 2400×2400px at 300 DPI",
+            "Fine 1.5-2px black line art on pure white — ultra-detailed",
+            "Themes: Gothic cathedrals, steampunk, celestial maps, Art Nouveau, floral mandalas",
+            "Instant digital download — printable at home or print shop",
+        ],
+    },
+    "kids": {
+        "title": "Simple Kids Coloring Pages Printable, Toddler & Preschooler Coloring Sheets",
+        "price": 3.99,
+        "tags": [
+            "kids coloring pages",
+            "toddler coloring",
+            "preschool coloring",
+            "easy coloring pages",
+            "instant download",
+            "simple coloring book",
+            "dinosaur coloring",
+            "cute animal coloring",
+            "coloring sheets kids",
+            "coloring book pdf",
+            "boy girl coloring",
+            "digital coloring",
+            "first coloring book",
+        ],
+        "hook": (
+            "🖍️ Instant download simple kids coloring pages — extra bold lines for easy coloring!\n\n"
+            "20 fun and easy coloring pages specifically designed for toddlers and young children (ages 3-8). "
+            "Features big, bold 4-5px outlines with large open spaces — perfect for crayons, washable markers, "
+            "and little hands learning to color inside the lines!"
+        ),
+        "whats_included": [
+            "20 unique simple kids coloring page PNG files",
+            "High resolution 2400×2400px at 300 DPI",
+            "Extra thick 4-5px black outlines with zero background clutter",
+            "Themes: dinosaurs, fire trucks, animals, rocket ships, ice cream, animals & shapes",
+            "Instant digital download — print unlimited copies for your kids",
         ],
     },
 }

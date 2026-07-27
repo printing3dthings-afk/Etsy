@@ -346,8 +346,8 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 
 /* ── Main content — 3-column CSS grid (left 290px | chat 1fr | right 310px) ── */
 .main{grid-column:2;grid-row:2;display:grid;grid-template-columns:290px 1fr 310px;gap:12px;padding:12px;overflow:hidden}
-.col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
-.col-center{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.col-center{display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .col-aicore{flex:0 0 auto}
 .col-sysmon{flex:1;min-height:0}
 .col-timeline{flex:0 0 auto;min-height:0}
@@ -2476,7 +2476,7 @@ const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 // flex to fill however wide the stage actually is; no other screen-level CSS
 // changes needed for this to take effect. ──
 const STAGE_W_MIN = 1440, STAGE_H_MIN = 900;
-const STAGE_W_MAX = 1800, STAGE_H_MAX = 1000;
+const STAGE_W_MAX = 1920, STAGE_H_MAX = 1200;
 const MOBILE_BREAKPOINT = 880;
 const stage = document.getElementById('stage');
 const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');
