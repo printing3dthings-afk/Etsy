@@ -7851,6 +7851,21 @@ def _run_scheduled_art_check() -> str:
     return "ran (see ops_runbook for output)"
 
 
+def _run_scheduled_coloring_check() -> str:
+    """Runs post_scheduled_coloring.py with no flags daily — self-gates on
+    data/coloring_schedule.json's next_post_date (every 4 days). Generates draft
+    pack (Adult, Kids, Kawaii) and stages action for approval."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "post_scheduled_coloring.py")],
+        capture_output=True, text=True, timeout=900, cwd=str(ROOT),
+    )
+    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    if "[SCHEDULED COLORING] Not due yet" in out or "Not due yet" in out:
+        return "not due today"
+    _append_ops_runbook_entry("Scheduled coloring run", out[:3000])
+    return "ran (see ops_runbook for output)"
+
+
 def _sync_calendar_to_google() -> str:
     """Pushes Frank's own due-dated todos and imminent seasonal/tax
     deadlines onto a connected Google Calendar, so both directions live in
@@ -8007,6 +8022,7 @@ async def _calendar_tasks_loop() -> None:
     last_seasonal = _get_calendar_task_last_run("seasonal")
     last_ads_check = _get_calendar_task_last_run("ads_check")
     last_art_check = _get_calendar_task_last_run("art_check")
+    last_coloring_check = _get_calendar_task_last_run("coloring_check")
     last_art_authenticity = _get_calendar_task_last_run("art_authenticity")
     last_star_seller_check = _get_calendar_task_last_run("star_seller_check")
     last_gcal_sync = _get_calendar_task_last_run("gcal_sync")
@@ -8098,6 +8114,15 @@ async def _calendar_tasks_loop() -> None:
             except Exception as exc:
                 print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
                 failed.append(f"scheduled-art:{exc}")
+        if today != last_coloring_check:
+            try:
+                detail = await asyncio.to_thread(_run_scheduled_coloring_check)
+                last_coloring_check = today
+                _set_calendar_task_last_run("coloring_check", today)
+                ran.append(f"scheduled-coloring:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] scheduled coloring check error: {exc}", flush=True)
+                failed.append(f"scheduled-coloring:{exc}")
         if today != last_gcal_sync:
             try:
                 detail = await asyncio.to_thread(_sync_calendar_to_google)

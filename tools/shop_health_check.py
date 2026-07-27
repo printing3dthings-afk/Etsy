@@ -119,15 +119,10 @@ def _load_prev_snapshot() -> dict | None:
         return None
 
 
-def _get(client, url):
-    headers = {
-        "Authorization": f"Bearer {client.access_token}",
-        "x-api-key": f"{client.client_id}:{client.client_secret}",
-    }
-    req = urllib.request.Request(url, headers=headers)
+def _get(client, url_or_path):
+    path = url_or_path.replace("https://openapi.etsy.com/v3/application/", "")
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return json.loads(resp.read())
+        return client._request("GET", path)
     except Exception as e:
         return {"error": str(e)}
 
