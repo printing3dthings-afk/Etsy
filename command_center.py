@@ -89,6 +89,18 @@ COMMANDS = [
                 "cmd": "python3 tools/audit_fix_wall_art_tags.py",
                 "desc": "Scans all active wall art listings for tag violations (>20 chars, <13 tags, duplicates) and fixes them.",
             },
+            {
+                "id": "seo_audit",
+                "label": "SEO Title Audit",
+                "cmd": "./venv/bin/python3 tools/seo_title_optimizer.py --fix",
+                "desc": "Grades every listing title (A–F) against 2026 Etsy SEO rules and suggests buyer-intent rewrites.",
+            },
+            {
+                "id": "seasonal_keywords",
+                "label": "Seasonal Keywords Calendar",
+                "cmd": "./venv/bin/python3 tools/seasonal_keywords.py --weeks 20",
+                "desc": "Shows upcoming seasonal peaks, overdue keyword updates, and which listings need tag changes now.",
+            },
         ]
     },
     # ── 3D PRINTING & CAD AUTOMATION ──────────────────────────────────────────
