@@ -4187,7 +4187,7 @@ function renderRefImgGrid(){
     const url = BASE + '/api/files/download?root=reference_images&path=' + encodeURIComponent(im.filename) + '&inline=1&token=' + encodeURIComponent(TOKEN);
     return '<div class="refimg-tile"><img src="' + url + '" alt="' + escHtml(im.description || im.filename) + '" loading="lazy">'
       + '<span class="refimg-cat">' + escHtml(_REFIMG_CATEGORY_LABELS[im.category] || im.category) + '</span>'
-      + '<button class="refimg-del" title="Delete" onclick="deleteRefImage(\\'' + im.id + '\\')">×</button></div>';
+      + '<button class="refimg-del" title="Delete" aria-label="Delete reference image" onclick="deleteRefImage(\\'' + im.id + '\\')">×</button></div>';
   }).join('');
 }
 async function uploadRefImages(fileList){
@@ -6448,7 +6448,7 @@ function _renderTasks(d, list, offlineNote){
       (answered ? '<div class="sub" style="color:var(--gold);margin-top:4px">Your answer: '+escHtml(t.answer)+' <a href="#" onclick="event.preventDefault();openAnswerModal('+t.id+')" style="color:var(--muted);text-decoration:underline">✏️ edit</a></div>'
         : (isQuestion ? '<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="openAnswerModal('+t.id+')">💬 Answer</button>' : ''))+
       '</div>'+
-      '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>'+
+      '<button aria-label="Delete to-do" onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>'+
       (isQuestion ? '<div id="answer-modal-'+t.id+'" style="display:none;padding:0 4px 8px 26px"></div>' : '');
   }).join('');
   list.innerHTML = html;
