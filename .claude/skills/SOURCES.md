@@ -25,6 +25,7 @@ found), license confirmed, author/repo checked for legitimacy.
 | `obsidian-cli` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
 | `defuddle` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
 | `hallmark` | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | MIT | 2026-07-29 |
+| `clipify` | [louisedesadeleer/clipify](https://github.com/louisedesadeleer/clipify) | MIT | 2026-07-29 |
 
 Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
 (unmodified) and is retained under its original MIT license. `graphify` is
@@ -68,6 +69,24 @@ pinned version).
 - **cc-switch** — not a Claude skill at all (a standalone desktop app for
   switching between Claude Code provider/model config profiles). Nothing to
   vet or install here; excluded per Scott's own instruction.
+- **OpenMontage** (calesthio/OpenMontage, 2026-07-29) — not a lightweight
+  skill file: a complete agentic video-production system requiring a full
+  repo clone (Python 3.10+, Node.js 18+, FFmpeg, `npm install` for its
+  Remotion composition engine, `make setup`), and **AGPLv3 licensed**
+  (copyleft — a materially different obligation profile than every
+  MIT-licensed skill in this repo). Forcing a heavy AGPL Node+Python clone
+  into this repo to get one capability is the wrong shape of integration.
+  If Scott wants full agentic video production later, the right move is
+  running it as a completely separate standalone tool on his own machine,
+  not merging it here.
+- **pycaps** (francozanardi/pycaps, 2026-07-29) — also not a skill file: a
+  Python CLI/library (`pip install git+...`) needing ffmpeg + optional
+  Playwright + an auto-downloaded Whisper model, for burning animated
+  CSS-styled captions onto video. A real feature candidate (captioned
+  product/promo videos) but it's actual new pipeline work — a new tool
+  module, a `requirements.txt` entry, wiring into existing video output —
+  not a file to fetch and drop in. Scoped as a documented future option,
+  not built.
 
 ## `taste-skill` scope — read before expecting it to fire on dashboard work
 
@@ -116,6 +135,17 @@ back to downloading audio and transcribing via OpenAI Whisper (`pip
 install openai-whisper`). Reviewed and found legitimate (no injection/
 exfiltration patterns, MIT licensed, 498-star repo) — flagged here so
 nobody is surprised the first time it silently installs `yt-dlp`.
+
+## `clipify` requires a separate local install — read before expecting it to just work
+
+Added 2026-07-29. Same category as `youtube-transcript`/`graphify` below —
+not a pure instruction file. Its `SKILL.md` drives real local processing
+(ffmpeg, local Whisper transcription, numpy) to find funny moments in a
+video, cut/reframe them to 9:16, and burn word-by-word captions. Reviewed
+clean (MIT, no API keys, fully local — no cloud calls of any kind). Needs
+`ffmpeg` + `whisper` installed locally to actually do anything; without
+them the skill will correctly report they're missing rather than silently
+failing.
 
 ## `graphify` requires a separate local install — read before expecting it to just work
 
