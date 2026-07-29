@@ -255,7 +255,23 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 #stage{
   position:relative;width:1440px;height:900px;flex-shrink:0;transform-origin:center center;
   background:var(--bg); /* 2026-07-23: flattened per Scott -- "all backgrounds solid" */
-  display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px 1fr 54px;
+  /* 2026-07-29: middle row was bare "1fr", not "minmax(0,1fr)" -- a bare fr
+     track in CSS Grid has an IMPLICIT automatic minimum equal to its content's
+     min-content size, which silently overrides min-height:0 set on the grid
+     ITEM inside it. #stage's real grid items are the .screen divs (.main is
+     nested one level deeper, inside #screen-cmd -- see .main's own comment
+     below for that part of the chain). The bare 1fr let the row (and
+     #screen-cmd inside it) grow past #stage's own 900px height whenever
+     content was tall enough, with nowhere for the overflow to scroll
+     (#stage-wrap is position:fixed, no ancestor scroll container) -- content
+     was genuinely, silently clipped at the literal browser window edge.
+     minmax(0,1fr) makes the track actually respect its computed share
+     instead of the content's natural size. Confirmed via direct
+     clientHeight measurement: #screen-cmd.clientHeight correctly reads
+     778px after this fix (900 - 68 - 54), matching Scott's real "chat is
+     cut off / section to the right is cut off" report at a real 1366x672
+     laptop viewport, not assumed. */
+  display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px minmax(0,1fr) 54px;
 }
 
 /* ── corner brackets (sci-fi HUD accent) ── */
@@ -350,7 +366,25 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 .voice-widget .vw-title{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
 
 /* ── Main content — 3-column CSS grid (left 290px | chat 1fr | right 310px) ── */
-.main{grid-column:2;grid-row:2;display:grid;grid-template-columns:290px 1fr 310px;gap:12px;padding:12px;overflow:hidden}
+/* 2026-07-29: height:100% added -- .main is NOT a direct grid item of #stage
+   (its grid-column/grid-row below are leftover/inert -- its real parent is
+   #screen-cmd, a .screen div, and .screen.active{display:block} is a plain
+   block box, not a grid container). #screen-cmd itself IS the real grid item
+   and correctly sizes to #stage's row-2 track (see #stage's grid-template-rows
+   fix above) -- but .main, as an ordinary block child with no explicit height,
+   just grew to its own content's natural size and silently overflowed that
+   already-correctly-sized parent. Since #stage-wrap is position:fixed (no
+   ancestor to scroll), that overflow had nowhere to go and was clipped at the
+   literal browser window edge with no scrollbar reachable anywhere -- Scott's
+   "chat is cut off / section to the right is cut off" report. height:100%
+   makes .main actually fill its parent's already-correct height instead of
+   growing past it (box-sizing:border-box is a global reset at line 221, so
+   padding is already accounted for). Verified via direct clientHeight
+   measurement before/after at a real 1366x672 laptop viewport (well under
+   the STAGE_H_MIN=900 floor): .col-right's own overflow-y:auto never once
+   engaged before this fix (scrollHeight==clientHeight, no overflow ever
+   detected) -- after, it correctly overflows and scrolls. */
+.main{grid-column:2;grid-row:2;display:grid;grid-template-columns:290px 1fr 310px;gap:12px;padding:12px;overflow:hidden;height:100%}
 .col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .col-center{display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .col-aicore{flex:0 0 auto}
@@ -359,8 +393,22 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 .col-chat{flex:1;min-height:0;display:flex;flex-direction:column}
 .col-shop{flex:0 0 auto}
 .col-meminsights{flex:0 0 auto}
-.col-agents{flex:1;min-height:0}
-.col-feed{flex:1;min-height:0}
+/* 2026-07-29: was min-height:0, which lets flexbox shrink these toward 0
+   instead of ever making .col-right's own content genuinely exceed its box
+   -- .col-right's overflow-y:auto (line above) almost never triggered as a
+   result, so on a real laptop screen (~1366x768, well under the STAGE_H_MIN
+   floor) the 4 fixed-size cards above (Shop Performance + 3x meminsights)
+   ate nearly all available height and squeezed Inbox &amp; Reviews toward
+   invisibility with no scrollbar reaching it -- verified via real Playwright
+   screenshots at 1366x768, not assumed. A min-height floor stops the shrink
+   before content vanishes, which forces .col-right to actually overflow and
+   scroll instead. Selector is .panel.col-agents (not bare .col-agents):
+   .panel{min-height:0} below has equal specificity and comes later in the
+   file, so the bare-class version silently lost this exact min-height to
+   that rule -- verified via getComputedStyle (reported 0px, not 140px)
+   before switching to the compound selector. */
+.panel.col-agents{flex:1;min-height:140px}
+.panel.col-feed{flex:1;min-height:140px}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;
   display:flex;flex-direction:column;overflow:hidden;min-height:0;
@@ -714,7 +762,12 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes wave{0%,100%{height:4px}50%{height:16px}}
 
-.screen{display:none;grid-column:2;grid-row:2;overflow:hidden;padding:12px}
+/* min-height:0: this (not .main) is #stage's actual grid item -- same CSS
+   Grid min-height:auto trap #stage's own minmax(0,1fr) fix (above) closes at
+   the track level; this closes it at the item level so .screen genuinely
+   respects its #stage row-2 allocation instead of growing past it, on any
+   of the 19 screens (including #screen-cmd) that use this class. */
+.screen{display:none;grid-column:2;grid-row:2;overflow:hidden;padding:12px;min-height:0}
 /* Screen-switch motion (2026-07-17, Scott: "too many hard lines... make it flow
    more"). Was a bare display:none->block cut with zero animation anywhere in the
    switch path (showScreen()/phoneOpenScreen() just toggle .active) -- the single
@@ -1774,7 +1827,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
         <div class="panel brk col-agents">
           <div class="panel-title">Inbox &amp; Reviews <span class="src">/api/inbox</span></div>
-          <div id="inbox-body">
+          <div class="panel-body" id="inbox-body">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
         </div>

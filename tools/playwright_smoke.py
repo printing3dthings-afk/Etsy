@@ -1404,6 +1404,51 @@ async def _run_browser_checks() -> None:
             check("Wall Art" in files_text.split("Reference Photos")[-1],
                   f"Reference Photos must sub-group by the real per-image category metadata: {files_text[:400]}")
 
+            # ── Desktop sub-floor content-cutoff regression (2026-07-29, Scott: "the
+            # chat is still cut off as well as the section to the right... it should
+            # auto adjust"). Every prior "Desktop layout fix" pass in this file's
+            # history (8078d7a, 98ad5ef, aab770f) only verified at-or-above the
+            # STAGE_H_MIN=900 floor -- the actual bug only reproduced BELOW it, on a
+            # real laptop viewport, which none of those passes ever checked. Root
+            # cause was two-fold: (1) #stage's grid-template-rows used a bare "1fr"
+            # for its middle row, which has an implicit content-based minimum that
+            # silently overrides min-height:0 on the grid item inside it -- fixed
+            # with minmax(0,1fr); (2) .main (the 3-column chat layout) is nested
+            # inside #screen-cmd, not a direct grid item of #stage as its own
+            # grid-column/grid-row properties implied -- #screen-cmd is display:block
+            # when active, so .main's placement properties were inert, and .main (no
+            # explicit height) just grew to its own content size and silently
+            # overflowed its already-correctly-sized parent -- fixed with
+            # height:100%. Assert the real, measurable symptom: .col-right's own
+            # overflow-y:auto must actually engage (scrollHeight > clientHeight) once
+            # its cards have real content, not stay permanently un-triggered like it
+            # did before either fix. ──
+            await page.set_viewport_size({"width": 1366, "height": 672})
+            await page.evaluate("showScreen('cmd')")
+            await page.wait_for_timeout(400)
+            await page.evaluate("""() => {
+                const setBody = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+                setBody('star-seller-body', '<div class="core-row"><span>Orders (90d)</span><span>5/5</span></div><div class="core-row"><span>Revenue (90d)</span><span>$80/$300</span></div><div class="core-row"><span>Avg Rating</span><span>5 stars</span></div><div class="core-row"><span>On-time Delivery</span><span>100%</span></div><div class="core-row"><span>Unread Messages</span><span>0</span></div>');
+                setBody('cogs-status-body', '<div class="core-row"><span>Avg margin (est.)</span><span>80.1%</span></div><div class="core-row"><span>Recent profit (est.)</span><span>$22.74</span></div><div class="core-row"><span>Recent units sold</span><span>4</span></div><div class="core-row"><span>Active listings</span><span>100</span></div><div style="font-size:9.5px;line-height:1.4">Long disclaimer paragraph filler text simulating real production content wrapping across several lines of small print.</div>');
+                setBody('inbox-body', '<div class="core-row"><span>New reviews</span><span>2</span></div><div class="core-row"><span>Unread messages</span><span>0</span></div><div class="core-row"><span>Pending questions</span><span>1</span></div>');
+            }""")
+            await page.wait_for_timeout(300)
+            sub_floor_layout = await page.evaluate("""() => {
+                const right = document.querySelector('.col-right');
+                const inbox = document.getElementById('inbox-body');
+                return {
+                    rightScrollHeight: right.scrollHeight,
+                    rightClientHeight: right.clientHeight,
+                    inboxClientHeight: inbox.clientHeight,
+                };
+            }""")
+            check(sub_floor_layout["rightScrollHeight"] > sub_floor_layout["rightClientHeight"],
+                  f"at a real sub-floor laptop viewport (1366x672), .col-right's content must genuinely overflow its box so overflow-y:auto engages -- otherwise content is silently clipped with no scrollbar reachable anywhere: {sub_floor_layout}")
+            check(sub_floor_layout["inboxClientHeight"] > 0,
+                  f"Inbox & Reviews card must keep a real, non-zero height (not get flex-shrunk to invisible) even when the 4 fixed-size cards above it are near-full of realistic content: {sub_floor_layout}")
+            await page.set_viewport_size({"width": 1440, "height": 1000})
+            await page.wait_for_timeout(300)
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the
