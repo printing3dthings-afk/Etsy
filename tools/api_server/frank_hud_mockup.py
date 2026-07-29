@@ -340,7 +340,12 @@ h1.hdr-title-h1{margin:0;font:inherit}
 h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;color:var(--muted);
   text-transform:uppercase;font-weight:400}
 
-.voice-widget{margin-top:auto;border:1px solid var(--border);border-radius:var(--r-md);padding:14px 10px;
+/* 2026-07-29: was margin-top:auto, which shoves this to the very bottom of
+   .sidebar's flex column -- on a tall stage (now up to 1440px, see
+   STAGE_H_MAX above) that left a large empty dead-zone between the short
+   nav list and this block, part of the "too much unused space" Scott
+   reported. Fixed top margin keeps it close to the nav list instead. */
+.voice-widget{margin-top:20px;border:1px solid var(--border);border-radius:var(--r-md);padding:14px 10px;
   background:var(--panel);text-align:center}
 .voice-widget .vw-title{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
 
@@ -384,6 +389,16 @@ body:not(.show-plumbing) #orb-build-ver,
 body:not(.show-plumbing) #settings-build-ver,
 body:not(.show-plumbing) #studio-build-ver,
 body:not(.show-plumbing) #system-status-pill{display:none}
+/* 2026-07-29: .col-left's only children (.col-aicore/.col-sysmon/.col-timeline,
+   all hidden above) are dev-only diagnostics -- for a normal (non-plumbing)
+   user this left the whole 290px .col-left column empty, a large chunk of
+   "too much unused space" Scott reported on desktop. Hide the empty column
+   itself, not just its contents, and collapse .main's grid to 2 columns so
+   the chat column actually reclaims that width instead of leaving a blank
+   gap where it used to sit. show-plumbing (dev) mode keeps the original
+   3-column layout with real content in .col-left. */
+body:not(.show-plumbing) .col-left{display:none}
+body:not(.show-plumbing) .main{grid-template-columns:1fr 310px}
 body:not(.show-advanced) .nav-item[data-tier="advanced"],
 body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}
 .panel-body{overflow-y:auto;min-height:0;flex:1}
@@ -716,7 +731,10 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 /* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
    /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
 #chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:2px 2px 10px;display:flex;flex-direction:column;gap:10px}
-.lc-bubble{max-width:78%;padding:10px 14px;border-radius:var(--r-lg);font-size:13px;line-height:1.5;word-break:break-word;box-shadow:var(--card-shadow)}
+/* 2026-07-29: 78%->85% -- the chat column just got significantly wider
+   (see .col-left hiding above), and a narrower bubble cap left more of
+   that new width unused as blank margin beside every message. */
+.lc-bubble{max-width:85%;padding:10px 14px;border-radius:var(--r-lg);font-size:13px;line-height:1.5;word-break:break-word;box-shadow:var(--card-shadow)}
 .lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
 /* 2026-07-22 chat redesign: bot bubbles pick up a cyan accent border -- the chat
    panel previously used zero cyan anywhere (gold for the user + flat panel-gray
@@ -2476,7 +2494,16 @@ const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 // flex to fill however wide the stage actually is; no other screen-level CSS
 // changes needed for this to take effect. ──
 const STAGE_W_MIN = 1440, STAGE_H_MIN = 900;
-const STAGE_W_MAX = 1920, STAGE_H_MAX = 1200;
+// 2026-07-29: raised from 1920x1200 (itself raised from the original
+// 1800x1000) -- 1920x1200 is a below-average size for monitors sold today,
+// so anything wider (2560x1440 QHD being extremely common) stopped growing
+// real layout width and fell back to transform:scale() letterboxing, which
+// read as "too much unused space" on a normal modern desktop monitor, not
+// just on an exotic ultrawide. New ceiling matches 2560x1440 QHD as real,
+// growable content width -- an true ultrawide (3440px+) still gets some
+// letterboxing above that, which is the original, still-valid "don't let
+// the content column get absurdly wide" intent, just at a higher bar.
+const STAGE_W_MAX = 2560, STAGE_H_MAX = 1440;
 const MOBILE_BREAKPOINT = 880;
 const stage = document.getElementById('stage');
 const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');
