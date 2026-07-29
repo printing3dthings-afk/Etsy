@@ -123,7 +123,7 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
   --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#e4b155;--gold2:#f2cb8f;--text:#f5eef2;--muted:#bfa3b5;
   --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
 
-  --font-display:'Fraunces',Georgia,serif;
+  --font-display:'Outfit','Sora',sans-serif;
   --font-body:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
 
@@ -266,7 +266,7 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 
 /* ── Header row ── */
 .hdr-logo{grid-column:1;grid-row:1;display:flex;align-items:center;gap:10px;padding:0 16px;
-  border-bottom:1px solid var(--border);border-right:1px solid var(--border);background:rgba(8,16,26,.7)}
+  border-bottom:1px solid var(--border);border-right:1px solid var(--border);background:var(--panel)}
 .hdr-logo .hex{width:30px;height:30px;border:2px solid var(--cyan);border-radius:var(--r-sm);display:flex;
   align-items:center;justify-content:center;color:var(--cyan2);font-size:15px;box-shadow:0 0 10px rgba(242,160,181,.5)}
 .hdr-logo .lbl .l1{font-family:var(--font-display);font-weight:600;letter-spacing:1px;color:var(--cyan2);font-size:16px;line-height:1.1;
@@ -274,7 +274,7 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 .hdr-logo .lbl .l2{font-size:8.5px;letter-spacing:2px;color:var(--muted)}
 
 .hdr-bar{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;border-bottom:1px solid var(--border);background:rgba(8,16,26,.5)}
+  padding:0 20px;border-bottom:1px solid var(--border);background:var(--panel)}
 .status-pill{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--green);
   border:1px solid rgba(76,175,130,.4);border-radius:var(--r-pill);padding:4px 10px;background:rgba(76,175,130,.08);
   letter-spacing:.5px;white-space:nowrap}
@@ -317,7 +317,7 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 .operator .ol2{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
 /* ── Sidebar ── */
-.sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);background:rgba(8,16,26,.55);
+.sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);background:var(--panel);
   display:flex;flex-direction:column;padding:14px 10px;overflow-y:auto;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .nav-section{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin:12px 10px 6px;text-transform:uppercase}
@@ -346,8 +346,8 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 
 /* ── Main content — 3-column CSS grid (left 290px | chat 1fr | right 310px) ── */
 .main{grid-column:2;grid-row:2;display:grid;grid-template-columns:290px 1fr 310px;gap:12px;padding:12px;overflow:hidden}
-.col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
-.col-center{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.col-center{display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .col-aicore{flex:0 0 auto}
 .col-sysmon{flex:1;min-height:0}
 .col-timeline{flex:0 0 auto;min-height:0}
@@ -1539,6 +1539,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <input class="search" id="global-search" aria-label="Search listings, orders, products, tools, tasks, and knowledge base" placeholder="Search listings, orders, products, tools…" autocomplete="off" onkeydown="if(event.key==='Enter'){runGlobalSearch(this.value)}else if(event.key==='Escape'){closeSearchDropdown()}">
         <div id="search-dropdown" class="search-dropdown" style="display:none" onclick="event.stopPropagation()" role="listbox" aria-label="Search results"></div>
       </div>
+      <a href="/cmd" style="color:var(--gold);border:1px solid var(--border);background:var(--panel);padding:4px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px">💻 Command Center</a>
       <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
       <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
@@ -2475,7 +2476,7 @@ const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').mat
 // flex to fill however wide the stage actually is; no other screen-level CSS
 // changes needed for this to take effect. ──
 const STAGE_W_MIN = 1440, STAGE_H_MIN = 900;
-const STAGE_W_MAX = 1800, STAGE_H_MAX = 1000;
+const STAGE_W_MAX = 1920, STAGE_H_MAX = 1200;
 const MOBILE_BREAKPOINT = 880;
 const stage = document.getElementById('stage');
 const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');

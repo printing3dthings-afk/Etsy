@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>OnBrandCraftz — Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0D1B2A;
+      --surface: rgba(22, 32, 51, 0.8);
+      --border: rgba(42, 64, 96, 0.5);
+      --text-main: #F5EDD0;
+      --text-muted: #8A9BAE;
+      --accent: #C9A84C;
+      --accent-hover: #E8C870;
+      --accent-glow: rgba(201, 168, 76, 0.3);
+      --error: #E05252;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+    body {
+      background: var(--bg);
+      background-image: radial-gradient(circle at 30% 20%, rgba(27, 58, 104, 0.6) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(201, 168, 76, 0.08) 0%, transparent 40%);
+      background-attachment: fixed;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px; color: var(--text-main); overflow: hidden;
+    }
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%; pointer-events: none;
+      filter: blur(80px); opacity: 0.4;
+    }
+    body::before {
+      width: 500px; height: 500px; top: -100px; left: -100px;
+      background: radial-gradient(circle, rgba(27, 58, 104, 0.8), transparent 70%);
+      animation: drift1 20s ease-in-out infinite;
+    }
+    body::after {
+      width: 400px; height: 400px; bottom: -80px; right: -80px;
+      background: radial-gradient(circle, rgba(201, 168, 76, 0.15), transparent 70%);
+      animation: drift2 25s ease-in-out infinite;
+    }
+    @keyframes drift1 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(60px,40px); } }
+    @keyframes drift2 { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(-50px,-30px); } }
+    .card {
+      background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border); border-radius: 24px; padding: 48px 40px;
+      max-width: 420px; width: 100%;
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.6), 0 0 40px rgba(201,168,76,0.05);
+      text-align: center; position: relative; z-index: 1;
+      animation: floatIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 60%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent); border-radius: 2px;
+    }
+    @keyframes floatIn { 0% { opacity:0; transform:translateY(20px) scale(0.95); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+    .logo { font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--accent-glow)); }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+    p { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; }
+    input {
+      width: 100%; padding: 14px 16px; background: rgba(13, 27, 42, 0.6);
+      border: 1px solid var(--border); border-radius: 12px; color: var(--text-main);
+      font-size: 15px; outline: none; transition: all 0.3s;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder { color: #4A6580; }
+    button {
+      width: 100%; margin-top: 16px; padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #B8943F);
+      color: #0D1B2A; border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    button:hover { background: linear-gradient(135deg, var(--accent-hover), var(--accent)); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,0.5); }
+    button:active { transform: translateY(1px); }
+    .err { color: var(--error); font-size: 13px; margin-top: 12px; font-weight: 500; animation: shake 0.4s; }
+    @keyframes shake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🏪</div>
+  <h1>OnBrandCraftz</h1>
+  <p>Command Center — Cloud Edition<br>Enter your password to continue.</p>
+  <form method="post" action="/login">
+    <input type="password" name="password" placeholder="Password" autofocus>
+    <button type="submit">Unlock →</button>
+    {% if error %}<div class="err">Incorrect password. Try again.</div>{% endif %}
+  </form>
+</div>
+</body>
+</html>

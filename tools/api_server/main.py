@@ -4655,6 +4655,78 @@ def frank_hud_mockup(request: Request):
     )
 
 
+@app.get("/cmd", response_class=HTMLResponse)
+def desktop_command_center(request: Request):
+    if not _check_session(request):
+        return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
+    from jinja2 import Template
+    from command_center import HTML, COMMANDS, OWNER_NAME
+    sections = [{
+        "id": s["category"].lower().replace(" ", "_").replace("&", "and"),
+        "category": s["category"],
+        "color": s["color"],
+        "icon": s["icon"],
+        "commands": s["commands"],
+    } for s in COMMANDS]
+    rendered = Template(HTML).render(commands=sections, cloud_mode=True, owner_name=OWNER_NAME, csrf_token="")
+    return HTMLResponse(content=rendered, headers={"Cache-Control": "private, no-cache"})
+
+
+@app.get("/run")
+def api_run_command(request: Request, id: str = ""):
+    if not _check_session(request):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    from command_center import _find_cmd, BASE_DIR
+    from fastapi.responses import StreamingResponse
+    cmd_def = _find_cmd(id)
+    if not cmd_def:
+        async def _not_found():
+            yield 'data: {"done":true,"ok":false}\n\n'
+        return StreamingResponse(_not_found(), media_type="text/event-stream")
+
+    cmd = cmd_def.get("cmd")
+    if not cmd:
+        async def _empty():
+            msg = json.dumps({"line": "No command defined.\n", "err": True})
+            yield f"data: {msg}\n\n"
+            yield f'data: {json.dumps({"done": True, "ok": False})}\n\n'
+        return StreamingResponse(_empty(), media_type="text/event-stream")
+
+    cmd_args = shlex.split(cmd)
+
+    def generate():
+        import select as sel
+        proc = subprocess.Popen(
+            cmd_args,
+            shell=False,
+            cwd=BASE_DIR,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1
+        )
+        fds = {proc.stdout.fileno(): False, proc.stderr.fileno(): True}
+        open_fds = set(fds.keys())
+        while open_fds:
+            readable, _, _ = sel.select(list(open_fds), [], [], 0.1)
+            for fd in readable:
+                is_err = fds[fd]
+                line = os.read(fd, 4096).decode("utf-8", errors="replace")
+                if not line:
+                    open_fds.discard(fd)
+                    continue
+                for ln in line.splitlines(keepends=True):
+                    payload = json.dumps({"line": ln, "err": is_err})
+                    yield f"data: {payload}\n\n"
+        proc.wait()
+        ok = proc.returncode == 0
+        yield f"data: {json.dumps({'done': True, 'ok': ok})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+
+
 @app.get("/api/me")
 async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Return the username/role/email/name associated with the current session.
@@ -7779,6 +7851,21 @@ def _run_scheduled_art_check() -> str:
     return "ran (see ops_runbook for output)"
 
 
+def _run_scheduled_coloring_check() -> str:
+    """Runs post_scheduled_coloring.py with no flags daily — self-gates on
+    data/coloring_schedule.json's next_post_date (every 4 days). Generates draft
+    pack (Adult, Kids, Kawaii) and stages action for approval."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "post_scheduled_coloring.py")],
+        capture_output=True, text=True, timeout=900, cwd=str(ROOT),
+    )
+    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    if "[SCHEDULED COLORING] Not due yet" in out or "Not due yet" in out:
+        return "not due today"
+    _append_ops_runbook_entry("Scheduled coloring run", out[:3000])
+    return "ran (see ops_runbook for output)"
+
+
 def _sync_calendar_to_google() -> str:
     """Pushes Frank's own due-dated todos and imminent seasonal/tax
     deadlines onto a connected Google Calendar, so both directions live in
@@ -7935,6 +8022,7 @@ async def _calendar_tasks_loop() -> None:
     last_seasonal = _get_calendar_task_last_run("seasonal")
     last_ads_check = _get_calendar_task_last_run("ads_check")
     last_art_check = _get_calendar_task_last_run("art_check")
+    last_coloring_check = _get_calendar_task_last_run("coloring_check")
     last_art_authenticity = _get_calendar_task_last_run("art_authenticity")
     last_star_seller_check = _get_calendar_task_last_run("star_seller_check")
     last_gcal_sync = _get_calendar_task_last_run("gcal_sync")
@@ -8026,6 +8114,15 @@ async def _calendar_tasks_loop() -> None:
             except Exception as exc:
                 print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
                 failed.append(f"scheduled-art:{exc}")
+        if today != last_coloring_check:
+            try:
+                detail = await asyncio.to_thread(_run_scheduled_coloring_check)
+                last_coloring_check = today
+                _set_calendar_task_last_run("coloring_check", today)
+                ran.append(f"scheduled-coloring:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] scheduled coloring check error: {exc}", flush=True)
+                failed.append(f"scheduled-coloring:{exc}")
         if today != last_gcal_sync:
             try:
                 detail = await asyncio.to_thread(_sync_calendar_to_google)
@@ -8170,6 +8267,45 @@ async def run_brief_now(request: Request):
     result = await asyncio.to_thread(_daily_brief.run_daily_brief)
     _set_calendar_task_last_run("daily_brief", date.today())
     return {"status": result}
+
+
+@app.post("/api/email/test")
+async def test_email_system_endpoint(request: Request):
+    """Test SMTP connection, verify credentials, update env if requested, and send test email."""
+    token = request.headers.get("X-App-Token", "")
+    if not token or not secrets.compare_digest(token, APP_TOKEN):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    import test_email_system
+    user = body.get("user") or os.getenv("SMTP_USER", "")
+    password = body.get("password") or os.getenv("SMTP_PASSWORD", "")
+    host = body.get("host") or os.getenv("SMTP_HOST", "")
+    port = int(body.get("port") or os.getenv("SMTP_PORT") or 587)
+    recipient = body.get("recipient") or user or "Printing3dthings@outlook.com"
+
+    if not host:
+        host, port = test_email_system.infer_smtp_settings(user)
+
+    success, msg = await asyncio.to_thread(
+        test_email_system.test_smtp_connection, host, port, user, password, recipient
+    )
+
+    if success:
+        os.environ["SMTP_HOST"] = host
+        os.environ["SMTP_PORT"] = str(port)
+        os.environ["SMTP_USER"] = user
+        os.environ["SMTP_PASSWORD"] = password
+        test_email_system.update_env_file("SMTP_HOST", host)
+        test_email_system.update_env_file("SMTP_PORT", str(port))
+        test_email_system.update_env_file("SMTP_USER", user)
+        test_email_system.update_env_file("SMTP_PASSWORD", password)
+
+    return {"success": success, "message": msg, "host": host, "port": port, "user": user}
+
 
 
 @app.post("/api/file-audit/run")
