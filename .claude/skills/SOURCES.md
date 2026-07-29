@@ -18,9 +18,18 @@ found), license confirmed, author/repo checked for legitimacy.
 | `brainstorming` | [obra/superpowers](https://github.com/obra/superpowers) (skills/brainstorming) | MIT | 2026-07-22 |
 | `youtube-transcript` | [michalparkola/tapestry-skills](https://github.com/michalparkola/tapestry-skills) | MIT | 2026-07-22 |
 | `taste-skill` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | MIT | 2026-07-25 |
+| `graphify` | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) (`v8` tag) | Apache-2.0 / MIT (dual) | 2026-07-29 |
+| `obsidian-markdown` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
+| `obsidian-bases` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
+| `json-canvas` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
+| `obsidian-cli` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
+| `defuddle` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
 
 Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
-(unmodified) and is retained under its original MIT license.
+(unmodified) and is retained under its original MIT license. `graphify` is
+the one exception — its `main` branch didn't have a stable `skill.md` path
+at fetch time, so it was pulled from the `v8` tag instead (same file,
+pinned version).
 
 ## Not added
 
@@ -43,6 +52,21 @@ Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
   general-purpose agent types); a genuinely *custom* project subagent
   (e.g. an Etsy-listing-specific reviewer) is a real, larger design task
   if wanted later, not a drop-in file.
+- **last30days-skill** (mvanhorn/last30days-skill, 2026-07-29) — a real,
+  legitimate MIT tool (52+ contributors) for 30-day trending-topic research,
+  but its actual `SKILL.md` (~1,400 lines) doesn't pass the same bar every
+  other skill here did. It auto-reads browser cookies (Chrome/Firefox/
+  Safari, for X/Twitter session auth) and its setup flow collects and
+  persists several third-party API keys (ScrapeCreators, Perplexity, Brave,
+  OpenRouter, Exa, a Bluesky app password, a GitHub OAuth device flow) to a
+  local `.env` config file via an escalating, consent-narrowing multi-step
+  flow. That credential-harvesting design pattern is a real mismatch for a
+  repo that already holds live Etsy/OpenAI/SMTP secrets in its own `.env`.
+  Raised directly to Scott rather than deciding unilaterally either way —
+  he chose to skip it. Don't re-propose without re-surfacing this tradeoff.
+- **cc-switch** — not a Claude skill at all (a standalone desktop app for
+  switching between Claude Code provider/model config profiles). Nothing to
+  vet or install here; excluded per Scott's own instruction.
 
 ## `taste-skill` scope — read before expecting it to fire on dashboard work
 
@@ -75,14 +99,30 @@ install openai-whisper`). Reviewed and found legitimate (no injection/
 exfiltration patterns, MIT licensed, 498-star repo) — flagged here so
 nobody is surprised the first time it silently installs `yt-dlp`.
 
+## `graphify` requires a separate local install — read before expecting it to just work
+
+Like `youtube-transcript`, `graphify` isn't a pure instruction file — its
+`SKILL.md` teaches how to drive the real `graphify` CLI (local, deterministic
+tree-sitter AST parsing of a codebase into a queryable knowledge graph;
+optional git hooks to auto-rebuild on commit/checkout). The CLI itself isn't
+bundled here and needs Scott to `pip install`/`uv tool install graphify`
+separately for this skill to do anything — until then, the skill will just
+correctly report the tool isn't installed. Reviewed the actual `skill.md`
+content directly (not marketing copy): it explicitly refuses to ask for or
+require any API key ("graphify needs no API key. Never ask the user for
+one, and never block on one"), and every optional external integration
+(Gemini for extraction, Neo4j/FalkorDB for graph storage) is opt-in via
+explicit flags/env vars — no injection or exfiltration patterns found.
+
 ## How the rest get used
 
 Claude Code auto-discovers project skills under `.claude/skills/<name>/SKILL.md`
 and loads one when its `description` matches the task at hand — no manual
-invocation needed. Every skill above except `youtube-transcript` is a pure
-instruction set (no bundled scripts) — adding them carries no code-execution
-risk; they just shape how a Claude Code session approaches copywriting, ad
-creative, email sequences, contract review, incident postmortems, SOP
-writing, AI-writing cleanup, pre-work brainstorming, and (landing/portfolio-
-shaped only, see the caveat above) frontend design taste, when relevant to
-OnBrandCraftz work.
+invocation needed. Every skill above except `youtube-transcript` and
+`graphify` is a pure instruction set (no bundled scripts) — adding them
+carries no code-execution risk; they just shape how a Claude Code session
+approaches copywriting, ad creative, email sequences, contract review,
+incident postmortems, SOP writing, AI-writing cleanup, pre-work
+brainstorming, frontend design taste (landing/portfolio-shaped only, see the
+caveat above), and Obsidian-flavored markdown/Bases/Canvas/CLI conventions,
+when relevant to OnBrandCraftz work.
