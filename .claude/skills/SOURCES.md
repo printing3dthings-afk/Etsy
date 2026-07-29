@@ -26,12 +26,57 @@ found), license confirmed, author/repo checked for legitimacy.
 | `defuddle` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
 | `hallmark` | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | MIT | 2026-07-29 |
 | `clipify` | [louisedesadeleer/clipify](https://github.com/louisedesadeleer/clipify) | MIT | 2026-07-29 |
+| `fastapi-patterns` | [affaan-m/ECC](https://github.com/affaan-m/ECC) (`skills/fastapi-patterns`) | MIT | 2026-07-29 |
+| `cost-tracking` | [affaan-m/ECC](https://github.com/affaan-m/ECC) (`skills/cost-tracking`) | MIT | 2026-07-29 |
 
 Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
 (unmodified) and is retained under its original MIT license. `graphify` is
 the one exception — its `main` branch didn't have a stable `skill.md` path
 at fetch time, so it was pulled from the `v8` tag instead (same file,
 pinned version).
+
+## Project subagents (`.claude/agents/`)
+
+Two custom subagent definitions added 2026-07-29, same vetting process as
+skills, sourced from [affaan-m/ECC](https://github.com/affaan-m/ECC) (MIT):
+
+| Agent | Source path | Why |
+|---|---|---|
+| `fastapi-reviewer` | `agents/fastapi-reviewer.md` | Our server is FastAPI (`Depends`, `HTTPException`, async routes throughout `main.py`) — a specialized reviewer beats a generic one for this specific framework. |
+| `silent-failure-hunter` | `agents/silent-failure-hunter.md` | Directly matches an explicit hard rule already in `.claude/rules/code-style.md` ("Errors: never a bare 500, never a silent swallow") — a dedicated hunter for exactly that bug class. |
+
+Both are clean, self-contained Claude Code subagent definitions (standard
+`name`/`description`/`tools`/`model` frontmatter, `tools: Read, Grep, Glob,
+Bash` — read-focused, no write/network tools) with a sensible "Prompt
+Defense Baseline" section guarding against injected instructions in
+whatever code they review. No external dependencies, no npx calls, no
+credentials.
+
+## ECC items considered but NOT added — real dependency gaps found
+
+Two more items from ECC looked useful on paper but turned out to depend on
+more of ECC's own infrastructure than a clean cherry-pick allows — flagging
+here rather than either silently installing something broken or silently
+dropping the ask:
+
+- **`commands/security-scan.md`** — its frontmatter declares
+  `agent: ecc:security-reviewer` (an ECC-plugin-namespaced agent we didn't
+  install) and its actual scan step shells out to `npx ecc-agentshield
+  scan` — i.e. downloading and running a **separate, unvetted third-party
+  npm package** at invocation time. That's a materially different trust
+  bar than a markdown instruction file, and I haven't personally reviewed
+  the `agentshield` scanner's own source. Not installed. If this is wanted,
+  it needs its own dedicated vetting pass on the actual `agentshield` code
+  (https://github.com/affaan-m/agentshield), not a quick add.
+- **The `stop:cost-tracker` hook** — `cost-tracking` (added above) reads
+  from `~/.claude/metrics/costs.jsonl`, which only gets populated by this
+  hook. The skill itself gracefully reports "cost log not found" rather
+  than fabricating data if the hook isn't installed (verified in its own
+  "Anti-Patterns" section), so it's safe to have without the hook — it'll
+  just stay inert until/unless the hook is added. **Not installing the
+  hook itself** without a separate explicit decision: a hook is real code
+  that auto-executes on every session-stop event, a bigger trust step than
+  a skill file, and wasn't part of what was actually vetted here.
 
 ## Not added
 
