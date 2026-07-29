@@ -44,6 +44,7 @@ skills, sourced from [affaan-m/ECC](https://github.com/affaan-m/ECC) (MIT):
 |---|---|---|
 | `fastapi-reviewer` | `agents/fastapi-reviewer.md` | Our server is FastAPI (`Depends`, `HTTPException`, async routes throughout `main.py`) — a specialized reviewer beats a generic one for this specific framework. |
 | `silent-failure-hunter` | `agents/silent-failure-hunter.md` | Directly matches an explicit hard rule already in `.claude/rules/code-style.md` ("Errors: never a bare 500, never a silent swallow") — a dedicated hunter for exactly that bug class. |
+| `security-reviewer` | `agents/security-reviewer.md` | OWASP Top 10 + secrets-detection specialist, added 2026-07-29 to back `/security-scan`. **Caveat**: its example "Analysis Commands" (`npm audit`, `eslint --plugin security`) are Node-biased — the review framework itself is language-agnostic but those two specific commands won't run here. Complements `fastapi-reviewer`, doesn't replace it. |
 
 Both are clean, self-contained Claude Code subagent definitions (standard
 `name`/`description`/`tools`/`model` frontmatter, `tools: Read, Grep, Glob,
@@ -52,31 +53,52 @@ Defense Baseline" section guarding against injected instructions in
 whatever code they review. No external dependencies, no npx calls, no
 credentials.
 
-## ECC items considered but NOT added — real dependency gaps found
+## `/security-scan` — installed, but runs unaudited third-party code on demand
 
-Two more items from ECC looked useful on paper but turned out to depend on
-more of ECC's own infrastructure than a clean cherry-pick allows — flagging
-here rather than either silently installing something broken or silently
-dropping the ask:
+Added 2026-07-29 (`commands/security-scan.md`, `agents/security-reviewer.md`,
+both from affaan-m/ECC, MIT). One adaptation was needed to actually work
+standalone: the command's frontmatter declared `agent: ecc:security-reviewer`
+(ECC's own plugin namespace, which we don't have installed) — changed to
+`agent: security-reviewer` to point at the plain agent installed alongside it.
+Nothing else in the file was touched.
 
-- **`commands/security-scan.md`** — its frontmatter declares
-  `agent: ecc:security-reviewer` (an ECC-plugin-namespaced agent we didn't
-  install) and its actual scan step shells out to `npx ecc-agentshield
-  scan` — i.e. downloading and running a **separate, unvetted third-party
-  npm package** at invocation time. That's a materially different trust
-  bar than a markdown instruction file, and I haven't personally reviewed
-  the `agentshield` scanner's own source. Not installed. If this is wanted,
-  it needs its own dedicated vetting pass on the actual `agentshield` code
-  (https://github.com/affaan-m/agentshield), not a quick add.
-- **The `stop:cost-tracker` hook** — `cost-tracking` (added above) reads
-  from `~/.claude/metrics/costs.jsonl`, which only gets populated by this
-  hook. The skill itself gracefully reports "cost log not found" rather
-  than fabricating data if the hook isn't installed (verified in its own
-  "Anti-Patterns" section), so it's safe to have without the hook — it'll
-  just stay inert until/unless the hook is added. **Not installing the
-  hook itself** without a separate explicit decision: a hook is real code
-  that auto-executes on every session-stop event, a bigger trust step than
-  a skill file, and wasn't part of what was actually vetted here.
+**Read this before running `/security-scan`**: it shells out to `npx
+ecc-agentshield scan` — downloading and executing a **separate npm package**
+at invocation time, not just following markdown instructions. Researched
+`affaan-m/agentshield` itself (not just its own README): MIT, read-only by
+default (file changes only with an explicit `--fix` flag), no API key needed
+for the basic scan (only its optional `--opus` deep-analysis mode calls
+Claude), scans local `~/.claude/` config files only, no other network calls.
+But it's young — built at a February 2026 hackathon, ~1k stars — and I have
+not personally read its scanning source, only its own description of itself.
+**Deliberately did not trigger the first real execution of `npx
+ecc-agentshield` from this sandbox** — that should happen once, on Scott's
+own machine, so he can see exactly what it does before it becomes a standing
+tool, rather than this session running unaudited third-party code on his
+behalf sight-unseen.
+
+## `cost-tracker.js` hook — hand-written, not vendored
+
+Added 2026-07-29 at `.claude/hooks/cost-tracker.js` — the first Node.js file
+in this repo (everything else is Python). This is **not a copy** of ECC's
+`scripts/hooks/cost-tracker.js`; that file pulls in a ~950-line cross-platform
+dependency chain (`utils.js` → `agent-data-home.js` → `path-safety.js`) built
+for ECC's own Cursor+Claude multi-harness distribution — none of which this
+single-project use case needs. Read the real file plus its full dependency
+chain before deciding this, then hand-wrote a ~150-line version that keeps
+the two things worth keeping (the per-`message.id` token dedup — the
+original's own comments cite a real bug where summing every transcript line
+inflated cost 2.5-3x — and the per-model rate table) and drops everything
+else (no Cursor support, no project-config-file overrides, no
+`child_process` calls anywhere in the file). Smaller, fully-audited surface
+for the one thing we actually need.
+
+**Deliberately not registered in this repo's own `.claude/settings.json`.**
+The hook writes to `~/.claude/metrics/costs.jsonl` — the user's home
+directory, a personal cross-project preference, not something that should
+silently fire for anyone who clones this repo. Registering it is a one-time
+step in Scott's own **user-level** `~/.claude/settings.json` (never
+committed) — see the delivery message in chat for the exact JSON snippet.
 
 ## Not added
 
