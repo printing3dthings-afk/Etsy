@@ -14084,3 +14084,182 @@ Also fixed as defense-in-depth: `.panel.col-agents`/`.panel.col-feed{min-height:
 **Verification:** every fix step was measured directly in a real browser (`clientHeight`/`scrollHeight`/`getComputedStyle`) at a real 1366×672 viewport with realistic injected card content (this dev environment has no live Etsy/Anthropic creds, so cards normally stay in a short placeholder state that doesn't reproduce the real content density from Scott's screenshot) before being written into the source file. New regression test added to `tools/playwright_smoke.py` that specifically exercises the sub-floor viewport class every prior pass missed — asserts `.col-right`'s `overflow-y:auto` genuinely engages (`scrollHeight > clientHeight`) and that Inbox & Reviews keeps a real non-zero height, so this exact bug class can't silently regress a 4th time.
 
 **Files:** `tools/api_server/frank_hud_mockup.py` (`#stage` grid-template-rows, `.screen{min-height:0}`, `.main{height:100%}`, `.panel.col-agents`/`.panel.col-feed`, `#inbox-body` markup), `tools/playwright_smoke.py` (new sub-floor regression block). Build `abd7f0b-v267`.
+
+
+## 2026-07-29 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+
+Traceback (most recent call last):
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 149, in <module>
+    main()
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 144, in main
+    result = run_scheduled_coloring(force=args.force, preview=args.preview)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 91, in run_scheduled_coloring
+    themes = gcp.PACKS[pack]["themes"]
+             ~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+
+
+## 2026-07-29 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — Durable volume not writable
+hourly health loop found /tmp/tmpnwp5xt6a/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpnwp5xt6a/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp3xi9d7jc/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 5690). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-29 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 5692). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-29 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-29 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 12.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+## 2026-07-29 (later) — Bambu P1S printer monitoring added to Frank
+
+Scott pasted an "Implementation Plan" for wiring the Bambu Lab P1S into "Frank Command Center" (Access Code + serial included in the message). Investigated before building anything: the plan targeted `command_center.py` at repo root — a separate, older Flask tool that only runs locally at `localhost:5055` — not the actual Frank dashboard (`tools/api_server/main.py` + `frank_hud_mockup.py`) Scott uses remotely, which is deployed to Railway with no route to his home LAN. Asked Scott directly which he wanted; he chose the real Frank via a local bridge, the same shape as the existing `frank_relay.py` pattern (a small process on Scott's own network that reports up to the cloud service, rather than the cloud service reaching down to the LAN).
+
+**Shipped:**
+- `main.py`: in-memory printer state (`_printer_telemetry`/`_printer_frame`, same tradeoff as `_relay_ws` — a redeploy just means "bridge offline" until the next push, no durability needed for live device state) + 4 endpoints: `POST /api/printer/telemetry`, `GET /api/printer/status` (reports `online:false` whenever nothing's been pushed in the last 30s — never presents stale numbers as live), `POST /api/printer/camera-frame`, `GET /api/printer/camera.jpg` (404s past the same 30s staleness window, same honesty rule).
+- `tools/relay/bambu_p1s_bridge.py` (new) + `tools/relay/bambu_requirements.txt` (`paho-mqtt`): standalone script, same deployment shape as `frank_relay.py`, connects to the P1S over local MQTT (port 8883, `bblp`/Access Code auth, self-signed cert — same tradeoff every open-source Bambu LAN integration makes), parses `gcode_state`/temps/progress/layers/AMS/HMS from the printer's `print` report, pushes to Frank via authenticated HTTP POST. `--test` verifies the MQTT handshake standalone.
+- **Caught and fixed a real integrity problem before shipping it**: the first draft of the camera-relay code included a fabricated binary auth-packet layout (invented magic bytes presented as if they were documented protocol constants) for the P1S's local camera stream, which Bambu Lab has never publicly documented. Sending fabricated bytes to a raw socket on Scott's real printer with no way to verify correctness would have been worse than not building it. Removed the fabricated implementation entirely — camera relay ships as an explicit, honest "not implemented" stub (`--test-camera` explains why) rather than code dressed up as more certain than it is. Telemetry (well-documented across the open-source Bambu ecosystem) shipped at full confidence; the receiving endpoints (`camera-frame`/`camera.jpg`) are already in place for whenever the protocol is actually confirmed.
+- `frank_hud_mockup.py`: new "🖨️ Bambu P1S Printer" card on Home (`col-meminsights`, same visual pattern as Star Seller/Ads/COGS), `loadPrinterStatus()` wired into `_SCREEN_LOADERS.cmd`. Shows state badge, progress bar, layer count, ETA, nozzle/bed/chamber temps, speed mode, AMS tray color chips; shows an honest "BRIDGE OFFLINE" state with setup instructions when nothing's reporting (true today — no bridge has been run against real hardware yet).
+- New `tests/test_printer_telemetry.py` (8 cases: roundtrip, offline-before-first-report, stale-data-reports-offline, camera roundtrip, missing/stale camera 404s, oversized-frame 413 + never stored). `tools/playwright_smoke.py` extended to confirm the card renders the offline state cleanly in CI (no bridge there either).
+- `CLAUDE.md`: new "Bambu P1S Live Monitoring (Frank Integration)" section with the real setup steps (env vars, `.env` location, `--test` flag) and the camera caveat.
+
+**Not done / explicitly deferred:** camera relay (see above — needs the real protocol confirmed against hardware, or Scott pointing the bridge at a known-working reference implementation). No hard-coded credentials anywhere in the diff — Access Code/IP/serial live only in `tools/relay/.env` (gitignored, same file `frank_relay.py` already uses), which Scott fills in on his own machine. Build `4ec5e9a-v268`.

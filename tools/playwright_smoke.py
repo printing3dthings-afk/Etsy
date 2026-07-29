@@ -476,6 +476,19 @@ async def _run_browser_checks() -> None:
             check(home_cards.get("adsCardPresent"), f"Ads/ROAS card must be present on Home: {home_cards}")
             check(home_cards.get("adsCardHasContent"), f"Ads/ROAS card must render some content, not stay blank: {home_cards}")
 
+            # ── Bambu P1S printer card (2026-07-29) ──
+            # No local bridge runs in this dev/CI environment, so /api/printer/status
+            # always reports online:false -- confirms the card renders the honest
+            # "bridge offline" state instead of throwing or staying blank forever.
+            printer_card = await page.evaluate("""() => {
+                const el = document.getElementById('printer-status-body');
+                return {present: !!el, hasContent: !!(el && el.innerHTML.trim().length > 0),
+                        showsOffline: !!(el && el.innerHTML.includes('BRIDGE OFFLINE'))};
+            }""")
+            check(printer_card.get("present"), f"Bambu P1S printer card must be present on Home: {printer_card}")
+            check(printer_card.get("hasContent"), f"Printer card must render some content, not stay blank: {printer_card}")
+            check(printer_card.get("showsOffline"), f"With no bridge running, printer card must honestly show 'bridge offline': {printer_card}")
+
             # Approvals batch-threshold banner -- stub _pendingActions with 11
             # same-type items (over the 10-item safety rail) and confirm the
             # computed warning banner appears; then confirm it's absent with a

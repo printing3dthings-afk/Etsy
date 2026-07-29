@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "abd7f0b-v267"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4ec5e9a-v268"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1686,6 +1686,25 @@ _RELAY_TOOLS = {"local_read_file", "local_list_dir"}
 # _stage_local_action (db.enqueue_action) instead of _dispatch_to_relay, so
 # nothing here ever mutates anything until Scott approves in the Action Center.
 _LOCAL_STAGED_TOOLS = {"local_write_file", "local_delete", "local_exec"}
+
+# ── Bambu P1S printer telemetry (2026-07-29) ────────────────────────────────
+# This Railway container has no route to Scott's home LAN, so it can never
+# open a direct MQTT connection to the printer itself. A small standalone
+# bridge process (tools/relay/bambu_p1s_bridge.py — same deployment shape as
+# frank_relay.py above) runs on Scott's own network, talks to the P1S over
+# local MQTT, and pushes a JSON snapshot + occasional camera frame here via
+# POST /api/printer/telemetry / /api/printer/camera-frame. In-memory only,
+# same tradeoff as _relay_ws above: a redeploy just means "bridge offline"
+# until its next push — no durability needed for live device state, and
+# nothing here ever touches an Etsy listing or spends money, so this is
+# read-only monitoring, not a staged action.
+_printer_lock = threading.Lock()
+_printer_telemetry: dict | None = None
+_printer_telemetry_at: float = 0.0
+_printer_frame: bytes | None = None
+_printer_frame_at: float = 0.0
+_PRINTER_STALE_SECS = 30
+_PRINTER_MAX_FRAME_BYTES = 3_000_000
 
 # 2026-07-21: _execute_agent_tool() dispatches to dozens of branches -- some are
 # subprocess.run() calls bounded by their own _EXEC_COMMANDS timeout (max 400s
@@ -7453,6 +7472,57 @@ async def get_ads_status(_token: str = Depends(_auth_session_or_bearer)):
     result = await asyncio.to_thread(_compute_ads_status)
     _cache_set("ads_status", result)
     return result
+
+
+# ── Bambu P1S printer telemetry (2026-07-29) ────────────────────────────────
+# See the _printer_lock/_printer_telemetry block above for why this is
+# in-memory only. The bridge (tools/relay/bambu_p1s_bridge.py) is the only
+# writer of the POST endpoints; the HUD card is the only reader of the GET
+# endpoints. No rate limiting beyond the shared session/bearer auth — a
+# bridge pushing every few seconds is well under any real limit, same as
+# every other internal, non-mutating, non-Etsy-costing endpoint here.
+@app.post("/api/printer/telemetry")
+async def post_printer_telemetry(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+    global _printer_telemetry, _printer_telemetry_at
+    with _printer_lock:
+        _printer_telemetry = payload
+        _printer_telemetry_at = time.time()
+    return {"ok": True}
+
+
+@app.get("/api/printer/status")
+async def get_printer_status(_token: str = Depends(_auth_session_or_bearer)):
+    with _printer_lock:
+        data = _printer_telemetry
+        at = _printer_telemetry_at
+    age = (time.time() - at) if at else None
+    online = age is not None and age < _PRINTER_STALE_SECS
+    if data is None:
+        return {"online": False, "bridge_seen": False}
+    return {"online": online, "bridge_seen": True, "age_seconds": round(age, 1), **data}
+
+
+@app.post("/api/printer/camera-frame")
+async def post_printer_camera_frame(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    global _printer_frame, _printer_frame_at
+    body = await request.body()
+    if len(body) > _PRINTER_MAX_FRAME_BYTES:
+        raise HTTPException(status_code=413, detail="Camera frame too large")
+    with _printer_lock:
+        _printer_frame = body
+        _printer_frame_at = time.time()
+    return {"ok": True}
+
+
+@app.get("/api/printer/camera.jpg")
+async def get_printer_camera_frame(_token: str = Depends(_auth_session_or_bearer)):
+    with _printer_lock:
+        frame = _printer_frame
+        at = _printer_frame_at
+    age = (time.time() - at) if at else None
+    if frame is None or age is None or age > _PRINTER_STALE_SECS:
+        raise HTTPException(status_code=404, detail="No recent camera frame from the printer bridge")
+    return Response(content=frame, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 # ── COGS / profit-per-listing (2026-07-17 capabilities audit item 4) ────────

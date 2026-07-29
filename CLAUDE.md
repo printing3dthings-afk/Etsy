@@ -237,6 +237,30 @@ Scope: `https://www.googleapis.com/auth/calendar` (read + write)
 
 ---
 
+## Bambu P1S Live Monitoring (Frank Integration)
+**Not yet running.** Frank (the Railway-hosted dashboard) has no route to the home LAN the printer is
+on, so it can never talk to the P1S directly. `tools/relay/bambu_p1s_bridge.py` is a small standalone
+process that runs ON the same network as the printer, reads its status over local MQTT, and pushes a
+snapshot to Frank every few seconds. To turn this on:
+1. `pip install -r tools/relay/bambu_requirements.txt`
+2. Create/edit `tools/relay/.env` (same file `frank_relay.py` uses, gitignored — never commit real
+   values here) with: `BAMBU_IP`, `BAMBU_ACCESS_CODE`, `BAMBU_SERIAL` (all three from the printer's own
+   touchscreen — Settings → Network / Device), `FRANK_API_BASE` (the live Railway URL), and
+   `APP_SECRET_TOKEN` (same token the mobile app/relay already use).
+3. `python tools/relay/bambu_p1s_bridge.py --test` to verify the MQTT handshake once before leaving it
+   running unattended; `python tools/relay/bambu_p1s_bridge.py` to run it for real.
+4. Once it's pushing, the "🖨️ Bambu P1S Printer" card on Frank's Home screen shows live state, progress,
+   layer count, ETA, nozzle/bed/chamber temps, speed mode, and AMS tray colors — it reads
+   `GET /api/printer/status`, which reports `online: false` ("bridge offline") whenever the bridge hasn't
+   pushed in the last 30 seconds, so the card never shows stale numbers as if they were live.
+
+**Camera snapshot: not implemented yet.** The P1S's local camera stream uses a protocol Bambu Lab has
+never published; the bridge's `--test-camera` flag explains why and what a real implementation would
+need. Frank's backend already has the receiving endpoints (`POST /api/printer/camera-frame`,
+`GET /api/printer/camera.jpg`) ready for whenever that's built.
+
+---
+
 ## Product Catalog
 
 ### DP1026 — Ultimate Digital Life Planner (Lavender Dreams)

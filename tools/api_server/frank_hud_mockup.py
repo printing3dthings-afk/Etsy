@@ -1825,6 +1825,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           </div>
         </div>
 
+        <div class="panel brk col-meminsights">
+          <div class="panel-title">🖨️ Bambu P1S Printer <span class="src">/api/printer/status</span></div>
+          <div id="printer-status-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
         <div class="panel brk col-agents">
           <div class="panel-title">Inbox &amp; Reviews <span class="src">/api/inbox</span></div>
           <div class="panel-body" id="inbox-body">
@@ -3733,7 +3740,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadCogsStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -6092,6 +6099,59 @@ async function loadCogsStatus(){
       }).join('');
     }
     html += '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4">'+escHtml(d.note||'')+'</div>';
+    el.innerHTML = html;
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+// 2026-07-29: Frank (this Railway container) has no route to Scott's home LAN,
+// so it never talks to the printer directly -- tools/relay/bambu_p1s_bridge.py
+// is a separate local process that pushes telemetry here. gcode_state values
+// and the fan/speed-level scaling below are community-documented (not Bambu-
+// official); unmapped states fall back to the raw string rather than guessing.
+const _PRINTER_STATE_LABEL = {
+  RUNNING: 'PRINTING', PAUSE: 'PAUSED', IDLE: 'IDLE', FINISH: 'FINISHED',
+  FAILED: 'FAILED', PREPARE: 'PREPARING',
+};
+const _PRINTER_STATE_CLASS = {
+  RUNNING: 'on_track', PAUSE: 'building', IDLE: 'building', FINISH: 'on_track',
+  FAILED: 'at_risk', PREPARE: 'building',
+};
+function _printerTemp(v){ return (v==null) ? '—' : Math.round(v)+'°'; }
+async function loadPrinterStatus(){
+  const el = document.getElementById('printer-status-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/printer/status');
+    const d = await r.json();
+    if(!d.online){
+      el.innerHTML =
+        '<div class="ss-status at_risk">BRIDGE OFFLINE</div>'+
+        '<div style="font-size:11px;color:var(--muted);line-height:1.4">'+
+        (d.bridge_seen ? 'Last seen more than 30s ago.' : 'Never connected.')+
+        ' Run tools/relay/bambu_p1s_bridge.py on the printer\\'s network to see live status here.</div>';
+      return;
+    }
+    const stateRaw = d.state || '?';
+    const label = _PRINTER_STATE_LABEL[stateRaw] || stateRaw;
+    const cls = _PRINTER_STATE_CLASS[stateRaw] || 'building';
+    const pct = (d.progress_pct!=null) ? d.progress_pct : 0;
+    const amsHtml = (d.ams||[]).filter(function(t){return t.color;}).map(function(t){
+      const title = escHtml((t.material||'')+' '+(t.remain_pct!=null?t.remain_pct+'%':''));
+      return '<span title="'+title+'" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+escHtml(t.color)+';border:1px solid rgba(255,255,255,.2);margin-right:4px"></span>';
+    }).join('');
+    let html = '<div class="ss-status '+cls+'">'+escHtml(label)+'</div>';
+    if (d.print_file) html += '<div class="ss-row"><span class="ss-label">File</span><span class="ss-val" style="max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(d.print_file)+'">'+escHtml(d.print_file)+'</span></div>';
+    html += '<div class="ss-row"><span class="ss-label">Progress</span><div class="ss-bar-wrap"><div class="ss-bar" style="width:'+pct+'%"></div></div><span class="ss-val">'+pct+'%</span></div>';
+    if (d.layer_total) html += '<div class="ss-row"><span class="ss-label">Layer</span><span class="ss-val">'+(d.layer_current||0)+' / '+d.layer_total+'</span></div>';
+    if (d.remaining_minutes!=null) html += '<div class="ss-row"><span class="ss-label">Time remaining</span><span class="ss-val">'+d.remaining_minutes+' min</span></div>';
+    html += '<div class="ss-row"><span class="ss-label">Nozzle</span><span class="ss-val">'+_printerTemp(d.nozzle_temp)+' / '+_printerTemp(d.nozzle_target)+'</span></div>';
+    html += '<div class="ss-row"><span class="ss-label">Bed</span><span class="ss-val">'+_printerTemp(d.bed_temp)+' / '+_printerTemp(d.bed_target)+'</span></div>';
+    if (d.chamber_temp!=null) html += '<div class="ss-row"><span class="ss-label">Chamber</span><span class="ss-val">'+_printerTemp(d.chamber_temp)+'</span></div>';
+    if (d.speed_mode) html += '<div class="ss-row"><span class="ss-label">Speed</span><span class="ss-val">'+escHtml(d.speed_mode)+'</span></div>';
+    if (amsHtml) html += '<div class="ss-row" style="border-bottom:none"><span class="ss-label">AMS</span><span>'+amsHtml+'</span></div>';
+    if ((d.hms||[]).length) html += '<div style="font-size:10px;color:var(--red);margin-top:4px">⚠ '+d.hms.length+' HMS event(s) — check printer screen or Bambu Handy app</div>';
     el.innerHTML = html;
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
