@@ -68,6 +68,12 @@ data/file_audit_report.json
 # files -- this is runtime-generated, never the git source of truth.
 data/generated_listing_content.json
 
+# Same pattern again -- the SKU/taxonomy backfill sweep's work queue
+# (main.py's _sku_taxonomy_backfill_loop()), local-dev fallback path when no
+# Railway Volume is mounted. Runtime content, rebuilt/updated by the weekly
+# drip loop, never the git source of truth.
+data/sku_taxonomy_backfill_queue.json
+
 # Drafted review responses (tools/review_monitor.py) and the seen-reviews
 # dedupe state -- can reference real buyer review text. 2026-07-15 security
 # audit: these were the only two data/ paths with buyer-adjacent content and
