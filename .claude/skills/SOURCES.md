@@ -24,6 +24,7 @@ found), license confirmed, author/repo checked for legitimacy.
 | `json-canvas` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
 | `obsidian-cli` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
 | `defuddle` | [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | MIT | 2026-07-29 |
+| `hallmark` | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | MIT | 2026-07-29 |
 
 Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
 (unmodified) and is retained under its original MIT license. `graphify` is
@@ -88,6 +89,23 @@ rules, should not) fire on that work. Where it *does* apply: one-off
 landing-page-shaped HTML (the Home-screen mockup Artifacts built earlier
 this session, any future marketing/report pages) — genuinely useful there,
 just not a blanket upgrade to every UI edit in this repo.
+
+## `hallmark` overlaps `taste-skill` — same scope gap, use whichever fires
+
+Added 2026-07-29 at Scott's request after reviewing a "top GitHub repos"
+post. Reviewed the actual `skills/hallmark/SKILL.md` (~15,000 words, MIT,
+19.5k★, real developer — Hassan El Mghari/Nutlope): clean, no exfiltration/
+credential/auto-install red flags, all file writes confined to the local
+project directory and transparently disclosed. It's more built-out than
+`taste-skill` (57 "slop-test" quality gates, 20 themes, 4 modes: build/
+audit/redesign/study) but **has the identical scope gap** — its own
+document explicitly limits itself to landing pages, marketing sites, and
+simple components, and does not address dashboards, data tables, multi-step
+forms, or admin panels. Frank's own Command Center screens are out of scope
+for this skill too, for the same reason `taste-skill` doesn't fire on them
+(see that section below). Both installed as companions, not a replacement
+for one another — Claude Code will pick whichever's description matches
+better for a given one-off landing/marketing page task.
 
 ## `youtube-transcript` is not a pure instruction file — read before use
 
