@@ -600,8 +600,38 @@ async def _run_browser_checks() -> None:
             # "Core Products" slice, now the full catalog with a category filter.
             # Stub _products directly (bare assignment, not window.X -- see the tour
             # steps above for why: these are top-level `let` bindings, not globals).
+            #
+            # 2026-07-30: showScreen('products') below fires the real loadProducts(),
+            # an async fetch of the (now 176-product) real /api/products -- reassigning
+            # the top-level `loadProducts` binding afterward (the fix a later block in
+            # this file uses) does NOT retarget that already-in-flight call, since
+            # _SCREEN_LOADERS.products captured the ORIGINAL function reference at
+            # page-load, not a live binding to the variable name. That real fetch can
+            # resolve at any point afterward and clobber this block's stubbed
+            # `_products` out from under it -- confirmed live in CI (176-product real
+            # catalog, not the 3-product stub, flowed into the filter assertions
+            # below). Mocking authGet for /api/products so the real call resolves to
+            # the SAME data as the stub makes the race harmless regardless of timing,
+            # rather than trying to win a timing fight against it.
+            await page.evaluate("""() => {
+                window._origAuthGet = window.authGet;
+                const stubProducts = [
+                    {id: 'DP1026', title: 'Life Planner', listing_id: '1', category: 'digital_planner',
+                     status: 'active', price: 14.99, files: [{name: 'DP1026.pdf', exists: true}], all_files_present: true},
+                    {id: 'WA1001', title: 'Wall Art One', listing_id: '2', category: 'wall_art',
+                     status: 'active', price: 5.99, files: [{name: 'WA1001.zip', exists: false}], all_files_present: false},
+                    {id: 'WA1002', title: 'Wall Art Two', listing_id: '3', category: 'wall_art',
+                     status: 'active', price: 5.99, files: [{name: 'WA1002.zip', exists: true}], all_files_present: true},
+                ];
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/products') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({products: stubProducts})});
+                    }
+                    return window._origAuthGet(path, ms);
+                };
+            }""")
             await page.evaluate("showScreen('products')")
-            await page.wait_for_timeout(300)
+            await page.wait_for_timeout(400)
             products_check = await page.evaluate("""() => {
                 _products = [
                     {id: 'DP1026', title: 'Life Planner', listing_id: '1', category: 'digital_planner',
@@ -637,6 +667,7 @@ async def _run_browser_checks() -> None:
                   f"filtering to wall_art should show only wall_art products: {filter_check[:300] if filter_check else filter_check}")
             check("missing: WA1001.zip" in filter_check,
                   f"a product with a missing file should name it: {filter_check[:300] if filter_check else filter_check}")
+            await page.evaluate("if(window._origAuthGet){window.authGet = window._origAuthGet; window._origAuthGet = null;}")
 
             # ── Products-screen tappable cards (2026-07-18) -- every card now opens
             # a popup: missing-files -> fix sheet (regenerate for planners, plain
