@@ -587,11 +587,11 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
   gap:8px;max-width:340px;pointer-events:none}
 .toast{display:flex;align-items:center;gap:9px;background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;
   font-size:12.5px;color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.4);pointer-events:auto;
-  border-left:3px solid var(--cyan);animation:toast-in .18s ease-out}
+  border-left:3px solid var(--cyan);animation:toast-in .12s ease-out}
 .toast.ok{border-left-color:var(--green)}
 .toast.err{border-left-color:var(--red)}
 .toast.info{border-left-color:var(--cyan)}
-.toast.out{animation:toast-out .18s ease-in forwards}
+.toast.out{animation:toast-out .12s ease-in forwards}
 @keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
 /* 2026-07-18: a real drawn checkmark on success toasts specifically -- the
@@ -786,7 +786,7 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
    freshly added to a *different* element), not on resize/reflow. Silenced
    under reduced motion below alongside the other decorative animations. */
 @keyframes screen-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.screen.active{display:block;animation:screen-in .26s cubic-bezier(.22,1,.36,1) both}
+.screen.active{display:block;animation:screen-in .15s cubic-bezier(.22,1,.36,1) both}
 
 /* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
    /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
@@ -816,7 +816,7 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
    same motion language. Applied once at creation time in addBubble(); silenced
    under reduced motion in the shared block near the bottom of this stylesheet. */
 @keyframes bubble-in{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.lc-bubble.bubble-in{animation:bubble-in .22s cubic-bezier(.22,1,.36,1) both}
+.lc-bubble.bubble-in{animation:bubble-in .14s cubic-bezier(.22,1,.36,1) both}
 /* "Frank is speaking" indicator inside the chat itself (2026-07-22) -- previously
    the only speaking cue lived on the orb canvas, which is hidden whenever chat is
    open, so there was zero in-chat feedback that a spoken reply was playing.
@@ -1325,7 +1325,7 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
    path while routing into Ask/Create via .screen.active, giving both the same
    entrance keeps all 5 destinations feeling equally polished from Home. Reuses the
    existing screen-in keyframe -- no new keyframes. */
-.pp.on{display:block;animation:screen-in .26s cubic-bezier(.22,1,.36,1) both}
+.pp.on{display:block;animation:screen-in .15s cubic-bezier(.22,1,.36,1) both}
 /* ══ Mobile Home landing screen (Editorial Feature / Concept D, 2026-07-23) —
    a hero tile for Ask + a 2x2 grid for Approvals/Today/Create/More, reached via
    phoneOpenHome(). #screen-home shares .screen's own display rules (see line 714),
@@ -1480,10 +1480,10 @@ body.product-review-open #product-review-modal{display:flex}
    setTimeout removes it once the animation has actually finished. */
 @keyframes prm-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}to{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}}
 @keyframes prm-backdrop-in{from{opacity:0}to{opacity:1}}
-body.product-review-open #product-review-modal{animation:prm-in .24s cubic-bezier(.22,1,.36,1) both}
-body.product-review-open #product-review-backdrop{animation:prm-backdrop-in .2s ease both}
-body.product-review-closing #product-review-backdrop{display:block;animation:prm-backdrop-in .18s ease reverse both}
-body.product-review-closing #product-review-modal{display:flex;animation:prm-in .18s cubic-bezier(.4,0,1,1) reverse both}
+body.product-review-open #product-review-modal{animation:prm-in .15s cubic-bezier(.22,1,.36,1) both}
+body.product-review-open #product-review-backdrop{animation:prm-backdrop-in .12s ease both}
+body.product-review-closing #product-review-backdrop{display:block;animation:prm-backdrop-in .12s ease reverse both}
+body.product-review-closing #product-review-modal{display:flex;animation:prm-in .12s cubic-bezier(.4,0,1,1) reverse both}
 .prm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
 .prm-header-title{font-weight:700;font-size:15px;color:var(--text)}
@@ -1514,10 +1514,10 @@ body.metric-detail-open #metric-detail-backdrop{display:block}
 body.metric-detail-open #metric-detail-modal{display:flex}
 @keyframes mdm-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}to{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}}
 @keyframes mdm-backdrop-in{from{opacity:0}to{opacity:1}}
-body.metric-detail-open #metric-detail-modal{animation:mdm-in .24s cubic-bezier(.22,1,.36,1) both}
-body.metric-detail-open #metric-detail-backdrop{animation:mdm-backdrop-in .2s ease both}
-body.metric-detail-closing #metric-detail-backdrop{display:block;animation:mdm-backdrop-in .18s ease reverse both}
-body.metric-detail-closing #metric-detail-modal{display:flex;animation:mdm-in .18s cubic-bezier(.4,0,1,1) reverse both}
+body.metric-detail-open #metric-detail-modal{animation:mdm-in .15s cubic-bezier(.22,1,.36,1) both}
+body.metric-detail-open #metric-detail-backdrop{animation:mdm-backdrop-in .12s ease both}
+body.metric-detail-closing #metric-detail-backdrop{display:block;animation:mdm-backdrop-in .12s ease reverse both}
+body.metric-detail-closing #metric-detail-modal{display:flex;animation:mdm-in .12s cubic-bezier(.4,0,1,1) reverse both}
 .mdm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
 .mdm-header-title{font-weight:700;font-size:15px;color:var(--text)}
@@ -3264,7 +3264,7 @@ function showToast(message, type='info', ms=4500){
   stack.appendChild(t);
   if (ms) setTimeout(()=>{
     t.classList.add('out');
-    setTimeout(()=>t.remove(), 200);
+    setTimeout(()=>t.remove(), 120);
   }, ms);
 }
 
@@ -5915,7 +5915,7 @@ function metricDetailClose(){
   if (!document.body.classList.contains('metric-detail-open')) return; // already closed/closing
   document.body.classList.remove('metric-detail-open');
   document.body.classList.add('metric-detail-closing');
-  setTimeout(() => document.body.classList.remove('metric-detail-closing'), _reducedMotion ? 0 : 200);
+  setTimeout(() => document.body.classList.remove('metric-detail-closing'), _reducedMotion ? 0 : 120);
 }
 function openMetricDetailModal(metricKey){
   const cfg = METRIC_DETAIL_CONFIG[metricKey];
@@ -8401,7 +8401,7 @@ function productReviewClose(){
   if (!document.body.classList.contains('product-review-open')) return; // already closed/closing
   document.body.classList.remove('product-review-open');
   document.body.classList.add('product-review-closing');
-  setTimeout(() => document.body.classList.remove('product-review-closing'), _reducedMotion ? 0 : 200);
+  setTimeout(() => document.body.classList.remove('product-review-closing'), _reducedMotion ? 0 : 120);
 }
 async function openProductReviewModal(p){
   document.getElementById('prm-title').textContent = p.title || p.id;
