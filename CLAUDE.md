@@ -252,12 +252,24 @@ snapshot to Frank every few seconds. To turn this on:
 4. Once it's pushing, the "🖨️ Bambu P1S Printer" card on Frank's Home screen shows live state, progress,
    layer count, ETA, nozzle/bed/chamber temps, speed mode, and AMS tray colors — it reads
    `GET /api/printer/status`, which reports `online: false` ("bridge offline") whenever the bridge hasn't
-   pushed in the last 30 seconds, so the card never shows stale numbers as if they were live.
+   pushed in the last 90 seconds, so the card never shows stale numbers as if they were live. The HUD
+   polls this endpoint every 5s while the Home screen is open (2026-07-30 — was tied to the 30s global
+   refresh cycle, which had zero margin against the old 30s staleness cutoff and made the card flicker
+   to "offline" on any single missed poll; both sides now have real headroom).
+5. **Click the printer card** to open a detail view with the full live stats plus a periodically-refreshed
+   camera frame (2026-07-30).
 
-**Camera snapshot: not implemented yet.** The P1S's local camera stream uses a protocol Bambu Lab has
-never published; the bridge's `--test-camera` flag explains why and what a real implementation would
-need. Frank's backend already has the receiving endpoints (`POST /api/printer/camera-frame`,
-`GET /api/printer/camera.jpg`) ready for whenever that's built.
+**Camera relay.** The P1S's local camera port (6000) has never been officially documented by Bambu Lab.
+The bridge independently verified the protocol shape against a real open-source reference
+(`coelacant1/Bambu-Lab-Cloud-API`, GPLv3 — not copied, since GPLv3 is incompatible with this codebase;
+reimplemented from the underlying protocol facts) before shipping — see the "Camera relay" comment block
+in `tools/relay/bambu_p1s_bridge.py` for exactly what was checked. It's best-effort/unofficial, not
+Bambu-documented, so run `python tools/relay/bambu_p1s_bridge.py --test-camera` on the bridge machine to
+confirm it actually connects to your real printer; report back anything unexpected (that command's output
+says so too). Runs automatically alongside telemetry; pass `--no-camera` to disable it and run telemetry
+only. Frank's backend receives frames at `POST /api/printer/camera-frame` and serves the latest one at
+`GET /api/printer/camera.jpg` (404s if the last frame is older than 15s — never serves a stale image as
+if it were live).
 
 ---
 

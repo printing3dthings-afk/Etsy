@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c9fcbf4-v271"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "0509ec4-v272"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1705,7 +1705,17 @@ _printer_telemetry: dict | None = None
 _printer_telemetry_at: float = 0.0
 _printer_frame: bytes | None = None
 _printer_frame_at: float = 0.0
-_PRINTER_STALE_SECS = 30
+# 2026-07-30: was 30s, matching the HUD's old 30s poll cadence exactly -- zero
+# margin, so any single missed poll (network jitter, a backgrounded browser tab
+# getting its timers throttled, a slow Railway request) flipped the card to
+# "BRIDGE OFFLINE" even though the bridge was still pushing every ~3s. 90s
+# gives real headroom over both the bridge's push interval and the HUD's
+# (now 5s-while-visible) poll cadence.
+_PRINTER_STALE_SECS = 90
+# Camera frames arrive much faster than telemetry once connected (many/sec,
+# not debounced to 3s) -- a much tighter window here means a genuinely stuck
+# camera relay is surfaced quickly instead of serving a very stale frame.
+_PRINTER_CAMERA_STALE_SECS = 15
 _PRINTER_MAX_FRAME_BYTES = 3_000_000
 
 # 2026-07-21: _execute_agent_tool() dispatches to dozens of branches -- some are
@@ -7540,7 +7550,7 @@ async def get_printer_camera_frame(_token: str = Depends(_auth_session_or_bearer
         frame = _printer_frame
         at = _printer_frame_at
     age = (time.time() - at) if at else None
-    if frame is None or age is None or age > _PRINTER_STALE_SECS:
+    if frame is None or age is None or age > _PRINTER_CAMERA_STALE_SECS:
         raise HTTPException(status_code=404, detail="No recent camera frame from the printer bridge")
     return Response(content=frame, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 

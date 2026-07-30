@@ -1843,7 +1843,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
-          <div class="panel-title">🖨️ Bambu P1S Printer <span class="src">/api/printer/status</span></div>
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openPrinterDetailModal()" role="button" tabindex="0">🖨️ Bambu P1S Printer <span class="src">/api/printer/status</span></div>
           <div id="printer-status-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
@@ -6136,42 +6136,94 @@ const _PRINTER_STATE_CLASS = {
   FAILED: 'at_risk', PREPARE: 'building',
 };
 function _printerTemp(v){ return (v==null) ? '—' : Math.round(v)+'°'; }
+// Shared by the sidebar card (loadPrinterStatus) and the click-through detail
+// modal (_renderPrinterDetail) -- one place to keep the field list in sync
+// rather than two copies drifting apart (repo convention: reuse before you write).
+function _printerOfflineHtml(d){
+  return '<div class="ss-status at_risk">BRIDGE OFFLINE</div>'+
+    '<div style="font-size:11px;color:var(--muted);line-height:1.4">'+
+    (d.bridge_seen ? 'Last seen more than 90s ago.' : 'Never connected.')+
+    ' Run tools/relay/bambu_p1s_bridge.py on the printer\\'s network to see live status here.</div>';
+}
+function _printerStatsHtml(d){
+  const stateRaw = d.state || '?';
+  const label = _PRINTER_STATE_LABEL[stateRaw] || stateRaw;
+  const cls = _PRINTER_STATE_CLASS[stateRaw] || 'building';
+  const pct = (d.progress_pct!=null) ? d.progress_pct : 0;
+  const amsHtml = (d.ams||[]).filter(function(t){return t.color;}).map(function(t){
+    const title = escHtml((t.material||'')+' '+(t.remain_pct!=null?t.remain_pct+'%':''));
+    return '<span title="'+title+'" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+escHtml(t.color)+';border:1px solid rgba(255,255,255,.2);margin-right:4px"></span>';
+  }).join('');
+  let html = '<div class="ss-status '+cls+'">'+escHtml(label)+'</div>';
+  if (d.print_file) html += '<div class="ss-row"><span class="ss-label">File</span><span class="ss-val" style="max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(d.print_file)+'">'+escHtml(d.print_file)+'</span></div>';
+  html += '<div class="ss-row"><span class="ss-label">Progress</span><div class="ss-bar-wrap"><div class="ss-bar" style="width:'+pct+'%"></div></div><span class="ss-val">'+pct+'%</span></div>';
+  if (d.layer_total) html += '<div class="ss-row"><span class="ss-label">Layer</span><span class="ss-val">'+(d.layer_current||0)+' / '+d.layer_total+'</span></div>';
+  if (d.remaining_minutes!=null) html += '<div class="ss-row"><span class="ss-label">Time remaining</span><span class="ss-val">'+d.remaining_minutes+' min</span></div>';
+  html += '<div class="ss-row"><span class="ss-label">Nozzle</span><span class="ss-val">'+_printerTemp(d.nozzle_temp)+' / '+_printerTemp(d.nozzle_target)+'</span></div>';
+  html += '<div class="ss-row"><span class="ss-label">Bed</span><span class="ss-val">'+_printerTemp(d.bed_temp)+' / '+_printerTemp(d.bed_target)+'</span></div>';
+  if (d.chamber_temp!=null) html += '<div class="ss-row"><span class="ss-label">Chamber</span><span class="ss-val">'+_printerTemp(d.chamber_temp)+'</span></div>';
+  if (d.speed_mode) html += '<div class="ss-row"><span class="ss-label">Speed</span><span class="ss-val">'+escHtml(d.speed_mode)+'</span></div>';
+  if (amsHtml) html += '<div class="ss-row" style="border-bottom:none"><span class="ss-label">AMS</span><span>'+amsHtml+'</span></div>';
+  if ((d.hms||[]).length) html += '<div style="font-size:10px;color:var(--red);margin-top:4px">⚠ '+d.hms.length+' HMS event(s) — check printer screen or Bambu Handy app</div>';
+  return html;
+}
 async function loadPrinterStatus(){
   const el = document.getElementById('printer-status-body');
   if(!el) return;
   try{
     const r = await authGet('/api/printer/status');
     const d = await r.json();
-    if(!d.online){
-      el.innerHTML =
-        '<div class="ss-status at_risk">BRIDGE OFFLINE</div>'+
-        '<div style="font-size:11px;color:var(--muted);line-height:1.4">'+
-        (d.bridge_seen ? 'Last seen more than 30s ago.' : 'Never connected.')+
-        ' Run tools/relay/bambu_p1s_bridge.py on the printer\\'s network to see live status here.</div>';
-      return;
-    }
-    const stateRaw = d.state || '?';
-    const label = _PRINTER_STATE_LABEL[stateRaw] || stateRaw;
-    const cls = _PRINTER_STATE_CLASS[stateRaw] || 'building';
-    const pct = (d.progress_pct!=null) ? d.progress_pct : 0;
-    const amsHtml = (d.ams||[]).filter(function(t){return t.color;}).map(function(t){
-      const title = escHtml((t.material||'')+' '+(t.remain_pct!=null?t.remain_pct+'%':''));
-      return '<span title="'+title+'" style="display:inline-block;width:14px;height:14px;border-radius:50%;background:'+escHtml(t.color)+';border:1px solid rgba(255,255,255,.2);margin-right:4px"></span>';
-    }).join('');
-    let html = '<div class="ss-status '+cls+'">'+escHtml(label)+'</div>';
-    if (d.print_file) html += '<div class="ss-row"><span class="ss-label">File</span><span class="ss-val" style="max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escHtml(d.print_file)+'">'+escHtml(d.print_file)+'</span></div>';
-    html += '<div class="ss-row"><span class="ss-label">Progress</span><div class="ss-bar-wrap"><div class="ss-bar" style="width:'+pct+'%"></div></div><span class="ss-val">'+pct+'%</span></div>';
-    if (d.layer_total) html += '<div class="ss-row"><span class="ss-label">Layer</span><span class="ss-val">'+(d.layer_current||0)+' / '+d.layer_total+'</span></div>';
-    if (d.remaining_minutes!=null) html += '<div class="ss-row"><span class="ss-label">Time remaining</span><span class="ss-val">'+d.remaining_minutes+' min</span></div>';
-    html += '<div class="ss-row"><span class="ss-label">Nozzle</span><span class="ss-val">'+_printerTemp(d.nozzle_temp)+' / '+_printerTemp(d.nozzle_target)+'</span></div>';
-    html += '<div class="ss-row"><span class="ss-label">Bed</span><span class="ss-val">'+_printerTemp(d.bed_temp)+' / '+_printerTemp(d.bed_target)+'</span></div>';
-    if (d.chamber_temp!=null) html += '<div class="ss-row"><span class="ss-label">Chamber</span><span class="ss-val">'+_printerTemp(d.chamber_temp)+'</span></div>';
-    if (d.speed_mode) html += '<div class="ss-row"><span class="ss-label">Speed</span><span class="ss-val">'+escHtml(d.speed_mode)+'</span></div>';
-    if (amsHtml) html += '<div class="ss-row" style="border-bottom:none"><span class="ss-label">AMS</span><span>'+amsHtml+'</span></div>';
-    if ((d.hms||[]).length) html += '<div style="font-size:10px;color:var(--red);margin-top:4px">⚠ '+d.hms.length+' HMS event(s) — check printer screen or Bambu Handy app</div>';
-    el.innerHTML = html;
+    el.innerHTML = d.online ? _printerStatsHtml(d) : _printerOfflineHtml(d);
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+// ── P1S click-through modal: full stats + a periodically-refreshed camera frame,
+// reusing the generic #metric-detail-modal shell (2026-07-30). Not driven through
+// METRIC_DETAIL_CONFIG/openMetricDetailModal like the day-series metrics -- printer
+// state isn't a historical series, it's a live snapshot, so this talks to the shell
+// directly. ──
+let _printerModalTimer = null;
+function openPrinterDetailModal(){
+  document.getElementById('mdm-title').textContent = '🖨️ Bambu P1S Printer';
+  document.body.classList.add('metric-detail-open');
+  _renderPrinterDetail();
+  if(_printerModalTimer) clearInterval(_printerModalTimer);
+  _printerModalTimer = setInterval(function(){
+    if(!document.body.classList.contains('metric-detail-open')){
+      clearInterval(_printerModalTimer);
+      _printerModalTimer = null;
+      return;
+    }
+    _renderPrinterDetail();
+  }, 5000);
+}
+async function _renderPrinterDetail(){
+  const body = document.getElementById('mdm-body');
+  if(!body) return;
+  try{
+    const r = await authGet('/api/printer/status');
+    const d = await r.json();
+    let html = '<div class="mdm-note">Live from tools/relay/bambu_p1s_bridge.py on Scott\\'s LAN — refreshes every 5s while this is open.</div>';
+    if(d.online){
+      // Session cookie (same-origin, sent automatically on an <img> request) covers
+      // auth here -- no need to append TOKEN, which is always '' in this file anyway
+      // (see its definition: auth uses the session cookie, never the real secret).
+      const camSrc = '/api/printer/camera.jpg?t='+Date.now();
+      html += '<div style="margin:10px 0">'+
+        '<img src="'+camSrc+'" alt="P1S camera feed" style="width:100%;display:block;border-radius:8px;border:1px solid var(--border);background:#000" '+
+        'onload="this.nextElementSibling.style.display=\\'none\\'" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'block\\'">'+
+        '<div style="color:var(--muted);font-size:11px;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:8px">'+
+        'No camera signal yet — bridge is online but hasn\\'t relayed a frame recently (camera relay may be disabled with --no-camera, or the printer just powered on).</div>'+
+        '</div>';
+    } else {
+      html += '<div style="margin:10px 0;color:var(--muted);font-size:11px;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:8px">Bridge offline — no camera feed.</div>';
+    }
+    html += d.online ? _printerStatsHtml(d) : _printerOfflineHtml(d);
+    body.innerHTML = html;
+  }catch(e){
+    body.innerHTML = '<div style="color:var(--red);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
 }
 
@@ -9771,6 +9823,19 @@ async function checkPersistence(){
 // pre-fetched in the background (2026-07-08 performance pass).
 loadAll();
 setInterval(loadAll, 30000);
+
+// P1S card refresh: a dedicated faster cadence, separate from the 30s global
+// loadAll() cycle (2026-07-30). Scott reported "stats keep going away and random
+// info pops up" -- root cause was this exact 30s poll interval having zero margin
+// against the backend's old 30s staleness cutoff (see main.py's _PRINTER_STALE_SECS
+// comment); any single missed tick flipped the card to "BRIDGE OFFLINE" even though
+// the bridge was still pushing. The backend threshold is now 90s for real headroom,
+// and this 5s loop (only while the printer card is actually on screen) makes the
+// numbers feel genuinely live on top of that.
+setInterval(function(){
+  if (document.hidden) return;
+  if (_activeScreen === 'cmd') loadPrinterStatus();
+}, 5000);
 
 // ── Operator chip — load current user from /api/me ──
 let _myRole = 'admin';

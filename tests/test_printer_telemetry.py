@@ -83,14 +83,14 @@ def test_telemetry_post_then_get_roundtrips_fields():
 
 
 def test_stale_telemetry_reports_offline_never_lies_as_live():
-    """The bridge stopped pushing 40s ago (> _PRINTER_STALE_SECS=30) -- the
+    """The bridge stopped pushing 120s ago (> _PRINTER_STALE_SECS=90) -- the
     HUD must show 'bridge offline', never stale numbers presented as live."""
     _reset_printer_state()
     with server._printer_lock:
         server._printer_telemetry = {"state": "RUNNING", "progress_pct": 99}
-        server._printer_telemetry_at = time.time() - 40
+        server._printer_telemetry_at = time.time() - 120
     status = asyncio.run(server.get_printer_status(_token="test"))
-    check(status["online"] is False, f"expected online=False for 40s-stale data, got {status}")
+    check(status["online"] is False, f"expected online=False for 120s-stale data, got {status}")
     check(status["bridge_seen"] is True, "bridge_seen should stay True -- it HAS reported before, just not recently")
     check(status.get("state") == "RUNNING", "stale data should still be returned alongside online=False for context")
 

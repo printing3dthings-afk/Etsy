@@ -31,13 +31,13 @@ Verify the MQTT handshake alone (no push to Frank, prints one parsed report
 and exits):
   python tools/relay/bambu_p1s_bridge.py --test
 
-Camera relay (the live snapshot on the HUD card) is NOT implemented in this
-version — the P1S's local camera stream uses a protocol Bambu Lab has never
-published, and guessing at it would mean sending fabricated bytes to a raw
-socket on the real printer. Telemetry (temps, progress, layers, AMS, HMS,
-state) works fully without it. Run `--test-camera` for a short explanation
-of what's missing and why; see the "Camera relay — NOT IMPLEMENTED" comment
-further down in this file for the real follow-up path.
+Camera relay pushes a JPEG snapshot to Frank every time the printer sends
+one (not true video streaming, but frequent enough to feel live). It uses
+the P1S's local camera port, a protocol Bambu Lab has never officially
+published; see the "Camera relay" section further down for exactly what was
+independently verified before this shipped, and how. Run `--test-camera` to
+smoke-test the camera connection alone. Pass `--no-camera` to run telemetry
+only.
 """
 
 from __future__ import annotations
@@ -45,7 +45,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import socket
 import ssl
+import struct
 import sys
 import threading
 import time
@@ -53,12 +55,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-try:
-    import paho.mqtt.client as mqtt
-except ImportError:
-    print("Missing dependency: pip install -r tools/relay/bambu_requirements.txt", file=sys.stderr)
-    raise
-
+# paho-mqtt is only needed for the telemetry (MQTT) half of this bridge -- the
+# camera relay is a plain TLS socket (see "Camera relay" section below) and has
+# no dependency on it. Imported lazily inside _build_client() rather than at
+# module level so `--test-camera`/`--no-camera` runs, and anything importing
+# this module to test its pure functions, don't need it installed.
 # ── Config ───────────────────────────────────────────────────────────────────
 
 _HERE = Path(__file__).resolve().parent
@@ -99,6 +100,19 @@ def _post_json(path: str, payload: dict) -> bool:
             return True
     except urllib.error.URLError as exc:
         print(f"[bambu-bridge] push to {path} failed: {exc}", flush=True)
+        return False
+
+
+def _post_bytes(path: str, body: bytes, content_type: str) -> bool:
+    req = urllib.request.Request(
+        FRANK_API_BASE + path, data=body, method="POST",
+        headers={"Authorization": f"Bearer {APP_TOKEN}", "Content-Type": content_type},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10):
+            return True
+    except urllib.error.URLError as exc:
+        print(f"[bambu-bridge] camera frame push failed: {exc}", flush=True)
         return False
 
 
@@ -197,7 +211,12 @@ def _on_message(client, userdata, msg, test_mode: bool = False, result_holder: l
         print(f"[bambu-bridge] pushed telemetry (state={state}, progress={pct}%)", flush=True)
 
 
-def _build_client(on_message) -> "mqtt.Client":
+def _build_client(on_message):
+    try:
+        import paho.mqtt.client as mqtt
+    except ImportError:
+        print("Missing dependency: pip install -r tools/relay/bambu_requirements.txt", file=sys.stderr)
+        raise
     client = mqtt.Client()
     client.username_pw_set("bblp", BAMBU_ACCESS_CODE)
     # The P1S's local MQTT broker serves a self-signed certificate -- there is
@@ -243,29 +262,117 @@ def run_test(timeout_secs: float = 15.0) -> None:
     print(json.dumps(result[0], indent=2), flush=True)
 
 
-# ── Camera relay — NOT IMPLEMENTED ──────────────────────────────────────────
+# ── Camera relay ─────────────────────────────────────────────────────────────
 #
-# The P1S's local camera stream uses a protocol Bambu Lab has never publicly
-# documented. Community tools (Home Assistant's bambu_lab integration,
-# bambulabs_api, various go2rtc-based bridges) do relay it, but their exact
-# byte-level framing was not something this script could verify against real
-# hardware while being written, and guessing at magic bytes/packet layout
-# would mean sending fabricated data to a raw socket on Scott's real printer
-# with no way to confirm it's correct or even harmless. Rather than ship
-# invented protocol constants dressed up as documented behavior, telemetry
-# (well-documented, high-confidence) ships alone in this version; camera
-# support is a real follow-up once either (a) the exact framing is confirmed
-# against one of the community references above, or (b) Scott points this at
-# a known-working relay tool directly. Frank's backend already exposes
-# POST /api/printer/camera-frame + GET /api/printer/camera.jpg for whichever
-# of those happens first — see tools/api_server/main.py.
+# The P1S's local camera port has never been officially documented by Bambu
+# Lab. An earlier version of this script deliberately shipped without this
+# feature rather than guess at the byte layout. 2026-07-30: independently
+# verified the real protocol shape by fetching (not trusting an AI summary
+# of) the actual source of a real open-source implementation
+# (coelacant1/Bambu-Lab-Cloud-API, GPLv3) and reading it directly. That repo
+# is GPLv3, which is incompatible with copying its code into this private
+# codebase, so nothing below is copied -- this is an independent
+# reimplementation of the same (unprotectable) protocol facts:
+#   - TLS socket to the printer on port 6000, cert verification disabled
+#     (same self-signed-cert tradeoff every LAN-mode Bambu integration makes,
+#     see _build_client() above).
+#   - An 80-byte auth packet: four little-endian uint32s (0x40 payload size,
+#     0x3000 a type/command code, then two reserved/flags words), followed
+#     by "bblp" null-padded to 32 bytes, then the Access Code null-padded to
+#     32 bytes.
+#   - Each frame is a 16-byte little-endian header (payload_size, track
+#     index, flags, reserved) immediately followed by payload_size bytes of
+#     JPEG data starting with the SOI marker (FF D8) and ending with EOI
+#     (FF D9).
+# Camera frames arrive much faster than telemetry once connected -- no
+# debounce here, every frame received is pushed.
+
+_CAMERA_PORT = 6000
+_CAMERA_AUTH_PACKET_SIZE = 80
+_CAMERA_HEADER_SIZE = 16
+_CAMERA_MAX_FRAME_BYTES = 3_000_000  # matches main.py's _PRINTER_MAX_FRAME_BYTES
+_JPEG_SOI = b"\xff\xd8"
+_JPEG_EOI = b"\xff\xd9"
+CAMERA_RECONNECT_BACKOFF_SECS = 5
 
 
-def run_test_camera() -> None:
-    print("[bambu-bridge] Camera relay is not implemented in this version.", flush=True)
-    print("See the 'Camera relay — NOT IMPLEMENTED' comment in this file for why and what's needed to add it.", flush=True)
-    print("Telemetry (temps/progress/AMS/HMS/state) works fully without it via the default run mode.", flush=True)
-    sys.exit(1)
+def _build_camera_auth_packet(access_code: str) -> bytes:
+    packet = struct.pack("<IIII", _CAMERA_AUTH_PACKET_SIZE - 16, 0x3000, 0, 0)
+    packet += b"bblp".ljust(32, b"\x00")
+    packet += access_code.encode("ascii", errors="ignore")[:32].ljust(32, b"\x00")
+    return packet
+
+
+def _open_camera_socket() -> ssl.SSLSocket:
+    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    raw = socket.create_connection((BAMBU_IP, _CAMERA_PORT), timeout=10)
+    sock = ctx.wrap_socket(raw)
+    sock.sendall(_build_camera_auth_packet(BAMBU_ACCESS_CODE))
+    return sock
+
+
+def _recv_exact(sock: ssl.SSLSocket, size: int) -> bytes:
+    data = b""
+    while len(data) < size:
+        chunk = sock.recv(size - len(data))
+        if not chunk:
+            raise ConnectionError("camera socket closed by printer")
+        data += chunk
+    return data
+
+
+def _read_camera_frames(on_frame) -> None:
+    sock = _open_camera_socket()
+    try:
+        while True:
+            header = _recv_exact(sock, _CAMERA_HEADER_SIZE)
+            payload_size = struct.unpack_from("<I", header, 0)[0]
+            if payload_size <= 0 or payload_size > _CAMERA_MAX_FRAME_BYTES:
+                raise ConnectionError(f"implausible camera frame size {payload_size} -- desynced")
+            frame = _recv_exact(sock, payload_size)
+            if not (frame.startswith(_JPEG_SOI) and frame.endswith(_JPEG_EOI)):
+                continue  # desynced mid-stream -- drop this frame, keep reading
+            on_frame(frame)
+    finally:
+        sock.close()
+
+
+def run_camera_loop() -> None:
+    def _on_frame(frame: bytes) -> None:
+        _post_bytes("/api/printer/camera-frame", frame, "image/jpeg")
+
+    while True:
+        try:
+            _read_camera_frames(_on_frame)
+        except Exception as exc:
+            print(f"[bambu-bridge] camera relay error ({exc}) — retrying in {CAMERA_RECONNECT_BACKOFF_SECS}s", flush=True)
+        time.sleep(CAMERA_RECONNECT_BACKOFF_SECS)
+
+
+def run_test_camera(timeout_secs: float = 15.0) -> None:
+    got_frame = threading.Event()
+    sizes: list[int] = []
+
+    def _on_frame(frame: bytes) -> None:
+        sizes.append(len(frame))
+        got_frame.set()
+
+    def _try_once() -> None:
+        try:
+            _read_camera_frames(_on_frame)
+        except Exception as exc:
+            print(f"[bambu-bridge] camera test connection error: {exc}", flush=True)
+
+    print(f"[bambu-bridge] connecting to {BAMBU_IP}:{_CAMERA_PORT} for camera test ...", flush=True)
+    threading.Thread(target=_try_once, daemon=True).start()
+    got_frame.wait(timeout=timeout_secs)
+    if not got_frame.is_set():
+        print(f"[bambu-bridge] CAMERA TEST FAILED: no frame received within {timeout_secs}s.", flush=True)
+        print("This is a best-effort, unofficial protocol (see the module docstring) -- report this output back so it can be fixed with real signal.", flush=True)
+        sys.exit(1)
+    print(f"[bambu-bridge] CAMERA TEST OK — received a {sizes[0]}-byte JPEG frame.", flush=True)
 
 
 def _require_config() -> None:
@@ -281,7 +388,8 @@ def _require_config() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--test", action="store_true", help="Verify the MQTT handshake, print one parsed report, exit.")
-    parser.add_argument("--test-camera", action="store_true", help="Print why camera relay isn't implemented yet, exit.")
+    parser.add_argument("--test-camera", action="store_true", help="Connect to the camera port alone, print one frame's size, exit.")
+    parser.add_argument("--no-camera", action="store_true", help="Run telemetry only -- skip the camera relay thread.")
     args = parser.parse_args()
 
     _require_config()
@@ -292,6 +400,9 @@ def main() -> None:
     if args.test_camera:
         run_test_camera()
         return
+
+    if not args.no_camera:
+        threading.Thread(target=run_camera_loop, daemon=True).start()
 
     run_telemetry_loop()
 

@@ -489,6 +489,34 @@ async def _run_browser_checks() -> None:
             check(printer_card.get("hasContent"), f"Printer card must render some content, not stay blank: {printer_card}")
             check(printer_card.get("showsOffline"), f"With no bridge running, printer card must honestly show 'bridge offline': {printer_card}")
 
+            # ── P1S click-through detail modal (2026-07-30) ── Scott asked to click the
+            # card and see the camera feed + full live stats. Confirms the panel-title
+            # is wired to openPrinterDetailModal(), the shared #metric-detail-modal shell
+            # opens, and it self-closes cleanly (no leaked interval, no stuck open state).
+            printer_tap_target = await page.evaluate(
+                "() => !!document.querySelector('div.panel-title[onclick*=\"openPrinterDetailModal\"]')"
+            )
+            check(printer_tap_target, "P1S panel-title must be wired to openPrinterDetailModal()")
+            await page.click('div.panel-title[onclick*="openPrinterDetailModal"]')
+            await page.wait_for_timeout(600)
+            printer_modal = await page.evaluate("""() => ({
+                open: document.body.classList.contains('metric-detail-open'),
+                title: (document.getElementById('mdm-title')||{}).textContent,
+                bodyHasContent: (document.getElementById('mdm-body')||{}).innerHTML.trim().length > 0,
+                showsOfflineOrCamera: /BRIDGE OFFLINE|camera feed/i.test((document.getElementById('mdm-body')||{}).innerHTML),
+            })""")
+            check(printer_modal.get("open"), f"Clicking the P1S card must open the metric-detail modal: {printer_modal}")
+            check("Printer" in (printer_modal.get("title") or ""), f"Modal title must identify the P1S panel: {printer_modal}")
+            check(printer_modal.get("bodyHasContent"), f"Modal body must render content, not stay blank: {printer_modal}")
+            check(printer_modal.get("showsOfflineOrCamera"), f"Modal must show either the camera feed markup or an honest offline state: {printer_modal}")
+            # Click near the top-left corner, not the element's center -- the centered
+            # modal panel (z-index 901) sits on top of the backdrop (900) at the viewport
+            # center, so a default center-click would hit the modal, never the backdrop.
+            await page.click("#metric-detail-backdrop", position={"x": 5, "y": 5})
+            await page.wait_for_timeout(400)
+            printer_modal_closed = await page.evaluate("() => document.body.classList.contains('metric-detail-open')")
+            check(not printer_modal_closed, "Clicking the backdrop must close the P1S detail modal")
+
             # Approvals batch-threshold banner -- stub _pendingActions with 11
             # same-type items (over the 10-item safety rail) and confirm the
             # computed warning banner appears; then confirm it's absent with a
