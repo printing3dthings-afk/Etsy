@@ -1106,7 +1106,14 @@ body:not(.is-mobile) .orb-open-chat{display:none}
     flex:none !important;width:100% !important
   }
 
-  #chat-msgs{min-height:280px;max-height:60vh;flex:none}
+  /* 2026-07-30 (Ask/Chat UX audit): 60vh is the *layout* viewport, which most mobile
+     browsers do NOT shrink when the on-screen keyboard opens -- on a long conversation
+     this fixed-height block plus the chips/indicator/input row below it could push
+     #chat-input off-screen under the keyboard. 60dvh (dynamic viewport height, already
+     used for #stage-wrap above) tracks the *visible* viewport instead, so the input row
+     stays above the keyboard. Browsers without dvh support ignore the second
+     declaration and keep the vh fallback above it. */
+  #chat-msgs{min-height:280px;max-height:60vh;max-height:60dvh;flex:none}
   .orb-hero-stage{min-height:220px}
 
   .agents-grid{grid-template-columns:repeat(2,1fr)}
@@ -1782,7 +1789,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div class="mobile-shop-header">OnBrandCraftz</div>
           <div class="panel-title">Ask %%AGENT_SHORT%% <span class="src">/ws/chat — live, always-on chat</span></div>
           <div id="chat-msgs" aria-live="polite"></div>
-          <div class="lc-chips">
+          <div class="lc-chips" id="lc-chips">
             <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">What should I focus on?</span>
             <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">How are sales?</span>
             <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">What's my next listing?</span>
@@ -5455,7 +5462,14 @@ async function initWS() {
       if (!_historyApplied && Array.isArray(d.messages)) {
         const c = document.getElementById('chat-msgs'); c.innerHTML = '';
         d.messages.forEach(m => addBubble(m.content, m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? null : {markdown:true}));
-        _historyApplied = true; scrollMsgs();
+        _historyApplied = true;
+        // 2026-07-30 (Ask/Chat UX audit): a real conversation already exists on the
+        // server (this session or a resumed one) -- the quick-reply chips are only a
+        // cold-start affordance, so hide them; a brand-new session gets the greeting
+        // instead. Keyed off real server-side history, not the greeting bubble itself
+        // (which is client-side-only and never persisted).
+        if (d.messages.length) { _hideChatChips(); } else { _showEmptyChatGreeting(); }
+        scrollMsgs();
       }
       return;
     }
@@ -5536,11 +5550,24 @@ function addBubble(text, who, opts) {
   return el;
 }
 function scrollMsgs() { const m=document.getElementById('chat-msgs'); m.scrollTop=m.scrollHeight; }
+// 2026-07-30 (Ask/Chat UX audit): the server only sends {type:'history'} `if
+// history:` (main.py) -- a brand-new session sends nothing at all, so #chat-msgs
+// stayed completely blank below the "Ask Frank" title with no explanation of what
+// this screen does. Client-side-only, never persisted -- reloading before sending
+// anything shows it again, which is correct (still an empty conversation).
+function _showEmptyChatGreeting() {
+  addBubble("Hi, I'm Frank — ask me about your shop's sales, listings, pricing, or what needs attention today. Try a suggestion below, or type your own question.", 'bot');
+}
+function _hideChatChips() {
+  const chips = document.getElementById('lc-chips');
+  if (chips) chips.style.display = 'none';
+}
 function sendMsg(sourceId) {
   const inp = document.getElementById(sourceId || 'chat-input');
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
+  _hideChatChips();
   addBubble(text, 'user');
   const bot = addBubble('', 'bot typing');
   bot.id = 'bot-streaming';

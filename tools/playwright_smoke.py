@@ -2247,6 +2247,80 @@ async def _run_browser_checks() -> None:
             check(speak_on is True, "setSpeaking(true) must turn on #chat-speaking-indicator")
             check(speak_off is False, "setSpeaking(false) must turn off #chat-speaking-indicator")
 
+            # ── Ask/Chat UX audit (2026-07-30), item 1 -- empty-conversation greeting.
+            # main.py's /ws/chat handler only sends {type:'history'} `if history:` -- a
+            # brand-new session got nothing at all, so #chat-msgs stayed completely
+            # blank below the "Ask Frank" title with no explanation of what the screen
+            # does. Resets _historyApplied (a JS module-scope `let`, NOT a window
+            # property -- see this file's Home-greeting test for why a bare reference
+            # is required here) and hand-fires the exact ws.onmessage the real server
+            # sends for a virgin session.
+            await page.evaluate("phoneTab('ask')")
+            await page.wait_for_timeout(200)
+            empty_history_state = await page.evaluate("""() => {
+                document.getElementById('chat-msgs').innerHTML = '';
+                document.getElementById('lc-chips').style.display = '';
+                _historyApplied = false;
+                ws.onmessage({data: JSON.stringify({type:'history', messages: []})});
+                const bubbles = document.getElementById('chat-msgs').querySelectorAll('.lc-bubble.bot');
+                return {
+                    bubbleCount: bubbles.length,
+                    greetingText: bubbles.length ? bubbles[0].textContent : null,
+                    chipsDisplay: getComputedStyle(document.getElementById('lc-chips')).display,
+                };
+            }""")
+            check(empty_history_state.get("bubbleCount") == 1,
+                  f"an empty-history session must render exactly one greeting bubble, got: {empty_history_state}")
+            check("Frank" in (empty_history_state.get("greetingText") or ""),
+                  f"the greeting bubble must introduce Frank, got: {empty_history_state}")
+            check(empty_history_state.get("chipsDisplay") != "none",
+                  f"quick-reply chips must stay visible on a fresh empty conversation: {empty_history_state}")
+
+            # ── Ask/Chat UX audit, item 2 -- chips hide once real history (or a real
+            # send) exists. Keyed off server-side history / an actual sendMsg() call,
+            # NOT the greeting bubble itself, per the adversarial review's coupling
+            # warning: a client-only greeting must never be mistaken for a real message.
+            nonempty_history_state = await page.evaluate("""() => {
+                document.getElementById('chat-msgs').innerHTML = '';
+                document.getElementById('lc-chips').style.display = '';
+                _historyApplied = false;
+                ws.onmessage({data: JSON.stringify({type:'history', messages: [{role:'user', content:'a prior real message'}]})});
+                const bubbles = document.getElementById('chat-msgs').querySelectorAll('.lc-bubble.bot');
+                return {
+                    greetingBubbleCount: bubbles.length,
+                    chipsDisplay: getComputedStyle(document.getElementById('lc-chips')).display,
+                };
+            }""")
+            check(nonempty_history_state.get("greetingBubbleCount") == 0,
+                  f"a session with real prior history must NOT also show the empty-conversation greeting: {nonempty_history_state}")
+            check(nonempty_history_state.get("chipsDisplay") == "none",
+                  f"quick-reply chips must hide once real history exists: {nonempty_history_state}")
+
+            # A real send (not just replayed history) must also hide the chips immediately.
+            send_hides_chips_display = await page.evaluate("""() => {
+                document.getElementById('lc-chips').style.display = '';
+                document.getElementById('chat-input').value = 'hide the chips please';
+                sendMsg();
+                return getComputedStyle(document.getElementById('lc-chips')).display;
+            }""")
+            check(send_hides_chips_display == "none",
+                  f"sendMsg() must hide the quick-reply chips on a real send: {send_hides_chips_display}")
+
+            # ── Ask/Chat UX audit, item 3 -- mobile keyboard must not cover the input
+            # row. #chat-msgs' mobile max-height used a plain 60vh, which most mobile
+            # browsers do NOT shrink when the on-screen keyboard opens (layout vs.
+            # visual viewport). Switched to 60dvh (already used for #stage-wrap) so it
+            # tracks the visible viewport instead. Confirms this Chromium build actually
+            # resolves a dvh-based max-height into a real pixel value at mobile width --
+            # a browser that ignored dvh would fall through to the 60vh declaration
+            # immediately before it in the cascade, so this checks for a real, finite
+            # resolved value rather than 'none'/unset.
+            chat_msgs_max_height = await page.evaluate(
+                "() => getComputedStyle(document.getElementById('chat-msgs')).maxHeight"
+            )
+            check(bool(chat_msgs_max_height) and chat_msgs_max_height.endswith("px") and chat_msgs_max_height != "0px",
+                  f"#chat-msgs must resolve to a real max-height on mobile, not 'none'/unset: {chat_msgs_max_height!r}")
+
             # ── Shop Performance metric-detail modal (2026-07-22), Phase 2 -- tapping
             # the Revenue/Orders 30d sparkline cards on #screen-cmd now opens a generic
             # #metric-detail-modal with a bigger chart + real per-day table. Mocks
