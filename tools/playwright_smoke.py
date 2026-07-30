@@ -2504,7 +2504,8 @@ async def _run_browser_checks() -> None:
                     }
                     if (path === '/api/metrics') {
                         return Promise.resolve({ok: true, status: 200, json: async () => ({
-                            shop: {active_listing_count: 37, active_listing_goal: 60}, orders: {},
+                            shop: {active_listing_count: 37, active_listing_goal: 60},
+                            orders: {today_revenue: 88.5},
                         })});
                     }
                     if (path.indexOf('/api/status-history?panel=star_seller') === 0) {
@@ -2537,6 +2538,83 @@ async def _run_browser_checks() -> None:
             ticker_text = home_state.get("tickerText") or ""
             check("$1234.56" in ticker_text and "Test Listing" in ticker_text and "4.80" in ticker_text,
                   f"ticker should render live revenue/top-listing/star-seller data, not placeholders: {ticker_text[:300]}")
+            check("$88.50" in ticker_text and "Today" in ticker_text,
+                  f"ticker should include a today's-revenue chip (2026-07-30 Home audit), not just the 30d figure: {ticker_text[:300]}")
+
+            # ── Personalized Home greeting (2026-07-30 Home-screen UX audit) --
+            # _loadHomeGreeting() fetches GET /api/me via fetchWithTimeout, not authGet,
+            # so mock that function directly instead (same "monkeypatch the shared
+            # function" convention as authGet elsewhere in this file). ──
+            greeting_state = await page.evaluate("""async () => {
+                window._origFetchWithTimeoutHome = window.fetchWithTimeout;
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    if (String(url).indexOf('/api/me') !== -1) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            username: 'scott', display_name: 'Scott', role: 'owner',
+                        })});
+                    }
+                    return window._origFetchWithTimeoutHome(url, opts, ms);
+                };
+                _homeGreetingName = null; // force a fresh fetch regardless of test order -- this is the
+                // module-scope `let` _loadHomeGreeting() itself reads/caches, not a window property;
+                // window._homeGreetingName would create an unrelated global and leave the real cache
+                // (already warmed by an earlier real /api/me call elsewhere in this run) untouched.
+                await _loadHomeGreeting();
+                window.fetchWithTimeout = window._origFetchWithTimeoutHome;
+                const el = document.getElementById('home-greeting');
+                return {text: el.textContent, visible: getComputedStyle(el).display !== 'none'};
+            }""")
+            check(greeting_state.get("visible") is True, f"home-greeting should be visible once a display_name is fetched: {greeting_state}")
+            check("Scott" in (greeting_state.get("text") or ""), f"greeting should include the account display_name: {greeting_state}")
+            check(any(p in (greeting_state.get("text") or "") for p in ("morning", "afternoon", "evening")),
+                  f"greeting should be time-of-day aware: {greeting_state}")
+
+            # (2026-07-30: a per-tile keyboard-activation handler was drafted here and
+            # dropped -- a pre-existing document-level keydown listener, dated
+            # 2026-07-08, already calls .click() on any focused role="button" element
+            # app-wide, Home's tiles included. The draft handler double-fired every
+            # keypress against that existing one; caught by this very test before
+            # shipping. No Home-specific a11y gap actually exists.)
+
+            # ── Inbox & Reviews review-list cap + expand toggle (2026-07-30 audit) --
+            # previously unbounded; now caps to 2 inline with a "N more" expand link,
+            # matching Shop Performance's existing toggleShopExpand() pattern. ──
+            inbox_state = await page.evaluate("""async () => {
+                window._origAuthGetInbox = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/inbox') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            unread_count: 0, reviews_awaiting_reply: 0,
+                            recent_reviews: [
+                                {id: 'r1', rating: 5, text: 'Great!', replied: true},
+                                {id: 'r2', rating: 4, text: 'Good', replied: true},
+                                {id: 'r3', rating: 3, text: 'Meh', replied: false},
+                            ],
+                        })});
+                    }
+                    return window._origAuthGetInbox(path, ms);
+                };
+                await loadInbox();
+                window.authGet = window._origAuthGetInbox;
+                const before = {
+                    visibleReviews: document.querySelectorAll('#inbox-body .inbox-review').length,
+                    extraDisplay: getComputedStyle(document.getElementById('inbox-extra-reviews')).display,
+                    toggleText: document.getElementById('inbox-expand-toggle').textContent,
+                };
+                toggleInboxExpand();
+                const after = {
+                    extraDisplay: getComputedStyle(document.getElementById('inbox-extra-reviews')).display,
+                    toggleText: document.getElementById('inbox-expand-toggle').textContent,
+                };
+                return {before, after};
+            }""")
+            ib = inbox_state.get("before") or {}
+            ia = inbox_state.get("after") or {}
+            check(ib.get("visibleReviews") == 3, f"all 3 review nodes exist in the DOM (2 inline + 1 inside the collapsed extra block): {ib}")
+            check(ib.get("extraDisplay") == "none", f"the 3rd review must start collapsed: {ib}")
+            check("1 more" in (ib.get("toggleText") or ""), f"toggle should name how many extra reviews are hidden: {ib}")
+            check(ia.get("extraDisplay") == "block", f"toggleInboxExpand() must reveal the extra review: {ia}")
+            check("fewer" in (ia.get("toggleText") or ""), f"toggle label must flip once expanded: {ia}")
 
             badge_state = await page.evaluate("""() => {
                 setActionBadge({high: 3}, 5);

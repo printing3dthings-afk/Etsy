@@ -1338,6 +1338,7 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .home-hero-ic{font-size:38px;color:var(--cyan);line-height:1}
 .home-hero-title{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);margin-top:8px}
 .home-hero-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+#home-greeting{font-size:14px;font-weight:600;color:var(--text);text-align:center;padding:0 2px 10px;opacity:.85}
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 2px}
 .home-tile{position:relative;background:var(--panel);border:1px solid var(--border);
   border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:20px 10px;text-align:center;
@@ -1711,6 +1712,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
        "active") and is inert on desktop. ══════════ -->
   <div class="screen" id="screen-home">
     <div class="mobile-shop-header">OnBrandCraftz</div>
+    <div id="home-greeting" style="display:none"></div>
     <div class="home-hero" id="home-hero" role="button" tabindex="0" onclick="phoneTab('ask')" aria-label="Ask Frank">
       <div class="home-hero-ic">◉</div>
       <div class="home-hero-title">Ask</div>
@@ -3109,10 +3111,33 @@ function phoneOpenScreen(name){
 // tab-bar<->ticker swap (see CSS). phoneOpenScreen() runs FIRST and strips any
 // stale phone-home-open (see its own top-of-function comment), so adding the
 // class back AFTER this call is required, not just convenient.
+// Personalized greeting on the mobile Home hero (2026-07-30, Home-screen UX audit).
+// Reuses GET /api/me (already built for the Settings "Your Account & Access" card,
+// see loadWhoAmI()) rather than adding a new endpoint. Fetched once per page load
+// and cached in _homeGreetingName -- display_name never changes mid-session.
+let _homeGreetingName = null;
+async function _loadHomeGreeting(){
+  const el = document.getElementById('home-greeting');
+  if(!el) return;
+  if(_homeGreetingName === null){
+    try{
+      const r = await fetchWithTimeout(BASE+'/api/me', {headers:{Authorization:'Bearer '+TOKEN}}, 8000);
+      const d = await r.json().catch(()=>({}));
+      _homeGreetingName = (r.ok && (d.display_name || d.username)) || '';
+    }catch(e){ _homeGreetingName = ''; }
+  }
+  if(!_homeGreetingName){ el.style.display = 'none'; return; }
+  const h = new Date().getHours();
+  const part = h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
+  el.textContent = 'Good ' + part + ', ' + _homeGreetingName;
+  el.style.display = 'block';
+}
+
 function phoneOpenHome(){
   phoneOpenScreen('home');
   document.body.classList.add('phone-home-open');
   renderTicker(); // paint immediately from whatever's cached; loadShopPerf()/loadStarSeller() refresh it live
+  _loadHomeGreeting();
 }
 // Jump from the Ask/orb view straight into the full chat transcript (the "cmd"
 // screen that holds the conversation). Closes the "Talk to Frank" popup first so
@@ -5790,7 +5815,13 @@ function renderTicker(){
   const lt = a.latest || {};
   const top = (a.top_listings && a.top_listings[0]) || null;
   const shop = m.shop || {};
+  const orders = m.orders || {};
   const chips = [
+    // Today's revenue (2026-07-30, Home-screen audit) -- the 30d figure below was
+    // the only revenue number on Home; m.orders.today_revenue is already fetched
+    // by loadShopPerf() for the Shop Performance expanded panel, just never surfaced
+    // on the ticker itself. Reused here, not a new endpoint.
+    {ic:'●', label:'Revenue · Today', val: orders.today_revenue!=null ? '$'+orders.today_revenue.toFixed(2) : '—'},
     {ic:'$', label:'Revenue · 30d', val: lt.revenue_30d!=null ? '$'+lt.revenue_30d.toFixed(2) : '—'},
     {ic:'▤', label:'Orders · 30d', val: lt.orders_30d!=null ? String(lt.orders_30d) : '—'},
     {ic:'★', label:'Top Listing', val: top ? (top.title.length>28 ? top.title.slice(0,28)+'…' : top.title)+' · '+top.views+' views' : '—'},
@@ -6014,6 +6045,22 @@ function _renderMetricDetail(cfg, dates, values){
     '<thead><tr><th>Date</th><th style="text-align:right">'+escHtml(cfg.label)+'</th><th style="text-align:right">vs prior day</th></tr></thead>'+
     '<tbody>'+rowsHtml+'</tbody></table></div>';
   body.innerHTML = html;
+}
+
+// Mirrors _shopExpanded/toggleShopExpand() above -- same "compact by default, more
+// on demand" pattern, applied to the Inbox & Reviews card's review list (2026-07-30,
+// Home-screen UX audit). Toggling only flips the DOM the current loadInbox() call
+// already rendered; it does not re-fetch.
+let _inboxExpanded = false;
+function toggleInboxExpand(){
+  _inboxExpanded = !_inboxExpanded;
+  const extra = document.getElementById('inbox-extra-reviews');
+  const toggle = document.getElementById('inbox-expand-toggle');
+  if(extra) extra.style.display = _inboxExpanded ? 'block' : 'none';
+  if(toggle){
+    const n = extra ? extra.querySelectorAll('.inbox-review').length : 0;
+    toggle.textContent = _inboxExpanded ? '▲ show fewer' : '▼ '+n+' more review'+(n>1?'s':'');
+  }
 }
 
 let _shopExpanded = false;
@@ -6302,18 +6349,31 @@ async function loadInbox(){
       html += '</div>';
     }
     if(reviews.length){
-      html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Reviews</div>';
-      reviews.forEach(rev=>{
+      // Cap the always-visible list to 2 (2026-07-30, Home-screen UX audit) -- with
+      // review text inline this was the one col-right card with no length limit or
+      // collapse, unlike Star Seller/Ads/COGS/Printer (fixed-size summaries) and Shop
+      // Performance (its own explicit expand toggle). Same "compact by default, more
+      // on demand" pattern as Shop Performance's #shop-expanded/toggleShopExpand(),
+      // not a full hide -- an urgent Star Seller-risk line stays visible either way
+      // since it's in the message bar above, not inside this list.
+      const _renderReview = rev=>{
         const stars = '★'.repeat(rev.rating)+'☆'.repeat(5-rev.rating);
-        html += '<div class="inbox-review"><div class="inbox-review-stars">'+stars+
+        let h = '<div class="inbox-review"><div class="inbox-review-stars">'+stars+
           (rev.id ? (rev.replied
             ? ' <span style="color:var(--green);font-size:10px">✓ replied</span>'
             : ' <button class="act-btn secondary" style="font-size:10px;padding:2px 8px" onclick="markReviewReplied(\\''+escHtml(rev.id)+'\\')">Mark replied</button>')
             : '') +
           '</div>';
-        if(rev.text) html += '<div class="inbox-review-text">'+escHtml(rev.text.slice(0,100))+(rev.text.length>100?'…':'')+'</div>';
-        html += '</div>';
-      });
+        if(rev.text) h += '<div class="inbox-review-text">'+escHtml(rev.text.slice(0,100))+(rev.text.length>100?'…':'')+'</div>';
+        return h+'</div>';
+      };
+      html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Reviews</div>';
+      html += reviews.slice(0,2).map(_renderReview).join('');
+      if(reviews.length > 2){
+        html += '<div id="inbox-extra-reviews" style="display:'+(_inboxExpanded?'block':'none')+'">'+reviews.slice(2).map(_renderReview).join('')+'</div>';
+        html += '<div style="font-size:10px;color:var(--cyan);text-align:center;margin-top:6px;cursor:pointer" onclick="toggleInboxExpand()" id="inbox-expand-toggle">'+
+          (_inboxExpanded?'▲ show fewer':'▼ '+(reviews.length-2)+' more review'+(reviews.length-2>1?'s':''))+'</div>';
+      }
     } else {
       html += '<div style="color:var(--muted);font-size:11px;margin-top:8px">No reviews yet</div>';
     }
