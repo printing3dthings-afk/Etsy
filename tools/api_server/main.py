@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "7c3dcde-v273"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e985f7a-v274"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2358,6 +2358,15 @@ LIVE DATA — you can read the real shop, do not guess:
 - ALWAYS pull the real numbers with a tool before quoting any figure. Never invent data.
   If a tool returns an error, say so plainly rather than guessing.
 
+IDENTIFIER LOOKUP — the instant {business_config.OWNER_NAME} sends you a bare identifier with little
+or no other context — a numeric Etsy listing ID, an internal product code (DP1026, SS1001,
+WA1030, CB001, etc.), or just a product name fragment — call get_product with it BEFORE
+replying. Never say "I don't know what that is" or ask what he means without trying this
+first; it cross-references the internal product catalog (files on disk, category, price,
+past operational notes) AND the live Etsy listing in one call, so a bare ID alone is always
+enough to identify the product. Use plain get_listing only when you already know for certain
+you're dealing with a live Etsy listing_id and specifically need Etsy's raw fields.
+
 YOUR COMPOUNDING MEMORY — log_learning:
 - You have a durable, append-only memory file (ceo_learnings.md) that is read back into
   your own system prompt at the start of every future chat, regardless of device or session.
@@ -2575,6 +2584,35 @@ AGENT_TOOLS = [
                 }
             },
             "required": ["listing_id"],
+        },
+    },
+    {
+        "name": "get_product",
+        "description": (
+            f"THE tool to reach for the instant {business_config.OWNER_NAME} pastes ANY product identifier "
+            "with no other context — a bare Etsy listing_id number, an internal product code "
+            "(DP1026, SS1001, WA1030, CB001, etc.), or a partial product name. Never respond "
+            "'I don't know what that is' without calling this first. Unlike get_listing (Etsy's "
+            "live fields only), this cross-references data/product_catalog.json — the shop's own "
+            "source of truth — so it returns the internal product_id, category, price, which files "
+            "exist on disk, and any operational note logged against this product (e.g. a past bug "
+            "fix or re-upload reason), PLUS the live Etsy listing (title, state, price, tags, views, "
+            "favorites) when the product has one. If the identifier isn't in the catalog but IS a "
+            "real numeric Etsy listing_id, still returns the live Etsy data with in_catalog=false so "
+            "you're never blind to an un-catalogued or newly-created listing."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "identifier": {
+                    "type": "string",
+                    "description": (
+                        "A numeric Etsy listing_id, an internal product code (e.g. 'DP1026'), or a "
+                        "product name/fragment to search for."
+                    ),
+                }
+            },
+            "required": ["identifier"],
         },
     },
     {
@@ -3664,6 +3702,129 @@ def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
     return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
 
 
+def _resolve_product(identifier: str, catalog: list | None = None) -> dict:
+    """Cross-reference a listing_id / internal product_id / name fragment against
+    data/product_catalog.json -- the shop's own source of truth -- plus a live Etsy
+    fetch when a listing_id is known. Backs the get_product agent tool (2026-07-30,
+    Scott: "I put a listing id in his chat, he didn't know what the product was" --
+    get_listing only ever queried Etsy directly, so it silently failed on anything
+    that wasn't a bare numeric Etsy ID, e.g. an internal code like 'DP1026').
+
+    Reuses _build_products_status() -- the exact function /api/products and the
+    Files tab already call -- so this can never disagree with what those screens
+    show (code-style.md: "reuse before you write"). Kept separate from
+    _execute_agent_tool's dispatch branch so it's independently unit-testable.
+
+    `catalog`: pass explicitly in tests to avoid touching real disk (mirrors
+    _build_products_status()'s own explicit-catalog-argument design); defaults to
+    loading the real data/product_catalog.json for the live tool-call path."""
+    ident = (identifier or "").strip()
+    if not ident:
+        return {"error": "identifier is required"}
+    if catalog is None:
+        try:
+            catalog = json.loads(Path("data/product_catalog.json").read_text())
+        except OSError:
+            catalog = []
+    overrides = _product_catalog_overrides()
+    rows = _build_products_status(catalog, _catalog_file_exists, overrides)
+
+    ident_upper = ident.upper()
+    match = next((r for r in rows if r.get("id") and r["id"].upper() == ident_upper), None)
+    if not match and ident.isdigit():
+        match = next((r for r in rows if str(r.get("listing_id") or "") == ident), None)
+    candidates = []
+    if not match:
+        needle = ident.lower()
+        candidates = [r for r in rows if needle in (r.get("title") or "").lower()]
+        if len(candidates) == 1:
+            match = candidates[0]
+
+    if match:
+        raw = next((p for p in catalog if p.get("product_id") == match.get("id")), {})
+        result = {
+            "found": True,
+            "in_catalog": True,
+            "product_id": match.get("id"),
+            "name": match.get("title"),
+            "category": match.get("category"),
+            "status": match.get("status"),
+            "price": match.get("price"),
+            "files": match.get("files"),
+            "all_files_present": match.get("all_files_present"),
+            "note": raw.get("note"),
+            "last_updated": raw.get("last_updated"),
+        }
+        lid = match.get("listing_id")
+        if lid:
+            try:
+                listing = EtsyAPIClient().get_listing(int(lid))
+                result["etsy"] = {
+                    "listing_id": listing.get("listing_id", lid),
+                    "title": listing.get("title", ""),
+                    "state": listing.get("state", ""),
+                    "price": _price_float(listing.get("price")),
+                    "views": listing.get("views", 0),
+                    "num_favorers": listing.get("num_favorers", 0),
+                    "tags": listing.get("tags", []),
+                    "url": listing.get("url") or f"https://www.etsy.com/listing/{listing.get('listing_id', lid)}",
+                }
+            except Exception as exc:
+                result["etsy_fetch_error"] = str(exc)
+        else:
+            result["etsy"] = None
+            result["etsy_note"] = "No etsy_listing_id on this catalog entry -- not yet published, or not linked."
+        return result
+
+    if len(candidates) > 1:
+        return {
+            "found": False,
+            "identifier": ident,
+            "note": f"{len(candidates)} products match '{ident}' by name -- ask which one before answering.",
+            "candidates": [{"product_id": r.get("id"), "name": r.get("title")} for r in candidates[:8]],
+        }
+
+    if ident.isdigit():
+        # Not in the local catalog -- still try Etsy directly so an un-catalogued
+        # or newly-created listing is never reported as unknown.
+        try:
+            listing = EtsyAPIClient().get_listing(int(ident))
+        except EtsyAPIError as exc:
+            if getattr(exc, "status", None) == 404:
+                return {
+                    "found": False,
+                    "identifier": ident,
+                    "note": (
+                        "No match in the product catalog by product_id/listing_id/name, and Etsy "
+                        f"returned 404 for listing_id {ident} -- this ID doesn't exist on the shop "
+                        "in any state."
+                    ),
+                }
+            return {"found": False, "identifier": ident, "error": f"Etsy: {exc}"}
+        except Exception as exc:
+            return {"found": False, "identifier": ident, "error": str(exc)}
+        return {
+            "found": True,
+            "in_catalog": False,
+            "listing_id": listing.get("listing_id", ident),
+            "name": listing.get("title", ""),
+            "state": listing.get("state", ""),
+            "price": _price_float(listing.get("price")),
+            "tags": listing.get("tags", []),
+            "description": (listing.get("description", "") or "")[:1500],
+            "note": (
+                "Found on Etsy but not in data/product_catalog.json -- likely un-catalogued or "
+                "a duplicate-ID remap (see CLAUDE.md's dp_listing_map.json notes)."
+            ),
+        }
+
+    return {
+        "found": False,
+        "identifier": ident,
+        "note": "No match by product_id, listing_id, or name substring in the product catalog.",
+    }
+
+
 def _execute_agent_tool(name: str, tool_input: dict) -> dict:
     """Run a CEO-agent tool and return a JSON-serializable result. Read-only."""
     try:
@@ -3730,6 +3891,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "description": (listing.get("description", "") or "")[:1500],
                 "url": listing.get("url") or f"https://www.etsy.com/listing/{listing.get('listing_id', lid)}",
             }
+        if name == "get_product":
+            return _resolve_product((tool_input or {}).get("identifier", ""))
         if name == "stage_action":
             ti = tool_input or {}
             payload = {"listing_id": ti.get("listing_id")}
