@@ -5480,6 +5480,16 @@ function sendMsg(sourceId) {
   bot.textContent = '';
   if (wsReady) { ws.send(JSON.stringify({message:text, session:CHAT_SESSION})); }
   else { pendingMsg = text; if(!ws) initWS(); }
+  // 2026-07-30 (Scott: "I cannot enter more than one thing into chat... after
+  // Frank responds I can no longer add to the chat") -- reproduced directly:
+  // tapping the round send button moves browser focus TO THE BUTTON (clicking
+  // an Enter keypress leaves focus on the input, but a mouse/touch click on a
+  // <button> always steals it), and nothing ever gave it back. On mobile that
+  // also dismisses the on-screen keyboard, so continuing to type after tapping
+  // Send silently went nowhere until the input was re-tapped by hand. Refocus
+  // synchronously, in the same user-gesture call stack this function already
+  // runs in, so it works whether the turn was sent via Enter or a tap/click.
+  inp.focus();
 }
 function sendChip(el) { document.getElementById('chat-input').value = el.textContent; sendMsg(); }
 document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });

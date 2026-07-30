@@ -517,6 +517,40 @@ async def _run_browser_checks() -> None:
             printer_modal_closed = await page.evaluate("() => document.body.classList.contains('metric-detail-open')")
             check(not printer_modal_closed, "Clicking the backdrop must close the P1S detail modal")
 
+            # ── Chat: sendMsg() must refocus the input after every send (2026-07-30) ──
+            # Scott: "I cannot enter more than one thing into chat. After Frank responds
+            # I can no longer add to the chat." Reproduced directly: clicking the round
+            # send button (as opposed to pressing Enter, which leaves focus on the input
+            # naturally) moves browser focus onto the BUTTON, and nothing ever gave it
+            # back -- on mobile this also dismisses the on-screen keyboard. Simulates a
+            # full turn (no live model in this environment) by hand-firing the exact
+            # ws.onmessage events the real server sends, then asserts focus lands back
+            # on #chat-input and a keystroke typed WITHOUT re-clicking the field lands
+            # in its value -- exactly the repro that caught this bug.
+            await page.evaluate("showScreen('cmd')")
+            await page.fill("#chat-input", "first message")
+            await page.evaluate("""() => {
+                sendMsg();
+                ws.onmessage({data: JSON.stringify({type:'chunk', content:'Hello.'})});
+                ws.onmessage({data: JSON.stringify({type:'done'})});
+            }""")
+            await page.click("#chat-input")  # first click is legitimate -- this simulates the user's OWN first turn, not the bug
+            await page.fill("#chat-input", "second message via send button")
+            await page.click("#chat-send")
+            focus_after_send = await page.evaluate("document.activeElement && document.activeElement.id")
+            check(focus_after_send == "chat-input", f"clicking #chat-send must return focus to #chat-input, got focus on: {focus_after_send}")
+            await page.evaluate("""() => {
+                ws.onmessage({data: JSON.stringify({type:'chunk', content:'reply'})});
+                ws.onmessage({data: JSON.stringify({type:'done'})});
+            }""")
+            await page.wait_for_timeout(100)
+            # Type WITHOUT re-clicking the input first -- this is the exact user action
+            # that silently went nowhere before the fix.
+            await page.keyboard.type("third message typed without reclicking", delay=10)
+            third_msg_value = await page.evaluate("document.getElementById('chat-input').value")
+            check(third_msg_value == "third message typed without reclicking",
+                  f"typing immediately after a response must land in #chat-input without a manual re-click, got: {third_msg_value!r}")
+
             # Approvals batch-threshold banner -- stub _pendingActions with 11
             # same-type items (over the 10-item safety rail) and confirm the
             # computed warning banner appears; then confirm it's absent with a
