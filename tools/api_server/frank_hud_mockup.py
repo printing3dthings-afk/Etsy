@@ -700,11 +700,18 @@ body.is-mobile #alert-dropdown{
 .dep-pill .dep-fail{font-size:9px;color:var(--muted)}
 
 
-.ss-status{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:var(--r-md);display:inline-block;margin-bottom:8px}
+/* 2026-07-30 (Scott: sidebar cards too small to read comfortably) -- 11px
+   bumped to the 12-14px range across .ss-status/.ss-row (Star Seller, Ads/
+   ROAS, COGS, Printer all share these two classes), with matching padding
+   so the larger text isn't cramped against its own row edges. Scoped to
+   these two classes rather than the shared .panel container, which is also
+   used by unrelated panels (chat, left-column system health) this wasn't
+   about. */
+.ss-status{font-size:12px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:var(--r-md);display:inline-block;margin-bottom:8px}
 .ss-status.on_track{background:rgba(42,170,100,.18);color:var(--green)}
 .ss-status.building{background:rgba(196,160,53,.18);color:var(--gold)}
 .ss-status.at_risk{background:rgba(200,60,60,.18);color:var(--red)}
-.ss-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.ss-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 .ss-row:last-child{border-bottom:none}
 .ss-label{color:var(--muted)}
 .ss-val{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
@@ -788,7 +795,13 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
    (see .col-left hiding above), and a narrower bubble cap left more of
    that new width unused as blank margin beside every message. */
 .lc-bubble{max-width:85%;padding:10px 14px;border-radius:var(--r-lg);font-size:13px;line-height:1.5;word-break:break-word;box-shadow:var(--card-shadow)}
-.lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
+/* 2026-07-30 (Scott: "orange chat bubbles"): a flat --gold fill read as loud
+   and, on warm-toned themes, low-contrast against the gold-on-gold panel
+   underneath. Mirrors the bot bubble's own accent-border-on-glass pattern
+   below instead of a solid fill -- same gold/cyan branding, less visual
+   weight, and it now reads as a matched pair with the bot bubble rather than
+   two unrelated treatments. */
+.lc-bubble.user{align-self:flex-end;background:var(--panel2);border:1px solid var(--gold);border-right-width:3px;color:var(--text);border-bottom-right-radius:4px}
 /* 2026-07-22 chat redesign: bot bubbles pick up a cyan accent border -- the chat
    panel previously used zero cyan anywhere (gold for the user + flat panel-gray
    for the bot), which was the concrete cause of it reading as flat/generic despite
@@ -818,8 +831,12 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 .lc-chip{padding:7px 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
 .lc-chip:active{border-color:var(--gold);color:var(--gold)}
 .lc-input-row{display:flex;gap:8px;padding:10px 2px 0;border-top:1px solid var(--border);flex-shrink:0}
-#chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-pill);padding:10px 16px;color:var(--text);font-size:14px;outline:none}
-#chat-input:focus{border-color:var(--gold)}
+/* Dark glass treatment (2026-07-30, Scott: input read as a plain white box on
+   light themes since it used --panel2, which flips light-colored there).
+   rgba(0,0,0,.28)+blur stays a consistent dark glass pane regardless of the
+   active theme instead of tracking --panel2's per-theme lightness. */
+#chat-input{flex:1;background:rgba(0,0,0,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--r-pill);padding:10px 16px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+#chat-input:focus{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(96,220,255,.35)}
 #chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* Voice-mode entry point inside the chat input row (2026-07-22 Ask-tab redesign) --
