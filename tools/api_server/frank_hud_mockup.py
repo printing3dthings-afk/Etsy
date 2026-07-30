@@ -853,7 +853,7 @@ body.is-mobile #chat-voice-btn{display:flex}
    (initOrbGL()) -- duplicating that render loop just for a static header label
    would be wasted GPU cost for no visual gain here. */
 .mobile-shop-header{display:none}
-body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:14px 2px 8px;font-family:var(--font-display);color:var(--cyan);font-size:24px;font-weight:800;letter-spacing:.3px}
+body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:14px 2px 8px;font-family:var(--font-display);color:var(--cyan);font-size:30px;font-weight:800;letter-spacing:.3px}
 /* Phone "Ask" tab (#orb-view) has no chat transcript, just the orb -- so Scott can
    still type to %%AGENT_SHORT%% even when voice isn't practical (loud room, no mic
    permission, etc). Same #chat-input/#chat-send visual treatment, own IDs since a
@@ -1318,6 +1318,16 @@ body.is-mobile.phone-panel #phone-body{
 body.is-mobile.phone-panel .main,
 body.is-mobile.phone-panel .hdr-logo,
 body.is-mobile.phone-panel .hdr-bar{display:none !important}
+/* 2026-07-30 (Home-screen UX audit, Scott: "the top is not accessible") -- the desktop
+   header (search bar, Command Center link, bell/help/gear icons, operator chip) was
+   only hidden under .phone-panel (the Ask/Approvals/Today/Create/More tab-bar
+   screens). Home and every other screen reached via phoneOpenScreen() instead gets
+   .phone-screen-open, which this rule never covered -- so on Home the full desktop
+   header rendered at mobile width and overflowed off both edges of the screen,
+   unreachable. .main must stay visible here (unlike .phone-panel above) since
+   phoneOpenScreen()-routed screens (#screen-home, #screen-cmd, etc.) live inside it. */
+body.is-mobile.phone-screen-open .hdr-logo,
+body.is-mobile.phone-screen-open .hdr-bar{display:none !important}
 .pp{display:none}
 /* 2026-07-23: was a flat display:none->block toggle with zero animation, unlike
    .screen.active's screen-in fade/slide (line 714) -- confirmed via direct codebase
@@ -1338,7 +1348,7 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .home-hero-ic{font-size:38px;color:var(--cyan);line-height:1}
 .home-hero-title{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);margin-top:8px}
 .home-hero-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
-#home-greeting{font-size:14px;font-weight:600;color:var(--text);text-align:center;padding:0 2px 10px;opacity:.85}
+#home-greeting{font-size:16px;font-weight:600;color:var(--text);text-align:center;padding:0 2px 10px;opacity:.85}
 .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 2px}
 .home-tile{position:relative;background:var(--panel);border:1px solid var(--border);
   border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:20px 10px;text-align:center;

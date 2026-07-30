@@ -2630,6 +2630,28 @@ async def _run_browser_checks() -> None:
             check(badge_state.get("htText") == "3" and badge_state.get("htDisplay") == "flex",
                   f"home-today-badge should mirror the high-severity today count: {badge_state}")
 
+            # ── Desktop header must not leak through on Home (2026-07-30, Scott:
+            # "the top is not accessible") -- .hdr-bar/.hdr-logo were only hidden
+            # under body.phone-panel (the Ask/Approvals/Today/Create/More tab-bar
+            # screens); Home is reached via phoneOpenScreen() instead, which sets
+            # .phone-screen-open, not .phone-panel, so the desktop header (search,
+            # Command Center link, bell/help/gear, operator chip) rendered at mobile
+            # width and overflowed off both edges, unreachable. Confirms both the
+            # header is actually hidden AND the page has zero horizontal overflow. ──
+            header_state = await page.evaluate("""() => ({
+                bodyClasses: document.body.className,
+                hdrBarDisplay: getComputedStyle(document.querySelector('.hdr-bar')).display,
+                hdrLogoDisplay: getComputedStyle(document.querySelector('.hdr-logo')).display,
+                scrollWidth: document.documentElement.scrollWidth,
+                clientWidth: document.documentElement.clientWidth,
+            })""")
+            check("phone-screen-open" in header_state.get("bodyClasses", ""),
+                  f"sanity check -- Home should be in the phone-screen-open state this test targets: {header_state}")
+            check(header_state.get("hdrBarDisplay") == "none", f"desktop .hdr-bar must be hidden on Home: {header_state}")
+            check(header_state.get("hdrLogoDisplay") == "none", f"desktop .hdr-logo must be hidden on Home: {header_state}")
+            check(header_state.get("scrollWidth") == header_state.get("clientWidth"),
+                  f"Home must not cause horizontal overflow at mobile width: {header_state}")
+
             # Navigating away restores the normal tab bar, hides the ticker, and
             # reveals the persistent return-to-Home button.
             away_state = await page.evaluate("""() => {
