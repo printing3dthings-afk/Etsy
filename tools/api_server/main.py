@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "9832972-v276"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "454c3db-v277"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3697,8 +3697,22 @@ def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
         cwd=str(ROOT),
     )
     out = (result.stdout + "\n" + result.stderr).strip()
-    if len(out) > 2000:
-        out = out[:1900] + "\n…[output truncated]"
+    # 2026-07-30 (Scott: ran qc_sweep + listing_integrity_check from Workflows,
+    # "it said it ran but nothing was caught"): both scripts print their real
+    # verdict LAST (qc_sweep's "RESULT: N FAIL/WARN/PASS" line, listing_integrity_
+    # check's "SUMMARY:" block) -- but this used to keep only the FIRST ~1900
+    # chars of stdout+stderr. Confirmed live: qc_sweep's output is already
+    # ~2800 chars against a small local subset, so the verdict line was being
+    # cut off and replaced with "[output truncated]" even in the small case --
+    # against Scott's real ~176-product catalog it's far larger, so this was
+    # ALWAYS true, not an edge case. A real FAIL/WARN always read as a clean run.
+    # Now keeps a head chunk for context plus the FULL tail, so the actual
+    # verdict is never lost regardless of total output length.
+    _MAX_OUT, _TAIL_KEEP = 12000, 4000
+    if len(out) > _MAX_OUT:
+        head, tail = out[:_MAX_OUT - _TAIL_KEEP], out[-_TAIL_KEEP:]
+        omitted = len(out) - len(head) - len(tail)
+        out = f"{head}\n…[{omitted} chars omitted — verdict/summary preserved below]…\n{tail}"
     return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
 
 
