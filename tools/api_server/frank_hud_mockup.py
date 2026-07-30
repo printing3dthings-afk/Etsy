@@ -1762,7 +1762,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           </div>
           <div id="chat-speaking-indicator" aria-live="polite"><span class="csi-dot"></span><span class="csi-dot"></span><span class="csi-dot"></span>%%AGENT_SHORT%% is speaking…</div>
           <div class="lc-input-row">
-            <input id="chat-input" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off" aria-label="Message">
+            <input id="chat-input" name="chat-message" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off" aria-label="Message">
             <button id="chat-voice-btn" onclick="openFrankPopup()" aria-label="Voice mode">
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             </button>
