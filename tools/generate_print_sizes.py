@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 generate_print_sizes.py
 For every base art file (DP1000–DP1057, matching ^DP1\d+\.jpg$), create a
 multi-size print ZIP containing all standard print sizes at 300 DPI.

@@ -3211,7 +3211,7 @@ function _skeletonCards(n, kind) {
 // Handles plain integers and "$123.45"-style currency; anything else (e.g.
 // show()'s '—' placeholder for a null metric) is set directly, no animation.
 function _animateCountUp(el, targetText) {
-  const m = String(targetText).match(/^(\$?)(-?[\d,]+(?:\.\d+)?)$/);
+  const m = String(targetText).match(/^(\\$?)(-?[\\d,]+(?:\\.\\d+)?)$/);
   if (!m || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
     el.textContent = targetText;
     return;
@@ -5428,7 +5428,7 @@ function _renderMarkdownLite(text) {
   const lines = esc(text).split('\\n');
   let html = '', inList = false;
   for (const line of lines) {
-    const m = /^[-*]\s+(.*)$/.exec(line);
+    const m = /^[-*]\\s+(.*)$/.exec(line);
     if (m) {
       if (!inList) { html += '<ul class="lc-md-list">'; inList = true; }
       html += '<li>' + m[1] + '</li>';
@@ -5438,7 +5438,7 @@ function _renderMarkdownLite(text) {
     }
   }
   if (inList) html += '</ul>';
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
   html = html.replace(/`([^`]+?)`/g, '<code>$1</code>');
   return html;
 }
@@ -8761,10 +8761,10 @@ function _hubZipEntryUrl(f, entryName){
 }
 function _hubFileIcon(name){
   const n=(name||'').toLowerCase();
-  if(n.match(/\.(png|jpe?g|gif|webp|svg)$/)) return '🖼️';
+  if(n.match(/\\.(png|jpe?g|gif|webp|svg)$/)) return '🖼️';
   if(n.endsWith('.pdf')) return '📕';
   if(n.endsWith('.zip')) return '🗂️';
-  if(n.match(/\.(txt|md)$/)) return '📃';
+  if(n.match(/\\.(txt|md)$/)) return '📃';
   return '📄';
 }
 function toggleZip(id, btn){

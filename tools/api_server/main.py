@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import codecs
 import hashlib
 import inspect
 import io
@@ -24,6 +25,7 @@ import os
 import random
 import re as _re
 import secrets
+import shlex
 import shutil
 import subprocess
 import sys
@@ -620,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4ec5e9a-v268"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2c8be37-v269"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4712,6 +4714,13 @@ def api_run_command(request: Request, id: str = ""):
         return StreamingResponse(_empty(), media_type="text/event-stream")
 
     cmd_args = shlex.split(cmd)
+    # Same fix as command_center.py's own run_command() (2026-07-29 audit) --
+    # this is a separate, near-duplicate copy of that streaming-subprocess
+    # logic used specifically for the Railway-hosted /cmd page, and had the
+    # identical bug: a mismatched python3 resolved on PATH vs. the one
+    # actually running this server.
+    if cmd_args and cmd_args[0] in ("python3", "python", "./venv/bin/python3", "./venv/bin/python"):
+        cmd_args[0] = sys.executable
 
     def generate():
         import select as sel
@@ -4726,13 +4735,24 @@ def api_run_command(request: Request, id: str = ""):
         )
         fds = {proc.stdout.fileno(): False, proc.stderr.fileno(): True}
         open_fds = set(fds.keys())
+        # Incremental decoder per fd -- a raw os.read(fd, 4096).decode(errors=
+        # "replace") corrupts multibyte UTF-8 characters (emoji, curly quotes)
+        # that land split across two reads into `` replacement characters.
+        decoders = {fd: codecs.getincrementaldecoder("utf-8")(errors="replace") for fd in open_fds}
         while open_fds:
             readable, _, _ = sel.select(list(open_fds), [], [], 0.1)
             for fd in readable:
                 is_err = fds[fd]
-                line = os.read(fd, 4096).decode("utf-8", errors="replace")
-                if not line:
+                chunk = os.read(fd, 4096)
+                if not chunk:
+                    tail = decoders[fd].decode(b"", final=True)
+                    if tail:
+                        payload = json.dumps({"line": tail, "err": is_err})
+                        yield f"data: {payload}\n\n"
                     open_fds.discard(fd)
+                    continue
+                line = decoders[fd].decode(chunk)
+                if not line:
                     continue
                 for ln in line.splitlines(keepends=True):
                     payload = json.dumps({"line": ln, "err": is_err})

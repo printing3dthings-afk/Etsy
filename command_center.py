@@ -10,8 +10,10 @@ Cloud:  deployed to Railway       →  https://your-app.up.railway.app
 
 import subprocess
 import os
+import sys
 import json
 import io
+import codecs
 import secrets
 import shlex
 from flask import Flask, Response, request, render_template_string, session, redirect, jsonify
@@ -853,7 +855,7 @@ HTML = """<!DOCTYPE html>
               🔒 Local Only
             </button>
             {% else %}
-            <button class="btn-run" id="btn-run-{{ cmd.id }}" onclick="runCmd('{{ cmd.id }}', '{{ cmd.label | replace("'", "\'") }}', '{{ section.color }}', this)">
+            <button class="btn-run" id="btn-run-{{ cmd.id }}" data-cmd-id="{{ cmd.id }}" data-cmd-label="{{ cmd.label }}" onclick="runCmd(this)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               Execute
             </button>
@@ -988,7 +990,7 @@ function copyOutput() {
 }
 
 function clearOutput() {
-  document.getElementById('output-body').innerHTML = '<span class="out-info">Console cleared.</span>\n';
+  document.getElementById('output-body').innerHTML = '<span class="out-info">Console cleared.</span>\\n';
 }
 
 function toggleFullscreen() {
@@ -996,7 +998,14 @@ function toggleFullscreen() {
   panel.classList.toggle('fullscreen');
 }
 
-function runCmd(id, label, color, btn) {
+function runCmd(btn) {
+  // Read the command id/label off the button's own data attributes rather than
+  // interpolating them into the onclick="" JS string -- a label containing an
+  // apostrophe used to break out of the single-quoted runCmd('...') call. HTML
+  // attribute escaping (Jinja2's autoescape, not hand-rolled JS-string escaping)
+  // is what actually keeps this safe; .dataset gives back the plain decoded text.
+  const id = btn.dataset.cmdId;
+  const label = btn.dataset.cmdLabel;
   const panel = document.getElementById('output-panel');
   const body = document.getElementById('output-body');
   const title = document.getElementById('output-title');
@@ -1020,7 +1029,7 @@ function runCmd(id, label, color, btn) {
   btn.classList.add('running');
   btn.disabled = true;
 
-  body.innerHTML = '<span class="out-info">🚀 Initializing task: ' + label + '\n$ ' + cmdToRun + '\n\n</span>';
+  body.innerHTML = '<span class="out-info">🚀 Initializing task: ' + label + '\\n$ ' + cmdToRun + '\\n\\n</span>';
   title.textContent = 'Executing: ' + label;
   panel.classList.add('open');
   body.scrollTop = 0;
@@ -1189,6 +1198,16 @@ def run_command():
                         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
     cmd_args = shlex.split(cmd)
+    # Every COMMANDS entry hardcodes a literal "python3" (a couple hardcode
+    # "./venv/bin/python3") -- if command_center.py itself is running under a
+    # venv but the subprocess resolves a *different* python3 first on PATH
+    # (or the venv isn't active for whatever spawned this process), the child
+    # ModuleNotFoundErrors on packages that are only installed in this venv
+    # (paho-mqtt, openai, etc). sys.executable is definitionally "the
+    # interpreter currently running this code" -- swapping it in guarantees
+    # the subprocess always matches, regardless of PATH/activation state.
+    if cmd_args and cmd_args[0] in ("python3", "python", "./venv/bin/python3", "./venv/bin/python"):
+        cmd_args[0] = sys.executable
 
     def generate():
         proc = subprocess.Popen(
@@ -1205,14 +1224,29 @@ def run_command():
 
         fds = {proc.stdout.fileno(): False, proc.stderr.fileno(): True}
         open_fds = set(fds.keys())
+        # Multibyte UTF-8 characters (emoji, curly quotes, etc.) routinely land
+        # split across two 4096-byte os.read() calls -- decoding each chunk in
+        # isolation with errors="replace" corrupts them into ``. An incremental
+        # decoder per fd buffers a trailing partial sequence until the next
+        # read completes it, so streamed output matches what the subprocess
+        # actually printed.
+        decoders = {fd: codecs.getincrementaldecoder("utf-8")(errors="replace") for fd in open_fds}
 
         while open_fds:
             readable, _, _ = sel.select(list(open_fds), [], [], 0.1)
             for fd in readable:
                 is_err = fds[fd]
-                line = os.read(fd, 4096).decode("utf-8", errors="replace")
-                if not line:
+                chunk = os.read(fd, 4096)
+                if not chunk:
+                    # Flush any final partial sequence before closing this fd.
+                    tail = decoders[fd].decode(b"", final=True)
+                    if tail:
+                        payload = json.dumps({"line": tail, "err": is_err})
+                        yield f"data: {payload}\n\n"
                     open_fds.discard(fd)
+                    continue
+                line = decoders[fd].decode(chunk)
+                if not line:
                     continue
                 for ln in line.splitlines(keepends=True):
                     payload = json.dumps({"line": ln, "err": is_err})
