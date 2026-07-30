@@ -1,9 +1,10 @@
 """
-Tests for the Reference Photos library (2026-07-22 Create-screen redesign) --
-upload / list / delete round-trip for Scott's own inspiration/style-reference
-images. Deliberately scoped to upload + organize + browse + delete only this
-round; nothing here is wired into AI generation (see the module docstring
-above upload_reference_image in main.py).
+Tests for the Reference Photos library (2026-07-22 Create-screen redesign,
+extended 2026-07-30) -- upload / list / delete round-trip for Scott's own
+inspiration/style-reference images, plus _reference_image_style_notes() and
+its wiring into the Wall Art new-art build path (previously the library was
+upload-only with nothing downstream reading it -- Scott reported this live:
+"when I uploaded one in there it didn't do anything").
 
 Self-contained TestClient-against-the-real-app pattern, same as
 tests/test_produce_qc.py. Run: python tests/test_reference_images.py
@@ -240,6 +241,91 @@ def test_reference_images_root_registered_in_file_labels():
     # plan's §3 -- a "reference_images" -> "Reference Photos" label must exist.
     check("reference_images" in server._FILE_ROOTS,
           "reference_images must be a registered durable root")
+
+
+def test_style_notes_unknown_id_errors():
+    root, meta_path = _isolated_roots()
+    with patch.dict(server._FILE_ROOTS, {"reference_images": root}), \
+         patch.object(server, "_REFERENCE_IMAGES_META_PATH", meta_path):
+        notes, err = server._reference_image_style_notes("not-a-real-id")
+        check(notes is None, f"unknown id must not return notes, got {notes!r}")
+        check(bool(err) and "not found" in err.lower(), f"expected a not-found error, got {err!r}")
+
+
+def test_style_notes_caches_after_first_vision_call():
+    root, meta_path = _isolated_roots()
+    with patch.dict(server._FILE_ROOTS, {"reference_images": root}), \
+         patch.object(server, "_REFERENCE_IMAGES_META_PATH", meta_path):
+        c = _logged_in_client()
+        entry = c.post(
+            "/api/reference-images/upload",
+            params={"filename": "moodboard.png", "category": "wall_art"},
+            content=_png_bytes(),
+            headers={"Content-Type": "application/octet-stream"},
+        ).json()
+
+        import image_gen
+        with patch.object(image_gen, "describe_reference_style", return_value="warm terracotta tones, boho watercolor") as m:
+            notes1, err1 = server._reference_image_style_notes(entry["id"])
+            check(err1 is None, f"expected no error, got {err1}")
+            check(notes1 == "warm terracotta tones, boho watercolor", f"got {notes1!r}")
+            check(m.call_count == 1, f"expected exactly one vision call, got {m.call_count}")
+
+            notes2, err2 = server._reference_image_style_notes(entry["id"])
+            check(notes2 == notes1, "second call should return the same cached notes")
+            check(m.call_count == 1, f"second call must be served from cache, not a new vision call, got {m.call_count} calls")
+
+        # Cache actually persisted to the meta sidecar, not just in-memory.
+        entries = server._reference_images_meta()
+        stored = next(e for e in entries if e["id"] == entry["id"])
+        check(stored.get("style_notes") == notes1, f"style_notes must be persisted, got {stored}")
+
+
+def test_build_product_wall_art_folds_in_reference_style_notes():
+    # The actual bug Scott reported: uploading a reference photo did nothing.
+    # Confirms a wall_art new-art build with reference_image_id set actually
+    # appends the style notes to the --description arg the subprocess receives.
+    root, meta_path = _isolated_roots()
+    with patch.dict(server._FILE_ROOTS, {"reference_images": root}), \
+         patch.object(server, "_REFERENCE_IMAGES_META_PATH", meta_path):
+        c = _logged_in_client()
+        entry = c.post(
+            "/api/reference-images/upload",
+            params={"filename": "inspo.png", "category": "wall_art"},
+            content=_png_bytes(),
+            headers={"Content-Type": "application/octet-stream"},
+        ).json()
+
+        import image_gen
+        captured = {}
+
+        class _FakeProc:
+            pid = 424242
+            def wait(self):
+                return 0
+
+        def _fake_popen(args, **kwargs):
+            captured["args"] = args
+            return _FakeProc()
+
+        with patch.object(image_gen, "describe_reference_style", return_value="soft sage green, minimal line art"), \
+             patch.object(server, "_resolve_art_engine", return_value=("gemini", None)), \
+             patch("generate_print_sizes.UPSCALED_DIR", root), \
+             patch("generate_print_sizes.PRODUCT_FILES_DIR", root), \
+             patch.object(server.subprocess, "Popen", side_effect=_fake_popen), \
+             patch.object(server.threading, "Thread") as mock_thread:
+            result = server._produce_build_product({
+                "pid": "WA_REFTEST01", "category": "wall_art",
+                "description": "a sun motif", "reference_image_id": entry["id"],
+            })
+        check(result.get("started") is True, f"expected the build to start, got {result}")
+        check("args" in captured, "subprocess.Popen must have been called")
+        args = captured.get("args", [])
+        check("--description" in args, f"expected --description in subprocess args, got {args}")
+        desc_arg = args[args.index("--description") + 1]
+        check("soft sage green, minimal line art" in desc_arg,
+              f"the reference image's style notes must be folded into the description, got {desc_arg!r}")
+        check("a sun motif" in desc_arg, f"the original description must still be present, got {desc_arg!r}")
 
 
 def run() -> None:

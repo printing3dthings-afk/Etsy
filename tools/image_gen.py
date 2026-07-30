@@ -285,6 +285,90 @@ def gemini_extract_text(design_path) -> str:
     return (resp.text or "").strip()
 
 
+def describe_reference_style(image_path) -> str:
+    """One vision call that turns a Scott-uploaded inspiration/reference photo
+    into plain-language style notes (palette, mood, motifs, composition) that
+    can be prepended to a text-to-image prompt as guidance -- NOT a literal
+    reproduction instruction. Added 2026-07-30 for the Reference Photos
+    library (main.py's /api/reference-images/*), which previously stored
+    uploads but never fed them into any generation call. Same client/model
+    plumbing as gemini_extract_text() above."""
+    from google import genai
+    from google.genai import types
+    p = Path(image_path)
+    mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+    client = genai.Client(api_key=_gemini_key())
+    resp = _gemini_call_with_retry(lambda: client.models.generate_content(
+        model=_GEMINI_TEXT_MODEL,
+        contents=[
+            "This is a style/inspiration reference photo for a product design. "
+            "Describe, in 2-4 short sentences, the visual style a designer should "
+            "borrow from it: dominant colors (as plain color names, not hex), "
+            "overall mood/aesthetic, recurring motifs or subject matter, and "
+            "composition/layout. Do not describe it as a literal scene to "
+            "reproduce -- describe it as style guidance for a NEW, different "
+            "design. Output only the description, nothing else.",
+            types.Part.from_bytes(data=p.read_bytes(), mime_type=mime),
+        ],
+    ))
+    return (resp.text or "").strip()
+
+
+def verify_original_art(image_path, prompt: str) -> dict:
+    """QA check for a brand-new AI-generated artwork (planner cover, wall art
+    master, coloring page) against the TEXT PROMPT it was generated from --
+    there is no source design file to compare against here, unlike
+    gemini_verify_render()/verify_render() below, which check a rendered photo
+    against a real product file. Added 2026-07-30 as the first step of routing
+    original product-art generation through the same self-verifying pattern
+    already proven for listing photos (tools/listing_photo_pipeline.py),
+    instead of a single-shot generate-and-hope call.
+
+    Catches the failure modes that slip through completely unchecked today:
+      1. Garbled/gibberish text baked into the image (image models routinely
+         invent nonsense glyphs even when the prompt says "no text")
+      2. A broken multi-panel/collage grid instead of one cohesive artwork
+      3. Wrong subject matter entirely (the model ignored the prompt)
+    Returns {"pass": bool, "issues": [str, ...]}."""
+    from google import genai
+    from google.genai import types
+    p = Path(image_path)
+    mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+    client = genai.Client(api_key=_gemini_key())
+    check_prompt = (
+        "You are a QA inspector for AI-generated product art (wall art prints, "
+        "planner covers, coloring pages). This image was generated from the "
+        f"following prompt:\n\n---\n{prompt}\n---\n\n"
+        "Check ONLY for these THREE failure types -- ignore everything else "
+        "(artistic interpretation, exact color shade, composition choices are "
+        "all fine and expected to vary from the prompt):\n"
+        "1. GARBLED TEXT: any word, letter cluster, or number baked into the "
+        "image that is nonsensical, misspelled gibberish, or malformed "
+        "(image models frequently invent fake text-like scribbles). If the "
+        "prompt did not ask for specific text, ANY text-like marks that "
+        "aren't clean readable words also count as a fail.\n"
+        "2. BROKEN COMPOSITION: the image is split into multiple disconnected "
+        "panels/tiles/frames like a broken collage grid, instead of one "
+        "single cohesive piece of art.\n"
+        "3. WRONG SUBJECT: the image's subject matter has nothing to do with "
+        "what the prompt described (e.g. prompt asked for a sunflower and the "
+        "image shows a car).\n\n"
+        "Respond with EXACTLY this format, nothing else:\n"
+        "PASS or FAIL\n"
+        "If FAIL, one line per issue starting with '- '."
+    )
+    resp = _gemini_call_with_retry(lambda: client.models.generate_content(
+        model=_GEMINI_TEXT_MODEL,
+        contents=[check_prompt, types.Part.from_bytes(data=p.read_bytes(), mime_type=mime)],
+    ))
+    text = (resp.text or "").strip()
+    passed = text.upper().startswith("PASS")
+    issues = [line.lstrip("- ").strip() for line in text.splitlines()[1:] if line.strip().startswith("-")]
+    if not passed and not issues:
+        issues = [text[:200] or "verification returned no usable response"]
+    return {"pass": passed, "issues": issues}
+
+
 def gemini_verify_render(design_paths: list, render, physics_desc: str = "",
                          facts: str = "") -> dict:
     """Gemini equivalent of listing_photo_pipeline.verify_render(). Uses the exact

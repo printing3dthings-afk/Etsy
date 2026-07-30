@@ -2085,13 +2085,41 @@ def generate_wall_art_master(product_id: str, prompt: str, engine: str | None = 
     Raises ImageGenError (propagated from image_gen.generate_image) or
     RuntimeError (from _upscale_for_print if Pillow is missing) on failure --
     the caller (build_wallart_product.py) is expected to let this exit
-    non-zero rather than silently continue with no source art."""
+    non-zero rather than silently continue with no source art.
+
+    (2026-07-30) Routed through goal_loop.run_until_goal() -- generate, then
+    one vision QA pass (image_gen.verify_original_art()) checking for garbled
+    baked-in text, a broken multi-panel collage, or wrong subject matter, with
+    up to one retry using the specific failures as corrective feedback. This
+    was previously a single-shot generate-and-hope call with zero automated
+    quality check, unlike the listing-photo pipeline's already-proven
+    verify+retry pattern this reuses. If it never passes within the attempt
+    budget, the last attempt is still used (never raises for a QA miss --
+    a real generation error still raises) but a loud warning is printed so a
+    human reviewing the build log knows to double-check it; this matches the
+    existing needs_visual_qc:true flag _produce_build_product() already
+    surfaces to Scott for any wall-art build that generated new AI art."""
     from tools.image_gen import generate_image, PORTRAIT
+    from tools import image_gen as _image_gen
+    from tools.goal_loop import run_until_goal
     _ensure_dirs()
     final_prompt = enrich_prompt_with_medium(prompt, hand_painted_medium)
     raw_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_raw.png")
-    generate_image(final_prompt, raw_path, size=PORTRAIT, quality="high",
-                    output_format="png", engine=engine)
+
+    def _generate(correction: str) -> str:
+        generate_image(final_prompt + correction, raw_path, size=PORTRAIT, quality="high",
+                        output_format="png", engine=engine)
+        return raw_path
+
+    def _verify(candidate_path: str) -> dict:
+        return _image_gen.verify_original_art(candidate_path, final_prompt)
+
+    result = run_until_goal(_generate, _verify, max_attempts=2)
+    if not result.passed:
+        print(f"[generate_wall_art_master] ⚠ {product_id}: automated art QA did not "
+              f"pass after {result.attempts} attempt(s): {result.issues}. Using the last "
+              f"generated image anyway -- review it before publishing.", flush=True)
+
     file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.jpg")
     _upscale_for_print(raw_path, file_path, target_px=3000)  # Gate 1: >=3000px short edge
     return file_path

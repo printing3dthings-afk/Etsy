@@ -35,7 +35,7 @@ Flat lays / collection shots (zero perspective → pixel-perfect, never AI-rende
     build_flat_lay(design_paths, layout, bg_prompt_or_path, out_path)
 """
 
-import re, os, base64, io, json, sys
+import re, os, base64, io, json, sys, tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
@@ -898,11 +898,16 @@ def generate_verified_photo(
     physics: str = "sign_flat",
     max_attempts: int = MAX_ATTEMPTS,
     client=None,
+    engine: str | None = None,
 ) -> PhotoResult:
     # Resolved up front (was computed later, after the OpenAI client was already
     # built unconditionally) so extraction/verification/generation can all branch
     # on it, and so a Gemini-only run never needs to build an OpenAI client at all.
-    _img_engine = os.getenv("IMAGE_ENGINE", "openai").lower().strip()
+    # `engine` lets a caller (e.g. the Create screen's per-call engine picker)
+    # override the IMAGE_ENGINE env default for just this call (2026-07-30 --
+    # this used to be env-only, so the UI's engine dropdown for this exact flow
+    # had no way to actually take effect).
+    _img_engine = (engine or os.getenv("IMAGE_ENGINE", "openai")).lower().strip()
     import image_gen
     # 2026-07-14: this used to be unconditional (`client = client or _client()`),
     # so even engine="gemini" runs still hard-required a funded OpenAI account --
@@ -970,19 +975,39 @@ def generate_verified_photo(
         if _img_engine == "gemini":
             raw = image_gen._gemini_edit_bytes(prompt, list(design_paths))
             return Image.open(io.BytesIO(raw)).convert("RGB")
-        images = [(f"design_{i}.png", _prep(dp), "image/png")
-                  for i, dp in enumerate(design_paths, 1)]
-        resp = client.images.edit(
-            model="gpt-image-1",
-            image=images if n > 1 else images[0],
-            prompt=prompt,
-            size="1024x1024",
-            quality="high",
-            input_fidelity="high",
-            output_format="png",
-        )
-        return Image.open(io.BytesIO(
-            base64.b64decode(resp.data[0].b64_json))).convert("RGB")
+        # Routed through the shared image_gen.edit_image() helper (2026-07-30)
+        # instead of a hand-rolled OpenAI-only multipart call hardcoded to
+        # gpt-image-1 -- that hardcoding meant selecting gpt-image-2 in the UI
+        # silently still generated with gpt-image-1. edit_image() already
+        # branches openai/gpt-image-2 correctly (and raises a clear error for
+        # engine='ideogram', which can't do edit calls) plus gets its existing
+        # retry handling for free. Still pre-shrink each source file with _prep()
+        # first (edit_image() sends raw file bytes with no resizing of its own) --
+        # design_paths can be full-size source art (multi-MB), and this is what
+        # kept multipart upload size/cost sane before this change.
+        tmp_paths: list[Path] = []
+        try:
+            for i, dp in enumerate(design_paths, 1):
+                tfd, tname = tempfile.mkstemp(suffix=f"_in{i}.png")
+                os.close(tfd)
+                tp = Path(tname)
+                tp.write_bytes(_prep(dp).read())
+                tmp_paths.append(tp)
+            out_fd, out_name = tempfile.mkstemp(suffix=".png")
+            os.close(out_fd)
+            out_tmp = Path(out_name)
+            try:
+                image_gen.edit_image(
+                    prompt, tmp_paths, out_tmp,
+                    size=image_gen.SQUARE, quality="high", input_fidelity="high",
+                    engine=_img_engine,
+                )
+                return Image.open(out_tmp).convert("RGB")
+            finally:
+                out_tmp.unlink(missing_ok=True)
+        finally:
+            for tp in tmp_paths:
+                tp.unlink(missing_ok=True)
 
     # run_until_goal() is a generic goal-seeking helper (tools/goal_loop.py)
     # shared by more than just photo generation -- it only tracks pass/issues,

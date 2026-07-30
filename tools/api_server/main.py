@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "454c3db-v277"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "68ab3f5-v278"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9696,18 +9696,27 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
             "title": title_result["title"],
         })
 
-    title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
-    republish_summary = f"Republish listing {listing_id} after Frank's fix ({title_short})"
-    if unfixable_issues:
-        unresolved = "; ".join(i["detail"] for i in unfixable_issues)
-        republish_summary += f" — ⚠️ NOT fully fixed, still needs: {unresolved}"
-    republish_id = await asyncio.to_thread(
-        db.enqueue_action,
-        "publish_listing",
-        republish_summary,
-        {"listing_id": listing_id, "_state_at_staging": listing.get("state")},
-    )
-    staged.append({"type": "publish_listing", "action_id": republish_id})
+    # Only stage a reactivation for listings that are actually inactive --
+    # for an already-active listing, "publish_listing" is a harmless no-op
+    # PATCH (client.update_listing(lid, {"state": "active"}), see
+    # _execute_staged_action), so staging it there just puts a meaningless
+    # "Republish..." approval in front of Scott for a listing that was never
+    # taken down (2026-07-30, this endpoint used to be reachable only from
+    # deactivated listings; the Listings-tab Fix button now offers it on
+    # every listing regardless of state).
+    if listing.get("state") != "active":
+        title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
+        republish_summary = f"Republish listing {listing_id} after Frank's fix ({title_short})"
+        if unfixable_issues:
+            unresolved = "; ".join(i["detail"] for i in unfixable_issues)
+            republish_summary += f" — ⚠️ NOT fully fixed, still needs: {unresolved}"
+        republish_id = await asyncio.to_thread(
+            db.enqueue_action,
+            "publish_listing",
+            republish_summary,
+            {"listing_id": listing_id, "_state_at_staging": listing.get("state")},
+        )
+        staged.append({"type": "publish_listing", "action_id": republish_id})
 
     todo_id = None
     if unfixable_issues:
@@ -11000,6 +11009,7 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
     design_names = body.get("design_paths") or []
     category = (body.get("category") or "sign_flat").strip()
     scene_prompt = (body.get("scene_prompt") or "").strip()
+    engine = (body.get("engine") or "").strip().lower() or None
     # Capped at 2 by default (not the pipeline's own 3) -- this is an interactive,
     # pay-per-call tool (real image-gen API cost per attempt), not an unattended batch
     # script; 2 attempts is a deliberate cost/quality tradeoff for that context.
@@ -11011,6 +11021,13 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
         raise HTTPException(status_code=400, detail="scene_prompt is required")
     if category not in listing_photo_pipeline.PHYSICS:
         raise HTTPException(status_code=400, detail=f"unknown category {category!r}, expected one of {sorted(listing_photo_pipeline.PHYSICS)}")
+    if engine == "ideogram":
+        # This is an edit-style call (real product file(s) as input) -- Ideogram is
+        # generate-only and cannot do edit/input-image calls at all (see
+        # image_gen.edit_image()'s own error for the same case). Fail fast here with
+        # a clear message instead of letting it surface as a generic 500 partway
+        # through generation.
+        raise HTTPException(status_code=400, detail="engine='ideogram' can't be used here — it has no image-edit mode. Choose Standard, gpt-image-2, or Gemini.")
 
     design_paths = []
     for n in design_names:
@@ -11028,7 +11045,7 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
         result = await asyncio.wait_for(
             asyncio.to_thread(
                 listing_photo_pipeline.generate_verified_photo,
-                design_paths, scene_prompt, out_path, category, max_attempts,
+                design_paths, scene_prompt, out_path, category, max_attempts, None, engine,
             ),
             timeout=280,
         )
@@ -11676,6 +11693,16 @@ def _produce_build_product(inp: dict) -> dict:
             engine, eng_err = _resolve_art_engine(inp)
             if eng_err:
                 return {"error": eng_err}
+            # (2026-07-30) Fold in a Reference Photos library selection, if given --
+            # the "library only right now" gap Scott reported (uploading a reference
+            # image did nothing). One cached vision call turns the image into style
+            # notes appended to the prompt as guidance, not a literal copy target.
+            ref_id = str((inp or {}).get("reference_image_id", "")).strip()
+            if ref_id:
+                style_notes, ref_err = _reference_image_style_notes(ref_id)
+                if ref_err:
+                    return {"error": ref_err}
+                description = f"{description}\n\nStyle reference (match this look, not the subject): {style_notes}"
             extra_args = ["--description", description, "--engine", engine]
             reg_name, reg_price = description[:120] or pid, None
             reg_files = [f"data/digital_products/print_zips/{pid}_print_sizes.zip"]
@@ -14911,6 +14938,39 @@ def _write_reference_images_meta(entries: list[dict]) -> None:
     tmp = _REFERENCE_IMAGES_META_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(entries, indent=2))
     tmp.replace(_REFERENCE_IMAGES_META_PATH)
+
+
+def _reference_image_style_notes(ref_id: str) -> tuple[str | None, str | None]:
+    """Resolve a Reference Photos library id into style-guidance text a
+    generation prompt can use (main.py's Reference Photos card previously
+    stored uploads with nothing downstream reading them -- see the "library
+    only right now" disclaimer this replaces, 2026-07-30).
+
+    Runs ONE vision call (image_gen.describe_reference_style()) per reference
+    image, ever -- the resulting caption is cached onto the meta entry
+    (style_notes field) so re-using the same reference on a later build never
+    re-spends the vision API call. Returns (notes, error); never both set.
+    """
+    entries = _reference_images_meta()
+    entry = next((e for e in entries if e.get("id") == ref_id), None)
+    if entry is None:
+        return None, f"reference image {ref_id!r} not found"
+    cached = entry.get("style_notes")
+    if cached:
+        return cached, None
+    img_path = _FILE_ROOTS["reference_images"] / entry["filename"]
+    if not img_path.is_file():
+        return None, f"reference image file missing on this deploy: {entry['filename']}"
+    try:
+        import image_gen
+        notes = image_gen.describe_reference_style(img_path)
+    except Exception as exc:  # noqa: BLE001 — a captioning failure shouldn't block the build
+        return None, f"could not analyze reference image: {exc}"
+    if not notes:
+        return None, "reference image analysis returned nothing"
+    entry["style_notes"] = notes
+    _write_reference_images_meta(entries)
+    return notes, None
 
 
 def _human_size(n: int) -> str:

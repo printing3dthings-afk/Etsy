@@ -66,22 +66,22 @@ def _fake_anthropic_response(text: str):
     return resp
 
 
-def _fake_listing(listing_id: int) -> dict:
+def _fake_listing(listing_id: int, state: str = "inactive") -> dict:
     return {
         "listing_id": listing_id,
         "title": "Some Listing Title",
         "price": {"amount": 1499, "divisor": 100},
         "tags": ["a", "b"],
-        "state": "inactive",
+        "state": state,
     }
 
 
-def _run_request_fix(listing_id: int, manifest: dict, audit_result: dict | None):
+def _run_request_fix(listing_id: int, manifest: dict, audit_result: dict | None, state: str = "inactive"):
     fake_tags = [f"tag {i}" for i in range(13)]
     with patch.object(server, "ANTHROPIC_KEY", "fake-key"), \
          patch.object(server, "_generate_tags_for_listings", return_value=[{"tags": fake_tags}]), \
          patch.object(server, "_anthropic_create", return_value=_fake_anthropic_response("New Title Here")), \
-         patch.object(server, "EtsyAPIClient", return_value=MagicMock(get_listing=lambda lid: _fake_listing(lid))), \
+         patch.object(server, "EtsyAPIClient", return_value=MagicMock(get_listing=lambda lid: _fake_listing(lid, state))), \
          patch.object(lic, "_load_json", return_value=manifest), \
          patch.object(lic, "audit_listing", return_value=audit_result or {}):
         return asyncio.run(server.request_listing_fix(listing_id, body={"instructions": ""}))
@@ -153,6 +153,25 @@ def test_mapped_listing_unfixable_fail_unchanged():
     queued = server.db.get_action(republish["action_id"])
     check("NOT fully fixed" in queued["summary"],
           f"a real unfixable issue should still warn in the republish summary, got: {queued['summary']!r}")
+
+
+def test_active_listing_skips_meaningless_republish_staging():
+    # 2026-07-30: the Listings-tab "Ask Frank to Fix" button used to only
+    # render for inactive/FAIL listings, so this endpoint was never reachable
+    # for an already-active one. Now it's offered on every listing -- for an
+    # active one, staging a "Republish..." action is a no-op PATCH
+    # (client.update_listing(lid, {"state": "active"})) dressed up as a
+    # meaningful approval. Confirms it's skipped entirely rather than shown.
+    listing_id = 9991004
+    manifest = {str(listing_id): {"dp_codes": ["DP1026"], "type": "planner"}}
+    audit_result = {"issues": []}
+    result = _run_request_fix(listing_id, manifest=manifest, audit_result=audit_result, state="active")
+
+    republish = next((s for s in result["staged"] if s["type"] == "publish_listing"), None)
+    check(republish is None,
+          f"an already-active listing should not get a republish action staged, got {result['staged']}")
+    check(result["staged_count"] == 2,
+          f"expected only tags + title staged for an active listing, got {result['staged_count']}: {result}")
 
 
 def run() -> None:

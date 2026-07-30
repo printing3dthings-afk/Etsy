@@ -2338,9 +2338,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <option value="openai">Standard (default · only one with transparent background)</option>
             <option value="gpt-image-2">Alternative — sharper text</option>
             <option value="gemini">Alternative — best product consistency across photos</option>
-            <option value="ideogram">Alternative — best in-image text</option>
           </select>
-          <div style="font-size:10px;color:var(--muted)">Some alternatives need an extra API key set up — Frank tells you if one's missing when you generate. <span id="engines-status"></span></div>
+          <div style="font-size:10px;color:var(--muted)">This is an edit-style call using your real product file as input, so Ideogram (generate-only) isn't offered here. Some alternatives need an extra API key set up — Frank tells you if one's missing when you generate. <span id="engines-status"></span></div>
         </div>
 
         <button class="act-btn primary" style="width:100%;margin-top:10px" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
@@ -2357,7 +2356,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
       <div class="hub-section-title" style="margin-top:18px">Reference Photos</div>
       <div class="hub-card">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Save inspiration and style-reference images here — photos you took, screenshots, things you found on Pinterest — organized by what they're for. This is a library only right now; it doesn't feed into anything Frank generates yet.</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Save inspiration and style-reference images here — photos you took, screenshots, things you found on Pinterest — organized by what they're for. When you build a new Wall Art design below, you can pick one of these to match its visual style. (Wall Art only for now — other categories are library-only until their generators support it.)</div>
 
         <select id="refimg-category" aria-label="What is this photo for?" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
           <option value="digital_planner">Digital Planner</option>
@@ -2495,6 +2494,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div id="product-sheet-title"></div>
     <div id="product-sheet-sub"></div>
     <div id="product-sheet-buttons"></div>
+    <div id="product-sheet-fix-result" style="font-size:12px;margin-top:2px"></div>
     <button class="psheet-btn cancel" onclick="productSheetClose()">Cancel</button>
   </div>
 
@@ -3828,7 +3828,7 @@ const _CREATE_CATEGORIES = {
     // narrower control that only appears inside "+ new one" -- see
     // _renderCategoryPanelHtml()'s usesNewArtDescription branch below.
     icon: '🖼️', label: 'Wall Art', real: true, usesEngine: false,
-    usesNewArtDescription: true,
+    usesNewArtDescription: true, usesReferenceImage: true,
     newArtPlaceholder: 'Describe the wall art you want, e.g. "a boho sun in terracotta and cream watercolor"',
     blurb: 'Every print size a buyer expects, ready to sell — small to large, square, and standard paper sizes, all print-quality.',
     placeholder: 'e.g. WA1030', primaryLabel: 'Build this wall art',
@@ -3871,9 +3871,16 @@ const _CREATE_CATEGORIES = {
 let _createOpenCat = null;
 
 function _engineOptionsHtml(){
+  // These are all pure-generate calls (new cover art / new wall-art master /
+  // new coloring-page theme) -- never an edit/input-image call -- so Ideogram
+  // (generate-only, best in-image text per CLAUDE.md) is safe and useful to
+  // offer here. Added 2026-07-30: it was already backend-approved
+  // (_APPROVED_ART_ENGINES, main.py) but missing from every picker that used
+  // this shared options list.
   return '<option value="gemini" selected>Standard (recommended)</option>'
     + '<option value="openai">Alternative — best for transparent backgrounds</option>'
-    + '<option value="gpt-image-2">Alternative — sharper in-image text</option>';
+    + '<option value="gpt-image-2">Alternative — sharper in-image text</option>'
+    + '<option value="ideogram">Alternative — best in-image text (titles/covers)</option>';
 }
 
 // One "rebuild just this part" row inside a real category's advanced disclosure —
@@ -3962,6 +3969,16 @@ function _renderCategoryPanelHtml(key){
     html += '<textarea id="bx-description" rows="3" placeholder="' + escHtml(cfg.newArtPlaceholder || '') + '" style="width:100%;box-sizing:border-box;margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:13px;resize:vertical"></textarea>';
     html += '<label style="font-size:11px;color:var(--muted);display:block;margin:6px 0 4px">Art style</label>';
     html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
+    // usesReferenceImage (2026-07-30, wall_art only for now): lets a Reference
+    // Photos library upload actually feed into generation -- previously the
+    // library was upload-only with nothing downstream reading it. One vision
+    // call turns the picked image into style notes appended to the prompt;
+    // _createSyncReferencePicker() (called from createOpenCategory()) fills
+    // the options from _refImages, filtered to this category, once loaded.
+    if (cfg.usesReferenceImage) {
+      html += '<label for="create-ref-select" style="font-size:11px;color:var(--muted);display:block;margin:8px 0 4px">Match a reference photo (optional)</label>';
+      html += '<select id="create-ref-select" aria-label="Match a reference photo" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px"><option value="">None — describe the style above</option></select>';
+    }
   }
   html += '<div style="margin-top:6px"><span class="cd-newcode-link" onclick="_createToggleNewCode(false)">← pick from the list instead</span></div></div>';
 
@@ -4099,6 +4116,7 @@ function createOpenCategory(key){
   panel.className = 'create-detail';
   panel.innerHTML = _renderCategoryPanelHtml(key);
   _createSyncProductPicker(key);
+  _createSyncReferencePicker(key);
   // product_video (2026-07-25): #studio-videos-list / #setting-video-engine only
   // exist in the DOM once this panel is open -- the create-screen show hook
   // (SCREEN_LOAD_HOOKS.create) already calls loadStudioVideos()/loadCreateEngines()
@@ -4164,6 +4182,18 @@ function _createSyncProductPicker(key){
     const opt = document.createElement('option');
     opt.value = p.id;
     opt.textContent = p.id + ' — ' + (p.title || '');
+    sel.appendChild(opt);
+  });
+}
+function _createSyncReferencePicker(key){
+  const sel = document.getElementById('create-ref-select');
+  if (!sel) return;
+  while (sel.options.length > 1) sel.remove(1);
+  const items = (_refImages || []).filter(im => im.category === key);
+  items.forEach(im => {
+    const opt = document.createElement('option');
+    opt.value = im.id;
+    opt.textContent = im.description || im.filename;
     sel.appendChild(opt);
   });
 }
@@ -4517,6 +4547,8 @@ async function buildProductRun(){
   const engine=(engEl&&engEl.value)||'gemini';
   const descEl=document.getElementById('bx-description');
   const description=((descEl&&descEl.value)||'').trim();
+  const refEl=document.getElementById('create-ref-select');
+  const referenceImageId=(refEl&&refEl.value)||'';
   const cfg = _CREATE_CATEGORIES[_createOpenCat];
   const autoGen = !!(cfg && cfg.autoGenerateCode);
   if(!pid && !autoGen){
@@ -4547,7 +4579,7 @@ async function buildProductRun(){
     // this live, 2026-07-22: "COLOR01 isn't a configured planner...").
     const r=await fetchWithTimeout(BASE+'/api/produce/build-product', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine, category: _createOpenCat, description})
+      body: JSON.stringify({pid, engine, category: _createOpenCat, description, reference_image_id: referenceImageId})
     }, 30000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
@@ -7879,11 +7911,11 @@ function renderListings() {
       <div class="hub-listing-info">
         <div class="hub-listing-title">${escHtml(l.title)}</div>
         <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
-        ${(l.state==='inactive'||l.manifest_status==='FAIL') ? `<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="event.stopPropagation();openFixListingModal(${l.listing_id})">🔧 Ask %%AGENT_SHORT%% to Fix</button>` : ''}
+        <button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="event.stopPropagation();openFixListingModal(${l.listing_id})">🔧 Ask %%AGENT_SHORT%% to Fix</button>
       </div>
       <div class="hub-listing-price">$${(+l.price||0).toFixed(2)}</div>
     </div>
-    ${(l.state==='inactive'||l.manifest_status==='FAIL') ? `<div id="fix-modal-${l.listing_id}" style="display:none;padding:0 4px"></div>` : ''}
+    <div id="fix-modal-${l.listing_id}" style="display:none;padding:0 4px"></div>
     <div id="hub-detail-${l.listing_id}" class="hub-listing-detail" style="display:none"></div>`).join('');
   el.innerHTML = html;
 }
@@ -8390,6 +8422,7 @@ function openProductFixSheet(p){
   }
   btns += '<button class="psheet-btn" onclick="productSheetOpenFiles(\\'' + p.id + '\\')">🗂 Open in Files</button>';
   document.getElementById('product-sheet-buttons').innerHTML = btns;
+  document.getElementById('product-sheet-fix-result').textContent = '';
   document.body.classList.add('product-sheet-open');
 }
 function openProductInfoSheet(p){
@@ -8399,11 +8432,47 @@ function openProductInfoSheet(p){
     p.id + (p.listing_id ? ' · Etsy #' + p.listing_id : '') + ' · ' + (p.status || '');
   let btns = '';
   if (p.listing_id) {
-    btns += '<button class="psheet-btn primary" onclick="window.open(\\'https://www.etsy.com/listing/' + p.listing_id + '\\',\\'_blank\\')">🏷 View listing on Etsy</button>';
+    // 2026-07-30: this used to be a dead end for any product that already has
+    // all its files and isn't in a review status -- Scott wants a Fix option
+    // available even on approved/live products, not just ones an automated
+    // check already flagged. Reuses the same generic diagnose-then-stage
+    // endpoint as the Listings tab's Fix button and the phone "needs
+    // attention" sheet -- always safe to offer, nothing goes live without
+    // approval either way.
+    btns += '<button id="product-sheet-fix-btn" class="psheet-btn primary" onclick="productSheetFix(\\'' + p.id + '\\')">🔧 Ask %%AGENT_SHORT%% to fix this</button>';
+    btns += '<button class="psheet-btn" onclick="window.open(\\'https://www.etsy.com/listing/' + p.listing_id + '\\',\\'_blank\\')">🏷 View listing on Etsy</button>';
   }
   btns += '<button class="psheet-btn" onclick="productSheetOpenFiles(\\'' + p.id + '\\')">🗂 Open in Files</button>';
   document.getElementById('product-sheet-buttons').innerHTML = btns;
+  document.getElementById('product-sheet-fix-result').textContent = '';
   document.body.classList.add('product-sheet-open');
+}
+async function productSheetFix(productId){
+  const p = _products.find(x => x.id === productId);
+  if (!p || !p.listing_id) return;
+  const btn = document.getElementById('product-sheet-fix-btn');
+  const resultEl = document.getElementById('product-sheet-fix-result');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Diagnosing & fixing…'; }
+  try {
+    const r = await fetchWithTimeout(BASE + '/api/conversion-targets/' + p.listing_id + '/fix',
+      {method: 'POST', headers: {Authorization: 'Bearer ' + TOKEN}}, 90000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    const n = (d.applied || []).length;
+    if (n > 0) {
+      if (resultEl) { resultEl.textContent = '✓ Staged ' + n + ' fix' + (n>1?'es':'') + ' — review in Approvals.'; resultEl.style.color = 'var(--green)'; }
+      showToast('Staged ' + n + ' fix' + (n>1?'es':'') + ' for ' + productId + ' — review in Approvals.', 'ok', 6000);
+      if (typeof loadActions === 'function') loadActions();
+    } else if (resultEl) {
+      resultEl.textContent = 'Diagnosed — ' + (d.primary_issue || 'no automated fix exists for this issue yet') + '.';
+      resultEl.style.color = 'var(--muted)';
+    }
+  } catch(e) {
+    if (resultEl) { resultEl.textContent = 'Could not fix: ' + (e.message||e); resultEl.style.color = 'var(--red)'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
 }
 
 // ── Review modal (ready_for_review / draft / listed_draft) ──────────────────────────
@@ -9433,6 +9502,11 @@ async function lsgGenerate(){
     if (status) status.textContent = 'Scene description is required.';
     return;
   }
+  // 2026-07-30: this used to never read the "Image engine" dropdown at all --
+  // every click silently generated with gpt-image-1 regardless of what was
+  // selected. Read it and pass it through; the backend/pipeline now honor it.
+  const engineEl = document.getElementById('setting-image-engine');
+  const engine = (engineEl && engineEl.value) || 'openai';
   if (resultEl) resultEl.style.display = 'none';
   const btn = document.getElementById('lsg-generate-btn');
   if (btn) btn.disabled = true;
@@ -9441,7 +9515,7 @@ async function lsgGenerate(){
     const r = await fetchWithTimeout(
       BASE+'/api/studio/generate-lifestyle-photo',
       {method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-       body: JSON.stringify({design_paths:_lsgUploadedPaths, category:category, scene_prompt:scenePrompt})},
+       body: JSON.stringify({design_paths:_lsgUploadedPaths, category:category, scene_prompt:scenePrompt, engine:engine})},
       290000
     );
     const d = await r.json().catch(function(){ return {}; });
