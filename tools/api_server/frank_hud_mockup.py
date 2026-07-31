@@ -4355,6 +4355,13 @@ function createOpenCategory(key){
   if (key === 'product_video') { loadStudioVideos(); loadCreateEngines(); }
   panel.scrollIntoView({behavior:'smooth', block:'start'});
 }
+function createGoto(id){
+  // Restored 2026-07-31: shared by the 9 Brand Kit chooser tiles (bk-identity..
+  // bk-photography). Deleted 2026-07-22 when the Create screen migrated to
+  // createOpenCategory() above, without noticing Brand Kit still called this --
+  // every chooser tile threw ReferenceError on click for over a week.
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'});
+}
 function _createPidSelectChanged(){
   const sel = document.getElementById('create-pid-select');
   const hidden = document.getElementById('bx-pid');
@@ -8519,6 +8526,12 @@ const _BRANDKIT_LISTING_TYPES = [
     description:['Hook','⚠ Disclaimer (digital download only — no physical item)','Pack Overview',"What's Included",'Compatible Printers & Slicers','How To Print (Bambu Studio)','Size & Scaling','Display Ideas','Technical Details','FAQ','About This Design (AI disclosure)','Copyright'],
     photos:'10 slots · 1–6 lifestyle (must carry "DIGITAL FILE — SVG DOWNLOAD" badge), 7 how-to (Color Painting Fill tool — never "Split by Color", that menu does not exist), 8 detail close-up, 9 specs/ZIP contents, 10 lineup of all designs',
     category:'Craft Supplies & Tools > Patterns & How To > Digital Files (taxonomy_id 2078)'},
+  {key:'stickers', label:'Standalone Sticker Packs', icon:'✨',
+    title:'Formula "[Theme] Kawaii Planner Stickers | GoodNotes Sticker Book | Planner Sticker Pack | Instant Download | [Product Type]"',
+    tags:'13 required: goodnotes stickers, planner sticker pack, kawaii stickers, digital stickers, goodnotes elements, notability stickers, ipad stickers, planner stickers, kawaii sticker book, digital planner kit, printable stickers, instant download, functional stickers — swap 2–3 per theme (e.g. DP1026 Lavender: lavender planner kit, life planner stickers, wellness stickers)',
+    description:['No dedicated section-by-section description order is documented in CLAUDE.md for standalone sticker pack listings, unlike Planners/Wall Art/SVG above — gap to confirm with Scott'],
+    photos:"10 slots (CLAUDE.md's own photo-slot table still describes a 5-sheet pack — stale vs. current 11-sheet packs, flagged here not silently fixed): 1 hero flat lay, 2 GoodNotes library preview, 3 in-use mockup, 4–7 per-sheet close-ups, 8 GoodNotes import how-to, 9 before/after sample page, 10 what's-included summary",
+    category:'Not pinned to one taxonomy_id in CLAUDE.md for standalone sticker packs specifically — same gap noted for Wall Art above'},
 ];
 const _BRANDKIT_PRICING = {
   endingRule:'.99 / .97 / .49 endings only — never round numbers. Applies to every price on every table below.',
@@ -9075,7 +9088,7 @@ function _bkSectionThemes(){
   html += '<div class="hub-card" style="border-left:3px solid var(--amber);font-size:11px;color:var(--muted);line-height:1.6">'+
     '&#9888; <b style="color:var(--text)">Known data conflict, flagged not resolved here:</b> the Product Roadmap table in '+
     'CLAUDE.md lists slightly different planned hex colors for DP1030 to DP1033 than the Theme Catalog entries shown below '+
-    '(Sage Garden, Matcha Serenity, Midnight Kawaii, Sunflower Studio). This page shows the richer Theme Catalog values. '+
+    '(Matcha Serenity, Sage Garden, Midnight Kawaii, Sunflower Studio). This page shows the richer Theme Catalog values. '+
     'Reconciling CLAUDE.md itself is a separate follow-up for Scott.</div>';
   _BRANDKIT_THEMES.forEach((t,i) => {
     const detailId = 'bk-theme-detail-'+i;
@@ -9092,7 +9105,7 @@ function _bkSectionThemes(){
       html += '<div style="display:flex;align-items:center;gap:5px">'+
         '<span class="hub-swatch" style="background:'+escHtml(c.hex)+'"></span>'+
         '<div style="font-size:11px"><div style="color:var(--muted)">'+escHtml(c.label)+'</div>'+
-        '<div class="bk-hexcopy" style="font-family:monospace;font-size:10px;color:var(--text);cursor:pointer" '+
+        '<div class="bk-hexcopy" role="button" tabindex="0" style="font-family:monospace;font-size:10px;color:var(--text);cursor:pointer" '+
         'title="Click to copy" onclick="copyHex(\\''+c.hex+'\\', this); event.stopPropagation()">'+escHtml(c.hex)+'</div></div>'+
         '</div>';
     });
@@ -9111,9 +9124,9 @@ function _bkSectionThemes(){
 
 function _bkSectionColorRules(){
   let html = '<div id="bk-color-rules">';
-  html += '<div class="hub-section-title">Color Design Rules — apply to every product built</div><div class="hub-card">';
+  html += '<div class="hub-section-title">Color Design Rules — apply to every planner built</div><div class="hub-card">';
   html += '<ol style="margin:0;padding-left:20px;font-size:12px;color:var(--muted);line-height:2">'+
-    '<li><b style="color:var(--text)">Maximum 4 colors</b> per product — Primary + Accent + Mid-tone + Neutral, plus black for text.</li>'+
+    '<li><b style="color:var(--text)">Maximum 4 colors</b> per planner — Primary + Accent + Mid-tone + Neutral, plus black for text.</li>'+
     '<li><b style="color:var(--text)">60-30-10 rule</b> — 60% neutral/background, 30% primary color, 10% accent pops.</li>'+
     '<li><b style="color:var(--text)">Minimum contrast ratio 4.5:1</b> for text on background (WCAG AA accessibility standard).</li>'+
     '<li><b style="color:var(--text)">Never pure black</b> (#000000) — use a deep tinted black matching the palette.</li>'+

@@ -388,9 +388,51 @@ async def _run_browser_checks() -> None:
             check(bk.get("chooserCount") == 9, f"Brand Kit jump-nav should have 9 targets: {bk}")
             check(bk.get("anchorsPresent"), f"Brand Kit missing one or more of the 9 section anchors: {bk}")
             check(bk.get("themeCardCount") == 16, f"Brand Kit should render 16 theme cards (4 live + 12 planned): {bk}")
-            check(bk.get("listingCardCount") == 3, f"Brand Kit should render 3 listing-standard cards: {bk}")
+            check(bk.get("listingCardCount") == 4,
+                  f"Brand Kit should render 4 listing-standard cards (Planners/Wall Art/SVG/Stickers, 2026-07-31): {bk}")
             check(bk.get("markCanvasIds") == ["brand-mark-preview", "brandkit-mark-preview"],
                   f"brand-mark canvas ids must be distinct, no collision: {bk}")
+
+            # ── createGoto() regression guard (2026-07-31): the 9 chooser tiles called a
+            # function deleted 2026-07-22 by an unrelated Create-screen refactor, so every
+            # tile threw ReferenceError on click and did nothing. Click one for real and
+            # assert the page actually scrolled toward its target section. ──
+            goto_result = await page.evaluate("""() => {
+                const scroller = document.getElementById('brandkit-content');
+                const target = document.getElementById('bk-pricing');
+                if (!scroller || !target) return {ok: false, reason: 'missing scroller or target'};
+                scroller.scrollTop = 0;
+                const before = scroller.scrollTop;
+                let threw = false;
+                try {
+                    document.querySelector('#brandkit-chooser .create-choice:nth-child(6)').click();
+                } catch (e) { threw = true; }
+                return {threw, before};
+            }""")
+            check(not goto_result.get("threw"),
+                  f"clicking a Brand Kit chooser tile must not throw (createGoto must be defined): {goto_result}")
+            await page.wait_for_timeout(600)
+            after_scroll = await page.evaluate("document.getElementById('brandkit-content').scrollTop")
+            check(after_scroll > goto_result.get("before", 0),
+                  f"clicking the Pricing chooser tile should scroll #brandkit-content down toward bk-pricing: "
+                  f"before={goto_result.get('before')} after={after_scroll}")
+
+            # ── .bk-hexcopy keyboard accessibility (2026-07-31): swatches had onclick but
+            # no role/tabindex, so keyboard-only users could never reach or activate them. ──
+            kb_copy = await page.evaluate("""() => new Promise(resolve => {
+                let captured = null;
+                navigator.clipboard.writeText = (text) => { captured = text; return Promise.resolve(); };
+                const chip = document.querySelector('.bk-hexcopy');
+                if (!chip) { resolve({ok: false, reason: 'no .bk-hexcopy element found'}); return; }
+                if (chip.getAttribute('role') !== 'button' || chip.tabIndex < 0) {
+                    resolve({ok: false, reason: 'chip missing role=button/tabindex'}); return;
+                }
+                chip.focus();
+                const focused = document.activeElement === chip;
+                chip.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+                setTimeout(() => resolve({ok: focused && !!captured, focused, captured}), 150);
+            })""")
+            check(kb_copy.get("ok"), f"a hex chip must be keyboard-focusable and Enter-activatable: {kb_copy}")
 
             # Click the first theme card's header -> its detail panel should go from
             # display:none to visible (toggleZip reuse).
@@ -419,8 +461,8 @@ async def _run_browser_checks() -> None:
 
             listing_text = await page.evaluate(
                 "document.getElementById('bk-listing-standards').innerText")
-            check(all(s in listing_text for s in ["Digital Planners", "Wall Art", "SVG"]),
-                  "Brand Kit must render all 3 product-type listing-standards blocks")
+            check(all(s in listing_text for s in ["Digital Planners", "Wall Art", "SVG", "Sticker Packs"]),
+                  "Brand Kit must render all 4 product-type listing-standards blocks")
 
             pricing_text = await page.evaluate("document.getElementById('bk-pricing').innerText")
             check(all(s in pricing_text for s in ["$14.99", "$4.99", "$9.99", "$17.99"]),
