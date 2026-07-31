@@ -126,6 +126,36 @@ def test_credentials_status_google_calendar_false_when_unset():
                 os.environ[k] = v
 
 
+def test_credentials_status_exposes_etsy_tokens_updated_at_no_raw_tokens():
+    # 2026-07-31 Settings audit: this field replaces a call to GET /api/etsy-tokens,
+    # which is owner-only and unconditionally returns raw access/refresh token
+    # strings. This endpoint must carry the timestamp Settings needs without ever
+    # returning the tokens themselves, since it's reachable by non-owner sessions.
+    c = _logged_in_client()
+    resp = c.get("/api/credentials/status")
+    check(resp.status_code == 200, f"expected 200, got {resp.status_code}")
+    data = resp.json()
+    check("etsy_tokens_updated_at" in data,
+          f"response missing 'etsy_tokens_updated_at' -- Settings' Connections summary reads this "
+          f"directly, got keys: {list(data.keys())}")
+    check("access_token" not in data and "refresh_token" not in data,
+          f"credentials/status must never return raw token strings, got keys: {list(data.keys())}")
+
+
+def test_credentials_status_reachable_by_non_owner_admin_role_session():
+    # 2026-07-31: the real regression this covers -- GET /api/etsy-tokens is
+    # owner-only, and every self-signup tester gets role="admin" (same as this
+    # test's login), so the old Promise.all([credentials/status, etsy-tokens])
+    # in loadSettingsConnectionsSummary() 403'd on the second call for every
+    # non-owner session and broke the whole Connections summary card. This
+    # endpoint has no owner gate, so the same session must succeed here.
+    c = _logged_in_client()
+    resp = c.get("/api/credentials/status")
+    check(resp.status_code == 200,
+          f"a role=admin session (the role every self-signup tester gets) must not be blocked "
+          f"from /api/credentials/status, got {resp.status_code}: {resp.text[:200]!r}")
+
+
 def test_credentials_status_google_calendar_true_when_set():
     saved = {k: os.environ.get(k) for k in
              ("GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET", "GOOGLE_CALENDAR_REFRESH_TOKEN")}

@@ -245,6 +245,34 @@ async def _run_browser_checks() -> None:
                   "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
 
+            # ── Settings audit (2026-07-31): the Connections summary card used to
+            # call GET /api/etsy-tokens (owner-only) alongside /api/credentials/status
+            # via Promise.all, so every non-owner ("admin"-role, same as this test's
+            # login) session 403'd on the second call and the whole card showed
+            # "offline" -- not just the token-age line. Confirm it no longer does. ──
+            conn_summary = await page.evaluate(
+                "document.getElementById('settings-connections-summary') ? "
+                "document.getElementById('settings-connections-summary').innerText : ''")
+            check("offline" not in conn_summary.lower(),
+                  f"Settings Connections summary must not show 'offline' for a standard (non-owner) "
+                  f"test login -- this was the live 403-poisons-Promise.all bug: {conn_summary!r}")
+
+            # ── #settings-build-ver used to be populated only by loadCredentialsAndHealth(),
+            # which isn't in _SCREEN_LOADERS.settings -- it only worked because cmd's loaders
+            # happen to fire once at initial page load. Clear it and re-trigger Settings' own
+            # loaders (simulating a return visit later in the session) to prove Settings now
+            # owns repopulating it itself. ──
+            build_ver_state = await page.evaluate("""() => new Promise(resolve => {
+                const el = document.getElementById('settings-build-ver');
+                if (!el) { resolve({ok: false, reason: 'no #settings-build-ver element'}); return; }
+                el.textContent = '';
+                showScreen('settings');
+                setTimeout(() => resolve({ok: true, text: el.textContent}), 1500);
+            })""")
+            check(build_ver_state.get("ok") and "Build" in build_ver_state.get("text", ""),
+                  f"#settings-build-ver should repopulate when Settings' own loaders re-run "
+                  f"(not just on initial page load): {build_ver_state}")
+
             # ── 4 new bright color themes (2026-07-18, Scott: "brighter colors but
             # make sure text is readable") -- confirm each is wired all the way
             # through: listed in the Settings swatch picker, and _setTheme()

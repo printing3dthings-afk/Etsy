@@ -2117,7 +2117,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- ══════════ SETTINGS — voice prefs (localStorage) + connections summary + about ══════════ -->
   <div class="screen" id="screen-settings">
     <div class="panel brk" style="height:100%;overflow-y:auto">
-      <div class="panel-title">Settings <span class="src">Voice prefs + theme (localStorage) + /api/account + /api/credentials/status + /api/etsy-tokens</span></div>
+      <div class="panel-title">Settings <span class="src">Voice prefs + theme (localStorage) · /api/account · /api/me · /api/settings · /api/credentials/status · /api/voice/speak · /api/business-tracker.xlsx</span></div>
 
       <div class="hub-section-title">Voice</div>
       <div class="hub-card">
@@ -4007,7 +4007,7 @@ const _SCREEN_LOADERS = {
   files: [loadFiles, loadEtsyFiles],
   connections: [loadConnections],
   security: [renderSecurityPosture],
-  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI, loadSettingsBuildVer],
   studio: [loadStudioVideos],
   // guided Create flow (reuses studio backends) — loadProducts populates the
   // global _products array the category panels' product pickers read from
@@ -5935,6 +5935,21 @@ async function loadCredentialsAndHealth(){
     coreDetail.innerHTML = coreRows.length ? coreRows.join('') :
       '<div class="core-row"><span class="lab"><span class="dotc err"></span>Unavailable</span><span class="v err">Could not load</span></div>';
   }
+}
+async function loadSettingsBuildVer(){
+  // 2026-07-31: #settings-build-ver used to be set only by loadCredentialsAndHealth(),
+  // which isn't in _SCREEN_LOADERS.settings -- it only ever populated because cmd's
+  // loaders happen to fire once at initial page load. Once a user navigates away from
+  // cmd, _activeScreen never points back at it, so this stopped updating for the rest
+  // of the session. This is a tiny standalone loader (just /health, no live Etsy ping,
+  // unlike loadCredentialsAndHealth which duplicates loadSettingsConnectionsSummary's
+  // /api/credentials/status call) so Settings owns its own build-version display.
+  try {
+    const r = await fetchWithTimeout(BASE+'/health', {}, 10000);
+    const health = await r.json();
+    const setVer = document.getElementById('settings-build-ver');
+    if (setVer && health.build) setVer.textContent = 'Build '+health.build;
+  } catch(e) {}
 }
 
 // ── AI Core actions — real writes to /api/core/* ──
@@ -10185,23 +10200,26 @@ async function loadSettingsConnectionsSummary() {
   const el = document.getElementById('settings-connections-summary');
   if (!el) return;
   try {
-    const [cr, tr] = await Promise.all([
-      authGet('/api/credentials/status', 15000),
-      authGet('/api/etsy-tokens', 15000)
-    ]);
+    // 2026-07-31: used to also call GET /api/etsy-tokens for the refresh-token
+    // age, via Promise.all -- that route is owner-only, and every self-signup
+    // tester is role="admin", so it 403'd for every non-owner session and (via
+    // Promise.all) poisoned this whole card even though /api/credentials/status
+    // alone would have succeeded. etsy_tokens_updated_at now comes from the
+    // credentials endpoint itself (no owner gate, never returns raw tokens).
+    const cr = await authGet('/api/credentials/status', 15000);
     const cred = await cr.json().catch(()=>({}));
-    const tok = await tr.json().catch(()=>({}));
     // Reuses the `cred` this call already fetched (zero extra network cost) --
     // catches a Premium-voice toggle already stuck ON from an earlier session
     // the moment Settings is opened, before it ever gets a chance to fail
     // silently on a real reply. See _verifyPremiumVoiceConfigured() above.
     _verifyPremiumVoiceConfigured(cred);
     let ageText = 'unknown';
-    if (tok.updated_at) {
-      const days = Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000);
-      ageText = days + ' day'+(days===1?'':'s')+' old'+(days>=75?' — re-auth before day 90':'');
+    let ageDays = null;
+    if (cred.etsy_tokens_updated_at) {
+      ageDays = Math.floor((Date.now() - new Date(cred.etsy_tokens_updated_at).getTime()) / 86400000);
+      ageText = ageDays + ' day'+(ageDays===1?'':'s')+' old'+(ageDays>=75?' — re-auth before day 90':'');
     }
-    const ageColor = (tok.updated_at && Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000) >= 75) ? 'var(--red)' : 'var(--muted)';
+    const ageColor = (ageDays !== null && ageDays >= 75) ? 'var(--red)' : 'var(--muted)';
     el.innerHTML = (cred.etsy_live
       ? '<div style="color:var(--green);font-size:14px;font-weight:700">✅ Etsy Live</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(cred.shop_name||'onbrandcraftz')+'</div>'
       : '<div style="color:var(--red);font-size:14px;font-weight:700">⚠️ Etsy Ping Failed</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(cred.etsy_live_error||'Unknown error')+'</div>')

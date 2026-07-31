@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "87b1d72-v290"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f62cde5-v291"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -12903,6 +12903,7 @@ async def credentials_status(_token: str = Depends(_auth_session_or_bearer)):
             "etsy_live": False,
             "etsy_live_error": None,
             "shop_name": "",
+            "etsy_tokens_updated_at": None,
         }
         try:
             shop = EtsyAPIClient().get_shop()
@@ -12910,6 +12911,16 @@ async def credentials_status(_token: str = Depends(_auth_session_or_bearer)):
             status["shop_name"] = shop.get("shop_name", "")
         except Exception as exc:
             status["etsy_live_error"] = str(exc)[:120]
+        # 2026-07-31 (Settings audit): sourced here, not from GET /api/etsy-tokens,
+        # because that route is owner-only and every self-signup tester is
+        # role="admin" -- Settings' Connections summary was 403ing for every
+        # non-owner session just to read this one timestamp. This endpoint has
+        # no owner gate, so it's reachable by the same sessions that need it.
+        try:
+            stored = db.get_etsy_tokens()
+            status["etsy_tokens_updated_at"] = stored.get("updated_at") if stored else None
+        except Exception:
+            pass
         return status
 
     data = await _fetch_with_degrade("credentials_status", asyncio.to_thread(_check), timeout=12.0)
