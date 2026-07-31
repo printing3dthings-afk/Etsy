@@ -1,0 +1,1 @@
+body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}

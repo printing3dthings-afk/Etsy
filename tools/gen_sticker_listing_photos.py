@@ -73,6 +73,28 @@ def fr(size):
     return ImageFont.load_default()
 
 
+def wrap_text(d, text, font, max_width):
+    """Word-wrap `text` to fit max_width, honoring explicit '\\n' as a forced
+    break. PIL's ImageDraw.text() never wraps on its own -- 2026-07-31: this
+    file's make_howto() drew each manually-authored '\\n' segment as a single
+    line with zero check against the panel's actual pixel width, so a long
+    segment overran into the next panel (same defect fixed in
+    gen_planner_listing_photos.py the same day)."""
+    lines = []
+    for para in text.split('\n'):
+        words = para.split(' ')
+        cur = ''
+        for w in words:
+            trial = f"{cur} {w}".strip()
+            if cur and d.textbbox((0, 0), trial, font=font)[2] > max_width:
+                lines.append(cur)
+                cur = w
+            else:
+                cur = trial
+        lines.append(cur)
+    return lines
+
+
 def drop_shadow(canvas, x, y, w, h, blur=20, opacity=45):
     layer = Image.new('RGBA', canvas.size, (0,0,0,0))
     ImageDraw.Draw(layer).rectangle([x+14,y+14,x+w+14,y+h+14], fill=(0,0,0,opacity))
@@ -233,6 +255,9 @@ def make_howto(cfg, out):
         ("3", "Use on Any Page", "Tap any sticker in your library\nand drag it onto any planner page!"),
     ]
     panel_w = (CANVAS-180)//3
+    text_w = panel_w - 100  # inset from the card's rounded corners/outline
+    title_font = fb(54)
+    body_font = fr(40)
     px = 60
     for step, title, body in steps:
         d.rounded_rectangle([px, 220, px+panel_w, CANVAS-140], radius=24,
@@ -240,9 +265,17 @@ def make_howto(cfg, out):
         cx = px + panel_w//2
         d.ellipse([cx-75, 310, cx+75, 460], fill=cfg['color'])
         d.text((cx, 385), step, font=fb(86), fill=(255,255,255), anchor='mm')
-        d.text((cx, 510), title, font=fb(54), fill=(50,40,70), anchor='mm')
-        for j, line in enumerate(body.split('\n')):
-            d.text((cx, 610+j*60), line, font=fr(40), fill=(110,90,140), anchor='mm')
+
+        ty = 510
+        for line in wrap_text(d, title, title_font, text_w):
+            d.text((cx, ty), line, font=title_font, fill=(50,40,70), anchor='mm')
+            ty += 60
+
+        ty += 40
+        for line in wrap_text(d, body, body_font, text_w):
+            d.text((cx, ty), line, font=body_font, fill=(110,90,140), anchor='mm')
+            ty += 56
+
         px += panel_w+30
 
     d.rectangle([0,CANVAS-130,CANVAS,CANVAS], fill=cfg['color'])

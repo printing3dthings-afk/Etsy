@@ -447,8 +447,7 @@ body:not(.show-plumbing) #system-status-pill{display:none}
    3-column layout with real content in .col-left. */
 body:not(.show-plumbing) .col-left{display:none}
 body:not(.show-plumbing) .main{grid-template-columns:1fr 310px}
-body:not(.show-advanced) .nav-item[data-tier="advanced"],
-body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}
+body:not(.show-advanced) .nav-item[data-tier="advanced"]{display:none}
 .panel-body{overflow-y:auto;min-height:0;flex:1}
 
 
@@ -3130,19 +3129,32 @@ async function phoneSheetFix(){
   }
 }
 // More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
+// 2026-07-31 (More screen UX audit): 'settings' and 'files' used to sit under
+// 'Advanced' here, alongside genuinely engineering-tier screens (Workflows/AI
+// Core/Agents/Security) -- on desktop both already live in 'Shop', next to
+// Products/Brand Kit/Connections (settings moved there 2026-07-17 specifically
+// because it's "everyday, non-technical", files was there from day one). A docs
+// claim that the 2026-07-17 fix covered mobile too was never actually true --
+// _PHONE_MORE was never touched by that commit. Also fixes two label mismatches
+// ('Tools' -> 'Tools & Skills', 'Brand kit' -> 'Brand Kit') against what the
+// desktop nav-item and each destination screen's own title actually say.
 const _PHONE_MORE = [
-  ['Shop', [['listings','🏷','Your listings'],['products','📦','Products'],['brandkit','🎨','Brand kit'],['connections','🔌','Connections']]],
+  ['Shop', [['listings','🏷','Your listings'],['products','📦','Products'],['brandkit','🎨','Brand Kit'],['connections','🔌','Connections'],['settings','⚙','Settings'],['files','🗂','Files']]],
   ['Knowledge', [['knowledge','✦','Knowledge'],['conversations','💬','Chat History']]],
-  ['Advanced', [['settings','⚙','Settings'],['tasks','☑','Tasks'],['calendar','▦','Calendar'],['files','🗂','Files'],['workflows','⇄','Workflows'],['tools','🛠','Tools'],['core','◎','AI Core'],['agents','⚙','Agents'],['security','🛡','Security']]],
+  ['Advanced', [['tasks','☑','Tasks'],['calendar','▦','Calendar'],['workflows','⇄','Workflows'],['tools','🛠','Tools & Skills'],['core','◎','AI Core'],['agents','⚙','Agents'],['security','🛡','Security']]],
 ];
 function renderPhoneMore(){
   const el = document.getElementById('pp-more-body');
+  // 2026-07-31: aria-hidden on the icon/chevron spans -- every comparable icon
+  // elsewhere in this file (sidebar nav-items, tab bar buttons) already has this;
+  // _PHONE_MORE predates the 2026-07-08 accessibility pass that added it to those
+  // and was missed.
   el.innerHTML = _PHONE_MORE.map(([g, items]) =>
     `<div class="pmore-grp">${g}</div>` + items.map(([s, ic, lbl]) =>
-      `<div class="pmore-item" data-screen="${s}" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi">${ic}</span>${lbl}<span class="pmc">›</span></div>`
+      `<div class="pmore-item" data-screen="${s}" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi" aria-hidden="true">${ic}</span>${lbl}<span class="pmc" aria-hidden="true">›</span></div>`
     ).join('')).join('')
     + `<div class="pmore-grp">Help</div>`
-    + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour()"><span class="pmi">?</span>Replay Tutorial<span class="pmc">›</span></div>`;
+    + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour()"><span class="pmi" aria-hidden="true">?</span>Replay Tutorial<span class="pmc" aria-hidden="true">›</span></div>`;
 }
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
@@ -4849,7 +4861,7 @@ const MOBILE_TOUR_STEPS = [
     body: '<p>Generate listing photos, videos, and product files here — everything goes through your one-tap approval before it ever reaches Etsy.</p>' },
   { target: '#pp-more-body', ptab: 'more',
     title: 'More',
-    body: '<p>Everything else lives here, grouped by what it\\'s for.</p><p><b>Shop</b> — Your listings, Products, Brand Kit, and Connections (your Etsy &amp; API credential status — this is where to check if something\\'s not set up right).</p><p><b>Knowledge</b>, then <b>Advanced</b> — Settings, Tasks, Calendar, and the engineering-level screens, for when you need them.</p>' },
+    body: '<p>Everything else lives here, grouped by what it\\'s for.</p><p><b>Shop</b> — Your listings, Products, Brand Kit, Connections (your Etsy &amp; API credential status — this is where to check if something\\'s not set up right), Settings, and Files.</p><p><b>Knowledge</b>, then <b>Advanced</b> — Tasks, Calendar, and the engineering-level screens, for when you need them.</p>' },
   { target: null, ptab: null,
     title: "You're all set",
     body: '<p>That\\'s everything. Replay this tour anytime from <b>More → Replay Tutorial</b>.</p>' },
@@ -7853,12 +7865,6 @@ async function loadConversations() {
     const d = await r.json();
     _convSessions = d.sessions || [];
     renderConversationList();
-    const badge = document.getElementById('badge-conversations');
-    if (badge) {
-      const total = _convSessions.reduce((sum, s) => sum + (s.message_count || 0), 0);
-      badge.textContent = total > 999 ? '999+' : total;
-      badge.style.display = total > 0 ? '' : 'none';
-    }
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }

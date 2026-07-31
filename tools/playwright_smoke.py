@@ -2291,6 +2291,42 @@ async def _run_browser_checks() -> None:
                 check(conv_screen_state.get("contentPresent") is True,
                       f"the conversations list/transcript container must be present on that screen: {conv_screen_state}")
 
+            # ── More screen UX audit (2026-07-31) ── settings/files moved from
+            # "Advanced" to "Shop" (matching desktop's actual grouping -- a
+            # 2026-07-17 fix moved Settings there specifically because it's
+            # "everyday, non-technical", but a docs claim that the fix covered
+            # mobile too was never actually true); "Tools" -> "Tools & Skills" and
+            # "Brand kit" -> "Brand Kit" now match the desktop nav-item/screen-title
+            # labels exactly; icon/chevron spans are now aria-hidden, matching every
+            # comparable icon elsewhere in the app. ──
+            await page.evaluate("phoneTab('more')")
+            await page.wait_for_timeout(300)
+            more_state = await page.evaluate("""() => {
+                const groups = Array.from(document.querySelectorAll('#pp-more-body .pmore-grp')).map(g => g.textContent);
+                const rows = Array.from(document.querySelectorAll('#pp-more-body .pmore-item'));
+                const rowInGroup = (screenName) => {
+                    const row = rows.find(r => r.dataset.screen === screenName);
+                    if (!row) return null;
+                    let el = row.previousElementSibling;
+                    while (el && !el.classList.contains('pmore-grp')) el = el.previousElementSibling;
+                    return el ? el.textContent : null;
+                };
+                const firstRow = rows[0];
+                return {
+                    groups,
+                    settingsGroup: rowInGroup('settings'),
+                    filesGroup: rowInGroup('files'),
+                    toolsLabel: rows.find(r => r.dataset.screen === 'tools')?.textContent || '',
+                    brandkitLabel: rows.find(r => r.dataset.screen === 'brandkit')?.textContent || '',
+                    firstRowAriaHidden: firstRow ? [...firstRow.querySelectorAll('span')].every(s => s.getAttribute('aria-hidden') === 'true') : false,
+                };
+            }""")
+            check(more_state.get("settingsGroup") == "Shop", f"Settings should now be grouped under Shop: {more_state}")
+            check(more_state.get("filesGroup") == "Shop", f"Files should now be grouped under Shop: {more_state}")
+            check("Tools & Skills" in more_state.get("toolsLabel", ""), f"the Tools row should say 'Tools & Skills': {more_state}")
+            check("Brand Kit" in more_state.get("brandkitLabel", ""), f"the Brand Kit row should be capitalized correctly: {more_state}")
+            check(more_state.get("firstRowAriaHidden") is True, f"decorative icon/chevron spans on a More row should be aria-hidden: {more_state}")
+
             # ── Mobile Ask-tab redesign (2026-07-22), Phase 1 -- Scott: tapping "Ask"
             # used to open a nearly blank orb popup (#orb-view) with only an "Open full
             # chat" button as the way to reach anything real, confirmed as a wasted

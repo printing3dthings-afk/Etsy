@@ -6,28 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260625-001 date=2026-06-25 kind=snippet source="tools/api_server/main.py" reason="Dead endpoint - zero callers found anywhere in the codebase (Frank, Hub _WEB_UI, or any tools/ script); superseded by /api/analytics which returns a superset of the same data. Removed per audit decision 2026-06-25." -->
-## 20260625-001 · 2026-06-25 · snippet · `tools/api_server/main.py`
-**Reason:** Dead endpoint - zero callers found anywhere in the codebase (Frank, Hub _WEB_UI, or any tools/ script); superseded by /api/analytics which returns a superset of the same data. Removed per audit decision 2026-06-25.  
-**Payload:** `data/trash/files/20260625-001__snippet.txt`
-
-```python
-@app.get("/api/history")
-async def get_history(days: int = 30, _token: str = Depends(_auth)):
-    """Daily shop snapshots (oldest-first) plus simple period deltas for trends."""
-    days = max(1, min(days, 365))
-    rows = await asyncio.to_thread(db.get_metric_history, days)
-    delta = {}
-    if len(rows) >= 2:
-        first, last = rows[0], rows[-1]
-        for k in ("revenue_30d", "active_listings", "total_sales", "total_reviews", "avg_rating"):
-            a, b = first.get(k), last.get(k)
-            if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-                delta[k] = round(b - a, 2)
-    return {"days": days, "count": len(rows), "delta": delta, "snapshots": rows}
-```
-
-<!-- /TRASH 20260625-001 -->
 <!-- TRASH id=20260701-001 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: replaced mrow flex rows with col-left/col-center/col-right CSS grid" -->
 ## 20260701-001 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** v83 3-column layout: replaced mrow flex rows with col-left/col-center/col-right CSS grid  
@@ -23363,3 +23341,30 @@ def check_active_listings() -> dict:
 ```
 
 <!-- /TRASH 20260725-001 -->
+<!-- TRASH id=20260731-001 date=2026-07-31 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="More screen UX audit (2026-07-31): dead badge-conversations lookup -- no element with id='badge-conversations' exists anywhere on either platform (removed when Conversations was merged into Knowledge, task #21), the DOM lookup was never cleaned up. Guarded by if(badge), so harmless, but unfinished plumbing." -->
+## 20260731-001 · 2026-07-31 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** More screen UX audit (2026-07-31): dead badge-conversations lookup -- no element with id='badge-conversations' exists anywhere on either platform (removed when Conversations was merged into Knowledge, task #21), the DOM lookup was never cleaned up. Guarded by if(badge), so harmless, but unfinished plumbing.  
+**Payload:** `data/trash/files/20260731-001__snippet.txt`
+
+```python
+    const badge = document.getElementById('badge-conversations');
+    if (badge) {
+      const total = _convSessions.reduce((sum, s) => sum + (s.message_count || 0), 0);
+      badge.textContent = total > 999 ? '999+' : total;
+      badge.style.display = total > 0 ? '' : 'none';
+    }
+```
+
+<!-- /TRASH 20260731-001 -->
+
+<!-- TRASH id=20260731-002 date=2026-07-31 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="More screen UX audit (2026-07-31): vestigial CSS rule referencing a .more-row class that has never existed in the actual DOM (the real markup uses .pmore-item/.pmore-grp) -- already flagged as vestigial in the 2026-07-17 ops_runbook entry and never removed." -->
+## 20260731-002 · 2026-07-31 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** More screen UX audit (2026-07-31): vestigial CSS rule referencing a .more-row class that has never existed in the actual DOM (the real markup uses .pmore-item/.pmore-grp) -- already flagged as vestigial in the 2026-07-17 ops_runbook entry and never removed.  
+**Payload:** `data/trash/files/20260731-002__snippet.txt`
+
+```python
+body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}
+```
+
+<!-- /TRASH 20260731-002 -->
+

@@ -249,6 +249,29 @@ def fr(size):
     return ImageFont.load_default()
 
 
+def wrap_text(d, text, font, max_width):
+    """Word-wrap `text` to fit max_width, honoring explicit '\\n' as a forced
+    break. PIL's ImageDraw.text() never wraps on its own -- 2026-07-31: the
+    GoodNotes how-to graphic (make_howto) drew each manually-authored '\\n'
+    segment as a single line with zero check against the panel's actual pixel
+    width, so a long segment overran into the next panel. Anything drawing
+    multi-line text into a fixed-width area must measure it, not just split
+    on hardcoded newlines."""
+    lines = []
+    for para in text.split('\n'):
+        words = para.split(' ')
+        cur = ''
+        for w in words:
+            trial = f"{cur} {w}".strip()
+            if cur and d.textbbox((0, 0), trial, font=font)[2] > max_width:
+                lines.append(cur)
+                cur = w
+            else:
+                cur = trial
+        lines.append(cur)
+    return lines
+
+
 def _hue_word(rgb):
     """Plain-English hue name for an (r,g,b) tuple — used in AI prompts INSTEAD of
     numeric rgb/hex, because engines leak digits from the prompt as baked-in text.
@@ -626,8 +649,11 @@ def make_howto(pid, cfg, out):
     ]
 
     panel_w = (CANVAS - 160) // 3
+    text_w = panel_w - 100  # inset from the card's rounded corners/outline
     px = 60
     py = 260
+    title_font = fb(56)
+    body_font = fr(40)
 
     for i, (step, title, body) in enumerate(steps):
         # Panel card
@@ -637,15 +663,17 @@ def make_howto(pid, cfg, out):
         cx, cy = px + panel_w//2, py + 120
         d.ellipse([cx-80, cy-80, cx+80, cy+80], fill=cfg['color'])
         d.text((cx, cy), str(i+1), font=fb(90), fill=(255,255,255), anchor='mm')
-        d.text((px + panel_w//2, py + 240), step, font=fb(44), fill=cfg['color'], anchor='mm')
-        d.text((px + panel_w//2, py + 310), title, font=fb(56), fill=(50,40,70), anchor='mm')
+        d.text((cx, py + 240), step, font=fb(44), fill=cfg['color'], anchor='mm')
 
-        # Body text (word-wrapped manually)
-        lines = body.split('\n')
-        ty = py + 410
-        for line in lines:
-            d.text((px + panel_w//2, ty), line, font=fr(40), fill=(100,85,130), anchor='mm')
-            ty += 60
+        ty = py + 310
+        for line in wrap_text(d, title, title_font, text_w):
+            d.text((cx, ty), line, font=title_font, fill=(50,40,70), anchor='mm')
+            ty += 62
+
+        ty += 30
+        for line in wrap_text(d, body, body_font, text_w):
+            d.text((cx, ty), line, font=body_font, fill=(100,85,130), anchor='mm')
+            ty += 56
 
         px += panel_w + 40
 
