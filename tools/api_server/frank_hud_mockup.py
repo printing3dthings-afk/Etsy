@@ -1969,11 +1969,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
        all). #conversations-content etc. now live only in that one screen. -->
   <div class="screen" id="screen-knowledge">
     <div class="panel brk" style="margin-bottom:14px">
-      <div class="panel-title">What Frank remembers</div>
+      <div class="panel-title">What %%AGENT_SHORT%% remembers <span class="src">/api/memory — chat history + logged learnings + knowledge base, rolled up</span></div>
       <div id="memory-content" style="margin-top:10px;overflow-y:auto;max-height:320px"><div class="hub-spinner"></div></div>
     </div>
     <div class="panel brk">
-      <div class="panel-title">Knowledge base</div>
+      <div class="panel-title">Knowledge base <span class="src">/api/kb — real markdown docs in data/knowledge_base/</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
         <input id="kb-search-input" type="text" placeholder="Search all docs…" aria-label="Search all knowledge base docs" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
         <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
@@ -3995,9 +3995,7 @@ const _SCREEN_LOADERS = {
   tasks: [loadTasks],
   actions: [loadActions],
   calendar: [loadCalendar],
-  memory: [loadMemory],
   conversations: [loadConversations],
-  kb: [loadKb],
   knowledge: [loadMemory, loadKb],  // merged "Knowledge" screen ("Past conversations" moved to its own #screen-conversations, 2026-07-15)
   tools: [loadTools],
   workflows: [loadWorkflows],
@@ -5622,7 +5620,20 @@ async function _navigateSearchResult(idx) {
   else if (r.category === 'product') { setProductCategoryFilter(r.subtitle || null); showScreen('products'); }
   else if (r.category === 'tool') { showScreen('tools'); }
   else if (r.category === 'task') { showScreen('tasks'); }
-  else if (r.category === 'kb') { showScreen('kb'); openKbDoc(r.id); }
+  else if (r.category === 'kb') {
+    // 2026-07-31 (Knowledge screen audit): showScreen('kb') targeted a screen
+    // deleted on 2026-07-11 when Memory+KB merged into #screen-knowledge --
+    // a missing target blanked the whole dashboard (showScreen() strips
+    // .active from every .screen div before checking the target exists).
+    // Also, _SCREEN_LOADERS.knowledge fires loadKb() unawaited on
+    // showScreen(); calling openKbDoc() right after (also unawaited) races
+    // it for the same #kb-content element -- await both, in order, so the
+    // specific doc always renders last (same pattern as the 'listing'
+    // branch above, fixed the same day for the same race-condition class).
+    showScreen('knowledge');
+    await loadKb();
+    await openKbDoc(r.id);
+  }
 }
 function closeSearchDropdown() {
   const dd = document.getElementById('search-dropdown');
@@ -7860,11 +7871,6 @@ async function loadMemory() {
     if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
     const d = await r.json();
     renderMemory(d);
-    const badge = document.getElementById('badge-memory');
-    if (badge) {
-      badge.textContent = d.learnings_count > 999 ? '999+' : d.learnings_count;
-      badge.style.display = d.learnings_count > 0 ? '' : 'none';
-    }
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
@@ -7896,7 +7902,7 @@ function renderMemory(d) {
     </div>`).join('');
   }
   html += '<div class="section-title">📚 Knowledge Base</div>';
-  html += `<div class="empty" style="padding:14px 0"><a href="#" onclick="showScreen('kb');return false" style="color:var(--cyan2)">${d.kb_doc_count} doc${d.kb_doc_count===1?'':'s'} in the knowledge base ›</a></div>`;
+  html += `<div class="empty" style="padding:14px 0"><a href="#" onclick="showScreen('knowledge');return false" style="color:var(--cyan2)">${d.kb_doc_count} doc${d.kb_doc_count===1?'':'s'} in the knowledge base ›</a></div>`;
   el.innerHTML = html;
 }
 
@@ -8128,11 +8134,6 @@ async function loadKb() {
     const d = await r.json();
     _kbDocs = d.docs || [];
     renderKbList();
-    const badge = document.getElementById('badge-kb');
-    if (badge) {
-      badge.textContent = _kbDocs.length > 999 ? '999+' : _kbDocs.length;
-      badge.style.display = _kbDocs.length > 0 ? '' : 'none';
-    }
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }

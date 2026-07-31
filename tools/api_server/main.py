@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "db97d43-v292"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4d99d19-v293"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2327,9 +2327,6 @@ async def get_memory(_token: str = Depends(_auth_session_or_bearer)):
     total_messages = sum(s["message_count"] for s in sessions)
     started = [s["started_at"] for s in sessions if s.get("started_at")]
     lasts = [s["last_at"] for s in sessions if s.get("last_at")]
-    # list_chat_sessions() already sorts most-recently-active first; take the most
-    # recent 14, then reverse to oldest→newest for a left-to-right sparkline.
-    recent_sizes = [s["message_count"] for s in sessions[:14]][::-1]
     return {
         "total_sessions": len(sessions),
         "total_messages": total_messages,
@@ -2338,7 +2335,6 @@ async def get_memory(_token: str = Depends(_auth_session_or_bearer)):
         "kb_doc_count": len(kb_docs),
         "learnings_count": len(learnings),
         "learnings": learnings[:20],
-        "recent_session_sizes": recent_sizes,
     }
 
 

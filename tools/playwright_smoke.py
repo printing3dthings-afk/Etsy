@@ -554,6 +554,53 @@ async def _run_browser_checks() -> None:
             check(simp.get("imageEngineSelect"), f"Create screen must have an image-engine dropdown incl. Gemini: {simp}")
             check(simp.get("videoEngineSelect"), f"Create screen must have a video-engine dropdown incl. Veo: {simp}")
 
+            # ── Knowledge screen: dead showScreen('kb') regression + race condition
+            # (2026-07-31 audit) -- #screen-kb was deleted 2026-07-11 when Memory+KB
+            # merged into #screen-knowledge, but two call sites still targeted it.
+            # showScreen() strips .active from every .screen div before checking the
+            # target exists, so a missing target blanked the whole dashboard, not a
+            # no-op. Both call sites fixed to target 'knowledge'; the search-result
+            # path also had loadKb()/openKbDoc() racing for the same #kb-content
+            # element, fixed by awaiting both in order. ──
+            await page.evaluate("showScreen('knowledge')")
+            await page.wait_for_timeout(800)
+            memory_link = await page.evaluate("""() => {
+                const link = [...document.querySelectorAll('#memory-content a')]
+                    .find(a => a.textContent.includes('docs in the knowledge base'));
+                if (!link) return {found: false};
+                link.click();
+                return {found: true};
+            }""")
+            check(memory_link.get("found"),
+                  f"expected the 'N docs in the knowledge base' link inside the Memory panel: {memory_link}")
+            await page.wait_for_timeout(200)
+            active_after_link = await page.evaluate(
+                "document.getElementById('screen-knowledge').classList.contains('active')")
+            check(active_after_link,
+                  "clicking the 'N docs in the knowledge base' link must not blank the Knowledge screen "
+                  "(regression: it used to target the deleted #screen-kb)")
+
+            kb_race = await page.evaluate("""async () => {
+                showScreen('knowledge');
+                const dd = document.getElementById('search-dropdown');
+                dd._results = [{category: 'kb', id: 'business_standards.md', title: 'Business Standards', subtitle: '1 match'}];
+                await _navigateSearchResult(0);
+                const el = document.getElementById('kb-content');
+                return {
+                    html: el ? el.innerHTML : '',
+                    activeAfter: document.getElementById('screen-knowledge').classList.contains('active'),
+                };
+            }""")
+            check(kb_race.get("activeAfter"),
+                  f"Knowledge screen must still be active after a kb search-result navigation: {kb_race}")
+            check("business_standards.md" in kb_race.get("html", ""),
+                  f"expected the specific doc (business_standards.md) to render after search-result "
+                  f"navigation, got: {kb_race.get('html','')[:200]}")
+            check("📚 Docs (" not in kb_race.get("html", ""),
+                  f"the doc LIST must not have clobbered the specific doc -- this is the exact race condition "
+                  f"the await-sequencing fix (loadKb() then openKbDoc(), both awaited) addresses, "
+                  f"got: {kb_race.get('html','')[:200]}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy
