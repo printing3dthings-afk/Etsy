@@ -18241,3 +18241,186 @@ generation failure still returns None/False for both `generate_coloring_page()` 
 entirely backend logic (error classification, vision-QA), not new interactive UI; the
 direct-call and source-substring tests already give stronger coverage than a DOM
 check would. Full suite 93/93, Playwright 3x clean, build ab775bc-v284.
+
+
+## 2026-07-31 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+
+Traceback (most recent call last):
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 149, in <module>
+    main()
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 144, in main
+    result = run_scheduled_coloring(force=args.force, preview=args.preview)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 91, in run_scheduled_coloring
+    themes = gcp.PACKS[pack]["themes"]
+             ~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+
+
+## 2026-07-31 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — Durable volume not writable
+hourly health loop found /tmp/tmphks_j2_6/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmphks_j2_6/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpm6_u4xir/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 2801). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-31 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 2803). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-31 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-31 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.6 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+## 2026-07-31 — CI Smoke failure on the Create screen ship, fixed (build 1b9739f-v285)
+Commit 1b9739f (the Create screen UX pass above) failed CI Smoke: `test_wall_art_
+verify_retry.py` broke because retrofitting `image_gen.gemini_key_available()`'s guard
+onto `generate_wall_art_master()` (done to close the same edge case for the new
+Coloring Pages/Planner-cover vision-QA) meant that function's real (unmocked)
+`gemini_key_available()` call now actually ran in CI -- and CI has no GEMINI_API_KEY,
+so the guard correctly skipped the QA loop, but the test's 3 pre-existing assertions
+(retry count, verify call count) assumed the loop always runs. Passed locally only
+because a real key happened to be configured in this dev environment, masking the
+gap -- classic "works on my machine." Root cause: `test_wall_art_verify_retry.py`
+never mocked `gemini_key_available()` at all before this change, since the function
+didn't have that dependency until this same pass added it.
+Fix: every test in that file now explicitly mocks `gemini_key_available()` (True for
+the QA-runs tests, False for a new dedicated skip-QA test), same pattern already used
+correctly in the two new test files from this pass. Verified with
+`GEMINI_API_KEY`/`GOOGLE_API_KEY` unset locally (matching CI exactly) before
+re-pushing -- full suite 93/93, Playwright 3x clean.
