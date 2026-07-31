@@ -1668,6 +1668,36 @@ async def _run_browser_checks() -> None:
             check("Wall Art" in files_text.split("Reference Photos")[-1],
                   f"Reference Photos must sub-group by the real per-image category metadata: {files_text[:400]}")
 
+            # ── Files screen: Download Backup honest failure (2026-07-31) -- was a
+            # bare window.open() + an unconditional success toast regardless of what
+            # happened in the new tab. GET /api/backup/download-all is owner-only,
+            # and every self-signup tester is role="admin" not "owner", so this
+            # 403'd for every one of them while the toast still claimed success.
+            # Now a real fetch+blob download; assert an honest message renders on a
+            # 403 instead of the old false-success toast. Mock fetchWithTimeout
+            # directly (not page.route()/authGet) since downloadFullBackup() calls
+            # it directly, same "mock in the page's own JS realm" reasoning as the
+            # Files-grouping block above (frank-sw.js swallows page.route mocks).
+            backup_toast_text = await page.evaluate("""async () => {
+                const orig = window.fetchWithTimeout;
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    if (String(url).includes('/api/backup/download-all')) {
+                        return Promise.resolve({status: 403, ok: false});
+                    }
+                    return orig(url, opts, ms);
+                };
+                showScreen('files');
+                downloadFullBackup();
+                await new Promise(r => setTimeout(r, 400));
+                window.fetchWithTimeout = orig;
+                const stack = document.getElementById('toast-stack');
+                return stack ? stack.textContent : '';
+            }""")
+            check("owner-only" in backup_toast_text,
+                  f"expected an honest owner-only-action toast on a 403, got: {backup_toast_text!r}")
+            check("Backup ZIP downloaded" not in backup_toast_text,
+                  f"must never show the success toast when the download 403s, got: {backup_toast_text!r}")
+
             # ── Desktop sub-floor content-cutoff regression (2026-07-29, Scott: "the
             # chat is still cut off as well as the section to the right... it should
             # auto adjust"). Every prior "Desktop layout fix" pass in this file's

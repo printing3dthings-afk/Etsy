@@ -2075,7 +2075,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- ══════════ FILES — real data: /api/files (data/digital_products/ + backups) ══════════ -->
   <div class="screen" id="screen-files">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Files <span class="src">/api/files — live volume listing, data/digital_products/ + backups</span></div>
+      <div class="panel-title">Files <span class="src">/api/files · /api/etsy-files · /api/backup/download-all</span></div>
       <div class="hub-card" style="margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Docs, catalog data, and Frank's database snapshot — as one ZIP you can save on your own computer.</div>
@@ -9449,8 +9449,36 @@ function _renderHubFileHtml(f){
     '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div></div>';
 }
 function downloadFullBackup(){
-  window.open(BASE+'/api/backup/download-all?token='+encodeURIComponent(TOKEN), '_blank');
+  // 2026-07-31: was a bare window.open() + an unconditional success toast --
+  // GET /api/backup/download-all is owner-only (_require_owner_or_automation),
+  // so every self-signup tester (role="admin", not "owner") got a 403 in the
+  // new tab while the primary tab still claimed success. Real fetch + blob
+  // download so a 403/error is seen and reported honestly instead.
   showToast('Building your backup ZIP — this can take a minute for a large one.');
+  fetchWithTimeout(BASE+'/api/backup/download-all', {}, 120000).then(async (r) => {
+    if (r.status === 403) {
+      showToast('Download Backup is an owner-only action — ask the shop owner to run it.', 'error');
+      return;
+    }
+    if (!r.ok) {
+      showToast('Could not build the backup ZIP (server error). Try again in a moment.', 'error');
+      return;
+    }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const cd = r.headers.get('Content-Disposition') || '';
+    const m = /filename="?([^"]+)"?/.exec(cd);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = m ? m[1] : 'frank_full_backup.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Backup ZIP downloaded.', 'ok');
+  }).catch(() => {
+    showToast('Could not build the backup ZIP (network error or timeout). Try again.', 'error');
+  });
 }
 function downloadBusinessTracker(){
   window.open(BASE+'/api/business-tracker.xlsx?token='+encodeURIComponent(TOKEN), '_blank');

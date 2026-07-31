@@ -1,5 +1,19 @@
 """
-Tests for the Files screen's listing-attachment grouping fix (2026-07-22).
+Tests for the Files screen's listing-attachment grouping fix (2026-07-22), plus
+the 2026-07-31 data-exposure fix.
+
+2026-07-31 addendum: list_files() used to iterate _FILE_ROOTS.items() directly,
+which included "data" (ROOT/data, registered for _catalog_file_url()'s download
+links) and "hub_db_backups" (a one-off internal retrieval, no browsing use case
+at all) -- both fell into the _labels.get(root_key, "Product Files") fallback
+and got dumped into a group mislabeled "Product Files" alongside real product
+files, with no owner gate. GET /api/files/download had the same gap
+independently (root=data/root=hub_db_backups accepted by dict-membership alone,
+via _resolve_in_root()) -- a non-owner session that knew/guessed the URL shape
+could bypass a UI-only fix. Both are closed by _BROWSABLE_FILE_ROOTS, a shared
+allowlist list_files() now iterates instead of _FILE_ROOTS, and that
+download_file() enforces directly (plus a narrower _is_known_catalog_data_path()
+check for the one legitimate root=data use case).
 
 Root cause: the Files tab's "PRODUCT FILES" grouping was a pure filename
 regex (_productKeyFromPath in frank_hud_mockup.py) with no awareness of the
@@ -52,8 +66,14 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
         sys.path.insert(0, sp)
 
 import main as server  # noqa: E402
+from starlette.requests import Request  # noqa: E402
 
 _failures: list[str] = []
+
+
+def _fake_request() -> Request:
+    scope = {"type": "http", "method": "GET", "path": "/api/files/download", "headers": [], "query_string": b""}
+    return Request(scope)
 
 
 def check(cond: bool, msg: str) -> None:
@@ -189,6 +209,86 @@ def test_scan_annotates_reference_images_category():
     check(entry is not None, "expected the reference image to be listed")
     if entry:
         check(entry.get("category") == "wall_art", f"expected category wall_art from sidecar metadata, got {entry}")
+
+
+# ── 2026-07-31 data-exposure fix: list_files() root scoping ──
+
+def test_scan_never_surfaces_data_root():
+    with tempfile.TemporaryDirectory() as td:
+        tdp = Path(td)
+        (tdp / "hub.db").write_bytes(b"fake sqlite db")
+        restore = _swap_root("data", tdp)
+        try:
+            with patch.object(server, "_file_owner_index", return_value={}):
+                result = asyncio.run(server.list_files(_token="test"))
+        finally:
+            restore()
+    roots = [g["root"] for g in result["groups"]]
+    check("data" not in roots, f"root='data' must never appear in a Files-screen group, got roots: {roots}")
+    all_paths = [f["path"] for g in result["groups"] for f in g["files"]]
+    check("hub.db" not in all_paths, f"the data-root fixture file leaked into another group's listing: {all_paths}")
+
+
+def test_scan_never_surfaces_hub_db_backups_root():
+    with tempfile.TemporaryDirectory() as td:
+        tdp = Path(td)
+        (tdp / "hub_db_state.json").write_text('{"users": [{"email": "real-buyer@example.com"}]}')
+        restore = _swap_root("hub_db_backups", tdp)
+        try:
+            with patch.object(server, "_file_owner_index", return_value={}):
+                result = asyncio.run(server.list_files(_token="test"))
+        finally:
+            restore()
+    roots = [g["root"] for g in result["groups"]]
+    check("hub_db_backups" not in roots, f"root='hub_db_backups' must never appear in a Files-screen group, got roots: {roots}")
+    all_paths = [f["path"] for g in result["groups"] for f in g["files"]]
+    check("hub_db_state.json" not in all_paths, f"the PII-export fixture file leaked into another group's listing: {all_paths}")
+
+
+# ── 2026-07-31 data-exposure fix: GET /api/files/download allowlist ──
+
+def test_download_file_rejects_hub_db_backups_root_outright():
+    # hub_db_backups has no legitimate external download caller at all -- the root
+    # string alone must reject it, before any path is even resolved.
+    req = _fake_request()
+    with patch.object(server, "_auth_session_or_bearer", return_value=None):
+        try:
+            asyncio.run(server.download_file(req, root="hub_db_backups", path="hub_db_state.json"))
+            check(False, "expected download_file to reject root=hub_db_backups")
+        except server.HTTPException as exc:
+            check(exc.status_code == 403, f"expected 403, got {exc.status_code}: {exc.detail!r}")
+
+
+def test_download_file_rejects_arbitrary_path_under_data_root():
+    # root=data is legitimate only for the specific catalog files _catalog_file_url()
+    # generates -- an arbitrary/unregistered path under data/ must 403, not stream.
+    req = _fake_request()
+    with patch.object(server, "_auth_session_or_bearer", return_value=None), \
+         patch.object(server, "_catalog_file_abs_path", return_value=None):
+        try:
+            asyncio.run(server.download_file(req, root="data", path="hub_db_backups/hub_db_state.json"))
+            check(False, "expected download_file to reject an unregistered path under root=data")
+        except server.HTTPException as exc:
+            check(exc.status_code == 403, f"expected 403, got {exc.status_code}: {exc.detail!r}")
+
+
+def test_download_file_allows_known_catalog_path_under_data_root():
+    # A path _catalog_file_url() actually generated (i.e. _catalog_file_abs_path
+    # resolves it back to the exact same file) must still be downloadable -- the
+    # fix must not break the one legitimate use of root=data.
+    with tempfile.TemporaryDirectory() as td:
+        tdp = Path(td)
+        real_file = tdp / "DP1099_real_catalog_file.pdf"
+        real_file.write_bytes(b"fake pdf bytes")
+        restore = _swap_root("data", tdp)
+        req = _fake_request()
+        try:
+            with patch.object(server, "_auth_session_or_bearer", return_value=None), \
+                 patch.object(server, "_catalog_file_abs_path", return_value=real_file):
+                resp = asyncio.run(server.download_file(req, root="data", path="DP1099_real_catalog_file.pdf"))
+            check(resp is not None, "expected a real FileResponse for a legitimate catalog-referenced path")
+        finally:
+            restore()
 
 
 def run() -> None:

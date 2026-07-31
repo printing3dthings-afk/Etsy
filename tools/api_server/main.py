@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f62cde5-v291"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "db97d43-v292"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -15061,6 +15061,36 @@ _REFERENCE_IMAGE_CATEGORIES = {
     "svg_3dprint_pack", "sublimation", "3d_print_physical", "general",
 }
 
+# Every _FILE_ROOTS key now assembled. This is the subset the Files screen is
+# actually designed to expose for browsing/downloading -- shared by list_files()
+# and GET /api/files/download so the two can never disagree. "data" and
+# "hub_db_backups" are deliberately excluded: they exist in _FILE_ROOTS for
+# narrow, non-browsing purposes only (root="data" for _catalog_file_url()'s
+# generated download links; "hub_db_backups" for a one-off internal retrieval),
+# and iterating them here would leak data/hub.db, hub_db_backups/'s user PII
+# export, data/financial/, and data/printify/ with no owner gate -- the exact
+# bug closed 2026-07-31 (see the Files-screen ops_runbook entry).
+_BROWSABLE_FILE_ROOTS = {
+    "backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files",
+    "staged_photos": "Staged Photos (pending approval)",
+    "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
+    "staged_videos": "Staged Videos (pending approval)",
+    "svg_conversions": "SVG Conversions",
+    "lifestyle_photos": "Lifestyle Photos",
+    "reference_images": "Reference Photos",
+}
+
+
+def _is_known_catalog_data_path(target: Path) -> bool:
+    """For GET /api/files/download?root=data — only allow paths this app itself
+    hands out via _catalog_file_url(), never an arbitrary path under data/.
+    Reuses _catalog_file_abs_path()'s own basename resolution (the same
+    function that generates those links) so this can never drift from what
+    URLs the app actually produces; a hub.db or data/financial/ path has no
+    matching catalog basename and correctly resolves to False."""
+    resolved = _catalog_file_abs_path(target.name)
+    return resolved is not None and resolved.resolve() == target.resolve()
+
 
 def _reference_images_meta() -> list[dict]:
     """List of {id, filename, category, description, size, size_human,
@@ -15240,8 +15270,18 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
         groups = []
         owner_index = _file_owner_index()
         refimg_categories = {m["filename"]: m.get("category") for m in _reference_images_meta()}
-        for root_key, root_path in _FILE_ROOTS.items():
-            if not root_path.exists():
+        # Iterating _BROWSABLE_FILE_ROOTS instead of _FILE_ROOTS means a root added
+        # later for a narrow, non-browsing purpose (e.g. "data" for
+        # _catalog_file_url(), "hub_db_backups" for a one-off retrieval) never
+        # appears here unless someone deliberately adds it to that allowlist.
+        # Iterating _FILE_ROOTS directly used to leak both of those roots' real
+        # contents (hub.db, PII exports in hub_db_backups/, data/financial/,
+        # data/printify/) under a wrong "Product Files" fallback label with no
+        # owner gate -- closed 2026-07-31, same allowlist GET /api/files/download
+        # now enforces.
+        for root_key, label in _BROWSABLE_FILE_ROOTS.items():
+            root_path = _FILE_ROOTS.get(root_key)
+            if root_path is None or not root_path.exists():
                 continue
             files = []
             for p in sorted(root_path.rglob("*")):
@@ -15273,16 +15313,7 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
                     entry["category"] = refimg_categories.get(p.name)
                 files.append(entry)
             files.sort(key=lambda f: f["modified"], reverse=True)
-            _labels = {
-                "backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files",
-                "staged_photos": "Staged Photos (pending approval)",
-                "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
-                "staged_videos": "Staged Videos (pending approval)",
-                "svg_conversions": "SVG Conversions",
-                "lifestyle_photos": "Lifestyle Photos",
-                "reference_images": "Reference Photos",
-            }
-            groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
+            groups.append({"root": root_key, "label": label, "files": files})
         # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so
         # nothing shows unless the files were produced/backed up on this same machine.
         has_any = any(g["files"] for g in groups)
@@ -15329,7 +15360,18 @@ async def download_file(request: Request, root: str, path: str, token: str = "",
     same-origin with the viewer's session (2026-07-08 security review)."""
     if not _consume_file_ticket(ticket, root, path):
         _auth_session_or_bearer(request)
+    # 2026-07-31: _resolve_in_root() alone only blocks path traversal within a
+    # root -- it accepts ANY key present in _FILE_ROOTS, including "hub_db_backups"
+    # (no legitimate external caller at all) and "data" (legitimate only for the
+    # specific catalog files _catalog_file_url() generates, never an arbitrary path
+    # under data/). Same allowlist list_files() now enforces, so a non-owner session
+    # that already knows/guesses this URL can't reach data/hub.db, hub_db_backups/'s
+    # PII export, data/financial/, or data/printify/ by root key alone.
+    if root not in _BROWSABLE_FILE_ROOTS and root != "data":
+        raise HTTPException(status_code=403, detail="This file root is not downloadable")
     target = _resolve_in_root(root, path)
+    if root == "data" and not _is_known_catalog_data_path(target):
+        raise HTTPException(status_code=403, detail="This file is not a registered product download")
     if not target.is_file():
         raise HTTPException(status_code=404, detail="File not found")
     ext = target.suffix.lower()
