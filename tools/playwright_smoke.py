@@ -468,6 +468,29 @@ async def _run_browser_checks() -> None:
             check(all(s in pricing_text for s in ["$14.99", "$4.99", "$9.99", "$17.99"]),
                   f"Brand Kit pricing section should render all 4 pricing tables: {pricing_text[:200]}")
 
+            # ── Connections screen regression guards (2026-07-31): Google Calendar row
+            # in the API Credentials card, and the TikTok roadmap's traffic-only caveat. ──
+            await page.evaluate("showScreen('connections')")
+            await page.wait_for_timeout(800)
+            conn_text = await page.evaluate("document.getElementById('connections-content').innerText")
+            check("Google Calendar" in conn_text,
+                  f"Connections screen's API Credentials card must include a Google Calendar row: "
+                  f"{conn_text[:200]}")
+            tiktok_toggle = await page.evaluate("""() => {
+                const rows = [...document.querySelectorAll('#connections-content .hub-cred-row')];
+                const row = rows.find(r => r.textContent.includes('TikTok'));
+                if (!row) return {ok: false, reason: 'no TikTok roadmap row found'};
+                const toggle = row.querySelector('[onclick*="toggleCredSteps"]');
+                if (!toggle) return {ok: false, reason: 'TikTok row has no Roadmap toggle (already live?)'};
+                toggle.click();
+                return {ok: true};
+            }""")
+            check(tiktok_toggle.get("ok"), f"clicking the TikTok roadmap row should expand its steps: {tiktok_toggle}")
+            await page.wait_for_timeout(200)
+            conn_text_expanded = await page.evaluate("document.getElementById('connections-content').innerText")
+            check("TikTok Shop can" in conn_text_expanded and "not a sales channel" in conn_text_expanded,
+                  "TikTok roadmap steps should clarify posting is Etsy-traffic-only, not a TikTok Shop sales channel")
+
             # ── First-time-user simplification (2026-07-11) regression guards ──
             simp = await page.evaluate("""() => {
                 const hidden = el => !el || el.offsetParent === null;

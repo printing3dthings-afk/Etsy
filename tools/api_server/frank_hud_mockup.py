@@ -2101,7 +2101,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- ══════════ CONNECTIONS — real data: /api/credentials/status + static Platform Roadmap ══════════ -->
   <div class="screen" id="screen-connections">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Connections <span class="src">/api/credentials/status — live token status + Platform Connections Roadmap</span></div>
+      <div class="panel-title">Connections <span class="src">/api/credentials/status — live token status · Platform Connections Roadmap is curated, not live-fetched</span></div>
       <div id="connections-content" class="hub-scroll"><div class="hub-spinner"></div></div>
     </div>
   </div>
@@ -10097,7 +10097,7 @@ const _PLATFORM_ROADMAP = [
     'Run: python tools/tiktok_oauth.py — log in as @onbrandcraftz and approve',
     'Tokens save to .env automatically (access token 24h, refresh token 365 days)',
     'Re-run tools/tiktok_oauth.py whenever the access token expires',
-    'Done — post via tools/tiktok_poster.py'
+    'Done — post via tools/tiktok_poster.py for Etsy-traffic content only. TikTok Shop can\\'t sell digital products (requires physical fulfillment) — this connection is not a sales channel'
   ]},
   {name:'OneDrive',  icon:'☁️', status:'roadmap',note:'Microsoft Graph — source file storage', steps:[
     'Not yet built — no OneDrive code exists in the repo today',
@@ -10130,7 +10130,7 @@ async function loadConnections() {
         '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.etsy_live_error||'Unknown error')+' — run python tools/etsy_oauth.py</div>';
     }
     html += '</div><div class="hub-section-title">API Credentials</div><div class="hub-card">';
-    const et=d.etsy||{}, an=d.anthropic||{}, oa=d.openai||{}, sm=d.smtp||{}, pi=d.pinterest||{};
+    const et=d.etsy||{}, an=d.anthropic||{}, oa=d.openai||{}, sm=d.smtp||{}, pi=d.pinterest||{}, gc=d.google_calendar||{};
     [
       {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
       {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
@@ -10138,7 +10138,8 @@ async function loadConnections() {
       {label:'Anthropic (Claude)',   ok:an.api_key,         note:'%%AGENT_NAME%% (CEO) · Conversion Doctor · tag gen'},
       {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
       {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
-      {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
+      {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'},
+      {label:'Google Calendar',      ok:gc.client_id && gc.client_secret && gc.refresh_token, note:'Read + write access to Scott\\'s calendar — see Platform Connections below'}
     ].forEach(c => {
       const col = c.ok ? 'var(--green)' : 'var(--red)';
       html += '<div class="hub-cred-row">'+

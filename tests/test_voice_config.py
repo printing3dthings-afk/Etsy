@@ -98,6 +98,54 @@ def test_credentials_status_openai_key_false_when_unset():
           f"expected openai.api_key False with no OPENAI_API_KEY configured, got: {data.get('openai')}")
 
 
+def test_credentials_status_reports_google_calendar_as_bool_fields():
+    c = _logged_in_client()
+    resp = c.get("/api/credentials/status")
+    check(resp.status_code == 200, f"expected 200, got {resp.status_code}")
+    data = resp.json()
+    check("google_calendar" in data, f"response missing 'google_calendar' key entirely: {data}")
+    gc = data.get("google_calendar", {})
+    for field in ("client_id", "client_secret", "refresh_token"):
+        check(isinstance(gc.get(field), bool),
+              f"google_calendar.{field} must be a bool -- Connections screen's API Credentials "
+              f"row reads these directly, got: {gc}")
+
+
+def test_credentials_status_google_calendar_false_when_unset():
+    saved = {k: os.environ.pop(k, None) for k in
+             ("GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET", "GOOGLE_CALENDAR_REFRESH_TOKEN")}
+    try:
+        c = _logged_in_client()
+        resp = c.get("/api/credentials/status")
+        gc = resp.json().get("google_calendar", {})
+        check(gc == {"client_id": False, "client_secret": False, "refresh_token": False},
+              f"expected all-False with no Google Calendar env vars configured, got: {gc}")
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                os.environ[k] = v
+
+
+def test_credentials_status_google_calendar_true_when_set():
+    saved = {k: os.environ.get(k) for k in
+             ("GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET", "GOOGLE_CALENDAR_REFRESH_TOKEN")}
+    os.environ["GOOGLE_CALENDAR_CLIENT_ID"] = "test-client-id"
+    os.environ["GOOGLE_CALENDAR_CLIENT_SECRET"] = "test-client-secret"
+    os.environ["GOOGLE_CALENDAR_REFRESH_TOKEN"] = "test-refresh-token"
+    try:
+        c = _logged_in_client()
+        resp = c.get("/api/credentials/status")
+        gc = resp.json().get("google_calendar", {})
+        check(gc == {"client_id": True, "client_secret": True, "refresh_token": True},
+              f"expected all-True with Google Calendar env vars configured, got: {gc}")
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
 def test_voice_speak_503s_with_openai_api_key_in_detail_when_unconfigured():
     c = _logged_in_client()
     resp = c.post("/api/voice/speak", json={"text": "hello"})

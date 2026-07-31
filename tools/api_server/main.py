@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "85e6bba-v289"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "87b1d72-v290"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -12895,6 +12895,11 @@ async def credentials_status(_token: str = Depends(_auth_session_or_bearer)):
             "openai":    {"api_key": bool(env.get("OPENAI_API_KEY"))},
             "smtp":      {"user":    bool(env.get("SMTP_USER")), "password": bool(env.get("SMTP_PASSWORD"))},
             "pinterest": {"api_key": bool(env.get("PINTEREST_API_KEY") or env.get("PINTEREST_ACCESS_TOKEN"))},
+            "google_calendar": {
+                "client_id":     bool(env.get("GOOGLE_CALENDAR_CLIENT_ID")),
+                "client_secret": bool(env.get("GOOGLE_CALENDAR_CLIENT_SECRET")),
+                "refresh_token": bool(env.get("GOOGLE_CALENDAR_REFRESH_TOKEN")),
+            },
             "etsy_live": False,
             "etsy_live_error": None,
             "shop_name": "",
