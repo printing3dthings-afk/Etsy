@@ -659,7 +659,20 @@ def _enforce_bw(img: Image.Image) -> Image.Image:
 
 def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False,
                             engine: str | None = None) -> Path | None:
-    """Generate one coloring page PNG. Returns path on success, None on failure."""
+    """Generate one coloring page PNG. Returns path on success, None on failure.
+
+    (2026-07-31, Create UX audit) Routed through goal_loop.run_until_goal() +
+    image_gen.verify_original_art() -- the same vision-QA-and-retry pattern
+    generate_wall_art_master() got on 2026-07-30 (garbled baked-in text, wrong
+    subject matter), closing the gap called out in that pass's own ops_runbook
+    entry ("coloring pages are natural follow-ons, not done this round"). This
+    was previously a single-shot generate-and-hope call with only a mechanical
+    black/white post-process, no check that the image actually depicts the
+    requested subject -- notable because generate_dynamic_theme_set() also runs
+    unattended via tools/post_scheduled_coloring.py's recurring cron job, with
+    no human reviewing the raw images before they're staged as a real listing.
+    Skips the QA pass (single generate call, no retry) when GEMINI_API_KEY isn't
+    configured -- see image_gen.gemini_key_available()'s docstring for why."""
     # generate_dynamic_theme_set() calls this directly without going through main()'s
     # own COLORING_DIR.mkdir() -- harmless in a real dev/prod checkout where
     # data/digital_products/ already exists from prior product generation, but a
@@ -674,14 +687,43 @@ def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False,
         return dst
 
     print(f"  → {theme['id']}: {theme['title']}")
-    img_bytes = _gen_image_openai(theme["prompt"], engine=engine)
-    if not img_bytes:
-        print(f"  ✗ {theme['id']} generation failed")
-        return None
 
-    img = Image.open(BytesIO(img_bytes))
-    bw = _enforce_bw(img)
-    bw.save(dst, "PNG", dpi=(300, 300))
+    from tools.image_gen import verify_original_art, gemini_key_available
+    from tools.goal_loop import run_until_goal
+
+    def _generate(correction: str) -> Image.Image:
+        img_bytes = _gen_image_openai(theme["prompt"] + correction, engine=engine)
+        if img_bytes is None:
+            raise RuntimeError("image engine call failed (see stderr above)")
+        return Image.open(BytesIO(img_bytes))
+
+    def _verify(candidate_img: Image.Image) -> dict:
+        # verify_original_art() checks a file on disk -- write the enforced
+        # black/white candidate to dst first so QA judges the exact pixels that
+        # would ship, not the pre-threshold color original. Also means dst always
+        # reflects the latest attempt even if the loop exhausts without passing.
+        _enforce_bw(candidate_img).save(dst, "PNG", dpi=(300, 300))
+        return verify_original_art(dst, theme["prompt"])
+
+    if gemini_key_available():
+        result = run_until_goal(_generate, _verify, max_attempts=2)
+        if not result.passed and not dst.exists():
+            print(f"  ✗ {theme['id']} generation failed")
+            return None
+        if not result.passed:
+            print(f"  ⚠ {theme['id']}: automated art QA did not pass after "
+                  f"{result.attempts} attempt(s): {result.issues}. Using the last "
+                  f"generated image anyway -- review it before publishing.")
+    else:
+        print(f"  ⚠ {theme['id']}: GEMINI_API_KEY not set -- skipping automated "
+              f"art QA. Set it to enable garbled-text/wrong-subject checks.")
+        try:
+            img = _generate("")
+        except RuntimeError:
+            print(f"  ✗ {theme['id']} generation failed")
+            return None
+        _enforce_bw(img).save(dst, "PNG", dpi=(300, 300))
+
     kb = dst.stat().st_size // 1024
     print(f"  ✓ {dst.name}  ({kb} KB)")
     return dst

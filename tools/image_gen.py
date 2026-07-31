@@ -185,6 +185,23 @@ def _gemini_key() -> str:
     return key
 
 
+def gemini_key_available() -> bool:
+    """Non-raising check for _gemini_key() -- lets a caller decide whether to run
+    a Gemini-backed verification pass (e.g. verify_original_art()) at all, rather
+    than entering goal_loop.run_until_goal() and having a missing key masquerade
+    as an ordinary verify failure. run_until_goal() has no distinct exception type
+    for "config problem" vs "the image is actually bad" (see goal_loop.py) -- a
+    missing key there gets folded into `issues` as "verification error: ...",
+    which then gets fed back into the NEXT generation attempt as a "fix this"
+    correction the model can't act on, burning real generation calls on a QA gate
+    that can never pass, before silently shipping the unverified image anyway."""
+    try:
+        _gemini_key()
+        return True
+    except ImageGenError:
+        return False
+
+
 def _gemini_bytes_from_resp(resp) -> bytes:
     """Pull the first inline image out of a google-genai generate_content response.
     Shape verified live against google-genai 2.10: candidates[0].content.parts[].inline_data.data"""

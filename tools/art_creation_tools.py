@@ -2098,8 +2098,16 @@ def generate_wall_art_master(product_id: str, prompt: str, engine: str | None = 
     a real generation error still raises) but a loud warning is printed so a
     human reviewing the build log knows to double-check it; this matches the
     existing needs_visual_qc:true flag _produce_build_product() already
-    surfaces to Scott for any wall-art build that generated new AI art."""
-    from tools.image_gen import generate_image, PORTRAIT
+    surfaces to Scott for any wall-art build that generated new AI art.
+
+    (2026-07-31) Skips the QA pass entirely (single generate call, no retry)
+    when GEMINI_API_KEY isn't configured, rather than entering the goal loop --
+    verify_original_art() needs its own Gemini key independent of whichever
+    engine generated the image, and without this guard a missing key would
+    masquerade as an ordinary QA failure: retried uselessly with a "fix this"
+    correction the model can't act on, then still shipped unverified anyway.
+    See image_gen.gemini_key_available()'s docstring for the full mechanism."""
+    from tools.image_gen import generate_image, PORTRAIT, gemini_key_available
     from tools import image_gen as _image_gen
     from tools.goal_loop import run_until_goal
     _ensure_dirs()
@@ -2114,11 +2122,18 @@ def generate_wall_art_master(product_id: str, prompt: str, engine: str | None = 
     def _verify(candidate_path: str) -> dict:
         return _image_gen.verify_original_art(candidate_path, final_prompt)
 
-    result = run_until_goal(_generate, _verify, max_attempts=2)
-    if not result.passed:
-        print(f"[generate_wall_art_master] ⚠ {product_id}: automated art QA did not "
-              f"pass after {result.attempts} attempt(s): {result.issues}. Using the last "
-              f"generated image anyway -- review it before publishing.", flush=True)
+    if gemini_key_available():
+        result = run_until_goal(_generate, _verify, max_attempts=2)
+        if not result.passed:
+            print(f"[generate_wall_art_master] ⚠ {product_id}: automated art QA did not "
+                  f"pass after {result.attempts} attempt(s): {result.issues}. Using the last "
+                  f"generated image anyway -- review it before publishing.", flush=True)
+    else:
+        print(f"[generate_wall_art_master] ⚠ {product_id}: GEMINI_API_KEY not set -- "
+              f"skipping automated art QA (no verification pass run). Set it to enable "
+              f"garbled-text/wrong-subject checks. Review this image before publishing.",
+              flush=True)
+        _generate("")
 
     file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.jpg")
     _upscale_for_print(raw_path, file_path, target_px=3000)  # Gate 1: >=3000px short edge

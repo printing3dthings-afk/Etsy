@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c11563d-v283"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "ab775bc-v284"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -10868,13 +10868,12 @@ async def studio_upload_image(request: Request, filename: str, _token: str = Dep
 
 # ── Reference Photos library (2026-07-22 Create-screen redesign) ──────────────────
 # Scott's own inspiration/style-reference images (photos he took, screenshots,
-# Pinterest finds), organized by product category for browsing. Deliberately
-# scoped to upload + organize + browse + delete only this round — nothing here
-# is wired into any AI generation call. Nothing in image_gen.py/
-# listing_photo_pipeline.py/art_creation_tools.py today distinguishes "use this
-# as style/mood guidance" from "reproduce this exactly" in a prompt, and
-# building that distinction is real follow-on engineering, not a page-redesign
-# task — see ops_runbook.md.
+# Pinterest finds), organized by product category for browsing. Originally scoped
+# to upload + organize + browse + delete only, with nothing wired into an AI
+# generation call. Wall Art's "new one" flow started using this on 2026-07-30
+# (_reference_image_style_notes() below, folded into the wall_art branch of
+# _produce_build_product()) -- other categories are still library-only until
+# their generators support the same style-guidance distinction.
 
 
 @app.post("/api/reference-images/upload")
@@ -11073,10 +11072,19 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
     # real product-mismatch rejection, so the UI can tell the user "try again" vs
     # "the render didn't match your file." Without this, both read as a match failure.
     _issues = result.issues or []
+    # 2026-07-31 (Create UX audit): a missing API key (ImageGenError's "...API_KEY
+    # not set..." message, image_gen.py) previously fell into the generic
+    # "generation error:" bucket below and rendered as "temporary error, try again"
+    # -- false, since retrying with no key configured fails identically forever.
+    # goal_loop.run_until_goal() has no distinct exception type for this (a single
+    # flat ImageGenError covers both config and transient failures), but the
+    # message text is a unique, greppable signature used only for missing-key
+    # cases anywhere in the codebase -- a substring check is a safe, low-risk fix.
+    _config = _issues and any("_API_KEY not set" in str(i) for i in _issues)
     _svc = _issues and all(
         str(i).startswith(("generation error:", "verification error:")) for i in _issues
     )
-    failure_kind = None if result.passed else ("service_error" if _svc else "mismatch")
+    failure_kind = None if result.passed else ("config_error" if _config else ("service_error" if _svc else "mismatch"))
 
     return {
         "ok": result.passed,

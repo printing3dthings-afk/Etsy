@@ -2358,7 +2358,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div class="cd-advanced-body">
           <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image engine</label>
           <select id="setting-image-engine" aria-label="Image engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <option value="openai">Standard (default · only one with transparent background)</option>
+            <option value="openai">Standard (default)</option>
             <option value="gpt-image-2">Alternative — sharper text</option>
             <option value="gemini">Alternative — best product consistency across photos</option>
           </select>
@@ -9751,7 +9751,12 @@ async function lsgGenerate(){
       if (downloadEl) downloadEl.style.display = 'none';
       const firstIssue = (d.issues && d.issues[0]) ? escHtml(d.issues[0]) : '';
       let headline;
-      if (d.failure_kind === 'service_error') {
+      if (d.failure_kind === 'config_error') {
+        // 2026-07-31 (Create UX audit): a missing API key for the chosen engine --
+        // retrying will fail identically every time until the key is added, so
+        // "try again" (the service_error message below) would be actively wrong here.
+        headline = '⚠ The selected engine is missing an API key — add it in Settings, then try again.';
+      } else if (d.failure_kind === 'service_error') {
         // A transient image-service error (e.g. Gemini 500), NOT a product mismatch —
         // retrying usually clears it; nothing is wrong with the uploaded file.
         headline = '⚠ The image service had a temporary error — no problem with your file. Please try again in a moment.';

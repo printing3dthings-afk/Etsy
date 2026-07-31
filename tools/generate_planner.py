@@ -1450,15 +1450,49 @@ def _make_cover_page(cfg: dict, cover_image_path: str | None) -> bytes:
 
 
 def _generate_cover_image(cfg: dict, out_path: str) -> bool:
-    from tools.image_gen import generate_image, ImageGenError, PORTRAIT
+    """Generate the planner cover illustration.
+
+    (2026-07-31, Create UX audit) Routed through goal_loop.run_until_goal() +
+    image_gen.verify_original_art(), closing the gap wall art's 2026-07-30
+    vision-QA pass deliberately deferred ("planner covers ... not done this
+    round"). Previously a single generate-and-hope call with zero automated
+    quality check -- a garbled or off-subject cover could reach a real listing
+    with nothing but Scott's own eyes catching it. Skips the QA pass (single
+    generate call, no retry, same as the original behavior) when
+    GEMINI_API_KEY isn't configured -- see image_gen.gemini_key_available()'s
+    docstring for why."""
+    from tools.image_gen import generate_image, ImageGenError, PORTRAIT, verify_original_art, gemini_key_available
+    from tools.goal_loop import run_until_goal
     prompt = cfg.get("cover_prompt", "Kawaii digital planner cover illustration")
-    try:
-        generate_image(prompt, out_path, size=PORTRAIT, quality="high")
-        print(f"    Cover image saved → {out_path}")
-        return True
-    except ImageGenError as e:
-        print(f"    [generate_planner] Cover generation failed: {e}")
-        return False
+
+    if not gemini_key_available():
+        print("    [generate_planner] ⚠ GEMINI_API_KEY not set -- skipping automated "
+              "art QA. Set it to enable garbled-text/wrong-subject checks.")
+        try:
+            generate_image(prompt, out_path, size=PORTRAIT, quality="high")
+            print(f"    Cover image saved → {out_path}")
+            return True
+        except ImageGenError as e:
+            print(f"    [generate_planner] Cover generation failed: {e}")
+            return False
+
+    def _generate(correction: str) -> str:
+        generate_image(prompt + correction, out_path, size=PORTRAIT, quality="high")
+        return out_path
+
+    def _verify(candidate_path: str) -> dict:
+        return verify_original_art(candidate_path, prompt)
+
+    result = run_until_goal(_generate, _verify, max_attempts=2)
+    if not result.passed:
+        if not os.path.exists(out_path):
+            print(f"    [generate_planner] Cover generation failed: {result.issues}")
+            return False
+        print(f"    [generate_planner] ⚠ automated art QA did not pass after "
+              f"{result.attempts} attempt(s): {result.issues}. Using the last "
+              f"generated image anyway -- review it before publishing.")
+    print(f"    Cover image saved → {out_path}")
+    return True
 
 
 def _merge_pdfs(*pdf_bytes_list: bytes) -> bytes:
