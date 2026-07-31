@@ -1409,6 +1409,9 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 .pcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px;margin-bottom:10px}
 .pcard .pt{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;line-height:1.35}
 .pcard .pm{font-size:12px;color:var(--muted);word-break:break-word}
+.pcard-tap{display:flex;align-items:center;gap:8px;cursor:pointer}
+.pcard-tap:active{opacity:.7}
+.pcard-tap .pchev{color:var(--muted);flex:none}
 .pp-acts{display:flex;gap:8px;margin-top:11px}
 .pp-btn{flex:1;border:1px solid transparent;border-radius:var(--r-md);padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .pp-btn.ok{background:var(--cyan);color:#04121b}
@@ -2008,7 +2011,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- ══════════ WORKFLOWS — real data: /api/workflows (live _EXEC_COMMANDS registry) ══════════ -->
   <div class="screen" id="screen-workflows">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Workflows <span class="src">/api/workflows — runnable backend scripts, gated by the same approval queue as Action Center</span></div>
+      <div class="panel-title">Workflows <span class="src">/api/workflows — runnable backend scripts, gated by the same approval queue as Approvals</span></div>
       <div id="workflows-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
     </div>
   </div>
@@ -2897,9 +2900,17 @@ async function renderPhoneApprovals(){
     else if (a.type==='update_description') meta += ` · ${escHtml((p.description||'').slice(0,90))}…`;
     else if (a.type==='update_price') meta += ` · $${escHtml(Number(p.price||0).toFixed(2))}`;
     else if (a.type==='toggle_listing_state') meta += ` · → ${escHtml(p.new_state||'')}`;
-    return `<div class="pcard"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div>
+    // 2026-07-30 (Approvals UX audit): mobile cards previously had no way to see
+    // WHY a change was suggested or what it actually contains -- toggleActionDetail()/
+    // _actionPreviewHtml() already render exactly that (the "why Frank suggested this"
+    // reasoning block + type-specific preview) for desktop; reused unchanged here via
+    // the same #act-detail-{id} id convention, just wired into a second template.
+    return `<div class="pcard"><div class="pcard-tap" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
+      <div style="flex:1;min-width:0"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div></div>
+      <span class="pchev">›</span></div>
       <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id}, this)">Approve</button>
       <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
+      <div id="act-detail-${a.id}" class="hub-listing-detail" style="display:none;margin-top:8px"></div>
       <div id="reject-modal-${a.id}" style="display:none"></div></div>`;
   }).join('') + recentHtml;
 }
@@ -4049,7 +4060,7 @@ function _renderCategoryPanelHtml(key){
 
 function _renderListingLookupPanelHtml(){
   let html = '<div style="font-weight:700;margin-bottom:4px">📝 Etsy Listing</div>';
-  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Type an existing product ID (e.g. DP1030, WA1032, COLOR1042) to review it, generate its listing content, and publish — nothing goes live until you approve it in the Action Center.</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Type an existing product ID (e.g. DP1030, WA1032, COLOR1042) to review it, generate its listing content, and publish — nothing goes live until you approve it in Approvals.</div>';
   html += '<input id="ell-pid" type="text" placeholder="e.g. DP1030" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
   html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="ellLookup()">Look Up</button></div>';
   html += '<div id="ell-result" style="margin-top:12px"></div>';
@@ -6952,8 +6963,15 @@ function setActionBadge(summary, pending) {
   if (pb) { if (pc > 0) { pb.textContent = pc > 99 ? '99+' : pc; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
   // The urgent-recommendations count lives on the TODAY tab now (that's where the
   // "Needs attention" items are shown) — not on Approvals.
+  // 2026-07-30 (Approvals UX audit): this badge previously counted summary.high
+  // only, but renderPhoneToday()'s own "Needs attention" list already includes
+  // medium severity too (x.severity==='high'||x.severity==='medium') -- and every
+  // System-health/data_error card (credential/API failures) is always medium, so a
+  // fresh infra alert could sit in the Today list with zero badge nudge until Scott
+  // happened to open that tab. Counting both keeps the badge honest against what
+  // the panel actually shows.
   const tb = document.getElementById('ptab-today-badge');
-  const hc = (summary && summary.high) || 0;
+  const hc = ((summary && summary.high) || 0) + ((summary && summary.medium) || 0);
   if (tb) { if (hc > 0) { tb.textContent = hc > 99 ? '99+' : hc; tb.style.display = 'flex'; } else { tb.style.display = 'none'; } }
   // Home tile mirrors (2026-07-23) -- same two counts, new mount points. #phone-tabbar
   // (and its badges) is hidden while on Home, so without this a user parked on the
@@ -6982,7 +7000,11 @@ function simpleLineDiff(before, after) {
 const _ACT_TYPE_GLYPH = {
   update_title: '📝', update_tags: '🏷️', update_description: '📄', publish_listing: '🏷️', deactivate_listing: '⛔',
   listing_photo: '🖼️', local_write_file: '📁', local_delete: '🗑️', local_exec: '⚙️', run_script: '⚙️',
-  update_price: '💲', toggle_listing_state: '🔄'
+  update_price: '💲', toggle_listing_state: '🔄',
+  // 2026-07-30 (Approvals UX audit): these 6 previously fell through to the
+  // generic ❓ placeholder thumbnail.
+  update_sku_and_category: '🔖', listing_video: '🎬', post_tiktok: '🎵', post_pinterest: '📌',
+  create_listing: '✨', register_command: '🖥️'
 };
 function _actAgeStr(a) {
   const t = a.staged_at || a.created_at || a.decided_at;
@@ -7100,6 +7122,41 @@ function _actionPreviewBody(a) {
     return `<div><strong>Run:</strong> <span style="font-family:monospace">python tools/${escHtml(p.command || '')}.py${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>` +
       `<div class="sub" style="margin-top:4px">Script output isn't previewable before approval — it will run for real on approve.</div>`;
   }
+  // 2026-07-30 (Approvals UX audit): these 6 types had no branch here at all --
+  // tapping to expand showed a completely blank panel, even though the payload
+  // already carries everything needed to preview it. Worst for create_listing,
+  // the highest-consequence write in the app (the staging confirm() elsewhere
+  // literally promises "you'll review it once more" -- this is that review).
+  if (a.type === 'create_listing') {
+    const ld = p.listing_data || {};
+    return `<div><strong>New listing:</strong> ${escHtml(ld.title || '')}</div>` +
+      `<div>$${escHtml(Number(ld.price || 0).toFixed(2))} · ${(ld.tags || []).length} tags · ${(p.photo_paths || []).length} photos · ${(p.file_paths || []).length} file(s)</div>` +
+      `<div style="margin-top:6px;color:var(--muted)">SKU: ${escHtml(ld.sku || '')} · Product: ${escHtml(p.product_id || '')}</div>`;
+  }
+  if (a.type === 'post_tiktok') {
+    return `<div><strong>TikTok caption:</strong> ${escHtml(p.caption || '')}</div>` +
+      `<div style="margin-top:4px;color:var(--muted)">Video: ${escHtml(p.video_path || '')}</div>`;
+  }
+  if (a.type === 'post_pinterest') {
+    return `<div><strong>Pin title:</strong> ${escHtml(p.title || '')}</div>` +
+      `<div style="margin-top:4px">${escHtml(p.description || '')}</div>` +
+      `<div style="margin-top:4px;color:var(--muted)">Board: ${escHtml(p.board_name || '')} · Listing ${escHtml(String(p.listing_id || ''))}</div>`;
+  }
+  if (a.type === 'update_sku_and_category') {
+    const parts = [];
+    if (p.sku != null) parts.push(`SKU → <strong>${escHtml(p.sku)}</strong>`);
+    if (p.taxonomy_id != null) parts.push(`Category (taxonomy) → <strong>${escHtml(String(p.taxonomy_id))}</strong>`);
+    return `<div>Listing ${escHtml(String(p.listing_id || ''))}</div><div style="margin-top:4px">${parts.join(' · ') || 'No changes'}</div>`;
+  }
+  if (a.type === 'listing_video') {
+    return `<div>Listing ${escHtml(String(p.listing_id || ''))} · video: ${escHtml(p.path || '')}${p.rank != null ? ' · rank ' + escHtml(String(p.rank)) : ''}</div>` +
+      `<div class="sub" style="margin-top:4px">Video preview isn't available before approval.</div>`;
+  }
+  if (a.type === 'register_command') {
+    return `<div><strong>New command:</strong> <span style="font-family:monospace">${escHtml(p.command_name || '')}</span></div>` +
+      `<div style="margin-top:4px">Script: <span style="font-family:monospace">${escHtml(p.script_path || '')}</span>${p.args ? ' ' + escHtml(p.args) : ''}</div>` +
+      (p.description ? `<div style="margin-top:4px;color:var(--muted)">${escHtml(p.description)}</div>` : '');
+  }
   return '';
 }
 function renderApproval(a) {
@@ -7151,7 +7208,14 @@ const _APPROVE_CONFIRM_MSGS = {
   local_write_file: 'Approve and write this file on your computer now?',
   local_delete: 'Approve and PERMANENTLY DELETE this file on your computer now?',
   local_exec: 'Approve and run this command on your computer now?',
-  run_script: 'Approve and run this workflow script now?'
+  run_script: 'Approve and run this workflow script now?',
+  // 2026-07-30 (Approvals UX audit): these 3 previously fell through to the
+  // generic "apply this change to your live Etsy listing" message, which is
+  // wrong for all three -- create_listing makes a brand-new listing (not a
+  // change to an existing one), and the social types aren't Etsy at all.
+  create_listing: 'Approve and create this as a NEW listing on your live Etsy shop now?',
+  post_tiktok: 'Approve and publish this post to your TikTok account now?',
+  post_pinterest: 'Approve and publish this pin to your Pinterest account now?'
 };
 // Walks to the shared button row (.act-btns desktop / .pp-acts mobile) so
 // Reject/Fix can't be tapped mid-approve either, not just the tapped button.
@@ -7275,7 +7339,7 @@ async function fixDraftStage(listingId, actionId, btn) {
     btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
     if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
     const errNote = (d.errors&&d.errors.length) ? ' Errors: '+d.errors.join(', ') : '';
-    showToast('Staged '+n+' fix'+(n!==1?'es':'')+'. Approve the new fixes in Action Center, then come back to approve Publish.'+errNote, 'ok');
+    showToast('Staged '+n+' fix'+(n!==1?'es':'')+'. Approve the new fixes in Approvals, then come back to approve Publish.'+errNote, 'ok');
     loadActions();
   } catch(e) {
     btn.disabled = false; btn.textContent = orig;
@@ -7456,7 +7520,7 @@ async function batchStageTags(btn) {
     showToast(d.message + errNote, 'ok');
     loadActions();
   } catch(e) {
-    showToast('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)), 'err', 6000);
+    showToast('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check Approvals in a moment':(e.message||e)), 'err', 6000);
   } finally {
     btn.disabled = false;
     btn.textContent = orig;
@@ -7671,8 +7735,8 @@ async function runWorkflow(id, btn, requiresApproval) {
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     if (d.staged) {
-      if (resultEl) resultEl.innerHTML = `<div class="sub">Queued — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a></div>`;
-      showToast('Queued for Action Center approval.', 'info');
+      if (resultEl) resultEl.innerHTML = `<div class="sub">Queued — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Approvals ›</a></div>`;
+      showToast('Queued for Approvals.', 'info');
       loadActions();
     } else if (d.started) {
       if (resultEl) resultEl.innerHTML = `<div class="sub">Started (PID ${escHtml(String(d.pid||''))}), running in background.</div>`;
@@ -8090,7 +8154,7 @@ function openFixListingModal(listingId) {
     <div class="hub-listing-meta" style="margin-bottom:6px">
       %%AGENT_SHORT%% will check what's wrong and fix the title/tags automatically if that's the issue.
       For missing photos or attached-file problems, he'll leave you a todo instead of guessing —
-      either way, nothing goes live until you approve it in the Action Center.
+      either way, nothing goes live until you approve it in Approvals.
     </div>
     <textarea id="fix-instructions-${listingId}" rows="2" placeholder="Optional — anything specific you want %%AGENT_SHORT%% to focus on"
       aria-label="Instructions for %%AGENT_SHORT%%"
@@ -8117,7 +8181,7 @@ async function submitFixListing(listingId) {
     }, 60000);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
-    let msg = `✓ Staged ${d.staged_count} item(s) in the Action Center for your approval (fixes + a republish).`;
+    let msg = `✓ Staged ${d.staged_count} item(s) in Approvals for your review (fixes + a republish).`;
     if (d.unfixable_issues && d.unfixable_issues.length) {
       msg += ` ⚠️ Also found something that isn't auto-fixable: ${escHtml(d.unfixable_issues.join('; '))} — added to your todo list. Don't approve the republish until that's handled.`;
     }
@@ -8729,7 +8793,7 @@ async function productReviewGenerateContent(productId){
 async function productReviewPublish(productId){
   const c = (_products.find(x => x.id === productId) || {});
   if (!confirm('Publish ' + productId + ' to Etsy?\\n\\nThis stages a new Etsy listing for your ' +
-    'approval in the Action Center -- it will be created as a DRAFT (not visible to buyers). ' +
+    'approval in Approvals -- it will be created as a DRAFT (not visible to buyers). ' +
     'You\\'ll review it once more and activate it separately when ready.\\n\\nContinue?')) return;
   try {
     const r = await fetchWithTimeout(BASE + '/api/products/' + productId + '/stage-publish',
@@ -9715,7 +9779,7 @@ async function studioStageToEtsy() {
     const r = await fetchWithTimeout(url, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:blob}, 60000);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
-    if (status) status.innerHTML = `Staged — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a>`;
+    if (status) status.innerHTML = `Staged — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Approvals ›</a>`;
   } catch(e) {
     if (status) status.textContent = e.message||'Staging failed';
   } finally {
@@ -9793,7 +9857,7 @@ const _PLATFORM_ROADMAP = [
     'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
     'Run: python tools/pinterest_oauth.py — authorizes and saves tokens to .env automatically',
     'Claim the Etsy shop under Pinterest "Claimed accounts" to enable Rich Pins',
-    'Already done: ask Frank to stage a pin (uses the listing\\'s own Etsy photo) — it queues in the Action Center for your one-tap approval, same as every other Etsy/social change'
+    'Already done: ask Frank to stage a pin (uses the listing\\'s own Etsy photo) — it queues in Approvals for your one-tap approval, same as every other Etsy/social change'
   ]},
   {name:'Instagram', icon:'📷', status:'roadmap',note:'Meta Graph API (app review needed)', steps:[
     'Create a Meta Business app at developers.facebook.com',
@@ -10017,6 +10081,21 @@ setInterval(function(){
   if (document.hidden) return;
   if (_activeScreen === 'cmd') loadPrinterStatus();
 }, 5000);
+
+// Mobile Approvals refresh: mirrors the P1S card interval directly above --
+// renderPhoneApprovals() (unlike its desktop counterpart loadActions(), which is
+// wired into _SCREEN_LOADERS and re-polls every 30s while active) previously only
+// fired once on tab-open. The badge count keeps updating in the background via the
+// always-on loadQueue() global loader, so the list could visibly drift out of sync
+// with the badge ("badge says 3, list still shows 2") if Scott lingered on the tab
+// (2026-07-30, Approvals UX audit). Checks the DOM's own "on" class rather than
+// adding a parallel state variable -- that's the same signal phoneTab() already
+// uses to track which panel is active.
+setInterval(function(){
+  if (document.hidden) return;
+  const el = document.getElementById('pp-appr');
+  if (el && el.classList.contains('on')) renderPhoneApprovals();
+}, 30000);
 
 // ── Operator chip — load current user from /api/me ──
 let _myRole = 'admin';

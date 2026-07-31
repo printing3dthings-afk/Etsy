@@ -1708,6 +1708,72 @@ async def _run_browser_checks() -> None:
             check("Etsy 429 rate limited" in filled, f"a failed action should show the actual error, not just 'failed': {filled[:300]}")
             check("❌" in filled, f"a failed action should show a failure icon: {filled[:300]}")
 
+            # ── Approvals UX audit (2026-07-30) ── mobile detail-expand: renderPhoneApprovals()'s
+            # pcard now calls toggleActionDetail() with the same #act-detail-{id} id convention
+            # desktop's renderApproval() uses, so _actionPreviewHtml()/_actionPreviewBody() (the
+            # "why Frank suggested this" reasoning block + type-specific preview) run unmodified.
+            # Test the shared pipeline directly (same reasoning as the "Recently completed" block
+            # above -- the service worker makes network mocking unreliable, and toggleActionDetail
+            # itself does no fetching, so this exercises the real function with synthetic data).
+            reason_panel_check = await page.evaluate("""() => {
+                _pendingActions = [{id: 9001, type: 'update_title', summary: 'Fix title',
+                    payload: {title: 'A Better Title', reason: 'Missing primary keyword in first 40 chars'}}];
+                document.body.insertAdjacentHTML('beforeend', '<div id="act-detail-9001" style="display:none"></div>');
+                toggleActionDetail(9001);
+                const panel = document.getElementById('act-detail-9001');
+                const result = {display: panel.style.display, html: panel.innerHTML};
+                panel.remove();
+                return result;
+            }""")
+            check(reason_panel_check.get("display") == "block", f"toggleActionDetail should reveal the panel: {reason_panel_check}")
+            check("Missing primary keyword" in reason_panel_check.get("html", ""), f"expected the reason block to render: {reason_panel_check}")
+            check("💡 Why:" in reason_panel_check.get("html", ""), f"expected the labeled Why block: {reason_panel_check}")
+
+            # Confirm-dialog wording for the 3 types that used to fall through to the generic
+            # "apply this change to your live Etsy listing" message.
+            confirm_msgs = await page.evaluate("() => _APPROVE_CONFIRM_MSGS")
+            check("NEW listing" in confirm_msgs.get("create_listing", ""), f"create_listing confirm message should say NEW listing: {confirm_msgs}")
+            check("TikTok" in confirm_msgs.get("post_tiktok", ""), f"post_tiktok confirm message should mention TikTok: {confirm_msgs}")
+            check("Pinterest" in confirm_msgs.get("post_pinterest", ""), f"post_pinterest confirm message should mention Pinterest: {confirm_msgs}")
+
+            # The 6 action types whose detail panel was previously completely blank.
+            preview_checks = await page.evaluate("""() => {
+                const cases = {
+                    create_listing: {listing_data: {title: 'New Sign Pack', price: 14.99, tags: ['a','b'], sku: 'SS1099'}, product_id: 'SS1099', photo_paths: ['a.jpg'], file_paths: ['a.3mf']},
+                    post_tiktok: {caption: 'Check out this design', video_path: 'staged_videos/x.mp4'},
+                    post_pinterest: {title: 'Pin title', description: 'Pin desc', board_name: 'Digital Planners', listing_id: 555},
+                    update_sku_and_category: {listing_id: 555, sku: 'DP1099', taxonomy_id: 2078},
+                    listing_video: {listing_id: 555, path: 'x.mp4', rank: 1},
+                    register_command: {command_name: 'my_cmd', script_path: 'tools/my_cmd.py', description: 'does a thing'},
+                };
+                const out = {};
+                for (const [type, payload] of Object.entries(cases)) {
+                    out[type] = {body: _actionPreviewBody({type, payload}), glyph: _ACT_TYPE_GLYPH[type]};
+                }
+                return out;
+            }""")
+            for t, must_contain in [
+                ("create_listing", "New Sign Pack"),
+                ("post_tiktok", "Check out this design"),
+                ("post_pinterest", "Pin title"),
+                ("update_sku_and_category", "DP1099"),
+                ("listing_video", "x.mp4"),
+                ("register_command", "my_cmd"),
+            ]:
+                entry = preview_checks.get(t, {})
+                check(must_contain in entry.get("body", ""), f"{t}'s preview body should mention {must_contain!r}: {entry}")
+                check(entry.get("glyph") and entry.get("glyph") != "❓", f"{t} should have a real glyph, not the ❓ fallback: {entry}")
+
+            # Today badge must count medium severity too (data_error/System-health cards are
+            # always medium) -- previously only summary.high bumped the badge.
+            today_badge_check = await page.evaluate("""() => {
+                setActionBadge({high: 0, medium: 3, low: 1}, 0);
+                const tb = document.getElementById('ptab-today-badge');
+                return {text: tb.textContent, display: tb.style.display};
+            }""")
+            check(today_badge_check.get("text") == "3", f"Today badge should count medium-severity items: {today_badge_check}")
+            check(today_badge_check.get("display") == "flex", f"Today badge should be visible when medium count > 0: {today_badge_check}")
+
             await page.evaluate("startTour()")
             await page.wait_for_timeout(400)
             mobile_step1 = await page.evaluate("""() => ({

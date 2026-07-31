@@ -17552,3 +17552,233 @@ Scott (`chips: hide after first real send`).
    immediately before it as an automatic fallback for browsers without `dvh` support.
 
 Full suite (89/89) + 3x clean playwright_smoke.py before shipping.
+
+
+## 2026-07-30 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+
+Traceback (most recent call last):
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 149, in <module>
+    main()
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 144, in main
+    result = run_scheduled_coloring(force=args.force, preview=args.preview)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 91, in run_scheduled_coloring
+    themes = gcp.PACKS[pack]["themes"]
+             ~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+
+
+## 2026-07-30 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — Durable volume not writable
+hourly health loop found /tmp/tmp_hk4s0o1/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp_hk4s0o1/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpz89ic7h6/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 4229). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-30 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 4231). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-30 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-30 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 13.5 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+## 2026-07-31 — Approvals screen UX pass (screen-by-screen audit, page 4, build 155c639-v282)
+Fourth screen in Scott's screen-by-screen UX audit (Login, Home, Ask/Chat already done).
+"Approvals" is the user-facing label for what the code still internally calls the
+"Action Center" -- the staged-action approve/reject gate. Plan drafted, sent through an
+adversarial review agent before any code, then two remaining decisions approved by
+Scott (Today badge should count medium severity too; "Action Center" -> "Approvals"
+string cleanup included in this pass).
+
+Unlike Ask/Chat, Approvals is NOT one shared screen definition -- desktop
+(`#screen-actions`, `loadActions()`/`renderActionsContent()`) and mobile (`#pp-appr`,
+`renderPhoneApprovals()`) are two independent render pipelines sharing some low-level
+helpers. That split drove most of the findings below.
+
+1. **Mobile detail-expand.** `renderPhoneApprovals()`'s pcard template had no way to
+   expand detail at all -- desktop's `toggleActionDetail()`/`_actionPreviewHtml()`
+   (the "why Frank suggested this" reasoning block from the 2026-07-18 audit, plus a
+   type-specific preview) were wired into the desktop card template only. Reused both
+   functions unmodified, just added a tappable `.pcard-tap` area + `#act-detail-{id}`
+   container to the mobile card, same id convention desktop uses.
+
+2. **Confirm-dialog wording.** `_APPROVE_CONFIRM_MSGS` fell through to a generic
+   "apply this change to your live Etsy listing" message for `create_listing` (creates
+   a brand-new listing, not a change to an existing one), `post_tiktok`, and
+   `post_pinterest` (neither is an Etsy listing change at all). Added accurate wording
+   for all three.
+
+3. **Mobile list went stale while the tab stayed open.** `renderPhoneApprovals()`
+   only fired once on tab-open; the badge count kept updating in the background via
+   the always-on `loadQueue()` global loader, so the list could visibly drift out of
+   sync with the badge. Added a dedicated 30s interval (mirrors the P1S card's own
+   interval added earlier the same day) gated on `#pp-appr`'s `on` class.
+
+4. **Blank detail panel for 6 action types (found during adversarial review, not in
+   the original draft).** `_actionPreviewBody()` had zero rendering branch for
+   `create_listing`, `post_tiktok`, `post_pinterest`, `update_sku_and_category`,
+   `listing_video`, `register_command` -- tapping to expand any of them on desktop
+   showed a completely blank panel, worst for `create_listing`, the highest-
+   consequence write in the app, whose own staging confirm() promises "you'll review
+   it once more." Added real preview branches for all six, plus their missing
+   `_ACT_TYPE_GLYPH` entries (previously falling back to a generic ❓).
+
+5. **Today badge undercounted.** `ptab-today-badge`/`home-today-badge` only counted
+   `summary.high`, never `summary.medium` -- but `renderPhoneToday()`'s own "Needs
+   attention" list already includes both, and every System-health/`data_error` card
+   (credential/API failures) is always medium severity. A fresh infra alert could sit
+   with zero badge nudge until Scott happened to open Today. Now counts both.
+
+6. **"Action Center" -> "Approvals" string cleanup.** ~8 leftover user-facing strings
+   (toasts, the new-listing confirm dialog, link labels, panel copy) still said
+   "Action Center" instead of "Approvals" -- internal code comments documenting the
+   old name were left as-is (never user-facing).
+
+Explicitly rejected during adversarial review: a "System health" section for mobile
+Approvals (my original draft) -- ops_runbook's own 2026-07-03 entry (v109/v110)
+already deliberately routes infra alerts to the Today tab instead, specifically to fix
+a badge/panel mismatch Scott flagged then. Re-adding it to Approvals would reintroduce
+that exact bug. Sort/filter on the pending list, per-item risk badges, and pagination
+were all considered and left out -- no evidence of a real problem yet.
+
+New test file `tests/test_approvals_ux_audit.py` (source-substring checks, all six
+fixes are pure frontend) + 6 new Playwright assertions in `playwright_smoke.py`
+(mobile detail-expand + reason block, the 3 new confirm messages, all 6 preview
+branches + glyphs, the Today medium-severity badge). Full suite 90/90, Playwright 3x
+clean, build 155c639-v282.
