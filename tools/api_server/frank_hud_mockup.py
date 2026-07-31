@@ -2505,7 +2505,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <div id="phone-sheet" role="dialog" aria-modal="true">
     <div id="phone-sheet-title"></div>
     <div id="phone-sheet-sub"></div>
-    <button class="psheet-btn primary" id="phone-sheet-fix" onclick="phoneSheetFix()">🤖 Let Frank fix it</button>
+    <button class="psheet-btn primary" id="phone-sheet-fix" onclick="phoneSheetPrimaryAction()">🤖 Let Frank fix it</button>
     <button class="psheet-btn" id="phone-sheet-view" onclick="phoneSheetView()">🏷 View listing on Etsy</button>
     <button class="psheet-btn cancel" onclick="phoneSheetClose()">Cancel</button>
   </div>
@@ -3004,7 +3004,7 @@ async function renderPhoneToday(){
   // isn't (see phoneNeedsSheet()).
   alerts.forEach(x => { const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
     needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: x.detail || '',
-      listing_id: x.listing_id, url: x.url, source: x.source || 'alert'}); });
+      listing_id: x.listing_id, url: x.url, source: x.source || 'alert', heartbeat_name: x.heartbeat_name}); });
 
   // 2026-07-18: a card that was showing on the PREVIOUS render but isn't in
   // this one anymore (Frank fixed it, or it genuinely cleared) gets to
@@ -3031,20 +3031,30 @@ async function renderPhoneToday(){
   if (needs.length){
     html += '<div class="pmore-grp">Needs attention</div>';
     html += _phoneNeeds.map((x,i) => {
-      const tap = (x.listing_id || x.url)
+      const actionable = x.listing_id || x.url || _heartbeatRetryKind(x.heartbeat_name);
+      const tap = actionable
         ? ` tappable" role="button" tabindex="0" onclick="phoneNeedsSheet(${i})` : '';
       return `<div class="palert ${x.sev}${tap}" data-need-key="${escHtml(_needKey(x))}"><span class="pdot"></span><div>${escHtml(x.title)}` +
         (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
-        `</div>` + ((x.listing_id || x.url) ? '<span class="pchev">›</span>' : '') + `</div>`;
+        `</div>` + (actionable ? '<span class="pchev">›</span>' : '') + `</div>`;
     }).join('');
   } else {
     html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
   }
+  _phoneBundleOpps = bundleOpps;
   if (bundleOpps.length){
     html += '<div class="pmore-grp">Opportunities</div>';
-    html += bundleOpps.map(o =>
+    html += bundleOpps.map((o,bi) =>
       `<div class="palert good"><span class="pdot"></span><div>${escHtml(o.title)}` +
       (o.suggestion ? `<div style="color:var(--muted);margin-top:2px">${escHtml(o.suggestion)}</div>` : '') +
+      // 2026-07-31 (Scott: "Why don't these have the option fix? I know you can"):
+      // picking WHICH existing designs go into a bundle is a real curation call --
+      // nothing here auto-selects real files into a fake "ready" listing (that
+      // would risk the top-priority "never lie to the customer" rule if the wrong
+      // designs got bundled). This opens the Create screen's matching build panel
+      // instead, pre-filled with a starter description, so Scott picks the actual
+      // designs before anything gets built.
+      `<div style="margin-top:6px"><button class="act-btn secondary" style="font-size:11.5px;padding:5px 10px" onclick="phoneStartBundleDraft(${bi})">＋ Start bundle listing</button></div>` +
       `</div></div>`
     ).join('');
   }
@@ -3057,27 +3067,130 @@ async function renderPhoneToday(){
   if (m.stale) el.querySelectorAll('.ptiles [data-countup]').forEach(node => { node.textContent = node.dataset.target; });
   else el.querySelectorAll('[data-countup]').forEach(node => _animateCountUp(node, node.dataset.target));
 }
-// Action sheet for a tapped Needs-attention card: Frank fixes it, or open on Etsy.
+// Action sheet for a tapped Needs-attention card: Frank fixes it, retries a
+// failed build, shows Quality Audit specifics, or opens the listing on Etsy.
 let _phoneNeeds = [];
 let _phoneNeedsKeys = new Set();  // keys from the last render, for the resolve animation above
 let _phoneSheetItem = null;
+// 2026-07-31 (Scott: "Why don't these have the option fix? I know you can"):
+// agent_heartbeat alerts come in two retriable shapes -- a failed/hung
+// one-tap build (heartbeat name "build:<builder>:<pid>", e.g.
+// "build:build_coloring_product:COLOR1002") and the daily Quality Audit loop
+// itself ("quality_audit", no pid). Everything else under that same source
+// (credential leaks, Anthropic spend cap, Etsy token expiry) has no
+// in-app fix at all -- those require an action in a third-party console or
+// a local OAuth flow, so they correctly get no action button here.
+const _RETRIABLE_BUILD_PREFIXES = ['build_coloring_pack', 'build_planner', 'build_sticker_pack',
+  'build_product', 'build_wallart_product', 'build_coloring_product'];
+function _heartbeatRetryKind(name){
+  if (!name) return null;
+  if (name === 'quality_audit') return 'quality_audit';
+  const bare = name.startsWith('build:') ? name.slice(6) : name;
+  return _RETRIABLE_BUILD_PREFIXES.includes(bare.split(':')[0]) ? 'retry' : null;
+}
 function phoneNeedsSheet(i){
   const it = _phoneNeeds[i];
-  if (!it || (!it.listing_id && !it.url)) return;
+  const retryKind = it ? _heartbeatRetryKind(it.heartbeat_name) : null;
+  if (!it || (!it.listing_id && !it.url && !retryKind)) return;
   _phoneSheetItem = it;
   document.getElementById('phone-sheet-title').textContent = it.title || 'Listing issue';
-  document.getElementById('phone-sheet-sub').textContent = it.sub || '';
-  // 2026-07-31 (Today UX audit): "Let Frank fix it" calls the Conversion Doctor
-  // route, which only ever touches title/tags/description -- for an alert with
-  // no relationship to that (product_file_integrity: a missing digital file),
-  // tapping it would just report "nothing to fix," an honest but unhelpful
-  // dead-end on the single highest-severity alert type in the app. Show only
-  // "View on Etsy" for those, so the one genuinely useful action (jump to the
-  // listing and re-upload) stays front and center instead of sharing space with
-  // a button that can't do anything here.
+  const subEl = document.getElementById('phone-sheet-sub');
+  subEl.textContent = it.sub || '';
+  subEl.style.whiteSpace = '';
+  subEl.style.maxHeight = '';
+  subEl.style.overflowY = '';
   const fixBtn = document.getElementById('phone-sheet-fix');
-  if (fixBtn) fixBtn.style.display = (it.source === 'product_file_integrity') ? 'none' : '';
+  const viewBtn = document.getElementById('phone-sheet-view');
+  if (retryKind === 'retry') {
+    if (fixBtn) { fixBtn.style.display = ''; fixBtn.disabled = false; fixBtn.textContent = '🔁 Retry build'; }
+    if (viewBtn) viewBtn.style.display = 'none';
+  } else if (retryKind === 'quality_audit') {
+    if (fixBtn) { fixBtn.style.display = ''; fixBtn.disabled = false; fixBtn.textContent = '🔍 View details'; }
+    if (viewBtn) viewBtn.style.display = 'none';
+  } else {
+    // 2026-07-31 (Today UX audit): "Let Frank fix it" calls the Conversion Doctor
+    // route, which only ever touches title/tags/description -- for an alert with
+    // no relationship to that (product_file_integrity: a missing digital file),
+    // tapping it would just report "nothing to fix," an honest but unhelpful
+    // dead-end on the single highest-severity alert type in the app. Show only
+    // "View on Etsy" for those, so the one genuinely useful action (jump to the
+    // listing and re-upload) stays front and center instead of sharing space with
+    // a button that can't do anything here.
+    if (fixBtn) { fixBtn.style.display = (it.source === 'product_file_integrity') ? 'none' : ''; fixBtn.disabled = false; fixBtn.textContent = '🤖 Let Frank fix it'; }
+    if (viewBtn) viewBtn.style.display = (it.listing_id || it.url) ? '' : 'none';
+  }
   document.body.classList.add('phone-sheet-open');
+}
+function phoneSheetPrimaryAction(){
+  const it = _phoneSheetItem; if (!it) return;
+  const kind = _heartbeatRetryKind(it.heartbeat_name);
+  if (kind === 'retry') return phoneSheetRetryBuild();
+  if (kind === 'quality_audit') return phoneSheetQualityAuditDetails();
+  return phoneSheetFix();
+}
+async function phoneSheetRetryBuild(){
+  const it = _phoneSheetItem; if (!it || !it.heartbeat_name) return;
+  const btn = document.getElementById('phone-sheet-fix');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Retrying…'; }
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/loops/retry',
+      {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+TOKEN},
+       body: JSON.stringify({name: it.heartbeat_name})}, 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || d.error) throw new Error(d.error || d.detail || ('HTTP '+r.status));
+    phoneSheetClose();
+    showToast(d.message || 'Retrying in the background — check Files when it finishes.', 'ok', 6000);
+  } catch(e) {
+    showToast('Could not retry: ' + (e.message||e), 'err', 6000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+}
+async function phoneSheetQualityAuditDetails(){
+  const it = _phoneSheetItem; if (!it) return;
+  const btn = document.getElementById('phone-sheet-fix');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Loading…'; }
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/quality-audit/latest', {headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP '+r.status));
+    if (!d.found) throw new Error('No audit history recorded yet.');
+    let text = 'PASS ' + d.passed + ' · WARN ' + d.warned + ' · FAIL ' + d.failed
+      + ' of ' + d.audited_count + ' audited';
+    if (d.ts) { try { text += ' (as of ' + new Date(d.ts).toLocaleString() + ')'; } catch(e) {} }
+    if (d.summary) text += '\\n\\n' + d.summary;
+    if (d.may_include_fetch_errors) text += '\\n\\n(Some of these may be transient Etsy fetch errors from that run, not confirmed content problems.)';
+    const subEl = document.getElementById('phone-sheet-sub');
+    subEl.textContent = text;
+    subEl.style.whiteSpace = 'pre-wrap';
+    subEl.style.maxHeight = '46vh';
+    subEl.style.overflowY = 'auto';
+    if (btn) btn.style.display = 'none';
+  } catch(e) {
+    showToast('Could not load audit details: ' + (e.message||e), 'err', 6000);
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+}
+// 2026-07-31: opens the Create screen's matching build panel with the "+ new
+// one" description box pre-filled with a starter note. Deliberately NOT a
+// one-tap auto-build -- picking WHICH existing designs go into a bundle is a
+// real curation call; nothing here invents a "ready" listing from files it
+// never actually selected (see the Opportunities-card comment above).
+let _phoneBundleOpps = [];
+function phoneStartBundleDraft(i){
+  const o = _phoneBundleOpps[i]; if (!o) return;
+  if (typeof phoneOpenScreen === 'function') phoneOpenScreen('create');
+  if (typeof createOpenCategory !== 'function' || !_CREATE_CATEGORIES[o.category]) {
+    showToast('Open Create → the matching category to build this bundle.', 'info', 6000);
+    return;
+  }
+  createOpenCategory(o.category);
+  _createToggleNewCode(true);
+  const desc = document.getElementById('bx-description');
+  if (desc) desc.value = 'Bundle listing — ' + (o.title || '') + '. Pick 3-5 of the strongest existing designs '
+    + '(see the Products screen for the full list), then describe the collection\\'s shared theme/tone here before building.';
 }
 function phoneSheetClose(){
   document.body.classList.remove('phone-sheet-open');

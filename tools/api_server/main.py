@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "9054fb6-v286"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "9a67706-v287"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6013,6 +6013,41 @@ async def get_bundle_opportunities(_token: str = Depends(_auth_session_or_bearer
     data = {"opportunities": await asyncio.to_thread(_compute_bundle_opportunities)}
     _cache_set("bundle_opportunities", data)
     return data
+
+
+@app.get("/api/quality-audit/latest")
+async def get_latest_quality_audit(_token: str = Depends(_auth_session_or_bearer)):
+    """Today tab's 'View details' on the Quality Audit alert card (2026-07-31 —
+    Scott: "Why don't these have the option fix? I know you can"). The card
+    itself only ever shows the one-line aggregate ("PASS:0 WARN:36 FAIL:22")
+    that _quality_audit_iteration() wrote into the heartbeat's detail string;
+    the real per-listing FAIL text it also captured (`summary`, up to 1500
+    chars of listing_integrity_check.py's own "✗ FAIL (" block) only ever
+    lived in the quality_audits table and, when real_failed > 0, an
+    ops_runbook.md entry — never surfaced in the app itself. This returns
+    that same stored summary so Scott can see specifics without leaving Today.
+
+    Caveat surfaced here rather than solved: `failed` in the stored row can
+    include listings that errored fetching from Etsy that run (transient,
+    not a content problem) — that per-run distinction (`fetch_errors`) is
+    computed in-memory during the audit but never persisted to the
+    quality_audits table, so it can't be reconstructed after the fact for a
+    past run. Told to the caller as `may_include_fetch_errors` rather than
+    silently presenting every FAIL as a confirmed content problem."""
+    history = await asyncio.to_thread(db.get_quality_audit_history, 1)
+    if not history:
+        return {"found": False}
+    row = history[-1]
+    return {
+        "found": True,
+        "ts": row.get("ts"),
+        "passed": row.get("passed"),
+        "warned": row.get("warned"),
+        "failed": row.get("failed"),
+        "audited_count": row.get("audited_count"),
+        "summary": row.get("summary") or "",
+        "may_include_fetch_errors": bool(row.get("failed")),
+    }
 
 
 # ── Shared background-loop retry/backoff/heartbeat helper ────────────────────────
@@ -11851,6 +11886,55 @@ async def produce_build_product(body: dict, _token: str = Depends(_rate_limited_
     return await asyncio.to_thread(_produce_build_product, body or {})
 
 
+# ── Retry a failed background build straight from its Today-tab alert ────────
+#
+# _health_check_iteration() (above) tracks every one-tap build in
+# _LONG_RUNNING_PROCS keyed by f"{proc_label}:{pid}" (e.g.
+# "build_coloring_product:COLOR1002") and, on a non-zero exit or a hang,
+# records it as an agent_heartbeat row named f"build:{cmd_name}" with status
+# "error" -- exactly the alert Scott saw on the Today tab with no way to act
+# on it ("Why don't these have the option fix? I know you can", 2026-07-31).
+# This dispatcher maps each proc_label prefix back to the exact same builder
+# function its own one-tap Create-screen button already calls, so "Retry"
+# is not a new mutation path -- it's the identical, already-approved action,
+# just re-triggered from the alert instead of typed in again.
+_LOOP_RETRY_BUILDERS = {
+    "build_coloring_pack": _produce_coloring_pack,
+    "build_planner": _produce_build_planner,
+    "build_sticker_pack": _produce_build_sticker_pack,
+    "build_product": _produce_build_product,
+    "build_wallart_product": _produce_build_product,
+    "build_coloring_product": _produce_build_product,
+}
+
+
+def _retry_build_loop(inp: dict) -> dict:
+    """`name` is a build-loop's agent_heartbeat name/label, e.g.
+    'build:build_coloring_product:COLOR1002' or the bare
+    'build_coloring_product:COLOR1002' (the Today alert only has the label
+    on hand) -- both accepted. Never touches Etsy; each target function is
+    already a real, independently-callable endpoint with its own validation,
+    so a bad pid still fails with that function's own clear error."""
+    raw = str((inp or {}).get("name", "")).strip()
+    if raw.startswith("build:"):
+        raw = raw[len("build:"):]
+    if ":" not in raw:
+        return {"error": f"'{raw}' isn't a recognized build-loop name (expected '<builder>:<pid>')."}
+    proc_label, _, pid = raw.partition(":")
+    builder = _LOOP_RETRY_BUILDERS.get(proc_label)
+    if builder is None:
+        return {"error": f"'{proc_label}' has no retry handler (retriable: "
+                          f"{', '.join(sorted(_LOOP_RETRY_BUILDERS))})."}
+    return builder({"pid": pid})
+
+
+@app.post("/api/loops/retry")
+async def retry_build_loop(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Today tab's Retry button on a failed background-build alert. See
+    _retry_build_loop()'s docstring."""
+    return await asyncio.to_thread(_retry_build_loop, body or {})
+
+
 @app.get("/api/produce/status")
 async def produce_status(os_pid: int, log_file: str = "", _token: str = Depends(_auth_session_or_bearer)):
     """Poll a background build kicked off by build-planner/build-sticker-pack/
@@ -13429,6 +13513,12 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
                 "source": "agent_heartbeat",
                 "title": f"Loop '{h.get('label') or h.get('name')}' is in an error state",
                 "detail": h.get("detail") or "",
+                # heartbeat_name (2026-07-31): the raw db row name, e.g.
+                # "build:build_coloring_product:COLOR1002" or "quality_audit" --
+                # lets the Today-tab card tell a retriable failed build apart
+                # from the Quality Audit loop (which gets a View Details action
+                # instead) without string-parsing the human-facing title.
+                "heartbeat_name": h.get("name"),
             })
 
     # API cost budget caps (Settings -> API Costs). Only checked for services
