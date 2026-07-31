@@ -596,6 +596,71 @@ async def _run_browser_checks() -> None:
             check("90001" in listings_html and "Ask" in listings_html and "Fix" in listings_html,
                   "an active listing with manifest_status='FAIL' should get the Fix button")
 
+            # Listings screen audit (2026-07-31), finding #4: new Expired tab --
+            # reactivating an expired listing IS Etsy's real renewal mechanism, so
+            # the detail panel's Activate button must render for state='expired'
+            # exactly like it already does for 'active'/'inactive' (previously
+            # gated to only those two, so an expired listing's Activate button
+            # silently never existed).
+            expired_check = await page.evaluate("""async () => {
+                _listings = [
+                    {listing_id: 90003, title: 'Needs Renewal', price: 12.99, state: 'expired',
+                     views: 0, num_favorers: 0, tags: []},
+                ];
+                _sectionFilter = null; _openDetailId = null;
+                _listingState = 'expired';
+                renderListings();
+                await toggleListingDetail(90003);
+                const panel = document.getElementById('hub-detail-90003');
+                const expiredTabExists = !!document.querySelector('#screen-listings .hub-toggle-btn[data-state="expired"]');
+                return { detailHtml: panel ? panel.innerHTML : null, expiredTabExists };
+            }""")
+            check(expired_check.get("expiredTabExists"), "an Expired toggle button (data-state='expired') should exist on the Listings screen")
+            detail_html = expired_check.get("detailHtml") or ""
+            check("Activate" in detail_html, f"an expired listing's detail panel should offer Activate, got: {detail_html[:300]}")
+
+            # Listings screen audit (2026-07-31), finding #1: global search -> Listings
+            # jump was broken every time, not intermittently -- showScreen('listings')
+            # kicks off an unawaited loadListings() that wipes #listings-content to a
+            # spinner (destroying every hub-detail-<id> node) before the old code's very
+            # next line, toggleListingDetail(r.id), even ran. Repro the exact precondition
+            # (cold _listings, a stashed search result) and confirm the detail panel now
+            # actually opens with the real listing's data once _navigateSearchResult is
+            # awaited end-to-end.
+            await page.evaluate("""() => {
+                window._origAuthGetListings = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/listings?state=active') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            listings: [{listing_id: 90004, title: 'Found Via Search', price: 7.77, state: 'active',
+                                        views: 3, num_favorers: 1, tags: []}],
+                            count: 1, state: 'active',
+                        })});
+                    }
+                    if (path.indexOf('/api/shop-sections') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({sections: []})});
+                    }
+                    if (path.indexOf('/api/listings/90004/files') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({files: []})});
+                    }
+                    return window._origAuthGetListings(path, ms);
+                };
+            }""")
+            search_jump_check = await page.evaluate("""async () => {
+                _listings = [];  // cold -- matches the real bug precondition
+                _lastListingState = 'draft';  // stale from a hypothetical prior visit
+                const dd = document.getElementById('search-dropdown');
+                dd._results = [{category: 'listing', id: 90004, title: 'Found Via Search'}];
+                await _navigateSearchResult(0);
+                const panel = document.getElementById('hub-detail-90004');
+                return { panelDisplay: panel ? panel.style.display : null, panelHtml: panel ? panel.innerHTML : null };
+            }""")
+            await page.evaluate("if(window._origAuthGetListings){window.authGet = window._origAuthGetListings; window._origAuthGetListings = null;}")
+            check(search_jump_check.get("panelDisplay") == 'block',
+                  f"the detail panel should actually be open after a search-result jump, got: {search_jump_check}")
+            check("90004" in (search_jump_check.get("panelHtml") or ""),
+                  f"the opened panel should be the real searched-for listing, got: {search_jump_check}")
+
             # Products screen rebuild (2026-07-15) -- was hardcoded to a ~5-product
             # "Core Products" slice, now the full catalog with a category filter.
             # Stub _products directly (bare assignment, not window.X -- see the tour

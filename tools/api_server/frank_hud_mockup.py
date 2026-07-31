@@ -2021,9 +2021,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Listings <span class="src">/api/listings — live Etsy listings via list_listings/get_listing</span></div>
       <div class="hub-toggle-row" style="margin-top:10px">
-        <button class="hub-toggle-btn active" onclick="loadListings('active',this)">Active</button>
-        <button class="hub-toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
-        <button class="hub-toggle-btn" onclick="loadListings('inactive',this)">Deactivated</button>
+        <button class="hub-toggle-btn active" data-state="active" onclick="loadListings('active',this)">Active</button>
+        <button class="hub-toggle-btn" data-state="draft" onclick="loadListings('draft',this)">Drafts</button>
+        <button class="hub-toggle-btn" data-state="inactive" onclick="loadListings('inactive',this)">Deactivated</button>
+        <!-- Expired (2026-07-31): reactivating an expired listing IS Etsy's renewal
+             mechanism (see stage_batch_listing_state's docstring) -- previously only
+             reachable by asking Frank in chat, not visible as a tab here at all. -->
+        <button class="hub-toggle-btn" data-state="expired" onclick="loadListings('expired',this)">Expired</button>
       </div>
       <div id="listings-content" class="hub-scroll"><div class="hub-spinner"></div></div>
     </div>
@@ -5588,12 +5592,25 @@ function _renderSearchResults(q, results) {
   dd.innerHTML = html;
   dd._results = results; // stash for _navigateSearchResult, avoids re-escaping ids/urls through onclick attrs
 }
-function _navigateSearchResult(idx) {
+async function _navigateSearchResult(idx) {
   const dd = document.getElementById('search-dropdown');
   const r = dd && dd._results && dd._results[idx];
   if (!r) return;
   closeSearchDropdown();
-  if (r.category === 'listing') { showScreen('listings'); toggleListingDetail(r.id); }
+  if (r.category === 'listing') {
+    // 2026-07-31 (Listings screen audit): this used to call toggleListingDetail()
+    // synchronously right after showScreen(), which failed every time, not just
+    // occasionally -- showScreen()'s own (unawaited) loadListings() call wipes
+    // #listings-content to a spinner before its first await, so the
+    // hub-detail-<id> node toggleListingDetail() looks for was already gone by
+    // the time it ran. Search results are always active-state listings
+    // (_search_listings() only searches state=active server-side), so force that
+    // tab and await a fresh load before trying to expand the row.
+    showScreen('listings');
+    const activeBtn = document.querySelector('#screen-listings .hub-toggle-btn[data-state="active"]');
+    await loadListings('active', activeBtn);
+    toggleListingDetail(r.id);
+  }
   else if (r.category === 'order') { window.open(r.url, '_blank', 'noopener'); }
   else if (r.category === 'product') { setProductCategoryFilter(r.subtitle || null); showScreen('products'); }
   else if (r.category === 'tool') { showScreen('tools'); }
@@ -8279,7 +8296,11 @@ async function toggleListingDetail(listingId) {
     `<div class="hub-drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
     `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
     `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
-    ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    // expired (2026-07-31): reactivating an expired listing is a normal Activate
+    // click same as inactive -- toggleListingState()'s newState logic already
+    // generalizes (anything !== 'active' -> 'active'), this just stops gating
+    // the button out of existence for the one state where Activate matters most.
+    ((l.state==='active'||l.state==='inactive'||l.state==='expired') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
     `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
     `</div>`;
   // Fix button/modal for inactive listings now lives on the compact row itself

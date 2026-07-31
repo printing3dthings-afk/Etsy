@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "9a67706-v287"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4ab6f39-v288"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5644,9 +5644,16 @@ def _check_star_seller_status() -> str:
 
 @app.get("/api/listings")
 async def get_listings(state: str = "active", _token: str = Depends(_auth_session_or_bearer)):
-    """Return listings with thumbnail URLs. Result cached 30 s."""
-    if state not in ("active", "draft", "inactive"):
-        raise HTTPException(status_code=400, detail="state must be active, draft, or inactive")
+    """Return listings with thumbnail URLs. Result cached 30 s.
+
+    state="expired" (2026-07-31, Listings screen audit): _listings_sync() and the
+    chat tools (list_listings/get_listing) already fully supported this state --
+    only the screen's own tab set (Active/Drafts/Deactivated) didn't expose it,
+    even though reactivating an expired listing IS Etsy's actual renewal
+    mechanism (see stage_batch_listing_state's own docstring). Added as a 4th
+    tab rather than left chat-only."""
+    if state not in ("active", "draft", "inactive", "expired"):
+        raise HTTPException(status_code=400, detail="state must be active, draft, inactive, or expired")
 
     def _fetch():
         data = _listings_sync(state)

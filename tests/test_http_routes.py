@@ -585,6 +585,43 @@ def test_listings_serves_stale_cache_when_etsy_unavailable():
         check(50 <= age_seconds <= 90, f"stale_as_of should reflect the ~60s-old seeded cache entry, got age {age_seconds}s")
 
 
+# ── Listings screen audit (2026-07-31): state=expired -- _listings_sync() and the
+# chat tools (list_listings/get_listing) already fully supported this state; only
+# the screen's own tab set didn't expose it, even though reactivating an expired
+# listing IS Etsy's real renewal mechanism (see stage_batch_listing_state) ──
+def test_listings_accepts_expired_state():
+    import etsy_api as etsy_api_module
+
+    server._cache.pop("listings_expired", None)
+
+    def _fake(self, state="active", limit=100):
+        check(state == "expired", f"expected the state param to reach get_shop_listings_all as 'expired', got {state!r}")
+        return [{"listing_id": 99, "title": "an expired listing", "state": "expired",
+                  "price": {"amount": 999, "divisor": 100}, "views": 0, "num_favorers": 0, "tags": []}]
+
+    original = etsy_api_module.EtsyAPIClient.get_shop_listings_all
+    etsy_api_module.EtsyAPIClient.get_shop_listings_all = _fake
+    try:
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.get("/api/listings?state=expired")
+    finally:
+        etsy_api_module.EtsyAPIClient.get_shop_listings_all = original
+        server._cache.pop("listings_expired", None)
+
+    check(resp.status_code == 200, f"state=expired should be accepted (200), got {resp.status_code}: {resp.text[:200]}")
+    body = resp.json()
+    check(body.get("count") == 1 and body.get("listings", [{}])[0].get("listing_id") == 99,
+          f"expected the fake expired listing to pass through, got: {body}")
+
+
+def test_listings_rejects_truly_invalid_state():
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.get("/api/listings?state=bogus")
+    check(resp.status_code == 400, f"a nonsense state should still 400, got {resp.status_code}")
+    detail = resp.json().get("detail", "")
+    check("expired" in detail, f"the 400 error message should mention the now-4 valid states, got: {detail!r}")
+
+
 # ── runner ────────────────────────────────────────────────────────────────────
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
