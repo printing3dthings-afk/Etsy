@@ -1774,6 +1774,60 @@ async def _run_browser_checks() -> None:
             check(today_badge_check.get("text") == "3", f"Today badge should count medium-severity items: {today_badge_check}")
             check(today_badge_check.get("display") == "flex", f"Today badge should be visible when medium count > 0: {today_badge_check}")
 
+            # ── Today UX audit (2026-07-31) ── setActionBadge() should fold in
+            # _alertsCritWarnCount (the alerts-only crit/warn count renderPhoneToday()
+            # maintains) so a standing alert-only critical condition (credential leak,
+            # expired token) isn't invisible to the badge just because it has no
+            # /api/actions counterpart. Tested directly against the shared state/function
+            # rather than through a live renderPhoneToday() fetch, for the same reason the
+            # "Recently completed" block above does -- the service worker makes mocking
+            # /api/alerts unreliable, and these are plain globals, not fetch-dependent.
+            today_alerts_badge_check = await page.evaluate("""() => {
+                _alertsCritWarnCount = 2;
+                setActionBadge({high: 0, medium: 3, low: 1}, 0);
+                const tb = document.getElementById('ptab-today-badge');
+                const result = {text: tb.textContent};
+                _alertsCritWarnCount = 0;  // reset so later tests aren't affected
+                setActionBadge({high: 0, medium: 0, low: 0}, 0);
+                return result;
+            }""")
+            check(today_alerts_badge_check.get("text") == "5", f"Today badge should be summary.medium(3) + _alertsCritWarnCount(2) = 5: {today_alerts_badge_check}")
+
+            # phoneNeedsSheet() should suppress "Let Frank fix it" for a
+            # product_file_integrity alert (the Conversion Doctor route it calls has no
+            # relationship to a missing file) but show it normally for an /api/actions
+            # recommendation (source:'action').
+            sheet_fix_gating_check = await page.evaluate("""() => {
+                _phoneNeeds = [
+                    {title: 'Missing file', listing_id: 111, source: 'product_file_integrity'},
+                    {title: 'Weak title', listing_id: 222, source: 'action'},
+                ];
+                phoneNeedsSheet(0);
+                const fileIntegrityDisplay = document.getElementById('phone-sheet-fix').style.display;
+                phoneNeedsSheet(1);
+                const actionDisplay = document.getElementById('phone-sheet-fix').style.display;
+                phoneSheetClose();
+                return {fileIntegrityDisplay, actionDisplay};
+            }""")
+            check(sheet_fix_gating_check.get("fileIntegrityDisplay") == "none",
+                  f"Fix button should be hidden for a product_file_integrity alert: {sheet_fix_gating_check}")
+            check(sheet_fix_gating_check.get("actionDisplay") != "none",
+                  f"Fix button should be shown for a real /api/actions recommendation: {sheet_fix_gating_check}")
+
+            # .palert.info's dot should be visually distinct from .good/.crit/.warn --
+            # a same-day calendar reminder (severity 'info') used to fall through to the
+            # same green 'good' styling as a genuinely positive signal.
+            palert_info_check = await page.evaluate("""() => {
+                const mk = (cls) => { const d = document.createElement('div'); d.className = 'palert ' + cls;
+                    const dot = document.createElement('span'); dot.className = 'pdot'; d.appendChild(dot);
+                    document.body.appendChild(d); const color = getComputedStyle(dot).backgroundColor; d.remove(); return color; };
+                return {info: mk('info'), good: mk('good'), crit: mk('crit'), warn: mk('warn')};
+            }""")
+            check(palert_info_check.get("info") != palert_info_check.get("good"),
+                  f".palert.info's dot should differ from .palert.good's (no longer falls through to green): {palert_info_check}")
+            check(palert_info_check.get("info") not in (palert_info_check.get("crit"), palert_info_check.get("warn")),
+                  f".palert.info's dot should be its own color, not reuse crit/warn: {palert_info_check}")
+
             await page.evaluate("startTour()")
             await page.wait_for_timeout(400)
             mobile_step1 = await page.evaluate("""() => ({
@@ -2757,6 +2811,12 @@ async def _run_browser_checks() -> None:
             check("fewer" in (ia.get("toggleText") or ""), f"toggle label must flip once expanded: {ia}")
 
             badge_state = await page.evaluate("""() => {
+                // 2026-07-31 (Today UX audit): _alertsCritWarnCount is real shared state now
+                // (see setActionBadge()'s hc computation) -- by this point in the run a real
+                // renderPhoneToday() has already fired (e.g. via the tour steps below) and set
+                // it from live data, so this isolated check of the summary.high pathway must
+                // reset it first or htText would include whatever real alerts happen to exist.
+                _alertsCritWarnCount = 0;
                 setActionBadge({high: 3}, 5);
                 const hab = document.getElementById('home-appr-badge');
                 const htb = document.getElementById('home-today-badge');

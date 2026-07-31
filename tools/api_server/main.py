@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "155c639-v282"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c11563d-v283"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1652,7 +1652,21 @@ async def _fetch_with_degrade(cache_key: str | None, coro, *, timeout: float):
         stale = _cache_get(cache_key, ttl=float("inf")) if cache_key else None
         if stale is not None:
             if isinstance(stale, dict):
-                stale = {**stale, "stale": True, "stale_reason": str(exc)[:200]}
+                # 2026-07-31 (Today UX audit): stale/stale_reason were already threaded
+                # this far but the frontend had no consumer for either -- confirmed via
+                # a full-repo grep, zero live callers ever checked them, so a stale cache
+                # payload rendered indistinguishably from a fresh one (worse: Today's
+                # count-up tile animation actively sold it as "just measured"). Adding a
+                # real as-of timestamp (not just a boolean) lets the frontend reuse its
+                # existing _offlineNote(ts) pattern verbatim instead of inventing new copy.
+                with _cache_lock:
+                    stale_ts = (_cache.get(cache_key) or {}).get("ts")
+                stale = {
+                    **stale,
+                    "stale": True,
+                    "stale_reason": str(exc)[:200],
+                    "stale_as_of": datetime.fromtimestamp(stale_ts, tz=timezone.utc).isoformat() if stale_ts else None,
+                }
             return stale
         raise HTTPException(
             status_code=503,
@@ -13517,6 +13531,13 @@ def _product_file_integrity_alerts() -> list[dict]:
             "detail": f"{item.get('title', '')} (Etsy #{item.get('listing_id', '?')}) — expected "
                       f"{', '.join(item.get('expected_files', [])) or 'a digital file'}. Run "
                       f"tools/audit_product_files.py to re-check.",
+            # 2026-07-31 (Today UX audit): listing_id previously only lived inside the
+            # `detail` string -- the frontend's Needs Attention card never had a
+            # structured field to key a tap-to-act sheet off of, so this alert type
+            # (arguably the most severe in the app -- a customer could receive
+            # nothing) could never be tapped, unlike a same-severity /api/actions
+            # recommendation for the identical listing.
+            "listing_id": item.get("listing_id"),
         }
         for item in report.get("genuinely_missing", [])
     ]

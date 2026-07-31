@@ -32,6 +32,7 @@ import sys
 import tempfile
 import time
 import traceback
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -572,6 +573,16 @@ def test_listings_serves_stale_cache_when_etsy_unavailable():
     check(body.get("stale") is True, f"the served fallback should be flagged stale, got: {body}")
     check(body.get("count") == 1 and body.get("listings", [{}])[0].get("title") == "cached listing",
           f"the served fallback should be the actual cached data, got: {body}")
+    # 2026-07-31 (Today UX audit): stale/stale_reason were already threaded this
+    # far but had zero frontend consumers -- a real as-of timestamp lets the
+    # frontend show something like "showing cached data from 2m ago" instead of
+    # rendering a possibly-hours-old number with no visual distinction from a
+    # fresh one. Should reflect the seeded cache entry's real age (~60s ago).
+    stale_as_of = body.get("stale_as_of")
+    check(stale_as_of, f"a stale response should carry a real as-of timestamp, got: {body}")
+    if stale_as_of:
+        age_seconds = time.time() - datetime.fromisoformat(stale_as_of).timestamp()
+        check(50 <= age_seconds <= 90, f"stale_as_of should reflect the ~60s-old seeded cache entry, got age {age_seconds}s")
 
 
 # ── runner ────────────────────────────────────────────────────────────────────

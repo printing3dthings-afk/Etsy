@@ -247,6 +247,12 @@ def test_file_audit_alerts_read_the_report():
             check(alerts[0]["source"] == "product_file_integrity", f"wrong alert source: {alerts}")
             check(alerts[0]["severity"] == "critical", f"a genuinely-missing active listing is a compliance issue -- must be critical: {alerts}")
             check("X1" in alerts[0]["title"], f"alert should name the product: {alerts}")
+            # 2026-07-31 (Today UX audit): listing_id used to only live inside the
+            # `detail` string -- the frontend had no structured field to key a
+            # tap-to-act sheet off of, so this alert type (arguably the most severe
+            # in the app) could never be tapped, unlike a same-severity
+            # /api/actions recommendation for the identical listing.
+            check(alerts[0].get("listing_id") == "999", f"alert should expose listing_id as a structured field, got: {alerts}")
 
             idx = server._file_audit_index()
             check(idx.get("X1") == "genuinely_missing", f"file audit index should classify X1: {idx}")

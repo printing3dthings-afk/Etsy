@@ -1448,6 +1448,7 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 }
 @media (prefers-reduced-motion:reduce){.palert.resolving{animation:none;display:none}}
 .palert.good .pdot{background:var(--green)}
+.palert.info .pdot{background:var(--cyan)}
 .pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
 .pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
 .pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -2926,28 +2927,31 @@ async function renderPhoneToday(){
   // (see the resolve-detection block below).
   const isFirstLoad = !el.dataset.loadedOnce;
   if (isFirstLoad) el.innerHTML = _skeletonCards(0, 'tile') + _skeletonCards(2);
-  let m = {}, alerts = [];
-  try { const r = await authGet('/api/metrics', 15000); m = await r.json().catch(()=>({})); } catch(e) {}
-  try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
-        alerts = d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) {}
-  let acts = [];
-  try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
-        acts = (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) {}
-  // 2026-07-18: a rare, genuinely earned "delight" moment -- Star Seller
-  // status is exactly the kind of infrequent, high-value milestone the
-  // visual-design research called out as worth a touch more personality
-  // than the constant-frequency UI around it. Fetched here (not a separate
-  // Today-only endpoint) so it degrades to "nothing shown" the same way
-  // everything else on this screen already does on a fetch failure.
-  let starSeller = null;
-  try { const r = await authGet('/api/star-seller', 15000); starSeller = await r.json().catch(()=>null); } catch(e) {}
-  // 2026-07-18 (audit-report fix, "bundle-opportunity nudge"): a growth
-  // suggestion, not a problem -- deliberately fetched and rendered separately
-  // from Needs Attention below so it never shares a severity dot/urgency
-  // styling with an actual alert.
-  let bundleOpps = [];
-  try { const r = await authGet('/api/bundle-opportunities', 15000); const d = await r.json().catch(()=>({}));
-        bundleOpps = d.opportunities || []; } catch(e) {}
+  // 2026-07-31 (Today UX audit): these 5 fetches used to run one after another,
+  // each with its own 15s timeout -- worst case (several slow endpoints) the
+  // skeleton sat on-screen for the SUM of them instead of the max. Each fetch
+  // keeps its own try/catch so it still degrades independently and never makes
+  // Promise.all fail fast and blank fields that would otherwise have loaded fine.
+  const [m, alerts, acts, starSeller, bundleOpps] = await Promise.all([
+    (async () => { try { const r = await authGet('/api/metrics', 15000); return await r.json().catch(()=>({})); } catch(e) { return {}; } })(),
+    (async () => { try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
+      return d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) { return []; } })(),
+    (async () => { try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
+      return (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) { return []; } })(),
+    // 2026-07-18: a rare, genuinely earned "delight" moment -- Star Seller
+    // status is exactly the kind of infrequent, high-value milestone the
+    // visual-design research called out as worth a touch more personality
+    // than the constant-frequency UI around it. Fetched here (not a separate
+    // Today-only endpoint) so it degrades to "nothing shown" the same way
+    // everything else on this screen already does on a fetch failure.
+    (async () => { try { const r = await authGet('/api/star-seller', 15000); return await r.json().catch(()=>null); } catch(e) { return null; } })(),
+    // 2026-07-18 (audit-report fix, "bundle-opportunity nudge"): a growth
+    // suggestion, not a problem -- deliberately fetched and rendered separately
+    // from Needs Attention below so it never shares a severity dot/urgency
+    // styling with an actual alert.
+    (async () => { try { const r = await authGet('/api/bundle-opportunities', 15000); const d = await r.json().catch(()=>({}));
+      return d.opportunities || []; } catch(e) { return []; } })(),
+  ]);
   // Real /api/metrics shape: orders is an OBJECT ({last_7_days, revenue_7d, ...}),
   // shop.total_sales is the all-time count. (Rendering m.orders directly printed
   // "[object Object]" — caught by Scott on-device.)
@@ -2961,24 +2965,47 @@ async function renderPhoneToday(){
     <div class="ptile"><div class="n" data-countup data-target="${escHtml(String(rev7))}">0</div><div class="l">Rev · 7d</div></div>
     <div class="ptile"><div class="n" data-countup data-target="${escHtml(String(totalSales))}">0</div><div class="l">Total sales</div></div>
   </div>`;
+  // 2026-07-31 (Today UX audit): /api/metrics can return a degraded cache-fallback
+  // payload (stale:true) after an Etsy timeout, but nothing here ever checked --
+  // the count-up animation right below would then animate a possibly-hours-old
+  // number as if it were "just measured." Reuses the existing _offlineNote()
+  // pattern (same one already used elsewhere in the app) rather than inventing
+  // new copy, and _animateCountUp() is skipped below so a stale number doesn't
+  // get the same liveness cue as a fresh one.
+  if (m.stale) html += _offlineNote(m.stale_as_of || Date.now());
   if (starSeller && starSeller.status === 'on_track') {
     const rev90 = '$' + Number(starSeller.revenue_90d || 0).toFixed(0);
     const rating = starSeller.avg_rating ? starSeller.avg_rating + '★' : '—';
     html += `<div class="pmilestone"><span class="pmilestone-glow">⭐</span><div>` +
       `<div class="pmilestone-t">Star Seller — on track</div>` +
       `<div class="pmilestone-s">${escHtml(String(starSeller.orders_90d||0))} orders · ${escHtml(rev90)} · ${escHtml(rating)} · 90d</div>` +
+      (starSeller.stale ? _offlineNote(starSeller.stale_as_of || Date.now()) : '') +
       `</div></div>`;
   }
+  // 2026-07-31 (Today UX audit): 'info' previously fell through to 'good' (the
+  // same green used for a genuinely positive signal) -- a same-day calendar
+  // reminder rendered with a green "all good" dot inside a section titled
+  // "Needs attention." Reuses this app's existing cyan info convention
+  // (.toast.info / .feed-tag.info) rather than inventing a new color.
   const sevOf = s => { s=String(s||'').toLowerCase();
     return (s.includes('crit')||s.includes('high')||s.includes('err')) ? 'crit'
-         : (s.includes('warn')||s.includes('med')) ? 'warn' : 'good'; };
+         : (s.includes('warn')||s.includes('med')) ? 'warn'
+         : s.includes('info') ? 'info' : 'good'; };
   // Needs attention = Frank's ranked recommendations (with a suggested fix each) + alerts.
   // Recommendations carry listing_id/url → tappable card → action sheet (fix it / view on Etsy).
   const needs = [];
   acts.forEach(x => needs.push({sev: x.severity==='high'?'crit':'warn', title: x.title, sub: x.suggestion,
-    listing_id: x.listing_id, url: x.url}));
+    listing_id: x.listing_id, url: x.url, source: 'action'}));
+  // 2026-07-31 (Today UX audit): sub used to be hardcoded '' for every alert --
+  // the backend's `detail` field (real remediation steps, e.g. exactly how to
+  // rotate a leaked key) was already fetched and then silently dropped. Also now
+  // copies listing_id/url through when the alert carries them (e.g. a
+  // product_file_integrity alert), and tags `source` so the tap sheet can tell a
+  // conversion-fixable /api/actions recommendation apart from an alert that
+  // isn't (see phoneNeedsSheet()).
   alerts.forEach(x => { const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
-    needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: ''}); });
+    needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: x.detail || '',
+      listing_id: x.listing_id, url: x.url, source: x.source || 'alert'}); });
 
   // 2026-07-18: a card that was showing on the PREVIOUS render but isn't in
   // this one anymore (Frank fixed it, or it genuinely cleared) gets to
@@ -2997,6 +3024,10 @@ async function renderPhoneToday(){
   }
   _phoneNeeds = needs.slice(0,20);
   _phoneNeedsKeys = newKeys;
+  // Computed off the full `needs` array, not the 20-item slice -- the badge
+  // should never undercount just because the panel itself truncates.
+  _alertsCritWarnCount = needs.filter(x => x.source !== 'action' && (x.sev === 'crit' || x.sev === 'warn')).length;
+  if (typeof setActionBadge === 'function') setActionBadge(_actionsSummary, (_pendingActions||[]).length);
 
   if (needs.length){
     html += '<div class="pmore-grp">Needs attention</div>';
@@ -3020,7 +3051,12 @@ async function renderPhoneToday(){
   }
   el.innerHTML = html;
   el.dataset.loadedOnce = '1';
-  el.querySelectorAll('[data-countup]').forEach(node => _animateCountUp(node, node.dataset.target));
+  // 2026-07-31: skip the count-up motion on a stale metrics payload -- the
+  // animation is deliberately a "this is live data" cue (see _animateCountUp's
+  // own comment), which is actively misleading on a number that may be hours
+  // old. The value still renders immediately via the fallback below.
+  if (m.stale) el.querySelectorAll('.ptiles [data-countup]').forEach(node => { node.textContent = node.dataset.target; });
+  else el.querySelectorAll('[data-countup]').forEach(node => _animateCountUp(node, node.dataset.target));
 }
 // Action sheet for a tapped Needs-attention card: Frank fixes it, or open on Etsy.
 let _phoneNeeds = [];
@@ -3032,6 +3068,16 @@ function phoneNeedsSheet(i){
   _phoneSheetItem = it;
   document.getElementById('phone-sheet-title').textContent = it.title || 'Listing issue';
   document.getElementById('phone-sheet-sub').textContent = it.sub || '';
+  // 2026-07-31 (Today UX audit): "Let Frank fix it" calls the Conversion Doctor
+  // route, which only ever touches title/tags/description -- for an alert with
+  // no relationship to that (product_file_integrity: a missing digital file),
+  // tapping it would just report "nothing to fix," an honest but unhelpful
+  // dead-end on the single highest-severity alert type in the app. Show only
+  // "View on Etsy" for those, so the one genuinely useful action (jump to the
+  // listing and re-upload) stays front and center instead of sharing space with
+  // a button that can't do anything here.
+  const fixBtn = document.getElementById('phone-sheet-fix');
+  if (fixBtn) fixBtn.style.display = (it.source === 'product_file_integrity') ? 'none' : '';
   document.body.classList.add('phone-sheet-open');
 }
 function phoneSheetClose(){
@@ -6948,6 +6994,18 @@ let _pendingActions = [];
 let _actionsSummary = {high:0,medium:0,low:0};
 let _recentActions = [];  // non-pending actions, newest first -- "Recently completed"
 let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
+// 2026-07-31 (Today UX audit): the Today badge only ever counted /api/actions'
+// summary (recommendations) -- a standing credential-leak alert, expired refresh
+// token, or budget-cap overage (all real, all critical, all alerts-only with no
+// /api/actions counterpart) could sit as a red-dot card in Today's own "Needs
+// attention" list while contributing zero to the badge. renderPhoneToday()
+// updates this on every render to the count of alert-sourced (not
+// recommendation-sourced -- those are already in _actionsSummary) crit/warn
+// items; setActionBadge() folds it into the Today badge below so it stays
+// correct through ANY caller, including the always-on 30s loadQueue() tick --
+// a one-shot DOM push from renderPhoneToday() alone would just get clobbered
+// back down by that tick's own setActionBadge() call.
+let _alertsCritWarnCount = 0;
 function setActionBadge(summary, pending) {
   const b = document.getElementById('badge-actions');
   if (!b) return;
@@ -6971,7 +7029,7 @@ function setActionBadge(summary, pending) {
   // happened to open that tab. Counting both keeps the badge honest against what
   // the panel actually shows.
   const tb = document.getElementById('ptab-today-badge');
-  const hc = ((summary && summary.high) || 0) + ((summary && summary.medium) || 0);
+  const hc = ((summary && summary.high) || 0) + ((summary && summary.medium) || 0) + _alertsCritWarnCount;
   if (tb) { if (hc > 0) { tb.textContent = hc > 99 ? '99+' : hc; tb.style.display = 'flex'; } else { tb.style.display = 'none'; } }
   // Home tile mirrors (2026-07-23) -- same two counts, new mount points. #phone-tabbar
   // (and its badges) is hidden while on Home, so without this a user parked on the
@@ -10095,6 +10153,17 @@ setInterval(function(){
   if (document.hidden) return;
   const el = document.getElementById('pp-appr');
   if (el && el.classList.contains('on')) renderPhoneApprovals();
+}, 30000);
+
+// Mobile Today refresh: same pattern as the Approvals interval directly above,
+// same underlying reason -- renderPhoneToday() previously only fired once on
+// tab-open, so its resolve animation (built specifically to visualize a card
+// disappearing over time) could never actually play if Scott stayed on the tab
+// (2026-07-31, Today UX audit).
+setInterval(function(){
+  if (document.hidden) return;
+  const el = document.getElementById('pp-today');
+  if (el && el.classList.contains('on')) renderPhoneToday();
 }, 30000);
 
 // ── Operator chip — load current user from /api/me ──
