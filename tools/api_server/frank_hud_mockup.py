@@ -1782,7 +1782,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div class="panel brk col-timeline">
           <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
           <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
-          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')" role="button" tabindex="0">View Full Schedule ›</span></div>
+          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('calendar')" role="button" tabindex="0">View Full Schedule ›</span></div>
         </div>
       </div>
 
@@ -4014,7 +4014,7 @@ const _SCREEN_LOADERS = {
 };
 const _GLOBAL_LOADERS = [
   () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
-  loadRelayStatus, loadAlerts, checkPersistence, loadQueue, loadShopPerf,
+  loadRelayStatus, loadAlerts, checkPersistence, loadQueue, loadShopPerf, updateTasksBadge,
 ];
 let _activeScreen = 'cmd';
 
@@ -6964,6 +6964,20 @@ function _sharedTodosFetch(){
   }
   return _todosFetchPromise;
 }
+// 2026-08-01 (Tasks screen audit): badge-tasks used to be written only inside
+// loadTasks(), which only ever runs while the Tasks screen itself is active
+// (_SCREEN_LOADERS.tasks, not _GLOBAL_LOADERS) -- so the badge went stale the
+// instant the user navigated away and never caught up again, even as new
+// todos were added via chat. loadQueue() already solves this for
+// badge-actions by being dual-purpose; this is the same fix, scoped to just
+// the badge (no re-render) so it's safe to run on every screen.
+async function updateTasksBadge(){
+  try {
+    const d = await _sharedTodosFetch();
+    const badge = document.getElementById('badge-tasks');
+    if(badge){ badge.textContent = d.open_count; badge.style.display = d.open_count>0 ? '' : 'none'; }
+  } catch(e) { /* offline -- leave the badge showing its last known value */ }
+}
 
 async function loadMissionTimeline(){
   const list = document.getElementById('timeline-list');
@@ -7091,39 +7105,63 @@ async function loadTasks(){
   }
 }
 async function addHudTodo(){
+  // 2026-08-01 (Tasks screen audit): used to clear inp.value/dueInp.value
+  // BEFORE the request resolved (an "it worked" signal on click), then
+  // silently swallow any failure with an empty catch and no r.ok check --
+  // a failed add (expired session, transient 500, offline) looked
+  // identical to a successful one and the typed text/due date were gone
+  // for good. Now both fields stay put until the request is confirmed
+  // successful, and a failure surfaces a real toast.
   const inp = document.getElementById('hud-todo-input');
   const dueInp = document.getElementById('hud-todo-due');
   const catInp = document.getElementById('hud-todo-category');
   const text = inp.value.trim();
   if (!text) return;
-  inp.value = '';
   const due = dueInp.value;
-  dueInp.value = '';
   const category = catInp ? catInp.value : 'general';
   try {
-    await fetchWithTimeout(BASE+'/api/todos', {
+    const r = await fetchWithTimeout(BASE+'/api/todos', {
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
       body: JSON.stringify({text, added_by:'scott', due_date: due || null, category}),
     }, 15000);
-  } catch(e) {}
-  loadTasks();
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    inp.value = '';
+    dueInp.value = '';
+    loadTasks();
+  } catch(e) {
+    showToast('Could not add task: ' + (e.message||e), 'err', 6000);
+  }
 }
 async function toggleHudTodo(id, done){
   try {
-    await fetchWithTimeout(BASE+'/api/todos/'+id+'/toggle', {
+    const r = await fetchWithTimeout(BASE+'/api/todos/'+id+'/toggle', {
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
       body: JSON.stringify({done}),
     }, 15000);
-  } catch(e) {}
-  loadTasks();
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadTasks();
+  } catch(e) {
+    showToast('Could not update task: ' + (e.message||e), 'err', 6000);
+    loadTasks();
+  }
 }
 async function deleteHudTodo(id){
+  // 2026-08-01 (Tasks screen audit): every other single-item delete in this
+  // file (e.g. deleteRefImage) confirms first -- this one didn't, so a
+  // misclick on the small "✕" permanently removed a task with no in-app undo.
+  if (!confirm('Delete this task?')) return;
   try {
-    await fetchWithTimeout(BASE+'/api/todos/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
-  } catch(e) {}
-  loadTasks();
+    const r = await fetchWithTimeout(BASE+'/api/todos/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadTasks();
+  } catch(e) {
+    showToast('Could not delete task: ' + (e.message||e), 'err', 6000);
+  }
 }
 
 // ── Tools & Skills — real data from /api/tools/list (live AGENT_TOOLS registry) ──

@@ -256,6 +256,27 @@ def test_create_calendar_event_tool_requires_summary_and_when():
     check("error" in result, f"missing required fields should error cleanly, got: {result}")
 
 
+# ── complete_todo agent tool: must also clean up its synced calendar event ──
+# 2026-08-01 (Tasks screen audit): the 2026-07-18 orphaned-event fix reached
+# toggle_todo (the dashboard checkbox's REST endpoint) and remove_todo, but
+# never complete_todo (the chat tool Frank calls on himself) -- this is the
+# regression test for that gap. No existing test covered
+# _cleanup_synced_calendar_event before this (confirmed via repo-wide search).
+def test_complete_todo_tool_cleans_up_synced_calendar_event():
+    todo_id = db.add_todo("Renew SSL cert", added_by="frank", category="general")
+    with patch.object(server, "_cleanup_synced_calendar_event") as mock_cleanup:
+        result = server._execute_agent_tool("complete_todo", {"todo_id": todo_id})
+    check(result.get("done") is True, f"expected done=True, got: {result}")
+    mock_cleanup.assert_called_once_with(f"todo:{todo_id}")
+
+
+def test_complete_todo_tool_skips_cleanup_when_todo_not_found():
+    with patch.object(server, "_cleanup_synced_calendar_event") as mock_cleanup:
+        result = server._execute_agent_tool("complete_todo", {"todo_id": 999999})
+    check(result.get("done") is False, f"expected done=False for an unknown id, got: {result}")
+    check(not mock_cleanup.called, "must not attempt calendar cleanup for a todo that was never marked done")
+
+
 # ── _sync_calendar_to_google(): dedup ────────────────────────────────────────
 def test_sync_calendar_dedups_across_runs():
     created_calls = []

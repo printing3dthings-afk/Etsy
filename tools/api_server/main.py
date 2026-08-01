@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2bba843-v294"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "277c255-v295"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4068,7 +4068,17 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             todo_id = (tool_input or {}).get("todo_id")
             if todo_id is None:
                 return {"error": "todo_id is required"}
-            ok = db.set_todo_done(int(todo_id), True)
+            todo_id = int(todo_id)
+            ok = db.set_todo_done(todo_id, True)
+            if ok:
+                # 2026-08-01 (Tasks screen audit): the 2026-07-18 fix for orphaned
+                # synced Google Calendar events (see _cleanup_synced_calendar_event's
+                # docstring) only reached toggle_todo/remove_todo -- this is the
+                # other place a todo gets marked done. _execute_agent_tool is a
+                # plain sync function already running off the event loop (dispatched
+                # via the caller's asyncio.to_thread), so this is a direct call, not
+                # awaited.
+                _cleanup_synced_calendar_event(f"todo:{todo_id}")
             return {"done": ok}
         if name == "create_calendar_event":
             summary = ((tool_input or {}).get("summary") or "").strip()

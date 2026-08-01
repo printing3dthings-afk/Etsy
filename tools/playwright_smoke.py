@@ -601,6 +601,56 @@ async def _run_browser_checks() -> None:
                   f"the await-sequencing fix (loadKb() then openKbDoc(), both awaited) addresses, "
                   f"got: {kb_race.get('html','')[:200]}")
 
+            # ── Tasks screen: silent-failure fix + View Full Schedule link (2026-08-01
+            # audit) -- addHudTodo/toggleHudTodo/deleteHudTodo used to swallow every
+            # failure with an empty catch(e){} and no r.ok check. addHudTodo also
+            # cleared the input AND due-date fields before the request resolved, so a
+            # failed add looked identical to a successful one and the typed text was
+            # gone for good. ──
+            await page.evaluate("showScreen('tasks')")
+            await page.wait_for_timeout(500)
+            add_fail = await page.evaluate("""async () => {
+                const orig = window.fetchWithTimeout;
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    if (String(url).includes('/api/todos') && opts && opts.method === 'POST') {
+                        return Promise.resolve({ok: false, status: 500, json: async () => ({detail: 'boom'})});
+                    }
+                    return orig(url, opts, ms);
+                };
+                const inp = document.getElementById('hud-todo-input');
+                const dueInp = document.getElementById('hud-todo-due');
+                inp.value = 'Renew business license';
+                dueInp.value = '2026-12-31';
+                await addHudTodo();
+                window.fetchWithTimeout = orig;
+                const stack = document.getElementById('toast-stack');
+                return {
+                    inputValue: inp.value,
+                    dueValue: dueInp.value,
+                    toastText: stack ? stack.textContent : '',
+                };
+            }""")
+            check(add_fail.get("inputValue") == "Renew business license",
+                  f"a failed add must NOT clear the typed task text, got: {add_fail}")
+            check(add_fail.get("dueValue") == "2026-12-31",
+                  f"a failed add must NOT clear the chosen due date, got: {add_fail}")
+            check("Could not add task" in add_fail.get("toastText", ""),
+                  f"a failed add must surface a real error toast, got: {add_fail}")
+
+            schedule_link = await page.evaluate("""() => {
+                showScreen('cmd');
+                const link = [...document.querySelectorAll('.col-timeline .lnk')]
+                    .find(el => el.textContent.includes('View Full Schedule'));
+                if (!link) return {found: false};
+                link.click();
+                return {found: true, active: document.getElementById('screen-calendar').classList.contains('active')};
+            }""")
+            check(schedule_link.get("found"),
+                  f"expected the 'View Full Schedule' link on the Mission Timeline panel: {schedule_link}")
+            check(schedule_link.get("active"),
+                  f"'View Full Schedule' must open the real Calendar screen, not the flat Tasks list "
+                  f"(regression: it used to link to showScreen('tasks')): {schedule_link}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy
