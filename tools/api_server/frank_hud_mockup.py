@@ -1962,7 +1962,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- Merged "Knowledge" screen — everything Frank remembers, in one place.
        Keeps the original content IDs (#memory-content, #kb-content) + search
        inputs so loadMemory/loadKb and searchKb() work unchanged. "Past
-       conversations" moved out to its own #screen-conversations (2026-07-15,
+       conversations" moved out to its own #screen-conversations (2026-07-16,
        Scott: "I need a option on the list to see the chat box from ask Frank
        to see his responses" -- it was previously reachable only by scrolling
        past this section on desktop; on mobile there was no path to it at
@@ -1989,7 +1989,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
        calls, just its own directly-reachable screen now. ══════════ -->
   <div class="screen" id="screen-conversations">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Chat History <span class="src">/api/conversations — every past reply, in writing</span></div>
+      <div class="panel-title">Chat History <span class="src">/api/conversations — every past reply that didn't touch buyer data</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
         <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
         <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
@@ -3996,7 +3996,7 @@ const _SCREEN_LOADERS = {
   actions: [loadActions],
   calendar: [loadCalendar],
   conversations: [loadConversations],
-  knowledge: [loadMemory, loadKb],  // merged "Knowledge" screen ("Past conversations" moved to its own #screen-conversations, 2026-07-15)
+  knowledge: [loadMemory, loadKb],  // merged "Knowledge" screen ("Past conversations" moved to its own #screen-conversations, 2026-07-16)
   tools: [loadTools],
   workflows: [loadWorkflows],
   listings: [() => loadListings(_lastListingState)],
@@ -8064,7 +8064,7 @@ function renderConversationDetail(sessionId, d) {
   const msgs = d.messages || [];
   let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
     <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
-    <span style="font-size:12px;color:var(--muted)">${escHtml(_convShortId(sessionId))} · ${msgs.length} message${msgs.length===1?'':'s'}${d.truncated ? ' (showing first 500)' : ''}</span>
+    <span style="font-size:12px;color:var(--muted)">${escHtml(_convShortId(sessionId))} · ${msgs.length} message${msgs.length===1?'':'s'}${d.truncated ? ' (showing most recent 500)' : ''}</span>
   </div>`;
   html += '<div style="display:flex;flex-direction:column;gap:10px">' +
     msgs.map(m => `<div class="lc-bubble ${m.role === 'user' ? 'user' : 'bot'}">${escHtml(m.content)}</div>`).join('') +
@@ -8085,18 +8085,21 @@ async function searchConversations() {
     const r = await authGet('/api/conversations?q=' + encodeURIComponent(q), 15000);
     if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
     const d = await r.json();
-    renderConversationSearch(q, d.results || []);
+    renderConversationSearch(q, d.results || [], !!d.truncated);
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
-function renderConversationSearch(q, results) {
+function renderConversationSearch(q, results, truncated) {
   const el = document.getElementById('conversations-content');
   if (!el) return;
+  // 2026-08-01 (Chat History audit): truncated comes from the backend's real
+  // COUNT-based flag, not guessed from results.length === the cap -- that
+  // guess can't tell "capped" apart from "exactly that many total matches."
   let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
     <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
-    <span style="font-size:12px;color:var(--muted)">${results.length} match${results.length===1?'':'es'} for "${escHtml(q)}"</span>
+    <span style="font-size:12px;color:var(--muted)">${results.length}${truncated?'+':''} match${results.length===1&&!truncated?'':'es'} for "${escHtml(q)}"</span>
   </div>`;
   html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')" role="button" tabindex="0">
       <div class="tl-dotcol"><span class="d"></span></div>

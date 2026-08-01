@@ -766,10 +766,19 @@ def list_chat_sessions() -> list:
 
 
 def get_chat_session(session_id: str, limit: int = 500) -> dict:
-    """Full message history for one session, ascending (oldest-first) — distinct
-    from load_chat_history(), which is newest-N-then-reversed and built only to
-    seed live agent context. Returns {"messages": [...], "truncated": bool}.
-    `limit` is a safety cap, not a UX page size."""
+    """Full message history for one session, ascending (oldest-first), capped
+    to the most recent `limit` messages -- distinct from load_chat_history(),
+    which is built only to seed live agent context (smaller limit, same
+    newest-N-then-reversed shape). Returns {"messages": [...], "truncated": bool}.
+    `limit` is a safety cap, not a UX page size.
+
+    2026-08-01 (Chat History audit): this used to be ORDER BY id ASC LIMIT ?,
+    which returns the OLDEST `limit` messages -- once a long-lived session
+    (CHAT_SESSION is a single per-device UUID reused indefinitely) passed the
+    cap, its newest replies became permanently unreachable on the Chat History
+    screen with no pagination to page forward. Fixed to select the newest
+    `limit` rows (DESC + reverse, same pattern load_chat_history() already
+    uses) so the tail shown is always current."""
     if not session_id:
         return {"messages": [], "truncated": False}
     init_db()
@@ -781,9 +790,10 @@ def get_chat_session(session_id: str, limit: int = 500) -> dict:
         ).fetchone()["n"]
         rows = conn.execute(
             "SELECT id, role, content, created_at FROM chat_messages "
-            "WHERE session_id=? ORDER BY id ASC LIMIT ?",
+            "WHERE session_id=? ORDER BY id DESC LIMIT ?",
             (session_id, limit),
         ).fetchall()
+        rows = list(rows)[::-1]
         return {
             "messages": [
                 {"id": r["id"], "role": r["role"], "content": r["content"], "created_at": r["created_at"]}
@@ -795,15 +805,22 @@ def get_chat_session(session_id: str, limit: int = 500) -> dict:
         conn.close()
 
 
-def search_chat_messages(query: str, limit: int = 50) -> list:
+def search_chat_messages(query: str, limit: int = 50) -> dict:
     """Substring search across all sessions' message content, newest-first, capped
     at `limit`. SQLite's LIKE is case-insensitive for ASCII by default, so no
     LOWER() wrapping is needed. LIKE wildcard characters (% and _) in the user's
     query are escaped so a literal search like "50% off" behaves correctly
-    instead of being interpreted as a wildcard."""
+    instead of being interpreted as a wildcard. Returns {"results": [...],
+    "truncated": bool}.
+
+    2026-08-01 (Chat History audit): queries limit+1 rows and trims to `limit`
+    so `truncated` is a real signal, not guessed from the frontend seeing
+    exactly `limit` results back -- that guess can't tell "capped" apart from
+    "exactly `limit` total matches, nothing truncated," same class of bug
+    get_chat_session()'s truncated flag (a real COUNT(*)) already avoids."""
     query = (query or "").strip()
     if not query:
-        return []
+        return {"results": [], "truncated": False}
     init_db()
     escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     conn = _connect()
@@ -811,18 +828,23 @@ def search_chat_messages(query: str, limit: int = 50) -> list:
         rows = conn.execute(
             "SELECT id, session_id, role, content, created_at FROM chat_messages "
             "WHERE content LIKE ? ESCAPE '\\' ORDER BY id DESC LIMIT ?",
-            (f"%{escaped}%", limit),
+            (f"%{escaped}%", limit + 1),
         ).fetchall()
-        return [
-            {
-                "id": r["id"],
-                "session_id": r["session_id"],
-                "role": r["role"],
-                "content": r["content"],
-                "created_at": r["created_at"],
-            }
-            for r in rows
-        ]
+        truncated = len(rows) > limit
+        rows = rows[:limit]
+        return {
+            "results": [
+                {
+                    "id": r["id"],
+                    "session_id": r["session_id"],
+                    "role": r["role"],
+                    "content": r["content"],
+                    "created_at": r["created_at"],
+                }
+                for r in rows
+            ],
+            "truncated": truncated,
+        }
     finally:
         conn.close()
 
