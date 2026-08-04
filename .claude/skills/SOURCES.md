@@ -28,6 +28,8 @@ found), license confirmed, author/repo checked for legitimacy.
 | `clipify` | [louisedesadeleer/clipify](https://github.com/louisedesadeleer/clipify) | MIT | 2026-07-29 |
 | `fastapi-patterns` | [affaan-m/ECC](https://github.com/affaan-m/ECC) (`skills/fastapi-patterns`) | MIT | 2026-07-29 |
 | `cost-tracking` | [affaan-m/ECC](https://github.com/affaan-m/ECC) (`skills/cost-tracking`) | MIT | 2026-07-29 |
+| `cast`, `paint` | [ATheVon/genjutsu](https://github.com/ATheVon/genjutsu) (`skills/cast`, `skills/paint`) | MIT | 2026-08-04 |
+| `_jutsu/*` (9 sub-skills, see note below) | [ATheVon/genjutsu](https://github.com/ATheVon/genjutsu) (`skills/_jutsu/*`) | MIT | 2026-08-04 |
 
 Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
 (unmodified) and is retained under its original MIT license. `graphify` is
@@ -228,6 +230,102 @@ require any API key ("graphify needs no API key. Never ask the user for
 one, and never block on one"), and every optional external integration
 (Gemini for extraction, Neo4j/FalkorDB for graph storage) is opt-in via
 explicit flags/env vars — no injection or exfiltration patterns found.
+
+## `cast`/`paint` (genjutsu) — motion/design pipeline, scoped to this repo's web-only stack
+
+Added 2026-08-04 at Scott's request after reviewing a "top GitHub repos" post
+(the same "Genjutsu... 172 stars" slide flagged `Web (React, Vue, Svelte,
+vanilla CSS, Three.js, Canvas)` specifically -- direct overlap with real work
+already in this repo: the vendored Three.js wordmark orb and every hand-rolled
+CSS/JS animation across the Frank UI audit). Cloned the actual repo (`git
+clone`, not marketing copy) and read `skills/cast/SKILL.md` in full plus
+grepped every `skills/**/*.md` for exfiltration/install/credential-harvesting
+patterns (`curl`, `wget`, `npx`, `pip install`, `api_key`, `secret`, `token`,
+`~/.ssh`, etc.) before adding anything -- every hit was benign (either a
+literal design-token reference, i.e. color/spacing/motion tokens, not auth
+tokens, or a legitimate local dev-tool invocation like `npx pa11y`/`npx
+source-map-explorer` gated behind `design-audit`'s own audit mode, same bar
+already applied to `youtube-transcript`/`clipify`/`graphify`). MIT, real
+author (Adrien Thevon), no API keys, no network calls beyond what Claude's
+own execution context already does, no phone-home.
+
+**Structure differs from every other skill in this file** -- it's not one
+`SKILL.md`, it's two orchestrators (`cast` = motion/micro-interactions,
+`paint` = full design-system pipeline) that internally load "sub-skills"
+from `_jutsu/<name>/SKILL.md` at runtime based on detected stack. Installed
+matching the upstream repo's own directory shape flattened one level (drop
+the outer `skills/` folder since `.claude/skills/` already serves that
+role): `.claude/skills/cast/`, `.claude/skills/paint/`,
+`.claude/skills/_jutsu/<name>/` -- so the orchestrators' internal relative
+paths to `_jutsu/...` keep resolving.
+
+**Only 9 of the upstream repo's 14 `_jutsu/` sub-skills were copied** --
+`css-native`, `gsap`, `threejs-r3f`, `canvas-generative`,
+`motion-principles`, `design-audit`, `desktop-principles`,
+`mobile-principles`, `ui-ux-pro-max`. Excluded: `compose-graphics`,
+`compose-motion`, `compose-multiplatform`, `swiftui-graphics`,
+`swiftui-motion` (Android/Apple-native -- this repo is 100% web, no native
+targets exist or are planned), and `framer-motion` (React-specific --
+Frank's frontend is vanilla JS/CSS with zero React, per this whole file's
+established stack). If `cast`/`paint` ever try to route to an excluded
+sub-skill on some future non-web work, they'll simply not find it -- no
+functional loss for the actual stack this repo has today, and cheaper than
+carrying ~40% more sub-skill weight (mostly Kotlin/Swift-specific token
+codegen guidance) that can never fire here.
+
+`_jutsu/ui-ux-pro-max` is itself a second-order vendor -- see its own
+`UPSTREAM.md` (copied along with it) for the chain: it mirrors
+[nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+(MIT), synced to upstream v2.11.0, ~1.8MB of design-token reference data +
+Python scripts (also grepped clean -- no `subprocess`/`os.system`/`eval`/
+`exec`/network calls). This is the *same* `ui-ux-pro-max` repo evaluated
+and explicitly passed on as a standalone install earlier in this same
+review pass (redundant with this shop's own custom 12-theme color system +
+WCAG checker + font-pairing picker) -- here it's an internal lookup module
+genjutsu's own pipeline consults, not something invoked directly, so the
+earlier "redundant" call doesn't apply to this nested copy.
+
+**Scope note, matching this file's `taste-skill`/`hallmark` caveats**:
+`cast`'s own frontmatter says it "adapts to Web, Android (Compose), Apple
+(SwiftUI)" -- unlike `taste-skill`/`hallmark`, which explicitly exclude
+dashboards, `cast`/`paint` don't carry that same landing-page-only
+restriction, so (unlike those two) they're expected to actually apply to
+Frank's own dashboard/admin-UI work, not just one-off marketing pages.
+
+## `gsap` — vendored animation library, not a skill
+
+Added 2026-08-04, same request as `cast`/`paint` above. **Not a Claude
+Skill** -- GSAP (GreenSock Animation Platform) is a client-side JS animation
+library, vendored the same way Three.js already is in this repo (see
+`tools/api_server/static/vendor/three/` and main.py's `_CachedStaticFiles`
+-- anything under `.../vendor/` is auto-served with a 7-day cache header,
+no route changes needed). Fetched the real upstream file directly (`curl` to
+jsdelivr's npm mirror, not a WebFetch summary -- WebFetch runs fetched
+content through a model and can silently paraphrase/truncate, which is fine
+for reading a license page but not safe for a file real browsers will
+execute) into `tools/api_server/static/vendor/gsap/gsap.min.js` (GSAP
+3.12.7, upstream's own minified build, unmodified, original license banner
+intact at the top of the file).
+
+**Not MIT** -- GSAP ships under GreenSock's own "Standard No Charge"
+license (confirmed by reading `https://gsap.com/standard-license/`
+directly, not marketing copy): free for this exact use case (embedding in
+an internal/commercial dashboard, no payment, no attribution requirement
+beyond not stripping the license banner), restricted only on building a
+*competing* no-code visual-animation-builder product or reverse-engineering
+GSAP to build one -- neither applies to using it as a library inside
+Frank's UI.
+
+**Vendored only, not yet wired into any feature** -- no `<script>` tag
+was added to `frank_hud_mockup.py`. Matches how Three.js itself was first
+vendored as pure infrastructure in one task, then actually wired into the
+wordmark orb in a later, separate task -- adding an unconditional
+`<script src="/static/vendor/gsap/gsap.min.js">` to every page load today
+would cost real parse/execute time for zero current benefit, since nothing
+uses it yet. When a future task actually builds a GSAP-based animation,
+load it there (a plain global `<script src="...">` tag, since GSAP ships
+UMD/global-style, not ESM -- unlike `three`, it doesn't need an importmap
+entry).
 
 ## How the rest get used
 
