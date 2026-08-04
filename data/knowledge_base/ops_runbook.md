@@ -21801,3 +21801,75 @@ fallback behavior, tax-deadline past-date filtering including an exact-
 today edge case) + new Playwright coverage for the badge updating from a
 different active screen, gcal card severity-by-proximity, and the renamed
 title.
+
+## 2026-08-04 — AI Core screen: 6 issues fixed (18th screen in the audit) — key-presence checks styled/worded as live checks, dedicated screen showed less than the Home summary card
+Small infra/credentials-health readout (`#screen-core`) plus 3 admin actions
+(refresh Etsy token, link to Files/Backups, redeploy server) and a Recent
+Errors panel. All 6 backend routes were already fully implemented -- every
+finding here was frontend/labeling/wiring, not a missing backend capability.
+
+**1. Anthropic/OpenAI status is key-presence only (`bool(env.get(...))`),
+but was styled and worded identically to Etsy's genuine live `get_shop()`
+check.** If `ANTHROPIC_API_KEY` is set but revoked/expired/out of quota,
+Frank's entire chat/agent capability would be broken, yet this screen would
+still show a green "connected" state. Fixed: dedicated screen's Anthropic/
+OpenAI rows now get a distinct amber "warn" dot (`dotc warn`) instead of the
+same green as Etsy's real check, with text "Key set (not live-verified)" /
+"Not set" -- matching the Connections screen's existing "Set check-mark"/
+"Not set" convention for the same underlying data. Home's `#ac-llms`
+counter changed from "N/M connected" to "N/M keys set." Also fixed the
+hourly health-check loop's docstring (`main.py`), which claimed it
+"confirms Anthropic credentials are actually live" when it only checks env-
+var presence -- same gap, now documented accurately instead of asserted
+inaccurately.
+
+**2. The dedicated AI Core screen showed LESS than the Home mini-panel.**
+Home's "AI Core Overview" panel already computed Memory session count,
+Voice status, and Agents running-count inside the same
+`loadCredentialsAndHealth()`/`loadAgents()` functions the dedicated screen
+also runs -- just never pushed into `#core-detail`, only into
+Home-specific DOM ids. Backwards from what "drill into AI Core for detail"
+should mean. Fixed by pushing Memory/Voice/Agents rows into the dedicated
+screen too, with zero new network calls: Agents reads the already-cached
+`cacheGet('agents')` result that `loadAgents()` populates continuously via
+`_GLOBAL_LOADERS`, rather than firing a redundant fetch.
+
+**3. `coreRedeploy()` never re-enabled its button after a SUCCESSFUL
+trigger** -- only the `catch` branch reset the disabled state/label,
+unlike its sibling `coreRefreshEtsyToken()`. A real redeploy left the
+button stuck at "Redeploying..." and disabled for the rest of the session.
+Fixed with a `finally` block matching the sibling function's pattern.
+
+**4. `loadCredentialsAndHealth()` fetched 3 endpoints serially** (up to
+~40s worst case combined client-side timeouts) instead of `Promise.all`,
+risking overlapping in-flight calls against the app's 30s global poll
+interval. Fixed to run in parallel, matching the established pattern
+elsewhere in this file (`Promise.all([loadAgents(), loadDependencyHealth()])`).
+
+**5. Panel-title "src" annotation was missing `/api/memory`**, which this
+loader already fetches every run. Now reads `/health + /api/credentials/
+status + /api/memory`, accurate now that Memory data is genuinely rendered
+here (fix 2).
+
+**6. Home mini-panel's status dots were purely decorative for 4 of 5
+rows** (AI Core, Memory, Agents, LLMs) -- no `id`, never touched by any JS,
+always green regardless of real status. Only Voice's dot was reactive.
+Found by adversarial review, not the initial research pass. Fixed by
+giving each dot an id and wiring it to the same err/warn `className` logic
+already driving its adjacent value text.
+
+**Explicitly not built:** a real live-probe call to Anthropic/OpenAI (cost/
+rate-limit implications on every screen visit not verified -- flagged to
+Scott as an optional follow-up, not built speculatively) and a budget-cap
+UI for `/api/system/costs` (the API Costs card was deliberately removed
+from Settings on 2026-07-10 after Scott found the spend number inaccurate;
+building a new UI for it is a feature decision, not a bug fix).
+
+Fix commit bumped `_BUILD_ID` to `0b586de-v298`. Verified via
+`tests/run_all.py` (99/99) and 3x clean `tools/playwright_smoke.py`. One
+Playwright run surfaced a stuck `window.confirm` override left by this
+screen's own test block bleeding into a later, unrelated Products-screen
+regen test (`page.once('dialog', ...)` never fired because `confirm()` had
+been monkey-patched and left that way) -- fixed by scoping the override to
+save/restore around the single `coreRedeploy()` call, same pattern already
+used for `window.authGet`/`window.fetchWithTimeout` elsewhere in the file.

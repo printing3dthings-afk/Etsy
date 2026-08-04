@@ -651,7 +651,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "08a0b6b-v297"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "0b586de-v298"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7019,9 +7019,13 @@ async def _health_check_iteration() -> dict:
 
 
 async def _health_check_loop() -> None:
-    """Every hour: confirm Etsy + Anthropic credentials are actually live (the
-    same checks /api/ping exposes manually, run here on a timer so a regression
-    surfaces in ops_runbook.md without anyone needing to remember to hit that URL),
+    """Every hour: confirm Etsy is actually live (a real get_shop() call) and
+    that ANTHROPIC_API_KEY is at least set (2026-08-04 AI Core screen audit --
+    this docstring previously claimed Anthropic gets the same "actually live"
+    treatment as Etsy; it doesn't, it's a bare env-var presence check, same gap
+    the AI Core screen's own credentials display had). Same checks /api/ping
+    exposes manually, run here on a timer so a regression surfaces in
+    ops_runbook.md without anyone needing to remember to hit that URL,
     and reap any long_running background processes (coloring page generation, etc.)
     started via _run_exec_command so a finished/crashed child never sits untracked
     forever in _LONG_RUNNING_PROCS.

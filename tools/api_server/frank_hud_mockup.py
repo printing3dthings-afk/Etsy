@@ -1765,12 +1765,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div class="panel brk col-aicore">
           <div class="panel-title">AI Core Overview <span class="src">/health</span></div>
           <div class="panel-body">
-            <div class="core-row"><span class="lab"><span class="dotc"></span>AI Core</span><span class="v" id="ac-core">—</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>Memory</span><span class="v" id="ac-memory">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc" id="ac-core-dot"></span>AI Core</span><span class="v" id="ac-core">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc" id="ac-memory-dot"></span>Memory</span><span class="v" id="ac-memory">—</span></div>
             <div class="core-row" id="ac-voice-row"><span class="lab" id="ac-voice-lab"><span class="dotc" id="ac-voice-dot"></span>Voice</span><span class="v" id="ac-voice">—</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>Agents</span><span class="v" id="ac-agents">—</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>LLMs</span><span class="v" id="ac-llms">—</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>System</span><span class="v" id="ac-system">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc" id="ac-agents-dot"></span>Agents</span><span class="v" id="ac-agents">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc" id="ac-llms-dot"></span>LLMs</span><span class="v" id="ac-llms">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc" id="ac-system-dot"></span>System</span><span class="v" id="ac-system">—</span></div>
           </div>
         </div>
 
@@ -1887,10 +1887,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <!-- ══════════ AI CORE — real data: /health + /api/credentials/status ══════════ -->
+  <!-- ══════════ AI CORE — real data: /health + /api/credentials/status + /api/memory ══════════ -->
   <div class="screen" id="screen-core">
     <div class="panel brk" style="height:100%;overflow-y:auto">
-      <div class="panel-title">AI Core <span class="src">/health + /api/credentials/status</span></div>
+      <div class="panel-title">AI Core <span class="src">/health + /api/credentials/status + /api/memory</span></div>
       <div class="panel-body" id="core-detail">
         <div class="core-row"><span class="lab"><span class="dotc"></span>Loading…</span><span class="v">—</span></div>
       </div>
@@ -5835,8 +5835,12 @@ async function loadAgents(){
     if(cmdGrid) cmdGrid.innerHTML = tiles;
     if(fullGrid) fullGrid.innerHTML = tiles;
     const acAgents = document.getElementById('ac-agents');
+    const acAgentsDot = document.getElementById('ac-agents-dot');
     if(acAgents) acAgents.textContent = d.running_count + '/' + d.total_count + ' running';
+    if(acAgentsDot) acAgentsDot.className = 'dotc';
   }catch(e){
+    const acAgentsDot = document.getElementById('ac-agents-dot');
+    if(acAgentsDot) acAgentsDot.className = 'dotc warn';
     const cached = cacheGet('agents');
     if(cached){
       const tiles = _offlineNote(cached.ts) + cached.data.agents.map(renderAgentTile).join('');
@@ -5875,10 +5879,16 @@ async function loadRelayStatus(){
 
 // ── LLM Status + AI Core — real data from /api/credentials/status + /health ──
 async function loadCredentialsAndHealth(){
-  let cred = null, health = null, mem = null;
-  try{ const r = await authGet('/api/credentials/status'); cred = await r.json(); }catch(e){}
-  try{ const r = await fetchWithTimeout(BASE+'/health', {}, 10000); health = await r.json(); }catch(e){}
-  try{ const r = await authGet('/api/memory'); mem = await r.json(); }catch(e){}
+  // 2026-08-04 (AI Core screen audit): these 3 fetches are independent -- used
+  // to run sequentially (up to ~40s worst case: 15s + 10s + 15s timeouts) before
+  // either this screen or the Home mini-panel finished rendering. Promise.all
+  // bounds worst case to the single slowest call instead of their sum.
+  const [credResult, healthResult, memResult] = await Promise.all([
+    authGet('/api/credentials/status').then(r=>r.json()).catch(()=>null),
+    fetchWithTimeout(BASE+'/health', {}, 10000).then(r=>r.json()).catch(()=>null),
+    authGet('/api/memory').then(r=>r.json()).catch(()=>null),
+  ]);
+  const cred = credResult, health = healthResult, mem = memResult;
 
   const coreRows = [];
   if(cred){
@@ -5889,18 +5899,34 @@ async function loadCredentialsAndHealth(){
     ];
     const connectedCount = providers.filter(p=>p.ok).length;
     const acLlms = document.getElementById('ac-llms');
-    if(acLlms) acLlms.textContent = connectedCount+'/'+providers.length+' connected';
+    const acLlmsDot = document.getElementById('ac-llms-dot');
+    // 2026-08-04: "connected" implied a live check for all 3 -- Etsy really is
+    // live-verified (get_shop() call below), but Anthropic/OpenAI only check
+    // whether the env var is non-empty. Reworded so a revoked/expired key
+    // wouldn't misleadingly still read as "connected."
+    if(acLlms) acLlms.textContent = connectedCount+'/'+providers.length+' keys set';
+    if(acLlmsDot) acLlmsDot.className = 'dotc'+(connectedCount===providers.length?'':(connectedCount===0?' err':' warn'));
 
     coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(cred.etsy_live?'':' err')+'"></span>Etsy</span><span class="v'+(cred.etsy_live?'':' err')+'">'+(cred.etsy_live?('Live — '+escHtml(cred.shop_name||'onbrandcraftz')):escHtml(cred.etsy_live_error||'offline'))+'</span></div>');
-    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'"></span>Anthropic</span><span class="v'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'">'+((cred.anthropic&&cred.anthropic.api_key)?'Key configured':'Missing key')+'</span></div>');
-    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.openai&&cred.openai.api_key)?'':' err')+'"></span>OpenAI</span><span class="v'+((cred.openai&&cred.openai.api_key)?'':' err')+'">'+((cred.openai&&cred.openai.api_key)?'Key configured':'Missing key')+'</span></div>');
+    // 2026-08-04: Anthropic/OpenAI dots used to share the same default-green
+    // styling as Etsy's row above -- but unlike Etsy (a real get_shop() call),
+    // these only check whether the env var is non-empty, never whether the key
+    // actually still works. Styled amber ("warn"), not green, when present but
+    // unverified, so a revoked/expired key can't visually pass for a live one.
+    // Wording matches the Connections screen's existing "Set ✓"/"Not set"
+    // convention for this same presence-only data.
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.anthropic&&cred.anthropic.api_key)?' warn':' err')+'"></span>Anthropic</span><span class="v'+((cred.anthropic&&cred.anthropic.api_key)?' warn':' err')+'">'+((cred.anthropic&&cred.anthropic.api_key)?'Key set (not live-verified)':'Not set')+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.openai&&cred.openai.api_key)?' warn':' err')+'"></span>OpenAI</span><span class="v'+((cred.openai&&cred.openai.api_key)?' warn':' err')+'">'+((cred.openai&&cred.openai.api_key)?'Key set (not live-verified)':'Not set')+'</span></div>');
   }
   const acCore = document.getElementById('ac-core');
+  const acCoreDot = document.getElementById('ac-core-dot');
   const acSystem = document.getElementById('ac-system');
+  const acSystemDot = document.getElementById('ac-system-dot');
   const voiceEl = document.getElementById('ac-voice');
   const voiceDot = document.getElementById('ac-voice-dot');
   if(health){
     if(acCore){ acCore.textContent = 'Online · build '+escHtml(health.build||'?'); acCore.className='v'; }
+    if(acCoreDot) acCoreDot.className = 'dotc';
     if(health.build){
       const orbVer = document.getElementById('orb-build-ver');
       if(orbVer) orbVer.textContent = 'Build '+health.build;
@@ -5911,6 +5937,7 @@ async function loadCredentialsAndHealth(){
       acSystem.textContent = health.persistent ? 'Persistent storage' : 'Ephemeral (volume not attached)';
       acSystem.className = 'v'+(health.persistent?'':' warn');
     }
+    if(acSystemDot) acSystemDot.className = 'dotc'+(health.persistent?'':' warn');
     // Voice (mic capture + /api/voice/transcribe + /api/voice/speak) is a stateless
     // feature of this same server — it has no dependency on the local relay, so it's
     // "Online" whenever the server itself answers /health (mislabeled as relay-bound
@@ -5924,6 +5951,7 @@ async function loadCredentialsAndHealth(){
     coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(health.persistent?'':' warn')+'"></span>Storage</span><span class="v'+(health.persistent?'':' warn')+'">'+(health.persistent?'Persistent volume attached':'Ephemeral — resets on redeploy')+'</span></div>');
   } else {
     if(acCore){ acCore.textContent = 'Offline'; acCore.className='v err'; }
+    if(acCoreDot) acCoreDot.className = 'dotc err';
     if(voiceEl){
       voiceEl.textContent = 'Offline';
       voiceEl.className = 'v err';
@@ -5932,15 +5960,32 @@ async function loadCredentialsAndHealth(){
   }
 
   const acMemory = document.getElementById('ac-memory');
-  if(acMemory){
-    if(mem){
-      acMemory.textContent = mem.total_sessions + ' sessions · ' + mem.learnings_count + ' learnings';
-      acMemory.className = 'v';
-    } else {
-      acMemory.textContent = 'Unavailable';
-      acMemory.className = 'v warn';
-    }
+  const acMemoryDot = document.getElementById('ac-memory-dot');
+  let memRowHtml = '';
+  if(mem){
+    if(acMemory){ acMemory.textContent = mem.total_sessions + ' sessions · ' + mem.learnings_count + ' learnings'; acMemory.className = 'v'; }
+    if(acMemoryDot) acMemoryDot.className = 'dotc';
+    memRowHtml = '<div class="core-row"><span class="lab"><span class="dotc"></span>Memory</span><span class="v">'+mem.total_sessions+' sessions · '+mem.learnings_count+' learnings</span></div>';
+  } else {
+    if(acMemory){ acMemory.textContent = 'Unavailable'; acMemory.className = 'v warn'; }
+    if(acMemoryDot) acMemoryDot.className = 'dotc warn';
+    memRowHtml = '<div class="core-row"><span class="lab"><span class="dotc warn"></span>Memory</span><span class="v warn">Unavailable</span></div>';
   }
+
+  // 2026-08-04 (AI Core screen audit, finding 2): Voice and Agents are already
+  // computed above / by loadAgents() for the Home mini-panel's ac-voice/ac-agents
+  // ids -- but the dedicated AI Core screen (#core-detail) never received them,
+  // so it showed strictly LESS than the summary card it's supposed to be the
+  // detail view for. Agents needs no new fetch: loadAgents() already runs
+  // continuously via _GLOBAL_LOADERS and caches its result via cacheSet('agents').
+  const voiceRowHtml = voiceEl
+    ? '<div class="core-row"><span class="lab"><span class="dotc'+(voiceEl.className.includes('err')?' err':'')+'"></span>Voice</span><span class="v'+(voiceEl.className.includes('err')?' err':'')+'">'+escHtml(voiceEl.textContent)+'</span></div>'
+    : '';
+  const cachedAgents = cacheGet('agents');
+  const agentsRowHtml = cachedAgents && cachedAgents.data
+    ? '<div class="core-row"><span class="lab"><span class="dotc"></span>Agents</span><span class="v">'+cachedAgents.data.running_count+'/'+cachedAgents.data.total_count+' running</span></div>'
+    : '<div class="core-row"><span class="lab"><span class="dotc warn"></span>Agents</span><span class="v warn">Unavailable</span></div>';
+  coreRows.push(memRowHtml, voiceRowHtml, agentsRowHtml);
 
   const coreDetail = document.getElementById('core-detail');
   if(coreDetail){
@@ -5991,6 +6036,11 @@ async function coreRedeploy(){
     showToast('Redeploy triggered — the server will be briefly unreachable while it restarts.');
   }catch(e){
     showToast('Redeploy failed: '+(e.message||e), 'err');
+  }finally{
+    // 2026-08-04 (AI Core screen audit): unlike its sibling coreRefreshEtsyToken(),
+    // this only reset the button in the catch branch -- a successful trigger left
+    // it stuck disabled/"Redeploying…" for the rest of the session, even once the
+    // server came back up ~30-60s later (no forced page reload happens on redeploy).
     if(btn){ btn.disabled = false; btn.textContent = '⟳ Redeploy Server'; }
   }
 }

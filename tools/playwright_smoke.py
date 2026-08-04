@@ -852,6 +852,91 @@ async def _run_browser_checks() -> None:
             check(cal_stub.get("farSev") == "low",
                   f"a far-out Google Calendar event should still render 'low' severity: {cal_stub}")
 
+            # ── AI Core screen (2026-08-04 audit): misleading key-presence styling,
+            # missing Memory/Voice/Agents rows, stuck Redeploy button, decorative
+            # Home-panel dots. ──
+            aicore_stub = await page.evaluate("""async () => {
+                window._origAuthGetAc = window.authGet;
+                window._origFetchWithTimeoutAc = window.fetchWithTimeout;
+                const credStub = {
+                    anthropic: {api_key: true}, openai: {api_key: false},
+                    etsy_live: true, shop_name: 'onbrandcraftz',
+                };
+                const healthStub = {build: 'test123', persistent: true};
+                const memStub = {total_sessions: 5, learnings_count: 12};
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/credentials/status') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => credStub});
+                    }
+                    if (path.indexOf('/api/memory') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => memStub});
+                    }
+                    return window._origAuthGetAc(path, ms);
+                };
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    if (String(url).includes('/health')) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => healthStub});
+                    }
+                    if (String(url).includes('/api/core/redeploy')) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({ok: true})});
+                    }
+                    return window._origFetchWithTimeoutAc(url, opts, ms);
+                };
+                // seed a cached agents result the same way loadAgents() would
+                cacheSet('agents', {running_count: 2, total_count: 5});
+                showScreen('core');
+                await loadCredentialsAndHealth();
+                const detail = document.getElementById('core-detail');
+                const html = detail ? detail.innerHTML : '';
+                const llmsText = (document.getElementById('ac-llms')||{}).textContent;
+                const llmsDotClass = (document.getElementById('ac-llms-dot')||{}).className;
+                // coreRedeploy() gates on a native confirm() -- stub it for this one call only,
+                // then restore immediately (an unrestored override here previously bled into the
+                // later DP1026-regen test's own page.once('dialog', ...) expectation).
+                const _origConfirmAc = window.confirm;
+                window.confirm = () => true;
+                const btn = document.getElementById('core-btn-redeploy');
+                await coreRedeploy();
+                window.confirm = _origConfirmAc;
+                const out = {
+                    html,
+                    llmsText,
+                    llmsDotClass,
+                    redeployBtnDisabledAfterSuccess: btn ? btn.disabled : null,
+                    redeployBtnTextAfterSuccess: btn ? btn.textContent : null,
+                };
+                window.authGet = window._origAuthGetAc;
+                window.fetchWithTimeout = window._origFetchWithTimeoutAc;
+                return out;
+            }""")
+            check("connected" not in aicore_stub.get("llmsText", ""),
+                  f"Home's #ac-llms must not say 'connected' for a presence-only key check "
+                  f"(regression: implied a live check that never happened): {aicore_stub.get('llmsText')}")
+            check("keys set" in aicore_stub.get("llmsText", ""),
+                  f"expected the relabeled 'N/M keys set' wording: {aicore_stub.get('llmsText')}")
+            check(aicore_stub.get("llmsDotClass") == "dotc warn",
+                  f"#ac-llms-dot must be wired and show 'warn' when some but not all keys are set: {aicore_stub}")
+            html = aicore_stub.get("html", "")
+            check("Key set" in html and "Not set" in html,
+                  f"Anthropic (key set) and OpenAI (not set) rows must render with the new wording: {html[:400]}")
+            check('dotc warn' in html,
+                  f"a present-but-unverified key must render an amber 'warn' dot, not the same green as Etsy's "
+                  f"real live check (regression: identical styling implied both were verified): {html[:400]}")
+            check("Memory" in html and "5 sessions" in html,
+                  f"the dedicated AI Core screen must show Memory data, not just the Home mini-panel "
+                  f"(regression: dedicated screen showed less than Home's summary card): {html[:600]}")
+            check("Agents" in html and "2/5 running" in html,
+                  f"the dedicated AI Core screen must show Agents data from the cached loadAgents() result, "
+                  f"with no extra network call: {html[:600]}")
+            check("Voice" in html,
+                  f"the dedicated AI Core screen must show Voice status: {html[:600]}")
+            check(aicore_stub.get("redeployBtnDisabledAfterSuccess") is False,
+                  f"coreRedeploy()'s button must re-enable after a SUCCESSFUL trigger, not just after a failure "
+                  f"(regression: only the catch branch reset the button, leaving it stuck disabled forever "
+                  f"after a real redeploy): {aicore_stub}")
+            check(aicore_stub.get("redeployBtnTextAfterSuccess") == "⟳ Redeploy Server",
+                  f"the button text must be restored after a successful redeploy: {aicore_stub}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy
