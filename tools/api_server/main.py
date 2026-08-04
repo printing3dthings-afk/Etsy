@@ -622,7 +622,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "277c255-v295"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "831eb11-v296"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3685,6 +3685,20 @@ def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
     if extra_args:
         cmd.extend(extra_args.split())
     if cfg.get("long_running"):
+        # 2026-08-01 (Workflows screen audit): key the already-running check on the
+        # underlying script, not cmd_name -- generate_coloring_pages and
+        # generate_coloring_pages_quick are separate registry entries that invoke the
+        # same script and write into the same output folder, so a cmd_name-only guard
+        # wouldn't stop them from colliding. Must also call proc.poll() here rather
+        # than just checking dict membership: finished processes stay in
+        # _LONG_RUNNING_PROCS unreaped for up to an hour until the health-check loop
+        # cleans them up, so a membership-only check would falsely block re-runs.
+        for other_pid, (other_proc, other_cmd, _started) in list(_LONG_RUNNING_PROCS.items()):
+            if _EXEC_COMMANDS.get(other_cmd, {}).get("script") == cfg["script"] and other_proc.poll() is None:
+                return {
+                    "started": False,
+                    "error": f"{other_cmd} is already running (PID {other_pid}) and uses the same script — wait for it to finish before starting another.",
+                }
         proc = subprocess.Popen(
             cmd,
             stdout=subprocess.DEVNULL,
@@ -13980,18 +13994,35 @@ async def get_tools_list(_token: str = Depends(_auth_session_or_bearer)):
     return {"tools": tools, "count": len(tools)}
 
 
+_WORKFLOW_NAME_ACRONYMS = {"Qc": "QC", "Db": "DB"}
+
+
+def _workflow_display_name(cmd_name: str) -> str:
+    """title() doesn't know acronyms -- 'qc_sweep'.title() -> 'Qc Sweep',
+    'backup_hub_db'.title() -> 'Backup Hub Db'. Fix up the known ones."""
+    words = cmd_name.replace("_", " ").title().split(" ")
+    return " ".join(_WORKFLOW_NAME_ACRONYMS.get(w, w) for w in words)
+
+
 @app.get("/api/workflows")
 async def get_workflows(_token: str = Depends(_auth_session_or_bearer)):
     """Runnable backend scripts for the Workflows screen — distinct from
     /api/tools/list (Frank's chat capabilities). Same _EXEC_COMMANDS registry
     execute_command already runs against."""
+    running_scripts = {
+        _EXEC_COMMANDS[cmd]["script"]
+        for _pid, (proc, cmd, _started) in _LONG_RUNNING_PROCS.items()
+        if cmd in _EXEC_COMMANDS and proc.poll() is None
+    }
     workflows = [
         {
             "id": k,
-            "name": k.replace("_", " ").title(),
+            "name": _workflow_display_name(k),
             "description": v["description"],
             "requires_approval": v.get("requires_approval", False),
             "long_running": v.get("long_running", False),
+            "timeout": v.get("timeout", 60),
+            "running": v["script"] in running_scripts,
         }
         for k, v in _EXEC_COMMANDS.items()
     ]
@@ -13999,10 +14030,14 @@ async def get_workflows(_token: str = Depends(_auth_session_or_bearer)):
 
 
 @app.post("/api/workflows/{workflow_id}/run")
-async def post_workflow_run(workflow_id: str, body: dict | None = None, _token: str = Depends(_auth_session_or_bearer)):
+async def post_workflow_run(workflow_id: str, body: dict | None = None, _token: str = Depends(_rate_limited_auth)):
     """Run a workflow. Commands without requires_approval run immediately;
-    backup_digital_products (the one command with requires_approval) stages
-    through the same action_queue Action Center uses."""
+    commands with requires_approval: True (currently backup_digital_products,
+    backup_hub_db, listing_compliance_sweep) stage through the same
+    action_queue Action Center uses. Rate-limited (2026-08-01 Workflows audit)
+    since generate_coloring_pages spends real gpt-image-1 budget per call --
+    every other endpoint that directly triggers paid AI generation already
+    uses _rate_limited_auth; this one was the one outlier."""
     if workflow_id not in _EXEC_COMMANDS:
         raise HTTPException(status_code=404, detail=f"unknown workflow: {workflow_id}")
     cfg = _EXEC_COMMANDS[workflow_id]

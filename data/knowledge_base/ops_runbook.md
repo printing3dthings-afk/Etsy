@@ -21294,3 +21294,255 @@ to `showScreen('calendar')`.
 New Playwright coverage: a failed add leaves the typed text/due-date in
 place and shows a real error toast; "View Full Schedule" now opens
 `#screen-calendar`, not `#screen-tasks`.
+
+
+## 2026-08-04 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+
+Traceback (most recent call last):
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 149, in <module>
+    main()
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 144, in main
+    result = run_scheduled_coloring(force=args.force, preview=args.preview)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 91, in run_scheduled_coloring
+    themes = gcp.PACKS[pack]["themes"]
+             ~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+
+
+## 2026-08-04 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — Durable volume not writable
+hourly health loop found /tmp/tmp_qe08m6c/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp_qe08m6c/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpph0nkjhs/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 2957). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-04 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 2959). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.3 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Workflows screen: 8 issues fixed (16th screen in the audit) — unmetered AI-spend exposure, results silently orphaned mid-run
+Manual-trigger UI over `_EXEC_COMMANDS` (the same whitelisted backend
+script registry `execute_command` runs against) -- unrelated to the
+`Workflow` orchestration tool despite the name overlap. Two of the eight
+findings were genuinely HIGH-risk; adversarial review also surfaced a
+significant bug the initial research pass missed entirely.
+
+**1. `POST /api/workflows/{id}/run` had no rate limit for a real-dollar AI
+generation script.** `generate_coloring_pages` spends real gpt-image-1
+budget over ~15 minutes per call; the endpoint used `_auth_session_or_bearer`
+instead of `_rate_limited_auth`, unlike every other endpoint in this
+codebase that directly triggers paid generation. A valid session/bearer
+holder could spam it to spawn unbounded concurrent 15-minute subprocesses.
+Switched to `_rate_limited_auth` (30 calls/hour). Also added an
+already-running guard in `_run_exec_command()`'s `long_running` branch,
+keyed on the underlying script path (not the registry key, since
+`generate_coloring_pages`/`_quick` share one script and output folder) and
+checking `proc.poll() is None` -- not just dict membership, since finished
+procs sit in `_LONG_RUNNING_PROCS` unreaped for up to an hour.
+
+**2. Frontend fetch timeout (flat 150s) was shorter than several scripts'
+real configured/measured backend runtime.** `listing_integrity_check` is
+configured at 330s and the code's own comment says it measures ~282s
+against the real catalog -- both exceed the old 150s client abort, so a
+real run would show a false "Request timed out" while the backend kept
+running unattended. This is a separate, still-live cause of the exact
+complaint behind the 2026-07-30 output-truncation fix ("it said it ran but
+nothing was caught"). `GET /api/workflows` now reports each entry's real
+`timeout`; the frontend threads it through the onclick into `runWorkflow()`
+and uses `Math.max(timeout*1000 + 30000, 150000)`.
+
+**3. The "instant" badge was misleading.** Several non-approval,
+non-long_running scripts (shop_health_check ~118s, qc_sweep up to 90s,
+listing_integrity_check ~282s, check_digital_file_exposure up to 120s) are
+synchronous blocking calls that take real time, not "instant." Relabeled
+to "runs now."
+
+**4. Sidebar "Run Health Check" button permanently lost its icon styling
+after the first click.** `runWorkflow()` captured/restored via
+`btn.textContent`, which strips the nested `<span class="qic">` icon badge
+on capture and replaces it with flattened plain text on restore -- broken
+for the rest of the session after one click. Switched to `btn.innerHTML`.
+
+**5. The Workflows screen's own 30s poll silently destroyed in-flight run
+state -- found by adversarial review, missed by the initial research pass.**
+`loadWorkflows()` is registered in `_SCREEN_LOADERS`, which re-fires every
+30s via `loadAll()` while parked on the screen (not just on navigation),
+and did a full destructive `innerHTML` replace every tick. This defeated
+`runWorkflow()`'s `btn.disabled` guard (a fresh non-disabled button
+replaced the old one, so a user could re-trigger the same run before the
+first one finished -- an everyday path into finding 1's concurrency
+problem, not just a "spam" edge case) AND orphaned the `#wf-result-*` div
+`runWorkflow()` had already captured, so real script output silently never
+rendered for any run outliving one 30s tick. This meant finding 2's fix
+alone wouldn't have solved what it was named for. Fixed with a
+`_workflowsRunning` Set guard: `loadWorkflows()` now skips its destructive
+re-render while anything is in flight.
+
+**Also fixed (smaller):** acronym-unaware title-casing ("Qc Sweep" -> "QC
+Sweep", "Backup Hub Db" -> "Backup Hub DB"); a stale comment undercounting
+approval-gated commands (named only 1, actually 3: backup_digital_products,
+backup_hub_db, listing_compliance_sweep); a generic confirm dialog that
+didn't name the workflow.
+
+New test coverage: `tests/test_workflows_screen.py` (timeout/running
+fields, acronym title-casing, rate-limited auth on the route, the
+already-running dedupe guard including the poll()-vs-membership
+distinction) + new Playwright coverage for the badge wording, timeout
+threading, named confirm dialog, sidebar icon survival, and the 30s-poll
+in-flight-run protection.

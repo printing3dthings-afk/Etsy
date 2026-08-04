@@ -651,6 +651,144 @@ async def _run_browser_checks() -> None:
                   f"'View Full Schedule' must open the real Calendar screen, not the flat Tasks list "
                   f"(regression: it used to link to showScreen('tasks')): {schedule_link}")
 
+            # ── Workflows screen (2026-08-01 audit): badge wording, timeout threading,
+            # named confirm dialog, and the 30s-poll-destroys-in-flight-run fix. ──
+            wf_stub = await page.evaluate("""async () => {
+                window._origAuthGetWf = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/workflows') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({workflows: [
+                            {id: 'listing_integrity_check', name: 'Listing Integrity Check',
+                             description: 'Audit every live listing', requires_approval: false,
+                             long_running: false, timeout: 330, running: false},
+                        ], count: 1})});
+                    }
+                    return window._origAuthGetWf(path, ms);
+                };
+                showScreen('workflows');
+                await loadWorkflows();
+                const el = document.getElementById('workflows-content');
+                return {html: el ? el.innerHTML : null};
+            }""")
+            check("runs now" in (wf_stub.get("html") or ""),
+                  f"'instant' badge must be relabeled 'runs now' (it wasn't instant -- some of these scripts "
+                  f"take minutes): {wf_stub}")
+            check("instant" not in (wf_stub.get("html") or ""),
+                  f"the old misleading 'instant' label must be gone: {wf_stub}")
+
+            wf_run = await page.evaluate("""async () => {
+                window._origConfirmWf = window.confirm;
+                let confirmMsg = null;
+                window.confirm = (msg) => { confirmMsg = msg; return true; };
+                window._origFetchWithTimeoutWf = window.fetchWithTimeout;
+                let capturedMs = null;
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    if (String(url).includes('/api/workflows/listing_integrity_check/run')) {
+                        capturedMs = ms;
+                        return Promise.resolve({ok: true, status: 200, json: async () => (
+                            {staged: false, success: true, returncode: 0, output: 'SUMMARY: 0 issues'}
+                        )});
+                    }
+                    return window._origFetchWithTimeoutWf(url, opts, ms);
+                };
+                const btn = [...document.querySelectorAll('#workflows-content .act-btn')]
+                    .find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes('listing_integrity_check'));
+                if (!btn) return {found: false};
+                await runWorkflow('listing_integrity_check', btn, false, 330, 'Listing Integrity Check');
+                const resultEl = document.getElementById('wf-result-listing_integrity_check');
+                const out = {
+                    found: true,
+                    confirmMsg,
+                    capturedMs,
+                    resultHtml: resultEl ? resultEl.innerHTML : null,
+                };
+                window.confirm = window._origConfirmWf;
+                window.fetchWithTimeout = window._origFetchWithTimeoutWf;
+                return out;
+            }""")
+            check(wf_run.get("found"), f"expected the Listing Integrity Check card's Run button: {wf_run}")
+            check("Listing Integrity Check" in (wf_run.get("confirmMsg") or ""),
+                  f"confirm dialog must name the workflow, not a generic 'Run this workflow now?': {wf_run}")
+            check((wf_run.get("capturedMs") or 0) >= 330000 + 30000,
+                  f"fetchWithTimeout's ms must cover this workflow's real 330s backend timeout plus a 30s "
+                  f"buffer, not the old flat 150000 (regression: listing_integrity_check measures ~282s and "
+                  f"would false-timeout under the old constant): {wf_run}")
+            check("SUMMARY: 0 issues" in (wf_run.get("resultHtml") or ""),
+                  f"the real script output must render into the result div: {wf_run}")
+
+            # Sidebar Quick Command button (fix 4): runWorkflow used to capture/restore
+            # via btn.textContent, which strips the nested <span class="qic"> icon and
+            # replaces it with flattened plain text -- permanently losing the icon's
+            # circular badge styling after the first click, for the rest of the session.
+            wf_sidebar = await page.evaluate("""async () => {
+                window.confirm = () => true;
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    if (String(url).includes('/api/workflows/shop_health_check/run')) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => (
+                            {staged: false, success: true, returncode: 0, output: 'all good'}
+                        )});
+                    }
+                    return window._origFetchWithTimeoutWf(url, opts, ms);
+                };
+                const btn = [...document.querySelectorAll('.qc-btn')]
+                    .find(b => (b.getAttribute('onclick')||'').includes('shop_health_check'));
+                if (!btn) return {found: false};
+                await runWorkflow('shop_health_check', btn, false, 150, 'Shop Health Check');
+                const out = {found: true, innerHtml: btn.innerHTML, text: btn.textContent};
+                window.confirm = window._origConfirmWf;
+                window.fetchWithTimeout = window._origFetchWithTimeoutWf;
+                return out;
+            }""")
+            check(wf_sidebar.get("found"), f"expected the sidebar 'Run Health Check' button: {wf_sidebar}")
+            check('class="qic"' in (wf_sidebar.get("innerHtml") or ""),
+                  f"the sidebar button's icon span must survive a run (regression: used to be captured/"
+                  f"restored via textContent, permanently flattening it to plain text): {wf_sidebar}")
+            check("Run Health Check" in (wf_sidebar.get("text") or ""),
+                  f"the button label text must still be correct after restore: {wf_sidebar}")
+
+            # 30s-poll-destroys-in-flight-run (fix 8a): loadWorkflows() re-fires every
+            # 30s while parked on this screen and used to unconditionally blow away
+            # #workflows-content, defeating the disabled-button guard and orphaning the
+            # result div mid-run. Simulate a run that never resolves, then simulate a
+            # poll tick firing mid-run, and confirm the destructive re-render is skipped.
+            wf_poll = await page.evaluate("""async () => {
+                window.confirm = () => true;
+                window.fetchWithTimeout = (url) => {
+                    if (String(url).includes('/api/workflows/listing_integrity_check/run')) {
+                        return new Promise(() => {});  // never resolves -- simulates a long-running script
+                    }
+                    return window._origFetchWithTimeoutWf ? window._origFetchWithTimeoutWf(...arguments) : fetch(...arguments);
+                };
+                const btn = [...document.querySelectorAll('#workflows-content .act-btn')]
+                    .find(b => (b.getAttribute('onclick')||'').includes('listing_integrity_check'));
+                runWorkflow('listing_integrity_check', btn, false, 330, 'Listing Integrity Check');  // not awaited -- stays in flight
+                await new Promise(r => setTimeout(r, 100));
+                const contentBefore = document.getElementById('workflows-content');
+                const resultBefore = document.getElementById('wf-result-listing_integrity_check');
+                await loadWorkflows();  // simulated 30s poll tick while a run is in flight
+                const out = {
+                    runningSetSize: _workflowsRunning.size,
+                    btnStillDisabled: btn.disabled,
+                    sameContentNode: document.getElementById('workflows-content') === contentBefore,
+                    sameResultNode: document.getElementById('wf-result-listing_integrity_check') === resultBefore,
+                };
+                _workflowsRunning.clear();  // clean up the never-resolving run so later checks aren't blocked
+                window.confirm = window._origConfirmWf;
+                window.fetchWithTimeout = window._origFetchWithTimeoutWf;
+                window.authGet = window._origAuthGetWf;
+                return out;
+            }""")
+            check(wf_poll.get("runningSetSize") == 1,
+                  f"_workflowsRunning must track the in-flight run: {wf_poll}")
+            check(wf_poll.get("btnStillDisabled") is True,
+                  f"the poll tick must not defeat the disabled-button guard on an in-flight run: {wf_poll}")
+            check(wf_poll.get("sameContentNode") is True,
+                  f"loadWorkflows() must skip its destructive full re-render while a run is in flight "
+                  f"(regression: the 30s poll used to blow away #workflows-content unconditionally): {wf_poll}")
+            check(wf_poll.get("sameResultNode") is True,
+                  f"the result div runWorkflow() already captured must still be the live DOM node when the "
+                  f"fetch eventually resolves, not orphaned by an intervening re-render: {wf_poll}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy

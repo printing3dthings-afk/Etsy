@@ -1698,7 +1698,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="vw-title">QUICK COMMANDS</div>
       <button class="qc-btn" onclick="showScreen('tasks');document.getElementById('hud-todo-input').focus()"><span class="qic">+</span>Start New Task</button>
       <button class="qc-btn" onclick="showScreen('calendar')"><span class="qic">▦</span>Open Calendar</button>
-      <button class="qc-btn" onclick="runWorkflow('shop_health_check', this, false)"><span class="qic">✓</span>Run Health Check</button>
+      <button class="qc-btn" onclick="runWorkflow('shop_health_check', this, false, 150, 'Shop Health Check')"><span class="qic">✓</span>Run Health Check</button>
       <button class="qc-btn" onclick="showScreen('workflows')"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
@@ -7947,14 +7947,28 @@ function renderMemory(d) {
 
 // ══════════════════════════════════════════════════════════════════════════
 // Workflows — real data: /api/workflows, live off the same _EXEC_COMMANDS
-// registry the execute_command chat tool already runs against. Most run
-// directly and show output inline; the one mutating command
-// (backup_digital_products) stages through the same action_queue Action
-// Center uses, via the run_script staged-action type. Static inventory —
-// loaded once at init, not on the 30s loadAll() poll.
+// registry the execute_command chat tool already runs against. Commands with
+// requires_approval: True (currently backup_digital_products, backup_hub_db,
+// listing_compliance_sweep) stage through the same action_queue Action Center
+// uses, via the run_script staged-action type; the rest run directly and show
+// output inline. Re-fetched every time the user navigates to this screen (and,
+// per the 2026-08-01 fix below, every 30s while parked on it) — not a true
+// one-time load, but cheap enough that re-fetching a near-static list is fine.
 // ══════════════════════════════════════════════════════════════════════════
+// 2026-08-01 (Workflows screen audit): ids with a run in flight on THIS tab.
+// loadWorkflows() is registered in _SCREEN_LOADERS, so it re-fires every 30s
+// via loadAll() while the user stays on this screen (not just on navigation)
+// -- and used to unconditionally blow away #workflows-content on every tick.
+// That defeated runWorkflow()'s btn.disabled guard (a fresh, non-disabled
+// button replaced the old one) and orphaned the #wf-result-* div runWorkflow()
+// had already captured, so real script output silently never appeared once a
+// run outlived one 30s tick -- which most of these scripts do. Skip the
+// destructive re-render while anything in this set is running.
+const _workflowsRunning = new Set();
+
 async function loadWorkflows() {
   const el = document.getElementById('workflows-content');
+  if (_workflowsRunning.size) return; // don't blow away in-flight run state — see note above
   el.innerHTML = '<div class="hub-spinner"></div>';
   try {
     const r = await authGet('/api/workflows', 15000);
@@ -7974,30 +7988,39 @@ function renderWorkflows(workflows) {
     return;
   }
   el.innerHTML = workflows.map(w => {
-    const badge = w.requires_approval
+    const running = w.running || _workflowsRunning.has(w.id);
+    const badge = running
+      ? '<span class="act-sev low">running…</span>'
+      : w.requires_approval
       ? '<span class="act-sev medium">needs approval</span>'
-      : (w.long_running ? '<span class="act-sev low">background</span>' : '<span class="act-sev approval">instant</span>');
+      : (w.long_running ? '<span class="act-sev low">background</span>' : '<span class="act-sev approval">runs now</span>');
     return `<div class="act-card low">
       ${badge}
       <div class="act-title">${escHtml(w.name)}</div>
       <div class="act-detail">${escHtml(w.description)}</div>
       <div class="act-btns">
-        <button class="act-btn primary" onclick="runWorkflow('${escHtml(w.id)}', this, ${w.requires_approval ? 'true' : 'false'})">▶ Run</button>
+        <button class="act-btn primary" ${running ? 'disabled' : ''} onclick="runWorkflow('${escHtml(w.id)}', this, ${w.requires_approval ? 'true' : 'false'}, ${Number(w.timeout)||60}, '${escHtml(w.name).replace(/'/g,"\\'")}')">${running ? '⏳ Running…' : '▶ Run'}</button>
       </div>
       <div id="wf-result-${escHtml(w.id)}" style="margin-top:9px"></div>
     </div>`;
   }).join('');
 }
 
-async function runWorkflow(id, btn, requiresApproval) {
-  if (!requiresApproval && !confirm('Run this workflow now?')) return;
+async function runWorkflow(id, btn, requiresApproval, timeoutSec, displayName) {
+  if (!requiresApproval && !confirm(`Run "${displayName || id}" now?`)) return;
   const resultEl = document.getElementById('wf-result-' + id);
-  const orig = btn.textContent;
+  const origHtml = btn.innerHTML;
+  _workflowsRunning.add(id);
   btn.disabled = true;
-  btn.textContent = '⏳ Running…';
+  btn.innerHTML = '⏳ Running…';
   if (resultEl) resultEl.innerHTML = '<div class="hub-spinner"></div>';
   try {
-    const r = await fetchWithTimeout(BASE+'/api/workflows/'+id+'/run', {method:'POST',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},body:'{}'}, 150000);
+    // 30s buffer over the backend's own declared ceiling for this script (2026-08-01
+    // fix — a flat 150000ms here was shorter than listing_integrity_check's configured
+    // 330s timeout / ~282s measured real runtime, so the client gave up and showed
+    // "Request timed out" while the backend script kept running unattended).
+    const ms = Math.max((Number(timeoutSec)||60) * 1000 + 30000, 150000);
+    const r = await fetchWithTimeout(BASE+'/api/workflows/'+id+'/run', {method:'POST',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},body:'{}'}, ms);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     if (d.staged) {
@@ -8007,6 +8030,10 @@ async function runWorkflow(id, btn, requiresApproval) {
     } else if (d.started) {
       if (resultEl) resultEl.innerHTML = `<div class="sub">Started (PID ${escHtml(String(d.pid||''))}), running in background.</div>`;
       showToast('Started, running in background.', 'info');
+    } else if (d.started === false) {
+      // already-running dedupe rejection from _run_exec_command (2026-08-01)
+      if (resultEl) resultEl.innerHTML = `<div class="empty">${escHtml(d.error || 'Already running.')}</div>`;
+      showToast(d.error || 'Already running.', 'err', 6000);
     } else {
       const ok = d.success !== false;
       if (resultEl) resultEl.innerHTML = `<div class="sub" style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✅ Completed':'❌ Failed'} (exit ${escHtml(String(d.returncode))})</div>` +
@@ -8018,8 +8045,9 @@ async function runWorkflow(id, btn, requiresApproval) {
     if (resultEl) resultEl.innerHTML = `<div class="empty">${escHtml(msg)}</div>`;
     showToast(msg, 'err', 6000);
   } finally {
+    _workflowsRunning.delete(id);
     btn.disabled = false;
-    btn.textContent = orig;
+    btn.innerHTML = origHtml;
   }
 }
 
