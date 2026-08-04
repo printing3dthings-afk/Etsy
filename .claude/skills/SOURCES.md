@@ -30,6 +30,7 @@ found), license confirmed, author/repo checked for legitimacy.
 | `cost-tracking` | [affaan-m/ECC](https://github.com/affaan-m/ECC) (`skills/cost-tracking`) | MIT | 2026-07-29 |
 | `cast`, `paint` | [ATheVon/genjutsu](https://github.com/ATheVon/genjutsu) (`skills/cast`, `skills/paint`) | MIT | 2026-08-04 |
 | `_jutsu/*` (9 sub-skills, see note below) | [ATheVon/genjutsu](https://github.com/ATheVon/genjutsu) (`skills/_jutsu/*`) | MIT | 2026-08-04 |
+| `gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`, `gsap-plugins`, `gsap-utils`, `gsap-react`, `gsap-performance`, `gsap-frameworks` | [greensock/gsap-skills](https://github.com/greensock/gsap-skills) (`skills/*`) | MIT | 2026-08-04 |
 
 Each `SKILL.md` was fetched verbatim from the source repo's `main` branch
 (unmodified) and is retained under its original MIT license. `graphify` is
@@ -326,6 +327,26 @@ uses it yet. When a future task actually builds a GSAP-based animation,
 load it there (a plain global `<script src="...">` tag, since GSAP ships
 UMD/global-style, not ESM -- unlike `three`, it doesn't need an importmap
 entry).
+
+## `gsap-*` (8 skills) — official GreenSock skills, complement to genjutsu's bundled `_jutsu/gsap`
+
+Added 2026-08-04, same review pass as `cast`/`paint`. Genjutsu's own
+`_jutsu/gsap` sub-skill (see above) is a third-party author's guide to
+GSAP usage; these 8 are the **official** skill set authored by GreenSock
+themselves (`greensock/gsap-skills`, MIT, 13k★) -- more authoritative for
+the same library, and a natural complement to the already-vendored
+`tools/api_server/static/vendor/gsap/gsap.min.js`. Cloned the repo,
+confirmed MIT via the actual `LICENSE` file, grepped every skill `.md` for
+the same exfiltration/install/credential patterns as every other skill in
+this file -- zero hits, no bundled scripts, no network calls (repo's own
+`skills/` directory is 148KB across 9 files, no `scripts/`/`cli/`
+directories at all, unlike `impeccable`/`OpenMontage`/`pycaps`). Installed
+all 8 top-level (`gsap-core`, `gsap-timeline`, `gsap-scrolltrigger`,
+`gsap-plugins`, `gsap-utils`, `gsap-performance`, plus `gsap-react` and
+`gsap-frameworks` which cover React/Vue/Svelte integration this repo
+doesn't use today -- kept anyway since they're small, harmless, and cost
+nothing to carry versus the real bulk-avoidance reason genjutsu's Android/
+iOS sub-skills were excluded).
 
 ## How the rest get used
 
