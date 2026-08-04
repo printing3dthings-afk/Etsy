@@ -1952,10 +1952,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <!-- ══════════ CALENDAR — real data: /api/cadence + /api/todos — Google Calendar, due dates, ops cadence, seasonal/tax calendar ══════════ -->
+  <!-- ══════════ CALENDAR — real data: /api/cadence — Google Calendar, due dates, ops cadence, seasonal/tax calendar ══════════ -->
   <div class="screen" id="screen-calendar">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Calendar <span class="src">/api/cadence + /api/todos — Google Calendar, due dates, ops cadence, seasonal keywords</span></div>
+      <div class="panel-title">Calendar <span class="src">/api/cadence — Google Calendar, due dates, ops cadence, seasonal keywords</span></div>
       <div id="calendar-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
     </div>
   </div>
@@ -4015,6 +4015,7 @@ const _SCREEN_LOADERS = {
 const _GLOBAL_LOADERS = [
   () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
   loadRelayStatus, loadAlerts, checkPersistence, loadQueue, loadShopPerf, updateTasksBadge,
+  updateCalendarBadge,
 ];
 let _activeScreen = 'cmd';
 
@@ -7798,36 +7799,57 @@ async function batchStageTags(btn) {
   }
 }
 
-// ── Calendar — real data from /api/cadence + /api/todos: due-dated tasks,
-// recurring weekly/monthly/quarterly ops cadence, and the seasonal keyword +
-// tax deadline calendar. List-based (not a grid) — same .act-card pattern as
+// ── Calendar — real data from /api/cadence: due-dated tasks, recurring
+// weekly/monthly/quarterly ops cadence, and the seasonal keyword + tax
+// deadline calendar. List-based (not a grid) — same .act-card pattern as
 // the Action Center, since data volume (~15-20 dated items/year) doesn't
 // justify a calendar-grid widget. ──
 const _CAL_URGENCY_SEV = {OVERDUE:'high', 'THIS WEEK':'high', SOON:'medium', UPCOMING:'low'};
+function _calGcalSoonWindow(gcal) {
+  const today = _localDateStr();
+  const tomorrow = _localDateStr(new Date(Date.now()+86400000));
+  return {today, tomorrow, soon: (gcal||[]).filter(e=>{
+    const day = (e.when||'').slice(0,10);
+    return day===today || day===tomorrow;
+  }).length};
+}
+// 2026-08-04 (Calendar screen audit): badge-calendar used to be computed only
+// inside loadCalendar(), registered only in _SCREEN_LOADERS -- same stale-
+// badge bug already fixed for Tasks (updateTasksBadge). Extracted so it can
+// also run from _GLOBAL_LOADERS regardless of which screen is active. Takes
+// an optional already-fetched /api/cadence payload so loadCalendar() (which
+// already has one) doesn't pay for a second round-trip on every screen visit.
+async function updateCalendarBadge(d) {
+  try {
+    if (!d) {
+      const r = await authGet('/api/cadence', 20000);
+      if (!r.ok) return;
+      d = await r.json();
+    }
+    const badge = document.getElementById('badge-calendar');
+    if (!badge) return;
+    const {soon: soonGcal} = _calGcalSoonWindow(d.google_calendar);
+    // due_todos counted here the same way the card renderer defines "urgent"
+    // (strictly overdue) -- it used to add every open due-dated todo
+    // unfiltered, so a task due 3 months out inflated the badge identically
+    // to one actually overdue.
+    const today = _localDateStr();
+    const overdueTodos = (d.due_todos||[]).filter(t=>t.due_date < today).length;
+    const urgent = (d.seasonal||[]).concat(d.tax_deadlines||[]).filter(e=>e.urgency==='OVERDUE'||e.urgency==='THIS WEEK').length
+      + overdueTodos + soonGcal;
+    badge.textContent = urgent;
+    badge.style.display = urgent>0 ? '' : 'none';
+  } catch(e) { /* offline -- leave the badge showing its last known value */ }
+}
 async function loadCalendar() {
   const el = document.getElementById('calendar-content');
   el.innerHTML = '<div class="hub-spinner"></div>';
   try {
-    const [cr, tr] = await Promise.all([
-      authGet('/api/cadence', 20000),
-      authGet('/api/todos', 15000).catch(()=>null)
-    ]);
-    if (!cr.ok) { const e = await cr.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+cr.status); }
-    const d = await cr.json();
+    const r = await authGet('/api/cadence', 20000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
     renderCalendarContent(d);
-    const badge = document.getElementById('badge-calendar');
-    if (badge) {
-      const today = _localDateStr();
-      const tomorrow = _localDateStr(new Date(Date.now()+86400000));
-      const soonGcal = (d.google_calendar||[]).filter(e=>{
-        const day = (e.when||'').slice(0,10);
-        return day===today || day===tomorrow;
-      }).length;
-      const urgent = (d.seasonal||[]).concat(d.tax_deadlines||[]).filter(e=>e.urgency==='OVERDUE'||e.urgency==='THIS WEEK').length
-        + (d.due_todos||[]).length + soonGcal;
-      badge.textContent = urgent;
-      badge.style.display = urgent>0 ? '' : 'none';
-    }
+    await updateCalendarBadge(d);
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
@@ -7851,7 +7873,16 @@ function renderCalendarContent(d) {
   if (!gcal.length) {
     html += '<div class="empty">No Google Calendar connected yet — connect it in Connections to see your events here.</div>';
   } else {
-    html += gcal.map(e => _calCard('low', e.title, _fmtGCalWhen(e))).join('');
+    // 2026-08-04: severity used to be hardcoded 'low' regardless of proximity,
+    // even though the badge (updateCalendarBadge) already treats today/
+    // tomorrow events as urgent -- an event bumping the nav badge showed no
+    // visual distinction in the list that's supposedly flagging it.
+    const {today: _calToday, tomorrow: _calTomorrow} = _calGcalSoonWindow(gcal);
+    html += gcal.map(e => {
+      const day = (e.when||'').slice(0,10);
+      const sev = day===_calToday ? 'high' : day===_calTomorrow ? 'medium' : 'low';
+      return _calCard(sev, e.title, _fmtGCalWhen(e));
+    }).join('');
   }
 
   const due = d.due_todos || [];
@@ -7861,7 +7892,7 @@ function renderCalendarContent(d) {
     return _calCard(overdue?'high':'low', t.text, 'Due ' + t.due_date);
   }).join('') : '<div class="empty">No to-dos with a due date.</div>';
 
-  html += `<div class="section-title">🔁 This Week's Cadence</div>`;
+  html += `<div class="section-title">🔁 Ops Cadence</div>`;
   const cl = d.checklists || {weekly:[],monthly:[],quarterly:[]};
   html += `<div class="act-card low" style="cursor:default">
     <div class="act-title">Weekly (Friday)</div>

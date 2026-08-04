@@ -21546,3 +21546,258 @@ already-running dedupe guard including the poll()-vs-membership
 distinction) + new Playwright coverage for the badge wording, timeout
 threading, named confirm dialog, sidebar icon survival, and the 30s-poll
 in-flight-run protection.
+
+
+## 2026-08-04 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+
+Traceback (most recent call last):
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 149, in <module>
+    main()
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 144, in main
+    result = run_scheduled_coloring(force=args.force, preview=args.preview)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Etsy/tools/post_scheduled_coloring.py", line 91, in run_scheduled_coloring
+    themes = gcp.PACKS[pack]["themes"]
+             ~~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: list indices must be integers or slices, not str
+
+
+## 2026-08-04 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — Durable volume not writable
+hourly health loop found /tmp/tmppksk7hug/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmppksk7hug/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpow1jxvfe/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 11426). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-04 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 11428). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-04 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 18.4 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-04 — Calendar screen: 7 issues fixed (17th screen in the audit) — tax deadlines stuck OVERDUE for 8 months, server dates computed in UTC
+Read-only rollup of Google Calendar events, due-dated todos, the static ops-
+cadence checklist, and seasonal-keyword/tax deadlines, backed by a single
+`GET /api/cadence` endpoint. No writes/mutations exist anywhere on this
+screen -- confirmed by both the research and adversarial-review passes, so
+this is the first screen in the audit where "silent failure on write" and
+"missing confirmation dialog" genuinely don't apply (nothing to protect).
+
+**1. Tax deadlines were never filtered for "already past."** `_get_tax_
+calendar()` returns 6 fixed-date entries for the current year unconditionally;
+`get_cadence()` consumed them with no past-date filter, unlike the seasonal-
+keyword block right above it, which already filters. As of today, 4 of the 6
+dates (Jan 15, Jan 31, Apr 15, Jun 17) had already passed and were rendering
+as permanent red "OVERDUE" cards -- for roughly 8 of 12 months a year, the
+Calendar screen shows stale, already-handled tax deadlines as urgent, and
+they were also inflating the nav badge. `_sync_calendar_to_google()` already
+had this exact filter (`if d < today: continue`) on its own independent
+re-fetch of the same data -- the filtering logic existed in this codebase,
+just not on the read path the Calendar screen actually uses. Fixed by
+applying the same filter to `get_cadence()`'s tax block.
+
+**2. Server-side "today" was computed in UTC, not the shop's local
+timezone.** The frontend already has a `_localDateStr()` fix for this exact
+bug class (2026-07-18), but four server-side call sites still used bare
+`date.today()`/`datetime.now(timezone.utc)`: `get_cadence()` (badge +
+urgency), `_sync_calendar_to_google()` (backfill guards),
+`/api/alerts`'s gcal today/tomorrow reminder matching, and
+`_calendar_tasks_loop()`'s Sunday/1st/8th/15th trigger-date checks (the last
+one found by adversarial review, not the initial research pass). No `TZ` env
+var is set anywhere in this repo's deploy config, so Railway containers
+default to UTC -- in the evening local hours for a US-based shop, the
+server's "today" has already rolled to the next calendar day, misclassifying
+same-day items as OVERDUE hours before they actually are locally. Fixed with
+a new `_shop_now()`/`_shop_today()` helper that reads Settings' `user_
+profile.timezone` field (already exists end-to-end -- DB column, `/api/
+account`, and a real Settings-screen UI field -- but was previously never
+consulted for any date computation) via `zoneinfo.ZoneInfo`, falling back to
+`America/New_York` if unset or invalid. All four call sites now route
+through it.
+
+**3. `#badge-calendar` only updated while the Calendar screen was open.**
+Same stale-badge bug class already fixed for Tasks -- `loadCalendar()`'s
+badge computation was registered only in `_SCREEN_LOADERS`, never `_GLOBAL_
+LOADERS`, so the badge sat at its dead default until the user manually
+opened Calendar at least once per session. Extracted into a standalone
+`updateCalendarBadge()` (accepting an optional pre-fetched payload so
+`loadCalendar()` itself doesn't pay for a second round-trip) and added to
+`_GLOBAL_LOADERS`.
+
+**4. The badge counted every due-dated todo as "urgent," no matter how far
+out.** Seasonal/tax entries and Google Calendar events were both filtered
+to actually-urgent windows before counting, but `due_todos.length` was added
+raw -- a todo due 3 months out counted identically to one actually overdue,
+directly contradicting the card renderer's own overdue/not-overdue coloring
+two sections down. Badge now filters `due_todos` to strictly overdue,
+matching the card renderer's existing definition.
+
+**Also fixed (smaller):** Google Calendar event cards were hardcoded to
+"low" severity regardless of proximity, even though the badge already
+treats today/tomorrow events as urgent -- now colored `high`/`medium`/`low`
+by actual proximity. `loadCalendar()` fetched `/api/todos` in parallel with
+`/api/cadence` and never used the response (100% dead network round-trip,
+up to a 15s timeout) -- removed, along with the stale "/api/cadence +
+/api/todos" comments/subtitle that advertised the dead half. The "This
+Week's Cadence" section title was renamed to "Ops Cadence" since the
+underlying checklist is a static, always-identical list with no actual
+day-of-week gating.
+
+New test coverage: `tests/test_calendar_screen.py` (shop-timezone helper
+fallback behavior, tax-deadline past-date filtering including an exact-
+today edge case) + new Playwright coverage for the badge updating from a
+different active screen, gcal card severity-by-proximity, and the renamed
+title.

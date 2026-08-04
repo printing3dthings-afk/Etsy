@@ -789,6 +789,69 @@ async def _run_browser_checks() -> None:
                   f"the result div runWorkflow() already captured must still be the live DOM node when the "
                   f"fetch eventually resolves, not orphaned by an intervening re-render: {wf_poll}")
 
+            # ── Calendar screen (2026-08-04 audit): badge staleness fix, gcal
+            # severity-by-proximity coloring, and the renamed cadence title. ──
+            cal_stub = await page.evaluate("""async () => {
+                window._origAuthGetCal = window.authGet;
+                const today = _localDateStr();
+                const tomorrow = _localDateStr(new Date(Date.now()+86400000));
+                const stub = {
+                    seasonal: [], tax_deadlines: [],
+                    due_todos: [{text:'Overdue task', due_date:'2020-01-01', done:false}],
+                    checklists: {weekly:[], monthly:[], quarterly:[]},
+                    google_calendar: [
+                        {title:'Today event', when: today+'T10:00:00', all_day:false},
+                        {title:'Tomorrow event', when: tomorrow+'T10:00:00', all_day:false},
+                        {title:'Far-out event', when:'2099-01-01T10:00:00', all_day:false},
+                    ],
+                };
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/cadence') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => stub});
+                    }
+                    return window._origAuthGetCal(path, ms);
+                };
+                // simulate the 30s global-loader tick firing while a DIFFERENT
+                // screen is active -- this is exactly the stale-badge bug: the
+                // badge must still update even though Calendar was never opened.
+                showScreen('cmd');
+                await updateCalendarBadge();
+                const badge = document.getElementById('badge-calendar');
+                const badgeAfterGlobalTick = {text: badge ? badge.textContent : null, shown: badge ? badge.style.display !== 'none' : null};
+                // now actually open the screen and check rendering
+                showScreen('calendar');
+                await loadCalendar();
+                const el = document.getElementById('calendar-content');
+                const cards = [...el.querySelectorAll('.act-card')];
+                const gcalCards = cards.filter(c => ['Today event','Tomorrow event','Far-out event'].some(t => c.textContent.includes(t)));
+                const sevOf = (label) => {
+                    const c = gcalCards.find(c => c.textContent.includes(label));
+                    return c ? [...c.classList].find(cl => ['high','medium','low'].includes(cl)) : null;
+                };
+                window.authGet = window._origAuthGetCal;
+                return {
+                    badgeAfterGlobalTick,
+                    html: el.innerHTML,
+                    todaySev: sevOf('Today event'),
+                    tomorrowSev: sevOf('Tomorrow event'),
+                    farSev: sevOf('Far-out event'),
+                };
+            }""")
+            check(cal_stub.get("badgeAfterGlobalTick", {}).get("shown") is True,
+                  f"updateCalendarBadge() must update #badge-calendar even when Calendar was never opened "
+                  f"this session (regression: it used to only run inside loadCalendar()): {cal_stub.get('badgeAfterGlobalTick')}")
+            check("Ops Cadence" in cal_stub.get("html", ""),
+                  f"the misleading 'This Week's Cadence' title must be renamed: {cal_stub.get('html','')[:200]}")
+            check("This Week's Cadence" not in cal_stub.get("html", ""),
+                  f"old misleading title text must be gone: {cal_stub.get('html','')[:200]}")
+            check(cal_stub.get("todaySev") == "high",
+                  f"a Google Calendar event happening today must render 'high' severity, not always 'low' "
+                  f"(regression: gcal cards used to be hardcoded _calCard('low', ...)): {cal_stub}")
+            check(cal_stub.get("tomorrowSev") == "medium",
+                  f"a Google Calendar event happening tomorrow must render 'medium' severity: {cal_stub}")
+            check(cal_stub.get("farSev") == "low",
+                  f"a far-out Google Calendar event should still render 'low' severity: {cal_stub}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy

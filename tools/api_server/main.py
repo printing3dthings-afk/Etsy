@@ -38,6 +38,7 @@ import zipfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import uvicorn
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, WebSocket, WebSocketDisconnect
@@ -101,6 +102,34 @@ _anthropic_breaker = CircuitBreaker("anthropic_api", db_module=db)
 # once — so promoting the primary model can never hard-break Frank; it just logs
 # and degrades gracefully. Keep this pointed at a model every account can reach.
 _MODEL_FALLBACK = "claude-sonnet-4-6"
+
+_SHOP_TZ_FALLBACK = "America/New_York"  # used until Settings' Timezone field is filled in
+
+
+def _shop_now() -> datetime:
+    """Current time in the shop's own local timezone, not the server's --
+    Railway containers default to UTC (no TZ env var set anywhere in this
+    repo's deploy config, confirmed 2026-08-04 Calendar screen audit). Every
+    cadence/calendar-sync date comparison in this file used to call bare
+    date.today()/datetime.now(timezone.utc), which rolls to the next
+    calendar day several hours before local midnight for a US-based shop --
+    misclassifying same-day items as OVERDUE, or as already-past for the
+    sync loop's backfill guard, hours before they actually are locally
+    (and, for _calendar_tasks_loop, misjudging which weekday/day-of-month
+    "today" is for its Sunday/1st/8th/15th trigger checks). Reads Settings'
+    user_profile.timezone; falls back to _SHOP_TZ_FALLBACK if unset or
+    invalid."""
+    tz_name = (db.get_user_profile().get("timezone") or "").strip() or _SHOP_TZ_FALLBACK
+    try:
+        tz = ZoneInfo(tz_name)
+    except (ZoneInfoNotFoundError, ValueError):
+        tz = ZoneInfo(_SHOP_TZ_FALLBACK)
+    return datetime.now(tz)
+
+
+def _shop_today() -> date:
+    """'Today' in the shop's own local timezone -- see _shop_now()."""
+    return _shop_now().date()
 
 
 def _log_anthropic_usage(caller: str, model: str, usage) -> None:
@@ -622,7 +651,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "831eb11-v296"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "08a0b6b-v297"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8238,7 +8267,7 @@ def _sync_calendar_to_google() -> str:
         return "not connected"
 
     synced = 0
-    today = date.today()
+    today = _shop_today()  # 2026-08-04: shop-local, not server UTC — see _shop_today() docstring
 
     todos = db.list_todos()
     for t in todos:
@@ -8382,7 +8411,7 @@ async def _calendar_tasks_loop() -> None:
     last_etsy_file_inventory = _get_calendar_task_last_run("etsy_file_inventory")
     while True:
         await asyncio.sleep(3600)
-        now = datetime.now(timezone.utc)
+        now = await asyncio.to_thread(_shop_now)  # 2026-08-04: shop-local, not server UTC
         today = now.date()
         ran = []
         # 2026-07-19: previously only `ran` existed, and the aggregate heartbeat
@@ -13603,8 +13632,9 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
     # literal "reminder" behavior Scott asked for. _get_upcoming_google_calendar_events()
     # already degrades to [] when not connected/on any API error, so this
     # never needs its own try/except.
-    today_str = date.today().isoformat()
-    tomorrow_str = (date.today() + timedelta(days=1)).isoformat()
+    _alerts_today = await asyncio.to_thread(_shop_today)  # 2026-08-04: shop-local, not server UTC
+    today_str = _alerts_today.isoformat()
+    tomorrow_str = (_alerts_today + timedelta(days=1)).isoformat()
     for e in await asyncio.to_thread(_get_upcoming_google_calendar_events, 2):
         when_date = (e.get("when") or "")[:10]
         if when_date not in (today_str, tomorrow_str):
@@ -14303,7 +14333,7 @@ def _get_upcoming_google_calendar_events(days_ahead: int = 14) -> list[dict]:
 
 @app.get("/api/cadence")
 async def get_cadence(_token: str = Depends(_auth_session_or_bearer)):
-    today = date.today()
+    today = await asyncio.to_thread(_shop_today)
 
     calendar = seasonal_keywords._build_calendar(today.year)
     for e in calendar:
@@ -14323,11 +14353,17 @@ async def get_cadence(_token: str = Depends(_auth_session_or_bearer)):
     ]
     seasonal.sort(key=lambda e: e["update_by"])
 
+    # 2026-08-04 (Calendar screen audit): unlike the seasonal block above, this
+    # never filtered past dates -- 4 of the 6 fixed tax dates are past for most
+    # of the year, sitting as permanent red "OVERDUE" cards until Dec 31.
+    # _sync_calendar_to_google() already filters (`if d < today: continue`);
+    # this read path just never got the same treatment.
     tax = json.loads(tax_compliance_tools._get_tax_calendar())["tax_deadlines"]
     for t in tax:
         d = datetime.strptime(t["date"], "%b %d, %Y").date()
         t["date_iso"] = d.isoformat()
         t["urgency"] = seasonal_keywords._urgency(d, today)
+    tax = [t for t in tax if t["date_iso"] >= today.isoformat()]
     tax.sort(key=lambda t: t["date_iso"])
 
     todos = await asyncio.to_thread(db.list_todos)
