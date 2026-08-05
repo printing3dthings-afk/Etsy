@@ -189,7 +189,12 @@ def test_cadence_endpoint_includes_google_calendar_key():
 
 # ── /api/alerts surfaces near-term events as reminders ──────────────────────
 def test_alerts_endpoint_surfaces_near_term_calendar_events():
-    today_str = date.today().isoformat()
+    # 2026-08-05: use the same shop-local date source /api/alerts itself
+    # reads (server._shop_today(), from the Calendar screen audit's UTC-vs-
+    # local fix), not a bare date.today() -- the two can legitimately
+    # disagree near a UTC/shop-timezone day boundary, which made this test
+    # flaky (mismatched "Today"/"Tomorrow" wording depending on time of day).
+    today_str = server._shop_today().isoformat()
 
     class _FakeClient:
         def list_upcoming_events(self, days_ahead=14):

@@ -937,6 +937,63 @@ async def _run_browser_checks() -> None:
             check(aicore_stub.get("redeployBtnTextAfterSuccess") == "⟳ Redeploy Server",
                   f"the button text must be restored after a successful redeploy: {aicore_stub}")
 
+            # ── Agents screen (2026-08-05 audit): sku_taxonomy_backfill tile
+            # present, running_count/tile-idle-class agreement for started/
+            # offline/warning/running/error statuses. ──
+            agents_stub = await page.evaluate("""async () => {
+                window._origAuthGetAg = window.authGet;
+                const fixture = {
+                    agents: [
+                        {name: 'sku_taxonomy_backfill', label: 'SKU + Category Backfill', built: true, status: 'ok', detail: '3 staged'},
+                        {name: 'file_audit', label: 'File Integrity Audit', built: true, status: 'warning', detail: 'skipped this run'},
+                        {name: 'daily_brief', label: 'Daily Brief', built: true, status: 'running', detail: 'generating brief'},
+                        {name: 'snapshot', label: 'Snapshot', built: true, status: 'started', detail: 'waiting for first run'},
+                        {name: 'local_relay', label: 'Local Relay', built: true, status: 'offline', detail: 'no relay connected'},
+                        {name: 'token_sync', label: 'Token Sync', built: true, status: 'error', detail: 'boom'},
+                    ],
+                    running_count: 3, total_count: 6,
+                };
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/agents/status') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => fixture});
+                    }
+                    return window._origAuthGetAg(path, ms);
+                };
+                showScreen('agents');
+                await loadAgents();
+                const grid = document.getElementById('agents-grid-full');
+                const html = grid ? grid.innerHTML : '';
+                const acAgents = document.getElementById('ac-agents');
+                window.authGet = window._origAuthGetAg;
+                return {html, acAgentsText: acAgents ? acAgents.textContent : null};
+            }""")
+            html = agents_stub.get("html", "")
+            check("SKU + Category Backfill" in html,
+                  f"sku_taxonomy_backfill must render a real tile (regression: missing from "
+                  f"_AGENT_LOOP_LABELS despite being a real running loop): {html[:800]}")
+            check(agents_stub.get("acAgentsText") == "3/6 running",
+                  f"the Home mini-panel's aggregate must reflect the backend's running_count, "
+                  f"not re-derive its own: {agents_stub}")
+            # 'ok'/'warning'/'running' tiles must NOT carry the 'idle' class; 'started'/
+            # 'offline'/'error' tiles must. Check via a per-tile eval since string-matching
+            # raw HTML for class order is fragile.
+            tile_classes = await page.evaluate("""() => {
+                const tiles = [...document.querySelectorAll('#agents-grid-full .agent-tile')];
+                return tiles.map(t => ({name: t.querySelector('.name').textContent, cls: t.className}));
+            }""")
+            by_name = {t["name"]: t["cls"] for t in tile_classes}
+            check("idle" not in by_name.get("SKU + Category Backfill", ""),
+                  f"an 'ok' tile must not render idle: {by_name}")
+            check("idle" not in by_name.get("File Integrity Audit", "") and "warn" in by_name.get("File Integrity Audit", ""),
+                  f"a 'warning' tile must render active (not idle) with the amber 'warn' class "
+                  f"(regression: 'warning' used to render identically to 'started'/never-run): {by_name}")
+            check("idle" not in by_name.get("Daily Brief", ""),
+                  f"a 'running' (actively executing) tile must not render idle: {by_name}")
+            check("idle" in by_name.get("Snapshot", ""),
+                  f"a 'started' (never run) tile must render idle: {by_name}")
+            check("idle" in by_name.get("Local Relay", ""),
+                  f"an 'offline' relay tile must render idle: {by_name}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy

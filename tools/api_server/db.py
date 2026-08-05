@@ -1698,10 +1698,11 @@ def all_settings() -> dict:
     return {r["key"]: r["value"] for r in rows}
 
 
-# ── Agent heartbeats (live-status registry) — each of the 5 real background
-# loops (and the relay/compactor once built) upserts its own row here on every
-# run so the HUD's Agents screen and Command Center tiles show real state
-# instead of a hardcoded "Running" label. ───────────────────────────────────
+# ── Agent heartbeats (live-status registry) — each real background loop
+# (see _AGENT_LOOP_LABELS in main.py, 9 as of 2026-08-05) plus the relay and
+# context_compactor upserts its own row here on every run so the HUD's
+# Agents screen and Command Center tiles show real state instead of a
+# hardcoded "Running" label. ─────────────────────────────────────────────
 
 
 def set_agent_heartbeat(name: str, label: str, status: str, detail: str = "") -> None:

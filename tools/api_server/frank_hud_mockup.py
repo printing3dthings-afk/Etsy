@@ -557,6 +557,8 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .agent-tile .stat .d{width:5px;height:5px;border-radius:50%;background:var(--green)}
 .agent-tile.idle .stat{color:var(--muted)}
 .agent-tile.idle .stat .d{background:var(--muted)}
+.agent-tile.warn .stat{color:var(--amber)}
+.agent-tile.warn .stat .d{background:var(--amber)}
 
 .inbox-msg-bar{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .inbox-unread-badge{font-size:18px;font-weight:700;color:var(--cyan2);min-width:28px}
@@ -5815,9 +5817,15 @@ initWS();
 // (Corrected 2026-07-15: this used to also say "or honestly marked not_built",
 // leftover from an earlier state — every tile has hardcoded built:true today.) ──
 function renderAgentTile(a){
-  const ok = a.status === 'ok';
+  // 2026-08-05: "warning" and "running" are genuinely active (a completed-
+  // but-flagged run, or a loop mid-execution right now) -- only "started"
+  // (never fired) and "offline" (relay disconnected) are idle. Matches the
+  // backend's running_count definition in _agents_status_snapshot() so the
+  // aggregate count and these tiles never contradict each other.
+  const warn = a.status === 'warning';
   const err = a.status === 'error';
-  const cls = 'agent-tile' + (ok ? '' : ' idle');
+  const active = a.status === 'ok' || warn || a.status === 'running';
+  const cls = 'agent-tile' + (active ? '' : ' idle') + (warn ? ' warn' : '');
   const dotStyle = err ? ' style="background:var(--red)"' : '';
   const statStyle = err ? ' style="color:var(--red)"' : '';
   const icon = a.built ? '⚙' : '⋯';

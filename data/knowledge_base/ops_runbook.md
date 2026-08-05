@@ -21873,3 +21873,49 @@ regen test (`page.once('dialog', ...)` never fired because `confirm()` had
 been monkey-patched and left that way) -- fixed by scoping the override to
 save/restore around the single `coreRedeploy()` call, same pattern already
 used for `window.authGet`/`window.fetchWithTimeout` elsewhere in the file.
+
+## 2026-08-05 — Agents screen: 3 issues fixed (19th screen in the audit) — a real running loop invisible on-screen, "N/N running" contradicting idle tiles
+Read-only live-status registry of backend background loops (`#screen-agents`,
+`GET /api/agents/status`). No destructive actions exist on this screen, so
+this audit was purely about data accuracy, not confirmation dialogs or
+silent failures.
+
+**1. `sku_taxonomy_backfill` -- a real loop started at boot and heartbeating
+normally -- was missing from `_AGENT_LOOP_LABELS`, so it never got a tile.**
+`/api/alerts` already surfaces this loop's heartbeat errors by name
+("Loop 'SKU + Category Backfill' is in an error state") since it reads
+*all* heartbeat rows unfiltered -- but there was no tile on the Agents
+screen to click into or confirm against if that alert ever fired. Fixed by
+adding it to `_AGENT_LOOP_LABELS` like every other interval loop.
+
+**2. `running_count` counted a loop that had never fired ("started",
+seeded at boot) or a disconnected relay ("offline") as "running."** The
+aggregate figure (shown on the Home mini-panel, the AI Core screen's cached
+row, and the header status pill) could read e.g. "10/10 running" right
+after a redeploy while every individual tile still rendered idle/grey --
+the number and the tiles directly contradicted each other. Also, "warning"
+(a completed-but-flagged run) and "running" (a loop actively mid-execution)
+were being demoted into the same "not running" bucket as a loop that never
+ran at all. Fixed the backend to count only `ok`/`warning`/`running` as
+active, and updated `renderAgentTile()` to match (idle class only for
+`started`/`offline`/`error`; new amber "warn" tile styling for `warning`
+so it's visually distinct from a plain "ok"). Note: this also tightens the
+header status pill's DEGRADED threshold, so a fresh redeploy can now show
+DEGRADED for longer (until `daily_brief`/`calendar_tasks` report their
+first heartbeat, up to ~1hr) than before the fix -- accepted tradeoff,
+since the pill is now telling the truth instead of hiding it.
+
+**3. Stale `db.py` comment said "5 real background loops" and described
+the relay/compactor as "once built."** There are 9 loops now, and both
+the relay and context_compactor have been built unconditionally for a
+while. Comment corrected.
+
+Fix commit bumped `_BUILD_ID` to `753dcba-v299`. New test coverage:
+`tests/test_agents_screen.py` (loop registration, running_count for every
+status combination) + a new Playwright block asserting tile idle/warn
+classes match their status. Also fixed an unrelated pre-existing flake
+surfaced by the full suite: `tests/test_google_calendar.py` compared
+`/api/alerts`' shop-local "today" (via `_shop_today()`, from the earlier
+Calendar screen audit) against a bare `date.today()` fixture, which could
+disagree near a UTC/shop-timezone day boundary -- fixed the test to read
+the same date source the endpoint actually uses.

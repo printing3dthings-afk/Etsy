@@ -651,7 +651,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "0b586de-v298"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "753dcba-v299"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8553,6 +8553,7 @@ _AGENT_LOOP_LABELS = {
     "daily_brief": "Daily Brief",
     "calendar_tasks": "Calendar Tasks",
     "file_audit": "File Integrity Audit",
+    "sku_taxonomy_backfill": "SKU + Category Backfill",
 }
 
 
@@ -8583,8 +8584,8 @@ async def _startup() -> None:
     etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))
     etsy_api.set_rate_limit_sample_hook(db.record_rate_limit_sample)
     # Seed every loop's row immediately so the Agents registry always reports
-    # all 5 from boot, rather than waiting on each loop's own startup delay
-    # (some sleep minutes before their first real run).
+    # all of _AGENT_LOOP_LABELS from boot, rather than waiting on each loop's
+    # own startup delay (some sleep minutes before their first real run).
     for _name, _label in _AGENT_LOOP_LABELS.items():
         try:
             db.set_agent_heartbeat(_name, _label, "started", "waiting for first run")
@@ -13381,7 +13382,15 @@ async def _agents_status_snapshot() -> dict:
         "updated_at": cc_hb["updated_at"] if cc_hb else (summaries[0]["updated_at"] if summaries else None),
     })
 
-    running = sum(1 for a in agents if a["built"] and a["status"] != "error")
+    # 2026-08-05 Agents screen audit: this used to count everything except
+    # "error" as running -- so a loop that had never fired ("started",
+    # seeded at boot) or a disconnected relay ("offline") both counted as
+    # "running," letting the aggregate read e.g. "10/10 running" right after
+    # a redeploy while every tile on screen still showed idle/grey. "warning"
+    # and "running" (a loop actively mid-run) are genuinely active, not idle
+    # -- only "started" and "offline" mean nothing has happened yet.
+    _ACTIVE_AGENT_STATUSES = {"ok", "warning", "running"}
+    running = sum(1 for a in agents if a["built"] and a["status"] in _ACTIVE_AGENT_STATUSES)
     return {"agents": agents, "running_count": running, "total_count": len(agents)}
 
 
