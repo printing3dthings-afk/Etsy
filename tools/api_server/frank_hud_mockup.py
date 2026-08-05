@@ -1689,7 +1689,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div id="nav-advanced-items">
     <div class="nav-item" data-tier="advanced" data-screen="tasks" role="button" tabindex="0"><span class="ic" aria-hidden="true">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
     <div class="nav-item" data-tier="advanced" data-screen="calendar" role="button" tabindex="0"><span class="ic" aria-hidden="true">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
-    <div class="nav-item" data-tier="advanced" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
+    <div class="nav-item" data-tier="advanced" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills</div>
     <div class="nav-item" data-tier="advanced" data-screen="workflows" role="button" tabindex="0"><span class="ic" aria-hidden="true">⇄</span>Workflows</div>
     <div class="nav-item" data-tier="advanced" data-screen="security" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛡</span>Security</div>
     <div class="nav-item" data-tier="advanced" data-screen="core" role="button" tabindex="0"><span class="ic" aria-hidden="true">◎</span>AI Core</div>
@@ -7240,14 +7240,10 @@ async function loadTools(){
     const d = await r.json();
     cacheSet('tools', d);
     _renderTools(d, list, null);
-    const badge = document.getElementById('badge-tools');
-    if(badge){ badge.textContent = d.count; badge.style.display = ''; }
   }catch(e){
     const cached = cacheGet('tools');
     if(cached){
       _renderTools(cached.data, list, _offlineNote(cached.ts));
-      const badge = document.getElementById('badge-tools');
-      if(badge){ badge.textContent = cached.data.count; badge.style.display = ''; }
     } else if(list){
       list.innerHTML = '<div style="color:var(--red);font-size:12px">Tools offline: '+escHtml(e.message)+'</div>';
     }

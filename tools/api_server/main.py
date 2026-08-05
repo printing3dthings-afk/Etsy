@@ -651,7 +651,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "753dcba-v299"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "9b71607-v300"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -14024,13 +14024,20 @@ async def set_budget_caps(body: dict, _token: str = Depends(_auth_session_or_bea
 @app.get("/api/tools/list")
 async def get_tools_list(_token: str = Depends(_auth_session_or_bearer)):
     """Live registered AGENT_TOOLS — the Tools & Skills screen's source of
-    truth. Badge count is always len(AGENT_TOOLS), so it grows automatically
-    as local_* relay tools or new tools are added; never hardcoded."""
+    truth. count is always len(AGENT_TOOLS), so it grows automatically
+    as local_* relay tools or new tools are added; never hardcoded.
+    Descriptions are run through _localize_identity() (2026-08-05) --
+    several tool descriptions bake the agent/owner name in at import time
+    (e.g. stage_action's OWNER_NAME f-string), so without this a runtime
+    rename via Settings would leave this screen showing the old name
+    forever even though the live chat/tool-calls already switched."""
     tools = [
         {
             "name": t["name"],
-            "description": t.get("description")
-            or "Native Anthropic-hosted tool — executed server-side by Anthropic, not by our code.",
+            "description": _localize_identity(
+                t.get("description")
+                or "Native Anthropic-hosted tool — executed server-side by Anthropic, not by our code."
+            ),
         }
         for t in AGENT_TOOLS
     ]

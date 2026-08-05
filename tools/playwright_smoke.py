@@ -994,6 +994,37 @@ async def _run_browser_checks() -> None:
             check("idle" in by_name.get("Local Relay", ""),
                   f"an 'offline' relay tile must render idle: {by_name}")
 
+            # ── Tools & Skills screen (2026-08-05 audit): tool descriptions
+            # localize to a runtime agent/owner rename, and the non-actionable
+            # tool-count badge is gone. ──
+            tools_stub = await page.evaluate("""async () => {
+                window._origAuthGetTl = window.authGet;
+                const fixture = {
+                    tools: [{name: 'stage_action', description: 'Stage a change for Jamie to approve.'}],
+                    count: 1,
+                };
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/tools/list') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => fixture});
+                    }
+                    return window._origAuthGetTl(path, ms);
+                };
+                showScreen('tools');
+                await loadTools();
+                const list = document.getElementById('tools-list');
+                const html = list ? list.innerHTML : '';
+                window.authGet = window._origAuthGetTl;
+                return {html, badgeExists: !!document.getElementById('badge-tools')};
+            }""")
+            check("Jamie" in tools_stub.get("html", ""),
+                  f"Tools & Skills must render whatever description /api/tools/list "
+                  f"returns (server-side localization already covered by the backend "
+                  f"unit test) -- got: {tools_stub.get('html','')[:300]}")
+            check(tools_stub.get("badgeExists") is False,
+                  f"badge-tools was removed (2026-08-05 audit: it only ever showed a "
+                  f"static, never-actionable total tool count) -- should not exist "
+                  f"in the DOM anymore: {tools_stub}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy

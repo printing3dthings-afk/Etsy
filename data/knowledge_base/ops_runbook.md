@@ -21919,3 +21919,42 @@ surfaced by the full suite: `tests/test_google_calendar.py` compared
 Calendar screen audit) against a bare `date.today()` fixture, which could
 disagree near a UTC/shop-timezone day boundary -- fixed the test to read
 the same date source the endpoint actually uses.
+
+## 2026-08-05 — Tools & Skills screen: 2 issues fixed (20th screen in the audit) — stale tool names after a rename, a nav badge that never signaled anything actionable
+Read-only flat list of every entry in the backend's `AGENT_TOOLS` dispatch
+registry (the same ~60 tools Claude can call mid-chat). Every tool was
+cross-checked against `_execute_agent_tool`'s dispatch chain -- unlike the
+Agents screen's missing `sku_taxonomy_backfill` loop, no tool here is
+registered but unreachable. No destructive actions exist on this screen.
+
+**1. Tool descriptions went stale after a runtime agent/owner rename.**
+Several `AGENT_TOOLS` descriptions bake the owner/agent name in at Python
+import time as an f-string (e.g. `stage_action`'s description literally
+interpolates `business_config.OWNER_NAME`). The live chat system prompt
+and the tool definitions actually sent to Claude both re-localize to the
+current name on every turn via `_localize_identity()`, but
+`GET /api/tools/list` built its display list straight from the raw
+`AGENT_TOOLS` entries and never called it -- so after Scott renamed the
+agent in Settings, this screen kept showing the OLD name forever (until
+the next process restart) even though the model was already receiving the
+new one. Fixed: `/api/tools/list` now runs every description through
+`_localize_identity()` before returning it, matching what the live chat
+path already does.
+
+**2. The nav badge showed a static total tool count that never signaled
+anything needing attention.** Unlike every other badge in the nav (Tasks
+= open-task count, Calendar = today's-events count, Actions = pending-
+approvals count), `badge-tools` just showed `len(AGENT_TOOLS)` (~60,
+never changes meaningfully within a session). It was also only wired
+inside the screen-scoped `loadTools()`, not `_GLOBAL_LOADERS` -- the same
+stale-badge bug class already fixed on Tasks/Calendar, but here the fix
+that actually matched the finding was removal, not wiring: a badge whose
+number never means anything shouldn't exist just to be technically fresh.
+Removed the badge markup and both its write sites.
+
+Fix commit bumped `_BUILD_ID` to `9b71607-v300`. New test coverage:
+`tests/test_tools_screen.py` (localization after a simulated rename,
+count-matches-registry invariant, badge markup gone) + a new Playwright
+block confirming the rendered description reflects whatever
+`/api/tools/list` returns and that `#badge-tools` no longer exists in the
+DOM.
