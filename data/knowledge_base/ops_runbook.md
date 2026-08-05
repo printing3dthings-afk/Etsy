@@ -22102,3 +22102,48 @@ coordinating this loop with `listing_compliance_sweep.py` beyond sharing
 the same registries, since that sweep is Scott-triggered on demand, not
 an automatic competing loop, so there's no actual race to guard against
 today.
+
+
+## 2026-08-05 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-05 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 19.2 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-05 — Added xAI/Grok as a second AI engine (image now, text now too)
+Scott provided an XAI_API_KEY (added to Railway). Wired Grok Imagine into
+`tools/image_gen.py` (`generate_image`/`edit_image`, engine="grok") alongside
+the existing openai/gpt-image-2/gemini/ideogram engines, and added it to
+`_APPROVED_ART_ENGINES` in main.py (now the single source of truth --
+`_IMAGE_ENGINES` was a hand-duplicated copy of the same tuple and is now just
+`= _APPROVED_ART_ENGINES`, so the two lists can't drift again).
+
+Also wired a second, independent seam for TEXT generation: `_xai_create()`
+(circuit-breaker-wrapped via its own `_xai_breaker`, usage-logged same as
+`_anthropic_create()`) plus a new `TEXT_ENGINE` setting (mirrors
+`IMAGE_ENGINE`'s exact `_SETTINGS_APPLY`/`_effective_settings()`/`POST
+/api/settings` pattern). `_effective_text_engine()` is the single read point
+every call site uses -- it degrades TEXT_ENGINE=grok back to anthropic
+automatically if XAI_API_KEY isn't set, so a bad/missing key can never
+silently stop tag/title/description generation, it just falls back to
+Claude. Wired into all 4 real LLM-text call sites: `_generate_tags_for_
+listings()`, `classify_listings_batch()`, `_autofix_title_core()`,
+`_generate_product_listing_content_core()` -- each branches on engine and
+keeps the existing Anthropic path (with its cache_control prompt caching)
+completely untouched when engine != grok.
+
+Grok is UNPROVEN against a real xAI response as of this entry -- XAI_API_KEY
+lives on Railway, not in the dev sandbox that built this, so the exact
+request/response shapes were built from xAI's published docs, not a live
+test call. Confirm on Railway before trusting output quality. No frontend
+picker for TEXT_ENGINE yet (env-var only for now) -- image engine already has
+one in Settings/Create; text engine picker is still pending.

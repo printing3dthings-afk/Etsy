@@ -157,6 +157,16 @@ def _get_bytes(url: str, retries: int, timeout: int) -> bytes:
 #   "gemini"     — Google "Nano Banana" (gemini-2.5-flash-image); best at keeping the
 #                  same product consistent across scenes → ideal for listing mockups
 #   "ideogram"   — Ideogram 3.0; best text-in-image (covers/badges); GENERATE-ONLY
+#   "grok"       — xAI Grok Imagine (grok-imagine-image-quality), added 2026-08-05.
+#                  Supports both generate and edit (up to 3 reference images per
+#                  xAI's docs, though only the first is actually wired here until
+#                  the multi-image request shape is confirmed against a real
+#                  response). Transparent-background support is NOT confirmed
+#                  against xAI's docs — do not use for stickers/cut-outs until
+#                  verified; use "openai" for those. UNPROVEN end-to-end (no
+#                  XAI_API_KEY in this dev sandbox; the real key lives on
+#                  Railway) — same "confirm on first real key" discipline as
+#                  Ideogram had before its own first live call.
 _DEFAULT_ENGINE = "openai"
 _GEMINI_IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image")
 _OPENAI_COMPATIBLE_ENGINES = {"openai", "gpt-image-2"}
@@ -510,6 +520,77 @@ def _ideogram_generate_bytes(prompt: str, size: str) -> bytes:
     return _get_bytes(url, retries=3, timeout=120)
 
 
+def _grok_key() -> str:
+    key = os.getenv("XAI_API_KEY", "")
+    if not key and _ENV_PATH.exists():
+        with open(_ENV_PATH) as fh:
+            for line in fh:
+                line = line.strip()
+                if line.startswith("XAI_API_KEY=") and "=" in line:
+                    key = line.split("=", 1)[1].strip()
+                    break
+    if not key:
+        raise ImageGenError("XAI_API_KEY not set (needed for engine='grok')")
+    return key
+
+
+_GROK_IMAGE_URL = "https://api.x.ai/v1/images/generations"
+_GROK_EDIT_URL = "https://api.x.ai/v1/images/edits"
+_GROK_IMAGE_MODEL = os.getenv("GROK_IMAGE_MODEL", "grok-imagine-image-quality")
+
+
+def _grok_generate_bytes(prompt: str) -> bytes:
+    """xAI Grok Imagine text->image (2026-08-05). UNPROVEN against a real key at
+    write time (Scott added XAI_API_KEY to Railway's production env, not this
+    sandbox) -- written to xAI's documented API (confirmed OpenAI-response-shape
+    compatible: {"data": [{"b64_json": ...}]}, same as _extract_bytes() already
+    handles), same discipline _ideogram_generate_bytes() used before its own
+    first real key: confirm the exact response on first live use, fix here if
+    it disagrees. No confirmed "size"/aspect-ratio request field in xAI's docs
+    (unlike OpenAI's engines) -- like gemini/ideogram, request the model's
+    native output and cover-fit to the requested size afterward via
+    _fit_to_size() rather than guessing a field name that might reject the
+    whole request."""
+    payload = {"model": _GROK_IMAGE_MODEL, "prompt": prompt, "response_format": "b64_json"}
+    body = json.dumps(payload).encode()
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {_grok_key()}"}
+    result = _post(_GROK_IMAGE_URL, body, headers, retries=3, timeout=120)
+    return _extract_bytes(result)
+
+
+def _grok_edit_bytes(prompt: str, image_paths: list) -> bytes:
+    """xAI Grok Imagine image edit (2026-08-05). UNPROVEN, same caveat as
+    _grok_generate_bytes() above. xAI's edit endpoint takes the reference
+    image as a JSON object (confirmed from xAI's own docs example), NOT a
+    multipart file upload like OpenAI's images/edits -- `{"image": {"url":
+    <public-url-or-base64-data-uri>, "type": "image_url"}}`. Frank's inputs
+    are always local files, never public URLs, so this always sends a
+    base64 data URI. xAI's docs describe support for up to 3 source images
+    per request but the multi-image request shape isn't documented in
+    enough detail to be confident here -- only the first image_path is
+    sent until that's confirmed against a real response; every OTHER
+    engine in this module (openai/gemini) does support Frank's real
+    multi-image edit calls, so engine='grok' should only be picked for
+    single-reference-image edits until this is verified and extended."""
+    if len(image_paths) > 1:
+        print(f"    grok edit: {len(image_paths)} images given, only the first is sent "
+              f"(multi-image request shape unconfirmed for this engine)")
+    p = Path(image_paths[0])
+    data = p.read_bytes()
+    mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+    data_uri = f"data:{mime};base64,{base64.b64encode(data).decode()}"
+    payload = {
+        "model": _GROK_IMAGE_MODEL,
+        "prompt": prompt,
+        "image": {"url": data_uri, "type": "image_url"},
+        "response_format": "b64_json",
+    }
+    body = json.dumps(payload).encode()
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {_grok_key()}"}
+    result = _post(_GROK_EDIT_URL, body, headers, retries=3, timeout=120)
+    return _extract_bytes(result)
+
+
 def _fit_to_size(raw: bytes, size: str, output_format: str) -> bytes:
     """Cover-fit provider output to the exact requested WxH so gemini/ideogram honor
     the same size contract gpt-image-1 does. (Providers emit their own native size.)"""
@@ -563,8 +644,10 @@ def generate_image(
             raw = _gemini_generate_bytes(prompt)
         elif eng == "ideogram":
             raw = _ideogram_generate_bytes(prompt, size)
+        elif eng == "grok":
+            raw = _grok_generate_bytes(prompt)
         else:
-            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram)")
+            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram/grok)")
         return _write(out_path, _fit_to_size(raw, size, output_format))
     if eng == "gpt-image-2" and background == "transparent":
         raise ImageGenError(
@@ -621,7 +704,10 @@ def edit_image(
             raise ImageGenError(
                 "engine='ideogram' is generate-only (no reference-image edit) — "
                 "use 'gemini' or 'openai' for edits")
-        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram)")
+        if eng == "grok":
+            raw = _grok_edit_bytes(prompt, list(image_paths))
+            return _write(out_path, _fit_to_size(raw, size, "jpeg"))
+        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram/grok)")
 
     boundary = "----imggen" + os.urandom(8).hex()
     parts: list[bytes] = []

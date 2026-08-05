@@ -95,6 +95,11 @@ from resilience import (  # noqa: E402
 # analogous to EtsyAPIClient._request(), so each of the ~7 call sites routes through
 # _anthropic_create() below instead.
 _anthropic_breaker = CircuitBreaker("anthropic_api", db_module=db)
+# Same pattern, separate breaker, for xAI/Grok text calls (2026-08-05) -- one
+# breaker per external text provider, same style as _anthropic_breaker above
+# rather than trying to generalize a single breaker across two SDKs with
+# different exception types.
+_xai_breaker = CircuitBreaker("xai_api", db_module=db)
 
 
 # Known-good fallback brain. If MODEL_PRIMARY (currently claude-sonnet-5) isn't
@@ -200,6 +205,97 @@ def _anthropic_create(client: "anthropic.Anthropic", **kwargs):
         return result
 
 
+def _log_xai_usage(caller: str, model: str, usage) -> None:
+    """xAI/Grok counterpart to _log_anthropic_usage() above -- same activity_log
+    trail, different provider. xAI's API is OpenAI-SDK-compatible, so `usage`
+    is an OpenAI-shaped CompletionUsage object (prompt_tokens/completion_tokens),
+    not Anthropic's (input_tokens/output_tokens) -- logged under its own field
+    names rather than force-fitting Anthropic's, so the two providers' spend
+    stay honestly distinguishable in activity_log."""
+    try:
+        db.log_activity(
+            actor="system",
+            action_type="xai_usage",
+            detail=f"{caller} · {model}",
+            payload={
+                "caller": caller,
+                "model": model,
+                "prompt_tokens": getattr(usage, "prompt_tokens", 0) or 0,
+                "completion_tokens": getattr(usage, "completion_tokens", 0) or 0,
+            },
+            outcome="ok",
+        )
+    except Exception as exc:
+        print(f"[xai-usage] logging failed (non-fatal): {exc}", flush=True)
+
+
+def _xai_create(client: "openai.OpenAI", **kwargs):
+    """xAI/Grok counterpart to _anthropic_create() above (2026-08-05) -- same
+    circuit-breaker-wrapped, usage-logged shape, but calling xAI's OpenAI-SDK
+    -compatible chat.completions.create() instead of Anthropic's messages
+    .create(). No model-fallback self-heal (unlike _anthropic_create()'s
+    _MODEL_FALLBACK) -- there's no established secondary Grok tier to fall
+    back to yet; a model-access error just surfaces to the caller. UNPROVEN
+    against a real xAI response at write time (XAI_API_KEY lives on Railway,
+    not in this dev sandbox) -- confirm the exception types raised on a real
+    failure match `openai.APIConnectionError`/`RateLimitError`/
+    `InternalServerError` (they should, since this is the standard `openai`
+    package hitting an OpenAI-compatible endpoint, but genuinely unverified)."""
+    if not _xai_breaker.allow_request():
+        raise CircuitBreakerOpenError(
+            "circuit breaker 'xai_api' is open -- skipping call until cooldown elapses"
+        )
+    try:
+        result = client.chat.completions.create(**kwargs)
+    except (openai.APIConnectionError, openai.RateLimitError, openai.InternalServerError):
+        _xai_breaker.record_failure()
+        raise
+    else:
+        _xai_breaker.record_success()
+        _log_xai_usage(inspect.stack()[1].function, kwargs.get("model", "?"), getattr(result, "usage", None))
+        return result
+
+
+def _xai_client() -> "openai.OpenAI":
+    """One place that builds the xAI-pointed OpenAI SDK client -- base_url
+    override is the entire integration surface (xAI's API is OpenAI-SDK
+    -compatible per their own docs), confirmed 2026-08-05."""
+    return openai.OpenAI(api_key=XAI_KEY, base_url="https://api.x.ai/v1")
+
+
+def _effective_text_engine() -> str:
+    """Current TEXT_ENGINE setting, normalized -- degrades to anthropic when
+    grok is selected but XAI_API_KEY isn't configured, same "never hard-break,
+    just fall back" pattern as _anthropic_create()'s model fallback (2026-08-05).
+    Every one of the four TEXT_ENGINE-aware call sites reads the engine through
+    this single function so "grok selected, no key" can never diverge into two
+    different behaviors across call sites."""
+    engine = os.getenv("TEXT_ENGINE", "anthropic").lower()
+    if engine == "grok" and not XAI_KEY:
+        return "anthropic"
+    return engine
+
+
+def _grok_text(prompt: str, max_tokens: int = 2000, model: str | None = None) -> str:
+    """One-shot Grok text call shared by the TEXT_ENGINE=grok branch of
+    _generate_tags_for_listings(), classify_listings_batch(),
+    _autofix_title_core(), and _generate_product_listing_content_core().
+    Concatenates whatever the Claude-side prompt would have sent as separate
+    cache_control-split blocks into one plain user message -- xAI's OpenAI
+    -compatible endpoint has no equivalent to Anthropic's explicit ephemeral
+    cache_control blocks, so there's nothing to preserve there (2026-08-05).
+    Raises on failure exactly like a raw _anthropic_create() call would --
+    callers already wrap their Anthropic call in try/except and should treat
+    this identically, not get a silent fallback to a provider Scott didn't
+    select."""
+    client = _xai_client()
+    response = _xai_create(
+        client, model=model or business_config.GROK_MODEL_CHEAP, max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return (response.choices[0].message.content or "").strip()
+
+
 def _reconcile_etsy_tokens() -> None:
     """Restore a rotated Etsy token from the durable /data DB if the env var is stale.
 
@@ -282,6 +378,7 @@ db.seed_correction_plan_todos()
 # are refreshed separately by _refresh_identity() so a rename reaches the agent too.
 _SETTINGS_APPLY = {
     "image_engine":     ("env", "IMAGE_ENGINE"),
+    "text_engine":      ("env", "TEXT_ENGINE"),
     "video_engine":     ("env", "AI_VIDEO_ENGINE"),
     "image_model":      ("env", "IMAGE_MODEL"),
     "model_primary":    ("cfg", "MODEL_PRIMARY"),
@@ -650,8 +747,9 @@ _seed_test_user_if_missing()
 
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
+XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "6cddd38-v302"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "500a544-v303"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4871,10 +4969,13 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
     Falls back to an empty list if no API key is set. `reason` is optional human
     feedback (e.g. a Scott reject reason) folded in as explicit corrective guidance —
     only meaningful when called with a single listing (the reject-fix path)."""
-    if not ANTHROPIC_KEY or not listings:
+    if not listings:
+        return []
+    engine = _effective_text_engine()
+    if engine == "anthropic" and not ANTHROPIC_KEY:
         return []
 
-    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    client = None if engine == "grok" else anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     results: list[dict] = []
     batch_size = 40
 
@@ -4894,23 +4995,26 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
                 f"fix this specifically:\n{reason}"
             )
 
-        msg = _anthropic_create(
-            client,
-            model=business_config.MODEL_CHEAP,
-            max_tokens=8000,
-            # _BATCH_TAG_PROMPT is a fixed template repeated on every batch (up to 40
-            # listings/call) -- split it into its own cached block, same pattern as the
-            # CEO chat path, so only the per-batch listing rows are ever sent uncached.
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": _BATCH_TAG_PROMPT, "cache_control": {"type": "ephemeral"}},
-                    {"type": "text", "text": dynamic_block},
-                ],
-            }],
-        )
+        if engine == "grok":
+            raw = _grok_text(_BATCH_TAG_PROMPT + "\n\n" + dynamic_block, max_tokens=8000)
+        else:
+            msg = _anthropic_create(
+                client,
+                model=business_config.MODEL_CHEAP,
+                max_tokens=8000,
+                # _BATCH_TAG_PROMPT is a fixed template repeated on every batch (up to 40
+                # listings/call) -- split it into its own cached block, same pattern as the
+                # CEO chat path, so only the per-batch listing rows are ever sent uncached.
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": _BATCH_TAG_PROMPT, "cache_control": {"type": "ephemeral"}},
+                        {"type": "text", "text": dynamic_block},
+                    ],
+                }],
+            )
+            raw = msg.content[0].text.strip()
 
-        raw = msg.content[0].text.strip()
         batch_results = _extract_json_object(raw)
         if batch_results is None:
             raise ValueError(f"Could not parse tag-generation response: {raw[:200]!r}")
@@ -5010,9 +5114,11 @@ def classify_listings_batch(listings: list[dict]) -> list[dict]:
         else:
             needs_llm.append(l)
 
-    if needs_llm and ANTHROPIC_KEY:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    engine = _effective_text_engine()
+    if needs_llm and (engine == "grok" or ANTHROPIC_KEY):
+        client = None if engine == "grok" else anthropic.Anthropic(api_key=ANTHROPIC_KEY)
         taxonomy_doc = _taxonomy_doc_text()
+        prompt_text = _CLASSIFY_LISTING_PROMPT.format(taxonomy_doc=taxonomy_doc)
         batch_size = 40
         for start in range(0, len(needs_llm), batch_size):
             batch = needs_llm[start : start + batch_size]
@@ -5025,19 +5131,20 @@ def classify_listings_batch(listings: list[dict]) -> list[dict]:
                 )
             dynamic_block = "\n\nListings:\n" + "\n".join(rows)
             try:
-                msg = _anthropic_create(
-                    client, model=business_config.MODEL_CHEAP, max_tokens=4000,
-                    messages=[{
-                        "role": "user",
-                        "content": [
-                            {"type": "text",
-                             "text": _CLASSIFY_LISTING_PROMPT.format(taxonomy_doc=taxonomy_doc),
-                             "cache_control": {"type": "ephemeral"}},
-                            {"type": "text", "text": dynamic_block},
-                        ],
-                    }],
-                )
-                raw = msg.content[0].text.strip()
+                if engine == "grok":
+                    raw = _grok_text(prompt_text + "\n\n" + dynamic_block, max_tokens=4000)
+                else:
+                    msg = _anthropic_create(
+                        client, model=business_config.MODEL_CHEAP, max_tokens=4000,
+                        messages=[{
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt_text, "cache_control": {"type": "ephemeral"}},
+                                {"type": "text", "text": dynamic_block},
+                            ],
+                        }],
+                    )
+                    raw = msg.content[0].text.strip()
                 parsed = _extract_json_object(raw)
                 if isinstance(parsed, list):
                     for row in parsed:
@@ -9703,7 +9810,8 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
     update_title action. `reason` is optional human feedback (a Scott reject
     reason) appended to the prompt as explicit corrective guidance. Never
     raises — returns {"error": str} on any failure."""
-    if not ANTHROPIC_KEY:
+    engine = _effective_text_engine()
+    if engine == "anthropic" and not ANTHROPIC_KEY:
         return {"error": "ANTHROPIC_API_KEY not configured", "listing_id": listing_id}
     if listing is None:
         listing = await _fetch_listing_for_autofix(listing_id)
@@ -9719,26 +9827,33 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
             f"fix this specifically:\n{reason}"
         )
 
-    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     try:
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                lambda: _anthropic_create(
-                    ai_client,
-                    model=business_config.MODEL_CHEAP,
-                    max_tokens=100,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-            ),
-            timeout=30.0,
-        )
+        if engine == "grok":
+            new_title_raw = await asyncio.wait_for(
+                asyncio.to_thread(lambda: _grok_text(prompt, max_tokens=100)),
+                timeout=30.0,
+            )
+        else:
+            ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    lambda: _anthropic_create(
+                        ai_client,
+                        model=business_config.MODEL_CHEAP,
+                        max_tokens=100,
+                        messages=[{"role": "user", "content": prompt}],
+                    )
+                ),
+                timeout=30.0,
+            )
+            new_title_raw = "".join(getattr(b, "text", "") for b in response.content)
     except asyncio.TimeoutError:
         return {"error": "Title generation timed out", "listing_id": listing_id}
     except Exception as exc:
         return {"error": f"Title generation failed: {exc}", "listing_id": listing_id}
 
     try:
-        new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
+        new_title = new_title_raw.strip().strip('"\'')
 
         payload = {"listing_id": listing_id, "title": new_title, "_state_at_staging": listing.get("state")}
         if reason:
@@ -12021,11 +12136,17 @@ async def produce_coloring_pack(body: dict, _token: str = Depends(_rate_limited_
     return await asyncio.to_thread(_produce_coloring_pack, body or {})
 
 
-# Approved image engines (mirrors tools/image_gen.py). Gemini ("Nano Banana") is
-# the default for the produce builders: it needs only GEMINI_API_KEY (no OpenAI
+# Approved image engines (mirrors tools/image_gen.py's engine dispatch). Single
+# source of truth for BOTH the produce-builders' engine validation below and
+# the /api/settings image_engine validation further down this file (see
+# _IMAGE_ENGINES = _APPROVED_ART_ENGINES) -- these were two separately-defined,
+# unlinked tuples that happened to just be reordered copies of each other until
+# 2026-08-05 (adding Grok surfaced the duplication; consolidated rather than
+# adding a 5th engine to two places by hand). Gemini ("Nano Banana") is the
+# default for the produce builders: it needs only GEMINI_API_KEY (no OpenAI
 # dependency — and gpt-image-1 shuts down 2026-10-23), and is a fully approved
-# engine per CLAUDE.md. gpt-image-2 / ideogram remain selectable.
-_APPROVED_ART_ENGINES = ("gemini", "openai", "gpt-image-2", "ideogram")
+# engine per CLAUDE.md. gpt-image-2 / ideogram / grok remain selectable.
+_APPROVED_ART_ENGINES = ("gemini", "openai", "gpt-image-2", "ideogram", "grok")
 _DEFAULT_ART_ENGINE = "gemini"
 
 
@@ -13783,7 +13904,8 @@ async def delete_my_account(request: Request, _token: str = Depends(_auth_sessio
 
 # ── Runtime settings (agent name + AI engines) — Settings screen ────────────────
 _VIDEO_ENGINES = ("sora", "veo")
-_IMAGE_ENGINES = ("openai", "gpt-image-2", "gemini", "ideogram")
+_IMAGE_ENGINES = _APPROVED_ART_ENGINES  # same list as _resolve_art_engine() above -- one source of truth (2026-08-05)
+_TEXT_ENGINES = ("anthropic", "grok")  # Claude stays default/live-chat brain; grok is opt-in per business_config.py's comment (2026-08-05)
 
 
 def _effective_settings() -> dict:
@@ -13793,12 +13915,14 @@ def _effective_settings() -> dict:
         "agent_name": business_config.AGENT_NAME_SHORT,
         "video_engine": os.getenv("AI_VIDEO_ENGINE", "sora").lower(),
         "image_engine": os.getenv("IMAGE_ENGINE", "openai").lower(),
+        "text_engine": os.getenv("TEXT_ENGINE", "anthropic").lower(),
         "image_model": os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image"),
         "model_primary": business_config.MODEL_PRIMARY,
         "brand_mark_data_url": db.get_setting("brand_mark_data_url"),
         "options": {
             "video_engine": list(_VIDEO_ENGINES),
             "image_engine": list(_IMAGE_ENGINES),
+            "text_engine": list(_TEXT_ENGINES),
         },
     }
 
@@ -13833,6 +13957,12 @@ async def post_settings_endpoint(payload: dict, _token: str = Depends(_auth_sess
         if v not in _IMAGE_ENGINES:
             raise HTTPException(status_code=400, detail=f"image_engine must be one of {_IMAGE_ENGINES}")
         db.set_setting("image_engine", v)
+
+    if "text_engine" in payload:
+        v = (payload.get("text_engine") or "").lower().strip()
+        if v not in _TEXT_ENGINES:
+            raise HTTPException(status_code=400, detail=f"text_engine must be one of {_TEXT_ENGINES}")
+        db.set_setting("text_engine", v)
 
     if "image_model" in payload:
         db.set_setting("image_model", (payload.get("image_model") or "").strip())
@@ -15450,7 +15580,8 @@ async def _generate_product_listing_content_core(product_id: str, max_attempts: 
     facts()'s real facts; regenerates with feedback (max `max_attempts`) if
     the model states a mismatched count. Returns {"error": str} on any
     failure -- never raises."""
-    if not ANTHROPIC_KEY:
+    engine = _effective_text_engine()
+    if engine == "anthropic" and not ANTHROPIC_KEY:
         return {"error": "ANTHROPIC_API_KEY not configured"}
     entry = _find_catalog_product(product_id)
     if entry is None:
@@ -15462,22 +15593,26 @@ async def _generate_product_listing_content_core(product_id: str, max_attempts: 
     if problems:
         return {"error": "can't generate grounded content — " + "; ".join(problems)}
 
-    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    ai_client = None if engine == "grok" else anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     feedback = ""
     last_problems: list[str] = []
     for attempt in range(max_attempts):
         prompt = _build_listing_content_prompt(product_id, entry, facts, feedback)
         try:
-            response = await asyncio.wait_for(
-                asyncio.to_thread(lambda: _anthropic_create(
-                    ai_client, model=business_config.MODEL_CHEAP, max_tokens=3000,
-                    messages=[{"role": "user", "content": prompt}],
-                )), timeout=60.0)
+            if engine == "grok":
+                raw = await asyncio.wait_for(
+                    asyncio.to_thread(lambda: _grok_text(prompt, max_tokens=3000)), timeout=60.0)
+            else:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(lambda: _anthropic_create(
+                        ai_client, model=business_config.MODEL_CHEAP, max_tokens=3000,
+                        messages=[{"role": "user", "content": prompt}],
+                    )), timeout=60.0)
+                raw = "".join(getattr(b, "text", "") for b in response.content)
         except asyncio.TimeoutError:
             return {"error": "content generation timed out"}
         except Exception as exc:
             return {"error": f"content generation failed: {exc}"}
-        raw = "".join(getattr(b, "text", "") for b in response.content)
         parsed = _extract_json_object(raw)
         if not isinstance(parsed, dict) or not all(k in parsed for k in ("title", "description", "tags")):
             feedback = "your last response wasn't valid JSON with title/description/tags — return ONLY the JSON object"

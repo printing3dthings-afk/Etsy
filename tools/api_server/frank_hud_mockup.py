@@ -2366,6 +2366,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <option value="openai">Standard (default)</option>
             <option value="gpt-image-2">Alternative — sharper text</option>
             <option value="gemini">Alternative — best product consistency across photos</option>
+            <option value="grok">Alternative — xAI Grok (new, unproven)</option>
           </select>
           <div style="font-size:10px;color:var(--muted)">This is an edit-style call using your real product file as input, so Ideogram (generate-only) isn't offered here. Some alternatives need an extra API key set up — Frank tells you if one's missing when you generate. <span id="engines-status"></span></div>
         </div>
@@ -4113,11 +4114,13 @@ function _engineOptionsHtml(){
   // (generate-only, best in-image text per CLAUDE.md) is safe and useful to
   // offer here. Added 2026-07-30: it was already backend-approved
   // (_APPROVED_ART_ENGINES, main.py) but missing from every picker that used
-  // this shared options list.
+  // this shared options list. Same trap hit again 2026-08-05 adding Grok --
+  // check every picker that calls this function, not just this one.
   return '<option value="gemini" selected>Standard (recommended)</option>'
     + '<option value="openai">Alternative — best for transparent backgrounds</option>'
     + '<option value="gpt-image-2">Alternative — sharper in-image text</option>'
-    + '<option value="ideogram">Alternative — best in-image text (titles/covers)</option>';
+    + '<option value="ideogram">Alternative — best in-image text (titles/covers)</option>'
+    + '<option value="grok">Alternative — xAI Grok (new, unproven)</option>';
 }
 
 // One "rebuild just this part" row inside a real category's advanced disclosure —
