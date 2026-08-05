@@ -22014,3 +22014,91 @@ register physical 3D-print products into the catalog, and better
 category-classification reasoning so Frank can correctly identify what
 kind of product an unmapped listing is instead of guessing from title
 keywords alone.
+
+## 2026-08-05 (same conversation) — catalog reconciliation feature: register
+physical products, auto-detect untracked listings, grounded classification
+
+Follow-up to the entry immediately above. Scott asked for three things: an
+easy way to register physical 3D-print products, Frank proactively
+noticing live Etsy listings that have no local record at all, and
+classification that doesn't just guess from title keywords.
+
+**Root design fact this whole feature had to work around**: Frank keeps
+TWO independent local records of what it knows about a product --
+`data/product_catalog.json` and `data/listing_manifest.json`. A listing
+can be known to one and completely absent from the other, which is
+exactly how the koozie/planner bug happened (both had nothing). Both
+files are also git-tracked, so this server can never write to either at
+runtime -- a raw write would silently revert on the next Railway
+redeploy. `product_catalog.json` already had a durable override sidecar
+(`product_catalog_overrides.json`, `_write_product_catalog_override()`)
+for exactly this reason; `listing_manifest.json` did not, and needed one
+added (`listing_manifest_overrides.json`, `_write_listing_manifest_
+override()` / `_read_manifest_entry_sync()` / `_get_manifest_entry()`).
+Every call site that used to read `data/listing_manifest.json` directly
+to decide "is this listing mapped" (`request_listing_fix()`, and now the
+`autofix_listing_tags`/`autofix_listing_title` chat tools, which had the
+exact same blind-generation gap as the button until today) now goes
+through `_get_manifest_entry()`/`_read_manifest_entry_sync()` instead, so
+a listing registered via this feature is recognized everywhere, not just
+at the one call site that happened to get fixed.
+
+**Classification** (`classify_listings_batch()`/`classify_unmapped_
+listing()`, main.py): structured Etsy signals first and free -- `type`/
+`shipping_profile_id` on the raw listing object unambiguously resolve
+physical vs. digital with zero LLM cost. Only genuinely ambiguous digital
+sub-categories (planner vs. wall art vs. sticker pack vs. ...) fall
+through to one batched LLM call (mirrors `_generate_tags_for_listings`'
+up-to-40-per-call pattern), grounded against a new structured reference
+doc (`data/knowledge_base/product_taxonomy.md`) instead of the three
+separate, disagreeing title-keyword regex lists that existed before
+today (`listing_qc.py`, `order_notifier.py`, and a deleted `sync_
+product_catalog.py`). Low confidence or no API key -> `uncategorized`,
+never a guess -- same fail-closed philosophy as the manifest gate.
+
+**New `register_product` staged-action type**: its own bucket (like
+`create_listing`, not `update_sku_and_category`) since a physical product
+that isn't listed on Etsy yet has no `listing_id` at all, and the shared
+`_execute_staged_action()` dispatcher unconditionally assumes one exists.
+Makes zero Etsy API calls -- pure local writes to both override
+sidecars. Validator rejects an unknown category, a duplicate `product_id`,
+and (new) a duplicate `etsy_listing_id` already mapped to something else.
+
+**Two entry points**: (1) `POST /api/products/register` -- the Create
+screen's new physical-product quick-add form (the `3d_print_physical`
+tile was a dead "coming soon" stub before today), Scott-initiated so it
+writes immediately with no approval step (a pure local catalog write,
+trivially reversible, "nothing irreversible auto-executes" doesn't apply
+here the way it does to a real Etsy mutation). (2) `_catalog_
+reconciliation_loop()` -- new weekly background loop (same shape as
+`_sku_taxonomy_backfill_loop`) that walks every live active listing,
+diffs against the union of both registries, classifies true orphans, and
+stages a `register_product` action per orphan for Scott's approval --
+capped at 10 new stages per run so a first-ever backlog doesn't dump
+dozens of approvals at once. Also chat-callable on demand via the new
+`run_catalog_reconciliation` AGENT_TOOLS entry. Verified against the
+exact real scenario that started this investigation (a physical listing
+with no title/type match and a digital listing masquerading as unknown)
+-- both correctly caught as orphans and staged.
+
+Fix commit bumped `_BUILD_ID` to `6cddd38-v302`. New test coverage:
+`tests/test_catalog_registration.py` (manifest-override merging incl. a
+genuine git-read failure still propagating rather than being swallowed,
+the chat-tool grounding gate, structured+fail-closed classification,
+`register_product`'s validator/executor including both collision checks,
+the manual registration endpoint's auto-classify/auto-slugify, and the
+reconciliation sweep finding true orphans while skipping already-known
+or already-pending listings) + a new Playwright block confirming the
+Create screen's `3d_print_physical` tile now opens a real form instead
+of the dead stub, that pasting a listing ID pre-fills name/price from the
+classify-preview endpoint, and that submitting renders the register
+endpoint's real success message.
+
+Deliberately not built this pass (explicit scoping decisions, not
+oversights): syncing the *partial*-gap case (known to one registry, not
+the other) -- a safer, no-guessing sync and a reasonable follow-up;
+per-unit COGS capture for physical products -- real gap, separate ask;
+coordinating this loop with `listing_compliance_sweep.py` beyond sharing
+the same registries, since that sweep is Scott-triggered on demand, not
+an automatic competing loop, so there's no actual race to guard against
+today.

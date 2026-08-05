@@ -1025,6 +1025,58 @@ async def _run_browser_checks() -> None:
                   f"static, never-actionable total tool count) -- should not exist "
                   f"in the DOM anymore: {tools_stub}")
 
+            # ── Physical-product registration form (2026-08-05, catalog
+            # reconciliation feature) -- the Create screen's 3d_print_physical
+            # tile used to be a dead "coming soon" stub; confirms it now opens a
+            # real form, that the classify-preview pre-fills fields, and that
+            # submitting calls the register endpoint and renders success. ──
+            pr_stub = await page.evaluate("""async () => {
+                window._origFetchWithTimeoutPr = window.fetchWithTimeout;
+                window.fetchWithTimeout = (url, opts, ms) => {
+                    const u = String(url);
+                    if (u.includes('/api/products/classify-listing/')) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            listing_id: 4506555435, title: 'Mystery Koozie Jug', price: 18.99,
+                            category: '3d_print_physical', confidence: 'high',
+                            reasoning: 'physical listing', already_registered: false,
+                        })});
+                    }
+                    if (u.includes('/api/products/register')) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            product_id: 'P3D_MYSTERY_KOOZIE_JUG', category: '3d_print_physical',
+                            etsy_listing_id: '4506555435', manifest_entry_written: true,
+                            message: "Registered P3D_MYSTERY_KOOZIE_JUG (3d_print_physical) into Frank's catalog, mapped to live listing 4506555435.",
+                        })});
+                    }
+                    return window._origFetchWithTimeoutPr(url, opts, ms);
+                };
+                showScreen('create');
+                createOpenCategory('3d_print_physical');
+                const panelHtml = document.getElementById('create-detail').innerHTML;
+                const listingInput = document.getElementById('pr-listing-id');
+                listingInput.value = '4506555435';
+                await prClassifyPreview();
+                const previewHtml = document.getElementById('pr-preview').innerHTML;
+                const nameVal = document.getElementById('pr-name').value;
+                const priceVal = document.getElementById('pr-price').value;
+                await prRegisterRun();
+                const resultHtml = document.getElementById('pr-result').innerHTML;
+                window.fetchWithTimeout = window._origFetchWithTimeoutPr;
+                return {panelHtml, previewHtml, nameVal, priceVal, resultHtml};
+            }""")
+            check("coming soon" not in pr_stub.get("panelHtml", "").lower(),
+                  f"3d_print_physical must no longer render the dead 'coming soon' stub: {pr_stub.get('panelHtml','')[:300]}")
+            check("Register this product" in pr_stub.get("panelHtml", ""),
+                  f"expected the real registration form, got: {pr_stub.get('panelHtml','')[:300]}")
+            check("Mystery Koozie Jug" in pr_stub.get("previewHtml", ""),
+                  f"classify-preview should show the fetched listing title: {pr_stub}")
+            check(pr_stub.get("nameVal") == "Mystery Koozie Jug",
+                  f"the name field should be pre-filled from the classify preview: {pr_stub}")
+            check(pr_stub.get("priceVal") == "18.99",
+                  f"the price field should be pre-filled from the classify preview: {pr_stub}")
+            check("Registered P3D_MYSTERY_KOOZIE_JUG" in pr_stub.get("resultHtml", ""),
+                  f"expected the register endpoint's success message to render: {pr_stub}")
+
             # ── Frank-usability tier (2026-07-15) ──
 
             # Home cards must render without throwing, even with no live Etsy
@@ -1659,7 +1711,10 @@ async def _run_browser_checks() -> None:
                 "sticker_pack", "svg_3dprint_pack", "sublimation", "3d_print_physical",
                 "etsy_listing_lookup", "product_video",
             }, f"unexpected tile category set: {tile_grid}")
-            check(tile_grid.get("soonCount") == 4, f"exactly 4 tiles should be 'coming soon', got: {tile_grid}")
+            # (2026-08-05) 4 -> 3: 3d_print_physical's tile lost its 'soon' class --
+            # it now opens a real physical-product registration form instead of the
+            # dead stub (see the physical-product registration Playwright block above).
+            check(tile_grid.get("soonCount") == 3, f"exactly 3 tiles should be 'coming soon', got: {tile_grid}")
             check("paper_pack" not in tile_grid.get("cats", []), "paper_pack must never appear as a tile (Scott's explicit exclusion)")
 
             # Stub _products so the real-category panel's picker has something to

@@ -651,7 +651,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "cbf5e7f-v301"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "6cddd38-v302"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2785,6 +2785,20 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "run_catalog_reconciliation",
+        "description": (
+            "Check every live active Etsy listing against Frank's local catalog right now "
+            "(instead of waiting for the automatic weekly pass) and stage a register_product "
+            "action for any listing Frank has no local record of at all -- this is how the "
+            "koozie/planner listing-mismatch bug (2026-08-05) was caught: 3 live listings "
+            f"existed with zero local record. Never auto-registers anything; every stage is "
+            f"{business_config.OWNER_NAME}'s to approve or correct in the Action Center. Capped at "
+            "10 new stages per call (matches _RECONCILIATION_BATCH_SIZE) -- run it again to "
+            "process more if there's a larger backlog."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "toggle_listing_state",
         "description": (
             "Stage an activate/deactivate change for a listing. This is the chat-only path "
@@ -4145,13 +4159,21 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             lid = ti.get("listing_id")
             if lid is None:
                 return {"error": "listing_id is required"}
-            return asyncio.run(_autofix_tags_core(int(lid), reason=ti.get("reason", "")))
+            reason = ti.get("reason", "")
+            blocked = _blind_fix_refusal(int(lid), reason)
+            if blocked:
+                return blocked
+            return asyncio.run(_autofix_tags_core(int(lid), reason=reason))
         if name == "autofix_listing_title":
             ti = tool_input or {}
             lid = ti.get("listing_id")
             if lid is None:
                 return {"error": "listing_id is required"}
-            return asyncio.run(_autofix_title_core(int(lid), reason=ti.get("reason", "")))
+            reason = ti.get("reason", "")
+            blocked = _blind_fix_refusal(int(lid), reason)
+            if blocked:
+                return blocked
+            return asyncio.run(_autofix_title_core(int(lid), reason=reason))
         if name == "stage_batch_tag_update":
             ti = tool_input or {}
             listing_ids = ti.get("listing_ids") or []
@@ -4202,6 +4224,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             with _cache_lock:
                 _cache.pop("actions", None)
             return {"staged": staged, "count": len(staged), "errors": errors}
+        if name == "run_catalog_reconciliation":
+            return _run_catalog_reconciliation_batch()
         if name == "toggle_listing_state":
             ti = tool_input or {}
             lid = ti.get("listing_id")
@@ -4895,6 +4919,154 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
     return results
 
 
+# ── Product-category classification (2026-08-05) ───────────────────────────
+# Built alongside the register_product feature (see the koozie/planner
+# photo-mismatch fix above): before this, category guessing lived only in
+# three separate, disagreeing title-keyword regex lists (listing_qc.py,
+# order_notifier.py, and a deleted sync_product_catalog.py), none of which
+# used Etsy's own structured signals. See data/knowledge_base/product_
+# taxonomy.md for the full category reference this classifier is grounded
+# against.
+_TAXONOMY_DOC_PATH = ROOT / "data" / "knowledge_base" / "product_taxonomy.md"
+_KNOWN_CATEGORIES = {
+    "digital_planner", "digital_planner_bundle", "wall_art", "wall_art_bundle",
+    "sticker_pack", "sticker_pack_license", "svg_bundle", "svg_bundle_license",
+    "svg_3dprint_pack", "paper_pack", "coloring_pages", "sublimation",
+    "3d_print_physical", "uncategorized",
+}
+_CLASSIFY_LISTING_PROMPT = """You are classifying Etsy listings for OnBrandCraftz into the shop's exact
+internal product categories. Read the taxonomy reference below carefully --
+it documents every real category, including two categories that look
+similar and are easy to confuse (svg_3dprint_pack vs. 3d_print_physical --
+read that section closely).
+
+{taxonomy_doc}
+
+For each listing below, return its category from EXACTLY this list:
+digital_planner, digital_planner_bundle, wall_art, wall_art_bundle,
+sticker_pack, sticker_pack_license, svg_bundle, svg_bundle_license,
+svg_3dprint_pack, paper_pack, coloring_pages, sublimation,
+3d_print_physical, uncategorized.
+
+Use "uncategorized" whenever you are not genuinely confident -- a wrong
+category is worse than an honest "don't know," and this decision gets
+reviewed by a human before anything is committed. Never guess just to
+avoid an empty answer.
+
+Return ONLY a JSON array, one object per listing, each shaped exactly:
+{{"listing_id": <id>, "category": "<one of the list above>",
+"confidence": "high"|"medium"|"low", "reasoning": "<one short sentence>"}}
+"""
+
+
+def _taxonomy_doc_text() -> str:
+    try:
+        return _TAXONOMY_DOC_PATH.read_text()
+    except OSError:
+        return ""
+
+
+def _classify_listing_structured(listing: dict) -> dict | None:
+    """Free, no-LLM-call classification using Etsy's own structured signals
+    (the raw listing object's `type` and `shipping_profile_id` fields --
+    both unmodified passthroughs of Etsy's real API response, confirmed
+    already exercised in production by listing_integrity_check.py's
+    check_attributes()/check_shipping_cost()). Only ever confidently
+    resolves the physical/digital split (3d_print_physical vs. everything
+    else) -- every digital category shares `type: "download"`, so
+    disambiguating those needs the LLM pass below. Returns None when
+    inconclusive, never a low-confidence guess -- physical vs. digital is
+    the one split these fields answer with certainty, so anything less
+    than certain here should fall through, not half-guess."""
+    listing_type = (listing.get("type") or "").lower()
+    has_shipping_profile = bool(listing.get("shipping_profile_id"))
+    if listing_type == "physical" or has_shipping_profile:
+        return {
+            "category": "3d_print_physical",
+            "confidence": "high",
+            "reasoning": "Etsy's own listing type/shipping profile marks this as a physical, shippable good.",
+        }
+    return None
+
+
+def classify_listings_batch(listings: list[dict]) -> list[dict]:
+    """Batched classifier for the reconciliation sweep and the manual
+    registration form's category-prefill. Structured signals (see
+    _classify_listing_structured) resolve the physical/digital split for
+    free; only listings still ambiguous after that go into ONE batched LLM
+    call per up-to-40 listings (mirrors _generate_tags_for_listings' same
+    pattern), so a sweep with many orphans never fires one sequential LLM
+    call per listing. Always returns exactly one result per input listing,
+    in input order -- a parse failure or missing ANTHROPIC_KEY falls back
+    to uncategorized/low confidence for the affected listings rather than
+    dropping them or raising."""
+    results: dict = {}
+    needs_llm: list[dict] = []
+    for l in listings:
+        lid = l.get("listing_id")
+        structured = _classify_listing_structured(l)
+        if structured:
+            results[lid] = {"listing_id": lid, **structured}
+        else:
+            needs_llm.append(l)
+
+    if needs_llm and ANTHROPIC_KEY:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+        taxonomy_doc = _taxonomy_doc_text()
+        batch_size = 40
+        for start in range(0, len(needs_llm), batch_size):
+            batch = needs_llm[start : start + batch_size]
+            rows = []
+            for l in batch:
+                rows.append(
+                    f'ID:{l.get("listing_id")} TITLE:"{(l.get("title") or "")[:100]}" '
+                    f'PRICE:${round(_price_float(l.get("price")), 2)} '
+                    f'DESC:"{(l.get("description") or "")[:200]}"'
+                )
+            dynamic_block = "\n\nListings:\n" + "\n".join(rows)
+            try:
+                msg = _anthropic_create(
+                    client, model=business_config.MODEL_CHEAP, max_tokens=4000,
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {"type": "text",
+                             "text": _CLASSIFY_LISTING_PROMPT.format(taxonomy_doc=taxonomy_doc),
+                             "cache_control": {"type": "ephemeral"}},
+                            {"type": "text", "text": dynamic_block},
+                        ],
+                    }],
+                )
+                raw = msg.content[0].text.strip()
+                parsed = _extract_json_object(raw)
+                if isinstance(parsed, list):
+                    for row in parsed:
+                        lid = row.get("listing_id")
+                        if lid is not None and row.get("category") in _KNOWN_CATEGORIES:
+                            results[lid] = row
+            except Exception as exc:
+                print(f"[classify] LLM classification batch failed: {exc}", flush=True)
+                # Unresolved listings fall through to the uncategorized default below --
+                # never silently dropped from the output.
+
+    out = []
+    for l in listings:
+        lid = l.get("listing_id")
+        if lid in results:
+            out.append(results[lid])
+        else:
+            out.append({
+                "listing_id": lid, "category": "uncategorized", "confidence": "low",
+                "reasoning": "Could not confidently classify -- no conclusive structured signal, "
+                              "and the LLM pass was unavailable, failed, or wasn't confident enough.",
+            })
+    return out
+
+
+def classify_unmapped_listing(listing: dict) -> dict:
+    """Single-listing convenience wrapper (the manual registration form's
+    category-prefill) built on classify_listings_batch()."""
+    return classify_listings_batch([listing])[0]
 
 
 # FRANK Command Center — Step 2 is wiring this shell to real data (Build Order
@@ -6850,6 +7022,145 @@ async def _sku_taxonomy_backfill_loop() -> None:
         await asyncio.sleep(delay)
 
 
+_RECONCILIATION_BATCH_SIZE = 10  # same pacing philosophy as _BACKFILL_BATCH_SIZE -- a first-ever
+                                  # backlog shouldn't dump dozens of approvals on Scott at once
+
+
+def _known_etsy_listing_ids() -> set[str]:
+    """Union of every etsy_listing_id Frank already has a local record of,
+    across BOTH local registries (2026-08-05, catalog reconciliation
+    feature) -- product_catalog.json + its override sidecar, and
+    data/listing_manifest.json + its override sidecar. A live Etsy listing
+    missing from ALL FOUR is a true orphan (the exact koozie/planner
+    failure mode); being known to only one is a narrower partial-gap case
+    this sweep deliberately does NOT try to fix (see the design plan's
+    explicit scoping note -- that's a safer, no-guessing sync and a
+    reasonable follow-up, not this pass)."""
+    ids: set[str] = set()
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        catalog = []
+    for entry in catalog:
+        lid = entry.get("etsy_listing_id")
+        if lid:
+            ids.add(str(lid))
+    for ov in _product_catalog_overrides().values():
+        lid = ov.get("etsy_listing_id")
+        if lid:
+            ids.add(str(lid))
+    try:
+        import listing_integrity_check as lic
+        manifest = lic._load_json(lic.MANIFEST_PATH)
+    except Exception:
+        manifest = {}
+    ids.update(str(k) for k in manifest.keys())
+    ids.update(str(k) for k in _listing_manifest_overrides().keys())
+    return ids
+
+
+def _run_catalog_reconciliation_batch() -> dict:
+    """One weekly pass of the catalog-reconciliation sweep (2026-08-05,
+    the koozie/planner listing-mismatch follow-up -- Scott: "I need him to
+    recognize things on Etsy not being in there and add them"). Walks
+    every live Etsy listing and stages a register_product action for
+    anything absent from BOTH local registries. Classification (see
+    classify_listings_batch()) is never auto-committed -- every stage is
+    Scott's to approve or correct in Approvals, same fail-closed
+    philosophy as the manifest gate above. Capped at
+    _RECONCILIATION_BATCH_SIZE new stages per run.
+
+    Deliberately NOT coordinated with listing_compliance_sweep.py beyond
+    sharing the same underlying registries -- that sweep is Scott-triggered
+    on demand (a Workflows command, not an automatic recurring loop; see
+    _EXEC_COMMANDS["listing_compliance_sweep"]), so there's no actual
+    two-automatic-loops race to guard against today. The practical
+    interaction: this loop runs weekly and will have already registered
+    most genuine new listings before Scott ever manually runs a compliance
+    sweep, which is what naturally prevents a legitimate new listing from
+    being proposed for takedown as "unmapped." If Scott ever wants
+    compliance running automatically too, revisit this ordering then --
+    not a speculative build now."""
+    client = EtsyAPIClient()
+    try:
+        listings = client.get_shop_listings_all(state="active")
+    except Exception as exc:
+        return {"status": "error", "staged": 0, "detail": f"could not fetch live listings: {exc}"}
+
+    known_ids = _known_etsy_listing_ids()
+    pending = db.list_actions("pending")
+    pending_listing_ids = {
+        str((a.get("payload") or {}).get("etsy_listing_id"))
+        for a in pending if a.get("type") == "register_product"
+    }
+    orphans = [
+        l for l in listings
+        if str(l.get("listing_id")) not in known_ids
+        and str(l.get("listing_id")) not in pending_listing_ids
+    ]
+    if not orphans:
+        return {"status": "ok", "staged": 0,
+                "detail": f"no orphaned listings found ({len(listings)} live listings checked, all known)"}
+
+    batch = orphans[:_RECONCILIATION_BATCH_SIZE]
+    classifications = classify_listings_batch(batch)
+    class_by_id = {c.get("listing_id"): c for c in classifications}
+
+    staged = 0
+    errors = []
+    for listing in batch:
+        lid = listing.get("listing_id")
+        c = class_by_id.get(lid, {})
+        category = c.get("category", "uncategorized")
+        name = (listing.get("title") or f"Listing {lid}")[:100]
+        prefix = {"3d_print_physical": "P3D"}.get(category, "MISC")
+        product_id = _slugify_product_id(name, prefix)
+        payload = {
+            "product_id": product_id, "name": name, "category": category,
+            "price": _price_float(listing.get("price")), "etsy_listing_id": lid,
+            "confidence": c.get("confidence"), "reasoning": c.get("reasoning"),
+        }
+        ok, msg = _validate_staged_action({"type": "register_product", "payload": payload})
+        if not ok:
+            errors.append(f"{lid}: {msg}")
+            continue
+        summary = f"Register orphaned listing {lid} ({category}, {c.get('confidence', '?')} confidence): {name}"
+        db.enqueue_action("register_product", summary, payload)
+        staged += 1
+
+    with _cache_lock:
+        _cache.pop("actions", None)
+    if staged:
+        remaining = len(orphans) - len(batch)
+        db.add_todo(
+            f"Catalog reconciliation: found {len(orphans)} live Etsy listing(s) with no local "
+            f"record -- staged {staged} for your review in Approvals"
+            + (f" ({remaining} more queued for next week)." if remaining else "."),
+            added_by="frank", category="general",
+        )
+    detail = f"orphans_found:{len(orphans)} staged:{staged} errors:{len(errors)}"
+    if errors:
+        detail += f" ({'; '.join(errors[:3])}{'...' if len(errors) > 3 else ''})"
+    return {"status": "warning" if errors else "ok", "staged": staged, "detail": detail}
+
+
+async def _catalog_reconciliation_loop() -> None:
+    """Weekly pass staging register_product actions for orphaned listings
+    (see _run_catalog_reconciliation_batch's docstring). base_interval=
+    604_800 (7 days), same cadence as the SKU/category backfill loop this
+    is modeled on."""
+    await asyncio.sleep(300)  # let the app finish booting, behind every other startup loop
+    while True:
+        delay = await _run_loop_iteration(
+            "catalog_reconciliation", "Catalog Reconciliation",
+            lambda: asyncio.to_thread(_run_catalog_reconciliation_batch),
+            on_success_status=lambda r: r["status"],
+            on_success_detail=lambda r: r["detail"],
+            base_interval=604_800,
+        )
+        await asyncio.sleep(delay)
+
+
 #   A tracked build stuck running past this is treated as hung and killed.
 #   Every build_planner/build_sticker_pack/build_product run finishes in 2-10
 #   min per their own docstrings; 15 min gives real headroom without letting a
@@ -8554,6 +8865,7 @@ _AGENT_LOOP_LABELS = {
     "calendar_tasks": "Calendar Tasks",
     "file_audit": "File Integrity Audit",
     "sku_taxonomy_backfill": "SKU + Category Backfill",
+    "catalog_reconciliation": "Catalog Reconciliation",
 }
 
 
@@ -8600,6 +8912,7 @@ async def _startup() -> None:
     asyncio.create_task(_calendar_tasks_loop())
     asyncio.create_task(_file_audit_loop())
     asyncio.create_task(_sku_taxonomy_backfill_loop())
+    asyncio.create_task(_catalog_reconciliation_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -9755,8 +10068,12 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
     try:
         import listing_integrity_check as lic
 
-        manifest = await asyncio.to_thread(lic._load_json, lic.MANIFEST_PATH)
-        entry = manifest.get(str(listing_id))
+        # 2026-08-05: was manifest.get(str(listing_id)) against the raw git
+        # file only -- a listing registered via register_product (which can
+        # only durably write the override sidecar, never the git-tracked
+        # file itself) would look unmapped again here forever. _get_manifest_
+        # entry() checks both.
+        entry = await _get_manifest_entry(listing_id)
         if entry:
             is_mapped = True
             rules = await asyncio.to_thread(lic._load_json, lic.RULES_PATH)
@@ -9776,8 +10093,9 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
                 "severity": "FAIL",
                 "check": "no_manifest_mapping",
                 "detail": (
-                    "This listing has no entry in data/listing_manifest.json, so Frank has "
-                    "no record of what this product actually is. Frank will NOT auto-generate "
+                    "This listing has no entry in data/listing_manifest.json or Frank's "
+                    "registration records, so Frank has no record of what this product "
+                    "actually is. Frank will NOT auto-generate "
                     "a title/tags fix here -- rewriting text with zero grounding just produces "
                     "a more confident-sounding WRONG title (this is exactly how 3 untracked "
                     "koozie/planner listings ended up with mismatched photos and titles, "
@@ -9902,11 +10220,21 @@ _SOCIAL_STAGED_ACTION_TYPES = ("post_tiktok", "post_pinterest")
 # bucket + own validation branch + own executor, same shape as the social
 # types above.
 _LISTING_CREATE_STAGED_ACTION_TYPES = ("create_listing",)
+# register_product (2026-08-05, catalog reconciliation feature) can't share
+# _ETSY_STAGED_ACTION_TYPES either, for the SAME reason create_listing can't
+# -- registering a physical product Scott hasn't listed on Etsy yet has no
+# listing_id, and _execute_staged_action()'s shared dispatcher unconditionally
+# pulls one out of the payload before any type-specific branch runs. Unlike
+# every other action type, this one makes ZERO Etsy API calls -- it's a pure
+# local write to the two override sidecars (product_catalog_overrides.json +
+# listing_manifest_overrides.json), so it doesn't even need EtsyAPIClient.
+_REGISTER_PRODUCT_STAGED_ACTION_TYPES = ("register_product",)
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
     + _VIDEO_STAGED_ACTION_TYPES + _REGISTER_COMMAND_STAGED_ACTION_TYPES
     + _SOCIAL_STAGED_ACTION_TYPES + _LISTING_CREATE_STAGED_ACTION_TYPES
+    + _REGISTER_PRODUCT_STAGED_ACTION_TYPES
 )
 
 
@@ -10173,6 +10501,41 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                 return False, (
                     f"product {product_id} already has an Etsy listing "
                     f"({current['listing_id']}) — refusing to create a duplicate"
+                )
+        return True, "ok"
+    if t == "register_product":
+        product_id = (p.get("product_id") or "").strip()
+        if not product_id:
+            return False, "missing product_id"
+        name = (p.get("name") or "").strip()
+        if not name:
+            return False, "missing name"
+        category = p.get("category")
+        if category not in _KNOWN_CATEGORIES:
+            return False, f"category must be one of {sorted(_KNOWN_CATEGORIES)}"
+        price = p.get("price")
+        if price is not None:
+            if not isinstance(price, (int, float)) or isinstance(price, bool):
+                return False, "price must be a number (dollars)"
+            if price < 0:
+                return False, f"price ${price:.2f} is negative — refusing"
+            if price > 500.00:
+                return False, f"price ${price:.2f} is implausibly high — refusing"
+        etsy_listing_id = p.get("etsy_listing_id")
+        if etsy_listing_id is not None and not str(etsy_listing_id).strip():
+            return False, "etsy_listing_id, if provided, must not be blank"
+        # Re-checked at both staging and approval time (unlike create_listing's
+        # duplicate check, which is approval-only) -- this is a pure local
+        # write with no network round trip either way, so there's no reason
+        # to defer the check.
+        if _find_catalog_product(product_id) is not None:
+            return False, f"product_id {product_id} already exists in the catalog — refusing to overwrite"
+        if etsy_listing_id is not None:
+            existing_entry = _read_manifest_entry_sync(etsy_listing_id)
+            if existing_entry:
+                return False, (
+                    f"Etsy listing {etsy_listing_id} is already mapped to "
+                    f"{existing_entry.get('dp_codes')} — refusing to double-register the same listing"
                 )
         return True, "ok"
     # Local types — the real security boundary is the relay's own realpath check
@@ -10444,6 +10807,93 @@ def _execute_register_command_staged_action(a: dict) -> dict:
     return {"command_name": command_name, "script": cfg["script"], "registered": True}
 
 
+# category (product_catalog.json's field) -> type (listing_manifest.json's
+# field / listing_rules.json's rule key) -- these DIVERGE for exactly one
+# category (digital_planner -> "planner"; confirmed by reading data/
+# listing_rules.json's real keys, which has no "digital_planner" entry at
+# all). Everything else not listed here maps to itself; audit_listing()
+# falls back to a permissive "unknown" rule for anything with no exact
+# match (listing_integrity_check.py:663), so an unmapped category here is
+# safe, just less-precisely-checked, never a crash.
+_CATALOG_CATEGORY_TO_MANIFEST_TYPE = {
+    "digital_planner": "planner",
+}
+
+
+def _execute_register_product_staged_action(a: dict) -> dict:
+    """Apply an approved register_product action (2026-08-05, catalog
+    reconciliation feature) -- a PURE LOCAL write, zero Etsy API calls.
+    Writes the full product record to the product_catalog_overrides.json
+    sidecar (same one _register_new_product_overlay() already writes for
+    Create-screen-built products) AND, when an etsy_listing_id was given, a
+    manifest entry to listing_manifest_overrides.json -- closing the exact
+    gap that caused the koozie/planner bug: a listing known to only ONE of
+    Frank's two local registries still looked "unmapped" to whichever
+    call site checked the other one. No manifest entry is written when
+    there's no etsy_listing_id yet (a "printed but not listed" physical
+    product) -- there's no live listing for request_listing_fix() or the
+    compliance sweep to ever diagnose, so nothing to map."""
+    p = a.get("payload", {}) or {}
+    product_id = p["product_id"]
+    category = p["category"]
+    etsy_listing_id = p.get("etsy_listing_id")
+    now = datetime.now(timezone.utc).isoformat()
+
+    _write_product_catalog_override(product_id, {
+        # is_new_product: True is what makes _find_catalog_product() and
+        # _build_products_status() recognize an overlay-only entry with no
+        # base data/product_catalog.json row at all (same flag
+        # _register_new_product_overlay() sets) -- without it this entry is
+        # invisible to /api/products, /api/products/{id}/review, and (just
+        # as importantly) the duplicate-registration check in this same
+        # action's own _validate_staged_action branch above, which relies
+        # on _find_catalog_product() to detect a re-registration.
+        "is_new_product": True,
+        "product_id": product_id,
+        "name": p["name"],
+        "category": category,
+        "price": p.get("price"),
+        "status": "active" if etsy_listing_id else "not_listed",
+        "etsy_listing_id": str(etsy_listing_id) if etsy_listing_id else "",
+        "files": [],
+        "created_at": now,
+        "source": "frank_register",
+    })
+
+    manifest_written = False
+    if etsy_listing_id:
+        manifest_type = _CATALOG_CATEGORY_TO_MANIFEST_TYPE.get(category, category)
+        _write_listing_manifest_override(etsy_listing_id, {
+            "dp_codes": [product_id],
+            "type": manifest_type,
+            "expected_file_count": 0,
+            "expected_files": [],
+            "min_photo_count": 1,
+            "art_hashes": {},
+            "art_sources": {},
+            "listing_roles": {product_id: "listing_id"},
+            "baseline_captured": now,
+            "baseline_source": "register_product_staged_action",
+        })
+        manifest_written = True
+
+    with _cache_lock:
+        for k in ("products", "listings_active", "listings_draft", "listings_inactive", "actions"):
+            _cache.pop(k, None)
+
+    return {
+        "product_id": product_id,
+        "category": category,
+        "etsy_listing_id": str(etsy_listing_id) if etsy_listing_id else None,
+        "manifest_entry_written": manifest_written,
+        "message": (
+            f"Registered {product_id} ({category}) into Frank's catalog"
+            + (f", mapped to live listing {etsy_listing_id}." if etsy_listing_id
+               else " with no Etsy listing yet -- map it once it's actually listed.")
+        ),
+    }
+
+
 async def _execute_local_staged_action(a: dict) -> dict:
     """Apply an approved local_write_file/local_delete/local_exec action — the
     actual mutation only ever happens here, after Scott's approval, via the same
@@ -10650,6 +11100,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
     is_register_command = a["type"] in _REGISTER_COMMAND_STAGED_ACTION_TYPES
     is_social = a["type"] in _SOCIAL_STAGED_ACTION_TYPES
     is_create_listing = a["type"] in _LISTING_CREATE_STAGED_ACTION_TYPES
+    is_register_product = a["type"] in _REGISTER_PRODUCT_STAGED_ACTION_TYPES
     if is_local:
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
@@ -10687,6 +11138,11 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
             # not a single PATCH.
             result = await asyncio.wait_for(
                 asyncio.to_thread(_execute_create_listing_staged_action, a), timeout=180.0
+            )
+        elif is_register_product:
+            # Pure local write, no network call -- short timeout is plenty.
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_execute_register_product_staged_action, a), timeout=15.0
             )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
@@ -12430,6 +12886,109 @@ async def get_product_review(product_id: str, _token: str = Depends(_auth_sessio
     if review is None:
         raise HTTPException(status_code=404, detail=f"unknown product_id: {product_id}")
     return review
+
+
+def _slugify_product_id(name: str, prefix: str) -> str:
+    """Auto-generates a product_id from a human-typed name for the
+    registration form (2026-08-05) -- Scott typing a name shouldn't also
+    require inventing a unique code by hand. Collision-checked against
+    BOTH the base catalog and the overlay sidecar via _find_catalog_product
+    (never silently returns a colliding id)."""
+    slug = _re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_").upper()[:40]
+    candidate = f"{prefix}_{slug}" if slug else prefix
+    if _find_catalog_product(candidate) is None:
+        return candidate
+    n = 2
+    while _find_catalog_product(f"{candidate}_{n}") is not None:
+        n += 1
+    return f"{candidate}_{n}"
+
+
+@app.get("/api/products/classify-listing/{listing_id}")
+async def classify_listing_for_registration(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+    """Read-only preview for the physical-product registration form
+    (2026-08-05) -- fetches the live Etsy listing and runs classify_
+    unmapped_listing() against it, so Scott sees a suggested name/category
+    before committing anything. Never writes. 404s with an actionable
+    message if the listing doesn't exist rather than a bare Etsy error."""
+    try:
+        listing = await asyncio.to_thread(EtsyAPIClient().get_listing, listing_id)
+    except EtsyAPIError as exc:
+        if getattr(exc, "status", None) == 404:
+            raise HTTPException(status_code=404, detail=f"Listing {listing_id} not found on Etsy")
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:200]}")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {str(exc)[:200]}")
+    classification = await asyncio.to_thread(classify_unmapped_listing, listing)
+    existing_entry = await _get_manifest_entry(listing_id)
+    return {
+        "listing_id": listing_id,
+        "title": listing.get("title", ""),
+        "price": _price_float(listing.get("price")),
+        "category": classification.get("category"),
+        "confidence": classification.get("confidence"),
+        "reasoning": classification.get("reasoning"),
+        "already_registered": bool(existing_entry),
+        "already_registered_as": (existing_entry or {}).get("dp_codes") if existing_entry else None,
+    }
+
+
+@app.post("/api/products/register")
+async def register_product_directly(body: dict | None = None, _token: str = Depends(_rate_limited_auth)):
+    """Scott-initiated product registration (2026-08-05, the Create screen's
+    physical-product quick-add form). Unlike every other product/listing
+    mutation in this app, this does NOT go through the staged-action
+    approval queue -- it's a pure local write (product_catalog_overrides
+    .json + listing_manifest_overrides.json), no Etsy API call at all, and
+    Scott typing the form and hitting Save already IS the approval (see
+    api-conventions.md's "nothing irreversible auto-executes" -- this is
+    trivially reversible, edit or delete the local record any time). Reuses
+    the exact same validate()/execute() pair the autonomous reconciliation
+    sweep's register_product staged action uses, so a product registered
+    either way ends up in an identical shape -- see _validate_staged_action
+    and _execute_register_product_staged_action's register_product
+    branches above."""
+    b = body or {}
+    name = (b.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="name is required")
+    price = b.get("price")
+    etsy_listing_id = b.get("etsy_listing_id")
+    if etsy_listing_id is not None and not str(etsy_listing_id).strip():
+        etsy_listing_id = None
+
+    category = (b.get("category") or "").strip()
+    if not category:
+        # Best-effort auto-classify if Scott didn't pick one -- the Create
+        # screen only offers this form for 3d_print_physical today (see the
+        # frontend tile config), so that's the fallback when there's no live
+        # listing to check real signals against.
+        if etsy_listing_id:
+            try:
+                listing = await asyncio.to_thread(EtsyAPIClient().get_listing, int(etsy_listing_id))
+                classification = await asyncio.to_thread(classify_unmapped_listing, listing)
+                category = classification.get("category") or "3d_print_physical"
+            except Exception:
+                category = "3d_print_physical"
+        else:
+            category = "3d_print_physical"
+
+    product_id = (b.get("product_id") or "").strip()
+    if not product_id:
+        prefix = {"3d_print_physical": "P3D"}.get(category, "MISC")
+        product_id = await asyncio.to_thread(_slugify_product_id, name, prefix)
+
+    payload = {
+        "product_id": product_id, "name": name, "category": category,
+        "price": price, "etsy_listing_id": etsy_listing_id,
+    }
+    ok, msg = await asyncio.to_thread(_validate_staged_action, {"type": "register_product", "payload": payload})
+    if not ok:
+        raise HTTPException(status_code=422, detail=msg)
+    result = await asyncio.to_thread(_execute_register_product_staged_action, {"payload": payload})
+    with _cache_lock:
+        _cache.pop("products", None)
+    return result
 
 
 def _extract_grounding_facts(product_id: str, entry: dict) -> tuple[dict, list[str]]:
@@ -14664,6 +15223,105 @@ def _write_product_catalog_override(product_id: str, updates: dict) -> None:
     tmp = _PRODUCT_CATALOG_OVERRIDES_PATH.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(overrides, indent=2))
     tmp.replace(_PRODUCT_CATALOG_OVERRIDES_PATH)
+
+
+# Same volume-or-local-data-dir pattern as _PRODUCT_CATALOG_OVERRIDES_PATH --
+# 2026-08-05, register_product staged action. data/listing_manifest.json is
+# ALSO git-tracked (same anti-pattern this whole comment block warns about),
+# but that file already has its own writer (listing_integrity_check.py's
+# _write_manifest_updates(), a pre-existing separate issue not introduced
+# here) -- this feature must not add a SECOND instance of writing to it.
+# Without this sidecar, a product registered via register_product would
+# look "mapped" until the next Railway redeploy (fresh git checkout), then
+# silently revert to unmapped with no error -- reintroducing the exact
+# koozie/planner bug this feature exists to close. See _get_manifest_entry()
+# below, which every "is this listing mapped" call site should use instead
+# of reading data/listing_manifest.json directly.
+_LISTING_MANIFEST_OVERRIDES_PATH = (
+    (_FILE_ROOTS["volume"] / "listing_manifest_overrides.json") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "listing_manifest_overrides.json")
+)
+
+
+def _listing_manifest_overrides() -> dict:
+    """dict keyed by str(listing_id) -> a manifest-shaped entry (same shape
+    data/listing_manifest.json's own entries use, e.g. {"dp_codes": [...],
+    "type": "3d_print_physical"})."""
+    try:
+        return json.loads(_LISTING_MANIFEST_OVERRIDES_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _write_listing_manifest_override(listing_id, entry: dict) -> None:
+    """Atomic write (temp file + replace), same idiom as
+    _write_product_catalog_override()."""
+    overrides = _listing_manifest_overrides()
+    overrides[str(listing_id)] = entry
+    _LISTING_MANIFEST_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _LISTING_MANIFEST_OVERRIDES_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(overrides, indent=2))
+    tmp.replace(_LISTING_MANIFEST_OVERRIDES_PATH)
+
+
+def _read_manifest_entry_sync(listing_id) -> dict | None:
+    """Sync core of _get_manifest_entry() below -- checks the git-tracked
+    data/listing_manifest.json first, then the durable override sidecar.
+    Exists as its own plain function (not just inlined in _get_manifest_
+    entry) so a caller that's already in a sync context -- _validate_
+    staged_action()'s register_product branch, which runs directly inside
+    a coroutine in some call paths with no asyncio.to_thread wrapper --
+    can call it without needing asyncio.run() (which crashes with 'cannot
+    be called from a running event loop' from exactly those call paths).
+    Deliberately NOT try/except around the git-manifest read -- a genuine
+    read failure must propagate to callers that distinguish "unmapped"
+    from "couldn't check" (request_listing_fix()'s try/except does this).
+    Only the override sidecar's read is fail-soft (via _listing_manifest_
+    overrides()'s own try/except), since a missing/corrupt override file
+    just means "nothing registered yet," not "something is broken."."""
+    import listing_integrity_check as lic
+    manifest = lic._load_json(lic.MANIFEST_PATH)
+    entry = manifest.get(str(listing_id))
+    if entry:
+        return entry
+    return _listing_manifest_overrides().get(str(listing_id))
+
+
+async def _get_manifest_entry(listing_id) -> dict | None:
+    """Async wrapper around _read_manifest_entry_sync() for callers already
+    running on the event loop (request_listing_fix() and the autofix_
+    listing_tags/autofix_listing_title chat tools both use this, as of
+    2026-08-05) -- otherwise a listing registered via register_product
+    looks unmapped again to whichever call site skipped the override
+    fallback."""
+    return await asyncio.to_thread(_read_manifest_entry_sync, listing_id)
+
+
+def _blind_fix_refusal(listing_id: int, reason: str) -> dict | None:
+    """Chat-tool counterpart to request_listing_fix()'s is_mapped gate
+    (2026-08-05) -- the autofix_listing_tags/autofix_listing_title
+    AGENT_TOOLS used to call _autofix_tags_core/_autofix_title_core
+    directly with no grounding check at all, so chat could bypass the
+    Listings-tab button's fix entirely and still blind-generate wrong
+    text for an untracked listing. Returns an {"error": ...} dict to
+    return as-is when blocked, or None when it's safe to proceed (either
+    the listing is mapped, or the caller supplied a real `reason`)."""
+    if reason:
+        return None
+    entry = asyncio.run(_get_manifest_entry(listing_id))
+    if entry:
+        return None
+    return {
+        "error": (
+            f"Refused: listing {listing_id} has no entry in Frank's manifest or "
+            "registration records, so there's no grounding for what this product "
+            "actually is -- a blind tag/title rewrite would just produce a more "
+            "confident-sounding WRONG result (see the 2026-08-05 koozie/planner "
+            f"bug in ops_runbook.md). Pass a `reason` describing what's actually "
+            f"wrong with this listing, or ask {business_config.OWNER_NAME} to map "
+            "it first."
+        )
+    }
 
 
 # Same volume-or-local-data-dir pattern as _PRODUCT_CATALOG_OVERRIDES_PATH,

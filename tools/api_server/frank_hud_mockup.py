@@ -2322,8 +2322,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">✂️</div><div style="font-weight:600;margin-top:6px">SVG / 3D-Print Pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
         <div class="create-choice soon" data-cat="sublimation" role="button" tabindex="0" onclick="createOpenCategory('sublimation')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🧣</div><div style="font-weight:600;margin-top:6px">Sublimation</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
-        <div class="create-choice soon" data-cat="3d_print_physical" role="button" tabindex="0" onclick="createOpenCategory('3d_print_physical')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🏺</div><div style="font-weight:600;margin-top:6px">3D-Print Items</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
+        <div class="create-choice" data-cat="3d_print_physical" role="button" tabindex="0" onclick="createOpenCategory('3d_print_physical')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🏺</div><div style="font-weight:700;margin-top:6px">3D-Print Items</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Register a hand-made physical product</div></div>
         <div class="create-choice" data-cat="etsy_listing_lookup" role="button" tabindex="0" onclick="createOpenCategory('etsy_listing_lookup')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">📝</div><div style="font-weight:700;margin-top:6px">Etsy Listing</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Look up a product, generate its full listing</div></div>
         <div class="create-choice" data-cat="product_video" role="button" tabindex="0" onclick="createOpenCategory('product_video')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
@@ -4092,6 +4092,14 @@ const _CREATE_CATEGORIES = {
     icon: '🧣', label: 'Sublimation', real: false,
     soon: "There's no automatic builder for Sublimation designs yet — for now these get made by hand.",
   },
+  // 3d_print_physical (2026-08-05): still real:false here (no automatic
+  // BUILDER exists -- these genuinely are made by hand) but this key is
+  // now special-cased in _renderCategoryPanelHtml() before this `real`
+  // flag is ever read, same pattern as etsy_listing_lookup/product_video
+  // below -- it opens a registration form (_renderPhysicalRegisterPanelHtml)
+  // instead of the "coming soon" stub. This entry stays real:false so the
+  // bundle-opportunity auto-open check at phoneStartBundleDraft() (which
+  // only makes sense for digital bundle categories) correctly skips it.
   '3d_print_physical': {
     icon: '🏺', label: '3D-Print Items', real: false,
     soon: "There's no automatic builder for 3D-printed items yet — for now these get made by hand.",
@@ -4154,6 +4162,10 @@ function _renderCategoryPanelHtml(key){
   // 2026-07-22 Create-screen redesign buried it with zero indication it was
   // there (Scott: "I'm also missing my section to make my ai videos").
   if (key === 'product_video') return _renderProductVideoPanelHtml();
+  // 3d_print_physical (2026-08-05): registration, not a build -- same
+  // reasoning as etsy_listing_lookup/product_video above, special-cased
+  // before cfg.real is ever read.
+  if (key === '3d_print_physical') return _renderPhysicalRegisterPanelHtml();
   const cfg = _CREATE_CATEGORIES[key];
   if (!cfg) return '';
   if (!cfg.real) {
@@ -4328,6 +4340,94 @@ function _renderProductVideoPanelHtml(){
       <button class="act-btn primary" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
       <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
     </div>`;
+}
+
+// 3d_print_physical registration (2026-08-05) -- these are made by hand,
+// not built here, so this form just tells Frank what the product IS
+// (name/price/category, and the Etsy listing it maps to if one exists
+// yet). Saves immediately via POST /api/products/register -- unlike every
+// other Create-screen action this does NOT go through Approvals, since
+// it's a pure local catalog write with no Etsy mutation and Scott hitting
+// Save already IS the approval (see main.py's register_product_directly
+// docstring for the full reasoning).
+function _renderPhysicalRegisterPanelHtml(){
+  let html = '<div style="font-weight:700;margin-bottom:4px">🏺 3D-Print Items</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Register a physical 3D-printed product into Frank\\'s catalog — these are made by hand, not built here, so this just tells Frank what it is. Saves immediately, no approval needed.</div>';
+  html += '<label for="pr-listing-id" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Etsy listing ID or URL (optional — leave blank if not listed yet)</label>';
+  html += '<input id="pr-listing-id" type="text" placeholder="e.g. 4506555435" onblur="prClassifyPreview()" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  html += '<div id="pr-preview" style="margin-top:6px;font-size:11.5px;min-height:14px"></div>';
+  html += '<label for="pr-name" style="font-size:11px;color:var(--muted);display:block;margin:10px 0 4px">Name</label>';
+  html += '<input id="pr-name" type="text" placeholder="e.g. Mini Cooler Jug, 3D Printed Travel Cooler" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  html += '<label for="pr-price" style="font-size:11px;color:var(--muted);display:block;margin:10px 0 4px">Price ($)</label>';
+  html += '<input id="pr-price" type="number" step="0.01" min="0" placeholder="e.g. 16.99" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="prRegisterRun()" id="pr-run-btn">Register this product</button></div>';
+  html += '<div id="pr-result" style="margin-top:12px"></div>';
+  return html;
+}
+function _prExtractListingId(raw){
+  const s = (raw || '').trim();
+  if (!s) return null;
+  const m = s.match(/(\d{6,})/); // accepts a bare ID or a pasted Etsy URL
+  return m ? m[1] : (/^\d+$/.test(s) ? s : null);
+}
+async function prClassifyPreview(){
+  const inp = document.getElementById('pr-listing-id');
+  const preview = document.getElementById('pr-preview');
+  if (!inp || !preview) return;
+  const listingId = _prExtractListingId(inp.value);
+  if (!listingId) { preview.textContent = ''; return; }
+  preview.textContent = 'Checking…';
+  preview.style.color = 'var(--muted)';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/products/classify-listing/'+listingId, {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) { preview.textContent = d.detail || 'Could not look up that listing.'; preview.style.color = 'var(--red)'; return; }
+    if (d.already_registered) {
+      preview.innerHTML = '⚠️ Already registered as ' + escHtml((d.already_registered_as||[]).join(', ') || '(unknown)') + '.';
+      preview.style.color = 'var(--amber)';
+      return;
+    }
+    const nameEl = document.getElementById('pr-name');
+    const priceEl = document.getElementById('pr-price');
+    if (nameEl && !nameEl.value) nameEl.value = d.title || '';
+    if (priceEl && !priceEl.value && d.price) priceEl.value = d.price;
+    preview.innerHTML = 'Found: "' + escHtml(d.title||'') + '" — suggested category: <b>' + escHtml(d.category||'?') + '</b> (' + escHtml(d.confidence||'?') + ' confidence)';
+    preview.style.color = 'var(--muted)';
+  } catch(e) {
+    preview.textContent = 'Could not reach Frank to check that listing.';
+    preview.style.color = 'var(--red)';
+  }
+}
+async function prRegisterRun(){
+  const nameEl = document.getElementById('pr-name');
+  const priceEl = document.getElementById('pr-price');
+  const listingEl = document.getElementById('pr-listing-id');
+  const btn = document.getElementById('pr-run-btn');
+  const result = document.getElementById('pr-result');
+  const name = (nameEl && nameEl.value || '').trim();
+  if (!name) { if (result) { result.innerHTML = '<div class="hub-empty">Name is required.</div>'; } return; }
+  const etsy_listing_id = _prExtractListingId(listingEl && listingEl.value);
+  const priceVal = priceEl && priceEl.value ? parseFloat(priceEl.value) : null;
+  if (btn) { btn.disabled = true; btn.textContent = 'Registering…'; }
+  if (result) result.textContent = '';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/products/register', {
+      method: 'POST', headers: {Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({name: name, price: priceVal, etsy_listing_id: etsy_listing_id})
+    }, 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || 'HTTP '+r.status);
+    if (result) { result.innerHTML = '✓ ' + escHtml(d.message || ('Registered ' + d.product_id)); result.style.color = 'var(--green)'; }
+    if (nameEl) nameEl.value = '';
+    if (priceEl) priceEl.value = '';
+    if (listingEl) listingEl.value = '';
+    const preview = document.getElementById('pr-preview'); if (preview) preview.textContent = '';
+    if (typeof loadProducts === 'function') loadProducts();
+  } catch(e) {
+    if (result) { result.textContent = 'Could not register: ' + (e.message||e); result.style.color = 'var(--red)'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Register this product'; }
+  }
 }
 
 function createOpenCategory(key){

@@ -55,6 +55,12 @@ data/reference_images_meta.json
 # source of truth (use Railway Volume in prod, same as staged_photos above).
 data/product_catalog_overrides.json
 
+# Same pattern -- durable manifest-equivalent sidecar for listings registered
+# via register_product (2026-08-05). data/listing_manifest.json itself is
+# ALSO git-tracked (a pre-existing, separate issue), so this is where new
+# registrations actually land at runtime instead.
+data/listing_manifest_overrides.json
+
 # Same local-dev-sidecar pattern as product_catalog_overrides.json above --
 # the Etsy-listing file-integrity sweep's report (main.py's
 # _file_audit_report()), local-dev fallback path when no Railway Volume is
