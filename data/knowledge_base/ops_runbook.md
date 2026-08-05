@@ -21958,3 +21958,59 @@ count-matches-registry invariant, badge markup gone) + a new Playwright
 block confirming the rendered description reflects whatever
 `/api/tools/list` returns and that `#badge-tools` no longer exists in the
 DOM.
+
+## 2026-08-05 — "Ask Frank to Fix" blind-generated wrong titles for
+untracked listings (real customer-facing bug, caught by Scott)
+
+Scott flagged 3 live Etsy listings ("Kawaii Blue Orange Koozie SVG, 3D
+Print File", "Kawaii Red Drink Koozie, Instant Download", and an unrelated
+"Kawaii Digital Planner 2026..." listing) all showing the same photo of a
+3D-printed cooler jug -- clearly wrong for at least the planner listing,
+and none of the 3 exist anywhere in `data/product_catalog.json` or
+`data/listing_manifest.json`. When Scott used "Ask Frank to Fix" on these,
+it made the title/info problem worse, not better.
+
+Root cause traced to `request_listing_fix()` (`main.py`, the `/api/
+listings/{id}/request-fix` handler behind that button). Its manifest gate
+(added 2026-07-22, see the entry above it in this file) correctly detects
+an unmapped listing and reports a `no_manifest_mapping` unfixable issue --
+but then *unconditionally* still called `_autofix_tags_core()` /
+`_autofix_title_core()` anyway ("title/tags still get a routine refresh"
+was the original 2026-07-22 design intent). Those two functions are
+purely text-based: they feed the listing's own current title/tags/price/
+description into an LLM with zero product grounding. For an untracked
+listing Frank has no idea what the product actually is, so the LLM just
+reworded whatever (possibly already wrong) text was already there into
+something more confident-sounding but still wrong -- exactly what Scott
+saw. Confirmed via code trace that image URLs are fetched per-listing_id
+directly from Etsy's own API response (no cross-listing image mixing
+anywhere in this codebase) -- the photo mismatch is a real state on live
+Etsy itself, which "Ask Frank to Fix" was never designed to detect (it
+never inspects photos, and even for *mapped* listings the photo-hash
+cardinal check only runs in `--full` mode via the weekly sweep, not this
+on-demand single-listing path).
+
+Fix: `request_listing_fix()` now only generates/stages a title/tags
+rewrite when Frank has real grounding -- either a manifest entry
+(`is_mapped`) or Scott's own typed instructions in the fix modal. An
+unmapped listing with no instructions gets zero blind-generated fix
+staged; only the unfixable-issue + todo, reworded to explicitly call out
+that Frank can't verify the photos match the title either. A failed
+diagnosis lookup (manifest load itself raising) now fails closed the same
+way, instead of silently falling through to the old blind-generate path.
+
+Fix commit bumped `_BUILD_ID` to `cbf5e7f-v301`. Updated `tests/
+test_listing_fix_manifest_gate.py`: replaced the old test asserting
+"title/tags still staged for an unmapped listing (helpful default)" --
+that assertion described the actual bug -- with tests confirming no fix
+is staged when unmapped+no-instructions, a fix IS staged when Scott
+supplies instructions even while unmapped, and a failed diagnosis lookup
+also skips the blind fix. All 3 pre-existing mapped-listing tests
+unchanged/still passing.
+
+Follow-up work in progress (Scott, same conversation): a reconciliation
+sweep to detect other untracked live listings shop-wide, an easier way to
+register physical 3D-print products into the catalog, and better
+category-classification reasoning so Frank can correctly identify what
+kind of product an unmapped listing is instead of guessing from title
+keywords alone.

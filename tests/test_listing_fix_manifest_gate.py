@@ -1,28 +1,43 @@
 """
-Tests for request_listing_fix()'s manifest-mapping gate (2026-07-22).
+Tests for request_listing_fix()'s manifest-mapping gate (2026-07-22, revised
+2026-08-05).
 
 "Ask Frank to Fix" on the Listings screen tells Scott, in its own popup copy,
 that Frank "will check what's wrong" before fixing anything. But the real
 diagnosis (listing_integrity_check.audit_listing()) can only run for a
-listing that has an entry in data/listing_manifest.json -- before this fix,
-an unmapped listing silently skipped the check entirely and still staged a
-clean, warning-free republish action, indistinguishable from "checked it and
-it's genuinely fine." That risked one-tap-reactivating something Scott
-deliberately took down for a reason the automated checks don't cover.
+listing that has an entry in data/listing_manifest.json -- before the
+2026-07-22 fix, an unmapped listing silently skipped the check entirely and
+still staged a clean, warning-free republish action, indistinguishable from
+"checked it and it's genuinely fine."
 
-This mirrors the fail-closed philosophy listing_compliance_sweep.py already
-applies shop-wide (_unmapped_result(): "unmapped/unresolved must block,
-never silently pass") -- request_listing_fix() now does the same for the
-single-listing case.
+2026-08-05 revision: that fix still unconditionally generated and staged a
+blind LLM title/tags rewrite for unmapped listings ("helpful default" -- see
+the removed test below), reasoning only from the listing's own possibly-wrong
+existing title/tags/description with zero grounding on what the product
+actually is. This is exactly how 3 untracked listings (a mini cooler jug
+titled "Kawaii Blue/Red Drink Koozie", and an unrelated listing titled
+"Kawaii Digital Planner 2026" showing the same koozie photo) ended up with
+Frank confidently proposing MORE wrong text instead of flagging that it had
+no idea what the product was. Now: an unmapped listing with no Scott-supplied
+instructions gets NO title/tags fix staged at all -- just the unfixable-issue
++ todo, same fail-closed philosophy listing_compliance_sweep.py already
+applies shop-wide, now correctly extended to the generation step itself, not
+just the diagnosis step. If Scott types instructions in the fix modal (real
+human grounding), the fix still generates normally even when unmapped.
 
 Checks:
-  1. Unmapped listing -> unfixable_issues carries a no_manifest_mapping
-     entry, the staged republish action's summary carries the warning text,
-     a scott_only todo is created, and title/tags are still staged normally
-     (never left un-actioned).
-  2. Mapped listing with only title/tag-fixable FAILs -> unchanged existing
+  1. Unmapped listing, no instructions -> unfixable_issues carries a
+     no_manifest_mapping entry, the staged republish action's summary
+     carries the warning text, a scott_only todo is created, and NO
+     title/tags fix is staged (the actual 2026-08-05 fix).
+  2. Unmapped listing WITH Scott-typed instructions -> title/tags fix IS
+     staged, since a human supplied real grounding.
+  3. Diagnosis lookup itself failing (manifest load raises) -> same
+     fail-closed skip as "unmapped", not a silent fall-through to the old
+     blind-generate behavior.
+  4. Mapped listing with only title/tag-fixable FAILs -> unchanged existing
      behavior: diagnosis feeds the reason, no unfixable issue, no warning.
-  3. Mapped listing with a non-title/tag FAIL -> unchanged existing
+  5. Mapped listing with a non-title/tag FAIL -> unchanged existing
      behavior: that FAIL surfaces as an unfixable issue (regression guard
      that this change didn't alter the already-working mapped path).
 
@@ -76,26 +91,29 @@ def _fake_listing(listing_id: int, state: str = "inactive") -> dict:
     }
 
 
-def _run_request_fix(listing_id: int, manifest: dict, audit_result: dict | None, state: str = "inactive"):
+def _run_request_fix(listing_id: int, manifest: dict, audit_result: dict | None, state: str = "inactive",
+                      instructions: str = "", load_json_side_effect=None):
     fake_tags = [f"tag {i}" for i in range(13)]
+    load_json_kwargs = {"side_effect": load_json_side_effect} if load_json_side_effect else {"return_value": manifest}
     with patch.object(server, "ANTHROPIC_KEY", "fake-key"), \
          patch.object(server, "_generate_tags_for_listings", return_value=[{"tags": fake_tags}]), \
          patch.object(server, "_anthropic_create", return_value=_fake_anthropic_response("New Title Here")), \
          patch.object(server, "EtsyAPIClient", return_value=MagicMock(get_listing=lambda lid: _fake_listing(lid, state))), \
-         patch.object(lic, "_load_json", return_value=manifest), \
+         patch.object(lic, "_load_json", **load_json_kwargs), \
          patch.object(lic, "audit_listing", return_value=audit_result or {}):
-        return asyncio.run(server.request_listing_fix(listing_id, body={"instructions": ""}))
+        return asyncio.run(server.request_listing_fix(listing_id, body={"instructions": instructions}))
 
 
-def test_unmapped_listing_blocks_silent_republish():
+def test_unmapped_listing_skips_blind_title_tags_fix():
     listing_id = 9991001
     result = _run_request_fix(listing_id, manifest={}, audit_result=None)
 
-    check(result["staged_count"] == 3,
-          f"expected tags + title + republish all staged, got {result['staged_count']}: {result}")
+    check(result["staged_count"] == 1,
+          f"expected only the republish staged (no blind title/tags fix), got {result['staged_count']}: {result}")
     check(len(result["unfixable_issues"]) == 1,
           f"expected exactly one unfixable issue (no_manifest_mapping), got {result['unfixable_issues']}")
-    check("no manifest" in result["unfixable_issues"][0].lower() or "no entry" in result["unfixable_issues"][0].lower(),
+    check("no record of what this product actually is" in result["unfixable_issues"][0].lower()
+          or "no entry" in result["unfixable_issues"][0].lower(),
           f"expected the no_manifest_mapping detail text, got {result['unfixable_issues'][0]!r}")
 
     republish = next((s for s in result["staged"] if s["type"] == "publish_listing"), None)
@@ -116,8 +134,48 @@ def test_unmapped_listing_blocks_silent_republish():
 
     tag_staged = next((s for s in result["staged"] if s["type"] == "update_tags"), None)
     title_staged = next((s for s in result["staged"] if s["type"] == "update_title"), None)
-    check(tag_staged is not None, "tags should still be staged for an unmapped listing (helpful default)")
-    check(title_staged is not None, "title should still be staged for an unmapped listing (helpful default)")
+    check(tag_staged is None,
+          "2026-08-05: tags must NOT be blind-generated for an unmapped listing -- Frank has no "
+          "grounding on what the product is, so a rewrite just produces a more confident wrong tag set")
+    check(title_staged is None,
+          "2026-08-05: title must NOT be blind-generated for an unmapped listing -- this exact "
+          "behavior produced the koozie/planner title-mismatch bug")
+    check(len(result["errors"]) == 0,
+          f"skipping the fix deliberately should not be reported as an error, got {result['errors']}")
+
+
+def test_unmapped_listing_with_instructions_still_generates_fix():
+    # A human (Scott) typing real instructions IS grounding, even without a
+    # manifest entry -- the gate is "does Frank know anything real about this
+    # product," not "is it in the manifest" specifically.
+    listing_id = 9991005
+    result = _run_request_fix(listing_id, manifest={}, audit_result=None,
+                               instructions="This is actually a mini cooler jug, not a koozie -- retitle accordingly")
+
+    check(result["staged_count"] == 3,
+          f"expected tags + title + republish staged once Scott supplied real grounding, got {result['staged_count']}: {result}")
+    tag_staged = next((s for s in result["staged"] if s["type"] == "update_tags"), None)
+    title_staged = next((s for s in result["staged"] if s["type"] == "update_title"), None)
+    check(tag_staged is not None, "tags should be staged when Scott provided instructions")
+    check(title_staged is not None, "title should be staged when Scott provided instructions")
+
+
+def test_diagnosis_lookup_failure_also_skips_blind_fix():
+    # If Frank can't even determine whether the listing is mapped (manifest
+    # load itself raises), that's the same fail-closed case as unmapped --
+    # not a silent fall-through to the old blind-generate behavior.
+    listing_id = 9991006
+    result = _run_request_fix(listing_id, manifest={}, audit_result=None,
+                               load_json_side_effect=RuntimeError("disk read failed"))
+
+    check(result["staged_count"] == 1,
+          f"expected only the republish staged when diagnosis lookup itself failed, got {result['staged_count']}: {result}")
+    check(len(result["unfixable_issues"]) == 1,
+          f"expected one unfixable issue (diagnosis_lookup_failed), got {result['unfixable_issues']}")
+    tag_staged = next((s for s in result["staged"] if s["type"] == "update_tags"), None)
+    title_staged = next((s for s in result["staged"] if s["type"] == "update_title"), None)
+    check(tag_staged is None, "a failed diagnosis lookup must not fall through to a blind fix")
+    check(title_staged is None, "a failed diagnosis lookup must not fall through to a blind fix")
 
 
 def test_mapped_listing_fixable_fail_unchanged():
@@ -187,7 +245,8 @@ def run() -> None:
             print(" -", f)
         sys.exit(1)
     print("LISTING FIX MANIFEST GATE TESTS OK — an unmapped listing no longer silently stages a "
-          "clean republish; it blocks with a real warning + todo, while the mapped-listing path "
+          "clean republish OR a blind title/tags rewrite; it blocks with a real warning + todo "
+          "unless Scott supplies real grounding via instructions, while the mapped-listing path "
           "(both fixable and unfixable FAILs) is unchanged.")
 
 

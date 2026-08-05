@@ -651,7 +651,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "9b71607-v300"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "cbf5e7f-v301"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9751,12 +9751,14 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
 
     diagnosis = ""
     unfixable_issues: list[dict] = []
+    is_mapped = False
     try:
         import listing_integrity_check as lic
 
         manifest = await asyncio.to_thread(lic._load_json, lic.MANIFEST_PATH)
         entry = manifest.get(str(listing_id))
         if entry:
+            is_mapped = True
             rules = await asyncio.to_thread(lic._load_json, lic.RULES_PATH)
             approvals = await asyncio.to_thread(lic._load_json, lic.APPROVALS_PATH)
             api = EtsyAPIClient()
@@ -9774,37 +9776,54 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
                 "severity": "FAIL",
                 "check": "no_manifest_mapping",
                 "detail": (
-                    "This listing has no entry in data/listing_manifest.json, so "
-                    "Frank could not verify why it was deactivated or whether it's "
-                    "actually compliant. Map it in the manifest, or review it "
-                    "manually, before republishing."
+                    "This listing has no entry in data/listing_manifest.json, so Frank has "
+                    "no record of what this product actually is. Frank will NOT auto-generate "
+                    "a title/tags fix here -- rewriting text with zero grounding just produces "
+                    "a more confident-sounding WRONG title (this is exactly how 3 untracked "
+                    "koozie/planner listings ended up with mismatched photos and titles, "
+                    "caught 2026-08-05). Map this listing in the manifest first, or review and "
+                    "fix it by hand on Etsy -- including checking the photos actually match "
+                    "the title."
                 ),
             }]
     except Exception as exc:
         print(f"[request-fix] diagnosis lookup failed for {listing_id}: {exc}", flush=True)
+        unfixable_issues = [{
+            "severity": "FAIL",
+            "check": "diagnosis_lookup_failed",
+            "detail": f"Frank couldn't check whether this listing is tracked ({exc}) -- review it manually rather than trusting an auto-generated fix.",
+        }]
 
     reason = " ".join(p for p in (diagnosis, instructions) if p).strip()
-    if not reason:
-        reason = "This listing was deactivated. Review the title and tags for anything that could be wrong and improve them."
 
     staged: list[dict] = []
     errors: list[str] = []
 
-    tag_result = await _autofix_tags_core(listing_id, listing=listing, reason=reason)
-    if "error" in tag_result:
-        errors.append(f"tags: {tag_result['error']}")
-    else:
-        staged.append({"type": "update_tags", "action_id": tag_result["action_id"]})
+    # 2026-08-05: only generate/stage a title-tags rewrite when Frank has real
+    # grounding -- either a manifest entry (audit_listing knows what this
+    # product actually is) or Scott's own typed instructions describing what's
+    # wrong. An unmapped listing with no instructions gets skipped entirely
+    # (unfixable_issues above explains why) rather than silently producing a
+    # confident-sounding rewrite of a title Frank has no way to verify.
+    if is_mapped or instructions:
+        if not reason:
+            reason = "This listing was deactivated. Review the title and tags for anything that could be wrong and improve them."
 
-    title_result = await _autofix_title_core(listing_id, listing=listing, reason=reason)
-    if "error" in title_result:
-        errors.append(f"title: {title_result['error']}")
-    else:
-        staged.append({
-            "type": "update_title",
-            "action_id": title_result["action_id"],
-            "title": title_result["title"],
-        })
+        tag_result = await _autofix_tags_core(listing_id, listing=listing, reason=reason)
+        if "error" in tag_result:
+            errors.append(f"tags: {tag_result['error']}")
+        else:
+            staged.append({"type": "update_tags", "action_id": tag_result["action_id"]})
+
+        title_result = await _autofix_title_core(listing_id, listing=listing, reason=reason)
+        if "error" in title_result:
+            errors.append(f"title: {title_result['error']}")
+        else:
+            staged.append({
+                "type": "update_title",
+                "action_id": title_result["action_id"],
+                "title": title_result["title"],
+            })
 
     # Only stage a reactivation for listings that are actually inactive --
     # for an already-active listing, "publish_listing" is a harmless no-op
