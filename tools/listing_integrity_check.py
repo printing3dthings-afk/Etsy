@@ -34,6 +34,7 @@ Exit codes:
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -66,6 +67,48 @@ RULES_PATH = BASE_DIR / "data" / "listing_rules.json"
 APPROVALS_PATH = BASE_DIR / "data" / "listing_approvals.json"
 REGISTRY_PATH = BASE_DIR / "data" / "product_art_registry.json"
 REPORT_DIR = BASE_DIR / "review_batches"
+
+# Durable sidecar for main.py's register_product feature -- gitignored, so on the
+# hosted dashboard (Railway) it lives on the mounted /data volume, not in this git
+# checkout (a redeploy is a fresh git checkout; a runtime write to a git-tracked
+# file would silently vanish). Same resolution convention as main.py's
+# _FILE_ROOTS["volume"] -- kept in sync by hand rather than importing main.py here,
+# since this module is deliberately lightweight (main.py does heavy startup work
+# at import time: DB connections, background loop task creation).
+_vol_override = os.getenv("HUB_FILES_DIR", "").strip()
+if _vol_override:
+    _VOLUME_ROOT = Path(_vol_override)
+elif Path("/data").is_dir():
+    _VOLUME_ROOT = Path("/data") / "files"
+else:
+    _VOLUME_ROOT = None
+MANIFEST_OVERRIDES_PATH = (
+    (_VOLUME_ROOT / "listing_manifest_overrides.json") if _VOLUME_ROOT
+    else (BASE_DIR / "data" / "listing_manifest_overrides.json")
+)
+
+
+def load_manifest_with_overrides() -> dict:
+    """data/listing_manifest.json merged with the listing_manifest_overrides.json
+    durable sidecar -- main.py's register_product feature (2026-08-05) writes a
+    freshly-registered/reconciled listing's mapping ONLY to that sidecar, never
+    to this git-tracked file. Before this function existed, listing_compliance_
+    sweep.py read MANIFEST_PATH alone, so a listing Frank had just correctly
+    registered would still get a false no_manifest_mapping FAIL and an auto-
+    staged deactivate_listing action on its very next compliance sweep -- the
+    sweep's own docstring claimed "no actual race" with the reconciliation
+    feature, which was true about timing but false about this exact gap. Any
+    caller that needs manifest data (this file's own audit_listing() callers,
+    listing_compliance_sweep.py) should use this instead of a bare _load_json
+    (MANIFEST_PATH) call."""
+    manifest = _load_json(MANIFEST_PATH)
+    try:
+        overrides = json.loads(MANIFEST_OVERRIDES_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        overrides = {}
+    merged = dict(manifest)
+    merged.update(overrides)
+    return merged
 
 TITLE_MAX = 70
 TAG_MAX_CHARS = 20

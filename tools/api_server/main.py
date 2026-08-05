@@ -749,7 +749,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "500a544-v303"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "dfdc0be-v304"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2815,6 +2815,18 @@ AGENT_TOOLS = [
                     "type": "integer",
                     "description": "New Etsy taxonomy_id (category) for update_sku_and_category.",
                 },
+                "reason": {
+                    "type": "string",
+                    "description": (
+                        "REQUIRED for update_title/update_tags/update_description when the "
+                        f"listing_id has no entry in Frank's product manifest/registry -- state "
+                        f"what's actually wrong with the listing (e.g. {business_config.OWNER_NAME}'s "
+                        "own feedback, or a specific concrete defect you observed). Without this, "
+                        "staging a content rewrite for an unmapped listing is refused, since Frank "
+                        "has no grounding for what the product actually is and a rewrite would just "
+                        "be a more confident-sounding guess."
+                    ),
+                },
             },
             "required": ["action_type", "listing_id", "summary"],
         },
@@ -4074,6 +4086,15 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _resolve_product((tool_input or {}).get("identifier", ""))
         if name == "stage_action":
             ti = tool_input or {}
+            if ti.get("action_type") in ("update_title", "update_tags", "update_description") and ti.get("listing_id") is not None:
+                # Same grounding gate as autofix_listing_tags/autofix_listing_title (2026-08-05)
+                # -- stage_action is the general-purpose tool and was the actual reachable path
+                # for the koozie/planner bug class (a listing with no manifest entry getting a
+                # confident-sounding but ungrounded rewrite), not just the two dedicated autofix
+                # tools that already had this check.
+                blocked = _blind_fix_refusal(int(ti["listing_id"]), ti.get("reason", ""))
+                if blocked:
+                    return blocked
             payload = {"listing_id": ti.get("listing_id")}
             if ti.get("title") is not None:
                 payload["title"] = ti["title"]
@@ -4293,10 +4314,23 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                     listings.append(client.get_listing(int(lid)))
                 except Exception as exc:
                     fetch_errors.append({"listing_id": lid, "error": str(exc)})
+            # Same grounding gate as stage_action/autofix_listing_tags (2026-08-05) --
+            # this batch tool used to be the one autofix sibling that skipped it
+            # entirely, so a batch containing an unmapped orphan listing would still
+            # get a confident-sounding blind tag rewrite for that one entry.
+            reason = ti.get("reason", "")
+            grounded_listings = []
+            for l in listings:
+                blocked = _blind_fix_refusal(int(l["listing_id"]), reason)
+                if blocked:
+                    fetch_errors.append({"listing_id": l["listing_id"], "error": blocked["error"]})
+                else:
+                    grounded_listings.append(l)
+            listings = grounded_listings
             if not listings:
                 return {"staged": [], "count": 0, "errors": fetch_errors}
             try:
-                tag_results = _generate_tags_for_listings(listings, ti.get("reason", ""))
+                tag_results = _generate_tags_for_listings(listings, reason)
             except Exception as exc:
                 return {"error": f"Tag generation failed: {exc}", "errors": fetch_errors}
             listing_map = {l["listing_id"]: l for l in listings}
@@ -6462,6 +6496,26 @@ async def _run_loop_iteration(
         return delay
 
 
+def _safe_set_agent_heartbeat(name: str, label: str, status: str, detail: str) -> None:
+    """db.set_agent_heartbeat(), guarded the same way _run_loop_iteration()'s
+    own heartbeat write already is (2026-08-05 full-Etsy-audit finding) -- for
+    the two hand-rolled calendar-gated loops (_daily_brief_loop,
+    _calendar_tasks_loop) that don't route through _run_loop_iteration at all
+    (they're date-gated, not interval-based) and so never inherited that
+    hardening. Without this, a DB hiccup on any of their several unguarded
+    set_agent_heartbeat() calls raises straight out of their `while True:`
+    body -- an unhandled exception inside an asyncio.create_task() coroutine
+    silently ends that task forever, and _calendar_tasks_loop alone backs 10
+    different sub-tasks (weekly monitors, monthly shop health, competitor
+    research, seasonal keywords, ads threshold check, Star Seller check,
+    scheduled art/coloring checks, Google Calendar sync, Etsy file
+    inventory)."""
+    try:
+        db.set_agent_heartbeat(name, label, status, detail)
+    except Exception as exc:
+        print(f"[{name}] heartbeat write failed (loop continues): {exc}", flush=True)
+
+
 # ── Persistence: daily snapshots + history ───────────────────────────────────────
 
 
@@ -6554,7 +6608,7 @@ async def _snapshot_loop() -> None:
             # piggybacked prune failed, and per the docstring above that must never
             # affect this loop's own success/backoff timing) so the failure is
             # visible on the Agents screen instead of only in server stdout.
-            db.set_agent_heartbeat(
+            _safe_set_agent_heartbeat(
                 "snapshot", "Snapshot", "warning",
                 "Daily metric snapshot recorded, but: " + "; ".join(prune_failures),
             )
@@ -7112,6 +7166,57 @@ def _run_sku_taxonomy_backfill_batch() -> dict:
     return {"status": "warning" if errors else "ok", "staged": staged, "detail": detail}
 
 
+def _get_interval_loop_last_run_at(name: str) -> datetime | None:
+    """Persisted "when did this fixed-interval loop last actually complete a
+    run" timestamp -- restart-safety companion to _get_calendar_task_last_run()
+    (2026-08-05 full-Etsy-audit finding). _sku_taxonomy_backfill_loop and
+    _catalog_reconciliation_loop each pace themselves purely via an in-process
+    asyncio.sleep(base_interval) between runs -- that clock resets to zero on
+    every restart (this app deploys often), and because each batch dedupes
+    against already-staged actions rather than replaying the same work, a
+    restart doesn't just re-run harmlessly, it stages the NEXT batch of up to
+    _BACKFILL_BATCH_SIZE/_RECONCILIATION_BATCH_SIZE new items -- several
+    redeploys in one day could put far more pending approvals in front of
+    Scott than the weekly pacing he approved. Stored via the same db.settings
+    table _get_calendar_task_last_run() uses, keyed distinctly."""
+    val = db.get_setting(f"interval_loop_last_run_at_{name}")
+    if not val:
+        return None
+    try:
+        return datetime.fromisoformat(val)
+    except ValueError:
+        return None
+
+
+def _set_interval_loop_last_run_at(name: str, when: datetime) -> None:
+    db.set_setting(f"interval_loop_last_run_at_{name}", when.isoformat())
+
+
+async def _wait_for_interval_loop_turn(name: str, base_interval: float) -> None:
+    """Sleeps out whatever's left of base_interval since this loop's last
+    completed run, so a restart mid-week can't re-trigger it early. A no-op
+    (returns immediately) the first time a name has ever run."""
+    last_run = _get_interval_loop_last_run_at(name)
+    if last_run is None:
+        return
+    elapsed = (datetime.now(timezone.utc) - last_run).total_seconds()
+    remaining = base_interval - elapsed
+    if remaining > 0:
+        await asyncio.sleep(remaining)
+
+
+def _record_interval_loop_run_if_succeeded(name: str) -> None:
+    """Call right after _run_loop_iteration(name, ...) returns. Only persists a
+    "last run at" timestamp when that iteration actually succeeded (_run_loop_
+    iteration resets _LOOP_FAILURE_COUNTS[name] to 0 on success, line ~6469) --
+    a FAILED iteration must never advance the restart-safety clock, or a single
+    transient error followed by a restart during its short backoff window would
+    make _wait_for_interval_loop_turn() wait out the full weekly interval before
+    retrying, silently disabling the loop for up to 7 days over one hiccup."""
+    if _LOOP_FAILURE_COUNTS.get(name, 0) == 0:
+        _set_interval_loop_last_run_at(name, datetime.now(timezone.utc))
+
+
 async def _sku_taxonomy_backfill_loop() -> None:
     """Weekly pass staging SKU/taxonomy_id fixes for listings that are
     missing or wrong (see _run_sku_taxonomy_backfill_batch's docstring).
@@ -7119,6 +7224,7 @@ async def _sku_taxonomy_backfill_loop() -> None:
     for this ~170-listing sweep."""
     await asyncio.sleep(300)  # let the app finish booting, behind every other startup loop
     while True:
+        await _wait_for_interval_loop_turn("sku_taxonomy_backfill", 604_800)
         delay = await _run_loop_iteration(
             "sku_taxonomy_backfill", "SKU + Category Backfill",
             lambda: asyncio.to_thread(_run_sku_taxonomy_backfill_batch),
@@ -7126,6 +7232,7 @@ async def _sku_taxonomy_backfill_loop() -> None:
             on_success_detail=lambda r: r["detail"],
             base_interval=604_800,
         )
+        _record_interval_loop_run_if_succeeded("sku_taxonomy_backfill")
         await asyncio.sleep(delay)
 
 
@@ -7146,7 +7253,11 @@ def _known_etsy_listing_ids() -> set[str]:
     ids: set[str] = set()
     try:
         catalog = json.loads(Path("data/product_catalog.json").read_text())
-    except OSError:
+    except (OSError, json.JSONDecodeError):
+        # Matches _product_catalog_overrides()/_listing_manifest_overrides()'s own
+        # error handling below -- a malformed (but readable) catalog file used to
+        # raise an uncaught JSONDecodeError here, crashing this whole function for
+        # every call site (2026-08-05 full-Etsy-audit finding).
         catalog = []
     for entry in catalog:
         lid = entry.get("etsy_listing_id")
@@ -7177,22 +7288,32 @@ def _run_catalog_reconciliation_batch() -> dict:
     philosophy as the manifest gate above. Capped at
     _RECONCILIATION_BATCH_SIZE new stages per run.
 
-    Deliberately NOT coordinated with listing_compliance_sweep.py beyond
-    sharing the same underlying registries -- that sweep is Scott-triggered
-    on demand (a Workflows command, not an automatic recurring loop; see
-    _EXEC_COMMANDS["listing_compliance_sweep"]), so there's no actual
-    two-automatic-loops race to guard against today. The practical
-    interaction: this loop runs weekly and will have already registered
-    most genuine new listings before Scott ever manually runs a compliance
-    sweep, which is what naturally prevents a legitimate new listing from
-    being proposed for takedown as "unmapped." If Scott ever wants
-    compliance running automatically too, revisit this ordering then --
-    not a speculative build now."""
+    Deliberately NOT coordinated with listing_compliance_sweep.py as a
+    scheduling matter -- that sweep is Scott-triggered on demand (a Workflows
+    command, not an automatic recurring loop; see _EXEC_COMMANDS
+    ["listing_compliance_sweep"]), so there's no two-automatic-loops timing
+    race to guard against. There WAS a real data-level gap here though
+    (found in the 2026-08-05 full-Etsy-functionality audit, not just a
+    timing concern): listing_compliance_sweep.py used to read only the
+    git-tracked data/listing_manifest.json, never this loop's own
+    listing_manifest_overrides.json sidecar writes -- so a listing this
+    loop had just correctly registered would still fail the next compliance
+    sweep as "unmapped" and get an incorrect deactivate_listing staged.
+    Fixed by giving listing_integrity_check.py a single load_manifest_with_
+    overrides() that both this loop's callers and listing_compliance_
+    sweep.py's run_sweep() now use, so the two registries genuinely can't
+    disagree on this specific question again."""
     client = EtsyAPIClient()
-    try:
-        listings = client.get_shop_listings_all(state="active")
-    except Exception as exc:
-        return {"status": "error", "staged": 0, "detail": f"could not fetch live listings: {exc}"}
+    # 2026-08-05 (full-Etsy-audit finding): this used to catch the fetch failure
+    # and return {"status": "error", ...} as a normal return value. _run_loop_
+    # iteration() only takes the exponential-backoff retry path when fn() RAISES
+    # -- a normal return (even one carrying status="error" in its payload) looks
+    # like success to it, resets the failure counter, and schedules the next
+    # attempt a full 7 days out instead of retrying soon. Letting this raise
+    # (matching _build_sku_taxonomy_backfill_queue()'s sibling pattern) gives a
+    # transient Etsy outage the real fast-retry-then-backoff behavior instead of
+    # a week-long stall.
+    listings = client.get_shop_listings_all(state="active")
 
     known_ids = _known_etsy_listing_ids()
     pending = db.list_actions("pending")
@@ -7255,9 +7376,14 @@ async def _catalog_reconciliation_loop() -> None:
     """Weekly pass staging register_product actions for orphaned listings
     (see _run_catalog_reconciliation_batch's docstring). base_interval=
     604_800 (7 days), same cadence as the SKU/category backfill loop this
-    is modeled on."""
+    is modeled on -- including that loop's restart-safety fix (2026-08-05
+    full-Etsy-audit finding): _wait_for_interval_loop_turn()/_record_
+    interval_loop_run_if_succeeded() so a mid-week redeploy can't re-stage
+    a fresh batch of register_product actions before a week has actually
+    passed."""
     await asyncio.sleep(300)  # let the app finish booting, behind every other startup loop
     while True:
+        await _wait_for_interval_loop_turn("catalog_reconciliation", 604_800)
         delay = await _run_loop_iteration(
             "catalog_reconciliation", "Catalog Reconciliation",
             lambda: asyncio.to_thread(_run_catalog_reconciliation_batch),
@@ -7265,6 +7391,7 @@ async def _catalog_reconciliation_loop() -> None:
             on_success_detail=lambda r: r["detail"],
             base_interval=604_800,
         )
+        _record_interval_loop_run_if_succeeded("catalog_reconciliation")
         await asyncio.sleep(delay)
 
 
@@ -7479,7 +7606,7 @@ async def _daily_brief_loop() -> None:
     Reusing those same persistence helpers (the setting-key prefix says
     "calendar_task" but the functions are generic date persistence, not
     specific to _calendar_tasks_loop) instead of duplicating the pattern."""
-    db.set_agent_heartbeat("daily_brief", "Daily Brief", "started", "waiting for 6 AM UTC")
+    _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "started", "waiting for 6 AM UTC")
     last_sent_date: date | None = _get_calendar_task_last_run("daily_brief")
     while True:
         await asyncio.sleep(3600)
@@ -7496,20 +7623,20 @@ async def _daily_brief_loop() -> None:
             pass
         now = datetime.now(timezone.utc)
         if now.hour == 6 and now.date() != last_sent_date:
-            db.set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
+            _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
             try:
                 import daily_brief as _daily_brief
                 result = await asyncio.to_thread(_daily_brief.run_daily_brief)
                 last_sent_date = now.date()
                 _set_calendar_task_last_run("daily_brief", last_sent_date)
-                db.set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
+                _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
                 print(f"[daily_brief] {result}", flush=True)
             except Exception as exc:
-                db.set_agent_heartbeat("daily_brief", "Daily Brief", "error", str(exc))
+                _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "error", str(exc))
                 print(f"[daily_brief] error: {exc}", flush=True)
         else:
             next_run = "today" if now.hour < 6 else "tomorrow"
-            db.set_agent_heartbeat(
+            _safe_set_agent_heartbeat(
                 "daily_brief", "Daily Brief", "ok",
                 f"next brief {next_run} at 06:00 UTC (last sent: {last_sent_date or 'never'})"
             )
@@ -8819,7 +8946,7 @@ async def _calendar_tasks_loop() -> None:
     doesn't skip that day entirely — it just fires the next time the loop
     wakes up and the date still matches — while a same-day restart doesn't
     cause a double-fire either."""
-    db.set_agent_heartbeat("calendar_tasks", "Calendar Tasks", "started", "waiting for next scheduled check")
+    _safe_set_agent_heartbeat("calendar_tasks", "Calendar Tasks", "started", "waiting for next scheduled check")
     last_weekly = _get_calendar_task_last_run("weekly")
     last_monthly = _get_calendar_task_last_run("monthly")
     last_competitor_research = _get_calendar_task_last_run("competitor_research")
@@ -8959,7 +9086,7 @@ async def _calendar_tasks_loop() -> None:
                 f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync}, "
                 f"etsy_file_inventory={last_etsy_file_inventory})"
             )
-        db.set_agent_heartbeat("calendar_tasks", "Calendar Tasks", status, " | ".join(detail_parts))
+        _safe_set_agent_heartbeat("calendar_tasks", "Calendar Tasks", status, " | ".join(detail_parts))
 
 
 _AGENT_LOOP_LABELS = {
@@ -9584,9 +9711,38 @@ async def _apply_conversion_fixes_core(listing_id: int) -> dict:
     stages the matching fix using "finding → fix" as the reason/corrective
     guidance. Every fix still lands in the Action Center for one-tap
     approval -- this connects two already-staging-gated systems, it does
-    not bypass staging for either. Never raises."""
+    not bypass staging for either. Never raises.
+
+    2026-08-05: gated on the listing being mapped in Frank's manifest/
+    registry before any fix handler runs -- the diagnosis itself is grounded
+    in the listing's own live Etsy title/tags/price, which for an unmapped
+    listing may already be the wrong content (this is precisely how the
+    koozie/planner listing-mismatch bug happened). A diagnosis produced from
+    already-wrong content is not the same as real corrective guidance, so it
+    does NOT count as the `reason` that would otherwise excuse a blind
+    rewrite elsewhere in this file -- unlike Scott's own typed reject text,
+    this is still ungrounded. The diagnosis (read-only) still runs and is
+    still returned, since that's useful, lower-risk information either way."""
     diagnosis_result = await _diagnose_listing_core(listing_id)
     fixes = ((diagnosis_result.get("diagnosis") or {}).get("fixes")) or []
+
+    if fixes and await _get_manifest_entry(listing_id) is None:
+        return {
+            "listing_id": listing_id,
+            "primary_issue": (diagnosis_result.get("diagnosis") or {}).get("primary_issue"),
+            "applied": [],
+            "skipped": [{"area": "all", "reason": "listing is unmapped -- refusing blind rewrite"}],
+            "errors": [],
+            "message": (
+                f"Diagnosed listing {listing_id} — found {len(fixes)} potential fix(es), but this "
+                "listing has no entry in Frank's manifest or registration records, so there's no "
+                "grounding for what the product actually is. Refusing to auto-stage title/tags/"
+                "description rewrites for it (see the 2026-08-05 koozie/planner bug in "
+                f"ops_runbook.md). Ask {business_config.OWNER_NAME} to map or register it first, "
+                "or use autofix_listing_tags/autofix_listing_title with an explicit `reason` if "
+                "you know specifically what's wrong."
+            ),
+        }
 
     applied: list[dict] = []
     skipped: list[dict] = []
@@ -10480,7 +10636,8 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                 return False, "taxonomy_id must be a positive integer"
         if at_approval:
             try:
-                current = EtsyAPIClient().get_listing(int(p["listing_id"]))
+                client = EtsyAPIClient()
+                current = client.get_listing(int(p["listing_id"]))
             except Exception as exc:
                 return False, f"could not reconfirm listing {p['listing_id']} before applying: {exc}"
             staged_state = p.get("_state_at_staging")
@@ -10490,6 +10647,30 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                     f"listing {p['listing_id']} state changed since this action was staged "
                     f"(was '{staged_state}', now '{current_state}') -- review and re-stage"
                 )
+            # 2026-08-05 (full-Etsy-audit finding): activation (publish_listing
+            # always activates; toggle_listing_state's new_state=="active" does
+            # too) previously had zero check that the listing has any photos at
+            # all. _execute_create_listing_staged_action already tolerates a
+            # partial photo-upload failure (writes the draft override anyway so
+            # a real Etsy draft never gets "forgotten" and duplicate-created --
+            # see its own docstring), which means a network blip during the
+            # original photo upload could leave a listing with ZERO photos,
+            # invisible to the "upload_errors" field unless Scott happens to
+            # read it before tapping activate. This is the one gate every
+            # activation path funnels through, so it's the right place to
+            # refuse rather than relying on Scott catching it upstream.
+            wants_active = (t == "publish_listing") or (t == "toggle_listing_state" and p.get("new_state") == "active")
+            if wants_active:
+                try:
+                    images = client.get_listing_images(int(p["listing_id"]))
+                except Exception as exc:
+                    return False, f"could not confirm listing {p['listing_id']} has photos before activating: {exc}"
+                if not images:
+                    return False, (
+                        f"listing {p['listing_id']} has zero photos -- refusing to activate a listing "
+                        "with nothing for a buyer to see (a prior upload may have failed silently; "
+                        "check upload_errors on the create_listing action, add photos, then retry)"
+                    )
         return True, "ok"
     if t in _PHOTO_STAGED_ACTION_TYPES:
         if not p.get("listing_id"):
@@ -10710,6 +10891,25 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         timeout = p.get("timeout")
         if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
             return False, "timeout must be a positive integer"
+    else:
+        # 2026-08-05 (full-Etsy-audit finding): every other bucket above
+        # (_ETSY_STAGED_ACTION_TYPES, _PHOTO_STAGED_ACTION_TYPES, _VIDEO_
+        # STAGED_ACTION_TYPES, _SOCIAL_STAGED_ACTION_TYPES, _LISTING_CREATE_
+        # STAGED_ACTION_TYPES, _REGISTER_PRODUCT_STAGED_ACTION_TYPES) returns
+        # from its own `if t in <bucket>:` block above, before execution ever
+        # reaches here. This local/script/register_command chain was the only
+        # one with no such guard -- a type added to _STAGED_ACTION_TYPES (so
+        # it passes the top-of-function gate) but never added to any bucket
+        # tuple or given its own branch here used to fall all the way through
+        # to a bare `return True, "ok"`, validating it with ZERO checks. That
+        # is structurally the exact same defect class as the register_product
+        # bug this session already found and fixed on the execute side
+        # (_execute_staged_action's shared listing_id-extraction assumption)
+        # -- a declared-but-not-fully-wired type -- just on the validate side,
+        # and dormant only because every current type happens to be fully
+        # wired. Fail closed instead: an unrecognized type is refused, not
+        # silently approved.
+        return False, f"validation not implemented for type: {t}"
     return True, "ok"
 
 
@@ -11313,9 +11513,18 @@ async def _dispatch_reject_fix(action: dict, reason: str) -> None:
             if errors:
                 raise RuntimeError("; ".join(errors))
         else:
-            # local_write_file, local_delete, local_exec, run_script, deactivate_listing —
-            # no well-posed auto-retry from free-text feedback; the reason is already
-            # recorded on the rejected action above.
+            # Every type other than update_title/update_tags/update_description/
+            # publish_listing above -- local_write_file, local_delete, local_exec,
+            # run_script, deactivate_listing, toggle_listing_state, update_price,
+            # update_sku_and_category, register_product, create_listing,
+            # listing_video, post_tiktok, post_pinterest, register_command.
+            # 2026-08-05 (full-Etsy-audit finding): this comment used to name
+            # only the original 5 types, which drifted stale as 9 more staged-
+            # action types were added since -- corrected to describe the actual
+            # current behavior rather than a fixed enumeration that will only
+            # drift again. None of these has an _autofix_*_core-style regenerator
+            # a rejection reason could plausibly retry against; the reason is
+            # already recorded on the rejected action above.
             return
         db.log_activity("frank", "reject_fix", f"{t} #{action.get('id')}: {reason}", action, outcome="ok")
     except Exception as exc:

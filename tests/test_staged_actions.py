@@ -36,6 +36,7 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
 for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
@@ -178,6 +179,49 @@ def test_update_title_at_approval_without_credentials_rejected_not_crashed():
                 os.environ[k] = v
     check(ok is False, "at_approval=True with no reachable Etsy API must reject, not silently pass")
     check(isinstance(msg, str) and msg, "rejection must carry a human-readable reason")
+
+
+# ── at_approval=True: zero-photos activation gate (2026-08-05 full-Etsy-audit) ─
+# _execute_create_listing_staged_action deliberately tolerates a partial photo-
+# upload failure (writes the draft override anyway so the real Etsy draft
+# doesn't get "forgotten" -- see its own docstring). Before this fix, nothing
+# stopped that listing from later being activated with ZERO photos if Scott
+# didn't happen to read upload_errors first. This is the one shared gate every
+# activation path (publish_listing, toggle_listing_state->active) funnels
+# through, so it's the right place to catch it.
+def _fake_client(images: list, state: str = "draft"):
+    client = MagicMock()
+    client.get_listing.return_value = {"listing_id": 123, "state": state}
+    client.get_listing_images.return_value = images
+    return client
+
+
+def test_toggle_active_with_zero_photos_rejected():
+    with patch.object(server, "EtsyAPIClient", return_value=_fake_client(images=[])):
+        ok, msg = validate("toggle_listing_state", {"listing_id": 123, "new_state": "active"}, at_approval=True)
+    check(ok is False, "activating a listing with zero photos must be rejected")
+    check("zero photos" in msg, f"expected a clear zero-photos reason, got: {msg!r}")
+
+
+def test_toggle_active_with_photos_passes():
+    with patch.object(server, "EtsyAPIClient", return_value=_fake_client(images=[{"listing_image_id": 1}])):
+        ok, msg = validate("toggle_listing_state", {"listing_id": 123, "new_state": "active"}, at_approval=True)
+    check(ok is True, f"a listing with real photos must be allowed to activate, got: {msg!r}")
+
+
+def test_toggle_inactive_never_checks_photos():
+    client = _fake_client(images=[])
+    with patch.object(server, "EtsyAPIClient", return_value=client):
+        ok, msg = validate("toggle_listing_state", {"listing_id": 123, "new_state": "inactive"}, at_approval=True)
+    check(ok is True, f"deactivating must never be blocked by the photo check, got: {msg!r}")
+    check(not client.get_listing_images.called, "get_listing_images must not even be called for a deactivate")
+
+
+def test_publish_listing_with_zero_photos_rejected():
+    with patch.object(server, "EtsyAPIClient", return_value=_fake_client(images=[])):
+        ok, msg = validate("publish_listing", {"listing_id": 123}, at_approval=True)
+    check(ok is False, "publish_listing (always activates) with zero photos must be rejected")
+    check("zero photos" in msg, f"expected a clear zero-photos reason, got: {msg!r}")
 
 
 # ── listing_photo ────────────────────────────────────────────────────────────

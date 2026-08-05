@@ -80,7 +80,12 @@ def _unmapped_result(listing: dict) -> dict:
 
 
 def run_sweep(dry_run: bool = False) -> list[dict]:
-    manifest = lic._load_json(lic.MANIFEST_PATH)
+    # load_manifest_with_overrides() (not a bare MANIFEST_PATH read) -- a listing
+    # registered via main.py's register_product feature lives only in the
+    # gitignored listing_manifest_overrides.json sidecar; reading MANIFEST_PATH
+    # alone used to make this sweep FAIL and auto-stage a deactivate_listing for
+    # a listing Frank had just correctly registered (2026-08-05 finding).
+    manifest = lic.load_manifest_with_overrides()
     rules = lic._load_json(lic.RULES_PATH)
     approvals = lic._load_json(lic.APPROVALS_PATH)
     registry = lic._load_json(lic.REGISTRY_PATH)

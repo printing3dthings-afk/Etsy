@@ -585,10 +585,22 @@ def post_art(preview_only=False):
     # same as every other listing publish in this system. See the module
     # docstring for why this changed from a direct PATCH state=active call.
     try:
+        # _state_at_staging (2026-08-05 full-Etsy-audit finding): every other
+        # publish_listing/toggle_listing_state staging site in main.py sets this
+        # so _validate_staged_action's at_approval=True re-check can refuse if
+        # the listing's live state changed between staging and Scott's approval
+        # (which can be days later). This was the one staging site missing it --
+        # not a crash, just a silently-skipped safety check for this one path.
+        # Best-effort: a fetch failure here must not block staging itself.
+        state_at_staging = None
+        try:
+            state_at_staging = client.get_listing(lid).get("state")
+        except Exception:
+            pass
         _db.enqueue_action(
             "publish_listing",
             f"Scheduled art ready to publish: {title[:60]}",
-            {"listing_id": lid},
+            {"listing_id": lid, "_state_at_staging": state_at_staging},
         )
         print(f"  ✓ Staged for approval — draft listing_id={lid}, review in the Action Center")
     except Exception as e:

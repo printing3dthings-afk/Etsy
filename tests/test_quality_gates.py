@@ -183,13 +183,23 @@ def test_gate_price_bad_ending():
           f"price not ending in .99/.97/.49 must fail, got: {fails}")
 
 
-def test_gate_price_cents_input():
-    # Etsy sometimes carries price in cents; the gate normalizes >100 as cents.
+def test_gate_price_over_100_dollars_trusted_as_dollars():
+    # 2026-08-05 full-Etsy-audit fix: this test used to assert the OPPOSITE --
+    # that a price >100 gets auto-divided by 100 as "probably cents". That
+    # heuristic was a real bug: every actual caller (stage_product_publish,
+    # etsy_listing_tools.py, the create_listing staged-action executor) always
+    # passes price in dollars, confirmed by grep -- there is no legitimate
+    # cents-unit caller anywhere in this codebase. A real $149.99 bundle
+    # listing (CLAUDE.md explicitly documents ZIP bundles as a real strategy
+    # for working around the 5-digital-file limit) would have been silently
+    # mangled into "$1.50" and false-failed both the price-floor and the
+    # .99/.97/.49-ending checks. The gate now trusts dollars at face value.
     d = good_listing()
-    d["price"] = 1299  # $12.99 in cents
+    d["title"] = "Complete OnBrandCraftz Planner Mega Bundle, GoodNotes, Instant Download"
+    d["price"] = 149.99
     fails = EtsyAPIClient.pre_publish_gate(d)
     check(not any("PRICE" in f for f in fails),
-          f"1299 cents should normalize to $12.99 and pass price checks, got: {fails}")
+          f"a real $149.99 dollar price must be trusted as-is, got: {fails}")
 
 
 def test_gate_is_supply_true_fails():

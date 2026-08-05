@@ -69,8 +69,22 @@ SHOP_OWNER_EMAIL = os.environ.get('SMTP_USER', 'Printing3dthings@outlook.com')
 
 def _classify(title: str) -> str:
     t = title.lower()
+    # 2026-08-05 (full-Etsy-audit finding): digital SVG packs use "3D Print" in
+    # their own titles as a matter of shop convention (e.g. "America 250 SVG,
+    # 10 Patriotic 3D Print Signs, Instant Download") -- without this check,
+    # such a listing would classify as the physical '3d_print' branch below
+    # and build_personal_message() would tell a buyer "I'm printing and
+    # shipping this" for a product that's actually an instant digital
+    # download, a direct customer-facing false statement (CLAUDE.md's NEVER
+    # LIE TO THE CUSTOMER rule). Etsy's own listing `type` field is the
+    # authoritative physical-vs-digital signal (see main.py's
+    # classify_listings_batch()), but this classifier only ever sees a bare
+    # title string -- these keywords are a title-only mitigation for the
+    # collision that's actually occurred in this shop's real catalog
+    # (SS_AMERICA_250_SVG), not a full replacement for a structured check.
+    is_explicitly_digital = any(x in t for x in ['svg', 'instant download', 'digital download'])
     # 3D print must be checked before wall_art — "3D Printed" contains "print"
-    if any(x in t for x in ['3d printed', '3d print', 'koozie', 'planter', 'candle holder',
+    if not is_explicitly_digital and any(x in t for x in ['3d printed', '3d print', 'koozie', 'planter', 'candle holder',
                               'tea light', 'lamp shade', 'desk organizer', 'pen holder',
                               'centerpiece', 'vase', 'filament']):
         return '3d_print'
@@ -78,6 +92,14 @@ def _classify(title: str) -> str:
         return 'digital_planner'
     if any(x in t for x in ['sticker', 'sticker pack', 'sticker book']):
         return 'sticker_pack'
+    if 'svg' in t:
+        # A digital SVG/3D-print-file pack, not physical wall art -- route to
+        # the product-agnostic generic template rather than falling through
+        # to the wall_art check below, whose "love it on your wall" framing
+        # would itself be a smaller-but-real content mismatch for a buyer who
+        # actually bought a cut file for their own 3D printer or cutting
+        # machine, not framed art.
+        return 'generic'
     if any(x in t for x in ['wall art', 'art print', 'botanical print', 'poster',
                               'digital download', 'printable', 'instant download',
                               'watercolor', 'illustration', 'photography print']):

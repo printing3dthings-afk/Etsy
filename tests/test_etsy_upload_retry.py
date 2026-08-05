@@ -166,6 +166,82 @@ def test_upload_fails_fast_on_non_retryable_4xx():
     check(not mock_sleep.called, "no backoff sleep should happen on a fail-fast 4xx")
 
 
+def test_upload_retries_500_502_504_now_that_the_set_was_widened():
+    # 2026-08-05 full-Etsy-audit finding: this used to be {429, 503} only --
+    # a real transient 500/502/504 (plausible on a slow multipart upload, or
+    # Etsy-side maintenance) failed immediately with zero retry.
+    for status in (500, 502, 504):
+        client = _make_client()
+        calls = {"n": 0}
+
+        def fake_urlopen(req, timeout=None, _status=status):
+            calls["n"] += 1
+            if calls["n"] < 2:
+                raise _http_error(_status)
+            return _FakeResponse({"listing_image_id": 1})
+
+        with mock.patch.object(urllib.request, "urlopen", fake_urlopen), \
+             mock.patch("time.sleep"):
+            result = client.upload_listing_image(4512345678, _tmp_image(), rank=1)
+        check(result.get("listing_image_id") == 1,
+              f"a {status} must now be retried and succeed, got: {result}")
+        check(calls["n"] == 2, f"expected 2 attempts for a {status} retry, got {calls['n']}")
+
+
+def test_upload_refreshes_token_and_retries_on_401():
+    # 2026-08-05 full-Etsy-audit finding: a 401 mid-upload-batch (access token
+    # expiring during a long photo/video/file upload sequence) used to raise
+    # immediately with zero refresh attempt, unlike every JSON call in this
+    # client -- this is the one call class that most needed it, since
+    # _execute_create_listing_staged_action's photo/file loop wraps each
+    # upload call with no retry of its own.
+    client = _make_client()
+    calls = {"n": 0}
+    refresh_calls = {"n": 0}
+    seen_auth_headers = []
+
+    def fake_refresh():
+        refresh_calls["n"] += 1
+        client.access_token = "refreshed-token"
+        return True
+
+    def fake_urlopen(req, timeout=None):
+        calls["n"] += 1
+        seen_auth_headers.append(req.headers.get("Authorization"))
+        if calls["n"] == 1:
+            raise _http_error(401, b'{"error": "token expired"}')
+        return _FakeResponse({"listing_image_id": 5})
+
+    with mock.patch.object(urllib.request, "urlopen", fake_urlopen), \
+         mock.patch.object(client, "refresh_access_token", fake_refresh), \
+         mock.patch("time.sleep"):
+        result = client.upload_listing_image(4512345678, _tmp_image(), rank=1)
+
+    check(result.get("listing_image_id") == 5, f"expected success after the token refresh+retry, got: {result}")
+    check(refresh_calls["n"] == 1, f"expected exactly one refresh_access_token() call, got {refresh_calls['n']}")
+    check(seen_auth_headers[0] == "Bearer fake-token", f"first attempt should use the original token, got: {seen_auth_headers}")
+    check(seen_auth_headers[1] == "Bearer refreshed-token",
+          f"retry must use the freshly refreshed token, got: {seen_auth_headers}")
+
+
+def test_upload_401_with_failed_refresh_raises_the_401():
+    client = _make_client()
+    calls = {"n": 0}
+
+    def fake_urlopen(req, timeout=None):
+        calls["n"] += 1
+        raise _http_error(401, b'{"error": "token expired"}')
+
+    with mock.patch.object(urllib.request, "urlopen", fake_urlopen), \
+         mock.patch.object(client, "refresh_access_token", return_value=False), \
+         mock.patch("time.sleep"):
+        try:
+            client.upload_listing_image(4512345678, _tmp_image(), rank=1)
+            check(False, "a 401 with a failed refresh must still raise")
+        except etsy_api.EtsyAPIError as e:
+            check(e.status == 401, f"expected the 401 to surface, got {e.status}")
+
+
 def test_upload_exhausts_retries_and_raises_last_error():
     client = _make_client()
     calls = {"n": 0}

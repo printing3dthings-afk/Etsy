@@ -22147,3 +22147,159 @@ request/response shapes were built from xAI's published docs, not a live
 test call. Confirm on Railway before trusting output quality. No frontend
 picker for TEXT_ENGINE yet (env-var only for now) -- image engine already has
 one in Settings/Create; text engine picker is still pending.
+
+
+## 2026-08-05 — Full-Etsy-functionality audit: 7 parallel deep-trace reviews, 13 real bugs fixed
+Scott: "make sure that Frank's functions pertaining to Etsy are working with
+no gaps... we keep finding issues, even in areas you have looked over and
+have not caught." Ran 7 independent deep-trace investigations (not a re-skim
+— each agent traced real execution paths against real code) covering:
+EtsyAPIClient core (`tools/etsy_api.py`), the listing publish pipeline,
+every AI-content autofix path, staged-action dispatcher completeness, order/
+digital-delivery handling, catalog-vs-live-Etsy drift, and every background
+loop touching Etsy. Findings were personally re-verified against the code
+(not taken on faith) before fixing. Confirmed-real fixes shipped this pass:
+
+**Critical (customer-facing / self-inflicted regressions):**
+1. `stage_action` (the general-purpose chat tool) let Claude write a brand
+   new title/tags/description for ANY listing_id with zero manifest-mapping
+   check -- the exact koozie/planner defect class already fixed today for
+   `request_listing_fix()`/`autofix_listing_tags`/`autofix_listing_title`,
+   just reachable through the tool the system prompt actually tells Claude
+   to use for listing fixes. Now gated via `_blind_fix_refusal()`, with an
+   optional `reason` escape hatch for real human/agent-supplied grounding.
+2. `apply_conversion_fixes`/`_apply_conversion_fixes_core` (Conversion
+   Doctor) called the autofix functions directly with no grounding check --
+   its own diagnosis is built from the listing's own live (possibly already-
+   wrong) title/tags, so a "corrective" rewrite from that diagnosis is not
+   the same as real corrective guidance. Now refuses to auto-stage fixes for
+   an unmapped listing (the diagnosis itself still runs/returns, since
+   that's lower-risk read-only info).
+3. `stage_batch_tag_update` had the same gap as (1) for up to 10 listings at
+   once. Now filters unmapped listings out of the batch before generation;
+   they land in `errors`, not silently dropped or silently staged.
+4. `listing_compliance_sweep.py` read ONLY the git-tracked
+   `data/listing_manifest.json`, never today's new
+   `listing_manifest_overrides.json` sidecar -- so a listing this session's
+   own catalog-reconciliation feature had just correctly registered would
+   fail the very next compliance sweep as "unmapped" and get an incorrect
+   `deactivate_listing` auto-staged. This session's own design comment
+   claimed "no actual race" with the sweep, which was true about *timing*
+   but false about this *data* gap. Fixed by giving
+   `listing_integrity_check.py` a single `load_manifest_with_overrides()`
+   both the sweep and the reconciliation loop now use.
+
+**High:**
+5. `order_notifier.py`'s title-keyword classifier would tell a customer "I'm
+   printing and shipping this" for a real digital SVG product whose title
+   contains both "3D Print" and a physical-signal keyword (confirmed against
+   the real catalog entry `SS_AMERICA_250_SVG`) -- a direct violation of the
+   NEVER LIE TO THE CUSTOMER rule. Latent (that listing is still draft) but
+   real. Fixed: digital signals ("svg", "instant download", "digital
+   download") now disqualify the physical branch; a pure SVG title routes to
+   the generic template instead of the wall-art-specific one.
+6. Listing activation (`publish_listing`, always activates;
+   `toggle_listing_state` with `new_state=active`) had zero check that the
+   listing actually has any photos. `_execute_create_listing_staged_action`
+   deliberately tolerates a partial photo-upload failure (writes the draft
+   override anyway so the real Etsy draft isn't "forgotten") -- without this
+   gate, a network blip during the original upload could leave a listing
+   live with ZERO photos if Scott didn't happen to read `upload_errors`
+   first. Added to `_validate_staged_action`'s `at_approval=True` check.
+7. `_catalog_reconciliation_loop` misreported an Etsy-fetch failure as a
+   *successful* iteration (`{"status": "error", ...}` returned normally
+   instead of raised), so `_run_loop_iteration`'s exponential backoff never
+   engaged -- a transient outage meant the next attempt was a full 7 days
+   away instead of a fast retry. Now raises, matching the sibling SKU-
+   backfill loop's already-correct pattern.
+8. `_catalog_reconciliation_loop`/`_sku_taxonomy_backfill_loop` had no
+   restart-safety check -- both pace purely via in-process
+   `asyncio.sleep(604_800)`, which resets to zero on every redeploy (this
+   app deploys often). Because each batch stages the *next* un-staged
+   batch (dedup against pending actions), a mid-week restart didn't just
+   re-run harmlessly, it queued a fresh batch of up to 10-18 new pending
+   approvals per restart -- several redeploys in one day could dump far
+   more into Scott's Approvals than the weekly pacing he approved. Added
+   `_wait_for_interval_loop_turn()`/`_record_interval_loop_run_if_succeeded()`
+   (persisted last-successful-run timestamp, only advanced on real success
+   so a failure's retry backoff isn't blocked by the restart-safety gate).
+9. `_calendar_tasks_loop`/`_daily_brief_loop`/`_snapshot_loop`'s prune-
+   overwrite each had unguarded `db.set_agent_heartbeat()` calls -- a DB
+   hiccup on any of them would raise uncaught out of the loop's `while
+   True:` body, silently ending that asyncio task forever (`_calendar_
+   tasks_loop` alone backs 10 sub-tasks: weekly monitors, monthly shop
+   health, competitor research, seasonal keywords, ads/Star Seller checks,
+   scheduled art/coloring checks, Google Calendar sync, Etsy file
+   inventory). `_run_loop_iteration`'s own heartbeat write got this
+   hardening back on 2026-07-21 but these three hand-rolled (date-gated,
+   not interval-based) loops never used that helper and never inherited
+   it. Added a shared `_safe_set_agent_heartbeat()` wrapper.
+10. `register_product` (this session's own new staged-action type) was
+    missing from all three frontend per-type wiring points in
+    `frank_hud_mockup.py` -- the exact "declared but not fully wired"
+    frontend bug the 2026-07-30 audit already fixed for 6 other types. Tap-
+    to-expand showed a blank detail panel, and the confirm dialog said
+    "apply this change to your live Etsy listing" for an action that's
+    actually a pure local write (zero Etsy calls). Added a real glyph,
+    detail-panel branch, and accurate confirm message; `register_command`
+    got the same false "live Etsy listing" confirm-message fix.
+11. `etsy_api.py`'s `pre_publish_gate()` guessed cents-vs-dollars from
+    `price > 100` -- every real caller passes dollars, so a legitimate
+    $149.99+ bundle listing (CLAUDE.md explicitly documents ZIP bundles as
+    a real strategy) would be silently mangled into "$1.50" and false-
+    failed. Now trusts dollars at face value (the test that had locked in
+    the old, wrong behavior as "expected" was rewritten to lock in the
+    corrected behavior instead). Also added: a duplicate-tag-within-the-
+    same-list check (existed for tag-vs-title, never tag-vs-tag), and a
+    `shipping_profile_id`-required check for `type=="physical"` listings
+    (deliberately did NOT add a blanket `taxonomy_id` requirement -- this
+    same function is reused by the content-generation grounding check on a
+    dict that legitimately has no taxonomy_id yet, category assignment
+    happens later).
+12. `etsy_api.py`'s `_request_impl`/`_upload_multipart_with_retry` each
+    independently hardcoded a narrower `{429, 503}` retry set than this
+    file's own `_BREAKER_TRIP_STATUSES`/resilience.py's
+    `_RETRYABLE_ETSY_STATUSES` -- a genuine transient 500/502/504 got zero
+    retry at the layer that matters most. Unified into one shared
+    `_HTTP_RETRYABLE_STATUSES = {429, 500, 502, 503, 504}`. Also:
+    `_upload_multipart_with_retry` (image/video/digital-file uploads) had
+    no 401-refresh-and-retry at all, unlike every JSON call in this client
+    -- a token expiring mid-batch (plausible on a 10-photo + digital-file
+    upload sequence) failed the whole operation outright with no recovery.
+    Now refreshes once and retries with the updated Authorization header.
+13. `_validate_staged_action`'s local/script/register_command branch chain
+    had no final `else`, so a hypothetical future type added to
+    `_STAGED_ACTION_TYPES` without a matching bucket/branch would fall all
+    the way through to a bare `return True, "ok"` -- validated with ZERO
+    checks. Structurally the same "declared but not fully wired" defect
+    class as the `register_product` bug already fixed this session, just
+    on the validate side and currently dormant (every real type today is
+    fully wired). Now fails closed instead.
+
+Also fixed as smaller/adjacent items found during the same pass:
+`post_scheduled_art.py`'s `publish_listing` staging was the one site
+missing `_state_at_staging` (silently skipped the approval-time freshness
+re-check, not a crash); `_known_etsy_listing_ids()` caught only `OSError`
+around a `json.loads()` call instead of also `json.JSONDecodeError`
+(inconsistent with sibling override-readers in the same file); a stale
+`_dispatch_reject_fix()` comment that only named 5 of the 14 real staged-
+action types.
+
+**Explicitly NOT fixed this pass (documented, not silently dropped):**
+reverse catalog drift (a dead Etsy listing with a live local record is
+still essentially undetected outside a weekly count-only diff with no
+write-back); local `status`/Etsy `state` reconciliation (nothing
+periodically re-verifies a stored `status` against live Etsy state);
+cross-instance Etsy rate-limit pacing (a fresh `EtsyAPIClient()` per call
+site means `_throttle_if_needed()` is blind almost all the time -- would
+need a module-level shared state redesign); `refresh_access_token()`
+concurrency protection (two near-simultaneous 401s can race); a hard 5-
+digital-file-count pre-flight check (only the 20MB-per-file limit is
+enforced client-side today). All are real, lower-severity, larger-scope
+items surfaced by the same audit -- flagging here rather than rushing a
+fix that risks a new regression.
+
+Verification: full suite 103/103 (added `tests/test_stage_action_grounding_
+gate.py`, extended `test_staged_actions.py`/`test_etsy_upload_retry.py`/
+`test_conversion_diagnosis_to_autofix_loop.py`/`test_quality_gates.py` with
+regression tests reproducing each exact defect), 3x clean Playwright.

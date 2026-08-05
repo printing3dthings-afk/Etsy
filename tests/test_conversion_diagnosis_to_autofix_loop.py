@@ -47,6 +47,18 @@ def check(cond: bool, msg: str) -> None:
         _failures.append(msg)
 
 
+async def _fake_mapped_entry(listing_id):
+    """Stand-in for server._get_manifest_entry() -- 2026-08-05 full-Etsy-audit
+    fix gated _apply_conversion_fixes_core() on the listing being mapped in
+    Frank's manifest (the diagnosis is grounded in the listing's own live
+    Etsy title/tags, which can itself already be wrong for an unmapped
+    listing -- exactly how the koozie/planner bug happened). These tests are
+    about fix-handler dispatch/error-propagation, not the grounding gate
+    itself (covered elsewhere), so every test below simulates a mapped
+    listing unless it's specifically testing the unmapped-refusal path."""
+    return {"dp_codes": ["DP1026"], "type": "planner"}
+
+
 _SAMPLE_DIAGNOSIS = {
     "listing_id": 4509179201,
     "diagnosis": {
@@ -91,6 +103,7 @@ def test_applies_fixable_areas_and_skips_unfixable_ones():
         return {"action_id": 333, "new_hook": "new hook", "listing_id": lid, "_reason_seen": reason}
 
     with patch.object(server, "_diagnose_listing_core", fake_diagnose), \
+         patch.object(server, "_get_manifest_entry", _fake_mapped_entry), \
          patch.object(server, "_autofix_title_core", fake_title_fix), \
          patch.object(server, "_autofix_tags_core", fake_tags_fix), \
          patch.object(server, "_autofix_description_core", fake_desc_fix):
@@ -133,6 +146,7 @@ def test_reason_text_combines_finding_and_fix():
         return {"action_id": 1, "listing_id": lid}
 
     with patch.object(server, "_diagnose_listing_core", fake_diagnose), \
+         patch.object(server, "_get_manifest_entry", _fake_mapped_entry), \
          patch.object(server, "_autofix_title_core", capture_title_fix):
         asyncio.run(server._apply_conversion_fixes_core(123))
 
@@ -154,6 +168,7 @@ def test_handles_errors_from_a_fix_gracefully():
         return {"action_id": 5, "listing_id": lid}
 
     with patch.object(server, "_diagnose_listing_core", fake_diagnose), \
+         patch.object(server, "_get_manifest_entry", _fake_mapped_entry), \
          patch.object(server, "_autofix_title_core", failing_title_fix), \
          patch.object(server, "_autofix_tags_core", ok_tags_fix):
         result = asyncio.run(server._apply_conversion_fixes_core(123))
@@ -163,6 +178,44 @@ def test_handles_errors_from_a_fix_gracefully():
     check("simulated Etsy API failure" in result["errors"][0]["error"], f"got: {result['errors']}")
     check(len(result["applied"]) == 1 and result["applied"][0]["area"] == "tags",
           f"a failure in one area must not block the others, got: {result['applied']}")
+
+
+def test_unmapped_listing_refuses_to_auto_stage_fixes():
+    # 2026-08-05 full-Etsy-audit finding: this is the regression test for the
+    # actual bug found -- apply_conversion_fixes/_apply_conversion_fixes_core
+    # used to call _autofix_title_core/_autofix_tags_core/_autofix_description_
+    # core directly with zero manifest-mapping check, so an Etsy listing with
+    # no local record at all (the koozie/planner listing-mismatch pattern)
+    # could get a diagnosis grounded in its own already-possibly-wrong live
+    # title/tags, then a "corrective" rewrite based on that -- a more
+    # confident-sounding version of the same bug already fixed for
+    # request_listing_fix()/autofix_listing_tags/autofix_listing_title.
+    async def fake_diagnose(listing_id):
+        return dict(_SAMPLE_DIAGNOSIS)
+
+    async def fake_unmapped(listing_id):
+        return None  # no manifest entry, no override -- genuinely unmapped
+
+    handlers_called = []
+
+    async def should_not_be_called(lid, listing=None, reason=""):
+        handlers_called.append(lid)
+        return {"action_id": 999, "listing_id": lid}
+
+    with patch.object(server, "_diagnose_listing_core", fake_diagnose), \
+         patch.object(server, "_get_manifest_entry", fake_unmapped), \
+         patch.object(server, "_autofix_title_core", should_not_be_called), \
+         patch.object(server, "_autofix_tags_core", should_not_be_called), \
+         patch.object(server, "_autofix_description_core", should_not_be_called):
+        result = asyncio.run(server._apply_conversion_fixes_core(4509179201))
+
+    check(handlers_called == [], f"no autofix handler should run for an unmapped listing, got calls: {handlers_called}")
+    check(result["applied"] == [], f"expected nothing applied, got: {result['applied']}")
+    check(len(result["skipped"]) == 1 and result["skipped"][0]["area"] == "all",
+          f"expected a single 'all' skip entry, got: {result['skipped']}")
+    check("no entry in frank's manifest" in result["message"].lower(), f"message should explain why, got: {result['message']!r}")
+    check(result["primary_issue"] == _SAMPLE_DIAGNOSIS["diagnosis"]["primary_issue"],
+          f"diagnosis itself should still surface (it's read-only/lower-risk), got: {result['primary_issue']}")
 
 
 def test_empty_diagnosis_returns_clean_no_op_message():

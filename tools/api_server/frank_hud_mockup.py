@@ -7433,7 +7433,10 @@ const _ACT_TYPE_GLYPH = {
   // 2026-07-30 (Approvals UX audit): these 6 previously fell through to the
   // generic ❓ placeholder thumbnail.
   update_sku_and_category: '🔖', listing_video: '🎬', post_tiktok: '🎵', post_pinterest: '📌',
-  create_listing: '✨', register_command: '🖥️'
+  create_listing: '✨', register_command: '🖥️',
+  // 2026-08-05 (full-Etsy-audit finding): register_product fell through to the
+  // same generic ❓ this comment block already fixed for 6 other types.
+  register_product: '📋'
 };
 function _actAgeStr(a) {
   const t = a.staged_at || a.created_at || a.decided_at;
@@ -7586,6 +7589,21 @@ function _actionPreviewBody(a) {
       `<div style="margin-top:4px">Script: <span style="font-family:monospace">${escHtml(p.script_path || '')}</span>${p.args ? ' ' + escHtml(p.args) : ''}</div>` +
       (p.description ? `<div style="margin-top:4px;color:var(--muted)">${escHtml(p.description)}</div>` : '');
   }
+  // 2026-08-05 (full-Etsy-audit finding): register_product had no branch here
+  // either -- same blank-panel bug the 2026-07-30 pass above fixed for 6 other
+  // types, just added to a bucket of its own after that pass. This is a pure
+  // local write (no Etsy call, see main.py's _execute_register_product_staged_
+  // action docstring) -- the panel says so explicitly so the confirm dialog's
+  // wording (fixed alongside this) reads consistently with what's shown here.
+  if (a.type === 'register_product') {
+    return `<div><strong>Register product:</strong> ${escHtml(p.name || '')}</div>` +
+      `<div style="margin-top:4px">Category: <strong>${escHtml(p.category || 'uncategorized')}</strong>` +
+      (p.price != null ? ` · $${escHtml(Number(p.price || 0).toFixed(2))}` : '') +
+      (p.etsy_listing_id ? ` · Etsy listing ${escHtml(String(p.etsy_listing_id))}` : ' · no Etsy listing yet') +
+      `</div>` +
+      (p.confidence ? `<div style="margin-top:4px;color:var(--muted)">Classification confidence: ${escHtml(p.confidence)}${p.reasoning ? ' — ' + escHtml(p.reasoning) : ''}</div>` : '') +
+      `<div class="sub" style="margin-top:6px">Local record only — does not touch the live Etsy listing.</div>`;
+  }
   return '';
 }
 function renderApproval(a) {
@@ -7610,6 +7628,7 @@ function renderApproval(a) {
   else if (a.type === 'update_description') meta += ` · ${escHtml((p.description || '').slice(0, 90))}…`;
   else if (a.type === 'update_price') meta += ` · $${escHtml(Number(p.price||0).toFixed(2))}`;
   else if (a.type === 'toggle_listing_state') meta += ` · → ${escHtml(p.new_state || '')}`;
+  else if (a.type === 'register_product') meta += ` · ${escHtml(p.name || '')} (${escHtml(p.category || 'uncategorized')})`;
   return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
     ${thumb}
     <div class="hub-listing-info">
@@ -7644,7 +7663,15 @@ const _APPROVE_CONFIRM_MSGS = {
   // change to an existing one), and the social types aren't Etsy at all.
   create_listing: 'Approve and create this as a NEW listing on your live Etsy shop now?',
   post_tiktok: 'Approve and publish this post to your TikTok account now?',
-  post_pinterest: 'Approve and publish this pin to your Pinterest account now?'
+  post_pinterest: 'Approve and publish this pin to your Pinterest account now?',
+  // 2026-08-05 (full-Etsy-audit finding): both of these fell through to the
+  // same generic "apply this change to your live Etsy listing" message the
+  // 2026-07-30 pass above fixed for create_listing/social types -- false for
+  // both (register_product is a pure local write, no Etsy call at all;
+  // register_command only writes registered_commands.json + the in-process
+  // command table).
+  register_product: 'Approve and save this as a new product record in Frank’s catalog? (Local record only — does not touch Etsy.)',
+  register_command: 'Approve and register this as a new runnable command? (Local record only — does not touch Etsy.)'
 };
 // Walks to the shared button row (.act-btns desktop / .pp-acts mobile) so
 // Reject/Fix can't be tapped mid-approve either, not just the tapped button.
