@@ -2168,6 +2168,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
+      <div class="hub-section-title" style="margin-top:18px">AI Text Generation</div>
+      <div class="hub-card">
+        <label for="setting-text-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Text engine (tags, title fixes, listing content)</label>
+        <select id="setting-text-engine" aria-label="Text engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <option value="anthropic">Claude (default)</option>
+          <option value="grok">Alternative — xAI Grok (new, unproven)</option>
+        </select>
+        <div style="font-size:11px;color:var(--muted)">
+          Applies shop-wide to tag/title fixes and category classification. The
+          "Generate listing content" button on a product's review card has its
+          own per-generation override if you want to try Grok for just one
+          listing without changing this default. <span id="text-engine-status"></span>
+        </div>
+      </div>
+
       <div class="hub-section-title" style="margin-top:18px">Orb / Brand Mark</div>
       <div class="hub-card">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -2191,8 +2206,16 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
       <!-- Model/engine picker removed 2026-07-11: the generation engine is now chosen
            automatically by the backend (env/db defaults) so a shop owner never has to
-           think about models or provider keys. loadRuntimeSettings() already
-           null-guards the removed selects; saveEngines() is retained but unused. -->
+           think about models or provider keys. Reintroduced 2026-08-05 for TEXT_ENGINE
+           only (Scott explicitly asked for Grok to be "swappable per-task, like images")
+           -- image/video stay Create-screen-only per the original 2026-07-11 reasoning,
+           since text generation is the one category with a genuine shop-wide default
+           worth setting once (see the "AI Text Generation" card above) plus a per-
+           generation override on the one call site that has a natural "Advanced" UI
+           slot. loadRuntimeSettings()/saveEngines() null-guard every engine select
+           that isn't present on the current screen, so image/video staying off this
+           screen and text living here works without either function knowing which
+           screen it's called from. -->
 
       <div class="hub-section-title" style="margin-top:18px">My Account</div>
       <div class="hub-card">
@@ -5530,8 +5553,10 @@ async function loadRuntimeSettings(){
     nameEl.value = d.agent_name || '';
     const ve = document.getElementById('setting-video-engine');
     const ie = document.getElementById('setting-image-engine');
+    const te = document.getElementById('setting-text-engine');
     if(ve && d.video_engine) ve.value = d.video_engine;
     if(ie && d.image_engine) ie.value = d.image_engine;
+    if(te && d.text_engine) te.value = d.text_engine;
     window._brandMarkDataUrl = d.brand_mark_data_url || null;
     renderBrandMarkPreview();
     if(window._brandMarkDataUrl && typeof applyBrandMarkToOrb === 'function') applyBrandMarkToOrb(window._brandMarkDataUrl);
@@ -5614,10 +5639,21 @@ function saveBranding(){
   _postSettings({agent_name:name}, 'branding-status', 'Agent name saved — reload to see it everywhere');
 }
 function saveEngines(){
+  // Each select is independently null-guarded (2026-08-05 fix: this used to
+  // bail out entirely if EITHER image/video select was missing, which meant
+  // it silently did nothing at all when called from a screen that only has
+  // one of the three -- e.g. the new Settings-screen text-engine select
+  // would never have saved, since image/video selects don't exist there).
   const ve = document.getElementById('setting-video-engine');
   const ie = document.getElementById('setting-image-engine');
-  if(!ve || !ie) return;  // both selects live on the Create screen; guard if absent
-  _postSettings({ video_engine: ve.value, image_engine: ie.value }, 'engines-status', 'Engine updated');
+  const te = document.getElementById('setting-text-engine');
+  const payload = {};
+  if(ve) payload.video_engine = ve.value;
+  if(ie) payload.image_engine = ie.value;
+  if(te) payload.text_engine = te.value;
+  if(!Object.keys(payload).length) return;  // no engine select on this screen
+  const statusId = te && !ve && !ie ? 'text-engine-status' : 'engines-status';
+  _postSettings(payload, statusId, 'Engine updated');
 }
 // Populate the Create-screen engine dropdowns with the currently-saved engines.
 // (loadRuntimeSettings early-returns off the Settings screen, so Create needs its
@@ -9228,6 +9264,15 @@ function _renderProductReview(review){
   // Actions
   let btns = '';
   if (!review.has_content) {
+    // Per-generation text-engine override (2026-08-05, Scott: "swappable per-task,
+    // like images") -- defaults to whatever the shop-wide Settings default is,
+    // but lets Scott try Grok for just this one listing without changing it.
+    btns += '<label for="prm-text-engine" style="font-size:10.5px;color:var(--muted);display:block;margin-bottom:3px">Text engine for this generation</label>' +
+      '<select id="prm-text-engine" aria-label="Text engine for this generation" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:6px 8px;color:var(--text);font-size:11.5px">' +
+      '<option value="">Use Settings default</option>' +
+      '<option value="anthropic">Claude</option>' +
+      '<option value="grok">xAI Grok (new, unproven)</option>' +
+      '</select>';
     btns += '<button class="psheet-btn primary" onclick="productReviewGenerateContent(\\'' + review.product_id + '\\')" id="prm-gen-btn">✨ Generate listing content</button>';
   } else if (review.listing_id) {
     btns += '<div class="hub-listing-meta" style="margin-bottom:2px">Etsy draft #' + escHtml(String(review.listing_id)) + ' — not yet live.</div>';
@@ -9288,10 +9333,13 @@ async function productReviewGenerateContent(productId){
   // calls the real generator, which writes grounded content into a durable
   // sidecar and returns the fresh review so the modal re-renders in place.
   const btn = document.getElementById('prm-gen-btn');
+  const engineEl = document.getElementById('prm-text-engine');
+  const engine = engineEl && engineEl.value ? engineEl.value : null;
   if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
   try {
     const r = await fetchWithTimeout(BASE + '/api/products/' + productId + '/generate-listing-content',
-      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN}}, 90000);
+      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+       body: JSON.stringify(engine ? {engine} : {})}, 90000);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
     _renderProductReview(d);

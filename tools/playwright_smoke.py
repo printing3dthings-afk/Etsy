@@ -244,6 +244,36 @@ async def _run_browser_checks() -> None:
             check("new-user-name" not in settings_html,
                   "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
+            # (2026-08-05) TEXT_ENGINE alone was reintroduced to Settings (Scott:
+            # "swappable per-task, like images") -- image/video stay Create-screen
+            # -only per the 2026-07-11 reasoning, confirmed still true above.
+            check("setting-text-engine" in settings_html,
+                  "Settings screen should have the text-engine picker (grok opt-in)")
+
+            # POST /api/settings round-trip: select 'grok', save, reload the
+            # Settings screen fresh, confirm it comes back selected -- proves
+            # saveEngines()'s per-select null-guard fix actually persists a
+            # lone text-engine change (the old `if(!ve||!ie) return` bug would
+            # have silently no-op'd this entire flow).
+            text_engine_roundtrip = await page.evaluate("""async () => {
+                const sel = document.getElementById('setting-text-engine');
+                if (!sel) return {ok: false, reason: 'no select'};
+                sel.value = 'grok';
+                saveEngines();
+                await new Promise(r => setTimeout(r, 500));
+                const statusText = (document.getElementById('text-engine-status') || {}).textContent || '';
+                sel.value = 'anthropic';  // simulate a fresh page render before reload
+                await loadRuntimeSettings();
+                return {ok: true, statusText, valueAfterReload: sel.value};
+            }""")
+            check(text_engine_roundtrip.get("ok"), f"text-engine select must exist to round-trip: {text_engine_roundtrip}")
+            check(text_engine_roundtrip.get("valueAfterReload") == "grok",
+                  f"saving 'grok' then reloading settings should come back selected: {text_engine_roundtrip}")
+            # Reset back to anthropic so later checks in this same session aren't affected.
+            await page.evaluate("""async () => {
+                const sel = document.getElementById('setting-text-engine');
+                if (sel) { sel.value = 'anthropic'; saveEngines(); await new Promise(r => setTimeout(r, 300)); }
+            }""")
 
             # ── Settings audit (2026-07-31): the Connections summary card used to
             # call GET /api/etsy-tokens (owner-only) alongside /api/credentials/status
@@ -1502,6 +1532,10 @@ async def _run_browser_checks() -> None:
                   f"missing content should offer the real generate-content button, not Publish: {review_no_content}")
             check("Publish to Etsy" not in review_no_content.get("actions", ""),
                   f"Publish must not appear with no content: {review_no_content}")
+            # (2026-08-05) Per-generation text-engine picker, Scott: "swappable
+            # per-task, like images" -- must appear alongside the generate button.
+            check("prm-text-engine" in review_no_content.get("actions", ""),
+                  f"the generate-content actions must include the per-generation engine picker: {review_no_content}")
             # Leave the DOM clean for later checks in this same page session (the
             # modal otherwise intercepts pointer events for unrelated later clicks).
             await page.evaluate("productReviewClose(); document.body.classList.remove('product-sheet-open')")
@@ -1572,7 +1606,13 @@ async def _run_browser_checks() -> None:
             check("Enter a product ID" in empty_lookup.get("resultHtml", ""),
                   f"an empty ID should show an inline prompt, not silently no-op: {empty_lookup}")
 
+            _captured_generate_body = {}
+
             async def _mock_generate_content(route):
+                try:
+                    _captured_generate_body["json"] = json.loads(route.request.post_data or "{}")
+                except Exception:
+                    _captured_generate_body["json"] = None
                 await route.fulfill(status=200, content_type="application/json", body=json.dumps({
                     "product_id": "DP9042", "category": "digital_planner", "status": "draft",
                     "listing_id": None, "has_content": True,
@@ -1604,6 +1644,10 @@ async def _run_browser_checks() -> None:
                     modalOpen: document.body.classList.contains('product-review-open'),
                     actionsHtml: document.getElementById('prm-actions').innerHTML,
                 };
+                // Pick 'grok' from the per-generation engine picker before firing --
+                // confirms the selected value actually reaches the POST body.
+                const engineSel = document.getElementById('prm-text-engine');
+                if (engineSel) engineSel.value = 'grok';
                 // Fire without awaiting so the synchronous "Generating…" state is observable.
                 productReviewGenerateContent('DP9042');
                 const midFlight = {
@@ -1629,6 +1673,8 @@ async def _run_browser_checks() -> None:
                   f"after generation the modal must re-render with the real generated title: {lookup_and_generate}")
             check("Publish to Etsy" in lookup_and_generate["after"].get("actionsHtml", ""),
                   f"once content exists (and files/QC pass) Publish should now be offered: {lookup_and_generate}")
+            check((_captured_generate_body.get("json") or {}).get("engine") == "grok",
+                  f"selecting 'grok' in the per-generation picker must reach the POST body: {_captured_generate_body}")
             await page.evaluate("document.body.classList.remove('product-review-open')")
 
             # ── "Product Video" Create-screen tile (2026-07-25) -- Scott: "I'm also

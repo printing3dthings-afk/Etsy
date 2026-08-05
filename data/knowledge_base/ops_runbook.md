@@ -22303,3 +22303,43 @@ Verification: full suite 103/103 (added `tests/test_stage_action_grounding_
 gate.py`, extended `test_staged_actions.py`/`test_etsy_upload_retry.py`/
 `test_conversion_diagnosis_to_autofix_loop.py`/`test_quality_gates.py` with
 regression tests reproducing each exact defect), 3x clean Playwright.
+
+
+## 2026-08-05 — Grok/xAI text-engine integration shipped (Settings + per-generation picker)
+Completed the Grok text-provider work started earlier this session (`_xai_create()`/
+`_grok_text()`/`TEXT_ENGINE` setting already wired into tag/title/description/classifier
+call sites). This entry covers the remaining two pieces: the frontend picker and full
+test/Playwright coverage.
+
+**Frontend (Scott: "swappable per-task, like images"):**
+- New "AI Text Engine" card on the Settings screen (`#setting-text-engine`) sets the
+  shop-wide default (`anthropic` | `grok`), persisted via `POST /api/settings` and
+  applied live to `os.environ["TEXT_ENGINE"]`.
+- New per-generation override on the product review modal's "Generate listing content"
+  button (`#prm-text-engine`) — lets Scott try Grok for one listing without touching the
+  shop-wide default. Reaches the backend via `_generate_product_listing_content_core`'s
+  new `engine_override` param and `_effective_text_engine(override=...)`.
+- Fixed a real pre-existing bug in `saveEngines()` while touching this: it bailed out
+  entirely (`if(!ve||!ie) return`) unless BOTH the image and video engine selects were
+  present on the current screen. Harmless before now (image/video only ever appeared
+  together on the Create screen), but would have silently no-op'd the new lone
+  text-engine select on Settings. Each select is now independently null-guarded.
+
+**Backend:** `POST /api/products/{id}/generate-listing-content` now accepts an optional
+`{"engine": "grok"|"anthropic"}` body, validated against `_TEXT_ENGINES`, normalized
+(lowercased/stripped), and threaded through to the generator core.
+
+**Tests:** new `tests/test_grok_text_engine.py` (23 tests) covering
+`_effective_text_engine()`'s normalize/degrade rule (env default, override precedence,
+grok-without-key degrade in both paths), `_xai_create()`'s circuit-breaker gating +
+success/failure recording (confirmed an unclassified exception does NOT trip the
+breaker, matching `_anthropic_create()`'s narrow except clause), `_grok_text()`'s
+default/custom model and content-stripping, the content generator's engine routing
+(grok path never touches anthropic; grok-without-key falls back to anthropic), the
+endpoint's validation/pass-through, and `/api/settings` text_engine persistence +
+live env application. Playwright: confirmed the Settings picker renders and round-trips
+through `saveEngines()`/`loadRuntimeSettings()`, and that selecting 'grok' on the
+per-generation picker actually reaches the POST body.
+
+Verification: full suite 104/104 (103 existing + the new grok test file), 1x clean
+Playwright (including the two new checks above).

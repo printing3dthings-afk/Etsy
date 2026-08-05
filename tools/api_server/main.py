@@ -263,14 +263,25 @@ def _xai_client() -> "openai.OpenAI":
     return openai.OpenAI(api_key=XAI_KEY, base_url="https://api.x.ai/v1")
 
 
-def _effective_text_engine() -> str:
+def _effective_text_engine(override: str | None = None) -> str:
     """Current TEXT_ENGINE setting, normalized -- degrades to anthropic when
     grok is selected but XAI_API_KEY isn't configured, same "never hard-break,
     just fall back" pattern as _anthropic_create()'s model fallback (2026-08-05).
     Every one of the four TEXT_ENGINE-aware call sites reads the engine through
     this single function so "grok selected, no key" can never diverge into two
-    different behaviors across call sites."""
-    engine = os.getenv("TEXT_ENGINE", "anthropic").lower()
+    different behaviors across call sites.
+
+    `override` (2026-08-05, Scott: "swappable per-task, like images") lets a
+    single call request a specific engine for just that one generation,
+    without touching the shop-wide TEXT_ENGINE default -- same normalize/
+    degrade rules apply to it as to the env-level default. Currently only
+    threaded through _generate_product_listing_content_core() (the one call
+    site with a natural per-generation "Advanced" UI affordance, the product
+    review modal's "Generate listing content" button); the other three
+    TEXT_ENGINE-aware call sites (tag/title autofix, classification) are
+    reached from chat tools/background sweeps with no analogous per-call UI,
+    so they stay governed by the global default only."""
+    engine = (override or os.getenv("TEXT_ENGINE", "anthropic")).lower()
     if engine == "grok" and not XAI_KEY:
         return "anthropic"
     return engine
@@ -749,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "dfdc0be-v304"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a7ecb2d-v305"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13674,15 +13685,26 @@ async def stage_product_publish(product_id: str, _token: str = Depends(_auth_ses
 
 
 @app.post("/api/products/{product_id}/generate-listing-content")
-async def generate_product_listing_content(product_id: str, _token: str = Depends(_rate_limited_auth)):
+async def generate_product_listing_content(
+    product_id: str, body: dict | None = None, _token: str = Depends(_rate_limited_auth),
+):
     """The review modal's "✨ Generate listing content" button. Writes a real,
     grounded title/description/13 tags/price into the generated-content
     sidecar (never the git-tracked data/{id}_listing.json) for a product
     with no listing content yet. Costs LLM $ and writes durable state, so
     it's rate-limited auth like every other AI-spend endpoint. Returns the
     FRESH review payload (not just the raw generated content) so the
-    frontend can re-render in one round trip."""
-    result = await _generate_product_listing_content_core(product_id)
+    frontend can re-render in one round trip.
+
+    body.engine (2026-08-05, optional): per-generation TEXT_ENGINE override
+    from the modal's Advanced picker -- see _effective_text_engine()'s
+    docstring. Falls back to the shop-wide TEXT_ENGINE default when absent."""
+    engine_override = (body or {}).get("engine")
+    if engine_override is not None:
+        engine_override = str(engine_override).lower().strip()
+        if engine_override not in _TEXT_ENGINES:
+            raise HTTPException(status_code=400, detail=f"engine must be one of {_TEXT_ENGINES}")
+    result = await _generate_product_listing_content_core(product_id, engine_override=engine_override)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     review = await asyncio.to_thread(_gather_product_review, product_id)
@@ -15783,13 +15805,19 @@ def _mark_backfill_queue_done(listing_id) -> None:
             return
 
 
-async def _generate_product_listing_content_core(product_id: str, max_attempts: int = 3) -> dict:
+async def _generate_product_listing_content_core(
+    product_id: str, max_attempts: int = 3, engine_override: str | None = None,
+) -> dict:
     """Generate grounded title/description/13 tags for product_id and save to
     the durable sidecar. Never invents a count not in _extract_grounding_
     facts()'s real facts; regenerates with feedback (max `max_attempts`) if
     the model states a mismatched count. Returns {"error": str} on any
-    failure -- never raises."""
-    engine = _effective_text_engine()
+    failure -- never raises.
+
+    engine_override (2026-08-05): optional per-call TEXT_ENGINE choice from
+    the product review modal's Advanced picker -- see _effective_text_
+    engine()'s docstring."""
+    engine = _effective_text_engine(engine_override)
     if engine == "anthropic" and not ANTHROPIC_KEY:
         return {"error": "ANTHROPIC_API_KEY not configured"}
     entry = _find_catalog_product(product_id)
