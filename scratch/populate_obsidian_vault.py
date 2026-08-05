@@ -5,6 +5,11 @@ VAULT_DIR = "/home/sjack7/Desktop/Onbrandcraftz"
 REPO_DIR = "/home/sjack7/Desktop/frank-source/Etsy-claude-etsy-automation-agents-WFAPU"
 
 MAPPINGS = [
+    # Root — master project instructions, kept at the vault root (not
+    # categorized) so it's always the first thing visible, mirroring its
+    # position at the repo root.
+    (os.path.join(REPO_DIR, "CLAUDE.md"), os.path.join(VAULT_DIR, "CLAUDE.md")),
+
     # 01 - Products
     (os.path.join(REPO_DIR, "data/svg_pack/etsy_listing.md"), os.path.join(VAULT_DIR, "01 - Products/SVG Pack Listing Draft.md")),
     (os.path.join(REPO_DIR, "data/knowledge_base/price_tests.md"), os.path.join(VAULT_DIR, "01 - Products/Listing Pricing & A-B Tests.md")),
