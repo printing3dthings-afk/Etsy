@@ -7759,6 +7759,17 @@ function _actionPreviewBody(a) {
     const label = p.new_state === 'active' ? 'Activate (renews an expired listing)' : 'Deactivate';
     return `<div>${label} — listing ${escHtml(String(p.listing_id||''))} → <strong>${escHtml(p.new_state||'')}</strong></div>`;
   }
+  // 2026-08-06 (page-by-page audit): deactivate_listing had no branch here --
+  // same blank-panel bug the 2026-07-30/2026-08-05 passes fixed for 7 other
+  // types, missed for this one. Staged from tools/listing_compliance_sweep.py
+  // with a real Etsy write behind it (active -> inactive) and only
+  // {listing_id, _state_at_staging} in the payload -- the compliance-fail
+  // reason lives in the action's own `summary` field (shown above this panel
+  // already), so this just states the mechanical effect plainly.
+  if (a.type === 'deactivate_listing') {
+    return `<div>Deactivate listing ${escHtml(String(p.listing_id||''))} — ` +
+      `<strong>${escHtml(p._state_at_staging||'active')}</strong> → <strong>inactive</strong></div>`;
+  }
   if (a.type === 'update_description') {
     const diffHtml = simpleLineDiff(p.before_description, p.description);
     return `<div style="max-height:320px;overflow:auto;background:var(--bg);border-radius:var(--r-sm);padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;

@@ -2577,7 +2577,12 @@ async def _run_browser_checks() -> None:
             check("TikTok" in confirm_msgs.get("post_tiktok", ""), f"post_tiktok confirm message should mention TikTok: {confirm_msgs}")
             check("Pinterest" in confirm_msgs.get("post_pinterest", ""), f"post_pinterest confirm message should mention Pinterest: {confirm_msgs}")
 
-            # The 6 action types whose detail panel was previously completely blank.
+            # The 6 action types whose detail panel was previously completely blank
+            # (2026-07-30/2026-08-05 passes), plus 2 more found by the 2026-08-06
+            # page-by-page audit (deactivate_listing had no _actionPreviewBody branch
+            # at all -- same bug class, just missed; register_product was fixed for
+            # _actionPreviewBody/glyph/confirm-message in the 2026-08-05 pass but never
+            # got a regression test here, so a future regression would go unnoticed).
             preview_checks = await page.evaluate("""() => {
                 const cases = {
                     create_listing: {listing_data: {title: 'New Sign Pack', price: 14.99, tags: ['a','b'], sku: 'SS1099'}, product_id: 'SS1099', photo_paths: ['a.jpg'], file_paths: ['a.3mf']},
@@ -2586,6 +2591,8 @@ async def _run_browser_checks() -> None:
                     update_sku_and_category: {listing_id: 555, sku: 'DP1099', taxonomy_id: 2078},
                     listing_video: {listing_id: 555, path: 'x.mp4', rank: 1},
                     register_command: {command_name: 'my_cmd', script_path: 'tools/my_cmd.py', description: 'does a thing'},
+                    deactivate_listing: {listing_id: 555, _state_at_staging: 'active'},
+                    register_product: {name: 'New Planner Draft', category: 'Digital Planners', price: 14.99},
                 };
                 const out = {};
                 for (const [type, payload] of Object.entries(cases)) {
@@ -2600,6 +2607,8 @@ async def _run_browser_checks() -> None:
                 ("update_sku_and_category", "DP1099"),
                 ("listing_video", "x.mp4"),
                 ("register_command", "my_cmd"),
+                ("deactivate_listing", "555"),
+                ("register_product", "New Planner Draft"),
             ]:
                 entry = preview_checks.get(t, {})
                 check(must_contain in entry.get("body", ""), f"{t}'s preview body should mention {must_contain!r}: {entry}")

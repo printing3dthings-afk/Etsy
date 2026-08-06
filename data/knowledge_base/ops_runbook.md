@@ -22401,3 +22401,43 @@ FastAPI TestClient login flow; updated `tests/test_frank_theme_contrast.py` for 
 12->5 reduction), 3x clean Playwright (extended for the 5-theme count + stale-theme
 fallback, all 4 new Settings cards, and the notification-prefs/retention-cleanup/
 active-sessions round-trips).
+
+
+## 2026-08-06 — Approvals screen: second-pass deep audit (page-by-page campaign, round 2)
+Scott asked for the same deep-audit methodology just used on Settings ("double check
+just to make sure there's nothing else") to be applied page-by-page to every other
+screen, one at a time, starting from the top of the nav. Home audited clean (no
+findings). Approvals was the second screen -- it had already been through a full
+research/fix/ship cycle earlier in this project, but the deeper pass (enumerate the
+canonical staged-action-type list from main.py's bucket constants, then check literal
+coverage in every frontend per-type dispatch table, not just what "looks complete")
+found one real gap the earlier pass missed:
+
+**Bug:** `deactivate_listing` (a real, live-Etsy-mutating action type staged by
+`tools/listing_compliance_sweep.py` when a listing fails a compliance check) had no
+branch in `_actionPreviewBody()` in `frank_hud_mockup.py`. Scott would see a
+completely blank detail panel when reviewing a pending deactivation before approving
+it -- the same blank-panel bug class the 2026-07-30 and 2026-08-05 passes fixed for 7
+other action types, just missed for this one because it wasn't in either of those
+audits' original list.
+
+**Fix:** added a `deactivate_listing` branch to `_actionPreviewBody()` mirroring the
+existing `toggle_listing_state` branch's style -- states the listing id and the
+active->inactive transition plainly (the compliance-fail reason itself already shows
+in the action's `summary` field above the panel, so this doesn't duplicate it).
+
+**Also checked and confirmed correct (no fix needed):** `_ACT_TYPE_GLYPH` has full
+coverage (deactivate_listing already had a glyph, just no preview body);
+`_APPROVE_CONFIRM_MSGS`'s partial coverage is correct by design (missing types
+intentionally fall through to an accurate generic Etsy-write message);
+`renderApproval()`'s `meta` builder has a safe fallback label for any type without a
+dedicated branch; `_BULK_APPROVE_TYPES` matches its own confirm-dialog's claimed scope
+exactly (tag/title updates only).
+
+**Regression coverage:** extended `playwright_smoke.py`'s existing "action types whose
+detail panel was previously completely blank" test block to also cover
+`deactivate_listing` (new fix) and `register_product` (fixed in the 2026-08-05 audit
+pass but never got a Playwright regression test at the time -- caught while auditing
+this same bug class here).
+
+Verified: 105/105 unit tests, 3x clean Playwright. Build bumped to `28b6da4-v307`.
