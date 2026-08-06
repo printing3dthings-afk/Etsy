@@ -4024,6 +4024,53 @@ async def _run_browser_checks() -> None:
             check(ia.get("extraDisplay") == "block", f"toggleInboxExpand() must reveal the extra review: {ia}")
             check("fewer" in (ia.get("toggleText") or ""), f"toggle label must flip once expanded: {ia}")
 
+            # ── Review reply draft display + copy button (2026-08-06, "Instant
+            # Message Response Assistant") -- an unreplied review with a real
+            # drafted reply should show the draft text and a working copy button;
+            # a replied review (even with a stale leftover draft) must never show
+            # one, and a review with no draft yet shows neither. ──
+            review_draft_state = await page.evaluate("""async () => {
+                window._origAuthGetInbox2 = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/inbox') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            unread_count: 0, reviews_awaiting_reply: 1,
+                            recent_reviews: [
+                                {id: 'd1', rating: 5, text: 'Loved it!', replied: false, draft: 'Thank you so much! — Scott'},
+                                {id: 'd2', rating: 2, text: 'Meh', replied: true, draft: 'Sorry to hear that. — Scott'},
+                                {id: 'd3', rating: 4, text: 'Pretty good', replied: false, draft: null},
+                            ],
+                        })});
+                    }
+                    return window._origAuthGetInbox2(path, ms);
+                };
+                await loadInbox();
+                window.authGet = window._origAuthGetInbox2;
+                const bodyHtml = document.getElementById('inbox-body').innerHTML;
+                const draftEls = document.querySelectorAll('.inbox-review-draft');
+                let copyResult = null;
+                if (draftEls.length) {
+                    const btn = draftEls[0].nextElementSibling;
+                    window.__origClipboardWrite = navigator.clipboard && navigator.clipboard.writeText;
+                    let copiedText = null;
+                    if (navigator.clipboard) navigator.clipboard.writeText = (t) => { copiedText = t; return Promise.resolve(); };
+                    btn.click();
+                    await new Promise(r => setTimeout(r, 50));
+                    copyResult = {copiedText, btnText: btn.textContent};
+                    if (navigator.clipboard && window.__origClipboardWrite) navigator.clipboard.writeText = window.__origClipboardWrite;
+                }
+                return {draftCount: draftEls.length, bodyHtml, copyResult};
+            }""")
+            check(review_draft_state.get("draftCount") == 1,
+                  f"exactly one draft block should render (d1 has a real draft and is unreplied) -- d2 is replied, d3 has no draft: {review_draft_state.get('draftCount')}")
+            body_html = review_draft_state.get("bodyHtml", "")
+            check("Thank you so much! — Scott" in body_html, f"d1's real draft text should render: {body_html[:400]}")
+            check("Sorry to hear that" not in body_html, f"d2's draft must be suppressed once replied: {body_html[:400]}")
+            copy_result = review_draft_state.get("copyResult") or {}
+            check(copy_result.get("copiedText") == "Thank you so much! — Scott",
+                  f"the copy button should copy the exact real draft text via copyHex(): {copy_result}")
+            check("Copied" in (copy_result.get("btnText") or ""), f"the button should flash 'Copied!' after a successful copy: {copy_result}")
+
             badge_state = await page.evaluate("""() => {
                 // 2026-07-31 (Today UX audit): _alertsCritWarnCount is real shared state now
                 // (see setActionBadge()'s hc computation) -- by this point in the run a real

@@ -22698,3 +22698,45 @@ open/close, `_tourWaitForEl()` fast-resolve and real-timeout behavior, the
 full waitForSelector→fallback→emptyStateBody path against real synthetic DOM
 elements, prefillChat setting the input without ever sending). Build bumped
 to `b6dfe1f-v311`.
+
+
+## 2026-08-06 — Idea 1/3: Review Reply Draft Assistant ("Instant Message Response Assistant")
+Scott asked for 3 ideas to significantly improve Frank; idea #1 as originally
+pitched was "draft-and-push buyer message replies" to close Star Seller's
+documented message-response-rate gap. Mid-build research (see the dedicated
+research pass) forced a scope correction, surfaced here for the record:
+
+**What's structurally impossible (confirmed, not assumed):** Etsy's v3 API
+has no buyer-messaging endpoint for third-party apps at all (`get_messages()`
+hits `shops/{id}/conversations`, a real, permanent 404 for this app -- already
+documented in CLAUDE.md) and no review-response endpoint either. Automating
+buyer-message replies is not achievable full stop -- CLAUDE.md's own
+"only manual Quick Replies / Auto-Reply windows earn Star Seller credit" line
+was already correct and stays correct. There is also no real push-notification
+channel available to a live Frank deployment (the `PushNotification` tool
+exists only inside an active Claude Code coding session, not at Frank's own
+runtime) -- email (SMTP) is the only working "reach Scott" channel that
+exists in this codebase.
+
+**What actually shipped, scoped honestly to what's real:** reviews ARE
+fetchable via `get_reviews()` (working). New `_review_reply_loop()` (hourly,
+same `_run_loop_iteration()` resilience wrapper as `_health_check_loop()`)
+detects any review not yet drafted and not already marked replied, drafts a
+genuinely personalized reply with Claude (grounded in the review's real
+rating + text, not a static per-star template like the disconnected
+`tools/review_monitor.py` CLI script already had), persists it to
+`data/review_drafts.json`, and emails Scott a copy-paste-ready digest via
+`daily_brief._send_brief()` (reused, not reimplemented -- this codebase
+already had two separate SMTP send functions before this).
+
+`/api/inbox` now merges the persisted draft into each review's payload; the
+Inbox card shows the real drafted text inline with a one-tap "Copy draft
+reply" button (reuses the existing `copyHex()` clipboard helper). New
+on-demand chat tool `draft_review_replies` lets Scott ask "any new reviews?"
+mid-conversation instead of waiting for the hourly pass -- flagged in
+`_PII_TOOLS` since it returns real buyer-authored review text.
+
+Verified: 109/109 unit tests (new `tests/test_review_reply_assistant.py`,
+9 tests), 3x clean Playwright (new coverage: draft rendering, suppressed on
+already-replied reviews, real copy-to-clipboard behavior). Build bumped to
+`cc34fea-v312`.

@@ -7362,6 +7362,16 @@ async function loadInbox(){
             : '') +
           '</div>';
         if(rev.text) h += '<div class="inbox-review-text">'+escHtml(rev.text.slice(0,100))+(rev.text.length>100?'…':'')+'</div>';
+        // 2026-08-06 ("Instant Message Response Assistant"): _review_reply_loop()
+        // already drafted a real, personalized reply for this review (hourly, or
+        // via the draft_review_replies chat tool) if one exists -- show it inline
+        // with a one-tap copy so pasting into Etsy takes seconds, not a from-
+        // scratch write. Etsy has no reply-post API, so this can never go further
+        // than copy-paste (see that function's own comment).
+        if(rev.draft && !rev.replied){
+          h += '<div class="inbox-review-draft" style="margin-top:4px;padding:6px 8px;background:var(--panel2);border-radius:var(--r-sm);font-size:10.5px;font-style:italic">'+escHtml(rev.draft)+'</div>';
+          h += '<button class="act-btn secondary" style="font-size:10px;padding:2px 8px;margin-top:4px" onclick="copyHex(this.previousElementSibling.textContent, this)">📋 Copy draft reply</button>';
+        }
         return h+'</div>';
       };
       html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Reviews</div>';

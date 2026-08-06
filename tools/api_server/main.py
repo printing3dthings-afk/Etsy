@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b6dfe1f-v311"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "cc34fea-v312"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3797,6 +3797,24 @@ AGENT_TOOLS.append({
     "description": "Read-only: list every Pinterest board already created on the connected account, with each board's id and pin count. Use this to see valid board_name values before staging a pin.",
     "input_schema": {"type": "object", "properties": {}},
 })
+# Review reply drafting (2026-08-06, "Instant Message Response Assistant") --
+# on-demand counterpart to the hourly _review_reply_loop() background job, so
+# Scott can ask "any new reviews?" mid-conversation instead of waiting for the
+# next hourly pass or the digest email. Read-only from the agent's perspective
+# (drafts + emails Scott himself; never posts anything to Etsy, which has no
+# review-response endpoint to post to anyway -- see the loop's own comment).
+AGENT_TOOLS.append({
+    "name": "draft_review_replies",
+    "description": (
+        "Check Etsy for any new reviews since the last check, draft a personalized "
+        f"reply for each with Claude, and email {business_config.OWNER_NAME} the drafts "
+        "(same digest _review_reply_loop() sends hourly in the background). Read-only "
+        "from Etsy's perspective -- Etsy has no review-response API to post to, so "
+        "every draft is copy-paste only. Safe to run as often as asked; already-drafted "
+        "or already-replied reviews are skipped."
+    ),
+    "input_schema": {"type": "object", "properties": {}},
+})
 _SOCIAL_TOOL_NAMES = {"stage_tiktok_post", "stage_pinterest_post", "list_pinterest_boards"}
 
 # Prompt-cache constants — built once at import time, reused every chat turn.
@@ -4503,6 +4521,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return asyncio.run(_apply_conversion_fixes_core(int(lid)))
         if name == "get_comparable_listings":
             return _get_comparable_listings(tool_input or {})
+        if name == "draft_review_replies":
+            return asyncio.run(_review_reply_iteration())
         if name == "deep_research":
             ti = tool_input or {}
             query = (ti.get("query") or "").strip()
@@ -5848,6 +5868,135 @@ async def mark_review_replied(review_id: str, _token: str = Depends(_auth_sessio
     return {"ok": True, "review_id": review_id}
 
 
+# ── Review reply drafting (2026-08-06, "Instant Message Response Assistant") ──
+# Etsy's v3 API has no review-response endpoint at all (see the radar comment
+# above) and no third-party message-send endpoint either (get_messages() hits
+# shops/{id}/conversations, confirmed 404 for this app -- see EtsyAPIClient.
+# get_messages()'s own docstring) -- so "auto-reply to a buyer message" is not
+# achievable at all, and "auto-post a review reply" isn't either. What IS
+# achievable: detect a new review the moment it's fetchable (get_reviews() is
+# real and working), draft a genuinely personalized reply with Claude, and get
+# it in front of Scott fast (email + in-app) so he can paste it into Etsy
+# himself in seconds instead of remembering to check. Runs hourly via
+# _review_reply_loop(), same _run_loop_iteration() resilience pattern as
+# _health_check_loop().
+_REVIEW_DRAFTS_PATH = db.resolve_persistent_path(
+    "review_drafts.json",
+    fallback=ROOT / "data" / "review_drafts.json",
+)
+
+
+def _load_review_drafts() -> dict:
+    try:
+        return json.loads(_REVIEW_DRAFTS_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_review_draft(review_id: str, draft: str, rating: int) -> None:
+    drafts = _load_review_drafts()
+    drafts[str(review_id)] = {
+        "draft": draft, "rating": rating,
+        "drafted_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _REVIEW_DRAFTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _REVIEW_DRAFTS_PATH.write_text(json.dumps(drafts, indent=2))
+
+
+_REVIEW_REPLY_PROMPT = """You are drafting a reply to a real Etsy buyer review for OnBrandCraftz, a kawaii
+digital planner / sticker / wall art / 3D-print shop run by Scott. Write ONE short,
+warm, genuine-sounding reply (2-4 sentences) that:
+- Thanks the buyer by referencing something SPECIFIC from their review (not generic)
+- Matches Scott's real tone: professional, warm, no emoji, signed "— Scott"
+- For a 4-5 star review: express genuine gratitude, maybe a light personal touch
+- For a 1-3 star review: acknowledge the specific issue without being defensive,
+  invite them to reach out so it can be made right, still signed "— Scott"
+Never invent product details you don't have. Output ONLY the reply text, nothing else."""
+
+
+def _draft_review_reply_text(rating: int, review_text: str) -> str | None:
+    engine = _effective_text_engine()
+    if engine == "anthropic" and not ANTHROPIC_KEY:
+        return None
+    prompt_input = f"Rating: {rating}/5 stars\nReview text: {review_text or '(no written review, star rating only)'}"
+    try:
+        if engine == "grok":
+            raw = _grok_text(_REVIEW_REPLY_PROMPT + "\n\n" + prompt_input, max_tokens=300)
+        else:
+            client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+            msg = _anthropic_create(
+                client, model=business_config.MODEL_CHEAP, max_tokens=300,
+                messages=[{"role": "user", "content": [
+                    {"type": "text", "text": _REVIEW_REPLY_PROMPT, "cache_control": {"type": "ephemeral"}},
+                    {"type": "text", "text": prompt_input},
+                ]}],
+            )
+            raw = msg.content[0].text.strip()
+        return raw or None
+    except Exception:
+        return None
+
+
+async def _review_reply_iteration() -> dict:
+    """Fetch real reviews, draft+persist+email anything new (not yet drafted AND
+    not already marked replied). Full review text, not the 120-char slice
+    /api/inbox uses for display -- drafting needs the whole thing."""
+    reviews_r = await asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50))
+    results = reviews_r.get("results", [])
+    replied_ids = _load_replied_review_ids()
+    drafts = _load_review_drafts()
+    new_drafts = []
+    for r in results:
+        review_id = str(r.get("transaction_id") or "")
+        if not review_id or review_id in replied_ids or review_id in drafts:
+            continue
+        rating = r.get("rating", 0)
+        text = r.get("review") or ""
+        draft = await asyncio.to_thread(_draft_review_reply_text, rating, text)
+        if not draft:
+            continue
+        _save_review_draft(review_id, draft, rating)
+        new_drafts.append({"id": review_id, "rating": rating, "text": text[:200], "draft": draft})
+    if new_drafts:
+        with _cache_lock:
+            _cache.pop("inbox", None)
+        subject = f"{len(new_drafts)} new review reply draft{'s' if len(new_drafts) != 1 else ''} ready — OnBrandCraftz"
+        body_lines = [
+            f"{len(new_drafts)} new review{'s' if len(new_drafts) != 1 else ''} came in. "
+            "Draft replies below -- copy, tweak if you'd like, and paste into Etsy.",
+            "",
+        ]
+        for d in new_drafts:
+            stars = "★" * d["rating"] + "☆" * (5 - d["rating"])
+            body_lines += [
+                stars,
+                f'Review: "{d["text"]}"' if d["text"] else "(star rating only, no written review)",
+                "",
+                f'Draft reply: "{d["draft"]}"',
+                "", "---", "",
+            ]
+        body_lines.append("— Frank 🤖")
+        try:
+            from daily_brief import _send_brief
+            await asyncio.to_thread(_send_brief, subject, "\n".join(body_lines))
+        except Exception:
+            pass  # email is a bonus channel -- drafts are already persisted and shown in-app either way
+    return {"new_drafts": len(new_drafts), "total_reviews_checked": len(results)}
+
+
+async def _review_reply_loop() -> None:
+    """Hourly: check for new reviews, draft a reply for each, email Scott a
+    digest. Same resilience wrapper as _health_check_loop()."""
+    await asyncio.sleep(90)  # let the app finish booting first
+    while True:
+        delay = await _run_loop_iteration(
+            "review_reply_draft", "Review Reply Drafts", _review_reply_iteration,
+            on_success_detail=lambda r: f"{r['new_drafts']} new draft(s) from {r['total_reviews_checked']} reviews checked",
+            base_interval=3600,
+        )
+        await asyncio.sleep(delay)
+
+
 @app.get("/api/inbox")
 async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
     """Etsy inbox: unread messages + recent reviews. Cached 90s."""
@@ -5889,6 +6038,11 @@ async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
 
         if not isinstance(reviews_r, Exception):
             replied_ids = _load_replied_review_ids()
+            # 2026-08-06 ("Instant Message Response Assistant"): merge in any
+            # AI-drafted reply _review_reply_loop() already generated for this
+            # review, so the Inbox card can show real, ready-to-paste text
+            # instead of just "N reviews awaiting a reply."
+            drafts = _load_review_drafts()
             all_reviews = []
             for r in reviews_r.get("results", []):
                 review_id = str(r.get("transaction_id") or "")
@@ -5898,6 +6052,7 @@ async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
                     "text": (r.get("review") or "")[:120],
                     "date": r.get("create_timestamp", 0),
                     "replied": bool(review_id) and review_id in replied_ids,
+                    "draft": drafts.get(review_id, {}).get("draft"),
                 })
             out["recent_reviews"] = all_reviews[:3]
             out["reviews_awaiting_reply"] = sum(1 for r in all_reviews if r["id"] and not r["replied"])
@@ -9133,6 +9288,7 @@ _AGENT_LOOP_LABELS = {
     "file_audit": "File Integrity Audit",
     "sku_taxonomy_backfill": "SKU + Category Backfill",
     "catalog_reconciliation": "Catalog Reconciliation",
+    "review_reply_draft": "Review Reply Drafts",
 }
 
 
@@ -9180,6 +9336,7 @@ async def _startup() -> None:
     asyncio.create_task(_file_audit_loop())
     asyncio.create_task(_sku_taxonomy_backfill_loop())
     asyncio.create_task(_catalog_reconciliation_loop())
+    asyncio.create_task(_review_reply_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -16826,7 +16983,10 @@ async def relay_ws(websocket: WebSocket):
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
 
 
-_PII_TOOLS = frozenset({"get_orders"})  # tools whose results include a real buyer name
+_PII_TOOLS = frozenset({
+    "get_orders",
+    "draft_review_replies",  # 2026-08-06: returns real buyer-authored review text
+})  # tools whose results include a real buyer name or their own written words
 
 
 def _should_persist_chat_turn(session_id: str, pii_tools_used: frozenset[str]) -> bool:
