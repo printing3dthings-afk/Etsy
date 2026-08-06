@@ -14,12 +14,28 @@ name: Build Desktop App
 # archived, not deleted -- see data/trash/DELETED.md if that model is ever
 # needed again.
 #
-# Manual trigger only for now (workflow_dispatch) -- not something that needs
-# to run on every push the way ci-smoke.yml does. Add a `release:` or
-# tag-triggered `push:` block later if/when this should auto-publish.
+# (2026-08-06, one-click distribution) Each installer is ALSO published as an
+# asset on a single, permanent GitHub Release tagged `desktop-latest`. That
+# release is never deleted or re-tagged -- softprops/action-gh-release just
+# updates its existing assets on every run, in place -- so the two download
+# URLs below never change no matter how many times this workflow re-runs:
+#   https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank-Setup.exe
+#   https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank.dmg
+# Scott can bookmark either one directly -- one click, no GitHub login, no
+# hunting through Actions run artifacts. package.json's build.win/mac.
+# artifactName is pinned to "Frank-Setup.${ext}"/"Frank.${ext}" (no version
+# number) specifically so these filenames -- and therefore these URLs --
+# never drift as the app's version bumps.
+#
+# Manual trigger only for now (workflow_dispatch) -- the app changes rarely,
+# so auto-building on every push would waste CI minutes for no benefit; a
+# rebuild only needs to happen when desktop/ itself changes.
 
 on:
   workflow_dispatch: {}
+
+permissions:
+  contents: write  # required to create/update the desktop-latest release
 
 jobs:
   build-windows:
@@ -40,12 +56,31 @@ jobs:
         working-directory: desktop
         run: npm run build:win
 
-      - name: Upload Windows installer
+      - name: Upload Windows installer (CI artifact, 90-day retention)
         uses: actions/upload-artifact@v4
         with:
           name: frank-windows-installer
           path: dist/desktop-app/*.exe
           if-no-files-found: error
+
+      - name: Publish to the permanent desktop-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-latest
+          name: Frank Desktop (latest)
+          body: |
+            Auto-published by the Build Desktop App workflow. These two
+            files are always the current build -- this release is updated
+            in place, never re-tagged, so the download links never change.
+
+            Unsigned installers (no Apple/Microsoft certificate): Windows
+            SmartScreen and macOS Gatekeeper will each show one warning on
+            first launch. Windows: "More info" -> "Run anyway". macOS:
+            right-click the app -> "Open".
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: dist/desktop-app/*.exe
 
   build-macos:
     runs-on: macos-latest
@@ -85,12 +120,31 @@ jobs:
         working-directory: desktop
         run: npm run build:mac
 
-      - name: Upload macOS installer
+      - name: Upload macOS installer (CI artifact, 90-day retention)
         uses: actions/upload-artifact@v4
         with:
           name: frank-macos-installer
           path: dist/desktop-app/*.dmg
           if-no-files-found: error
+
+      - name: Publish to the permanent desktop-latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-latest
+          name: Frank Desktop (latest)
+          body: |
+            Auto-published by the Build Desktop App workflow. These two
+            files are always the current build -- this release is updated
+            in place, never re-tagged, so the download links never change.
+
+            Unsigned installers (no Apple/Microsoft certificate): Windows
+            SmartScreen and macOS Gatekeeper will each show one warning on
+            first launch. Windows: "More info" -> "Run anyway". macOS:
+            right-click the app -> "Open".
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: dist/desktop-app/*.dmg
 
 # Known limitation, not fixed here: the macOS .dmg is unsigned/unnotarized (no Apple
 # Developer certificate, $99/yr, configured). Gatekeeper will show "unidentified

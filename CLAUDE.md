@@ -303,11 +303,21 @@ to configure.
 - **`Frank → Change Server URL...`** menu item opens `<userData>/config.json` in the OS's default editor
   (same pattern as the old "Edit API Keys..." item) in case the Railway URL ever changes.
 
-**Building installers:** `.github/workflows/build-desktop.yml`, manual `workflow_dispatch` trigger only.
-Windows `.exe` (NSIS) and macOS `.dmg`, both unsigned (no Apple/Microsoft signing certificate configured —
-Gatekeeper/SmartScreen will warn on first launch, right-click → Open bypasses it on macOS). No download
-link exists yet anywhere Scott can reach without going into GitHub Actions artifacts — that's the next
-gap to close if this becomes something Scott actually installs rather than a proof of concept.
+**Building installers:** `.github/workflows/build-desktop.yml`, manual `workflow_dispatch` trigger only
+(the app changes rarely, so this doesn't run on every push). Windows `.exe` (NSIS) and macOS `.dmg`,
+both unsigned (no Apple/Microsoft signing certificate configured — Gatekeeper/SmartScreen will warn on
+first launch, right-click → Open bypasses it on macOS).
+
+**Download links (2026-08-06, one-click distribution):** every successful build also publishes both
+installers as assets on a single permanent GitHub Release tagged `desktop-latest` — via
+`softprops/action-gh-release`, which updates that release's assets in place on each run rather than
+creating a new tag, so these two URLs never change no matter how many times the workflow re-runs:
+- Windows: `https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank-Setup.exe`
+- macOS: `https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank.dmg`
+
+Scott can bookmark either one directly — one click, no GitHub login, no digging through Actions run
+artifacts. The stable filenames (no version number) come from `package.json`'s `build.win.artifactName`/
+`build.mac.artifactName` overrides, specifically so a version bump never changes the download URL.
 
 ---
 

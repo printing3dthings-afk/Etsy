@@ -23061,3 +23061,36 @@ verified findings and fixes:
 Verified: 115/115 unit tests (new `tests/test_full_system_audit_fixes.py`,
 7 tests covering all 6 fixes above), 3x clean Playwright. Build bumped to
 `b572366-v318`.
+
+## 2026-08-06 — One-click desktop app distribution
+
+Scott asked for a one-click way to get the desktop app after the thin-client
+rebuild shipped (had noted "no download link exists yet anywhere Scott can
+reach without going into GitHub Actions artifacts" as the remaining gap).
+
+`.github/workflows/build-desktop.yml`: each platform job now also publishes
+its installer as an asset on a single permanent GitHub Release tagged
+`desktop-latest`, via `softprops/action-gh-release`. That action updates the
+existing release's assets in place on every re-run rather than creating a new
+tag, so the two download URLs are permanent regardless of how many times the
+workflow runs:
+- `https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank-Setup.exe`
+- `https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank.dmg`
+
+Needed `permissions: contents: write` added to the workflow (default
+`GITHUB_TOKEN` is read-only for repo contents otherwise). `desktop/
+package.json`'s `build.win.artifactName`/`build.mac.artifactName` were pinned
+to fixed strings ("Frank-Setup.${ext}"/"Frank.${ext}", no version number) --
+electron-builder's default artifact names embed the package version, which
+would have changed the filename (and therefore the URL) on every version
+bump, breaking the "bookmark it once" promise.
+
+Confirmed via the GitHub API (`list_releases`) that the repo had zero existing
+releases before this change, so there was no naming/tag collision risk.
+
+Not yet triggered live -- this ships the mechanism; the workflow still needs
+one manual `workflow_dispatch` run (by Scott or on request) to actually
+produce the first `desktop-latest` release and populate those two URLs.
+
+CLAUDE.md's "Frank Desktop App" section updated to replace the stale "no
+download link exists yet" note with the real, permanent URLs.
