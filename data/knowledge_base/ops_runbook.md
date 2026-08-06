@@ -22539,3 +22539,119 @@ too, so `querySelectorAll` needed to be scoped to `#listings-content`.
 
 Verified: 107/107 unit tests, 3x clean Playwright. Build bumped to
 `aacdb37-v309`.
+
+
+## 2026-08-06 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-06 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-06 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-06 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-06 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-06 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-06 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-06 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-06 — Today screen second-pass audit: fetch-failure honesty + 3 missing signals
+Scott: "See what needs fixed and what can be added to make it easier and more
+capable. We need to get the small details taken care of." This screen had
+already been through one full audit-and-build pass earlier in the project;
+this second pass found real gaps the first pass missed.
+
+**Fixed:**
+1. **Fetch-failure honesty (real bug).** `renderPhoneToday()`'s `/api/alerts`
+   and `/api/actions` fetches degraded a genuine network/5xx failure to `[]`,
+   identically to a real "nothing wrong" result -- the empty state then said
+   "you're all caught up," which is a straight-up false claim about data the
+   screen never actually received. Also meant any alert card showing before
+   the failed poll would play the "Frank resolved it" collapse animation on a
+   fetch error, not a real resolution. Added a `fetchFailed` flag threaded
+   through both fetches; the empty-state branch now distinguishes "genuinely
+   nothing to report" from "couldn't check," and the resolve-animation/
+   `_phoneNeedsKeys` update are both skipped on a failed poll.
+2. **5 backend `date.today()` -> `_shop_today()` gating fixes**, matching the
+   2026-08-04 fix already applied to `/api/alerts`/`_calendar_tasks_loop` but
+   missed by 5 other Today-adjacent nudge/dedup gates: `_check_star_seller_
+   status()`'s weekly cooldown, `_check_ads_thresholds()`'s quarterly nudge
+   gate + week/month windowing, `_compute_ads_status()`'s windowing (must
+   never disagree with the above about what "this week" means), and the two
+   manual-trigger endpoints (`POST /api/calendar-tasks/run`, `POST /api/brief/
+   run`) whose persisted last-run date could otherwise drift from the
+   shop-local date the background loops themselves use, risking the exact
+   near-midnight duplicate-run bug the 2026-08-04 fix closed.
+3. Star Seller `status:'at_risk'` never rendered anything on this screen --
+   the only prior nudge was a once-a-week todo landing in Tasks, invisible on
+   Today itself, the one screen whose whole job is "what needs attention
+   right now."
+4. `/api/inbox` (unread messages, reviews awaiting reply) was never fetched
+   by this screen at all, despite already powering the desktop Home panel --
+   both are real Star-Seller-relevant signals a "what needs attention"
+   screen should surface.
+5. `phoneNeedsSheet()`'s "Let Frank fix it" button was offered on
+   `draft_unpublished` cards (wrong action -- that's a Products-screen
+   publish, not anything Conversion Doctor touches) and on the
+   `recently_fixed_days_ago` reassurance card (nothing left to fix, it's a
+   confirmation). Both now hide the button, joining the existing
+   `product_file_integrity` carve-out.
+
+**Added:** aria-hidden on the Star Seller milestone glow icon and the needs-
+list dot/chevron spans (missed in the 2026-07-31 aria-hidden pass); a
+"Checked Xm ago" freshness line under Needs Attention, only advancing on a
+round where neither alerts nor actions failed.
+
+**Deferred (design questions, not built):** a COGS/profit tile on Today (more
+of a layout decision than a bug/gap) and surfacing Frank-authored todos on
+Today (risks blurring the Today/Tasks screen boundary) -- flagging both for
+Scott rather than building them speculatively.
+
+Verified: 108/108 unit tests (new `tests/test_today_screen_audit.py`), 3x
+clean Playwright. Build bumped to `320aa86-v310`.

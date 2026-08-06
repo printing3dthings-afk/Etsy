@@ -3002,6 +3002,11 @@ async function phoneApprove(id, btnEl){ await approveAction(id, btnEl); renderPh
 function _needKey(x) {
   return x.listing_id ? ('l:' + x.listing_id) : ('a:' + (x.title || ''));
 }
+// 2026-08-06 (Today second-pass audit): timestamp of the last render where
+// BOTH /api/alerts and /api/actions actually succeeded -- only updated on a
+// clean round, so a run of failed polls shows increasingly stale "checked"
+// text instead of silently resetting to "just now" on every failed attempt.
+let _todayLastGoodCheck = null;
 async function renderPhoneToday(){
   const el = document.getElementById('pp-today-body');
   // Only show the skeleton on a genuinely first load -- a periodic refresh
@@ -3014,12 +3019,41 @@ async function renderPhoneToday(){
   // skeleton sat on-screen for the SUM of them instead of the max. Each fetch
   // keeps its own try/catch so it still degrades independently and never makes
   // Promise.all fail fast and blank fields that would otherwise have loaded fine.
-  const [m, alerts, acts, starSeller, bundleOpps] = await Promise.all([
+  // 2026-08-06 (Today second-pass audit): fetchFailed tracks whether either of
+  // the two "what needs attention" sources (alerts/actions) genuinely failed
+  // (network error, timeout, or a non-2xx response) rather than legitimately
+  // returning zero items. Previously a failed fetch silently degraded to []
+  // exactly like a real "all clear," which meant (a) the empty state read
+  // "you're all caught up" on a fetch failure, indistinguishable from the
+  // real thing, and (b) any alert card that WAS showing before this render
+  // would play the "Frank resolved it" collapse animation below, because the
+  // resolve-detection logic has no way to tell "genuinely cleared" apart from
+  // "we just failed to check." Both are wrong for the one screen whose entire
+  // job is "what needs attention right now" -- see the two spots below that
+  // branch on this flag.
+  let fetchFailed = false;
+  const [m, alerts, actsResult, starSeller, bundleOpps, inbox] = await Promise.all([
     (async () => { try { const r = await authGet('/api/metrics', 15000); return await r.json().catch(()=>({})); } catch(e) { return {}; } })(),
-    (async () => { try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
-      return d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) { return []; } })(),
-    (async () => { try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
-      return (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) { return []; } })(),
+    (async () => { try { const r = await authGet('/api/alerts', 15000);
+      if (!r.ok) { fetchFailed = true; return []; }
+      const d = await r.json().catch(()=>({}));
+      return d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) { fetchFailed = true; return []; } })(),
+    (async () => { try { const r = await authGet('/api/actions', 15000);
+      if (!r.ok) { fetchFailed = true; return {list:[], summary:null}; }
+      const d = await r.json().catch(()=>({}));
+      // recently_fixed_days_ago (2026-08-06): _compute_actions() downgrades a
+      // content-fixable card to severity:'low' once a fix has been applied and
+      // is still within Etsy's re-index cooldown, specifically so Scott gets a
+      // "✅ fix applied Nd ago, no action needed yet" confirmation instead of
+      // the card just silently vanishing -- exactly the "I don't know if he
+      // actually fixed it" complaint that feature was built to close. The
+      // severity==='high'||'medium' filter below excluded 'low' outright, so
+      // that confirmation card never once reached this screen. 'low' is ONLY
+      // ever set by that one downgrade rule in _compute_actions() (verified),
+      // so it's safe to admit it here without reopening the door to generic
+      // low-priority noise.
+      const list = (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'||x.recently_fixed_days_ago!=null);
+      return {list, summary: d.summary}; } catch(e) { fetchFailed = true; return {list:[], summary:null}; } })(),
     // 2026-07-18: a rare, genuinely earned "delight" moment -- Star Seller
     // status is exactly the kind of infrequent, high-value milestone the
     // visual-design research called out as worth a touch more personality
@@ -3033,7 +3067,21 @@ async function renderPhoneToday(){
     // styling with an actual alert.
     (async () => { try { const r = await authGet('/api/bundle-opportunities', 15000); const d = await r.json().catch(()=>({}));
       return d.opportunities || []; } catch(e) { return []; } })(),
+    // 2026-08-06 (Today second-pass audit): unread messages / reviews-awaiting-
+    // reply already power /api/inbox for the desktop Home screen, but this
+    // mobile "what needs attention" surface never fetched it at all -- both
+    // are real Star-Seller-relevant items a user would expect "Today" to
+    // surface. Degrades to "nothing shown" like everything else here.
+    (async () => { try { const r = await authGet('/api/inbox', 15000); return await r.json().catch(()=>null); } catch(e) { return null; } })(),
   ]);
+  const acts = actsResult.list;
+  // Update the shared badge summary from this screen's own poll too -- it used
+  // to only ever come from loadActions() (mobile boot + after approve/reject),
+  // so a new high/medium recommendation surfaced by THIS 30s poll could sit
+  // visible in the list below with the header badge never moving until the
+  // user happened to approve something elsewhere. Left untouched (not reset
+  // to zero) on a failed poll so the badge doesn't lie either.
+  if (actsResult.summary) _actionsSummary = actsResult.summary;
   // Real /api/metrics shape: orders is an OBJECT ({last_7_days, revenue_7d, ...}),
   // shop.total_sales is the all-time count. (Rendering m.orders directly printed
   // "[object Object]" — caught by Scott on-device.)
@@ -3058,7 +3106,7 @@ async function renderPhoneToday(){
   if (starSeller && starSeller.status === 'on_track') {
     const rev90 = '$' + Number(starSeller.revenue_90d || 0).toFixed(0);
     const rating = starSeller.avg_rating ? starSeller.avg_rating + '★' : '—';
-    html += `<div class="pmilestone"><span class="pmilestone-glow">⭐</span><div>` +
+    html += `<div class="pmilestone"><span class="pmilestone-glow" aria-hidden="true">⭐</span><div>` +
       `<div class="pmilestone-t">Star Seller — on track</div>` +
       `<div class="pmilestone-s">${escHtml(String(starSeller.orders_90d||0))} orders · ${escHtml(rev90)} · ${escHtml(rating)} · 90d</div>` +
       (starSeller.stale ? _offlineNote(starSeller.stale_as_of || Date.now()) : '') +
@@ -3076,8 +3124,36 @@ async function renderPhoneToday(){
   // Needs attention = Frank's ranked recommendations (with a suggested fix each) + alerts.
   // Recommendations carry listing_id/url → tappable card → action sheet (fix it / view on Etsy).
   const needs = [];
-  acts.forEach(x => needs.push({sev: x.severity==='high'?'crit':'warn', title: x.title, sub: x.suggestion,
-    listing_id: x.listing_id, url: x.url, source: 'action'}));
+  // 2026-08-06 (Today second-pass audit): starSeller's own fetched object
+  // already carries 'at_risk'/'building'/'on_track', but this screen only
+  // ever rendered something for 'on_track' -- the one status that's actually
+  // a problem got zero representation here (the only proactive nudge was a
+  // once-a-week todo that lands in Tasks, never Today itself).
+  if (starSeller && starSeller.status === 'at_risk') {
+    needs.push({sev:'warn', title:'Star Seller status is at risk',
+      sub:`${starSeller.orders_90d||0} orders · $${Number(starSeller.revenue_90d||0).toFixed(0)} revenue over the trailing 90 days (need 5 orders / $300)`,
+      source:'star_seller'});
+  }
+  // 2026-08-06: unread messages / reviews-awaiting-reply -- see the /api/inbox
+  // fetch comment above for why this was missing entirely.
+  if (inbox) {
+    if (inbox.unread_count > 0) {
+      needs.push({sev:'warn', title:`${inbox.unread_count} unread message${inbox.unread_count===1?'':'s'}`,
+        sub: inbox.oldest_unread_hours!=null ? `Oldest unread: ${inbox.oldest_unread_hours}h ago — Star Seller needs a 95%+ 24h reply rate.` : '',
+        source:'inbox'});
+    }
+    if (inbox.reviews_awaiting_reply > 0) {
+      needs.push({sev:'info', title:`${inbox.reviews_awaiting_reply} review${inbox.reviews_awaiting_reply===1?'':'s'} awaiting a reply`,
+        sub:'Replying to reviews (especially critical ones) has a real secondary conversion impact.', source:'inbox'});
+    }
+  }
+  // recently_fixed_days_ago (2026-08-06): maps the reassurance downgrade to a
+  // calm green dot instead of the warn/crit treatment every other action card
+  // gets -- it's confirming a fix, not flagging a new problem. 'low' severity
+  // is ONLY ever this one case (see the fetch comment above), so this mapping
+  // can't accidentally soften a real problem's visual urgency.
+  acts.forEach(x => needs.push({sev: x.severity==='high'?'crit': x.severity==='medium'?'warn':'good',
+    title: x.title, sub: x.suggestion, listing_id: x.listing_id, url: x.url, source: 'action', category: x.category}));
   // 2026-07-31 (Today UX audit): sub used to be hardcoded '' for every alert --
   // the backend's `detail` field (real remediation steps, e.g. exactly how to
   // rotate a leaked key) was already fetched and then silently dropped. Also now
@@ -3093,8 +3169,15 @@ async function renderPhoneToday(){
   // this one anymore (Frank fixed it, or it genuinely cleared) gets to
   // visibly collapse before the new content replaces it, instead of just
   // vanishing the instant this re-render happens.
+  // 2026-08-06: skipped entirely when fetchFailed -- a card missing this round
+  // because /api/alerts or /api/actions genuinely errored (not because it
+  // resolved) must never play the "Frank fixed it" collapse animation. Also
+  // leaves _phoneNeedsKeys untouched on failure so the NEXT successful render
+  // still compares against the last known-good set, not this round's partial
+  // one (which would otherwise make real items falsely "reappear as resolving
+  // again" the moment the fetch recovers).
   const newKeys = new Set(needs.map(_needKey));
-  if (!isFirstLoad && _phoneNeedsKeys.size) {
+  if (!isFirstLoad && !fetchFailed && _phoneNeedsKeys.size) {
     const resolvedEls = Array.from(_phoneNeedsKeys)
       .filter(k => !newKeys.has(k))
       .map(k => el.querySelector('[data-need-key="' + CSS.escape(k) + '"]'))
@@ -3105,7 +3188,7 @@ async function renderPhoneToday(){
     }
   }
   _phoneNeeds = needs.slice(0,20);
-  _phoneNeedsKeys = newKeys;
+  if (!fetchFailed) { _phoneNeedsKeys = newKeys; _todayLastGoodCheck = Date.now(); }
   // Computed off the full `needs` array, not the 20-item slice -- the badge
   // should never undercount just because the panel itself truncates.
   _alertsCritWarnCount = needs.filter(x => x.source !== 'action' && (x.sev === 'crit' || x.sev === 'warn')).length;
@@ -3117,18 +3200,31 @@ async function renderPhoneToday(){
       const actionable = x.listing_id || x.url || _heartbeatRetryKind(x.heartbeat_name);
       const tap = actionable
         ? ` tappable" role="button" tabindex="0" onclick="phoneNeedsSheet(${i})` : '';
-      return `<div class="palert ${x.sev}${tap}" data-need-key="${escHtml(_needKey(x))}"><span class="pdot"></span><div>${escHtml(x.title)}` +
+      return `<div class="palert ${x.sev}${tap}" data-need-key="${escHtml(_needKey(x))}"><span class="pdot" aria-hidden="true"></span><div>${escHtml(x.title)}` +
         (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
-        `</div>` + (actionable ? '<span class="pchev">›</span>' : '') + `</div>`;
+        `</div>` + (actionable ? '<span class="pchev" aria-hidden="true">›</span>' : '') + `</div>`;
     }).join('');
+  } else if (fetchFailed) {
+    // 2026-08-06: distinct from the real "all caught up" message below --
+    // this is the one case a fetch genuinely failed, so saying "you're all
+    // caught up" would be an honest-sounding lie about data we never got.
+    html += '<div class="pp-empty" style="padding:22px 10px">⚠ Couldn\\'t check for problems right now — pull to refresh or try again shortly.</div>';
   } else {
     html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
+  }
+  // 2026-08-06: honest freshness signal for the whole "what needs attention"
+  // section -- _todayLastGoodCheck only advances on a round where neither
+  // alerts nor actions failed (see above), so a run of failed polls shows
+  // increasingly stale "checked" text here instead of every failed attempt
+  // silently resetting the clock to "just now."
+  if (_todayLastGoodCheck) {
+    html += `<div style="color:var(--muted);font-size:10px;padding:6px 2px 0;text-align:right">Checked ${_timeAgo(new Date(_todayLastGoodCheck).toISOString())}</div>`;
   }
   _phoneBundleOpps = bundleOpps;
   if (bundleOpps.length){
     html += '<div class="pmore-grp">Opportunities</div>';
     html += bundleOpps.map((o,bi) =>
-      `<div class="palert good"><span class="pdot"></span><div>${escHtml(o.title)}` +
+      `<div class="palert good"><span class="pdot" aria-hidden="true"></span><div>${escHtml(o.title)}` +
       (o.suggestion ? `<div style="color:var(--muted);margin-top:2px">${escHtml(o.suggestion)}</div>` : '') +
       // 2026-07-31 (Scott: "Why don't these have the option fix? I know you can"):
       // picking WHICH existing designs go into a bundle is a real curation call --
@@ -3199,7 +3295,15 @@ function phoneNeedsSheet(i){
     // "View on Etsy" for those, so the one genuinely useful action (jump to the
     // listing and re-upload) stays front and center instead of sharing space with
     // a button that can't do anything here.
-    if (fixBtn) { fixBtn.style.display = (it.source === 'product_file_integrity') ? 'none' : ''; fixBtn.disabled = false; fixBtn.textContent = '🤖 Let Frank fix it'; }
+    // 2026-08-06 (Today second-pass audit): draft_unpublished cards got no such
+    // carve-out -- the only button on a "Publish: <title>" card ran an LLM
+    // conversion diagnosis against a draft with zero traffic data (views/sales
+    // are always 0 for a draft), instead of anything related to publishing it.
+    // sev==='good' is the recently-fixed reassurance card (see the acts.forEach
+    // comment above) -- there's nothing to fix on a card that's confirming a fix
+    // already landed, so "Let Frank fix it" there would be equally misleading.
+    const noFixAvailable = it.source === 'product_file_integrity' || it.category === 'draft_unpublished' || it.sev === 'good';
+    if (fixBtn) { fixBtn.style.display = noFixAvailable ? 'none' : ''; fixBtn.disabled = false; fixBtn.textContent = '🤖 Let Frank fix it'; }
     if (viewBtn) viewBtn.style.display = (it.listing_id || it.url) ? '' : 'none';
   }
   document.body.classList.add('phone-sheet-open');

@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "aacdb37-v309"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "320aa86-v310"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6000,7 +6000,7 @@ def _check_star_seller_status() -> str:
     if out.get("status") != "at_risk":
         return f"status={out.get('status')} — nothing to flag"
 
-    today = date.today()
+    today = _shop_today()  # 2026-08-06 (Today second-pass audit): shop-local, not server UTC — see _shop_today() docstring
     last_nudge_str = db.get_setting("star_seller_at_risk_nudge_date")
     last_nudge = date.fromisoformat(last_nudge_str) if last_nudge_str else None
     if last_nudge and (today - last_nudge).days < _STAR_SELLER_NUDGE_COOLDOWN_DAYS:
@@ -8224,7 +8224,7 @@ def _check_ads_thresholds() -> str:
         # to watch spend that doesn't exist, not to flag its absence. Nudge at most
         # once per quarter (db.get_setting/set_setting, same key-value store the
         # Settings screen uses) so this doesn't spam a daily todo.
-        today = date.today()
+        today = _shop_today()  # 2026-08-06 (Today second-pass audit): shop-local, not server UTC
         last_nudge_str = db.get_setting("ads_never_used_nudge_date")
         last_nudge = date.fromisoformat(last_nudge_str) if last_nudge_str else None
         if last_nudge is None or (today - last_nudge).days >= 90:
@@ -8238,7 +8238,7 @@ def _check_ads_thresholds() -> str:
             return "no ad spend logged yet — quarterly nudge added"
         return "no ad spend logged yet — nothing to check (nudged recently)"
 
-    today = date.today()
+    today = _shop_today()  # 2026-08-06 (Today second-pass audit): shop-local, not server UTC
 
     def _safe_date(s):
         try:
@@ -8313,7 +8313,7 @@ def _compute_ads_status() -> dict:
     if not spend_log:
         return {"used": False}
 
-    today = date.today()
+    today = _shop_today()  # 2026-08-06 (Today second-pass audit): shop-local, not server UTC
 
     def _safe_date(s):
         try:
@@ -9201,7 +9201,12 @@ async def run_calendar_tasks_now(request: Request):
     if not token or not secrets.compare_digest(token, APP_TOKEN):
         raise HTTPException(status_code=401, detail="Unauthorized")
     results = {}
-    today = date.today()
+    # 2026-08-06 (Today second-pass audit): _calendar_tasks_loop's own gate
+    # already uses _shop_now().date() (2026-08-04 fix) -- this manual-trigger
+    # endpoint stamping bare date.today() (server UTC) instead could disagree
+    # with the loop near a local-midnight boundary and reopen the exact
+    # duplicate-run bug the docstring above describes.
+    today = _shop_today()
     for name, task_key, fn in [
         ("weekly_monitors", "weekly", _run_weekly_monitors),
         ("monthly_shop_health", "monthly", _run_monthly_shop_health),
@@ -9232,7 +9237,10 @@ async def run_brief_now(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
     import daily_brief as _daily_brief
     result = await asyncio.to_thread(_daily_brief.run_daily_brief)
-    _set_calendar_task_last_run("daily_brief", date.today())
+    # 2026-08-06 (Today second-pass audit): shop-local, same reason as above --
+    # _daily_brief_loop's own gate already reads shop-local "today" (see its
+    # docstring at line ~14273).
+    _set_calendar_task_last_run("daily_brief", _shop_today())
     return {"status": result}
 
 

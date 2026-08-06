@@ -2763,6 +2763,105 @@ async def _run_browser_checks() -> None:
             check(palert_info_check.get("info") not in (palert_info_check.get("crit"), palert_info_check.get("warn")),
                   f".palert.info's dot should be its own color, not reuse crit/warn: {palert_info_check}")
 
+            # ── Today second-pass audit (2026-08-06) ── Scott: "See what needs fixed
+            # and what can be added to make it easier and more capable." Round 1 below
+            # establishes a real Star Seller at_risk card + inbox unread/review cards
+            # (both previously never reached this screen at all) and a real "Checked"
+            # timestamp; round 2 makes /api/alerts fail outright and confirms the
+            # screen tells the truth about that instead of quietly reporting "all
+            # caught up" or resetting the freshness clock. Same authGet-stub seam as
+            # every other Today block above (service worker makes page.route()
+            # unreliable for GET here).
+            today_audit_check = await page.evaluate("""async () => {
+                window.__origAuthGet3 = authGet;
+                authGet = async (path) => {
+                    if (path.includes('/api/metrics')) return {ok:true, json: async () => ({orders:{last_7_days:1,revenue_7d:10}, shop:{total_sales:5}})};
+                    if (path.includes('/api/star-seller')) return {ok:true, json: async () => ({status:'at_risk', orders_90d:2, revenue_90d:75})};
+                    if (path.includes('/api/actions')) return {ok:true, json: async () => ({actions:[], summary:{high:0,medium:0,low:0}})};
+                    if (path.includes('/api/alerts')) return {ok:true, json: async () => ({alerts:[]})};
+                    if (path.includes('/api/bundle-opportunities')) return {ok:true, json: async () => ({opportunities:[]})};
+                    if (path.includes('/api/inbox')) return {ok:true, json: async () => ({unread_count:3, oldest_unread_hours:5, reviews_awaiting_reply:2})};
+                    return {ok:true, json: async () => ({})};
+                };
+                await renderPhoneToday();
+                const round1Body = document.getElementById('pp-today-body').textContent;
+                const round1Checked = _todayLastGoodCheck;
+
+                // Round 2: /api/alerts fails outright AND nothing else has a needs
+                // card of its own (star-seller building, inbox all-clear, no actions)
+                // -- the one combination that actually reaches the empty-state branch,
+                // so it's the only way to prove the branch says the honest thing.
+                authGet = async (path) => {
+                    if (path.includes('/api/alerts')) return {ok:false, json: async () => ({})};
+                    if (path.includes('/api/metrics')) return {ok:true, json: async () => ({orders:{last_7_days:1,revenue_7d:10}, shop:{total_sales:5}})};
+                    if (path.includes('/api/star-seller')) return {ok:true, json: async () => ({status:'building'})};
+                    if (path.includes('/api/actions')) return {ok:true, json: async () => ({actions:[], summary:{high:0,medium:0,low:0}})};
+                    if (path.includes('/api/bundle-opportunities')) return {ok:true, json: async () => ({opportunities:[]})};
+                    if (path.includes('/api/inbox')) return {ok:true, json: async () => ({unread_count:0, reviews_awaiting_reply:0})};
+                    return {ok:true, json: async () => ({})};
+                };
+                await renderPhoneToday();
+                await new Promise(r => setTimeout(r, 500));
+                const round2Body = document.getElementById('pp-today-body').textContent;
+                const round2Checked = _todayLastGoodCheck;
+                authGet = window.__origAuthGet3;
+                return {round1Body, round1Checked, round2Body, round2Checked};
+            }""")
+            r1 = today_audit_check.get("round1Body", "")
+            check("Star Seller status is at risk" in r1, f"a real at_risk Star Seller status should render a needs-attention card: {r1[:400]}")
+            check("2 orders" in r1 and "$75" in r1, f"the at_risk card should show real numbers: {r1[:400]}")
+            check("3 unread messages" in r1, f"/api/inbox unread_count should render a card (previously never fetched at all): {r1[:400]}")
+            check("Oldest unread: 5h ago" in r1, f"unread card should show the oldest-unread detail: {r1[:400]}")
+            check("2 reviews awaiting a reply" in r1, f"/api/inbox reviews_awaiting_reply should render its own card: {r1[:400]}")
+            check(today_audit_check.get("round1Checked") is not None, f"a clean round should set _todayLastGoodCheck: {today_audit_check}")
+            r2 = today_audit_check.get("round2Body", "")
+            check("Couldn't check for problems" in r2, f"a genuine /api/alerts failure should say so, not claim 'all caught up': {r2[:400]}")
+            check("all caught up" not in r2, f"a fetch failure must never read like a real all-clear: {r2[:400]}")
+            check(today_audit_check.get("round2Checked") == today_audit_check.get("round1Checked"),
+                  f"_todayLastGoodCheck must not advance on a failed poll (would falsely imply we just checked): {today_audit_check}")
+
+            # pmilestone-glow's star icon is decorative (adjacent text already says
+            # "Star Seller — on track") -- should be aria-hidden like every other
+            # decorative icon span on this screen. Fresh render with status:'on_track'
+            # (round 1/2 above used 'at_risk'/'building', neither of which renders
+            # .pmilestone-glow at all, and renderPhoneToday() replaces the whole
+            # #pp-today-body each call, so a stale DOM node from an earlier block
+            # can't be relied on here).
+            milestone_glow_check = await page.evaluate("""async () => {
+                window.__origAuthGet4 = authGet;
+                authGet = async (path) => {
+                    if (path.includes('/api/star-seller')) return {ok:true, json: async () => ({status:'on_track', orders_90d:12, revenue_90d:480, avg_rating:4.9})};
+                    return {ok:true, json: async () => ({})};
+                };
+                await renderPhoneToday();
+                const el = document.querySelector('.pmilestone-glow');
+                const result = el ? el.getAttribute('aria-hidden') : null;
+                authGet = window.__origAuthGet4;
+                return result;
+            }""")
+            check(milestone_glow_check == "true", f".pmilestone-glow should be aria-hidden: {milestone_glow_check}")
+
+            # phoneNeedsSheet() must not offer "Let Frank fix it" for a
+            # draft_unpublished card (that's a Products-screen publish action, not
+            # anything Conversion Doctor can do) or for a recently-fixed reassurance
+            # card (sev:'good' -- there's nothing left to fix, it's a confirmation).
+            sheet_fix_gating_check2 = await page.evaluate("""() => {
+                _phoneNeeds = [
+                    {title: 'Listing still in draft', listing_id: 333, source: 'action', category: 'draft_unpublished'},
+                    {title: 'Fix applied 2d ago', listing_id: 444, source: 'action', sev: 'good'},
+                ];
+                phoneNeedsSheet(0);
+                const draftDisplay = document.getElementById('phone-sheet-fix').style.display;
+                phoneNeedsSheet(1);
+                const goodDisplay = document.getElementById('phone-sheet-fix').style.display;
+                phoneSheetClose();
+                return {draftDisplay, goodDisplay};
+            }""")
+            check(sheet_fix_gating_check2.get("draftDisplay") == "none",
+                  f"Fix button should be hidden for a draft_unpublished card (wrong action entirely): {sheet_fix_gating_check2}")
+            check(sheet_fix_gating_check2.get("goodDisplay") == "none",
+                  f"Fix button should be hidden for a recently-fixed reassurance card (nothing left to fix): {sheet_fix_gating_check2}")
+
             await page.evaluate("startTour()")
             await page.wait_for_timeout(400)
             mobile_step1 = await page.evaluate("""() => ({
