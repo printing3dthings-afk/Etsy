@@ -1,15 +1,22 @@
 name: Build Desktop App
 
 # Produces the real, installable Frank desktop app for Windows (.exe) and macOS
-# (.dmg). Runs on GitHub-hosted windows-latest/macos-latest runners specifically
-# because PyInstaller does not cross-compile -- a Windows .exe must be built on
-# Windows, a macOS .app on macOS, and no sandbox/CI runner running Linux can produce
-# either (see tools/desktop/backend.spec's docstring for the full reasoning).
+# (.dmg). Runs on GitHub-hosted windows-latest/macos-latest runners so the
+# native installer format matches the target OS (NSIS on Windows, DMG on
+# macOS -- electron-builder needs to run on the platform it's packaging for
+# most reliably, especially for the macOS .icns conversion step below).
 #
-# Manual trigger only for now (workflow_dispatch) -- this is a slow, heavy build
-# (bundles the full backend + ~34MB of vendor JS assets per platform) and isn't
-# something that needs to run on every push the way ci-smoke.yml does. Add a
-# `release:` or tag-triggered `push:` block later if/when this should auto-publish.
+# (2026-08-06) No Python/PyInstaller step anymore -- the desktop app is a
+# thin Electron client that loads the live Railway deployment directly (see
+# desktop/main.js's docstring), so there's no backend to bundle. This used to
+# build and package a full local copy of tools/api_server/main.py per
+# platform; that step (and tools/desktop/backend.spec / build_backend.py) is
+# archived, not deleted -- see data/trash/DELETED.md if that model is ever
+# needed again.
+#
+# Manual trigger only for now (workflow_dispatch) -- not something that needs
+# to run on every push the way ci-smoke.yml does. Add a `release:` or
+# tag-triggered `push:` block later if/when this should auto-publish.
 
 on:
   workflow_dispatch: {}
@@ -17,22 +24,9 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build backend executable
-        run: python tools/desktop/build_backend.py
 
       - uses: actions/setup-node@v4
         with:
@@ -55,22 +49,9 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build backend executable
-        run: python tools/desktop/build_backend.py
 
       - name: Build .icns from the committed icon.png
         # iconutil is macOS-only, which is exactly why this step can't run anywhere

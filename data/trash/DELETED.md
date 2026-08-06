@@ -14672,3 +14672,140 @@ html.theme-springvivid{
 
 <!-- /TRASH 20260806-003 -->
 
+<!-- TRASH id=20260806-004 date=2026-08-06 kind=file source="tools/desktop/backend.spec" reason="Desktop app moved to a thin-client architecture (2026-08-06, Option A) -- BrowserWindow loads the live Railway deployment directly instead of a locally spawned backend, so there is no backend executable left to build a PyInstaller spec for." -->
+## 20260806-004 · 2026-08-06 · file · `tools/desktop/backend.spec`
+**Reason:** Desktop app moved to a thin-client architecture (2026-08-06, Option A) -- BrowserWindow loads the live Railway deployment directly instead of a locally spawned backend, so there is no backend executable left to build a PyInstaller spec for.  
+**Payload:** `data/trash/files/20260806-004__backend.spec`
+
+```
+# -*- mode: python ; coding: utf-8 -*-
+"""
+PyInstaller spec for Frank's backend (tools/api_server/main.py), bundled as a
+standalone executable for the desktop app (desktop/ Electron shell spawns this as a
+child process). No pre-installed Python required on the end-user machine.
+
+Build (must run ON the target OS -- PyInstaller does not cross-compile):
+  python -m PyInstaller tools/desktop/backend.spec --distpath dist/desktop-backend
+
+Why onedir, not onefile: main.py resolves sys.path.insert(0, ROOT / "tools") at import
+time and imports sibling modules (daily_brief, trash, etc.) as bare names -- that only
+works if tools/ exists as real files on disk next to the executable, which onedir mode
+gives for free (the datas entry below copies the whole tools/ tree into the bundle).
+onefile mode self-extracts to a temp dir per launch, which would also work but adds
+startup latency and an extra temp-cleanup failure mode for no benefit here.
+
+main.py itself has a matching frozen-detection branch (search `getattr(sys, "frozen"`)
+that computes ROOT as the directory containing the frozen executable instead of walking
+up from __file__, since __file__ for a frozen entry script doesn't sit 3 directories
+under the repo root the way it does when run from source.
+"""
+from pathlib import Path
+
+REPO_ROOT = Path(SPECPATH).resolve().parent.parent  # tools/desktop -> tools -> repo root
+MAIN_PY = REPO_ROOT / "tools" / "api_server" / "main.py"
+
+a = Analysis(
+    [str(MAIN_PY)],
+    pathex=[str(REPO_ROOT), str(REPO_ROOT / "tools"), str(REPO_ROOT / "tools" / "api_server")],
+    binaries=[],
+    datas=[
+        # The whole tools/ tree (incl. tools/api_server/static/'s ~34MB vendor JS) as
+        # real files on disk -- see the onedir rationale above. Harmless if this also
+        # duplicates main.py's own source alongside the compiled entry script.
+        (str(REPO_ROOT / "tools"), "tools"),
+        # Read-mostly reference docs the CEO agent reads at runtime (business_standards.md,
+        # ops_runbook.md, etc.) -- NOT the rest of data/ (staged_photos, digital_products,
+        # backups, trash are large/gitignored/user-specific and don't belong in an installer).
+        (str(REPO_ROOT / "data" / "knowledge_base"), "data/knowledge_base"),
+        (str(REPO_ROOT / "data" / "dp_listing_map.json"), "data"),
+    ],
+    hiddenimports=[],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name="frank-backend",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=False,
+    console=True,  # keep a console window for now -- makes startup errors visible
+                   # during bring-up; Electron can hide it later once this is proven stable
+    disable_windowed_traceback=False,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name="frank-backend",
+)
+```
+
+<!-- /TRASH 20260806-004 -->
+
+<!-- TRASH id=20260806-005 date=2026-08-06 kind=file source="tools/desktop/build_backend.py" reason="Same thin-client architecture change as backend.spec -- this script built the now-unused local backend executable via PyInstaller." -->
+## 20260806-005 · 2026-08-06 · file · `tools/desktop/build_backend.py`
+**Reason:** Same thin-client architecture change as backend.spec -- this script built the now-unused local backend executable via PyInstaller.  
+**Payload:** `data/trash/files/20260806-005__build_backend.py`
+
+```
+#!/usr/bin/env python3
+"""
+Builds the standalone Frank backend executable for the desktop app, using
+tools/desktop/backend.spec. Must run ON the target OS -- PyInstaller does not
+cross-compile a Windows .exe from Linux/Mac or vice versa. In practice this means:
+  - Local runs (this script) only ever produce a binary for the OS you ran it on.
+  - The real Windows .exe / Mac .app come from .github/workflows/build-desktop.yml's
+    matrix build on windows-latest / macos-latest GitHub-hosted runners.
+
+Run:  python tools/desktop/build_backend.py
+Output: dist/desktop-backend/frank-backend/ (a directory -- onedir mode, see the
+        spec's docstring for why onedir instead of onefile).
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+SPEC = REPO_ROOT / "tools" / "desktop" / "backend.spec"
+DIST = REPO_ROOT / "dist" / "desktop-backend"
+BUILD = REPO_ROOT / "build" / "desktop-backend"
+
+
+def main() -> int:
+    cmd = [
+        sys.executable, "-m", "PyInstaller",
+        str(SPEC),
+        "--distpath", str(DIST),
+        "--workpath", str(BUILD),
+        "--noconfirm",
+    ]
+    print("Running:", " ".join(cmd))
+    result = subprocess.run(cmd, cwd=str(REPO_ROOT))
+    if result.returncode != 0:
+        return result.returncode
+    out_dir = DIST / "frank-backend"
+    print(f"\nBuilt: {out_dir}")
+    print(f"Run it directly to test: {out_dir / 'frank-backend'}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+```
+
+<!-- /TRASH 20260806-005 -->
+

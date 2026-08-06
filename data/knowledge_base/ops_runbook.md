@@ -22937,3 +22937,47 @@ empty sidecar so the panel isn't blank for a full week).
 
 Verified: 114/114 unit tests (new `tests/test_review_themes.py`, 9 tests),
 3x clean Playwright. Build bumped to `efd533d-v317`.
+
+## 2026-08-06 — Desktop app rebuilt as a thin client onto live data (Option A)
+
+After researching the existing (previously undocumented-in-CLAUDE.md) `desktop/` Electron shell
+built 2026-07-09, reported findings to Scott: it spawned a locally bundled PyInstaller copy of the
+whole backend with its own empty database, so a fresh install had zero orders/listings/chat history
+until Scott manually re-entered API keys -- never actually a window onto his real shop. One CI run
+had produced real Windows/macOS installers, but there was no distribution channel, no auto-update,
+and it was already ~184 builds stale. Presented a pros/cons comparison between keeping/modernizing
+that local-instance model (Option B) vs. rebuilding as a thin client pointed at the live Railway
+deployment (Option A). Scott confirmed Option A explicitly ("Option a it is").
+
+`desktop/main.js` rewritten: no more spawned backend process, no local `.env`/database. The
+`BrowserWindow` loads `https://etsy-production-b2f1.up.railway.app/frank` directly -- the exact same
+data Scott sees in a normal browser tab. Electron's default session persists cookies to disk like a
+real browser profile, so logging into `/login` once inside the app keeps Scott logged in across
+restarts with zero custom auth code.
+
+Added on top of the live page:
+- System tray icon (Open Frank / Quit Frank), click-to-toggle. Closing the window hides it instead
+  of quitting, so notifications keep working in the background.
+- Global hotkey `Cmd/Ctrl+Shift+F` to show/hide from anywhere.
+- Native OS notifications for new alerts -- polls the SAME `GET /api/alerts` endpoint already
+  backing the in-app bell (no duplicate alert logic), injected via `webContents.executeJavaScript()`
+  after each page load. First poll after launch seeds a seen-set silently (dedup key
+  `source + '::' + title`, since alerts have no stable ID) so restarting never re-fires a
+  notification storm for conditions that were already open before the window existed.
+- `Frank → Change Server URL...` menu item opens `<userData>/config.json` in the OS default editor
+  in case the Railway URL ever changes, same UX pattern as the old "Edit API Keys..." item it replaces.
+
+`tools/desktop/backend.spec` and `tools/desktop/build_backend.py` archived via `tools/trash.py`
+(entries `20260806-004`/`20260806-005` in `data/trash/DELETED.md`) -- no longer invoked by anything
+once the CI workflow (`.github/workflows/build-desktop.yml`) dropped its Python/PyInstaller steps.
+`tools/desktop/generate_icon.py` kept (icon generation is still relevant; confirmed it has no
+dependency on the archived files before archiving).
+
+**Verification limitation, stated honestly:** this sandbox has no Electron install and no way to
+actually launch/click through a real GUI window (no display server the harness can drive the way
+Playwright drives headless Chromium for the web app). Verified: `node --check` on `main.js` passes,
+`package.json`/CI workflow YAML are both well-formed, `generate_icon.py` has no reference to the
+archived files. NOT verified: an actual end-to-end launch (tray icon rendering, hotkey registration,
+notification permission/delivery, live-URL reachability check UX). Scott should do a real
+`npm install && npm start` from `desktop/` on his own machine before relying on this, and flag
+anything that doesn't behave as described above.

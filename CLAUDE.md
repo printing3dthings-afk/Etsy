@@ -273,6 +273,44 @@ if it were live).
 
 ---
 
+## Frank Desktop App
+
+**Architecture: thin client, not a local instance.** `desktop/main.js` (Electron) opens a native window
+pointed directly at the live Railway deployment (`https://etsy-production-b2f1.up.railway.app/frank` by
+default) — the exact same data, listings, chat history, and orders Scott sees in a browser tab. There is
+**no bundled backend, no local database, and no separate copy of anything** — this replaced an earlier
+version (built 2026-07-09, one CI run produced real installers) that spawned a local PyInstaller copy of
+`tools/api_server/main.py` with its own empty database, which meant a fresh install had zero orders/
+listings/history until Scott manually re-entered API keys. Scott confirmed the thin-client direction
+explicitly ("Option a it is") after a pros/cons comparison; the old local-backend packaging scripts
+(`tools/desktop/backend.spec`, `tools/desktop/build_backend.py`) are archived via `tools/trash.py`, not
+deleted — see `data/trash/DELETED.md` if that model is ever needed again.
+
+**Auth:** Electron's default session persists cookies to disk exactly like a real browser profile, so
+Scott logs into `/login` once inside the app window and stays logged in across restarts. Nothing extra
+to configure.
+
+**On top of the live page, the shell adds:**
+- **System tray icon** — click to show/hide the window; right-click for Open Frank / Quit Frank. Closing
+  the window hides it (keeps running in the tray) rather than quitting — real quit is tray menu, app
+  menu, or Cmd/Ctrl+Q.
+- **Global hotkey** (`Cmd/Ctrl+Shift+F`) — show/hide the window from anywhere, even when Frank isn't focused.
+- **Native OS notifications for new alerts** — polls the same `GET /api/alerts` endpoint that already
+  backs the in-app bell (no separate alert logic to keep in sync), injected into the live page via
+  `webContents.executeJavaScript()` after each load. Only fires for alerts that appear *after* launch —
+  the first poll seeds a seen-set silently so restarting the app never re-fires a notification storm for
+  conditions that were already open.
+- **`Frank → Change Server URL...`** menu item opens `<userData>/config.json` in the OS's default editor
+  (same pattern as the old "Edit API Keys..." item) in case the Railway URL ever changes.
+
+**Building installers:** `.github/workflows/build-desktop.yml`, manual `workflow_dispatch` trigger only.
+Windows `.exe` (NSIS) and macOS `.dmg`, both unsigned (no Apple/Microsoft signing certificate configured —
+Gatekeeper/SmartScreen will warn on first launch, right-click → Open bypasses it on macOS). No download
+link exists yet anywhere Scott can reach without going into GitHub Actions artifacts — that's the next
+gap to close if this becomes something Scott actually installs rather than a proof of concept.
+
+---
+
 ## Product Catalog
 
 ### DP1026 — Ultimate Digital Life Planner (Lavender Dreams)
