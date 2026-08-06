@@ -221,7 +221,7 @@ at context7.com/dashboard if 429s show up.
 **Authorized.** Access token and refresh token are set in `.env`. API calls to OnBrandCraftz are live.
 If the token expires, run `python tools/etsy_oauth.py` to re-authorize.
 Redirect URI registered: `http://localhost:3003/callback`
-Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
+Scopes: shops_r, shops_w, listings_r, listings_w, listings_d, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
 
 ## Google Calendar OAuth Status
 **Not yet authorized.** `GOOGLE_CALENDAR_CLIENT_ID`/`GOOGLE_CALENDAR_CLIENT_SECRET` need to be set in `.env`
@@ -861,13 +861,35 @@ Use all 10 slots. Each image tells one chapter of the buyer's story. Technical s
 
 ## Listing Agent Workflow (Step-by-Step)
 
-When asked to list a planner on Etsy:
-1. Call `get_approved_unlisted_products` to see what's ready
-2. Products must have `status: qc_pending` or `status: approved`
-3. Call `generate_listing_content` with the full pre-written template (see below)
-4. Generate all 10 listing photos using `generate_digital_art` with the prompts below
-5. Once ETSY_ACCESS_TOKEN is set (run `python tools/etsy_oauth.py`), call `publish_digital_listing`
-6. After publishing, upload the PDF and sticker pack ZIP as digital files on the Etsy listing
+**Corrected 2026-08-06 (full-system audit)** — the step list below used to name
+`get_approved_unlisted_products`/`generate_listing_content`/`publish_digital_listing`/
+`generate_digital_art`, which came from `tools/etsy_listing_tools.py` and
+`tools/art_creation_tools.py`. Those modules are real and still used directly by a
+few standalone scripts (`run_wall_art_workflow.py`, `build_planners.py`), but their
+chat-tool layer (`TOOL_DEFINITIONS`/`execute_tool()`) was never wired into
+`AGENT_TOOLS` — so none of those four names are actually callable from chat, and
+following this section as written would silently fail at step 1. The real,
+currently-wired workflow is below.
+
+When asked to list a planner (or any digital product) on Etsy:
+1. Call `build_product` with the planner code (e.g. `DP1030`) to generate the whole
+   product end to end — sticker pack, dated + undated PDFs, all 10 listing photos,
+   and a final Quality Check. Runs in the background (~6-10 min); watch
+   `<pid>_product_build.log` in Files for progress and the QC verdict. Nothing is
+   published by this step (Scott-gated).
+2. Once QC passes, review the product on the **Products** screen — tapping a
+   product card opens a review modal (backed by `GET /api/products/{id}/review`)
+   showing every generated file and photo.
+3. From that modal, **Publish** stages a `create_listing` action (via `stage_action`)
+   for Scott's one-tap approval in the Action Center — nothing goes live without it.
+   For a product whose files/photos already exist outside this pipeline (e.g. a
+   physical/manually-produced item), use `register_product` instead to register it
+   into the catalog first.
+4. After Scott approves, the staged action publishes the listing and uploads the
+   digital files automatically.
+5. Use `check_listing_quality` / `diagnose_listing_conversion` on any live listing
+   to catch quality-gate or conversion problems after the fact; `autofix_listing_tags`/
+   `autofix_listing_title` can stage targeted fixes the same way.
 
 ---
 

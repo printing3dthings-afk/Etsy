@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "efd533d-v317"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b572366-v318"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3744,6 +3744,24 @@ import etsy_ads_tools as _etsy_ads_tools
 AGENT_TOOLS.extend(_etsy_ads_tools.TOOL_DEFINITIONS)
 _ETSY_ADS_TOOL_NAMES = {t["name"] for t in _etsy_ads_tools.TOOL_DEFINITIONS}
 
+# Tax & Compliance -- tools/tax_compliance_tools.py already imported above for
+# its _get_tax_calendar() helper (used by the Calendar screen). Its chat-tool
+# layer (TOOL_DEFINITIONS/execute_tool()) was never wired in (2026-08-06
+# full-system audit, same "real module, dead chat-tool layer" bug class
+# etsy_ads_tools.py had before its own 2026-07-09 fix above). Only 4 of its
+# 8 tools are wired here, deliberately: log_deductible_expense/
+# get_deductions_summary/check_copyright_guidance/get_tax_calendar never
+# touch DataStore's shop_data.json analytics/listings fields (nothing in
+# this app populates those with real revenue/listing data -- that's a
+# SEPARATE, ad-spend-only local log tools/etsy_ads_tools.py uses honestly,
+# see its own comment above). The other 4 (get_tax_overview,
+# calculate_quarterly_tax, get_1099k_status, check_etsy_compliance) DO read
+# store.analytics/store.listings and would silently report $0 revenue /
+# zero compliance issues instead of an honest error -- stay unwired until
+# rerouted to a real data source (this app's live Etsy/metrics calls).
+_TAX_SAFE_TOOL_NAMES = {"log_deductible_expense", "get_deductions_summary", "check_copyright_guidance", "get_tax_calendar"}
+AGENT_TOOLS.extend([t for t in tax_compliance_tools.TOOL_DEFINITIONS if t["name"] in _TAX_SAFE_TOOL_NAMES])
+
 # TikTok — stage a video post for approval. tools/tiktok_poster.py is a real, working
 # posting client, previously only reachable via manual CLI (command_center.py), never
 # Frank's chat agent (2026-07-09 tool audit). "Post to social media accounts" is a Hard
@@ -4159,6 +4177,9 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         if name in _ETSY_ADS_TOOL_NAMES:
             from data_store import DataStore
             return json.loads(_etsy_ads_tools.execute_tool(name, tool_input or {}, DataStore()))
+        if name in _TAX_SAFE_TOOL_NAMES:
+            from data_store import DataStore
+            return json.loads(tax_compliance_tools.execute_tool(name, tool_input or {}, DataStore()))
         if name == "stage_tiktok_post":
             return _stage_tiktok_post(tool_input or {})
         if name == "stage_pinterest_post":
@@ -7645,8 +7666,16 @@ def _prune_buyer_data_retention() -> dict:
             except OSError as exc:
                 print(f"[retention] could not prune {f}: {exc}", flush=True)
 
+    # notified_orders.json: same resolver tools/order_notifier.py uses (mirrored
+    # there since that script runs as a standalone subprocess, not importable
+    # from this module) -- both must agree on the real path, or pruning here
+    # would silently operate on a stale copy while order_notifier.py keeps
+    # writing to the durable one (2026-08-06 full-system audit).
+    _notified_orders_path = db.resolve_persistent_path(
+        "notified_orders.json", fallback=ROOT / "data" / "notified_orders.json",
+    )
     for path, key, id_key in (
-        (ROOT / "data" / "notified_orders.json", "notified_orders_trimmed", "notified"),
+        (_notified_orders_path, "notified_orders_trimmed", "notified"),
         (drafts_dir / "sent_log.json", "sent_log_trimmed", "sent_ids"),
     ):
         try:
@@ -8417,44 +8446,56 @@ async def _daily_brief_loop() -> None:
     last_sent_date: date | None = _get_calendar_task_last_run("daily_brief")
     while True:
         await asyncio.sleep(3600)
-        # Purge expired sessions on every hourly tick
         try:
-            db.purge_expired_sessions()
-        except Exception:
-            pass
-        # Prune old executed/rejected action_queue rows so the table doesn't grow
-        # unbounded (2026-07-08 performance pass).
-        try:
-            db.prune_old_actions()
-        except Exception:
-            pass
-        enabled = db.get_setting("daily_brief_enabled") != "0"
-        if not enabled:
-            _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "ok", "disabled in Settings")
-            continue
-        try:
-            configured_hour = int(db.get_setting("daily_brief_hour") or 6)
-        except (TypeError, ValueError):
-            configured_hour = 6
-        now = _shop_now()
-        if now.hour == configured_hour and now.date() != last_sent_date:
-            _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
+            # 2026-08-06 (full-system audit): this used to start with two bare
+            # calls (db.get_setting()/_shop_now()) outside any try/except --
+            # every OTHER step in this loop is individually guarded, but an
+            # exception in either of those two would still kill the whole
+            # asyncio.Task silently, with no heartbeat update, unlike loops
+            # using _run_loop_iteration()'s whole-iteration wrapper. Wrapping
+            # the entire tick closes that gap without changing any of the
+            # existing fine-grained handling below.
+            # Purge expired sessions on every hourly tick
             try:
-                import daily_brief as _daily_brief
-                result = await asyncio.to_thread(_daily_brief.run_daily_brief)
-                last_sent_date = now.date()
-                _set_calendar_task_last_run("daily_brief", last_sent_date)
-                _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
-                print(f"[daily_brief] {result}", flush=True)
-            except Exception as exc:
-                _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "error", str(exc))
-                print(f"[daily_brief] error: {exc}", flush=True)
-        else:
-            next_run = "today" if now.hour < configured_hour else "tomorrow"
-            _safe_set_agent_heartbeat(
-                "daily_brief", "Daily Brief", "ok",
-                f"next brief {next_run} at {configured_hour:02d}:00 shop-local time (last sent: {last_sent_date or 'never'})"
-            )
+                db.purge_expired_sessions()
+            except Exception:
+                pass
+            # Prune old executed/rejected action_queue rows so the table doesn't grow
+            # unbounded (2026-07-08 performance pass).
+            try:
+                db.prune_old_actions()
+            except Exception:
+                pass
+            enabled = db.get_setting("daily_brief_enabled") != "0"
+            if not enabled:
+                _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "ok", "disabled in Settings")
+                continue
+            try:
+                configured_hour = int(db.get_setting("daily_brief_hour") or 6)
+            except (TypeError, ValueError):
+                configured_hour = 6
+            now = _shop_now()
+            if now.hour == configured_hour and now.date() != last_sent_date:
+                _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
+                try:
+                    import daily_brief as _daily_brief
+                    result = await asyncio.to_thread(_daily_brief.run_daily_brief)
+                    last_sent_date = now.date()
+                    _set_calendar_task_last_run("daily_brief", last_sent_date)
+                    _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
+                    print(f"[daily_brief] {result}", flush=True)
+                except Exception as exc:
+                    _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "error", str(exc))
+                    print(f"[daily_brief] error: {exc}", flush=True)
+            else:
+                next_run = "today" if now.hour < configured_hour else "tomorrow"
+                _safe_set_agent_heartbeat(
+                    "daily_brief", "Daily Brief", "ok",
+                    f"next brief {next_run} at {configured_hour:02d}:00 shop-local time (last sent: {last_sent_date or 'never'})"
+                )
+        except Exception as exc:
+            _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "error", f"tick failed: {exc}")
+            print(f"[daily_brief] tick failed: {exc}", flush=True)
 
 
 # ── Calendar-gated tasks: weekly monitors, monthly/seasonal checks, ads
@@ -8659,7 +8700,14 @@ def _run_seasonal_keyword_check() -> str:
 # standalone background job outside a chat turn) for broader trend/algorithm
 # signal a pure Etsy search can't see. Read-only against Etsy; the only write is
 # this local knowledge-base file.
-_COMPETITOR_RESEARCH_PATH = ROOT / "data" / "knowledge_base" / "competitor_research_2026.md"
+# 2026-08-06 (full-system audit): was a raw ROOT/"data" path -- the monthly
+# refresh below silently vanished on every Railway redeploy, same durability
+# gap already fixed for ceo_learnings.md/ops_runbook.md. Same resolver now.
+_COMPETITOR_RESEARCH_PATH = db.resolve_persistent_path(
+    "knowledge_base/competitor_research_2026.md",
+    fallback=ROOT / "data" / "knowledge_base" / "competitor_research_2026.md",
+    seed_from=ROOT / "data" / "knowledge_base" / "competitor_research_2026.md",
+)
 _COMPETITOR_RESEARCH_SEARCH_TERMS = [
     "printable wall art digital download",
     "digital planner goodnotes",
@@ -9775,133 +9823,143 @@ async def _calendar_tasks_loop() -> None:
     last_etsy_file_inventory = _get_calendar_task_last_run("etsy_file_inventory")
     while True:
         await asyncio.sleep(3600)
-        now = await asyncio.to_thread(_shop_now)  # 2026-08-04: shop-local, not server UTC
-        today = now.date()
-        ran = []
-        # 2026-07-19: previously only `ran` existed, and the aggregate heartbeat
-        # below always reported "ok" no matter what -- a sub-task's own `last_*`
-        # var and its `ran.append(...)` both live inside the try block, so a
-        # failure left BOTH untouched, and the final heartbeat couldn't tell the
-        # difference between "nothing was due today" and "the one thing that was
-        # due today failed." A real failure the one day it mattered would render
-        # on the dashboard as "ok / no scheduled task due today" -- indistinguishable
-        # from a quiet day. Track failures explicitly so the aggregate heartbeat can
-        # never lie about that.
-        failed = []
-        if now.weekday() == 6 and today != last_weekly:  # Sunday
-            try:
-                await asyncio.to_thread(_run_weekly_monitors)
-                last_weekly = today
-                _set_calendar_task_last_run("weekly", today)
-                ran.append("weekly-monitors")
-            except Exception as exc:
-                print(f"[calendar-tasks] weekly monitors error: {exc}", flush=True)
-                failed.append(f"weekly-monitors:{exc}")
-        if today.day == 1 and today != last_monthly:
-            try:
-                await asyncio.to_thread(_run_monthly_shop_health)
-                last_monthly = today
-                _set_calendar_task_last_run("monthly", today)
-                ran.append("monthly-shop-health")
-            except Exception as exc:
-                print(f"[calendar-tasks] monthly shop health error: {exc}", flush=True)
-                failed.append(f"monthly-shop-health:{exc}")
-        if today.day == 15 and today != last_art_authenticity:
-            try:
-                await asyncio.to_thread(_run_art_authenticity_check)
-                last_art_authenticity = today
-                _set_calendar_task_last_run("art_authenticity", today)
-                ran.append("art-authenticity")
-            except Exception as exc:
-                print(f"[calendar-tasks] art authenticity check error: {exc}", flush=True)
-                failed.append(f"art-authenticity:{exc}")
-        if today.day == 8 and today != last_competitor_research:
-            try:
-                detail = await asyncio.to_thread(_run_competitor_research_refresh)
-                last_competitor_research = today
-                _set_calendar_task_last_run("competitor_research", today)
-                ran.append(f"competitor-research:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] competitor research refresh error: {exc}", flush=True)
-                failed.append(f"competitor-research:{exc}")
-        if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
-            try:
-                await asyncio.to_thread(_run_seasonal_keyword_check)
-                last_seasonal = today
-                _set_calendar_task_last_run("seasonal", today)
-                ran.append("seasonal-keywords")
-            except Exception as exc:
-                print(f"[calendar-tasks] seasonal keyword check error: {exc}", flush=True)
-                failed.append(f"seasonal-keywords:{exc}")
-        if today != last_ads_check:
-            try:
-                detail = await asyncio.to_thread(_check_ads_thresholds)
-                last_ads_check = today
-                _set_calendar_task_last_run("ads_check", today)
-                ran.append(f"ads-check:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] ads threshold check error: {exc}", flush=True)
-                failed.append(f"ads-check:{exc}")
-        if today != last_star_seller_check:
-            try:
-                detail = await asyncio.to_thread(_check_star_seller_status)
-                last_star_seller_check = today
-                _set_calendar_task_last_run("star_seller_check", today)
-                ran.append(f"star-seller:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] star seller check error: {exc}", flush=True)
-                failed.append(f"star-seller:{exc}")
-        if today != last_art_check:
-            try:
-                detail = await asyncio.to_thread(_run_scheduled_art_check)
-                last_art_check = today
-                _set_calendar_task_last_run("art_check", today)
-                ran.append(f"scheduled-art:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
-                failed.append(f"scheduled-art:{exc}")
-        if today != last_coloring_check:
-            try:
-                detail = await asyncio.to_thread(_run_scheduled_coloring_check)
-                last_coloring_check = today
-                _set_calendar_task_last_run("coloring_check", today)
-                ran.append(f"scheduled-coloring:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] scheduled coloring check error: {exc}", flush=True)
-                failed.append(f"scheduled-coloring:{exc}")
-        if today != last_gcal_sync:
-            try:
-                detail = await asyncio.to_thread(_sync_calendar_to_google)
-                last_gcal_sync = today
-                _set_calendar_task_last_run("gcal_sync", today)
-                ran.append(f"gcal-sync:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] google calendar sync error: {exc}", flush=True)
-                failed.append(f"gcal-sync:{exc}")
-        if today != last_etsy_file_inventory:
-            try:
-                detail = await asyncio.to_thread(_run_etsy_file_inventory_sweep)
-                last_etsy_file_inventory = today
-                _set_calendar_task_last_run("etsy_file_inventory", today)
-                ran.append(f"etsy-file-inventory:{detail}")
-            except Exception as exc:
-                print(f"[calendar-tasks] etsy file inventory sweep error: {exc}", flush=True)
-                failed.append(f"etsy-file-inventory:{exc}")
-        status = "error" if failed else "ok"
-        detail_parts = []
-        if failed:
-            detail_parts.append("FAILED: " + "; ".join(failed))
-        if ran:
-            detail_parts.append("ran: " + "; ".join(ran))
-        if not detail_parts:
-            detail_parts.append(
-                f"no scheduled task due today (last: weekly={last_weekly}, "
-                f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
-                f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
-                f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync}, "
-                f"etsy_file_inventory={last_etsy_file_inventory})"
-            )
-        _safe_set_agent_heartbeat("calendar_tasks", "Calendar Tasks", status, " | ".join(detail_parts))
+        try:
+            # 2026-08-06 (full-system audit): the whole-tick try/except below is
+            # new -- previously `now`/`today` were computed outside any guard,
+            # so an exception there (unlike every sub-task below, each already
+            # individually try/excepted) would kill this asyncio.Task silently
+            # with no heartbeat update, unlike loops using _run_loop_iteration()'s
+            # whole-iteration wrapper.
+            now = await asyncio.to_thread(_shop_now)  # 2026-08-04: shop-local, not server UTC
+            today = now.date()
+            ran = []
+            # 2026-07-19: previously only `ran` existed, and the aggregate heartbeat
+            # below always reported "ok" no matter what -- a sub-task's own `last_*`
+            # var and its `ran.append(...)` both live inside the try block, so a
+            # failure left BOTH untouched, and the final heartbeat couldn't tell the
+            # difference between "nothing was due today" and "the one thing that was
+            # due today failed." A real failure the one day it mattered would render
+            # on the dashboard as "ok / no scheduled task due today" -- indistinguishable
+            # from a quiet day. Track failures explicitly so the aggregate heartbeat can
+            # never lie about that.
+            failed = []
+            if now.weekday() == 6 and today != last_weekly:  # Sunday
+                try:
+                    await asyncio.to_thread(_run_weekly_monitors)
+                    last_weekly = today
+                    _set_calendar_task_last_run("weekly", today)
+                    ran.append("weekly-monitors")
+                except Exception as exc:
+                    print(f"[calendar-tasks] weekly monitors error: {exc}", flush=True)
+                    failed.append(f"weekly-monitors:{exc}")
+            if today.day == 1 and today != last_monthly:
+                try:
+                    await asyncio.to_thread(_run_monthly_shop_health)
+                    last_monthly = today
+                    _set_calendar_task_last_run("monthly", today)
+                    ran.append("monthly-shop-health")
+                except Exception as exc:
+                    print(f"[calendar-tasks] monthly shop health error: {exc}", flush=True)
+                    failed.append(f"monthly-shop-health:{exc}")
+            if today.day == 15 and today != last_art_authenticity:
+                try:
+                    await asyncio.to_thread(_run_art_authenticity_check)
+                    last_art_authenticity = today
+                    _set_calendar_task_last_run("art_authenticity", today)
+                    ran.append("art-authenticity")
+                except Exception as exc:
+                    print(f"[calendar-tasks] art authenticity check error: {exc}", flush=True)
+                    failed.append(f"art-authenticity:{exc}")
+            if today.day == 8 and today != last_competitor_research:
+                try:
+                    detail = await asyncio.to_thread(_run_competitor_research_refresh)
+                    last_competitor_research = today
+                    _set_calendar_task_last_run("competitor_research", today)
+                    ran.append(f"competitor-research:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] competitor research refresh error: {exc}", flush=True)
+                    failed.append(f"competitor-research:{exc}")
+            if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
+                try:
+                    await asyncio.to_thread(_run_seasonal_keyword_check)
+                    last_seasonal = today
+                    _set_calendar_task_last_run("seasonal", today)
+                    ran.append("seasonal-keywords")
+                except Exception as exc:
+                    print(f"[calendar-tasks] seasonal keyword check error: {exc}", flush=True)
+                    failed.append(f"seasonal-keywords:{exc}")
+            if today != last_ads_check:
+                try:
+                    detail = await asyncio.to_thread(_check_ads_thresholds)
+                    last_ads_check = today
+                    _set_calendar_task_last_run("ads_check", today)
+                    ran.append(f"ads-check:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] ads threshold check error: {exc}", flush=True)
+                    failed.append(f"ads-check:{exc}")
+            if today != last_star_seller_check:
+                try:
+                    detail = await asyncio.to_thread(_check_star_seller_status)
+                    last_star_seller_check = today
+                    _set_calendar_task_last_run("star_seller_check", today)
+                    ran.append(f"star-seller:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] star seller check error: {exc}", flush=True)
+                    failed.append(f"star-seller:{exc}")
+            if today != last_art_check:
+                try:
+                    detail = await asyncio.to_thread(_run_scheduled_art_check)
+                    last_art_check = today
+                    _set_calendar_task_last_run("art_check", today)
+                    ran.append(f"scheduled-art:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
+                    failed.append(f"scheduled-art:{exc}")
+            if today != last_coloring_check:
+                try:
+                    detail = await asyncio.to_thread(_run_scheduled_coloring_check)
+                    last_coloring_check = today
+                    _set_calendar_task_last_run("coloring_check", today)
+                    ran.append(f"scheduled-coloring:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] scheduled coloring check error: {exc}", flush=True)
+                    failed.append(f"scheduled-coloring:{exc}")
+            if today != last_gcal_sync:
+                try:
+                    detail = await asyncio.to_thread(_sync_calendar_to_google)
+                    last_gcal_sync = today
+                    _set_calendar_task_last_run("gcal_sync", today)
+                    ran.append(f"gcal-sync:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] google calendar sync error: {exc}", flush=True)
+                    failed.append(f"gcal-sync:{exc}")
+            if today != last_etsy_file_inventory:
+                try:
+                    detail = await asyncio.to_thread(_run_etsy_file_inventory_sweep)
+                    last_etsy_file_inventory = today
+                    _set_calendar_task_last_run("etsy_file_inventory", today)
+                    ran.append(f"etsy-file-inventory:{detail}")
+                except Exception as exc:
+                    print(f"[calendar-tasks] etsy file inventory sweep error: {exc}", flush=True)
+                    failed.append(f"etsy-file-inventory:{exc}")
+            status = "error" if failed else "ok"
+            detail_parts = []
+            if failed:
+                detail_parts.append("FAILED: " + "; ".join(failed))
+            if ran:
+                detail_parts.append("ran: " + "; ".join(ran))
+            if not detail_parts:
+                detail_parts.append(
+                    f"no scheduled task due today (last: weekly={last_weekly}, "
+                    f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
+                    f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
+                    f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync}, "
+                    f"etsy_file_inventory={last_etsy_file_inventory})"
+                )
+            _safe_set_agent_heartbeat("calendar_tasks", "Calendar Tasks", status, " | ".join(detail_parts))
+        except Exception as exc:
+            _safe_set_agent_heartbeat("calendar_tasks", "Calendar Tasks", "error", f"tick failed: {exc}")
+            print(f"[calendar-tasks] tick failed: {exc}", flush=True)
 
 
 _AGENT_LOOP_LABELS = {

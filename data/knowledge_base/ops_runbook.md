@@ -22981,3 +22981,83 @@ archived files. NOT verified: an actual end-to-end launch (tray icon rendering, 
 notification permission/delivery, live-URL reachability check UX). Scott should do a real
 `npm install && npm start` from `desktop/` on his own machine before relying on this, and flag
 anything that doesn't behave as described above.
+
+## 2026-08-06 — Full-system "scan Frank start to finish" audit and fixes
+
+Scott: "Scan through Frank again. Start to finish. Make sure everything is going
+what it is supposed to do. Make sure everything has what it needs to function.
+We need to be done with fixes and making things that are in Frank already, work."
+
+Ran 6 parallel investigations (background loops, AGENT_TOOLS dispatch wiring,
+frontend screen loader wiring, durable-state/volume-awareness consistency,
+end-to-end wiring of the last 3 shipped features, and CLAUDE.md-vs-code drift),
+plus a full 115-test unit run and a live Playwright pass as ground truth (both
+clean before any fixes -- confirming nothing was already broken). Real,
+verified findings and fixes:
+
+1. **`_COMPETITOR_RESEARCH_PATH` durability bug.** Raw hardcoded `ROOT/"data"`
+   path -- the monthly competitor-research refresh (`_run_competitor_research_
+   refresh()`) silently vanished on every Railway redeploy. Same bug class
+   already fixed for `ceo_learnings.md`/`ops_runbook.md`; now routed through
+   `db.resolve_persistent_path()` with `seed_from` so the committed history
+   migrates on first durable run instead of looking wiped.
+
+2. **`notified_orders.json` durability bug, in TWO places.** Both `main.py`'s
+   retention-pruner and `tools/order_notifier.py`'s own writer used a raw
+   `ROOT/"data"` path -- state resets on every redeploy, meaning `order_
+   notifier.py` would re-send "new order" notifications for orders already
+   emailed before the last deploy. `order_notifier.py` runs as a standalone
+   subprocess (not importable from `tools/api_server/db.py`), so it got its
+   own mirrored volume-detection resolver; both now agree on the same real
+   file, verified by a test that imports both and compares the resolved path.
+
+3. **Orphaned `studio` screen loader.** `frank_hud_mockup.py`'s `_SCREEN_
+   LOADERS` still had a standalone `studio: [loadStudioVideos]` entry left
+   over from the 2026-07 video work that relocated the whole Studio panel
+   into the `create` screen -- no `id="screen-studio"` element, no nav path,
+   ever reached it. `loadStudioVideos()` itself is real and still used by the
+   `create` screen's own loader array; only the dead standalone key removed.
+
+4. **`tax_compliance_tools.py`: real module, dead chat-tool layer.** Same
+   class of bug `etsy_ads_tools.py` had before its 2026-07-09 fix -- imported
+   for its `_get_tax_calendar()` helper (used by the Calendar screen), but
+   its `TOOL_DEFINITIONS`/`execute_tool()` were never wired into `AGENT_
+   TOOLS`, so none of its 8 tools were ever chat-callable. Wired in only the
+   4 that are genuinely safe: `log_deductible_expense`, `get_deductions_
+   summary`, `check_copyright_guidance`, `get_tax_calendar` -- none of these
+   read the legacy `DataStore`'s `shop_data.json` `analytics`/`listings`
+   fields, which nothing in this app populates with real revenue/listing
+   data. The other 4 (`get_tax_overview`, `calculate_quarterly_tax`, `get_
+   1099k_status`, `check_etsy_compliance`) DO read those fields and would
+   silently report $0 revenue / zero compliance issues instead of an honest
+   error -- left unwired on purpose until rerouted to a real data source.
+   (Also confirmed `art_creation_tools.py`/`etsy_listing_tools.py` are
+   NOT dead code despite the same unwired-TOOL_DEFINITIONS pattern -- both
+   are actively imported by real standalone scripts (`build_planners.py`,
+   `run_wall_art_workflow.py`) for their underlying functions, so their
+   files were left untouched; only CLAUDE.md's stale description of the
+   chat workflow that named their now-unreachable tool names was fixed.)
+
+5. **CLAUDE.md drift.** "Listing Agent Workflow" section named `get_
+   approved_unlisted_products`/`generate_listing_content`/`publish_digital_
+   listing`/`generate_digital_art` -- none of which are real, chat-callable
+   AGENT_TOOLS names (see #4) -- rewritten to describe the actual current
+   flow (`build_product` -> Products screen review modal -> `stage_action`
+   with `create_listing`/`register_product` -> Scott's Action Center
+   approval). Etsy OAuth scopes list was also missing `listings_d` (present
+   in the real `SCOPES` constant in `tools/etsy_oauth.py`, absent from the
+   doc).
+
+6. **Two background loops had an unprotected preamble.** `_daily_brief_
+   loop()` and `_calendar_tasks_loop()` each start their per-tick body with
+   a plain DB read / `_shop_now()` call outside any try/except, unlike every
+   other step in those same functions (each already individually guarded).
+   An exception there would kill the loop's `asyncio.Task` silently with no
+   heartbeat update, unlike loops using `_run_loop_iteration()`'s whole-
+   iteration wrapper. Both now wrap their entire tick in one top-level
+   try/except that writes an error heartbeat on any unhandled exception,
+   without changing any of the existing fine-grained handling inside.
+
+Verified: 115/115 unit tests (new `tests/test_full_system_audit_fixes.py`,
+7 tests covering all 6 fixes above), 3x clean Playwright. Build bumped to
+`b572366-v318`.

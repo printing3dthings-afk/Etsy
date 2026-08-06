@@ -62,7 +62,26 @@ from etsy_messages import (
     PERSONAL_MESSAGE_GENERIC,
 )
 
-STATE_FILE = Path(__file__).parent.parent / 'data' / 'notified_orders.json'
+def _resolve_state_file() -> Path:
+    """Mirrors tools/api_server/db.py's resolve_persistent_path() -- this
+    script runs as a standalone subprocess (invoked from the weekly monitor
+    loop / execute_command, not imported into the FastAPI app), so it can't
+    just call that function directly. Without this, notified-order state
+    lived at a plain repo-relative path that's wiped on every Railway
+    redeploy, silently re-sending "new order" notifications for orders
+    already emailed before the last deploy (2026-08-06 full-system audit)."""
+    fallback = Path(__file__).parent.parent / 'data' / 'notified_orders.json'
+    vol = Path('/data')
+    if vol.is_dir() and os.access(vol, os.W_OK):
+        p = vol / 'notified_orders.json'
+        p.parent.mkdir(parents=True, exist_ok=True)
+        if not p.exists() and fallback.exists():
+            p.write_text(fallback.read_text())
+        return p
+    return fallback
+
+
+STATE_FILE = _resolve_state_file()
 SHOP_OWNER_EMAIL = os.environ.get('SMTP_USER', 'Printing3dthings@outlook.com')
 
 # ── Product-type classifier ───────────────────────────────────────────────────

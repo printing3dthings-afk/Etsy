@@ -4259,7 +4259,6 @@ const _SCREEN_LOADERS = {
   security: [renderSecurityPosture],
   settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI, loadSettingsBuildVer,
              loadApiCosts, loadNotificationPrefs, loadActiveSessions],
-  studio: [loadStudioVideos],
   // guided Create flow (reuses studio backends) — loadProducts populates the
   // global _products array the category panels' product pickers read from
   // (2026-07-22 redesign), loadReferenceImages populates the new library.
