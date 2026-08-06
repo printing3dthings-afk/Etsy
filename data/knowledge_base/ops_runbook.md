@@ -22826,3 +22826,33 @@ Verified: 111/111 unit tests (new `tests/test_ab_testing.py`, 19 tests —
 covers the ranking-recovery floor rejection, the "never call Etsy directly"
 invariant, the approve/reject hooks, and the honest-verdict computation),
 JS syntax check, 3x clean Playwright. Build bumped to `d6272cf-v314`.
+
+## 2026-08-06 — Competitor Price & Listing Drift Watchdog (idea 4/6, second "significantly improve Frank" batch)
+
+Weekly sweep reusing `_get_comparable_listings()` (already wired to Etsy's
+real public `listings/active` search, public API key only) across every
+active listing's own top-2 tags. Excludes the shop's own listings from the
+comparable set (a search on your own tags can surface your own other
+listings), requires at least 3 real comparables before trusting an average
+(`_COMPETITOR_MIN_SAMPLE`), and flags a real price gap only at 20%+
+(`_COMPETITOR_DRIFT_THRESHOLD_PCT`). Logs a durable per-listing history
+(`data/competitor_snapshots.json`, 12-week rolling window) via
+`db.resolve_persistent_path()`.
+
+Never changes a price itself — this is pure surfacing. Folded into Growth
+Brief as a new `competitor_drift` category with `est_dollar_impact` always
+`None` (a price gap has no knowable revenue impact without assuming future
+sales volume — never fabricated, matches the existing Growth Brief honesty
+rule for bundle/seasonal items).
+
+New desktop panel (`#competitor-watch-body`, next to A/B Tests), new chat
+tool `get_competitor_drift`, new endpoint `GET /api/competitor-watch`
+(reads the sidecar only — never a live Etsy call itself, so it's always
+instant). `EtsyAPIClient.get_orders()` gained optional
+`min_created`/`max_created` params as part of the A/B-testing work
+yesterday; unrelated to this feature but shipped in the same window.
+
+Verified: 112/112 unit tests (new `tests/test_competitor_watch.py`, 12
+tests — covers self-listing exclusion, the minimum-sample gate, and that a
+price gap NEVER produces a fabricated dollar figure in Growth Brief), 3x
+clean Playwright. Build bumped to `08bac43-v315`.

@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d6272cf-v314"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "08bac43-v315"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3866,6 +3866,22 @@ AGENT_TOOLS.append({
     ),
     "input_schema": {"type": "object", "properties": {}},
 })
+# Competitor Price & Listing Drift Watchdog (2026-08-06, "significantly
+# improve Frank" idea 4/6, second batch) -- read-only over the weekly
+# sweep's durable sidecar (data/competitor_snapshots.json), never a live
+# Etsy call from the chat path.
+AGENT_TOOLS.append({
+    "name": "get_competitor_drift",
+    "description": (
+        "Real listings whose price has drifted meaningfully (20%+) from the "
+        "live average of real comparable Etsy listings in their own niche, "
+        "from the weekly competitor-watch sweep. Each item cites the real "
+        "comparable-listing count and average it was computed from -- never "
+        "a price recommendation, and price changes always need Scott's "
+        "approval regardless."
+    ),
+    "input_schema": {"type": "object", "properties": {}},
+})
 _SOCIAL_TOOL_NAMES = {"stage_tiktok_post", "stage_pinterest_post", "list_pinterest_boards"}
 
 # Prompt-cache constants — built once at import time, reused every chat turn.
@@ -4585,6 +4601,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         if name == "get_ab_tests":
             tests = _load_ab_tests()
             return {"tests": sorted(tests.values(), key=lambda t: int(t["id"]), reverse=True)}
+        if name == "get_competitor_drift":
+            return {"items": _compute_competitor_drift_items()}
         if name == "deep_research":
             ti = tool_input or {}
             query = (ti.get("query") or "").strip()
@@ -6629,7 +6647,8 @@ async def get_bundle_opportunities(_token: str = Depends(_auth_session_or_bearer
 # with a real one, but is never backfilled with an invented number just to
 # make every row look equally precise.
 def _score_growth_brief_items(ads: dict, cogs: dict, star_seller: dict, actions_data: dict,
-                                bundle_opps: list, seasonal_entries: list) -> list[dict]:
+                                bundle_opps: list, seasonal_entries: list,
+                                competitor_drift_items: list | None = None) -> list[dict]:
     """Pure merge/scoring over already-fetched data -- no I/O, so this is
     directly unit-testable with synthetic inputs. See _compute_growth_brief()
     for where each argument actually comes from."""
@@ -6719,6 +6738,21 @@ def _score_growth_brief_items(ads: dict, cogs: dict, star_seller: dict, actions_
             "impact_basis": "structural catalog gap — no dollar estimate available",
         })
 
+    for cd in (competitor_drift_items or [])[:5]:
+        gap = abs(cd["gap_pct"])
+        items.append({
+            "category": "competitor_drift", "severity": "medium" if gap >= 35 else "low",
+            "title": f"Listing {cd['listing_id']} priced {gap}% {cd['direction']} the market",
+            "detail": (
+                f"${cd['my_price']:.2f} vs a ${cd['competitor_avg']:.2f} average across "
+                f"{cd['competitor_count']} real live comparable listings (search: \"{cd['keywords']}\")."
+            ),
+            "suggestion": "Review pricing against these real comparables — Scott's call, never automatic.",
+            "listing_id": cd["listing_id"], "url": cd.get("url"),
+            "est_dollar_impact": None,
+            "impact_basis": "real: live comparable-listing average pulled from Etsy's public search — no revenue prediction made",
+        })
+
     _SEV_RANK = {"high": 0, "medium": 1, "low": 2}
     items.sort(key=lambda it: (
         0 if it["est_dollar_impact"] is not None else 1,
@@ -6782,7 +6816,13 @@ async def _compute_growth_brief() -> dict:
     # vs cache-miss race silently change this function's behavior.
     bundle_opps = bundle_cached.get("opportunities", []) if isinstance(bundle_cached, dict) else bundle_cached
     seasonal_entries = await asyncio.to_thread(_growth_brief_seasonal_entries, today)
-    items = _score_growth_brief_items(ads, cogs, star_seller, actions_data, bundle_opps, seasonal_entries)
+    # _compute_competitor_drift_items() is a pure sidecar-file read (no Etsy
+    # call, populated separately by the weekly _competitor_watch_loop()) --
+    # cheap enough to call directly every time, no cache needed.
+    competitor_drift_items = await asyncio.to_thread(_compute_competitor_drift_items)
+    items = _score_growth_brief_items(
+        ads, cogs, star_seller, actions_data, bundle_opps, seasonal_entries, competitor_drift_items,
+    )
     return {"items": items[:8], "generated_at": datetime.now(timezone.utc).isoformat()}
 
 
@@ -9824,6 +9864,7 @@ _AGENT_LOOP_LABELS = {
     "catalog_reconciliation": "Catalog Reconciliation",
     "review_reply_draft": "Review Reply Drafts",
     "ab_test": "A/B Tests",
+    "competitor_watch": "Competitor Watchdog",
 }
 
 
@@ -9873,6 +9914,7 @@ async def _startup() -> None:
     asyncio.create_task(_catalog_reconciliation_loop())
     asyncio.create_task(_review_reply_loop())
     asyncio.create_task(_ab_test_loop())
+    asyncio.create_task(_competitor_watch_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -10601,6 +10643,148 @@ def _get_comparable_listings(tool_input: dict) -> dict:
         "listings": listings,
         "price_range": price_range,
     }
+
+
+# ── Competitor Price & Listing Drift Watchdog (2026-08-06, "significantly
+# improve Frank" idea 4/6, second batch) ────────────────────────────────────
+# Weekly sweep reusing _get_comparable_listings() -- the shop's only real
+# external market-data source, already wired to Etsy's public listings/active
+# search (public API key, no OAuth, no scraping/ToS risk) -- across every
+# active listing's own tags. Logs a durable per-listing price-history
+# snapshot and flags when Scott's price has drifted meaningfully out of step
+# with the real, live comparable-listing average. Never changes price itself
+# -- price changes always require Scott's approval (Autonomy Boundaries) --
+# this only ever surfaces the real gap with real numbers.
+_COMPETITOR_SNAPSHOTS_PATH = db.resolve_persistent_path(
+    "competitor_snapshots.json",
+    fallback=ROOT / "data" / "competitor_snapshots.json",
+)
+_COMPETITOR_DRIFT_THRESHOLD_PCT = 0.20  # 20% away from the real comparable average
+_COMPETITOR_MIN_SAMPLE = 3  # need at least this many real comparables to trust the average
+_COMPETITOR_SNAPSHOT_HISTORY_WEEKS = 12  # bounds the sidecar's per-listing history
+
+
+def _load_competitor_snapshots() -> dict:
+    try:
+        return json.loads(_COMPETITOR_SNAPSHOTS_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_competitor_snapshots(data: dict) -> None:
+    _COMPETITOR_SNAPSHOTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _COMPETITOR_SNAPSHOTS_PATH.write_text(json.dumps(data, indent=2))
+
+
+def _competitor_watch_keywords(listing: dict) -> str:
+    """Real buyer-intent search phrase for this listing -- its own top 2 tags
+    (already curated buyer-intent phrases per CLAUDE.md's tag rules), falling
+    back to the title only when a listing has no tags."""
+    tags = listing.get("tags") or []
+    if tags:
+        return " ".join(tags[:2])
+    return (listing.get("title") or "")[:50]
+
+
+async def _competitor_watch_iteration() -> dict:
+    """One weekly sweep: for every active listing, pull real live comparable
+    listings via the shop's own tags and log this week's real competitor
+    average alongside Scott's real price. Never touches Etsy's write API --
+    read-only search calls only."""
+    listings_data = await asyncio.to_thread(_listings_sync, "active")
+    active = listings_data.get("listings", [])
+    own_ids = {l["listing_id"] for l in active}
+    snapshots = await asyncio.to_thread(_load_competitor_snapshots)
+    today = (await asyncio.to_thread(_shop_today)).isoformat()
+    checked, flagged, skipped = 0, 0, 0
+    for listing in active:
+        listing_id = listing["listing_id"]
+        my_price = listing.get("price")
+        keywords = _competitor_watch_keywords(listing)
+        if not my_price or not keywords:
+            skipped += 1
+            continue
+        result = await asyncio.to_thread(_get_comparable_listings, {"keywords": keywords, "limit": 15})
+        await asyncio.sleep(0.5)  # be considerate to Etsy's public search endpoint
+        if "error" in result:
+            skipped += 1
+            continue
+        comparables = [
+            l for l in result.get("listings", [])
+            if l.get("listing_id") not in own_ids and l.get("price")
+        ]
+        checked += 1
+        if len(comparables) < _COMPETITOR_MIN_SAMPLE:
+            continue
+        comp_prices = [l["price"] for l in comparables]
+        comp_avg = round(sum(comp_prices) / len(comp_prices), 2)
+        history = snapshots.setdefault(str(listing_id), [])
+        history.append({
+            "date": today, "my_price": my_price, "competitor_avg": comp_avg,
+            "competitor_count": len(comparables), "keywords": keywords,
+        })
+        snapshots[str(listing_id)] = history[-_COMPETITOR_SNAPSHOT_HISTORY_WEEKS:]
+        if comp_avg > 0 and abs(my_price - comp_avg) / comp_avg >= _COMPETITOR_DRIFT_THRESHOLD_PCT:
+            flagged += 1
+    await asyncio.to_thread(_save_competitor_snapshots, snapshots)
+    return {"checked": checked, "flagged": flagged, "skipped": skipped}
+
+
+async def _competitor_watch_loop() -> None:
+    """Weekly: same resilience/backoff pattern as _snapshot_loop()/_ab_test_loop()."""
+    await asyncio.sleep(120)  # let the app finish booting first
+    while True:
+        delay = await _run_loop_iteration(
+            "competitor_watch", "Competitor Watchdog", _competitor_watch_iteration,
+            on_success_detail=lambda r: f"{r['flagged']} listing(s) flagged out of {r['checked']} checked ({r['skipped']} skipped)",
+            base_interval=7 * 86_400,
+        )
+        await asyncio.sleep(delay)
+
+
+def _compute_competitor_drift_items() -> list[dict]:
+    """Pure read over the durable snapshot sidecar -- no I/O, no Etsy call --
+    so GET /api/competitor-watch and Growth Brief can both call this cheaply
+    without waiting on the weekly sweep. Only ever reports the MOST RECENT
+    snapshot per listing; a listing that's since been fixed (or hasn't been
+    swept yet) simply has nothing here."""
+    snapshots = _load_competitor_snapshots()
+    items = []
+    for listing_id, history in snapshots.items():
+        if not history:
+            continue
+        latest = history[-1]
+        comp_avg = latest["competitor_avg"]
+        my_price = latest["my_price"]
+        if comp_avg <= 0:
+            continue
+        gap_pct = (my_price - comp_avg) / comp_avg
+        if abs(gap_pct) < _COMPETITOR_DRIFT_THRESHOLD_PCT:
+            continue
+        items.append({
+            "listing_id": int(listing_id), "my_price": my_price,
+            "competitor_avg": comp_avg, "competitor_count": latest["competitor_count"],
+            "keywords": latest["keywords"], "date": latest["date"],
+            "gap_pct": round(gap_pct * 100, 1),
+            "direction": "above" if gap_pct > 0 else "below",
+            "url": f"https://www.etsy.com/listing/{listing_id}",
+        })
+    items.sort(key=lambda it: abs(it["gap_pct"]), reverse=True)
+    return items
+
+
+@app.get("/api/competitor-watch")
+async def get_competitor_watch(_token: str = Depends(_auth_session_or_bearer)):
+    """Today/Growth Brief's competitor price-drift findings. Reads the
+    durable weekly-sweep sidecar -- never makes a live Etsy call itself, so
+    this is always instant. Cached 300s (the underlying data only changes
+    once a week; this just avoids re-reading the file on every poll)."""
+    cached = _cache_get("competitor_watch", ttl=300)
+    if cached is not None:
+        return cached
+    data = {"items": await asyncio.to_thread(_compute_competitor_drift_items)}
+    _cache_set("competitor_watch", data)
+    return data
 
 
 @app.post("/api/diagnose/{listing_id}")

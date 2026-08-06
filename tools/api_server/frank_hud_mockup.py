@@ -1858,6 +1858,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
+          <div class="panel-title">📊 Competitor Watchdog <span class="src">/api/competitor-watch</span></div>
+          <div id="competitor-watch-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
           <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('star_seller')" role="button" tabindex="0">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
@@ -4216,7 +4223,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -7304,6 +7311,36 @@ async function loadAbTests(){
         + '<div class="ss-row" style="cursor:default" title="Variant A"><span class="ss-label">A: '+escHtml(t.variant_a_title)+'</span></div>'
         + '<div class="ss-row" style="cursor:default" title="Variant B"><span class="ss-label">B: '+escHtml(t.variant_b_title)+'</span></div>'
         + verdictLine + cancelBtn
+        + '</div>';
+    }).join('');
+  }catch(e){
+    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// Competitor Price & Listing Drift Watchdog (2026-08-06, "significantly
+// improve Frank" idea 4/6, second batch). Read-only render of the weekly
+// sweep's findings -- every number here (my price, competitor average,
+// comparable count) came from a real live Etsy search, never invented.
+// Never suggests or stages a price change itself -- see main.py's own
+// comment on why (Autonomy Boundaries: price changes are always Scott's call).
+async function loadCompetitorWatch(){
+  const el = document.getElementById('competitor-watch-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/competitor-watch');
+    const d = await r.json();
+    const items = d.items || [];
+    if (!items.length) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">No pricing drift detected yet — checked weekly against real comparable listings.</span></div>';
+      return;
+    }
+    el.innerHTML = items.map(function(it){
+      const color = Math.abs(it.gap_pct) >= 35 ? 'var(--red)' : 'var(--gold)';
+      const arrow = it.direction === 'above' ? '↑' : '↓';
+      return '<div class="ss-row" style="align-items:flex-start;cursor:default" title="real: '+Math.abs(it.competitor_count)+' live comparable listings for &quot;'+escHtml(it.keywords)+'&quot;, avg $'+it.competitor_avg.toFixed(2)+'">'
+        + '<span class="ss-label" style="color:var(--text)">Listing '+it.listing_id+': $'+it.my_price.toFixed(2)+' vs $'+it.competitor_avg.toFixed(2)+' avg</span>'
+        + '<span class="ss-val" style="color:'+color+';flex-shrink:0">'+arrow+' '+Math.abs(it.gap_pct)+'%</span>'
         + '</div>';
     }).join('');
   }catch(e){

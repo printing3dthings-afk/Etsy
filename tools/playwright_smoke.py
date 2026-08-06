@@ -2715,6 +2715,42 @@ async def _run_browser_checks() -> None:
             check(ab_test_state.get("formAfterOpen") == "block", f"toggleAbTestForm() should open it: {ab_test_state}")
             check(ab_test_state.get("formAfterClose") == "none", f"toggleAbTestForm() should close it again: {ab_test_state}")
 
+            # ── Competitor Price & Listing Drift Watchdog (2026-08-06,
+            # "significantly improve Frank" idea 4/6, second batch).
+            # Desktop-only panel. Confirms: a real drift item renders both
+            # real prices and the real gap %, the direction arrow matches
+            # above/below, and the tooltip carries the real comparable count
+            # -- never a fabricated number. ──
+            competitor_watch_state = await page.evaluate("""async () => {
+                window.__origAuthGetCW = authGet;
+                authGet = (path, ms) => {
+                    if (path.indexOf('/api/competitor-watch') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            items: [
+                                {listing_id: 111, my_price: 30.0, competitor_avg: 20.0,
+                                 competitor_count: 5, keywords: 'kawaii digital planner',
+                                 date: '2026-08-06', gap_pct: 50.0, direction: 'above',
+                                 url: 'https://www.etsy.com/listing/111'},
+                            ],
+                        })});
+                    }
+                    return window.__origAuthGetCW(path, ms);
+                };
+                await loadCompetitorWatch();
+                authGet = window.__origAuthGetCW;
+                const row = document.querySelector('#competitor-watch-body .ss-row');
+                return {
+                    bodyText: document.getElementById('competitor-watch-body').textContent,
+                    rowTitle: row ? row.getAttribute('title') : '',
+                };
+            }""")
+            check("$30.00" in competitor_watch_state.get("bodyText", "") and "$20.00" in competitor_watch_state.get("bodyText", ""),
+                  f"both real prices should render: {competitor_watch_state}")
+            check("50%" in competitor_watch_state.get("bodyText", "") and "↑" in competitor_watch_state.get("bodyText", ""),
+                  f"the real gap % and 'above' direction arrow should render: {competitor_watch_state}")
+            check("5 live comparable listings" in competitor_watch_state.get("rowTitle", ""),
+                  f"the tooltip should cite the real comparable count, never a fabricated one: {competitor_watch_state}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the
