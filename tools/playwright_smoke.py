@@ -2751,6 +2751,51 @@ async def _run_browser_checks() -> None:
             check("5 live comparable listings" in competitor_watch_state.get("rowTitle", ""),
                   f"the tooltip should cite the real comparable count, never a fabricated one: {competitor_watch_state}")
 
+            # ── Weekly "What Changed" Movement Digest (2026-08-06,
+            # "significantly improve Frank" idea 5/6, second batch).
+            # Desktop-only panel. Confirms: a real winner renders a real
+            # positive $ delta in green, a real decliner renders a real
+            # negative $ delta in red, and the tooltip carries the real
+            # views/favorites deltas -- never fabricated. ──
+            movement_digest_state = await page.evaluate("""async () => {
+                window.__origAuthGetMD = authGet;
+                authGet = (path, ms) => {
+                    if (path.indexOf('/api/movement-digest') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            winners: [
+                                {listing_id: 111, title: 'Winner Planner', revenue_delta: 50.0,
+                                 this_week_views: 60, last_week_views: 50,
+                                 this_week_favs: 6, last_week_favs: 3},
+                            ],
+                            decliners: [
+                                {listing_id: 222, title: 'Decliner Stickers', revenue_delta: -60.0,
+                                 this_week_views: 5, last_week_views: 50,
+                                 this_week_favs: 1, last_week_favs: 2},
+                            ],
+                        })});
+                    }
+                    return window.__origAuthGetMD(path, ms);
+                };
+                await loadMovementDigest();
+                authGet = window.__origAuthGetMD;
+                const rows = document.querySelectorAll('#movement-digest-body .ss-row');
+                return {
+                    rowCount: rows.length,
+                    bodyText: document.getElementById('movement-digest-body').textContent,
+                    winnerColor: rows[0] ? rows[0].querySelector('.ss-val').style.color : '',
+                    declinerColor: rows[1] ? rows[1].querySelector('.ss-val').style.color : '',
+                    winnerTitle: rows[0] ? rows[0].getAttribute('title') : '',
+                };
+            }""")
+            check(movement_digest_state.get("rowCount") == 2, f"expected one row per listing: {movement_digest_state}")
+            check("Winner Planner" in movement_digest_state.get("bodyText", "") and "+$50.00" in movement_digest_state.get("bodyText", ""),
+                  f"the real winner and its real $ delta should render: {movement_digest_state}")
+            check("Decliner Stickers" in movement_digest_state.get("bodyText", "") and "-$60.00" in movement_digest_state.get("bodyText", ""),
+                  f"the real decliner and its real $ delta should render: {movement_digest_state}")
+            check("green" in movement_digest_state.get("winnerColor", ""), f"a real winner should render in green: {movement_digest_state}")
+            check("views +10, favorites +3" in movement_digest_state.get("winnerTitle", ""),
+                  f"the tooltip should cite the real views/favorites deltas, never fabricated ones: {movement_digest_state}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the

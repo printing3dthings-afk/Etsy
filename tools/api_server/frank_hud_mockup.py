@@ -1865,6 +1865,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
+          <div class="panel-title">📈 What Changed This Week <span class="src">/api/movement-digest</span></div>
+          <div id="movement-digest-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
           <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('star_seller')" role="button" tabindex="0">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
@@ -4223,7 +4230,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadMovementDigest, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -7343,6 +7350,43 @@ async function loadCompetitorWatch(){
         + '<span class="ss-val" style="color:'+color+';flex-shrink:0">'+arrow+' '+Math.abs(it.gap_pct)+'%</span>'
         + '</div>';
     }).join('');
+  }catch(e){
+    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// Weekly "What Changed" Movement Digest (2026-08-06, "significantly improve
+// Frank" idea 5/6, second batch). Real week-over-week revenue/views/
+// favorites deltas -- winners and decliners, both computed server-side from
+// Frank's own daily snapshot history plus one real Etsy receipts fetch.
+function _fmtMovementDelta(cur, prev){
+  if (cur == null || prev == null) return 'n/a';
+  const d = cur - prev;
+  return (d >= 0 ? '+' : '') + d;
+}
+async function loadMovementDigest(){
+  const el = document.getElementById('movement-digest-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/movement-digest');
+    const d = await r.json();
+    const winners = d.winners || [], decliners = d.decliners || [];
+    if (!winners.length && !decliners.length) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">No real revenue movement yet this week vs. last week.</span></div>';
+      return;
+    }
+    function row(it, colorVar){
+      const viewsDelta = _fmtMovementDelta(it.this_week_views, it.last_week_views);
+      const favsDelta = _fmtMovementDelta(it.this_week_favs, it.last_week_favs);
+      return '<div class="ss-row" style="align-items:flex-start;cursor:default" title="views '+viewsDelta+', favorites '+favsDelta+' vs last week -- real daily snapshot deltas">'
+        + '<span class="ss-label" style="color:var(--text)">'+escHtml(it.title||('Listing '+it.listing_id))+'</span>'
+        + '<span class="ss-val" style="color:var('+colorVar+');flex-shrink:0">'+(it.revenue_delta>=0?'+':'-')+'$'+Math.abs(it.revenue_delta).toFixed(2)+'</span>'
+        + '</div>';
+    }
+    let h = '';
+    if (winners.length) h += winners.map(function(it){ return row(it, '--green'); }).join('');
+    if (decliners.length) h += decliners.map(function(it){ return row(it, '--red'); }).join('');
+    el.innerHTML = h;
   }catch(e){
     if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
   }

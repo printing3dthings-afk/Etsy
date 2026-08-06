@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "08bac43-v315"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e029858-v316"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3882,6 +3882,22 @@ AGENT_TOOLS.append({
     ),
     "input_schema": {"type": "object", "properties": {}},
 })
+# Weekly "What Changed" Movement Digest (2026-08-06, "significantly improve
+# Frank" idea 5/6, second batch) -- real week-over-week winners/decliners by
+# revenue delta, computed from already-collected daily snapshot data + one
+# shared date-scoped receipts fetch.
+AGENT_TOOLS.append({
+    "name": "get_movement_digest",
+    "description": (
+        "Real week-over-week movement per listing -- views, favorites, "
+        "orders, and revenue this week vs. last week, from Frank's own "
+        "daily snapshot history plus real Etsy order receipts. Returns the "
+        "top 5 real revenue winners and top 5 real revenue decliners. Use "
+        "when asked 'what changed this week' or 'which listings are up or "
+        "down'."
+    ),
+    "input_schema": {"type": "object", "properties": {}},
+})
 _SOCIAL_TOOL_NAMES = {"stage_tiktok_post", "stage_pinterest_post", "list_pinterest_boards"}
 
 # Prompt-cache constants — built once at import time, reused every chat turn.
@@ -4603,6 +4619,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return {"tests": sorted(tests.values(), key=lambda t: int(t["id"]), reverse=True)}
         if name == "get_competitor_drift":
             return {"items": _compute_competitor_drift_items()}
+        if name == "get_movement_digest":
+            return asyncio.run(_compute_movement_digest())
         if name == "deep_research":
             ti = tool_input or {}
             query = (ti.get("query") or "").strip()
@@ -10784,6 +10802,127 @@ async def get_competitor_watch(_token: str = Depends(_auth_session_or_bearer)):
         return cached
     data = {"items": await asyncio.to_thread(_compute_competitor_drift_items)}
     _cache_set("competitor_watch", data)
+    return data
+
+
+# ── Weekly "What Changed" Movement Digest (2026-08-06, "significantly
+# improve Frank" idea 5/6, second batch) ────────────────────────────────────
+# Turns the CLAUDE.md-documented manual monthly ritual ("compare conversion
+# rates... identify listings with high views but low conversion") into a
+# standing digest computed from data Frank already collects daily -- real
+# week-over-week views/favorites deltas from listing_snapshots (populated by
+# the existing _snapshot_loop(), same table A/B testing's comparison logic
+# reads) and real orders/revenue from ONE shared, date-scoped get_orders()
+# call covering the full 14-day window (not per-listing -- a single receipts
+# fetch bucketed by listing_id and by which 7-day half it falls in). Zero new
+# Etsy calls beyond that one shared fetch; everything else is a local SQLite
+# read. Real numbers only -- a listing with fewer than 2 daily snapshots in a
+# window reports null views/favorites deltas rather than a misleading 0.
+def _movement_window_delta(rows: list[dict]) -> tuple:
+    if len(rows) < 2:
+        return None, None
+    return rows[-1]["views"] - rows[0]["views"], rows[-1]["num_favorers"] - rows[0]["num_favorers"]
+
+
+async def _compute_movement_digest() -> dict:
+    today = await asyncio.to_thread(_shop_today)
+    try:
+        listings_data = await asyncio.to_thread(_listings_sync, "active")
+    except Exception as exc:
+        # Same "never a bare 500" rule every other Growth-Brief-adjacent
+        # compute function in this file follows (see _compute_star_seller_
+        # status()'s own per-call try/except) -- an Etsy outage or missing
+        # OAuth token must degrade to an honest empty digest, not crash the
+        # endpoint. 2026-08-06: caught live in Playwright verification --
+        # this was the one Etsy call in the whole function not wrapped.
+        print(f"[movement_digest] listings fetch failed (non-fatal, empty digest returned): {exc}", flush=True)
+        return {
+            "winners": [], "decliners": [],
+            "week_start": (today - timedelta(days=7)).isoformat(),
+            "prior_week_start": (today - timedelta(days=14)).isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    active = listings_data.get("listings", [])
+    id_to_title = {l["listing_id"]: l["title"] for l in active}
+
+    this_week_start = today - timedelta(days=7)
+    last_week_start = today - timedelta(days=14)
+    this_week_start_iso = this_week_start.isoformat()
+
+    view_stats: dict[int, dict] = {}
+    for l in active:
+        rows = await asyncio.to_thread(
+            db.get_listing_snapshot_history, l["listing_id"],
+            last_week_start.isoformat(), today.isoformat(),
+        )
+        this_week_rows = [r for r in rows if r["snapshot_date"] >= this_week_start_iso]
+        last_week_rows = [r for r in rows if r["snapshot_date"] < this_week_start_iso]
+        tw_views, tw_favs = _movement_window_delta(this_week_rows)
+        lw_views, lw_favs = _movement_window_delta(last_week_rows)
+        view_stats[l["listing_id"]] = {
+            "this_week_views": tw_views, "this_week_favs": tw_favs,
+            "last_week_views": lw_views, "last_week_favs": lw_favs,
+        }
+
+    order_stats: dict[int, dict] = {
+        lid: {"this_week_orders": 0, "this_week_revenue": 0.0, "last_week_orders": 0, "last_week_revenue": 0.0}
+        for lid in id_to_title
+    }
+    try:
+        start_ts = int(datetime.fromisoformat(last_week_start.isoformat()).replace(tzinfo=timezone.utc).timestamp())
+        this_week_start_ts = int(datetime.fromisoformat(this_week_start_iso).replace(tzinfo=timezone.utc).timestamp())
+        r = await asyncio.to_thread(
+            lambda: EtsyAPIClient().get_orders(limit=100, status="paid", min_created=start_ts)
+        )
+        for receipt in r.get("results", []) or []:
+            bucket = "this_week" if receipt.get("create_timestamp", 0) >= this_week_start_ts else "last_week"
+            for t in receipt.get("transactions", []) or []:
+                lid = t.get("listing_id")
+                if lid not in order_stats:
+                    continue
+                qty = int(t.get("quantity", 1) or 1)
+                price = t.get("price") or {}
+                amt = (price.get("amount", 0) / price.get("divisor", 100)) if price.get("divisor") else 0
+                order_stats[lid][f"{bucket}_orders"] += qty
+                order_stats[lid][f"{bucket}_revenue"] += amt * qty
+    except Exception as exc:
+        print(f"[movement_digest] order fetch failed (non-fatal, views/favorites still shown): {exc}", flush=True)
+
+    items = []
+    for lid, title in id_to_title.items():
+        vs = view_stats.get(lid, {})
+        os_ = order_stats.get(lid, {})
+        revenue_delta = round(os_.get("this_week_revenue", 0) - os_.get("last_week_revenue", 0), 2)
+        items.append({
+            "listing_id": lid, "title": title,
+            "this_week_views": vs.get("this_week_views"), "last_week_views": vs.get("last_week_views"),
+            "this_week_favs": vs.get("this_week_favs"), "last_week_favs": vs.get("last_week_favs"),
+            "this_week_orders": os_.get("this_week_orders", 0), "last_week_orders": os_.get("last_week_orders", 0),
+            "this_week_revenue": round(os_.get("this_week_revenue", 0), 2),
+            "last_week_revenue": round(os_.get("last_week_revenue", 0), 2),
+            "revenue_delta": revenue_delta,
+        })
+
+    winners = sorted([it for it in items if it["revenue_delta"] > 0], key=lambda it: it["revenue_delta"], reverse=True)[:5]
+    decliners = sorted([it for it in items if it["revenue_delta"] < 0], key=lambda it: it["revenue_delta"])[:5]
+    return {
+        "winners": winners, "decliners": decliners,
+        "week_start": this_week_start_iso, "prior_week_start": last_week_start.isoformat(),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/api/movement-digest")
+async def get_movement_digest(_token: str = Depends(_auth_session_or_bearer)):
+    """Real week-over-week winners/decliners by revenue delta. Cached 1800s
+    (30min) -- this is a weekly-cadence digest, not a live ticker, and the
+    underlying receipts fetch is a real Etsy call worth not repeating on
+    every poll."""
+    cached = _cache_get("movement_digest", ttl=1800)
+    if cached is not None:
+        return cached
+    data = await _compute_movement_digest()
+    _cache_set("movement_digest", data)
     return data
 
 

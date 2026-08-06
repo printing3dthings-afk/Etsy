@@ -22856,3 +22856,44 @@ Verified: 112/112 unit tests (new `tests/test_competitor_watch.py`, 12
 tests — covers self-listing exclusion, the minimum-sample gate, and that a
 price gap NEVER produces a fabricated dollar figure in Growth Brief), 3x
 clean Playwright. Build bumped to `08bac43-v315`.
+
+## 2026-08-06 — Weekly "What Changed" Movement Digest (idea 5/6, second "significantly improve Frank" batch)
+
+Real week-over-week winners/decliners per listing, computed from data Frank
+already collects daily -- views/favorites deltas from `listing_snapshots`
+(populated by the existing `_snapshot_loop()`, same table A/B testing's
+comparison logic reads), and orders/revenue from ONE shared, date-scoped
+`get_orders()` call covering the full 14-day window, bucketed by
+`listing_id` and by which 7-day half each receipt's `create_timestamp`
+falls into. No new Etsy call beyond that single shared fetch; everything
+else is a local SQLite read. A listing with fewer than 2 daily snapshots in
+a window reports a null views/favorites delta rather than a misleading 0.
+Top 5 real revenue winners and top 5 real decliners surfaced, never a
+guessed one -- a listing with zero real revenue delta appears in neither
+list.
+
+**Real bug caught live in 3x-clean Playwright verification, fixed same
+day:** the initial `_listings_sync()` call inside `_compute_movement_
+digest()` was the one Etsy call in the whole function not wrapped in
+try/except -- unlike every sibling Growth-Brief-adjacent compute function
+(`_compute_star_seller_status()` etc.), which each wrap their own Etsy
+calls and degrade gracefully. In this environment (no Etsy OAuth token
+configured), that raised an uncaught `EtsyAPIError` straight into a raw 500
+on every page load, confirmed via two real `500 (Internal Server Error)`
+console errors during Playwright's first run. Fixed by wrapping the
+listings fetch in the same try/except pattern and returning an honest
+empty digest (`{"winners": [], "decliners": [], ...}`) on failure --
+matching this codebase's "never a bare 500" convention
+(`.claude/rules/api-conventions.md`). Re-ran 3x clean Playwright after the
+fix to confirm the console errors are gone, not just papered over.
+
+New desktop panel (`#movement-digest-body`, next to Competitor Watchdog),
+new chat tool `get_movement_digest`, new endpoint `GET /api/movement-
+digest` (cached 30min -- a weekly-cadence digest, not a live ticker, and
+the underlying receipts fetch is a real Etsy call worth not repeating on
+every poll).
+
+Verified: 113/113 unit tests (new `tests/test_movement_digest.py`, 8
+tests -- including a regression test for the exact 500-causing bug above),
+3x clean Playwright (first pass caught the real bug; all three passes
+clean after the fix). Build bumped to `e029858-v316`.
