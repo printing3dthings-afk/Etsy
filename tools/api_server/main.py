@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "cc34fea-v312"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "65e4443-v313"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2694,6 +2694,23 @@ AGENT_TOOLS = [
         "input_schema": {"type": "object", "properties": {}},
     },
     {
+        # 2026-08-06 ("Growth Brief", idea 2/3 of the Frank improvement roadmap):
+        # synthesizes Ads/COGS/Star Seller/seasonal keywords/bundle opportunities/
+        # Conversion Doctor into one ranked list instead of Scott having to check
+        # 5+ separate panels and mentally combine them himself.
+        "name": "get_growth_brief",
+        "description": (
+            "Ranked, dollar-impact-scored list of what to prioritize this week, "
+            "synthesized from Ads/ROAS, COGS margin, Star Seller status, seasonal "
+            "keyword windows, bundle opportunities, and Conversion Doctor listing "
+            "issues. Each item's est_dollar_impact is either a REAL number (ad spend, "
+            "logged revenue, Star Seller's trailing-90-day revenue at stake) or null "
+            "with impact_basis explaining why no dollar figure was estimated -- never "
+            "fabricated. Call this when asked 'what should I focus on' or similar."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "list_listings",
         "description": (
             "List the shop's listings with title, price, views, favorites, tags, and "
@@ -4069,6 +4086,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _list_pinterest_boards()
         if name == "get_metrics":
             return _metrics_sync()
+        if name == "get_growth_brief":
+            return asyncio.run(_compute_growth_brief())
         if name == "list_listings":
             state = (tool_input or {}).get("state", "active")
             data = _listings_sync(state)
@@ -6549,6 +6568,193 @@ async def get_bundle_opportunities(_token: str = Depends(_auth_session_or_bearer
         return cached
     data = {"opportunities": await asyncio.to_thread(_compute_bundle_opportunities)}
     _cache_set("bundle_opportunities", data)
+    return data
+
+
+# ── Growth Brief (2026-08-06, "significantly improve Frank" idea 2/3) ──────────
+# Frank had gotten data-rich but synthesis-poor: Ads/COGS/Star Seller/seasonal
+# keywords/bundle opportunities/Conversion Doctor findings all already existed
+# as separate panels/endpoints, but nothing combined them into one ranked
+# "do this first" list. This does exactly that -- and is deliberate about
+# NEVER fabricating a dollar figure it doesn't actually have (the top-priority
+# "never lie" rule applies to Frank's own recommendations, not just listing
+# copy): only ads spend/revenue, Star Seller's real trailing-90-day revenue,
+# and COGS's already-labeled profit ESTIMATE carry a real est_dollar_impact.
+# Conversion Doctor/seasonal/bundle items rank by their own existing native
+# signal (severity/urgency/active_count) with est_dollar_impact left null and
+# impact_basis saying so explicitly -- a null $ figure ranks below any item
+# with a real one, but is never backfilled with an invented number just to
+# make every row look equally precise.
+def _score_growth_brief_items(ads: dict, cogs: dict, star_seller: dict, actions_data: dict,
+                                bundle_opps: list, seasonal_entries: list) -> list[dict]:
+    """Pure merge/scoring over already-fetched data -- no I/O, so this is
+    directly unit-testable with synthetic inputs. See _compute_growth_brief()
+    for where each argument actually comes from."""
+    items: list[dict] = []
+
+    if ads.get("used"):
+        st = ads.get("status")
+        if st == "kill_signal":
+            items.append({
+                "category": "ads", "severity": "high",
+                "title": "Ads are burning money with zero return",
+                "detail": f"${ads['week_spend']:.2f} spent this week, $0 revenue back.",
+                "suggestion": "Pause this campaign in Etsy Ads and re-evaluate targeting before spending more.",
+                "est_dollar_impact": ads["week_spend"],
+                "impact_basis": "real: this week's logged ad spend with zero logged revenue",
+            })
+        elif st == "low_roas":
+            items.append({
+                "category": "ads", "severity": "medium",
+                "title": f"Ads ROAS is below target ({ads.get('month_roas', 0)}x)",
+                "detail": f"${ads['month_spend']:.2f} spent this month, ${ads['month_revenue']:.2f} back.",
+                "suggestion": "Consider narrowing targeting or pausing the weakest-performing listing.",
+                "est_dollar_impact": max(ads["month_spend"] - ads["month_revenue"], 0),
+                "impact_basis": "real: this month's logged spend minus logged revenue",
+            })
+        elif st == "scale_eligible":
+            items.append({
+                "category": "ads", "severity": "low",
+                "title": f"Ads are outperforming target ({ads.get('month_roas', 0)}x ROAS)",
+                "detail": f"${ads['month_revenue']:.2f} back on ${ads['month_spend']:.2f} spent this month.",
+                "suggestion": "Consider raising budget 20-30% (never more than double at once) — this is a proven winner.",
+                "est_dollar_impact": ads["month_revenue"],
+                "impact_basis": "real: this month's logged ad revenue — a growth opportunity, not a problem",
+            })
+
+    if star_seller.get("status") == "at_risk":
+        items.append({
+            "category": "star_seller", "severity": "high",
+            "title": "Star Seller status is at risk",
+            "detail": f"{star_seller.get('orders_90d', 0)} orders / ${star_seller.get('revenue_90d', 0):.2f} "
+                      "revenue over the trailing 90 days (need 5 orders / $300).",
+            "suggestion": "Star Seller status drives catalog-wide ranking lift — closing this gap benefits every listing, not just one.",
+            "est_dollar_impact": star_seller.get("revenue_90d", 0),
+            "impact_basis": "real: trailing-90-day revenue already earned, shown as the stakes of losing Star Seller ranking lift",
+        })
+
+    if cogs.get("used") and cogs.get("flagged_low_margin"):
+        n = len(cogs["flagged_low_margin"])
+        items.append({
+            "category": "cogs", "severity": "medium",
+            "title": f"{n} listing{'s' if n != 1 else ''} running thin margins",
+            "detail": f"Shop-wide average margin is an estimated {cogs.get('avg_margin_pct', 0)}%.",
+            "suggestion": "Review pricing on these listings — even a small price increase compounds across every future sale.",
+            "est_dollar_impact": None,
+            "impact_basis": "estimate only (COGS is a flat-rate guess, not real accounting) — no forward dollar prediction made",
+        })
+
+    for card in (actions_data.get("actions") or [])[:5]:
+        if card.get("severity") not in ("high", "medium"):
+            continue
+        items.append({
+            "category": "listing_fix", "severity": card["severity"],
+            "title": card.get("title", ""), "detail": card.get("detail", ""),
+            "suggestion": card.get("suggestion", ""),
+            "listing_id": card.get("listing_id"), "url": card.get("url"),
+            "est_dollar_impact": None,
+            "impact_basis": f"ranked by severity + {card.get('impact', 0)} views on this listing — no dollar figure fabricated",
+        })
+
+    for e in seasonal_entries:
+        urg = e.get("urgency")
+        items.append({
+            "category": "seasonal", "severity": "medium" if urg == "OVERDUE" else "low",
+            "title": f"{e.get('season', 'Seasonal')} keyword window is {str(urg).lower()}",
+            "detail": f"Update by {e.get('update_by')} for listings: {', '.join(e.get('listings_to_update', []))}",
+            "suggestion": "Update titles/tags before the seasonal search window opens.",
+            "est_dollar_impact": None,
+            "impact_basis": "timing opportunity — no dollar estimate available",
+        })
+
+    for bo in bundle_opps:
+        items.append({
+            "category": "bundle", "severity": "low",
+            "title": bo.get("title", ""), "detail": "",
+            "suggestion": bo.get("suggestion", ""),
+            "est_dollar_impact": None,
+            "impact_basis": "structural catalog gap — no dollar estimate available",
+        })
+
+    _SEV_RANK = {"high": 0, "medium": 1, "low": 2}
+    items.sort(key=lambda it: (
+        0 if it["est_dollar_impact"] is not None else 1,
+        -(it["est_dollar_impact"] or 0),
+        _SEV_RANK.get(it["severity"], 9),
+    ))
+    return items
+
+
+def _growth_brief_seasonal_entries(today: date) -> list[dict]:
+    """Same filter/urgency logic GET /api/cadence already uses (main.py's own
+    seasonal block) -- duplicated here rather than shared since /api/cadence's
+    version is entangled with tax-deadline merging this doesn't need, and this
+    is only the 2nd real caller (code-style.md's bar for extracting a shared
+    helper), not worth the coupling risk of refactoring a working endpoint
+    mid-sprint."""
+    calendar = seasonal_keywords._build_calendar(today.year)
+    for e in calendar:
+        if e["update_by"] is None:
+            e["update_by"] = seasonal_keywords._update_by(e["peak"])
+    out = []
+    for e in calendar:
+        if not (e["peak"] >= today or (e["update_by"] < today < e["peak"])):
+            continue
+        urg = seasonal_keywords._urgency(e["update_by"], today)
+        if urg not in ("OVERDUE", "THIS WEEK"):
+            continue
+        out.append({
+            "season": e["season"], "update_by": e["update_by"].isoformat(),
+            "listings_to_update": e["listings_to_update"], "urgency": urg,
+        })
+    return out
+
+
+async def _get_or_compute_cached(cache_key: str, ttl: float, fn) -> object:
+    """Reuses whatever another screen's own loader already populated under
+    this exact cache key (e.g. Home's Ads/COGS/Star Seller panels) instead of
+    re-fetching from Etsy -- Growth Brief can end up making ZERO extra Etsy
+    calls if Scott just had Home open. Falls through to a fresh compute (and
+    populates the same cache) on a real miss."""
+    cached = _cache_get(cache_key, ttl=ttl)
+    if cached is not None:
+        return cached
+    result = await asyncio.to_thread(fn)
+    _cache_set(cache_key, result)
+    return result
+
+
+async def _compute_growth_brief() -> dict:
+    today = await asyncio.to_thread(_shop_today)
+    ads, cogs, star_seller, actions_data, bundle_cached = await asyncio.gather(
+        _get_or_compute_cached("ads_status", 120, _compute_ads_status),
+        _get_or_compute_cached("cogs_status", 120, _compute_cogs_status),
+        _get_or_compute_cached("star_seller", 120, _compute_star_seller_status),
+        _get_or_compute_cached("actions", 120, _compute_actions),
+        _get_or_compute_cached("bundle_opportunities", 3600, _compute_bundle_opportunities),
+    )
+    # bundle_opportunities' own endpoint wraps the raw list as {"opportunities":
+    # [...]} before caching -- a fresh compute here (cache miss) returns the
+    # bare list instead, so normalize both shapes rather than let a cache-hit
+    # vs cache-miss race silently change this function's behavior.
+    bundle_opps = bundle_cached.get("opportunities", []) if isinstance(bundle_cached, dict) else bundle_cached
+    seasonal_entries = await asyncio.to_thread(_growth_brief_seasonal_entries, today)
+    items = _score_growth_brief_items(ads, cogs, star_seller, actions_data, bundle_opps, seasonal_entries)
+    return {"items": items[:8], "generated_at": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/api/growth-brief")
+async def get_growth_brief(_token: str = Depends(_auth_session_or_bearer)):
+    """Ranked, dollar-impact-scored 'what to do this week' list synthesized
+    from Ads/COGS/Star Seller/seasonal keywords/bundle opportunities/
+    Conversion Doctor -- see _score_growth_brief_items()'s own comment for
+    the scoring rules. Cached 60s (short -- this is a merge over other
+    endpoints' own longer-TTL caches, so re-running it is cheap)."""
+    cached = _cache_get("growth_brief", ttl=60)
+    if cached is not None:
+        return cached
+    data = await _compute_growth_brief()
+    _cache_set("growth_brief", data)
     return data
 
 

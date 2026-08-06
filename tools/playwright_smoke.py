@@ -2625,6 +2625,51 @@ async def _run_browser_checks() -> None:
             check(chat_prefill_check.get("bubblesBefore") == chat_prefill_check.get("bubblesAfter"),
                   f"prefillChat must never actually send the message (that's a real paid API call): {chat_prefill_check}")
 
+            # ── Growth Brief (2026-08-06, "significantly improve Frank" idea 2/3) --
+            # a ranked, dollar-impact-scored list synthesized server-side from Ads/
+            # COGS/Star Seller/seasonal keywords/bundle opportunities/Conversion
+            # Doctor. Desktop-only panel (.col-right, brk class). Stubs authGet()
+            # directly, same seam as the Today-tab block above (the service worker
+            # makes page.route() unreliable for GET here). Confirms: real-$ items
+            # render the real dollar figure, null-$ items render an em dash (never
+            # a fabricated number), and the honesty basis is in the row's tooltip. ──
+            growth_brief_state = await page.evaluate("""async () => {
+                window.__origAuthGetGB = authGet;
+                authGet = (path, ms) => {
+                    if (path.indexOf('/api/growth-brief') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            items: [
+                                {category: 'star_seller', severity: 'high', title: 'Star Seller status is at risk',
+                                 detail: '2 orders / $145.30 revenue', suggestion: 'x',
+                                 est_dollar_impact: 145.30, impact_basis: 'real: trailing-90-day revenue already earned'},
+                                {category: 'listing_fix', severity: 'medium', title: 'Tags incomplete on a listing',
+                                 detail: 'd', suggestion: 's', listing_id: 123, url: null,
+                                 est_dollar_impact: null, impact_basis: 'ranked by severity + 12 views -- no dollar figure fabricated'},
+                            ],
+                            generated_at: '2026-08-06T00:00:00Z',
+                        })});
+                    }
+                    return window.__origAuthGetGB(path, ms);
+                };
+                await loadGrowthBrief();
+                authGet = window.__origAuthGetGB;
+                const rows = Array.from(document.querySelectorAll('#growth-brief-body .ss-row'));
+                return {
+                    rowCount: rows.length,
+                    firstRowText: rows[0] ? rows[0].textContent : '',
+                    firstRowTitle: rows[0] ? rows[0].getAttribute('title') : '',
+                    secondRowText: rows[1] ? rows[1].textContent : '',
+                    secondRowTitle: rows[1] ? rows[1].getAttribute('title') : '',
+                };
+            }""")
+            check(growth_brief_state.get("rowCount") == 2, f"expected one row per item: {growth_brief_state}")
+            check("$145.30" in growth_brief_state.get("firstRowText", ""), f"a real $ figure should render as a real dollar amount: {growth_brief_state}")
+            check("Star Seller status is at risk" in growth_brief_state.get("firstRowText", ""), f"expected the real title: {growth_brief_state}")
+            check("real:" in growth_brief_state.get("firstRowTitle", ""), f"the tooltip should carry the honest impact_basis: {growth_brief_state}")
+            check("—" in growth_brief_state.get("secondRowText", ""), f"a null $ figure must render as an em dash, never a fabricated number: {growth_brief_state}")
+            check("no dollar figure fabricated" in growth_brief_state.get("secondRowTitle", ""),
+                  f"the null-$ row's tooltip must say so explicitly: {growth_brief_state}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the

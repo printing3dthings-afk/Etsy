@@ -22740,3 +22740,38 @@ Verified: 109/109 unit tests (new `tests/test_review_reply_assistant.py`,
 9 tests), 3x clean Playwright (new coverage: draft rendering, suppressed on
 already-replied reviews, real copy-to-clipboard behavior). Build bumped to
 `cc34fea-v312`.
+
+
+## 2026-08-06 — Idea 2/3: Growth Brief (ranked, dollar-scored action list)
+Scott's 2nd idea from the "significantly improve Frank" request: Frank had
+gotten data-rich but synthesis-poor -- Ads/COGS/Star Seller/seasonal keyword
+windows/bundle opportunities/Conversion Doctor findings all already existed
+as separate panels/endpoints, but nothing combined them into one ranked "do
+this first" list.
+
+**New `GET /api/growth-brief`** (`_compute_growth_brief()` -> `_score_growth_
+brief_items()`): merges all 6 sources, capped to the top 8 items. The one
+rule every part of this was built around: `est_dollar_impact` is either a
+REAL number traceable straight to a source function (this week's ad spend
+with zero return, this month's logged ad revenue, Star Seller's real
+trailing-90-day revenue at stake) or explicitly `null` with `impact_basis`
+saying why no figure was estimated -- Conversion Doctor listing issues,
+seasonal keyword timing, bundle-catalog gaps, and COGS's already-flagged
+margin ESTIMATE never get a fabricated dollar prediction. Items with a real
+$ figure always sort above items without one; the top-priority "never lie"
+rule applies to Frank's own recommendations, not just listing copy.
+
+`_get_or_compute_cached()` reuses whatever another screen's own loader
+already populated under the exact same cache key (ads_status/cogs_status/
+star_seller/actions/bundle_opportunities) instead of re-fetching from Etsy
+-- Growth Brief can make ZERO extra Etsy calls if Scott just had Home open.
+
+New desktop panel (`#growth-brief-body`, `.col-right`, next to Star Seller)
+and chat tool `get_growth_brief` (not PII -- no buyer names, only aggregate
+shop numbers).
+
+Verified: 110/110 unit tests (new `tests/test_growth_brief.py`, 13 tests --
+one caught a real deadlock bug in the test itself: double-acquiring the
+non-reentrant `_cache_lock` by wrapping `_cache_set()`, which locks
+internally, inside an outer `with server._cache_lock:` block), 3x clean
+Playwright. Build bumped to `65e4443-v313`.

@@ -1830,6 +1830,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
+          <div class="panel-title">🎯 Growth Brief <span class="src">/api/growth-brief</span></div>
+          <div id="growth-brief-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
           <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('star_seller')" role="button" tabindex="0">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
@@ -4188,7 +4195,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -7166,6 +7173,37 @@ async function loadAdsStatus(){
       '<div class="ss-row"><span class="ss-label">Last logged</span><span class="ss-val"'+(d.days_since_log>=7?' style="color:var(--red)"':'')+'>'+d.days_since_log+'d ago</span></div>';
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+// Growth Brief (2026-08-06, "significantly improve Frank" idea 2/3): a
+// ranked, dollar-impact-scored list synthesized server-side from Ads/COGS/
+// Star Seller/seasonal keywords/bundle opportunities/Conversion Doctor --
+// see _score_growth_brief_items()'s own comment for the honesty rule
+// (est_dollar_impact is either a real number or explicitly null, never a
+// fabricated guess). The impact_basis tooltip says which one it is per row.
+const _GROWTH_SEV_COLOR = {high: 'var(--red)', medium: 'var(--gold)', low: 'var(--green)'};
+async function loadGrowthBrief(){
+  const el = document.getElementById('growth-brief-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/growth-brief');
+    const d = await r.json();
+    const items = d.items || [];
+    if (!items.length) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">Nothing ranked right now — every source is quiet.</span></div>';
+      return;
+    }
+    el.innerHTML = items.map(function(it, i){
+      const dollar = it.est_dollar_impact != null ? '$' + Number(it.est_dollar_impact).toFixed(2) : '—';
+      const color = _GROWTH_SEV_COLOR[it.severity] || 'var(--muted)';
+      return '<div class="ss-row" style="align-items:flex-start;cursor:default" title="' + escHtml(it.impact_basis || '') + '">'
+        + '<span class="ss-label" style="color:var(--text)">' + (i + 1) + '. ' + escHtml(it.title) + '</span>'
+        + '<span class="ss-val" style="color:' + color + ';flex-shrink:0">' + dollar + '</span>'
+        + '</div>';
+    }).join('');
+  }catch(e){
+    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
   }
 }
 
