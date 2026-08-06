@@ -14658,3 +14658,17 @@ html.theme-springvivid{
 
 <!-- /TRASH 20260806-002 -->
 
+<!-- TRASH id=20260806-003 date=2026-08-06 kind=snippet source="tools/post_scheduled_coloring.py" reason="Broken: PACKS[pack] is a plain theme list not a {themes,style} dict, and generate_pack() does not exist in generate_coloring_pages.py -- TypeError crashed every scheduled run since this script was written. Replaced with the real per-theme loop main() actually uses." -->
+## 20260806-003 · 2026-08-06 · snippet · `tools/post_scheduled_coloring.py`
+**Reason:** Broken: PACKS[pack] is a plain theme list not a {themes,style} dict, and generate_pack() does not exist in generate_coloring_pages.py -- TypeError crashed every scheduled run since this script was written. Replaced with the real per-theme loop main() actually uses.  
+**Payload:** `data/trash/files/20260806-003__snippet.txt`
+
+```python
+    # Generate full page set
+    themes = gcp.PACKS[pack]["themes"]
+    style_dna = gcp.PACKS[pack]["style"]
+    generated_files = gcp.generate_pack(pack, themes, style_dna=style_dna)
+```
+
+<!-- /TRASH 20260806-003 -->
+

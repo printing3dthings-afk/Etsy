@@ -87,10 +87,18 @@ def run_scheduled_coloring(force: bool = False, preview: bool = False) -> dict:
         print(f"  Tags ({len(meta.get('tags', []))}): {', '.join(meta.get('tags', []))}")
         return {"status": "preview_complete", "pack": pack}
 
-    # Generate full page set
-    themes = gcp.PACKS[pack]["themes"]
-    style_dna = gcp.PACKS[pack]["style"]
-    generated_files = gcp.generate_pack(pack, themes, style_dna=style_dna)
+    # Generate full page set. PACKS[pack] is the theme list directly (no
+    # "themes"/"style" sub-dict), and generate_coloring_pages.py has no
+    # generate_pack() batch function -- this now matches the same per-theme
+    # loop that module's own main() uses (2026-08-06 fix: the previous code
+    # here never worked, TypeError'd on every scheduled run since this script
+    # was written -- see ops_runbook.md).
+    themes = gcp.PACKS[pack]
+    generated_files = []
+    for theme in themes:
+        p = gcp.generate_coloring_page(theme, gcp.COLORING_DIR)
+        if p:
+            generated_files.append(p)
 
     if not generated_files:
         print("[SCHEDULED COLORING] ✗ Image generation failed or returned 0 files.")

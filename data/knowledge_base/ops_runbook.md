@@ -22472,3 +22472,32 @@ pass (canonical-list-vs-frontend-coverage checks, dead-setting greps, dispatch
 table completeness) and came back clean -- no further findings.
 
 Verified: 106/106 unit tests, 3x clean Playwright. Build bumped to `4eb155e-v308`.
+
+
+## 2026-08-06 — Fix: scheduled coloring pack generation crashed on every run
+The hourly health loop had been logging this exact crash repeatedly:
+`TypeError: list indices must be integers or slices, not str` at
+`gcp.PACKS[pack]["themes"]` inside `tools/post_scheduled_coloring.py`.
+
+**Root cause:** `run_scheduled_coloring()` assumed `generate_coloring_pages.py`'s
+`PACKS` dict maps each pack name to a `{"themes": [...], "style": ...}` object,
+and called a `gcp.generate_pack(pack, themes, style_dna=style_dna)` batch
+function. Neither matches reality: `PACKS[pack]` IS the theme list directly
+(no "themes"/"style" sub-dict), and `generate_pack()` does not exist anywhere
+in `generate_coloring_pages.py` -- the real per-page entry point is
+`generate_coloring_page(theme, output_dir)`, called once per theme in a loop
+(exactly what that module's own `main()` does). This meant the scheduled
+coloring-pack cron job has never successfully produced a pack since this
+script was written -- it crashed before generating a single image, every time.
+
+**Fix:** `run_scheduled_coloring()` now loops `gcp.generate_coloring_page(theme,
+gcp.COLORING_DIR)` over `gcp.PACKS[pack]` directly, collecting successful
+paths, then proceeds to `build_sets()`/`generate_listing_json()` as before
+(those two call sites were already correct). Added
+`tests/test_scheduled_coloring_pack_generation.py`: asserts PACKS' real shape,
+asserts `generate_pack` still doesn't exist (so this doesn't silently regress
+if the API changes again), and exercises the fixed loop end-to-end with a
+mocked `generate_coloring_page()`.
+
+Verified: 107/107 unit tests (includes the new regression test). No frontend
+touched -- backend script only, no Playwright needed.
