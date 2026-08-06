@@ -244,6 +244,18 @@ async def _run_browser_checks() -> None:
             check("new-user-name" not in settings_html,
                   "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
+            # (2026-08-06 Settings audit) -- confirm the 4 new/fixed sections all
+            # actually render: the orphaned API Costs card, Notifications,
+            # Autonomy Boundaries, Data & Privacy, and the relabeled My Account
+            # copy that explains what the fields actually do.
+            check("settings-api-costs" in settings_html, "Settings screen missing the API Costs card")
+            check("setting-daily-brief-hour" in settings_html and "setting-daily-brief-enabled" in settings_html,
+                  "Settings screen missing the Notifications (daily brief) card")
+            check("What %%AGENT_SHORT%%" not in settings_html and "Can Do Without Asking" in settings_html,
+                  "Settings screen missing the Autonomy Boundaries card (or its template placeholder wasn't substituted)")
+            check("runRetentionCleanup" in settings_html, "Settings screen missing the Data & Privacy cleanup button")
+            check("also updates how" in settings_html, "My Account Name field should explain it also renames the agent's address for Scott")
+            check("doesn't route any notifications" in settings_html, "My Account Email field should clarify it doesn't drive real notifications")
             # (2026-08-05) TEXT_ENGINE alone was reintroduced to Settings (Scott:
             # "swappable per-task, like images") -- image/video stay Create-screen
             # -only per the 2026-07-11 reasoning, confirmed still true above.
@@ -275,6 +287,59 @@ async def _run_browser_checks() -> None:
                 if (sel) { sel.value = 'anthropic'; saveEngines(); await new Promise(r => setTimeout(r, 300)); }
             }""")
 
+            # ── Notifications card round-trip (2026-08-06) -- the hour dropdown
+            # is built client-side (24 options) by loadNotificationPrefs(), and
+            # saving must persist through POST /api/settings and read back
+            # correctly on a fresh load. ──
+            notif_state = await page.evaluate("""async () => {
+                await loadNotificationPrefs();
+                const hourSel = document.getElementById('setting-daily-brief-hour');
+                const optionCount = hourSel ? hourSel.options.length : 0;
+                hourSel.value = '21';
+                document.getElementById('setting-daily-brief-enabled').checked = false;
+                await saveNotificationPrefs();
+                await new Promise(r => setTimeout(r, 300));
+                const statusText = document.getElementById('notification-prefs-status').textContent;
+                hourSel.value = '6';  // simulate stale DOM before reload
+                document.getElementById('setting-daily-brief-enabled').checked = true;
+                await loadNotificationPrefs();
+                return {optionCount, statusText, hourAfterReload: hourSel.value,
+                        enabledAfterReload: document.getElementById('setting-daily-brief-enabled').checked};
+            }""")
+            check(notif_state.get("optionCount") == 24, f"expected a 24-hour dropdown, got {notif_state}")
+            check("Saved" in notif_state.get("statusText", ""), f"expected a save confirmation, got {notif_state}")
+            check(notif_state.get("hourAfterReload") == "21", f"saved hour should round-trip through a reload, got {notif_state}")
+            check(notif_state.get("enabledAfterReload") is False, f"saved disabled state should round-trip, got {notif_state}")
+            # Restore defaults so later checks in this session aren't affected.
+            await page.evaluate("""async () => {
+                document.getElementById('setting-daily-brief-hour').value = '6';
+                document.getElementById('setting-daily-brief-enabled').checked = true;
+                await saveNotificationPrefs();
+            }""")
+
+            # ── Data & Privacy: mock the retention-cleanup call (never invoke the
+            # REAL prune function from a smoke test -- it touches actual files
+            # under data/message_drafts/ and data/notified_orders.json, which are
+            # real repo paths, not sandboxed by this test server's tmp DB). ──
+            async def _mock_retention_cleanup(route):
+                await route.fulfill(status=200, content_type="application/json",
+                                     body=json.dumps({"drafts_deleted": 2, "notified_orders_trimmed": 0, "sent_log_trimmed": 0}))
+            await page.route("**/api/system/run-retention-cleanup", _mock_retention_cleanup)
+            retention_state = await page.evaluate("""async () => {
+                await runRetentionCleanup();
+                await new Promise(r => setTimeout(r, 200));
+                return document.getElementById('retention-cleanup-status').textContent;
+            }""")
+            check("2 old draft file" in retention_state, f"expected the mocked cleanup result rendered, got {retention_state!r}")
+
+            # ── Active Sessions: real (unmocked) call -- read-only, no side
+            # effects, and this test's own login is a genuine active session. ──
+            sessions_state = await page.evaluate("""async () => {
+                await loadActiveSessions();
+                return document.getElementById('active-sessions-list').textContent;
+            }""")
+            check("this device" in sessions_state, f"expected the current session to be labeled 'this device', got {sessions_state!r}")
+
             # ── Settings audit (2026-07-31): the Connections summary card used to
             # call GET /api/etsy-tokens (owner-only) alongside /api/credentials/status
             # via Promise.all, so every non-owner ("admin"-role, same as this test's
@@ -303,15 +368,31 @@ async def _run_browser_checks() -> None:
                   f"#settings-build-ver should repopulate when Settings' own loaders re-run "
                   f"(not just on initial page load): {build_ver_state}")
 
-            # ── 4 new bright color themes (2026-07-18, Scott: "brighter colors but
-            # make sure text is readable") -- confirm each is wired all the way
-            # through: listed in the Settings swatch picker, and _setTheme()
-            # actually applies its real CSS custom properties on <html>. ──
+            # ── Color themes (2026-08-06: trimmed 12->5, Scott: "take the color
+            # selection down to 5") -- confirm the swatch row renders EXACTLY 5
+            # (not stale extras, not the old 12), and that each surviving theme's
+            # _setTheme() call actually applies its real CSS custom properties. ──
+            theme_swatch_count = await page.evaluate(
+                "document.getElementById('theme-swatch-row').children.length")
+            check(theme_swatch_count == 5,
+                  f"theme swatch row should render exactly 5 themes after the reduction, got {theme_swatch_count}")
+            stale_theme_state = await page.evaluate("""() => {
+                localStorage.setItem('frankTheme', 'sakura');  // a theme cut in the 12->5 trim
+                const resolved = _getTheme();
+                _setTheme(resolved);
+                return {resolved, hasStaleClass: document.documentElement.classList.contains('theme-sakura'),
+                         storedAfter: localStorage.getItem('frankTheme')};
+            }""")
+            check(stale_theme_state.get("resolved") == "default",
+                  f"a theme removed in the 12->5 trim must fall back to 'default' on read, got: {stale_theme_state}")
+            check(not stale_theme_state.get("hasStaleClass"),
+                  f"a removed theme's class must never be applied to <html>: {stale_theme_state}")
+            check(stale_theme_state.get("storedAfter") == "default",
+                  f"resolving a stale theme should self-correct localStorage back to a real theme: {stale_theme_state}")
             for theme_name, expect_bg_hex in [
                 ("sunwashed", "#fff8f0"),
-                ("mermaid", "#f0fbfa"),
-                ("clubroom", "#fffdf5"),
-                ("springvivid", "#fbf7ff"),
+                ("ocean", "#07120f"),
+                ("kawaii", "#0d0a1a"),
             ]:
                 theme_state = await page.evaluate(f"""() => {{
                     _setTheme('{theme_name}');
@@ -339,13 +420,13 @@ async def _run_browser_checks() -> None:
                 _setFontPairing('rounded');
                 const csAfterFont = getComputedStyle(document.documentElement);
                 const displayAfterFont = csAfterFont.getPropertyValue('--font-display').trim();
-                _setTheme('mermaid');
+                _setTheme('ocean');
                 const csAfterTheme = getComputedStyle(document.documentElement);
                 return {
                     swatchRowText: (document.getElementById('font-swatch-row') || {}).textContent || '',
                     displayAfterFont,
                     displayAfterThemeSwitch: csAfterTheme.getPropertyValue('--font-display').trim(),
-                    themeHasClass: document.documentElement.classList.contains('theme-mermaid'),
+                    themeHasClass: document.documentElement.classList.contains('theme-ocean'),
                 };
             }""")
             check("Friendly Rounded" in font_pairing_state.get("swatchRowText", ""),

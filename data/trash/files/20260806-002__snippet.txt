@@ -1,0 +1,8 @@
+  {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
+  {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
+  {name:'sakura',  label:'Sakura',        bg:'#140a10', accent:'#f4a7b9'},
+  {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
+  {name:'sunwashed',   label:'Sunwashed',     bg:'#fff8f0', accent:'#ba4e36'},
+  {name:'mermaid',     label:'Mermaid Bright',bg:'#f0fbfa', accent:'#007d73'},
+  {name:'clubroom',    label:'Clubroom Gold', bg:'#fffdf5', accent:'#916c08'},
+  {name:'springvivid', label:'Spring Vivid',  bg:'#fbf7ff', accent:'#c4157f'},

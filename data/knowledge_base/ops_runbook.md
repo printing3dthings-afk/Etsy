@@ -22343,3 +22343,61 @@ per-generation picker actually reaches the POST body.
 
 Verification: full suite 104/104 (103 existing + the new grok test file), 1x clean
 Playwright (including the two new checks above).
+
+
+## 2026-08-06 — Settings page audit + fixes shipped (theme reduction + 3 real defects + 4 additions)
+Scott: "double check just to make sure there's nothing else that we need to add so we
+can call the setting page done." A deeper pass (tracing every db.get_setting/set_setting
+key, every "for the Settings X card" comment against actual frontend wiring, and every
+field's real consumer) found 3 genuine defects beyond the original color-count request,
+not just wishlist items:
+
+**1. Color theme reduction 12 -> 5** (Scott's original ask). Kept Studio Warm (default),
+Day Mode (light), Ocean Teal, Midnight Kawaii, Sunwashed. Removed Dark Purple, Warm
+Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid -- archived via
+`tools/trash.py` (ledger ids 20260806-001/002), recoverable. Fixed a real latent bug
+while at it: `_getTheme()` had no validation against the current theme list, so a
+device with a since-removed theme in localStorage would apply a class with no matching
+CSS forever. Now falls back to 'default' and self-corrects the stored value.
+
+**2. `owner_name` was dead plumbing.** `_SETTINGS_APPLY` mapped it to `business_config.
+OWNER_NAME` since it was written, but nothing ever called `db.set_setting("owner_name",
+...)` -- the "My Account" Name field looked like it should change how the agent
+addresses Scott in chat and silently didn't. `POST /api/account` now writes it when a
+name is saved (only when non-empty, so it can't be cleared by accident).
+
+**3. Fully-built "API Costs" card had zero frontend wiring.** `GET /api/system/costs`
++ `POST /api/system/costs/budget-caps` were both live and explicitly commented as being
+"for the Settings 'API Costs' card" -- the card never existed. Now wired in.
+
+**4. My Account email/phone were functionally inert.** Traced every consumer of
+`user_profile` and found only `timezone` is read anywhere else; email/phone were saved
+and just redisplayed. Order/system emails go to a hardcoded `SMTP_USER` address, not
+this field. Relabeled the fields to say so honestly rather than rewiring live buyer-
+facing email flows (out of scope / real risk for a Settings-page task).
+
+**Additions (all confirmed genuinely missing, not speculative):**
+- Notification preferences (`daily_brief_hour`/`daily_brief_enabled` settings). Found +
+  fixed a real bug while building this: `_daily_brief_loop` compared `datetime.now(
+  timezone.utc).hour == 6` -- for the default shop timezone (America/New_York) that
+  fires the brief at 1-2 AM local time, the middle of the night. Now uses `_shop_now()`
+  (already used elsewhere for exactly this class of bug) so the send hour is genuinely
+  local and follows DST correctly with no separate UTC-offset math.
+- Autonomy Boundaries summary panel (static, mirrors CLAUDE.md's real section).
+- Data & Privacy card: surfaces the existing (previously silent) `_prune_buyer_data_
+  retention()` 90-day pass, with a manual "Run cleanup now" trigger
+  (`POST /api/system/run-retention-cleanup`).
+- Session management (confirmed via code trace this genuinely didn't exist anywhere in
+  the app, not just under-prioritized): `hub_sessions` gained a `user_agent` column,
+  new `GET /api/account/sessions` / `DELETE /api/account/sessions/{short_id}` / `POST
+  /api/account/sessions/revoke-others`. The raw session_id (the actual bearer
+  credential) is never sent to the client -- a one-way `sha256(...)[:12]` short id
+  identifies a session for display/revoke instead.
+
+Verification: full suite 105/105 (added `tests/test_settings_audit_fixes.py`, 15 tests
+covering owner_name wiring, notification-prefs validation/persistence, retention
+cleanup trigger, and the full session list/revoke/revoke-others lifecycle via a real
+FastAPI TestClient login flow; updated `tests/test_frank_theme_contrast.py` for the
+12->5 reduction), 3x clean Playwright (extended for the 5-theme count + stale-theme
+fallback, all 4 new Settings cards, and the notification-prefs/retention-cleanup/
+active-sessions round-trips).

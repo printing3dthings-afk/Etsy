@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a7ecb2d-v305"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b161fa3-v306"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1025,13 +1025,13 @@ def _consume_file_ticket(ticket: str, root: str, path: str) -> bool:
     return time.time() <= expiry and t_root == root and t_path == path
 
 
-def _new_session(username: str) -> str:
+def _new_session(username: str, user_agent: str | None = None) -> str:
     sid = secrets.token_urlsafe(32)
     expiry = time.time() + SESSION_TTL
     with _sessions_lock:
         _sessions[sid] = (expiry, username)
     try:
-        db.create_session(sid, username, expiry)
+        db.create_session(sid, username, expiry, user_agent=user_agent)
     except Exception:
         pass
     return sid
@@ -1510,6 +1510,7 @@ def login_page(next: str = "/", error: str = "", mode: str = ""):
 
 @app.post("/login")
 def login_submit(
+    request: Request,
     username: str = Form(""),
     password: str = Form(""),
     confirm_password: str = Form(""),
@@ -1543,7 +1544,7 @@ def login_submit(
             db.create_hub_user(uname, _hash_password(pw), role="owner",
                                 recovery_code_hash=_hash_password(recovery_code))
             print(f"[auth] owner account created: '{uname}'", flush=True)
-            sid = _new_session(uname)
+            sid = _new_session(uname, user_agent=request.headers.get("user-agent"))
             no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
             resp = HTMLResponse(
                 _RECOVERY_CODE_PAGE.format(hub_title=business_config.BUSINESS_NAME,
@@ -1566,7 +1567,7 @@ def login_submit(
     user_row = db.get_hub_user(uname)
     if user_row and _verify_password(user_row["pw_hash"], password.strip()):
         _reset_login_fails(uname)
-        sid = _new_session(uname)
+        sid = _new_session(uname, user_agent=request.headers.get("user-agent"))
         resp = RedirectResponse(safe_next, status_code=303)
         resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
         return resp
@@ -1594,6 +1595,7 @@ def signup_page(next: str = "/", error: str = ""):
 
 @app.post("/signup")
 def signup_submit(
+    request: Request,
     email: str = Form(""),
     display_name: str = Form(""),
     username: str = Form(""),
@@ -1642,7 +1644,7 @@ def signup_submit(
                         recovery_code_hash=_hash_password(recovery_code),
                         email=email, display_name=display_name)
     print(f"[auth] self-service account created: '{uname}' <{email}>", flush=True)
-    sid = _new_session(uname)
+    sid = _new_session(uname, user_agent=request.headers.get("user-agent"))
     no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
     resp = HTMLResponse(
         _RECOVERY_CODE_PAGE.format(hub_title=business_config.BUSINESS_NAME,
@@ -7602,22 +7604,34 @@ async def _health_check_loop() -> None:
 
 
 async def _daily_brief_loop() -> None:
-    """Fire a daily shop-status email at 6 AM UTC. Checks once per hour.
+    """Fire a daily shop-status email at the Settings 'Notifications' hour
+    (default 6 AM), checked once per hour, in the SHOP'S LOCAL time -- not
+    UTC. Checks db.get_setting("daily_brief_hour"/"daily_brief_enabled") live
+    on every tick so a Settings change takes effect on the very next check,
+    no restart needed.
 
     Does not use _run_loop_iteration because the timing logic is calendar-based
     (once per calendar day) rather than interval-based (every N seconds).
     Failures are logged but never crash the server.
+
+    2026-08-06 Settings audit finding: this used to compare `datetime.now(
+    timezone.utc).hour == 6` -- for a US shop (default timezone America/
+    New_York) that fires the brief at 1-2 AM local time depending on DST, the
+    middle of the night. Now uses _shop_now() (already used elsewhere in this
+    file for exactly this class of bug) so the send hour is genuinely the
+    hour Scott picks in Settings, correctly following DST with no separate
+    UTC-offset math to maintain.
 
     2026-07-19: last_sent_date used to be a plain local variable, the exact
     "in-memory gate lost on restart" bug class _calendar_tasks_loop's
     _get_calendar_task_last_run()/_set_calendar_task_last_run() were built to
     fix elsewhere (2026-07-18) -- reintroduced here since this loop predates
     that fix and was never updated to match. Two redeploys landing inside the
-    same 6:00-6:59 UTC window on the same day could send the brief twice.
+    same configured-hour window on the same day could send the brief twice.
     Reusing those same persistence helpers (the setting-key prefix says
     "calendar_task" but the functions are generic date persistence, not
     specific to _calendar_tasks_loop) instead of duplicating the pattern."""
-    _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "started", "waiting for 6 AM UTC")
+    _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "started", "waiting for the configured send hour")
     last_sent_date: date | None = _get_calendar_task_last_run("daily_brief")
     while True:
         await asyncio.sleep(3600)
@@ -7632,8 +7646,16 @@ async def _daily_brief_loop() -> None:
             db.prune_old_actions()
         except Exception:
             pass
-        now = datetime.now(timezone.utc)
-        if now.hour == 6 and now.date() != last_sent_date:
+        enabled = db.get_setting("daily_brief_enabled") != "0"
+        if not enabled:
+            _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "ok", "disabled in Settings")
+            continue
+        try:
+            configured_hour = int(db.get_setting("daily_brief_hour") or 6)
+        except (TypeError, ValueError):
+            configured_hour = 6
+        now = _shop_now()
+        if now.hour == configured_hour and now.date() != last_sent_date:
             _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
             try:
                 import daily_brief as _daily_brief
@@ -7646,10 +7668,10 @@ async def _daily_brief_loop() -> None:
                 _safe_set_agent_heartbeat("daily_brief", "Daily Brief", "error", str(exc))
                 print(f"[daily_brief] error: {exc}", flush=True)
         else:
-            next_run = "today" if now.hour < 6 else "tomorrow"
+            next_run = "today" if now.hour < configured_hour else "tomorrow"
             _safe_set_agent_heartbeat(
                 "daily_brief", "Daily Brief", "ok",
-                f"next brief {next_run} at 06:00 UTC (last sent: {last_sent_date or 'never'})"
+                f"next brief {next_run} at {configured_hour:02d}:00 shop-local time (last sent: {last_sent_date or 'never'})"
             )
 
 
@@ -14050,7 +14072,16 @@ async def post_account_endpoint(payload: dict, _token: str = Depends(_auth_sessi
     email = ((payload or {}).get("email") or "").strip() or None
     phone = ((payload or {}).get("phone") or "").strip() or None
     tz = ((payload or {}).get("timezone") or "").strip() or None
-    return await asyncio.to_thread(db.save_user_profile, name, email, phone, tz)
+    result = await asyncio.to_thread(db.save_user_profile, name, email, phone, tz)
+    # 2026-08-06 Settings audit finding: `owner_name` has been in _SETTINGS_APPLY
+    # (-> business_config.OWNER_NAME) since it was written, but nothing ever
+    # called db.set_setting("owner_name", ...) -- dead plumbing. This field
+    # already looks like "change your name" to Scott; make it actually change
+    # how the agent addresses him in chat/prompts, not just a redisplayed DB row.
+    if name:
+        await asyncio.to_thread(db.set_setting, "owner_name", name)
+        _refresh_identity()
+    return result
 
 
 class _SelfPasswordChange(BaseModel):
@@ -14095,6 +14126,92 @@ async def change_my_password(body: _SelfPasswordChange, request: Request, _token
         print(f"[auth] delete_sessions_for_user({uname!r}) failed -- sessions may not be "
               f"fully revoked: {exc}", flush=True)
     return {"ok": True}
+
+
+def _session_short_id(session_id: str) -> str:
+    """Stable, one-way, non-reversible display id for a session -- the real
+    session_id IS the bearer credential for that session, so it must never
+    reach the client. Hashing lets the Settings 'Active sessions' card show
+    and revoke a specific session without ever exposing the raw token."""
+    return hashlib.sha256(session_id.encode()).hexdigest()[:12]
+
+
+def _relative_time_str(iso_str: str) -> str:
+    """Human-friendly '2 hours ago' style string for the Active sessions list."""
+    try:
+        then = datetime.fromisoformat(iso_str)
+    except (TypeError, ValueError):
+        return iso_str or ""
+    delta = datetime.now(timezone.utc) - then
+    seconds = delta.total_seconds()
+    if seconds < 60:
+        return "just now"
+    if seconds < 3600:
+        return f"{int(seconds // 60)}m ago"
+    if seconds < 86400:
+        return f"{int(seconds // 3600)}h ago"
+    return f"{int(seconds // 86400)}d ago"
+
+
+@app.get("/api/account/sessions")
+async def get_my_sessions(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """List the signed-in user's own active sessions -- Settings 'Active
+    sessions' card (2026-08-06 Settings audit finding: this genuinely didn't
+    exist anywhere in the app). Self-service only, same _get_session_user()
+    convention as change_my_password/delete_my_account -- no admin scope."""
+    uname = _get_session_user(request)
+    if not uname:
+        return {"sessions": []}
+    current_sid = request.cookies.get(SESSION_COOKIE, "")
+    rows = await asyncio.to_thread(db.list_sessions_for_user, uname)
+    return {"sessions": [
+        {
+            "session_id_short": _session_short_id(r["session_id"]),
+            "created_at": r["created_at"],
+            "created_at_relative": _relative_time_str(r["created_at"]),
+            "user_agent": r.get("user_agent") or "",
+            "is_current": r["session_id"] == current_sid,
+        }
+        for r in rows
+    ]}
+
+
+@app.delete("/api/account/sessions/{short_id}")
+async def revoke_my_session(short_id: str, request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Revoke one specific session by its short (hashed) id. Never allows
+    revoking the current session through this endpoint -- that's what the
+    'Log out everywhere else' button + the normal logout button are for."""
+    uname = _get_session_user(request)
+    if not uname:
+        raise HTTPException(status_code=401, detail="Log in to manage your sessions")
+    current_sid = request.cookies.get(SESSION_COOKIE, "")
+    rows = await asyncio.to_thread(db.list_sessions_for_user, uname)
+    match = next((r for r in rows if _session_short_id(r["session_id"]) == short_id), None)
+    if not match:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if match["session_id"] == current_sid:
+        raise HTTPException(status_code=400, detail="Can't revoke your current session this way — use logout")
+    await asyncio.to_thread(db.delete_session, match["session_id"])
+    with _sessions_lock:
+        _sessions.pop(match["session_id"], None)
+    return {"ok": True}
+
+
+@app.post("/api/account/sessions/revoke-others")
+async def revoke_other_sessions(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """'Log out everywhere else' — revokes every OTHER active session for the
+    signed-in user, keeping the current device signed in."""
+    uname = _get_session_user(request)
+    if not uname:
+        raise HTTPException(status_code=401, detail="Log in to manage your sessions")
+    current_sid = request.cookies.get(SESSION_COOKIE, "")
+    rows = await asyncio.to_thread(db.list_sessions_for_user, uname)
+    others = [r["session_id"] for r in rows if r["session_id"] != current_sid]
+    for sid in others:
+        await asyncio.to_thread(db.delete_session, sid)
+        with _sessions_lock:
+            _sessions.pop(sid, None)
+    return {"revoked": len(others)}
 
 
 @app.delete("/api/account")
@@ -14142,6 +14259,8 @@ _TEXT_ENGINES = ("anthropic", "grok")  # Claude stays default/live-chat brain; g
 def _effective_settings() -> dict:
     """Current effective values (stored override already applied to env/config) plus
     the option lists the Settings dropdowns render from."""
+    daily_brief_hour_raw = db.get_setting("daily_brief_hour")
+    daily_brief_enabled_raw = db.get_setting("daily_brief_enabled")
     return {
         "agent_name": business_config.AGENT_NAME_SHORT,
         "video_engine": os.getenv("AI_VIDEO_ENGINE", "sora").lower(),
@@ -14150,6 +14269,11 @@ def _effective_settings() -> dict:
         "image_model": os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image"),
         "model_primary": business_config.MODEL_PRIMARY,
         "brand_mark_data_url": db.get_setting("brand_mark_data_url"),
+        # 2026-08-06: daily brief send hour is in the SHOP'S LOCAL time (see
+        # _shop_now()), not UTC -- _daily_brief_loop compares against shop-local
+        # hour each tick so this never drifts across DST.
+        "daily_brief_hour": int(daily_brief_hour_raw) if daily_brief_hour_raw is not None else 6,
+        "daily_brief_enabled": daily_brief_enabled_raw != "0",  # default on
         "options": {
             "video_engine": list(_VIDEO_ENGINES),
             "image_engine": list(_IMAGE_ENGINES),
@@ -14194,6 +14318,18 @@ async def post_settings_endpoint(payload: dict, _token: str = Depends(_auth_sess
         if v not in _TEXT_ENGINES:
             raise HTTPException(status_code=400, detail=f"text_engine must be one of {_TEXT_ENGINES}")
         db.set_setting("text_engine", v)
+
+    if "daily_brief_hour" in payload:
+        try:
+            hour = int(payload.get("daily_brief_hour"))
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="daily_brief_hour must be an integer 0-23")
+        if not 0 <= hour <= 23:
+            raise HTTPException(status_code=400, detail="daily_brief_hour must be 0-23")
+        db.set_setting("daily_brief_hour", str(hour))
+
+    if "daily_brief_enabled" in payload:
+        db.set_setting("daily_brief_enabled", "1" if payload.get("daily_brief_enabled") else "0")
 
     if "image_model" in payload:
         db.set_setting("image_model", (payload.get("image_model") or "").strip())
@@ -14958,6 +15094,17 @@ async def set_budget_caps(body: dict, _token: str = Depends(_auth_session_or_bea
         await asyncio.to_thread(db.set_setting, f"budget_cap_{svc}", str(f))
         saved[svc] = f
     return {"saved": saved}
+
+
+@app.post("/api/system/run-retention-cleanup")
+async def run_retention_cleanup(_token: str = Depends(_rate_limited_auth)):
+    """Manual trigger for the Settings 'Data & Privacy' card -- runs the exact
+    same _prune_buyer_data_retention() pass that already fires automatically
+    every day inside _quality_audit_iteration(), just on demand so Scott can
+    see it happen and what it did instead of it being silent/backend-only.
+    Rate-limited auth since it does real file I/O, matching every other
+    mutating Settings action."""
+    return await asyncio.to_thread(_prune_buyer_data_retention)
 
 
 @app.get("/api/tools/list")

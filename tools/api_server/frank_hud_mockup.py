@@ -150,26 +150,6 @@ html.theme-light{
   --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
   --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
 }
-html.theme-purple{
-  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--panel3:#291a3e;--border:#221537;
-  --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
-  --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-charcoal{
-  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--panel3:#332c22;--border:#2e281d;
-  --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
-  --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
-}
-html.theme-sakura{
-  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--panel3:#35192b;--border:#311826;
-  --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
-  --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-matcha{
-  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--panel3:#223424;--border:#1e2e21;
-  --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
-  --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
-}
 html.theme-ocean{
   --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#16312c;
   --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
@@ -180,41 +160,20 @@ html.theme-kawaii{
   --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
   --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
-/* 2026-07-18: four new bright/light-surfaced themes (Scott: "brighter colors but
-   make sure text is readable") -- every text/muted/accent value below is verified
-   against its actual bg AND panel2 (the more saturated surface a card can sit on)
-   with tools/color_contrast_check.py's real WCAG math, same discipline as the
-   2026-07-15 brightening pass above; nothing here is eyeballed. Where a genuinely
-   vivid accent hex failed 4.5:1 as body text, it's already darkened just enough to
-   pass while keeping its hue -- see data/knowledge_base/ops_runbook.md for the
-   before/after values. All four reuse the light theme's card-shadow (real drop
-   shadow reads correctly on a light surface, unlike the dark themes' inset-highlight
-   trick above). */
+/* 2026-07-18: bright/light-surfaced theme (Scott: "brighter colors but make sure
+   text is readable") -- every text/muted/accent value below is verified against
+   its actual bg AND panel2 (the more saturated surface a card can sit on) with
+   tools/color_contrast_check.py's real WCAG math, same discipline as the
+   2026-07-15 brightening pass above; nothing here is eyeballed. Reuses the light
+   theme's card-shadow (real drop shadow reads correctly on a light surface,
+   unlike the dark themes' inset-highlight trick above). Originally shipped
+   alongside 3 siblings (Mermaid Bright, Clubroom Gold, Spring Vivid); those were
+   cut in the 2026-08-06 12->5 theme reduction -- this one survived as the kept
+   warm-light alternative to Day Mode. */
 html.theme-sunwashed{
   --bg:#fff8f0;--panel:#ffffff;--panel2:#ffeee0;--panel3:#ffffff;--border:#f0d5b8;
   --cyan:#ba4e36;--cyan2:#8f3a28;--gold:#a46400;--gold2:#7a4b00;
   --text:#3a2418;--muted:#82644d;--green:#19824a;--red:#d6362b;--amber:#a46400;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-mermaid{
-  --bg:#f0fbfa;--panel:#ffffff;--panel2:#dff6f3;--panel3:#ffffff;--border:#bfe8e2;
-  --cyan:#007d73;--cyan2:#005850;--gold:#7a45e0;--gold2:#5b2fb0;
-  --text:#0b3b38;--muted:#3a736c;--green:#12814d;--red:#d6362b;--amber:#a46400;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-clubroom{
-  --bg:#fffdf5;--panel:#ffffff;--panel2:#f5ebd0;--panel3:#ffffff;--border:#e8d9a8;
-  --cyan:#2d6cdf;--cyan2:#1e4fa8;--gold:#916c08;--gold2:#6b4f05;
-  --text:#1c1608;--muted:#6b5a2e;--green:#1a8548;--red:#d53a3a;--amber:#916c08;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-springvivid{
-  --bg:#fbf7ff;--panel:#ffffff;--panel2:#f0e6fb;--panel3:#ffffff;--border:#dcc7f5;
-  --cyan:#c4157f;--cyan2:#8e0e5c;--gold:#bc4f1b;--gold2:#8a3a13;
-  --text:#241541;--muted:#6b5490;--green:#18804f;--red:#d0342a;--amber:#bc4f1b;
   --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
   --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
 }
@@ -2221,21 +2180,24 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <label for="account-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>
+            <label for="account-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name — also updates how %%AGENT_SHORT%% addresses you in chat</label>
             <input type="text" id="account-name" class="search" style="width:100%" placeholder="%%OWNER%%">
           </div>
           <div>
-            <label for="account-email" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email</label>
+            <label for="account-email" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email — for your own reference only</label>
             <input type="email" id="account-email" class="search" style="width:100%" placeholder="you@example.com">
           </div>
           <div>
-            <label for="account-phone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Phone</label>
+            <label for="account-phone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Phone — for your own reference only</label>
             <input type="text" id="account-phone" class="search" style="width:100%" placeholder="(555) 555-5555">
           </div>
           <div>
-            <label for="account-timezone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Timezone</label>
+            <label for="account-timezone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Timezone — used for the daily brief send time and overdue-date logic</label>
             <input type="text" id="account-timezone" class="search" style="width:100%" placeholder="America/New_York">
           </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">
+          Order/system emails always go to the address connected under API Credentials in Connections, regardless of what's saved here — this Email field doesn't route any notifications.
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
           <button class="act-btn primary" onclick="saveAccountSettings()">Save</button>
@@ -2277,6 +2239,19 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" style="margin-top:18px">Your Account &amp; Access</div>
       <div class="hub-card">
         <div id="whoami-summary" style="font-size:13px;color:var(--text)">Loading…</div>
+        <!-- 2026-08-06 Settings audit finding: session management genuinely didn't
+             exist anywhere in the app (confirmed, not assumed) -- Security screen is
+             a static checklist + admin user management, no view/revoke of active
+             logins. Matters more now that self-service signup means more than one
+             person can be signed in. -->
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Active sessions</div>
+          <div id="active-sessions-list" style="font-size:12px;color:var(--muted)">Loading…</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <button class="act-btn secondary" onclick="revokeOtherSessions()">Log out everywhere else</button>
+            <div id="active-sessions-status" style="font-size:11px;color:var(--muted)"></div>
+          </div>
+        </div>
         <div id="whoami-danger" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
           <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Danger zone</div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:10px" id="whoami-delete-hint">Permanently deletes your account and signs you out. This can't be undone.</div>
@@ -2296,6 +2271,63 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="font-size:11px;color:var(--muted);margin:6px 0 10px">One workbook, multiple tabs: Products, COGS &amp; Profit, Orders (live from Etsy), plus Physical Inventory, Consumables &amp; Reorder, Suppliers, Equipment &amp; Assets, and an Expense &amp; Tax Tracker for you to fill in. Generated fresh from live data every time you download it.</div>
         <button class="act-btn primary" onclick="downloadBusinessTracker()">Download workbook</button>
         <div id="tracker-download-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
+      <!-- 2026-08-06 Settings audit finding: GET /api/system/costs + POST /api/system/
+           costs/budget-caps were both fully built (explicitly commented as being "for
+           the Settings 'API Costs' card") but had zero frontend wiring anywhere -- dead,
+           already-live functionality. This is that card. -->
+      <div class="hub-section-title" style="margin-top:18px">API Costs</div>
+      <div class="hub-card" id="settings-api-costs"><div class="hub-spinner"></div></div>
+
+      <div class="hub-section-title" style="margin-top:18px">Notifications</div>
+      <div class="hub-card">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer">
+          <input type="checkbox" id="setting-daily-brief-enabled"> Daily shop-status brief
+        </label>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:10px">
+          A once-a-day email summarizing orders, alerts, and what needs your attention.
+        </div>
+        <label for="setting-daily-brief-hour" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Send at (your local time, from Timezone below)</label>
+        <select id="setting-daily-brief-hour" aria-label="Daily brief send hour" style="width:100%;max-width:220px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px"></select>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn primary" onclick="saveNotificationPrefs()">Save</button>
+          <div id="notification-prefs-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <!-- Read-only, mirrors CLAUDE.md's "Autonomy Boundaries" section verbatim --
+           keep both in sync if that section changes. Static text, no backend call. -->
+      <div class="hub-section-title" style="margin-top:18px">What %%AGENT_SHORT%% Can Do Without Asking</div>
+      <div class="hub-card">
+        <div style="font-size:12.5px;color:var(--green);font-weight:700;margin-bottom:6px">✓ Fully autonomous</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:14px">
+          Monitoring, health checks, drafting listing content, generating art, seasonal keyword previews, Quick Reply support (file/download/format questions), refreshing OAuth tokens, weekly reports.
+        </div>
+        <div style="font-size:12.5px;color:var(--amber);font-weight:700;margin-bottom:6px">⏸ Needs your approval first</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.7;margin-bottom:14px">
+          Publishing any listing, pushing keyword updates, refund/negative-review responses, price changes on live listings, any bulk edit over 10 listings, custom order pricing.
+        </div>
+        <div style="font-size:12.5px;color:var(--red);font-weight:700;margin-bottom:6px">⛔ Never, without you doing it yourself</div>
+        <div style="font-size:11.5px;color:var(--text);line-height:1.7">
+          Pushing live to Etsy without your photo/content review, issuing refunds, deleting a listing, changing more than 5 prices in one session, posting to social media, contacting buyers outside the 5 approved templates.
+        </div>
+      </div>
+
+      <!-- 2026-08-06: surfaces the GDPR-motivated retention pass (_prune_buyer_data_
+           retention(), 90-day window) that already runs automatically as part of the
+           daily quality audit -- previously silent/backend-only, no way for Scott to
+           see the policy or trigger it on demand. -->
+      <div class="hub-section-title" style="margin-top:18px">Data &amp; Privacy</div>
+      <div class="hub-card">
+        <div style="font-size:11.5px;color:var(--text);line-height:1.6;margin-bottom:10px">
+          Buyer-referencing local files (drafted reply text, per-order notification state) are
+          deleted after 90 days — Etsy's own order/message history stays the authoritative
+          record, so nothing is lost. This runs automatically every day as part of the quality
+          audit; the button below runs it immediately and shows you exactly what it did.
+        </div>
+        <button class="act-btn secondary" onclick="runRetentionCleanup()">Run cleanup now</button>
+        <div id="retention-cleanup-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
 
       <div class="hub-section-title" style="margin-top:18px">Connections</div>
@@ -4031,7 +4063,8 @@ const _SCREEN_LOADERS = {
   files: [loadFiles, loadEtsyFiles],
   connections: [loadConnections],
   security: [renderSecurityPosture],
-  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI, loadSettingsBuildVer],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI, loadSettingsBuildVer,
+             loadApiCosts, loadNotificationPrefs, loadActiveSessions],
   studio: [loadStudioVideos],
   // guided Create flow (reuses studio backends) — loadProducts populates the
   // global _products array the category panels' product pickers read from
@@ -5340,24 +5373,28 @@ function _autoSpeakOpts(){
 // ── Color theme — per-device display preference, so localStorage (not the
 // backend) is the right persistence layer. Default 'cyan' matches the
 // original :root values, applied via no class on <html>. ──
+// 2026-08-06: trimmed from 12 to 5 (Scott: "take the color selection down to
+// 5") -- kept the two flagships (Studio Warm, Day Mode) plus the 3 most
+// distinct-hue alternatives (a cool dark, a vivid dark that matches the shop's
+// kawaii brand, a warm light). Dropped Dark Purple/Warm Charcoal/Sakura/Matcha/
+// Mermaid Bright/Clubroom Gold/Spring Vivid -- archived via tools/trash.py
+// (ledger ids 20260806-001/002), recoverable if wanted back. Their CSS blocks
+// were removed too, right above this array.
 const _UI_THEMES = [
   {name:'default', label:'Studio Warm',   bg:'#1a1420', accent:'#f2a0b5'},
   {name:'light',   label:'Day Mode',      bg:'#edf1f5', accent:'#1a8a9a'},
-  {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
-  {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
-  {name:'sakura',  label:'Sakura',        bg:'#140a10', accent:'#f4a7b9'},
-  {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
   {name:'ocean',   label:'Ocean Teal',    bg:'#07120f', accent:'#3ad6c8'},
   {name:'kawaii',  label:'Midnight Kawaii',bg:'#0d0a1a', accent:'#00e5ff'},
-  // 2026-07-18: four new bright/light themes -- see the html.theme-* CSS above
-  // for the full WCAG-verified role sets.
   {name:'sunwashed',   label:'Sunwashed',     bg:'#fff8f0', accent:'#ba4e36'},
-  {name:'mermaid',     label:'Mermaid Bright',bg:'#f0fbfa', accent:'#007d73'},
-  {name:'clubroom',    label:'Clubroom Gold', bg:'#fffdf5', accent:'#916c08'},
-  {name:'springvivid', label:'Spring Vivid',  bg:'#fbf7ff', accent:'#c4157f'},
 ];
 function _getTheme() {
-  try { return localStorage.getItem('frankTheme') || 'default'; } catch(e) { return 'default'; }
+  // A theme saved before the 2026-08-06 12->5 trim (or any other stale value)
+  // must not silently apply a class with no matching CSS -- fall back to
+  // 'default', which self-corrects the stored value on the next _setTheme() call.
+  try {
+    const saved = localStorage.getItem('frankTheme');
+    return (saved && _UI_THEMES.some(t => t.name === saved)) ? saved : 'default';
+  } catch(e) { return 'default'; }
 }
 function _setTheme(name) {
   try { localStorage.setItem('frankTheme', name); } catch(e) {}
@@ -5542,6 +5579,175 @@ async function deleteMyAccount(){
     showToast('Network error — account not deleted', 'err', 6000);
     if(btnEl){ btnEl.disabled = false; btnEl.textContent = 'Delete my account'; }
   }
+}
+// ── Active sessions (2026-08-06 Settings audit finding: this genuinely didn't
+// exist anywhere in the app -- view/revoke your own logged-in sessions). ──
+function _friendlyUA(ua){
+  if(!ua) return 'Unknown device';
+  const isMobile = /Mobi|Android|iPhone|iPad/.test(ua);
+  let browser = 'a browser';
+  if(/Edg\//.test(ua)) browser = 'Edge';
+  else if(/Chrome\//.test(ua)) browser = 'Chrome';
+  else if(/Firefox\//.test(ua)) browser = 'Firefox';
+  else if(/Safari\//.test(ua)) browser = 'Safari';
+  let os = '';
+  if(/iPhone|iPad/.test(ua)) os = 'iOS';
+  else if(/Android/.test(ua)) os = 'Android';
+  else if(/Mac OS X/.test(ua)) os = 'Mac';
+  else if(/Windows/.test(ua)) os = 'Windows';
+  else if(/Linux/.test(ua)) os = 'Linux';
+  return `${browser}${os ? ' on ' + os : ''}${isMobile ? ' (mobile)' : ''}`;
+}
+async function loadActiveSessions(){
+  const listEl = document.getElementById('active-sessions-list');
+  if(!listEl) return;
+  try{
+    const r = await authGet('/api/account/sessions');
+    const d = await r.json();
+    const sessions = d.sessions || [];
+    if(!sessions.length){ listEl.textContent = 'No active sessions.'; return; }
+    listEl.innerHTML = sessions.map(s => `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="color:var(--text);font-size:12.5px">${escHtml(_friendlyUA(s.user_agent))}${s.is_current ? ' <span style="color:var(--green);font-weight:600">· this device</span>' : ''}</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:2px">Signed in ${escHtml(s.created_at_relative || s.created_at || '')}</div>
+        </div>
+        ${s.is_current ? '' : `<button class="act-btn secondary" style="padding:4px 10px;font-size:11px" onclick="revokeSession('${escHtml(s.session_id_short)}')">Revoke</button>`}
+      </div>`).join('');
+  }catch(e){ listEl.textContent = 'Could not load active sessions.'; }
+}
+async function revokeSession(shortId){
+  const statusEl = document.getElementById('active-sessions-status');
+  if(statusEl) statusEl.textContent = 'Revoking…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/account/sessions/'+shortId, {method:'DELETE', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    if(!r.ok){ const d = await r.json().catch(()=>({})); if(statusEl) statusEl.textContent = d.detail || 'Could not revoke session'; return; }
+    if(statusEl) statusEl.textContent = 'Revoked ✓';
+    loadActiveSessions();
+  }catch(e){ if(statusEl) statusEl.textContent = 'Network error'; }
+}
+async function revokeOtherSessions(){
+  if(!confirm('Log out every other device signed into your account? This device stays signed in.')) return;
+  const statusEl = document.getElementById('active-sessions-status');
+  if(statusEl) statusEl.textContent = 'Logging out other sessions…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/account/sessions/revoke-others', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok){ if(statusEl) statusEl.textContent = d.detail || 'Could not revoke other sessions'; return; }
+    if(statusEl) statusEl.textContent = `Signed out ${d.revoked ?? 0} other session(s) ✓`;
+    loadActiveSessions();
+  }catch(e){ if(statusEl) statusEl.textContent = 'Network error'; }
+}
+// ── API Costs (2026-08-06 Settings audit finding: GET /api/system/costs and
+// POST /api/system/costs/budget-caps were both fully built and explicitly
+// commented as being "for the Settings 'API Costs' card" but had ZERO
+// frontend wiring anywhere -- this closes that gap). ──
+async function loadApiCosts(){
+  const el = document.getElementById('settings-api-costs');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/system/costs');
+    const d = await r.json();
+    const services = d.services || {};
+    const caps = d.budget_caps || {};
+    el.innerHTML = Object.entries(services).map(([key, svc]) => {
+      const cap = caps[key];
+      const spendText = svc.available === false
+        ? `<span style="color:var(--muted)">${escHtml(svc.reason || 'Not connected yet')}</span>`
+        : (svc.estimated_cost_usd != null ? `~$${Number(svc.estimated_cost_usd).toFixed(2)} this month` : 'Live spend unavailable');
+      return `<div style="padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:600;font-size:12.5px;color:var(--text)">${escHtml(svc.label || key)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${spendText}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <label for="budget-cap-${escHtml(key)}" style="font-size:10.5px;color:var(--muted)">Alert at $/mo</label>
+            <input type="number" min="0" step="1" id="budget-cap-${escHtml(key)}" value="${cap != null ? cap : ''}" placeholder="none"
+                   style="width:80px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 7px;color:var(--text);font-size:11.5px">
+          </div>
+        </div>
+      </div>`;
+    }).join('') + `
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <button class="act-btn primary" onclick="saveBudgetCaps()">Save budget caps</button>
+        <div id="api-costs-status" style="font-size:11px;color:var(--muted)"></div>
+      </div>`;
+  }catch(e){ el.textContent = 'Could not load API costs.'; }
+}
+async function saveBudgetCaps(){
+  const statusEl = document.getElementById('api-costs-status');
+  const payload = {};
+  ['railway', 'anthropic', 'openai', 'gemini'].forEach(svc => {
+    const inp = document.getElementById('budget-cap-'+svc);
+    if(inp) payload[svc] = inp.value === '' ? null : inp.value;
+  });
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/system/costs/budget-caps', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }, 15000);
+    if(!r.ok){ const d = await r.json().catch(()=>({})); if(statusEl) statusEl.textContent = d.detail || 'Save failed'; return; }
+    if(statusEl) statusEl.textContent = 'Saved ✓';
+  }catch(e){ if(statusEl) statusEl.textContent = 'Network error'; }
+}
+// ── Notification preferences (2026-08-06): daily brief send time/on-off. Also
+// fixes a real latent bug found while building this -- the loop previously
+// checked now.hour==6 in UTC, which for a US shop actually fires the brief in
+// the middle of the night local time; the hour picker below is your LOCAL
+// time and the backend now checks it against shop-local time, not UTC. ──
+async function loadNotificationPrefs(){
+  const hourEl = document.getElementById('setting-daily-brief-hour');
+  if(!hourEl) return;
+  if(!hourEl.options.length){
+    for(let h=0; h<24; h++){
+      const label = h===0 ? '12:00 AM' : h<12 ? `${h}:00 AM` : h===12 ? '12:00 PM' : `${h-12}:00 PM`;
+      hourEl.appendChild(new Option(label, String(h)));
+    }
+  }
+  try{
+    const r = await authGet('/api/settings');
+    const d = await r.json();
+    document.getElementById('setting-daily-brief-enabled').checked = d.daily_brief_enabled !== false;
+    hourEl.value = String(d.daily_brief_hour ?? 6);
+  }catch(e){ /* leave defaults */ }
+}
+async function saveNotificationPrefs(){
+  const statusEl = document.getElementById('notification-prefs-status');
+  const payload = {
+    daily_brief_enabled: document.getElementById('setting-daily-brief-enabled').checked,
+    daily_brief_hour: parseInt(document.getElementById('setting-daily-brief-hour').value, 10),
+  };
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/settings', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }, 15000);
+    if(!r.ok){ const d = await r.json().catch(()=>({})); if(statusEl) statusEl.textContent = d.detail || 'Save failed'; return; }
+    if(statusEl) statusEl.textContent = 'Saved ✓';
+    showToast('Notification preferences saved', 'ok');
+  }catch(e){ if(statusEl) statusEl.textContent = 'Network error'; }
+}
+// ── Data & Privacy: manual retention cleanup trigger (2026-08-06) --
+// surfaces the previously-silent, backend-only _prune_buyer_data_retention()
+// pass that already runs daily as part of the quality audit. ──
+async function runRetentionCleanup(){
+  const statusEl = document.getElementById('retention-cleanup-status');
+  if(statusEl) statusEl.textContent = 'Running…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/system/run-retention-cleanup', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN}
+    }, 30000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok){ if(statusEl) statusEl.textContent = d.detail || 'Cleanup failed'; return; }
+    const parts = [];
+    if(d.drafts_deleted) parts.push(`${d.drafts_deleted} old draft file(s) deleted`);
+    if(d.notified_orders_trimmed) parts.push(`${d.notified_orders_trimmed} old order ID(s) trimmed`);
+    if(d.sent_log_trimmed) parts.push(`${d.sent_log_trimmed} old sent-log ID(s) trimmed`);
+    if(statusEl) statusEl.textContent = parts.length ? `Done — ${parts.join(', ')}.` : 'Done — nothing was old enough to prune.';
+  }catch(e){ if(statusEl) statusEl.textContent = 'Network error'; }
 }
 // ── Runtime settings — agent name + AI engines (backed by /api/settings, DB) ──
 async function loadRuntimeSettings(){

@@ -338,6 +338,14 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE quality_audits ADD COLUMN audited_count INTEGER")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            # 2026-08-06 Settings audit: powers the new "Active sessions" card --
+            # existing hub_sessions rows had no device info at all, so a Settings
+            # audit finding ("session management genuinely doesn't exist anywhere")
+            # could only be closed with a real column, not just new endpoints.
+            try:
+                conn.execute("ALTER TABLE hub_sessions ADD COLUMN user_agent TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             conn.commit()
         finally:
             conn.close()
@@ -1853,17 +1861,36 @@ def hub_users_empty() -> bool:
 # ── Hub sessions (persisted so sessions survive Railway restarts) ─────────────
 
 
-def create_session(session_id: str, username: str, expires_at: float) -> None:
+def create_session(session_id: str, username: str, expires_at: float, user_agent: str | None = None) -> None:
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     exp_iso = datetime.fromtimestamp(expires_at, tz=timezone.utc).isoformat()
     conn = _connect()
     try:
         conn.execute(
-            "INSERT OR REPLACE INTO hub_sessions (session_id, username, expires_at, created_at) VALUES (?,?,?,?)",
-            (session_id, username.lower(), exp_iso, ts),
+            "INSERT OR REPLACE INTO hub_sessions (session_id, username, expires_at, created_at, user_agent) VALUES (?,?,?,?,?)",
+            (session_id, username.lower(), exp_iso, ts, (user_agent or "")[:300] or None),
         )
         conn.commit()
+    finally:
+        conn.close()
+
+
+def list_sessions_for_user(username: str) -> list[dict]:
+    """Active (non-expired) sessions for a user, newest first -- backs the
+    Settings 'Active sessions' card (2026-08-06)."""
+    if not username:
+        return []
+    init_db()
+    conn = _connect()
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        rows = conn.execute(
+            "SELECT session_id, created_at, expires_at, user_agent FROM hub_sessions "
+            "WHERE username=? AND expires_at >= ? ORDER BY created_at DESC",
+            (username.lower(), now_iso),
+        ).fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
 

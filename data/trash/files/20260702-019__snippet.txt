@@ -1,4 +1,0 @@
-def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
-    if not secrets.compare_digest(credentials.credentials, APP_TOKEN):
-        raise HTTPException(status_code=401, detail="Invalid token")
-    return credentials.credentials

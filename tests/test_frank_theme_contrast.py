@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """
 WCAG AA contrast test for Frank's HUD color themes (tools/api_server/
-frank_hud_mockup.py), added 2026-07-18 alongside 4 new bright/light themes
-(Sunwashed, Mermaid Bright, Clubroom Gold, Spring Vivid) requested by Scott:
-"brighter colors but make sure text is readable."
+frank_hud_mockup.py).
+
+Originally added 2026-07-18 alongside 4 new bright/light themes (Sunwashed,
+Mermaid Bright, Clubroom Gold, Spring Vivid) requested by Scott: "brighter
+colors but make sure text is readable." Updated 2026-08-06 for the 12->5
+theme reduction ("take the color selection down to 5") -- kept themes are
+Studio Warm (default), Day Mode (light), Ocean Teal, Midnight Kawaii, and
+Sunwashed (the sole surviving light-surfaced bright theme); Dark Purple,
+Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, and Spring
+Vivid were archived via tools/trash.py (recoverable).
 
 Parses the REAL --text/--muted/--cyan/--gold/--green/--red/--bg/--panel2
 values straight out of the shipped `:root{...}` block and every
@@ -62,10 +69,12 @@ def _extract_theme_blocks(source: str) -> dict:
     return themes
 
 
-# Themes introduced 2026-07-18 specifically for "brighter, still readable" --
-# these get the stricter panel2 check too, since that's exactly the surface
-# where a first draft (muted on Sunwashed/Mermaid) initially fell short.
-LIGHT_THEMES = {"light", "sunwashed", "mermaid", "clubroom", "springvivid"}
+# The 5 themes kept after the 2026-08-06 12->5 reduction. "light" and
+# "sunwashed" are the two light-surfaced ones -- they get the stricter
+# panel2 check too, since that's exactly the surface where a first draft
+# (muted on Sunwashed) initially fell short during the original 2026-07-18 pass.
+EXPECTED_THEMES = {"default", "light", "ocean", "kawaii", "sunwashed"}
+LIGHT_THEMES = {"light", "sunwashed"}
 
 
 def test_every_theme_text_and_muted_pass_aa_on_bg():
@@ -81,9 +90,8 @@ def test_every_theme_text_and_muted_pass_aa_on_bg():
         merged.update(overrides)
         all_themes[name] = merged
 
-    check(len(all_themes) >= 12, f"expected at least 12 themes (default + 7 existing named + 4 new), got {len(all_themes)}: {sorted(all_themes)}")
-    for new_theme in ("sunwashed", "mermaid", "clubroom", "springvivid"):
-        check(new_theme in all_themes, f"new theme '{new_theme}' not found in shipped CSS")
+    check(set(all_themes) == EXPECTED_THEMES,
+          f"expected exactly the 5 kept themes {sorted(EXPECTED_THEMES)}, got {sorted(all_themes)}")
 
     for name, v in all_themes.items():
         bg = v.get("bg")
@@ -98,15 +106,19 @@ def test_every_theme_text_and_muted_pass_aa_on_bg():
         check(meets_wcag_aa(muted, bg), f"theme '{name}': muted {muted} on bg {bg} fails AA ({r_muted}:1)")
 
 
-def test_new_bright_themes_pass_aa_on_panel2_too():
+def test_light_surfaced_themes_pass_aa_on_panel2_too():
     source = HUD_PATH.read_text(encoding="utf-8")
     root_vars = _extract_root_vars(source)
     theme_blocks = _extract_theme_blocks(source)
 
     for name in LIGHT_THEMES:
-        assert name in theme_blocks, f"theme '{name}' block not found"
-        merged = dict(root_vars)
-        merged.update(theme_blocks[name])
+        if name == "light":
+            merged = dict(root_vars)
+            merged.update(theme_blocks.get("light", {}))
+        else:
+            assert name in theme_blocks, f"theme '{name}' block not found"
+            merged = dict(root_vars)
+            merged.update(theme_blocks[name])
         panel2 = merged.get("panel2")
         text = merged.get("text")
         muted = merged.get("muted")
@@ -117,33 +129,34 @@ def test_new_bright_themes_pass_aa_on_panel2_too():
         check(meets_wcag_aa(muted, panel2), f"theme '{name}': muted {muted} on panel2 {panel2} fails AA ({contrast_ratio(muted, panel2)}:1)")
 
 
-def test_new_theme_accent_colors_pass_aa_as_text():
+def test_sunwashed_accent_colors_pass_aa_as_text():
     """cyan/gold are used as text/link color in several places (e.g. section
     headers, hub-listing-title accents), not just fills -- both the primary
     and the darker '2' variant must be readable on the theme's own bg."""
     source = HUD_PATH.read_text(encoding="utf-8")
     theme_blocks = _extract_theme_blocks(source)
-    for name in ("sunwashed", "mermaid", "clubroom", "springvivid"):
-        v = theme_blocks[name]
-        bg = v["bg"]
-        for role in ("cyan", "cyan2", "gold", "gold2", "green", "red"):
-            c = v.get(role)
-            check(c is not None, f"theme '{name}' missing --{role}")
-            if c is None:
-                continue
-            check(meets_wcag_aa(c, bg), f"theme '{name}': --{role} {c} on bg {bg} fails AA ({contrast_ratio(c, bg)}:1)")
+    v = theme_blocks["sunwashed"]
+    bg = v["bg"]
+    for role in ("cyan", "cyan2", "gold", "gold2", "green", "red"):
+        c = v.get(role)
+        check(c is not None, f"theme 'sunwashed' missing --{role}")
+        if c is None:
+            continue
+        check(meets_wcag_aa(c, bg), f"theme 'sunwashed': --{role} {c} on bg {bg} fails AA ({contrast_ratio(c, bg)}:1)")
 
 
-def test_ui_themes_array_lists_all_four_new_themes():
-    """_UI_THEMES drives the Settings swatch picker -- a theme with real CSS
-    but no _UI_THEMES entry would be unreachable from the UI."""
+def test_ui_themes_array_matches_the_kept_five():
+    """_UI_THEMES drives the Settings swatch picker -- must list exactly the
+    5 kept themes, no more (a stale/removed name would be unreachable CSS-
+    wise) and no less (a theme with real CSS but no _UI_THEMES entry would
+    be unreachable from the UI)."""
     source = HUD_PATH.read_text(encoding="utf-8")
     m = re.search(r"const _UI_THEMES = \[(.*?)\];", source, re.DOTALL)
     assert m, "could not find const _UI_THEMES = [...] array"
     block = m.group(1)
     names = re.findall(r"name:'([a-zA-Z0-9]+)'", block)
-    for new_theme in ("sunwashed", "mermaid", "clubroom", "springvivid"):
-        check(new_theme in names, f"'{new_theme}' missing from _UI_THEMES (unreachable from the theme picker): {names}")
+    check(set(names) == EXPECTED_THEMES,
+          f"expected _UI_THEMES to list exactly {sorted(EXPECTED_THEMES)}, got {sorted(names)}")
     check(len(names) == len(set(names)), f"duplicate theme names in _UI_THEMES: {names}")
 
 
@@ -159,10 +172,10 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("FRANK THEME CONTRAST TESTS OK — every theme's text/muted pass WCAG AA on both "
-          "bg and (for the 5 light-surfaced themes) the more saturated panel2 tint, the 4 "
-          "new bright themes' accent colors are readable as text too, and all 4 are wired "
-          "into the _UI_THEMES picker so they're actually reachable from Settings.")
+    print("FRANK THEME CONTRAST TESTS OK — all 5 kept themes' text/muted pass WCAG AA on both "
+          "bg and (for the 2 light-surfaced themes) the more saturated panel2 tint, sunwashed's "
+          "accent colors are readable as text too, and _UI_THEMES lists exactly the 5 kept "
+          "themes so nothing removed is still reachable from Settings.")
 
 
 if __name__ == "__main__":

@@ -1,8 +1,0 @@
-        def _revenue(order_list):
-            total = 0.0
-            for o in order_list:
-                gt = o.get("grandtotal", {})
-                if isinstance(gt, dict):
-                    divisor = gt.get("divisor", 100) or 100
-                    total += gt.get("amount", 0) / divisor
-            return round(total, 2)

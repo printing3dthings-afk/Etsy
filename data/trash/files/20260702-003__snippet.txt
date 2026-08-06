@@ -1,1 +1,0 @@
-function isControlCenterOpen(){ return document.body.classList.contains('cc-open'); }
