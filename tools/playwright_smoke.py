@@ -1388,6 +1388,91 @@ async def _run_browser_checks() -> None:
             check("90004" in (search_jump_check.get("panelHtml") or ""),
                   f"the opened panel should be the real searched-for listing, got: {search_jump_check}")
 
+            # Listings screen UX pass (2026-08-06): quality-gate badge, title-length
+            # check, tag chips, sort, and search -- all pure client-side over fields
+            # /api/listings already ships (manifest_status, title, tags, views, sales,
+            # conversion_pct, created_timestamp), no new fetch involved. Reset to a
+            # clean fixture set and exercise each addition directly.
+            # Mock the /files calls each toggleListingDetail() triggers (real
+            # network round-trips gave the app's own setInterval(loadAll, 30000)
+            # global refresh time to fire mid-test and clobber the fixture below --
+            # confirmed via debug run, same race-condition class the 2026-07-30
+            # comment elsewhere in this file already documents for /api/products).
+            await page.evaluate("""() => {
+                window._origAuthGetListingsUx = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (/\\/api\\/listings\\/\\d+\\/files/.test(path)) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({files: []})});
+                    }
+                    return window._origAuthGetListingsUx(path, ms);
+                };
+            }""")
+            listings_ux_check = await page.evaluate("""async () => {
+                _listings = [
+                    {listing_id: 91001, title: 'Zebra Listing With A Deliberately Long Title That Exceeds Seventy Characters For Sure',
+                     price: 9.99, state: 'active', views: 10, num_favorers: 1, sales: 2, conversion_pct: 20.0,
+                     created_timestamp: 3000, tags: ['sticker pack'], manifest_status: 'FAIL'},
+                    {listing_id: 91002, title: 'Apple Listing Short Title', price: 12.99, state: 'active',
+                     views: 100, num_favorers: 5, sales: 1, conversion_pct: 1.0, created_timestamp: 1000,
+                     tags: ['digital planner', 'goodnotes planner'], manifest_status: 'PASS'},
+                    {listing_id: 91003, title: 'Mango Listing Mid Title', price: 5.99, state: 'active',
+                     views: 50, num_favorers: 2, sales: 5, conversion_pct: 10.0, created_timestamp: 2000,
+                     tags: [], manifest_status: 'WARN'},
+                ];
+                _sectionFilter = null; _openDetailId = null; _listingState = 'active';
+                document.getElementById('listings-search').value = '';
+                document.getElementById('listings-sort').value = 'default';
+                renderListings();
+                const rowHtml = document.getElementById('listings-content').innerHTML;
+
+                await toggleListingDetail(91001);
+                const longTitleDetail = document.getElementById('hub-detail-91001').innerHTML;
+                await toggleListingDetail(91001); // close it again before opening the next
+
+                await toggleListingDetail(91002);
+                const taggedDetail = document.getElementById('hub-detail-91002').innerHTML;
+                await toggleListingDetail(91002);
+
+                document.getElementById('listings-sort').value = 'views_desc';
+                renderListings();
+                const sortedIds = Array.from(document.querySelectorAll('#listings-content .hub-listing-item'))
+                    .map(el => el.getAttribute('onclick').match(/\\d+/)[0]);
+
+                document.getElementById('listings-sort').value = 'default';
+                document.getElementById('listings-search').value = 'goodnotes';
+                renderListings();
+                const searchByTagHtml = document.getElementById('listings-content').innerHTML;
+
+                document.getElementById('listings-search').value = 'zebra';
+                renderListings();
+                const searchByTitleHtml = document.getElementById('listings-content').innerHTML;
+
+                document.getElementById('listings-search').value = '';
+                renderListings();
+
+                return { rowHtml, longTitleDetail, taggedDetail, sortedIds, searchByTagHtml, searchByTitleHtml };
+            }""")
+            await page.evaluate("if(window._origAuthGetListingsUx){window.authGet = window._origAuthGetListingsUx; window._origAuthGetListingsUx = null;}")
+            check("hub-qbadge fail" in listings_ux_check.get("rowHtml", ""),
+                  "a FAIL-status listing's compact row should show the quality-gate badge")
+            check("hub-qbadge warn" in listings_ux_check.get("rowHtml", ""),
+                  "a WARN-status listing's compact row should show the quality-gate badge")
+            check("hub-qbadge pass" not in listings_ux_check.get("rowHtml", ""),
+                  "a PASS-status listing's compact row should NOT show a badge (only WARN/FAIL are actionable)")
+            long_detail = listings_ux_check.get("longTitleDetail", "")
+            check("⚠️ over mobile limit" in long_detail, f"a >70-char title should flag the mobile-ranking-penalty warning, got: {long_detail[:300]}")
+            check("hub-qbadge fail" in long_detail, f"the detail panel's quality-gate row should render the FAIL badge, got: {long_detail[:300]}")
+            tagged_detail = listings_ux_check.get("taggedDetail", "")
+            check("goodnotes planner" in tagged_detail and "digital planner" in tagged_detail,
+                  f"the detail panel should render each real tag as a chip, got: {tagged_detail[:400]}")
+            check("2/13" in tagged_detail, f"the detail panel should show the real tag count out of 13, got: {tagged_detail[:400]}")
+            check(listings_ux_check.get("sortedIds") == ['91002', '91003', '91001'],
+                  f"sorting by 'Most views' should order 100 > 50 > 10, got: {listings_ux_check.get('sortedIds')}")
+            check("91002" in listings_ux_check.get("searchByTagHtml", "") and "91001" not in listings_ux_check.get("searchByTagHtml", ""),
+                  "searching 'goodnotes' should match by tag content, not just title")
+            check("91001" in listings_ux_check.get("searchByTitleHtml", "") and "91002" not in listings_ux_check.get("searchByTitleHtml", ""),
+                  "searching 'zebra' should match by title substring")
+
             # Products screen rebuild (2026-07-15) -- was hardcoded to a ~5-product
             # "Core Products" slice, now the full catalog with a category filter.
             # Stub _products directly (bare assignment, not window.X -- see the tour

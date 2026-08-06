@@ -22501,3 +22501,41 @@ mocked `generate_coloring_page()`.
 
 Verified: 107/107 unit tests (includes the new regression test). No frontend
 touched -- backend script only, no Playwright needed.
+
+
+## 2026-08-06 — Listings screen: 5 UX improvements (quality badge, tags, title-length, sort, search)
+Scott asked what could be added to the Listings screen to make it easier to
+use. Researched via a dedicated agent pass: found 5 improvements reachable
+with zero or near-zero new backend work, since every field involved already
+ships in the /api/listings payload (manifest_status, tags, title, views,
+sales, conversion_pct, created_timestamp) but was never rendered on this
+screen. Scott approved building this tier.
+
+**Added:**
+1. **Quality-gate badge** (PASS/WARN/FAIL pill) on the compact row -- only
+   shown for WARN/FAIL (PASS is the expected default, showing it on every
+   row would be noise) -- and unconditionally in the detail panel.
+2. **Title-length live-check** in the detail panel (N/70, red + warning past
+   the 2026 mobile-ranking-penalty limit).
+3. **Tag chips** in the detail panel -- every real tag rendered, plus a
+   count out of 13.
+4. **Sort control** (views, sold, conversion, newest/oldest) -- pure
+   client-side over the already-loaded `_listings` array.
+5. **Search box** scoped to this screen, filtering by title or tag content
+   across whichever state tab is open (the header search only covers
+   active listings).
+
+New helpers: `_qualityBadgeHtml()`, `_sortListings()` in frank_hud_mockup.py.
+
+**Playwright test hit a real race while writing coverage:** the app's own
+`setInterval(loadAll, 30000)` global refresh fired mid-test (real, unmocked
+`/api/listings/{id}/files` network round-trips gave it enough wall-clock
+time) and clobbered the fixture `_listings` array -- same race-condition
+class already documented elsewhere in this file for `/api/products`. Fixed
+by mocking those `/files` calls the same way `search_jump_check` already
+does. Also found and fixed a scoping bug in the new sort-order assertion:
+`.hub-listing-item` is a shared CSS class reused by Approvals/Files rows
+too, so `querySelectorAll` needed to be scoped to `#listings-content`.
+
+Verified: 107/107 unit tests, 3x clean Playwright. Build bumped to
+`aacdb37-v309`.

@@ -920,6 +920,11 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-lstate{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);margin-left:6px}
 .hub-lstate.draft{background:#0f1f30;color:var(--muted);border:1px solid var(--border)}
 .hub-lstate.active{background:#143323;color:var(--green);border:1px solid #1f4d36}
+.hub-qbadge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);margin-left:6px}
+.hub-qbadge.pass{background:#143323;color:var(--green);border:1px solid #1f4d36}
+.hub-qbadge.warn{background:#2d2a1a;color:var(--gold2);border:1px solid #4d431f}
+.hub-qbadge.fail{background:#2d1a1a;color:#e07070;border:1px solid #4d1f1f}
+.hub-tag-chip{display:inline-block;font-size:10.5px;padding:2px 8px;margin:2px 4px 2px 0;border-radius:var(--r-pill);background:var(--panel2);border:1px solid var(--border);color:var(--muted)}
 
 .hub-listing-detail{padding:2px 14px 12px;margin:-2px 0 10px;background:var(--panel);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;font-size:12px}
 .hub-listing-detail .hub-drow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
@@ -1993,6 +1998,18 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
              mechanism (see stage_batch_listing_state's docstring) -- previously only
              reachable by asking Frank in chat, not visible as a tab here at all. -->
         <button class="hub-toggle-btn" data-state="expired" onclick="loadListings('expired',this)">Expired</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+        <input id="listings-search" type="text" placeholder="Search title or tags…" aria-label="Search listings" oninput="renderListings()" style="flex:1;min-width:140px;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:8px 12px;font-size:12.5px">
+        <select id="listings-sort" aria-label="Sort listings" onchange="renderListings()" style="background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:8px 10px;font-size:12.5px">
+          <option value="default">Sort: Etsy order</option>
+          <option value="views_desc">Most views</option>
+          <option value="views_asc">Fewest views</option>
+          <option value="sold_desc">Most sold</option>
+          <option value="conversion_desc">Best conversion</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
       </div>
       <div id="listings-content" class="hub-scroll"><div class="hub-spinner"></div></div>
     </div>
@@ -8803,6 +8820,31 @@ function setSectionFilter(key) {
   _openDetailId = null;
   renderListings();
 }
+// Quality-gate badge (2026-08-06, Listings UX pass): manifest_status is a plain
+// "PASS"/"WARN"/"FAIL" string, already returned by every /api/listings row
+// (listing_integrity_check.py's audit_listing(), merged in at main.py's
+// _listings_sync()) but was never rendered anywhere on this screen before.
+// null/undefined (never audited yet) renders nothing -- absence isn't a failure.
+function _qualityBadgeHtml(status) {
+  const s = String(status||'').toUpperCase();
+  const cls = s==='PASS' ? 'pass' : s==='WARN' ? 'warn' : s==='FAIL' ? 'fail' : '';
+  if (!cls) return '';
+  const label = s==='PASS' ? '✓ PASS' : s==='WARN' ? '⚠ WARN' : '✗ FAIL';
+  return '<span class="hub-qbadge '+cls+'">'+label+'</span>';
+}
+// Sort/search are pure client-side over the already-fetched _listings array --
+// every field used here (views, sales, conversion_pct, created_timestamp,
+// tags) already ships in the /api/listings payload, no extra fetch needed.
+function _sortListings(list, sortKey) {
+  const arr = list.slice();
+  if (sortKey==='views_desc') arr.sort((a,b)=>(b.views||0)-(a.views||0));
+  else if (sortKey==='views_asc') arr.sort((a,b)=>(a.views||0)-(b.views||0));
+  else if (sortKey==='sold_desc') arr.sort((a,b)=>(b.sales||0)-(a.sales||0));
+  else if (sortKey==='conversion_desc') arr.sort((a,b)=>(b.conversion_pct||0)-(a.conversion_pct||0));
+  else if (sortKey==='newest') arr.sort((a,b)=>(b.created_timestamp||0)-(a.created_timestamp||0));
+  else if (sortKey==='oldest') arr.sort((a,b)=>(a.created_timestamp||0)-(b.created_timestamp||0));
+  return arr; // 'default' (or anything unrecognized) -- keep Etsy's own order
+}
 function renderListings() {
   const el = document.getElementById('listings-content');
   if (!_listings.length) { el.innerHTML = '<div class="hub-empty">No '+_listingState+' listings</div>'; return; }
@@ -8822,14 +8864,23 @@ function renderListings() {
     });
     html += '</div>';
   }
-  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
-  if (!filtered.length) { html += '<div class="hub-empty">No listings in this category</div>'; el.innerHTML = html; return; }
+  let filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
+  const searchEl = document.getElementById('listings-search');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if (q) {
+    filtered = filtered.filter(l =>
+      (l.title||'').toLowerCase().includes(q) ||
+      (l.tags||[]).some(t => (t||'').toLowerCase().includes(q)));
+  }
+  const sortEl = document.getElementById('listings-sort');
+  filtered = _sortListings(filtered, sortEl ? sortEl.value : 'default');
+  if (!filtered.length) { html += `<div class="hub-empty">No listings ${q?'match "'+escHtml(q)+'"':'in this category'}</div>`; el.innerHTML = html; return; }
   html += filtered.map(l => `
     <div class="hub-listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})" role="button" tabindex="0">
       ${l.thumbnail_url ? `<img class="hub-thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy" alt="${escHtml(l.title||'Listing photo')}">` : `<div class="hub-thumb-ph" aria-hidden="true">🏷️</div>`}
       <div class="hub-listing-info">
         <div class="hub-listing-title">${escHtml(l.title)}</div>
-        <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+        <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span>${l.manifest_status && l.manifest_status!=='PASS' ? _qualityBadgeHtml(l.manifest_status) : ''}</div>
         <button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="event.stopPropagation();openFixListingModal(${l.listing_id})">🔧 Ask %%AGENT_SHORT%% to Fix</button>
       </div>
       <div class="hub-listing-price">$${(+l.price||0).toFixed(2)}</div>
@@ -8850,14 +8901,25 @@ async function toggleListingDetail(listingId) {
   if (!l) return;
   panel.style.display = 'block';
   _openDetailId = listingId;
+  // Quality gate / title-length / tags rows (2026-08-06, Listings UX pass):
+  // all three read fields the /api/listings payload already ships (manifest_status,
+  // l.title, l.tags) -- no extra fetch, just data that was loaded and discarded before.
+  const titleLen = (l.title||'').length;
+  const tags = l.tags || [];
   panel.innerHTML =
     `<div class="hub-drow"><span>Listing ID</span><b>${listingId}</b></div>`+
     `<div class="hub-drow"><span>Category</span><b>${escHtml(_sectionLabel(l.shop_section_id))}</b></div>`+
+    (l.manifest_status ? `<div class="hub-drow"><span>Quality gate</span><b>${_qualityBadgeHtml(l.manifest_status)}</b></div>` : '')+
+    `<div class="hub-drow"><span>Title length</span><b style="color:${titleLen>70?'var(--red)':'var(--green)'}">${titleLen}/70${titleLen>70?' ⚠️ over mobile limit':''}</b></div>`+
     `<div class="hub-drow"><span>Views</span><b>${l.views}</b></div>`+
     `<div class="hub-drow"><span>Favorites</span><b>${l.num_favorers}</b></div>`+
     (l.sales!=null ? `<div class="hub-drow"><span>Sold</span><b>${l.sales}</b></div>` : '')+
     (l.conversion_pct!=null ? `<div class="hub-drow"><span>Conversion</span><b>${l.conversion_pct}%</b></div>` : '')+
     `<div class="hub-drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
+    `<div class="hub-drow" style="display:block">`+
+      `<div style="display:flex;justify-content:space-between"><span>Tags</span><b style="color:${tags.length<13?'var(--gold2)':'var(--green)'}">${tags.length}/13</b></div>`+
+      (tags.length ? `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${tags.map(t=>'<span class="hub-tag-chip">'+escHtml(t)+'</span>').join('')}</div>` : '')+
+    `</div>`+
     `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
     `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
     // expired (2026-07-31): reactivating an expired listing is a normal Activate
