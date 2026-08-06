@@ -571,6 +571,17 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
   background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
   box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:8px;cursor:default;text-align:left}
 
+/* Tour menu (2026-08-06 Full tour) -- same panel/shadow/z-index recipe as
+   .alert-dropdown above, just narrower for a 2-item picker (Quick tour / Full
+   tour) anchored under the header '?' icon. */
+.tour-menu-dropdown{position:absolute;top:38px;right:0;width:220px;max-width:calc(100vw - 24px);
+  background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:6px;cursor:default;text-align:left}
+.tour-menu-item{display:block;width:100%;text-align:left;background:none;border:none;
+  border-radius:var(--r-sm);padding:9px 10px;font-size:12.5px;color:var(--text);cursor:pointer;font-family:inherit}
+.tour-menu-item:hover,.tour-menu-item:focus{background:var(--panel2);outline:none}
+.tour-menu-item .tmi-sub{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+
 /* Global search results dropdown -- same panel/shadow/z-index recipe as
    .alert-dropdown above, anchored under the search input instead of a
    right-aligned header icon. 2026-07-17 Wave 3 usability fix: replaces the
@@ -1626,7 +1637,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
         </div>
       </div>
-      <div class="icon-btn" onclick="startTour()" title="Replay tutorial" aria-label="Replay tutorial" role="button" tabindex="0">?</div>
+      <div class="icon-btn" id="tour-menu-btn" onclick="event.stopPropagation();toggleTourMenu()" title="Take the tour" aria-label="Take the tour" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">?
+        <div id="tour-menu-dropdown" class="tour-menu-dropdown" style="display:none" onclick="event.stopPropagation()">
+          <button class="tour-menu-item" onclick="closeTourMenu();startTour('quick')">Quick tour<span class="tmi-sub">~30s — where everything lives</span></button>
+          <button class="tour-menu-item" onclick="closeTourMenu();startTour('full')">Full tour<span class="tmi-sub">~4-5 min — see Frank work on your real shop</span></button>
+        </div>
+      </div>
       <div class="icon-btn" onclick="showScreen('settings')" aria-label="Settings" role="button" tabindex="0">⚙</div>
       <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button" tabindex="0" aria-label="Log out"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
     </div>
@@ -3454,7 +3470,11 @@ function renderPhoneMore(){
       `<div class="pmore-item" data-screen="${s}" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi" aria-hidden="true">${ic}</span>${lbl}<span class="pmc" aria-hidden="true">›</span></div>`
     ).join('')).join('')
     + `<div class="pmore-grp">Help</div>`
-    + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour()"><span class="pmi" aria-hidden="true">?</span>Replay Tutorial<span class="pmc" aria-hidden="true">›</span></div>`;
+    + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour('quick')"><span class="pmi" aria-hidden="true">?</span>Replay Tutorial<span class="pmc" aria-hidden="true">›</span></div>`
+    // 2026-08-06 (Full tour): the longer, interactive walkthrough that
+    // navigates real screens and shows real shop data -- separate from the
+    // quick ~30s replay above, see TOUR_STEPS_FULL's own comment.
+    + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour('full')"><span class="pmi" aria-hidden="true">▶</span>Take the Full Tour<span class="pmc" aria-hidden="true">›</span></div>`;
 }
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
@@ -5275,23 +5295,195 @@ const MOBILE_TOUR_STEPS = [
     title: "You're all set",
     body: '<p>That\\'s everything. Replay this tour anytime from <b>More → Replay Tutorial</b>.</p>' },
 ];
+// ── Full tour (2026-08-06) — Scott: "make it interactive so someone actually
+// gets to see what Frank does... make it informative and make it practical."
+// Separate from the quick tour above (which stays fast, ~30s, for first login):
+// this one navigates every real screen and spotlights REAL live data -- an
+// actual listing row, an actual pending approval, the shop's actual connection
+// status -- instead of just pointing at a nav item. "Look, don't touch": no
+// step performs a mutating action on the real shop; waitForSelector/
+// waitForFallbackSelector below poll for that real content to finish loading
+// (see renderTourStep()'s own comment) and honestly explain an empty state
+// rather than ever faking data to fill a gap. Reachable via the '?' menu
+// (desktop) or More → "Take the full tour" (mobile) -- see startTour(mode).
+const TOUR_STEPS_FULL = [
+  { target: null, screen: null,
+    title: 'The full tour',
+    body: '<p>This one\\'s longer — a few minutes — and it shows %%AGENT_SHORT%% working on your ACTUAL shop, not a demo. Real listings, a real pending approval if you have one, your real numbers.</p><p class="tour-note">Nothing gets changed along the way — this is look, don\\'t touch. Tap Next to start, or Skip to jump right in.</p>' },
+  { target: '#ticker-track .tick-chip', screen: 'cmd', waitForSelector: '#ticker-track .tick-chip',
+    title: 'Your real numbers',
+    body: '<p>This is Home — and that scrolling row is your ACTUAL revenue, orders, and top listing, refreshed live. Every screen you\\'re about to see works the same way: real data, not a mockup.</p>' },
+  { target: '#chat-input', screen: null, waitForSelector: '#chat-input',
+    prefillChat: "How's my shop doing this week?",
+    title: 'Ask Frank anything',
+    body: '<p>%%AGENT_SHORT%% talks in plain English about your real shop. I\\'ve typed a real question in the box — <b>tap Send</b> if you want to see a real answer right now (or skip it and keep going, nothing here requires it).</p>' },
+  { target: '.nav-item[data-screen="actions"]', screen: 'actions',
+    waitForSelector: '#actions-content .hub-listing-item', waitForFallbackSelector: '#actions-content .empty',
+    title: 'Approvals',
+    body: '<p>This is a REAL item currently waiting on your OK — %%AGENT_SHORT%% never changes your shop, files, or posts without one tap from you. Tap "Open on Etsy" or "Ask CEO" any time you want to act on something here.</p>',
+    emptyStateBody: '<p>Nothing\\'s waiting on you right now — that\\'s the "✅ All clear" message you\\'ll see whenever your queue is empty. The moment %%AGENT_SHORT%% has a real suggestion, it shows up here exactly like this, with a Fix and an Open-on-Etsy button.</p>' },
+  { target: '.nav-item[data-screen="listings"]', screen: 'listings',
+    waitForSelector: '#listings-content .hub-listing-item', waitForFallbackSelector: '#listings-content .hub-empty',
+    title: 'Your listings',
+    body: '<p>An actual listing from your shop, with %%AGENT_SHORT%%\\'s own quality check on it (the PASS/WARN/FAIL badge) — tap any listing to expand it, check its title length, tags, and everything the quality gate looked at.</p>',
+    emptyStateBody: '<p>No listings in this state right now — switch tabs at the top (Active / Draft / Inactive) to see listings in a different state.</p>' },
+  { target: '#create-chooser', screen: 'create', waitForSelector: '#create-chooser',
+    title: 'Create',
+    body: '<p>Digital Planner, Wall Art, and Coloring Pages are real, working builders — %%AGENT_SHORT%% generates the files, photos, and listing content, you review everything, then approve before anything goes to Etsy. (We won\\'t actually kick one off here — a real build costs real time and API usage.)</p>' },
+  { target: '.nav-item[data-screen="products"]', screen: 'products',
+    waitForSelector: '#products-content .hub-prod-card', waitForFallbackSelector: '#products-content .hub-empty',
+    title: 'Products',
+    body: '<p>A real entry from your product catalog — the colored left edge shows whether all its files are actually present on disk, checked automatically.</p>',
+    emptyStateBody: '<p>No products in the catalog yet — once you build or register one, it shows up here with a live file-presence check.</p>' },
+  { target: '#bk-themes .hub-card', screen: 'brandkit', waitForSelector: '#bk-themes .hub-card',
+    title: 'Brand Kit',
+    body: '<p>The actual colors, fonts, and rules %%AGENT_SHORT%% uses every time it generates something new for you — this is real configuration, not a preview.</p>' },
+  { target: '.nav-item[data-screen="files"]', screen: 'files',
+    waitForSelector: '#files-content .hub-listing-item', waitForFallbackSelector: '#files-content .hub-empty',
+    title: 'Files',
+    body: '<p>The real product files living on the server right now. Tap one to open it, tap a ZIP to expand it — no downloading or unzipping needed.</p>',
+    emptyStateBody: '<p>No files on record yet — once products or backups exist, they show up here.</p>' },
+  { target: '.nav-item[data-screen="connections"]', screen: 'connections',
+    waitForSelector: '#connections-content .hub-cred-row',
+    title: 'Connections',
+    body: '<p>Your real, live credential status — Etsy, Claude, OpenAI, email, and more. Green means connected and working right now; red means something needs attention. This is the first place to check if anything seems broken.</p>' },
+  { target: '#memory-content .metric', screen: 'knowledge', waitForSelector: '#memory-content .metric',
+    title: 'Knowledge',
+    body: '<p>What %%AGENT_SHORT%% actually remembers — real session and message counts, plus every knowledge-base doc it reads before making a decision (your business standards, product catalog, and more).</p>' },
+  { target: '.nav-item[data-screen="settings"]', screen: 'settings',
+    title: 'Settings',
+    body: '<p>Voice, appearance, and account preferences — also one tap away anytime from the <b>⚙</b> icon up top.</p>' },
+  { target: '#nav-advanced-toggle', screen: null,
+    title: 'Advanced',
+    body: '<p>The engineering-level screens (Tasks, Workflows, AI Core, Agents, and more) live under here. Safe to ignore until you need them — this tour won\\'t dig into those.</p>' },
+  { target: null, screen: null,
+    title: "That's Frank",
+    body: '<p>Everything you just saw was your real shop — not a demo. Replay this tour anytime from the <b>?</b> icon, or take the quick version if you just want a refresher.</p>' },
+];
+// Mobile analog of TOUR_STEPS_FULL -- uses ptab for the 5 real tab-bar
+// destinations and popen (a screen name, not just 'home') for everything else,
+// same as MOBILE_TOUR_STEPS but reaching further than the 5 tabs + More bucket.
+const MOBILE_TOUR_STEPS_FULL = [
+  { target: null, ptab: null,
+    title: 'The full tour',
+    body: '<p>This one\\'s longer — a few minutes — and it shows %%AGENT_SHORT%% working on your ACTUAL shop, not a demo. Real listings, a real pending approval if you have one, your real numbers.</p><p class="tour-note">Nothing gets changed along the way — this is look, don\\'t touch. Tap Next to start, or Skip to jump right in.</p>' },
+  { target: '#ticker-track .tick-chip', popen: 'home', waitForSelector: '#ticker-track .tick-chip',
+    title: 'Your real numbers',
+    body: '<p>This is Home — and that scrolling row is your ACTUAL revenue, orders, and top listing, refreshed live. Every screen you\\'re about to see works the same way: real data, not a mockup.</p>' },
+  { target: '#chat-input', ptab: 'ask', waitForSelector: '#chat-input',
+    prefillChat: "How's my shop doing this week?",
+    title: 'Ask Frank anything',
+    body: '<p>%%AGENT_SHORT%% talks in plain English about your real shop. I\\'ve typed a real question in the box — <b>tap Send</b> if you want to see a real answer right now (or skip it and keep going, nothing here requires it).</p>' },
+  { target: '.ptab[data-ptab="appr"]', ptab: 'appr',
+    waitForSelector: '#actions-content .hub-listing-item', waitForFallbackSelector: '#actions-content .empty',
+    title: 'Approvals',
+    body: '<p>This is a REAL item currently waiting on your OK — %%AGENT_SHORT%% never changes your shop, files, or posts without one tap from you.</p>',
+    emptyStateBody: '<p>Nothing\\'s waiting on you right now — that\\'s the "✅ All clear" message you\\'ll see whenever your queue is empty. The moment %%AGENT_SHORT%% has a real suggestion, it shows up here.</p>' },
+  { target: null, popen: 'listings',
+    waitForSelector: '#listings-content .hub-listing-item', waitForFallbackSelector: '#listings-content .hub-empty',
+    title: 'Your listings',
+    body: '<p>An actual listing from your shop, with %%AGENT_SHORT%%\\'s own quality check on it (the PASS/WARN/FAIL badge) — tap it to expand and see everything the quality gate looked at.</p>',
+    emptyStateBody: '<p>No listings in this state right now — switch tabs at the top to see listings in a different state.</p>' },
+  { target: '.ptab[data-ptab="create"]', ptab: 'create',
+    title: 'Create',
+    body: '<p>Digital Planner, Wall Art, and Coloring Pages are real, working builders — %%AGENT_SHORT%% generates the files, photos, and listing content, you review everything, then approve before anything goes to Etsy. (We won\\'t actually kick one off here.)</p>' },
+  { target: null, popen: 'products',
+    waitForSelector: '#products-content .hub-prod-card', waitForFallbackSelector: '#products-content .hub-empty',
+    title: 'Products',
+    body: '<p>A real entry from your product catalog — the colored left edge shows whether all its files are actually present, checked automatically.</p>',
+    emptyStateBody: '<p>No products in the catalog yet — once you build or register one, it shows up here with a live file-presence check.</p>' },
+  { target: null, popen: 'brandkit', waitForSelector: '#bk-themes .hub-card',
+    title: 'Brand Kit',
+    body: '<p>The actual colors, fonts, and rules %%AGENT_SHORT%% uses every time it generates something new for you.</p>' },
+  { target: null, popen: 'connections', waitForSelector: '#connections-content .hub-cred-row',
+    title: 'Connections',
+    body: '<p>Your real, live credential status — Etsy, Claude, OpenAI, email, and more. Green means connected and working right now. This is the first place to check if anything seems broken.</p>' },
+  { target: null, popen: 'knowledge', waitForSelector: '#memory-content .metric',
+    title: 'Knowledge',
+    body: '<p>What %%AGENT_SHORT%% actually remembers — real session and message counts, plus every knowledge-base doc it reads before making a decision.</p>' },
+  { target: '#pp-more-body', ptab: 'more',
+    title: 'Everything else',
+    body: '<p>Files, Settings, and the engineering-level Advanced screens all live under <b>More</b> — safe to explore whenever you\\'re curious.</p>' },
+  { target: null, ptab: null,
+    title: "That's Frank",
+    body: '<p>Everything you just saw was your real shop — not a demo. Replay this tour anytime from <b>More → Take the full tour</b>, or take the quick version if you just want a refresher.</p>' },
+];
 let _tourIndex = 0;
 let _activeTourSteps = TOUR_STEPS;
+// 2026-08-06 (Full tour, monotonic render token): a full-tour step can await up
+// to 4s for real content to load (see waitForSelector below) -- if the user
+// clicks Next/Back again (or closes the tour) before that resolves, the stale
+// call must never reposition the spotlight out from under the step the user is
+// actually looking at now. Every renderTourStep() call claims a new generation
+// number at its very start; any awaited work checks it's still the latest
+// generation before touching the DOM, and bails silently otherwise.
+let _tourRenderGen = 0;
 function _tourTargetEl(step){ return step.target ? document.querySelector(step.target) : null; }
-function renderTourStep(){
+// Polls for `selector` to appear (a screen's own _SCREEN_LOADERS fetch is async,
+// so a just-navigated-to real content element doesn't exist yet the instant
+// showScreen() returns) up to `timeoutMs`, then gives up and resolves null.
+function _tourWaitForEl(selector, timeoutMs){
+  return new Promise(resolve => {
+    const start = Date.now();
+    (function poll(){
+      const el = document.querySelector(selector);
+      if (el || Date.now() - start >= timeoutMs) { resolve(el); return; }
+      setTimeout(poll, 150);
+    })();
+  });
+}
+async function renderTourStep(){
   const step = _activeTourSteps[_tourIndex];
   if (!step) return;
+  const myGen = ++_tourRenderGen;
   // popen (2026-07-23, Home screen) checked first -- Home isn't one of the 5 real
   // .ptab tab-bar buttons nor a screen ever reached via showScreen() from desktop
   // nav, so it gets its own dedicated field rather than overloading ptab/screen
   // (which would corrupt the tab-bar/pill state machine or the showScreen() nav-
   // item contract every other step relies on).
-  if (step.popen) phoneOpenHome();
+  // 2026-08-06 (Full tour): popen now also carries any non-tab screen name
+  // (e.g. 'products', 'brandkit') for mobile full-tour steps that need to open
+  // a screen normally only reachable via a "More" list row -- routed through
+  // phoneOpenScreen() (the same function those rows call) rather than bare
+  // showScreen(), so the popup/overflow cleanup phoneOpenScreen() does still
+  // happens. 'home' keeps its own dedicated phoneOpenHome() call since that
+  // function layers the extra phone-home-open marker on top.
+  if (step.popen === 'home') phoneOpenHome();
+  else if (step.popen) phoneOpenScreen(step.popen);
   else if (step.ptab) phoneTab(step.ptab);
   else if (step.screen) showScreen(step.screen);
+  // Full-tour steps (waitForSelector set) spotlight REAL content -- a real
+  // pending approval, a real listing row -- that only exists once the screen's
+  // own async loader finishes, unlike a static nav item which is already in the
+  // DOM the instant showScreen() returns. Quick-tour steps never set
+  // waitForSelector, so this block is skipped entirely and behavior is exactly
+  // what it always was: synchronous, zero added latency.
+  let resolvedSelector = step.target;
+  let usingFallback = false;
+  if (step.waitForSelector) {
+    const found = await _tourWaitForEl(step.waitForSelector, 4000);
+    if (myGen !== _tourRenderGen) return; // superseded -- user moved on or closed the tour
+    if (found) {
+      resolvedSelector = step.waitForSelector;
+    } else if (step.waitForFallbackSelector && document.querySelector(step.waitForFallbackSelector)) {
+      // Nothing real to show (e.g. zero pending approvals right now) -- spotlight
+      // the screen's own real empty-state element and say so, honestly, via
+      // step.emptyStateBody below. Never fakes data to fill the gap.
+      resolvedSelector = step.waitForFallbackSelector;
+      usingFallback = true;
+    }
+  }
+  // prefillChat (2026-08-06, Full tour "Ask Frank" step): sets a real sample
+  // question into the real chat input WITHOUT sending it -- sending is a real
+  // paid Claude API call, so the tour never fires one automatically; the person
+  // taking the tour taps Send themselves if they want the real answer.
+  if (step.prefillChat) {
+    const inp = document.getElementById('chat-input');
+    if (inp) { inp.value = step.prefillChat; inp.focus(); }
+  }
   const spot = document.getElementById('tour-spot');
   const tip = document.getElementById('tour-tooltip');
-  const el = _tourTargetEl(step);
+  const el = resolvedSelector ? document.querySelector(resolvedSelector) : null;
   const rect = el ? el.getBoundingClientRect() : null;
   const pad = 8;
   if (rect) {
@@ -5308,7 +5500,7 @@ function renderTourStep(){
     spot.style.height = '0px';
   }
   document.getElementById('tour-step-title').innerHTML = step.title;
-  document.getElementById('tour-step-body').innerHTML = step.body;
+  document.getElementById('tour-step-body').innerHTML = (usingFallback && step.emptyStateBody) ? step.emptyStateBody : step.body;
   const dots = document.getElementById('tour-dots');
   dots.innerHTML = _activeTourSteps.map((_, i) => '<span class="dot' + (i === _tourIndex ? ' active' : '') + '"></span>').join('');
   document.getElementById('tour-back-btn').disabled = (_tourIndex === 0);
@@ -5356,6 +5548,7 @@ function renderTourStep(){
 // loaded and may still be empty this early. A failed/empty fetch just ends the
 // tour exactly as before -- this is a bonus nudge, never a requirement.
 async function endTour(markSeen, completed){
+  _tourRenderGen++; // invalidate any in-flight renderTourStep() wait (see its own comment)
   const root = document.getElementById('tour-root');
   if (root) root.style.display = 'none';
   if (markSeen) { try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {} }
@@ -5382,8 +5575,14 @@ function tourBack(){
   renderTourStep();
 }
 function tourSkip(){ endTour(true, false); }
-function startTour(){
-  _activeTourSteps = isMobileMode() ? MOBILE_TOUR_STEPS : TOUR_STEPS;
+// mode: 'quick' (default -- the ~30s first-login walkthrough, unchanged) or
+// 'full' (2026-08-06: the longer, deeper tour that navigates every real screen
+// and spotlights real live data instead of just a nav item -- see
+// TOUR_STEPS_FULL/MOBILE_TOUR_STEPS_FULL below).
+function startTour(mode){
+  _activeTourSteps = isMobileMode()
+    ? (mode === 'full' ? MOBILE_TOUR_STEPS_FULL : MOBILE_TOUR_STEPS)
+    : (mode === 'full' ? TOUR_STEPS_FULL : TOUR_STEPS);
   openControlCenter();
   _tourIndex = 0;
   const root = document.getElementById('tour-root');
@@ -7304,6 +7503,28 @@ function toggleAlertDropdown(){
   const btn = document.getElementById('bell-btn');
   if(btn) btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
 }
+// Tour menu (2026-08-06 Full tour) -- same open/close/outside-click recipe as
+// toggleAlertDropdown() above.
+function toggleTourMenu(){
+  const dd = document.getElementById('tour-menu-dropdown');
+  if(!dd) return;
+  const opening = (dd.style.display === 'none' || !dd.style.display);
+  dd.style.display = opening ? 'block' : 'none';
+  const btn = document.getElementById('tour-menu-btn');
+  if(btn) btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+}
+function closeTourMenu(){
+  const dd = document.getElementById('tour-menu-dropdown');
+  if(dd) dd.style.display = 'none';
+  const btn = document.getElementById('tour-menu-btn');
+  if(btn) btn.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('tour-menu-dropdown');
+  const btn = document.getElementById('tour-menu-btn');
+  if(!dd || dd.style.display === 'none' || !dd.style.display) return;
+  if(btn && !btn.contains(e.target)) closeTourMenu();
+});
 function _renderAlerts(d, badgeEl, listEl, offlineNote){
   const alerts = (d && d.alerts) || [];
   if(badgeEl){

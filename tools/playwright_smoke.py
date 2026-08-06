@@ -189,7 +189,10 @@ async def _run_browser_checks() -> None:
             check(skip_result.get("seen") == "1", f"Skip tour should persist frankWelcomeSeen: {skip_result}")
 
             # The '?' header icon must replay the tour from step 1 on demand.
-            await page.click("[title='Replay tutorial']")
+            # 2026-08-06 (Full tour): the icon now opens a 2-item menu (Quick
+            # tour / Full tour) instead of calling startTour() directly.
+            await page.click("#tour-menu-btn")
+            await page.click(".tour-menu-item >> text=Quick tour")
             await page.wait_for_timeout(400)
             replay = await page.evaluate("""() => ({
                 visible: getComputedStyle(document.getElementById('tour-root')).display !== 'none',
@@ -2480,6 +2483,147 @@ async def _run_browser_checks() -> None:
                   f"Inbox & Reviews card must keep a real, non-zero height (not get flex-shrunk to invisible) even when the 4 fixed-size cards above it are near-full of realistic content: {sub_floor_layout}")
             await page.set_viewport_size({"width": 1440, "height": 1000})
             await page.wait_for_timeout(300)
+
+            # ── Full tour (2026-08-06) -- Scott: "make it interactive so someone
+            # actually gets to see what Frank does." Desktop-only checks first
+            # (the '?' menu lives in .hdr-bar, which is desktop-chrome-only and
+            # hidden once the viewport switches mobile below), then the shared
+            # renderTourStep()/waitForSelector engine is exercised directly with
+            # synthetic steps -- same reasoning as every other block in this file
+            # that tests a shared render function with synthetic data instead of
+            # fighting the real network/service-worker for a specific data shape
+            # (here: "zero pending approvals" vs "one real pending approval" isn't
+            # reliably reproducible against whatever this dev DB actually has). ──
+            tour_menu_check = await page.evaluate("""() => {
+                document.getElementById('tour-menu-btn').click();
+                const dd = document.getElementById('tour-menu-dropdown');
+                const result = {openDisplay: dd.style.display, text: dd.textContent};
+                document.body.click(); // outside click should close it
+                const afterOutsideClick = dd.style.display;
+                return {...result, afterOutsideClick};
+            }""")
+            check(tour_menu_check.get("openDisplay") == "block", f"clicking the '?' icon should open the tour menu: {tour_menu_check}")
+            check("Quick tour" in tour_menu_check.get("text", "") and "Full tour" in tour_menu_check.get("text", ""),
+                  f"tour menu should offer both options: {tour_menu_check}")
+            check(tour_menu_check.get("afterOutsideClick") == "none", f"clicking outside the tour menu should close it: {tour_menu_check}")
+
+            full_tour_start_check = await page.evaluate("""() => {
+                startTour('full');
+                const active = _activeTourSteps === TOUR_STEPS_FULL;
+                const visible = document.getElementById('tour-root').style.display === 'block';
+                endTour(false, false); // close it back out -- markSeen:false so it doesn't affect frankWelcomeSeen
+                return {active, visible};
+            }""")
+            check(full_tour_start_check.get("active"), f"startTour('full') should select TOUR_STEPS_FULL on desktop: {full_tour_start_check}")
+            check(full_tour_start_check.get("visible"), f"starting the full tour should show the overlay: {full_tour_start_check}")
+
+            more_full_tour_row_check = await page.evaluate("""() => {
+                renderPhoneMore();
+                const html = document.getElementById('pp-more-body').innerHTML;
+                return {hasRow: html.includes('Take the Full Tour'), callsFullMode: html.includes(\"startTour('full')\")};
+            }""")
+            check(more_full_tour_row_check.get("hasRow"), f"mobile More screen should offer 'Take the Full Tour': {more_full_tour_row_check}")
+            check(more_full_tour_row_check.get("callsFullMode"), f"the row should call startTour('full'): {more_full_tour_row_check}")
+
+            # _tourWaitForEl() core polling behavior: resolves near-instantly when
+            # the element already exists, resolves null after genuinely waiting
+            # out the timeout when it never appears.
+            wait_for_el_check = await page.evaluate("""async () => {
+                const probe = document.createElement('div');
+                probe.id = 'tour-test-probe-exists';
+                document.body.appendChild(probe);
+                const t0 = performance.now();
+                const found = await _tourWaitForEl('#tour-test-probe-exists', 2000);
+                const fastMs = performance.now() - t0;
+                const t1 = performance.now();
+                const missing = await _tourWaitForEl('#tour-test-probe-missing', 300);
+                const timeoutMs = performance.now() - t1;
+                probe.remove();
+                return {foundIsEl: found === probe, fastMs, missingIsNull: missing === null, timeoutMs};
+            }""")
+            check(wait_for_el_check.get("foundIsEl"), f"_tourWaitForEl should resolve the real element when it already exists: {wait_for_el_check}")
+            check(wait_for_el_check.get("fastMs", 9999) < 200, f"an already-present element should resolve near-instantly, not wait out the poll interval: {wait_for_el_check}")
+            check(wait_for_el_check.get("missingIsNull"), f"_tourWaitForEl should resolve null once its timeout elapses: {wait_for_el_check}")
+            check(wait_for_el_check.get("timeoutMs", 0) >= 280, f"should actually wait out the timeout before giving up, not bail early: {wait_for_el_check}")
+
+            # renderTourStep() end-to-end: a step whose waitForSelector resolves
+            # immediately spotlights the REAL element and shows step.body; a step
+            # whose primary selector never appears falls back to
+            # waitForFallbackSelector and shows step.emptyStateBody instead --
+            # this is the exact mechanism behind "zero pending approvals" vs "a
+            # real pending approval" on every full-tour content step. The
+            # fallback step genuinely waits out renderTourStep()'s internal 4s
+            # timeout, so this one assertion is slow by design.
+            full_tour_render_check = await page.evaluate("""async () => {
+                const origSteps = _activeTourSteps, origIndex = _tourIndex;
+                const primaryEl = document.createElement('div');
+                primaryEl.id = 'tour-test-primary';
+                primaryEl.style.cssText = 'position:fixed;top:10px;left:10px;width:50px;height:20px';
+                document.body.appendChild(primaryEl);
+                const fallbackEl = document.createElement('div');
+                fallbackEl.id = 'tour-test-fallback';
+                fallbackEl.style.cssText = 'position:fixed;top:220px;left:220px;width:60px;height:30px';
+                document.body.appendChild(fallbackEl);
+                document.getElementById('tour-root').style.display = 'block';
+                _activeTourSteps = [
+                    {target: '#tour-test-primary', screen: null, waitForSelector: '#tour-test-primary',
+                     title: 'Primary step', body: 'REAL_PRIMARY_BODY'},
+                    {target: null, screen: null, waitForSelector: '#tour-test-does-not-exist',
+                     waitForFallbackSelector: '#tour-test-fallback',
+                     title: 'Fallback step', body: 'REAL_BODY_NEVER_SHOWN', emptyStateBody: 'HONEST_EMPTY_BODY'},
+                ];
+                _tourIndex = 0;
+                await renderTourStep();
+                const primarySpotLeft = parseFloat(document.getElementById('tour-spot').style.left);
+                const primaryBody = document.getElementById('tour-step-body').innerHTML;
+
+                _tourIndex = 1;
+                await renderTourStep();
+                const fallbackSpotLeft = parseFloat(document.getElementById('tour-spot').style.left);
+                const fallbackBody = document.getElementById('tour-step-body').innerHTML;
+
+                primaryEl.remove(); fallbackEl.remove();
+                document.getElementById('tour-root').style.display = 'none';
+                _activeTourSteps = origSteps; _tourIndex = origIndex;
+                return {primarySpotLeft, primaryBody, fallbackSpotLeft, fallbackBody};
+            }""")
+            check(full_tour_render_check.get("primaryBody") == "REAL_PRIMARY_BODY",
+                  f"a step whose real content is already present should show step.body: {full_tour_render_check}")
+            check(abs(full_tour_render_check.get("primarySpotLeft", -999) - 2) < 3,
+                  f"spotlight should be positioned over the real primary element (left~2px after the 8px pad): {full_tour_render_check}")
+            check(full_tour_render_check.get("fallbackBody") == "HONEST_EMPTY_BODY",
+                  f"a step whose primary content never appears should fall back to step.emptyStateBody, not fake step.body: {full_tour_render_check}")
+            check(abs(full_tour_render_check.get("fallbackSpotLeft", -999) - 212) < 3,
+                  f"spotlight should reposition onto the real fallback element (left~212px after the 8px pad), not stay on the missing primary target: {full_tour_render_check}")
+
+            # prefillChat: sets the real chat input's value WITHOUT sending it --
+            # sending is a real paid Claude API call, so the tour must never fire
+            # one automatically. Verified two ways: the input's value is set, and
+            # no new chat bubble appears (would only exist if sendMsg() actually ran).
+            chat_prefill_check = await page.evaluate("""async () => {
+                const inp = document.getElementById('chat-input');
+                const origValue = inp.value;
+                inp.value = '';
+                const bubblesBefore = document.querySelectorAll('.lc-bubble').length;
+                const origSteps = _activeTourSteps, origIndex = _tourIndex;
+                document.getElementById('tour-root').style.display = 'block';
+                _activeTourSteps = [{target: '#chat-input', screen: null, waitForSelector: '#chat-input',
+                    prefillChat: 'Test prefill question?', title: 'Ask Frank', body: 'x'}];
+                _tourIndex = 0;
+                await renderTourStep();
+                const value = inp.value;
+                const focused = document.activeElement === inp;
+                const bubblesAfter = document.querySelectorAll('.lc-bubble').length;
+                inp.value = origValue;
+                document.getElementById('tour-root').style.display = 'none';
+                _activeTourSteps = origSteps; _tourIndex = origIndex;
+                return {value, focused, bubblesBefore, bubblesAfter};
+            }""")
+            check(chat_prefill_check.get("value") == "Test prefill question?",
+                  f"prefillChat should set the real chat input's value: {chat_prefill_check}")
+            check(chat_prefill_check.get("focused"), f"prefillChat should focus the input so tapping Send is the only step left: {chat_prefill_check}")
+            check(chat_prefill_check.get("bubblesBefore") == chat_prefill_check.get("bubblesAfter"),
+                  f"prefillChat must never actually send the message (that's a real paid API call): {chat_prefill_check}")
 
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the

@@ -22655,3 +22655,46 @@ Scott rather than building them speculatively.
 
 Verified: 108/108 unit tests (new `tests/test_today_screen_audit.py`), 3x
 clean Playwright. Build bumped to `320aa86-v310`.
+
+
+## 2026-08-06 — Full tour: interactive walkthrough on real shop data
+Scott: "Do a more thorough walkthrough tour. Make it interactive so someone
+actually gets to see what Frank does. Make it informative and make it
+practical." The existing tour (~30s, 13 desktop / 9 mobile steps) only ever
+spotlighted a nav item with a sentence of static copy -- no real data, no
+interaction. Rather than replace it (the quick tour stays useful for first
+login), added a second, longer tour reachable from the same entry points.
+
+**New "Full tour" (TOUR_STEPS_FULL / MOBILE_TOUR_STEPS_FULL, ~14/~13 steps):**
+navigates every real screen and spotlights REAL live data -- an actual
+listing row, a real pending approval if one exists, the shop's actual
+connection status, actual configured Brand Kit colors -- instead of a nav
+item. "Look, don't touch": no step mutates the real shop. The "Ask Frank"
+step pre-fills a real sample question into the real chat input but never
+auto-sends it (a real send is a paid Claude API call) -- the person taking
+the tour taps Send themselves if they want to see it answered live.
+
+**Engine change:** `renderTourStep()` is now async and supports
+`step.waitForSelector` -- polls (up to 4s) for real content to finish
+loading via the screen's own `_SCREEN_LOADERS` fetch before spotlighting it,
+since a static nav item is already in the DOM the instant `showScreen()`
+returns but real content isn't. Falls back to `step.waitForFallbackSelector`
++ `step.emptyStateBody` (e.g. "no pending approvals right now") when nothing
+real exists yet -- never fakes data to fill the gap. A monotonic
+`_tourRenderGen` token guards against a slow in-flight wait repositioning the
+spotlight after the user has already clicked Next/Back/Skip past it.
+Quick-tour steps set none of these fields, so they're byte-for-byte the same
+synchronous behavior as before.
+
+**Entry points:** desktop's `?` icon is now a 2-item menu (Quick tour / Full
+tour, same open/close/outside-click pattern as the existing alert bell
+dropdown); mobile's More screen gets a second "Take the Full Tour" row next
+to "Replay Tutorial". `startTour(mode)` picks `TOUR_STEPS`/`TOUR_STEPS_FULL`
+(desktop) or `MOBILE_TOUR_STEPS`/`MOBILE_TOUR_STEPS_FULL` (mobile) --
+existing callers with no arg still get the quick tour.
+
+Verified: 108/108 unit tests, 3x clean Playwright (new coverage: tour menu
+open/close, `_tourWaitForEl()` fast-resolve and real-timeout behavior, the
+full waitForSelector→fallback→emptyStateBody path against real synthetic DOM
+elements, prefillChat setting the input without ever sending). Build bumped
+to `b6dfe1f-v311`.
