@@ -22775,3 +22775,54 @@ one caught a real deadlock bug in the test itself: double-acquiring the
 non-reentrant `_cache_lock` by wrapping `_cache_set()`, which locks
 internally, inside an outer `with server._cache_lock:` block), 3x clean
 Playwright. Build bumped to `65e4443-v313`.
+
+## 2026-08-06 — Title A/B Testing (idea 3/3 of the "significantly improve Frank" roadmap)
+
+Scope correction (same honest pattern as idea 1's buyer-messaging fix): the
+brief was "Photo/Title A/B Testing" — shipped title testing only. Etsy has
+no per-photo split-test mechanism to read real results from, so a "photo B
+won" verdict would have to be fabricated; that would violate the top-
+priority never-lie rule, so photo A/B was cut rather than faked.
+
+Design respects two hard rules:
+1. "Nothing irreversible auto-executes" — every title swap (A->B) is staged
+   via the existing `db.enqueue_action("update_title", ...)` queue, tagged
+   with `ab_test_id` in its payload, and only applied once Scott approves it
+   in Approvals like any other title edit. This code never calls
+   EtsyAPIClient's write endpoints directly.
+2. Etsy's own Ranking Recovery guidance ("don't compound edits within the
+   2-3 week recovery window") means a fast-flipping A/B test would actively
+   fight the algorithm instead of helping. Rotation windows are floored at
+   `db._RANKING_RECOVERY_COOLDOWN_DAYS` (21 days) — `_start_ab_test()`
+   rejects anything shorter with an explicit error citing the real reason.
+
+Flow: `_start_ab_test(listing_id, variant_b_title)` fetches the listing's
+REAL current title from Etsy as Variant A (never caller-supplied) and starts
+tracking immediately — no Etsy write needed since A is already live. Daily
+`_ab_test_loop()` checks each running test; when a phase's window closes it
+stages the next `update_title` action (A->B) via `db.enqueue_action()`.
+`_advance_ab_test()`, hooked into `POST /api/queue/{id}/approve` right after
+the real Etsy mutation executes, moves the test from `awaiting_approval_b`
+into `running_b`. A rejected swap is caught by the same hook point on
+`POST /api/queue/{id}/reject` and marks the test `cancelled` with the
+reason, so it can never sit stuck forever. When Variant B's window closes,
+`_compute_ab_test_comparison()` computes a REAL verdict from
+`db.get_listing_snapshot_history()` (real daily views/favorites,
+`_snapshot_loop()` already collects this for every active listing) and a
+freshly date-scoped `EtsyAPIClient.get_orders(min_created=..., max_created=...)`
+call — `get_orders()` gained optional `min_created`/`max_created` params
+(same shape as `get_reviews()`'s own `min_created`) specifically because the
+existing shared 100-receipt order cache (`_get_recent_orders_raw()`) is
+explicitly NOT date-bounded and can't isolate one test window from another.
+Verdict is `variant_a`/`variant_b`/`tie`/`inconclusive` — never a guessed
+winner when data is missing.
+
+New desktop panel (`#ab-tests-body`, `.col-right`, next to Growth Brief) with
+an inline "+ New Test" form, plus 2 chat tools (`start_ab_test`,
+`get_ab_tests`). New durable sidecar `data/ab_tests.json` via
+`db.resolve_persistent_path()`.
+
+Verified: 111/111 unit tests (new `tests/test_ab_testing.py`, 19 tests —
+covers the ranking-recovery floor rejection, the "never call Etsy directly"
+invariant, the approve/reject hooks, and the honest-verdict computation),
+JS syntax check, 3x clean Playwright. Build bumped to `d6272cf-v314`.

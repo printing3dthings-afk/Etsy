@@ -406,6 +406,31 @@ def record_metric_snapshot(metrics: dict, listings: list) -> str:
     return d
 
 
+def get_listing_snapshot_history(listing_id: int, start_date: str | None = None, end_date: str | None = None) -> list:
+    """Real daily views/num_favorers/title/price for one listing, oldest-first,
+    from the listing_snapshots table _snapshot_loop() already populates for
+    every active listing once a day (2026-08-06, A/B testing idea 3/3 --
+    reuses this existing table instead of standing up a second daily
+    per-listing tracker). start_date/end_date are inclusive ISO date strings
+    ('YYYY-MM-DD'); omit either to leave that side of the range open."""
+    init_db()
+    conn = _connect()
+    try:
+        query = "SELECT * FROM listing_snapshots WHERE listing_id = ?"
+        params: list = [listing_id]
+        if start_date:
+            query += " AND snapshot_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND snapshot_date <= ?"
+            params.append(end_date)
+        query += " ORDER BY snapshot_date ASC"
+        rows = conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
 def get_metric_history(days: int = 30) -> list:
     """Most recent `days` shop snapshots, oldest-first (ready for charting)."""
     init_db()

@@ -657,12 +657,23 @@ class EtsyAPIClient:
 
     # ── OAuth-protected endpoints ─────────────────────────────────────────────
 
-    def get_orders(self, limit: int = 25, status: str = "open") -> dict:
-        """Get shop orders. Requires OAuth access token."""
+    def get_orders(
+        self, limit: int = 25, status: str = "open",
+        min_created: int | None = None, max_created: int | None = None,
+    ) -> dict:
+        """Get shop orders. Requires OAuth access token. min_created/max_created
+        are optional Unix timestamps (same param names/shape as get_reviews()'s
+        own min_created) -- added 2026-08-06 for A/B test window comparisons,
+        which need real per-window order counts rather than an undated top-N
+        receipt list."""
         self._require_oauth()
         params: dict = {"limit": limit, "was_paid": True}
         if status != "open":
             params["status"] = status
+        if min_created is not None:
+            params["min_created"] = min_created
+        if max_created is not None:
+            params["max_created"] = max_created
         return self._request("GET", f"shops/{self.shop_id}/receipts", params=params)
 
     def get_messages(self, limit: int = 25) -> dict:

@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "65e4443-v313"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d6272cf-v314"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3832,6 +3832,40 @@ AGENT_TOOLS.append({
     ),
     "input_schema": {"type": "object", "properties": {}},
 })
+# Title A/B testing (2026-08-06, "significantly improve Frank" idea 3/3) --
+# see the full module comment above _AB_TESTS_PATH for the scope note (title
+# only, not photo) and the ranking-recovery-driven minimum rotation window.
+AGENT_TOOLS.append({
+    "name": "start_ab_test",
+    "description": (
+        "Start a title A/B test on a live listing. Variant A is whatever the "
+        "listing's REAL current title already is (fetched fresh from Etsy). "
+        "Variant B is staged as a normal update_title approval once Variant A's "
+        "rotation window closes -- it never applies automatically. rotation_days "
+        "defaults to 21 and cannot go lower (shorter windows would compound "
+        "title edits inside Etsy's own ranking-recovery period and hurt the "
+        "listing). Only one active test per listing at a time."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "listing_id": {"type": "integer", "description": "The live Etsy listing to test."},
+            "variant_b_title": {"type": "string", "description": "Proposed replacement title, ≤70 characters."},
+            "rotation_days": {"type": "integer", "description": "Days per variant before rotating. Optional, default and floor is 21."},
+        },
+        "required": ["listing_id", "variant_b_title"],
+    },
+})
+AGENT_TOOLS.append({
+    "name": "get_ab_tests",
+    "description": (
+        "List every title A/B test (running, awaiting approval, completed, or "
+        "cancelled) with real per-variant views/favorites/orders/revenue and an "
+        "honest verdict -- 'inconclusive' when there isn't yet enough real data "
+        "to call a winner, never a guessed one."
+    ),
+    "input_schema": {"type": "object", "properties": {}},
+})
 _SOCIAL_TOOL_NAMES = {"stage_tiktok_post", "stage_pinterest_post", "list_pinterest_boards"}
 
 # Prompt-cache constants — built once at import time, reused every chat turn.
@@ -4542,6 +4576,15 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _get_comparable_listings(tool_input or {})
         if name == "draft_review_replies":
             return asyncio.run(_review_reply_iteration())
+        if name == "start_ab_test":
+            ti = tool_input or {}
+            lid = ti.get("listing_id")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            return asyncio.run(_start_ab_test(int(lid), ti.get("variant_b_title", ""), ti.get("rotation_days")))
+        if name == "get_ab_tests":
+            tests = _load_ab_tests()
+            return {"tests": sorted(tests.values(), key=lambda t: int(t["id"]), reverse=True)}
         if name == "deep_research":
             ti = tool_input or {}
             query = (ti.get("query") or "").strip()
@@ -6756,6 +6799,291 @@ async def get_growth_brief(_token: str = Depends(_auth_session_or_bearer)):
     data = await _compute_growth_brief()
     _cache_set("growth_brief", data)
     return data
+
+
+# ── Title A/B Testing (2026-08-06, "significantly improve Frank" idea 3/3) ──
+# Scope note (same honest-correction pattern as idea 1's buyer-messaging scope
+# fix): the brief was "Photo/Title A/B Testing" -- title testing is fully real
+# and built below; photo A/B testing is NOT (Etsy has no per-listing-photo
+# split-test mechanism to read results from, and a fabricated "photo B got
+# more clicks" number with no real per-photo click data behind it would
+# violate the top-priority never-lie rule). Title testing is the real,
+# deliverable slice; scoped down rather than shipped fake.
+#
+# Design constraints this respects (both from CLAUDE.md, both hard rules):
+# 1. "Nothing irreversible auto-executes" -- every title swap (A->B, and any
+#    eventual revert) goes through the existing staged-action approval queue
+#    exactly like a manual title edit. This code never calls
+#    EtsyAPIClient().update_listing() directly.
+# 2. Ranking Recovery guidance ("Do not edit the same listing again during
+#    [the 2-3 week recovery] window -- compound edits extend the recovery
+#    period") means a fast title-flip A/B test would actively fight Etsy's
+#    own algorithm instead of helping the shop. Rotation windows are floored
+#    at db._RANKING_RECOVERY_COOLDOWN_DAYS (21 days) -- the same number the
+#    rest of the app already treats as the safe re-edit interval -- not a
+#    marketing-textbook "run it for a week" default.
+_AB_TESTS_PATH = db.resolve_persistent_path(
+    "ab_tests.json",
+    fallback=ROOT / "data" / "ab_tests.json",
+)
+
+
+def _load_ab_tests() -> dict:
+    try:
+        return json.loads(_AB_TESTS_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def _save_ab_tests(tests: dict) -> None:
+    _AB_TESTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _AB_TESTS_PATH.write_text(json.dumps(tests, indent=2))
+
+
+def _next_ab_test_id(tests: dict) -> str:
+    return str(max((int(k) for k in tests), default=0) + 1)
+
+
+async def _start_ab_test(listing_id: int, variant_b_title: str, rotation_days: int | None = None) -> dict:
+    """Begin tracking a title A/B test. Variant A is whatever the listing's
+    REAL title already is -- fetched fresh from Etsy, never assumed or typed
+    in by the caller -- since it's already live and needs no staged action to
+    "start". Variant B only goes live once Scott approves the staged
+    update_title action _ab_test_loop() creates when Variant A's window closes."""
+    variant_b_title = (variant_b_title or "").strip()
+    if not variant_b_title:
+        return {"error": "variant_b_title is empty"}
+    if len(variant_b_title) > 70:
+        return {"error": f"variant_b_title is {len(variant_b_title)} chars — max 70 (mobile ranking rule)"}
+    days = rotation_days or db._RANKING_RECOVERY_COOLDOWN_DAYS
+    if days < db._RANKING_RECOVERY_COOLDOWN_DAYS:
+        return {
+            "error": f"rotation_days must be at least {db._RANKING_RECOVERY_COOLDOWN_DAYS} — "
+                     "shorter windows would compound title edits inside Etsy's own ranking "
+                     "recovery period (CLAUDE.md Ranking Recovery Playbook) and hurt the listing "
+                     "instead of helping it."
+        }
+    try:
+        listing = await asyncio.to_thread(lambda: EtsyAPIClient().get_listing(listing_id))
+    except Exception as exc:
+        return {"error": f"could not fetch listing {listing_id} from Etsy: {str(exc)[:200]}"}
+    current_title = (listing.get("title") or "").strip()
+    if not current_title:
+        return {"error": f"listing {listing_id} has no title on Etsy — can't establish variant A"}
+    if listing.get("state") != "active":
+        return {"error": f"listing {listing_id} is '{listing.get('state')}', not active — can't A/B test a non-live listing"}
+    tests = _load_ab_tests()
+    for t in tests.values():
+        if t["listing_id"] == listing_id and t["status"] not in ("completed", "cancelled"):
+            return {"error": f"listing {listing_id} already has an active A/B test (id {t['id']}) — finish or cancel it first"}
+    today = (await asyncio.to_thread(_shop_today)).isoformat()
+    test_id = _next_ab_test_id(tests)
+    test = {
+        "id": test_id, "listing_id": listing_id,
+        "variant_a_title": current_title, "variant_b_title": variant_b_title,
+        "rotation_days": days, "status": "running_a",
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "phase_started_at": datetime.now(timezone.utc).isoformat(),
+        "variant_a_start_date": today, "variant_a_end_date": None,
+        "variant_b_start_date": None, "variant_b_end_date": None,
+        "pending_action_id": None, "result": None,
+    }
+    tests[test_id] = test
+    _save_ab_tests(tests)
+    return {"ok": True, "test": test}
+
+
+def _stage_ab_test_title_change(test: dict, title: str) -> int:
+    payload = {"listing_id": test["listing_id"], "title": title, "ab_test_id": test["id"]}
+    summary = (
+        f"A/B test #{test['id']}: switch listing {test['listing_id']} to Variant B — "
+        f'"{title}" (Variant A window closed after {test["rotation_days"]} days)'
+    )
+    return db.enqueue_action("update_title", summary, payload)
+
+
+async def _ab_test_iteration() -> dict:
+    """Daily check: has any running test's current-phase window closed? If so,
+    stage the next title change (never applied directly -- see module comment
+    above) or, for a completed Variant B window, compute the real comparison
+    and close the test out. Idempotent -- safe to run more than once a day."""
+    tests = _load_ab_tests()
+    if not tests:
+        return {"checked": 0, "advanced": 0}
+    today = await asyncio.to_thread(_shop_today)
+    advanced = 0
+    for test in tests.values():
+        try:
+            phase_started = datetime.fromisoformat(test["phase_started_at"])
+        except (KeyError, ValueError):
+            continue
+        days_in_phase = (datetime.now(timezone.utc) - phase_started).days
+        if test["status"] == "running_a" and days_in_phase >= test["rotation_days"]:
+            test["variant_a_end_date"] = today.isoformat()
+            action_id = await asyncio.to_thread(_stage_ab_test_title_change, test, test["variant_b_title"])
+            test["status"] = "awaiting_approval_b"
+            test["pending_action_id"] = action_id
+            advanced += 1
+        elif test["status"] == "running_b" and days_in_phase >= test["rotation_days"]:
+            test["variant_b_end_date"] = today.isoformat()
+            test["result"] = await asyncio.to_thread(_compute_ab_test_comparison, test)
+            test["status"] = "completed"
+            advanced += 1
+    if advanced:
+        _save_ab_tests(tests)
+    return {"checked": len(tests), "advanced": advanced}
+
+
+async def _ab_test_loop() -> None:
+    """Daily: same cadence/resilience pattern as _snapshot_loop()."""
+    while True:
+        delay = await _run_loop_iteration(
+            "ab_test", "A/B Tests", _ab_test_iteration,
+            on_success_detail=lambda r: f"{r['advanced']} test(s) advanced out of {r['checked']} tracked",
+            base_interval=86_400,
+        )
+        await asyncio.sleep(delay)
+
+
+def _advance_ab_test(ab_test_id: str, applied_title: str) -> None:
+    """Called right after a staged update_title action tagged with ab_test_id
+    actually executes on Etsy (see POST /api/queue/{id}/approve) -- moves the
+    test from 'awaiting_approval_b' into 'running_b' now that Variant B is
+    genuinely live, not the moment it was merely staged. Best-effort: a
+    failure here must never block the real Etsy mutation that already
+    succeeded, so the caller wraps this and swallows any exception."""
+    tests = _load_ab_tests()
+    test = tests.get(str(ab_test_id))
+    if not test or test["status"] != "awaiting_approval_b":
+        return
+    test["status"] = "running_b"
+    test["phase_started_at"] = datetime.now(timezone.utc).isoformat()
+    test["variant_b_start_date"] = _shop_today().isoformat()
+    test["pending_action_id"] = None
+    _save_ab_tests(tests)
+
+
+def _cancel_ab_test_for_rejected_action(ab_test_id: str, reason: str) -> None:
+    """Called when Scott rejects the staged Variant-B title swap -- the test
+    can't silently sit in 'awaiting_approval_b' forever with no path forward,
+    so it's marked cancelled with the reason attached rather than left stuck."""
+    tests = _load_ab_tests()
+    test = tests.get(str(ab_test_id))
+    if not test or test["status"] != "awaiting_approval_b":
+        return
+    test["status"] = "cancelled"
+    test["result"] = {"cancelled_reason": reason or "Variant B title change was rejected"}
+    test["pending_action_id"] = None
+    _save_ab_tests(tests)
+
+
+def _compute_ab_test_comparison(test: dict) -> dict:
+    """Real per-window comparison -- never fabricates a winner. Views/
+    favorites come from listing_snapshots (accurately date-bounded daily data
+    _snapshot_loop() already collects for every active listing). Orders/
+    revenue come from a fresh, date-scoped get_orders() call rather than
+    _get_recent_orders_raw()'s shared 100-receipt cache, because that cache
+    is explicitly NOT date-bounded (see its own docstring) and can't be
+    trusted to isolate one multi-week window from another."""
+    listing_id = test["listing_id"]
+
+    def _window_stats(start_date, end_date):
+        if not start_date or not end_date:
+            return {"views_gained": None, "favorites_gained": None, "days_tracked": 0,
+                     "note": "window not closed yet"}
+        rows = db.get_listing_snapshot_history(listing_id, start_date, end_date)
+        if len(rows) < 2:
+            return {"views_gained": None, "favorites_gained": None, "days_tracked": len(rows),
+                     "note": "fewer than 2 daily snapshots landed in this window — not enough data"}
+        return {
+            "views_gained": rows[-1]["views"] - rows[0]["views"],
+            "favorites_gained": rows[-1]["num_favorers"] - rows[0]["num_favorers"],
+            "days_tracked": len(rows),
+        }
+
+    def _window_orders(start_date, end_date):
+        if not start_date or not end_date:
+            return {"orders": None, "revenue": None, "note": "window not closed yet"}
+        try:
+            start_ts = int(datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc).timestamp())
+            end_ts = int(datetime.fromisoformat(end_date).replace(tzinfo=timezone.utc).timestamp()) + 86_400
+            r = EtsyAPIClient().get_orders(limit=100, status="paid", min_created=start_ts, max_created=end_ts)
+            orders, revenue = 0, 0.0
+            for receipt in r.get("results", []):
+                for txn in receipt.get("transactions", []) or []:
+                    if txn.get("listing_id") != listing_id:
+                        continue
+                    qty = txn.get("quantity", 1) or 1
+                    price = txn.get("price") or {}
+                    amt = (price.get("amount", 0) / price.get("divisor", 100)) if price.get("divisor") else 0
+                    orders += qty
+                    revenue += amt * qty
+            return {"orders": orders, "revenue": round(revenue, 2)}
+        except Exception as exc:
+            return {"orders": None, "revenue": None, "note": f"order lookup failed: {str(exc)[:150]}"}
+
+    a_stats = _window_stats(test.get("variant_a_start_date"), test.get("variant_a_end_date"))
+    b_stats = _window_stats(test.get("variant_b_start_date"), test.get("variant_b_end_date"))
+    a_orders = _window_orders(test.get("variant_a_start_date"), test.get("variant_a_end_date"))
+    b_orders = _window_orders(test.get("variant_b_start_date"), test.get("variant_b_end_date"))
+
+    verdict, verdict_basis = "inconclusive", "not enough real data to call a winner"
+    a_views, b_views = a_stats.get("views_gained"), b_stats.get("views_gained")
+    a_ord, b_ord = a_orders.get("orders"), b_orders.get("orders")
+    if a_views and b_views and a_ord is not None and b_ord is not None:
+        a_conv, b_conv = a_ord / a_views, b_ord / b_views
+        if a_conv == b_conv:
+            verdict = "tie"
+        else:
+            verdict = "variant_b" if b_conv > a_conv else "variant_a"
+        verdict_basis = f"real conversion rate: A={a_conv:.2%} vs B={b_conv:.2%} (orders ÷ views gained, each window)"
+    elif not a_views or not b_views:
+        verdict_basis = "zero (or untracked) views gained in one window — conversion rate not computable"
+
+    return {
+        "variant_a": {"title": test["variant_a_title"], **a_stats, **a_orders},
+        "variant_b": {"title": test["variant_b_title"], **b_stats, **b_orders},
+        "verdict": verdict, "verdict_basis": verdict_basis,
+    }
+
+
+@app.get("/api/ab-tests")
+async def get_ab_tests(_token: str = Depends(_auth_session_or_bearer)):
+    """List every title A/B test, newest first."""
+    tests = await asyncio.to_thread(_load_ab_tests)
+    ordered = sorted(tests.values(), key=lambda t: int(t["id"]), reverse=True)
+    return {"tests": ordered}
+
+
+@app.post("/api/ab-tests")
+async def create_ab_test(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Start a new title A/B test. Body: {listing_id, variant_b_title, rotation_days?}."""
+    listing_id = body.get("listing_id")
+    variant_b_title = body.get("variant_b_title", "")
+    rotation_days = body.get("rotation_days")
+    if not listing_id:
+        raise HTTPException(status_code=422, detail="listing_id is required")
+    result = await _start_ab_test(int(listing_id), variant_b_title, rotation_days)
+    if "error" in result:
+        raise HTTPException(status_code=422, detail=result["error"])
+    return result
+
+
+@app.post("/api/ab-tests/{test_id}/cancel")
+async def cancel_ab_test(test_id: str, _token: str = Depends(_rate_limited_auth)):
+    """Manually cancel a running test (e.g. Scott changes his mind mid-test).
+    Does not revert any title already live -- that's a separate, ordinary
+    update_title action if he wants the original title back."""
+    tests = await asyncio.to_thread(_load_ab_tests)
+    test = tests.get(test_id)
+    if not test:
+        raise HTTPException(status_code=404, detail="A/B test not found")
+    if test["status"] in ("completed", "cancelled"):
+        raise HTTPException(status_code=409, detail=f"test already {test['status']}")
+    test["status"] = "cancelled"
+    test["result"] = {"cancelled_reason": "manually cancelled"}
+    await asyncio.to_thread(_save_ab_tests, tests)
+    return {"ok": True, "test": test}
 
 
 @app.get("/api/quality-audit/latest")
@@ -9495,6 +9823,7 @@ _AGENT_LOOP_LABELS = {
     "sku_taxonomy_backfill": "SKU + Category Backfill",
     "catalog_reconciliation": "Catalog Reconciliation",
     "review_reply_draft": "Review Reply Drafts",
+    "ab_test": "A/B Tests",
 }
 
 
@@ -9543,6 +9872,7 @@ async def _startup() -> None:
     asyncio.create_task(_sku_taxonomy_backfill_loop())
     asyncio.create_task(_catalog_reconciliation_loop())
     asyncio.create_task(_review_reply_loop())
+    asyncio.create_task(_ab_test_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -11869,6 +12199,14 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": str(exc)})
         raise HTTPException(status_code=502, detail=f"execution failed: {str(exc)[:200]}")
     await asyncio.to_thread(db.set_action_status, action_id, "executed", result)
+    ab_test_id = (a.get("payload") or {}).get("ab_test_id")
+    if ab_test_id:
+        # Best-effort -- the real Etsy title change above already succeeded and
+        # must be reported regardless of whether this bookkeeping step works.
+        try:
+            await asyncio.to_thread(_advance_ab_test, ab_test_id, a["payload"].get("title", ""))
+        except Exception as exc:
+            print(f"[ab-test] _advance_ab_test failed for test {ab_test_id}: {exc}", flush=True)
     return {"status": "executed", "id": action_id, "result": result}
 
 
@@ -11884,6 +12222,11 @@ async def reject_action(action_id: int, body: dict | None = None, _token: str = 
         raise HTTPException(status_code=409, detail=f"action already {a['status']}")
     reason = ((body or {}).get("reason") or "").strip()
     await asyncio.to_thread(db.set_action_status, action_id, "rejected", {"reason": reason} if reason else None)
+    ab_test_id = (a.get("payload") or {}).get("ab_test_id")
+    if ab_test_id:
+        # A rejected Variant-B swap can't sit forever in "awaiting_approval_b"
+        # with no path forward -- close the test out honestly instead.
+        await asyncio.to_thread(_cancel_ab_test_for_rejected_action, ab_test_id, reason)
     if reason:
         asyncio.create_task(_dispatch_reject_fix(a, reason))
     return {"status": "rejected", "id": action_id, "fix_started": bool(reason)}

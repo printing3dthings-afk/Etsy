@@ -2670,6 +2670,51 @@ async def _run_browser_checks() -> None:
             check("no dollar figure fabricated" in growth_brief_state.get("secondRowTitle", ""),
                   f"the null-$ row's tooltip must say so explicitly: {growth_brief_state}")
 
+            # ── Title A/B Testing (2026-08-06, "significantly improve Frank"
+            # idea 3/3). Desktop-only panel (.col-right, brk class). Confirms:
+            # a running test renders both variant titles + status label, a
+            # completed test renders its real verdict (never fabricated --
+            # verdict text comes straight from the mocked result), and the
+            # "+ New Test" form toggles open/closed via toggleAbTestForm(). ──
+            ab_test_state = await page.evaluate("""async () => {
+                window.__origAuthGetAB = authGet;
+                authGet = (path, ms) => {
+                    if (path.indexOf('/api/ab-tests') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            tests: [
+                                {id: '2', listing_id: 555, variant_a_title: 'Old Planner Title',
+                                 variant_b_title: 'New Planner Title 2026', status: 'running_a', result: null},
+                                {id: '1', listing_id: 444, variant_a_title: 'Original Sticker Title',
+                                 variant_b_title: 'Kawaii Sticker Pack 2026', status: 'completed',
+                                 result: {verdict: 'variant_b', verdict_basis: 'real conversion rate: A=2.00% vs B=5.00%'}},
+                            ],
+                        })});
+                    }
+                    return window.__origAuthGetAB(path, ms);
+                };
+                await loadAbTests();
+                authGet = window.__origAuthGetAB;
+                const rows = document.querySelectorAll('#ab-tests-body > div');
+                const formBefore = getComputedStyle(document.getElementById('ab-test-new-form')).display;
+                toggleAbTestForm();
+                const formAfterOpen = getComputedStyle(document.getElementById('ab-test-new-form')).display;
+                toggleAbTestForm();
+                const formAfterClose = getComputedStyle(document.getElementById('ab-test-new-form')).display;
+                return {
+                    rowCount: rows.length,
+                    bodyText: document.getElementById('ab-tests-body').textContent,
+                    formBefore, formAfterOpen, formAfterClose,
+                };
+            }""")
+            check(ab_test_state.get("rowCount") == 2, f"expected one row per test: {ab_test_state}")
+            check("Old Planner Title" in ab_test_state.get("bodyText", "") and "New Planner Title 2026" in ab_test_state.get("bodyText", ""),
+                  f"both real variant titles should render: {ab_test_state}")
+            check("Variant B won" in ab_test_state.get("bodyText", ""),
+                  f"a completed test's real verdict should render: {ab_test_state}")
+            check(ab_test_state.get("formBefore") == "none", f"the new-test form should start hidden: {ab_test_state}")
+            check(ab_test_state.get("formAfterOpen") == "block", f"toggleAbTestForm() should open it: {ab_test_state}")
+            check(ab_test_state.get("formAfterClose") == "none", f"toggleAbTestForm() should close it again: {ab_test_state}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the

@@ -1837,6 +1837,27 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
+          <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>🧪 Title A/B Tests <span class="src">/api/ab-tests</span></span>
+            <button class="act-btn secondary" style="font-size:10px;padding:2px 8px" onclick="toggleAbTestForm()">+ New Test</button>
+          </div>
+          <div id="ab-test-new-form" style="display:none;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:6px">
+            <div class="hub-listing-meta" style="margin-bottom:6px">Variant A is the listing's real current title — fetched fresh, never typed in. Rotation floors at 21 days per variant (Etsy's own ranking-recovery window).</div>
+            <input id="ab-test-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID"
+              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:6px">
+            <input id="ab-test-variant-b" type="text" placeholder="Variant B title (≤70 chars)" aria-label="Variant B title" maxlength="70"
+              style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:6px">
+            <div style="display:flex;gap:8px">
+              <button class="act-btn" onclick="submitAbTest()">Start Test</button>
+              <button class="act-btn" onclick="toggleAbTestForm()">Cancel</button>
+            </div>
+          </div>
+          <div id="ab-tests-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
           <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('star_seller')" role="button" tabindex="0">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
@@ -4195,7 +4216,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -7200,6 +7221,89 @@ async function loadGrowthBrief(){
       return '<div class="ss-row" style="align-items:flex-start;cursor:default" title="' + escHtml(it.impact_basis || '') + '">'
         + '<span class="ss-label" style="color:var(--text)">' + (i + 1) + '. ' + escHtml(it.title) + '</span>'
         + '<span class="ss-val" style="color:' + color + ';flex-shrink:0">' + dollar + '</span>'
+        + '</div>';
+    }).join('');
+  }catch(e){
+    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// Title A/B Testing (2026-08-06, "significantly improve Frank" idea 3/3).
+// Scope note: title only, not photo -- Etsy has no per-photo split-test
+// mechanism to read real results from, so a "photo B" verdict would have to
+// be fabricated. See main.py's _AB_TESTS_PATH module comment for the full
+// reasoning. Every phase transition (A->B) goes through the normal staged-
+// action approval queue -- this panel never swaps a title on its own.
+const _AB_STATUS_LABEL = {
+  running_a: 'Running — Variant A', awaiting_approval_b: 'Awaiting approval → B',
+  running_b: 'Running — Variant B', completed: 'Completed', cancelled: 'Cancelled',
+};
+const _AB_STATUS_CLASS = {
+  running_a: 'building', awaiting_approval_b: 'at_risk', running_b: 'building',
+  completed: 'on_track', cancelled: 'at_risk',
+};
+function toggleAbTestForm(){
+  const f = document.getElementById('ab-test-new-form');
+  if (!f) return;
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+async function submitAbTest(){
+  const lidEl = document.getElementById('ab-test-listing-id');
+  const titleEl = document.getElementById('ab-test-variant-b');
+  const listing_id = parseInt((lidEl && lidEl.value || '').trim(), 10);
+  const variant_b_title = (titleEl && titleEl.value || '').trim();
+  if (!listing_id) { showToast('Enter a listing ID', 'err'); return; }
+  if (!variant_b_title) { showToast('Enter a Variant B title', 'err'); return; }
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/ab-tests', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({listing_id, variant_b_title})
+    }, 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    showToast('A/B test started — tracking Variant A now', 'ok');
+    toggleAbTestForm();
+    if (lidEl) lidEl.value = ''; if (titleEl) titleEl.value = '';
+    loadAbTests();
+  }catch(e){ showToast('Could not start test: ' + (e.message||e), 'err', 6000); }
+}
+async function cancelAbTest(id){
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/ab-tests/'+id+'/cancel', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadAbTests();
+  }catch(e){ showToast('Could not cancel: ' + (e.message||e), 'err', 6000); }
+}
+async function loadAbTests(){
+  const el = document.getElementById('ab-tests-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/ab-tests');
+    const d = await r.json();
+    const tests = d.tests || [];
+    if (!tests.length) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">No A/B tests yet — click "+ New Test" to start one.</span></div>';
+      return;
+    }
+    el.innerHTML = tests.map(function(t){
+      const label = _AB_STATUS_LABEL[t.status] || t.status;
+      const cls = _AB_STATUS_CLASS[t.status] || 'building';
+      let verdictLine = '';
+      if (t.status === 'completed' && t.result) {
+        const v = t.result.verdict === 'variant_a' ? 'Variant A won' : t.result.verdict === 'variant_b' ? 'Variant B won' : t.result.verdict === 'tie' ? 'Tied' : 'Inconclusive';
+        verdictLine = '<div class="ss-row" style="cursor:default" title="'+escHtml(t.result.verdict_basis||'')+'"><span class="ss-label">'+escHtml(v)+'</span></div>';
+      } else if (t.status === 'cancelled' && t.result) {
+        verdictLine = '<div class="ss-row"><span class="ss-label" style="color:var(--muted)">'+escHtml(t.result.cancelled_reason||'Cancelled')+'</span></div>';
+      }
+      const cancelBtn = (t.status === 'running_a' || t.status === 'running_b')
+        ? '<button class="act-btn secondary" style="font-size:10px;padding:2px 8px" onclick="cancelAbTest('+t.id+')">Cancel</button>' : '';
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--border)">'
+        + '<div class="ss-row"><span class="ss-label" style="color:var(--text)">Listing '+t.listing_id+'</span><span class="ss-status '+cls+'">'+escHtml(label)+'</span></div>'
+        + '<div class="ss-row" style="cursor:default" title="Variant A"><span class="ss-label">A: '+escHtml(t.variant_a_title)+'</span></div>'
+        + '<div class="ss-row" style="cursor:default" title="Variant B"><span class="ss-label">B: '+escHtml(t.variant_b_title)+'</span></div>'
+        + verdictLine + cancelBtn
         + '</div>';
     }).join('');
   }catch(e){
