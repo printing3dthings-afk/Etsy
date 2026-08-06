@@ -22441,3 +22441,34 @@ pass but never got a Playwright regression test at the time -- caught while audi
 this same bug class here).
 
 Verified: 105/105 unit tests, 3x clean Playwright. Build bumped to `28b6da4-v307`.
+
+
+## 2026-08-06 — Files screen: second-pass deep audit finds hardcoded branch link (page-by-page campaign, round 2)
+Continuing the page-by-page campaign past Approvals. While investigating the
+Knowledge screen the surrounding template surfaced a real defect on the
+neighboring Files screen: the "Download everything from GitHub" link had this
+exact dev session's branch name hardcoded directly in frank_hud_mockup.py
+(archive/refs/heads/claude/etsy-automation-agents-WFAPU.zip).
+
+tools/check_default_branch.py already exists as the documented single source
+of truth for "which branch is the real active one" (EXPECTED_DEFAULT_BRANCH --
+see that module's docstring on the 2026-07-10 incident where GitHub's
+configured default_branch silently drifted to a stale branch and cron jobs ran
+old code for an unknown period). Two independent hardcoded copies of the same
+fact -- one in the CI drift-check constant, one baked into the HTML template --
+could silently diverge: Scott updates EXPECTED_DEFAULT_BRANCH when the active
+branch legitimately changes (per that module's own instructions), with nothing
+forcing him to remember the frontend link too, so the download button would
+404 the next time the branch changes or gets deleted after a merge.
+
+**Fix:** render_frank_hud() now substitutes a new %%GITHUB_DEFAULT_BRANCH%%
+placeholder from check_default_branch.EXPECTED_DEFAULT_BRANCH -- one source of
+truth instead of two. Added tests/test_github_download_link_branch_sync.py to
+guard against the hardcoded literal reappearing and to confirm the constant
+actually reaches the rendered HTML.
+
+Home, Create, Your Listings, and Knowledge screens were also re-audited this
+pass (canonical-list-vs-frontend-coverage checks, dead-setting greps, dispatch
+table completeness) and came back clean -- no further findings.
+
+Verified: 106/106 unit tests, 3x clean Playwright. Build bumped to `4eb155e-v308`.

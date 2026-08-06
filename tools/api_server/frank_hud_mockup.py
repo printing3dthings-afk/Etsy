@@ -27,6 +27,10 @@ APP_SECRET_TOKEN is never injected into the page source.
 import json
 
 import business_config
+import check_default_branch  # tools/ is on sys.path (main.py) -- single source of
+# truth for "which branch is the real active one" (see that module's docstring on
+# the 2026-07-10 stale-default-branch incident), reused here so the Files screen's
+# "download everything from GitHub" link can't independently drift from it.
 
 _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <html lang="en">
@@ -2044,7 +2048,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           The actual product files (SVG/sublimation/planner assets, ~350MB) don't live on this server — they're kept in the GitHub repo so deploys stay fast.
-          <a href="https://github.com/printing3dthings-afk/Etsy/archive/refs/heads/claude/etsy-automation-agents-WFAPU.zip" target="_blank" style="color:var(--gold)">Download everything from GitHub →</a>
+          <a href="https://github.com/printing3dthings-afk/Etsy/archive/refs/heads/%%GITHUB_DEFAULT_BRANCH%%.zip" target="_blank" style="color:var(--gold)">Download everything from GitHub →</a>
         </div>
       </div>
       <div id="files-content" class="hub-scroll"><div class="hub-spinner"></div></div>
@@ -11713,5 +11717,6 @@ def render_frank_hud() -> str:
     html = html.replace("%%AGENT_NAME%%", business_config.AGENT_NAME)
     html = html.replace("%%AGENT_SHORT%%", business_config.AGENT_NAME_SHORT)
     html = html.replace("%%OWNER%%", business_config.OWNER_NAME)
+    html = html.replace("%%GITHUB_DEFAULT_BRANCH%%", check_default_branch.EXPECTED_DEFAULT_BRANCH)
     _frank_html_cache = html
     return html
