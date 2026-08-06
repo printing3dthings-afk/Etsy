@@ -1872,6 +1872,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
+          <div class="panel-title">🔁 Recurring Complaints <span class="src">/api/review-themes</span></div>
+          <div id="review-themes-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
           <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('star_seller')" role="button" tabindex="0">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
@@ -4230,7 +4237,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadMovementDigest, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadMovementDigest, loadReviewThemes, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -7387,6 +7394,34 @@ async function loadMovementDigest(){
     if (winners.length) h += winners.map(function(it){ return row(it, '--green'); }).join('');
     if (decliners.length) h += decliners.map(function(it){ return row(it, '--red'); }).join('');
     el.innerHTML = h;
+  }catch(e){
+    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// Recurring Complaint / Review Theme Tracker (2026-08-06, "significantly
+// improve Frank" idea 6/6, second batch). No LLM summarization -- shared_term
+// is a real word that appears verbatim in 2+ distinct negative reviews on the
+// same listing, and every excerpt in the tooltip is the real unmodified
+// review text it was found in, never paraphrased or invented.
+async function loadReviewThemes(){
+  const el = document.getElementById('review-themes-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/review-themes');
+    const d = await r.json();
+    const findings = d.findings || [];
+    if (!findings.length) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">No recurring complaint themes found across recent reviews.</span></div>';
+      return;
+    }
+    el.innerHTML = findings.map(function(f){
+      const excerptText = (f.excerpts||[]).map(function(x){ return x.rating+'★: "'+x.text+'"'; }).join('\\n\\n');
+      return '<div class="ss-row" style="align-items:flex-start;cursor:default" title="real review excerpts:\\n\\n'+escHtml(excerptText)+'">'
+        + '<span class="ss-label" style="color:var(--text)">'+escHtml(f.title||('Listing '+f.listing_id))+' — &quot;'+escHtml(f.shared_term)+'&quot;</span>'
+        + '<span class="ss-val" style="color:var(--red);flex-shrink:0">'+f.review_count+'/'+f.total_negative_reviews+'</span>'
+        + '</div>';
+    }).join('');
   }catch(e){
     if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
   }

@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e029858-v316"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "efd533d-v317"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3898,6 +3898,21 @@ AGENT_TOOLS.append({
     ),
     "input_schema": {"type": "object", "properties": {}},
 })
+# Recurring Complaint / Review Theme Tracker (2026-08-06, "significantly
+# improve Frank" idea 6/6, second batch) -- real buyer-authored review
+# excerpts, so PII-flagged below same as draft_review_replies.
+AGENT_TOOLS.append({
+    "name": "get_review_themes",
+    "description": (
+        "Real recurring-complaint findings -- listings where the SAME "
+        "significant word/phrase appears verbatim in 2+ distinct real "
+        "negative (<=3 star) reviews, meaning multiple buyers "
+        "independently flagged the same real problem. Includes the real "
+        "unmodified review excerpts, never paraphrased or invented. Use "
+        "when asked about recurring quality issues or review patterns."
+    ),
+    "input_schema": {"type": "object", "properties": {}},
+})
 _SOCIAL_TOOL_NAMES = {"stage_tiktok_post", "stage_pinterest_post", "list_pinterest_boards"}
 
 # Prompt-cache constants — built once at import time, reused every chat turn.
@@ -4621,6 +4636,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return {"items": _compute_competitor_drift_items()}
         if name == "get_movement_digest":
             return asyncio.run(_compute_movement_digest())
+        if name == "get_review_themes":
+            return asyncio.run(_compute_review_themes())
         if name == "deep_research":
             ti = tool_input or {}
             query = (ti.get("query") or "").strip()
@@ -6666,7 +6683,8 @@ async def get_bundle_opportunities(_token: str = Depends(_auth_session_or_bearer
 # make every row look equally precise.
 def _score_growth_brief_items(ads: dict, cogs: dict, star_seller: dict, actions_data: dict,
                                 bundle_opps: list, seasonal_entries: list,
-                                competitor_drift_items: list | None = None) -> list[dict]:
+                                competitor_drift_items: list | None = None,
+                                review_theme_findings: list | None = None) -> list[dict]:
     """Pure merge/scoring over already-fetched data -- no I/O, so this is
     directly unit-testable with synthetic inputs. See _compute_growth_brief()
     for where each argument actually comes from."""
@@ -6771,6 +6789,17 @@ def _score_growth_brief_items(ads: dict, cogs: dict, star_seller: dict, actions_
             "impact_basis": "real: live comparable-listing average pulled from Etsy's public search — no revenue prediction made",
         })
 
+    for rt in (review_theme_findings or [])[:5]:
+        items.append({
+            "category": "review_theme", "severity": "medium" if rt["review_count"] >= 3 else "low",
+            "title": f"\"{rt['shared_term']}\" mentioned in {rt['review_count']} reviews of \"{rt['title']}\"",
+            "detail": f"{rt['review_count']} of {rt['total_negative_reviews']} negative reviews on this listing independently name the same issue.",
+            "suggestion": "Read the real excerpts and check whether the file/description needs a fix — Scott's call.",
+            "listing_id": rt["listing_id"],
+            "est_dollar_impact": None,
+            "impact_basis": f"real: the word \"{rt['shared_term']}\" appears verbatim in {rt['review_count']} distinct real reviews — no dollar estimate available",
+        })
+
     _SEV_RANK = {"high": 0, "medium": 1, "low": 2}
     items.sort(key=lambda it: (
         0 if it["est_dollar_impact"] is not None else 1,
@@ -6838,8 +6867,14 @@ async def _compute_growth_brief() -> dict:
     # call, populated separately by the weekly _competitor_watch_loop()) --
     # cheap enough to call directly every time, no cache needed.
     competitor_drift_items = await asyncio.to_thread(_compute_competitor_drift_items)
+    # Same sidecar-read pattern -- populated separately by the weekly
+    # _review_theme_loop(). Only the shared_term/counts feed into this
+    # non-PII-flagged brief, never the raw quoted review excerpts (those
+    # stay behind the PII-flagged get_review_themes tool/dedicated panel).
+    review_theme_findings = _load_review_themes().get("findings", [])
     items = _score_growth_brief_items(
-        ads, cogs, star_seller, actions_data, bundle_opps, seasonal_entries, competitor_drift_items,
+        ads, cogs, star_seller, actions_data, bundle_opps, seasonal_entries,
+        competitor_drift_items, review_theme_findings,
     )
     return {"items": items[:8], "generated_at": datetime.now(timezone.utc).isoformat()}
 
@@ -9883,6 +9918,7 @@ _AGENT_LOOP_LABELS = {
     "review_reply_draft": "Review Reply Drafts",
     "ab_test": "A/B Tests",
     "competitor_watch": "Competitor Watchdog",
+    "review_themes": "Review Theme Tracker",
 }
 
 
@@ -9933,6 +9969,7 @@ async def _startup() -> None:
     asyncio.create_task(_review_reply_loop())
     asyncio.create_task(_ab_test_loop())
     asyncio.create_task(_competitor_watch_loop())
+    asyncio.create_task(_review_theme_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -10923,6 +10960,158 @@ async def get_movement_digest(_token: str = Depends(_auth_session_or_bearer)):
         return cached
     data = await _compute_movement_digest()
     _cache_set("movement_digest", data)
+    return data
+
+
+# ── Recurring Complaint / Review Theme Tracker (2026-08-06, "significantly
+# improve Frank" idea 6/6, second batch) ────────────────────────────────────
+# CLAUDE.md's mission language: "every support message is a review that
+# didn't happen." One critical review naming a problem is noise; several
+# reviews on the SAME listing independently naming the SAME problem is a
+# real, fixable defect getting missed because Frank (and Scott) only ever
+# sees reviews one at a time. This mines the full text of real reviews
+# (already fetched via EtsyAPIClient.get_reviews(), same source
+# _review_reply_iteration()/Star Seller use) for genuinely recurring
+# significant terms across 2+ distinct negative reviews on one listing --
+# no LLM summarization, no paraphrasing, so nothing can be invented: every
+# "theme" is a real word/phrase that appears verbatim in 2+ real reviews,
+# and every excerpt shown is the real review text it came from, never
+# reworded stronger or weaker than what the buyer actually wrote.
+#
+# Scope note (honest, matching _get_recent_orders_raw()'s own caveat
+# pattern): get_reviews() is capped at 100 results per call (Etsy's own
+# per-request limit) with no pagination wired here -- this covers the
+# shop's most recent 100 reviews, not literally every review ever left,
+# same scope as _compute_star_seller_status()'s own reviews call.
+_REVIEW_THEME_STOPWORDS = frozenset({
+    "about", "after", "again", "always", "another", "anything", "around",
+    "because", "been", "before", "being", "better", "could", "didn",
+    "doesn", "doing", "download", "downloaded", "each", "every", "even",
+    "everything", "exactly", "first", "found", "from", "getting", "going",
+    "great", "happy", "have", "having", "here", "however", "instead",
+    "isn", "item", "just", "know", "like", "little", "love", "loved",
+    "lovely", "make", "makes", "many", "more", "much", "myself", "never",
+    "nice", "once", "only", "other", "over", "perfect", "planner",
+    "pretty", "product", "purchase", "purchased", "quality", "quickly",
+    "really", "received", "recommend", "should", "since", "some", "still",
+    "such", "sure", "thank", "thanks", "that", "their", "them", "then",
+    "there", "these", "they", "thing", "things", "think", "this", "those",
+    "though", "through", "time", "took", "under", "using", "very", "wanted",
+    "wasn", "were", "what", "when", "where", "which", "while", "will",
+    "with", "wonderful", "won", "would", "your",
+})
+
+
+def _significant_review_terms(text: str) -> set[str]:
+    """Real, verifiable term extraction -- no LLM, so nothing can be
+    invented. Lowercased words of 5+ letters, common/generic words filtered
+    out, so shared terms across 2+ negative reviews point at an actual
+    recurring concern rather than filler language."""
+    words = _re.findall(r"[a-zA-Z']+", (text or "").lower())
+    return {w.strip("'") for w in words if len(w.strip("'")) >= 5} - _REVIEW_THEME_STOPWORDS
+
+
+def _compute_review_theme_findings(reviews_result: dict, id_to_title: dict) -> list[dict]:
+    """Pure function over an already-fetched reviews payload -- no I/O, so
+    this is directly unit-testable with synthetic reviews. Flags a listing
+    only when the SAME significant term appears in 2+ distinct negative
+    (<=3 star) reviews with real text -- every excerpt attached is the
+    real, unmodified review text it was found in."""
+    by_listing: dict = {}
+    for r in reviews_result.get("results", []) or []:
+        rating = r.get("rating", 5)
+        text = (r.get("review") or "").strip()
+        if rating > 3 or not text:
+            continue
+        lid = r.get("listing_id")
+        if lid is None:
+            continue
+        by_listing.setdefault(lid, []).append({
+            "rating": rating, "text": text,
+            "terms": _significant_review_terms(text),
+        })
+
+    findings = []
+    for lid, entries in by_listing.items():
+        if len(entries) < 2:
+            continue
+        term_counts: dict = {}
+        for e in entries:
+            for term in e["terms"]:
+                term_counts.setdefault(term, set()).add(id(e))
+        recurring = {t: idxs for t, idxs in term_counts.items() if len(idxs) >= 2}
+        if not recurring:
+            continue
+        top_term = max(recurring, key=lambda t: len(recurring[t]))
+        matching_entries = [e for e in entries if top_term in e["terms"]]
+        findings.append({
+            "listing_id": lid, "title": id_to_title.get(lid, f"Listing {lid}"),
+            "shared_term": top_term, "review_count": len(matching_entries),
+            "total_negative_reviews": len(entries),
+            "excerpts": [{"rating": e["rating"], "text": e["text"][:300]} for e in matching_entries[:4]],
+        })
+    findings.sort(key=lambda f: f["review_count"], reverse=True)
+    return findings[:5]
+
+
+async def _compute_review_themes() -> dict:
+    try:
+        reviews_result = await asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=100))
+    except Exception as exc:
+        # Same "never a bare 500" rule as every sibling compute function --
+        # see the real bug this pattern fixed in _compute_movement_digest().
+        print(f"[review_themes] reviews fetch failed (non-fatal, empty result returned): {exc}", flush=True)
+        return {"findings": [], "generated_at": datetime.now(timezone.utc).isoformat()}
+    listings_data = await asyncio.to_thread(_listings_sync, "active")
+    id_to_title = {l["listing_id"]: l["title"] for l in listings_data.get("listings", [])}
+    findings = await asyncio.to_thread(_compute_review_theme_findings, reviews_result, id_to_title)
+    return {"findings": findings, "generated_at": datetime.now(timezone.utc).isoformat()}
+
+
+async def _review_theme_loop() -> None:
+    """Weekly: same resilience/backoff pattern as _competitor_watch_loop()."""
+    await asyncio.sleep(150)  # let the app finish booting first
+    while True:
+        delay = await _run_loop_iteration(
+            "review_themes", "Review Theme Tracker", _review_theme_iteration,
+            on_success_detail=lambda r: f"{len(r.get('findings', []))} recurring theme(s) found",
+            base_interval=7 * 86_400,
+        )
+        await asyncio.sleep(delay)
+
+
+_REVIEW_THEMES_PATH = db.resolve_persistent_path(
+    "review_theme_findings.json",
+    fallback=ROOT / "data" / "review_theme_findings.json",
+)
+
+
+async def _review_theme_iteration() -> dict:
+    data = await _compute_review_themes()
+    await asyncio.to_thread(
+        lambda: _REVIEW_THEMES_PATH.parent.mkdir(parents=True, exist_ok=True) or
+        _REVIEW_THEMES_PATH.write_text(json.dumps(data, indent=2))
+    )
+    return data
+
+
+def _load_review_themes() -> dict:
+    try:
+        return json.loads(_REVIEW_THEMES_PATH.read_text())
+    except (OSError, ValueError):
+        return {"findings": [], "generated_at": None}
+
+
+@app.get("/api/review-themes")
+async def get_review_themes(_token: str = Depends(_auth_session_or_bearer)):
+    """Recurring-complaint findings from the weekly sweep's durable sidecar
+    -- reads the last computed result instantly rather than re-fetching
+    reviews on every poll. Falls through to a live compute on first-ever
+    load (empty sidecar) so the panel isn't blank for a full week."""
+    cached = _load_review_themes()
+    if cached.get("generated_at"):
+        return cached
+    data = await _review_theme_iteration()
     return data
 
 
@@ -17858,6 +18047,7 @@ async def relay_ws(websocket: WebSocket):
 _PII_TOOLS = frozenset({
     "get_orders",
     "draft_review_replies",  # 2026-08-06: returns real buyer-authored review text
+    "get_review_themes",  # 2026-08-06: returns real buyer-authored review excerpts
 })  # tools whose results include a real buyer name or their own written words
 
 

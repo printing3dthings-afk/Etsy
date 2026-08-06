@@ -22897,3 +22897,43 @@ Verified: 113/113 unit tests (new `tests/test_movement_digest.py`, 8
 tests -- including a regression test for the exact 500-causing bug above),
 3x clean Playwright (first pass caught the real bug; all three passes
 clean after the fix). Build bumped to `e029858-v316`.
+
+## 2026-08-06 — Recurring Complaint / Review Theme Tracker (idea 6/6, second batch)
+
+Idea 6 of Scott's second "significantly improve Frank" batch (Competitor
+Watchdog, Movement Digest, Review Theme Tracker -- all three now shipped).
+CLAUDE.md's own mission language: "every support message is a review that
+didn't happen." One critical review is noise; several reviews on the SAME
+listing independently naming the SAME problem is a real, fixable defect
+Frank was never surfacing because reviews are only ever read one at a time.
+
+`_compute_review_theme_findings()` mines the shop's most recent 100 reviews
+(same `EtsyAPIClient.get_reviews()` source Star Seller already uses -- no
+extra Etsy call) for a significant word (5+ letters, common/generic terms
+filtered via `_REVIEW_THEME_STOPWORDS`) that appears verbatim in 2+ distinct
+negative (<=3 star) reviews on the same listing. Deliberately NOT an LLM
+summarization step -- a keyword-overlap heuristic can never invent a
+"theme" that isn't literally there; every finding traces to real words in
+real review text, and every excerpt shown is the unmodified original.
+
+PII discipline: `get_review_themes` (the chat tool) is added to
+`_PII_TOOLS` since it returns real buyer-authored review excerpts. The
+Growth Brief integration (`_score_growth_brief_items()`'s new
+`review_theme_findings` param) deliberately includes ONLY `shared_term` and
+counts -- never the raw `excerpts` field -- since `/api/growth-brief` is
+not a PII-flagged endpoint. Covered by a dedicated test asserting the raw
+excerpt text (with a synthetic buyer name in it) never appears in a Growth
+Brief item.
+
+Same "never a bare 500" pattern as Movement Digest's own real bug fix
+(previous entry): `_compute_review_themes()` wraps its `get_reviews()` call
+in try/except from the start, degrading to an honest empty result on any
+Etsy outage or missing-token condition.
+
+New desktop panel (`#review-themes-body`, next to Star Seller), new chat
+tool `get_review_themes`, new endpoint `GET /api/review-themes` (serves a
+weekly durable sidecar, falls through to one live compute on first-ever
+empty sidecar so the panel isn't blank for a full week).
+
+Verified: 114/114 unit tests (new `tests/test_review_themes.py`, 9 tests),
+3x clean Playwright. Build bumped to `efd533d-v317`.

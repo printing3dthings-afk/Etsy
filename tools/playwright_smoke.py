@@ -2796,6 +2796,41 @@ async def _run_browser_checks() -> None:
             check("views +10, favorites +3" in movement_digest_state.get("winnerTitle", ""),
                   f"the tooltip should cite the real views/favorites deltas, never fabricated ones: {movement_digest_state}")
 
+            # ── Recurring Complaint / Review Theme Tracker (2026-08-06,
+            # "significantly improve Frank" idea 6/6, second batch). Desktop-
+            # only panel. Confirms: a real recurring-theme finding renders
+            # its real shared term + the real review_count/total_negative_
+            # reviews ratio, and the tooltip carries the real unmodified
+            # review excerpt text -- never paraphrased or invented. ──
+            review_themes_state = await page.evaluate("""async () => {
+                window.__origAuthGetRT = authGet;
+                authGet = (path, ms) => {
+                    if (path.indexOf('/api/review-themes') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            findings: [
+                                {listing_id: 111, title: 'Lavender Life Planner', shared_term: 'blurry',
+                                 review_count: 3, total_negative_reviews: 4,
+                                 excerpts: [{rating: 1, text: 'The pages are blurry when printed at home.'}]},
+                            ],
+                        })});
+                    }
+                    return window.__origAuthGetRT(path, ms);
+                };
+                await loadReviewThemes();
+                authGet = window.__origAuthGetRT;
+                const row = document.querySelector('#review-themes-body .ss-row');
+                return {
+                    bodyText: document.getElementById('review-themes-body').textContent,
+                    rowTitle: row ? row.getAttribute('title') : '',
+                };
+            }""")
+            check("Lavender Life Planner" in review_themes_state.get("bodyText", "") and "blurry" in review_themes_state.get("bodyText", ""),
+                  f"the real listing title and real shared term should render: {review_themes_state}")
+            check("3/4" in review_themes_state.get("bodyText", ""),
+                  f"the real review_count/total_negative_reviews ratio should render: {review_themes_state}")
+            check("The pages are blurry when printed at home." in review_themes_state.get("rowTitle", ""),
+                  f"the tooltip should carry the real unmodified review excerpt text, never paraphrased: {review_themes_state}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the
