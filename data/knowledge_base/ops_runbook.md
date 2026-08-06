@@ -23094,3 +23094,28 @@ produce the first `desktop-latest` release and populate those two URLs.
 
 CLAUDE.md's "Frank Desktop App" section updated to replace the stale "no
 download link exists yet" note with the real, permanent URLs.
+
+
+## 2026-08-06 — Rerouted the 4 stubbed tax-compliance chat tools to real data
+Full-system audit (same day, above) left 4 of `tax_compliance_tools.py`'s 8
+tools unwired (get_tax_overview, calculate_quarterly_tax, get_1099k_status,
+check_etsy_compliance) rather than wire them against the legacy DataStore's
+unpopulated shop_data.json analytics/listings fields, which would have had
+Frank silently report $0 revenue / zero compliance issues as if real.
+
+Rerouted instead of left unwired: `tax_compliance_tools.execute_tool()` now
+takes an explicit `real_data` param and raises ValueError if any of the 4
+are called without it — structurally impossible to silently fall back to
+fabricated numbers. main.py's dispatch builds `real_data` from two new
+helpers: `_get_ytd_orders_raw()` (real Jan-1-to-now paid Etsy receipts,
+cached 1h, flags `capped=True` if the fetch hit Etsy's single-call ~100-
+order limit) and `_get_active_listings_for_compliance()` (real active
+listings via `get_shop_listings_all()`, kept separate from the shared
+`_listings_sync()` cache since that trimmed shape has no
+description/images field). All 4 tools now surface a `revenue_caveat`
+field when the YTD fetch was capped, so Scott sees "actual revenue may be
+higher" instead of a confidently wrong number. Also fixed a latent
+`l['id']` KeyError in `_check_etsy_compliance` — real Etsy listing dicts
+use `listing_id`, not `id`.
+
+All 8 tax tools are now real, callable chat tools. Build c73c26d-v319.

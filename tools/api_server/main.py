@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b572366-v318"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c73c26d-v319"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3748,18 +3748,20 @@ _ETSY_ADS_TOOL_NAMES = {t["name"] for t in _etsy_ads_tools.TOOL_DEFINITIONS}
 # its _get_tax_calendar() helper (used by the Calendar screen). Its chat-tool
 # layer (TOOL_DEFINITIONS/execute_tool()) was never wired in (2026-08-06
 # full-system audit, same "real module, dead chat-tool layer" bug class
-# etsy_ads_tools.py had before its own 2026-07-09 fix above). Only 4 of its
-# 8 tools are wired here, deliberately: log_deductible_expense/
-# get_deductions_summary/check_copyright_guidance/get_tax_calendar never
-# touch DataStore's shop_data.json analytics/listings fields (nothing in
-# this app populates those with real revenue/listing data -- that's a
-# SEPARATE, ad-spend-only local log tools/etsy_ads_tools.py uses honestly,
-# see its own comment above). The other 4 (get_tax_overview,
-# calculate_quarterly_tax, get_1099k_status, check_etsy_compliance) DO read
-# store.analytics/store.listings and would silently report $0 revenue /
-# zero compliance issues instead of an honest error -- stay unwired until
-# rerouted to a real data source (this app's live Etsy/metrics calls).
-_TAX_SAFE_TOOL_NAMES = {"log_deductible_expense", "get_deductions_summary", "check_copyright_guidance", "get_tax_calendar"}
+# etsy_ads_tools.py had before its own 2026-07-09 fix above). Originally only
+# 4 of its 8 tools were wired here (log_deductible_expense/get_deductions_
+# summary/check_copyright_guidance/get_tax_calendar -- these never needed
+# real Etsy data). The other 4 (get_tax_overview, calculate_quarterly_tax,
+# get_1099k_status, check_etsy_compliance) DID depend on DataStore's
+# unpopulated shop_data.json analytics/listings and were left unwired --
+# now rerouted (same day) to pull real numbers instead: gross_ytd from a
+# real date-scoped Etsy receipts fetch (_get_ytd_orders_raw(), same shape as
+# Movement Digest's own real receipts fetch) and real live listings for
+# compliance checks. tax_compliance_tools.execute_tool() now REQUIRES a
+# real_data dict for these 4 (raises rather than silently defaulting to
+# zero) -- see that module's own comment on why.
+_TAX_REAL_DATA_TOOL_NAMES = {"get_tax_overview", "calculate_quarterly_tax", "get_1099k_status", "check_etsy_compliance"}
+_TAX_SAFE_TOOL_NAMES = {"log_deductible_expense", "get_deductions_summary", "check_copyright_guidance", "get_tax_calendar"} | _TAX_REAL_DATA_TOOL_NAMES
 AGENT_TOOLS.extend([t for t in tax_compliance_tools.TOOL_DEFINITIONS if t["name"] in _TAX_SAFE_TOOL_NAMES])
 
 # TikTok — stage a video post for approval. tools/tiktok_poster.py is a real, working
@@ -4179,7 +4181,14 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return json.loads(_etsy_ads_tools.execute_tool(name, tool_input or {}, DataStore()))
         if name in _TAX_SAFE_TOOL_NAMES:
             from data_store import DataStore
-            return json.loads(tax_compliance_tools.execute_tool(name, tool_input or {}, DataStore()))
+            real_data = None
+            if name in _TAX_REAL_DATA_TOOL_NAMES:
+                if name == "check_etsy_compliance":
+                    real_data = {"listings": _get_active_listings_for_compliance()}
+                else:
+                    ytd_orders, ytd_capped = _get_ytd_orders_raw()
+                    real_data = {"gross_ytd": _order_revenue(ytd_orders), "ytd_orders_capped": ytd_capped}
+            return json.loads(tax_compliance_tools.execute_tool(name, tool_input or {}, DataStore(), real_data=real_data))
         if name == "stage_tiktok_post":
             return _stage_tiktok_post(tool_input or {})
         if name == "stage_pinterest_post":
@@ -5900,6 +5909,54 @@ def _get_recent_orders_raw() -> list[dict]:
         print(f"[orders] recent-receipts fetch failed: {exc}", flush=True)
         raw = []
     _cache_set("orders_recent", raw)
+    return raw
+
+
+def _get_ytd_orders_raw() -> tuple[list[dict], bool]:
+    """Real paid Etsy receipts since Jan 1 of the current year, shop-local
+    time -- built for the tax tools (get_tax_overview/calculate_quarterly_tax/
+    get_1099k_status), 2026-08-06. Returns (orders, capped) where `capped` is
+    True if the fetch hit Etsy's own single-call limit (100) -- if so, the
+    real YTD order count is HIGHER than what's returned here, and callers
+    MUST surface that honestly rather than silently under-reporting revenue
+    (same "last 100 receipts" scope caveat _get_recent_orders_raw() already
+    documents, just date-bounded to this year instead of "most recent").
+    Cached 3600s: tax planning doesn't need sub-hour freshness."""
+    cache_key = "orders_ytd"
+    cached = _cache_get(cache_key, ttl=3600)
+    if cached is not None:
+        return cached["orders"], cached["capped"]
+    try:
+        now = _shop_now()
+        jan_1 = datetime(now.year, 1, 1, tzinfo=now.tzinfo)
+        raw = EtsyAPIClient().get_orders(limit=100, min_created=int(jan_1.timestamp())).get("results", []) or []
+    except Exception as exc:
+        print(f"[tax] YTD orders fetch failed: {exc}", flush=True)
+        raw = []
+    capped = len(raw) >= 100
+    _cache_set(cache_key, {"orders": raw, "capped": capped})
+    return raw, capped
+
+
+def _get_active_listings_for_compliance() -> list[dict]:
+    """Raw active Etsy listing dicts (full shape, including description/images)
+    for tax_compliance_tools.check_etsy_compliance(). Built 2026-08-06 as a
+    separate fetch from _listings_sync() on purpose: that function returns a
+    trimmed shape (title/price/views/...) with no description or images field,
+    cached under "listings_active" for the Listings/Products screens -- adding
+    description/images to that shared cache would bloat a payload hit far more
+    often just to serve this rarely-called chat tool. Cached 3600s under its
+    own key instead."""
+    cache_key = "listings_active_compliance_raw"
+    cached = _cache_get(cache_key, ttl=3600)
+    if cached is not None:
+        return cached
+    try:
+        raw = EtsyAPIClient().get_shop_listings_all(state="active") or []
+    except Exception as exc:
+        print(f"[tax] active listings fetch for compliance check failed: {exc}", flush=True)
+        raw = []
+    _cache_set(cache_key, raw)
     return raw
 
 

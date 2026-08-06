@@ -19,11 +19,19 @@ Confirmed findings covered here:
   4. tools/tax_compliance_tools.py was imported (for its _get_tax_calendar()
      helper) but its chat-tool layer was never wired into AGENT_TOOLS -- the
      same "real module, dead chat-tool layer" bug class etsy_ads_tools.py had
-     before its own 2026-07-09 fix. Only the 4 tools that never read the
-     legacy DataStore's unpopulated shop_data.json analytics/listings fields
-     are wired now (log_deductible_expense/get_deductions_summary/
-     check_copyright_guidance/get_tax_calendar); the other 4 would silently
-     report $0 revenue / zero compliance issues and stay unwired on purpose.
+     before its own 2026-07-09 fix. Originally only 4 tools that never read
+     the legacy DataStore's unpopulated shop_data.json analytics/listings
+     fields were wired (log_deductible_expense/get_deductions_summary/
+     check_copyright_guidance/get_tax_calendar); the other 4
+     (get_tax_overview/calculate_quarterly_tax/get_1099k_status/
+     check_etsy_compliance) were left unwired rather than silently reporting
+     $0 revenue / zero compliance issues. Same day, rerouted instead of left
+     unwired: they're now wired too, but main.py's dispatch constructs a
+     real_data dict (real YTD revenue from a date-scoped Etsy receipts fetch,
+     real active listings from a live Etsy fetch) and
+     tax_compliance_tools.execute_tool() raises ValueError if any of the 4
+     are called without it -- structurally impossible to silently fall back
+     to fabricated numbers.
   5. _daily_brief_loop()/_calendar_tasks_loop() each had a small window of
      unprotected per-tick code (a plain DB read / _shop_now() call) outside
      any try/except, unlike every other step in those same functions --
@@ -99,16 +107,15 @@ def test_notified_orders_path_consistent_between_main_and_order_notifier():
           f"resolved path ({main_resolved}) -- both must agree on the one real file")
 
 
-def test_tax_compliance_safe_tools_wired_unsafe_tools_stay_unwired():
+def test_tax_compliance_all_8_tools_wired_real_data_tools_require_real_data():
     names = {t["name"] for t in server.AGENT_TOOLS}
     safe = {"log_deductible_expense", "get_deductions_summary", "check_copyright_guidance", "get_tax_calendar"}
-    unsafe = {"get_tax_overview", "calculate_quarterly_tax", "get_1099k_status", "check_etsy_compliance"}
-    for n in safe:
+    real_data = {"get_tax_overview", "calculate_quarterly_tax", "get_1099k_status", "check_etsy_compliance"}
+    for n in safe | real_data:
         check(n in names, f"{n} should now be a real, callable chat tool")
-    for n in unsafe:
-        check(n not in names,
-              f"{n} reads the legacy DataStore's unpopulated analytics/listings fields -- "
-              f"must stay unwired until rerouted to a real data source, never silently expose fabricated $0/zero numbers")
+
+    check(real_data == server._TAX_REAL_DATA_TOOL_NAMES,
+          f"main.py's _TAX_REAL_DATA_TOOL_NAMES drifted from the expected set: {server._TAX_REAL_DATA_TOOL_NAMES}")
 
     result = server._execute_agent_tool("get_tax_calendar", {})
     check(isinstance(result, dict) and "tax_deadlines" in result, f"got: {result}")
@@ -117,6 +124,52 @@ def test_tax_compliance_safe_tools_wired_unsafe_tools_stay_unwired():
         "amount": 12.5, "category": "materials", "description": "test",
     })
     check(result2.get("success") is True and result2.get("deduction_id"), f"got: {result2}")
+
+    # execute_tool() itself must refuse to run any real-data tool without real_data
+    # (the structural "loud fail, never fabricate" guard) -- direct-call it here,
+    # bypassing main.py's dispatch, to prove the guard lives in the tool module
+    # itself and isn't only enforced by main.py remembering to pass real_data.
+    import tax_compliance_tools
+    from data_store import DataStore
+    for n in real_data:
+        try:
+            tax_compliance_tools.execute_tool(n, {"quarter": 1} if n == "calculate_quarterly_tax" else {}, DataStore())
+            check(False, f"{n} must raise ValueError when called without real_data")
+        except ValueError:
+            pass
+
+
+def test_tax_overview_uses_real_ytd_orders_and_surfaces_cap_caveat():
+    from unittest.mock import patch
+
+    capped_orders = [{"receipt_id": i, "grandtotal": {"amount": 2000, "divisor": 100}} for i in range(100)]
+
+    with patch.object(server, "_get_ytd_orders_raw", return_value=(capped_orders, True)):
+        result = server._execute_agent_tool("get_tax_overview", {})
+    check(result.get("gross_revenue_ytd") == 2000.0, f"expected gross_revenue_ytd=2000.0 (100 orders x $20), got: {result}")
+    check("revenue_caveat" in result, f"capped fetch must surface revenue_caveat, got: {result}")
+
+    uncapped_orders = [{"receipt_id": 1, "grandtotal": {"amount": 500, "divisor": 100}}]
+    with patch.object(server, "_get_ytd_orders_raw", return_value=(uncapped_orders, False)):
+        result2 = server._execute_agent_tool("get_tax_overview", {})
+    check(result2.get("gross_revenue_ytd") == 5.0, f"expected gross_revenue_ytd=5.0, got: {result2}")
+    check("revenue_caveat" not in result2, f"uncapped fetch must NOT surface a caveat, got: {result2}")
+
+
+def test_check_etsy_compliance_uses_real_listing_fields_not_KeyError():
+    from unittest.mock import patch
+
+    raw_listings = [
+        {"listing_id": 111, "tags": ["a", "b"], "description": "short", "images": []},
+        {"listing_id": 222, "tags": ["t"] * 13, "description": "x" * 200, "images": [{}] * 5},
+    ]
+    with patch.object(server, "_get_active_listings_for_compliance", return_value=raw_listings):
+        result = server._execute_agent_tool("check_etsy_compliance", {})
+    check(result.get("listings_checked") == 2, f"got: {result}")
+    check(any("111" in issue for issue in result.get("compliance_issues", [])),
+          f"listing 111's short description should be flagged by real listing_id, got: {result}")
+    check(any("111" in w for w in result.get("warnings", [])),
+          f"listing 111's low tag count should be flagged, got: {result}")
 
 
 def test_studio_screen_loader_orphan_removed():
