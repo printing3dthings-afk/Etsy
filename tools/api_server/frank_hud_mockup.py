@@ -5183,6 +5183,32 @@ async function buildProductRun(){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
 }
+// Rapid tab-bouncing (2026-08-07, Scott reported "long delay switching between sections
+// on my phone, sometimes have to close and reopen"): showScreen() used to re-fire EVERY
+// loader for a screen (up to 12 concurrent fetches for cmd, 8 for settings) on every single
+// navigation into it, with no de-dup or in-flight guard. Mobile browsers cap ~6 concurrent
+// connections per origin, so quickly bouncing between heavy screens (especially back to a
+// screen you were just on, e.g. cmd -- the mobile Ask tab's central hub) queued up more
+// competing fetches than could ever resolve at once -- each extra switch made every
+// subsequent switch slower, and the only thing that flushed the backlog was a full app
+// restart (which drops the in-flight queue), matching Scott's exact workaround.
+// _fireScreenLoaders() below tracks real in-flight state per screen (not a fixed time
+// window -- these loaders are all `async function`s, so fn() returns a real Promise) and
+// skips starting a fresh batch only while the PREVIOUS batch for that same screen hasn't
+// actually finished yet. A genuine revisit after the prior batch has resolved (whether
+// that's 200ms or 20 minutes later) always re-fetches -- this never makes data go stale,
+// it only stops duplicate overlapping batches from queuing on top of each other. Shared
+// between showScreen() (user navigation) and loadAll() (the 30s background poll, which
+// used to call _SCREEN_LOADERS[_activeScreen] directly) so neither path can pile onto a
+// still-resolving fetch from the other.
+const _screenLoadInFlight = {};
+function _fireScreenLoaders(name){
+  const loaders = _SCREEN_LOADERS[name] || [];
+  if (!loaders.length || _screenLoadInFlight[name]) return;
+  _screenLoadInFlight[name] = true;
+  Promise.allSettled(loaders.map(fn => Promise.resolve(fn())))
+    .finally(() => { _screenLoadInFlight[name] = false; });
+}
 function showScreen(name){
   // 2026-07-23: the header's gear/bell/nav-item icons (e.g. onclick="showScreen('settings')"
   // at line ~1534) call this directly, bypassing phoneOpenScreen()'s own phone-home-open
@@ -5200,7 +5226,7 @@ function showScreen(name){
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
   _activeScreen = name;
-  (_SCREEN_LOADERS[name] || []).forEach(fn => fn());
+  _fireScreenLoaders(name);
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -11505,7 +11531,7 @@ function loadAll(){
   // (2026-07-08 performance pass).
   if (document.hidden) return;
   _GLOBAL_LOADERS.forEach(fn => fn());
-  (_SCREEN_LOADERS[_activeScreen] || []).forEach(fn => fn());
+  _fireScreenLoaders(_activeScreen);
 }
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) loadAll();

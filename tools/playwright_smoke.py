@@ -4373,6 +4373,41 @@ async def _run_browser_checks() -> None:
             check(gear_from_home_state.get("returnBtnVisible") is True,
                   f"return-to-Home button must reappear on Settings reached via the gear icon: {gear_from_home_state}")
 
+            # ── Rapid tab-bouncing slowdown fix (2026-08-07, Scott: "long delay switching
+            # between sections on my phone, sometimes have to close and reopen") --
+            # showScreen() used to re-fire every loader for a screen on every single
+            # navigation into it with no de-dup, so quickly bouncing back to a screen
+            # you were just on queued up duplicate overlapping fetch batches that piled
+            # up faster than mobile's ~6-connection-per-origin cap could drain them.
+            # _fireScreenLoaders() now skips starting a fresh batch while the previous
+            # one for that screen is still in flight, but must NOT block a genuine
+            # revisit once the prior batch has actually resolved -- verified with a
+            # mock loader instead of real fetches so this is deterministic. ──
+            rapid_reentry_state = await page.evaluate("""async () => {
+                let calls = 0;
+                const original = _SCREEN_LOADERS.cmd;
+                _SCREEN_LOADERS.cmd = [async () => { calls++; await new Promise(r => setTimeout(r, 300)); }];
+                showScreen('cmd');
+                showScreen('cmd');  // rapid re-entry while the first batch is still in flight
+                const callsAfterRapid = calls;
+                await new Promise(r => setTimeout(r, 500));  // let the in-flight batch resolve
+                const callsAfterSettle = calls;
+                showScreen('cmd');  // genuine revisit after the previous batch finished
+                await new Promise(r => setTimeout(r, 50));
+                const callsAfterRevisit = calls;
+                _SCREEN_LOADERS.cmd = original;
+                return {callsAfterRapid, callsAfterSettle, callsAfterRevisit};
+            }""")
+            check(rapid_reentry_state.get("callsAfterRapid") == 1,
+                  f"a second showScreen('cmd') while the first batch is still in flight must NOT "
+                  f"start a duplicate overlapping batch: {rapid_reentry_state}")
+            check(rapid_reentry_state.get("callsAfterSettle") == 1,
+                  f"the in-flight batch resolving on its own should not retroactively fire a second "
+                  f"batch: {rapid_reentry_state}")
+            check(rapid_reentry_state.get("callsAfterRevisit") == 2,
+                  f"a genuine revisit AFTER the previous batch has resolved must still fire fresh "
+                  f"loaders -- this guard must never make data go permanently stale: {rapid_reentry_state}")
+
         finally:
             await browser.close()
 

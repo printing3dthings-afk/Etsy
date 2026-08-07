@@ -23119,3 +23119,48 @@ higher" instead of a confidently wrong number. Also fixed a latent
 use `listing_id`, not `id`.
 
 All 8 tax tools are now real, callable chat tools. Build c73c26d-v319.
+
+
+## 2026-08-07 — Fixed mobile "long delay switching between sections, sometimes have to close and reopen"
+Scott reported this exact symptom. Investigated via a dedicated background audit
+before touching any code, rather than guessing.
+
+**Root cause (confirmed):** `showScreen()` re-fired EVERY loader for a screen on
+EVERY navigation into it, with zero de-dup or in-flight guard — up to 12
+concurrent fetches for the cmd/Ask screen, 8 for Settings. Mobile browsers cap
+~6 concurrent connections per origin, so quickly bouncing between screens (especially
+back to cmd, the mobile Ask tab's central hub Scott returns to constantly) queued up
+more competing fetches than could ever resolve at once. Each additional switch made
+every subsequent switch slower, and the only thing that flushed the backlog was a
+full app restart (dropping the in-flight queue) — exactly Scott's reported workaround.
+
+**Fix:** `_fireScreenLoaders(name)` (new shared helper in frank_hud_mockup.py,
+replacing the old inline `.forEach(fn=>fn())` calls in both `showScreen()` and
+`loadAll()`) tracks real per-screen in-flight state — these loaders are all
+`async function`s, so `fn()` returns a real Promise — and skips starting a fresh
+batch only while the PREVIOUS batch for that screen hasn't actually resolved yet.
+A genuine revisit after the prior batch finishes always re-fetches fresh data,
+whether that's 200ms or 20 minutes later; this can never make data go stale, it
+only stops duplicate overlapping batches piling on top of each other. Deliberately
+NOT a fixed time-based cooldown — an earlier draft of this fix used one, but it
+risked colliding with a legitimate existing Playwright regression
+(`playwright_smoke.py`'s `#settings-build-ver` revisit test, which explicitly
+re-triggers Settings' loaders a few seconds later to prove a return-visit
+repopulates it) since real elapsed time in that test flow was uncomfortably close
+to any reasonable fixed window. The in-flight-based guard has no such timing risk.
+
+Also checked and ruled out as NOT contributing: nav entry points (no listener
+accumulation), the 3 polling loops (all created once, properly gated), the WebGL
+orb (single context, no leak — a prior orb-freeze bug in this area was already
+fixed), and skeleton/count-up/tour animation code (no `document`/`window` listener
+accumulation). The service worker (`frank-sw.js`) does re-dispatch every GET from
+inside its own execution context, but that's a standard proxy passthrough — its
+`fetch(req)` call IS the one real network request, not a second one on top, and it
+doesn't grow an unbounded cache — so left as-is.
+
+New Playwright regression (`playwright_smoke.py`) uses a mock loader with a
+controlled delay to deterministically prove: (1) a second `showScreen()` call
+while the first batch is still in flight does NOT start a duplicate batch, (2)
+the in-flight batch resolving on its own does not retroactively fire a second
+one, and (3) a genuine revisit AFTER the previous batch has resolved still fires
+fresh loaders. Build 8e28159-v320.
