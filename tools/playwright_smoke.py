@@ -2166,8 +2166,38 @@ async def _run_browser_checks() -> None:
                   f"Coloring Pages' new-code panel must show the subjects-description field: {new_code_affordances}")
             check("subject" in new_code_affordances.get("coloringDescPlaceholder", "").lower(),
                   f"Coloring Pages' description placeholder should explain the one-subject-per-line convention: {new_code_affordances}")
-            check("20" in new_code_affordances.get("coloringDescPlaceholder", ""),
-                  f"Coloring Pages' placeholder should promise 20 auto-generated subjects (2026-07-24): {new_code_affordances}")
+            check("30" in new_code_affordances.get("coloringDescPlaceholder", ""),
+                  f"Coloring Pages' placeholder should promise 30 auto-generated subjects (2026-08-08 bump from 20): {new_code_affordances}")
+
+            # Regression guard (2026-08-08, Scott: "make sure the kids coloring
+            # pages are separate from the adult due to the adult being more
+            # detailed") -- the difficulty picker must appear only for Coloring
+            # Pages, default to "standard", and offer the kids/adult tiers.
+            difficulty_affordances = await page.evaluate("""() => {
+                createOpenCategory('coloring_pages');
+                _createToggleNewCode(true);
+                const diffEl = document.getElementById('bx-difficulty');
+                const coloringHasDifficulty = !!diffEl;
+                const coloringDifficultyDefault = diffEl ? diffEl.value : null;
+                const coloringDifficultyOptions = diffEl
+                    ? Array.from(diffEl.options).map(o => o.value) : [];
+                createOpenCategory('coloring_pages'); // close
+
+                createOpenCategory('wall_art');
+                _createToggleNewCode(true);
+                const wallArtHasDifficulty = !!document.getElementById('bx-difficulty');
+                createOpenCategory('wall_art'); // close
+
+                return {coloringHasDifficulty, coloringDifficultyDefault, coloringDifficultyOptions, wallArtHasDifficulty};
+            }""")
+            check(difficulty_affordances.get("coloringHasDifficulty") is True,
+                  f"Coloring Pages' new-code panel must show a difficulty picker: {difficulty_affordances}")
+            check(difficulty_affordances.get("coloringDifficultyDefault") == "standard",
+                  f"the difficulty picker must default to 'standard' so pre-existing behavior is unchanged: {difficulty_affordances}")
+            check(set(difficulty_affordances.get("coloringDifficultyOptions", [])) == {"standard", "kids", "adult"},
+                  f"the difficulty picker must offer exactly standard/kids/adult: {difficulty_affordances}")
+            check(difficulty_affordances.get("wallArtHasDifficulty") is False,
+                  f"Wall Art has no difficulty concept and must not show the picker: {difficulty_affordances}")
 
             # Regression guard: switching from "+ new one" back to the picker
             # must clear a typed description too (not just the pid) -- a
@@ -2258,6 +2288,8 @@ async def _run_browser_checks() -> None:
                   f"the frontend must send an empty pid, letting the server auto-generate it: {coloring_captured_body}")
             check(coloring_captured_body.get("category") == "coloring_pages", f"got: {coloring_captured_body}")
             check(coloring_captured_body.get("description") == "ocean animals", f"got: {coloring_captured_body}")
+            check(coloring_captured_body.get("difficulty") == "standard",
+                  f"buildProductRun() must send the difficulty picker's value (defaulting to standard) in the POST body: {coloring_captured_body}")
             check("COLOR9042" in coloring_result_html,
                   f"the server-assigned pid must render in the success banner: {coloring_result_html}")
 

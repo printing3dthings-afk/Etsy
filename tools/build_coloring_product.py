@@ -30,16 +30,23 @@ dead-ending on "not in the catalog" (Scott reported that dead end live,
 2026-07-22 -- "every action on this page has to work").
 
 (2026-07-24) main.py's coloring_pages branch now expands Scott's ONE typed
-theme into exactly NEW_THEME_SET_SIZE (20) distinct, never-before-used
-subjects itself (an LLM call, checked against a permanent cross-listing
-registry -- see main.py's _resolve_coloring_subjects()) before spawning this
-script, so --description always arrives here as 20 literal subject lines
+theme into exactly NEW_THEME_SET_SIZE distinct, never-before-used subjects
+itself (an LLM call, checked against a permanent cross-listing registry --
+see main.py's _resolve_coloring_subjects()) before spawning this script, so
+--description always arrives here as that many literal subject lines
 already. This script's own job stays unchanged: one page per line, packaged
 into one ZIP via build_sets(..., batch_size=gcp.NEW_THEME_SET_SIZE) below.
 
+(2026-08-08, Scott: "I need for the coloring pages to be made in groups of
+30" + "make sure the kids coloring pages are separate from the adult due to
+the adult being more detailed") -- NEW_THEME_SET_SIZE is now 30, and an
+optional --difficulty (standard/kids/adult) selects ONE style tier for the
+whole batch, threaded straight to generate_dynamic_theme_set(). Omitting it
+keeps the pre-existing "standard" (_fun_theme) behavior unchanged.
+
 Usage:  python tools/build_coloring_product.py COLOR_KAWAII_COLORING_PAGES_SET_05
         python tools/build_coloring_product.py COLOR_NEW_SET --description "A sleepy fox under an oak tree
-A hot air balloon over mountains" --engine gemini
+A hot air balloon over mountains" --engine gemini --difficulty kids
 """
 import argparse
 import json
@@ -116,6 +123,7 @@ def main() -> int:
     parser.add_argument("pid", nargs="?", default="")
     parser.add_argument("--description", default="")
     parser.add_argument("--engine", default=None)
+    parser.add_argument("--difficulty", default="standard")
     args, _unknown = parser.parse_known_args()
 
     if not args.pid.strip():
@@ -140,7 +148,8 @@ def main() -> int:
         pages_ok = False
         expected_stems: list[str] = []
         try:
-            generated = gcp.generate_dynamic_theme_set(pid, subjects, engine=args.engine)
+            generated = gcp.generate_dynamic_theme_set(pid, subjects, engine=args.engine,
+                                                         difficulty=args.difficulty)
             pages_ok = bool(generated)
             if generated:
                 zip_paths = gcp.build_sets(generated, pack=pid.lower(),

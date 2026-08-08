@@ -68,14 +68,15 @@ def _resolve_dp_base() -> Path:
 COLORING_DIR = _resolve_dp_base() / "coloring_pages"
 SETS_DIR = COLORING_DIR / "sets"
 PAGES_PER_SET = 5
-# NEW_THEME_SET_SIZE (2026-07-24): the dynamic Scott-typed-theme path (see
-# generate_dynamic_theme_set()) always produces exactly this many pages, packaged
-# into exactly one ZIP -- deliberately a SEPARATE constant from PAGES_PER_SET,
-# which stays 5 and keeps batching the 2 old fixed kawaii/fun_basic packs into
-# 4 ZIPs each, untouched (Scott: leave the old packs exactly as they are). Do
-# not merge these two constants -- see build_sets()'s batch_size param, which is
-# how the two call sites stopped sharing one global.
-NEW_THEME_SET_SIZE = 20
+# NEW_THEME_SET_SIZE (2026-07-24, bumped 20->30 on 2026-08-08 per Scott: "I need
+# for the coloring pages to be made in groups of 30"): the dynamic Scott-typed-
+# theme path (see generate_dynamic_theme_set()) always produces exactly this many
+# pages, packaged into exactly one ZIP -- deliberately a SEPARATE constant from
+# PAGES_PER_SET, which stays 5 and keeps batching the 2 old fixed kawaii/fun_basic
+# packs into 4 ZIPs each, untouched (Scott: leave the old packs exactly as they
+# are). Do not merge these two constants -- see build_sets()'s batch_size param,
+# which is how the two call sites stopped sharing one global.
+NEW_THEME_SET_SIZE = 30
 
 # ---------------------------------------------------------------------------
 # Style DNA injected into every prompt for consistency
@@ -758,20 +759,55 @@ def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False,
 # and feels consistent with the rest of the shop's coloring-page catalog.
 _DYNAMIC_BORDER = "subtle"  # generic decorative border text _fun_theme() expects
 
+# DIFFICULTY_CHOICES (2026-08-08, Scott: "make sure the kids coloring pages are
+# separate from the adult due to the adult being more detailed"): before this,
+# generate_dynamic_theme_set() always wrapped every subject in _fun_theme() --
+# the single mid-complexity tier -- with no way to ask for the big-bold/very-easy
+# KIDS style or the intricate/dense ADULT style that the old fixed hardcoded packs
+# (PACKS["kids"]/PACKS["adult"]) already have. One `difficulty` value now governs
+# the WHOLE batch -- every one of the `subjects` passed to a single call gets
+# wrapped in the SAME tier, so a kids page and an adult page can never land in the
+# same 30-page group; a genuinely separate call (separate product_id) is required
+# to build the other tier, exactly like the old fixed packs were already separate
+# products.
+DIFFICULTY_CHOICES = ("standard", "kids", "adult")
+
 
 def generate_dynamic_theme_set(product_id: str, subjects: list[str],
-                                engine: str | None = None) -> list[Path]:
+                                engine: str | None = None,
+                                difficulty: str = "standard") -> list[Path]:
     """Generate a brand-new, Scott-typed coloring-page set: one page per
     subject line (each theme id namespaced by product_id so caching via
     generate_coloring_page()'s own dst.exists() check can never collide with
     another product's pages, or with a re-run of the same product). Returns
     the list of successfully generated page paths (skips/omits any subject
     whose generation failed rather than raising -- the caller decides
-    whether a partial set is still good enough to package)."""
-    themes = [
-        _fun_theme(f"{product_id}_{i:02d}", subject[:60], subject, _DYNAMIC_BORDER)
-        for i, subject in enumerate(subjects, start=1)
-    ]
+    whether a partial set is still good enough to package).
+
+    `difficulty` picks ONE style tier for every subject in this call (never
+    mixed within a batch) -- "standard" (default, same _fun_theme wrapper this
+    function always used before difficulty existed), "kids" (_kids_theme: big
+    bold single subject, no border, very few details), or "adult" (_adult_theme:
+    intricate, dense, fine line weight). An unrecognized value falls back to
+    "standard" rather than raising -- this is user-typed input reaching here
+    from the Create screen, never trusted blindly."""
+    if difficulty not in DIFFICULTY_CHOICES:
+        difficulty = "standard"
+    if difficulty == "kids":
+        themes = [
+            _kids_theme(f"{product_id}_{i:02d}", subject[:60], subject)
+            for i, subject in enumerate(subjects, start=1)
+        ]
+    elif difficulty == "adult":
+        themes = [
+            _adult_theme(f"{product_id}_{i:02d}", subject[:60], subject)
+            for i, subject in enumerate(subjects, start=1)
+        ]
+    else:
+        themes = [
+            _fun_theme(f"{product_id}_{i:02d}", subject[:60], subject, _DYNAMIC_BORDER)
+            for i, subject in enumerate(subjects, start=1)
+        ]
     generated = [generate_coloring_page(t, COLORING_DIR, regen=False, engine=engine) for t in themes]
     return [p for p in generated if p]
 

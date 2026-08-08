@@ -23209,3 +23209,49 @@ New test: tests/test_knowledge_base_expansion.py — confirms the new doc is rea
 sourced, and auto-discoverable via read_knowledge_base_doc's glob (no registration
 step needed), the search-terms fix, and all 4 style constants share the same
 closed-outline clause. Build e10a5de-v321.
+
+## 2026-08-08 — Coloring pages: groups of 30 + a kids/adult difficulty tier
+Scott: "I need for the coloring pages to be made in groups of 30 ... make sure
+the kids coloring pages are separate from the adult due to the adult being
+more detailed." Bumped `generate_coloring_pages.NEW_THEME_SET_SIZE` 20 -> 30
+(the single source of truth already cascades through subject-resolution and
+ZIP batching — no other count-related code needed to change). Added
+`DIFFICULTY_CHOICES = ("standard", "kids", "adult")` and threaded a
+`difficulty` param through `generate_dynamic_theme_set()` ->
+`build_coloring_product.py --difficulty` -> main.py's build-product route ->
+a new picker on the Create screen's Coloring Pages panel (defaults to
+"standard", never mixes tiers within one 30-page batch). Flagged, did not
+auto-change: the $6.99 dynamic-set default price is now under-market for 30
+pages per `coloring_page_design_and_market_research.md`'s own data
+(25+-page bundles run $8-15) — left as a comment for Scott's pricing review,
+matching the standing autonomy boundary on price changes.
+
+Verified: 116/116 full suite + 3 clean Playwright runs (2 of 5 runs hit
+unrelated pre-existing flakes — a WebGL/three.js static-asset 404 once, an
+"expired listing Activate button" check once — neither touches anything in
+this diff; reran clean immediately after with nothing else competing for
+CPU/IO, confirming both were transient, not regressions).
+
+## 2026-08-08 — Grok engine has likely never worked end-to-end (real key, wrong var name)
+Scott asked to actually run the new 30-page coloring build through Grok to see
+real output. Pulled Railway's real production secrets via the GraphQL API
+(RAILWAY_API_TOKEN in .env, one-time manual pull for this test, not persisted
+anywhere) and found the xAI key is NOT stored under `XAI_API_KEY` — it's
+stored under a variable literally named `Grok api` (with a space).
+`tools/image_gen.py`'s `_grok_key()` only ever looks for `XAI_API_KEY`, so
+every real call to `engine="grok"` — in this sandbox or in production — would
+have failed with "XAI_API_KEY not set" until now. This directly explains why
+CLAUDE.md's Grok section says it's "UNPROVEN against a real key as of this
+writing." Confirmed the code path actually works once the real value is
+present: exported it locally as `XAI_API_KEY` for one test build
+(COLOR_COMPARE_GROK), got a real 2400x2400 coloring page back successfully.
+**Action needed from Scott**: rename the Railway variable from `Grok api` to
+`XAI_API_KEY` (Railway dashboard -> Etsy service -> Variables) so the engine
+actually works without a manual env pull next time.
+
+Also confirmed (separately) that GEMINI_API_KEY is identical between this
+sandbox's .env and Railway production — the "Your prepayment credits are
+depleted" 429s seen throughout this session are a real, account-level AI
+Studio billing block, not an environment-specific gap. No key swap fixes it;
+needs a top-up at ai.studio/projects before Gemini/"Nano Banana" image
+generation will work anywhere. Build c16821a-v322.

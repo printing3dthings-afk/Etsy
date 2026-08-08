@@ -68,6 +68,107 @@ def test_dynamic_theme_prompts_include_style_dna_and_subject():
             p.unlink(missing_ok=True)
 
 
+def test_new_theme_set_size_is_30():
+    """Regression guard for Scott's explicit request (2026-08-08): 'I need for
+    the coloring pages to be made in groups of 30.' Every downstream reader
+    (_resolve_coloring_subjects()/build_coloring_product.py) derives its count
+    from this ONE constant, so this is the single real assertion needed."""
+    check(gcp.NEW_THEME_SET_SIZE == 30, f"expected 30, got {gcp.NEW_THEME_SET_SIZE}")
+
+
+def test_dynamic_theme_difficulty_selects_correct_style_uniformly():
+    """Scott (2026-08-08): 'make sure the kids coloring pages are separate
+    from the adult due to the adult being more detailed.' One `difficulty`
+    value must select ONE style wrapper for every subject in the batch --
+    never a mix of kids-simple and adult-intricate pages in the same group."""
+    captured_prompts = {}
+
+    def _record(prompt, out_path, size=None, output_format=None, engine=None):
+        captured_prompts.setdefault("prompts", []).append(prompt)
+        return _fake_generate_image(prompt, out_path)
+
+    subjects = ["a sleepy fox", "a hot air balloon", "a birthday cake"]
+    for difficulty, expected_style in (
+        ("kids", gcp._STYLE_KIDS),
+        ("adult", gcp._STYLE_ADULT),
+        ("standard", gcp._STYLE),
+    ):
+        captured_prompts.clear()
+        # Force the single-shot, no-QA path (see generate_coloring_page()'s own
+        # docstring) so exactly one generate call happens per subject --
+        # otherwise a real (if exhausted/rate-limited) GEMINI_API_KEY in the
+        # environment makes the vision-QA retry loop call _generate() a second
+        # time on a failed verification, which is real, correct production
+        # behavior but makes "N subjects -> N prompts recorded" nondeterministic
+        # and not what this test is actually checking (style-tier selection).
+        with patch("tools.image_gen.generate_image", side_effect=_record), \
+             patch("tools.image_gen.gemini_key_available", return_value=False):
+            paths = gcp.generate_dynamic_theme_set(
+                f"COLOR_DIFF_{difficulty.upper()}", subjects, difficulty=difficulty)
+        try:
+            check(len(paths) == len(subjects), f"[{difficulty}] expected {len(subjects)} pages, got {paths}")
+            prompts = captured_prompts.get("prompts", [])
+            check(len(prompts) == len(subjects), f"[{difficulty}] expected {len(subjects)} prompts recorded")
+            for p in prompts:
+                check(expected_style in p,
+                      f"[{difficulty}] every page in the batch must use the SAME style tier, "
+                      f"expected {expected_style[:40]!r} in prompt, got: {p[:200]}")
+            # Cross-check: a kids/adult prompt must NOT also contain the other
+            # tiers' style text -- proves this isn't accidentally reusing the
+            # generic _fun_theme() wrapper under a different difficulty label.
+            if difficulty != "standard":
+                for p in prompts:
+                    check(gcp._STYLE not in p or expected_style == gcp._STYLE,
+                          f"[{difficulty}] must not fall back to the standard _fun_theme style DNA")
+        finally:
+            for p in paths:
+                p.unlink(missing_ok=True)
+
+
+def test_dynamic_theme_unrecognized_difficulty_falls_back_to_standard():
+    with patch("tools.image_gen.generate_image", side_effect=_fake_generate_image):
+        paths = gcp.generate_dynamic_theme_set(
+            "COLOR_BADDIFF", ["a garden gnome"], difficulty="expert-level-nonsense")
+    try:
+        check(len(paths) == 1, f"expected 1 page even with a bogus difficulty value, got {paths}")
+    finally:
+        for p in paths:
+            p.unlink(missing_ok=True)
+
+
+def test_build_coloring_product_threads_difficulty_through():
+    captured = {}
+
+    def _capture_difficulty(pid, subjects, engine=None, difficulty=None):
+        captured["difficulty"] = difficulty
+        return []
+
+    with patch.object(gcp, "generate_dynamic_theme_set", side_effect=_capture_difficulty), \
+         patch("sys.argv", ["build_coloring_product.py", "COLOR_KIDS_TEST", "--description", "a puppy",
+                             "--difficulty", "kids"]), \
+         patch("qc_sweep.sweep", return_value=[]), \
+         patch("backup_digital_products.run"):
+        bcp.main()
+    check(captured.get("difficulty") == "kids",
+          f"--difficulty must reach generate_dynamic_theme_set() unchanged, got {captured}")
+
+
+def test_build_coloring_product_difficulty_defaults_to_standard():
+    captured = {}
+
+    def _capture_difficulty(pid, subjects, engine=None, difficulty=None):
+        captured["difficulty"] = difficulty
+        return []
+
+    with patch.object(gcp, "generate_dynamic_theme_set", side_effect=_capture_difficulty), \
+         patch("sys.argv", ["build_coloring_product.py", "COLOR_NODIFF_TEST", "--description", "a puppy"]), \
+         patch("qc_sweep.sweep", return_value=[]), \
+         patch("backup_digital_products.run"):
+        bcp.main()
+    check(captured.get("difficulty") == "standard",
+          f"omitting --difficulty must default to 'standard' (pre-existing behavior unchanged), got {captured}")
+
+
 def test_dynamic_theme_namespaces_ids_by_product_id():
     with patch("tools.image_gen.generate_image", side_effect=_fake_generate_image):
         paths = gcp.generate_dynamic_theme_set("COLOR_ABC", ["subject one", "subject two"])
@@ -116,11 +217,17 @@ def test_build_coloring_product_description_branch_bypasses_catalog_lookup():
 def test_build_coloring_product_description_caps_at_new_theme_set_size():
     captured = {}
 
-    def _capture(pid, subjects, engine=None):
+    def _capture(pid, subjects, engine=None, difficulty=None):
         captured["subjects"] = subjects
+        captured["difficulty"] = difficulty
         return []
 
-    many_subjects = "\n".join(f"subject {i}" for i in range(25))
+    # Must exceed NEW_THEME_SET_SIZE regardless of its current value, or the
+    # cap never actually triggers and this test silently stops testing anything
+    # (confirmed real: this used a hardcoded range(25) before NEW_THEME_SET_SIZE
+    # was bumped 20->30 on 2026-08-08, which would have made 25 < 30 and let an
+    # uncapped list slip through as a false pass).
+    many_subjects = "\n".join(f"subject {i}" for i in range(gcp.NEW_THEME_SET_SIZE + 10))
     with patch.object(gcp, "generate_dynamic_theme_set", side_effect=_capture), \
          patch("sys.argv", ["build_coloring_product.py", "COLOR_MANY", "--description", many_subjects]), \
          patch("qc_sweep.sweep", return_value=[]), \

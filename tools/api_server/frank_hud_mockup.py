@@ -4324,9 +4324,16 @@ const _CREATE_CATEGORIES = {
     // a theme is described (see _renderCategoryPanelHtml()'s
     // autoGenerateCode branch and _next_coloring_pid() in main.py).
     autoGenerateCode: true,
+    // usesDifficulty (2026-08-08, Scott: "make sure the kids coloring pages
+    // are separate from the adult due to the adult being more detailed") --
+    // shows a #bx-difficulty picker (see _renderCategoryPanelHtml()) so ONE
+    // explicit tier governs the whole 30-page group, never mixed. wall_art
+    // (the other usesNewArtDescription category) has no equivalent concept,
+    // so this flag is coloring_pages-only.
+    usesDifficulty: true,
     newCodeLinkLabel: '＋ This is a new one — describe it and I\\'ll build it',
-    newArtPlaceholder: 'One general theme, e.g. "ocean animals" -- Frank turns it into 20 distinct coloring-page subjects, never repeating a subject used before.',
-    blurb: 'A themed set of 20 individual coloring pages, packaged into one ZIP and ready to sell.',
+    newArtPlaceholder: 'One general theme, e.g. "ocean animals" -- Frank turns it into 30 distinct coloring-page subjects, never repeating a subject used before.',
+    blurb: 'A themed set of 30 individual coloring pages, all one difficulty tier, packaged into one ZIP and ready to sell.',
     placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
   },
   sticker_pack: {
@@ -4460,6 +4467,18 @@ function _renderCategoryPanelHtml(key){
   // above still needs neither.
   if (cfg.usesNewArtDescription) {
     html += '<textarea id="bx-description" rows="3" placeholder="' + escHtml(cfg.newArtPlaceholder || '') + '" style="width:100%;box-sizing:border-box;margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:13px;resize:vertical"></textarea>';
+    // usesDifficulty (2026-08-08): coloring_pages only -- one tier for the whole
+    // 30-page group. #bx-difficulty only exists in the DOM for categories that
+    // opt in; buildProductRun() null-checks it and defaults to 'standard' when
+    // absent (wall_art, the other usesNewArtDescription category, has no picker).
+    if (cfg.usesDifficulty) {
+      html += '<label style="font-size:11px;color:var(--muted);display:block;margin:8px 0 4px">Difficulty</label>';
+      html += '<select id="bx-difficulty" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">'
+        + '<option value="standard" selected>Standard — moderate detail (most listings)</option>'
+        + '<option value="kids">Kids — big, bold, very simple (ages 3-8)</option>'
+        + '<option value="adult">Adult — intricate, dense detail</option>'
+        + '</select>';
+    }
     html += '<label style="font-size:11px;color:var(--muted);display:block;margin:6px 0 4px">Art style</label>';
     html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
     // usesReferenceImage (2026-07-30, wall_art only for now): lets a Reference
@@ -5135,6 +5154,11 @@ async function buildProductRun(){
   const engine=(engEl&&engEl.value)||'gemini';
   const descEl=document.getElementById('bx-description');
   const description=((descEl&&descEl.value)||'').trim();
+  // difficulty (2026-08-08): only coloring_pages renders #bx-difficulty --
+  // absent for every other category, so this always falls back to 'standard'
+  // there (matches the server-side default in main.py's build branch).
+  const diffEl=document.getElementById('bx-difficulty');
+  const difficulty=(diffEl&&diffEl.value)||'standard';
   const refEl=document.getElementById('create-ref-select');
   const referenceImageId=(refEl&&refEl.value)||'';
   const cfg = _CREATE_CATEGORIES[_createOpenCat];
@@ -5167,7 +5191,7 @@ async function buildProductRun(){
     // this live, 2026-07-22: "COLOR01 isn't a configured planner...").
     const r=await fetchWithTimeout(BASE+'/api/produce/build-product', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine, category: _createOpenCat, description, reference_image_id: referenceImageId})
+      body: JSON.stringify({pid, engine, category: _createOpenCat, description, difficulty, reference_image_id: referenceImageId})
     }, 30000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));

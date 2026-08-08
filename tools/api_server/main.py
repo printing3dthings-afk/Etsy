@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e10a5de-v321"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c16821a-v322"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13947,11 +13947,15 @@ def _produce_build_product(inp: dict) -> dict:
 
     (2026-07-24) For coloring_pages specifically, `description` is now ONE
     general theme (e.g. "ocean animals"), not literal subject lines --
-    _resolve_coloring_subjects() expands it into 20 distinct, never-before-
-    used subjects itself, checked against a permanent cross-listing registry
-    so no coloring-page subject is ever generated twice across the whole
-    catalog (Scott: "It will be a set of 20 individual coloring pages. Never
-    to repeat a creation."). Packaged into exactly one 20-page ZIP.
+    _resolve_coloring_subjects() expands it into NEW_THEME_SET_SIZE distinct,
+    never-before-used subjects itself, checked against a permanent
+    cross-listing registry so no coloring-page subject is ever generated
+    twice across the whole catalog (Scott: "It will be a set of individual
+    coloring pages. Never to repeat a creation."). Packaged into exactly one
+    ZIP. (2026-08-08: bumped 20->30 per Scott, "made in groups of 30" -- see
+    generate_coloring_pages.NEW_THEME_SET_SIZE, the one place that size
+    lives.) An optional `difficulty` (standard/kids/adult) picks one style
+    tier for the whole group -- see generate_dynamic_theme_set()'s docstring.
 
     (2026-07-25) For coloring_pages specifically, `pid` is now OPTIONAL --
     Scott: "It should auto generate the code." Omit it (empty string) along
@@ -13966,8 +13970,10 @@ def _produce_build_product(inp: dict) -> dict:
         if category == "coloring_pages" and description:
             pid = _next_coloring_pid()
         elif category == "coloring_pages":
-            return {"error": "Describe a theme first (e.g. 'ocean animals') and Frank "
-                              "will pick the code and generate 20 subjects from it."}
+            import generate_coloring_pages as _gcp_err
+            return {"error": f"Describe a theme first (e.g. 'ocean animals') and Frank "
+                              f"will pick the code and generate {_gcp_err.NEW_THEME_SET_SIZE} "
+                              f"subjects from it."}
         else:
             return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
     extra_args: list[str] = []
@@ -14045,16 +14051,26 @@ def _produce_build_product(inp: dict) -> dict:
             if eng_err:
                 return {"error": eng_err}
             # (2026-07-24) `description` is now ONE theme, not literal subjects -- Frank
-            # expands it into NEW_THEME_SET_SIZE (20) distinct, never-before-used subjects
+            # expands it into NEW_THEME_SET_SIZE distinct, never-before-used subjects
             # itself, checked against the permanent cross-listing registry -- see
-            # _resolve_coloring_subjects()'s docstring. Scott: "It will be a set of 20
+            # _resolve_coloring_subjects()'s docstring. Scott: "It will be a set of
             # individual coloring pages. Never to repeat a creation."
             subjects, subj_err = _resolve_coloring_subjects(description)
             if subj_err:
                 return {"error": subj_err}
-            extra_args = ["--description", "\n".join(subjects), "--engine", engine]
+            # difficulty (2026-08-08, Scott: "make sure the kids coloring pages are
+            # separate from the adult due to the adult being more detailed") -- one
+            # explicit tier for this WHOLE build, never mixed within a group (see
+            # generate_dynamic_theme_set()'s own docstring). Defaults to "standard"
+            # (the pre-existing behavior) for any caller that doesn't send it.
+            import generate_coloring_pages as _gcp
+            difficulty = str((inp or {}).get("difficulty", "standard")).strip().lower()
+            if difficulty not in _gcp.DIFFICULTY_CHOICES:
+                difficulty = "standard"
+            extra_args = ["--description", "\n".join(subjects), "--engine", engine,
+                          "--difficulty", difficulty]
             reg_name, reg_price = description.splitlines()[0][:120] or pid, None
-            # NEW_THEME_SET_SIZE always caps at 20 subjects -> always exactly one ZIP, deterministic.
+            # NEW_THEME_SET_SIZE always caps subjects at one fixed size -> always exactly one ZIP, deterministic.
             reg_files = [f"data/digital_products/coloring_pages/sets/coloring_{pid.lower()}_set_01.zip"]
             # Record the reservation NOW, before the subprocess spawns -- see
             # _record_used_coloring_subjects()'s own docstring for why eager (not
@@ -14764,7 +14780,10 @@ _CONTENT_PRICE_BY_CATEGORY = {
     # CLAUDE.md Gate 7 "Single print" tier ($4.99-$7.99) -- picks the tier
     # midpoint. coloring_pages: CLAUDE.md has NO documented price table for
     # this category at all (confirmed 2026-07-25) -- $6.99 is a code-level
-    # judgment call for the 20-page dynamic sets, not invented by the LLM.
+    # judgment call for the dynamic sets, not invented by the LLM. (2026-08-08:
+    # group size grew 20->30 pages -- data/knowledge_base/coloring_page_design_
+    # and_market_research.md's own real market data puts 25+-page bundles at
+    # $8-15, so this default is worth a pricing review; not auto-changed here.)
     # Scott can adjust any of these via a normal price-fix action after
     # a listing is generated -- this is a starting point, not gospel.
     "digital_planner": 12.99,
@@ -17417,7 +17436,7 @@ def _register_new_product_overlay(product_id: str, category: str, name: str,
 
 
 # ── Coloring-pages theme registry (2026-07-24) — Scott: "It will be a set of
-# 20 individual coloring pages. Never to repeat a creation." A permanent,
+# individual coloring pages. Never to repeat a creation." A permanent,
 # catalog-wide, forward-only record of every individual coloring-page SUBJECT
 # ever generated via the Create screen's dynamic new-theme path. Deliberately
 # NOT retroactively seeded with the 40 prompts the 2 old fixed kawaii/
@@ -17545,9 +17564,9 @@ def _generate_coloring_subjects(theme: str, exclude: list[str], count: int,
 
 def _resolve_coloring_subjects(theme: str) -> tuple[list[str], str | None]:
     """Turns Scott's one-line theme into exactly generate_coloring_pages.
-    NEW_THEME_SET_SIZE (20) subjects, never repeating anything in the durable,
-    catalog-wide, forward-only registry (2026-07-24, "never repeat a
-    creation"). Belt-and-suspenders: even though the prompt is given the
+    NEW_THEME_SET_SIZE subjects (30, as of 2026-08-08), never repeating
+    anything in the durable, catalog-wide, forward-only registry (2026-07-24,
+    "never repeat a creation"). Belt-and-suspenders: even though the prompt is given the
     exclude list, this ALSO code-verifies every returned subject against the
     FULL registry (normalized exact match) and silently drops anything that
     slips past the LLM, retrying once for the shortfall. Returns
