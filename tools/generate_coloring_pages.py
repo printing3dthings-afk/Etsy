@@ -79,12 +79,27 @@ NEW_THEME_SET_SIZE = 20
 
 # ---------------------------------------------------------------------------
 # Style DNA injected into every prompt for consistency
+#
+# _CLOSED_OUTLINE_CLAUSE (2026-08-08, data/knowledge_base/coloring_page_design_and_
+# market_research.md): published coloring-book design guides consistently name
+# closed/fully-enclosed outlines as the single most important technical property of
+# a coloring page -- an open or broken line segment lets color bleed between regions,
+# both on paper (crayon/marker) and in digital coloring apps (bucket-fill leaks
+# through the gap). None of the 4 style tiers below said this explicitly before --
+# they controlled line weight and black/white purity but never outline closure.
+# Appended to all 4 tiers rather than left as a general note, since it's a per-
+# generation instruction like the others, not a one-time pipeline setting.
 # ---------------------------------------------------------------------------
+_CLOSED_OUTLINE_CLAUSE = (
+    "Every outline must form a closed, fully enclosed loop — no open or broken line "
+    "segments, so colored areas can never leak between regions. "
+)
 _STYLE = (
     "STYLE: Professional coloring book illustration. "
     "ONLY clean black lines on pure white background — absolutely ZERO fills, "
     "ZERO shading, ZERO gray tones, ZERO gradients anywhere. "
     "Line weight 2-3px, confident consistent strokes throughout. "
+    + _CLOSED_OUTLINE_CLAUSE +
     "Pure #000000 black outlines on pure #FFFFFF white only. "
     "Suitable for printing on A4/letter paper and coloring with colored pencils or markers. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
@@ -98,6 +113,7 @@ _STYLE_BOLD = (
     "ONLY clean black lines on pure white background — absolutely ZERO fills, "
     "ZERO shading, ZERO gray tones, ZERO gradients anywhere. "
     "Line weight 3-4px, extra bold and simple, very few small details. "
+    + _CLOSED_OUTLINE_CLAUSE +
     "Pure #000000 black outlines on pure #FFFFFF white only. "
     "Suitable for printing on A4/letter paper and coloring with crayons, colored pencils, or markers. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
@@ -114,6 +130,7 @@ _STYLE_ADULT = (
     "ZERO shading, ZERO gray tones. Designed for experienced adult colorists who want "
     "a challenging, meditative, time-intensive coloring experience. "
     "Think zentangle, mandala complexity, botanical illustration density. "
+    + _CLOSED_OUTLINE_CLAUSE +
     "Pure #000000 black outlines on pure #FFFFFF white only. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
 )
@@ -128,6 +145,7 @@ _STYLE_KIDS = (
     "Large open areas easy to color inside the lines with crayons. "
     "NO intricate patterns, NO small details, NO background clutter. "
     "ONE main subject per page, big and centered. "
+    + _CLOSED_OUTLINE_CLAUSE +
     "Pure #000000 black outlines on pure #FFFFFF white only. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
 )

@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8e28159-v320"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e10a5de-v321"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8769,6 +8769,15 @@ _COMPETITOR_RESEARCH_SEARCH_TERMS = [
     "printable wall art digital download",
     "digital planner goodnotes",
     "kawaii sticker pack goodnotes",
+    # 2026-08-08: the refresh prompt below has always claimed to cover all 4 product
+    # lines ("wall art, digital planners, kawaii sticker packs, 3D-print SVG packs"),
+    # but this list only ever had 3 terms -- coloring pages had no search term at all,
+    # and SVG packs were named in the prompt without ever being searched for. The live
+    # competitor_research_2026.md doc stayed wall-art-titled/scoped as a result. Two
+    # terms added to close the gap between what this refresh claims to do and what it
+    # actually searches for.
+    "coloring pages printable digital download",
+    "3d print svg file bundle",
 ]
 
 
@@ -8809,9 +8818,9 @@ def _run_competitor_research_refresh() -> str:
     user_payload = (
         f"Today is {date.today().isoformat()}. Refresh this shop's competitive intelligence "
         f"report for its digital product lines (wall art, digital planners, kawaii sticker "
-        f"packs, 3D-print SVG packs). Use web_search for anything that needs current internet "
-        f"data (Etsy algorithm changes, pricing/trend research, seasonal shifts) and the REAL "
-        f"LIVE ETSY DATA below for actual current competitor listings.\n\n"
+        f"packs, 3D-print SVG packs, coloring pages). Use web_search for anything that needs "
+        f"current internet data (Etsy algorithm changes, pricing/trend research, seasonal "
+        f"shifts) and the REAL LIVE ETSY DATA below for actual current competitor listings.\n\n"
         f"REAL LIVE ETSY DATA (search_listings, today):\n{comparable_text}\n\n"
         f"EXISTING REPORT (may be stale -- verify, correct, and refresh it; keep the same "
         f"overall structure/section headers so the rest of the app that reads this file "

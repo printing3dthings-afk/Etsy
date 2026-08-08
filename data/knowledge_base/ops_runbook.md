@@ -23164,3 +23164,48 @@ while the first batch is still in flight does NOT start a duplicate batch, (2)
 the in-flight batch resolving on its own does not retroactively fire a second
 one, and (3) a genuine revisit AFTER the previous batch has resolved still fires
 fresh loaders. Build 8e28159-v320.
+
+
+## 2026-08-08 — Expanded Frank's knowledge base (Scott: "he needs more knowledge")
+Scott asked for Frank to have more knowledge on competitors, digital design, Etsy
+mechanics, product-building technique, and specifically better coloring pages, plus
+any useful repos/tools/skills. Audited data/knowledge_base/ + CLAUDE.md first rather
+than writing blind: wall art, SVG packs, digital planners, and sticker packs already
+had deep, sourced research (design_quality_research_2026-06.md,
+competitor_research_2026.md, CLAUDE.md's own Sticker Pack Design Standards section).
+**Coloring pages had zero competitor research and zero design-technique doc anywhere**
+— the one real, glaring gap, matching what Scott specifically called out.
+
+Also found a real bug while auditing: `_run_competitor_research_refresh()`'s prompt
+text has always claimed to cover 4 product lines ("wall art, digital planners, kawaii
+sticker packs, 3D-print SVG packs"), but `_COMPETITOR_RESEARCH_SEARCH_TERMS` only ever
+had 3 entries — no coloring-pages term, no SVG term. The live doc stayed wall-art-
+titled/scoped as a result. Fixed: added `"coloring pages printable digital download"`
+and `"3d print svg file bundle"` to the search terms, and added coloring pages to the
+prompt text so the terms and the claim finally match.
+
+Did real web-search-grounded research (not guessed) and wrote
+`data/knowledge_base/coloring_page_design_and_market_research.md`: real Etsy pricing
+data (themed bundles $4-8/10-15pg, $8-15/25+pg — our 20-page packs at flat $3.99 sit
+under-priced for their own page count, presented as a recommendation for Scott's
+review, not auto-changed), 2026 trending niches (educational-hybrid is the standout
+differentiator, plus cottagecore/stained-glass/affirmation — our existing dynamic
+per-theme generator can already target any of these, no code needed), and published
+coloring-book design principles. The one concrete, transferable prompt-technique gap
+found: published guides call closed/fully-enclosed outlines the #1 technical
+requirement (open lines let color leak between regions) — none of
+`generate_coloring_pages.py`'s 4 style-DNA constants (`_STYLE`/`_STYLE_BOLD`/
+`_STYLE_ADULT`/`_STYLE_KIDS`) said this explicitly. Added a shared
+`_CLOSED_OUTLINE_CLAUSE` to all 4. Confirmed (and left alone) that Midjourney-style
+`--no` negative-prompt techniques from generic guides don't transfer to gpt-image-1,
+matching CLAUDE.md's own established rule — our existing positive-constraint prompt
+style was already correct there.
+
+Logged a tool_evaluations.md entry: no dedicated coloring-page tool (lineart.ai etc.)
+beats the current gpt-image-1 → hard-threshold → vision-QA pipeline, since those tools
+solve photo-to-lineart tracing, not original-artwork generation — the actual job here.
+
+New test: tests/test_knowledge_base_expansion.py — confirms the new doc is real,
+sourced, and auto-discoverable via read_knowledge_base_doc's glob (no registration
+step needed), the search-terms fix, and all 4 style constants share the same
+closed-outline clause. Build e10a5de-v321.
