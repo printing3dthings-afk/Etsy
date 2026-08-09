@@ -4364,7 +4364,7 @@ const _CREATE_CATEGORIES = {
 };
 let _createOpenCat = null;
 
-function _engineOptionsHtml(){
+function _engineOptionsHtml(defaultEngine){
   // These are all pure-generate calls (new cover art / new wall-art master /
   // new coloring-page theme) -- never an edit/input-image call -- so Ideogram
   // (generate-only, best in-image text per CLAUDE.md) is safe and useful to
@@ -4372,11 +4372,32 @@ function _engineOptionsHtml(){
   // (_APPROVED_ART_ENGINES, main.py) but missing from every picker that used
   // this shared options list. Same trap hit again 2026-08-05 adding Grok --
   // check every picker that calls this function, not just this one.
-  return '<option value="gemini" selected>Standard (recommended)</option>'
-    + '<option value="openai">Alternative — best for transparent backgrounds</option>'
-    + '<option value="gpt-image-2">Alternative — sharper in-image text</option>'
-    + '<option value="ideogram">Alternative — best in-image text (titles/covers)</option>'
-    + '<option value="grok">Alternative — xAI Grok (new, unproven)</option>';
+  //
+  // defaultEngine (2026-08-09): lets a caller start a different option
+  // selected instead of the generic gemini default -- Coloring Pages passes
+  // 'grok' since its own difficulty picker starts on "Standard" (see the
+  // usesDifficulty render branch above and _syncColoringEngineDefault()
+  // below). Every other caller passes nothing and keeps the old behavior.
+  const d = defaultEngine || 'gemini';
+  const opt = (val, label) => '<option value="' + val + '"' + (val === d ? ' selected' : '') + '>' + label + '</option>';
+  return opt('gemini', 'Standard (recommended)')
+    + opt('openai', 'Alternative — best for transparent backgrounds')
+    + opt('gpt-image-2', 'Alternative — sharper in-image text')
+    + opt('ideogram', 'Alternative — best in-image text (titles/covers)')
+    + opt('grok', 'Alternative — xAI Grok (denser, more intricate line art)');
+}
+
+// Coloring Pages only (2026-08-09): re-selects #bx-engine's default whenever
+// #bx-difficulty changes, so picking Kids always lands on OpenAI and picking
+// Standard/Adult always lands on Grok -- matches main.py's own difficulty-
+// based engine default for any caller that leaves engine blank. Scott can
+// still hand-pick a different engine afterward; this only resets the
+// starting point on a difficulty change, it never locks the dropdown.
+function _syncColoringEngineDefault(){
+  const diffEl = document.getElementById('bx-difficulty');
+  const engEl = document.getElementById('bx-engine');
+  if (!diffEl || !engEl) return;
+  engEl.value = (diffEl.value === 'kids') ? 'openai' : 'grok';
 }
 
 // One "rebuild just this part" row inside a real category's advanced disclosure —
@@ -4473,14 +4494,23 @@ function _renderCategoryPanelHtml(key){
     // absent (wall_art, the other usesNewArtDescription category, has no picker).
     if (cfg.usesDifficulty) {
       html += '<label style="font-size:11px;color:var(--muted);display:block;margin:8px 0 4px">Difficulty</label>';
-      html += '<select id="bx-difficulty" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">'
+      html += '<select id="bx-difficulty" onchange="_syncColoringEngineDefault()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">'
         + '<option value="standard" selected>Standard — moderate detail (most listings)</option>'
         + '<option value="kids">Kids — big, bold, very simple (ages 3-8)</option>'
         + '<option value="adult">Adult — intricate, dense detail</option>'
         + '</select>';
     }
     html += '<label style="font-size:11px;color:var(--muted);display:block;margin:6px 0 4px">Art style</label>';
-    html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
+    // Coloring Pages defaults to Grok (denser, more intricate line art) since
+    // the initial difficulty above is "standard" -- _syncColoringEngineDefault()
+    // swaps this to OpenAI the moment Kids is picked. Every other category keeps
+    // the generic gemini default via the no-arg call. (2026-08-09, Scott: "make
+    // grok more for teen and adult coloring pages. open ai for kids" -- confirmed
+    // across 3 real side-by-side prompts in the Reference Photos library.)
+    html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml(cfg.usesDifficulty ? 'grok' : null) + '</select>';
+    if (cfg.usesDifficulty) {
+      html += '<div class="hub-listing-meta" style="margin-top:4px">Standard/Adult default to Grok (denser detail) — Kids default to OpenAI (simpler, thicker lines). Change the dropdown above anytime to override.</div>';
+    }
     // usesReferenceImage (2026-07-30, wall_art only for now): lets a Reference
     // Photos library upload actually feed into generation -- previously the
     // library was upload-only with nothing downstream reading it. One vision

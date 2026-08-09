@@ -325,6 +325,72 @@ def test_coloring_new_pid_with_description_starts_generation_steps():
     check(out.get("needs_visual_qc") is True, f"got {out}")
 
 
+def _kickoff_coloring_build(pid, extra_inp):
+    """Shared helper for the difficulty->engine default tests below: kicks off
+    a new-theme coloring build with mocked subject generation + subprocess,
+    returns (out, popen_env) so callers can inspect which engine actually got
+    threaded into the spawned subprocess's IMAGE_ENGINE env var -- the real
+    signal build_coloring_product.py's own IMAGE_ENGINE-driven engine picks
+    up, not just the --engine CLI arg (see _subprocess_env_with_engine)."""
+    fake_proc = MagicMock()
+    fake_proc.pid = 900010 + abs(hash(pid)) % 1000
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+            out = server._produce_build_product({
+                "pid": pid, "category": "coloring_pages", "description": "woodland animals",
+                **extra_inp,
+            })
+        server._LONG_RUNNING_PROCS.pop(fake_proc.pid, None)
+        popen_env = mock_popen.call_args.kwargs.get("env") or {}
+    return out, popen_env
+
+
+# ── Difficulty -> engine default (2026-08-09) ────────────────────────────────
+# Scott: "let's make grok more for teen and adult coloring pages. open ai for
+# kids." Confirmed across 3 real side-by-side prompts (cabin/treehouse/monster
+# truck, filed in the Reference Photos library) that Grok renders denser,
+# more intricate line art and OpenAI renders simpler, kid-friendly line art
+# from the identical prompt. main.py's coloring_pages branch now defaults the
+# engine by difficulty ONLY when the caller leaves engine blank -- these
+# cover both the default and the explicit-override escape hatch.
+
+def test_coloring_kids_difficulty_defaults_engine_to_openai():
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_KIDS", {"difficulty": "kids"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "openai",
+          f"difficulty=kids with no explicit engine must default to openai, got env={env}")
+
+
+def test_coloring_standard_difficulty_defaults_engine_to_grok():
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_STD", {"difficulty": "standard"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "grok",
+          f"difficulty=standard with no explicit engine must default to grok, got env={env}")
+
+
+def test_coloring_adult_difficulty_defaults_engine_to_grok():
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_ADULT", {"difficulty": "adult"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "grok",
+          f"difficulty=adult with no explicit engine must default to grok, got env={env}")
+
+
+def test_coloring_explicit_engine_overrides_difficulty_default():
+    """An explicit engine choice (the Create screen's dropdown always sends
+    one) must win over the difficulty-based default -- kids must NOT be
+    force-locked to openai if Scott hand-picks something else."""
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_OVERRIDE",
+                                        {"difficulty": "kids", "engine": "ideogram"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "ideogram",
+          f"an explicit engine must override the kids->openai default, got env={env}")
+
+
 def test_coloring_subject_generation_failure_blocks_build_before_spawn():
     """_resolve_coloring_subjects() returning an error (e.g. the registry
     couldn't produce enough non-repeating subjects, or ANTHROPIC_KEY is unset)

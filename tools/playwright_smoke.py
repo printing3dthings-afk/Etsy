@@ -2199,6 +2199,41 @@ async def _run_browser_checks() -> None:
             check(difficulty_affordances.get("wallArtHasDifficulty") is False,
                   f"Wall Art has no difficulty concept and must not show the picker: {difficulty_affordances}")
 
+            # Regression guard (2026-08-09, Scott: "let's make grok more for teen
+            # and adult coloring pages. open ai for kids") -- the engine dropdown
+            # must default to grok on load (matches the initial "standard"
+            # difficulty), then flip to openai the moment Kids is picked, and
+            # back to grok for Adult -- via _syncColoringEngineDefault().
+            engine_sync = await page.evaluate("""() => {
+                createOpenCategory('coloring_pages');
+                _createToggleNewCode(true);
+                const diffEl = document.getElementById('bx-difficulty');
+                const engEl = document.getElementById('bx-engine');
+                const initialEngine = engEl.value;
+
+                diffEl.value = 'kids';
+                diffEl.dispatchEvent(new Event('change'));
+                const kidsEngine = engEl.value;
+
+                diffEl.value = 'adult';
+                diffEl.dispatchEvent(new Event('change'));
+                const adultEngine = engEl.value;
+
+                diffEl.value = 'standard';
+                diffEl.dispatchEvent(new Event('change'));
+                const standardEngine = engEl.value;
+                createOpenCategory('coloring_pages'); // close
+                return {initialEngine, kidsEngine, adultEngine, standardEngine};
+            }""")
+            check(engine_sync.get("initialEngine") == "grok",
+                  f"Coloring Pages' engine dropdown must default to grok (matches the initial Standard difficulty): {engine_sync}")
+            check(engine_sync.get("kidsEngine") == "openai",
+                  f"picking Kids difficulty must switch the engine default to openai: {engine_sync}")
+            check(engine_sync.get("adultEngine") == "grok",
+                  f"picking Adult difficulty must switch the engine default back to grok: {engine_sync}")
+            check(engine_sync.get("standardEngine") == "grok",
+                  f"picking Standard difficulty must default the engine to grok: {engine_sync}")
+
             # Regression guard: switching from "+ new one" back to the picker
             # must clear a typed description too (not just the pid) -- a
             # stale description must never silently survive into a rebuild

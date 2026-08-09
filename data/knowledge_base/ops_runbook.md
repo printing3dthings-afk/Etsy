@@ -23255,3 +23255,44 @@ depleted" 429s seen throughout this session are a real, account-level AI
 Studio billing block, not an environment-specific gap. No key swap fixes it;
 needs a top-up at ai.studio/projects before Gemini/"Nano Banana" image
 generation will work anywhere. Build c16821a-v322.
+
+## 2026-08-09 — Coloring pages: engine now defaults by difficulty (Grok for teen/adult, OpenAI for kids)
+Ran 3 real side-by-side prompts (cozy cabin, treehouse village, monster truck
+rally) through both Grok and OpenAI at difficulty=standard, same exact prompt
+to each, and visually inspected all 6 outputs directly. Consistent, repeated
+pattern every time: Grok renders denser, more intricate linework (individual
+pine needles/feathers, textured surfaces, cross-hatched detail, decorative
+borders, legible-but-untrustworthy in-image text) -- genuinely teen/adult
+skill level. OpenAI renders simpler, thicker-lined art with big open regions
+-- genuinely kid-friendly. Scott: "let's make grok more for teen and adult
+coloring pages. open ai for kids."
+
+Wired this as the default (not a lock): main.py's coloring_pages branch now
+picks engine by difficulty (kids -> openai, standard/adult -> grok) ONLY when
+the caller leaves engine blank -- an explicit engine choice always wins. The
+Create screen's engine dropdown mirrors this: defaults to grok on load
+(matches the initial "standard" difficulty), and `_syncColoringEngineDefault()`
+re-syncs it to openai/grok the moment the difficulty picker changes, while
+staying hand-overridable.
+
+Filed all 6 comparison images (3 Grok + 3 OpenAI) into Frank's live Reference
+Photos library (`coloring_pages` category) with engine/prompt/finding baked
+into each description, via the real `/api/reference-images/upload` endpoint
+against production -- not just local test data -- so they're genuinely
+usable as style references, not scratch files.
+
+New tests: 4 in test_produce_qc.py covering kids->openai, standard->grok,
+adult->grok, and explicit-engine-overrides-default; 1 new Playwright block
+verifying the dropdown auto-syncs on every difficulty change. Verified:
+116/116 full suite + 3 clean Playwright runs. Build 416bb89-v323.
+
+
+## 2026-08-09 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.

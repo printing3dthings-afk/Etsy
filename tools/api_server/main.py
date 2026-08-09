@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c16821a-v322"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "416bb89-v323"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -14047,9 +14047,6 @@ def _produce_build_product(inp: dict) -> dict:
                 return {"error": f"{pid} isn't in the coloring-pages catalog yet (or has no "
                                   f"files listed). Pick an existing set from the list, or "
                                   f"describe a new theme in the 'new one' box and I'll build it."}
-            engine, eng_err = _resolve_art_engine(inp)
-            if eng_err:
-                return {"error": eng_err}
             # (2026-07-24) `description` is now ONE theme, not literal subjects -- Frank
             # expands it into NEW_THEME_SET_SIZE distinct, never-before-used subjects
             # itself, checked against the permanent cross-listing registry -- see
@@ -14067,6 +14064,22 @@ def _produce_build_product(inp: dict) -> dict:
             difficulty = str((inp or {}).get("difficulty", "standard")).strip().lower()
             if difficulty not in _gcp.DIFFICULTY_CHOICES:
                 difficulty = "standard"
+            # engine default by difficulty (2026-08-09, Scott: "make grok more for
+            # teen and adult coloring pages. open ai for kids") -- confirmed across 3
+            # real side-by-side prompts (cabin/treehouse/monster truck) in the
+            # Reference Photos library that Grok renders denser, more intricate
+            # linework (teen/adult) and OpenAI renders simpler, thicker-lined art
+            # (kids) from the identical prompt. Only kicks in when the caller left
+            # engine blank -- the Create screen's dropdown always sends an explicit
+            # value (defaulted client-side, see _syncColoringEngineDefault()), so
+            # this mainly protects non-UI callers; an explicit engine choice always
+            # wins over this default.
+            engine_inp = dict(inp or {})
+            if not str(engine_inp.get("engine", "")).strip():
+                engine_inp["engine"] = "openai" if difficulty == "kids" else "grok"
+            engine, eng_err = _resolve_art_engine(engine_inp)
+            if eng_err:
+                return {"error": eng_err}
             extra_args = ["--description", "\n".join(subjects), "--engine", engine,
                           "--difficulty", difficulty]
             reg_name, reg_price = description.splitlines()[0][:120] or pid, None
