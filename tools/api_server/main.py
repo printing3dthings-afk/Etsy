@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "416bb89-v323"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e86eec1-v324"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -14052,9 +14052,41 @@ def _produce_build_product(inp: dict) -> dict:
             # itself, checked against the permanent cross-listing registry -- see
             # _resolve_coloring_subjects()'s docstring. Scott: "It will be a set of
             # individual coloring pages. Never to repeat a creation."
-            subjects, subj_err = _resolve_coloring_subjects(description)
-            if subj_err:
-                return {"error": subj_err}
+            #
+            # subjects override (2026-08-09): _resolve_coloring_subjects()'s own
+            # Anthropic call can be unusable (confirmed in production the same day --
+            # "Your credit balance is too low to access the Anthropic API" on every
+            # attempt, real vs. a registry collision, verified against server logs).
+            # A caller (Claude, or any future non-chat integration) can supply the
+            # already-expanded subject list directly via inp['subjects'] to skip the
+            # LLM-expansion step entirely -- this is a different SOURCE for subjects,
+            # never a bypass of the "never repeat a creation" guarantee: still exactly
+            # NEW_THEME_SET_SIZE entries, still checked against the full registry, still
+            # recorded via the same _record_used_coloring_subjects() call below.
+            subjects_override = (inp or {}).get("subjects")
+            if isinstance(subjects_override, list) and subjects_override:
+                import generate_coloring_pages as _gcp_subj
+                subjects = [str(s).strip() for s in subjects_override if str(s).strip()]
+                if len(subjects) != _gcp_subj.NEW_THEME_SET_SIZE:
+                    return {"error": f"subjects must contain exactly {_gcp_subj.NEW_THEME_SET_SIZE} "
+                                      f"non-empty entries, got {len(subjects)}"}
+                registry = _coloring_theme_registry()
+                used_normalized = {e["normalized"] for e in registry}
+                seen_this_batch: set[str] = set()
+                dupes = []
+                for s in subjects:
+                    norm = _normalize_subject(s)
+                    if norm in used_normalized or norm in seen_this_batch:
+                        dupes.append(s)
+                    seen_this_batch.add(norm)
+                if dupes:
+                    return {"error": f"{len(dupes)} supplied subject(s) already used (repeated "
+                                      f"within this batch, or already in the shop-wide registry): "
+                                      f"{'; '.join(dupes[:5])}{'...' if len(dupes) > 5 else ''}"}
+            else:
+                subjects, subj_err = _resolve_coloring_subjects(description)
+                if subj_err:
+                    return {"error": subj_err}
             # difficulty (2026-08-08, Scott: "make sure the kids coloring pages are
             # separate from the adult due to the adult being more detailed") -- one
             # explicit tier for this WHOLE build, never mixed within a group (see

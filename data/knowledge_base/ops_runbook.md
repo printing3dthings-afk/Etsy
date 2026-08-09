@@ -23286,6 +23286,44 @@ adult->grok, and explicit-engine-overrides-default; 1 new Playwright block
 verifying the dropdown auto-syncs on every difficulty change. Verified:
 116/116 full suite + 3 clean Playwright runs. Build 416bb89-v323.
 
+## 2026-08-09 — INCIDENT: production Anthropic API credit balance exhausted
+Scott asked Frank to build a real kids coloring-pages listing (30-page
+"Friendly Dinosaurs" set). The build failed immediately with "Could only
+generate 0/30 distinct new subjects" — looked at first like a registry
+collision, but a genuinely novel theme ("sleepy woodland gnomes...") failed
+identically, ruling that out. Pulled real production logs via Railway's
+GraphQL `environmentLogs` API and found the actual cause:
+`Error code: 400 - {'type': 'invalid_request_error', 'message': 'Your credit
+balance is too low to access the Anthropic API. Please go to Plans & Billing
+to upgrade or purchase credits.'}`. This blocks EVERY Anthropic-dependent
+feature in production right now, not just coloring-pages subject expansion —
+chat replies, tag/title/description generation, the classifier, anything
+that calls Claude server-side. Needs a top-up at Anthropic's Plans & Billing
+page (whichever account owns the `ANTHROPIC_API_KEY` set on Railway) before
+any of it works again. Separate from — but the same class of issue as — the
+already-logged Gemini prepayment-credit block above.
+
+**Workaround shipped so the coloring-pages build could still go through
+today:** `_produce_build_product()`'s coloring_pages branch now accepts an
+optional `inp['subjects']` — a caller-supplied list of exactly
+NEW_THEME_SET_SIZE (30) already-expanded subjects, skipping
+`_resolve_coloring_subjects()`'s Anthropic call entirely. Every other
+guarantee is unchanged: exact count enforced, still deduped against the full
+`_coloring_theme_registry()` (never-repeat-a-creation), still recorded via
+`_record_used_coloring_subjects()` before the subprocess spawns. This is a
+different SOURCE for subjects (Claude writing them directly instead of a
+server-side LLM call), not a bypass of the dedup guarantee. 3 new tests in
+test_produce_qc.py (bypasses the LLM call, rejects a wrong-count list,
+rejects a registry collision). Verified: 116/116 full suite (no frontend
+touched, Playwright skipped). Build e86eec1-v324.
+
+Also discovered while investigating: Railway's "Etsy" service auto-deploys
+directly from `claude/etsy-automation-agents-WFAPU` (confirmed via
+`serviceInstance.latestDeployment.meta.branch` on Railway's GraphQL API) —
+every push to this branch redeploys production within a couple minutes.
+Worth knowing for future sessions: pushing here is NOT the same as pushing
+to a feature branch nobody's watching.
+
 
 ## 2026-08-09 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
 **Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False

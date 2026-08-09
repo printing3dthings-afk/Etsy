@@ -439,6 +439,54 @@ def test_coloring_subjects_recorded_before_spawn():
     check(recorded.get("subjects") == fake_subjects, f"got {recorded}")
 
 
+# ── Subjects override (2026-08-09) ───────────────────────────────────────────
+# Scott asked for a real coloring-pages product while production's Anthropic
+# credits were exhausted -- _resolve_coloring_subjects()'s own LLM call was
+# unusable (confirmed via real server logs: "Your credit balance is too low
+# to access the Anthropic API", not a registry collision). inp['subjects']
+# lets a caller supply the already-expanded 30 subjects directly, skipping
+# that call, while keeping every other guarantee (exact count, registry
+# dedup, recorded before spawn) identical to the LLM-expansion path.
+
+def test_coloring_subjects_override_bypasses_llm_expansion():
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    with patch.object(server, "_resolve_coloring_subjects") as mock_resolve:
+        out, env = _kickoff_coloring_build("COLOR_SUBJ_OVERRIDE", {
+            "difficulty": "kids", "subjects": my_subjects,
+        })
+    check(out.get("started") is True, f"got {out}")
+    check(not mock_resolve.called, "the LLM-expansion call must be skipped entirely when subjects are supplied")
+    check(env.get("IMAGE_ENGINE") == "openai", f"kids difficulty must still default engine to openai, got env={env}")
+
+
+def test_coloring_subjects_override_wrong_count_rejected():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_SUBJ_SHORT", "category": "coloring_pages",
+            "description": "dinosaurs", "subjects": ["only one subject"],
+        })
+    check("error" in out and not out.get("started"), f"a short subjects list must be rejected, got {out}")
+    check("exactly" in out["error"].lower(), f"the error should explain the required count, got {out}")
+    check(not mock_popen.called, "a bad subjects count must be caught before any subprocess spawns")
+
+
+def test_coloring_subjects_override_rejects_registry_collision():
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    fake_registry = [{"subject": my_subjects[0], "normalized": server._normalize_subject(my_subjects[0]),
+                       "product_id": "COLOR_OLD", "theme": "dinosaurs", "created_at": "2026-01-01T00:00:00+00:00"}]
+    with patch.object(server, "_coloring_theme_registry", return_value=fake_registry), \
+         patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_SUBJ_DUPE", "category": "coloring_pages",
+            "description": "dinosaurs", "subjects": my_subjects,
+        })
+    check("error" in out and not out.get("started"), f"a registry collision must be rejected, got {out}")
+    check("already used" in out["error"].lower(), f"got {out}")
+    check(not mock_popen.called, "a registry collision must be caught before any subprocess spawns")
+
+
 # ── Coloring Pages auto-generated code (2026-07-25) ─────────────────────────
 # Scott: "It should auto generate the code" -- the Create screen no longer
 # collects a typed pid for a new coloring-pages theme. These cover
