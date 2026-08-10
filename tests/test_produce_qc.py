@@ -487,6 +487,53 @@ def test_coloring_subjects_override_rejects_registry_collision():
     check(not mock_popen.called, "a registry collision must be caught before any subprocess spawns")
 
 
+def test_coloring_subjects_override_same_pid_resume_not_blocked_by_own_registry():
+    """2026-08-10: a build interrupted partway through (container restart,
+    crash) must be resumable by resubmitting the identical payload -- its own
+    already-reserved subjects (recorded eagerly, before the subprocess spawns)
+    must NOT self-collide on retry. A DIFFERENT pid reusing the same subject
+    text must still be rejected -- this only exempts the build's own prior
+    reservation, it doesn't weaken the cross-product dedup guarantee."""
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    fake_registry = [
+        {"subject": s, "normalized": server._normalize_subject(s),
+         "product_id": "COLOR_RESUME_PID", "theme": "dinosaurs", "created_at": "2026-08-10T00:00:00+00:00"}
+        for s in my_subjects[:10]  # first 10 already generated before the restart killed the build
+    ]
+    fake_proc = MagicMock()
+    fake_proc.pid = 900011
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_coloring_theme_registry", return_value=fake_registry), \
+             patch.object(server, "_record_used_coloring_subjects"), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_RESUME_PID", "category": "coloring_pages",
+                "description": "dinosaurs", "subjects": my_subjects,
+            })
+    server._LONG_RUNNING_PROCS.pop(900011, None)
+    check(out.get("started") is True, f"a same-pid resume must be allowed to restart, got {out}")
+
+
+def test_coloring_subjects_override_different_pid_still_blocked_by_registry():
+    """The exemption above is scoped to the SAME pid only -- a genuinely
+    different product reusing a subject another product already reserved
+    must still be rejected, unchanged from the pre-fix behavior."""
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    fake_registry = [{"subject": my_subjects[0], "normalized": server._normalize_subject(my_subjects[0]),
+                       "product_id": "COLOR_OTHER_PID", "theme": "dinosaurs", "created_at": "2026-01-01T00:00:00+00:00"}]
+    with patch.object(server, "_coloring_theme_registry", return_value=fake_registry), \
+         patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_NEW_PID", "category": "coloring_pages",
+            "description": "dinosaurs", "subjects": my_subjects,
+        })
+    check("error" in out and not out.get("started"), f"a different-pid collision must still be rejected, got {out}")
+    check(not mock_popen.called, "a cross-pid collision must be caught before any subprocess spawns")
+
+
 # ── Coloring Pages auto-generated code (2026-07-25) ─────────────────────────
 # Scott: "It should auto generate the code" -- the Create screen no longer
 # collects a typed pid for a new coloring-pages theme. These cover

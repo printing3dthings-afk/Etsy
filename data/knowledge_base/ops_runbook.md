@@ -23482,3 +23482,39 @@ test_listing_integrity.py — via `lic.TITLE_MAX + 1` instead of a magic 71,
 test_ab_testing.py). Verified: 116/116 full suite, twice (once with a stale
 run caught mid-fix). No frontend logic touched (only maxlength/label text),
 Playwright skipped per convention. Build 8a343b1-v328.
+
+
+## 2026-08-10 — Coloring-build retry blocked by its own subject registry after a deploy restart
+**Symptom:** kicked off a new 30-page coloring-pages build (COLOR1005). The
+deploy that shipped the title-length fix above landed mid-build and Railway
+restarted the container, killing the in-progress subprocess after 10/30
+images. Retrying via `POST /api/loops/retry` failed with "COLOR1005 isn't a
+configured planner" (that endpoint's dispatcher needs `category` to resolve,
+which an unregistered coloring pid doesn't have yet); resubmitting the
+original `_produce_build_product` payload directly then failed a second way
+— "30 supplied subject(s) already used" — because subjects are recorded in
+`coloring_theme_registry.json` eagerly, before the subprocess spawns
+(deliberate, see `_record_used_coloring_subjects()`'s docstring), with no
+exemption for the SAME pid's own prior reservation.
+
+**Root cause:** the dedup check in `_produce_build_product()`'s
+coloring_pages branch built its collision set from the ENTIRE registry with
+no `product_id` filter — a build interrupted after any partial progress
+could never be resumed by resubmitting the same payload, only ever blocked.
+
+**Fix:** excluded the same pid's own registry entries from the collision set
+(`tools/api_server/main.py`, `_produce_build_product`) — cross-pid
+collisions are still blocked exactly as before, only same-pid resume is now
+allowed. Also found (separately, non-blocking): Gemini's automated art-QA
+verification step is failing on every subject with `429 RESOURCE_EXHAUSTED —
+prepayment credits depleted` (a real, distinct billing gap from the already-
+known Anthropic and Grok/xAI issues) — the code already degrades gracefully
+("Using the last generated image anyway — review it before publishing"), so
+this didn't block the build, just removed the extra automated QA layer.
+Worth Scott topping up Google AI Studio billing or removing the check's
+false urgency if it's going to stay unfunded.
+
+New tests: `test_coloring_subjects_override_same_pid_resume_not_blocked_by_
+own_registry`, `test_coloring_subjects_override_different_pid_still_blocked_
+by_registry` (tests/test_produce_qc.py). Verified: 116/116 full suite.
+Build 55f68c3-v329.

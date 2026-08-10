@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8a343b1-v328"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "55f68c3-v329"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -14072,7 +14072,14 @@ def _produce_build_product(inp: dict) -> dict:
                     return {"error": f"subjects must contain exactly {_gcp_subj.NEW_THEME_SET_SIZE} "
                                       f"non-empty entries, got {len(subjects)}"}
                 registry = _coloring_theme_registry()
-                used_normalized = {e["normalized"] for e in registry}
+                # 2026-08-10: exclude this SAME pid's own prior reservations from the
+                # collision set. Subjects are recorded eagerly, before the subprocess
+                # spawns (see _record_used_coloring_subjects()'s docstring) -- without
+                # this exemption, a build interrupted partway through (container
+                # restart, crash) can never be retried: its own already-reserved
+                # subjects would permanently self-collide on every resubmission of the
+                # same payload. Cross-pid collisions are still blocked as before.
+                used_normalized = {e["normalized"] for e in registry if e.get("product_id") != pid}
                 seen_this_batch: set[str] = set()
                 dupes = []
                 for s in subjects:
