@@ -23370,3 +23370,40 @@ honesty.py, reproduces identically against the parent commit with none of
 this session's changes applied -- confirmed pre-existing and unrelated, not
 investigated further here since it wasn't part of this task). No frontend
 touched, Playwright skipped. Build 198e66f-v325.
+
+## 2026-08-10 — INCIDENT: pre-existing test bug silently blocked every deploy on this branch
+Pushed the set-listing-content commit above and it never went live on
+production, even after 10+ minutes. Checked Railway directly (GraphQL
+`deployments` query) and found the real deployment status: **SKIPPED**,
+`skippedReason: "CI check suite failed"`. GitHub's "CI Smoke" workflow for
+that commit failed at its "Full test suite (tests/run_all.py)" step -- the
+exact `test_calendar_tasks_heartbeat_honesty.py` failure flagged (but not
+investigated) in the previous entry. This means: **every push to this
+branch has been silently failing to deploy since this test started
+failing**, not just this one -- Railway auto-deploys straight from
+`claude/etsy-automation-agents-WFAPU` (logged 2026-08-09) but gates on the
+GitHub check suite passing first. The last 3 commits before this one
+(416bb89, e86eec1, 198e66f) all happened to pass CI, which is why this
+wasn't caught sooner.
+
+Root cause, found by comparing the endpoint code against the test: `POST
+/api/calendar-tasks/run` and `POST /api/brief/run` persist `server.
+_shop_today()` (shop-local timezone, e.g. America/New_York -- a deliberate
+2026-08-04/08-06 fix, see `run_calendar_tasks_now()`'s own docstring), but
+`test_calendar_tasks_heartbeat_honesty.py` (written 2026-07-19, predates
+that fix) still asserted against bare `date.today()` (server/UTC). UTC
+rolls to the next calendar day ~4-5 hours before America/New_York does --
+confirmed directly (`date -u` vs `TZ=America/New_York date` showed Aug 10
+UTC / Aug 9 23:06 EDT at the time of this incident) -- so the test
+intermittently fails for a multi-hour window every single night, and this
+session's work happened to land in that window. **Not a bug in the
+production code** -- the shop-timezone behavior is correct and intentional.
+Fixed the test's 2 stale assertions to compare against `server._shop_
+today()` instead. Verified: 116/116 full suite (including the now-fixed
+test) + 1 clean Playwright run (CI runs it regardless of touched files, so
+ran it here too even though this diff is test-only). Build 7ac76da-v326.
+
+**Worth remembering:** a "no deploy showing up" symptom on this branch
+should always be checked against Railway's `deployments` query (`status` +
+`meta.skippedReason`) before assuming a slow build -- a silently-skipped
+deploy looks identical to a slow one from `/health`'s build string alone.

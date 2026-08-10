@@ -173,7 +173,15 @@ def test_manual_calendar_tasks_endpoint_persists_last_run_dates():
     check(body.get("ads_threshold") == "ok", f"got: {body}")
     check(str(body.get("star_seller", "")).startswith("ERROR:"), f"got: {body}")
 
-    today = date.today()
+    # (2026-08-10) Both manual-trigger endpoints persist server._shop_today()
+    # (shop-local timezone, e.g. America/New_York), not bare date.today()
+    # (server/UTC) -- a deliberate 2026-08-04/08-06 fix (see run_calendar_
+    # tasks_now()'s own docstring) that this test predates. Comparing against
+    # date.today() intermittently failed for a multi-hour UTC window every
+    # night (confirmed: UTC rolls to the next calendar day ~4-5 hours before
+    # America/New_York does), which is exactly what broke CI here. Compare
+    # against the same _shop_today() the endpoint actually persists.
+    today = server._shop_today()
     check(server._get_calendar_task_last_run("ads_check") == today,
           "a successfully-triggered task must persist today's date so the loop doesn't duplicate-fire it later")
     check(server._get_calendar_task_last_run("star_seller_check") != today,
@@ -185,7 +193,7 @@ def test_manual_brief_endpoint_persists_last_sent_date():
     with patch("daily_brief.run_daily_brief", return_value="sent"):
         resp = _logged_in_client().post("/api/brief/run", headers={"X-App-Token": server.APP_TOKEN})
     check(resp.status_code == 200, f"expected 200, got {resp.status_code}: {resp.text[:300]}")
-    check(server._get_calendar_task_last_run("daily_brief") == date.today(),
+    check(server._get_calendar_task_last_run("daily_brief") == server._shop_today(),
           "triggering the brief manually must persist today's date so the loop's own 6am check "
           "doesn't send a duplicate later the same day")
 
