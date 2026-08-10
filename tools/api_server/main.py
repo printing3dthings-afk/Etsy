@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "7ac76da-v326"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "3419a5c-v327"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -15197,6 +15197,47 @@ async def set_product_listing_content(
         _cache.pop("products", None)
     review = await asyncio.to_thread(_gather_product_review, product_id)
     return review
+
+
+# Allowlist for run_agent_tool_direct() below -- staging-only tools whose
+# own existing validation/caps are trusted as-is (never extended here).
+# stage_action: single listing, one field at a time (title/tags/description/
+# price/state/sku). stage_batch_price_update / stage_batch_listing_state:
+# multi-listing, hard-capped at 5 per call inside _execute_agent_tool()
+# itself -- this endpoint does not, and must never, raise that cap.
+_DIRECT_AGENT_TOOLS = frozenset({"stage_action", "stage_batch_price_update", "stage_batch_listing_state"})
+
+
+@app.post("/api/agent-tools/{tool_name}")
+async def run_agent_tool_direct(
+    tool_name: str, body: dict | None = None, _token: str = Depends(_rate_limited_auth),
+):
+    """Direct HTTP path into _execute_agent_tool() for the small allowlisted
+    subset of chat-agent tools that are pure staging operations (never an
+    Etsy write themselves -- everything they do still lands as a pending
+    Action Center entry). Added 2026-08-10: with production's Anthropic
+    credit balance exhausted (logged 2026-08-09/10), the chat loop that
+    normally decides to call these tools is dead, but the tools themselves
+    are plain functions with zero LLM dependency -- this unblocks Scott's
+    own explicit, already-confirmed instructions (e.g. "reprice these 91
+    listings the way I just told you to") without touching the chat layer
+    at all.
+
+    Deliberately NOT a general-purpose "call any agent tool" endpoint --
+    _execute_agent_tool() dispatches to dozens of branches, some of which
+    assume they're only ever reached after an LLM has already reasoned
+    about intent (e.g. content-generation tools). Every entry in
+    _DIRECT_AGENT_TOOLS below is staging-only, keeps its own existing
+    validation/caps completely intact (stage_batch_price_update still
+    hard-caps at 5 listings per call -- this endpoint does not touch that),
+    and never mutates a live Etsy listing on its own."""
+    if tool_name not in _DIRECT_AGENT_TOOLS:
+        raise HTTPException(status_code=404, detail=f"'{tool_name}' isn't available via this endpoint "
+                                                      f"(have: {', '.join(sorted(_DIRECT_AGENT_TOOLS))})")
+    result = await asyncio.to_thread(_execute_agent_tool, tool_name, body or {})
+    with _cache_lock:
+        _cache.pop("actions", None)
+    return result
 
 
 @app.post("/api/studio/post-instagram")

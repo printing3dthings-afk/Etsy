@@ -23,6 +23,7 @@ fetch-failure tests below.
 
 Run: python tests/test_price_renewal_actions.py
 """
+import asyncio
 import os
 import sys
 import tempfile
@@ -209,6 +210,63 @@ def test_batch_listing_state_fetch_failures_are_partial_not_fatal():
     check("error" not in out, f"a well-formed request within caps must not itself error, got: {out}")
     check(out.get("count") == 0 and len(out.get("errors", [])) == 2,
           f"both listings should fail as individual fetch errors, got: {out}")
+
+
+# ── POST /api/agent-tools/{tool_name} (2026-08-10) ───────────────────────────
+# Added when production's Anthropic credit balance was exhausted (logged
+# 2026-08-09/10): the chat loop that normally decides to call
+# stage_batch_price_update etc. was dead, but the tools themselves have zero
+# LLM dependency. This direct HTTP path unblocks Scott's own explicit,
+# already-confirmed bulk instructions without touching the chat layer, while
+# every existing cap/validation inside _execute_agent_tool() stays exactly
+# as-is -- these tests confirm the wrapper adds nothing and removes nothing.
+
+def test_agent_tool_endpoint_rejects_unlisted_tool_name():
+    try:
+        asyncio.run(server.run_agent_tool_direct("delete_everything", body={}, _token="test"))
+        check(False, "a tool name outside the allowlist must be rejected")
+    except server.HTTPException as exc:
+        check(exc.status_code == 404, f"expected 404, got {exc.status_code}")
+
+
+def test_agent_tool_endpoint_dispatches_stage_batch_price_update():
+    out = asyncio.run(server.run_agent_tool_direct(
+        "stage_batch_price_update", body={"listing_ids": [111, 222], "new_price": 5.99}, _token="test"))
+    # No real Etsy creds in this sandbox -- both listings fail as individual
+    # fetch errors, same partial-failure shape test_batch_listing_state_
+    # fetch_failures_are_partial_not_fatal() already confirms for the
+    # underlying tool. The point here is just that dispatch reached the real
+    # tool at all (an "error" key here would mean it didn't).
+    check("error" not in out, f"a well-formed request must reach the real tool, got: {out}")
+    check(out.get("count") == 0 and len(out.get("errors", [])) == 2, f"got: {out}")
+
+
+def test_agent_tool_endpoint_still_enforces_the_5_listing_cap():
+    """The whole point of keeping this staging-only: the endpoint must NOT
+    raise or bypass the cap that already lives inside _execute_agent_tool()."""
+    out = asyncio.run(server.run_agent_tool_direct(
+        "stage_batch_price_update", body={"listing_ids": list(range(1, 8)), "new_price": 5.99}, _token="test"))
+    check("error" in out and "5-listing cap" in out["error"],
+          f"more than 5 listing_ids must still be refused through this endpoint, got: {out}")
+
+
+def test_agent_tool_endpoint_dispatches_single_stage_action():
+    out = asyncio.run(server.run_agent_tool_direct(
+        "stage_action", body={"action_type": "update_price", "listing_id": 333, "price": 5.99}, _token="test"))
+    check(isinstance(out, dict), f"got: {out}")
+    check("error" not in out or "fetch" in str(out.get("error", "")).lower(),
+          f"a well-formed single stage_action must reach the real tool (fetch failure OK, no creds here), got: {out}")
+
+
+def test_agent_tool_endpoint_uses_rate_limited_auth():
+    route = next((r for r in server.app.routes
+                  if getattr(r, "path", "") == "/api/agent-tools/{tool_name}"), None)
+    check(route is not None, "the new route must be registered")
+    if route is not None:
+        deps = [d.call for d in route.dependant.dependencies]
+        check(server._rate_limited_auth in deps,
+              f"the endpoint stages real Etsy mutations (even if it never applies them itself) and "
+              f"should use _rate_limited_auth, got deps calling {deps}")
 
 
 def run() -> None:

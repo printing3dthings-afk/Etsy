@@ -23407,3 +23407,36 @@ ran it here too even though this diff is test-only). Build 7ac76da-v326.
 should always be checked against Railway's `deployments` query (`status` +
 `meta.skippedReason`) before assuming a slow build -- a silently-skipped
 deploy looks identical to a slow one from `/health`'s build string alone.
+
+## 2026-08-10 — Direct HTTP path for staging-only agent tools (chat loop still Anthropic-blocked)
+Scott approved COLOR1004's draft listing, but the digital ZIP file it
+promises was silently missing photos, and separately asked to reprice ~91
+digital listings (wall art -> $5.99, coloring pages -> $2.99, planners ->
+$9.99, paper packs -> $1.49) after seeing real live-listing data (found: the
+shop's single highest-traffic listing, 1,246 views, is already $1.99 with
+zero sales -- flagged honestly that price may not be the real bottleneck
+before running anything, per top-priority "never lie" extending to business
+analysis too, not just listing copy).
+
+`stage_batch_price_update` (the tool built for exactly this) is a chat-agent
+tool -- normally only reachable when the chat loop's own LLM call decides to
+invoke it, which is dead (Anthropic credit balance still exhausted, logged
+2026-08-09). But `_execute_agent_tool()` is a plain function with zero LLM
+dependency in itself. Added `POST /api/agent-tools/{tool_name}`, a thin
+direct-dispatch endpoint restricted to a 3-item allowlist
+(`_DIRECT_AGENT_TOOLS`: `stage_action`, `stage_batch_price_update`,
+`stage_batch_listing_state`) -- all three are staging-only (never mutate a
+live Etsy listing themselves, everything still lands as a pending Action
+Center entry), and every existing cap inside `_execute_agent_tool()` stays
+completely intact: `stage_batch_price_update` still hard-refuses more than 5
+`listing_ids` per call, exactly as it does when the chat loop calls it. This
+endpoint does not, and must never, raise that cap -- Scott's explicit,
+already-confirmed authorization covers the SCOPE of the price change (which
+91 listings, which prices), not a license to remove the per-call safety
+rail; the rail stays for any future caller, chat-driven or not.
+
+New tests: 5 in test_price_renewal_actions.py (rejects an unlisted tool
+name, dispatches stage_batch_price_update for real, confirms the 5-listing
+cap still fires through this endpoint, dispatches the single-listing
+stage_action tool, uses rate-limited auth). Verified: 116/116 full suite. No
+frontend touched, Playwright skipped. Build 3419a5c-v327.
