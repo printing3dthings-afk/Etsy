@@ -19,7 +19,7 @@ Checks:
   1. _load_ab_tests()/_save_ab_tests() round-trip and tolerate a missing file.
   2. _start_ab_test(): happy path pulls the REAL current title from Etsy as
      Variant A (never trusts a caller-supplied value); rejects an empty or
-     >70-char Variant B title; rejects rotation_days below the 21-day floor;
+     >140-char Variant B title; rejects rotation_days below the 21-day floor;
      rejects a non-active listing; rejects a second concurrent test on the
      same listing.
   3. _ab_test_iteration(): advances a running_a test whose window has closed
@@ -141,11 +141,11 @@ def test_start_ab_test_rejects_empty_variant_b():
         path.unlink(missing_ok=True)
 
 
-def test_start_ab_test_rejects_title_over_70_chars():
+def test_start_ab_test_rejects_title_over_140_chars():
     orig, path = _swap_ab_path()
     try:
-        result = asyncio.run(server._start_ab_test(1, "x" * 71))
-        check("error" in result and "70" in result["error"], f"expected a 70-char rejection, got: {result}")
+        result = asyncio.run(server._start_ab_test(1, "x" * 141))
+        check("error" in result and "140" in result["error"], f"expected a 140-char rejection, got: {result}")
     finally:
         server._AB_TESTS_PATH = orig
         path.unlink(missing_ok=True)

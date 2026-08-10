@@ -510,11 +510,12 @@ def post_art(preview_only=False):
     print(f"\n[7/7] Posting to Etsy...")
     client = EtsyAPIClient()
 
-    # Build title — enforce ≤70 chars (2026 algorithm rule)
+    # Build title — enforce ≤140 chars (Etsy's hard platform max; see
+    # etsy_api.py's pre_publish_gate() for why this isn't 70 anymore)
     title_raw = category['title_template'].replace('{subject}', subject)
-    title = title_raw[:70].rstrip(',').rstrip()
+    title = title_raw[:140].rstrip(',').rstrip()
     if len(title) < len(title_raw):
-        print(f"  Title trimmed to 70 chars: {title!r}")
+        print(f"  Title trimmed to 140 chars: {title!r}")
 
     description = build_description(subject, category)
     tags = category['tags'][:13]

@@ -1845,7 +1845,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <div class="hub-listing-meta" style="margin-bottom:6px">Variant A is the listing's real current title — fetched fresh, never typed in. Rotation floors at 21 days per variant (Etsy's own ranking-recovery window).</div>
             <input id="ab-test-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID"
               style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:6px">
-            <input id="ab-test-variant-b" type="text" placeholder="Variant B title (≤70 chars)" aria-label="Variant B title" maxlength="70"
+            <input id="ab-test-variant-b" type="text" placeholder="Variant B title (≤140 chars)" aria-label="Variant B title" maxlength="140"
               style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:6px">
             <div style="display:flex;gap:8px">
               <button class="act-btn" onclick="submitAbTest()">Start Test</button>
@@ -9800,13 +9800,13 @@ const _BRANDKIT_THEMES = [
 ];
 const _BRANDKIT_LISTING_TYPES = [
   {key:'planners', label:'Digital Planners', icon:'📓',
-    title:'≤70 chars (hard limit — mobile ranking penalty above) · lead keyword in first 20–30 chars · include year (2026) or "Undated" + app name (GoodNotes) in first 40 chars · comma separators, not pipes',
+    title:'100–140 chars (Etsy platform max is 140; real top-favorited competitors cluster 100-140, not ≤70 — see 2026-08-10 competitive research) · lead keyword in first 20–40 chars · include year (2026) or "Undated" + app name (GoodNotes) in first 40 chars · comma separators, not pipes',
     tags:'13 tags · each ≤20 chars · no duplicate of title phrases · multi-word buyer-intent phrases',
     description:['Hook',"What's Included",'Compatible Apps','How To Use Stickers','How To Use The Planner','Sections Included','Technical Details','FAQ','Copyright'],
     photos:'10 slots · 2400×2400px square · subject centered in 70% of frame · 5% neutral padding · lifestyle hero photo first',
     category:'Craft Supplies & Tools > Patterns & How To > Digital Files (taxonomy_id 2078)'},
   {key:'wallart', label:'Wall Art', icon:'🖼️',
-    title:'≤70 chars (55–70 char target) · formula "[Primary phrase] Printable Wall Art, Instant Download, [Style/room]" · must include "printable" AND "instant download" · comma separators, not pipes',
+    title:'100–140 chars (Etsy platform max is 140; real top-favorited competitors cluster 100-140, not ≤70 — see 2026-08-10 competitive research) · formula "[Primary phrase] Printable Wall Art, Instant Download, [Style/room], [additional buyer-search phrases]" · must include "printable" AND "instant download" · comma separators, not pipes',
     tags:'13 tags · each ≤20 chars · zero duplicate of title phrases · must cover 6 intent categories: style, room, art medium, occasion, recipient, format',
     description:['First-sentence hook (primary keyword + states instant/digital download)',"What's Included",'Specs','FAQ'],
     photos:'10 slots · minimum 2 different room types shown · 2400×2400px · gallery wall grouping + size reference w/ furniture required',

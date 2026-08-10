@@ -752,13 +752,16 @@ Research-backed rules that must be applied to every listing:
 
 ---
 
-### Titles (max 70 chars — ALL listing types)
-- **Hard limit: 70 characters.** Etsy's 2026 algorithm applies a mobile ranking penalty above 70 chars. 70%+ of Etsy traffic is mobile.
-- Lead with the PRIMARY search keyword buyers type in first 20-30 characters
-- Use comma separators, not pipes
+### Titles (100–140 chars — ALL listing types) — corrected 2026-08-10
+- **Hard limit: 140 characters** (Etsy's actual platform max). **Target
+  100–140**, not a short title — see "Change 1: Title Length Cap" below for
+  the real competitive research this is based on (every top-favorited
+  competitor across 7 real niche searches ran 100–140 chars, not ≤70).
+- Lead with the PRIMARY search keyword buyers type in first 20-40 characters (mobile still truncates the preview here)
+- Fill the rest with additional real buyer-search phrases, comma-separated, not pipes
 - Include year (2026) or "Undated" for evergreen
 - Include app compatibility (GoodNotes) in first 40 chars
-- Example: `Digital Planner 2026 Undated, GoodNotes iPad, Instant Download` (62 chars)
+- Example: `Digital Planner 2026 Undated, GoodNotes iPad, Fillable Hyperlinked Planner, Daily Weekly Monthly, Kawaii Sticker Pack, Instant Download` (139 chars)
 
 ### Descriptions — Required Sections in Order
 1. **Hook** (1–2 sentences): Emotion-first + primary keyword in sentence 1 for Google indexing
@@ -907,7 +910,7 @@ When asked to list a planner (or any digital product) on Etsy:
 
 ### DP1026 — Ultimate Digital Life Planner
 
-**Title** (62 chars — 2026 70-char mobile rule):
+**Title** (62 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Digital Planner 2026 Undated, GoodNotes iPad, Instant Download`
 
 **Tags**:
@@ -1022,7 +1025,7 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ### DP1027 — Student & School Planner
 
-**Title** (61 chars — 2026 70-char mobile rule):
+**Title** (61 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Kawaii Student Planner 2026, GoodNotes iPad, Instant Download`
 
 **Tags**:
@@ -1136,7 +1139,7 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ### DP1028 — Budget & Finance Planner
 
-**Title** (64 chars — 2026 70-char mobile rule):
+**Title** (64 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Digital Budget Planner 2026 Undated, GoodNotes, Instant Download`
 
 **Tags**:
@@ -1252,7 +1255,7 @@ A: This license is for personal use only. If your partner wants a copy, they'll 
 
 ### DP1029 — Fitness & Wellness Planner
 
-**Title** (65 chars — 2026 70-char mobile rule):
+**Title** (65 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Digital Fitness Planner 2026 Undated, GoodNotes, Instant Download`
 
 **Tags**:
@@ -1642,12 +1645,19 @@ This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no
 ---
 
 ### SS-Series SVG Pack — Title
-- Max 70 chars (hard limit — mobile ranking penalty above)
+- Hard technical limit: 140 chars (Etsy's real platform max — see "Change 1:
+  Title Length Cap" above). The old "70 char hard limit" claim for this
+  category was never independently verified and is now known wrong for wall
+  art/planners/coloring (real competitors run 100–140 chars there) — SVG
+  packs haven't been checked yet, so **keep the 60–70 target below until a
+  dedicated competitive pull confirms or corrects it for this niche
+  specifically.** Don't assume the wall-art/planner finding generalizes here
+  without evidence.
 - Formula: `[Design Theme] SVG, 3D Print [Type], Instant Download`
 - Must contain "SVG" in the first 30 chars
 - Must end with "Instant Download"
 - Comma separators only — no pipes
-- Target: 60–70 chars
+- Target: 60–70 chars (unverified for this niche — see note above)
 
 ### SS-Series SVG Pack — Tags (13 exactly, each ≤20 chars)
 - Zero tags may duplicate any phrase already in the title
@@ -1784,22 +1794,26 @@ Any file below this is rejected from the production pipeline — do NOT create a
 
 ---
 
-### Gate 3: Title — 2026 Algorithm Rules (HARD REQUIREMENT)
-**Maximum 70 characters.** Titles over 70 chars receive a mobile ranking penalty (70%+ of Etsy traffic is mobile).
+### Gate 3: Title — 2026 Algorithm Rules (HARD REQUIREMENT) — corrected 2026-08-10
+**Maximum 140 characters** (Etsy's real platform max). **Target 100–140** —
+real competitive research (7 live Etsy searches, 2026-08-10, see "Change 1:
+Title Length Cap") showed every top-favorited wall-art competitor runs
+100–140 chars, not ≤70. The old "70 char = mobile penalty above" claim had
+no cited source and is contradicted by this data.
 
 **Formula:**
 ```
-[Primary search phrase] Printable Wall Art, Instant Download, [Style/room]
+[Primary search phrase] Printable Wall Art, Instant Download, [Style/room], [additional buyer-search phrases]
 ```
 
 Rules:
-- First 20–30 characters = highest algorithm weight — lead with the exact phrase buyers type
+- First 20–40 characters = highest algorithm weight (mobile still truncates the preview here) — lead with the exact phrase buyers type
 - Must include: "printable" AND "instant download"
 - Use comma separators, not pipes
-- Target: 55–70 characters
+- Target: 100–140 characters
 - **Do NOT repeat title phrases in tags** (wastes ranking slots — see Gate 4)
 
-**Validation:** Run `len(title)` before publishing. Hard reject if > 70.
+**Validation:** Run `len(title)` before publishing. Hard reject if > 140.
 
 ---
 
@@ -1884,7 +1898,7 @@ Run through this in order for every new wall art product:
 - [ ] ZIP verified under 20MB
 
 **Listing Content**
-- [ ] Title: 55–70 characters, leads with buyer search phrase, includes "printable" + "instant download"
+- [ ] Title: 100–140 characters, leads with buyer search phrase in first 40 chars, includes "printable" + "instant download"
 - [ ] Title: does NOT use pipe separators (use commas)
 - [ ] Description: first sentence contains primary keyword + states instant download
 - [ ] Description: all required sections present (hook, what's included, specs, FAQ)
@@ -2400,8 +2414,8 @@ Before publishing any sticker pack:
 - [ ] Files named descriptively: `DP1030_8x10_300dpi.jpg` (not IMG_4456.jpg)
 
 ### Wall Art Listing Quality
-- [ ] Title is 55–70 characters (hard reject above 70 — mobile ranking penalty)
-- [ ] Title leads with buyer search phrase in first 20–30 characters
+- [ ] Title is 100–140 characters (hard reject above 140 — Etsy's platform max)
+- [ ] Title leads with buyer search phrase in first 20–40 characters
 - [ ] Title uses comma separators (not pipes)
 - [ ] Title includes "printable" AND "instant download"
 - [ ] All 13 tag slots used
@@ -2454,7 +2468,7 @@ Before publishing any sticker pack:
 - [ ] Hero photo (Photo 1) reviewed — does it stop the scroll?
 - [ ] Text callouts added in Canva for Photos 2, 6, 7 (not baked into AI image)
 - [ ] Tags: all 13 used, each ≤ 20 chars, no special characters
-- [ ] Title: primary keyword in first 40 chars, total ≤ 70 chars (2026 algorithm: >70 chars = mobile ranking penalty)
+- [ ] Title: primary keyword in first 40 chars, total 100–140 chars (Etsy platform max is 140 — see "Change 1: Title Length Cap")
 - [ ] Title mentions: year (2026), app (GoodNotes/Notability), "Instant Download"
 - [ ] Description: primary keyword in sentence 1 or 2
 - [ ] Description: all 9 required sections present in order
@@ -2591,12 +2605,41 @@ The dates below are the script's actual values; `_SEASONAL_TRIGGER_DATES` in
 
 ## Etsy 2026 Algorithm — Confirmed Changes
 
-### Change 1: Title Length Cap (CRITICAL — affects all listings)
-- **Titles > 70 characters face mobile ranking penalty**
-- Mobile = 70%+ of Etsy traffic in 2026
-- Listings that shortened to <70 chars saw +34% mobile CTR and avg +4.2 position ranking boost
-- **Formula:** Lead with product noun → include top 3 keywords → keep buyer-friendly language
-- Example: `Kawaii Digital Planner 2026 | GoodNotes iPad | Sticker Pack` (61 chars) ✓
+### Change 1: Title Length Cap — CORRECTED 2026-08-10 (real competitive research)
+**The flat 70-char cap below was reversed.** It's superseded by the section
+immediately following — kept here (struck through in spirit, not deleted) so
+the correction has an explicit before/after instead of silently vanishing.
+
+~~- **Titles > 70 characters face mobile ranking penalty**~~
+~~- Mobile = 70%+ of Etsy traffic in 2026~~
+~~- Listings that shortened to <70 chars saw +34% mobile CTR and avg +4.2 position ranking boost~~
+~~- Example: `Kawaii Digital Planner 2026 | GoodNotes iPad | Sticker Pack` (61 chars) ✓~~
+
+The "+34% CTR / +4.2 position boost from shortening to <70 chars" claim above
+had no cited source anywhere in this doc and turned out to be contradicted by
+real data: pulling live Etsy public-search results for our top-10-by-views
+digital listings' niches (7 searches: moon/ocean wall art, mountain lake wall
+art, dog wall art, checkerboard floral, paris skyline, digital planners,
+kawaii/adult coloring — full findings in chat, 2026-08-10) showed **every
+single top-favorited competitor listing runs 100–140 characters**, not ≤70.
+Several cluster at exactly 140 — Etsy's real, hard platform max for a title.
+
+**Corrected rule:**
+- **Target 100–140 characters** (Etsy's hard platform max is 140 — enforced
+  by `EtsyAPIClient.pre_publish_gate()`, `listing_qc.py`, and every staged
+  `update_title`/`create_listing` action; nothing above 140 can publish)
+- Mobile still truncates the preview at ~40 characters, so still **lead with
+  the single highest-intent keyword phrase in the first 20–40 chars** — that
+  part of the old rule was never contradicted by the evidence
+- Fill the remaining characters with additional real buyer-search phrases,
+  comma-separated (never pipes) — matches the real winning pattern, not
+  artificial keyword stuffing
+- **Formula:** `[Primary phrase, first 40 chars], [secondary phrase], [tertiary phrase], Instant Download`
+- Example (139 chars, real winning-pattern shape): `Golden Retriever Boy Nursery Decor, Boy Golden Retriever Painting, Dog Decor Boys Room, Fishing Wall Art, Lake Nursery, Printable Dog Art`
+- This is evidence from wall art / digital planner / coloring-page niches
+  specifically — if a future competitive pull in a different category (SVG
+  packs, sticker packs) shows a different pattern, update that category on
+  its own evidence rather than assuming this generalizes further than checked.
 
 ### Change 2: Shipping Cost Penalty
 - US listings with shipping above **$6** face reduced search visibility
@@ -2630,7 +2673,7 @@ Etsy's search operates in two distinct phases:
 **Ranking drop causes:**
 - Policy violations reduce shop quality score, which drags ranking of ALL remaining listings
 - Editing a listing can temporarily reduce its search visibility (expect 2–3 weeks to recover)
-- Titles >70 chars (mobile penalty), shipping >$6 (US domestic penalty)
+- Titles >140 chars (exceeds Etsy's platform max — can't publish), shipping >$6 (US domestic penalty)
 - Seasonal shifts in buyer demand (looks like a drop but is just category-level traffic change)
 
 **Recovery timeline after fixes:** Most sellers see views recovering within 2–3 weeks after optimizing titles/tags. Compliance violations take weeks to months because the algorithm needs to see consistent positive signals before trusting the shop again.

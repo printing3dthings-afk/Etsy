@@ -23,7 +23,7 @@ Usage:
     python tools/listing_integrity_check.py           # fast audit, all listings
     python tools/listing_integrity_check.py --full    # + photo hash check
     python tools/listing_integrity_check.py --id 4515674594   # single listing
-    python tools/listing_integrity_check.py --fix-titles      # auto-fix titles >70 chars
+    python tools/listing_integrity_check.py --fix-titles      # auto-fix titles >140 chars
     python tools/listing_integrity_check.py --save            # save report to review_batches/
 
 Exit codes:
@@ -110,7 +110,10 @@ def load_manifest_with_overrides() -> dict:
     merged.update(overrides)
     return merged
 
-TITLE_MAX = 70
+# 2026-08-10: raised from a flat 70-char cap to Etsy's real 140-char platform
+# max -- see etsy_api.py's pre_publish_gate() for the sourced competitive
+# research (real top-favorited listings run 100-140 chars, not <=70).
+TITLE_MAX = 140
 TAG_MAX_CHARS = 20
 TAGS_REQUIRED = 13
 DEFAULT_ART_THRESHOLD = 80   # Hamming distance; ≤ this means the art IS present in a photo

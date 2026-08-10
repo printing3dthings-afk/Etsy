@@ -744,12 +744,17 @@ class EtsyAPIClient:
         is_physical = listing_data.get("type") == "physical"
 
         # ── Title ──────────────────────────────────────────────────────────────
+        # 2026-08-10: the flat 70-char cap was replaced with Etsy's real 140-char
+        # platform max after live competitive research (real top-favorited listings
+        # pulled from Etsy's public search API across 7 niches) showed every single
+        # winning listing runs 100-140 chars, not <=70 -- the "70-char mobile
+        # penalty" claim this gate encoded had no cited source and was contradicted
+        # by real data. See CLAUDE.md "Change 1: Title Length Cap" for the evidence.
         if not title:
             failures.append("TITLE: missing")
-        elif len(title) > 70:
+        elif len(title) > 140:
             failures.append(
-                f"TITLE: {len(title)}/70 chars — Etsy 2026 algorithm penalizes titles >70 chars "
-                f"on mobile (70%+ of traffic). Shorten to ≤70."
+                f"TITLE: {len(title)}/140 chars — Etsy's hard platform max is 140. Shorten to ≤140."
             )
         if title and len(title) < 30:
             failures.append("TITLE: under 30 chars — too few keywords, Etsy won't rank this")

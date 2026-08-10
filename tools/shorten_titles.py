@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Shorten All Listing Titles to ≤70 Characters
+Shorten All Listing Titles to ≤140 Characters
 ==============================================
-Etsy's 2026 algorithm penalizes titles > 70 chars on mobile.
+Etsy's hard platform max for a listing title is 140 characters. (2026-08-10:
+this used to enforce a 70-char cap — real competitive research showed every
+top-favorited listing in our niches runs 100-140 chars, so the old 70-char
+target was dropped. See etsy_api.py's pre_publish_gate() for the evidence.)
 
 Usage:
   python tools/shorten_titles.py --dry-run
@@ -25,7 +28,7 @@ if _env_path.exists():
 
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
-MAX_TITLE_LEN = 70
+MAX_TITLE_LEN = 140
 
 
 def smart_shorten(title: str, max_len: int = MAX_TITLE_LEN) -> str:
@@ -88,7 +91,7 @@ def main():
 
     print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     print("  Title Length Optimizer")
-    print("  Etsy 2026: ≤70 chars for mobile ranking")
+    print("  Etsy platform max: ≤140 chars")
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
     if args.lid:
@@ -109,7 +112,7 @@ def main():
     print(f"  Already ≤{MAX_TITLE_LEN}: {ok_count}   Over: {len(too_long)}\n")
 
     if not too_long:
-        print("  ✓ All titles are within the 70-character limit.")
+        print(f"  ✓ All titles are within the {MAX_TITLE_LEN}-character limit.")
         return
 
     updated, failed = 0, 0

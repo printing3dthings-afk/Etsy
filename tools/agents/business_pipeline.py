@@ -92,8 +92,8 @@ class QualityGate:
 
     @staticmethod
     def check_title(title: str) -> tuple[bool, str]:
-        if len(title) > 70:
-            return False, f"Title too long: {len(title)} chars (max 70)"
+        if len(title) > 140:
+            return False, f"Title too long: {len(title)} chars (max 140 — Etsy's platform limit)"
         if "sublimation" not in title.lower() and "svg" not in title.lower() and "planner" not in title.lower():
             return False, "Title missing product category keyword"
         if "instant download" not in title.lower():

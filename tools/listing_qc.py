@@ -80,13 +80,16 @@ def _check_universal(title: str, tags: list[str], price: float) -> list[dict]:
     f: list[dict] = []
 
     tlen = len(title)
-    if tlen > 70:
+    if tlen > 140:
+        # 2026-08-10: raised from a flat 70-char cap to Etsy's real 140-char
+        # platform max -- see etsy_api.py's pre_publish_gate() for the sourced
+        # competitive research that contradicted the old unsourced 70-char claim.
         f.append({
-            "check": "Title ≤ 70 chars",
+            "check": "Title ≤ 140 chars",
             "severity": "error",
             "actual": f"{tlen} chars",
-            "expected": "≤ 70 chars",
-            "note": "2026 algorithm mobile ranking penalty above 70 chars — 70%+ of Etsy traffic is mobile",
+            "expected": "≤ 140 chars",
+            "note": "Etsy's hard platform max for a listing title is 140 characters",
         })
     elif tlen < 20:
         f.append({
@@ -297,7 +300,7 @@ def _check_wall_art(title: str, description: str, price: float, tags: list[str])
             "check": "Title ≥ 55 chars",
             "severity": "warning",
             "actual": f"{len(title)} chars",
-            "expected": "55–70 chars for wall art listings",
+            "expected": "55–140 chars for wall art listings (real top-favorited competitors cluster 100-140)",
         })
 
     if "printable" not in title_l:

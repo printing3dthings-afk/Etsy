@@ -3,7 +3,7 @@
 listing_performance_monitor.py
 
 Scans all active listings for quality issues that hurt ranking:
-  - Title > 70 chars (mobile ranking penalty)
+  - Title > 140 chars (Etsy's hard platform max)
   - Title missing "Instant Download" (digital products)
   - Fewer than 5 photos (algorithm penalty)
   - Fewer than 13 tags
@@ -64,8 +64,8 @@ def audit_listing(listing: dict) -> list[str]:
     tags = listing.get("tags") or []
     images = listing.get("images") or []
 
-    if len(title) > 70:
-        issues.append(f"Title {len(title)} chars (>70 mobile penalty)")
+    if len(title) > 140:
+        issues.append(f"Title {len(title)} chars (>140 Etsy platform max)")
     if _is_digital(title) and "instant download" not in title.lower():
         issues.append("Missing 'Instant Download' in title")
     if len(tags) < 13:

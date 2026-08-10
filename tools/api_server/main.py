@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "3419a5c-v327"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8a343b1-v328"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4972,7 +4972,7 @@ Rules for suggestions:
 - Prioritize by revenue impact and urgency
 - If a draft has been sitting unpublished, call it out specifically
 - If listings have 0 views after 7+ days, identify which ones and why
-- Tag gaps (<13 tags), title length violations (>70 chars), and zero-view listings are high priority
+- Tag gaps (<13 tags), title length violations (>140 chars), and zero-view listings are high priority
 \
 """.replace("OnBrandCraftz", business_config.BUSINESS_NAME).replace("Scott", business_config.OWNER_NAME)
 
@@ -4997,7 +4997,9 @@ Diagnose against Etsy's 2026 conversion standards:
   range directly (e.g. "comparable listings average $X, this is priced $Y above/
   below that") and let it override generic tier assumptions. If comparable data
   is not available, fall back to the static psychology-ending rule only.
-- TITLE: ≤70 chars, primary keyword in first 40 chars, comma separators not pipes.
+- TITLE: 100-140 chars (Etsy's platform max is 140; real top-favorited competitors cluster
+  100-140, not <=70 — a short title wastes searchable keyword slots), primary keyword in
+  first 40 chars, comma separators not pipes.
 - TAGS: all 13 used, multi-word buyer-intent phrases, no title duplication.
 - DESCRIPTION: first 1-2 sentences must hook + carry the primary keyword (mobile
   shows only this above the fold). Needs What's Included, compatibility, FAQ.
@@ -6567,12 +6569,11 @@ def _compute_actions() -> dict:
         created = l.get("created_timestamp", 0) or 0
         age_days = (now - created) / day if created else 0
 
-        if len(title) > 70:
+        if len(title) > 140:
             add("high", "title_too_long",
-                f"Title over 70 chars ({len(title)}): {title[:50]}",
-                f"Title is {len(title)} characters. Etsy applies a mobile ranking "
-                "penalty above 70, and 70%+ of traffic is mobile.",
-                "Trim to ≤70 chars, keeping the primary keyword in the first 40.",
+                f"Title over 140 chars ({len(title)}): {title[:50]}",
+                f"Title is {len(title)} characters — Etsy's hard platform max is 140.",
+                "Trim to ≤140 chars, keeping the primary keyword in the first 40.",
                 l)
 
         if len(tags) < 13:
@@ -7024,8 +7025,8 @@ async def _start_ab_test(listing_id: int, variant_b_title: str, rotation_days: i
     variant_b_title = (variant_b_title or "").strip()
     if not variant_b_title:
         return {"error": "variant_b_title is empty"}
-    if len(variant_b_title) > 70:
-        return {"error": f"variant_b_title is {len(variant_b_title)} chars — max 70 (mobile ranking rule)"}
+    if len(variant_b_title) > 140:
+        return {"error": f"variant_b_title is {len(variant_b_title)} chars — max 140 (Etsy's platform limit)"}
     days = rotation_days or db._RANKING_RECOVERY_COOLDOWN_DAYS
     if days < db._RANKING_RECOVERY_COOLDOWN_DAYS:
         return {
@@ -11953,8 +11954,8 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             title = (p.get("title") or "").strip()
             if not title:
                 return False, "title is empty"
-            if len(title) > 70:
-                return False, f"title is {len(title)} chars — max 70 (mobile ranking rule)"
+            if len(title) > 140:
+                return False, f"title is {len(title)} chars — max 140 (Etsy's platform limit)"
         if t == "update_tags":
             tags = p.get("tags")
             if not isinstance(tags, list) or not tags:
@@ -14960,9 +14961,11 @@ def _build_listing_content_prompt(product_id: str, entry: dict, facts: dict,
             "9 description sections in order: Hook, WHAT'S INCLUDED, COMPATIBLE APPS, "
             "HOW TO USE STICKERS, HOW TO USE THE PLANNER, SECTIONS INCLUDED, TECHNICAL DETAILS, "
             "FAQ (min 5 Qs), COPYRIGHT. Use ━━━ emoji section dividers. First sentence must hook "
-            "the buyer AND contain the primary keyword. Title: 30-70 chars, must contain "
+            "the buyer AND contain the primary keyword. Title: 100-140 chars (Etsy's real platform "
+            "max is 140; real top-favorited competitors cluster 100-140, not <=70), must contain "
             "'Instant Download', comma-separated (never pipes), lead with the primary search "
-            "keyword in the first 20-30 chars, mention GoodNotes/iPad compatibility. "
+            "keyword in the first 20-40 chars, then add further buyer-search phrases, mention "
+            "GoodNotes/iPad compatibility. "
             "Tags: exactly 13, each ≤20 chars, no special characters, none may duplicate a "
             "title phrase, cover style/app/audience/format/use-case."
         )
@@ -14972,7 +14975,8 @@ def _build_listing_content_prompt(product_id: str, entry: dict, facts: dict,
             "MUST state (verbatim or close variant): \"Instant download printable wall art — "
             "digital download delivered immediately after purchase, ready to print at home or at "
             "any print shop.\" Title formula: [Primary search phrase] Printable Wall Art, Instant "
-            "Download, [Style/room] -- 55-70 chars, comma-separated. Tags: exactly 13, each ≤20 "
+            "Download, [Style/room], [additional buyer-search phrases] -- 100-140 chars, lead with "
+            "the primary keyword in the first 40 chars, comma-separated. Tags: exactly 13, each ≤20 "
             "chars, covering style/room-type/medium/occasion/recipient/format, none duplicating "
             "a title phrase."
         )
@@ -14986,7 +14990,8 @@ def _build_listing_content_prompt(product_id: str, entry: dict, facts: dict,
             "(page count, format, theme), HOW TO USE (print at home or any print shop; screen "
             "coloring apps), THEME & SUBJECTS (what's depicted), TECHNICAL DETAILS (file "
             "format/size/page count), FAQ (min 5 Qs), COPYRIGHT (personal use only). Title: "
-            "must include 'printable' and 'instant download', 55-70 chars, comma-separated. "
+            "must include 'printable' and 'instant download', 100-140 chars, lead with the primary "
+            "keyword in the first 40 chars, comma-separated. "
             "Tags: exactly 13, each ≤20 chars, covering theme/audience/occasion/format, none "
             "duplicating a title phrase."
         )

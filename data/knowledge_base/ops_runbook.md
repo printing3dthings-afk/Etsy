@@ -23440,3 +23440,45 @@ name, dispatches stage_batch_price_update for real, confirms the 5-listing
 cap still fires through this endpoint, dispatches the single-listing
 stage_action tool, uses rate-limited auth). Verified: 116/116 full suite. No
 frontend touched, Playwright skipped. Build 3419a5c-v327.
+
+
+## 2026-08-10 — Corrected the 70-char title cap to Etsy's real 140-char max
+Requested by Scott after a "top-10 listings vs. real Etsy competitors"
+competitive research pass (7 live Etsy public-search pulls across our
+top-viewed niches: moon/ocean wall art, mountain lake wall art, dog wall
+art, checkerboard floral, paris skyline, digital planners, kawaii/adult
+coloring). Finding: every single top-favorited competitor listing in every
+niche checked ran 100-140 characters, not the <=70 this codebase enforced
+everywhere. The "+34% CTR / +4.2 position boost from shortening to <70
+chars" claim in CLAUDE.md had no cited source and was directly contradicted
+by this real data — several real winners sit at exactly 140 chars, Etsy's
+actual hard platform max.
+
+Raised the enforced ceiling from 70 to 140 chars everywhere it was a real
+gate, not just documentation: `EtsyAPIClient.pre_publish_gate()` (etsy_api.py),
+`listing_qc.py`'s `_check_universal()`, `_validate_staged_action()`'s
+`update_title` branch (main.py), `_start_ab_test()`'s variant-B validation,
+`listing_integrity_check.py`'s `TITLE_MAX` constant (drives `--fix-titles`),
+`listing_performance_monitor.py`'s audit, `business_pipeline.py`'s
+`check_title()`, `post_scheduled_art.py`'s truncation, `shorten_titles.py`'s
+whole purpose (renamed its own docstring/output accordingly), and the HUD's
+A/B-test input `maxlength`. Also updated the LLM content-generation system
+prompts (planner/wall-art/coloring templates + the Conversion Doctor system
+prompt) so future AI-generated titles use 100-140 chars once Anthropic
+billing is restored — they were still telling the model to write <=70.
+
+CLAUDE.md: rewrote "Change 1: Title Length Cap" with the sourced evidence
+and corrected rule (100-140 target, still front-load the primary keyword in
+the first 20-40 chars since mobile truncation of the *preview* is real and
+unaffected by this finding), struck through the old unsourced claim rather
+than deleting it, and propagated the fix to every checklist/gate section
+that restated the old 70-char number (SVG title guidance intentionally left
+alone — no competitive research was done for that niche, flagged as
+unverified rather than assumed to generalize).
+
+Tests: fixed 4 files that hardcoded the old 70-char boundary as their test
+fixture (test_quality_gates.py, test_staged_actions.py,
+test_listing_integrity.py — via `lic.TITLE_MAX + 1` instead of a magic 71,
+test_ab_testing.py). Verified: 116/116 full suite, twice (once with a stale
+run caught mid-fix). No frontend logic touched (only maxlength/label text),
+Playwright skipped per convention. Build 8a343b1-v328.

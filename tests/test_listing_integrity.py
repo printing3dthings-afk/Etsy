@@ -105,10 +105,10 @@ def test_audit_listing_passes_a_fully_compliant_listing():
 
 
 def test_audit_listing_fails_an_oversized_title():
-    bad = dict(_GOOD_LISTING, title="X" * 71)
+    bad = dict(_GOOD_LISTING, title="X" * (lic.TITLE_MAX + 1))
     api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
     r = lic.audit_listing(api, "9990002", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
-    check(r["status"] == "FAIL", f"expected FAIL for a 71-char title, got {r['status']}")
+    check(r["status"] == "FAIL", f"expected FAIL for an oversized title, got {r['status']}")
     check(any(i["check"] == "title_length" for i in r["issues"]),
           f"expected a title_length issue, got {r['issues']}")
 
@@ -289,10 +289,10 @@ def test_audit_listing_handles_fetch_failure_as_fail_not_crash():
 
 
 def test_audit_listing_content_fail_does_not_set_fetch_error():
-    bad = dict(_GOOD_LISTING, title="X" * 71)
+    bad = dict(_GOOD_LISTING, title="X" * (lic.TITLE_MAX + 1))
     api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
     r = lic.audit_listing(api, "9990008", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
-    check(r["status"] == "FAIL", f"expected FAIL for a 71-char title, got {r['status']}")
+    check(r["status"] == "FAIL", f"expected FAIL for an oversized title, got {r['status']}")
     check(r.get("fetch_error") is False,
           f"a real content FAIL (listing was fetched fine) must NOT set fetch_error, "
           f"got {r.get('fetch_error')!r}")
@@ -382,7 +382,7 @@ def test_write_manifest_updates_falls_back_when_reread_fails():
 
 def test_render_report_flags_fetch_errors_separately_from_real_fails():
     results = [
-        lic.audit_listing(_FakeEtsyClient(dict(_GOOD_LISTING, title="X" * 71), _GOOD_FILES, _GOOD_IMAGES),
+        lic.audit_listing(_FakeEtsyClient(dict(_GOOD_LISTING, title="X" * (lic.TITLE_MAX + 1)), _GOOD_FILES, _GOOD_IMAGES),
                           "1", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False),
     ]
 
@@ -436,7 +436,7 @@ def test_render_report_runs_without_crashing_on_mixed_results():
     results = [
         lic.audit_listing(_FakeEtsyClient(_GOOD_LISTING, _GOOD_FILES, _GOOD_IMAGES),
                           "1", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False),
-        lic.audit_listing(_FakeEtsyClient(dict(_GOOD_LISTING, title="X" * 71), _GOOD_FILES, _GOOD_IMAGES),
+        lic.audit_listing(_FakeEtsyClient(dict(_GOOD_LISTING, title="X" * (lic.TITLE_MAX + 1)), _GOOD_FILES, _GOOD_IMAGES),
                           "2", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False),
     ]
     report = lic.render_report(results, elapsed=1.23)

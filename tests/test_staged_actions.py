@@ -77,15 +77,15 @@ def test_update_title_empty_rejected():
     check(ok is False, "an empty/whitespace-only title must be rejected")
 
 
-def test_update_title_over_70_chars_rejected():
-    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 71})
-    check(ok is False, "a 71-char title must be rejected (mobile ranking rule)")
-    check("70" in msg, f"rejection message should mention the 70-char limit, got: {msg!r}")
+def test_update_title_over_140_chars_rejected():
+    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 141})
+    check(ok is False, "a 141-char title must be rejected (exceeds Etsy's platform max)")
+    check("140" in msg, f"rejection message should mention the 140-char limit, got: {msg!r}")
 
 
-def test_update_title_70_chars_exactly_passes():
-    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 70})
-    check(ok is True, f"a title at exactly 70 chars should pass, got: {msg!r}")
+def test_update_title_140_chars_exactly_passes():
+    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 140})
+    check(ok is True, f"a title at exactly 140 chars should pass, got: {msg!r}")
 
 
 def test_update_title_valid_passes():
