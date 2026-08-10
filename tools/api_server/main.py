@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e86eec1-v324"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "198e66f-v325"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -15143,6 +15143,58 @@ async def generate_product_listing_content(
     result = await _generate_product_listing_content_core(product_id, engine_override=engine_override)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
+    review = await asyncio.to_thread(_gather_product_review, product_id)
+    return review
+
+
+@app.post("/api/products/{product_id}/set-listing-content")
+async def set_product_listing_content(
+    product_id: str, body: dict | None = None, _token: str = Depends(_rate_limited_auth),
+):
+    """Manually set title/description/tags/price for a product's listing
+    content, bypassing _generate_product_listing_content_core()'s AI call
+    entirely. Added 2026-08-09: BOTH text-generation paths were unusable in
+    production the same day -- Anthropic's credit balance is exhausted
+    (confirmed via real server logs), and the TEXT_ENGINE="grok" override
+    silently degrades back to Anthropic because XAI_KEY is empty server-side
+    (the real xAI key on Railway is stored under the variable name "Grok
+    api", not XAI_API_KEY -- a separate already-logged bug). Scott: "I want
+    you to build it. Don't use Frank. You complete it then put it in Frank."
+
+    Hand-supplied content gets ZERO exemption from the checks the AI path
+    runs -- same _extract_grounding_facts() real-file-count lookup, same
+    etsy_api.check_description_count_claims() + _check_generated_content_
+    grounding() numeric-claim checks, same EtsyAPIClient.pre_publish_gate().
+    A caller who claims "50 coloring pages" for a 30-page ZIP fails exactly
+    like the AI path would. Returns the fresh review payload, same shape as
+    generate-listing-content, so the review modal renders identically
+    regardless of which path populated the content."""
+    entry = _find_catalog_product(product_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail=f"unknown product_id: {product_id}")
+    category = entry.get("category", "")
+    if category not in _CONTENT_PRICE_BY_CATEGORY:
+        raise HTTPException(status_code=400, detail=f"content generation isn't supported yet for category '{category}'")
+    b = body or {}
+    title = str(b.get("title", "")).strip()
+    description = str(b.get("description", "")).strip()
+    tags = [_clean_tag(t) for t in (b.get("tags") or []) if str(t).strip()]
+    price = b.get("price")
+    price = float(price) if price is not None else _CONTENT_PRICE_BY_CATEGORY[category]
+
+    facts, problems = await asyncio.to_thread(_extract_grounding_facts, product_id, entry)
+    if problems:
+        raise HTTPException(status_code=400, detail="can't set content — " + "; ".join(problems))
+    content = {"product_id": product_id, "title": title, "description": description,
+               "tags": tags, "price": price}
+    gate_problems = (etsy_api.check_description_count_claims(description, facts)
+                      + _check_generated_content_grounding(description, facts)
+                      + EtsyAPIClient.pre_publish_gate(content))
+    if gate_problems:
+        raise HTTPException(status_code=400, detail="; ".join(gate_problems))
+    await asyncio.to_thread(_write_generated_listing_content, product_id, content)
+    with _cache_lock:
+        _cache.pop("products", None)
     review = await asyncio.to_thread(_gather_product_review, product_id)
     return review
 

@@ -662,6 +662,157 @@ def test_generate_content_endpoint_uses_rate_limited_auth():
               f"the endpoint must use _rate_limited_auth (costs LLM $ + writes state), got deps calling {deps}")
 
 
+# ── POST /api/products/{id}/set-listing-content (2026-08-09) ────────────
+# Added when BOTH text-generation paths were unusable in production the same
+# day (Anthropic credit balance exhausted; TEXT_ENGINE="grok" silently
+# degrades back to Anthropic because the real xAI key on Railway is under
+# the wrong variable name). Lets a caller (Claude, hand-writing content) set
+# title/description/tags/price directly -- but it must run through the
+# EXACT SAME grounding + pre-publish gates the AI path runs, never an
+# exemption.
+
+def _coloring_fixture(tmpdir, n_pages=30):
+    """Real coloring_pages catalog entry + a real n_pages-member ZIP fixture,
+    same shape test_extract_grounding_facts_sticker_and_coloring_counts()
+    already uses."""
+    vol = Path(tmpdir)
+    (vol / "data" / "test_fixture_setcontent").mkdir(parents=True)
+    members = {f"page_{i:02d}.png": b"x" for i in range(1, n_pages + 1)}
+    (vol / "data" / "test_fixture_setcontent" / "coloring_settest_set_01.zip").write_bytes(_make_zip_bytes(members))
+    entry = {"category": "coloring_pages", "name": "Test Set",
+              "files": ["data/test_fixture_setcontent/coloring_settest_set_01.zip"]}
+    return entry
+
+
+_VALID_CONTENT = {
+    "title": "Dinosaur Coloring Pages, Kids Printable, Instant Download",
+    "description": "A" * 320 + " This set has exactly 30 individual coloring pages, ready to print at home.",
+    "tags": [f"kids tag {i}" for i in range(13)],
+    "price": 7.99,
+}
+
+
+def test_set_content_writes_valid_content_and_returns_review():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        entry = _coloring_fixture(tmpdir, n_pages=30)
+        had_volume = "volume" in server._FILE_ROOTS
+        old_volume = server._FILE_ROOTS.get("volume")
+        server._FILE_ROOTS["volume"] = Path(tmpdir)
+        sidecar_path = Path(tmpdir) / "generated_listing_content.json"
+        old_sidecar = server._GENERATED_LISTING_CONTENT_PATH
+        server._GENERATED_LISTING_CONTENT_PATH = sidecar_path
+        try:
+            with patch.object(server, "_find_catalog_product", return_value=entry), \
+                 patch.object(server, "_build_products_status", return_value=[{"status": "draft", "listing_id": ""}]), \
+                 patch.object(server, "_qc_check_product", return_value={"verdict": "pass"}):
+                review = asyncio.run(server.set_product_listing_content(
+                    "COLOR_SETCONTENT_TEST", body=dict(_VALID_CONTENT), _token="test"))
+            check(review["has_content"] is True, f"got {review}")
+            check(review["content"]["title"] == _VALID_CONTENT["title"], f"got {review['content']}")
+            check(review["content"]["price"] == 7.99, f"got {review['content']}")
+            check(len(review["content"]["tags"]) == 13, f"got {review['content']['tags']}")
+        finally:
+            if had_volume:
+                server._FILE_ROOTS["volume"] = old_volume
+            else:
+                server._FILE_ROOTS.pop("volume", None)
+            server._GENERATED_LISTING_CONTENT_PATH = old_sidecar
+
+
+def test_set_content_never_calls_any_ai_provider():
+    """The whole point of this endpoint: it must never touch Anthropic or
+    xAI, since it exists specifically for when both are unusable."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        entry = _coloring_fixture(tmpdir, n_pages=30)
+        server._FILE_ROOTS["volume"] = Path(tmpdir)
+        sidecar_path = Path(tmpdir) / "generated_listing_content.json"
+        server._GENERATED_LISTING_CONTENT_PATH = sidecar_path
+        try:
+            with patch.object(server, "_find_catalog_product", return_value=entry), \
+                 patch.object(server, "_build_products_status", return_value=[{"status": "draft", "listing_id": ""}]), \
+                 patch.object(server, "_qc_check_product", return_value={"verdict": "pass"}), \
+                 patch.object(server, "_anthropic_create") as mock_anthropic, \
+                 patch.object(server, "_grok_text") as mock_grok:
+                asyncio.run(server.set_product_listing_content(
+                    "COLOR_SETCONTENT_NOAI", body=dict(_VALID_CONTENT), _token="test"))
+            check(not mock_anthropic.called, "must never call Anthropic")
+            check(not mock_grok.called, "must never call Grok/xAI")
+        finally:
+            server._FILE_ROOTS.pop("volume", None)
+
+
+def test_set_content_rejects_miscounted_page_claim():
+    """CLAUDE.md's top rule: never lie to the customer. A hand-supplied
+    description claiming a page count that doesn't match the real ZIP must
+    be rejected exactly like the AI-generated path would be."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        entry = _coloring_fixture(tmpdir, n_pages=30)
+        server._FILE_ROOTS["volume"] = Path(tmpdir)
+        try:
+            bad_content = dict(_VALID_CONTENT)
+            bad_content["description"] = "A" * 320 + " This set has exactly 50 individual coloring pages."
+            with patch.object(server, "_find_catalog_product", return_value=entry):
+                try:
+                    asyncio.run(server.set_product_listing_content(
+                        "COLOR_SETCONTENT_BADCOUNT", body=bad_content, _token="test"))
+                    check(False, "a mismatched page-count claim must be rejected")
+                except server.HTTPException as exc:
+                    check(exc.status_code == 400, f"got {exc.status_code}")
+                    check("50" in exc.detail, f"got {exc.detail}")
+        finally:
+            server._FILE_ROOTS.pop("volume", None)
+
+
+def test_set_content_rejects_pre_publish_gate_failure():
+    """Fewer than 13 tags must fail the same pre_publish_gate() the AI path
+    already runs -- no separate, looser validation for hand-supplied content."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        entry = _coloring_fixture(tmpdir, n_pages=30)
+        server._FILE_ROOTS["volume"] = Path(tmpdir)
+        try:
+            bad_content = dict(_VALID_CONTENT)
+            bad_content["tags"] = ["only one tag"]
+            with patch.object(server, "_find_catalog_product", return_value=entry):
+                try:
+                    asyncio.run(server.set_product_listing_content(
+                        "COLOR_SETCONTENT_BADTAGS", body=bad_content, _token="test"))
+                    check(False, "too few tags must be rejected")
+                except server.HTTPException as exc:
+                    check(exc.status_code == 400, f"got {exc.status_code}")
+                    check("13" in exc.detail, f"got {exc.detail}")
+        finally:
+            server._FILE_ROOTS.pop("volume", None)
+
+
+def test_set_content_endpoint_rejects_unknown_product():
+    with patch.object(server, "_find_catalog_product", return_value=None):
+        try:
+            asyncio.run(server.set_product_listing_content("DOES_NOT_EXIST", body=dict(_VALID_CONTENT), _token="test"))
+            check(False, "should have raised HTTPException for an unknown product")
+        except server.HTTPException as exc:
+            check(exc.status_code == 404, f"expected 404, got {exc.status_code}")
+
+
+def test_set_content_endpoint_rejects_unsupported_category():
+    entry = {"category": "sublimation", "name": "X", "files": []}
+    with patch.object(server, "_find_catalog_product", return_value=entry):
+        try:
+            asyncio.run(server.set_product_listing_content("SUB9998", body=dict(_VALID_CONTENT), _token="test"))
+            check(False, "should have raised HTTPException for an unsupported category")
+        except server.HTTPException as exc:
+            check(exc.status_code == 400, f"expected 400, got {exc.status_code}")
+
+
+def test_set_content_endpoint_uses_rate_limited_auth():
+    route = next((r for r in server.app.routes
+                  if getattr(r, "path", "") == "/api/products/{product_id}/set-listing-content"), None)
+    check(route is not None, "the new route must be registered")
+    if route is not None:
+        deps = [d.call for d in route.dependant.dependencies]
+        check(server._rate_limited_auth in deps,
+              f"the endpoint must use _rate_limited_auth (writes durable state), got deps calling {deps}")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

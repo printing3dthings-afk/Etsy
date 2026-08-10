@@ -23324,13 +23324,49 @@ every push to this branch redeploys production within a couple minutes.
 Worth knowing for future sessions: pushing here is NOT the same as pushing
 to a feature branch nobody's watching.
 
+(Note: a stray "hourly health loop" dev-server diagnostic entry that briefly
+landed here in the prior commit was removed -- it was local test-server
+noise, not a real incident, and shouldn't have been committed.)
 
-## 2026-08-09 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
-**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+## 2026-08-09 — Coloring pages: subjects-source-of-truth endpoint + manual listing-content endpoint (Friendly Dinosaurs, COLOR1004)
+Scott: "I want you to build it. Don't use Frank. You complete it then put it
+in Frank." Built the real 30-page kids coloring-pages product end to end
+against LIVE production (not a local sandbox test) using the subjects-
+override shipped in the previous commit: 30 hand-written, distinct, single-
+subject dinosaur prompts (kept deliberately simple/uncluttered per Scott's
+"none of the pages are too cluttered for kids" ask), difficulty=kids,
+engine=openai. Kicked off via `POST /api/produce/build-product` on the real
+Railway app, polled `GET /api/produce/status` until done. Result: COLOR1004
+"Friendly Dinosaurs", QC verdict PASS (30/30 individual page files, zero
+FAIL/WARN), confirmed via `GET /api/products/COLOR1004/review`.
 
-**What was tried:**
-- read-only diagnostic -- no auto-remediation attempted
+Hit a second, related infra gap generating the listing content: `POST /api/
+products/{id}/generate-listing-content` with `{"engine":"grok"}` STILL hit
+the Anthropic billing error, even with the override. Root cause:
+`_effective_text_engine()` silently degrades "grok" back to "anthropic"
+whenever `XAI_KEY` is empty server-side -- and it IS empty in production,
+because (same bug logged 2026-08-08) the real xAI key on Railway is stored
+under the variable name "Grok api", not `XAI_API_KEY`. So BOTH text-
+generation paths were dead at once. Scott still hasn't renamed that Railway
+variable -- this is the second feature it's silently broken.
 
-**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+Added `POST /api/products/{product_id}/set-listing-content`: lets a caller
+supply title/description/tags/price directly, running through the EXACT
+SAME gates the AI path runs (`_extract_grounding_facts`, `etsy_api.check_
+description_count_claims`, `_check_generated_content_grounding`,
+`EtsyAPIClient.pre_publish_gate`) before writing to the same generated-
+content sidecar `_generate_product_listing_content_core()` writes to --
+zero exemption from the numeric-count/structural checks for hand-supplied
+content. Used it to submit real, accurate title/13 tags/description/$7.99
+price for COLOR1004, verified against the gates locally first (all passed
+clean) before calling it live. New tests: 7 in test_listing_content_
+generator.py (writes+returns review, never calls Anthropic/Grok, rejects a
+miscounted page claim, rejects a pre-publish-gate failure i.e. too few tags,
+rejects unknown product, rejects unsupported category, uses rate-limited
+auth).
 
-**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+Verified: 115/116 full suite (the 1 failure, test_calendar_tasks_heartbeat_
+honesty.py, reproduces identically against the parent commit with none of
+this session's changes applied -- confirmed pre-existing and unrelated, not
+investigated further here since it wasn't part of this task). No frontend
+touched, Playwright skipped. Build 198e66f-v325.
