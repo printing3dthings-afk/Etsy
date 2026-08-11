@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "87781ae-v331"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "99efd37-v332"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13729,6 +13729,40 @@ async def produce_coloring_pack(body: dict, _token: str = Depends(_rate_limited_
     return await asyncio.to_thread(_produce_coloring_pack, body or {})
 
 
+def _register_prepublish_coloring_listing_images(pid: str, zip_path: Path) -> list[str]:
+    """Sample real pages straight from a coloring-pages product's own
+    delivered ZIP (never an AI stand-in) and register them into the
+    catalog's `files` list BEFORE the listing is ever published -- so
+    stage_product_publish()'s photo_paths (built from review["photos"],
+    which reads catalog `files` entries containing "_listing_images/") picks
+    them up automatically, and _execute_create_listing_staged_action()
+    uploads them to Etsy in the SAME approval as the listing draft itself.
+    No separate post-publish photo-staging round needed (2026-08-11, Scott:
+    "make it so the photos are in there when the listing goes into drafts so
+    we don't have to do work more than once").
+
+    Distinct from _produce_coloring_pages_listing_photos() (which stages
+    individual listing_photo actions against an ALREADY-LIVE listing_id, for
+    refreshing photos on a listing that already exists) -- this one runs
+    pre-publish, writing files + a catalog registration instead of staged
+    actions. Returns the list of registered catalog paths (empty if the ZIP
+    had no page images to sample)."""
+    pages = _extract_coloring_page_images(zip_path, _MAX_COLORING_LISTING_PHOTOS)
+    if not pages:
+        return []
+    img_dir = _product_log_dir() / f"{pid}_listing_images"
+    img_dir.mkdir(parents=True, exist_ok=True)
+    registered: list[str] = []
+    for rank, (_name, data) in enumerate(pages, start=1):
+        dest_name = f"page_{rank:02d}.png"
+        (img_dir / dest_name).write_bytes(data)
+        registered.append(f"data/digital_products/product_files/{pid}_listing_images/{dest_name}")
+    entry = _find_catalog_product(pid) or {}
+    existing_files = list(entry.get("files") or [])
+    _write_product_catalog_override(pid, {"files": existing_files + registered})
+    return registered
+
+
 def _produce_coloring_bundle(inp: dict) -> dict:
     """Combine several EXISTING coloring-pages products' real, already-
     generated ZIPs into one new bundle product's ZIP — zero AI spend, pure
@@ -13760,7 +13794,12 @@ def _produce_coloring_bundle(inp: dict) -> dict:
     rel_path = f"data/digital_products/coloring_pages/sets/coloring_{bundle_pid.lower()}_set_01.zip"
     _register_new_product_overlay(bundle_pid, "coloring_pages", description, None, [rel_path], description)
 
+    photos_registered = _register_prepublish_coloring_listing_images(bundle_pid, result["zip_path"])
+
     missing_note = f" Could not find a ZIP for: {', '.join(result['missing'])}." if result["missing"] else ""
+    photo_note = (f" {len(photos_registered)} listing photos pre-registered — they'll upload "
+                  f"automatically with the listing draft, no separate staging step needed."
+                  if photos_registered else " (no page images found to use as listing photos)")
     return {
         "pid": bundle_pid,
         "status": "merged",
@@ -13768,8 +13807,9 @@ def _produce_coloring_bundle(inp: dict) -> dict:
         "included": result["included"],
         "missing": result["missing"],
         "total_pages": result["total_pages"],
+        "photos_registered": len(photos_registered),
         "message": f"Combined {len(result['included'])} existing product(s) into {result['total_pages']} "
-                   f"real pages for {bundle_pid} — zero new AI spend.{missing_note} "
+                   f"real pages for {bundle_pid} — zero new AI spend.{missing_note}{photo_note} "
                    f"Open Products to author listing content and stage for review.",
     }
 
@@ -14230,6 +14270,15 @@ def _produce_build_product(inp: dict) -> dict:
             rc = _proc.wait()
             if rc == 0:
                 _register_new_product_overlay(_pid, _cat, _name or _pid, _price, _files, _desc)
+                # (2026-08-11) Pre-register listing photos here too -- same fix as
+                # the bundle-merge path (_register_prepublish_coloring_listing_
+                # images's own docstring) so a standard new-theme coloring build
+                # also has photos ready to upload the moment its create_listing
+                # action is approved, not a separate manual round after.
+                if _cat == "coloring_pages" and _files:
+                    zip_path = _catalog_file_abs_path(_files[0])
+                    if zip_path is not None:
+                        _register_prepublish_coloring_listing_images(_pid, zip_path)
         threading.Thread(target=_watch_and_register, daemon=True).start()
     result = {
         "pid": pid,

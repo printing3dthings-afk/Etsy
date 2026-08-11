@@ -639,13 +639,25 @@ def test_coloring_bundle_merges_sources_and_registers_new_product():
         _write_fake_source_zip(sets_dir, "COLOR1005", 30)
         orig_sets_dir = gcp.SETS_DIR
         gcp.SETS_DIR = sets_dir
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
         try:
             with patch.object(server, "_find_catalog_product", return_value=None), \
-                 patch.object(server, "_register_new_product_overlay", side_effect=_fake_register):
+                 patch.object(server, "_register_new_product_overlay", side_effect=_fake_register), \
+                 patch.object(server, "_product_log_dir", return_value=img_dir), \
+                 patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path):
                 out = server._produce_coloring_bundle({
                     "pid": "COLOR_MEGA_BUNDLE", "description": "Mega Kids Bundle",
                     "source_pids": ["COLOR1004", "COLOR1005"],
                 })
+            # 2026-08-11: photos must be pre-registered at merge time, not left
+            # for a separate manual post-publish step (Scott: "make it so the
+            # photos are in there when the listing goes into drafts so we don't
+            # have to do work more than once"). Checked inside the tempdir
+            # block -- the files it's asserting on are torn down on exit.
+            check(out.get("photos_registered") == 10, f"expected 10 pre-registered photos, got {out}")
+            check((img_dir / "COLOR_MEGA_BUNDLE_listing_images" / "page_01.png").exists(),
+                  "sample photo files must actually be written to disk")
         finally:
             gcp.SETS_DIR = orig_sets_dir
     check(out.get("status") == "merged", f"got {out}")
@@ -675,6 +687,52 @@ def test_coloring_bundle_rejects_pid_collision():
             "source_pids": ["COLOR1004", "COLOR1005"],
         })
     check("error" in out and "already exists" in out["error"], f"got {out}")
+
+
+def test_register_prepublish_coloring_listing_images_merges_with_existing_files():
+    """The photo paths must be ADDED to a product's existing catalog `files`
+    (e.g. the deliverable ZIP already registered by _register_new_product_
+    overlay), never replace them -- a real _write_product_catalog_override
+    round-trip through _find_catalog_product proves the merge, not just a
+    mocked capture."""
+    import zipfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "coloring_color_photo_test_set_01.zip"
+        with zipfile.ZipFile(zpath, "w") as zf:
+            for i in range(15):
+                zf.writestr(f"page_{i:02d}_coloring.png", b"fake png bytes")
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path):
+            server._register_new_product_overlay(
+                "COLOR_PHOTO_TEST", "coloring_pages", "Photo test", None,
+                ["data/digital_products/coloring_pages/sets/coloring_color_photo_test_set_01.zip"], "desc")
+            registered = server._register_prepublish_coloring_listing_images("COLOR_PHOTO_TEST", zpath)
+            entry = server._find_catalog_product("COLOR_PHOTO_TEST")
+    check(len(registered) == 10, f"expected 10 photos (Etsy's cap), got {len(registered)}")
+    check(all("_listing_images/" in r for r in registered), f"got {registered}")
+    files = entry.get("files") or []
+    check(any(f.endswith("coloring_color_photo_test_set_01.zip") for f in files),
+          f"the original deliverable ZIP must still be registered, got {files}")
+    check(all(r in files for r in registered), f"every photo path must be merged into files, got {files}")
+    check(len(files) == 1 + 10, f"expected ZIP + 10 photos == 11 total files, got {files}")
+
+
+def test_register_prepublish_coloring_listing_images_empty_zip_returns_nothing():
+    import zipfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "coloring_color_empty_test_set_01.zip"
+        with zipfile.ZipFile(zpath, "w"):
+            pass  # a real, valid, but empty ZIP -- no page images inside
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path), \
+             patch.object(server, "_write_product_catalog_override") as mock_write:
+            registered = server._register_prepublish_coloring_listing_images("COLOR_EMPTY_TEST", zpath)
+    check(registered == [], f"got {registered}")
+    check(not mock_write.called, "must never write a catalog override when there are no pages to register")
 
 
 def test_coloring_bundle_all_sources_missing_rejected_without_registering():

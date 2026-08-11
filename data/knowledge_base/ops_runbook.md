@@ -23596,3 +23596,37 @@ coloring_zip_malformed_manifest_falls_back_to_standard_size`
 no_manifest_either` + manifest assertions added to the existing merge test
 (test_coloring_dynamic_theme.py). Verified: 116/116 full suite.
 Build 87781ae-v331.
+
+
+## 2026-08-11 — Coloring-page listing photos now pre-registered at build time
+Scott: "Can you make it to where the photos are in there when the listing
+goes into drafts so we don't have to do work more than once." Root cause of
+the extra manual round: `_execute_create_listing_staged_action()` already
+uploads `photo_paths` in the SAME Etsy write as creating the draft listing —
+that machinery was fully built and working — but nothing ever populated
+`review["photos"]` for a coloring-pages product before publish, since photo
+generation only ever happened via `_produce_coloring_pages_listing_photos()`,
+which requires an ALREADY-LIVE listing_id (stages individual `listing_photo`
+actions against an existing listing, for refreshing photos later). A
+genuinely new product had no photos to bundle into its first create_listing
+call, so every build needed a manual second `/api/produce/listing-photos`
+round after Scott approved the publish action.
+
+Added `_register_prepublish_coloring_listing_images()`: samples real pages
+straight from the product's own delivered ZIP (never an AI stand-in, same
+sampling as the post-publish path), writes them to `<pid>_listing_images/`,
+and merges their paths into the catalog's `files` list BEFORE publish is
+ever staged. Wired into both coloring-pages production paths: the bundle-
+merge endpoint (`_produce_coloring_bundle`) and the standard dynamic-theme
+build's watcher thread (`_produce_build_product`'s coloring_pages branch).
+Now `stage_product_publish()` picks the photos up automatically via the
+existing (previously dead-code) `review["photos"]` -> `photo_paths` path,
+and they upload in the same approval as the listing draft — zero separate
+staging round for any future coloring-pages build.
+
+New tests: `test_register_prepublish_coloring_listing_images_merges_with_
+existing_files` (proves the ZIP registration survives the merge, doesn't get
+overwritten), `test_register_prepublish_coloring_listing_images_empty_zip_
+returns_nothing`, extended `test_coloring_bundle_merges_sources_and_
+registers_new_product` to assert `photos_registered == 10` and real files on
+disk (test_produce_qc.py). Verified: 116/116 full suite. Build 99efd37-v332.
