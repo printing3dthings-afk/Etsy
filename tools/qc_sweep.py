@@ -213,6 +213,84 @@ def check_print_zip(path: Path, rows_add):
                              "no embedded color profile (re-run generate_print_sizes.py)")
 
 
+_CALENDAR_YEAR_RE = re.compile(r"\b(202[5-9]|20[3-9]\d)\b")
+
+
+def _pdf_facts_from_bytes(data: bytes) -> tuple[int, str]:
+    """(page_count, extracted_text) for a PDF held in memory (inside a ZIP) --
+    same PyPDF2 reader etsy_api.validate_digital_file() uses for a standalone
+    PDF path, just fed BytesIO instead of a file path."""
+    from PyPDF2 import PdfReader
+    reader = PdfReader(io.BytesIO(data))
+    text = "\n".join((p.extract_text() or "") for p in reader.pages)
+    return len(reader.pages), text
+
+
+def check_wall_calendar_zip(path: Path, rows_add):
+    """WC-series printable wall calendar. Every claim this ZIP's listing
+    makes must be literally true of what's inside: exactly 12 pages in each
+    monthly-grid PDF, dated PDFs actually dated to the claimed year (real
+    weekday-aligned day numbers present), undated PDFs containing ZERO year
+    digits (see generate_wall_calendar.py's own docstring for why the
+    undated variant must never bake in a specific year's weekday alignment
+    -- this check is the QC-side half of that same guarantee), and the
+    year-at-a-glance poster meeting the print-resolution floor every other
+    wall-art image in this shop must clear (>=3000px short edge)."""
+    facts = gate(path, rows_add, expected_ext=".zip")
+    if not facts:
+        return
+    with zipfile.ZipFile(path) as zf:
+        names = zf.namelist()
+        # This pack's own naming convention (generate_wall_calendar.py's
+        # build_calendar_pack): "<PID>_dated_..." vs "<PID>U_undated_...".
+        dated_pdfs = [n for n in names if n.lower().endswith(".pdf") and "_dated_" in n.lower()]
+        undated_pdfs = [n for n in names if n.lower().endswith(".pdf") and "undated" in n.lower()]
+        posters = [n for n in names if n.lower().endswith((".jpg", ".jpeg")) and "yearglance" in n.lower()]
+
+        if len(dated_pdfs) < 1:
+            rows_add("FAIL", path.name, "dated_pdf_present", "no dated monthly-grid PDF found")
+        if len(undated_pdfs) < 1:
+            rows_add("FAIL", path.name, "undated_pdf_present", "no undated monthly-grid PDF found")
+        if len(posters) < 1:
+            rows_add("FAIL", path.name, "poster_present", "no year-at-a-glance poster JPG found")
+
+        for name in dated_pdfs:
+            pages, text = _pdf_facts_from_bytes(zf.read(name))
+            if pages != 12:
+                rows_add("FAIL", name, "page_count", f"{pages} pages (expected exactly 12 — one per month)")
+            else:
+                rows_add("PASS", name, "page_count", "12 pages")
+            # A dated PDF must actually contain real day numbers -- a build that
+            # silently fell back to the undated (blank-cell) template would still
+            # pass the page-count check, so verify day numbers are really present.
+            if not re.search(r"\b(1|2|3)\d\b|\b[1-9]\b", text):
+                rows_add("FAIL", name, "dated_content", "no day numbers found — looks like a blank/undated template")
+
+        for name in undated_pdfs:
+            pages, text = _pdf_facts_from_bytes(zf.read(name))
+            if pages != 12:
+                rows_add("FAIL", name, "page_count", f"{pages} pages (expected exactly 12 — one per month)")
+            else:
+                rows_add("PASS", name, "page_count", "12 pages")
+            leaked_years = _CALENDAR_YEAR_RE.findall(text)
+            if leaked_years:
+                rows_add("FAIL", name, "undated_no_year_leak",
+                         f"found year digit(s) {sorted(set(leaked_years))} in a file marketed as undated/evergreen")
+            else:
+                rows_add("PASS", name, "undated_no_year_leak", "no year digits present")
+
+        for name in posters:
+            with Image.open(io.BytesIO(zf.read(name))) as im:
+                w, h = im.size
+                if min(w, h) < 3000:
+                    rows_add("WARN", name, "poster_resolution", f"{w}x{h} — below the 3000px short-edge floor")
+                else:
+                    rows_add("PASS", name, "poster_resolution", f"{w}x{h}")
+
+        if not any(n.lower().endswith("readme.txt") for n in names):
+            rows_add("WARN", path.name, "readme", "no README.txt")
+
+
 def check_other_zip(path: Path, rows_add):
     gate(path, rows_add, expected_ext=".zip")
 
@@ -315,6 +393,11 @@ def sweep(only: str | None = None) -> list[dict]:
             check_other_zip(z, add)
         else:
             check_coloring_zip(z, add)
+
+    # Wall calendar ZIPs (WC-series)
+    for z in sorted((DP_BASE / "wall_calendars" / "packs").glob("*.zip")):
+        if want(z):
+            check_wall_calendar_zip(z, add)
 
     # Other deliverable ZIPs (digital paper)
     for z in sorted((DP_BASE / "digital_paper").glob("*.zip")):

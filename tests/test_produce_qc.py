@@ -758,6 +758,113 @@ def test_coloring_bundle_all_sources_missing_rejected_without_registering():
     check(not registered["called"], "must never register a product with zero real pages")
 
 
+# ── Wall calendar build wiring (2026-08-11) ──────────────────────────────────
+# _produce_build_product()'s wall_calendar branch (WC-series). The generator's
+# own logic (generate_wall_calendar.py) is covered directly in tests/test_
+# generate_wall_calendar.py; these cover main.py's dispatch/validation/
+# subprocess-args wiring around it.
+
+def test_wall_calendar_build_starts_with_valid_theme():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900020
+    with patch.object(server.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WC1001", "category": "wall_calendar", "theme": "sage_garden",
+        })
+    server._LONG_RUNNING_PROCS.pop(900020, None)
+    check(out.get("started") is True, f"got {out}")
+    check("header art (12 illustrations)" in out.get("steps", []), f"got {out}")
+    args = list(mock_popen.call_args.args[0])
+    check(args[2] == "WC1001", f"pid must be the first CLI arg after the script path, got {args}")
+    check("--theme" in args and "sage_garden" in args, f"got {args}")
+    check("--year" in args and "2026" in args, f"default year must be 2026, got {args}")
+
+
+def test_wall_calendar_build_rejects_unknown_theme():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WC1001", "category": "wall_calendar", "theme": "not_a_real_theme",
+        })
+    check("error" in out and not out.get("started"), f"got {out}")
+    check(not mock_popen.called, "an unknown theme must be caught before any subprocess spawns")
+
+
+def test_wall_calendar_build_rejects_missing_theme():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({"pid": "WC1001", "category": "wall_calendar"})
+    check("error" in out and not out.get("started"), f"got {out}")
+    check(not mock_popen.called, "a missing theme must be caught before any subprocess spawns")
+
+
+def test_wall_calendar_build_requires_explicit_pid():
+    """No auto-pid-generation for calendars (yet) -- matches wall_art's
+    existing precedent, unlike coloring_pages which does auto-generate."""
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({"category": "wall_calendar", "theme": "sage_garden"})
+    check("error" in out and "pid is required" in out["error"], f"got {out}")
+    check(not mock_popen.called, "a missing pid must be caught before any subprocess spawns")
+
+
+def test_wall_calendar_build_honors_explicit_year():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900021
+    with patch.object(server.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WC1002", "category": "wall_calendar", "theme": "matcha_serenity", "year": 2027,
+        })
+    server._LONG_RUNNING_PROCS.pop(900021, None)
+    check(out.get("started") is True, f"got {out}")
+    args = list(mock_popen.call_args.args[0])
+    check("--year" in args and "2027" in args, f"got {args}")
+
+
+def test_register_prepublish_calendar_listing_images_extracts_real_poster():
+    import zipfile as _zipfile
+    from PIL import Image
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "wc1001_calendar_pack.zip"
+        img_buf = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        Image.new("RGB", (3000, 3000), (200, 200, 200)).save(img_buf.name, "JPEG")
+        poster_bytes = Path(img_buf.name).read_bytes()
+        with _zipfile.ZipFile(zpath, "w") as zf:
+            zf.writestr("README.txt", "test")
+            zf.writestr("WC1001_2026_yearglance_poster.jpg", poster_bytes)
+            zf.writestr("WC1001_dated_2026_monday_start.pdf", b"fake pdf bytes")
+
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path):
+            server._register_new_product_overlay(
+                "WC1001", "wall_calendar", "Sage Garden 2026 Wall Calendar", None,
+                ["data/digital_products/wall_calendars/packs/wc1001_calendar_pack.zip"], "desc")
+            registered = server._register_prepublish_calendar_listing_images("WC1001", zpath)
+            entry = server._find_catalog_product("WC1001")
+    check(len(registered) == 1, f"expected exactly 1 registered photo (the poster), got {registered}")
+    check("_listing_images/" in registered[0], f"got {registered}")
+    files = entry.get("files") or []
+    check(any(f.endswith("wc1001_calendar_pack.zip") for f in files),
+          f"the original deliverable ZIP must still be registered, got {files}")
+    check(registered[0] in files, f"the poster photo must be merged into files, got {files}")
+
+
+def test_register_prepublish_calendar_listing_images_no_poster_returns_nothing():
+    import zipfile as _zipfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "wc1001_calendar_pack.zip"
+        with _zipfile.ZipFile(zpath, "w") as zf:
+            zf.writestr("README.txt", "test")
+            zf.writestr("WC1001_dated_2026_monday_start.pdf", b"fake pdf bytes")
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path), \
+             patch.object(server, "_write_product_catalog_override") as mock_write:
+            registered = server._register_prepublish_calendar_listing_images("WC1001", zpath)
+    check(registered == [], f"got {registered}")
+    check(not mock_write.called, "must never write a catalog override when there's no poster to register")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

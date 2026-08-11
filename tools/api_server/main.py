@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "99efd37-v332"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "1c0df4e-v333"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13763,6 +13763,41 @@ def _register_prepublish_coloring_listing_images(pid: str, zip_path: Path) -> li
     return registered
 
 
+def _register_prepublish_calendar_listing_images(pid: str, zip_path: Path) -> list[str]:
+    """WC-series analog of _register_prepublish_coloring_listing_images():
+    pulls the real year-at-a-glance poster JPG straight out of the
+    product's own delivered ZIP (never an AI stand-in) and registers it as
+    this product's first listing photo before publish is ever staged, so it
+    uploads in the same create_listing approval as the draft itself.
+
+    Only registers the ONE real deliverable preview -- the remaining
+    lifestyle-room photo slots (hero-on-wall, gallery grouping, etc.) still
+    need the standard AI-photo pipeline, same as wall_art's existing "no
+    lifestyle photos in the one-tap build" precedent (see _produce_build_
+    product()'s own docstring) -- this just avoids leaving the listing at
+    literally zero photos in the meantime."""
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            poster_name = next((n for n in zf.namelist() if "yearglance" in n.lower()
+                                 and n.lower().endswith((".jpg", ".jpeg"))), None)
+            if poster_name is None:
+                return []
+            poster_bytes = zf.read(poster_name)
+    except (OSError, zipfile.BadZipFile):
+        return []
+
+    img_dir = _product_log_dir() / f"{pid}_listing_images"
+    img_dir.mkdir(parents=True, exist_ok=True)
+    dest_name = "photo_01_yearglance.jpg"
+    (img_dir / dest_name).write_bytes(poster_bytes)
+    registered = [f"data/digital_products/product_files/{pid}_listing_images/{dest_name}"]
+
+    entry = _find_catalog_product(pid) or {}
+    existing_files = list(entry.get("files") or [])
+    _write_product_catalog_override(pid, {"files": existing_files + registered})
+    return registered
+
+
 def _produce_coloring_bundle(inp: dict) -> dict:
     """Combine several EXISTING coloring-pages products' real, already-
     generated ZIPs into one new bundle product's ZIP — zero AI spend, pure
@@ -14240,10 +14275,39 @@ def _produce_build_product(inp: dict) -> dict:
         script_name, log_suffix, proc_label = "build_product.py", "product_build", "build_product"
         steps = ["sticker pack", "planner PDFs", "listing photos", "quality check"]
         needs_visual_qc = True
+    elif category == "wall_calendar":
+        # WC-series (2026-08-11) -- built from a real competitive-research +
+        # adversarial-review workflow pass before any code shipped; see
+        # generate_wall_calendar.py's own module docstring for the design
+        # decisions (week-start as a real product axis, the undated-variant
+        # date-leak fix, why the monthly PDF isn't run through generate_
+        # print_sizes.py). No auto-pid generation (yet) -- explicit pid
+        # required, same as wall_art.
+        import generate_wall_calendar as _gwc
+        theme = str((inp or {}).get("theme", "")).strip().lower()
+        if theme not in _gwc.CALENDAR_THEMES:
+            return {"error": f"theme is required for wall_calendar (have: "
+                              f"{', '.join(sorted(_gwc.CALENDAR_THEMES))})"}
+        engine, eng_err = _resolve_art_engine(inp)
+        if eng_err:
+            return {"error": eng_err}
+        year = (inp or {}).get("year")
+        try:
+            year = int(year) if year else _gwc.NEW_YEAR
+        except (TypeError, ValueError):
+            return {"error": f"year must be an integer, got {year!r}"}
+        extra_args = ["--theme", theme, "--year", str(year), "--engine", engine]
+        reg_name = f"{_gwc.CALENDAR_THEMES[theme]['label']} {year} Wall Calendar"
+        reg_price = None
+        reg_files = [f"data/digital_products/wall_calendars/packs/{pid.lower()}_calendar_pack.zip"]
+        description = reg_name
+        script_name, log_suffix, proc_label = "generate_wall_calendar.py", "calendar_build", "build_wall_calendar"
+        steps = ["header art (12 illustrations)", "monthly-grid PDFs", "year-at-a-glance poster", "quality check"]
+        needs_visual_qc = True  # header art is freshly AI-generated -- same honesty flag as any fresh-art build
     else:
         return {"error": f"'{category}' has no verified one-tap build pipeline yet (have: "
-                          f"digital_planner, wall_art, coloring_pages). Use the individual "
-                          f"Create-screen tools for this product instead."}
+                          f"digital_planner, wall_art, coloring_pages, wall_calendar). Use the "
+                          f"individual Create-screen tools for this product instead."}
 
     script = ROOT / "tools" / script_name
     if not script.exists():
@@ -14259,7 +14323,7 @@ def _produce_build_product(inp: dict) -> dict:
         env=_subprocess_env_with_engine(engine) if engine else None,
     )
     _LONG_RUNNING_PROCS[proc.pid] = (proc, f"{proc_label}:{pid}", datetime.now(timezone.utc))
-    if category in ("wall_art", "wall_art_bundle", "coloring_pages") and reg_files is not None:
+    if category in ("wall_art", "wall_art_bundle", "coloring_pages", "wall_calendar") and reg_files is not None:
         # A watcher thread, not inline registration: only a CLEAN exit (0)
         # means the files this record claims actually exist. Registering
         # eagerly (before the subprocess even finishes) would let a failed
@@ -14272,13 +14336,22 @@ def _produce_build_product(inp: dict) -> dict:
                 _register_new_product_overlay(_pid, _cat, _name or _pid, _price, _files, _desc)
                 # (2026-08-11) Pre-register listing photos here too -- same fix as
                 # the bundle-merge path (_register_prepublish_coloring_listing_
-                # images's own docstring) so a standard new-theme coloring build
-                # also has photos ready to upload the moment its create_listing
-                # action is approved, not a separate manual round after.
+                # images's own docstring) so a standard new-theme coloring/
+                # calendar build also has photos ready to upload the moment its
+                # create_listing action is approved, not a separate manual round
+                # after. Calendars only get the poster (a real deliverable, not
+                # an AI stand-in) pre-registered this way -- the remaining
+                # lifestyle-room photo slots still need the standard AI-photo
+                # flow, same as wall_art's existing "no lifestyle photos in the
+                # one-tap build" precedent, just not left at zero photos either.
                 if _cat == "coloring_pages" and _files:
                     zip_path = _catalog_file_abs_path(_files[0])
                     if zip_path is not None:
                         _register_prepublish_coloring_listing_images(_pid, zip_path)
+                elif _cat == "wall_calendar" and _files:
+                    zip_path = _catalog_file_abs_path(_files[0])
+                    if zip_path is not None:
+                        _register_prepublish_calendar_listing_images(_pid, zip_path)
         threading.Thread(target=_watch_and_register, daemon=True).start()
     result = {
         "pid": pid,

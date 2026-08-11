@@ -1925,6 +1925,46 @@ Run through this in order for every new wall art product:
 
 ---
 
+## WC-Series Printable Wall Calendar Pipeline
+*Built 2026-08-11 from a real competitive-research + adversarial-review pass (a workflow of parallel research agents, a hard Canva-feasibility check for the separate editable-template category, spec synthesis, then an adversarial review of the spec against this shop's own rules) before any code shipped. Reuses `generate_planner.py`/`generate_planner_v2.py`'s reportlab rendering primitives and the exact existing theme RGB tuples for Sage Garden (DP1031), Matcha Serenity (DP1030), and Sunflower Studio (DP1033) — zero new color derivation, zero drift from the shipped planner line.*
+
+### What ships per product
+One ZIP (`tools/generate_wall_calendar.py`, category `wall_calendar`, pid prefix `WC`):
+- 12 AI-generated seasonal header illustrations (one per month, reused across every PDF variant so art cost is fixed regardless of variant count)
+- Dated 2026 monthly-grid PDF — Monday-start and Sunday-start versions (both real, both ship — week-start is a real, buyer-searched calendar attribute this shop's planner line has never needed)
+- Undated evergreen monthly-grid PDF — same two week-start versions, **zero day numbers rendered, only the calendar-agnostic weekday column headers** — see the module's own docstring for why: an earlier planner-code pattern (`_v2_monthly_pages(dated=False)`) silently bakes in the CURRENT year's real weekday alignment even in "undated" mode, which is fine for a notebook-style planner page but a real truthfulness defect for a wall calendar specifically (a buyer uses this to track real dates)
+- One year-at-a-glance poster JPG (3000×3000px, PIL-rendered grid + hero art, weekend cells 15% lighter per the existing Color Design Rule)
+
+**Deliberately NOT included in v1:** the monthly-grid PDF is delivered at ONE size (US Letter, matching the planner convention) and is never run through `generate_print_sizes.py` — that tool resizes a single flat image, and a US-Letter-laid-out PDF does not correctly re-flow to 18×24/A4/A3 (different aspect ratios: 18×24=0.75, Letter=0.773, A4/A3=0.707 → real content would crop). Only the year-at-a-glance poster goes through the real multi-size pipeline. A poster-size tier expansion (18×24/24×36/A1 — real top sellers ship up to 36×48/A0) is a valid v2 addition, scoped out of v1 to avoid touching `generate_print_sizes.py` before a single calendar has actually sold.
+
+### Launch themes (3 of the 12-theme catalog)
+- **Sage Garden** — botanical/cottagecore was the #1 confirmed trending style in real Etsy search snippets pulled for this research.
+- **Matcha Serenity** — minimalist/Japanese-inspired, covers the confirmed "minimalist" trend bucket.
+- **Sunflower Studio** — colorful/botanical hybrid, covers the confirmed "colorful" trend bucket.
+Cherry Blossom held for a spring seasonal re-release (aligns with the existing Feb-6 seasonal calendar trigger).
+
+### QC gate (`qc_sweep.check_wall_calendar_zip()`)
+- [ ] Every dated monthly-grid PDF: exactly 12 pages, real day-number text present (catches a build that silently produced the blank/undated template but named it as the dated file — page count alone can't tell the difference)
+- [ ] Every undated monthly-grid PDF: exactly 12 pages, **zero year digits present anywhere** (regex `202[5-9]|20[3-9]\d` on extracted text) — the QC-side half of the same guarantee the generator's own undated rendering makes structurally true
+- [ ] Year-at-a-glance poster: ≥3000px short edge
+- [ ] `validate_digital_file()` zero errors on the final ZIP (content gate, size, ZIP integrity — shared with every other category)
+- [ ] README.txt present
+
+### Title & tags
+Formula: `[Year] Wall Calendar, [Theme/Style] Printable Calendar, [Week-Start] Start, Instant Download, [additional buyer-search phrases]` — 100–140 chars per Change 1, lead with the primary keyword in the first 40 chars. Real title pattern confirmed from live top-favorited listings: comma-separated, always states the week-start variant (`Sunday start`/`Monday start`) and size call-outs explicitly — this shop's planner pipeline has never needed a week-start attribute before this product line.
+
+13 tags across categories: style (`botanical calendar`), format (`printable calendar`), size (poster size actually shipped), week-start (`monday start cal` / `sunday start cal`), use (`wall calendar 2026`), audience/aesthetic, `instant download` — zero tags may duplicate a title phrase (same rule as every other category).
+
+### Pricing
+Year-at-a-glance poster only: **$5.99**. Full pack (poster + monthly book, dated+undated, both week-starts): **$8.99**. Anchored just above the adjacent wall-art single-print tier and below the $12.99+ wall-art set-of-3 tier — this product's design cost (12 header images) is lower than a full illustrated wall-art set, and real full-price data for this niche was largely unverifiable in live search (only noisy sale-price snippets, $2.67–$4.45) so this leans on the adjacent-category anchor rather than an unconfirmed number.
+
+### 10 listing photos
+1. Hero — poster on a wall, styled room · 2. Second room type · 3. Monthly-book page close-up · 4. Size comparison flat lay · 5. Dated vs. undated side-by-side · 6. Week-start variant callout (Sun vs. Mon grid) · 7. Full 12-month lineup grid · 8. Gallery-wall styled shot · 9. What's-included ZIP contents graphic · 10. Theme palette / cover close-up.
+
+Same as every other category: lifestyle photos (slots 1-2, 6, 8) must use the real delivered files via `images.edit` / `listing_photo_pipeline.py`'s `generate_verified_photo()`, never an AI-generated stand-in — the one-tap build only pre-registers the real poster JPG as photo 1 automatically (so the listing is never photo-less at draft time); the remaining lifestyle-room slots still need the standard AI-photo flow before publishing, same as wall_art's existing "no lifestyle photos in the one-tap build" precedent.
+
+---
+
 ## Image Generation Notes (for gpt-image-1 / DALL-E)
 
 Generate all 10 images at **2400×2400px square**. Never put text overlays in the AI-generated image — add all text callouts separately in Canva after generation. No hands or people visible (AI renders these unnaturally). Use the product's color theme as the accent color for props and backgrounds.

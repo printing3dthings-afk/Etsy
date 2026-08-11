@@ -23630,3 +23630,70 @@ overwritten), `test_register_prepublish_coloring_listing_images_empty_zip_
 returns_nothing`, extended `test_coloring_bundle_merges_sources_and_
 registers_new_product` to assert `photos_registered == 10` and real files on
 disk (test_produce_qc.py). Verified: 116/116 full suite. Build 99efd37-v332.
+
+
+## 2026-08-11 — New product line: WC-series printable wall calendars
+Scott: "Let's work on option 2 and 3 [calendars + Canva templates]. Make a
+loop so the agents that you make for these do it correctly from the start."
+Ran a real multi-agent workflow first (parallel market research on
+calendars/wedding invites/social templates, a hard Canva-API feasibility
+check, spec synthesis, then adversarial review of each spec) before writing
+any code — see the chat transcript for full findings. Two real outcomes:
+
+**Canva templates: NOT automatable end-to-end, confirmed against Canva's
+own current API docs.** The Autofill API (the only path that produces a
+genuinely re-editable design) is Enterprise-only and gated so the RECIPIENT
+must also be an Enterprise org member — structurally cannot serve an
+anonymous Etsy buyer. Minting a "Use this template" shareable link is a
+manual Share-menu click in Canva's UI with no API equivalent. This is a
+real, permanent platform limitation, not a "write more code" problem —
+shelved pending a business decision on committing ongoing manual per-design
+labor (not a one-time engineering cost like every other product line here).
+
+**Calendars: built, shipped.** New `tools/generate_wall_calendar.py`
+(category `wall_calendar`, pid prefix WC) + `qc_sweep.check_wall_calendar_
+zip()`, wired into `_produce_build_product`. Reuses generate_planner.py's
+reportlab primitives and the EXACT existing RGB tuples for Sage Garden
+(DP1031)/Matcha Serenity (DP1030)/Sunflower Studio (DP1033) — zero new
+color derivation. Real defects the adversarial-review pass caught and fixed
+before any of this shipped:
+- The original spec's "one PDF sized to largest tier" claim was
+  unfulfillable (18x24=0.75 vs Letter=0.773 vs A4/A3=0.707 aspect ratios —
+  content would crop). Fixed: monthly-grid PDF ships at ONE size (US
+  Letter), only the year-at-a-glance poster goes through the real multi-
+  size pipeline.
+- generate_planner_v2._v2_monthly_pages(dated=False) silently bakes in the
+  CURRENT real year's weekday alignment even in "undated" mode — fine for a
+  notebook-style planner page, a real truthfulness defect for a wall
+  calendar a buyer actually uses to track dates. Fixed: this product's
+  undated variant renders ZERO day numbers, only calendar-agnostic weekday
+  column headers — QC-gated via a regex year-leak check
+  (`check_wall_calendar_zip`) so this can never silently regress.
+- Week-start (Sunday vs. Monday) is a real, buyer-searched calendar
+  attribute the planner pipeline has never modeled — built as a local,
+  self-contained parameter in the new module rather than retrofitting the
+  shared (working, shipped) planner rendering code.
+- The poster's PIL layer was initially missing the weekend-cell 15%-lighter
+  tint CLAUDE.md's own Color Design Rules already require (the reportlab
+  monthly-grid PDF had it from the start via the existing `_bl()` helper;
+  the new PIL poster code didn't) — added, verified visually.
+
+QC gate hard-verified against a real generated pack (dates cross-checked
+against `calendar.monthrange`/independently-known real dates: Jan 1 2026 =
+Thursday, confirmed correct in both week-start layouts) and against 3
+deliberately-broken packs (wrong page count, missing poster, leaked year in
+the undated file) to confirm it actually catches real defects, not just
+rubber-stamps success.
+
+Also pre-registers the real year-at-a-glance poster as listing photo 1
+before publish (same fix pattern as the coloring-pages photo work above) —
+the remaining lifestyle-room photo slots still need the standard AI-photo
+flow, matching wall_art's existing "no lifestyle photos in the one-tap
+build" precedent, just never left at zero photos either.
+
+New files: tools/generate_wall_calendar.py, tests/test_generate_wall_
+calendar.py, tests/test_qc_sweep_calendar.py. New tests also added to
+tests/test_produce_qc.py (wall_calendar build wiring: theme/pid/year
+validation, subprocess args, prepublish photo registration). CLAUDE.md: new
+"WC-Series Printable Wall Calendar Pipeline" section. Verified: 118/118
+full suite. Build 1c0df4e-v333.
