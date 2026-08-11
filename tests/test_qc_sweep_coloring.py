@@ -81,6 +81,58 @@ def test_check_coloring_zip_fails_on_undercount():
           f"one page short of NEW_THEME_SET_SIZE must hard FAIL (never lie to the customer), got {page_rows}")
 
 
+def test_check_coloring_zip_honors_manifest_for_a_merged_bundle():
+    """2026-08-10: a multi-source bundle (generate_coloring_pages.merge_
+    existing_sets_into_bundle()) legitimately has more than NEW_THEME_SET_SIZE
+    pages -- its `.manifest.json` sidecar records the real total, and the
+    page_count gate must PASS against THAT count, not the single-batch
+    default, or every real bundle would false-FAIL forever."""
+    with tempfile.TemporaryDirectory() as tmp:
+        zpath = Path(tmp) / "coloring_color1006_set_01.zip"
+        _write_fake_zip(zpath, 100)
+        zpath.with_suffix(".manifest.json").write_text(
+            '{"bundle_pid": "COLOR1006", "total_pages": 100, "included": []}')
+        rows = []
+        with patch.object(qc_sweep, "validate_digital_file", return_value={"path": str(zpath)}):
+            qc_sweep.check_coloring_zip(zpath, lambda sev, f, c, d="": rows.append(
+                {"severity": sev, "file": f, "check": c, "detail": d}))
+    page_rows = [r for r in rows if r["check"] == "page_count"]
+    check(len(page_rows) == 1, f"got {rows}")
+    check(page_rows[0]["severity"] == "PASS",
+          f"100 real pages matching the manifest's claimed total must PASS, got {page_rows}")
+
+
+def test_check_coloring_zip_manifest_mismatch_still_fails():
+    """The manifest changes the EXPECTED count, not the enforcement -- if the
+    actual ZIP contents don't match what the manifest itself claims, that's
+    still a real mismatch and must still FAIL."""
+    with tempfile.TemporaryDirectory() as tmp:
+        zpath = Path(tmp) / "coloring_color1006_set_01.zip"
+        _write_fake_zip(zpath, 99)  # one short of what the manifest claims
+        zpath.with_suffix(".manifest.json").write_text(
+            '{"bundle_pid": "COLOR1006", "total_pages": 100, "included": []}')
+        rows = []
+        with patch.object(qc_sweep, "validate_digital_file", return_value={"path": str(zpath)}):
+            qc_sweep.check_coloring_zip(zpath, lambda sev, f, c, d="": rows.append(
+                {"severity": sev, "file": f, "check": c, "detail": d}))
+    page_rows = [r for r in rows if r["check"] == "page_count"]
+    check(page_rows[0]["severity"] == "FAIL", f"got {page_rows}")
+
+
+def test_check_coloring_zip_malformed_manifest_falls_back_to_standard_size():
+    with tempfile.TemporaryDirectory() as tmp:
+        zpath = Path(tmp) / "coloring_color_broken_set_01.zip"
+        _write_fake_zip(zpath, gcp.NEW_THEME_SET_SIZE)
+        zpath.with_suffix(".manifest.json").write_text("not valid json{{{")
+        rows = []
+        with patch.object(qc_sweep, "validate_digital_file", return_value={"path": str(zpath)}):
+            qc_sweep.check_coloring_zip(zpath, lambda sev, f, c, d="": rows.append(
+                {"severity": sev, "file": f, "check": c, "detail": d}))
+    page_rows = [r for r in rows if r["check"] == "page_count"]
+    check(page_rows[0]["severity"] == "PASS",
+          f"a malformed manifest must fall back to the standard NEW_THEME_SET_SIZE check, got {page_rows}")
+
+
 def test_sweep_dispatch_routes_old_pack_to_generic_gate_not_page_count():
     with tempfile.TemporaryDirectory() as tmp:
         dp_base = Path(tmp)

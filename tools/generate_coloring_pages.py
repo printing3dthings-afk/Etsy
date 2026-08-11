@@ -868,7 +868,14 @@ def merge_existing_sets_into_bundle(source_pids: list[str], bundle_pid: str) -> 
     (_resolve_dp_base()'s own docstring) and their source files were never
     migrated, so they simply aren't present here to merge. Never silently
     drops a requested source: any pid whose ZIP isn't found is reported in
-    `missing`, not just skipped without a trace."""
+    `missing`, not just skipped without a trace.
+
+    Also writes a `.manifest.json` sidecar next to the combined ZIP recording
+    the real total page count -- qc_sweep.check_coloring_zip()'s page_count
+    gate otherwise hard-expects exactly NEW_THEME_SET_SIZE (a single-batch
+    assumption a multi-source bundle correctly violates); the manifest lets
+    QC verify the ACTUAL claimed count instead of false-FAILing a legitimate
+    bundle. Absent for every non-bundle ZIP, so existing behavior is untouched."""
     SETS_DIR.mkdir(parents=True, exist_ok=True)
     included: list[dict] = []
     missing: list[str] = []
@@ -890,8 +897,14 @@ def merge_existing_sets_into_bundle(source_pids: list[str], bundle_pid: str) -> 
                     out_zf.writestr(new_name, src_zf.read(name))
                 included.append({"pid": pid, "pages": len(members)})
     total_pages = sum(e["pages"] for e in included)
+    manifest_path = out_path.with_suffix(".manifest.json")
     if total_pages == 0:
         out_path.unlink(missing_ok=True)
+        manifest_path.unlink(missing_ok=True)
+    else:
+        manifest_path.write_text(json.dumps({
+            "bundle_pid": bundle_pid, "total_pages": total_pages, "included": included,
+        }, indent=2))
     return {
         "bundle_pid": bundle_pid,
         "zip_path": out_path,

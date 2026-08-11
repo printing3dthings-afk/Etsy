@@ -238,7 +238,14 @@ def check_coloring_zip(path: Path, rows_add):
     Scoped to ONLY the dynamic path -- see sweep()'s dispatch, which routes
     the 2 old fixed packs (kawaii/fun_basic) to check_other_zip() instead by
     filename, so this assertion never false-FAILs an existing 5-page-per-ZIP
-    product."""
+    product.
+
+    2026-08-10: a multi-source bundle (generate_coloring_pages.merge_
+    existing_sets_into_bundle()) legitimately has a different total -- it
+    writes a `<zip>.manifest.json` sidecar recording the real combined count.
+    When present, that recorded total_pages is the expected count instead of
+    NEW_THEME_SET_SIZE; absent (every normal single-batch ZIP), behavior is
+    unchanged."""
     facts = gate(path, rows_add, expected_ext=".zip")
     if not facts:
         return
@@ -246,12 +253,19 @@ def check_coloring_zip(path: Path, rows_add):
     # level, which this module deliberately avoids until sweep() itself runs
     # (see the `from PIL import Image` local import above).
     from tools.generate_coloring_pages import NEW_THEME_SET_SIZE
+    manifest_path = path.with_suffix(".manifest.json")
+    expected = NEW_THEME_SET_SIZE
+    if manifest_path.exists():
+        try:
+            expected = int(json.loads(manifest_path.read_text())["total_pages"])
+        except (OSError, ValueError, KeyError, TypeError):
+            pass  # malformed manifest -- fall back to the standard single-batch expectation
     with zipfile.ZipFile(path) as zf:
         page_count = coloring_zip_page_count(zf.namelist())
-    if page_count != NEW_THEME_SET_SIZE:
+    if page_count != expected:
         rows_add("FAIL", path.name, "page_count",
-                 f"{page_count} individual page files (expected exactly {NEW_THEME_SET_SIZE} -- "
-                 f"the listing promises {NEW_THEME_SET_SIZE} individual coloring pages)")
+                 f"{page_count} individual page files (expected exactly {expected} -- "
+                 f"the listing promises {expected} individual coloring pages)")
     else:
         rows_add("PASS", path.name, "page_count", f"{page_count} individual page files")
 

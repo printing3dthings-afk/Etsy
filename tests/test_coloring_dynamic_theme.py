@@ -363,6 +363,24 @@ def test_merge_existing_sets_combines_real_pages_with_no_name_collisions():
             check(len(set(names)) == 60, "member names must all be unique (no source collision)")
             check(all(n.startswith("COLOR1004_") or n.startswith("COLOR1005_") for n in names),
                   "every member must be prefixed with its real source pid")
+        manifest_path = result["zip_path"].with_suffix(".manifest.json")
+        check(manifest_path.exists(), "a manifest sidecar must be written so QC knows the real page count")
+        manifest = json.loads(manifest_path.read_text())
+        check(manifest["total_pages"] == 60, f"got {manifest}")
+        check(manifest["bundle_pid"] == "COLOR_MEGA_TEST", f"got {manifest}")
+
+
+def test_merge_existing_sets_all_missing_leaves_no_manifest_either():
+    with tempfile.TemporaryDirectory() as tmp:
+        sets_dir = Path(tmp) / "sets"
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = sets_dir
+        try:
+            result = gcp.merge_existing_sets_into_bundle(["COLOR_GHOST_C", "COLOR_GHOST_D"], "COLOR_MEGA_EMPTY2")
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+        check(not result["zip_path"].with_suffix(".manifest.json").exists(),
+              "no manifest should be left behind when nothing was merged")
 
 
 def test_merge_existing_sets_reports_missing_source_without_dropping_silently():

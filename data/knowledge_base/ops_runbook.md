@@ -23569,3 +23569,30 @@ missing_writes_no_zip` (test_coloring_dynamic_theme.py); 5 tests on
 rejected, missing description rejected, pid collision rejected, all-sources-
 missing rejected without registering). Verified: 116/116 full suite.
 Build 1cdaa7f-v330.
+
+
+## 2026-08-10 — Bundle QC gate false-FAILed a legitimate 100-page merge
+Ran the new coloring-bundle merge live: combined COLOR1002 (Halloween, 20
+real pages), COLOR1003 (Halloween, 20), COLOR1004 (Dinosaurs, 30), COLOR1005
+(Variety, 30) into COLOR1006 — 100 real pages, zero new AI spend, exactly as
+designed. QC immediately FAILed it: `check_coloring_zip()` hard-expects
+exactly `NEW_THEME_SET_SIZE` (30) pages, a single-batch assumption the
+bundle-merge feature (shipped the same session, just before this) correctly
+violates — not a defect in the bundle itself.
+
+**Fix:** `merge_existing_sets_into_bundle()` now writes a `<zip>.manifest.
+json` sidecar recording the real combined total_pages. `qc_sweep.check_
+coloring_zip()` checks for that sidecar and uses its recorded total as the
+expected count instead of NEW_THEME_SET_SIZE when present; falls back to the
+unchanged single-batch check when absent (every existing product, since no
+manifest exists for them) or malformed. Never weakens the mismatch check
+itself — a bundle whose real ZIP contents don't match what its OWN manifest
+claims still hard-FAILs, same as before.
+
+New tests: `test_check_coloring_zip_honors_manifest_for_a_merged_bundle`,
+`test_check_coloring_zip_manifest_mismatch_still_fails`, `test_check_
+coloring_zip_malformed_manifest_falls_back_to_standard_size`
+(test_qc_sweep_coloring.py); `test_merge_existing_sets_all_missing_leaves_
+no_manifest_either` + manifest assertions added to the existing merge test
+(test_coloring_dynamic_theme.py). Verified: 116/116 full suite.
+Build 87781ae-v331.
