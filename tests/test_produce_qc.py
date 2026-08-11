@@ -609,6 +609,97 @@ def test_next_coloring_pid_returns_lowest_when_none_taken():
     check(re.fullmatch(r"COLOR\d+", pid), f"expected a COLOR#### shape, got {pid!r}")
 
 
+# ── Coloring bundle merge (2026-08-10, cost-effective-scale request) ────────
+# _produce_coloring_bundle() combines several EXISTING coloring-pages
+# products' real ZIPs into one new bundle product's ZIP -- zero new AI
+# spend. These test the server-level endpoint function's validation/
+# registration wiring; generate_coloring_pages.merge_existing_sets_into_
+# bundle()'s own file-merge mechanics are covered directly in
+# tests/test_coloring_dynamic_theme.py.
+
+def _write_fake_source_zip(sets_dir, pid, n_pages):
+    import zipfile
+    sets_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(sets_dir / f"coloring_{pid.lower()}_set_01.zip", "w") as zf:
+        for i in range(n_pages):
+            zf.writestr(f"{pid}_{i:02d}_coloring.png", b"fake png bytes")
+
+
+def test_coloring_bundle_merges_sources_and_registers_new_product():
+    import generate_coloring_pages as gcp
+    registered = {}
+
+    def _fake_register(pid, category, name, price, files, description):
+        registered.update(pid=pid, category=category, name=name, price=price,
+                           files=files, description=description)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sets_dir = Path(tmpdir) / "sets"
+        _write_fake_source_zip(sets_dir, "COLOR1004", 30)
+        _write_fake_source_zip(sets_dir, "COLOR1005", 30)
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = sets_dir
+        try:
+            with patch.object(server, "_find_catalog_product", return_value=None), \
+                 patch.object(server, "_register_new_product_overlay", side_effect=_fake_register):
+                out = server._produce_coloring_bundle({
+                    "pid": "COLOR_MEGA_BUNDLE", "description": "Mega Kids Bundle",
+                    "source_pids": ["COLOR1004", "COLOR1005"],
+                })
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check(out.get("status") == "merged", f"got {out}")
+    check(out.get("total_pages") == 60, f"expected 60 combined real pages, got {out}")
+    check(out.get("missing") == [], f"expected no missing sources, got {out}")
+    check(registered.get("pid") == "COLOR_MEGA_BUNDLE", f"got {registered}")
+    check(registered.get("category") == "coloring_pages", f"got {registered}")
+
+
+def test_coloring_bundle_rejects_fewer_than_two_sources():
+    out = server._produce_coloring_bundle({
+        "description": "Not enough sources", "source_pids": ["COLOR1004"],
+    })
+    check("error" in out, f"a single source must be rejected, got {out}")
+    check("at least 2" in out["error"], f"got {out}")
+
+
+def test_coloring_bundle_requires_description():
+    out = server._produce_coloring_bundle({"source_pids": ["COLOR1004", "COLOR1005"]})
+    check("error" in out and "description" in out["error"].lower(), f"got {out}")
+
+
+def test_coloring_bundle_rejects_pid_collision():
+    with patch.object(server, "_find_catalog_product", return_value={"product_id": "COLOR_TAKEN"}):
+        out = server._produce_coloring_bundle({
+            "pid": "COLOR_TAKEN", "description": "dup test",
+            "source_pids": ["COLOR1004", "COLOR1005"],
+        })
+    check("error" in out and "already exists" in out["error"], f"got {out}")
+
+
+def test_coloring_bundle_all_sources_missing_rejected_without_registering():
+    registered = {"called": False}
+
+    def _fake_register(*a, **kw):
+        registered["called"] = True
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        import generate_coloring_pages as gcp
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = Path(tmpdir) / "sets"
+        try:
+            with patch.object(server, "_find_catalog_product", return_value=None), \
+                 patch.object(server, "_register_new_product_overlay", side_effect=_fake_register):
+                out = server._produce_coloring_bundle({
+                    "pid": "COLOR_MEGA_GHOST", "description": "ghost sources",
+                    "source_pids": ["COLOR_GHOST_A", "COLOR_GHOST_B"],
+                })
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check("error" in out, f"all-missing sources must be rejected, got {out}")
+    check(not registered["called"], "must never register a product with zero real pages")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

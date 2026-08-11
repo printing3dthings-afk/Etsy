@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "55f68c3-v329"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "1cdaa7f-v330"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13727,6 +13727,59 @@ async def produce_coloring_pack(body: dict, _token: str = Depends(_rate_limited_
     """Kick off a coloring-pages product's ZIP-set rebuild in the background.
     Returns immediately; the ZIPs appear in Files when done."""
     return await asyncio.to_thread(_produce_coloring_pack, body or {})
+
+
+def _produce_coloring_bundle(inp: dict) -> dict:
+    """Combine several EXISTING coloring-pages products' real, already-
+    generated ZIPs into one new bundle product's ZIP — zero AI spend, pure
+    repackaging (2026-08-10, cost-effective-scale request). Synchronous and
+    fast (disk I/O only, no subprocess) unlike the AI-generation produce
+    endpoints above. See generate_coloring_pages.merge_existing_sets_into_
+    bundle()'s docstring for the merge mechanics and why only new-pipeline
+    (COLOR100x) sources are reachable — older pre-volume-fix products' source
+    files were never migrated and aren't present to merge."""
+    source_pids = (inp or {}).get("source_pids")
+    if not isinstance(source_pids, list) or len(source_pids) < 2:
+        return {"error": "source_pids must be a list of at least 2 existing coloring-pages product IDs"}
+    source_pids = [str(p).strip().upper() for p in source_pids if str(p).strip()]
+    description = str((inp or {}).get("description", "")).strip()
+    if not description:
+        return {"error": "description is required (short name for the new bundle product)"}
+    bundle_pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not bundle_pid:
+        bundle_pid = _next_coloring_pid()
+    if _find_catalog_product(bundle_pid) is not None:
+        return {"error": f"{bundle_pid} already exists in the catalog — pick a different pid"}
+
+    import generate_coloring_pages as _gcp
+    result = _gcp.merge_existing_sets_into_bundle(source_pids, bundle_pid)
+    if result["total_pages"] == 0:
+        return {"error": f"none of the requested source pids had a reachable ZIP on this deploy's "
+                          f"volume: {', '.join(result['missing'])}"}
+
+    rel_path = f"data/digital_products/coloring_pages/sets/coloring_{bundle_pid.lower()}_set_01.zip"
+    _register_new_product_overlay(bundle_pid, "coloring_pages", description, None, [rel_path], description)
+
+    missing_note = f" Could not find a ZIP for: {', '.join(result['missing'])}." if result["missing"] else ""
+    return {
+        "pid": bundle_pid,
+        "status": "merged",
+        "zip": rel_path,
+        "included": result["included"],
+        "missing": result["missing"],
+        "total_pages": result["total_pages"],
+        "message": f"Combined {len(result['included'])} existing product(s) into {result['total_pages']} "
+                   f"real pages for {bundle_pid} — zero new AI spend.{missing_note} "
+                   f"Open Products to author listing content and stage for review.",
+    }
+
+
+@app.post("/api/produce/coloring-bundle")
+async def produce_coloring_bundle(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Merge several existing coloring-pages products' real ZIPs into one new
+    bundle listing's ZIP. Fast and synchronous (no background job) — see
+    _produce_coloring_bundle()'s docstring."""
+    return await asyncio.to_thread(_produce_coloring_bundle, body or {})
 
 
 # Approved image engines (mirrors tools/image_gen.py's engine dispatch). Single

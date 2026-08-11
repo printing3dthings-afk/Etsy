@@ -23518,3 +23518,54 @@ New tests: `test_coloring_subjects_override_same_pid_resume_not_blocked_by_
 own_registry`, `test_coloring_subjects_override_different_pid_still_blocked_
 by_registry` (tests/test_produce_qc.py). Verified: 116/116 full suite.
 Build 55f68c3-v329.
+
+
+## 2026-08-10 — Coloring-page cost audit: quality tier + zero-spend bundle merge
+Follow-up to the top-10-listings competitive research above: Scott asked how
+to cost-effectively scale coloring-page bundle size toward what top
+competitors advertise (~8,000 pages, itself almost certainly an accumulated
+bundle-of-many-products, not one generation batch).
+
+**Real waste found and fixed:** `generate_coloring_pages.py`'s per-page
+image call never set a `quality` tier, so it silently inherited `image_gen.
+generate_image()`'s default `quality="high"` — confirmed against OpenAI's
+own pricing docs: $0.167/image at our SQUARE size, vs. $0.042 at "medium"
+(~4x cheaper) or $0.011 at "low". A coloring page is pure thick black-line-
+on-white with zero gradients/fine detail to lose, so "high" was pure waste.
+Switched `_gen_image_openai()` to request `quality="medium"` explicitly —
+a deliberately conservative choice (not "low") pending a real visual
+side-by-side, same discipline the grok-vs-openai engine default used before
+shipping. Silently ignored by non-OpenAI engines (grok/gemini/ideogram),
+so this only affects the openai/gpt-image-2 path.
+
+**Zero-spend scaling path:** audited real page counts across the whole
+coloring-pages catalog via `/api/products/{id}/review` — found the 11 kawaii
+5-page sets + 2 bundle-wrapper products (~85-105 pages) show `exists: false`
+for their source files even though they're live, real Etsy listings (spot-
+checked SET_01 via `/api/listings/{id}/files`: real 2.3MB file, confirmed
+delivered to buyers). Root cause: `_resolve_dp_base()`'s own docstring — the
+durable-volume fix landed 2026-07-25, and these predate it, so their source
+files were never migrated and simply aren't present on the current volume to
+merge. Only the new pipeline's products (COLOR100x) are reachable. Also
+found COLOR1002/COLOR1003 (Halloween, 20 real pages each) sitting unpublished
+with a QC "FAIL" — not a truthfulness issue (their authored descriptions
+correctly say "20 pages," not 30), just stale against the NEW_THEME_SET_SIZE
+20->30 bump from 2026-08-08 that postdates them.
+
+Added `generate_coloring_pages.merge_existing_sets_into_bundle()` +
+`POST /api/produce/coloring-bundle` (`_produce_coloring_bundle`) — combines
+several existing coloring-pages products' real ZIPs into one new bundle
+product's ZIP, zero new AI spend, each source's pages prefixed by pid so
+names can never collide, any unreachable source reported in `missing` (never
+silently dropped), registers the result as a normal draft product via the
+same `_register_new_product_overlay()` every other new-product path uses.
+
+New tests: `test_coloring_pages_generate_at_medium_quality_not_high`
+(test_coloring_dynamic_theme.py); `test_merge_existing_sets_combines_real_
+pages_with_no_name_collisions`, `test_merge_existing_sets_reports_missing_
+source_without_dropping_silently`, `test_merge_existing_sets_all_sources_
+missing_writes_no_zip` (test_coloring_dynamic_theme.py); 5 tests on
+`_produce_coloring_bundle` (test_produce_qc.py: merge+register, <2 sources
+rejected, missing description rejected, pid collision rejected, all-sources-
+missing rejected without registering). Verified: 116/116 full suite.
+Build 1cdaa7f-v330.

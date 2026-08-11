@@ -24,6 +24,7 @@ import json
 import os
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -44,7 +45,7 @@ def check(cond: bool, msg: str) -> None:
         _failures.append(msg)
 
 
-def _fake_generate_image(prompt, out_path, size=None, output_format=None, engine=None):
+def _fake_generate_image(prompt, out_path, size=None, output_format=None, quality=None, engine=None):
     from PIL import Image
     out_path = Path(out_path)
     Image.new("RGB", (64, 64), "white").save(out_path)
@@ -68,6 +69,31 @@ def test_dynamic_theme_prompts_include_style_dna_and_subject():
             p.unlink(missing_ok=True)
 
 
+def test_coloring_pages_generate_at_medium_quality_not_high():
+    """2026-08-10 cost audit: generate_image()'s own default is quality="high"
+    ($0.167/image on gpt-image-1/2 at our SQUARE size, confirmed against
+    OpenAI's pricing docs) -- wasted spend for a coloring page, which is pure
+    thick black-line-on-white with no gradients or fine detail to lose.
+    _gen_image_openai() must explicitly request "medium" ($0.042/image, ~4x
+    cheaper) rather than silently inheriting the expensive default."""
+    captured = {}
+
+    def _capture_quality(prompt, out_path, size=None, output_format=None, quality=None, engine=None):
+        captured["quality"] = quality
+        return _fake_generate_image(prompt, out_path, size, output_format, quality, engine)
+
+    with patch("tools.image_gen.generate_image", side_effect=_capture_quality):
+        paths = gcp.generate_dynamic_theme_set(
+            "COLOR_QUALITY_TEST", ["A curious owl on a branch"], engine="openai")
+    try:
+        check(len(paths) == 1, f"expected 1 generated page, got {paths}")
+        check(captured.get("quality") == "medium",
+              f"coloring pages must request quality='medium', got {captured.get('quality')!r}")
+    finally:
+        for p in paths:
+            p.unlink(missing_ok=True)
+
+
 def test_new_theme_set_size_is_30():
     """Regression guard for Scott's explicit request (2026-08-08): 'I need for
     the coloring pages to be made in groups of 30.' Every downstream reader
@@ -83,7 +109,7 @@ def test_dynamic_theme_difficulty_selects_correct_style_uniformly():
     never a mix of kids-simple and adult-intricate pages in the same group."""
     captured_prompts = {}
 
-    def _record(prompt, out_path, size=None, output_format=None, engine=None):
+    def _record(prompt, out_path, size=None, output_format=None, quality=None, engine=None):
         captured_prompts.setdefault("prompts", []).append(prompt)
         return _fake_generate_image(prompt, out_path)
 
@@ -303,6 +329,74 @@ def test_catalog_lookup_returns_none_for_overlay_entry_missing_files():
         finally:
             del os.environ["HUB_FILES_DIR"]
     check(result is None, f"an overlay entry with no files must not resolve, got {result}")
+
+
+# ── Bundle merge (2026-08-10, cost-effective-scale request) ─────────────────
+# Combines several EXISTING coloring-pages products' real ZIPs into one new
+# bundle ZIP with zero new AI spend. Pure file work -- no image_gen mock
+# needed, just real (fake-content) ZIPs on disk.
+
+def _write_fake_source_zip(sets_dir: Path, pid: str, n_pages: int) -> None:
+    sets_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(sets_dir / f"coloring_{pid.lower()}_set_01.zip", "w") as zf:
+        for i in range(n_pages):
+            zf.writestr(f"{pid}_{i:02d}_coloring.png", b"fake png bytes")
+
+
+def test_merge_existing_sets_combines_real_pages_with_no_name_collisions():
+    with tempfile.TemporaryDirectory() as tmp:
+        sets_dir = Path(tmp) / "sets"
+        _write_fake_source_zip(sets_dir, "COLOR1004", 30)
+        _write_fake_source_zip(sets_dir, "COLOR1005", 30)
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = sets_dir
+        try:
+            result = gcp.merge_existing_sets_into_bundle(["COLOR1004", "COLOR1005"], "COLOR_MEGA_TEST")
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+        check(result["total_pages"] == 60, f"expected 60 combined pages, got {result['total_pages']}")
+        check(result["missing"] == [], f"expected no missing sources, got {result['missing']}")
+        check(result["zip_path"].exists(), "the combined ZIP must actually be written to disk")
+        with zipfile.ZipFile(result["zip_path"], "r") as zf:
+            names = zf.namelist()
+            check(len(names) == 60, f"expected 60 members in the combined ZIP, got {len(names)}")
+            check(len(set(names)) == 60, "member names must all be unique (no source collision)")
+            check(all(n.startswith("COLOR1004_") or n.startswith("COLOR1005_") for n in names),
+                  "every member must be prefixed with its real source pid")
+
+
+def test_merge_existing_sets_reports_missing_source_without_dropping_silently():
+    """A source pid whose ZIP isn't reachable (e.g. an old pre-volume-fix
+    product whose files were never migrated) must be reported in `missing`,
+    not just silently excluded -- see merge_existing_sets_into_bundle()'s
+    docstring."""
+    with tempfile.TemporaryDirectory() as tmp:
+        sets_dir = Path(tmp) / "sets"
+        _write_fake_source_zip(sets_dir, "COLOR1004", 30)
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = sets_dir
+        try:
+            result = gcp.merge_existing_sets_into_bundle(
+                ["COLOR1004", "COLOR_KAWAII_COLORING_PAGES_SET_01"], "COLOR_MEGA_TEST2")
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check(result["total_pages"] == 30, f"only the reachable source's pages should be counted, got {result}")
+    check(result["missing"] == ["COLOR_KAWAII_COLORING_PAGES_SET_01"], f"got {result['missing']}")
+    check(len(result["included"]) == 1, f"got {result['included']}")
+
+
+def test_merge_existing_sets_all_sources_missing_writes_no_zip():
+    with tempfile.TemporaryDirectory() as tmp:
+        sets_dir = Path(tmp) / "sets"
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = sets_dir
+        try:
+            result = gcp.merge_existing_sets_into_bundle(["COLOR_GHOST_A", "COLOR_GHOST_B"], "COLOR_MEGA_EMPTY")
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+        check(result["total_pages"] == 0, f"got {result}")
+        check(sorted(result["missing"]) == ["COLOR_GHOST_A", "COLOR_GHOST_B"], f"got {result['missing']}")
+        check(not result["zip_path"].exists(), "no ZIP file should be left behind when nothing was merged")
 
 
 def run() -> None:

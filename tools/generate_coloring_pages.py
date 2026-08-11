@@ -638,7 +638,19 @@ def _gen_image_openai(prompt: str, engine: str | None = None) -> bytes | None:
     same as generate_image() itself when not given (2026-07-22: threaded
     through so generate_dynamic_theme_set() can honor an explicit engine
     choice from the Create screen's new-theme flow, same as every other
-    category's AI generation call in this app)."""
+    category's AI generation call in this app).
+
+    quality="medium" (2026-08-10, cost audit): generate_image()'s own default
+    is quality="high" ($0.167/image at our SQUARE size on gpt-image-1/2,
+    confirmed against OpenAI's own pricing docs) -- wasted spend for this
+    category specifically, since a coloring page is pure thick black-line-on-
+    white with no gradients, photorealism, or fine detail to lose. "medium"
+    ($0.042/image, ~4x cheaper) is the safe middle ground pending a real
+    visual side-by-side before dropping further to "low" ($0.011/image) --
+    the same verify-before-defaulting discipline the grok-vs-openai engine
+    comparison used, not a blind cost cut. Silently ignored by non-OpenAI-
+    compatible engines (grok/gemini/ideogram don't accept it), so this is
+    safe to pass unconditionally regardless of which engine actually resolves."""
     try:
         from tools.image_gen import generate_image, SQUARE, ImageGenError
     except ImportError:
@@ -646,7 +658,7 @@ def _gen_image_openai(prompt: str, engine: str | None = None) -> bytes | None:
         from tools.image_gen import generate_image, SQUARE, ImageGenError
     try:
         tmp_path = generate_image(prompt, BASE / "_tmp_coloring_gen.png", size=SQUARE,
-                                   output_format="png", engine=engine)
+                                   output_format="png", quality="medium", engine=engine)
         data = tmp_path.read_bytes()
         tmp_path.unlink(missing_ok=True)
         return data
@@ -837,6 +849,56 @@ def build_sets(coloring_files: list[Path], pack: str = "kawaii",
         print(f"  ZIP {set_num:02d}: {zip_path.name} ({len(batch)} pages)")
         zip_paths.append(zip_path)
     return zip_paths
+
+
+def merge_existing_sets_into_bundle(source_pids: list[str], bundle_pid: str) -> dict:
+    """Combine the real, already-generated ZIPs of several existing coloring-
+    pages products into ONE new ZIP for a bundle listing — zero new AI spend,
+    reuses content that's already paid for. Pure file work: reads each source
+    ZIP under SETS_DIR (the new-pipeline naming convention,
+    `coloring_<pid.lower()>_set_01.zip` — see _produce_build_product()'s
+    reg_files assignment), re-packages every PNG member into one combined ZIP
+    at SETS_DIR / `coloring_<bundle_pid.lower()>_set_01.zip`, prefixing each
+    member's filename with its source pid so pages from different sources can
+    never collide on the same name inside the combined ZIP.
+
+    2026-08-10: only the NEW pipeline's products (COLOR100x, files registered
+    under SETS_DIR with a full catalog path) are reachable this way -- the
+    older kawaii/fun-adventure sets predate the durable-volume fix
+    (_resolve_dp_base()'s own docstring) and their source files were never
+    migrated, so they simply aren't present here to merge. Never silently
+    drops a requested source: any pid whose ZIP isn't found is reported in
+    `missing`, not just skipped without a trace."""
+    SETS_DIR.mkdir(parents=True, exist_ok=True)
+    included: list[dict] = []
+    missing: list[str] = []
+    seen_names: set[str] = set()
+    out_path = SETS_DIR / f"coloring_{bundle_pid.lower()}_set_01.zip"
+    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as out_zf:
+        for pid in source_pids:
+            src_path = SETS_DIR / f"coloring_{pid.lower()}_set_01.zip"
+            if not src_path.exists():
+                missing.append(pid)
+                continue
+            with zipfile.ZipFile(src_path, "r") as src_zf:
+                members = [n for n in src_zf.namelist() if n.lower().endswith(".png")]
+                for name in members:
+                    new_name = f"{pid}_{name}"
+                    if new_name in seen_names:
+                        continue  # a genuine duplicate write would corrupt the ZIP index
+                    seen_names.add(new_name)
+                    out_zf.writestr(new_name, src_zf.read(name))
+                included.append({"pid": pid, "pages": len(members)})
+    total_pages = sum(e["pages"] for e in included)
+    if total_pages == 0:
+        out_path.unlink(missing_ok=True)
+    return {
+        "bundle_pid": bundle_pid,
+        "zip_path": out_path,
+        "included": included,
+        "missing": missing,
+        "total_pages": total_pages,
+    }
 
 
 # ---------------------------------------------------------------------------
