@@ -530,7 +530,19 @@ def _grok_key() -> str:
                     key = line.split("=", 1)[1].strip()
                     break
     if not key:
-        raise ImageGenError("XAI_API_KEY not set (needed for engine='grok')")
+        # 2026-08-05/2026-08-11: the real xAI key is set on Railway, but under
+        # the variable name "Grok api" (with a space) instead of XAI_API_KEY
+        # -- confirmed live (this codebase's every other reference to this
+        # bug documents it as a known, still-unfixed Railway naming mismatch,
+        # not a missing key). Check it as a fallback so a real, already-
+        # provisioned key isn't silently unusable while the rename is
+        # pending -- this reads an existing variable, never renames/writes
+        # anything in Railway itself.
+        key = os.getenv("Grok api", "")
+    if not key:
+        raise ImageGenError(
+            "XAI_API_KEY not set (needed for engine='grok') -- also checked the "
+            "known-misnamed 'Grok api' Railway variable, not set either")
     return key
 
 

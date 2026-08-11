@@ -126,6 +126,44 @@ def test_ideogram_generate_bytes_raises_clear_error_when_no_url():
             check("no image url" in str(e), f"error message should explain the missing url, got: {e}")
 
 
+# ── _grok_key() fallback for the misnamed Railway variable (2026-08-11) ────
+# The real xAI key is provisioned on Railway under "Grok api" (with a space)
+# instead of XAI_API_KEY -- a known, already-logged naming mismatch. Rather
+# than leave a real, already-paid-for key unusable while the rename is
+# pending, _grok_key() now also checks that exact variable name as a
+# fallback. This never renames/writes anything in Railway -- purely a read
+# of an already-existing variable.
+
+def test_grok_key_uses_xai_api_key_when_set():
+    with patch.dict(image_gen.os.environ, {"XAI_API_KEY": "real-key-123"}, clear=False), \
+         patch.object(image_gen, "_ENV_PATH", Path("/nonexistent/path/.env")):
+        check(image_gen._grok_key() == "real-key-123", "must prefer XAI_API_KEY when set")
+
+
+def test_grok_key_falls_back_to_misnamed_railway_variable():
+    env = dict(image_gen.os.environ)
+    env.pop("XAI_API_KEY", None)
+    env["Grok api"] = "misnamed-real-key-456"
+    with patch.dict(image_gen.os.environ, env, clear=True), \
+         patch.object(image_gen, "_ENV_PATH", Path("/nonexistent/path/.env")):
+        check(image_gen._grok_key() == "misnamed-real-key-456",
+              "must fall back to the known-misnamed 'Grok api' variable when XAI_API_KEY is unset")
+
+
+def test_grok_key_raises_clear_error_when_neither_variable_is_set():
+    env = dict(image_gen.os.environ)
+    env.pop("XAI_API_KEY", None)
+    env.pop("Grok api", None)
+    with patch.dict(image_gen.os.environ, env, clear=True), \
+         patch.object(image_gen, "_ENV_PATH", Path("/nonexistent/path/.env")):
+        try:
+            image_gen._grok_key()
+            check(False, "must raise ImageGenError when neither variable is set")
+        except image_gen.ImageGenError as e:
+            check("XAI_API_KEY" in str(e) and "Grok api" in str(e),
+                  f"error should mention both variable names checked, got: {e}")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

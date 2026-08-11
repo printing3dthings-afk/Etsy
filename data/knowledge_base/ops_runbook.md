@@ -23697,3 +23697,40 @@ tests/test_produce_qc.py (wall_calendar build wiring: theme/pid/year
 validation, subprocess args, prepublish photo registration). CLAUDE.md: new
 "WC-Series Printable Wall Calendar Pipeline" section. Verified: 118/118
 full suite. Build 1c0df4e-v333.
+
+
+## 2026-08-11 — Every approved image engine down at once; Grok unblocked in code
+Tried to actually run the new WC1001 (Sage Garden) calendar build against
+real production to verify end-to-end, not just against fake test art.
+Found all 4 approved image engines unusable, one after another:
+- **gemini** (default): `429 RESOURCE_EXHAUSTED — prepayment credits
+  depleted` (same known issue already logged earlier this session).
+- **openai** (gpt-image-1): `429 insufficient_quota — no credits
+  remaining`. NEW as of this session — it worked fine for COLOR1005/1006/
+  1007 earlier today, so this is a fresh depletion, not a standing issue.
+- **ideogram**: `IDEOGRAM_API_KEY not set` — never configured on Railway at
+  all.
+- **grok**: `XAI_API_KEY not set` — the already-documented naming mismatch
+  (real key lives under Railway variable "Grok api", with a space, not
+  XAI_API_KEY).
+
+Every single approved engine was simultaneously unusable — a total block on
+any new AI image generation shop-wide (not just calendars): no new coloring
+pages, wall art, planner covers, or SVG pack art either until at least one
+is fixed.
+
+**Fixed what's fixable from code:** `image_gen._grok_key()` now falls back
+to checking the real, already-provisioned "Grok api" Railway variable when
+`XAI_API_KEY` is unset -- reads an existing variable, never renames or
+writes anything in Railway. This doesn't fix Gemini/OpenAI (those need
+Scott to add real billing credits) or Ideogram (needs a key provisioned at
+all), but it should unblock Grok immediately without waiting on a Railway
+console rename. New tests: `test_grok_key_uses_xai_api_key_when_set`,
+`test_grok_key_falls_back_to_misnamed_railway_variable`, `test_grok_key_
+raises_clear_error_when_neither_variable_is_set` (test_image_gen_ideogram_
+retry.py). Verified: 118/118 full suite. Build 701de81-v334.
+
+**Still needs Scott:** add billing/credits to Gemini (AI Studio) and/or
+OpenAI (platform.openai.com billing), or provision IDEOGRAM_API_KEY, so
+this shop has more than one working image engine again. Grok alone being
+unblocked is not a substitute for having the shop's primary engines funded.
