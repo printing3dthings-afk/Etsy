@@ -760,7 +760,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "701de81-v334"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2bb950b-v335"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9272,17 +9272,48 @@ async def get_ads_status(_token: str = Depends(_auth_session_or_bearer)):
 # endpoints. No rate limiting beyond the shared session/bearer auth — a
 # bridge pushing every few seconds is well under any real limit, same as
 # every other internal, non-mutating, non-Etsy-costing endpoint here.
-@app.post("/api/printer/telemetry")
-async def post_printer_telemetry(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
-    global _printer_telemetry, _printer_telemetry_at
-    with _printer_lock:
-        _printer_telemetry = payload
-        _printer_telemetry_at = time.time()
-    return {"ok": True}
+def _merge_printer_telemetry(existing: dict | None, incoming: dict) -> dict:
+    """Merge one bridge push into the running printer-state snapshot instead
+    of replacing it wholesale (2026-08-11 fix for Scott's "stats keep going
+    away and random info pops up" -- confirmed live: bridge_seen=true,
+    age_seconds<1, yet nearly every field null except whatever the single
+    most recent MQTT message happened to mention).
+
+    Root cause: Bambu's MQTT `print` topic mixes full "pushall" reports with
+    small partial deltas that only carry the fields that changed. The old
+    code (`_printer_telemetry = payload`) treated every push as a complete
+    snapshot, so a delta that only reported a new bed temp wiped out every
+    other field the HUD was showing a second earlier.
+
+    Two independent old-bridge quirks handled defensively here so this fix
+    takes effect the moment it deploys, without requiring Scott to update
+    the bridge on his own machine first:
+      - Scalar fields: the shipped bridge always sends every key, using
+        None for "this delta didn't mention it" -- skip None on merge.
+      - `ams`/`hms`: always sent as a list (never None) even when the delta
+        didn't mention them at all, defaulting to `[]` -- skip an EMPTY
+        list on merge so a real, non-empty tray/error list already known
+        doesn't get silently cleared. (Tradeoff: a genuine HMS-just-cleared
+        transition won't visibly clear until the next non-empty-driving
+        push; a stale error notice is lower-risk than the constant-flicker
+        bug this fix targets.)
+    A rewritten bridge (this same commit) only includes a key in its
+    payload at all when the raw MQTT message actually reported it, which
+    makes this merge exactly correct for it too -- no second code path
+    needed once Scott updates the bridge."""
+    state = dict(existing) if existing else {}
+    for key, value in incoming.items():
+        if value is None:
+            continue
+        if key in ("ams", "hms") and isinstance(value, list) and not value:
+            continue
+        state[key] = value
+    return state
 
 
-@app.get("/api/printer/status")
-async def get_printer_status(_token: str = Depends(_auth_session_or_bearer)):
+def _printer_status_payload() -> dict:
+    """Same shape GET /api/printer/status returns -- shared so the REST
+    response and every /ws/printer push can never drift apart."""
     with _printer_lock:
         data = _printer_telemetry
         at = _printer_telemetry_at
@@ -9291,6 +9322,76 @@ async def get_printer_status(_token: str = Depends(_auth_session_or_bearer)):
     if data is None:
         return {"online": False, "bridge_seen": False}
     return {"online": online, "bridge_seen": True, "age_seconds": round(age, 1), **data}
+
+
+_printer_ws_clients: set = set()
+_printer_ws_lock = threading.Lock()
+
+
+async def _broadcast_printer_telemetry() -> None:
+    """Push the current snapshot to every connected /ws/printer client —
+    called right after a bridge push updates state, so the HUD updates the
+    instant new data arrives instead of waiting for its next poll tick."""
+    with _printer_ws_lock:
+        clients = list(_printer_ws_clients)
+    if not clients:
+        return
+    payload = json.dumps(_printer_status_payload())
+    dead = []
+    for ws in clients:
+        try:
+            await ws.send_text(payload)
+        except Exception:  # noqa: BLE001
+            dead.append(ws)
+    if dead:
+        with _printer_ws_lock:
+            for ws in dead:
+                _printer_ws_clients.discard(ws)
+
+
+@app.post("/api/printer/telemetry")
+async def post_printer_telemetry(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+    global _printer_telemetry, _printer_telemetry_at
+    with _printer_lock:
+        _printer_telemetry = _merge_printer_telemetry(_printer_telemetry, payload)
+        _printer_telemetry_at = time.time()
+    await _broadcast_printer_telemetry()
+    return {"ok": True}
+
+
+@app.get("/api/printer/status")
+async def get_printer_status(_token: str = Depends(_auth_session_or_bearer)):
+    return _printer_status_payload()
+
+
+@app.websocket("/ws/printer")
+async def printer_ws(websocket: WebSocket):
+    """Live push channel for the P1S printer card (2026-08-11) — the HUD
+    connects here instead of relying solely on its 5s poll of GET
+    /api/printer/status. Auth via the same short-lived, single-use ?ticket=
+    mechanism /ws/chat uses (browsers can't set a Bearer header on a WS
+    handshake). Sends the current snapshot immediately on connect, then
+    again every time the bridge pushes new telemetry (see
+    _broadcast_printer_telemetry(), called from post_printer_telemetry()).
+    Server -> client only; the 5s poll stays in place client-side as a
+    fallback so a dropped socket degrades to "slightly less instant," never
+    to "no data.\""""
+    ticket = websocket.query_params.get("ticket", "")
+    if not ticket or not _consume_ws_ticket(ticket):
+        await websocket.close(code=4001)
+        return
+    await websocket.accept()
+    with _printer_ws_lock:
+        _printer_ws_clients.add(websocket)
+    try:
+        await websocket.send_text(json.dumps(_printer_status_payload()))
+        while True:
+            await websocket.receive_text()  # only used to detect disconnect; no client->server messages expected
+    except WebSocketDisconnect:
+        pass
+    finally:
+        with _printer_ws_lock:
+            _printer_ws_clients.discard(websocket)
 
 
 @app.post("/api/printer/camera-frame")

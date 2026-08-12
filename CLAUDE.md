@@ -238,10 +238,12 @@ Scope: `https://www.googleapis.com/auth/calendar` (read + write)
 ---
 
 ## Bambu P1S Live Monitoring (Frank Integration)
-**Not yet running.** Frank (the Railway-hosted dashboard) has no route to the home LAN the printer is
-on, so it can never talk to the P1S directly. `tools/relay/bambu_p1s_bridge.py` is a small standalone
-process that runs ON the same network as the printer, reads its status over local MQTT, and pushes a
-snapshot to Frank every few seconds. To turn this on:
+**Running in production** (confirmed live 2026-08-11 — this doc previously said "Not yet running,"
+which was stale; Scott has it set up and pushing). Frank (the Railway-hosted dashboard) has no route
+to the home LAN the printer is on, so it can never talk to the P1S directly. `tools/relay/
+bambu_p1s_bridge.py` is a small standalone process that runs ON the same network as the printer, reads
+its status over local MQTT, and pushes a snapshot to Frank roughly every second. To set this up fresh
+(or re-set-up on a new machine):
 1. `pip install -r tools/relay/bambu_requirements.txt`
 2. Create/edit `tools/relay/.env` (same file `frank_relay.py` uses, gitignored — never commit real
    values here) with: `BAMBU_IP`, `BAMBU_ACCESS_CODE`, `BAMBU_SERIAL` (all three from the printer's own
@@ -250,14 +252,43 @@ snapshot to Frank every few seconds. To turn this on:
 3. `python tools/relay/bambu_p1s_bridge.py --test` to verify the MQTT handshake once before leaving it
    running unattended; `python tools/relay/bambu_p1s_bridge.py` to run it for real.
 4. Once it's pushing, the "🖨️ Bambu P1S Printer" card on Frank's Home screen shows live state, progress,
-   layer count, ETA, nozzle/bed/chamber temps, speed mode, and AMS tray colors — it reads
-   `GET /api/printer/status`, which reports `online: false` ("bridge offline") whenever the bridge hasn't
-   pushed in the last 90 seconds, so the card never shows stale numbers as if they were live. The HUD
-   polls this endpoint every 5s while the Home screen is open (2026-07-30 — was tied to the 30s global
-   refresh cycle, which had zero margin against the old 30s staleness cutoff and made the card flicker
-   to "offline" on any single missed poll; both sides now have real headroom).
+   layer count, ETA, nozzle/bed/chamber temps, speed mode, and AMS tray colors. `GET /api/printer/status`
+   reports `online: false` ("bridge offline") whenever the bridge hasn't pushed in the last 90 seconds,
+   so the card never shows stale numbers as if they were live.
 5. **Click the printer card** to open a detail view with the full live stats plus a periodically-refreshed
    camera frame (2026-07-30).
+
+**Near-instant updates + the "fields go blank" fix (2026-08-11).** Scott reported "stats keep going away
+and random info pops up" twice — the first pass (2026-07-30) only fixed the card falsely flipping to
+"BRIDGE OFFLINE" (a too-tight 30s staleness cutoff with zero margin against the HUD's own 30s poll).
+Confirmed live in production the underlying bug was still there: `bridge_seen: true`, `age_seconds: 0.6`
+(genuinely connected, actively pushing), yet nearly every field `null` except whichever one the single
+most recent MQTT message happened to mention. Root cause: Bambu's MQTT `print` topic mixes full
+"pushall" reports with small partial deltas that only carry whatever changed, and neither the bridge
+(`_parse_report()`, called fresh per message with no memory of prior values) nor the backend
+(`post_printer_telemetry` — `_printer_telemetry = payload`, a full overwrite) ever merged pushes; any
+field a specific delta didn't mention got wiped from the dashboard.
+
+Fixed on both sides:
+- **Backend** (`main.py`): `_merge_printer_telemetry()` merges each push into the running snapshot
+  instead of replacing it — skips `None` scalar values and empty `ams`/`hms` lists so a field a delta
+  doesn't mention keeps its last known real value. Deliberately defensive against the *old*, not-yet-
+  updated bridge's payload shape too (always-present keys, `None`/`[]` standing in for "not reported"),
+  so this fix took effect the moment it deployed, without waiting on Scott to touch the bridge machine.
+- **Bridge** (`tools/relay/bambu_p1s_bridge.py`): `_parse_report()` now only includes a key in its
+  payload when the raw MQTT message actually reported it (never defaults an absent field to `None`/`[]`)
+  — the producing-side half of the same contract, and what makes the merge exactly correct once Scott
+  pulls this update. Push debounce (`PUSH_MIN_INTERVAL_SECS`) also dropped from 3s to 1s to match real
+  Bambu delta cadence, now that pushing more often no longer risks flickering fields to null either.
+- **Live push channel**: new `GET /ws/printer` (ticket-authed the same way `/ws/chat` is — browsers
+  can't set a Bearer header on a WS handshake) broadcasts the current snapshot the instant the backend
+  receives a new bridge push, instead of the HUD waiting for its next poll tick. The existing 5s poll
+  (`loadPrinterStatus()`) stays in place client-side as a fallback, not replaced — a dropped socket
+  degrades to "slightly less instant," never to "no data."
+
+**This means the bridge fix needs Scott to actually pull and restart it** — the backend/frontend halves
+deploy the normal way and take effect immediately, but `tools/relay/bambu_p1s_bridge.py` runs on Scott's
+own home-network machine, outside this repo's normal deploy path.
 
 **Camera relay.** The P1S's local camera port (6000) has never been officially documented by Bambu Lab.
 The bridge independently verified the protocol shape against a real open-source reference

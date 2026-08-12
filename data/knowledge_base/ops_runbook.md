@@ -23734,3 +23734,169 @@ retry.py). Verified: 118/118 full suite. Build 701de81-v334.
 OpenAI (platform.openai.com billing), or provision IDEOGRAM_API_KEY, so
 this shop has more than one working image engine again. Grok alone being
 unblocked is not a substitute for having the shop's primary engines funded.
+
+
+## 2026-08-12 — Bambu P1S card: correctness fix for field-wipe bug + near-instant push
+Root-caused the rest of Scott's "stats keep going away and random info pops
+up" complaint (the 2026-07-30 entry above only fixed the whole-card
+offline-flicker half of it). Confirmed live: `GET /api/printer/status`
+showed `bridge_seen: true, age_seconds: 0.6` yet nearly every field `null`
+except `bed_temp`.
+
+**Root cause:** the P1S's MQTT `print` topic mixes full "pushall" reports
+with small partial deltas that only carry whatever changed. The bridge's
+old `_parse_report()` defaulted every absent field to `None`/`[]`
+unconditionally, and the backend's old `post_printer_telemetry()` did a
+wholesale overwrite of the in-memory snapshot on every push -- so any
+partial delta wiped out every field it didn't happen to mention.
+
+**Fix (both halves needed, backend alone is sufficient defensively):**
+- `main.py`: new `_merge_printer_telemetry()` merges each push into the
+  existing snapshot instead of replacing it; `None` values and empty
+  `ams`/`hms` lists from an old-style bridge are treated as "no update," not
+  "clear this field." Also added `/ws/printer` (ticket-auth WebSocket, same
+  pattern as `/ws/chat`) so `_broadcast_printer_telemetry()` pushes the
+  merged snapshot to connected clients the instant a telemetry POST lands,
+  instead of clients waiting for their next 5s poll.
+- `bambu_p1s_bridge.py`: `_parse_report()` rewritten to only include a key
+  in its returned dict when the raw MQTT message actually reported it (was:
+  always all keys, defaulted). `PUSH_MIN_INTERVAL_SECS` dropped 3s -> 1s to
+  match real Bambu delta cadence, now safe since the backend merges instead
+  of overwriting.
+- `frank_hud_mockup.py`: `initPrinterWS()` connects to `/ws/printer` on top
+  of the existing 5s poll (poll stays as a fallback, not replaced).
+
+New/extended tests: `test_bambu_p1s_bridge.py` (6 new `_parse_report()`
+cases -- full report, partial delta omits unreported fields entirely, delta
+without `ams` key omits `ams` entirely, empty-string filename still counts
+as a real update, no-`print`-key and empty-`print`-object both return
+`None`), `test_printer_telemetry.py` (15 new cases -- merge logic directly,
+end-to-end merge across two POSTs, WS ticket auth incl. single-use, and
+broadcast/dead-client-pruning). Full suite: 118/118. Build 2bb950b-v335.
+
+**Still needs Scott:** the bridge half (`bambu_p1s_bridge.py`) runs on his
+own home-network machine, not Railway -- it does not auto-deploy. He needs
+to `git pull` and restart it (`python tools/relay/bambu_p1s_bridge.py`) to
+get the faster 1s push cadence and the only-real-keys fix on the producing
+side. The backend merge fix alone (live automatically once this deploys)
+already stops the field-wipe even against the *old*, not-yet-updated
+bridge, so the card is correct either way -- restarting the bridge just
+makes it faster.
+
+
+## 2026-08-12 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-12 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-12 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-12 — Durable volume not writable
+hourly health loop found /tmp/tmp0v1oi98e/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp0v1oi98e/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-12 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-12 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpfago_v02/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-12 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-12 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 30311). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-12 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 30313). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-12 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.

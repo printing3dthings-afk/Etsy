@@ -78,7 +78,13 @@ FRANK_API_BASE = os.getenv("FRANK_API_BASE", "http://localhost:8000").strip().rs
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "").strip()
 
 MQTT_PORT = 8883
-PUSH_MIN_INTERVAL_SECS = 3  # debounce -- the printer can send several report deltas/second
+# 2026-08-11: was 3s. Real Bambu MQTT delta cadence while printing is close to
+# 1/sec, so a 3s debounce was discarding roughly two-thirds of the update
+# opportunities the printer already provides for free. Frank's backend now
+# merges pushes instead of overwriting (see _merge_printer_telemetry() in
+# main.py), so pushing more often no longer risks flickering fields to null
+# either -- there's no longer a correctness reason to hold this higher.
+PUSH_MIN_INTERVAL_SECS = 1  # debounce -- the printer can send several report deltas/second
 RECONNECT_BACKOFF_SECS = 5
 
 # Community-documented (not Bambu-official) mapping -- printed alongside the raw
@@ -116,6 +122,25 @@ def _post_bytes(path: str, body: bytes, content_type: str) -> bool:
         return False
 
 
+# (out_key, raw_key) for every scalar field the HUD shows -- shared by
+# _parse_report() below.
+_SCALAR_FIELDS = [
+    ("state", "gcode_state"),
+    ("progress_pct", "mc_percent"),
+    ("layer_current", "layer_num"),
+    ("layer_total", "total_layer_num"),
+    ("remaining_minutes", "mc_remaining_time"),
+    ("nozzle_temp", "nozzle_temper"),
+    ("nozzle_target", "nozzle_target_temper"),
+    ("bed_temp", "bed_temper"),
+    ("bed_target", "bed_target_temper"),
+    ("chamber_temp", "chamber_temper"),
+    ("fan_part_raw", "cooling_fan_speed"),
+    ("fan_aux_raw", "big_fan1_speed"),
+    ("fan_chamber_raw", "big_fan2_speed"),
+]
+
+
 def _parse_report(raw: dict) -> dict | None:
     """Extract the fields Frank's HUD card actually shows from a Bambu MQTT
     `print` report. Confident fields (temps, state, progress, layers, file
@@ -123,51 +148,55 @@ def _parse_report(raw: dict) -> dict | None:
     open-source Bambu ecosystem. Fan-speed scaling and the speed-level->name
     mapping are community-documented, not Bambu-official -- passed through
     with their raw values alongside the best-effort interpretation so a
-    wrong guess is visible on the HUD, never silently presented as fact."""
+    wrong guess is visible on the HUD, never silently presented as fact.
+
+    2026-08-11: only includes a key in the returned dict when the raw MQTT
+    message actually reported it -- Bambu's `print` topic mixes full
+    "pushall" reports with small partial deltas that only carry whatever
+    changed, and the old version defaulted every absent field to None/[]
+    unconditionally, indistinguishable from "the printer reports this is
+    genuinely empty/zero." Frank's backend (_merge_printer_telemetry() in
+    main.py) merges pushes into a running snapshot rather than overwriting,
+    treating "key absent from this payload" as "no news, keep the last
+    known value" -- this is the producing side of that same contract: never
+    emit a key this specific message didn't actually carry."""
     p = raw.get("print")
     if not isinstance(p, dict):
         return None
 
-    speed_lvl = p.get("spd_lvl")
-    ams_trays = []
-    ams_root = p.get("ams", {}) if isinstance(p.get("ams"), dict) else {}
-    for unit in ams_root.get("ams", []) or []:
-        for tray in unit.get("tray", []) or []:
-            color = tray.get("tray_color") or ""
-            if len(color) == 8:  # trailing alpha byte, e.g. "FF6B9DFF"
-                color = color[:6]
-            ams_trays.append({
-                "id": tray.get("id"),
-                "color": f"#{color}" if color else None,
-                "material": tray.get("tray_type") or None,
-                "remain_pct": tray.get("remain"),
-            })
+    out: dict = {}
+    for out_key, raw_key in _SCALAR_FIELDS:
+        if raw_key in p:
+            out[out_key] = p[raw_key]
+    if "gcode_file" in p:
+        out["print_file"] = p["gcode_file"] or None
+    if "spd_lvl" in p:
+        speed_lvl = p["spd_lvl"]
+        out["speed_level_raw"] = speed_lvl
+        out["speed_mode"] = _SPEED_MODE_BY_LEVEL.get(speed_lvl)
 
-    hms = [
-        {"attr": h.get("attr"), "code": h.get("code")}
-        for h in (p.get("hms") or []) if isinstance(h, dict)
-    ]
+    if isinstance(p.get("ams"), dict):
+        ams_trays = []
+        for unit in p["ams"].get("ams", []) or []:
+            for tray in unit.get("tray", []) or []:
+                color = tray.get("tray_color") or ""
+                if len(color) == 8:  # trailing alpha byte, e.g. "FF6B9DFF"
+                    color = color[:6]
+                ams_trays.append({
+                    "id": tray.get("id"),
+                    "color": f"#{color}" if color else None,
+                    "material": tray.get("tray_type") or None,
+                    "remain_pct": tray.get("remain"),
+                })
+        out["ams"] = ams_trays
 
-    return {
-        "state": p.get("gcode_state"),
-        "print_file": p.get("gcode_file") or None,
-        "progress_pct": p.get("mc_percent"),
-        "layer_current": p.get("layer_num"),
-        "layer_total": p.get("total_layer_num"),
-        "remaining_minutes": p.get("mc_remaining_time"),
-        "speed_level_raw": speed_lvl,
-        "speed_mode": _SPEED_MODE_BY_LEVEL.get(speed_lvl),
-        "nozzle_temp": p.get("nozzle_temper"),
-        "nozzle_target": p.get("nozzle_target_temper"),
-        "bed_temp": p.get("bed_temper"),
-        "bed_target": p.get("bed_target_temper"),
-        "chamber_temp": p.get("chamber_temper"),
-        "fan_part_raw": p.get("cooling_fan_speed"),
-        "fan_aux_raw": p.get("big_fan1_speed"),
-        "fan_chamber_raw": p.get("big_fan2_speed"),
-        "ams": ams_trays,
-        "hms": hms,
-    }
+    if "hms" in p:
+        out["hms"] = [
+            {"attr": h.get("attr"), "code": h.get("code")}
+            for h in (p.get("hms") or []) if isinstance(h, dict)
+        ]
+
+    return out or None
 
 
 def _on_connect(client, userdata, flags, rc, *_):

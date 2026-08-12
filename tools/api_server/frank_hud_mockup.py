@@ -7602,6 +7602,48 @@ async function loadPrinterStatus(){
   }
 }
 
+// ── P1S live push (2026-08-11) — on top of the 5s poll above, not instead of
+// it: this connects to /ws/printer so the card updates the instant the bridge
+// pushes new telemetry, rather than waiting for the next poll tick. Same
+// single-use ?ticket= auth /ws/chat uses. Reconnects with backoff but stays
+// quiet (no toast) on failure — the 5s poll already covers this card end to
+// end, so a dropped socket only means "slightly less instant," never "no
+// data." See main.py's printer_ws()/_broadcast_printer_telemetry().
+let _printerWs = null, _printerWsReconnectTimer = null, _printerWsRetries = 0;
+async function initPrinterWS(){
+  if (_printerWsReconnectTimer) { clearTimeout(_printerWsReconnectTimer); _printerWsReconnectTimer = null; }
+  let ticket;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/ws-ticket', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    if (!r.ok) throw new Error('ticket request failed: '+r.status);
+    ticket = (await r.json()).ticket;
+  } catch(e) {
+    _schedulePrinterWsReconnect();
+    return;
+  }
+  const socket = new WebSocket(WS_BASE + '/ws/printer?ticket=' + encodeURIComponent(ticket));
+  _printerWs = socket;
+  socket.onopen = () => { _printerWsRetries = 0; };
+  socket.onmessage = e => {
+    try {
+      const d = JSON.parse(e.data);
+      const el = document.getElementById('printer-status-body');
+      if (el) el.innerHTML = d.online ? _printerStatsHtml(d) : _printerOfflineHtml(d);
+    } catch(err) { /* malformed push -- ignore, the next push or 5s poll recovers */ }
+  };
+  socket.onerror = () => {};
+  socket.onclose = e => {
+    if (_printerWs === socket) _printerWs = null;
+    if (e.code === 4001) return; // auth failed -- don't retry forever, the 5s poll still covers this card
+    _schedulePrinterWsReconnect();
+  };
+}
+function _schedulePrinterWsReconnect(){
+  _printerWsRetries = Math.min(_printerWsRetries + 1, 5);
+  const delay = Math.min(1000 * Math.pow(2, _printerWsRetries - 1), 15000);
+  _printerWsReconnectTimer = setTimeout(() => { if (!_printerWs) initPrinterWS(); }, delay);
+}
+
 // ── P1S click-through modal: full stats + a periodically-refreshed camera frame,
 // reusing the generic #metric-detail-modal shell (2026-07-30). Not driven through
 // METRIC_DETAIL_CONFIG/openMetricDetailModal like the day-series metrics -- printer
@@ -11619,15 +11661,12 @@ async function checkPersistence(){
 // pre-fetched in the background (2026-07-08 performance pass).
 loadAll();
 setInterval(loadAll, 30000);
+initPrinterWS();
 
-// P1S card refresh: a dedicated faster cadence, separate from the 30s global
-// loadAll() cycle (2026-07-30). Scott reported "stats keep going away and random
-// info pops up" -- root cause was this exact 30s poll interval having zero margin
-// against the backend's old 30s staleness cutoff (see main.py's _PRINTER_STALE_SECS
-// comment); any single missed tick flipped the card to "BRIDGE OFFLINE" even though
-// the bridge was still pushing. The backend threshold is now 90s for real headroom,
-// and this 5s loop (only while the printer card is actually on screen) makes the
-// numbers feel genuinely live on top of that.
+// P1S card refresh: faster cadence vs. the 30s global loadAll() (2026-07-30,
+// see main.py's _PRINTER_STALE_SECS comment). initPrinterWS() above adds a
+// live push channel on top for instant updates; see _merge_printer_
+// telemetry() (main.py) / _parse_report() (bambu_p1s_bridge.py), 2026-08-11.
 setInterval(function(){
   if (document.hidden) return;
   if (_activeScreen === 'cmd') loadPrinterStatus();

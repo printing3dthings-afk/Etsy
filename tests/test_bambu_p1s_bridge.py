@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
-Bambu P1S bridge tests (2026-07-30).
+Bambu P1S bridge tests (2026-07-30, extended 2026-08-11).
 
 Covers the pure/offline-testable pieces of tools/relay/bambu_p1s_bridge.py:
 the camera auth packet byte layout (independently verified against a real
 open-source reference before it shipped -- see the module's "Camera relay"
-comment block for what was checked and how) and the camera frame reader's
-desync/oversize handling. Does NOT touch a real printer or MQTT broker --
-paho-mqtt itself is only imported lazily inside _build_client() so this file
-(and --test-camera/--no-camera) can run without it installed, matching this
+comment block for what was checked and how), the camera frame reader's
+desync/oversize handling, and _parse_report()'s only-present-keys behavior
+(the producing-side fix for Scott's "stats keep going away and random info
+pops up" -- see main.py's _merge_printer_telemetry() for the consuming
+side). Does NOT touch a real printer or MQTT broker -- paho-mqtt itself is
+only imported lazily inside _build_client() so this file (and
+--test-camera/--no-camera) can run without it installed, matching this
 repo's pattern of keeping optional/local-only dependencies out of the main
 test path (see bambu_requirements.txt vs. requirements.txt).
 """
@@ -133,6 +136,74 @@ def test_read_camera_frames_rejects_implausible_frame_size():
             pass
 
 
+# ── _parse_report() only-present-keys fix (2026-08-11) ──────────────────────
+# Root cause of Scott's "stats keep going away and random info pops up":
+# Bambu's MQTT `print` topic mixes full "pushall" reports with small partial
+# deltas that only carry whatever changed. The old _parse_report() defaulted
+# every absent field to None/[] unconditionally, indistinguishable from "the
+# printer reports this is genuinely empty" -- confirmed live in production
+# (bridge_seen=true, age_seconds<1, yet nearly every field null). Fixed to
+# only include a key when the raw MQTT message actually reported it, which
+# is what lets main.py's _merge_printer_telemetry() correctly treat "key
+# absent" as "no news" instead of "clear this field."
+
+def test_parse_report_full_report_includes_every_field():
+    raw = {
+        "print": {
+            "gcode_state": "RUNNING", "gcode_file": "vase.gcode", "mc_percent": 42,
+            "layer_num": 10, "total_layer_num": 100, "mc_remaining_time": 55,
+            "spd_lvl": 2, "nozzle_temper": 210.0, "nozzle_target_temper": 215.0,
+            "bed_temper": 60.0, "bed_target_temper": 60.0, "chamber_temper": 35.0,
+            "cooling_fan_speed": "8", "big_fan1_speed": "15", "big_fan2_speed": "0",
+            "ams": {"ams": [{"tray": [{"id": "0", "tray_color": "FF6B9DFF", "tray_type": "PLA", "remain": 80}]}]},
+            "hms": [],
+        }
+    }
+    parsed = bridge._parse_report(raw)
+    check(parsed is not None, "a full report must parse")
+    check(parsed["state"] == "RUNNING", f"got {parsed}")
+    check(parsed["print_file"] == "vase.gcode", f"got {parsed}")
+    check(parsed["nozzle_temp"] == 210.0, f"got {parsed}")
+    check(parsed["ams"] == [{"id": "0", "color": "#FF6B9D", "material": "PLA", "remain_pct": 80}], f"got {parsed}")
+    check(parsed["hms"] == [], "an explicitly-reported empty hms list must still come through as []")
+
+
+def test_parse_report_partial_delta_omits_unreported_fields_entirely():
+    """The exact defect class this fix targets: a delta that only reports a
+    bed-temp change must NOT include nozzle_temp/state/ams/etc. at all --
+    not as None, not as [] -- so the backend merge knows to leave them
+    untouched rather than reading them as real updates."""
+    raw = {"print": {"bed_temper": 23.125}}
+    parsed = bridge._parse_report(raw)
+    check(parsed == {"bed_temp": 23.125}, f"expected only bed_temp, got {parsed}")
+    check("nozzle_temp" not in parsed, f"got {parsed}")
+    check("state" not in parsed, f"got {parsed}")
+    check("ams" not in parsed, f"got {parsed}")
+    check("hms" not in parsed, f"got {parsed}")
+
+
+def test_parse_report_delta_without_ams_key_omits_ams_entirely():
+    raw = {"print": {"nozzle_temper": 210.0}}
+    parsed = bridge._parse_report(raw)
+    check("ams" not in parsed, f"a delta that never mentions ams must not include the key at all, got {parsed}")
+
+
+def test_parse_report_gcode_file_empty_string_normalizes_to_none_but_key_stays():
+    raw = {"print": {"gcode_file": ""}}
+    parsed = bridge._parse_report(raw)
+    check("print_file" in parsed and parsed["print_file"] is None,
+          f"an explicitly-reported empty filename must still be a real update (None), got {parsed}")
+
+
+def test_parse_report_returns_none_for_message_with_no_print_key():
+    check(bridge._parse_report({"system": {}}) is None, "a non-print MQTT message must return None")
+
+
+def test_parse_report_returns_none_for_empty_print_object():
+    check(bridge._parse_report({"print": {}}) is None,
+          "an empty print delta (nothing this message actually reported) must return None, not an empty dict")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
@@ -145,7 +216,9 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("BAMBU P1S BRIDGE TESTS OK — camera auth packet layout and frame reader desync/oversize handling behave correctly.")
+    print("BAMBU P1S BRIDGE TESTS OK — camera auth packet layout and frame reader desync/oversize handling behave "
+          "correctly, and _parse_report() only emits keys the raw MQTT message actually reported (never defaults "
+          "an unreported field to None/[], which is what makes the backend's merge-not-overwrite fix correct).")
 
 
 if __name__ == "__main__":
