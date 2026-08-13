@@ -78,6 +78,7 @@ import anthropic
 import openai
 import business_config
 import db  # local persistence layer (tools/api_server/db.py)
+import oauth_providers  # Google / Apple Sign-In (tools/api_server/oauth_providers.py)
 import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
 import etsy_api
@@ -708,6 +709,60 @@ def _verify_password(stored_hash: str, password: str) -> bool:
         return False
 
 
+def _username_from_email(email: str) -> str:
+    """Derive a hub_users.username candidate from an OAuth email's local-part —
+    lowercased, non-alphanumeric stripped to '-'. Never returns empty (falls
+    back to 'user' if the local-part strips to nothing, e.g. an all-emoji or
+    all-CJK local-part)."""
+    local = email.split("@", 1)[0].lower()
+    slug = _re.sub(r"[^a-z0-9]+", "-", local).strip("-")
+    return slug or "user"
+
+
+def _find_or_create_oauth_user(provider: str, profile: dict) -> str:
+    """Resolves a verified OAuth profile ({"sub","email","email_verified","name"})
+    to a hub_users.username, creating an account or linking to an existing one as
+    needed. Returns the username to open a session for.
+
+    Linking rule (security-critical): a new OAuth identity is only ever
+    auto-linked to an EXISTING password account when the provider says the
+    email is verified. An unverified email is never trusted to silently gain
+    access to somebody else's existing account — it just gets its own new
+    account instead. (Google always verifies Gmail addresses; Apple verifies
+    email ownership at the account level for every id_token it issues.)
+    """
+    sub = profile["sub"]
+    email = profile["email"].strip().lower()
+
+    existing_identity = db.get_oauth_identity(provider, sub)
+    if existing_identity:
+        return existing_identity["username"]
+
+    if profile.get("email_verified"):
+        existing_user = db.get_hub_user_by_email(email)
+        if existing_user:
+            db.create_oauth_identity(provider, sub, existing_user["username"], email)
+            return existing_user["username"]
+
+    base = _username_from_email(email)
+    username = base
+    suffix = 1
+    while db.get_hub_user(username):
+        suffix += 1
+        username = f"{base}{suffix}"
+
+    display_name = (profile.get("name") or "").strip() or None
+    # No usable password exists for an OAuth-created account — a random,
+    # never-shown 256-bit hash makes password login for it cryptographically
+    # impossible rather than merely "not set up yet" (there is no UI to guess
+    # against, and this is never displayed or emailed anywhere).
+    unusable_pw_hash = _hash_password(secrets.token_urlsafe(32))
+    db.create_hub_user(username, unusable_pw_hash, role="admin", email=email, display_name=display_name)
+    db.create_oauth_identity(provider, sub, username, email)
+    print(f"[auth] OAuth account created via {provider}: '{username}' <{email}>", flush=True)
+    return username
+
+
 def _seed_owner_if_empty() -> None:
     """Seed owner account only when both env vars are explicitly configured."""
     if not (_FRANK_USERNAME_EXPLICIT and _FRANK_PASSWORD_EXPLICIT):
@@ -760,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2bb950b-v335"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "9965bde-v336"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -785,6 +840,14 @@ app = FastAPI(title=f"{business_config.BUSINESS_NAME} Mobile API", version="1.0.
 # no browser Origin header at all, so tightening this list cannot break the mobile app.
 # The only legitimate cross-origin caller is the web UI itself (same-origin, BASE = location.origin).
 _RAILWAY_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+# OAuth (Google/Apple Sign-In) redirect_uri must be an exact string match against
+# whatever's registered in that provider's console — no trailing slash, no path
+# drift. PUBLIC_BASE_URL lets a custom domain override the Railway one; falls back
+# to localhost for local dev (never used in a real OAuth call there since neither
+# provider is reachable from Railway's actual public domain in that case anyway).
+_PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/") or (
+    f"https://{_RAILWAY_DOMAIN}" if _RAILWAY_DOMAIN else "http://localhost:8000"
+)
 # Dev-only localhost origins are only included when NOT running on Railway (reuses
 # the same signal already used for the prod domain above, rather than a second env
 # var) — they were previously always allowed, which is unneeded surface in prod
@@ -990,6 +1053,40 @@ def _consume_ws_ticket(ticket: str) -> bool:
     return expiry is not None and time.time() <= expiry
 
 
+# ── OAuth CSRF state tokens (Google/Apple Sign-In) ──────────────────────────────
+#
+# Standard OAuth CSRF defense: mint an unguessable, single-use, short-lived token
+# before redirecting to the provider, and require it back unchanged on the
+# callback. Without this, an attacker could pre-generate their own valid
+# authorization code and trick a victim's browser into completing the callback,
+# logging the victim into the ATTACKER's account (a real login-CSRF vector for
+# OAuth, not theoretical). Same pattern as _new_ws_ticket/_consume_ws_ticket
+# above — single-use, in-memory, no need to survive a restart since a login in
+# progress across a Railway redeploy is expected to just be retried.
+_oauth_states: dict[str, tuple[float, str]] = {}   # state -> (expiry, next_path)
+_oauth_states_lock = threading.Lock()
+_OAUTH_STATE_TTL = 600  # seconds — generous enough for a slow consent screen
+
+
+def _new_oauth_state(next_path: str) -> str:
+    state = secrets.token_urlsafe(32)
+    with _oauth_states_lock:
+        _oauth_states[state] = (time.time() + _OAUTH_STATE_TTL, next_path)
+    return state
+
+
+def _consume_oauth_state(state: str) -> str | None:
+    """Single-use: returns the original next_path iff state exists and hasn't
+    expired, else None (caller must treat None as a hard failure, never fall
+    back to a default next path — that would defeat the CSRF check)."""
+    with _oauth_states_lock:
+        entry = _oauth_states.pop(state, None)
+    if entry is None:
+        return None
+    expiry, next_path = entry
+    return next_path if time.time() <= expiry else None
+
+
 # ── File-download tickets ───────────────────────────────────────────────────────
 #
 # Same problem as the WS tickets above, different trigger: handing a video URL to a
@@ -1168,48 +1265,144 @@ def _rate_limited_auth(request: Request) -> str:
     return token
 
 
+# ── Shared auth-page CSS — the Studio Warm design tokens/typography copied
+# straight from frank_hud_mockup.py's :root (2026-08-13; the auth pages below
+# previously used an unrelated hardcoded teal-on-navy palette that didn't match
+# the live app at all). Plain string, not a .format() template — its own braces
+# never need escaping since it's substituted as a VALUE into the page templates
+# below, not parsed as one. See frank_hud_mockup.py's :root comment for why
+# these specific hex values (the 2026-07-15 WCAG-verified brightening pass).
+_AUTH_PAGE_CSS = """
+*{box-sizing:border-box;margin:0;padding:0}
+@font-face{font-family:'Sora';font-weight:700;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Sora-700.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:400;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/IBMPlexSans-400.woff2') format('woff2')}
+:root{
+  --bg:#241c2e;--panel:#2d2438;--panel2:#372c42;--panel3:#42354e;--border:#3d3248;
+  --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#e4b155;--gold2:#f2cb8f;--text:#f5eef2;--muted:#bfa3b5;
+  --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
+  --font-display:'Outfit','Sora',sans-serif;
+  --font-body:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
+  --card-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 2px 10px rgba(0,0,0,.16);
+}
+html,body{height:100%}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);color:var(--text);font-family:var(--font-body);padding:24px}
+.box{width:380px;max-width:100%;padding:32px 28px 26px;background:var(--panel);
+  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--card-shadow);position:relative}
+.box::before,.box::after{content:'';position:absolute;width:14px;height:14px;pointer-events:none;opacity:.55}
+.box::before{top:-1px;left:-1px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);border-top-left-radius:var(--r-sm)}
+.box::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan);border-bottom-right-radius:var(--r-sm)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.logo .hex{width:34px;height:34px;border:2px solid var(--cyan);border-radius:var(--r-sm);display:flex;
+  align-items:center;justify-content:center;color:var(--cyan2);font-size:17px;flex-shrink:0;
+  box-shadow:0 0 10px rgba(242,160,181,.5)}
+.logo .l1{font-family:var(--font-display);font-weight:600;letter-spacing:1px;color:var(--cyan2);font-size:17px;line-height:1.15;
+  text-shadow:0 0 10px rgba(242,160,181,.4)}
+.logo .l2{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:1px}
+h1.heading{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);margin:0 0 4px}
+.hint{font-size:11.5px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:6px}
+input[type=text],input[type=email],input[type=password]{width:100%;padding:10px 12px;margin-bottom:15px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);
+  font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(228,177,85,.35)}
+button.submit{width:100%;padding:11px;background:var(--gold);border:1px solid var(--gold);border-radius:var(--r-sm);
+  color:#2c1a06;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:2px;
+  font-family:var(--font-body);transition:background .15s,border-color .15s}
+button.submit:hover{background:var(--gold2);border-color:var(--gold2)}
+button.submit:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.err{background:rgba(226,104,95,.1);border:1px solid #5a2d3a;border-radius:var(--r-sm);color:#ff9d94;
+  font-size:12px;padding:9px 11px;margin-bottom:14px;line-height:1.5}
+.warn{background:rgba(232,184,104,.1);border:1px solid #6b501f;border-radius:var(--r-sm);color:var(--amber);
+  font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}
+.warn b{color:var(--gold2)}
+.cross-link{text-align:center;margin-top:16px}
+.cross-link a{color:var(--cyan2);font-size:12px;text-decoration:none}
+.cross-link a:hover,.cross-link a:focus-visible{text-decoration:underline}
+.once{font-size:10px;color:var(--muted);margin-top:14px;text-align:center;opacity:.8}
+.code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:19px;font-weight:700;
+  letter-spacing:2px;color:var(--cyan2);background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:16px;text-align:center;margin-bottom:18px;user-select:all;word-break:break-all}
+a.btn{display:block;width:100%;padding:11px;background:var(--gold);border:1px solid var(--gold);border-radius:var(--r-sm);
+  color:#2c1a06;font-weight:700;font-size:14px;text-align:center;text-decoration:none;box-sizing:border-box;
+  font-family:var(--font-body)}
+a.btn:hover{background:var(--gold2);border-color:var(--gold2)}
+.oauth-row{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.oauth-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:10px;
+  background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);
+  font-family:var(--font-body);font-size:13.5px;font-weight:600;text-decoration:none;cursor:pointer;
+  transition:background .15s,border-color .15s}
+.oauth-btn:hover,.oauth-btn:focus-visible{background:var(--panel3);border-color:var(--cyan)}
+.oauth-btn svg{width:18px;height:18px;flex-shrink:0}
+.divider{display:flex;align-items:center;gap:10px;margin:2px 0 18px;color:var(--muted);font-size:10.5px;
+  letter-spacing:.06em;text-transform:uppercase}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+"""
+
+_OAUTH_ICON_GOOGLE = (
+    '<svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481'
+    'h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 '
+    '18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332'
+    'A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71'
+    'V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.3'
+    '21 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163'
+    ' 6.656 3.58 9 3.58z"/></svg>'
+)
+_OAUTH_ICON_APPLE = (
+    '<svg viewBox="0 0 384 512" aria-hidden="true" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-'
+    '84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141 4 184.8 4 273.'
+    '5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 9'
+    '0.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 '
+    '34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>'
+)
+
+
+def _oauth_buttons_html(next_path: str) -> str:
+    """Conditionally rendered "Continue with Google/Apple" buttons — empty string
+    (no divider either) when neither provider has real credentials configured, so
+    the login/signup screens never show a button that would just 404. See
+    oauth_providers.py's module docstring for what "configured" requires."""
+    buttons = []
+    if oauth_providers.GOOGLE_ENABLED:
+        buttons.append(
+            f'<a class="oauth-btn" href="/auth/google?next={next_path}">{_OAUTH_ICON_GOOGLE}<span>Continue with Google</span></a>'
+        )
+    if oauth_providers.APPLE_ENABLED:
+        buttons.append(
+            f'<a class="oauth-btn" href="/auth/apple?next={next_path}">{_OAUTH_ICON_APPLE}<span>Continue with Apple</span></a>'
+        )
+    if not buttons:
+        return ""
+    return f'<div class="oauth-row">{"".join(buttons)}</div><div class="divider">or</div>'
+
+
 _LOGIN_PAGE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{hub_title} — Sign in</title>
-<style>
-  *{{box-sizing:border-box}}
-  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
-  .box{{width:340px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
-  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:20px}}
-  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
-  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#708392;margin-top:1px}}
-  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
-  input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
-    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
-  input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
-  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
-    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
-  button:hover{{background:#38d8d8}}
-  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
-  .cross-link{{text-align:center;margin-top:16px}}
-  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
-  .cross-link a:hover{{text-decoration:underline}}
-</style>
+<style>{auth_css}</style>
 </head>
 <body>
   <div class="box">
     <div class="logo">
-      <div class="logo-dot">F</div>
-      <div><div class="logo-text">{hub_title}</div><div class="logo-sub">Operations Hub</div></div>
+      <div class="hex" aria-hidden="true">⬡</div>
+      <div><div class="l1">{hub_title}</div><div class="l2">OPERATIONS HUB</div></div>
     </div>
     {error_html}
+    {oauth_html}
     <form method="post" action="/login" autocomplete="on">
       <input type="hidden" name="next" value="{next_path}">
       <label for="li-user">Username</label>
       <input type="text" id="li-user" name="username" placeholder="Enter your username" autofocus autocomplete="username">
       <label for="li-pass">Password</label>
       <input type="password" id="li-pass" name="password" placeholder="Enter your password" autocomplete="current-password">
-      <button type="submit">Sign in</button>
+      <button type="submit" class="submit">Sign in</button>
     </form>
     <div class="cross-link"><a href="/forgot-password">Forgot password?</a></div>
     {cross_link}
@@ -1225,41 +1418,16 @@ _SETUP_PAGE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{hub_title} — Create your account</title>
-<style>
-  *{{box-sizing:border-box}}
-  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
-  .box{{width:360px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
-  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
-  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
-  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#708392;margin-top:1px}}
-  .setup-heading{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .setup-hint{{font-size:11px;color:#708392;margin-bottom:18px;line-height:1.5}}
-  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
-  input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
-    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
-  input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
-  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
-    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
-  button:hover{{background:#38d8d8}}
-  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
-  .warn{{background:#2a1206;border:1px solid #a33;border-radius:7px;color:#ffb27a;font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}}
-  .warn b{{color:#ff8a5c}}
-  .once{{font-size:10px;color:#3a4a56;margin-top:14px;text-align:center}}
-  .cross-link{{text-align:center;margin-top:16px}}
-  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
-  .cross-link a:hover{{text-decoration:underline}}
-</style>
+<style>{auth_css}</style>
 </head>
 <body>
   <div class="box">
     <div class="logo">
-      <div class="logo-dot">F</div>
-      <div><div class="logo-text">{hub_title}</div><div class="logo-sub">Operations Hub</div></div>
+      <div class="hex" aria-hidden="true">⬡</div>
+      <div><div class="l1">{hub_title}</div><div class="l2">OPERATIONS HUB</div></div>
     </div>
-    <div class="setup-heading">Create your account</div>
-    <div class="setup-hint">First-time setup — choose a username and password for the owner account. You won't see this screen again.</div>
+    <h1 class="heading">Create your account</h1>
+    <div class="hint">First-time setup — choose a username and password for the owner account. You won't see this screen again.</div>
     {persist_warning}
     {error_html}
     <form method="post" action="/login" autocomplete="off">
@@ -1271,7 +1439,7 @@ _SETUP_PAGE = """<!DOCTYPE html>
       <input type="password" id="su-pass" name="password" placeholder="Choose a strong password" autocomplete="new-password" required>
       <label for="su-conf">Confirm password</label>
       <input type="password" id="su-conf" name="confirm_password" placeholder="Repeat your password" autocomplete="new-password" required>
-      <button type="submit">Create account &amp; sign in</button>
+      <button type="submit" class="submit">Create account &amp; sign in</button>
     </form>
     <div class="once">This is a one-time setup. After this, use your username and password to sign in.</div>
     {signin_link}
@@ -1294,41 +1462,18 @@ _SIGNUP_PAGE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{hub_title} — Create an account</title>
-<style>
-  *{{box-sizing:border-box}}
-  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
-  .box{{width:360px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
-  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
-  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
-  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#708392;margin-top:1px}}
-  .setup-heading{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .setup-hint{{font-size:11px;color:#708392;margin-bottom:18px;line-height:1.5}}
-  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
-  input[type=text],input[type=email],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
-    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
-  input:focus{{border-color:#2ec4c4}}
-  input:focus-visible{{outline:2px solid #2ec4c4;outline-offset:1px}}
-  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
-    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
-  button:hover{{background:#38d8d8}}
-  button:focus-visible{{outline:2px solid #38d8d8;outline-offset:2px}}
-  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
-  .cross-link{{text-align:center;margin-top:16px}}
-  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
-  .cross-link a:hover,.cross-link a:focus-visible{{text-decoration:underline}}
-</style>
+<style>{auth_css}</style>
 </head>
 <body>
   <div class="box">
     <div class="logo">
-      <div class="logo-dot">F</div>
-      <div><div class="logo-text">{hub_title}</div><div class="logo-sub">Operations Hub</div></div>
+      <div class="hex" aria-hidden="true">⬡</div>
+      <div><div class="l1">{hub_title}</div><div class="l2">OPERATIONS HUB</div></div>
     </div>
-    <div class="setup-heading">Create an account</div>
-    <div class="setup-hint">You'll get full access to the same live shop dashboard, chat, and approvals as everyone else on this account.</div>
+    <h1 class="heading">Create an account</h1>
+    <div class="hint">You'll get full access to the same live shop dashboard, chat, and approvals as everyone else on this account.</div>
     {error_html}
+    {oauth_html}
     <form method="post" action="/signup" autocomplete="on">
       <input type="hidden" name="next" value="{next_path}">
       <label for="su-email">Email</label>
@@ -1341,7 +1486,7 @@ _SIGNUP_PAGE = """<!DOCTYPE html>
       <input type="password" id="su-pass" name="password" placeholder="Choose a strong password" autocomplete="new-password" required>
       <label for="su-conf">Confirm password</label>
       <input type="password" id="su-conf" name="confirm_password" placeholder="Repeat your password" autocomplete="new-password" required>
-      <button type="submit">Create account &amp; sign in</button>
+      <button type="submit" class="submit">Create account &amp; sign in</button>
     </form>
     <div class="cross-link"><a href="/login?next={next_path}">Already have an account? Sign in instead</a></div>
   </div>
@@ -1357,34 +1502,15 @@ _RECOVERY_CODE_PAGE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{hub_title} — Save your recovery code</title>
-<style>
-  *{{box-sizing:border-box}}
-  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
-  .box{{width:380px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
-  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
-  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
-  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  h1{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .hint{{font-size:12px;color:#a8b4bf;margin-bottom:18px;line-height:1.6}}
-  .warn{{background:#2a1206;border:1px solid #a33;border-radius:7px;color:#ffb27a;font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}}
-  .warn b{{color:#ff8a5c}}
-  .code{{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:20px;font-weight:700;
-    letter-spacing:2px;color:#7cf0f0;background:#0b0f14;border:1px solid #2a3744;border-radius:8px;
-    padding:16px;text-align:center;margin-bottom:18px;user-select:all;word-break:break-all}}
-  button,a.btn{{display:block;width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
-    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;text-align:center;
-    text-decoration:none;box-sizing:border-box}}
-  button:hover,a.btn:hover{{background:#38d8d8}}
-</style>
+<style>{auth_css}</style>
 </head>
 <body>
   <div class="box">
     <div class="logo">
-      <div class="logo-dot">F</div>
-      <div class="logo-text">{hub_title}</div>
+      <div class="hex" aria-hidden="true">⬡</div>
+      <div><div class="l1">{hub_title}</div><div class="l2">OPERATIONS HUB</div></div>
     </div>
-    <h1>Save your account recovery code</h1>
+    <h1 class="heading">Save your account recovery code</h1>
     <div class="warn">⚠️ <b>This is shown ONE TIME only.</b> If you lose both your password and this code, the only way back in is wiping the account entirely. Write it down or save it in a password manager now.</div>
     <div class="code">{recovery_code}</div>
     <div class="hint">If you ever forget your password, use "Forgot password?" on the sign-in screen with the username <b>{username}</b> and this code to set a new one — no email needed.</div>
@@ -1400,36 +1526,15 @@ _FORGOT_PASSWORD_PAGE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{hub_title} — Reset your password</title>
-<style>
-  *{{box-sizing:border-box}}
-  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
-  .box{{width:340px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
-  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
-  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
-  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  h1{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .hint{{font-size:11px;color:#708392;margin-bottom:18px;line-height:1.5}}
-  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
-  input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
-    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
-  input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
-  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
-    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px}}
-  button:hover{{background:#38d8d8}}
-  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
-  .cross-link{{text-align:center;margin-top:16px}}
-  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
-  .cross-link a:hover{{text-decoration:underline}}
-</style>
+<style>{auth_css}</style>
 </head>
 <body>
   <div class="box">
     <div class="logo">
-      <div class="logo-dot">F</div>
-      <div class="logo-text">{hub_title}</div>
+      <div class="hex" aria-hidden="true">⬡</div>
+      <div><div class="l1">{hub_title}</div><div class="l2">OPERATIONS HUB</div></div>
     </div>
-    <h1>Reset your password</h1>
+    <h1 class="heading">Reset your password</h1>
     <div class="hint">Enter your username, the recovery code you saved when the account was created, and a new password.</div>
     {error_html}
     <form method="post" action="/forgot-password" autocomplete="off">
@@ -1439,7 +1544,7 @@ _FORGOT_PASSWORD_PAGE = """<!DOCTYPE html>
       <input type="text" id="fp-code" name="recovery_code" placeholder="XXXX-XXXX-XXXX" autocomplete="off" required>
       <label for="fp-pass">New password</label>
       <input type="password" id="fp-pass" name="new_password" autocomplete="new-password" required>
-      <button type="submit">Reset password</button>
+      <button type="submit" class="submit">Reset password</button>
     </form>
     <div class="cross-link"><a href="/login">Back to sign in</a></div>
   </div>
@@ -1484,7 +1589,7 @@ def login_page(next: str = "/", error: str = "", mode: str = ""):
         )
         return HTMLResponse(
             _SETUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME,
-                               persist_warning=persist_warning, signin_link=signin_link),
+                               persist_warning=persist_warning, signin_link=signin_link, auth_css=_AUTH_PAGE_CSS),
             headers=no_cache,
         )
     if error == "noaccount":
@@ -1503,7 +1608,7 @@ def login_page(next: str = "/", error: str = "", mode: str = ""):
     )
     return HTMLResponse(
         _LOGIN_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME,
-                           cross_link=cross_link),
+                           cross_link=cross_link, oauth_html=_oauth_buttons_html(safe_next), auth_css=_AUTH_PAGE_CSS),
         headers=no_cache,
     )
 
@@ -1548,7 +1653,8 @@ def login_submit(
             no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
             resp = HTMLResponse(
                 _RECOVERY_CODE_PAGE.format(hub_title=business_config.BUSINESS_NAME,
-                                           recovery_code=recovery_code, username=uname, next_path=safe_next),
+                                           recovery_code=recovery_code, username=uname, next_path=safe_next,
+                                           auth_css=_AUTH_PAGE_CSS),
                 headers=no_cache,
             )
             resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
@@ -1588,7 +1694,8 @@ def signup_page(next: str = "/", error: str = ""):
     no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
     error_html = f'<div class="err">{error}</div>' if error else ""
     return HTMLResponse(
-        _SIGNUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME),
+        _SIGNUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME,
+                            oauth_html=_oauth_buttons_html(safe_next), auth_css=_AUTH_PAGE_CSS),
         headers=no_cache,
     )
 
@@ -1648,7 +1755,8 @@ def signup_submit(
     no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
     resp = HTMLResponse(
         _RECOVERY_CODE_PAGE.format(hub_title=business_config.BUSINESS_NAME,
-                                   recovery_code=recovery_code, username=uname, next_path=safe_next),
+                                   recovery_code=recovery_code, username=uname, next_path=safe_next,
+                                   auth_css=_AUTH_PAGE_CSS),
         headers=no_cache,
     )
     resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
@@ -1664,7 +1772,8 @@ def forgot_password_page(error: str = ""):
         error_html = f'<div class="err">New password must be at least {_MIN_PASSWORD_LEN} characters.</div>'
     no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
     return HTMLResponse(
-        _FORGOT_PASSWORD_PAGE.format(hub_title=business_config.BUSINESS_NAME, error_html=error_html),
+        _FORGOT_PASSWORD_PAGE.format(hub_title=business_config.BUSINESS_NAME, error_html=error_html,
+                                     auth_css=_AUTH_PAGE_CSS),
         headers=no_cache,
     )
 
@@ -1710,6 +1819,81 @@ def forgot_password_submit(
         print(f"[auth] delete_sessions_for_user({uname!r}) failed -- sessions may not be "
               f"fully revoked: {exc}", flush=True)
     return RedirectResponse("/login", status_code=303)
+
+
+def _oauth_login_error_redirect(next_path: str, message: str) -> RedirectResponse:
+    # Deliberately generic in what's shown to the browser (message is a fixed,
+    # non-leaky string from each call site below, never the raw provider/
+    # exception text) -- the specific failure still goes to the server log via
+    # the OAuthError callers already print before calling this.
+    return RedirectResponse(f"/login?error={quote(message)}&next={_safe_next(next_path)}", status_code=303)
+
+
+@app.get("/auth/google")
+def auth_google_start(next: str = "/"):
+    if not oauth_providers.GOOGLE_ENABLED:
+        raise HTTPException(status_code=404, detail="Google Sign-In is not configured")
+    state = _new_oauth_state(_safe_next(next))
+    redirect_uri = _PUBLIC_BASE_URL + "/auth/google/callback"
+    return RedirectResponse(oauth_providers.google_authorize_url(state, redirect_uri), status_code=303)
+
+
+@app.get("/auth/google/callback")
+def auth_google_callback(request: Request, code: str = "", state: str = "", error: str = ""):
+    next_path = _consume_oauth_state(state)
+    if next_path is None:
+        return _oauth_login_error_redirect("/", "Sign-in session expired or invalid. Please try again.")
+    if error or not code:
+        return _oauth_login_error_redirect(next_path, "Google sign-in was cancelled or failed.")
+    redirect_uri = _PUBLIC_BASE_URL + "/auth/google/callback"
+    try:
+        profile = oauth_providers.google_exchange_code(code, redirect_uri)
+    except oauth_providers.OAuthError as exc:
+        print(f"[auth] Google OAuth failed: {exc}", flush=True)
+        return _oauth_login_error_redirect(next_path, "Google sign-in failed. Please try again.")
+    username = _find_or_create_oauth_user("google", profile)
+    sid = _new_session(username, user_agent=request.headers.get("user-agent"))
+    resp = RedirectResponse(next_path, status_code=303)
+    resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
+    return resp
+
+
+@app.get("/auth/apple")
+def auth_apple_start(next: str = "/"):
+    if not oauth_providers.APPLE_ENABLED:
+        raise HTTPException(status_code=404, detail="Apple Sign-In is not configured")
+    state = _new_oauth_state(_safe_next(next))
+    redirect_uri = _PUBLIC_BASE_URL + "/auth/apple/callback"
+    return RedirectResponse(oauth_providers.apple_authorize_url(state, redirect_uri), status_code=303)
+
+
+@app.post("/auth/apple/callback")
+def auth_apple_callback(
+    request: Request,
+    code: str = Form(""),
+    state: str = Form(""),
+    error: str = Form(""),
+):
+    # Apple requires response_mode=form_post whenever "name"/"email" scopes are
+    # requested (see oauth_providers.apple_authorize_url) -- this callback is a
+    # POST from appleid.apple.com's own server-rendered consent page, not a
+    # link a browser navigated to directly.
+    next_path = _consume_oauth_state(state)
+    if next_path is None:
+        return _oauth_login_error_redirect("/", "Sign-in session expired or invalid. Please try again.")
+    if error or not code:
+        return _oauth_login_error_redirect(next_path, "Apple sign-in was cancelled or failed.")
+    redirect_uri = _PUBLIC_BASE_URL + "/auth/apple/callback"
+    try:
+        profile = oauth_providers.apple_exchange_code(code, redirect_uri)
+    except oauth_providers.OAuthError as exc:
+        print(f"[auth] Apple OAuth failed: {exc}", flush=True)
+        return _oauth_login_error_redirect(next_path, "Apple sign-in failed. Please try again.")
+    username = _find_or_create_oauth_user("apple", profile)
+    sid = _new_session(username, user_agent=request.headers.get("user-agent"))
+    resp = RedirectResponse(next_path, status_code=303)
+    resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
+    return resp
 
 
 @app.get("/logout")

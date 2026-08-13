@@ -262,6 +262,15 @@ CREATE TABLE IF NOT EXISTS hub_sessions (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_hub_sessions_user ON hub_sessions(username);
+CREATE TABLE IF NOT EXISTS oauth_identities (
+  provider     TEXT NOT NULL,   -- 'google' | 'apple'
+  provider_sub TEXT NOT NULL,   -- provider's stable, opaque user id ("sub" claim)
+  username     TEXT NOT NULL,   -- FK to hub_users.username (lowercase)
+  email        TEXT,
+  created_at   TEXT NOT NULL,
+  PRIMARY KEY (provider, provider_sub)
+);
+CREATE INDEX IF NOT EXISTS idx_oauth_identities_user ON oauth_identities(username);
 CREATE TABLE IF NOT EXISTS settings (
   key        TEXT PRIMARY KEY,   -- e.g. 'agent_name', 'image_engine', 'model_primary'
   value      TEXT,               -- string value; NULL/absent = fall back to env/default
@@ -1879,6 +1888,55 @@ def hub_users_empty() -> bool:
     try:
         n = conn.execute("SELECT COUNT(*) FROM hub_users").fetchone()[0]
         return n == 0
+    finally:
+        conn.close()
+
+
+def get_hub_user_by_email(email: str) -> dict | None:
+    """Case-insensitive email lookup — used only to auto-link a VERIFIED OAuth
+    identity to an existing password account with the same email. Never used
+    to authenticate by itself (email is not a login credential here)."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT username, pw_hash, role, created_at, recovery_code_hash, email, display_name "
+            "FROM hub_users WHERE lower(email) = ?",
+            (email.strip().lower(),),
+        ).fetchone()
+        return dict(r) if r else None
+    finally:
+        conn.close()
+
+
+# ── OAuth identities (Google / Apple Sign-In account linking) ────────────────
+
+
+def get_oauth_identity(provider: str, provider_sub: str) -> dict | None:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT provider, provider_sub, username, email, created_at FROM oauth_identities "
+            "WHERE provider = ? AND provider_sub = ?",
+            (provider, provider_sub),
+        ).fetchone()
+        return dict(r) if r else None
+    finally:
+        conn.close()
+
+
+def create_oauth_identity(provider: str, provider_sub: str, username: str, email: str | None) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO oauth_identities (provider, provider_sub, username, email, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (provider, provider_sub, username.lower(), email, ts),
+        )
+        conn.commit()
     finally:
         conn.close()
 

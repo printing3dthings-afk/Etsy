@@ -44,3 +44,9 @@ yt-dlp==2026.7.4
 # kept out of this file deliberately; now a real dependency since it's wired to a
 # live endpoint.
 openpyxl==3.1.5
+# PyJWT[crypto] — Sign in with Apple (tools/api_server/oauth_providers.py): signs the
+# short-lived ES256 client-secret JWT sent to Apple's token endpoint, and verifies the
+# RS256 id_token Apple returns against its published JWKS. The [crypto] extra pulls in
+# `cryptography` for both algorithms. Google Sign-In needs no JWT library at all (its
+# identity is fetched from Google's own userinfo endpoint, not decoded locally).
+PyJWT[crypto]==2.10.1

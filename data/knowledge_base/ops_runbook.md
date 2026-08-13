@@ -23900,3 +23900,59 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
 
 **Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-13 — Login screen redesign + Google/Apple Sign-In added
+Scott flagged the `/login` screen (the OnBrandCraftz mobile lock-screen style
+sign-in page) as needing a real redesign to match Frank's actual look, plus
+"top level security," plus Google and Apple sign-in.
+
+**Design mismatch confirmed:** `_LOGIN_PAGE`/`_SIGNUP_PAGE`/`_SETUP_PAGE`/
+`_FORGOT_PASSWORD_PAGE`/`_RECOVERY_CODE_PAGE` in `main.py` were hand-rolled with
+a completely unrelated hardcoded teal-on-navy palette (`#2ec4c4` / `#0b0f14`) —
+not derived from the live app's real theme at all. Rewrote all five to use the
+actual Studio Warm design tokens from `frank_hud_mockup.py`'s `:root` (`--bg
+#241c2e`, `--panel #2d2438`, `--cyan #f2a0b5`, `--gold #e4b155`, Outfit/Sora
+display font, Manrope body font, the hex/⬡ header-logo glyph, the same corner-
+bracket HUD accent) via a new shared `_AUTH_PAGE_CSS` constant, instead of
+duplicating five near-identical hand-tuned stylesheets.
+
+**Security review of the existing auth (no changes needed, already solid):**
+pbkdf2-sha256 260k iterations + constant-time compare, per-username (not
+per-IP, since Railway's X-Forwarded-For is attacker-controlled) brute-force
+lockout, `httponly`+`secure`+`samesite=lax` session cookies, a real CSP already
+covering `/login`. Nothing to harden here — this was a real audit, not a
+rubber stamp.
+
+**Google + Apple Sign-In (new):** `tools/api_server/oauth_providers.py`
+implements the standard OAuth 2.0 authorization-code flow for both. Google is
+verified via its own userinfo endpoint (no local JWT decoding needed). Apple
+has no userinfo endpoint, so its id_token IS verified locally against Apple's
+published JWKS (new `PyJWT[crypto]` dependency) — Apple's token-endpoint
+client_secret is a short-lived (5 min) ES256 JWT generated fresh per exchange
+rather than cached/rotated, sidestepping Apple's 6-month secret-rotation
+bookkeeping entirely.
+
+Both buttons are hidden until their full credential set is present in the
+environment (`oauth_providers.GOOGLE_ENABLED`/`APPLE_ENABLED`) — neither can be
+registered by Claude (both require a human with Google Cloud Console / Apple
+Developer Program account access); see CLAUDE.md's new "Google / Apple Sign-In
+(Frank login screen)" section for Scott's exact setup steps and which Railway
+env vars to set. **Still needs Scott** to actually go create both OAuth apps —
+until then this ships dormant with zero visible change to the login screen.
+
+Account linking (`_find_or_create_oauth_user()` in main.py): a new OAuth
+identity only auto-links to an *existing* password account when the provider
+confirms the email is verified — an unverified email always gets a separate
+new account instead, so a Google/Apple sign-in can never silently walk into
+somebody else's existing account. New CSRF state-token store
+(`_new_oauth_state`/`_consume_oauth_state`, same single-use in-memory pattern
+as the existing WS tickets) prevents the classic OAuth login-CSRF where an
+attacker's own authorization code gets completed against a victim's browser.
+
+New `oauth_identities` table (provider, provider_sub, username, email) in
+db.py. New tests: `tests/test_oauth_login.py` (account-linking incl. the
+unverified-email security rule, state-token single-use/expiry, Apple JWT
+shape, authorize URL construction, and the `/auth/google`+`/auth/apple` routes
+end to end with real network calls mocked out). Full suite: 119/119. Build
+9965bde-v336.

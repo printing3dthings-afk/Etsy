@@ -237,6 +237,67 @@ Scope: `https://www.googleapis.com/auth/calendar` (read + write)
 
 ---
 
+## Google / Apple Sign-In (Frank login screen)
+**Not yet authorized — needs Scott.** All the code is shipped and live
+(`tools/api_server/oauth_providers.py`, `/auth/google` + `/auth/apple` routes in
+`main.py`) but both buttons stay hidden on `/login` and `/signup` until real
+credentials exist — `_oauth_buttons_html()` only renders a provider's button
+when its full env-var set is present, specifically so the screen never shows a
+button that would 404. Neither OAuth app can be registered by Claude — both
+require a human with account access to Google Cloud Console / the Apple
+Developer Program. Once either is set up, the corresponding button appears with
+no further code changes.
+
+**Google — Google Cloud Console (console.cloud.google.com), free:**
+1. Create/select a project → APIs & Services → OAuth consent screen. External
+   user type is fine (this only needs "Sign in with Google", not Workspace
+   restriction). Add the `openid`, `email`, `profile` scopes (these are the
+   default non-sensitive scopes — no verification review needed).
+2. APIs & Services → Credentials → Create Credentials → OAuth client ID →
+   Application type **Web application**.
+3. Under **Authorized redirect URIs**, add exactly:
+   `https://etsy-production-b2f1.up.railway.app/auth/google/callback`
+   (must match byte-for-byte — no trailing slash).
+4. Copy the generated **Client ID** and **Client secret**.
+5. Set in Railway: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+
+**Apple — Apple Developer Program (developer.apple.com), $99/year:**
+1. Certificates, Identifiers & Profiles → Identifiers → register an **App ID**
+   first if one doesn't already exist for this project, with the "Sign In with
+   Apple" capability enabled.
+2. Identifiers → **+** → **Services IDs** → register a new Services ID (e.g.
+   `com.onbrandcraftz.frank.web`) — this becomes `APPLE_CLIENT_ID`. Enable
+   "Sign In with Apple" on it, click Configure, and under **Website URLs** add:
+   - Domain: `etsy-production-b2f1.up.railway.app`
+   - Return URL: `https://etsy-production-b2f1.up.railway.app/auth/apple/callback`
+3. Note the **Team ID** (top-right of the Apple Developer account page, under
+   Membership) → `APPLE_TEAM_ID`.
+4. Certificates, Identifiers & Profiles → Keys → **+** → name it, enable "Sign
+   In with Apple", associate it with the App ID from step 1, then **Register**
+   and **Download** — this `.p8` file can only be downloaded once, save it.
+   The Key ID shown on this page → `APPLE_KEY_ID`.
+5. Open the downloaded `.p8` file in a text editor and copy its entire
+   contents (including the `-----BEGIN PRIVATE KEY-----`/`-----END PRIVATE
+   KEY-----` lines) → `APPLE_PRIVATE_KEY` in Railway, pasted as-is (Railway's
+   env var editor handles the embedded newlines fine — no need to strip or
+   escape them).
+6. Set in Railway: `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`,
+   `APPLE_PRIVATE_KEY`.
+
+**How the login itself works (for reference, no action needed):** both are the
+standard OAuth 2.0 authorization-code flow — the button is a plain link (no
+JavaScript SDK, no CSP changes needed), the callback exchanges the code
+server-side, and a hub_users account is created or linked automatically. An
+OAuth identity only ever auto-links to an *existing* password account when the
+provider confirms the email is verified — an unverified email always gets its
+own new account instead, so a Google/Apple sign-in can never silently walk into
+somebody else's existing account. OAuth-created accounts get `role="admin"`
+(same as self-service `/signup`, never `"owner"`) and a random, never-shown
+password hash — they always sign in through the same provider going forward,
+password login for that account is not offered.
+
+---
+
 ## Bambu P1S Live Monitoring (Frank Integration)
 **Running in production** (confirmed live 2026-08-11 — this doc previously said "Not yet running,"
 which was stale; Scott has it set up and pushing). Frank (the Railway-hosted dashboard) has no route
