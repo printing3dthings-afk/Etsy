@@ -24042,3 +24042,212 @@ instruction):**
 admin_users, core_redeploy, smtp_notify, post_art, plus the 4 fully-
 unverified ones, plus batch_stage_tags) are written to disk but deliberately
 left UNCOMMITTED pending the grouped follow-up rounds above.
+
+
+## 2026-08-14 — Functional-test audit Group A: verification complete, 4 more real findings
+Ran the 9 remaining Round-1 adversarial-verification agent calls (mock-fidelity
++ logic-correctness per finding) for the 5 targets whose finder had already
+run but whose verification hadn't (session-limit interrupted): batch_stage_tags,
+ads_tools, qc_gate_audit, lifestyle_scene, svg_converter. All 10 verifier calls
+completed this time (no session-limit hit).
+
+**2 findings fully confirmed** (both verifiers independently re-checked the
+code and reproduced the bug themselves, not just re-reading the finder's
+claim):
+- `batch_stage_tags` (main.py:15784, `POST /api/batch/stage-tags`): stages an
+  `update_tags` action for every under-tagged active listing with **zero**
+  batch-size cap, listing_ids allowlist, or confirm flag — contrast with the
+  sibling `stage_batch_price_update`, which explicitly refuses anything over
+  5 listing_ids citing CLAUDE.md. Verified reproducible: 50 mocked listings ->
+  50 real pending actions enqueued in one unconfirmed call. Directly violates
+  CLAUDE.md's autonomy boundary ("any bulk edit touching more than 10
+  listings" requires Scott confirming scope first). **Not fixed yet** — what
+  the cap/confirmation mechanism should look like is a real design decision,
+  held for explicit direction rather than guessed at.
+- `etsy_ads_tools._set_daily_budget`: only checks `budget < 1.0`, no upper
+  bound at all (a $50,000/day typo is accepted), and `float('nan') < 1.0`
+  evaluates to `False` in Python so NaN silently bypasses even that floor and
+  gets persisted (propagates into `monthly_cap_estimate` as a non-standard
+  JSON `NaN` token). **Not fixed yet** — same reasoning, what the real upper
+  bound should be is Scott's call, not mine to invent.
+
+**2 more findings surfaced by the verification process itself** (the original
+finder classified these PASS/no-bug; an independent logic-correctness check
+pushed harder and found something the first pass missed — exactly what
+adversarial verification exists to catch):
+- `gen_lifestyle_scene.py`'s `replace_art_in_frame()`: when
+  `detect_mat_bounds()` fails to locate the AI-drawn placeholder mat/frame in
+  a generated room-background image (a real, reproducible case — a mat
+  spanning only 25% of canvas width), the function does **not** skip the
+  photo — it falls through to drawing the real art at a fixed generic
+  position without ever covering/removing the original AI-generated
+  stand-in artwork still visible elsewhere in the same image. `verify_
+  composite()` only checks furniture overlap near the new frame, never
+  whether the old fake art is still showing. This is a real, coded path
+  where a customer-facing listing photo could ship still containing
+  AI-generated placeholder art next to the real art — a direct hit against
+  this shop's #1 rule ("NEVER LIE TO THE CUSTOMER" / no AI stand-ins in
+  customer-facing photos). **Not fixed yet** — flagged as the most severe
+  finding in this round given it's the shop's own top-priority rule, but
+  held for explicit go-ahead since the right fix (skip-and-log the photo
+  entirely on a failed detection? attempt a second detection pass? something
+  else?) is a product decision, not obvious from the code alone.
+- `etsy_api.check_svg_quality()`: the file-size check (`elif size_kb > 150
+  and not is_clean`) only fires when combined with a bad fill/path count —
+  a genuinely "clean" (low fill/path count) but oversized SVG (reproduced:
+  293 KB, 2 fills, 2 paths) gets `passes_gate: True` despite CLAUDE.md
+  listing "File size per SVG: ≤ 150 KB" as one of three SS-Series hard-
+  requirement thresholds. **Investigated further before deciding whether to
+  use the plan's narrow QC-gate-tightening exception, and deliberately did
+  NOT auto-fix**: this exact `not is_clean` gating was the *original,
+  intentional* design (confirmed via this same ops_runbook's 2026-07-xx
+  entry describing `check_svg_quality()`'s extraction from
+  `_validate_svgs_in_zip()` as a "behavior-identical refactor," itself
+  describing the threshold as "combined with either"), with a specific
+  documented rationale in the code's own comment: legitimate single-file
+  merged multi-color SVGs can legitimately run 200-400 KB. Tightening this
+  is not the "strictly additive, never changes behavior elsewhere" case the
+  plan's exception was scoped for — it would newly reject some real files
+  that currently pass. Held for an explicit decision rather than guessed at.
+
+**1 finding held up clean**: `svg_converter.convert_to_svg()` — PASS survives
+both verifiers. The logic-correctness check specifically pushed past the
+finder's trivial-input testing (only 1-3 flat colors) with a genuinely busy
+gradient+noise image, which did blow past every threshold (3,896 fills/paths,
+1.6MB) exactly as CLAUDE.md warns is possible — but confirmed the real
+downstream gate (`check_svg_quality()`, wired live into `POST /api/studio/
+convert-svg`) correctly catches and flags it every time. No masked defect.
+
+All 5 test files committed as real regression/audit evidence regardless of
+fix status (they demonstrate current behavior precisely, CONFIRMED_BUG ones
+failing on purpose to prove the defect). Full suite (135 files total on disk,
+including the still-uncommitted ones from the earlier round): 133/135 (the 2
+confirmed-but-unfixed bug tests fail on purpose; svg_converter/qc_gate_audit/
+lifestyle_scene pass). Build unchanged (no app code touched this round).
+
+**Summary of everything now confirmed across both rounds:** 4 bugs fixed
+earlier today (digital_planner page count, publish-path false-success +
+uncaught FileContentError, upload_to_volume bare 500, refresh-token
+durability) + 4 more confirmed-but-intentionally-unfixed findings from this
+round (batch_stage_tags cap, ads_tools budget bounds, lifestyle_scene AI-art
+fallback, check_svg_quality size gating) = 8 real findings total from this
+audit so far. Groups B/C/D (Round 2/3 deep-dive + synthesis report) still not
+started, per Scott's explicit "don't start until I say."
+
+
+## 2026-08-14 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-14 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — Durable volume not writable
+hourly health loop found /tmp/tmppv5tqg_d/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmppv5tqg_d/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp7aal82sd/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 24629). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-14 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 24631). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
