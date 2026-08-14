@@ -2057,6 +2057,48 @@ Same as every other category: lifestyle photos (slots 1-2, 6, 8) must use the re
 
 ---
 
+## Parametric 3D Print Pipeline (OpenSCAD)
+
+Added 2026-08-14 after reviewing a batch of open-source 3D tooling (TRELLIS,
+Blender, Meshroom, FreeCAD, OpenSCAD) for fit against how this shop already
+works. OpenSCAD is the one that matches the existing pattern used everywhere
+else here — Claude writes a script, a subprocess renders it deterministically,
+resizable later by changing one number — the same shape as
+`generate_planner.py`/`generate_wall_calendar.py`/`svg_converter.py`, just for
+genuinely 3D (non-flat) objects instead of flat PDFs/SVGs. This is a
+**different product shape than the SS-Series pipeline above** — SS-Series is
+flat multi-color SIGNS assembled from layered SVGs/3MF at set Z heights; this
+is real sculpted 3D geometry (a vase, a desk organizer, a bracket, a holder)
+for the existing `3d_print_physical` catalog category — items Scott prints
+and ships himself, not a customer-facing digital download.
+
+**Tool**: `render_openscad_model` (chat) / `tools/openscad_render.py`
+(standalone: `python3 tools/openscad_render.py model.scad -o out.stl -D
+size=40`, or `--check` to confirm the binary is present). Frank writes real
+OpenSCAD source in the tool call; the wrapper shells out to the `openscad`
+CLI and returns a mesh file (STL by default — every slicer including Bambu
+Studio imports it directly; 3MF/OFF/AMF also supported).
+
+**System dependency, not a Python package**: `openscad` is a system binary
+(apt package `openscad`, ~2021.01), **not in the Railway server image or
+requirements.txt** — `check_openscad_available()` reports this clearly
+(`{"error": "openscad is not installed. Install it with apt-get install -y
+openscad..."}`) rather than a bare crash if it's missing on a given deploy.
+Install with `apt-get install -y openscad` to enable real rendering.
+
+**Zero API cost, zero Etsy interaction.** Pure local subprocess — no AI call,
+no money spent, nothing published or staged toward Etsy by the render itself.
+Once a design is confirmed printable, register it via `stage_action`
+(`action_type: register_product`, `category: 3d_print_physical`) — same
+one-tap-approval gate as everything else, per Autonomy Boundaries below.
+
+**Design rule**: write clean, parametric OpenSCAD — real named variables for
+every dimension (`size=40; cube([size,size,size]);`), never magic numbers
+baked into the geometry — so a design is genuinely resizable by a future `-D`
+override, the whole point of choosing this over a one-off manual model.
+
+---
+
 ## Image Generation Notes (for gpt-image-1 / DALL-E)
 
 Generate all 10 images at **2400×2400px square**. Never put text overlays in the AI-generated image — add all text callouts separately in Canva after generation. No hands or people visible (AI renders these unnaturally). Use the product's color theme as the accent color for props and backgrounds.
@@ -2676,6 +2718,7 @@ Rules:
 | Financial tracking / COGS per print | Craftybase |
 | Social post scheduling | Buffer or Tailwind |
 | Shop health snapshots | `tools/shop_health_check.py` |
+| **Parametric 3D-print model generation** | `tools/openscad_render.py` / `render_openscad_model` chat tool — see "Parametric 3D Print Pipeline (OpenSCAD)" above. Requires `openscad` installed on the deploy. |
 | **Backup digital_products/ after producing a new product's files** | `tools/backup_digital_products.py` — run as soon as a new product's source art/PDF/ZIP is generated, since `data/digital_products/` is gitignored and has no other durable backup. Hand the output ZIP to Scott (via chat) to save in his own cloud storage. |
 | **Log infrastructure/dashboard incidents for the CEO Agent (Fucking Frank)** | Append a short dated entry (symptom, root cause, fix) to `data/knowledge_base/ops_runbook.md` any time Claude Code diagnoses or fixes a problem with the live site, API, deploy, or credentials — Frank loads this file fresh on every chat/diagnostic request (`_ops_runbook_block()` in `tools/api_server/main.py`), so Scott can ask Frank directly "why was X broken?" and get a grounded answer instead of a guess. Keep entries short — this is a log, not a report. |
 | **Archive anything before deleting it (recycle bin)** | BEFORE removing any code block or file, archive it first via `tools/trash.py` — `from tools.trash import archive_snippet, archive_file` then `archive_snippet(source_path, exact_removed_text, reason)` for code or `archive_file(path, reason)` for whole files. Everything lands in the committed vault `data/trash/` (ledger `DELETED.md` + byte-exact copies in `files/`), kept **30 days** then auto-pruned, so an accidental or regressive deletion can be recovered with `python tools/trash.py --restore <id>`. This is a hard rule per Scott (2026-06-23): nothing we delete should be unrecoverable. The vault must stay committed (the remote container is ephemeral — uncommitted files are lost). |

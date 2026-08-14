@@ -815,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d15c3aa-v339"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a59c8a1-v340"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3535,6 +3535,50 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "render_openscad_model",
+        "description": (
+            "Render a genuinely 3D (non-flat) printable object — write real OpenSCAD code "
+            "yourself in this call and this renders it to a mesh file via the openscad CLI. "
+            "For a real parametric shape (a vase, an organizer, a holder, a bracket — "
+            "anything CAD-like), not for the flat multi-color signs the SS-series SVG-pack "
+            "pipeline already covers (use that pipeline for signs instead). Output feeds the "
+            "3d_print_physical catalog category — Scott prints and ships it himself on the "
+            "Bambu P1S; this never touches Etsy or publishes anything. Write clean, "
+            "parametric OpenSCAD (use variables for every dimension, not magic numbers) so "
+            "the design is genuinely resizable later. Requires the `openscad` system binary "
+            "on this deploy — if it isn't installed, this returns a clear error rather than "
+            "a bare crash; tell Scott it needs `apt-get install openscad` if that happens. "
+            "Use when asked to design/model/generate a 3D-printable object from a "
+            "description, not just a flat sign."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "scad_source": {
+                    "type": "string",
+                    "description": "The complete OpenSCAD script to render, written by you.",
+                },
+                "output_name": {
+                    "type": "string",
+                    "description": "Filename for the rendered mesh, e.g. 'desk_organizer_v1'. "
+                                   "No extension — the format param picks it.",
+                },
+                "format": {
+                    "type": "string", "enum": ["stl", "3mf", "off", "amf"],
+                    "description": "Output mesh format. Default 'stl' (universal — every "
+                                   "slicer including Bambu Studio imports it directly).",
+                },
+                "params": {
+                    "type": "object",
+                    "description": "Optional -D variable overrides, e.g. {\"height\": \"40\"}. "
+                                   "Values are passed to OpenSCAD verbatim — a string variable "
+                                   "needs literal quotes inside the value, e.g. '\"Custom Text\"'.",
+                },
+            },
+            "required": ["scad_source", "output_name"],
+        },
+    },
+    {
         "name": "register_command",
         "description": (
             f"Wire up an EXISTING script under tools/ as a new named command {business_config.AGENT_NAME_SHORT} can run. "
@@ -4928,6 +4972,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _produce_listing_photos(tool_input or {})
         if name == "generate_print_zip":
             return _produce_print_zip(tool_input or {})
+        if name == "render_openscad_model":
+            return _produce_openscad_render(tool_input or {})
         if name == "build_planner":
             return _produce_build_planner(tool_input or {})
         if name == "build_sticker_pack":
@@ -14083,6 +14129,71 @@ async def produce_print_zip(body: dict, _token: str = Depends(_rate_limited_auth
             asyncio.to_thread(_produce_print_zip, body or {}), timeout=200)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Print-ZIP build timed out — try again.")
+
+
+_OPENSCAD_OUTPUT_SUBDIR = "openscad_models"  # under _product_log_dir()'s base, alongside product_files/
+
+
+def _produce_openscad_render(inp: dict) -> dict:
+    """Render Claude-authored OpenSCAD source to a real mesh file (2026-08-14,
+    render_openscad_model chat tool). Synchronous and can take a while on a
+    complex script -- callers awaiting this via the HTTP route wrap it with
+    a timeout, same pattern as _produce_print_zip above. Zero AI/API cost;
+    the only external dependency is the openscad system binary, which
+    openscad_render.check_openscad_available() reports on clearly rather
+    than this failing with a bare subprocess error."""
+    scad_source = str((inp or {}).get("scad_source", "")).strip()
+    if not scad_source:
+        return {"error": "scad_source is required — write the OpenSCAD script to render."}
+    output_name = str((inp or {}).get("output_name", "")).strip()
+    if not output_name:
+        return {"error": "output_name is required (no extension, e.g. 'desk_organizer_v1')."}
+    fmt = str((inp or {}).get("format", "stl")).strip().lower().lstrip(".")
+    params = (inp or {}).get("params") or {}
+    if not isinstance(params, dict):
+        return {"error": "params must be an object of variable_name: value pairs."}
+
+    try:
+        import openscad_render as osr
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"openscad_render module unavailable: {exc}"}
+
+    available, info = osr.check_openscad_available()
+    if not available:
+        return {"error": info}
+
+    safe_name = _re.sub(r"[^A-Za-z0-9_-]", "_", output_name)[:80] or "model"
+    out_dir = _product_log_dir().parent / _OPENSCAD_OUTPUT_SUBDIR
+    output_path = out_dir / f"{safe_name}.{fmt}"
+    try:
+        osr.render_scad(scad_source, output_path, params={k: str(v) for k, v in params.items()}, fmt=fmt)
+    except osr.OpenSCADError as exc:
+        return {"error": str(exc)}
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"render failed: {exc}"}
+
+    size_kb = round(output_path.stat().st_size / 1024, 1)
+    return {
+        "output_name": safe_name,
+        "format": fmt,
+        "path": f"{_OPENSCAD_OUTPUT_SUBDIR}/{safe_name}.{fmt}",
+        "size_kb": size_kb,
+        "message": f"Rendered {safe_name}.{fmt} ({size_kb} KB) — open it from the Files screen. "
+                   f"Register it with stage_action (register_product, category="
+                   f"'3d_print_physical') once Scott's confirmed it prints correctly.",
+    }
+
+
+@app.post("/api/produce/openscad-render")
+async def produce_openscad_render(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Render OpenSCAD source to a mesh file. Local subprocess only, no AI/API
+    cost — timeout matches openscad_render.render_scad's own default plus
+    a small margin for process overhead."""
+    try:
+        return await asyncio.wait_for(
+            asyncio.to_thread(_produce_openscad_render, body or {}), timeout=140)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="OpenSCAD render timed out — try a lower-resolution script.")
 
 
 def _produce_coloring_pack(inp: dict) -> dict:

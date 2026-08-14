@@ -24247,3 +24247,36 @@ because their tool descriptions didn't say they existed.
 
 Full suite: 140/143 passing (same 3 known deliberately-failing bug-proof
 tests as before, untracked). Build bumped this deploy.
+
+
+## 2026-08-14 — Added parametric 3D print pipeline (OpenSCAD)
+Scott reviewed a batch of open-source 3D tooling (TRELLIS, Blender, Meshroom,
+FreeCAD, OpenSCAD) and asked to implement whichever fit. OpenSCAD was the
+only one matching this codebase's existing pattern (Claude writes a script,
+a subprocess renders it deterministically, resizable by one parameter) --
+the same shape as generate_planner.py/generate_wall_calendar.py/
+svg_converter.py, just for genuinely 3D (non-flat) physical products instead
+of flat PDFs/SVGs.
+
+New: tools/openscad_render.py (render_scad(), check_openscad_available(),
+CLI) + render_openscad_model chat tool (main.py) + POST /api/produce/
+openscad-render. Feeds the existing 3d_print_physical catalog category --
+Scott prints/ships himself, nothing here touches Etsy or spends AI budget.
+
+openscad is a system binary (apt package `openscad`, 2021.01), NOT bundled
+in the Railway image and not a pip dependency -- check_openscad_available()
+reports this with an actionable install command rather than a bare crash
+when missing. Verified end-to-end in this session after installing it by
+hand: a real cube([10,10,10]) rendered a genuine 1503-byte ASCII STL with
+real vertex data, bad OpenSCAD syntax and an empty-geometry difference()
+both surfaced as a clean OpenSCADError instead of a silent/bare failure,
+and a -D size override actually changed the rendered vertex coordinates.
+Tests (tests/test_openscad_render.py) gracefully skip the real-render
+checks (not fail) on any deploy where the binary isn't installed, same
+pattern as this repo's other optional-dependency tests.
+
+Also documented in CLAUDE.md's new "Parametric 3D Print Pipeline (OpenSCAD)"
+section and the Automation Stack table.
+
+Full suite: 141/144 passing (same 3 known deliberately-failing bug-proof
+tests as before, untracked). Build bumped this deploy.
