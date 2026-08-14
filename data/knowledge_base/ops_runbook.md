@@ -23956,3 +23956,89 @@ unverified-email security rule, state-token single-use/expiry, Apple JWT
 shape, authorize URL construction, and the `/auth/google`+`/auth/apple` routes
 end to end with real network calls mocked out). Full suite: 119/119. Build
 9965bde-v336.
+
+
+## 2026-08-14 — Functional-test audit: 4 confirmed bugs found and fixed
+Scott asked for a functional test pass across the codebase ("check everything
+that has a function and that it actually works... some are maybe too
+complex... sub agents to verify by looping"). Ran this as a multi-round
+Workflow: 16 highest-risk targets (picked from a real AST scan of 1,707
+functions, scored by LOC + live-route + state-mutation + existing-coverage),
+one finder agent per target writing/running a real functional test, then two
+independent adversarial verifiers per finding (mock-fidelity + logic-
+correctness, both required to survive). Hit the session usage limit twice
+mid-run (resets are frequent, not a single daily cap) — resumed both times via
+`Workflow({resumeFromRunId: ...})`, which correctly replayed completed agents
+from cache and only re-ran what failed.
+
+**4 confirmed, adversarially-verified bugs found and fixed** (regression
+tests already existed from the audit, just needed re-asserting for the fixed
+behavior):
+
+1. **Sticker-picker page-count undercount** (`art_creation_tools.py`,
+   `_create_digital_planner`) — the tier-3 sticker-picker call site credited
+   `page_count += 1` for `draw_sticker_picker_page()`, which actually writes 5
+   real pages (one per sticker sheet). The function's own returned `"pages"`
+   metadata undercounted the real PDF by 4 whenever the sticker pack shipped
+   at the default tier. Fixed to `+= 5`. Directly relevant to CLAUDE.md's
+   Quality Gate rule #2 ("page counts... match the description exactly").
+2. **Publish path — two bugs** (`etsy_listing_tools.py`):
+   - `_publish_digital_listing`: a 2xx Etsy response missing `listing_id` (no
+     exception) was reported as `success=True` with an empty
+     `etsy_listing_id` and a broken `etsy_url` — live-reachable via
+     `run_wall_art_workflow.py`, which trusts `pub['etsy_listing_id']`
+     whenever `success` is true. Fixed to return a real error instead.
+   - `_attach_digital_file`: only caught `EtsyAPIError`, so a genuine
+     `FileContentError` from `upload_listing_file()`'s own DP-code-mismatch
+     safety gate (its docstring: "the exact failure that shipped a customer
+     the wrong art") propagated as an unhandled exception instead of the
+     file's normal `{"error": ...}` response. Fixed with an explicit
+     `except FileContentError` clause.
+3. **`upload_to_volume` bare 500 on directory collision** (`main.py`,
+   `POST /api/files/upload`) — `path="."` resolves to the volume root itself,
+   which slips past the traversal guard (`target == vroot` short-circuits
+   it); separately, an earlier upload's auto-created parent directory can
+   collide with a later upload's `path`. Either way `target.write_bytes(body)`
+   raised an unhandled `IsADirectoryError` -> bare 500, violating
+   api-conventions.md's "never a bare exception that becomes a generic 500."
+   Fixed with an explicit `target.is_dir()` check before the write.
+4. **`core_refresh_etsy_token` didn't persist rotated tokens durably**
+   (`main.py`, `POST /api/core/refresh-etsy-token`) — only updated
+   `os.environ` in-memory + a best-effort `.env` write (a no-op on Railway's
+   ephemeral filesystem); never called `db.save_etsy_tokens()` the way the
+   sibling `POST /api/etsy-tokens` endpoint does. Since Etsy invalidates the
+   OLD refresh token the instant a rotation succeeds, a restart/redeploy in
+   the window before the separate ~60s background `_token_sync_loop` synced
+   it would strand the shop on a dead refresh token — the same failure class
+   `_reconcile_etsy_tokens()`'s own docstring says was already diagnosed
+   2026-06-17, reintroduced by this endpoint. Fixed to call
+   `db.save_etsy_tokens()` immediately on success.
+
+**Also investigated and ruled out:** `test_functional_audit_check_shop.py`
+failed once inside a full `tests/run_all.py` run but passed 10/10 times when
+re-run standalone (both directly and via the identical subprocess mechanism
+run_all.py uses) — a one-off environmental flake, not a real regression,
+consistent with this repo's already-known `playwright_smoke.py` flakiness
+pattern. No code change made for it.
+
+Full suite: 133/135 (only the 2 still-unverified findings below fail, as
+expected). Build b15465f-v337.
+
+**Still outstanding (grouped, explicitly NOT started per Scott's
+instruction):**
+- Group A: finish Round-1 verification for 5 targets whose finder completed
+  but whose adversarial verify didn't (qc_gate_audit, ads_tools,
+  lifestyle_scene, svg_converter, batch_stage_tags). `ads_tools` and
+  `batch_stage_tags` currently claim CONFIRMED_BUG but are UNVERIFIED — their
+  test files are on disk (`tests/test_functional_audit_{ads_tools,
+  batch_stage_tags}.py`, currently failing in the suite) but NOT committed,
+  specifically because their findings haven't been adversarially checked yet.
+- Group B: Round-2 "find something new" pass for the 7 deep-dive targets.
+- Group C: verify whatever Group B finds; Round 3 if not dry.
+- Group D: final synthesis report; fix any newly confirmed bugs the same way
+  as the 4 above.
+
+12 other test files (studio_queue, check_shop, catalog_registration,
+admin_users, core_redeploy, smtp_notify, post_art, plus the 4 fully-
+unverified ones, plus batch_stage_tags) are written to disk but deliberately
+left UNCOMMITTED pending the grouped follow-up rounds above.

@@ -5117,8 +5117,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     if "sticker_pack" in _extras:
         if _design == 3:
-            # Tier 3: unified interactive picker page (linked from every day cell)
-            draw_sticker_picker_page(); page_count += 1
+            # Tier 3: unified interactive picker -- draw_sticker_picker_page() itself
+            # writes 5 real pages (one per sticker sheet: Functional Planning, Widget
+            # Trackers, Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday --
+            # its own `for pg_idx in range(5): ... c.showPage()` loop), so crediting
+            # only +1 here undercounted the function's returned "pages" metadata by 4
+            # against the real PDF (2026-08-13 functional audit, CLAUDE.md Quality
+            # Gate rule "page counts... match the description exactly").
+            draw_sticker_picker_page(); page_count += 5
         else:
             # Tier 1/2: three separate screenshottable sticker pack pages
             for _pi in range(1, 6):

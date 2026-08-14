@@ -461,7 +461,14 @@ def _publish_digital_listing(data: dict, store: DataStore) -> str:
         }
 
         response = client.create_listing(listing_data)
-        etsy_listing_id = str(response.get("listing_id", ""))
+        etsy_listing_id = str(response.get("listing_id") or "")
+        if not etsy_listing_id:
+            # 2026-08-13 functional audit: a 2xx-shaped response missing
+            # listing_id (no exception raised) used to be reported as
+            # success=True with an empty etsy_listing_id and a broken
+            # etsy_url — silently poisoning the product record with a
+            # "listed" status that has no real Etsy listing behind it.
+            return json.dumps({"error": f"Etsy create_listing() response had no listing_id: {response}"})
 
         product["etsy_listing_id"] = etsy_listing_id
         product["status"] = "listed"
@@ -1046,7 +1053,7 @@ def _upload_listing_image(data: dict, store: DataStore) -> str:
 
 
 def _attach_digital_file(data: dict, store: DataStore) -> str:
-    from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+    from tools.etsy_api import EtsyAPIClient, EtsyAPIError, FileContentError
     product = _find_product(data["product_id"], store)
     if not product:
         return json.dumps({"error": f"Product {data['product_id']} not found"})
@@ -1077,6 +1084,13 @@ def _attach_digital_file(data: dict, store: DataStore) -> str:
             "file_attached": os.path.basename(file_path),
             "note": "Buyers can now download instantly from Etsy. Email delivery is still active as a backup.",
         }, indent=2)
+    except FileContentError as e:
+        # Deliberately not an EtsyAPIError (see its docstring) -- it fires
+        # before any network call, from upload_listing_file()'s own pre-upload
+        # content gate. Was previously uncaught here, so it propagated as a
+        # bare unhandled exception instead of this file's normal
+        # {"error": ...} response shape (2026-08-13 functional audit).
+        return json.dumps({"error": f"File content validation failed: {e}"}, indent=2)
     except EtsyAPIError as e:
         return json.dumps({"error": str(e)}, indent=2)
 

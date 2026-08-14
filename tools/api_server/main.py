@@ -815,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "9965bde-v336"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b15465f-v337"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -15981,6 +15981,7 @@ async def core_refresh_etsy_token(request: Request, _token: str = Depends(_auth_
     owner-or-automation gate as the raw token endpoints above, since success
     here rotates the live credential."""
     _require_owner_or_automation(request)
+    parent_refresh_token = os.getenv("ETSY_REFRESH_TOKEN", "")
     ok = await asyncio.to_thread(lambda: EtsyAPIClient().refresh_access_token())
     if not ok:
         raise HTTPException(status_code=502, detail=(
@@ -15988,6 +15989,17 @@ async def core_refresh_etsy_token(request: Request, _token: str = Depends(_auth_
             "successful rotation), run `python tools/etsy_oauth.py` on your own machine to "
             "fully re-authorize."
         ))
+    # refresh_access_token() only updates os.environ in-memory + a best-effort
+    # .env write (a no-op on Railway's ephemeral filesystem) -- it never
+    # persisted to the durable db.etsy_tokens store, unlike the sibling
+    # POST /api/etsy-tokens endpoint above. Etsy invalidates the OLD refresh
+    # token the instant this rotation succeeds, so a restart/redeploy before
+    # the separate ~60s background sync loop happens to persist it would
+    # strand the shop on a dead refresh token (2026-08-13 functional audit).
+    new_access = os.getenv("ETSY_ACCESS_TOKEN", "")
+    new_refresh = os.getenv("ETSY_REFRESH_TOKEN", "")
+    if new_access and new_refresh:
+        await asyncio.to_thread(db.save_etsy_tokens, new_access, new_refresh, parent_refresh_token)
     tokens = await asyncio.to_thread(db.get_etsy_tokens)
     return {"ok": True, "updated_at": (tokens or {}).get("updated_at")}
 
@@ -18685,6 +18697,15 @@ async def upload_to_volume(request: Request, path: str, _token: str = Depends(_a
     target = (vroot / rel).resolve()
     if vroot not in target.parents and target != vroot:
         raise HTTPException(status_code=400, detail="Invalid path")
+    if target.is_dir():
+        # Covers path="." (resolves to vroot itself, which slips past the
+        # traversal guard above since target == vroot) and the case where an
+        # earlier upload's target.parent.mkdir() auto-created a directory that
+        # a later upload's path then collides with. Without this,
+        # target.write_bytes(body) below raises an unhandled IsADirectoryError
+        # -> bare 500 (2026-08-13 functional audit; api-conventions.md: "never
+        # a bare exception that becomes a generic 500").
+        raise HTTPException(status_code=400, detail=f"path '{rel}' is an existing directory, not a file")
     body = await request.body()
     if not body:
         raise HTTPException(status_code=400, detail="empty body")
