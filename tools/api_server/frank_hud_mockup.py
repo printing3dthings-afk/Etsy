@@ -55,6 +55,15 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
   "three": "/static/vendor/three/build/three.module.js"
 }}
 </script>
+<!-- GSAP (vendored, /static/vendor/gsap/gsap.min.js) -- a classic global script, NOT an
+     importmap entry: this is GSAP's UMD/global build, and its fallback-to-globalThis path
+     (`(t=t||self).window=t.window||{}`) throws `Cannot set property window of #<Window>
+     which has only a getter` when evaluated as a real ES module (top-level `this` is
+     undefined there, so it falls through to `self`, i.e. `window`, and then tries to
+     assign `window.window` -- a read-only self-reference on the real Window object).
+     Confirmed via a real headless-Chrome run before wiring this in. Loaded as a plain
+     script here so it attaches `window.gsap` the way GSAP's docs actually expect. -->
+<script src="/static/vendor/gsap/gsap.min.js"></script>
 <!-- Orb load speed (Scott, 2026-07-10): the default sphere's WebGL setup only
      starts fetching three.module.js (1.3MB) once the giant inline script below has
      been fully downloaded, parsed, and run down to resetOrbToDefault() -- on a real
@@ -879,8 +888,44 @@ body:not(.is-mobile) .orb-open-chat{display:none}
   border-radius:var(--r-md);padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow)}
 .create-detail .cd-advanced-toggle{display:inline-block;font-size:11.5px;color:var(--muted);cursor:pointer;
   margin:6px 0;text-decoration:underline;text-underline-offset:2px}
-.create-detail .cd-advanced-body{display:none;margin:8px 0 4px;padding:10px;border:1px dashed var(--border);border-radius:var(--r-sm)}
-.create-detail .cd-advanced-body.open{display:block}
+/* Smooth expand/collapse (2026-08-14, motion audit) -- grid-template-rows 0fr->1fr instead of
+   a hard display:none/block flip. Works in every evergreen browser today (no @starting-style
+   dependency, unlike the modal fix above).
+   Requires exactly ONE grid item inside .cd-advanced-body (.cd-advanced-inner, added at each
+   of the 3 call sites) -- confirmed the hard way in real headless Chrome: with the padding/
+   border-color-only version tried first, and grid-template-rows applied directly to a
+   MULTI-CHILD .cd-advanced-body (a <label> + <select> + a note div, not one node), CSS Grid
+   auto-places each child into its own IMPLICIT row; only the first gets the explicit 0fr
+   track, the rest default to grid-auto-rows:auto and keep their natural height regardless --
+   closed height measured 45.6px instead of ~0. Wrapping the real content in one inner element
+   is the textbook-correct fix for this, not optional -- see .cd-advanced-inner below, and the
+   3 call sites (~line 2545, ~4573, ~4586) that now open a matching inner div.
+   Selector deliberately NOT scoped under .create-detail (that was the pre-existing rule's
+   scoping too, before this same 2026-08-14 edit): the static "Advanced" block in the Make-a-
+   listing-photo hub-card (~line 2545) sits inside .hub-card, not .create-detail, at all -- so
+   the old `.create-detail .cd-advanced-body{display:none}` rule never matched it, and that
+   instance had been silently always-expanded (display's browser default is inline/block, never
+   none) this whole time, also confirmed via a real headless-Chrome DOM ancestor walk
+   (hub-card > panel > screen > ..., never create-detail). .cd-advanced-body is specific enough
+   as a plain class selector; no scoping ancestor needed. */
+.cd-advanced-body{display:grid;grid-template-rows:0fr;overflow:hidden;margin:8px 0 4px;
+  transition:grid-template-rows .2s ease}
+.cd-advanced-body.open{grid-template-rows:1fr}
+/* min-height:0 alone (needed so the collapsed grid ROW isn't held open by the item's default
+   automatic-minimum-size) does NOT get the row fully to 0 by itself -- padding/border on this
+   same inner element still contribute their own box size regardless of row height, confirmed
+   empirically (measured 22px closed = the 10px+10px padding + 1px+1px border, exactly, even
+   with grid-template-rows:0fr and min-height:0 both correctly applied). Animating padding to 0
+   and border-color to transparent in sync with the row transition is what actually gets a true
+   ~2px closed height -- same technique the very first (pre-wrapper) attempt at this used, now
+   combined with the wrapper instead of replaced by it. */
+.cd-advanced-body>.cd-advanced-inner{overflow:hidden;min-height:0;
+  padding:0 10px;border:1px dashed transparent;border-radius:var(--r-sm);
+  transition:padding .2s ease,border-color .2s ease}
+.cd-advanced-body.open>.cd-advanced-inner{padding:10px;border-color:var(--border)}
+@media (prefers-reduced-motion:reduce){
+  .cd-advanced-body,.cd-advanced-body>.cd-advanced-inner{transition:none}
+}
 .create-detail .cd-newcode-link{font-size:11.5px;color:var(--cyan2);cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:inline-block;margin-top:4px}
 .hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
 .hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
@@ -1466,26 +1511,31 @@ body.product-sheet-open #product-sheet{display:flex}
 /* Products-screen review modal (2026-07-18) -- a taller, scrollable, centered panel
    (not a bottom sheet) since it needs to show description text, a tag list, and a
    photo grid. */
-#product-review-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6)}
-#product-review-modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+/* Entrance/exit motion (2026-07-18 motion audit, redone 2026-08-14 with @starting-style +
+   transition-behavior:allow-discrete): previously a hard display:none<->flex cut needed a
+   JS-driven third class (.product-review-closing, see productReviewClose()) purely because a
+   plain `transition` can't run AFTER display goes to none -- closing kept display:flex for one
+   more duration while playing the reverse motion via a setTimeout. allow-discrete lets `display`
+   itself participate in the transition (the UA holds it at the pre-transition value -- flex --
+   until the rest of the transition finishes, then flips it), so open AND close are now one real
+   transition each, no JS timing at all. Verified in real headless Chrome before shipping: display
+   stays 'flex' throughout the close fade and only becomes 'none' once opacity/transform settle. */
+#product-review-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6);
+  opacity:0;transition:opacity .12s ease,display .12s allow-discrete}
+#product-review-modal{display:none;position:fixed;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.94) translateY(6px);opacity:0;
   z-index:901;width:min(560px,92vw);max-height:85vh;background:var(--panel);
-  border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden}
-body.product-review-open #product-review-backdrop{display:block}
-body.product-review-open #product-review-modal{display:flex}
-/* Entrance/exit motion (2026-07-18 motion audit) — was a hard display:none<->flex
-   cut with no transition either direction. Entrance uses `animation` (fires cleanly
-   on display:none->flex, same reasoning as .screen-in above transitions can't
-   interpolate from a missing starting frame). Exit needs a JS-driven third class
-   (.product-review-closing, see productReviewClose()) since transition/animation
-   can't run AFTER display goes to none -- closing keeps display:flex for one more
-   animation duration while playing the reverse motion, then productReviewClose()'s
-   setTimeout removes it once the animation has actually finished. */
-@keyframes prm-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}to{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}}
-@keyframes prm-backdrop-in{from{opacity:0}to{opacity:1}}
-body.product-review-open #product-review-modal{animation:prm-in .15s cubic-bezier(.22,1,.36,1) both}
-body.product-review-open #product-review-backdrop{animation:prm-backdrop-in .12s ease both}
-body.product-review-closing #product-review-backdrop{display:block;animation:prm-backdrop-in .12s ease reverse both}
-body.product-review-closing #product-review-modal{display:flex;animation:prm-in .12s cubic-bezier(.4,0,1,1) reverse both}
+  border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden;
+  transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1),display .15s allow-discrete}
+body.product-review-open #product-review-backdrop{display:block;opacity:1}
+body.product-review-open #product-review-modal{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}
+@starting-style{
+  body.product-review-open #product-review-backdrop{opacity:0}
+  body.product-review-open #product-review-modal{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}
+}
+@media (prefers-reduced-motion:reduce){
+  #product-review-backdrop,#product-review-modal{transition:none}
+}
 .prm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
 .prm-header-title{font-weight:700;font-size:15px;color:var(--text)}
@@ -1508,18 +1558,24 @@ body.product-review-closing #product-review-modal{display:flex;animation:prm-in 
    .prm-actions-equivalent footer -- this is read-only trend data, no approve/reject action.
    Kept metric-agnostic (mdm- prefix, no "revenue"/"orders" in any class name) because
    Phase 3 reuses this exact modal for Star Seller/Ads/COGS -- see METRIC_DETAIL_CONFIG. */
-#metric-detail-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6)}
-#metric-detail-modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+/* Same @starting-style + allow-discrete treatment as #product-review-modal above (2026-08-14)
+   -- was the identical JS-driven .metric-detail-closing workaround, see that comment block. */
+#metric-detail-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6);
+  opacity:0;transition:opacity .12s ease,display .12s allow-discrete}
+#metric-detail-modal{display:none;position:fixed;left:50%;top:50%;
+  transform:translate(-50%,-50%) scale(.94) translateY(6px);opacity:0;
   z-index:901;width:min(560px,92vw);max-height:85vh;background:var(--panel);
-  border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden}
-body.metric-detail-open #metric-detail-backdrop{display:block}
-body.metric-detail-open #metric-detail-modal{display:flex}
-@keyframes mdm-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}to{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}}
-@keyframes mdm-backdrop-in{from{opacity:0}to{opacity:1}}
-body.metric-detail-open #metric-detail-modal{animation:mdm-in .15s cubic-bezier(.22,1,.36,1) both}
-body.metric-detail-open #metric-detail-backdrop{animation:mdm-backdrop-in .12s ease both}
-body.metric-detail-closing #metric-detail-backdrop{display:block;animation:mdm-backdrop-in .12s ease reverse both}
-body.metric-detail-closing #metric-detail-modal{display:flex;animation:mdm-in .12s cubic-bezier(.4,0,1,1) reverse both}
+  border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden;
+  transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1),display .15s allow-discrete}
+body.metric-detail-open #metric-detail-backdrop{display:block;opacity:1}
+body.metric-detail-open #metric-detail-modal{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}
+@starting-style{
+  body.metric-detail-open #metric-detail-backdrop{opacity:0}
+  body.metric-detail-open #metric-detail-modal{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}
+}
+@media (prefers-reduced-motion:reduce){
+  #metric-detail-backdrop,#metric-detail-modal{transition:none}
+}
 .mdm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
 .mdm-header-title{font-weight:700;font-size:15px;color:var(--text)}
@@ -2501,7 +2557,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
 
         <span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>
-        <div class="cd-advanced-body">
+        <div class="cd-advanced-body"><div class="cd-advanced-inner">
           <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image engine</label>
           <select id="setting-image-engine" aria-label="Image engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
             <option value="openai">Standard (default)</option>
@@ -2510,7 +2566,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <option value="grok">Alternative — xAI Grok (new, unproven)</option>
           </select>
           <div style="font-size:10px;color:var(--muted)">This is an edit-style call using your real product file as input, so Ideogram (generate-only) isn't offered here. Some alternatives need an extra API key set up — Frank tells you if one's missing when you generate. <span id="engines-status"></span></div>
-        </div>
+        </div></div>
 
         <button class="act-btn primary" style="width:100%;margin-top:10px" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
         <div id="lsg-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
@@ -4530,10 +4586,10 @@ function _renderCategoryPanelHtml(key){
   // Skip the whole Advanced disclosure rather than show an empty one.
   if (cfg.usesEngine) {
     html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>';
-    html += '<div class="cd-advanced-body">';
+    html += '<div class="cd-advanced-body"><div class="cd-advanced-inner">';
     html += '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Art style (used for the AI-generated art step only)</label>';
     html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
-    html += '</div>';
+    html += '</div></div>';
   }
 
   html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="buildProductRun()" id="bx-run-btn">' + escHtml(cfg.primaryLabel) + '</button></div>';
@@ -4542,7 +4598,7 @@ function _renderCategoryPanelHtml(key){
   const secondary = _createSecondaryRowsHtml(key);
   if (secondary) {
     html += '<div style="margin-top:16px"><span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Rebuild just one part ▸</span>';
-    html += '<div class="cd-advanced-body">' + secondary + '</div></div>';
+    html += '<div class="cd-advanced-body"><div class="cd-advanced-inner">' + secondary + '</div></div></div>';
   }
   return html;
 }
@@ -7110,10 +7166,10 @@ async function loadShopPerf(){
   }
 }
 function metricDetailClose(){
-  if (!document.body.classList.contains('metric-detail-open')) return; // already closed/closing
+  // 2026-08-14: the exit fade + display:none-after-transition is now pure CSS
+  // (@starting-style + transition-behavior:allow-discrete on #metric-detail-modal/
+  // -backdrop) -- no JS timing needed, see that CSS block's comment.
   document.body.classList.remove('metric-detail-open');
-  document.body.classList.add('metric-detail-closing');
-  setTimeout(() => document.body.classList.remove('metric-detail-closing'), _reducedMotion ? 0 : 120);
 }
 function openMetricDetailModal(metricKey){
   const cfg = METRIC_DETAIL_CONFIG[metricKey];
@@ -10182,10 +10238,10 @@ async function productSheetFix(productId){
 
 // ── Review modal (ready_for_review / draft / listed_draft) ──────────────────────────
 function productReviewClose(){
-  if (!document.body.classList.contains('product-review-open')) return; // already closed/closing
+  // 2026-08-14: the exit fade + display:none-after-transition is now pure CSS
+  // (@starting-style + transition-behavior:allow-discrete on #product-review-modal/
+  // -backdrop) -- no JS timing needed, see that CSS block's comment.
   document.body.classList.remove('product-review-open');
-  document.body.classList.add('product-review-closing');
-  setTimeout(() => document.body.classList.remove('product-review-closing'), _reducedMotion ? 0 : 120);
 }
 async function openProductReviewModal(p){
   document.getElementById('prm-title').textContent = p.title || p.id;

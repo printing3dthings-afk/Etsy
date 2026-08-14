@@ -815,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "6aef3e2-v341"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "6e4089f-v342"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1290,8 +1290,11 @@ _AUTH_PAGE_CSS = """
 html,body{height:100%}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
   background:var(--bg);color:var(--text);font-family:var(--font-body);padding:24px}
+@keyframes box-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .box{width:380px;max-width:100%;padding:32px 28px 26px;background:var(--panel);
-  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--card-shadow);position:relative}
+  border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--card-shadow);position:relative;
+  animation:box-in .25s cubic-bezier(.22,1,.36,1) both}
+@media (prefers-reduced-motion:reduce){.box{animation:none}}
 .box::before,.box::after{content:'';position:absolute;width:14px;height:14px;pointer-events:none;opacity:.55}
 .box::before{top:-1px;left:-1px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);border-top-left-radius:var(--r-sm)}
 .box::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan);border-bottom-right-radius:var(--r-sm)}
@@ -16168,6 +16171,12 @@ async def studio_post_facebook(body: dict, _token: str = Depends(_rate_limited_a
 
 
 # ── Batch tag fix (one Claude call → staged approvals for every under-tagged listing) ─
+_BATCH_TAG_STAGE_CAP = 10  # CLAUDE.md autonomy boundary: "any bulk edit touching more than 10
+# listings" requires Scott confirming scope first. Looser than stage_batch_price_update's 5-
+# listing hard stop (a real per-session dollar-amount cap CLAUDE.md calls out explicitly) since
+# a tag fix is a routine, lower-stakes hygiene action that still needs Scott's individual
+# per-listing approval in the Action Center either way -- capped-and-report-the-remainder here
+# instead of a hard refusal, so one call still makes real progress instead of staging nothing.
 
 
 @app.post("/api/batch/stage-tags")
@@ -16191,9 +16200,9 @@ async def batch_stage_tags(_token: str = Depends(_rate_limited_auth)):
         raise HTTPException(status_code=504, detail="Etsy API timeout fetching listings")
 
     listings = data.get("listings", [])
-    to_fix = [l for l in listings if len(l.get("tags", [])) < 13]
+    to_fix_all = [l for l in listings if len(l.get("tags", [])) < 13]
 
-    if not to_fix:
+    if not to_fix_all:
         return {
             "staged": 0,
             "skipped": 0,
@@ -16201,6 +16210,9 @@ async def batch_stage_tags(_token: str = Depends(_rate_limited_auth)):
             "errors": [],
             "message": f"All {len(listings)} active listings already have 13 tags — nothing to fix!",
         }
+
+    to_fix = to_fix_all[:_BATCH_TAG_STAGE_CAP]
+    remaining = len(to_fix_all) - len(to_fix)
 
     # One Claude API call per batch of 40 → structured JSON tag sets.
     try:
@@ -16246,12 +16258,19 @@ async def batch_stage_tags(_token: str = Depends(_rate_limited_auth)):
     with _cache_lock:
         _cache.pop("actions", None)
 
+    message = f"Staged {staged} tag fixes — check the Action Center to approve them."
+    if remaining:
+        message += (f" {remaining} more under-tagged listing(s) found but not processed this call "
+                     f"(cap: {_BATCH_TAG_STAGE_CAP} per call, per CLAUDE.md's bulk-edit boundary) — "
+                     f"run batch_stage_tags again to continue.")
     return {
         "staged": staged,
         "skipped": skipped,
         "total_checked": len(to_fix),
+        "total_under_tagged": len(to_fix_all),
+        "remaining": remaining,
         "errors": errors,
-        "message": f"Staged {staged} tag fixes — check the Action Center to approve them.",
+        "message": message,
     }
 
 

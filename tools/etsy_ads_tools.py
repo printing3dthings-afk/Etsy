@@ -13,6 +13,7 @@ This module manages ad config/tracking locally with Etsy API calls where availab
 """
 
 import json
+import math
 from datetime import date, timedelta
 from typing import Any
 
@@ -157,9 +158,28 @@ def _get_ads_overview(store: DataStore) -> str:
     }, indent=2)
 
 
+_MAX_DAILY_BUDGET_USD = 500.0  # 2026-08-14: this shop's real ad spend is $3-5/day (CLAUDE.md's
+# Etsy Ads Strategy section) scaling up gradually (20-30%/week past ROAS>4x) -- $500/day is
+# generous headroom above any spend this shop would legitimately reach any time soon, while
+# still catching the real failure mode (a $50.00/day budget typed as $5000/day or $50000/day).
+
+
 def _set_daily_budget(budget: float, store: DataStore) -> str:
+    # NaN compares False to everything, including `< 1.0` -- math.isnan() is the only
+    # reliable way to catch it. Checked first since NaN would otherwise silently pass every
+    # numeric comparison below it (2026-08-14, confirmed bug: a NaN budget used to persist
+    # and propagate through every downstream ROAS/budget calculation as a non-JSON-standard
+    # `NaN` token).
+    if isinstance(budget, float) and math.isnan(budget):
+        return json.dumps({"error": "Daily budget must be a real number, not NaN"})
     if budget < 1.0:
         return json.dumps({"error": "Minimum Etsy Ads daily budget is $1.00"})
+    if budget > _MAX_DAILY_BUDGET_USD:
+        return json.dumps({
+            "error": f"Maximum Etsy Ads daily budget is ${_MAX_DAILY_BUDGET_USD:,.2f} -- "
+                     f"if you genuinely need to spend more than that per day, set it directly "
+                     f"in Etsy Shop Manager instead of through this tool."
+        })
     ads_data = store.get("etsy_ads", default=_default_ads_data())
     old_budget = ads_data.get("daily_budget_usd", 0)
     ads_data["daily_budget_usd"] = budget

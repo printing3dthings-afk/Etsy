@@ -24325,3 +24325,73 @@ Also documented in CLAUDE.md's new "Animated Video Compositions
 
 Full suite: 142/145 passing (same 3 known deliberately-failing bug-proof
 tests as before, untracked). Build bumped this deploy.
+
+
+## 2026-08-14 — Motion/visual polish pass on Frank's dashboard + fixed the 3 remaining functional-audit bugs
+
+**Motion/visual polish** (research agent audited the real code for GitHub-
+sourced upgrade ideas, findings shipped after Scott approved the "quick
+wins"):
+- Login/signup card (`_AUTH_PAGE_CSS`, main.py) now fades+rises in on load
+  instead of appearing instantly.
+- Product-review and metric-detail modals: replaced the JS-driven
+  `.closing` class + `setTimeout` workaround with `@starting-style` +
+  `transition-behavior:allow-discrete` -- `display` itself now participates
+  in a real CSS transition (holds `flex` until the fade/scale finishes,
+  then flips to `none` natively). `productReviewClose()`/`metricDetailClose()`
+  are now a single class removal each, no JS timing at all. Verified in
+  real headless Chrome before shipping (display stays 'flex' throughout the
+  close fade, confirmed via computed-style sampling mid-transition).
+- The "Advanced ▸" accordion (`.cd-advanced-body`) now expands/collapses via
+  `grid-template-rows:0fr->1fr` instead of a hard `display:none/block` cut.
+  Took 3 real iterations to get right (documented in the CSS comments) --
+  applying the trick directly to a multi-child element left non-first
+  children at their natural height (implicit grid rows only inherit
+  `grid-auto-rows`, not the first explicit track), and padding/border on
+  the same element as the animated row prevented true collapse even with
+  `min-height:0`. Fixed by wrapping content in one `.cd-advanced-inner`
+  child and animating ITS padding/border-color in sync with the row.
+  Also found and fixed a real latent bug while at it: the CSS selector was
+  scoped `.create-detail .cd-advanced-body`, but the static "Advanced"
+  block in the Make-a-listing-photo hub-card was never inside `.create-
+  detail` at all -- that instance had been silently always-expanded this
+  whole time (display's browser default is never `none`). Selector
+  broadened to plain `.cd-advanced-body`, fixing both call sites.
+- GSAP core (already vendored at /static/vendor/gsap/gsap.min.js, unused
+  until now) is wired into the dashboard as a classic `<script src>` tag,
+  NOT an importmap entry -- confirmed via real headless Chrome that
+  importing it as an ES module throws `Cannot set property window of
+  #<Window> which has only a getter` (its UMD wrapper's fallback path
+  assigns `window.window`, which is a read-only self-reference on the real
+  Window object; only breaks in strict-mode ESM, not a classic script).
+- `tests/test_motion_flow_audit.py`'s F2 section (modal entrance/exit) was
+  locking in the OLD `.closing`/setTimeout mechanism by design -- updated
+  to verify the new `@starting-style`/`allow-discrete` implementation
+  instead of reverting the fix.
+
+**3 remaining functional-audit bugs, fixed on Scott's direct instruction**
+(previously held for a business-judgment call on the exact numbers):
+1. `etsy_ads_tools._set_daily_budget()` had no upper bound and NaN bypassed
+   even its $1 floor (`nan < 1.0` is `False` in Python). Added
+   `math.isnan()` rejection and a $500/day ceiling (generous headroom above
+   this shop's real $3-5/day starting range per CLAUDE.md's Ads Strategy
+   section, well below any real typo).
+2. `batch_stage_tags` (main.py) had no cap on how many listings it staged
+   in one unconfirmed call, unlike its sibling `stage_batch_price_update`'s
+   hard 5-listing cap. Capped at 10 (CLAUDE.md's literal ">10 listings"
+   bulk-edit threshold) -- looser than the price sibling since a tag fix is
+   lower-stakes and still needs Scott's individual Action Center approval
+   either way; caps-and-reports-the-remainder rather than a hard refusal,
+   so one call still makes real progress.
+3. `_publish_digital_listing` (etsy_listing_tools.py) had no guard against
+   republishing a product that already carries a real `etsy_listing_id`,
+   reachable via `run_wall_art_workflow.py`'s unconditional status reset --
+   would create a genuine second live Etsy listing and silently orphan the
+   first (overwritten, no longer findable). Added the same duplicate check
+   `_validate_staged_action`'s `create_listing` branch already does for the
+   staged-action path, as the equivalent guard for this lower-level
+   function that scripts call directly.
+
+Full suite: 145/145 passing -- the 3 tests above are no longer deliberately-
+failing and are now committed as real regression coverage. Build bumped
+this deploy.

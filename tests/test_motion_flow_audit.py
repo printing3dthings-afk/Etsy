@@ -76,30 +76,64 @@ def test_pill_positioning_uses_mutation_observer_not_scattered_calls():
 
 
 # ── F2: modal entrance/exit ─────────────────────────────────────────────────
+# Redone 2026-08-14 (motion audit round 2) with @starting-style + transition-
+# behavior:allow-discrete instead of the JS-driven .product-review-closing
+# class + setTimeout -- allow-discrete lets `display` itself participate in
+# the transition (the UA holds it at the pre-transition value until the rest
+# of the transition finishes, then flips it), so open AND close are one real
+# CSS transition each, no JS timing at all. Verified in real headless Chrome
+# before shipping: display stays 'flex' throughout the close fade and only
+# becomes 'none' once opacity/transform settle -- see ops_runbook.md.
 
-def test_modal_has_entrance_and_exit_keyframes():
+def test_modal_has_starting_style_entrance_and_discrete_display_transition():
     source = _source()
-    check("@keyframes prm-in{" in source, "the modal needs an entrance keyframe (display:none->flex can't use `transition`)")
-    check("body.product-review-open #product-review-modal{animation:prm-in" in source,
-          "the entrance animation should fire whenever product-review-open is added")
-    check("body.product-review-closing #product-review-modal{display:flex;animation:prm-in" in source and "reverse" in source,
-          "the exit should keep display:flex for one more animation duration while playing the entrance keyframe in reverse")
+    check("transition:opacity .15s cubic-bezier(.22,1,.36,1),transform .15s cubic-bezier(.22,1,.36,1),display .15s allow-discrete"
+          in source,
+          "the modal needs display in its own transition with allow-discrete, so display:none<->flex "
+          "can now be a real transition instead of requiring a `@keyframes` + JS-timed reverse-animation class")
+    check("@starting-style{\n  body.product-review-open #product-review-backdrop{opacity:0}\n"
+          "  body.product-review-open #product-review-modal{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}\n}"
+          in source,
+          "@starting-style must provide the entrance 'from' state for the transition (transitions can't "
+          "otherwise interpolate from a display:none starting point)")
 
 
-def test_modal_close_is_js_coordinated_not_instant():
+def test_modal_close_is_a_single_class_removal_no_js_timing():
     source = _source()
     m = re.search(r"function productReviewClose\(\)\{(.*?)\n\}", source, re.DOTALL)
     assert m, "could not find productReviewClose()"
     body = m.group(1)
-    check("product-review-closing" in body, "close should add the closing class rather than instantly removing product-review-open")
-    check("setTimeout(" in body, "close should wait for the exit animation to actually finish before fully hiding")
-    check("_reducedMotion" in body, "the wait should collapse to 0 under prefers-reduced-motion, not force a pointless delay")
+    check("product-review-closing" not in body,
+          "the .closing workaround class is obsolete now that CSS handles the exit transition natively")
+    check("setTimeout(" not in body,
+          "no JS timing should be needed -- transition-behavior:allow-discrete keeps display:flex until "
+          "the CSS transition itself finishes, natively")
+    check("document.body.classList.remove('product-review-open')" in body,
+          "close should be nothing more than removing the open class; the exit motion is pure CSS")
 
 
-def test_modal_animation_disabled_under_reduced_motion():
+def test_modal_transition_disabled_under_reduced_motion():
     source = _source()
-    check("#product-review-modal,#product-review-backdrop{animation:none !important}" in source,
-          "the modal's entrance/exit animation should be silenced under prefers-reduced-motion")
+    check("@media (prefers-reduced-motion:reduce){\n  #product-review-backdrop,#product-review-modal{transition:none}\n}"
+          in source,
+          "the modal's open/close transition should be silenced under prefers-reduced-motion "
+          "(display then flips instantly alongside the class change, no motion)")
+
+
+def test_metric_detail_modal_got_the_same_treatment():
+    # Cloned from #product-review-modal (see its own CSS comment) -- must not have drifted
+    # back to the old .closing/setTimeout pattern independently.
+    source = _source()
+    m = re.search(r"function metricDetailClose\(\)\{(.*?)\n\}", source, re.DOTALL)
+    assert m, "could not find metricDetailClose()"
+    body = m.group(1)
+    check("metric-detail-closing" not in body, "metricDetailClose should not use the obsolete .closing class either")
+    check("setTimeout(" not in body, "metricDetailClose should need no JS timing either")
+    check("#metric-detail-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6);\n"
+          "  opacity:0;transition:opacity .12s ease,display .12s allow-discrete}" in source,
+          "metric-detail-backdrop needs the same allow-discrete transition as product-review-backdrop")
+    check("display .15s allow-discrete}\nbody.metric-detail-open" in source,
+          "metric-detail-modal needs the same allow-discrete transition as product-review-modal")
 
 
 # ── F3: in-flight approve state ─────────────────────────────────────────────

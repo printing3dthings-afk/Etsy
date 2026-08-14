@@ -410,6 +410,30 @@ def _publish_digital_listing(data: dict, store: DataStore) -> str:
     if not product:
         return json.dumps({"error": f"Product {data['product_id']} not found"})
 
+    # 2026-08-14 functional audit round 2: this product may already carry a real
+    # etsy_listing_id from a prior successful publish, with status since reset back to
+    # "approved" (e.g. run_wall_art_workflow.py's Step 1 unconditionally sets every
+    # product's status to "approved" on every run, with no existing-listing check).
+    # Without this guard, a second call here creates a genuine SECOND live Etsy listing,
+    # then overwrites the product's single etsy_listing_id field with the new id --
+    # silently orphaning the first listing (still live on Etsy, no longer findable via
+    # this product record at all) -- and _add_to_main_listings unconditionally appends,
+    # so store["listings"] ends up with two rows for one digital_product_id. Same
+    # duplicate-listing check _validate_staged_action's create_listing branch already
+    # does for the staged-action path (main.py) -- this is the equivalent guard for the
+    # lower-level function scripts call directly, which never goes through that gate.
+    existing_listing_id = product.get("etsy_listing_id")
+    if existing_listing_id:
+        return json.dumps({
+            "error": (
+                f"Product {data['product_id']} already has a live Etsy listing "
+                f"({existing_listing_id}) — refusing to create a duplicate. If this "
+                f"listing needs updating, edit it directly rather than republishing; "
+                f"if it's genuinely gone from Etsy, clear etsy_listing_id from the "
+                f"product record first."
+            ),
+        })
+
     if product.get("status") not in ("approved",):
         return json.dumps({"error": f"Product must be QC-approved before listing. Current status: {product.get('status')}. Run the Quality Check Agent first."})
 
