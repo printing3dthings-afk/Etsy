@@ -77,8 +77,15 @@ def test_font_swatch_row_mount_point_exists_and_is_independent_of_theme():
 
 def test_font_pairing_localstorage_key_is_distinct_from_theme_key():
     source = HUD_PATH.read_text(encoding="utf-8")
-    check("frankFontPairing" in source, "font pairing should persist under its own localStorage key, not reuse frankTheme")
-    check("frankTheme" in source, "regression check: theme localStorage key should still exist")
+    # 2026-08-14: the color-theme system's localStorage keys were renamed from the old
+    # single flat 'frankTheme' to 'frankPalette'/'frankMode' (see test_frank_theme_
+    # contrast.py) -- this test's actual intent (font pairing has its own distinct key,
+    # never collides with the color-scheme keys) is unchanged, just needs the new names.
+    check("frankFontPairing" in source, "font pairing should persist under its own localStorage key, not reuse a color-scheme key")
+    check("frankPalette" in source, "regression check: palette localStorage key should still exist")
+    check("frankMode" in source, "regression check: mode localStorage key should still exist")
+    check("frankFontPairing" != "frankPalette" and "frankFontPairing" != "frankMode",
+          "font pairing's key must be distinct from both color-scheme keys")
 
 
 def run() -> None:

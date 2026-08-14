@@ -24439,3 +24439,76 @@ specific symmetric 3-value dataset, verified this isn't masking a real
 difference by reading the exact test data before relying on it.
 
 Full suite: 145/145 passing. Build bumped this deploy.
+
+
+## 2026-08-14 — Rebuilt Frank's color-theme system: 3 palettes x light/dark = 6, system-aware
+
+Scott: "change the color scheme... I want a setting to make dark and light...
+3 color schemes that will actually be 6 because of light/dark... needs to be
+set according to computer and phone settings that pre existing users have."
+
+Replaced the old flat 5-theme system (default/light/ocean/kawaii/sunwashed --
+itself a 2026-08-06 trim from 12) with a real 2-axis system: 3 named
+palettes -- Studio Warm (kept, the existing rose/gold/eggplant identity),
+Transformative Teal (new -- WGSN's actual named 2026 key color, already cited
+elsewhere in this codebase's product-theme research), Clubroom Contrast (new
+-- black+gold luxury, also already flagged in CLAUDE.md's 2026 macro-trend
+research) -- crossed with dark/light mode, selected via [data-palette]/
+[data-mode] on <html> instead of a single flat theme-* class. Old theme-
+light/ocean/kawaii/sunwashed CSS archived via tools/trash.py before removal
+(ledger id 20260814-001) -- that same archive_snippet() call's routine
+prune() also correctly dropped 104 unrelated trash-vault entries genuinely
+past the documented 30-day retention window (dated July 8-11, today is
+Aug 14) -- expected, not a bug, verified by reading prune()'s real logic
+before including it in this commit.
+
+**Mode defaulting/persistence** (the "computer and phone settings" part):
+mode is 'dark'|'light'|'system' (default for anyone who's never explicitly
+chosen). 'system' resolves live against window.matchMedia('(prefers-color-
+scheme: dark)') -- and stays live: a matchMedia change listener re-applies
+the theme if the OS/browser preference actually flips while the tab is open,
+without touching a pinned explicit choice. Verified all three real scenarios
+in headless Chrome: OS=dark with no override -> dark; OS=light with no
+override -> light; OS flips mid-session while following system -> theme
+follows; OS flips again after explicitly pinning to light -> stays pinned.
+A tiny synchronous inline <script> right after the stylesheet (before any
+body content) applies data-palette/data-mode before first paint, so
+switching palettes or system light/dark never flashes the wrong theme first
+-- the real _applyTheme()/_getPalette()/_resolveMode() logic lives much
+later in the main script and can't run early enough on its own.
+
+**Pre-existing users**: the old 'frankTheme' localStorage key is no longer
+read at all (renamed to 'frankPalette'/'frankMode') -- a stale value there
+is simply ignored, not misapplied, and the new system falls back cleanly to
+Studio Warm + system-detected mode. Verified via a real localStorage seed +
+reload in headless Chrome.
+
+**Real correctness bug found and fixed while building this** (not
+hypothetical): ~26 call sites across the file hardcoded 4 different near-
+black hex literals (#0D1B2A/#06141f/#04121b/#0a1420, all serving the same
+"text/icon color for use on a --cyan/--gold accent background" role -- CTA
+buttons, badges, active toggle states). Fine when every accent was light-on-
+dark, but Studio Warm/Teal/Clubroom Contrast's new LIGHT variants
+deliberately deepen their accent colors to clear AA against a white/cream
+page -- a hardcoded near-black text color on an already-dark accent would be
+dark-on-dark, unreadable. Replaced all 4 literals with a new --on-accent
+token, aliased to var(--bg) (confirmed >=5.1:1 AA against every accent color
+in all 6 palettes -- --bg is already the "extreme" end of whichever mode is
+active, near-black in dark mode, near-white in light).
+
+**WCAG AA verified for all 6 combinations** before shipping (not eyeballed):
+text/muted/accent-as-text on bg, text/muted on panel2 for the 3 light
+variants, --on-accent against both --cyan and --gold in all 6 -- every check
+clears the 4.5:1 AA floor, minimum observed was 4.63:1.
+
+tests/test_frank_theme_contrast.py and tests/test_frank_font_pairings.py
+rewritten for the new palette/mode structure (both were locking in the old
+flat-theme assumptions by design, not testing anything real anymore).
+
+Verified end to end in real headless Chrome: all 6 palette/mode combinations
+render their exact designed hex values, the Settings screen's new "Light /
+dark" + "Color scheme" swatch rows render and persist correctly, and a
+screenshot of each of the 6 combinations was sent to Scott for visual
+sign-off before shipping.
+
+Full suite: 145/145 passing. Build bumped this deploy.

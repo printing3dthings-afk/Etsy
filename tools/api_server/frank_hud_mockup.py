@@ -118,23 +118,49 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
   src:url('/static/vendor/fonts/IBMPlexSans-500.woff2') format('woff2')}
 
 :root{
-  /* Studio Warm — dark warm-plum surfaces, coral + gold accents (pulls the coral
-     from the existing Sakura theme's palette and the gold already used site-wide
-     for primary CTAs). --cyan/--cyan2 keep their legacy names for the ~300 existing
-     usages across this file but now hold coral/blush values, not cyan — they were
-     always "the accent hue," never literally required to be cyan. --panel3 is a new
-     4th elevation level (toasts/dropdowns/overlays sit on this, one step lighter
-     than --panel2) — dark-mode surfaces need at least 4 steps to read as depth
-     without relying on box-shadow, which barely shows on dark backgrounds. */
-  /* Brightened 2026-07-15 (Scott: "seems a little dark throughout") -- every
-     surface step lifted ~4-6% lighter and --muted brightened for readability,
-     verified against tools/color_contrast_check.py's WCAG math before shipping:
-     text-on-bg 14.36:1 and muted-on-bg 7.12:1, both still comfortably above the
-     4.5:1 AA floor (muted actually IMPROVED from 5.77:1 -- it was brightened more
-     than the background was). */
+  /* 2026-08-14 (Scott: "change the color scheme... 3 color schemes that will
+     actually be 6 because of light/dark"): replaced the old flat 5-theme system
+     (default/light/ocean/kawaii/sunwashed, itself a 2026-08-06 trim from 12) with
+     a real 2-axis system -- 3 named PALETTES (Studio Warm, Transformative Teal,
+     Clubroom Contrast) crossed with 2 MODES (dark/light) = 6 total token sets,
+     selected via [data-palette]/[data-mode] on <html> instead of a single flat
+     theme-* class. See _applyTheme()/_resolveMode() below for how mode defaults
+     to the device's real prefers-color-scheme and stays live if it changes while
+     the tab is open, and the tiny early inline script right after this stylesheet
+     for why the attributes get set before first paint (no flash of the wrong theme).
+     Old theme-light/ocean/kawaii/sunwashed CSS archived via tools/trash.py before
+     removal (ledger id 20260814-001), same as the 2026-08-06 12->5 trim before it.
+
+     This block (:root, no attributes) IS Studio Warm + dark -- the pre-JS default
+     and also what [data-palette="warm"][data-mode="dark"] would set explicitly;
+     kept as the bare fallback so a no-JS context still renders correctly instead
+     of unstyled. --cyan/--cyan2 keep their legacy names for the ~300 existing
+     usages across this file across every palette below, despite not literally
+     being cyan in any of them -- always meant "the primary accent hue." --panel3
+     is a 4th elevation level (toasts/dropdowns/overlays) all 6 sets define
+     explicitly (a real gap in the old system: theme-light/ocean never set it,
+     silently inheriting :root's DARK --panel3 under a light theme). Every one of
+     the 6 sets below was checked against tools/color_contrast_check.py-equivalent
+     WCAG relative-luminance math before shipping -- text/muted/accent-on-every-
+     surface all clear 4.5:1 AA (nothing eyeballed), same discipline as the
+     2026-07-15 brightening pass this inherits. */
   --bg:#241c2e;--panel:#2d2438;--panel2:#372c42;--panel3:#42354e;--border:#3d3248;
   --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#e4b155;--gold2:#f2cb8f;--text:#f5eef2;--muted:#bfa3b5;
   --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
+  /* 2026-08-14: "text/icon color for use ON an accent-colored background" (gold CTA
+     buttons, cyan badges) used to be two different hardcoded near-black hex literals
+     (var(--on-accent), var(--on-accent)) scattered across ~26 call sites -- fine when every palette's
+     accent was a light/bright color against a dark page, but Studio Warm/Teal/Clubroom
+     Contrast's LIGHT variants deliberately use DARK, deepened accent colors (so they
+     clear AA against a white/cream page) -- a hardcoded near-black text color on top of
+     an already-dark accent would be dark-on-dark with almost no contrast. Aliased to
+     --bg (already the "extreme" end of whichever mode is active -- near-black in dark
+     mode, near-white in light mode) rather than repeated per-palette: custom properties
+     resolve var() at actual use time through the live cascade, so one definition here
+     correctly tracks whichever --bg the active [data-palette][data-mode] combination
+     sets. Verified >=5.1:1 AA against every accent color in all 6 palettes before
+     replacing every var(--on-accent)/var(--on-accent) occurrence with var(--on-accent) below. */
+  --on-accent:var(--bg);
 
   --font-display:'Outfit','Sora',sans-serif;
   --font-body:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -144,49 +170,59 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
      A dual highlight+shadow (the neumorphism technique) reads as a raised surface
      even on dark backgrounds, where a plain drop-shadow "barely shows" (see the
      --panel3 comment above) — the inset top highlight is what actually carries
-     it here, the ambient shadow is a secondary cue. Overridden per-theme below
-     only where a theme's surface treatment needs it (light theme gets a real
-     drop shadow since it renders well on white). */
+     it here, the ambient shadow is a secondary cue. Every dark-mode palette below
+     reuses this same :root shadow; every light-mode palette overrides it with a
+     real drop shadow (renders correctly on a light surface, unlike the inset-
+     highlight trick, which barely shows there either -- same reasoning, opposite
+     surface). */
   --card-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 2px 10px rgba(0,0,0,.16);
   --card-shadow-hover:0 1px 0 rgba(255,255,255,.05) inset,0 6px 18px rgba(0,0,0,.28);
 }
-/* ── Color themes — full bg + panel + accent swap. Fonts/radius above are
-   structural (declared once on :root) and apply under every theme unchanged;
-   only surface/accent colors vary per theme, including each theme's own
-   --panel3 elevation step. Card-shadow tokens likewise only need a per-theme
-   override for the light theme (below); every dark-surfaced theme reuses the
-   :root treatment since they all share the same "shadow barely shows" constraint. ── */
-html.theme-light{
-  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#d0d9e2;
-  --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
-  --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
+/* Studio Warm — light. Same rose/gold identity as :root above, inverted: warm
+   blush-cream surfaces, both accents darkened enough to clear AA on white/cream
+   (the same "darken the accent for light mode" move the old theme-light made). */
+:root[data-palette="warm"][data-mode="light"]{
+  --bg:#fdf6f3;--panel:#ffffff;--panel2:#f7e8e3;--panel3:#ffffff;--border:#eeddd6;
+  --cyan:#a83a52;--cyan2:#7a2138;--gold:#8a5a10;--gold2:#6b4508;
+  --text:#2e1b22;--muted:#7a5a63;--green:#1f7a4c;--red:#a8302c;--amber:#8a5a10;
   --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
   --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
 }
-html.theme-ocean{
-  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#16312c;
-  --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
-  --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+/* Transformative Teal — dark. WGSN's actual named 2026 key color (already cited
+   elsewhere in this codebase's product-theme research) -- deep teal-black
+   surfaces, bright aqua primary accent, a coral pop for the secondary/CTA slot
+   so it doesn't read as monochrome. */
+:root[data-palette="teal"][data-mode="dark"]{
+  --bg:#0c1f1e;--panel:#132b29;--panel2:#1a3836;--panel3:#224543;--border:#1d3c3a;
+  --cyan:#3ecfc0;--cyan2:#7ee8dc;--gold:#ff8a65;--gold2:#ffab91;
+  --text:#e8f5f3;--muted:#7fa8a3;--green:#4fc47f;--red:#e2685f;--amber:#e0a83a;
 }
-html.theme-kawaii{
-  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#241a42;
-  --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
-  --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+/* Transformative Teal — light. Pearl-mist surfaces, deep teal + deep coral. */
+:root[data-palette="teal"][data-mode="light"]{
+  --bg:#f2faf9;--panel:#ffffff;--panel2:#e0f2ef;--panel3:#ffffff;--border:#c8e6e1;
+  --cyan:#0d6d63;--cyan2:#0a534b;--gold:#b0401f;--gold2:#8a3018;
+  --text:#122624;--muted:#4f6f6b;--green:#1f7a4c;--red:#b03030;--amber:#a46400;
+  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
 }
-/* 2026-07-18: bright/light-surfaced theme (Scott: "brighter colors but make sure
-   text is readable") -- every text/muted/accent value below is verified against
-   its actual bg AND panel2 (the more saturated surface a card can sit on) with
-   tools/color_contrast_check.py's real WCAG math, same discipline as the
-   2026-07-15 brightening pass above; nothing here is eyeballed. Reuses the light
-   theme's card-shadow (real drop shadow reads correctly on a light surface,
-   unlike the dark themes' inset-highlight trick above). Originally shipped
-   alongside 3 siblings (Mermaid Bright, Clubroom Gold, Spring Vivid); those were
-   cut in the 2026-08-06 12->5 theme reduction -- this one survived as the kept
-   warm-light alternative to Day Mode. */
-html.theme-sunwashed{
-  --bg:#fff8f0;--panel:#ffffff;--panel2:#ffeee0;--panel3:#ffffff;--border:#f0d5b8;
-  --cyan:#ba4e36;--cyan2:#8f3a28;--gold:#a46400;--gold2:#7a4b00;
-  --text:#3a2418;--muted:#82644d;--green:#19824a;--red:#d6362b;--amber:#a46400;
+/* Clubroom Contrast — dark. Bold black + gold luxury (CLAUDE.md's own 2026 macro-
+   trend research flags this exact combination as underused and striking). Both
+   accent slots stay in the gold family on purpose -- a bright primary gold and a
+   softer bronze secondary -- rather than introducing a competing 3rd hue, to
+   keep the "black + gold" identity intact instead of diluting it. */
+:root[data-palette="contrast"][data-mode="dark"]{
+  --bg:#0e0d0b;--panel:#161412;--panel2:#1e1b17;--panel3:#28241f;--border:#2a2620;
+  --cyan:#d4af37;--cyan2:#e8cc6e;--gold:#b8854a;--gold2:#c99a5c;
+  --text:#f2ede0;--muted:#9c9280;--green:#5cc48a;--red:#e2685f;--amber:#e8b868;
+}
+/* Clubroom Contrast — light. The genuinely-light version of a black+gold identity
+   reads as letterpress stationery, not a dark-luxury club -- warm ivory surfaces,
+   deep gold + bronze ink, same restrained 2-hue-family discipline as the dark
+   variant above. */
+:root[data-palette="contrast"][data-mode="light"]{
+  --bg:#faf7f0;--panel:#ffffff;--panel2:#f2ecd9;--panel3:#ffffff;--border:#e0d4b0;
+  --cyan:#8a6210;--cyan2:#6b4a08;--gold:#6b4a2a;--gold2:#4a3018;
+  --text:#1a1712;--muted:#6b6152;--green:#1f7a4c;--red:#a8302c;--amber:#8a5a10;
   --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
   --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
 }
@@ -294,13 +330,13 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 .icon-btn:focus-visible,.operator:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .act-btn:focus-visible,.qc-btn:focus-visible,.hub-toggle-btn:focus-visible,.psheet-btn:focus-visible,
 .hub-chip-btn:focus-visible,.lc-chip:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
-.badge{position:absolute;top:-5px;right:-5px;background:var(--cyan);color:#06141f;
+.badge{position:absolute;top:-5px;right:-5px;background:var(--cyan);color:var(--on-accent);
   font-size:9px;font-weight:700;border-radius:var(--r-sm);min-width:15px;height:15px;
   display:flex;align-items:center;justify-content:center;padding:0 3px}
 .operator{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:var(--r-pill);
   padding:3px 10px 3px 3px;background:var(--panel)}
 .operator .av{width:24px;height:24px;border-radius:50%;background:var(--gold);
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0a1420;flex-shrink:0}
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--on-accent);flex-shrink:0}
 .operator .ol1{font-size:11px;font-weight:600;line-height:1.1}
 .operator .ol2{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
@@ -667,7 +703,7 @@ body.is-mobile #alert-dropdown{
 .tour-controls .tour-btns{display:flex;gap:8px}
 .tour-controls button.tour-nav-btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);
   border-radius:var(--r-md);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
-.tour-controls button.tour-nav-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.tour-controls button.tour-nav-btn.primary{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
 .tour-controls button.tour-nav-btn:disabled{opacity:.35;cursor:default}
 
 .dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;justify-content:flex-start}
@@ -822,7 +858,7 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 #chat-input{flex:1;background:rgba(0,0,0,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--r-pill);padding:10px 16px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
 #chat-input:focus{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 14px rgba(96,220,255,.35)}
 #chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#chat-send svg{width:18px;height:18px;stroke:var(--on-accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* Voice-mode entry point inside the chat input row (2026-07-22 Ask-tab redesign) --
    opens the existing #orb-view popup (openFrankPopup()) on demand instead of it
    being the mandatory Ask-tab landing screen. Mobile only; desktop has no orb
@@ -846,7 +882,7 @@ body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:14px 
 #orb-chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-pill);padding:10px 16px;color:var(--text);font-size:14px;outline:none}
 #orb-chat-input:focus{border-color:var(--gold)}
 #orb-chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#orb-chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#orb-chat-send svg{width:18px;height:18px;stroke:var(--on-accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* One-tap route from the Ask/orb view into the full chat transcript (the page Scott
    wanted directly reachable). Mobile affordance only — on desktop the Home screen
    already IS the chat, so it's hidden there. Stays visible inside the mobile
@@ -951,10 +987,10 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 
 .hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .hub-toggle-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
-.hub-toggle-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
+.hub-toggle-btn.active{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
 .hub-chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
-.hub-chip-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
+.hub-chip-btn.active{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
 
 .hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);
   transition:background-color .15s ease}
@@ -1043,7 +1079,7 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .act-btn,.hub-act-btn{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
 .act-btn:active,.hub-act-btn:active{transform:scale(.97)}
 .act-btn{flex:1;text-align:center;padding:7px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
-.act-btn.primary,.hub-act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.act-btn.primary,.hub-act-btn.primary{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
 .act-btn.primary:hover,.hub-act-btn.primary:hover{background:var(--gold2);border-color:var(--gold2)}
 .act-btn.secondary,.hub-act-btn.secondary{background:var(--panel2);border-color:var(--cyan);color:var(--cyan2)}
 .act-btn.secondary:hover,.hub-act-btn.secondary:hover{background:var(--panel3)}
@@ -1251,7 +1287,7 @@ body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-
   right:calc(14px + env(safe-area-inset-right));
   bottom:calc(74px + env(safe-area-inset-bottom));
   width:42px;height:42px;border-radius:50%;align-items:center;justify-content:center;
-  background:var(--gold);color:#0D1B2A;border:none;font-size:18px;font-weight:700;
+  background:var(--gold);color:var(--on-accent);border:none;font-size:18px;font-weight:700;
   cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 #back-to-top-btn.show{display:flex}
 #back-to-top-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
@@ -1333,7 +1369,7 @@ body.is-mobile #quick-chat-popup.open{
 #quick-chat-input:focus{border-color:var(--gold)}
 #quick-chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;flex-shrink:0}
-#quick-chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#quick-chat-send svg{width:18px;height:18px;stroke:var(--on-accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 #quick-chat-status{font-size:11px;color:var(--muted);margin-top:8px}
 /* the 19-item sidebar is hidden by default on phone and revealed on demand via "More" */
 body.is-mobile .sidebar{display:none}
@@ -1431,7 +1467,7 @@ body.is-mobile.phone-home-open #shop-ticker{
   left:calc(14px + env(safe-area-inset-left));
   bottom:calc(74px + env(safe-area-inset-bottom));
   height:42px;padding:0 16px;border-radius:var(--r-pill);
-  background:var(--gold);color:#0D1B2A;border:none;font-size:14px;font-weight:700;font-family:var(--font-body);
+  background:var(--gold);color:var(--on-accent);border:none;font-size:14px;font-weight:700;font-family:var(--font-body);
   cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);transition:transform .1s ease}
 body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{display:flex}
 #home-return-btn:active{transform:scale(.95)}
@@ -1445,7 +1481,7 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 .pcard-tap .pchev{color:var(--muted);flex:none}
 .pp-acts{display:flex;gap:8px;margin-top:11px}
 .pp-btn{flex:1;border:1px solid transparent;border-radius:var(--r-md);padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-.pp-btn.ok{background:var(--cyan);color:#04121b}
+.pp-btn.ok{background:var(--cyan);color:var(--on-accent)}
 .pp-btn.no{background:transparent;color:var(--muted);border-color:var(--border)}
 .pp-empty{text-align:center;color:var(--muted);font-size:13px;padding:34px 10px;line-height:1.5}
 .ptiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
@@ -1500,7 +1536,7 @@ body.phone-sheet-open #phone-sheet{display:flex}
 #phone-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
 .psheet-btn{border:1px solid var(--border);border-radius:var(--r-md);padding:15px 13px;font-size:14px;
   font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
-.psheet-btn.primary{background:var(--cyan);border-color:transparent;color:#04121b}
+.psheet-btn.primary{background:var(--cyan);border-color:transparent;color:var(--on-accent)}
 .psheet-btn.cancel{background:transparent;color:var(--muted)}
 /* Products-screen fix sheet (2026-07-18) -- copy of the #phone-sheet rules under new
    ids rather than retrofitting the shipped Needs-Attention sheet (which has its own
@@ -1643,6 +1679,28 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .act-btn:active,.hub-act-btn:active{transform:none}
 }
 </style>
+<script>
+// 2026-08-14: applies data-palette/data-mode BEFORE first paint, so switching
+// between palettes or system light/dark never shows a flash of the wrong theme
+// first. This is deliberately a tiny, separate, synchronous script placed right
+// after the stylesheet -- the real theme logic (_applyTheme() and friends,
+// including the palette/mode swatch UI) lives much later in the main script,
+// which doesn't run until far more of the page has already parsed. Kept in
+// exact sync with _getPalette()/_resolveMode() below by hand since this has to
+// stay standalone and can't call them (they aren't defined yet this early).
+(function(){
+  try {
+    var palettes = ['warm','teal','contrast'];
+    var p = localStorage.getItem('frankPalette');
+    if (!palettes.indexOf) {} // no-op, keeps this block framework-free
+    document.documentElement.setAttribute('data-palette', (p && palettes.indexOf(p) !== -1) ? p : 'warm');
+    var m = localStorage.getItem('frankMode');
+    var mode = (m === 'dark' || m === 'light') ? m
+      : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-mode', mode);
+  } catch(e) {}
+})();
+</script>
 </head>
 <body>
 <div id="persist-warning"><span class="pw-txt">⚠️ <b>DATA IS NOT BEING SAVED.</b> Every change resets when the server restarts. Attach a Railway Volume mounted at <b>/data</b> to make data persist.</span><button id="persist-warning-x" aria-label="Dismiss" onclick="dismissPersistWarning()">✕</button></div>
@@ -2030,7 +2088,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <option value="frank_can_do">Frank Can Do</option>
         </select>
         <input id="hud-todo-due" type="date" aria-label="Due date" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 10px;font-size:13px;color:var(--text)">
-        <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
+        <button onclick="addHudTodo()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
       </div>
       <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:700px">
         <div style="color:var(--muted);font-size:12px">Loading…</div>
@@ -2188,7 +2246,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card" style="margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Docs, catalog data, and Frank's database snapshot — as one ZIP you can save on your own computer.</div>
-          <button onclick="downloadFullBackup()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">⬇ Download Backup</button>
+          <button onclick="downloadFullBackup()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">⬇ Download Backup</button>
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           The actual product files (SVG/sublimation/planner assets, ~350MB) don't live on this server — they're kept in the GitHub repo so deploys stay fast.
@@ -2248,7 +2306,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
       <div class="hub-section-title" style="margin-top:18px">Appearance</div>
       <div class="hub-card">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Color theme</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Light / dark</div>
+        <div id="mode-toggle-row" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">
+          "System" matches this device's own light/dark setting automatically, including if it
+          changes on its own (e.g. a night schedule) — no need to touch this again after picking it.
+        </div>
+        <div style="font-size:13px;font-weight:600;margin:18px 0 10px">Color scheme</div>
         <div id="theme-swatch-row" style="display:flex;gap:10px;flex-wrap:wrap"></div>
         <div style="font-size:11px;color:var(--muted);margin-top:10px">
           Saved to this device only — every screen repaints instantly, no reload needed.
@@ -5885,61 +5949,111 @@ function _autoSpeakOpts(){
   };
 }
 // ── Color theme — per-device display preference, so localStorage (not the
-// backend) is the right persistence layer. Default 'cyan' matches the
-// original :root values, applied via no class on <html>. ──
-// 2026-08-06: trimmed from 12 to 5 (Scott: "take the color selection down to
-// 5") -- kept the two flagships (Studio Warm, Day Mode) plus the 3 most
-// distinct-hue alternatives (a cool dark, a vivid dark that matches the shop's
-// kawaii brand, a warm light). Dropped Dark Purple/Warm Charcoal/Sakura/Matcha/
-// Mermaid Bright/Clubroom Gold/Spring Vivid -- archived via tools/trash.py
-// (ledger ids 20260806-001/002), recoverable if wanted back. Their CSS blocks
-// were removed too, right above this array.
-const _UI_THEMES = [
-  {name:'default', label:'Studio Warm',   bg:'#1a1420', accent:'#f2a0b5'},
-  {name:'light',   label:'Day Mode',      bg:'#edf1f5', accent:'#1a8a9a'},
-  {name:'ocean',   label:'Ocean Teal',    bg:'#07120f', accent:'#3ad6c8'},
-  {name:'kawaii',  label:'Midnight Kawaii',bg:'#0d0a1a', accent:'#00e5ff'},
-  {name:'sunwashed',   label:'Sunwashed',     bg:'#fff8f0', accent:'#ba4e36'},
+// backend) is the right persistence layer.
+// 2026-08-14 (Scott: "change the color scheme... 3 that will actually be 6
+// because of light/dark... needs to be set according to computer and phone
+// settings that pre existing users have"): replaced the old flat 5-theme
+// system (itself a 2026-08-06 trim from 12 -- archived ledger ids
+// 20260806-001/002) with a real PALETTE x MODE system. _applyTheme() is the
+// single source of truth both this file and the tiny early anti-flash inline
+// script (right after the stylesheet, before body content) call -- see that
+// script's own comment for why the early call exists.
+const _UI_PALETTES = [
+  {name:'warm',     label:'Studio Warm',        dark:'#f2a0b5', light:'#a83a52'},
+  {name:'teal',     label:'Transformative Teal',dark:'#3ecfc0', light:'#0d6d63'},
+  {name:'contrast', label:'Clubroom Contrast',  dark:'#d4af37', light:'#8a6210'},
 ];
-function _getTheme() {
-  // A theme saved before the 2026-08-06 12->5 trim (or any other stale value)
-  // must not silently apply a class with no matching CSS -- fall back to
-  // 'default', which self-corrects the stored value on the next _setTheme() call.
+function _getPalette() {
+  // A palette saved before this system existed (or any other stale value --
+  // 'default'/'light'/'ocean'/'kawaii'/'sunwashed' from the old flat system)
+  // must not silently apply an attribute with no matching CSS -- fall back to
+  // 'warm', which self-corrects the stored value on the next _setPalette() call.
   try {
-    const saved = localStorage.getItem('frankTheme');
-    return (saved && _UI_THEMES.some(t => t.name === saved)) ? saved : 'default';
-  } catch(e) { return 'default'; }
+    const saved = localStorage.getItem('frankPalette');
+    return (saved && _UI_PALETTES.some(p => p.name === saved)) ? saved : 'warm';
+  } catch(e) { return 'warm'; }
 }
-function _setTheme(name) {
-  try { localStorage.setItem('frankTheme', name); } catch(e) {}
-  _UI_THEMES.forEach(t => document.documentElement.classList.remove('theme-'+t.name));
-  if (name !== 'default') document.documentElement.classList.add('theme-'+name);
+function _setPalette(name) {
+  try { localStorage.setItem('frankPalette', name); } catch(e) {}
+  _applyTheme();
+}
+// Mode is 'dark' | 'light' | 'system' (the default for anyone who's never
+// explicitly chosen -- resolved live against the device's real
+// prefers-color-scheme, see _resolveMode()/_watchSystemMode() below).
+function _getModePreference() {
+  try {
+    const saved = localStorage.getItem('frankMode');
+    return (saved === 'dark' || saved === 'light') ? saved : 'system';
+  } catch(e) { return 'system'; }
+}
+function _setModePreference(mode) {
+  try {
+    if (mode === 'system') localStorage.removeItem('frankMode');
+    else localStorage.setItem('frankMode', mode);
+  } catch(e) {}
+  _applyTheme();
+}
+function _resolveMode() {
+  const pref = _getModePreference();
+  if (pref !== 'system') return pref;
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  } catch(e) { return 'dark'; }
+}
+function _applyTheme() {
+  const palette = _getPalette(), mode = _resolveMode();
+  document.documentElement.setAttribute('data-palette', palette);
+  document.documentElement.setAttribute('data-mode', mode);
   _renderThemeSwatches();
+  _renderModeToggle();
 }
 function _renderThemeSwatches() {
   const row = document.getElementById('theme-swatch-row');
   if (!row) return;
-  const active = _getTheme();
-  row.innerHTML = _UI_THEMES.map(t =>
+  const active = _getPalette(), mode = _resolveMode();
+  row.innerHTML = _UI_PALETTES.map(p =>
     '<button class="act-btn" style="display:flex;align-items:center;gap:7px;'+
-    (t.name === active ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
-    '" onclick="_setTheme(\\''+t.name+'\\')">'+
-    '<span style="width:20px;height:14px;border-radius:4px;flex-shrink:0;display:inline-block;overflow:hidden;border:1px solid rgba(255,255,255,.15)">'+
-      '<span style="display:block;width:50%;height:100%;background:'+t.bg+';float:left"></span>'+
-      '<span style="display:block;width:50%;height:100%;background:'+t.accent+';float:left"></span>'+
-    '</span>'+
-    t.label+(t.name === active ? ' ✓' : '')+'</button>'
+    (p.name === active ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
+    '" onclick="_setPalette(\\''+p.name+'\\')">'+
+    '<span style="width:14px;height:14px;border-radius:50%;flex-shrink:0;display:inline-block;'+
+      'background:'+(mode === 'dark' ? p.dark : p.light)+';border:1px solid rgba(128,128,128,.35)"></span>'+
+    p.label+(p.name === active ? ' ✓' : '')+'</button>'
   ).join('');
 }
+function _renderModeToggle() {
+  const row = document.getElementById('mode-toggle-row');
+  if (!row) return;
+  const pref = _getModePreference();
+  const options = [
+    {name:'system', label:'💻 System', hint:'Match this device'},
+    {name:'light',  label:'☀️ Light',  hint:''},
+    {name:'dark',   label:'🌙 Dark',   hint:''},
+  ];
+  row.innerHTML = options.map(o =>
+    '<button class="act-btn" style="'+
+    (o.name === pref ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
+    '" onclick="_setModePreference(\\''+o.name+'\\')" title="'+escHtml(o.hint)+'">'+
+    o.label+(o.name === pref ? ' ✓' : '')+'</button>'
+  ).join('');
+}
+// Live update when following 'system' and the OS/browser preference actually
+// changes while the tab is open (e.g. the device's own dark/light schedule
+// flips at sunset) -- this is the concrete behavior behind "needs to be set
+// according to computer and phone settings," not just a one-time read at load.
+try {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (_getModePreference() === 'system') _applyTheme();
+  });
+} catch(e) {}
 (function(){
-  _setTheme(_getTheme());
+  _applyTheme();
 })();
 // ── Font pairing (2026-07-18, from the visual-design-research pass) — independent
 // of color theme (a person might want Mermaid Bright colors with Friendly Rounded
 // type), so this sets --font-display/--font-body directly as inline styles on
 // <html> rather than adding a second html.theme-* class dimension, which would
 // need every theme x pairing combination as a compound selector for no benefit.
-// Same localStorage-only persistence pattern as _setTheme() above. ──
+// Same localStorage-only persistence pattern as _setPalette()/_setModePreference() above. ──
 const _FONT_PAIRINGS = [
   {name:'default',   label:'Studio Warm (current)', display:"'Fraunces',Georgia,serif",
    body:"'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"},
@@ -8889,7 +9003,7 @@ async function loadActions() {
     setActionBadge(_actionsSummary, pending.length);
     renderActionsContent();
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 function setActionFilter(sev) {
@@ -9095,7 +9209,7 @@ async function loadCalendar() {
     renderCalendarContent(d);
     await updateCalendarBadge(d);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 function _calCard(sev, title, detail) {
@@ -9185,7 +9299,7 @@ async function loadMemory() {
     const d = await r.json();
     renderMemory(d);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -9251,7 +9365,7 @@ async function loadWorkflows() {
     const d = await r.json();
     renderWorkflows(d.workflows || []);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadWorkflows()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadWorkflows()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -9365,7 +9479,7 @@ async function loadConversations() {
     _convSessions = d.sessions || [];
     renderConversationList();
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -9395,7 +9509,7 @@ async function openConversation(sessionId) {
     const d = await r.json();
     renderConversationDetail(sessionId, d);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openConversation('${escHtml(sessionId)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openConversation('${escHtml(sessionId)}')" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
   }
 }
 
@@ -9428,7 +9542,7 @@ async function searchConversations() {
     const d = await r.json();
     renderConversationSearch(q, d.results || [], !!d.truncated);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -9479,7 +9593,7 @@ async function loadKb() {
     _kbDocs = d.docs || [];
     renderKbList();
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -9509,7 +9623,7 @@ async function openKbDoc(filename) {
     const d = await r.json();
     renderKbDoc(filename, d);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openKbDoc('${escHtml(filename)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openKbDoc('${escHtml(filename)}')" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
   }
 }
 
@@ -9537,7 +9651,7 @@ async function searchKb() {
     const d = await r.json();
     renderKbSearch(q, d.results || []);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchKb()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -9598,7 +9712,7 @@ async function loadListings(state, btn) {
     _listings = d.listings || [];
     renderListings();
   } catch(e) {
-    el.innerHTML = `<div class="hub-empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastListingState)" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="hub-empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastListingState)" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 function setSectionFilter(key) {
@@ -10967,7 +11081,7 @@ async function loadFiles() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
-      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
 
@@ -11032,7 +11146,7 @@ async function loadEtsyFiles() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load Etsy files')+'</div>'+
-      '<div style="text-align:center;margin-top:8px"><button onclick="loadEtsyFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadEtsyFiles()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
 
@@ -11621,7 +11735,7 @@ async function loadConnections() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
-      '<div style="text-align:center;margin-top:8px"><button onclick="loadConnections()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadConnections()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
 
