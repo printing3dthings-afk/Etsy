@@ -174,8 +174,15 @@ def check_svg_quality(svg_text: str) -> dict:
     # Count path elements (handle namespace prefixes like ns0:path)
     path_count = len(_re.findall(r"<(?:\w+:)?path[\s>]", svg_text))
 
-    # Count unique hex fill colors
-    fills = _re.findall(r'fill="(#[0-9a-fA-F]{3,6})"', svg_text)
+    # Count unique hex fill colors. Matches both the XML presentation-attribute
+    # form (fill="#rrggbb", what this shop's own vtracer-based svg_converter.py
+    # emits) and the CSS style-attribute form (style="fill:#rrggbb;...", the
+    # standard Illustrator/Inkscape export shape) -- previously only the first
+    # form was matched, so a traced-raster SVG using style="fill:#.." sailed
+    # through with unique_fills=0 regardless of how many real colors it had
+    # (2026-08-14 functional audit, round 2: reproduced with a 50-distinct-
+    # color style="fill:#.." SVG reporting passes_gate=True).
+    fills = _re.findall(r'fill(?:="|:\s*)(#[0-9a-fA-F]{3,6})', svg_text)
     unique_fills = len(set(f for f in fills if f.lower() != "none"))
 
     problems = []

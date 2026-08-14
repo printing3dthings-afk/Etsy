@@ -815,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b15465f-v337"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d3aa0e7-v338"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5829,6 +5829,22 @@ async def admin_delete_user(username: str, request: Request, _token: str = Depen
     if user_row["role"] == "owner":
         raise HTTPException(status_code=403, detail="Cannot delete the owner account")
     db.delete_hub_user(uname)
+    # 2026-08-14 functional audit (round 2): this route used to delete the
+    # hub_users row without revoking the user's existing sessions -- unlike
+    # admin_reset_password just above and delete_my_account, which both do
+    # this. Session validation only checks the session id (never re-checks
+    # the underlying hub_users row still exists), so a just-deleted admin's
+    # cookie kept authenticating successfully for up to SESSION_TTL (30
+    # days). Same revocation pattern as admin_reset_password.
+    with _sessions_lock:
+        to_remove = [sid for sid, (_, u) in _sessions.items() if u == uname]
+        for sid in to_remove:
+            del _sessions[sid]
+    try:
+        db.delete_sessions_for_user(uname)
+    except Exception as exc:
+        print(f"[auth] delete_sessions_for_user({uname!r}) failed after admin_delete_user -- sessions "
+              f"may not be fully revoked: {exc}", flush=True)
     return {"ok": True}
 
 
@@ -15998,10 +16014,26 @@ async def core_refresh_etsy_token(request: Request, _token: str = Depends(_auth_
     # strand the shop on a dead refresh token (2026-08-13 functional audit).
     new_access = os.getenv("ETSY_ACCESS_TOKEN", "")
     new_refresh = os.getenv("ETSY_REFRESH_TOKEN", "")
+    updated_at = None
     if new_access and new_refresh:
-        await asyncio.to_thread(db.save_etsy_tokens, new_access, new_refresh, parent_refresh_token)
-    tokens = await asyncio.to_thread(db.get_etsy_tokens)
-    return {"ok": True, "updated_at": (tokens or {}).get("updated_at")}
+        # 2026-08-14 functional audit (round 2): the refresh itself already
+        # succeeded and a live token is already in os.environ for this
+        # process -- a DB failure here (locked file, disk full) must not turn
+        # into a bare 500 that hides that success from the caller. The
+        # background _token_sync_loop will retry this same persistence on
+        # its own next tick, so a logged-and-swallowed failure here is safe,
+        # not silent (api-conventions.md: never a bare exception, never a
+        # silent swallow that changes what gets reported as true -- this
+        # keeps "the refresh worked" true while being honest that durable
+        # persistence specifically is not yet confirmed via updated_at).
+        try:
+            await asyncio.to_thread(db.save_etsy_tokens, new_access, new_refresh, parent_refresh_token)
+            tokens = await asyncio.to_thread(db.get_etsy_tokens)
+            updated_at = (tokens or {}).get("updated_at")
+        except Exception as exc:
+            print(f"[etsy-tokens] core_refresh_etsy_token: DB persistence failed after a successful "
+                  f"Etsy refresh -- _token_sync_loop will retry: {exc}", flush=True)
+    return {"ok": True, "updated_at": updated_at}
 
 
 @app.get("/api/core/recent-errors")

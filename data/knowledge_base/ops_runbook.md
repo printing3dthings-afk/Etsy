@@ -24151,3 +24151,45 @@ into the Group A commit between writing this file and `git add` — same class
 of issue as every prior "strip noise before append" note in this file,
 happened this time because the check was only done *before* writing, not
 again right before staging.
+
+
+## 2026-08-14 — Functional audit Group C: verified Round 2 findings, fixed 3 more confirmed bugs
+All 6 Round 2 findings (refresh_token, admin_users, qc_gate_audit, digital_planner,
+publish_path, post_art) passed dual adversarial verification (mock-fidelity +
+logic-correctness, both independent of the finder agent). 3 were mechanical/
+unambiguous and fixed directly in this pass:
+
+- `core_refresh_etsy_token` (main.py): the round-1 fix added a `db.save_etsy_tokens()`
+  call with no try/except around it or the following `db.get_etsy_tokens()` readback.
+  A DB failure (locked file, disk full) after the real Etsy refresh already succeeded
+  turned a genuinely successful token rotation into a bare crash, hiding from the
+  caller that a live token was already usable in os.environ. Now logs-and-swallows,
+  returning `{"ok": True, "updated_at": None}` — the background `_token_sync_loop`
+  retries persistence on its own next tick.
+- `admin_delete_user` (main.py): deleted the hub_users row without revoking the
+  user's existing sessions, unlike its sibling `admin_reset_password` /
+  `delete_my_account`. A just-deleted admin's cookie kept authenticating for up to
+  SESSION_TTL (30 days) since session validation never re-checks the row still
+  exists. Now purges in-memory `_sessions` and calls `db.delete_sessions_for_user`,
+  matching the existing precedent.
+- `check_svg_quality` (etsy_api.py): the unique-fill-color regex only matched the
+  XML presentation-attribute form (`fill="#rrggbb"`), not the CSS style-attribute
+  form (`style="fill:#rrggbb"`, the standard Illustrator/Inkscape export shape) —
+  a traced-raster SVG using the latter sailed through the SS-series Quality Gate
+  with `unique_fills=0` regardless of real color count. Broadened to match both.
+
+2 findings held for explicit business-judgment calls, not auto-fixed:
+- `_v2_weekly_page` (art_creation_tools.py): the `layout` param ("horizontal" vs
+  "vertical") is accepted but never branches — both layouts render byte-identical
+  output. CLAUDE.md's "Choose Your Layout" feature is currently a false promise.
+  Needs a product decision (implement the second layout, or stop advertising it).
+- Publish-path duplicate-listing guard (main.py): still no idempotency check
+  before create_listing on retry after a partial failure — could double-list a
+  product on Etsy. Needs a decision on the right guard shape (dedupe key, DB
+  lock, etc.), not a one-line fix.
+
+Full suite: 139/142 passing. The 3 remaining "failures" are deliberately-failing
+regression tests proving still-open bugs (ads_tools rate-limit gap, batch_stage_tags
+cap bypass, publish_path duplicate-listing) — kept untracked on disk, never
+committed, per the CI-safety rule learned earlier this audit (a tracked failing
+test permanently reddens CI for the whole branch).

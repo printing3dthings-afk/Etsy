@@ -225,7 +225,7 @@ def get_or_create_section(client, section_title):
             if s.get('title', '').lower() == section_title.lower():
                 return s['shop_section_id']
         new_sec = client._request('POST', f'/shops/{client.shop_id}/sections',
-                                  json={'title': section_title})
+                                  body={'title': section_title})
         return new_sec.get('shop_section_id')
     except Exception as e:
         print(f"  WARNING: section lookup failed: {e}")
@@ -547,7 +547,7 @@ def post_art(preview_only=False):
 
     try:
         listing = client._request('POST', f'/shops/{client.shop_id}/listings',
-                                  json=listing_body)
+                                  body=listing_body)
     except Exception as e:
         print(f"  FAILED to create listing: {e}")
         return None
