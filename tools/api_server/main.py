@@ -27,6 +27,7 @@ import re as _re
 import secrets
 import shlex
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -815,7 +816,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "6e4089f-v342"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "afa9ec2-v343"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -11403,7 +11404,19 @@ async def _competitor_watch_iteration() -> dict:
         if not my_price or not keywords:
             skipped += 1
             continue
-        result = await asyncio.to_thread(_get_comparable_listings, {"keywords": keywords, "limit": 15})
+        # 2026-08-14 (Scott: "the prices seem off, some are really high"):
+        # max_price bounds the search itself -- a broad 2-tag keyword phrase
+        # (e.g. "digital planner") matches Etsy listings across every price
+        # tier, including e.g. a $200+ laminated physical planner bundle or a
+        # business-coaching PDF that happens to share the tag. Uncapped, a
+        # single such outlier in a 15-result sample used to be free to drag
+        # the whole comparison upward. 6x this listing's own price is
+        # generous headroom for genuine premium comparables while still
+        # excluding obviously-irrelevant matches.
+        result = await asyncio.to_thread(
+            _get_comparable_listings,
+            {"keywords": keywords, "limit": 15, "max_price": my_price * 6},
+        )
         await asyncio.sleep(0.5)  # be considerate to Etsy's public search endpoint
         if "error" in result:
             skipped += 1
@@ -11416,11 +11429,21 @@ async def _competitor_watch_iteration() -> dict:
         if len(comparables) < _COMPETITOR_MIN_SAMPLE:
             continue
         comp_prices = [l["price"] for l in comparables]
-        comp_avg = round(sum(comp_prices) / len(comp_prices), 2)
+        # Median, not mean -- the price bound above already excludes the most
+        # obviously-irrelevant matches, but a handful of genuinely-comparable-
+        # but-pricier listings (a bundle vs. a single item, say) can still
+        # skew a straight mean upward; median is far less sensitive to a
+        # small number of outliers on either end. Key name (competitor_avg)
+        # is kept as-is for compatibility with already-persisted snapshot
+        # history on disk -- only the statistic computed under that key
+        # changed, and the UI label was updated from "avg" to "median" to
+        # match (see loadCompetitorWatch() in frank_hud_mockup.py).
+        comp_avg = round(statistics.median(comp_prices), 2)
         history = snapshots.setdefault(str(listing_id), [])
         history.append({
             "date": today, "my_price": my_price, "competitor_avg": comp_avg,
             "competitor_count": len(comparables), "keywords": keywords,
+            "title": listing.get("title", ""),
         })
         snapshots[str(listing_id)] = history[-_COMPETITOR_SNAPSHOT_HISTORY_WEEKS:]
         if comp_avg > 0 and abs(my_price - comp_avg) / comp_avg >= _COMPETITOR_DRIFT_THRESHOLD_PCT:
@@ -11462,6 +11485,10 @@ def _compute_competitor_drift_items() -> list[dict]:
             continue
         items.append({
             "listing_id": int(listing_id), "my_price": my_price,
+            # .get() with a fallback, not latest["title"] -- snapshots written before
+            # 2026-08-14 don't have this key at all; degrade to "" (frontend falls back
+            # to "Listing <id>") rather than a KeyError on old history entries.
+            "title": latest.get("title", ""),
             "competitor_avg": comp_avg, "competitor_count": latest["competitor_count"],
             "keywords": latest["keywords"], "date": latest["date"],
             "gap_pct": round(gap_pct * 100, 1),

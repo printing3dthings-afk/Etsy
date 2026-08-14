@@ -24395,3 +24395,47 @@ wins"):
 Full suite: 145/145 passing -- the 3 tests above are no longer deliberately-
 failing and are now committed as real regression coverage. Build bumped
 this deploy.
+
+
+## 2026-08-14 — Competitor Watchdog: fixed inflated prices, unreadable listing IDs, unbounded panel growth
+
+Scott reported three real problems with the Competitor Watchdog panel
+(main.py's /api/competitor-watch, frank_hud_mockup.py's loadCompetitorWatch()):
+
+1. **Prices seemed off, some really high.** Root cause: the weekly sweep
+   (`_competitor_watch_iteration`) searches Etsy by just the listing's first
+   1-2 tags (e.g. "digital planner") with NO price ceiling at all, then
+   averages up to 15 results. A broad keyword phrase matches listings across
+   every price tier -- a single irrelevant/premium match (a $200+ physical
+   bundle, a business-coaching PDF sharing the tag) could drag the whole
+   comparison upward, and a plain mean has zero resistance to that. Fixed
+   two ways: `_get_comparable_listings` now gets `max_price=my_price*6`
+   (generous headroom for genuine premium comparables, excludes obvious
+   noise), AND the "average" is now a median (`statistics.median`), far less
+   sensitive to whatever outliers still get through the price bound. The
+   `competitor_avg` key name in the snapshot schema is unchanged (already-
+   persisted history on disk uses it) -- only the statistic computed under
+   that key changed; the UI label was updated from "avg" to "median" to match.
+2. **No easy way to identify the listing.** The panel showed only the raw
+   numeric listing_id. Snapshots now also store the listing's title at
+   sweep time (`_competitor_watch_iteration`), threaded through
+   `_compute_competitor_drift_items()` with a `.get("title", "")` fallback
+   for old snapshots written before this fix. The panel now shows the real
+   (truncated) title, and the whole row is a link straight to the live Etsy
+   listing (`target="_blank"`) -- same click-to-verify pattern used
+   elsewhere in this dashboard.
+3. **Panel grew indefinitely instead of scrolling.** `#competitor-watch-body`
+   had no height constraint. Capped at 220px with `overflow-y:auto`, same
+   pattern as `.hub-scroll` elsewhere in this file.
+
+Verified end to end against the real generated markup in headless Chrome:
+injected 20 mock drift items (including one with no title, confirming the
+"Listing <id>" fallback), confirmed the panel is genuinely scrollable
+(scrollHeight 1152px vs. 220px clientHeight), confirmed the row's href
+resolves to the real Etsy listing URL. Existing test_competitor_watch.py's
+assertion on the old mean (`entry["competitor_avg"] == 20.0` for prices
+[18,22,20]) still passes -- median and mean happen to coincide for that
+specific symmetric 3-value dataset, verified this isn't masking a real
+difference by reading the exact test data before relying on it.
+
+Full suite: 145/145 passing. Build bumped this deploy.

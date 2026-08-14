@@ -862,6 +862,12 @@ body:not(.is-mobile) .orb-open-chat{display:none}
    unrelated .badge (notification dot) that would collide with the live Hub's .badge
    (listing state pill). ── */
 .hub-scroll{margin-top:10px;overflow-y:auto;max-height:760px}
+/* 2026-08-14 (Scott: "I want the [Competitor Watchdog] to be scrollable not the long
+   section it is now"): was unbounded, so a shop with many flagged listings pushed every
+   panel below it down the page indefinitely. Same overflow-y:auto pattern as .hub-scroll
+   above, just a shorter cap since this sits in the stacked right-column panel list, not a
+   full-width main content area. */
+#competitor-watch-body{max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .hub-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
 .hub-section-title:first-child{margin-top:0}
 .hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:12px;
@@ -7487,10 +7493,20 @@ async function loadCompetitorWatch(){
     el.innerHTML = items.map(function(it){
       const color = Math.abs(it.gap_pct) >= 35 ? 'var(--red)' : 'var(--gold)';
       const arrow = it.direction === 'above' ? '↑' : '↓';
-      return '<div class="ss-row" style="align-items:flex-start;cursor:default" title="real: '+Math.abs(it.competitor_count)+' live comparable listings for &quot;'+escHtml(it.keywords)+'&quot;, avg $'+it.competitor_avg.toFixed(2)+'">'
-        + '<span class="ss-label" style="color:var(--text)">Listing '+it.listing_id+': $'+it.my_price.toFixed(2)+' vs $'+it.competitor_avg.toFixed(2)+' avg</span>'
+      // 2026-08-14 (Scott: "I need an easier way to identify the listing"):
+      // the raw numeric listing_id used to be the ONLY identifier shown.
+      // Lead with the real title (older snapshots pre-dating this fix have
+      // no stored title -- falls back to the id in that case only) and make
+      // the whole row a link straight to the live Etsy listing, same one-
+      // click-to-verify pattern as everywhere else in this dashboard.
+      const label = it.title ? escHtml(it.title.length > 60 ? it.title.slice(0, 57) + '…' : it.title)
+                              : ('Listing ' + it.listing_id);
+      return '<a class="ss-row" href="'+escHtml(it.url)+'" target="_blank" rel="noopener" '
+        + 'style="align-items:flex-start;text-decoration:none" '
+        + 'title="real: '+Math.abs(it.competitor_count)+' live comparable listings for &quot;'+escHtml(it.keywords)+'&quot;, median $'+it.competitor_avg.toFixed(2)+' — click to open this listing on Etsy">'
+        + '<span class="ss-label" style="color:var(--text)">'+label+': $'+it.my_price.toFixed(2)+' vs $'+it.competitor_avg.toFixed(2)+' median</span>'
         + '<span class="ss-val" style="color:'+color+';flex-shrink:0">'+arrow+' '+Math.abs(it.gap_pct)+'%</span>'
-        + '</div>';
+        + '</a>';
     }).join('');
   }catch(e){
     if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
