@@ -24135,119 +24135,19 @@ audit so far. Groups B/C/D (Round 2/3 deep-dive + synthesis report) still not
 started, per Scott's explicit "don't start until I say."
 
 
-## 2026-08-14 — Scheduled coloring run
-============================================================
- [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
-============================================================
-
-  → AD001: Gothic Cathedral Interior
-  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD001 generation failed
-  → AD002: Steampunk Clockwork City
-  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD002 generation failed
-  → AD003: Enchanted Mushroom Forest
-  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD003 generation failed
-  → AD004: Day of the Dead Sugar Skull
-  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD004 generation failed
-  → AD005: Victorian Botanical Garden
-  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD005 generation failed
-  → AD006: Underwater Coral Kingdom
-  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD006 generation failed
-  → AD007: Japanese Temple Garden
-  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD007 generation failed
-  → AD008: Haunted Victorian Mansion
-  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD008 generation failed
-  → AD009: Art Nouveau Floral Woman
-  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD009 generation failed
-  → AD010: Celestial Map of the Cosmos
-  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD010 generation failed
-  → AD011: Moroccan Tile Patterns
-  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD011 generation failed
-  → AD012: Dragon's Hoard
-  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD012 generation failed
-  → AD013: Apothecary Cabinet
-  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD013 generation failed
-  → AD014: Peacock in Full Display
-  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD014 generation failed
-  → AD015: Mechanical Butterfly Collection
-  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
-  ✗ AD015 generation failed
-  → AD016: Ancient Library
-  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
-
-
-## 2026-08-14 — Monthly competitor research refresh
-Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
-
-
-## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
-**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
-
-**What was tried:**
-- read-only diagnostic -- no auto-remediation attempted
-
-**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
-
-**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
-
-
-## 2026-08-14 — Durable volume not writable
-hourly health loop found /tmp/tmppv5tqg_d/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmppv5tqg_d/not_actually_a_dir'. Product files and backups may not be landing durably.
-
-
-## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
-**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
-
-**What was tried:**
-- read-only diagnostic -- no auto-remediation attempted
-
-**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
-
-**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
-
-
-## 2026-08-14 — hub_db_state.json backup is stale
-hourly health loop found the hub.db snapshot at /tmp/tmp7aal82sd/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
-
-
-## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
-**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
-
-**What was tried:**
-- read-only diagnostic -- no auto-remediation attempted
-
-**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
-
-**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
-
-
-## 2026-08-14 — Background build failed: build_planner:TESTCRASH
-hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 24629). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
-
-
-## 2026-08-14 — Background build hung: build_sticker_pack:TESTHUNG
-hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 24631). Killed after running 930s, past the 900s ceiling.
-
-
-## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
-**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
-
-**What was tried:**
-- read-only diagnostic -- no auto-remediation attempted
-
-**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
-
-**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+## 2026-08-14 — Correction: un-tracked 2 deliberately-failing audit tests to protect CI
+Immediately after the Group A commit above, realized `tests/run_all.py`
+exits non-zero if ANY discovered test file fails, and CI Smoke's "Full test
+suite" step runs exactly that as a hard gate. `test_functional_audit_
+ads_tools.py` and `test_functional_audit_batch_stage_tags.py` are
+*deliberately* failing (they prove confirmed-but-not-yet-fixed bugs) —
+leaving them tracked would have permanently reddened CI Smoke for this
+branch until those two specific bugs get fixed, blocking the "is this commit
+broken" signal for every unrelated future change. `git rm --cached` on both
+(files kept on disk, still real audit evidence, just back to untracked like
+the other pending-review files from this audit). Also caught and stripped a
+second instance of the scheduled-coloring/health-loop noise that slipped
+into the Group A commit between writing this file and `git add` — same class
+of issue as every prior "strip noise before append" note in this file,
+happened this time because the check was only done *before* writing, not
+again right before staging.
