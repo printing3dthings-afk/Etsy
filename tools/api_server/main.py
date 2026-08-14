@@ -815,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d3aa0e7-v338"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d15c3aa-v339"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2973,7 +2973,12 @@ AGENT_TOOLS = [
             "it — it lands in the approval queue (Action Center) and only applies to "
             f"Etsy when {business_config.OWNER_NAME} taps Approve. Use for fixes you can fully specify: "
             "correcting a listing title, replacing its tags, or publishing a draft. "
-            "Always fetch the listing first so your change is accurate."
+            "Always fetch the listing first so your change is accurate.\n\n"
+            "action_type='register_product' is different from the rest — it's a pure local "
+            "catalog write (no Etsy API call at all), for a product whose files/photos already "
+            "exist OUTSIDE the build_product pipeline (e.g. a physical/manually-produced item, "
+            "or a listing that's live on Etsy but was never registered here). Use it when asked "
+            "to register/add/catalog a product that isn't going through build_product."
         ),
         "input_schema": {
             "type": "object",
@@ -2983,7 +2988,7 @@ AGENT_TOOLS = [
                     "enum": [
                         "update_tags", "update_title", "update_description", "publish_listing",
                         "deactivate_listing", "toggle_listing_state", "update_price",
-                        "update_sku_and_category",
+                        "update_sku_and_category", "register_product",
                     ],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
@@ -3028,6 +3033,37 @@ AGENT_TOOLS = [
                 "taxonomy_id": {
                     "type": "integer",
                     "description": "New Etsy taxonomy_id (category) for update_sku_and_category.",
+                },
+                "product_id": {
+                    "type": "string",
+                    "description": (
+                        "For register_product: the internal product code (e.g. 'P3D0042'). "
+                        "Optional — auto-generated from name + category convention if omitted."
+                    ),
+                },
+                "name": {
+                    "type": "string",
+                    "description": "For register_product: the product's display name. Required.",
+                },
+                "category": {
+                    "type": "string",
+                    # Literal, not a reference to _KNOWN_CATEGORIES (main.py:5483) -- that set is
+                    # defined well after AGENT_TOOLS is built, so a dynamic reference here would
+                    # NameError at import time. Keep in sync by hand if _KNOWN_CATEGORIES changes.
+                    "enum": [
+                        "digital_planner", "digital_planner_bundle", "wall_art", "wall_art_bundle",
+                        "sticker_pack", "sticker_pack_license", "svg_bundle", "svg_bundle_license",
+                        "svg_3dprint_pack", "paper_pack", "coloring_pages", "sublimation",
+                        "3d_print_physical", "uncategorized",
+                    ],
+                    "description": "For register_product: this shop's internal category. Required.",
+                },
+                "etsy_listing_id": {
+                    "type": "integer",
+                    "description": (
+                        "For register_product: this product's live Etsy listing_id, if it "
+                        "already has one. Omit for a not-yet-published product."
+                    ),
                 },
                 "reason": {
                     "type": "string",
@@ -3387,22 +3423,72 @@ AGENT_TOOLS = [
     {
         "name": "build_product",
         "description": (
-            "Build an ENTIRE product from a single planner code, end to end: sticker pack → "
-            "planner PDFs (dated + undated, with the sticker sheets embedded) → all 10 listing "
-            "photos → a final Quality Check. Runs in the BACKGROUND (~6-10 min); each "
-            "deliverable appears in Files as it finishes, and <pid>_product_build.log carries "
-            "the live log + the QC verdict. Defaults to the Gemini art engine. Nothing is "
-            "published (Scott-gated). Use when asked to build/make/produce a whole product or "
-            "'everything' for a planner code. Only configured planner codes (DP1030-DP1034)."
+            "Build an ENTIRE product end to end, in the BACKGROUND (each deliverable appears "
+            "in Files as it finishes; <pid>_*_build.log carries the live log + final QC "
+            "verdict). Nothing is published (Scott-gated). Dispatches by category — pass "
+            "`category` explicitly, or omit it and it's looked up from product_catalog.json "
+            "by `pid`:\n"
+            "  • digital_planner (default when uncatalogued): sticker pack → planner PDFs "
+            "(dated + undated) → all 10 listing photos → QC. Configured codes only "
+            "(DP1030-DP1034) — pid required.\n"
+            "  • wall_art: multi-size print ZIP → QC. If WA-code source art already exists on "
+            "disk, just pass pid. For a BRAND-NEW wall-art product with no source art yet, "
+            "also pass `description` (what to generate) — real new art is created first via "
+            "the approved-engine pipeline, then QC'd; optionally pass `reference_image_id` "
+            "(from the Reference Photos library) to steer the art's style.\n"
+            "  • coloring_pages: for an EXISTING catalogued set, pass pid alone. For a NEW "
+            "theme set, pid is optional (a fresh COLOR#### code is picked automatically) — "
+            "pass `description` as ONE theme (e.g. 'ocean animals'), which expands into a "
+            "full set of never-before-repeated individual subjects automatically. Optionally "
+            "pass `difficulty` (standard/kids/adult — kids and adult use different line "
+            "weight and engine defaults, never mix tiers in one set).\n"
+            "  • wall_calendar: pid + `theme` (one of the configured calendar themes) + "
+            "optional `year` (defaults to next year). Generates 12 header illustrations, "
+            "dated + undated monthly-grid PDFs (both week-start variants), and a "
+            "year-at-a-glance poster, then QC.\n"
+            "Any category whose art is freshly AI-generated in this call returns "
+            "needs_visual_qc:true — eyeball the result for garbled text/wrong subject before "
+            "it goes further, no file-level gate catches that. Use when asked to build/make/"
+            "produce a whole product, a new product idea, or 'everything' for a code — for "
+            "any category, not just planners."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
-                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
-                           "description": "Art engine for cover + sticker sheets. Default 'gemini'."},
+                "pid": {"type": "string",
+                        "description": "Product code, e.g. 'DP1030', 'WA1030'. Optional only "
+                                       "for a brand-new coloring_pages set (auto-assigned)."},
+                "category": {"type": "string",
+                             "enum": ["digital_planner", "wall_art", "coloring_pages", "wall_calendar"],
+                             "description": "Explicit category. Omit to auto-detect from "
+                                            "product_catalog.json via pid (falls back to "
+                                            "digital_planner if pid isn't catalogued)."},
+                "description": {"type": "string",
+                                 "description": "Required to generate brand-new art: for "
+                                                "wall_art, a description of the art to create; "
+                                                "for coloring_pages, ONE theme to expand into a "
+                                                "full new subject set. Not used for "
+                                                "digital_planner or wall_calendar."},
+                "theme": {"type": "string",
+                          "description": "Required for wall_calendar — the calendar theme key "
+                                         "(see the Color Design System theme catalog in "
+                                         "CLAUDE.md/read_knowledge_base_doc for the live list)."},
+                "year": {"type": "integer",
+                         "description": "wall_calendar only. Defaults to next year if omitted."},
+                "difficulty": {"type": "string", "enum": ["standard", "kids", "adult"],
+                               "description": "coloring_pages only, new sets. Defaults to "
+                                              "'standard'. Never mix tiers within one set."},
+                "reference_image_id": {"type": "string",
+                                        "description": "wall_art only, new art. Optional id from "
+                                                       "the Reference Photos library — its style "
+                                                       "(not its subject) guides the new art."},
+                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram", "grok"],
+                           "description": "Art engine for whatever this call generates. Default "
+                                          "'gemini' (coloring_pages instead defaults 'openai' "
+                                          "for kids difficulty, 'grok' for teen/adult, unless "
+                                          "set explicitly here)."},
             },
-            "required": ["pid"],
+            "required": [],
         },
     },
     {
@@ -4431,6 +4517,35 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _resolve_product((tool_input or {}).get("identifier", ""))
         if name == "stage_action":
             ti = tool_input or {}
+            if ti.get("action_type") == "register_product":
+                # Distinct payload shape from every other action_type below (no listing_id,
+                # no Etsy call at all -- see _validate_staged_action's register_product branch
+                # and register_product_directly, main.py ~15195, for the same shape) -- handled
+                # in its own early branch rather than folded into the shared listing-mutation
+                # payload builder below, which assumes a listing_id-centric shape throughout.
+                payload = {
+                    "product_id": (ti.get("product_id") or "").strip() or None,
+                    "name": (ti.get("name") or "").strip(),
+                    "category": ti.get("category"),
+                    "price": ti.get("price"),
+                    "etsy_listing_id": ti.get("etsy_listing_id"),
+                }
+                if not payload["product_id"]:
+                    # Same auto-slug convention register_product_directly uses -- keeps both
+                    # paths (chat-staged and Scott's Create-screen form) producing identical ids.
+                    prefix = {"3d_print_physical": "P3D"}.get(payload["category"], "MISC")
+                    payload["product_id"] = _slugify_product_id(payload["name"], prefix)
+                candidate = {"type": "register_product", "payload": payload}
+                ok, msg = _validate_staged_action(candidate)
+                if not ok:
+                    return {"staged": False, "error": msg}
+                aid = db.enqueue_action("register_product", ti.get("summary", ""), payload)
+                return {
+                    "staged": True,
+                    "action_id": aid,
+                    "status": "pending",
+                    "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
+                }
             if ti.get("action_type") in ("update_title", "update_tags", "update_description") and ti.get("listing_id") is not None:
                 # Same grounding gate as autofix_listing_tags/autofix_listing_title (2026-08-05)
                 # -- stage_action is the general-purpose tool and was the actual reachable path

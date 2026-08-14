@@ -24193,3 +24193,57 @@ regression tests proving still-open bugs (ads_tools rate-limit gap, batch_stage_
 cap bypass, publish_path duplicate-listing) — kept untracked on disk, never
 committed, per the CI-safety rule learned earlier this audit (a tracked failing
 test permanently reddens CI for the whole branch).
+
+
+## 2026-08-14 — Frank execution-quality audit: 2 capability-gap fixes shipped
+Scott asked for a review of everything Frank touches on Etsy -- tasks needing
+better detail, workflow gaps, missing capabilities, weaker prompts. Direct
+investigation (research agents hit the session usage limit twice with zero
+output; proceeded solo per Scott's "Option 2") found the real lever wasn't
+prompt quality (newer generation code -- wall_calendar, coloring_pages --
+already follows CLAUDE.md's own prompt-engineering rules closely: style
+anchors, negative-constraint clauses, palette locks). The real problem was
+that real, working, already-shipped capabilities were invisible to Frank
+because their tool descriptions didn't say they existed.
+
+**Fixed (2 safe, mechanical, zero-behavior-change fixes):**
+1. `build_product` chat tool (main.py) described itself as digital-planner-
+   only ("Only configured planner codes DP1030-DP1034"). The function it
+   actually calls, `_produce_build_product`, has genuinely supported 4
+   categories since 2026-07-18/07-22/08-11 -- wall_art, coloring_pages, and
+   wall_calendar too, including generating a brand-new product from a text
+   description (auto-picks the next free code, expands one theme into 30
+   never-repeated coloring subjects, picks engine by difficulty tier, pulls
+   style notes from a reference photo). None of that was in the tool's
+   description or input_schema, so Frank had never used it for anything but
+   planners. Rewrote the description and schema to expose category/
+   description/theme/year/difficulty/reference_image_id -- zero application
+   code changed, this only makes existing capability visible.
+2. `stage_action`'s action_type enum was missing `register_product`, even
+   though CLAUDE.md's own Listing Agent Workflow names it ("for a product
+   whose files/photos already exist outside this pipeline... use
+   register_product instead") and the backend has fully supported it as a
+   staged-action type since 2026-08-05 (_validate_staged_action,
+   _execute_register_product_staged_action, the Create screen's manual
+   form). Frank had no tool-call path to ever select it. Added a dedicated
+   early branch in _execute_agent_tool's stage_action dispatch (distinct
+   payload shape from the listing-mutation types: product_id/name/category/
+   price/etsy_listing_id, no listing_id at all) plus new input_schema
+   fields. New regression test: tests/test_stage_action_register_product.py.
+
+**Found and explicitly held (real scope, not "fixes"):**
+- SS-series (3D-print SVG pack) product line has ZERO build automation --
+  not even a manual script -- despite CLAUDE.md giving it the most detailed
+  production spec of all six categories.
+- Standalone sticker-pack listing photos (gen_sticker_listing_photos.py)
+  only run via the old separate command_center.py CLI, not reachable from
+  Frank's chat tools at all.
+- listing_qc.check_listing()'s ProductType only recognizes 3 of 6 real
+  categories (digital_planner/svg_pack/wall_art). Its keyword-based
+  classifier actively MISCLASSIFIES a real wall-calendar title (contains
+  "printable", doesn't contain "planner") as wall_art, so it gets checked
+  against the wrong category's rules entirely. coloring_pages and
+  wall_calendar get no category-specific quality gate at all today.
+
+Full suite: 140/143 passing (same 3 known deliberately-failing bug-proof
+tests as before, untracked). Build bumped this deploy.
