@@ -425,6 +425,11 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
   margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .panel-title .src{font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
 .panel-title .lnk{font-size:9px;color:var(--cyan);text-transform:none;letter-spacing:0;cursor:pointer}
+/* Star Seller/Ads/COGS/Printer panel titles are tap targets (onclick="openMetricDetailModal(...)"/
+   "openPrinterDetailModal()", role="button" via inline attributes) -- same press-state affordance
+   as every other primary tap target, scoped by attribute selector since there's no dedicated class. */
+.panel-title[role="button"]{transition:transform .12s ease}
+.panel-title[role="button"]:active{transform:scale(.98)}
 /* ── First-time-user simplification (2026-07-11): keep engineering/infra surfaces
    out of the everyday view. Nothing here is DELETED — it is CSS-hidden and fully
    reversible. A developer reveals it all with localStorage.frankDevMode='1', which
@@ -587,8 +592,9 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 
 .qc-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--panel2);
   border:1px solid var(--border);color:var(--text);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:7px;
-  font-size:11px;cursor:pointer}
+  font-size:11px;cursor:pointer;transition:transform .12s ease}
 .qc-btn:hover{border-color:var(--cyan)}
+.qc-btn:active{transform:scale(.97)}
 .qc-btn .qic{width:18px;height:18px;border-radius:50%;background:rgba(242,160,181,.18);color:var(--cyan2);
   display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 
@@ -596,13 +602,26 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
   gap:8px;max-width:340px;pointer-events:none}
 .toast{display:flex;align-items:center;gap:9px;background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;
   font-size:12.5px;color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.4);pointer-events:auto;
-  border-left:3px solid var(--cyan);animation:toast-in .12s ease-out}
+  border-left:3px solid var(--cyan);animation:toast-in .12s ease-out;cursor:pointer}
 .toast.ok{border-left-color:var(--green)}
 .toast.err{border-left-color:var(--red)}
 .toast.info{border-left-color:var(--cyan)}
 .toast.out{animation:toast-out .12s ease-in forwards}
+/* 2026-08-14: click/tap-to-dismiss -- a toast blocking something underneath
+   no longer requires waiting out its full auto-dismiss timer. */
+.toast:active{transform:scale(.98)}
+@media (prefers-reduced-motion:reduce){.toast:active{transform:none}}
 @keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+/* Flash-on-change (2026-08-14) -- brief scale+brightness pop applied via JS
+   (_flashOnChange()) whenever a live value actually changes: shop-perf stat
+   cells and every notification badge (badge-actions, ptab-badge, ptab-today-
+   badge, home-appr-badge, home-today-badge). Filter+transform, not color, so
+   it reads consistently whether the element is plain text or an
+   already-colored badge pill. */
+@keyframes flash-update{0%{transform:scale(1.15);filter:brightness(1.3)}100%{transform:scale(1);filter:brightness(1)}}
+.flash-update{animation:flash-update .4s cubic-bezier(.22,1,.36,1)}
+@media (prefers-reduced-motion:reduce){.flash-update{animation:none}}
 /* 2026-07-18: a real drawn checkmark on success toasts specifically -- the
    single most-repeated positive action in the app (approving a fix) gets a
    touch more personality than the constant-frequency toasts elsewhere,
@@ -994,9 +1013,11 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .hub-toggle-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .hub-toggle-btn.active{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
+.hub-toggle-btn:active{transform:scale(.97)}
 .hub-chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:transform .12s ease}
 .hub-chip-btn.active{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
+.hub-chip-btn:active{transform:scale(.97)}
 
 .hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);
   transition:background-color .15s ease}
@@ -1523,8 +1544,9 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 .palert.good .pdot{background:var(--green)}
 .palert.info .pdot{background:var(--cyan)}
 .pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
-.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
+.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px;transition:transform .12s ease}
 .pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.pmore-item:active{transform:scale(.97)}
 .pmore-item .pmi{width:24px;text-align:center;font-size:16px}
 .pmore-item .pmc{margin-left:auto;color:var(--muted)}
 /* tappable needs-attention cards */
@@ -1541,9 +1563,11 @@ body.phone-sheet-open #phone-sheet{display:flex}
 #phone-sheet-title{font-weight:700;font-size:14.5px;color:var(--text);line-height:1.4}
 #phone-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
 .psheet-btn{border:1px solid var(--border);border-radius:var(--r-md);padding:15px 13px;font-size:14px;
-  font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
+  font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text);
+  transition:transform .12s ease}
 .psheet-btn.primary{background:var(--cyan);border-color:transparent;color:var(--on-accent)}
 .psheet-btn.cancel{background:transparent;color:var(--muted)}
+.psheet-btn:active{transform:scale(.97)}
 /* Products-screen fix sheet (2026-07-18) -- copy of the #phone-sheet rules under new
    ids rather than retrofitting the shipped Needs-Attention sheet (which has its own
    hardcoded 2-button markup) to take a dynamic button list too. */
@@ -1683,6 +1707,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   /* .act-btn's press-scale predates this file's reduced-motion pass (pre-existing
      gap, fixed in passing here since Phase 3 already touches this selector). */
   .act-btn:active,.hub-act-btn:active{transform:none}
+  /* 2026-08-14 press-state pass -- same reduced-motion silencing as every
+     other :active transform above. */
+  .qc-btn:active,.pmore-item:active,.psheet-btn:active,.hub-toggle-btn:active,
+  .hub-chip-btn:active,.panel-title[role="button"]:active{transform:none}
 }
 /* ── Native page-transition crossfade (View Transitions API, 2026-08-14) --
    showScreen() wraps its DOM swap in document.startViewTransition() when the
@@ -2652,7 +2680,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
         <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
 
-        <span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>
+        <span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)" role="button" tabindex="0">Advanced ▸</span>
         <div class="cd-advanced-body"><div class="cd-advanced-inner">
           <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image engine</label>
           <select id="setting-image-engine" aria-label="Image engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
@@ -3879,6 +3907,23 @@ function _animateCountUp(el, targetText) {
   }
   requestAnimationFrame(frame);
 }
+// Brief highlight pulse when a value genuinely changes (2026-08-14) -- lighter-
+// weight than _animateCountUp() above (no tween, just a one-shot CSS flash),
+// for spots where the VALUE mattering more than a smooth count-up: shop-perf
+// stat cells (setEl() in _renderShopPerf) and notification badges (below).
+// No-ops (no flash, no reflow forced) when the text hasn't actually changed,
+// so a routine 30s poll re-render that happens to return the same number
+// stays silent instead of flashing every tick.
+function _flashOnChange(el, newText){
+  if (!el) return;
+  const changed = el.textContent !== String(newText);
+  el.textContent = newText;
+  if (changed) {
+    el.classList.remove('flash-update');
+    void el.offsetWidth; // force reflow so a retrigger (rapid back-to-back changes) replays the animation
+    el.classList.add('flash-update');
+  }
+}
 function showToast(message, type='info', ms=4500){
   const stack = document.getElementById('toast-stack');
   if (!stack) return;
@@ -3893,11 +3938,22 @@ function showToast(message, type='info', ms=4500){
   } else {
     t.textContent = message;
   }
-  stack.appendChild(t);
-  if (ms) setTimeout(()=>{
+  // Click/tap-to-dismiss (2026-08-14): reuses the same role="button" +
+  // document-level Enter/Space-activates-click() handler every other custom
+  // control in this file already relies on (see the keydown listener near
+  // showScreen() wiring), so keyboard users get dismissal for free too.
+  t.setAttribute('role', 'button');
+  t.setAttribute('tabindex', '0');
+  t.setAttribute('aria-label', 'Dismiss notification');
+  let autoTimer = null;
+  const dismiss = () => {
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
     t.classList.add('out');
     setTimeout(()=>t.remove(), 120);
-  }, ms);
+  };
+  t.addEventListener('click', dismiss);
+  stack.appendChild(t);
+  if (ms) autoTimer = setTimeout(dismiss, ms);
 }
 
 // ── Voice: OpenAI TTS (speech-out) + Whisper (speech-in) — wired to the orb's
@@ -4615,7 +4671,7 @@ function _renderCategoryPanelHtml(key){
     + '<option value="">Choose one you already have…</option></select>';
   if (cfg.allowNewCode !== false) {
     const newCodeLabel = cfg.newCodeLinkLabel || '＋ This is a new one — I\\'ll type the code';
-    html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)">' + newCodeLabel + '</span>';
+    html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)" role="button" tabindex="0">' + newCodeLabel + '</span>';
   }
   html += '</div>';
   html += '<div id="create-pid-freetext-wrap" style="display:none;margin-bottom:6px">';
@@ -4674,14 +4730,14 @@ function _renderCategoryPanelHtml(key){
       html += '<select id="create-ref-select" aria-label="Match a reference photo" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px"><option value="">None — describe the style above</option></select>';
     }
   }
-  html += '<div style="margin-top:6px"><span class="cd-newcode-link" onclick="_createToggleNewCode(false)">← pick from the list instead</span></div></div>';
+  html += '<div style="margin-top:6px"><span class="cd-newcode-link" onclick="_createToggleNewCode(false)" role="button" tabindex="0">← pick from the list instead</span></div></div>';
 
   // usesEngine: false (wall_art, coloring_pages) -- this category's one-tap
   // build generates no new AI art, so an art-style picker would be a dead
   // control the backend never reads (see _CREATE_CATEGORIES' own comment).
   // Skip the whole Advanced disclosure rather than show an empty one.
   if (cfg.usesEngine) {
-    html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>';
+    html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)" role="button" tabindex="0">Advanced ▸</span>';
     html += '<div class="cd-advanced-body"><div class="cd-advanced-inner">';
     html += '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Art style (used for the AI-generated art step only)</label>';
     html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
@@ -4693,7 +4749,7 @@ function _renderCategoryPanelHtml(key){
 
   const secondary = _createSecondaryRowsHtml(key);
   if (secondary) {
-    html += '<div style="margin-top:16px"><span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Rebuild just one part ▸</span>';
+    html += '<div style="margin-top:16px"><span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)" role="button" tabindex="0">Rebuild just one part ▸</span>';
     html += '<div class="cd-advanced-body"><div class="cd-advanced-inner">' + secondary + '</div></div></div>';
   }
   return html;
@@ -7291,7 +7347,7 @@ function _renderShopPerf(a, m, sparkEl, chipEl, offlineNote){
       '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v" id="shop-alltime-rev">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
   }
   // Populate expanded panel IDs
-  const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  const setEl = (id, val) => _flashOnChange(document.getElementById(id), val);
   const o = m.orders || {};
   setEl('shop-rev-7d', '$' + (o.revenue_7d||0).toFixed(2));
   setEl('shop-ord-7d', (o.last_7_days||0) + ' orders');
@@ -8609,19 +8665,26 @@ let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
 // a one-shot DOM push from renderPhoneToday() alone would just get clobbered
 // back down by that tick's own setActionBadge() call.
 let _alertsCritWarnCount = 0;
+// Shared by every badge mount point setActionBadge() updates below -- sets the
+// count (flashing only when it actually changed, via _flashOnChange()) and the
+// show/hide display state in one place so all 5 stay behaviorally identical.
+function _setBadge(el, n, displayVal){
+  if (!el) return;
+  if (n > 0) { _flashOnChange(el, n > 99 ? '99+' : n); el.style.display = displayVal; }
+  else { el.style.display = 'none'; }
+}
 function setActionBadge(summary, pending) {
   const b = document.getElementById('badge-actions');
   if (!b) return;
   const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
-  if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
-  else { b.style.display = 'none'; }
+  _setBadge(b, n, '');
   // Phone Approvals tab badge = ONLY items actually awaiting approval (the `pending`
   // count) — NOT the high-severity recommendations (those live under Today → Needs
   // attention). This keeps the badge honest: it always matches what the Approvals panel
   // shows, so a "7" never leads to an empty "All clear" panel.
   const pb = document.getElementById('ptab-badge');
   const pc = pending || 0;
-  if (pb) { if (pc > 0) { pb.textContent = pc > 99 ? '99+' : pc; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
+  _setBadge(pb, pc, 'flex');
   // The urgent-recommendations count lives on the TODAY tab now (that's where the
   // "Needs attention" items are shown) — not on Approvals.
   // 2026-07-30 (Approvals UX audit): this badge previously counted summary.high
@@ -8633,14 +8696,14 @@ function setActionBadge(summary, pending) {
   // the panel actually shows.
   const tb = document.getElementById('ptab-today-badge');
   const hc = ((summary && summary.high) || 0) + ((summary && summary.medium) || 0) + _alertsCritWarnCount;
-  if (tb) { if (hc > 0) { tb.textContent = hc > 99 ? '99+' : hc; tb.style.display = 'flex'; } else { tb.style.display = 'none'; } }
+  _setBadge(tb, hc, 'flex');
   // Home tile mirrors (2026-07-23) -- same two counts, new mount points. #phone-tabbar
   // (and its badges) is hidden while on Home, so without this a user parked on the
   // screen they see most at cold load would see zero pending/today signal at all.
   const hab = document.getElementById('home-appr-badge');
-  if (hab) { if (pc > 0) { hab.textContent = pc > 99 ? '99+' : pc; hab.style.display = 'flex'; } else { hab.style.display = 'none'; } }
+  _setBadge(hab, pc, 'flex');
   const htb = document.getElementById('home-today-badge');
-  if (htb) { if (hc > 0) { htb.textContent = hc > 99 ? '99+' : hc; htb.style.display = 'flex'; } else { htb.style.display = 'none'; } }
+  _setBadge(htb, hc, 'flex');
 }
 function simpleLineDiff(before, after) {
   const b = String(before == null ? '' : before).split('\\n');

@@ -24742,3 +24742,115 @@ color/label pairing per panel, the null-safe history lookup, and the CSS.
 Full suite: 148/148 passing (145 baseline + test_view_transitions.py +
 test_skeleton_loaders.py + test_at_a_glance_sparklines.py, the 3 new files
 this entry covers). Build bumped this deploy.
+
+
+## 2026-08-14 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-14 — Click/tap-to-dismiss toasts, press-states, keyboard reach, flash-on-change
+
+Remaining 4 items from the same visual-research pass (View Transitions,
+skeleton loaders, and sparklines shipped earlier the same day).
+
+**Click/tap-to-dismiss toasts.** showToast() marks each toast role="button"
+tabindex="0" and attaches a click listener that runs the same exit
+animation + removal the auto-dismiss timer already used, extracted into one
+shared `dismiss` closure so both paths agree and can't drift. Keyboard
+dismissal (Enter/Space) comes free from the existing document-level
+role="button" keydown handler -- no new keydown listener needed. Manual
+dismiss cancels the pending auto-timer so it can't double-fire against an
+already-removed node.
+
+**Press-state feedback.** Added `transform:scale()` :active rules (+
+transitions where missing) to 6 tap targets that had none: .qc-btn,
+.pmore-item, .psheet-btn, .hub-toggle-btn, .hub-chip-btn (scale .97, matching
+.act-btn/.shop-spark-card's existing convention), and
+.panel-title[role="button"] (scale .98, matching .nav-item's smaller/subtler
+scale for a text-label-sized target). All 6 silenced together in the
+existing general prefers-reduced-motion block.
+
+**Keyboard reachability.** .cd-advanced-toggle (3 call sites) and
+.cd-newcode-link (2 call sites) were plain onclick spans with no tabindex/
+role -- keyboard-only users couldn't Tab to or activate them at all. Added
+role="button" tabindex="0" to all 5; onclick handlers unchanged. Reuses the
+same generic role="button" keydown-activates-click() handler and
+[role="button"]:focus-visible CSS every other custom control in this file
+already relies on -- no new machinery needed.
+
+**Flash-on-change.** New _flashOnChange(el, newText) compares against the
+CURRENT textContent before overwriting, and only adds a one-shot
+scale+brightness .flash-update CSS pulse when the value actually changed
+(force-reflow between remove/add so a rapid second change retriggers rather
+than no-opping on an already-present class) -- a routine 30s poll re-render
+returning the same number stays silent instead of flashing every tick.
+Wired into _renderShopPerf's setEl() and, via a new shared _setBadge(el, n,
+displayVal) helper, all 5 notification badge mount points setActionBadge()
+maintains (badge-actions, ptab-badge, ptab-today-badge, home-appr-badge,
+home-today-badge -- extracted from 5 near-identical inline blocks so all 5
+share one behavior instead of risking drift).
+
+Verified end to end in real headless Chrome for all 4: toast click/keyboard
+dismissal actually removes the node; .cd-advanced-toggle's real screen
+(#screen-create, display:none until navigated to -- .focus() silently no-ops
+on a hidden descendant, had to navigate there for real before testing)
+responds to a real keyboard Enter exactly like a click; setActionBadge()
+flashes on a genuine count change and stays silent on a repeat call with the
+same count. No page-level JS errors across any of the checks.
+
+New tests: tests/test_toast_dismiss.py, tests/test_press_state_feedback.py,
+tests/test_advanced_toggle_keyboard.py, tests/test_flash_on_change.py.
+
+Full suite: 152/152 passing (148 baseline + these 4 new files). Build bumped
+this deploy. This closes out all 7 items from the second visual-research
+pass ("do it all in the order you suggest").
