@@ -739,6 +739,12 @@ body.is-mobile #alert-dropdown{
 .ss-bar{height:4px;border-radius:2px;background:var(--green);transition:width .4s}
 .ss-bar.warn{background:var(--amber)}
 .ss-bar.bad{background:var(--red)}
+/* Mini at-a-glance trend row (2026-08-14) -- Star Seller/Ads/COGS already fetch
+   30 days of _lastStatusHistory via /api/status-history for the bigger metric-detail
+   modal's chart (_miniSpark() at 64px there); this reuses the exact same fetched
+   trend array at a smaller 28px inline in the panel itself, zero extra network call. */
+.ss-spark-row{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04)}
+.ss-spark-lab{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
 
 .shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow-y:auto;flex-wrap:wrap}
 .shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);
@@ -1677,6 +1683,26 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   /* .act-btn's press-scale predates this file's reduced-motion pass (pre-existing
      gap, fixed in passing here since Phase 3 already touches this selector). */
   .act-btn:active,.hub-act-btn:active{transform:none}
+}
+/* ── Native page-transition crossfade (View Transitions API, 2026-08-14) --
+   showScreen() wraps its DOM swap in document.startViewTransition() when the
+   browser supports it (see showScreen() in the main script below); this tunes
+   the UA's default root crossfade to match the app's existing quick, snappy
+   motion feel instead of the browser default (~0.25s ease). Already feature-
+   detected + _reducedMotion-gated in JS before this ever runs; the @media
+   block here is defense-in-depth for any future call site that skips that
+   gate, same double-gating pattern as the orb's idle rotation above. ──*/
+::view-transition-old(root),
+::view-transition-new(root){
+  animation-duration:.18s;
+  animation-timing-function:cubic-bezier(.22,1,.36,1);
+}
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*){
+    animation:none !important;
+  }
 }
 </style>
 <script>
@@ -5389,6 +5415,26 @@ function _fireScreenLoaders(name){
   Promise.allSettled(loaders.map(fn => Promise.resolve(fn())))
     .finally(() => { _screenLoadInFlight[name] = false; });
 }
+function _showScreenInner(name, viaViewTransition){
+  document.body.classList.remove('phone-home-open');
+  document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
+  const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
+  if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el){
+    el.classList.add('active');
+    // The native View Transition crossfade (see showScreen() below) already
+    // animates old-screen-out/new-screen-in as a whole-page snapshot swap --
+    // the CSS screen-in keyframe (opacity+slide) firing on top of that on this
+    // path double-animates and reads as a stutter, so skip it here only. The
+    // non-view-transition fallback path below never passes this flag, so
+    // screen-in keeps working exactly as before on browsers/users that skip VT.
+    if(viaViewTransition) el.style.animation = 'none';
+  }
+  _activeScreen = name;
+  _fireScreenLoaders(name);
+}
 function showScreen(name){
   // 2026-07-23: the header's gear/bell/nav-item icons (e.g. onclick="showScreen('settings')"
   // at line ~1534) call this directly, bypassing phoneOpenScreen()'s own phone-home-open
@@ -5398,15 +5444,19 @@ function showScreen(name){
   // (phoneOpenScreen, phoneTab's ask/create branches, every bare onclick="showScreen(...)"
   // in the header/sidebar) funnels through, so fixing it here covers all of them at once
   // instead of chasing down each individual call site.
-  document.body.classList.remove('phone-home-open');
-  document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
-  const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
-  if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const el = document.getElementById('screen-'+name);
-  if(el) el.classList.add('active');
-  _activeScreen = name;
-  _fireScreenLoaders(name);
+  //
+  // 2026-08-14: wrapped in document.startViewTransition() when supported (Chromium
+  // 111+; Safari/Firefox fall through to the plain-mutation path below, identical to
+  // pre-existing behavior) -- gives every navigation through this one choke point a
+  // native whole-page crossfade for free, no per-screen work. Feature-detected AND
+  // _reducedMotion-gated (that const is declared earlier in this same page's script
+  // scope, top-level let/const is shared across classic <script> tags) since a forced
+  // crossfade is exactly the kind of motion prefers-reduced-motion asks to skip.
+  if (typeof document.startViewTransition === 'function' && !_reducedMotion) {
+    document.startViewTransition(() => _showScreenInner(name, true));
+  } else {
+    _showScreenInner(name, false);
+  }
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -7375,6 +7425,7 @@ function toggleShopExpand(){
 
 async function loadStarSeller(){
   const el = document.getElementById('star-seller-body');
+  if (el) el.innerHTML = _skeletonCards(2);
   try{
     // Phase 3 (2026-07-22): fetch this panel's drill-down history alongside its
     // live status, same Promise.all-two-calls pattern as loadShopPerf() above.
@@ -7426,7 +7477,9 @@ async function loadStarSeller(){
       '<div class="ss-row">'+
         '<span class="ss-label">Unread Messages</span>'+
         '<span class="ss-val"'+(msgOk?'':' style="color:var(--red)"')+'>'+( d.unread_messages||0)+' '+(msgOk?'✓':'⚠')+'</span>'+
-      '</div>';
+      '</div>'+
+      '<div class="ss-spark-row"><div class="ss-spark-lab">Revenue trend (90d)</div>'+
+        _miniSpark((_lastStatusHistory.star_seller||{}).trend, 'var(--gold)', 28)+'</div>';
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
@@ -7448,6 +7501,7 @@ const _ADS_STATUS_CLASS = {
 async function loadAdsStatus(){
   const el = document.getElementById('ads-status-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const [r, hr] = await Promise.all([
       authGet('/api/ads-status'),
@@ -7467,7 +7521,9 @@ async function loadAdsStatus(){
       '<div class="ss-row"><span class="ss-label">Spend (7d)</span><span class="ss-val">$'+d.week_spend.toFixed(2)+'</span></div>'+
       '<div class="ss-row"><span class="ss-label">Revenue (7d)</span><span class="ss-val">$'+d.week_revenue.toFixed(2)+'</span></div>'+
       '<div class="ss-row"><span class="ss-label">ROAS (this month)</span><span class="ss-val">'+(d.have_monthly_verdict ? d.month_roas+'x' : 'building — '+d.month_roas+'x so far')+'</span></div>'+
-      '<div class="ss-row"><span class="ss-label">Last logged</span><span class="ss-val"'+(d.days_since_log>=7?' style="color:var(--red)"':'')+'>'+d.days_since_log+'d ago</span></div>';
+      '<div class="ss-row"><span class="ss-label">Last logged</span><span class="ss-val"'+(d.days_since_log>=7?' style="color:var(--red)"':'')+'>'+d.days_since_log+'d ago</span></div>'+
+      '<div class="ss-spark-row"><div class="ss-spark-lab">ROAS trend (month)</div>'+
+        _miniSpark((_lastStatusHistory.ads_roas||{}).trend, 'var(--cyan2)', 28)+'</div>';
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
@@ -7483,6 +7539,7 @@ const _GROWTH_SEV_COLOR = {high: 'var(--red)', medium: 'var(--gold)', low: 'var(
 async function loadGrowthBrief(){
   const el = document.getElementById('growth-brief-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/growth-brief');
     const d = await r.json();
@@ -7555,6 +7612,7 @@ async function cancelAbTest(id){
 async function loadAbTests(){
   const el = document.getElementById('ab-tests-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/ab-tests');
     const d = await r.json();
@@ -7596,6 +7654,7 @@ async function loadAbTests(){
 async function loadCompetitorWatch(){
   const el = document.getElementById('competitor-watch-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/competitor-watch');
     const d = await r.json();
@@ -7639,6 +7698,7 @@ function _fmtMovementDelta(cur, prev){
 async function loadMovementDigest(){
   const el = document.getElementById('movement-digest-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/movement-digest');
     const d = await r.json();
@@ -7672,6 +7732,7 @@ async function loadMovementDigest(){
 async function loadReviewThemes(){
   const el = document.getElementById('review-themes-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/review-themes');
     const d = await r.json();
@@ -7700,6 +7761,7 @@ const _COGS_LOW_MARGIN_LABEL = 40;
 async function loadCogsStatus(){
   const el = document.getElementById('cogs-status-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const [r, hr] = await Promise.all([
       authGet('/api/cogs-status'),
@@ -7724,6 +7786,8 @@ async function loadCogsStatus(){
         return '<div class="ss-row"><span class="ss-label" title="'+escHtml(f.title)+'">'+escHtml(f.title.length>34?f.title.slice(0,34)+'…':f.title)+'</span><span class="ss-val" style="color:var(--red)">'+f.margin_pct+'%</span></div>';
       }).join('');
     }
+    html += '<div class="ss-spark-row"><div class="ss-spark-lab">Avg margin trend</div>'+
+      _miniSpark((_lastStatusHistory.cogs_margin||{}).trend, 'var(--green)', 28)+'</div>';
     html += '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4">'+escHtml(d.note||'')+'</div>';
     el.innerHTML = html;
   }catch(e){
@@ -7779,6 +7843,7 @@ function _printerStatsHtml(d){
 async function loadPrinterStatus(){
   const el = document.getElementById('printer-status-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/printer/status');
     const d = await r.json();
@@ -7881,6 +7946,7 @@ async function _renderPrinterDetail(){
 async function loadInbox(){
   const el = document.getElementById('inbox-body');
   if(!el) return;
+  el.innerHTML = _skeletonCards(2);
   try{
     const r = await authGet('/api/inbox');
     const d = await r.json();
@@ -8028,6 +8094,7 @@ async function recheckCredentials(){
 }
 async function loadDependencyHealth(){
   const el = document.getElementById('dep-pill-row');
+  if (el) el.innerHTML = _skeletonCards(3);
   try{
     const r = await authGet('/api/system/dependencies');
     const d = await r.json();
@@ -8247,6 +8314,7 @@ function _renderQueue(d, list, offlineNote){
 }
 async function loadQueue(){
   const list = document.getElementById('feed-list');
+  if (list) list.innerHTML = _skeletonCards(3);
   try{
     const r = await authGet('/api/queue?status=pending');
     const d = await r.json();
@@ -8306,6 +8374,7 @@ async function updateTasksBadge(){
 
 async function loadMissionTimeline(){
   const list = document.getElementById('timeline-list');
+  if (list) list.innerHTML = _skeletonCards(3);
   try{
     const d = await _sharedTodosFetch();
     cacheSet('missionTimeline', d);

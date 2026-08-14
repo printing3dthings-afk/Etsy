@@ -24512,3 +24512,233 @@ screenshot of each of the 6 combinations was sent to Scott for visual
 sign-off before shipping.
 
 Full suite: 145/145 passing. Build bumped this deploy.
+
+
+## 2026-08-14 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — Durable volume not writable
+hourly health loop found /tmp/tmppy3bzw8b/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmppy3bzw8b/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpb8fh3b0n/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 29176). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-14 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 29179). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-14 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-14 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-14 — showScreen() wrapped in native View Transitions
+
+First item from the second visual-research pass ("do it all in the order you
+suggest" -- flagged as the highest-leverage foundation since every navigation
+path funnels through showScreen(): phoneOpenScreen(), phoneTab()'s ask/create
+branches, every bare onclick="showScreen(...)" in the header/sidebar/nav, and
+search-result routing all call it directly or indirectly).
+
+showScreen(name) split into a plain _showScreenInner(name, viaViewTransition)
+(the real DOM mutation, unchanged in substance) and a thin showScreen(name)
+wrapper: when document.startViewTransition exists AND !_reducedMotion, the
+mutation runs inside document.startViewTransition(() => ...) for a native
+whole-page crossfade; otherwise it falls straight through to the direct
+mutation, identical to pre-existing behavior for browsers without the API
+(Safari/Firefox as of this writing) or reduced-motion users.
+
+Double-motion guard: the existing .screen.active{animation:screen-in ...}
+CSS keyframe (opacity+slide entrance) would double-animate on top of the
+native crossfade, so _showScreenInner sets el.style.animation='none' but
+ONLY when viaViewTransition is true -- the non-VT fallback path keeps its
+original screen-in entrance exactly as before.
+
+Added CSS tuning the UA's default root crossfade (::view-transition-old/new
+(root)) to 0.18s cubic-bezier(.22,1,.36,1) to match the app's snappier
+existing motion feel instead of the ~0.25s browser default, plus a
+prefers-reduced-motion @media guard on the view-transition pseudo-elements
+as defense-in-depth alongside the JS _reducedMotion gate (same
+double-gating pattern as the orb's idle rotation elsewhere in this file).
+
+Verified end to end in real headless Chrome (not just structurally): a real
+click on a .nav-item fires exactly one startViewTransition() call and lands
+on the correct screen, repeatably across multiple navs; with
+prefers-reduced-motion: reduce emulated, startViewTransition() is never
+called and navigation still works via the plain fallback; no page-level JS
+errors either way. Noted in passing, unrelated to this change and NOT
+touched: showScreen(null) fires spontaneously a few hundred ms after page
+load even with zero user interaction (confirmed pre-existing, same on both
+sides of this edit) -- harmless no-op (document.getElementById('screen-null')
+is null, so the mutation is a no-op both before and after this change) but
+flagged here in case it's worth root-causing separately later.
+
+New tests/test_view_transitions.py locks in the split, the feature-detect +
+reduced-motion gate, the double-motion guard's scoping, and that
+phoneOpenScreen() still funnels through the public showScreen() entry point
+rather than calling _showScreenInner() directly.
+
+## 2026-08-14 — Skeleton loaders on the 13 Command Center panels
+
+Second item from the same pass. 13 panels (Star Seller, Ads & ROAS, COGS &
+Profit, Printer status, Inbox, Live Intelligence Feed, Mission Timeline,
+Dependency health pills, Growth Brief, A/B Tests, Competitor Watchdog, What
+Changed This Week, Recurring Complaints) used to show a static, un-animated
+"Loading…" text node during their fetch window instead of the shimmer
+placeholder 4 other loaders already used (_skeletonCards(), from the
+2026-07-18 motion audit's .skel-card/.skel-bar CSS).
+
+Fix was one line per loader, inserted between the element lookup and the
+fetch call: `el.innerHTML = _skeletonCards(n)` (n=2 for the single-column
+stat panels, n=3 for the list-shaped ones). 10 loaders already had an early
+`if(!el) return;` guard the new line sits after; loadStarSeller,
+loadDependencyHealth, loadQueue, and loadMissionTimeline have no such guard
+(loadStarSeller deliberately so, to keep the Home ticker fresh off-screen --
+see its own 2026-07-23 comment), so those 4 got a null-guarded
+`if(el) el.innerHTML = ...` / `if(list) list.innerHTML = ...` instead.
+
+Verified end to end in real headless Chrome: called each of the 13 loader
+functions synchronously (before its fetch promise settles) and confirmed the
+target element's innerHTML contains a real skel-card/skel-bar node immediately
+after the call returns -- the shimmer genuinely paints before the network
+response arrives, not just "the string exists somewhere in the source." No
+page-level JS errors.
+
+New tests/test_skeleton_loaders.py locks in all 13 call sites, that the
+skeleton-set happens before the fetch (not after), and the null-guard shape
+for the 4 loaders without an early return.
+
+## 2026-08-14 — Mini sparklines on Star Seller/Ads/COGS at-a-glance panels
+
+Third item from the same pass. These 3 panels already fetch 30 days of trend
+history via /api/status-history (loadStarSeller/loadAdsStatus/loadCogsStatus,
+stashed in _lastStatusHistory -- originally added 2026-07-22 Phase 3 to feed
+the bigger metric-detail modal's chart when the panel is tapped) but never
+showed any of that trend inline in the panel itself, only behind a tap.
+
+Reused the exact same already-fetched trend array and the existing
+_miniSpark() helper (already used for Shop Performance cards at default
+height and the metric-detail modal at 64px) at a smaller 28px inline in each
+panel -- zero new network calls, zero new charting code. Star Seller shows
+"Revenue trend (90d)" in gold (matches METRIC_DETAIL_CONFIG.star_seller's
+color), Ads shows "ROAS trend (month)" in cyan2, COGS shows "Avg margin
+trend" in green -- each null-guarded via `(_lastStatusHistory.X||{}).trend`
+so a failed/not-yet-loaded history fetch can't throw (and _miniSpark() itself
+already renders an "Accumulating daily data" fallback for <2 points, so a
+too-short trend degrades gracefully rather than showing a broken chart).
+
+New .ss-spark-row/.ss-spark-lab CSS (border-top divider from the stat rows
+above, matching the existing .ss-row border-bottom convention this panel
+family already uses).
+
+Verified end to end in real headless Chrome: injected a real trend array,
+confirmed each panel's rendered sparkline row contains a real inline <svg>
+element (not just text), and confirmed the actual edited loader functions
+execute without throwing.
+
+New tests/test_at_a_glance_sparklines.py locks in the 3 call sites, the
+color/label pairing per panel, the null-safe history lookup, and the CSS.
+
+Full suite: 148/148 passing (145 baseline + test_view_transitions.py +
+test_skeleton_loaders.py + test_at_a_glance_sparklines.py, the 3 new files
+this entry covers). Build bumped this deploy.
