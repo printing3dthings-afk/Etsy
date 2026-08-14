@@ -815,7 +815,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a59c8a1-v340"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "6aef3e2-v341"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4016,6 +4016,58 @@ AGENT_TOOLS = [
             "required": ["listing_id"],
         },
     },
+    {
+        "name": "render_hyperframes_video",
+        "description": (
+            "Render a CUSTOM animated video — write real HTML with GSAP animation yourself in "
+            "this call, and this renders it to a real MP4 via headless Chrome + ffmpeg. Use this "
+            "when generate_video's 4 fixed pan-zoom styles aren't enough — a branded animated "
+            "intro, kinetic-typography sale announcement, layered multi-photo reveal, or anything "
+            "needing real motion design instead of a slideshow. Reference real product photos via "
+            "the media_files param and an <img>/<video> src in your HTML — the cardinal rule "
+            "applies here too, never invent a stand-in image in the composition. Composition "
+            "format: a root element with data-composition-id/data-start/data-duration (or "
+            "register a GSAP timeline on window.__timelines[id] and duration is inferred), child "
+            "elements marked class=\"clip\" with their own data-start/data-duration/"
+            "data-track-index. Requires the `hyperframes` npm CLI + ffmpeg + Chrome Headless Shell "
+            "on this deploy — if missing, this returns a clear error rather than a bare crash."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "html_source": {
+                    "type": "string",
+                    "description": "The complete index.html composition to render, written by you.",
+                },
+                "output_name": {
+                    "type": "string",
+                    "description": "Filename for the rendered video, e.g. 'sale_announcement_v1'. "
+                                   "No extension.",
+                },
+                "media_files": {
+                    "type": "object",
+                    "description": "Maps a relative path as referenced in html_source's src "
+                                   "attributes (e.g. 'assets/photo1.jpg') to a real file path on "
+                                   "disk, e.g. a product's actual listing photo. Every referenced "
+                                   "media file must be listed here — never leave a src pointing "
+                                   "at a file that doesn't exist.",
+                },
+                "resolution": {
+                    "type": "string",
+                    "enum": ["portrait", "landscape", "square"],
+                    "description": "Output resolution preset. Default: whatever the composition's "
+                                   "own dimensions specify (portrait 1080x1920 for TikTok/Reels is "
+                                   "the usual choice, matching generate_video's format).",
+                },
+                "quality": {
+                    "type": "string", "enum": ["draft", "standard", "high"],
+                    "description": "Render quality. Default 'standard'. Use 'draft' for a fast "
+                                   "preview while iterating on a composition.",
+                },
+            },
+            "required": ["html_source", "output_name"],
+        },
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -5125,6 +5177,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                     "ready to download or post via the Studio tab."
                 ),
             }
+        if name == "render_hyperframes_video":
+            return _produce_hyperframes_render(tool_input or {})
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired as exc:
         # exc.timeout is the actual configured limit that was exceeded (subprocess.run's
@@ -14194,6 +14248,100 @@ async def produce_openscad_render(body: dict, _token: str = Depends(_rate_limite
             asyncio.to_thread(_produce_openscad_render, body or {}), timeout=140)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="OpenSCAD render timed out — try a lower-resolution script.")
+
+
+_HYPERFRAMES_OUTPUT_SUBDIR = "hyperframes_videos"  # under _product_log_dir()'s base, alongside product_files/
+
+
+def _resolve_media_file_path(raw: str) -> Path | None:
+    """A media_files value from Claude can be an absolute path, or a path
+    relative to the digital_products base (how Files-tab entries are shown
+    elsewhere, e.g. 'product_files/DP1030_listing_images/photo_01.jpg') --
+    try both, in that order. Returns None (never raises) if neither exists;
+    the caller surfaces this as one of render_composition's own clean
+    "media file not found" errors, not a silent skip."""
+    p = Path(raw)
+    if p.is_absolute() and p.exists():
+        return p
+    candidate = _product_log_dir().parent / raw
+    if candidate.exists():
+        return candidate
+    candidate = ROOT / raw
+    if candidate.exists():
+        return candidate
+    return None
+
+
+def _produce_hyperframes_render(inp: dict) -> dict:
+    """Render Claude-authored HTML/GSAP source to a real MP4 (2026-08-14,
+    render_hyperframes_video chat tool). Synchronous, can take 10-60s+
+    depending on composition complexity -- callers awaiting this via the
+    HTTP route wrap it with a timeout, same pattern as
+    _produce_openscad_render above. Zero AI/API cost; the only external
+    dependencies are the hyperframes npm CLI + ffmpeg + Chrome Headless
+    Shell, which hyperframes_render.check_hyperframes_available() reports
+    on clearly rather than this failing with a bare subprocess error."""
+    html_source = str((inp or {}).get("html_source", "")).strip()
+    if not html_source:
+        return {"error": "html_source is required — write the HTML/GSAP composition to render."}
+    output_name = str((inp or {}).get("output_name", "")).strip()
+    if not output_name:
+        return {"error": "output_name is required (no extension, e.g. 'sale_announcement_v1')."}
+    media_files_in = (inp or {}).get("media_files") or {}
+    if not isinstance(media_files_in, dict):
+        return {"error": "media_files must be an object of {relative_src: real_file_path}."}
+    resolution = (inp or {}).get("resolution")
+    quality = str((inp or {}).get("quality", "standard")).strip().lower()
+
+    try:
+        import hyperframes_render as hfr
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"hyperframes_render module unavailable: {exc}"}
+
+    available, info = hfr.check_hyperframes_available()
+    if not available:
+        return {"error": info}
+
+    resolved_media: dict[str, Path] = {}
+    for rel_name, raw_path in media_files_in.items():
+        found = _resolve_media_file_path(str(raw_path))
+        if found is None:
+            return {"error": f"media file not found for {rel_name!r}: {raw_path!r} "
+                              f"(checked as absolute, relative to the digital_products base, "
+                              f"and relative to the repo root)"}
+        resolved_media[rel_name] = found
+
+    safe_name = _re.sub(r"[^A-Za-z0-9_-]", "_", output_name)[:80] or "video"
+    out_dir = _product_log_dir().parent / _HYPERFRAMES_OUTPUT_SUBDIR
+    output_path = out_dir / f"{safe_name}.mp4"
+    try:
+        hfr.render_composition(html_source, output_path, media_files=resolved_media,
+                                resolution=resolution, quality=quality)
+    except hfr.HyperframesError as exc:
+        return {"error": str(exc)}
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"render failed: {exc}"}
+
+    size_kb = round(output_path.stat().st_size / 1024, 1)
+    return {
+        "output_name": safe_name,
+        "path": f"{_HYPERFRAMES_OUTPUT_SUBDIR}/{safe_name}.mp4",
+        "size_kb": size_kb,
+        "message": f"Rendered {safe_name}.mp4 ({size_kb} KB) — open it from the Files screen.",
+    }
+
+
+@app.post("/api/produce/hyperframes-render")
+async def produce_hyperframes_render(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Render an HTML/GSAP composition to MP4. Local subprocess only, no
+    AI/API cost — timeout gives headroom over render_composition's own
+    default (a composition can legitimately take a while at high quality)."""
+    try:
+        return await asyncio.wait_for(
+            asyncio.to_thread(_produce_hyperframes_render, body or {}), timeout=320)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="HyperFrames render timed out — try --quality draft "
+                                                      "or check the composition has a data-duration/GSAP timeline.")
 
 
 def _produce_coloring_pack(inp: dict) -> dict:

@@ -24280,3 +24280,48 @@ section and the Automation Stack table.
 
 Full suite: 141/144 passing (same 3 known deliberately-failing bug-proof
 tests as before, untracked). Build bumped this deploy.
+
+
+## 2026-08-14 — Added animated video composition pipeline (HyperFrames)
+Scott reviewed heygen-com/hyperframes among a batch of open-source tooling
+and asked to implement it the same way as OpenSCAD. It writes real
+animated video the same way OpenSCAD writes real 3D geometry: Claude
+authors HTML with GSAP/data-attribute timing, a subprocess (headless
+Chrome + ffmpeg) renders it deterministically to MP4. This is a different,
+more flexible tool than the existing generate_video (a fixed Ken Burns
+pan-zoom slideshow with 4 preset styles) -- use it for branded animated
+intros, kinetic-typography sale announcements, or layered multi-photo
+reveals a plain pan-zoom can't produce.
+
+New: tools/hyperframes_render.py (render_composition(), check_
+hyperframes_available(), CLI) + render_hyperframes_video chat tool
+(main.py) + POST /api/produce/hyperframes-render. Real product photos are
+passed via media_files (resolved against the digital_products base, same
+convention as every Files-tab path) and copied into a throwaway project
+dir before rendering -- never an AI-generated stand-in, same cardinal rule
+as every other listing asset.
+
+hyperframes is a Node.js npm CLI, NOT a pip dependency -- needs Node 22+,
+ffmpeg (apt), and a one-time Chrome Headless Shell download (`npx
+hyperframes browser ensure`, ~115MB). None of this is in the Railway image
+by default -- check_hyperframes_available() reports exactly what's
+missing rather than a bare crash. Telemetry is disabled on every call
+(HYPERFRAMES_NO_TELEMETRY=1, DO_NOT_TRACK=1) -- no config write, no
+account.
+
+Verified end-to-end this session after installing all three dependencies
+by hand: a real GSAP fade-in title card rendered a genuine 1080x1920 H.264
+MP4; a real product-photo <img> reference rendered correctly via a copied-
+in media file; a malformed composition (no GSAP timeline, no data-
+duration) reliably hangs well past HyperFrames' own internal timeouts --
+a real observed failure mode, not hypothetical -- caught only by this
+wrapper's own subprocess timeout, which is documented as load-bearing, not
+defensive boilerplate. Tests (tests/test_hyperframes_render.py) gracefully
+skip the real-render checks (not fail) wherever the dependencies aren't
+installed, same pattern as tests/test_openscad_render.py.
+
+Also documented in CLAUDE.md's new "Animated Video Compositions
+(HyperFrames)" section and the Automation Stack table.
+
+Full suite: 142/145 passing (same 3 known deliberately-failing bug-proof
+tests as before, untracked). Build bumped this deploy.

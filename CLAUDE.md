@@ -2099,6 +2099,60 @@ override, the whole point of choosing this over a one-off manual model.
 
 ---
 
+## Animated Video Compositions (HyperFrames)
+
+Added 2026-08-14 alongside the OpenSCAD pipeline above, from the same batch
+of open-source tooling review. `generate_video` (existing) is a fixed Ken
+Burns pan-zoom slideshow with 4 preset styles, pulled from an already-live
+Etsy listing's photos — good for a fast, no-thought social video. HyperFrames
+is a different tool for when that's not enough: Claude writes a real
+animated composition (HTML + GSAP timing/motion), and a subprocess renders
+it to a genuine MP4 via headless Chrome + ffmpeg — a branded animated intro,
+kinetic-typography sale announcement, or a layered multi-photo reveal that a
+plain pan-zoom can't produce.
+
+**Tool**: `render_hyperframes_video` (chat) / `tools/hyperframes_render.py`
+(standalone: `python3 tools/hyperframes_render.py --check`). Claude writes
+the complete composition HTML in the tool call — a root element with
+`data-composition-id`/`data-start`/`data-duration` (or register a GSAP
+timeline on `window.__timelines[id]` and duration is inferred), child
+elements marked `class="clip"` with their own `data-start`/`data-duration`/
+`data-track-index`. `npx hyperframes docs` has the full authoring reference.
+
+**Real product photos, never a stand-in**: pass a `media_files` map
+(`{"assets/photo.jpg": "product_files/DP1030_listing_images/photo_01.jpg"}`)
+and reference it via a normal `<img src="assets/photo.jpg">` in the
+composition — the wrapper resolves each value against the digital_products
+base (same convention as every other Files-tab path) and copies the real
+file in before rendering. The cardinal rule applies here exactly like every
+other listing asset: never invent a placeholder image in the composition.
+
+**System dependencies, not Python packages**: `hyperframes` is an npm CLI
+(Node.js 22+), rendering needs `ffmpeg` (apt package `ffmpeg`) and a
+one-time Chrome Headless Shell download (`npx hyperframes browser ensure`,
+~115MB, cached after). None of this is in the Railway server image by
+default — `check_hyperframes_available()` reports exactly what's missing
+(`{"error": "hyperframes needs Node.js 22+ ... installed on this deploy."}`)
+rather than a bare crash. For production use, `npm install -g hyperframes`
+once avoids a per-render npm-registry check that `npx` otherwise does.
+
+**Telemetry**: HyperFrames collects anonymous usage telemetry by default
+(can link to a HeyGen account). The wrapper sets `HYPERFRAMES_NO_TELEMETRY=1`
+and `DO_NOT_TRACK=1` on every render call — no config file write, no
+account, nothing opted in silently.
+
+**Known failure mode, guarded against**: a composition with no GSAP
+timeline AND no `data-duration` on its root element can hang well past
+HyperFrames' own internal timeouts rather than failing fast — confirmed
+during development. `render_composition()`'s own `timeout` parameter is the
+real safety net for this, not just defensive boilerplate; don't remove it.
+
+**Zero API cost, zero Etsy interaction** — pure local subprocess, same as
+OpenSCAD above. Nothing is posted or published by the render itself; use
+`stage_tiktok_post`/`stage_pinterest_post` separately once a video is ready.
+
+---
+
 ## Image Generation Notes (for gpt-image-1 / DALL-E)
 
 Generate all 10 images at **2400×2400px square**. Never put text overlays in the AI-generated image — add all text callouts separately in Canva after generation. No hands or people visible (AI renders these unnaturally). Use the product's color theme as the accent color for props and backgrounds.
@@ -2719,6 +2773,7 @@ Rules:
 | Social post scheduling | Buffer or Tailwind |
 | Shop health snapshots | `tools/shop_health_check.py` |
 | **Parametric 3D-print model generation** | `tools/openscad_render.py` / `render_openscad_model` chat tool — see "Parametric 3D Print Pipeline (OpenSCAD)" above. Requires `openscad` installed on the deploy. |
+| **Custom animated social videos** | `tools/hyperframes_render.py` / `render_hyperframes_video` chat tool — see "Animated Video Compositions (HyperFrames)" above. Requires the `hyperframes` npm CLI + `ffmpeg` + a one-time Chrome Headless Shell download on the deploy. |
 | **Backup digital_products/ after producing a new product's files** | `tools/backup_digital_products.py` — run as soon as a new product's source art/PDF/ZIP is generated, since `data/digital_products/` is gitignored and has no other durable backup. Hand the output ZIP to Scott (via chat) to save in his own cloud storage. |
 | **Log infrastructure/dashboard incidents for the CEO Agent (Fucking Frank)** | Append a short dated entry (symptom, root cause, fix) to `data/knowledge_base/ops_runbook.md` any time Claude Code diagnoses or fixes a problem with the live site, API, deploy, or credentials — Frank loads this file fresh on every chat/diagnostic request (`_ops_runbook_block()` in `tools/api_server/main.py`), so Scott can ask Frank directly "why was X broken?" and get a grounded answer instead of a guess. Keep entries short — this is a log, not a report. |
 | **Archive anything before deleting it (recycle bin)** | BEFORE removing any code block or file, archive it first via `tools/trash.py` — `from tools.trash import archive_snippet, archive_file` then `archive_snippet(source_path, exact_removed_text, reason)` for code or `archive_file(path, reason)` for whole files. Everything lands in the committed vault `data/trash/` (ledger `DELETED.md` + byte-exact copies in `files/`), kept **30 days** then auto-pruned, so an accidental or regressive deletion can be recovered with `python tools/trash.py --restore <id>`. This is a hard rule per Scott (2026-06-23): nothing we delete should be unrecoverable. The vault must stay committed (the remote container is ephemeral — uncommitted files are lost). |
