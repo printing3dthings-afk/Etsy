@@ -1884,7 +1884,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       </div>
       <a href="/cmd" style="color:var(--gold);border:1px solid var(--border);background:var(--panel);padding:4px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px">💻 Command Center</a>
       <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
-      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
+      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" title="Alerts" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
           <div class="alert-dropdown-title">Alerts</div>
           <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
@@ -1896,7 +1896,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <button class="tour-menu-item" onclick="closeTourMenu();startTour('full')">Full tour<span class="tmi-sub">~4-5 min — see Frank work on your real shop</span></button>
         </div>
       </div>
-      <div class="icon-btn" onclick="showScreen('settings')" aria-label="Settings" role="button" tabindex="0">⚙</div>
+      <div class="icon-btn" onclick="showScreen('settings')" title="Settings" aria-label="Settings" role="button" tabindex="0">⚙</div>
       <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button" tabindex="0" aria-label="Log out"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
     </div>
   </div>
@@ -2186,9 +2186,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
       <div class="hub-section-title" style="margin-top:18px">Actions</div>
       <div class="hub-card" style="display:flex;flex-direction:column;gap:8px;padding:12px">
-        <button onclick="coreRefreshEtsyToken()" id="core-btn-refresh-token" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">🔄 Refresh Etsy Token Now</button>
+        <button onclick="coreRefreshEtsyToken()" id="core-btn-refresh-token" data-owner-only="1" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">🔄 Refresh Etsy Token Now</button>
         <button onclick="showScreen('files')" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">🗂 Backups &amp; Files →</button>
-        <button onclick="coreRedeploy()" id="core-btn-redeploy" style="background:var(--bg);color:var(--red);border:1px solid var(--red);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">⟳ Redeploy Server</button>
+        <button onclick="coreRedeploy()" id="core-btn-redeploy" data-owner-only="1" style="background:var(--bg);color:var(--red);border:1px solid var(--red);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">⟳ Redeploy Server</button>
         <div style="font-size:11px;color:var(--muted);line-height:1.5;padding:0 2px">Redeploy causes a brief real outage (~30-60s) while the server restarts. Only use it if something's actually stuck.</div>
       </div>
 
@@ -2380,7 +2380,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card" style="margin-bottom:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
           <div style="font-size:12px;color:var(--muted);line-height:1.5">Docs, catalog data, and Frank's database snapshot — as one ZIP you can save on your own computer.</div>
-          <button onclick="downloadFullBackup()" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">⬇ Download Backup</button>
+          <button onclick="downloadFullBackup()" id="core-btn-download-backup" data-owner-only="1" style="background:var(--gold);color:var(--on-accent);border:none;border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">⬇ Download Backup</button>
         </div>
         <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           The actual product files (SVG/sublimation/planner assets, ~350MB) don't live on this server — they're kept in the GitHub repo so deploys stay fast.
@@ -12145,6 +12145,28 @@ setInterval(function(){
 
 // ── Operator chip — load current user from /api/me ──
 let _myRole = 'admin';
+// Owner-only UI gating (2026-08-15 ease-of-use pass). Several buttons
+// (Redeploy Server, Refresh Etsy Token, Download Backup) call endpoints
+// server-side-gated to _require_owner_or_automation() -- a non-owner admin
+// account could always click through the confirm() dialog and only find
+// out it was never going to work from a bare error toast afterward. Every
+// such control just needs data-owner-only="1"; this disables it up front
+// instead, with a title/tooltip that explains why rather than leaving it
+// looking identical to every other (working) button. Buttons only, by
+// design -- .disabled=true is native browser behavior that blocks the
+// onclick handler from firing at all, no separate click-interception logic
+// needed, and it only applies where it's semantically correct (a real
+// <button> element).
+function _applyRoleGating(){
+  const isOwner = _myRole === 'owner';
+  document.querySelectorAll('[data-owner-only]').forEach(function(el){
+    if (el.tagName !== 'BUTTON') return;
+    el.disabled = !isOwner;
+    el.style.opacity = isOwner ? '' : '.5';
+    el.style.cursor = isOwner ? '' : 'not-allowed';
+    el.title = isOwner ? '' : "Owner-only action — ask the shop owner to run this.";
+  });
+}
 async function loadOperatorChip(){
   try {
     const r = await fetchWithTimeout(BASE+'/api/me',{headers:{Authorization:'Bearer '+TOKEN}},5000);
@@ -12156,7 +12178,7 @@ async function loadOperatorChip(){
     document.getElementById('op-av').textContent   = uname[0].toUpperCase();
     document.getElementById('op-name').textContent = uname;
     document.getElementById('op-role').textContent = role;
-    // User Management UI was removed (solo shop) — nothing owner-specific to reveal here now.
+    _applyRoleGating();
   } catch(e){ /* silent */ }
 }
 loadOperatorChip();
