@@ -12080,7 +12080,20 @@ async function loadSettingsConnectionsSummary() {
   }
 }
 
-// ── Security — fully static: security posture checklist ──
+// ── Security — posture checklist + (owner only) team access ──
+// Team Access restored 2026-08-15: loadUsers()/addUser()/deleteUser()/
+// resetUserPw() below and their /api/admin/users backend (owner-only,
+// _require_owner) were real and fully working, but had been left with no
+// DOM container to render into at all -- #user-list/#new-user-name/
+// #new-user-pw didn't exist anywhere in the markup, an orphaned leftover
+// from an earlier removal (a stale comment nearby used to say "User
+// Management UI was removed (solo shop)"). Restored here, gated by hiding
+// the ENTIRE section for a non-owner rather than disabling individual
+// buttons -- the list itself 403s for a non-owner (GET is _require_owner
+// too), so showing it and then failing to load would be worse UX than not
+// showing it at all. _myRole is set by loadOperatorChip() at page load,
+// well before a real navigation to this screen in practice (same
+// same-session timing this file's other _myRole-gated UI already relies on).
 function renderSecurityPosture() {
   const el = document.getElementById('security-content');
   if (!el) return;
@@ -12110,7 +12123,26 @@ function renderSecurityPosture() {
     '<b style="color:var(--gold)">Re-authorize Etsy:</b> If any API call returns 401, run<br>'+
     '<code style="font-size:11px;background:var(--bg);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px">python tools/etsy_oauth.py</code>'+
     '</div></div>';
+  if (_myRole === 'owner') {
+    html += '<div class="hub-section-title" style="margin-top:18px">Team Access</div>'+
+      '<div class="hub-card">'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Add a teammate as an admin account — they can use every screen except the owner-only ones, like this one. Only you (the owner) can see this section.</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
+      '<input type="text" id="new-user-name" class="search" placeholder="Username" autocomplete="off">'+
+      '<input type="password" id="new-user-pw" class="search" placeholder="Temporary password" autocomplete="new-password">'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">'+
+      '<button class="act-btn primary" onclick="addUser()">Add teammate</button>'+
+      '<div id="user-add-status" style="font-size:11px;color:var(--muted)"></div>'+
+      '</div>'+
+      '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">'+
+      '<div style="font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Current team</div>'+
+      '<div id="user-list" style="font-size:12px;color:var(--muted)">Loading…</div>'+
+      '</div>'+
+      '</div>';
+  }
   el.innerHTML = html;
+  if (_myRole === 'owner') loadUsers();
 }
 
 function loadAll(){

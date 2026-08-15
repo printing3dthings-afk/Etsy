@@ -26212,3 +26212,156 @@ confirms this was deliberate at some point. Flagged to Scott rather than
 guessing: leave it dead, delete it properly (tools/trash.py), or restore
 a real gated entry point since there's currently no in-app way to invite
 a teammate as an admin account at all.
+
+
+## 2026-08-15 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-15 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Durable volume not writable
+hourly health loop found /tmp/tmpkxb6jvs8/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpkxb6jvs8/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpuqgroacc/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 17972). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-15 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 17974). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Team Access restored to the Security screen (owner-gated)
+
+Closes out the "idiot proof" ease-of-use audit's last item. Confirmed the
+Add/List/Remove-teammate UI genuinely didn't exist anywhere in the markup
+(#user-list, #new-user-name, #new-user-pw had zero matches) -- the real
+loadUsers()/addUser()/deleteUser()/resetUserPw() functions and their
+owner-only /api/admin/users backend were fully working, just orphaned. A
+stale nearby comment ("Security screen is a static checklist + admin user
+management") confirmed the UI used to exist and was dropped without the
+JS/backend being cleaned up alongside it. Scott confirmed: restore it.
+
+Added a "Team Access" section to renderSecurityPosture(), built into the
+`html` string ONLY when `_myRole === 'owner'` -- hidden from the DOM
+entirely for a non-owner, not just disabled, since the list itself would
+403 for a non-owner too (GET /api/admin/users is _require_owner). Same
+gating philosophy as this pass's AI Core button fixes: hide what genuinely
+can't work, don't let someone click into a dead end. Wires the exact
+existing element ids the pre-existing JS functions already expected --
+no new backend code, no new JS functions, purely restoring the missing
+DOM container.
+
+Verified end-to-end in real headless Chrome against the real backend: a
+non-owner test account sees no Team Access section at all on Security; the
+same account promoted to owner sees the full section, adding a real
+teammate via the real form immediately shows it in the list with working
+Reset PW / Remove buttons, and removing it actually drops it from the
+list. Ran tools/playwright_smoke.py and the full suite (163/163) before
+shipping. Build bumped this deploy.
+
+This closes the three-part ease-of-use audit from earlier today: (1)
+owner-only buttons gated in the UI, (2) missing header tooltips fixed, (3)
+typed confirmation on catastrophic actions, plus this restoration of the
+orphaned team-management UI found while doing (1)'s planned follow-on.
