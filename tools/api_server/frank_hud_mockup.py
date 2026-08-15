@@ -613,9 +613,15 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 
 #toast-stack{position:fixed;top:16px;right:16px;z-index:9000;display:flex;flex-direction:column;
   gap:8px;max-width:340px;pointer-events:none}
+/* Entrance retuned to the "Flow" curve (2026-08-15 motion pass) — same spring
+   the .toast-check pop below already used at full strength (.4s), but toasts
+   fire far more often than a success checkmark specifically, so duration
+   stays short (.22s) per this file's own "delight scales inversely with
+   frequency" doctrine (see .toast-check's comment) — same curve everywhere
+   for a consistent feel, calibrated intensity per how often it's seen. */
 .toast{display:flex;align-items:center;gap:9px;background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;
   font-size:12.5px;color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.4);pointer-events:auto;
-  border-left:3px solid var(--cyan);animation:toast-in .12s ease-out;cursor:pointer}
+  border-left:3px solid var(--cyan);animation:toast-in .22s cubic-bezier(.34,1.56,.64,1);cursor:pointer}
 .toast.ok{border-left-color:var(--green)}
 .toast.err{border-left-color:var(--red)}
 .toast.info{border-left-color:var(--cyan)}
@@ -776,7 +782,31 @@ body.is-mobile #alert-dropdown{
 .ss-status.on_track{background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green)}
 .ss-status.building{background:color-mix(in srgb, var(--gold) 18%, transparent);color:var(--gold)}
 .ss-status.at_risk{background:color-mix(in srgb, var(--red) 18%, transparent);color:var(--red)}
-.ss-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.ss-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;
+  animation:row-in .18s ease-out both}
+/* Data-arrival entrance (2026-08-15 motion pass) — .ss-row is the shared row
+   template for every panel that replaces its skeleton with real data (Star
+   Seller, Growth Brief, Competitor Watch, etc. — ~13 panels, one shared CSS
+   rule covers all of them, nothing per-call-site to touch). Deliberately
+   ease-out at 180ms, NOT the Flow spring used elsewhere in this pass: these
+   panels auto-refresh every 30s (see setInterval(loadAll, 30000)), so unlike
+   a one-shot moment (nav switch, modal open) this genuinely repeats often —
+   per this file's own "delight scales inversely with frequency" doctrine
+   (.toast-check's comment) and motion-principles' frequency rule, something
+   this repetitive needs to stay short and subtle, not a dramatic reveal that
+   would wear out fast. Staggered via nth-child so a fresh render cascades in
+   rather than popping as one block; capped at 8 items — a longer list beyond
+   that renders together rather than growing the total settle time. */
+.ss-row:nth-child(1){animation-delay:0ms}
+.ss-row:nth-child(2){animation-delay:25ms}
+.ss-row:nth-child(3){animation-delay:50ms}
+.ss-row:nth-child(4){animation-delay:75ms}
+.ss-row:nth-child(5){animation-delay:100ms}
+.ss-row:nth-child(6){animation-delay:125ms}
+.ss-row:nth-child(7){animation-delay:150ms}
+.ss-row:nth-child(8){animation-delay:175ms}
+@keyframes row-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.ss-row{animation:none}}
 .ss-row:last-child{border-bottom:none}
 .ss-label{color:var(--muted)}
 .ss-val{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
@@ -1780,6 +1810,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .mini-wave span{animation:none;height:10px}
   .hub-spinner{animation:none}
   .screen.active,.pp.on{animation:none}
+  .toast,.toast.out{animation:none}
   .nav-item,.nav-pill,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti,
   body.is-mobile #phone-tabbar .ptab-pill{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
