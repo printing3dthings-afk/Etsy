@@ -24995,3 +24995,87 @@ deploy — once this lands, watch `/health`'s `build` field (should match
 this commit's short hash) and GitHub's CI Smoke run for this push to
 confirm CI actually passes and Railway actually redeploys this time,
 since that's the only way to truly close this out.
+
+
+## 2026-08-15 — INCIDENT: View Transitions regression + real logo (Home wordmark)
+
+Two pieces of work, the second one surfacing a real bug from earlier in this
+same session.
+
+**Home Screen wordmark.** Scott uploaded a real hand-lettered "OnBrandCraftz"
+script-font logo (gold underline, cream background) and asked for it to
+replace the plain styled text in .mobile-shop-header (mobile Home screen +
+mobile Ask/chat screen header, same shared component). Background removed via
+a global distance-to-sampled-background-color test with a soft anti-aliased
+alpha ramp (not this codebase's existing remove_white_background(), which
+only clears border-CONNECTED background and would have left the enclosed
+negative-space highlight inside the "B" as a solid cream patch — this
+artwork's interior highlight is meant to read as "paper showing through",
+same treatment as the border background). Two ink-color variants generated
+from the same source art (dark-navy ink for light mode -- the original; a
+light-cream recolor for dark mode, gold underline unchanged, verified 5.28:1
+against the dark bg) and swapped via [data-mode], since a single fixed ink
+color is confirmed illegible in one of the two modes (screenshotted the
+naive single-variant version in real dark mode before catching this: the
+near-black ink was nearly invisible against the dark purple panel). Shipped
+as two SVG files wrapping the palette-optimized PNGs as embedded base64 data
+URIs (Scott asked for SVG specifically) under tools/api_server/static/brand/.
+
+**INCIDENT — View Transitions regression, caught by real-browser CI, silently
+blocking every deploy a second time.** Running the exact CI real-browser
+smoke test locally (tools/playwright_smoke.py, not just tests/run_all.py) to
+verify the logo change surfaced a cascade of 15+ unrelated failures: tour
+spotlighting, phoneOpenScreen/phoneTab routing, tab-bar/ticker visibility
+sync, settings navigation, loader-dedup. Root-caused via bisection (a
+disposable git worktree at the exact commit that introduced
+document.startViewTransition() around showScreen(), 2026-08-14's visual-
+research pass, with just that wrap removed) to a real, confirmed regression:
+startViewTransition(callback)'s callback is NOT guaranteed to run
+synchronously (confirmed against real Chromium, not assumed from the spec
+text) -- and this codebase has many call sites that read DOM state
+immediately after calling showScreen()/phoneOpenScreen() with no await
+(chained onclick handlers, the tour's spotlight math, phone-home-open/
+ticker/tab-bar sync, _screenLoadInFlight dedup). This had been silently
+failing GitHub's "CI Smoke" check (which gates Railway's auto-deploy) since
+the commit that introduced it, compounding with the separate hyperframes CI
+bug fixed earlier today -- meaning Frank had TWO independent deploy-blocking
+CI failures stacked on this branch, and tools/playwright_smoke.py itself
+hadn't been updated for the 2026-08-14 color-theme rebuild either (still
+referencing the removed _getTheme()/_setTheme()/theme-* class system and
+asserting "exactly 5 themes" instead of 3), so it had never actually run
+clean against anything from that rebuild onward.
+
+Fixed by fully reverting the startViewTransition() wrap (showScreen() is a
+single plain synchronous function again, _showScreenInner()'s split and its
+viaViewTransition param removed, the now-dead ::view-transition-old/new(root)
+CSS tuning removed) rather than patching around it -- adopting native view
+transitions here for real would require auditing and fixing every affected
+call site to await the transition's own promise first, a larger and
+separately-scoped change than what shipped. tests/test_view_transitions.py
+(which locked in the now-reverted behavior) archived via tools/trash.py
+(ledger 20260815-001) and removed. tools/playwright_smoke.py's entire stale
+color-theme block rewritten for the real 3-palette x 2-mode system (exact
+hex values re-verified against the live :root blocks, not guessed), plus 2
+more stale .mobile-shop-header text-content assertions (one in
+playwright_smoke.py, one in tests/test_ask_tab_redesign.py) updated for the
+new wordmark-image markup.
+
+Verified via the exact same real-browser check that caught this: 3 clean
+consecutive runs of tools/playwright_smoke.py against the fully-fixed
+codebase (one flaky, order-dependent unrelated failure -- a stale toast
+overlapping a later check -- did not reproduce on reruns, confirmed pre-
+existing and unrelated by bisection against the same pre-regression
+baseline). Full suite: 154/154 passing.
+
+**Worth remembering, extending the 2026-08-10/08-15 notes on this same
+theme:** `tests/run_all.py` passing is necessary but not sufficient --
+tools/playwright_smoke.py is a SEPARATE CI gate (the "Real-browser smoke
+test" step) that exercises real DOM/timing behavior no string-matching test
+can catch, and it must be run locally before trusting a UI-facing change is
+safe to push, not just after CI fails on it after the fact. A change that
+"looks fine" in ad-hoc manual Playwright verification (which always adds its
+own wait_for_timeout() after every navigation call, masking exactly this
+class of timing bug) is not the same guarantee as this suite's stricter,
+often-immediate assertions.
+
+Build bumped this deploy.

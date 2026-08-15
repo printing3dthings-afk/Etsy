@@ -48,9 +48,12 @@ def run() -> None:
           "primary Ask-tab path) leaves cc-open stuck otherwise")
 
     # ── Mobile shop-name header (Scott: keep the branding, as a header) ────
-    check('<div class="mobile-shop-header">OnBrandCraftz</div>' in src,
-          "expected a mobile-only OnBrandCraftz header inside the chat panel")
-    check("body.is-mobile .mobile-shop-header{display:block" in src,
+    # 2026-08-15: the header is now Scott's real hand-lettered wordmark image
+    # (light/dark-mode variants swapped via CSS), not plain text.
+    check('<div class="mobile-shop-header"><img class="wordmark-light" '
+          'src="/static/brand/onbrandcraftz-wordmark.svg" alt="OnBrandCraftz"' in src,
+          "expected a mobile-only OnBrandCraftz wordmark image inside the chat panel")
+    check("body.is-mobile .mobile-shop-header{display:flex" in src,
           "the shop-name header must be shown on mobile (hidden by default for desktop)")
 
     # ── Voice mode demoted to an in-screen control ──────────────────────────

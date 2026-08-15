@@ -907,11 +907,27 @@ body.is-mobile #chat-voice-btn{display:flex}
 #chat-voice-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 /* Mobile-only branded header above the Ask/chat panel -- Scott wants to keep the
    "OnBrandCraftz" branding now that Ask no longer lands on its own dedicated orb
-   screen (see phoneTab()). Plain styled text, not the animated WebGL wordmark
-   (initOrbGL()) -- duplicating that render loop just for a static header label
-   would be wasted GPU cost for no visual gain here. */
+   screen (see phoneTab()). Not the animated WebGL wordmark (initOrbGL()) --
+   duplicating that render loop just for a static header label would be wasted
+   GPU cost for no visual gain here.
+   2026-08-15: replaced the plain styled text with Scott's real hand-lettered
+   wordmark (transparent-background SVG; original cream backdrop AND the
+   enclosed cream negative-space inside the "B" loop both removed via a global
+   distance-to-sampled-background-color test with a soft anti-aliased alpha
+   ramp, not this codebase's border-flood-fill remove_white_background() --
+   that function only clears border-CONNECTED background, which would have
+   left the enclosed "B" highlight as a solid cream patch). Two ink-color
+   variants ship (dark navy ink for light mode -- the original art -- and a
+   light-cream recolor for dark mode, gold underline unchanged in both,
+   already verified 5.28:1 against the dark bg) since a single fixed ink
+   color would be illegible in one of the two modes; swapped via [data-mode]
+   like every other mode-aware surface in this file, not JS. */
 .mobile-shop-header{display:none}
-body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:14px 2px 8px;font-family:var(--font-display);color:var(--cyan);font-size:30px;font-weight:800;letter-spacing:.3px}
+body.is-mobile .mobile-shop-header{display:flex;justify-content:center;padding:14px 2px 8px}
+.mobile-shop-header img{height:34px;width:auto;max-width:80%}
+.mobile-shop-header .wordmark-dark{display:none}
+:root[data-mode="dark"] .mobile-shop-header .wordmark-light{display:none}
+:root[data-mode="dark"] .mobile-shop-header .wordmark-dark{display:inline-block}
 /* Phone "Ask" tab (#orb-view) has no chat transcript, just the orb -- so Scott can
    still type to %%AGENT_SHORT%% even when voice isn't practical (loud room, no mic
    permission, etc). Same #chat-input/#chat-send visual treatment, own IDs since a
@@ -1752,26 +1768,6 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .qc-btn:active,.pmore-item:active,.psheet-btn:active,.hub-toggle-btn:active,
   .hub-chip-btn:active,.panel-title[role="button"]:active{transform:none}
 }
-/* ── Native page-transition crossfade (View Transitions API, 2026-08-14) --
-   showScreen() wraps its DOM swap in document.startViewTransition() when the
-   browser supports it (see showScreen() in the main script below); this tunes
-   the UA's default root crossfade to match the app's existing quick, snappy
-   motion feel instead of the browser default (~0.25s ease). Already feature-
-   detected + _reducedMotion-gated in JS before this ever runs; the @media
-   block here is defense-in-depth for any future call site that skips that
-   gate, same double-gating pattern as the orb's idle rotation above. ──*/
-::view-transition-old(root),
-::view-transition-new(root){
-  animation-duration:.18s;
-  animation-timing-function:cubic-bezier(.22,1,.36,1);
-}
-@media (prefers-reduced-motion: reduce){
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*){
-    animation:none !important;
-  }
-}
 </style>
 <script>
 // 2026-08-14: applies data-palette/data-mode BEFORE first paint, so switching
@@ -1939,7 +1935,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
        Never linked from a desktop .nav-item, so it stays plain "screen" (no
        "active") and is inert on desktop. ══════════ -->
   <div class="screen" id="screen-home">
-    <div class="mobile-shop-header">OnBrandCraftz</div>
+    <div class="mobile-shop-header"><img class="wordmark-light" src="/static/brand/onbrandcraftz-wordmark.svg" alt="OnBrandCraftz" width="1232" height="281" loading="lazy"><img class="wordmark-dark" src="/static/brand/onbrandcraftz-wordmark-dark.svg" alt="OnBrandCraftz" width="1232" height="281" loading="lazy"></div>
     <div id="home-greeting" style="display:none"></div>
     <div class="home-hero" id="home-hero" role="button" tabindex="0" onclick="phoneTab('ask')" aria-label="Ask Frank">
       <div class="home-hero-ic">◉</div>
@@ -1997,7 +1993,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <!-- CENTER: primary interaction -->
       <div class="col-center">
         <div class="panel brk col-chat">
-          <div class="mobile-shop-header">OnBrandCraftz</div>
+          <div class="mobile-shop-header"><img class="wordmark-light" src="/static/brand/onbrandcraftz-wordmark.svg" alt="OnBrandCraftz" width="1232" height="281" loading="lazy"><img class="wordmark-dark" src="/static/brand/onbrandcraftz-wordmark-dark.svg" alt="OnBrandCraftz" width="1232" height="281" loading="lazy"></div>
           <div class="panel-title">Ask %%AGENT_SHORT%% <span class="src">/ws/chat — live, always-on chat</span></div>
           <div id="chat-msgs" aria-live="polite"></div>
           <div class="lc-chips" id="lc-chips">
@@ -5519,26 +5515,6 @@ function _fireScreenLoaders(name){
   Promise.allSettled(loaders.map(fn => Promise.resolve(fn())))
     .finally(() => { _screenLoadInFlight[name] = false; });
 }
-function _showScreenInner(name, viaViewTransition){
-  document.body.classList.remove('phone-home-open');
-  document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
-  const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
-  if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  const el = document.getElementById('screen-'+name);
-  if(el){
-    el.classList.add('active');
-    // The native View Transition crossfade (see showScreen() below) already
-    // animates old-screen-out/new-screen-in as a whole-page snapshot swap --
-    // the CSS screen-in keyframe (opacity+slide) firing on top of that on this
-    // path double-animates and reads as a stutter, so skip it here only. The
-    // non-view-transition fallback path below never passes this flag, so
-    // screen-in keeps working exactly as before on browsers/users that skip VT.
-    if(viaViewTransition) el.style.animation = 'none';
-  }
-  _activeScreen = name;
-  _fireScreenLoaders(name);
-}
 function showScreen(name){
   // 2026-07-23: the header's gear/bell/nav-item icons (e.g. onclick="showScreen('settings')"
   // at line ~1534) call this directly, bypassing phoneOpenScreen()'s own phone-home-open
@@ -5549,18 +5525,30 @@ function showScreen(name){
   // in the header/sidebar) funnels through, so fixing it here covers all of them at once
   // instead of chasing down each individual call site.
   //
-  // 2026-08-14: wrapped in document.startViewTransition() when supported (Chromium
-  // 111+; Safari/Firefox fall through to the plain-mutation path below, identical to
-  // pre-existing behavior) -- gives every navigation through this one choke point a
-  // native whole-page crossfade for free, no per-screen work. Feature-detected AND
-  // _reducedMotion-gated (that const is declared earlier in this same page's script
-  // scope, top-level let/const is shared across classic <script> tags) since a forced
-  // crossfade is exactly the kind of motion prefers-reduced-motion asks to skip.
-  if (typeof document.startViewTransition === 'function' && !_reducedMotion) {
-    document.startViewTransition(() => _showScreenInner(name, true));
-  } else {
-    _showScreenInner(name, false);
-  }
+  // 2026-08-14: briefly wrapped this in document.startViewTransition() for a native
+  // whole-page crossfade -- REVERTED 2026-08-15 after tools/playwright_smoke.py's
+  // real-browser CI check caught a real regression: startViewTransition(callback)'s
+  // callback is NOT guaranteed to run synchronously (confirmed against real Chromium,
+  // not assumed from the spec text), and this codebase has many call sites that read
+  // DOM state immediately after calling showScreen()/phoneOpenScreen() with no await
+  // (chained onclick handlers like showScreen('tasks');el.focus(), the tour's
+  // spotlight positioning math, phone-home-open/ticker/tab-bar visibility sync,
+  // _screenLoadInFlight dedup). Confirmed via bisection (a disposable git worktree at
+  // the commit that introduced this, with the wrap removed) that reverting to a
+  // plain synchronous call alone fixes all 18 real-browser failures the wrap caused --
+  // this was silently blocking every Railway deploy on this branch since CI Smoke
+  // gates on this same real-browser step passing. Adopting native view transitions
+  // here for real would need auditing and fixing every one of those call sites to
+  // await the transition's own promise first, a larger and separately-scoped change.
+  document.body.classList.remove('phone-home-open');
+  document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
+  const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
+  if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  _activeScreen = name;
+  _fireScreenLoaders(name);
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));

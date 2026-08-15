@@ -371,65 +371,103 @@ async def _run_browser_checks() -> None:
                   f"#settings-build-ver should repopulate when Settings' own loaders re-run "
                   f"(not just on initial page load): {build_ver_state}")
 
-            # ── Color themes (2026-08-06: trimmed 12->5, Scott: "take the color
-            # selection down to 5") -- confirm the swatch row renders EXACTLY 5
-            # (not stale extras, not the old 12), and that each surviving theme's
-            # _setTheme() call actually applies its real CSS custom properties. ──
+            # ── Color scheme (2026-08-14: replaced the old flat 5-theme system --
+            # itself a 2026-08-06 trim from 12 -- with a real 2-axis system: 3 named
+            # PALETTES (Studio Warm/Transformative Teal/Clubroom Contrast) x 2 MODES
+            # (dark/light) = 6 token sets, selected via [data-palette]/[data-mode] on
+            # <html> instead of a theme-* class. Scott: "3 color schemes that will
+            # actually be 6 because of light/dark... needs to be able to be set
+            # according to computer and phone settings"). Confirm the swatch row
+            # renders EXACTLY 3 palettes (not the old 5), that a stale localStorage
+            # value from either superseded system falls back safely, that each real
+            # palette applies its actual CSS custom properties in both modes, and
+            # that mode (dark/light/system) actually resolves against the device's
+            # live prefers-color-scheme. ──
             theme_swatch_count = await page.evaluate(
                 "document.getElementById('theme-swatch-row').children.length")
-            check(theme_swatch_count == 5,
-                  f"theme swatch row should render exactly 5 themes after the reduction, got {theme_swatch_count}")
+            check(theme_swatch_count == 3,
+                  f"theme swatch row should render exactly 3 palettes, got {theme_swatch_count}")
             stale_theme_state = await page.evaluate("""() => {
-                localStorage.setItem('frankTheme', 'sakura');  // a theme cut in the 12->5 trim
-                const resolved = _getTheme();
-                _setTheme(resolved);
-                return {resolved, hasStaleClass: document.documentElement.classList.contains('theme-sakura'),
-                         storedAfter: localStorage.getItem('frankTheme')};
+                localStorage.setItem('frankPalette', 'sakura');  // a theme cut in an earlier (12->5) trim, never a real palette
+                const resolved = _getPalette();
+                _setPalette(resolved);
+                return {resolved, dataPalette: document.documentElement.getAttribute('data-palette')};
             }""")
-            check(stale_theme_state.get("resolved") == "default",
-                  f"a theme removed in the 12->5 trim must fall back to 'default' on read, got: {stale_theme_state}")
-            check(not stale_theme_state.get("hasStaleClass"),
-                  f"a removed theme's class must never be applied to <html>: {stale_theme_state}")
-            check(stale_theme_state.get("storedAfter") == "default",
-                  f"resolving a stale theme should self-correct localStorage back to a real theme: {stale_theme_state}")
-            for theme_name, expect_bg_hex in [
-                ("sunwashed", "#fff8f0"),
-                ("ocean", "#07120f"),
-                ("kawaii", "#0d0a1a"),
+            check(stale_theme_state.get("resolved") == "warm",
+                  f"a stale/never-valid palette value must fall back to 'warm' on read, got: {stale_theme_state}")
+            check(stale_theme_state.get("dataPalette") == "warm",
+                  f"the resolved fallback must actually be applied to <html data-palette>: {stale_theme_state}")
+            for palette_name, mode, expect_bg_hex, expect_cyan_hex in [
+                ("warm", "light", "#fdf6f3", "#a83a52"),
+                ("teal", "dark", "#0c1f1e", "#3ecfc0"),
+                ("contrast", "light", "#faf7f0", "#8a6210"),
             ]:
                 theme_state = await page.evaluate(f"""() => {{
-                    _setTheme('{theme_name}');
+                    _setPalette('{palette_name}');
+                    _setModePreference('{mode}');
                     const cs = getComputedStyle(document.documentElement);
                     return {{
-                        hasClass: document.documentElement.classList.contains('theme-{theme_name}'),
+                        dataPalette: document.documentElement.getAttribute('data-palette'),
+                        dataMode: document.documentElement.getAttribute('data-mode'),
                         bg: cs.getPropertyValue('--bg').trim().toLowerCase(),
+                        cyan: cs.getPropertyValue('--cyan').trim().toLowerCase(),
                         swatchRowText: (document.getElementById('theme-swatch-row') || {{}}).textContent || '',
+                        metaThemeColor: (document.getElementById('meta-theme-color') || {{}}).getAttribute
+                            ? document.getElementById('meta-theme-color').getAttribute('content') : null,
                     }};
                 }}""")
-                check(theme_state.get("hasClass"), f"_setTheme('{theme_name}') should add the theme-{theme_name} class: {theme_state}")
+                check(theme_state.get("dataPalette") == palette_name,
+                      f"_setPalette('{palette_name}') should set data-palette on <html>: {theme_state}")
+                check(theme_state.get("dataMode") == mode,
+                      f"_setModePreference('{mode}') should set data-mode on <html>: {theme_state}")
                 check(theme_state.get("bg") == expect_bg_hex,
-                      f"theme '{theme_name}' should compute --bg={expect_bg_hex} on :root after switching: {theme_state}")
+                      f"{palette_name}/{mode} should compute --bg={expect_bg_hex} on :root after switching, "
+                      f"got: {theme_state}")
+                check(theme_state.get("cyan") == expect_cyan_hex,
+                      f"{palette_name}/{mode} should compute --cyan={expect_cyan_hex} on :root after switching, "
+                      f"got: {theme_state}")
                 check("✓" in theme_state.get("swatchRowText", ""),
                       f"theme swatch row should re-render showing an active checkmark: {theme_state}")
-            # Reset to default so later checks in this run aren't affected.
-            await page.evaluate("_setTheme('default')")
+                check(theme_state.get("metaThemeColor") == expect_bg_hex,
+                      f"<meta name=theme-color> should track the real resolved --bg (2026-08-15 fix): {theme_state}")
+            # Mode 'system' should resolve against the device's live prefers-color-scheme,
+            # not just store the literal string -- confirms _resolveMode()'s matchMedia path.
+            system_mode_state = await page.evaluate("""() => {
+                _setModePreference('system');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                return {
+                    dataMode: document.documentElement.getAttribute('data-mode'),
+                    prefersDark,
+                    storedMode: localStorage.getItem('frankMode'),
+                };
+            }""")
+            check(system_mode_state.get("storedMode") is None,
+                  f"'system' mode should NOT write a literal value to localStorage (it's the absence of an "
+                  f"override): {system_mode_state}")
+            check(system_mode_state.get("dataMode") == ("dark" if system_mode_state.get("prefersDark") else "light"),
+                  f"data-mode should resolve 'system' against the real live prefers-color-scheme match: {system_mode_state}")
+            # Reset to the default palette/mode so later checks in this run aren't affected.
+            await page.evaluate("_setPalette('warm'); _setModePreference('system')")
 
             # ── 4 new font pairings (2026-07-18) -- independent of color theme,
             # so verify the font-swatch mount point renders AND that switching
             # actually changes the real computed --font-display/--font-body,
-            # while a subsequent theme switch leaves the font choice untouched
-            # (proves the two systems really are decoupled, not just declared so). ──
+            # while a subsequent palette/mode switch leaves the font choice
+            # untouched (proves the two systems really are decoupled, not just
+            # declared so). ──
             font_pairing_state = await page.evaluate("""() => {
                 _setFontPairing('rounded');
                 const csAfterFont = getComputedStyle(document.documentElement);
                 const displayAfterFont = csAfterFont.getPropertyValue('--font-display').trim();
-                _setTheme('ocean');
+                _setPalette('teal');
+                _setModePreference('dark');
                 const csAfterTheme = getComputedStyle(document.documentElement);
                 return {
                     swatchRowText: (document.getElementById('font-swatch-row') || {}).textContent || '',
                     displayAfterFont,
                     displayAfterThemeSwitch: csAfterTheme.getPropertyValue('--font-display').trim(),
-                    themeHasClass: document.documentElement.classList.contains('theme-ocean'),
+                    dataPalette: document.documentElement.getAttribute('data-palette'),
+                    dataMode: document.documentElement.getAttribute('data-mode'),
                 };
             }""")
             check("Friendly Rounded" in font_pairing_state.get("swatchRowText", ""),
@@ -437,10 +475,11 @@ async def _run_browser_checks() -> None:
             check("Fredoka" in font_pairing_state.get("displayAfterFont", ""),
                   f"_setFontPairing('rounded') should set --font-display to Fredoka: {font_pairing_state}")
             check(font_pairing_state.get("displayAfterThemeSwitch") == font_pairing_state.get("displayAfterFont"),
-                  f"switching color theme must not reset the chosen font pairing (the two systems should be independent): {font_pairing_state}")
-            check(font_pairing_state.get("themeHasClass"), f"theme switch should still apply normally alongside a custom font pairing: {font_pairing_state}")
+                  f"switching palette/mode must not reset the chosen font pairing (the two systems should be independent): {font_pairing_state}")
+            check(font_pairing_state.get("dataPalette") == "teal" and font_pairing_state.get("dataMode") == "dark",
+                  f"palette/mode switch should still apply normally alongside a custom font pairing: {font_pairing_state}")
             # Reset both so later checks in this run aren't affected.
-            await page.evaluate("_setFontPairing('default'); _setTheme('default');")
+            await page.evaluate("_setFontPairing('default'); _setPalette('warm'); _setModePreference('system');")
 
             # ── "Test Voice" button + Premium-voice fail-safe (2026-07-16) — Scott:
             # "How do I get Frank to speak out loud?" / "guarantee it will work."
@@ -3788,18 +3827,26 @@ async def _run_browser_checks() -> None:
             await page.wait_for_timeout(200)
             ask_state = await page.evaluate("""() => {
                 phoneTab('ask');
+                // 2026-08-15: the header is now Scott's real hand-lettered wordmark image
+                // (2 <img> variants, light/dark-mode swapped via CSS -- see .mobile-shop-header
+                // in frank_hud_mockup.py), not plain text -- textContent is empty for an <img>,
+                // so check for the alt-labeled image instead of a literal string.
+                const wm = document.querySelector('.mobile-shop-header img[alt="OnBrandCraftz"]');
                 return {
                     screenCmdActive: document.getElementById('screen-cmd').classList.contains('active'),
                     orbViewVisible: getComputedStyle(document.getElementById('orb-view')).display !== 'none',
-                    mobileHeaderText: (() => { const el = document.querySelector('.mobile-shop-header'); return el ? el.textContent : null; })(),
+                    hasWordmarkImg: !!wm,
+                    wordmarkLoaded: !!(wm && wm.complete && wm.naturalWidth > 0),
                 };
             }""")
             check(ask_state.get("screenCmdActive") is True,
                   f"phoneTab('ask') must land directly on #screen-cmd, not require a second tap through the orb popup: {ask_state}")
             check(ask_state.get("orbViewVisible") is False,
                   f"the orb popup must NOT be showing right after tapping Ask -- it's now an opt-in voice control, not the landing view: {ask_state}")
-            check(ask_state.get("mobileHeaderText") == "OnBrandCraftz",
-                  f"the mobile-only shop-name header must render above the chat panel (Scott: keep the branding): {ask_state}")
+            check(ask_state.get("hasWordmarkImg") is True,
+                  f"the mobile-only shop wordmark image must render above the chat panel (Scott: keep the branding): {ask_state}")
+            check(ask_state.get("wordmarkLoaded") is True,
+                  f"the wordmark image must actually load, not just be present in the DOM: {ask_state}")
 
             # Voice button opens the orb popup on demand; "Open full chat" inside it
             # returns to the same chat screen (reusing the pre-existing button/handler

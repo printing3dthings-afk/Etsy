@@ -418,3 +418,99 @@ html.theme-sunwashed{
 ```
 
 <!-- /TRASH 20260814-001 -->
+
+<!-- TRASH id=20260815-001 date=2026-08-15 kind=file source="tests/test_view_transitions.py" reason="Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior." -->
+## 20260815-001 · 2026-08-15 · file · `tests/test_view_transitions.py`
+**Reason:** Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior.  
+**Payload:** `data/trash/files/20260815-001__test_view_transitions.py`
+
+```
+"""
+Test for the 2026-08-14 native View Transitions wiring on showScreen() --
+the foundation item from the second visual-research pass (the one flagged
+as "highest-leverage" since every navigation in the app funnels through this
+one function: phoneOpenScreen(), phoneTab()'s ask/create branches, every bare
+onclick="showScreen(...)" in the header/sidebar/nav, and search-result routing
+all call it, directly or indirectly).
+
+showScreen() was split into a plain _showScreenInner(name, viaViewTransition)
+(the actual DOM mutation, unchanged in substance from before this pass) and a
+thin showScreen(name) wrapper that runs it inside document.startViewTransition()
+when the browser supports the API and the user hasn't asked for reduced motion,
+falling straight through to the old direct-mutation behavior otherwise.
+
+Verified end-to-end in real headless Chrome (chromium-1194) before shipping,
+not just asserted structurally here:
+  - a real user click on a .nav-item fires exactly one startViewTransition()
+    call and lands on the correct screen, repeatably across multiple navs
+  - with prefers-reduced-motion: reduce emulated, startViewTransition() is
+    never called at all and navigation still works via the plain fallback
+  - no page-level JS errors either way
+That live-browser check isn't re-runnable from this harness (no Node/browser
+dependency in the standard test suite), so this file locks in the structural
+contract instead: the split exists, the feature-detect + reduced-motion gate
+is real, and the double-motion guard (skip the CSS screen-in keyframe on the
+VT path only, since the native crossfade already animates that swap) doesn't
+leak into the non-VT fallback path.
+
+Run: python tests/test_view_transitions.py
+"""
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+HUD_PATH = ROOT / "tools" / "api_server" / "frank_hud_mockup.py"
+
+_failures: list[str] = []
+
+
+def check(cond: bool, msg: str) -> None:
+    if not cond:
+        _failures.append(msg)
+
+
+def _source() -> str:
+    return HUD_PATH.read_text(encoding="utf-8")
+
+
+def test_show_screen_inner_holds_the_real_dom_mutation():
+    source = _source()
+    m = re.search(r"function _showScreenInner\(name, viaViewTransition\)\{(.*?)\n\}", source, re.DOTALL)
+    assert m, "could not find function _showScreenInner(name, viaViewTransition)"
+    body = m.group(1)
+    for expected in (
+        "document.body.classList.remove('phone-home-open')",
+        "document.querySelectorAll('.nav-item')",
+        "document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))",
+        "_activeScreen = name",
+        "_fireScreenLoaders(name)",
+    ):
+        check(expected in body, f"_showScreenInner is missing expected DOM-mutation logic: {expected!r}")
+
+
+def test_show_screen_wraps_inner_in_a_feature_detected_reduced_motion_gated_transition():
+    source = _source()
+    m = re.search(r"function showScreen\(name\)\{(.*?)\n\}", source, re.DOTALL)
+    assert m, "could not find function showScreen(name)"
+    body = m.group(1)
+    check("typeof document.startViewTransition === 'function'" in body,
+          "must feature-detect startViewTransition rather than assuming support (Safari/Firefox lack it)")
+    check("!_reducedMotion" in body,
+          "must also gate on _reducedMotion -- a forced whole-page crossfade is exactly the kind of "
+          "motion prefers-reduced-motion asks to skip")
+    check("document.startViewTransition(() => _showScreenInner(name, true))" in body,
+          "the VT path should mark the call as viaViewTransition so the double-motion guard can engage")
+    check("_showScreenInner(name, false)" in body,
+          "the fallback path must still call the real mutation logic directly for unsupported browsers")
+
+
+def test_double_motion_guard_is_scoped_to_the_view_transition_path_only():
+    source = _source()
+    m = re.search(r"function _showScreenInner\(name, viaViewTransition\)\{(.*?)\n\}", source, re.DOTALL)
+    assert m, "could 
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260815-001 -->
+
