@@ -1026,6 +1026,16 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
 .hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
 @keyframes hubspin{to{transform:rotate(360deg)}}
+/* 2026-08-15 (3rd visual-research pass) -- a fetch failure used to render as
+   plain muted-gray "⚠ message" text, visually near-identical to .hub-empty's
+   genuine "nothing here yet" state, with no way to recover short of leaving
+   and re-entering the screen. Research-validated pattern (loading/empty/error
+   need to read as 3 distinct states, every error needs a real retry action):
+   a warm red-tinted card, distinct from both the neutral empty state and the
+   shimmer skeleton, with a real Retry button that re-runs the same loader. */
+.hub-error{background:color-mix(in srgb, var(--red) 8%, transparent);border:1px solid color-mix(in srgb, var(--red) 25%, transparent);border-radius:var(--r-sm);padding:12px;text-align:center}
+.hub-error-msg{color:var(--red);font-size:11px;line-height:1.4}
+.hub-error .act-btn{display:inline-block;width:auto}
 
 /* ── Skeleton loaders (2026-07-18 visual-design pass) — content-shaped shimmer
    placeholders for the highest-traffic screens (Today, Products, Approvals),
@@ -3925,6 +3935,16 @@ function _skeletonCards(n, kind) {
   return Array.from({length: n || 3}).map(() =>
     '<div class="skel-card"><span class="skel-bar" style="width:70%;height:13px;margin-bottom:8px"></span><span class="skel-bar" style="width:45%;height:10px"></span></div>'
   ).join('');
+}
+// Shared error-state renderer (2026-08-15, 3rd visual-research pass) -- a
+// visually distinct .hub-error card (not just muted text easily confused
+// with a genuine empty state) plus a real Retry button that re-runs the
+// exact loader that failed, instead of a dead end requiring the user to
+// leave and re-enter the screen. retryFnName must be a zero-arg global
+// function name (all of this file's loadXxx() panel loaders qualify).
+function _errorRetry(message, retryFnName){
+  return '<div class="hub-error"><div class="hub-error-msg">⚠ '+escHtml(message)+'</div>'+
+    '<button class="act-btn secondary" style="margin-top:8px;font-size:11px;padding:5px 10px" onclick="'+retryFnName+'()">Retry</button></div>';
 }
 // Animates a stat tile's number from 0 up to its real value (~260ms, ease-out
 // cubic) instead of just printing it -- makes the number feel reported, not
@@ -7585,7 +7605,7 @@ async function loadStarSeller(){
       '<div class="ss-spark-row"><div class="ss-spark-lab">Revenue trend (90d)</div>'+
         _miniSpark((_lastStatusHistory.star_seller||{}).trend, 'var(--gold)', 28)+'</div>';
   }catch(e){
-    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadStarSeller');
   }
 }
 
@@ -7629,7 +7649,7 @@ async function loadAdsStatus(){
       '<div class="ss-spark-row"><div class="ss-spark-lab">ROAS trend (month)</div>'+
         _miniSpark((_lastStatusHistory.ads_roas||{}).trend, 'var(--cyan2)', 28)+'</div>';
   }catch(e){
-    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadAdsStatus');
   }
 }
 
@@ -7661,7 +7681,7 @@ async function loadGrowthBrief(){
         + '</div>';
     }).join('');
   }catch(e){
-    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadGrowthBrief');
   }
 }
 
@@ -7745,7 +7765,7 @@ async function loadAbTests(){
         + '</div>';
     }).join('');
   }catch(e){
-    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadAbTests');
   }
 }
 
@@ -7786,7 +7806,7 @@ async function loadCompetitorWatch(){
         + '</a>';
     }).join('');
   }catch(e){
-    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadCompetitorWatch');
   }
 }
 
@@ -7824,7 +7844,7 @@ async function loadMovementDigest(){
     if (decliners.length) h += decliners.map(function(it){ return row(it, '--red'); }).join('');
     el.innerHTML = h;
   }catch(e){
-    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadMovementDigest');
   }
 }
 
@@ -7853,7 +7873,7 @@ async function loadReviewThemes(){
         + '</div>';
     }).join('');
   }catch(e){
-    if(el) el.innerHTML = '<div style="color:var(--muted);font-size:11px">⚠ ' + escHtml(e.message) + '</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadReviewThemes');
   }
 }
 
@@ -7895,7 +7915,7 @@ async function loadCogsStatus(){
     html += '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4">'+escHtml(d.note||'')+'</div>';
     el.innerHTML = html;
   }catch(e){
-    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadCogsStatus');
   }
 }
 
@@ -7953,7 +7973,7 @@ async function loadPrinterStatus(){
     const d = await r.json();
     el.innerHTML = d.online ? _printerStatsHtml(d) : _printerOfflineHtml(d);
   }catch(e){
-    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadPrinterStatus');
   }
 }
 
@@ -8121,7 +8141,7 @@ async function loadInbox(){
     }
     el.innerHTML = html;
   }catch(e){
-    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+    if(el) el.innerHTML = _errorRetry(e.message, 'loadInbox');
   }
 }
 async function markReviewReplied(reviewId){

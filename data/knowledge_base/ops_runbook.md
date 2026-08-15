@@ -25107,3 +25107,29 @@ side of the pipeline. Both of those now say everything on GitHub's end is
 correct; whatever is holding the actual container swap back partway through
 its queue needs a look at Railway's own deployment dashboard/logs directly.
 Told Scott plainly rather than continuing to guess blind.
+
+
+## 2026-08-15 — Panel loaders: dead-end error text replaced with real retry buttons
+
+Research-driven polish pass (Scott: "find all the things you can make
+better"). Confirmed 2026 UX best practice via web research: loading/empty/
+error must be three distinct designed states, and an error state needs a
+real recoverable action, not a dead end. 10 sidebar panel loaders (Star
+Seller, Ads, Growth Brief, A/B Tests, Competitor Watch, Movement Digest,
+Review Themes, COGS, Printer Status, Inbox) rendered a failed fetch as bare
+muted text with no way to recover short of a full page reload. Added a
+shared `_errorRetry(message, retryFnName)` helper (a `.hub-error` card,
+red-tinted via `color-mix(in srgb, var(--red) ...)` matching this file's
+token-derivation convention, with a real `.act-btn` Retry button that calls
+the exact loader function that failed) and wired all 10 catch blocks to it.
+Left `_renderPrinterDetail()`'s modal error handler alone on purpose --
+it's an on-demand modal (user can just close/reopen), not a passively-
+polling panel, so different retry semantics apply.
+
+Verified in real headless Chrome: force `authGet()` to throw for one panel,
+confirmed the `.hub-error` card renders with a working Retry button, then
+removed the fault and clicked Retry -- it correctly re-ran the real fetch
+and replaced the error card with the successful render. Ran
+`tools/playwright_smoke.py` (mandatory per the View Transitions lesson
+above) and the full `tests/run_all.py` suite (155/155) before shipping.
+Build bumped this deploy.
