@@ -25079,3 +25079,31 @@ class of timing bug) is not the same guarantee as this suite's stricter,
 often-immediate assertions.
 
 Build bumped this deploy.
+
+
+## 2026-08-15 — Deploy pipeline unstuck but stalled partway through its backlog
+
+Follow-up to the View Transitions incident above. Confirmed via GitHub's
+Actions API that "CI Smoke" now passes cleanly on both fix commits (eda1512,
+6b5bf90). Watched Railway's live /health build field directly (not just CI
+status) to confirm the actual deploy, not just the gate: it sat on the stale
+a59c8a1-v340 for ~16 minutes after CI first went green (one transient 502
+during that window, likely a container swap that didn't stick), then jumped
+forward to ab26289-v349 -- proof the pipeline genuinely can still deploy, not
+fully broken -- but has now sat on that SAME build for another ~15+ minutes
+without advancing to either of the two newer commits actually pushed today
+(eda1512 has the View Transitions revert + real Home wordmark logo, 6b5bf90
+just bumps its size). ab26289 itself is notable: its own CI Smoke run
+recorded FAILURE (the run before the fix), yet it's what's live -- Railway's
+deploy trigger doesn't appear to be strictly 1:1 with "this exact commit's
+CI passed," more like "redeploy from whatever HEAD is next in an internal
+queue once some gate condition is satisfied," which doesn't fully match the
+simple mental model from the 2026-08-09 note ("every push redeploys within a
+couple minutes").
+
+This is the edge of what's diagnosable from here -- no Railway console/API
+access in this environment, only the public /health endpoint and GitHub's
+side of the pipeline. Both of those now say everything on GitHub's end is
+correct; whatever is holding the actual container swap back partway through
+its queue needs a look at Railway's own deployment dashboard/logs directly.
+Told Scott plainly rather than continuing to guess blind.
