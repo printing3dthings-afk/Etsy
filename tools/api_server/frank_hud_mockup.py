@@ -924,7 +924,7 @@ body.is-mobile #chat-voice-btn{display:flex}
    like every other mode-aware surface in this file, not JS. */
 .mobile-shop-header{display:none}
 body.is-mobile .mobile-shop-header{display:flex;justify-content:center;padding:14px 2px 8px}
-.mobile-shop-header img{height:56px;width:auto;max-width:90%}
+.mobile-shop-header img{height:72px;width:auto;max-width:92%}
 .mobile-shop-header .wordmark-dark{display:none}
 :root[data-mode="dark"] .mobile-shop-header .wordmark-light{display:none}
 :root[data-mode="dark"] .mobile-shop-header .wordmark-dark{display:inline-block}
