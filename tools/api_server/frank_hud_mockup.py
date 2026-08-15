@@ -6421,10 +6421,27 @@ async function loadWhoAmI(){
     }
   }catch(e){ summaryEl.textContent = 'Could not load account info.'; }
 }
+// Typed confirmation (2026-08-15 ease-of-use pass) — a plain confirm() is one
+// reflexive click to accept, which is fine for reversible actions (log out,
+// delete a task) but not proportionate to the two truly catastrophic ones in
+// this app: deleting your own account and redeploying the live production
+// server. Requiring the user to actually type the word makes it effectively
+// impossible to click through by reflex, matching the same bar GitHub/AWS
+// hold their own worst actions to. Returns false (and shows a toast) on any
+// cancel or mismatch — never proceeds on a typo.
+function _typedConfirm(message, requiredWord){
+  const typed = prompt(message + '\\n\\nType ' + requiredWord + ' (all caps) to confirm:');
+  if (typed === null) return false;
+  if (typed.trim().toUpperCase() !== requiredWord) {
+    showToast('Typed confirmation did not match "' + requiredWord + '" — nothing was done.', 'err', 6000);
+    return false;
+  }
+  return true;
+}
 async function deleteMyAccount(){
   const btnEl = document.getElementById('whoami-delete-btn');
   if(btnEl && btnEl.disabled) return;
-  if(!confirm('Permanently delete your account? This signs you out immediately and cannot be undone.')) return;
+  if(!_typedConfirm('Permanently delete your account? This signs you out immediately and cannot be undone.', 'DELETE')) return;
   if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Deleting…'; }
   try{
     const r = await fetchWithTimeout(BASE+'/api/account', {method:'DELETE', headers:{Authorization:'Bearer '+TOKEN}}, 15000);
@@ -7236,7 +7253,7 @@ async function coreRefreshEtsyToken(){
   }
 }
 async function coreRedeploy(){
-  if(!confirm('Redeploy the live server now? This causes a brief real outage (~30-60s) while it restarts.')) return;
+  if(!_typedConfirm('Redeploy the live server now? This causes a brief real outage (~30-60s) while it restarts.', 'REDEPLOY')) return;
   const btn = document.getElementById('core-btn-redeploy');
   if(btn){ btn.disabled = true; btn.textContent = '⟳ Redeploying…'; }
   try{

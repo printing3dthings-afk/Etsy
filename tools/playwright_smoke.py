@@ -1043,14 +1043,15 @@ async def _run_browser_checks() -> None:
                 const html = detail ? detail.innerHTML : '';
                 const llmsText = (document.getElementById('ac-llms')||{}).textContent;
                 const llmsDotClass = (document.getElementById('ac-llms-dot')||{}).className;
-                // coreRedeploy() gates on a native confirm() -- stub it for this one call only,
-                // then restore immediately (an unrestored override here previously bled into the
+                // coreRedeploy() gates on _typedConfirm() (2026-08-15: typed-word confirmation,
+                // was a plain confirm()) -- stub window.prompt for this one call only, then
+                // restore immediately (an unrestored override here previously bled into the
                 // later DP1026-regen test's own page.once('dialog', ...) expectation).
-                const _origConfirmAc = window.confirm;
-                window.confirm = () => true;
+                const _origPromptAc = window.prompt;
+                window.prompt = () => 'REDEPLOY';
                 const btn = document.getElementById('core-btn-redeploy');
                 await coreRedeploy();
-                window.confirm = _origConfirmAc;
+                window.prompt = _origPromptAc;
                 const out = {
                     html,
                     llmsText,

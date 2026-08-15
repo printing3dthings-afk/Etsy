@@ -25895,3 +25895,155 @@ Noted but out of scope for this pass: the Security screen's Add/Remove
 User controls call the same-tier _require_owner-gated endpoints and would
 benefit from the identical data-owner-only treatment -- not touched yet,
 flagged as a natural follow-on.
+
+
+## 2026-08-15 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-15 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Durable volume not writable
+hourly health loop found /tmp/tmpxuakixx8/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpxuakixx8/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpt27clqhi/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 3562). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-15 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 3564). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Typed confirmation for the two genuinely catastrophic actions
+
+Final piece of the "idiot proof" ease-of-use pass. A plain confirm() is one
+reflexive click to accept -- proportionate for reversible actions (delete a
+task, log out another device) but not for the two truly catastrophic ones
+in the app: deleting your own account (permanent, no undo) and redeploying
+the live production server (real ~30-60s outage). Added a shared
+`_typedConfirm(message, requiredWord)` helper (shows the same warning text
+via prompt(), proceeds only on an exact case-insensitive match, shows a
+toast and changes nothing on any cancel or typo) and wired both
+deleteMyAccount() and coreRedeploy() through it, requiring "DELETE" and
+"REDEPLOY" respectively. Deliberately left every other confirm() in the
+app untouched -- routine, frequent actions getting the same friction as
+these two would just be annoying, not safer.
+
+Regression found and fixed in the same pass: tools/playwright_smoke.py's
+existing AI Core screen test stubbed `window.confirm = () => true` to
+drive coreRedeploy() -- now needed `window.prompt = () => 'REDEPLOY'`
+instead, since the guard changed from confirm() to _typedConfirm() (which
+calls prompt(), not confirm()). Caught by actually running the real
+playwright suite before shipping, not just the structural test.
+
+Verified in real headless Chrome: mismatched typed word returns false +
+toast, cancelling the prompt returns false, exact match (including
+different casing, e.g. "redeploy" typed for the required "REDEPLOY")
+returns true. Full suite 161/161. Build bumped this deploy.
+
+This closes out the three ease-of-use findings from this session's audit:
+(1) owner-only buttons now disabled up front instead of failing after a
+confirm() + network round trip, (2) missing header icon tooltips, (3) typed
+confirmation on the two catastrophic actions. The Security screen's user-
+management buttons (flagged as a natural follow-on for #1) remain untouched.
