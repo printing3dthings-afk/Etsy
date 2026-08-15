@@ -816,7 +816,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e2e7d6b-v352"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c508a53-v353"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -17146,6 +17146,48 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
                 })
         except (ValueError, TypeError):
             pass
+
+    # Third-party API shutdown deadlines (2026-08-15): Sora and gpt-image-1 are
+    # both dated for real removal (see tools/ai_video.py / tools/image_gen.py's
+    # own module comments) but neither deadline was ever surfaced anywhere
+    # Scott would actually see it day-to-day -- only living in code comments.
+    # Same date-math + settings-flag-to-clear pattern as the credential-leak
+    # alerts above: a fixed calendar deadline, cleared by a one-line
+    # db.set_setting() call once the migration is actually confirmed done
+    # (not auto-cleared just because the code changed, since "the code is
+    # ready" and "it's been proven against a live key" are different things
+    # for the veo path specifically -- see ai_video.py's own "UNPROVEN" note).
+    _shutdown_deadlines = (
+        ("sora_migration_resolved", "Sora video API", date(2026, 9, 24),
+         "OpenAI's Sora-2 API shuts down on this date. tools/ai_video.py's \"veo\" "
+         "engine is the documented migration target but is UNPROVEN end-to-end -- "
+         "run one real generation against a live GEMINI_API_KEY before this date, "
+         "then flip AI_VIDEO_ENGINE=veo."),
+        ("gpt_image_1_migration_resolved", "gpt-image-1", date(2026, 10, 23),
+         "OpenAI's gpt-image-1 shuts down on this date. It's the only engine "
+         "confirmed to support background=\"transparent\" (stickers/cut-outs) -- "
+         "confirm gpt-image-2 (or another approved engine) has a working "
+         "transparent-background path before this date, or sticker/cut-out "
+         "generation breaks."),
+    )
+    for setting_key, label, deadline, remediation in _shutdown_deadlines:
+        if await asyncio.to_thread(db.get_setting, setting_key):
+            continue
+        days_left = (deadline - _shop_today()).days
+        if days_left <= 14:
+            severity = "critical"
+        elif days_left <= 75:
+            severity = "warning"
+        else:
+            continue
+        when = f"{abs(days_left)} days ago" if days_left < 0 else \
+            ("today" if days_left == 0 else f"in {days_left} days")
+        alerts.append({
+            "severity": severity,
+            "source": "api_deprecation",
+            "title": f"{label} shuts down {when} ({deadline.isoformat()})",
+            "detail": remediation,
+        })
 
     heartbeats = await asyncio.to_thread(db.list_agent_heartbeats)
     for h in heartbeats:
