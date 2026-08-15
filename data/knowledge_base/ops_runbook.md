@@ -25133,3 +25133,152 @@ and replaced the error card with the successful render. Ran
 `tools/playwright_smoke.py` (mandatory per the View Transitions lesson
 above) and the full `tests/run_all.py` suite (155/155) before shipping.
 Build bumped this deploy.
+
+
+## 2026-08-15 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-15 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Durable volume not writable
+hourly health loop found /tmp/tmpoejxr95y/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpoejxr95y/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp_08ta62f/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 9721). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-15 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 9723). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-15 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-15 — Tap targets had press-state but no hover-state feedback
+
+Continuation of the same polish pass as the panel-loader retry fix above.
+Audited every element styled with `cursor:pointer` against which classes
+had a real `:hover` rule vs. only `:active`. Found the 2026-08-14 press-
+state pass gave nearly every primary tap target real `:active` feedback,
+but most had zero `:hover` -- a desktop mouse user got no visual response
+while moving the cursor over a button/card/chip, only right at the instant
+of click. `.create-choice` was the sole exception (already had both) and
+served as the reference pattern.
+
+Added `:hover` rules to: bare-tier `.act-btn`/`.hub-act-btn` (11+ buttons
+with no primary/secondary/danger modifier) plus `.approve`/`.reject`
+variants, `.hub-toggle-btn`/`.hub-chip-btn` (scoped `:not(.active)` so
+hovering an already-selected pill doesn't fight its own filled state),
+`.lc-chip`, `.hub-prod-card.tappable`, `.pcard-tap`, `.pp-btn.ok`/`.no`,
+`.palert.tappable`, `.pmore-item`, and the clickable
+`.panel-title[role="button"]` section headers (Star Seller, Ads & ROAS,
+COGS & Profit, Bambu P1S Printer, Shop Performance). Verified via real
+mouse hover in headless Chrome that `.panel-title[role="button"]`'s
+computed color actually changes on hover with no click involved.
+
+One existing test (`test_press_state_feedback.py`) had an exact-string
+match against `.panel-title[role="button"]`'s old single-property
+`transition:transform .12s ease` -- legitimately grew to
+`transition:transform .12s ease,color .15s ease` for the new hover, so the
+assertion was widened to a substring check rather than weakened in scope.
+Ran `tools/playwright_smoke.py` and the full suite (156/156) before
+shipping. Build bumped this deploy.

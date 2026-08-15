@@ -428,7 +428,8 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 /* Star Seller/Ads/COGS/Printer panel titles are tap targets (onclick="openMetricDetailModal(...)"/
    "openPrinterDetailModal()", role="button" via inline attributes) -- same press-state affordance
    as every other primary tap target, scoped by attribute selector since there's no dedicated class. */
-.panel-title[role="button"]{transition:transform .12s ease}
+.panel-title[role="button"]{transition:transform .12s ease,color .15s ease}
+.panel-title[role="button"]:hover{color:var(--cyan)}
 .panel-title[role="button"]:active{transform:scale(.98)}
 /* ── First-time-user simplification (2026-07-11): keep engineering/infra surfaces
    out of the everyday view. Nothing here is DELETED — it is CSS-hidden and fully
@@ -886,7 +887,8 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 #chat-speaking-indicator .csi-dot:nth-child(3){animation-delay:.3s}
 @keyframes csi-pulse{0%,60%,100%{opacity:.3;transform:scale(1)}30%{opacity:1;transform:scale(1.3)}}
 .lc-chips{display:flex;gap:8px;flex-wrap:wrap;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border)}
-.lc-chip{padding:7px 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.lc-chip{padding:7px 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;transition:border-color .15s ease,color .15s ease}
+.lc-chip:hover{border-color:var(--gold);color:var(--text)}
 .lc-chip:active{border-color:var(--gold);color:var(--gold)}
 .lc-input-row{display:flex;gap:8px;padding:10px 2px 0;border-top:1px solid var(--border);flex-shrink:0}
 /* Dark glass treatment (2026-07-30, Scott: input read as a plain white box on
@@ -1052,10 +1054,12 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .hub-toggle-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .hub-toggle-btn.active{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
+.hub-toggle-btn:not(.active):hover{border-color:var(--muted);color:var(--text)}
 .hub-toggle-btn:active{transform:scale(.97)}
 .hub-chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:transform .12s ease}
+.hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:transform .12s ease,border-color .15s ease,color .15s ease}
 .hub-chip-btn.active{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
+.hub-chip-btn:not(.active):hover{border-color:var(--muted);color:var(--text)}
 .hub-chip-btn:active{transform:scale(.97)}
 
 .hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);
@@ -1119,7 +1123,8 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 
 .hub-swatch{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
 .hub-prod-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:var(--r-md);padding:13px 14px;margin-bottom:10px}
-.hub-prod-card.tappable{cursor:pointer}
+.hub-prod-card.tappable{cursor:pointer;transition:border-color .15s ease}
+.hub-prod-card.tappable:hover{border-color:var(--muted)}
 .hub-prod-card.tappable:active{background:var(--panel)}
 .hub-prod-card .pchev{margin-left:auto;color:var(--muted);flex:none;align-self:center}
 
@@ -1172,6 +1177,7 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .act-btn,.hub-act-btn{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
 .act-btn:active,.hub-act-btn:active{transform:scale(.97)}
 .act-btn{flex:1;text-align:center;padding:7px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.act-btn:hover,.hub-act-btn:hover{border-color:var(--muted);color:var(--text)}
 .act-btn.primary,.hub-act-btn.primary{background:var(--gold);color:var(--on-accent);border-color:var(--gold)}
 .act-btn.primary:hover,.hub-act-btn.primary:hover{background:var(--gold2);border-color:var(--gold2)}
 .act-btn.secondary,.hub-act-btn.secondary{background:var(--panel2);border-color:var(--cyan);color:var(--cyan2)}
@@ -1179,7 +1185,9 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .act-btn.danger,.hub-act-btn.danger{background:none;border-color:color-mix(in srgb, var(--red) 40%, transparent);color:var(--red)}
 .act-btn.danger:hover,.hub-act-btn.danger:hover{background:color-mix(in srgb, var(--red) 12%, transparent)}
 .act-btn.approve{background:var(--green);color:var(--on-accent);border-color:var(--green)}
+.act-btn.approve:hover{filter:brightness(.92)}
 .act-btn.reject{color:var(--red);border-color:color-mix(in srgb, var(--red) 40%, transparent)}
+.act-btn.reject:hover{background:color-mix(in srgb, var(--red) 12%, transparent)}
 /* In-flight state (2026-07-18 motion audit) — approveAction()/bulkApproveLowRisk()
    await a real Etsy write (up to 50s) before this pass touched the UI at all, so a
    slow response just looked like a dead button. NOT optimistic completion (that
@@ -1569,13 +1577,16 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 .pcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px;margin-bottom:10px}
 .pcard .pt{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;line-height:1.35}
 .pcard .pm{font-size:12px;color:var(--muted);word-break:break-word}
-.pcard-tap{display:flex;align-items:center;gap:8px;cursor:pointer}
+.pcard-tap{display:flex;align-items:center;gap:8px;cursor:pointer;transition:opacity .15s ease}
+.pcard-tap:hover{opacity:.85}
 .pcard-tap:active{opacity:.7}
 .pcard-tap .pchev{color:var(--muted);flex:none}
 .pp-acts{display:flex;gap:8px;margin-top:11px}
-.pp-btn{flex:1;border:1px solid transparent;border-radius:var(--r-md);padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.pp-btn{flex:1;border:1px solid transparent;border-radius:var(--r-md);padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .15s ease,border-color .15s ease,color .15s ease}
 .pp-btn.ok{background:var(--cyan);color:var(--on-accent)}
+.pp-btn.ok:hover{filter:brightness(.93)}
 .pp-btn.no{background:transparent;color:var(--muted);border-color:var(--border)}
+.pp-btn.no:hover{border-color:var(--muted);color:var(--text)}
 .pp-empty{text-align:center;color:var(--muted);font-size:13px;padding:34px 10px;line-height:1.5}
 .ptiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
 .ptile{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center}
@@ -1610,13 +1621,15 @@ body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{dis
 .palert.good .pdot{background:var(--green)}
 .palert.info .pdot{background:var(--cyan)}
 .pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
-.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px;transition:transform .12s ease}
+.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px;transition:transform .12s ease,border-color .15s ease}
+.pmore-item:hover{border-color:var(--muted)}
 .pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pmore-item:active{transform:scale(.97)}
 .pmore-item .pmi{width:24px;text-align:center;font-size:16px}
 .pmore-item .pmc{margin-left:auto;color:var(--muted)}
 /* tappable needs-attention cards */
-.palert.tappable{cursor:pointer}
+.palert.tappable{cursor:pointer;transition:background-color .15s ease}
+.palert.tappable:hover{background:var(--panel2)}
 .palert.tappable:active{background:var(--panel2)}
 .palert .pchev{margin-left:auto;color:var(--muted);flex:none;align-self:center}
 /* phone action sheet */

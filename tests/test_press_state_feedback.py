@@ -80,7 +80,13 @@ def test_every_target_has_a_transform_transition_somewhere():
     check("transition:transform .12s ease" in re.sub(r"\s+", " ", m.group(1)),
           ".psheet-btn needs a transform transition")
 
-    check('.panel-title[role="button"]{transition:transform .12s ease}' in source,
+    m = re.search(r'\.panel-title\[role="button"\]\{([^}]*)\}', source)
+    assert m, 'could not find .panel-title[role="button"] base rule'
+    check("transition:transform .12s ease" in m.group(1),
+          # 2026-08-15: this rule's transition list grew a second property
+          # (`,color .15s ease`) when a :hover rule was added for desktop
+          # mouse users -- substring check so that legitimate addition
+          # doesn't false-fail this exact-match assertion.
           '.panel-title[role="button"] needs its own transform transition rule')
 
 
