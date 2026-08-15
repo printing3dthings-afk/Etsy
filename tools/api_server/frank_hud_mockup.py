@@ -342,21 +342,33 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 
 /* ── Sidebar ── */
 .sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);background:var(--panel);
-  display:flex;flex-direction:column;padding:14px 10px;overflow-y:auto;
+  display:flex;flex-direction:column;padding:14px 10px;overflow-y:auto;position:relative;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .nav-section{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin:12px 10px 6px;text-transform:uppercase}
 .nav-section:first-child{margin-top:2px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-sm);
-  cursor:pointer;color:var(--muted);font-size:12.5px;margin-bottom:2px;position:relative;
+  cursor:pointer;color:var(--muted);font-size:12.5px;margin-bottom:2px;position:relative;z-index:1;
   transition:background .18s ease,color .18s ease,border-color .18s ease,transform .1s ease}
 .nav-item .ic{width:16px;text-align:center;font-size:13px}
 .nav-item:hover{background:var(--panel);color:var(--text)}
 .nav-item:active{transform:scale(.98)}
-.nav-item.active{background:var(--panel3); /* 2026-07-23: flattened per Scott, was a hardcoded (not theme-reactive) gradient */
-  color:var(--cyan2);border-left:2px solid var(--cyan)}
+.nav-item.active{color:var(--cyan2)} /* background/border now carried by the animated .nav-pill below */
 .nav-item .nbadge{margin-left:auto;background:var(--panel2);color:var(--cyan2);
   font-size:9.5px;font-weight:700;border-radius:var(--r-sm);padding:1px 7px;border:1px solid var(--border)}
 .nav-item:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
+/* Sliding pill indicator (2026-08-15 motion pass, "Flow" thesis) — same technique
+   already proven on the mobile tab bar's #ptab-pill (identical curve/duration,
+   see that element's own comment): a MutationObserver watches .nav-item's class
+   attribute and morphs this absolutely-positioned highlight to the active item's
+   real offsetTop/offsetHeight via translateY, rather than an instant background
+   swap. top/height are set directly (never transitioned — animating those
+   triggers layout, see motion-principles' "never animate width/height/top/left")
+   and only transform (translateY) + opacity animate, both GPU-composited. Sits
+   at z-index:0, one layer behind every .nav-item (z-index:1 above), so it reads
+   as a highlight sliding behind the row, not a box drawn on top of the text. */
+.nav-pill{position:absolute;left:10px;right:10px;top:0;border-radius:var(--r-sm);
+  background:var(--panel3);border-left:2px solid var(--cyan);opacity:0;pointer-events:none;z-index:0;
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1),opacity .2s ease}
 /* Real heading elements (2026-07-08 accessibility review) reuse the exact same visual
    rules as before — this reset stops browser default h1/h2 margin+size from touching
    layout. The tag changed, the look didn't. */
@@ -1768,7 +1780,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .mini-wave span{animation:none;height:10px}
   .hub-spinner{animation:none}
   .screen.active,.pp.on{animation:none}
-  .nav-item,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti,
+  .nav-item,.nav-pill,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti,
   body.is-mobile #phone-tabbar .ptab-pill{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
   .ticker-track{animation:none}
@@ -1890,6 +1902,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   </div>
 
   <div class="sidebar" role="navigation" aria-label="Primary">
+    <div class="nav-pill" id="nav-pill" aria-hidden="true"></div>
     <h2 class="nav-section nav-section-h2" id="nav-heading-frank">%%AGENT_SHORT%%</h2>
     <div class="nav-item active" data-screen="cmd" role="button" tabindex="0" aria-current="page"><span class="ic" aria-hidden="true">⌂</span>Home</div>
     <div class="nav-item" data-screen="actions" role="button" tabindex="0"><span class="ic" aria-hidden="true">✓</span>Approvals<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
@@ -3230,6 +3243,35 @@ function closeFrankPopup(){
   window.addEventListener('resize', schedulePillMove);
   mobileMQ.addEventListener('change', schedulePillMove);
   schedulePillMove();
+})();
+// Desktop sidebar nav — sliding pill indicator (2026-08-15 motion pass, "Flow"
+// thesis). Same MutationObserver-on-class-attribute pattern as the mobile
+// #ptab-pill IIFE directly above (proven there first) -- decoupled from every
+// showScreen() call site the same way, so it can never drift out of sync with
+// whichever one last ran. offsetTop/offsetHeight (not getBoundingClientRect)
+// on purpose: .sidebar is the positioned offsetParent AND the scroll container,
+// so an absolutely-positioned child's translateY tracks scroll for free --
+// getBoundingClientRect() would need a separate scroll-position correction the
+// mobile tab bar (which never scrolls) doesn't have to deal with.
+(function(){
+  const sidebar = document.querySelector('.sidebar');
+  const pill = document.getElementById('nav-pill');
+  if (!sidebar || !pill) return;
+  function moveNavPill(){
+    const active = sidebar.querySelector('.nav-item.active');
+    if (!active){ pill.style.opacity = '0'; return; }
+    pill.style.opacity = '1';
+    pill.style.height = active.offsetHeight + 'px';
+    pill.style.transform = 'translateY(' + active.offsetTop + 'px)';
+  }
+  let _navPillRAF = null;
+  function scheduleNavPillMove(){
+    if (_navPillRAF) return;
+    _navPillRAF = requestAnimationFrame(() => { _navPillRAF = null; moveNavPill(); });
+  }
+  new MutationObserver(scheduleNavPillMove).observe(sidebar, {attributes: true, attributeFilter: ['class'], subtree: true});
+  window.addEventListener('resize', scheduleNavPillMove);
+  scheduleNavPillMove();
 })();
 // Quick-text popup (mobile only) — the top-right hamburger's actual job now: a
 // small popup with just an input + send button, no orb, no transcript. Reuses
