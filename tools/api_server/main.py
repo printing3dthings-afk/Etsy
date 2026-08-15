@@ -816,7 +816,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "51caea8-v346"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "881b807-v347"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1273,6 +1273,20 @@ def _rate_limited_auth(request: Request) -> str:
 # never need escaping since it's substituted as a VALUE into the page templates
 # below, not parsed as one. See frank_hud_mockup.py's :root comment for why
 # these specific hex values (the 2026-07-15 WCAG-verified brightening pass).
+#
+# 2026-08-15 color-token audit: added a real light-mode override via
+# @media(prefers-color-scheme:light), using the exact Studio Warm LIGHT hex
+# values frank_hud_mockup.py's :root[data-palette="warm"][data-mode="light"]
+# already ships (same numbers, not re-derived) -- an unauthenticated visitor
+# whose OS/browser is in light mode used to get the fixed dark page regardless.
+# Scoped to prefers-color-scheme only, not the full 3-palette/localStorage
+# system the main dashboard has -- there's no user preference to read before
+# login, and adding the palette picker itself to these pages is a real,
+# separate feature decision, not folded into this pass. Fixed 3 pairings that
+# would have been illegible once light mode activated (button/link text
+# hardcoded near-black assumed a light accent fill that only exists in dark
+# mode; .err/.warn's light pink/washed-out text assumed a dark alert-box
+# background that flips light) -- see each rule's own note below.
 _AUTH_PAGE_CSS = """
 *{box-sizing:border-box;margin:0;padding:0}
 @font-face{font-family:'Sora';font-weight:700;font-style:normal;font-display:swap;
@@ -1282,11 +1296,29 @@ _AUTH_PAGE_CSS = """
 :root{
   --bg:#241c2e;--panel:#2d2438;--panel2:#372c42;--panel3:#42354e;--border:#3d3248;
   --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#e4b155;--gold2:#f2cb8f;--text:#f5eef2;--muted:#bfa3b5;
-  --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
+  --green:#5cc48a;--red:#e2685f;--amber:#e8b868;--on-accent:var(--bg);
+  --err-text:#ff9d94;
   --font-display:'Outfit','Sora',sans-serif;
   --font-body:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
   --card-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 2px 10px rgba(0,0,0,.16);
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#fdf6f3;--panel:#ffffff;--panel2:#f7e8e3;--panel3:#ffffff;--border:#eeddd6;
+    --cyan:#a83a52;--cyan2:#7a2138;--gold:#8a5a10;--gold2:#6b4508;--text:#2e1b22;--muted:#7a5a63;
+    --green:#1f7a4c;--red:#a8302c;--amber:#8a5a10;
+    /* var(--red) itself (#e2685f dark / #a8302c light) is fine as a badge/border
+       accent at low tint but measured only 4.49:1 against --panel as BODY TEXT in
+       dark mode -- under the 4.5:1 AA text floor, and worse once composited under
+       .err's own translucent red tint (3.83:1, confirmed failing). --err-text is a
+       dedicated, verified-AA value for that one specific use: the ORIGINAL
+       dark-mode #ff9d94 (7.39:1 on panel, unchanged) stays the default above; this
+       light override happens to equal --red here since --red is already a strong
+       dark-on-light text color once the accent flips to a light background. */
+    --err-text:#a8302c;
+    --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  }
 }
 html,body{height:100%}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
@@ -1302,9 +1334,9 @@ body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:c
 .logo{display:flex;align-items:center;gap:10px;margin-bottom:22px}
 .logo .hex{width:34px;height:34px;border:2px solid var(--cyan);border-radius:var(--r-sm);display:flex;
   align-items:center;justify-content:center;color:var(--cyan2);font-size:17px;flex-shrink:0;
-  box-shadow:0 0 10px rgba(242,160,181,.5)}
+  box-shadow:0 0 10px color-mix(in srgb, var(--cyan) 50%, transparent)}
 .logo .l1{font-family:var(--font-display);font-weight:600;letter-spacing:1px;color:var(--cyan2);font-size:17px;line-height:1.15;
-  text-shadow:0 0 10px rgba(242,160,181,.4)}
+  text-shadow:0 0 10px color-mix(in srgb, var(--cyan) 40%, transparent)}
 .logo .l2{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:1px}
 h1.heading{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--text);margin:0 0 4px}
 .hint{font-size:11.5px;color:var(--muted);margin-bottom:18px;line-height:1.5}
@@ -1313,15 +1345,22 @@ label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);text-tra
 input[type=text],input[type=email],input[type=password]{width:100%;padding:10px 12px;margin-bottom:15px;
   background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);
   font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
-input:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(228,177,85,.35)}
+input:focus{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb, var(--gold) 35%, transparent)}
 button.submit{width:100%;padding:11px;background:var(--gold);border:1px solid var(--gold);border-radius:var(--r-sm);
-  color:#2c1a06;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:2px;
+  color:var(--on-accent);font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:2px;
   font-family:var(--font-body);transition:background .15s,border-color .15s}
 button.submit:hover{background:var(--gold2);border-color:var(--gold2)}
 button.submit:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.err{background:rgba(226,104,95,.1);border:1px solid #5a2d3a;border-radius:var(--r-sm);color:#ff9d94;
+/* 2026-08-15: .err/.warn's background/border were fixed dark-red/dark-amber-
+   tinted literals that never adapted to the new light-mode override above.
+   Converted the tint/border to color-mix() off the real --red/--amber
+   tokens, same pattern used for frank_hud_mockup.py's status pills. Text
+   uses the dedicated --err-text token (see its own comment above) rather
+   than var(--red) directly -- var(--red) measured under the 4.5:1 AA floor
+   once composited under its own translucent tint in dark mode. */
+.err{background:color-mix(in srgb, var(--red) 12%, transparent);border:1px solid color-mix(in srgb, var(--red) 45%, transparent);border-radius:var(--r-sm);color:var(--err-text);
   font-size:12px;padding:9px 11px;margin-bottom:14px;line-height:1.5}
-.warn{background:rgba(232,184,104,.1);border:1px solid #6b501f;border-radius:var(--r-sm);color:var(--amber);
+.warn{background:color-mix(in srgb, var(--amber) 12%, transparent);border:1px solid color-mix(in srgb, var(--amber) 45%, transparent);border-radius:var(--r-sm);color:var(--amber);
   font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}
 .warn b{color:var(--gold2)}
 .cross-link{text-align:center;margin-top:16px}
@@ -1332,7 +1371,7 @@ button.submit:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   letter-spacing:2px;color:var(--cyan2);background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);
   padding:16px;text-align:center;margin-bottom:18px;user-select:all;word-break:break-all}
 a.btn{display:block;width:100%;padding:11px;background:var(--gold);border:1px solid var(--gold);border-radius:var(--r-sm);
-  color:#2c1a06;font-weight:700;font-size:14px;text-align:center;text-decoration:none;box-sizing:border-box;
+  color:var(--on-accent);font-weight:700;font-size:14px;text-align:center;text-decoration:none;box-sizing:border-box;
   font-family:var(--font-body)}
 a.btn:hover{background:var(--gold2);border-color:var(--gold2)}
 .oauth-row{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}

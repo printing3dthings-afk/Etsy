@@ -44,7 +44,7 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="%%AGENT_SHORT%%">
-<meta name="theme-color" content="#070d16">
+<meta name="theme-color" id="meta-theme-color" content="#241c2e">
 <link rel="manifest" href="/frank-manifest.webmanifest">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/static/icon-192.png">
@@ -627,7 +627,14 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
    touch more personality than the constant-frequency toasts elsewhere,
    per the "delight scales inversely with frequency" research finding. */
 .toast-check{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;animation:toast-check-pop .4s cubic-bezier(.34,1.56,.64,1) .05s both}
-.toast-check svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+/* 2026-08-15 color-token audit: a plain white stroke on var(--green) is a
+   confirmed WCAG failure in every DARK-mode combination (2.16:1, below even
+   the 3:1 non-text UI floor -- Studio Warm/Teal/Clubroom Contrast all use a
+   bright, light-toned green in dark mode meant to be read as text ON the
+   dark bg, not to have white drawn ON TOP of it). var(--on-accent) passes
+   comfortably in all 6 combinations (4.97-8.99:1 measured) since it's
+   already designed to be "whatever contrasts with an accent fill." */
+.toast-check svg{width:11px;height:11px;stroke:var(--on-accent);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
 @keyframes toast-check-pop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.toast-check{animation:none}}
 
@@ -747,9 +754,15 @@ body.is-mobile #alert-dropdown{
    used by unrelated panels (chat, left-column system health) this wasn't
    about. */
 .ss-status{font-size:12px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:var(--r-md);display:inline-block;margin-bottom:8px}
-.ss-status.on_track{background:rgba(42,170,100,.18);color:var(--green)}
-.ss-status.building{background:rgba(196,160,53,.18);color:var(--gold)}
-.ss-status.at_risk{background:rgba(200,60,60,.18);color:var(--red)}
+/* 2026-08-15 color-token audit: these 3 backgrounds were fixed rgba() triples
+   independent of --green/--gold/--red -- close enough to Studio Warm dark's
+   values that the mismatch was easy to miss, but a different palette's
+   accent (e.g. Teal's #4fc47f vs this rgba's baked-in 42,170,100) would tint
+   the badge one hue while the text was a visibly different one. color-mix
+   ties the tint to the same real token the text already uses. */
+.ss-status.on_track{background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green)}
+.ss-status.building{background:color-mix(in srgb, var(--gold) 18%, transparent);color:var(--gold)}
+.ss-status.at_risk{background:color-mix(in srgb, var(--red) 18%, transparent);color:var(--red)}
 .ss-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
 .ss-row:last-child{border-bottom:none}
 .ss-label{color:var(--muted)}
@@ -1036,19 +1049,38 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .refimg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:10px}
 .refimg-tile{position:relative;border-radius:var(--r-sm);overflow:hidden;background:var(--border);aspect-ratio:1/1}
 .refimg-tile img{width:100%;height:100%;object-fit:cover;display:block}
-.refimg-tile .refimg-cat{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--r-pill);background:rgba(6,20,31,.75);color:var(--text)}
+/* 2026-08-15 color-token audit: .refimg-cat's background is deliberately a
+   FIXED near-black overlay regardless of app theme (photo-caption convention
+   -- it sits on top of an arbitrary reference-image thumbnail, not the app's
+   own panel/bg, so it should stay legible over any photo content rather than
+   flip to the palette's bg). It previously paired that fixed dark background
+   with var(--text) for the label -- correct in every dark mode (light text),
+   but var(--text) flips to a DARK color in light mode, producing illegible
+   dark-on-near-black. Fixed to a plain white to match its own fixed
+   background, same self-consistent-fixed-pair approach .refimg-del already
+   used correctly (fixed bg + fixed red-tinted icon color, untouched below). */
+.refimg-tile .refimg-cat{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--r-pill);background:rgba(6,20,31,.75);color:#fff}
 .refimg-tile .refimg-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(6,20,31,.75);color:#e0808f;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0}
 .hub-listing-info{flex:1;min-width:0}
 .hub-listing-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hub-listing-meta{font-size:11px;color:var(--muted);margin-top:2px}
 .hub-listing-price{font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
 .hub-lstate{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);margin-left:6px}
-.hub-lstate.draft{background:#0f1f30;color:var(--muted);border:1px solid var(--border)}
-.hub-lstate.active{background:#143323;color:var(--green);border:1px solid #1f4d36}
+/* 2026-08-15 color-token audit: .hub-lstate/.hub-qbadge/.act-sev/.act-card's
+   status-pill family was entirely hardcoded to the original single dark
+   Studio Warm palette (predates the 2026-08-14 palette x mode rebuild) --
+   these pills stayed visually frozen in dark purple-ish tones no matter which
+   of the 6 combinations was active. Converted to color-mix(in srgb, var(--X)
+   N%, transparent), the exact same formula the sliding tab-bar pill already
+   established and tests (test_motion_flow_audit.py's F1 checks) so every
+   palette/mode combination recolors these pills correctly instead of just
+   the text. */
+.hub-lstate.draft{background:var(--panel3);color:var(--muted);border:1px solid var(--border)}
+.hub-lstate.active{background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green);border:1px solid color-mix(in srgb, var(--green) 40%, transparent)}
 .hub-qbadge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);margin-left:6px}
-.hub-qbadge.pass{background:#143323;color:var(--green);border:1px solid #1f4d36}
-.hub-qbadge.warn{background:#2d2a1a;color:var(--gold2);border:1px solid #4d431f}
-.hub-qbadge.fail{background:#2d1a1a;color:#e07070;border:1px solid #4d1f1f}
+.hub-qbadge.pass{background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green);border:1px solid color-mix(in srgb, var(--green) 40%, transparent)}
+.hub-qbadge.warn{background:color-mix(in srgb, var(--gold) 18%, transparent);color:var(--gold2);border:1px solid color-mix(in srgb, var(--gold) 40%, transparent)}
+.hub-qbadge.fail{background:color-mix(in srgb, var(--red) 18%, transparent);color:var(--red);border:1px solid color-mix(in srgb, var(--red) 40%, transparent)}
 .hub-tag-chip{display:inline-block;font-size:10.5px;padding:2px 8px;margin:2px 4px 2px 0;border-radius:var(--r-pill);background:var(--panel2);border:1px solid var(--border);color:var(--muted)}
 
 .hub-listing-detail{padding:2px 14px 12px;margin:-2px 0 10px;background:var(--panel);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;font-size:12px}
@@ -1081,13 +1113,19 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .act-card:hover{box-shadow:var(--card-shadow-hover)}
 .act-card.high{border-left-color:var(--red)}
 .act-card.medium{border-left-color:var(--gold)}
-.act-card.low{border-left-color:#4a6b8a}
-.act-card.approval{border-left-color:var(--green);background:#13241c}
+/* 2026-08-15 color-token audit: "low" severity had no real semantic token of
+   its own (an arbitrary hardcoded blue, #4a6b8a/#7ba0c2, that also never
+   adapted to palette/mode) -- reused var(--muted) instead, which already
+   means "least visually urgent" everywhere else in this file, so low
+   severity now reads correctly as the quietest tier without inventing a
+   4th accent color no palette actually defines. */
+.act-card.low{border-left-color:var(--muted)}
+.act-card.approval{border-left-color:var(--green);background:color-mix(in srgb, var(--green) 10%, transparent)}
 .act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:var(--r-md)}
-.act-sev.high{background:#2d1a1a;color:#e07070}
-.act-sev.medium{background:#2d2a1a;color:var(--gold2)}
-.act-sev.low{background:#1a2330;color:#7ba0c2}
-.act-sev.approval{background:#13241c;color:#5fcf9e;border:1px solid #2d5a44}
+.act-sev.high{background:color-mix(in srgb, var(--red) 18%, transparent);color:var(--red)}
+.act-sev.medium{background:color-mix(in srgb, var(--gold) 18%, transparent);color:var(--gold2)}
+.act-sev.low{background:var(--panel3);color:var(--muted)}
+.act-sev.approval{background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green);border:1px solid color-mix(in srgb, var(--green) 40%, transparent)}
 .act-title{font-family:var(--font-display);font-size:15px;font-weight:600;margin:7px 0 4px;line-height:1.35;color:var(--text)}
 .act-detail{font-size:12px;color:var(--muted);line-height:1.45}
 .act-sug{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
@@ -1100,9 +1138,11 @@ body:not(.is-mobile) .orb-open-chat{display:none}
    ghost, for supporting-but-real actions (toggle state, view details, retry).
    .danger = destructive actions, red-tinted, secondary weight (never filled —
    destructive + primary-filled together reads as "encouraged," which delete
-   actions should never be). .approve/.reject predate this pass and already
-   nail the semantic-color pattern for the one place it was already correct
-   (the staged-action review flow) — left as-is. ──*/
+   actions should never be). .approve/.reject already nailed the semantic-
+   color PATTERN (reuse var(--red)/var(--green) as text) but, like the rest
+   of this block, still hardcoded their own backgrounds/borders/on-fill text
+   to the original dark-only palette -- fixed in the same 2026-08-15 audit
+   pass as the badge family above. ──*/
 .act-btn,.hub-act-btn{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
 .act-btn:active,.hub-act-btn:active{transform:scale(.97)}
 .act-btn{flex:1;text-align:center;padding:7px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
@@ -1110,10 +1150,10 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .act-btn.primary:hover,.hub-act-btn.primary:hover{background:var(--gold2);border-color:var(--gold2)}
 .act-btn.secondary,.hub-act-btn.secondary{background:var(--panel2);border-color:var(--cyan);color:var(--cyan2)}
 .act-btn.secondary:hover,.hub-act-btn.secondary:hover{background:var(--panel3)}
-.act-btn.danger,.hub-act-btn.danger{background:none;border-color:#5a2d3a;color:#e0808f}
-.act-btn.danger:hover,.hub-act-btn.danger:hover{background:rgba(224,104,95,.12)}
-.act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
-.act-btn.reject{color:#e08585;border-color:#5a2d2d}
+.act-btn.danger,.hub-act-btn.danger{background:none;border-color:color-mix(in srgb, var(--red) 40%, transparent);color:var(--red)}
+.act-btn.danger:hover,.hub-act-btn.danger:hover{background:color-mix(in srgb, var(--red) 12%, transparent)}
+.act-btn.approve{background:var(--green);color:var(--on-accent);border-color:var(--green)}
+.act-btn.reject{color:var(--red);border-color:color-mix(in srgb, var(--red) 40%, transparent)}
 /* In-flight state (2026-07-18 motion audit) — approveAction()/bulkApproveLowRisk()
    await a real Etsy write (up to 50s) before this pass touched the UI at all, so a
    slow response just looked like a dead button. NOT optimistic completion (that
@@ -1752,6 +1792,14 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     var mode = (m === 'dark' || m === 'light') ? m
       : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.setAttribute('data-mode', mode);
+    // Keep <meta name="theme-color"> (Android status bar / installed-PWA
+    // chrome tint) in sync from the very first paint too, not just after
+    // _applyTheme() runs later -- see that function's own comment.
+    var metaTheme = document.getElementById('meta-theme-color');
+    if (metaTheme) {
+      var earlyBg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      if (earlyBg) metaTheme.setAttribute('content', earlyBg);
+    }
   } catch(e) {}
 })();
 </script>
@@ -6112,6 +6160,18 @@ function _applyTheme() {
   document.documentElement.setAttribute('data-mode', mode);
   _renderThemeSwatches();
   _renderModeToggle();
+  // 2026-08-15 color-token audit: <meta name="theme-color"> (Android status
+  // bar / installed-PWA chrome tint) can't reference a CSS var directly --
+  // it's a static attribute, not a stylesheet -- so it used to be a fixed
+  // hex (#070d16) that matched none of the 6 real palette bg values and
+  // never updated on a palette/mode switch. Reads the real resolved --bg
+  // straight off the DOM (set synchronously by the two attribute writes
+  // just above) so this can never drift from the actual CSS value by hand.
+  const metaTheme = document.getElementById('meta-theme-color');
+  if (metaTheme) {
+    const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+    if (bg) metaTheme.setAttribute('content', bg);
+  }
 }
 function _renderThemeSwatches() {
   const row = document.getElementById('theme-swatch-row');
@@ -9099,7 +9159,7 @@ async function fixDraftStage(listingId, actionId, btn) {
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     const n = d.staged_count||0;
     btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
-    if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
+    if (n > 0) { btn.style.background='var(--green)'; btn.style.color='var(--on-accent)'; }
     const errNote = (d.errors&&d.errors.length) ? ' Errors: '+d.errors.join(', ') : '';
     showToast('Staged '+n+' fix'+(n!==1?'es':'')+'. Approve the new fixes in Approvals, then come back to approve Publish.'+errNote, 'ok');
     loadActions();
@@ -9142,7 +9202,11 @@ function setActionFilter(sev) {
   _actionFilter = (_actionFilter === sev) ? null : sev; // tap again to clear
   renderActionsContent();
 }
-const _SEV_COLORS = {high:'var(--red)', medium:'var(--gold)', low:'#7ba0c2'};
+// 2026-08-15 color-token audit: 'low' used to be a hardcoded blue (#7ba0c2)
+// with no matching palette token and no adaptation across modes -- reused
+// var(--muted) instead, matching .act-sev.low/.act-card.low's own fix (same
+// "least urgent = muted" reasoning, no 4th accent color invented).
+const _SEV_COLORS = {high:'var(--red)', medium:'var(--gold)', low:'var(--muted)'};
 // Same thresholds as CLAUDE.md's Autonomy Boundaries section ("any bulk edit
 // touching more than 10 listings" needs confirming scope) -- surfaced here so
 // Scott sees WHY a big batch deserves a closer look, not just that there's a
@@ -10759,7 +10823,7 @@ function _bkSectionThemes(){
     html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
     html += '<div><div style="font-size:12.5px;font-weight:700">'+(t.id ? escHtml(t.id)+' — ' : '')+escHtml(t.name)+
       ' <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;'+
-      (t.live ? 'background:rgba(92,196,138,.18);color:var(--green)' : 'background:rgba(232,184,104,.18);color:var(--amber)')+
+      (t.live ? 'background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green)' : 'background:color-mix(in srgb, var(--amber) 18%, transparent);color:var(--amber)')+
       '">'+(t.live ? 'LIVE' : 'PLANNED')+'</span></div>';
     if(t.tagline) html += '<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:2px">"'+escHtml(t.tagline)+'"</div>';
     html += '</div><span class="bk-caret" style="font-size:13px;color:var(--muted);flex-shrink:0">&#9656;</span></div>';

@@ -24854,3 +24854,81 @@ tests/test_advanced_toggle_keyboard.py, tests/test_flash_on_change.py.
 Full suite: 152/152 passing (148 baseline + these 4 new files). Build bumped
 this deploy. This closes out all 7 items from the second visual-research
 pass ("do it all in the order you suggest").
+
+
+## 2026-08-15 — Color-token coverage audit (dashboard + auth pages)
+
+Follow-up to the palette/mode rebuild (2026-08-14): systematically swept
+frank_hud_mockup.py and _AUTH_PAGE_CSS (main.py) for hex-literal colors
+outside the real :root token blocks, to find anything that wouldn't adapt
+across the 6 combinations. Excluded as legitimately non-adaptive: the
+product theme-catalog swatch data (_BRANDKIT_THEMES/CLAUDE.md's 16-theme
+catalog, describes PLANNER cover colors, unrelated to Frank's own chrome),
+_UI_PALETTES' own swatch-preview hex (needs literal values to preview each
+palette), brand icon SVG fills (Google/Apple), the video-player letterbox
+background, and the persist-warning banner (deliberately fixed for maximum
+urgency regardless of theme, same reasoning browsers use for insecure-
+connection warnings).
+
+**Dashboard findings, all fixed:**
+1. .toast-check svg's white stroke on var(--green) — confirmed real WCAG
+   failure, 2.16:1 in every dark-mode combination (below the 3:1 floor).
+   Fixed to var(--on-accent), verified 4.97-8.99:1 across all 6.
+2. .act-btn.approve's fill text (+ its JS twin in batchStageTags' success
+   state) hardcoded #06140d — the exact near-black var(--on-accent) exists
+   to replace, missed by the original sweep since that one only searched
+   the 4 literals used against --cyan/--gold, not this 5th one against
+   --green.
+3. .refimg-tile .refimg-cat paired a FIXED dark photo-caption overlay with
+   an ADAPTING var(--text) — correct in dark mode, illegible in light mode
+   (dark text on a still-dark overlay). Fixed to fixed light text, matching
+   its sibling .refimg-del's already-correct fixed+fixed pairing.
+4. An entire status-pill family (.hub-lstate, .hub-qbadge, .act-sev,
+   .act-card borders, .act-btn.danger/.reject, Brand Kit LIVE/PLANNED,
+   .ss-status.*, JS _SEV_COLORS) was hardcoded to the original single dark
+   palette — stayed visually frozen regardless of active combination.
+   Converted to color-mix(in srgb, var(--X) N%, transparent), the exact
+   formula the sliding tab-bar pill already established and tests. "low"
+   severity had no real token (an arbitrary blue) — reused var(--muted).
+5. <meta name="theme-color"> was a stale hex matching none of the 6 real
+   bg values, never updated on switch. Now synced from real --bg both at
+   first paint and on every _applyTheme() call.
+
+**Auth-page findings:** _AUTH_PAGE_CSS had ZERO light/dark awareness at
+all — an unauthenticated visitor in system light mode always got the fixed
+dark page. Added @media(prefers-color-scheme:light) using frank_hud_mockup
+.py's exact warm/light hex values (not re-derived). Activating light mode
+exposed 3 pairings that would have gone illegible: button/link fill text
+(hardcoded near-black #2c1a06, assumed --gold is always light — fixed to
+var(--on-accent)); the logo's glow effects (fixed dark-mode pink rgba,
+fixed to color-mix off var(--cyan)); and .err/.warn's tinted background/
+border (fixed rgba/hex, converted to color-mix off var(--red)/var(--amber)).
+
+Caught a real regression in my own first pass on .err: naively using
+var(--red) as its text color measured 4.49:1 against --panel in dark mode
+(already under the 4.5:1 AA floor before any tint) and 3.83:1 once actually
+composited under its own translucent red tint — confirmed failing by the
+new test's real contrast-math check, not eyeballed. Root cause: --red's
+dark-mode value (#e2685f) was tuned as a badge/border accent, not dedicated
+body text. Fixed with a new --err-text token: the ORIGINAL dark-mode value
+(#ff9d94, 7.39:1 against panel, already correct) stays default; light mode
+override happens to equal --red there since --red is already strong dark-
+on-light text once the accent flips.
+
+Verified end to end in real headless Chrome for both halves: color-mix()
+results resolve to the exact expected RGB+alpha for the active combination
+(spot-checked against computed styles, not just source inspection);
+var(--on-accent) renders correctly against --green specifically in both a
+synthetic toast-check element and a real .act-btn.approve; meta theme-color
+tracks --bg exactly after a runtime palette/mode switch; auth pages
+screenshotted in both prefers-color-scheme states (login, error banner,
+warning banner) — all legible, no mismatched colors.
+
+New tests/test_color_token_audit_dashboard.py and
+tests/test_color_token_audit_auth_pages.py (the latter includes real
+composited-background contrast math, not just source-string checks, plus a
+guard test asserting the naive var(--red)-as-text mistake really would fail
+AA, so the regression this pass caught can't silently stop being tested if
+--red's value ever changes).
+
+Full suite: 154/154 passing. Build bumped this deploy.
