@@ -816,7 +816,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c508a53-v353"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "18c4304-v354"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -17164,11 +17164,11 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
          "run one real generation against a live GEMINI_API_KEY before this date, "
          "then flip AI_VIDEO_ENGINE=veo."),
         ("gpt_image_1_migration_resolved", "gpt-image-1", date(2026, 10, 23),
-         "OpenAI's gpt-image-1 shuts down on this date. It's the only engine "
-         "confirmed to support background=\"transparent\" (stickers/cut-outs) -- "
-         "confirm gpt-image-2 (or another approved engine) has a working "
-         "transparent-background path before this date, or sticker/cut-out "
-         "generation breaks."),
+         "OpenAI's gpt-image-1 shuts down on this date. tools/image_gen.py now has "
+         "engine=\"gpt-image-1.5\" wired for the transparent-background/sticker path "
+         "(shuts down later, 2026-12-01) but it's UNPROVEN -- run one real sticker-"
+         "sheet generation and verify the alpha channel before this date, or "
+         "sticker/cut-out generation breaks."),
     )
     for setting_key, label, deadline, remediation in _shutdown_deadlines:
         if await asyncio.to_thread(db.get_setting, setting_key):

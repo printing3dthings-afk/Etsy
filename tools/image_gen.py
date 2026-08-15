@@ -140,7 +140,7 @@ def _get_bytes(url: str, retries: int, timeout: int) -> bytes:
 #   "openai"     — gpt-image-1 (default, unchanged, proven). Shuts down 2026-10-23
 #                  per OpenAI's deprecations page — migrate call sites to
 #                  "gpt-image-2" before then, EXCEPT anywhere background="transparent"
-#                  is used (stickers/cut-outs) — see the note below.
+#                  is used (stickers/cut-outs) — see "gpt-image-1.5" below for that path.
 #   "gpt-image-2" — OpenAI's gpt-image-1 successor (shipped 2026-04-21). Same REST
 #                  endpoints/response shape as gpt-image-1 (this module reuses the
 #                  same call path, just swaps the model string), native reasoning,
@@ -149,11 +149,26 @@ def _get_bytes(url: str, retries: int, timeout: int) -> bytes:
 #                  background="transparent" (verified against OpenAI's docs,
 #                  2026-07) — generate_image()/edit_image() raise a clear
 #                  ImageGenError if you try, same as the gemini/ideogram guard
-#                  below. Sticker/cut-out generation must keep using engine="openai"
-#                  (or a future transparency-capable engine) until/unless that
-#                  changes. Also omits input_fidelity on edits — gpt-image-2
-#                  processes every input at high fidelity automatically, the API
-#                  doesn't accept overriding it.
+#                  below.
+#   "gpt-image-1.5" — added 2026-08-15. OpenAI shipped this between gpt-image-1 and
+#                  gpt-image-2 (December 2025) specifically for native transparent
+#                  PNG cutouts — unlike gpt-image-2, it keeps that capability, and
+#                  unlike gpt-image-1 it isn't on the imminent Oct 23 cliff: OpenAI's
+#                  deprecations page lists its own shutdown as 2026-12-01, about 5.5
+#                  weeks later. This is the real migration target for the sticker/
+#                  cut-out path specifically (gpt-image-2 remains the target for
+#                  everything else, per above) — NOT a permanent answer since it too
+#                  sunsets eventually, but it's the correct bridge rather than riding
+#                  gpt-image-1 to its literal last day. Same REST shape as gpt-image-1/
+#                  gpt-image-2 (this module reuses the same call path). UNPROVEN in
+#                  this codebase — no live OPENAI_API_KEY call against this specific
+#                  model has been made from here yet; run one real sticker-sheet
+#                  generation and visually verify the alpha channel before relying on
+#                  it for a real customer-facing product (CLAUDE.md's zero-tolerance
+#                  truthfulness rule applies directly here — a broken transparent-bg
+#                  render is exactly the kind of thing that must never ship unverified).
+#                  input_fidelity handling is unconfirmed for this model too — passed
+#                  through unchanged (same as gpt-image-1) until proven otherwise.
 #   "gemini"     — Google "Nano Banana" (gemini-2.5-flash-image); best at keeping the
 #                  same product consistent across scenes → ideal for listing mockups
 #   "ideogram"   — Ideogram 3.0; best text-in-image (covers/badges); GENERATE-ONLY
@@ -163,17 +178,18 @@ def _get_bytes(url: str, retries: int, timeout: int) -> bytes:
 #                  the multi-image request shape is confirmed against a real
 #                  response). Transparent-background support is NOT confirmed
 #                  against xAI's docs — do not use for stickers/cut-outs until
-#                  verified; use "openai" for those. UNPROVEN end-to-end (no
-#                  XAI_API_KEY in this dev sandbox; the real key lives on
-#                  Railway) — same "confirm on first real key" discipline as
-#                  Ideogram had before its own first live call.
+#                  verified; use "openai" or "gpt-image-1.5" for those. UNPROVEN
+#                  end-to-end (no XAI_API_KEY in this dev sandbox; the real key
+#                  lives on Railway) — same "confirm on first real key" discipline
+#                  as Ideogram had before its own first live call.
 _DEFAULT_ENGINE = "openai"
 _GEMINI_IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image")
-_OPENAI_COMPATIBLE_ENGINES = {"openai", "gpt-image-2"}
+_OPENAI_COMPATIBLE_ENGINES = {"openai", "gpt-image-2", "gpt-image-1.5"}
+_OPENAI_MODEL_IDS = {"gpt-image-2": "gpt-image-2", "gpt-image-1.5": "gpt-image-1.5"}
 
 
 def _openai_model_for(eng: str) -> str:
-    return "gpt-image-2" if eng == "gpt-image-2" else _MODEL
+    return _OPENAI_MODEL_IDS.get(eng, _MODEL)
 
 
 def _engine(engine: str | None) -> str:
@@ -651,7 +667,7 @@ def generate_image(
         if background == "transparent":
             raise ImageGenError(
                 f"engine={eng!r} does not support transparent background — use "
-                "engine='openai' for cut-out/sticker assets")
+                "engine='gpt-image-1.5' (or 'openai' until it's proven) for cut-out/sticker assets")
         if eng == "gemini":
             raw = _gemini_generate_bytes(prompt)
         elif eng == "ideogram":
@@ -659,12 +675,12 @@ def generate_image(
         elif eng == "grok":
             raw = _grok_generate_bytes(prompt)
         else:
-            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram/grok)")
+            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gpt-image-1.5/gemini/ideogram/grok)")
         return _write(out_path, _fit_to_size(raw, size, output_format))
     if eng == "gpt-image-2" and background == "transparent":
         raise ImageGenError(
             "engine='gpt-image-2' does not support transparent background — use "
-            "engine='openai' (gpt-image-1) for cut-out/sticker assets")
+            "engine='gpt-image-1.5' (or 'openai' until it's proven) for cut-out/sticker assets")
     if background == "transparent" and output_format not in ("png", "webp"):
         raise ImageGenError("transparent background requires output_format='png' or 'webp'")
     payload = {
@@ -719,7 +735,7 @@ def edit_image(
         if eng == "grok":
             raw = _grok_edit_bytes(prompt, list(image_paths))
             return _write(out_path, _fit_to_size(raw, size, "jpeg"))
-        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram/grok)")
+        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gpt-image-1.5/gemini/ideogram/grok)")
 
     boundary = "----imggen" + os.urandom(8).hex()
     parts: list[bytes] = []
