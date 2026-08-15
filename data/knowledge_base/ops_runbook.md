@@ -24932,3 +24932,66 @@ AA, so the regression this pass caught can't silently stop being tested if
 --red's value ever changes).
 
 Full suite: 154/154 passing. Build bumped this deploy.
+
+
+## 2026-08-15 — INCIDENT: CI Smoke silently blocked every deploy since 99e807c
+
+Scott: "When I open frank none of the changes are there." Checked `/health`
+on the live Railway app directly — reported `build: a59c8a1-v340`, a commit
+from earlier this session, before the color-theme rebuild, the visual-
+research pass, and the color-token audit above. All of that work (5 commits,
+99e807c through 1d658b5) was sitting on GitHub, fully pushed, and simply
+never went live.
+
+Per the 2026-08-10 incident's own advice ("a 'no deploy showing up' symptom
+on this branch should always be checked against Railway's real deployment
+status before assuming a slow build" — Railway's Etsy service auto-deploys
+straight from `claude/etsy-automation-agents-WFAPU` but gates on GitHub's
+"CI Smoke" check suite passing first), pulled the actual GitHub Actions
+history instead of guessing: "CI Smoke" had been failing on every single
+commit going back to 99e807c (confirmed via `list_workflow_runs` filtered
+to this branch) — meaning every push for the entire back half of this
+session silently never deployed, exactly the same failure class as before,
+just a different underlying test this time.
+
+Root cause, found in the failed job's logs (`get_job_logs`, `failed_only:
+true`): `test_hyperframes_render.py`'s `test_missing_media_file_refused_
+before_any_render_attempt` assumed `_produce_hyperframes_render()`'s
+media-file-existence check was always reachable, but that function checks
+`hyperframes_render.check_hyperframes_available()` FIRST and short-circuits
+if it fails. In every local dev sandbox this was verified in during
+development, Node/ffmpeg/Chrome Headless Shell were ALL present
+(`check_hyperframes_available()` → `True`), so the test always reached the
+real media-file check and passed. The GitHub Actions CI runner has the
+hyperframes CLI resolvable but genuinely lacks ffmpeg specifically — a
+different, real partial-availability state neither local sandbox nor CI
+had been directly compared before. That makes `check_hyperframes_available()`
+return `(False, "hyperframes needs ffmpeg (apt package \`ffmpeg\`) installed
+on this deploy.")`, short-circuiting before the media-file loop ever runs,
+so the tool correctly returns a clean error but NOT the specific "not found"
+substring the test hardcoded — a real environment-dependent test bug, same
+class as the 2026-08-10 timezone incident (works everywhere it was actually
+tried, fails in the one environment that matters for shipping).
+
+Fixed by gating the strict "not found" substring assertion on
+`_HAS_HYPERFRAMES` (computed once at test-module load from the real
+environment) — the unconditional "some clean error, not a crash" check
+still always runs; the environment-specific message-content check only
+runs when this environment can actually exercise that code path. Verified
+against the exact CI condition, not just re-run locally: mocked
+`check_hyperframes_available()` to return the real observed CI failure
+tuple and confirmed the tool still returns a clean error the fixed test
+would accept.
+
+**Worth remembering, extending the 2026-08-10 note:** an "available/
+unavailable" test split needs to consider PARTIAL availability too, not
+just the two extremes (fully present locally, fully absent in CI) — this
+bug hid for 5 commits specifically because both environments checked
+during development happened to be at opposite ends of that spectrum, never
+the middle state CI actually turned out to be in.
+
+Full suite: 154/154 passing (including the fixed test). Build bumped this
+deploy — once this lands, watch `/health`'s `build` field (should match
+this commit's short hash) and GitHub's CI Smoke run for this push to
+confirm CI actually passes and Railway actually redeploys this time,
+since that's the only way to truly close this out.

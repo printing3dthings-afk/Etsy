@@ -103,13 +103,28 @@ def test_unavailable_dependency_reports_cleanly_not_a_crash():
 def test_missing_media_file_refused_before_any_render_attempt():
     """resolve_media_file_path must catch a nonexistent media file BEFORE
     ever spawning hyperframes -- otherwise a typo'd path wastes a real
-    render attempt only to fail deep inside the composition."""
+    render attempt only to fail deep inside the composition.
+
+    2026-08-15 CI incident: _produce_hyperframes_render() checks
+    check_hyperframes_available() BEFORE the media-file loop, so this exact
+    "not found" message is only reachable when hyperframes is actually
+    available in this environment. That held in every local dev sandbox
+    this was verified in (Node/ffmpeg/Chrome Headless Shell all present,
+    _HAS_HYPERFRAMES=True) but NOT in the GitHub Actions CI runner, which
+    has the hyperframes CLI resolvable but not ffmpeg specifically -- a
+    real, observed environment difference (confirmed via the actual CI
+    failure log), not a hypothetical one. That silently blocked every
+    Railway deploy on this branch from landing (CI Smoke gates the deploy)
+    for several commits before being caught. The strict "not found"
+    substring check is now gated on _HAS_HYPERFRAMES; either way, a clean
+    non-crashing error is still required unconditionally."""
     result = server._execute_agent_tool("render_hyperframes_video", {
         "html_source": _SIMPLE_COMPOSITION, "output_name": "thing",
         "media_files": {"assets/photo.jpg": "product_files/definitely_does_not_exist_12345.jpg"},
     })
     check(result.get("error") is not None, f"expected a clean error for missing media, got: {result}")
-    check("not found" in result.get("error", "").lower(), f"expected a 'not found' message, got: {result}")
+    if _HAS_HYPERFRAMES:
+        check("not found" in result.get("error", "").lower(), f"expected a 'not found' message, got: {result}")
 
 
 def test_resolve_media_file_path_checks_digital_products_base():
