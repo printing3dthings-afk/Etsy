@@ -26365,3 +26365,193 @@ This closes the three-part ease-of-use audit from earlier today: (1)
 owner-only buttons gated in the UI, (2) missing header tooltips fixed, (3)
 typed confirmation on catastrophic actions, plus this restoration of the
 orphaned team-management UI found while doing (1)'s planned follow-on.
+
+
+## 2026-08-16 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-08-16 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-16 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-16 — Durable volume not writable
+hourly health loop found /tmp/tmpldkf1ifo/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpldkf1ifo/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-16 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-16 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmplaxcku65/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-16 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-16 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 16084). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-16 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 16086). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-16 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-16 — Tasks screen rebuilt: real follow-through, not just checkboxes
+
+Scott: "The question task doesn't seem to do anything... I need this to
+have more ability." Investigated the real mechanics (not just the UI):
+answering a question-category todo wrote the answer into the ops runbook
+and left the checkbox open forever -- Frank only ever saw it if it
+happened to call list_todos on some unrelated future turn, with zero UI
+feedback either way. "Frank Can Do" had literally zero automation
+difference from "General" -- a label with nothing behind it. Presented
+both findings with two design options each; Scott's answers: "Auto
+complete but still have Frank finish it" (Questions) and "Background queue
+but make sure it gets done" (Frank Can Do).
+
+**New infrastructure — a real headless agent turn.** `_run_agent_turn`
+(the live chat loop) is hard-coupled to a websocket. Built
+`_run_headless_agent_task(prompt)`: the same multi-round tool-use loop
+with no streaming and no persisted chat history, reusing `_anthropic_create`,
+`_tools_with_cache()`, and `_execute_agent_tool()` verbatim -- Frank gets
+its real tools (including `stage_action`, so anything Etsy-mutating still
+goes through the normal approval gate, never executed directly) with two
+exclusions: `_RELAY_TOOLS` (no live connection to Scott's machine when this
+fires unattended) and `_PII_TOOLS` (a stored follow-up note is dashboard-
+visible; safer to let a genuinely PII-requiring task escalate than risk a
+buyer name landing in it). Real bug caught before shipping: a module-level
+`_HEADLESS_EXCLUDED_TOOLS = _RELAY_TOOLS | _PII_TOOLS` constant placed near
+this new code crashed at import -- `_PII_TOOLS` is defined near the bottom
+of the file, well after this line would have executed at module load.
+Fixed by computing it lazily inside the function instead.
+
+**Questions**: `POST /api/todos/{id}/answer` now marks the todo done (Scott's
+own part of the loop finishes the moment he answers) and fires
+`asyncio.create_task(_process_answered_question(...))` -- a real headless
+turn telling Frank what was asked and answered, asking it to actually act
+on it. The result gets written to a new `follow_up` column and shown in
+the UI as "Frank: ...". Never blocks the HTTP response (same fire-and-
+forget pattern as the existing `_dispatch_reject_fix` after a rejected
+action).
+
+**Frank Can Do**: new hourly `_frank_can_do_loop()` (same `_run_loop_iteration`
+heartbeat/backoff wrapper every other background loop uses) works through
+up to 3 open frank_can_do todos per run via `_attempt_frank_can_do_todo()`.
+The prompt tells Frank to call the existing `complete_todo` tool only once
+something is genuinely done, or to stage an action and explain without
+completing if it needs Scott's approval. Every attempt -- success, staged,
+or failed -- writes a real `follow_up` note. `attempt_count` increments on
+every non-completing attempt; hitting 3 sets `needs_attention`, which the
+loop's own query (`list_open_frank_can_do_todos`) then excludes from further
+auto-retries, and the UI shows a visible "⚠ couldn't finish this
+automatically" escalation instead of retrying forever silently. Also added
+`POST /api/todos/{id}/run-now` + a real "🤖 Send to Frank now" button so
+Scott doesn't have to wait up to an hour to see it work.
+
+**Frontend**: `_renderTasks()` now gives each category the primary action
+that actually matches what it needs (answer box for Questions, a real send-
+to-Frank button + queue/attempt/escalation state for Frank Can Do) instead
+of one generic checkbox for all four. General/Only You unchanged.
+
+**Verified**: real headless Chrome run end-to-end against the real (non-
+mocked) endpoints -- answering a question auto-checks it and, since this
+sandbox has no ANTHROPIC_API_KEY, correctly shows "Frank: Couldn't follow
+up automatically: ANTHROPIC_API_KEY not configured" rather than silently
+doing nothing (proves the failure path is honest, not just the happy
+path). The live agent-turn mechanics themselves (`_run_headless_agent_task`'s
+actual multi-round tool-use loop, including a real `complete_todo` round
+trip that genuinely marks a todo done in the database) are covered by 5
+new mocked-Anthropic-call test files (168/168 full suite passing) --
+UNPROVEN against a real key in this sandbox specifically, same "unproven
+here, needs one real check on Railway" discipline as Grok/veo/gpt-image-1.5
+earlier this session. Ran tools/playwright_smoke.py before shipping. Build
+bumped this deploy.

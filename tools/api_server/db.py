@@ -327,6 +327,31 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE todos ADD COLUMN answered_at TEXT")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            # follow_up/follow_up_at/attempt_count/needs_attention (2026-08-16, Tasks
+            # screen ease-of-use pass): both 'question' and 'frank_can_do' todos now
+            # get real follow-through instead of sitting inert -- answering a question
+            # kicks off a real headless agent turn, and frank_can_do items get worked
+            # by an hourly background loop. follow_up holds Frank's own summary of
+            # what it did/found (shown in the UI as "Frank: ..."); attempt_count +
+            # needs_attention let the frank_can_do loop cap retries and escalate
+            # visibly to Scott instead of silently retrying forever or giving up
+            # silently (Scott's explicit ask: "make sure it gets done").
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN follow_up TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN follow_up_at TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN attempt_count INTEGER NOT NULL DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN needs_attention INTEGER NOT NULL DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             try:
                 conn.execute("ALTER TABLE hub_users ADD COLUMN recovery_code_hash TEXT")
             except sqlite3.OperationalError:
@@ -1332,9 +1357,18 @@ def set_todo_done(todo_id: int, done: bool) -> bool:
 
 
 def set_todo_answer(todo_id: int, answer: str) -> bool:
-    """Store Scott's answer to a question-category todo. Deliberately does NOT
-    touch `done` -- answering informs the next step, it doesn't mean the
-    underlying task is resolved (Scott's explicit call, 2026-07-15)."""
+    """Store Scott's answer to a question-category todo.
+
+    2026-08-16 (Tasks screen ease-of-use pass): previously deliberately did
+    NOT touch `done` (2026-07-15 call: "answering informs the next step, it
+    doesn't mean the underlying task is resolved") -- reversed on Scott's
+    explicit instruction ("auto complete but still have Frank finish it").
+    Scott's own part of the loop -- answering -- is now the completion
+    signal; the caller (POST /api/todos/{id}/answer) marks `done` itself
+    right after this call AND kicks off a real headless agent turn so
+    Frank actually follows through, rather than the answer just sitting in
+    the ops runbook waiting for Frank to notice it on some unrelated future
+    turn. This function's own job stays narrow -- just persist the answer."""
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
@@ -1345,6 +1379,65 @@ def set_todo_answer(todo_id: int, answer: str) -> bool:
         )
         conn.commit()
         return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def set_todo_follow_up(todo_id: int, note: str) -> bool:
+    """Store Frank's own follow-up note after actually acting on a todo --
+    either a real headless agent turn processing an answered question, or a
+    frank_can_do attempt. Shown in the Tasks UI as "Frank: <note>" so
+    answering/creating a task has a visible resolution instead of vanishing
+    into a log file only Frank ever reads."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET follow_up=?, follow_up_at=? WHERE id=?",
+            (note.strip()[:4000], ts, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def bump_todo_attempt(todo_id: int, needs_attention: bool = False) -> bool:
+    """Increment attempt_count for a frank_can_do todo the background loop
+    just tried and didn't complete. needs_attention is only ever set to
+    True here (the loop's escalation signal once it gives up retrying) --
+    the flag naturally stops mattering once the todo is marked done via the
+    normal completion path, so nothing needs to clear it back to False."""
+    init_db()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET attempt_count = attempt_count + 1, "
+            "needs_attention = CASE WHEN ? THEN 1 ELSE needs_attention END WHERE id=?",
+            (1 if needs_attention else 0, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def list_open_frank_can_do_todos(max_attempts: int = 3, limit: int = 3) -> list:
+    """Open frank_can_do todos the background loop should still try, oldest
+    first. Excludes anything already at/over max_attempts -- those stay
+    open and visible (needs_attention is set) but the loop stops
+    re-attempting them automatically, so a task that genuinely can't be
+    done this way surfaces to Scott instead of retrying forever."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM todos WHERE done=0 AND category='frank_can_do' "
+            "AND attempt_count < ? ORDER BY created_at ASC LIMIT ?",
+            (max_attempts, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
 

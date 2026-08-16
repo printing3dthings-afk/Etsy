@@ -8656,13 +8656,49 @@ function _renderTasks(d, list, offlineNote){
     const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
     const catLabel = _TASK_CATEGORY_LABELS[t.category] || '';
     const isQuestion = t.category === 'question';
+    const isFrankCanDo = t.category === 'frank_can_do';
     const answered = !!t.answer;
+    const followUp = t.follow_up || '';
+    const needsAttention = !!t.needs_attention;
+    const attempts = t.attempt_count || 0;
+
+    // 2026-08-16 (Tasks screen rebuild, Scott: "auto complete but still have Frank
+    // finish it" / "background queue but make sure it gets done"): each category
+    // now gets the primary action that actually matches what it needs, instead of
+    // one generic checkbox for all four -- a Question needs an answer, a Frank Can
+    // Do item needs a real attempt, General/Only You stay simple checkboxes.
+    let primaryAction;
+    if (isQuestion && answered) {
+      // Answering now auto-completes (POST /api/todos/:id/answer sets done=true
+      // server-side) -- this renders the resolved state, not a bare checkbox.
+      primaryAction =
+        '<div class="sub" style="color:var(--gold);margin-top:4px">Your answer: '+escHtml(t.answer)+
+        ' <a href="#" onclick="event.preventDefault();openAnswerModal('+t.id+')" style="color:var(--muted);text-decoration:underline">✏️ edit</a></div>'+
+        (followUp
+          ? '<div class="sub" style="color:var(--cyan2);margin-top:4px">%%AGENT_SHORT%%: '+escHtml(followUp)+'</div>'
+          : '<div class="sub" style="color:var(--muted);margin-top:4px;font-style:italic">%%AGENT_SHORT%% is following up…</div>');
+    } else if (isQuestion) {
+      primaryAction = '<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="openAnswerModal('+t.id+')">💬 Answer</button>';
+    } else if (isFrankCanDo && done) {
+      primaryAction = followUp
+        ? '<div class="sub" style="color:var(--cyan2);margin-top:4px">%%AGENT_SHORT%%: '+escHtml(followUp)+'</div>' : '';
+    } else if (isFrankCanDo) {
+      primaryAction =
+        '<button class="hub-act-btn secondary" id="run-now-btn-'+t.id+'" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="runFrankCanDoNow('+t.id+',this)">🤖 Send to %%AGENT_SHORT%% now</button>'+
+        '<span class="sub" style="margin-left:8px">or checks this queue on its own hourly</span>'+
+        (needsAttention
+          ? '<div class="sub" style="color:var(--red);margin-top:4px">⚠ Couldn\\'t finish this automatically after '+attempts+' tries — needs your input</div>'
+          : (attempts > 0 ? '<div class="sub" style="margin-top:4px">attempted '+attempts+'x</div>' : ''))+
+        (followUp ? '<div class="sub" style="color:var(--cyan2);margin-top:4px">%%AGENT_SHORT%%: '+escHtml(followUp)+'</div>' : '');
+    } else {
+      primaryAction = '';
+    }
+
     return '<div class="tl-item">'+
       '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
       '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
       '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+(catLabel?' · '+catLabel:'')+'</div>'+
-      (answered ? '<div class="sub" style="color:var(--gold);margin-top:4px">Your answer: '+escHtml(t.answer)+' <a href="#" onclick="event.preventDefault();openAnswerModal('+t.id+')" style="color:var(--muted);text-decoration:underline">✏️ edit</a></div>'
-        : (isQuestion ? '<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="openAnswerModal('+t.id+')">💬 Answer</button>' : ''))+
+      primaryAction+
       '</div>'+
       '<button aria-label="Delete to-do" onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>'+
       (isQuestion ? '<div id="answer-modal-'+t.id+'" style="display:none;padding:0 4px 8px 26px"></div>' : '');
@@ -8782,6 +8818,26 @@ async function deleteHudTodo(id){
     loadTasks();
   } catch(e) {
     showToast('Could not delete task: ' + (e.message||e), 'err', 6000);
+  }
+}
+// 2026-08-16 (Tasks screen rebuild): "Send to Frank now" for frank_can_do todos --
+// runs the exact same attempt logic the hourly background loop uses, on demand,
+// instead of making Scott wait up to an hour to see whether it actually works.
+// A real headless agent turn (possibly several tool round-trips) can genuinely
+// take a while, hence the generous 90s timeout -- matching this file's other
+// real-agent-work call sites, not the usual 15-20s for a plain CRUD request.
+async function runFrankCanDoNow(id, btn){
+  if (btn) { btn.disabled = true; btn.textContent = '🤖 Working…'; }
+  showToast('Sending this to %%AGENT_SHORT%% now — this can take a minute.');
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/todos/'+id+'/run-now', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 90000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    showToast('%%AGENT_SHORT%% finished — see what happened below.', 'ok');
+    loadTasks();
+  } catch(e) {
+    showToast('Could not run this now: ' + (e.message||e), 'err', 6000);
+    if (btn) { btn.disabled = false; btn.textContent = '🤖 Send to %%AGENT_SHORT%% now'; }
   }
 }
 

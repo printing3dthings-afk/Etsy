@@ -816,7 +816,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "634fef9-v359"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "6f2ccbe-v360"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -10654,6 +10654,7 @@ async def _startup() -> None:
     asyncio.create_task(_ab_test_loop())
     asyncio.create_task(_competitor_watch_loop())
     asyncio.create_task(_review_theme_loop())
+    asyncio.create_task(_frank_can_do_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -17860,14 +17861,16 @@ async def set_todo_category_endpoint(todo_id: int, payload: dict, _token: str = 
 
 @app.post("/api/todos/{todo_id}/answer")
 async def answer_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_session_or_bearer)):
-    """Store Scott's answer to a question-category todo and push it into the
-    ops runbook so Frank actually sees it on his next chat turn -- todos are
-    never auto-injected into chat context (list_todos is a tool Frank must
-    proactively call), but _ops_runbook_block() is unconditionally prepended
-    to every turn's system prompt, so that's the real delivery mechanism, not
-    just the DB column (2026-07-15 design note, see the plan this shipped
-    from). Deliberately does not touch `done` -- an answer informs the next
-    step, it doesn't mean the underlying task is resolved."""
+    """Store Scott's answer to a question-category todo, mark it done (Scott's
+    own part of the loop is complete the moment he answers), and kick off a
+    real headless agent turn so Frank actually follows through on the answer
+    right away -- not just an ops-runbook entry waiting for Frank to notice it
+    on some unrelated future turn (2026-08-16: reversed the prior "answering
+    doesn't complete it" design on Scott's explicit instruction, see
+    _run_headless_agent_task's own comment for why). The ops runbook entry
+    stays too -- it's still the mechanism that lets Scott ask Frank directly
+    "why did you answer X" later and get a grounded answer, independent of the
+    live follow-up call succeeding or failing."""
     answer = ((payload or {}).get("answer") or "").strip()
     if not answer:
         raise HTTPException(status_code=400, detail="answer is required")
@@ -17878,10 +17881,12 @@ async def answer_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_s
     ok = await asyncio.to_thread(db.set_todo_answer, todo_id, answer)
     if not ok:
         raise HTTPException(status_code=404, detail="Todo not found")
+    await asyncio.to_thread(db.set_todo_done, todo_id, True)
     await asyncio.to_thread(
         _append_ops_runbook_entry, "Scott answered a todo question",
         f"Q: {row['text']}\nA: {answer}",
     )
+    asyncio.create_task(_process_answered_question(todo_id, row["text"], answer))
     return {"ok": True}
 
 
@@ -17901,6 +17906,199 @@ async def remove_todo(todo_id: int, _token: str = Depends(_auth_session_or_beare
     # 2026-07-18: same orphaned-event gap as toggle_todo -- deleting a
     # synced todo must also remove its real calendar event.
     await asyncio.to_thread(_cleanup_synced_calendar_event, f"todo:{todo_id}")
+    return {"ok": True}
+
+
+# ── Headless agent task runner (2026-08-16, Tasks screen ease-of-use pass) ──────────
+# _run_agent_turn (bottom of this file) is the live-chat loop: it streams text over
+# a real websocket and needs one connected the whole time. Answered questions and
+# frank_can_do todos need the same real tool-using agent turn, but with no browser
+# tab open and no one watching -- this is that, headless: a plain (non-streaming)
+# multi-round-trip tool-use loop that returns the final text instead of streaming it.
+# Deliberately excludes _RELAY_TOOLS (needs a live connection to Scott's own machine,
+# which may not even be running when this fires) and _PII_TOOLS (a stored follow_up
+# note is dashboard-visible; safer to let a genuinely PII-requiring task fall through
+# to needs_attention than risk a buyer name/review text landing in it). _LOCAL_STAGED_TOOLS
+# stay available -- _execute_agent_tool() already handles those the same as everything
+# else here (stage first, execute never), same as live chat.
+_HEADLESS_AGENT_MAX_ROUNDS = 4
+
+
+async def _run_headless_agent_task(prompt: str, max_rounds: int = _HEADLESS_AGENT_MAX_ROUNDS) -> str:
+    """Run one self-contained agent task with real tool access, headless (no
+    websocket, no persisted chat history). Returns the final assistant text.
+    Raises on a genuine API/circuit-breaker failure -- callers are responsible
+    for catching and recording that as a failed attempt, same discipline as
+    every other background loop in this file."""
+    if not ANTHROPIC_KEY:
+        raise RuntimeError("ANTHROPIC_API_KEY not configured")
+    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    # _PII_TOOLS is defined later in this file (near _run_agent_turn) -- computed
+    # here at call time rather than as a module-level constant next to this
+    # function, since a module-level `_RELAY_TOOLS | _PII_TOOLS` line here would
+    # execute at import time, before _PII_TOOLS exists yet, and crash startup.
+    excluded = _RELAY_TOOLS | _PII_TOOLS
+    tools = [t for t in _tools_with_cache() if t.get("name") not in excluded]
+    history: list[dict] = [{"role": "user", "content": prompt}]
+
+    for round_idx in range(max_rounds + 1):
+        allow_tools = round_idx < max_rounds
+        kwargs = dict(
+            model=business_config.MODEL_PRIMARY,
+            max_tokens=1500,
+            system=[_system_block(), {
+                "type": "text",
+                "text": _ops_runbook_block() + _ceo_learnings_block(),
+                "cache_control": {"type": "ephemeral"},
+            }],
+            messages=history,
+        )
+        if allow_tools:
+            kwargs["tools"] = tools
+        final = await asyncio.to_thread(_anthropic_create, client, **kwargs)
+        history.append({"role": "assistant", "content": final.content})
+
+        if final.stop_reason != "tool_use":
+            return "".join(
+                b.text for b in final.content if getattr(b, "type", "") == "text"
+            ).strip()
+
+        tool_results = []
+        for block in final.content:
+            if getattr(block, "type", None) != "tool_use":
+                continue
+            try:
+                result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+            except Exception as exc:  # noqa: BLE001 — a failed tool call must still get a tool_result
+                result = {"error": str(exc)[:300]}
+            tool_results.append({
+                "type": "tool_result",
+                "tool_use_id": block.id,
+                "content": json.dumps(result, default=str)[:8000],
+            })
+        history.append({"role": "user", "content": tool_results})
+
+    # Round cap hit with the model still mid tool-use -- the final round above ran
+    # with allow_tools=False, so this branch is unreachable in practice (mirrors
+    # _run_agent_turn's own guaranteed-final-round guard), kept only as an honest
+    # fallback rather than an assumed-impossible silent return.
+    return "(reached the round limit without a final text response)"
+
+
+async def _process_answered_question(todo_id: int, question_text: str, answer: str) -> None:
+    """Fire-and-forget: run a real headless agent turn right after Scott answers
+    a question-category todo, so the answer actually gets acted on instead of
+    sitting in the ops runbook waiting for Frank to notice it on some unrelated
+    future turn. Never raises -- failures are recorded as the follow_up itself
+    so they're visible on the Tasks screen, not silently lost."""
+    prompt = (
+        f"{business_config.OWNER_NAME} just answered a question you asked on the shared to-do list:\n"
+        f"Q: {question_text}\nA: {answer}\n\n"
+        "Take whatever follow-up action is appropriate now, using your real tools if needed "
+        "(e.g. unblock something you were waiting on, update a record, or move forward with "
+        "what the answer unblocks). If nothing further is needed, say so in one short sentence."
+    )
+    try:
+        result = await _run_headless_agent_task(prompt)
+        await asyncio.to_thread(db.set_todo_follow_up, todo_id, result or "(no response)")
+        await asyncio.to_thread(
+            db.log_activity, "frank", "todo_question_followup",
+            f"todo #{todo_id}: {question_text[:120]}", {"answer": answer, "result": result}, outcome="ok",
+        )
+    except Exception as exc:
+        detail = f"Couldn't follow up automatically: {exc}"[:500]
+        await asyncio.to_thread(db.set_todo_follow_up, todo_id, detail)
+        await asyncio.to_thread(
+            db.log_activity, "frank", "todo_question_followup",
+            f"todo #{todo_id}: {question_text[:120]}", {"answer": answer}, outcome=f"error: {exc}",
+        )
+
+
+_FRANK_CAN_DO_MAX_ATTEMPTS = 3
+
+
+async def _attempt_frank_can_do_todo(todo: dict) -> None:
+    """Run one real attempt at a frank_can_do todo. Never raises -- every outcome
+    (completed, staged for approval, failed) is recorded via set_todo_follow_up
+    so the Tasks screen always shows what actually happened, and bump_todo_attempt
+    tracks retries so a genuinely-stuck task escalates to Scott (needs_attention)
+    instead of retrying silently forever. Shared by both the hourly background
+    loop and the manual "Send to Frank now" button -- one place this logic lives."""
+    todo_id, text = todo["id"], todo["text"]
+    prompt = (
+        f"Here is something you (Frank) previously said you could do yourself, from the "
+        f"shared to-do list: \"{text}\"\n\n"
+        "Attempt it now using your real tools. If you fully complete it, call complete_todo "
+        f"with todo_id={todo_id} — do this only once it's genuinely done, not just planned. "
+        "If it turns out to need a staged/approval-gated action (anything that touches a real "
+        "Etsy listing, spends money, or otherwise can't be trivially undone), stage it via "
+        "stage_action and explain what you staged and why — do NOT call complete_todo in that "
+        "case, since it isn't actually done until Scott approves it. If you genuinely can't make "
+        "any progress, explain what's blocking you."
+    )
+    try:
+        result = await _run_headless_agent_task(prompt)
+        await asyncio.to_thread(db.set_todo_follow_up, todo_id, result or "(no response)")
+        still_open = await asyncio.to_thread(db.list_todos)
+        row = next((t for t in still_open if t["id"] == todo_id), None)
+        if row and not row["done"]:
+            new_count = (row.get("attempt_count") or 0) + 1
+            await asyncio.to_thread(
+                db.bump_todo_attempt, todo_id, new_count >= _FRANK_CAN_DO_MAX_ATTEMPTS,
+            )
+        await asyncio.to_thread(
+            db.log_activity, "frank", "frank_can_do_attempt",
+            f"todo #{todo_id}: {text[:120]}", {"result": result}, outcome="ok",
+        )
+    except Exception as exc:
+        detail = f"Attempt failed: {exc}"[:500]
+        await asyncio.to_thread(db.set_todo_follow_up, todo_id, detail)
+        new_count = (todo.get("attempt_count") or 0) + 1
+        await asyncio.to_thread(
+            db.bump_todo_attempt, todo_id, new_count >= _FRANK_CAN_DO_MAX_ATTEMPTS,
+        )
+        await asyncio.to_thread(
+            db.log_activity, "frank", "frank_can_do_attempt",
+            f"todo #{todo_id}: {text[:120]}", None, outcome=f"error: {exc}",
+        )
+
+
+async def _frank_can_do_iteration() -> dict:
+    todos = await asyncio.to_thread(db.list_open_frank_can_do_todos, _FRANK_CAN_DO_MAX_ATTEMPTS, 3)
+    for todo in todos:
+        await _attempt_frank_can_do_todo(todo)
+    return {"attempted": len(todos)}
+
+
+async def _frank_can_do_loop() -> None:
+    """Hourly: work through open frank_can_do todos in the background so
+    "Frank Can Do" is a real queue, not just a label -- Scott's explicit ask.
+    Same resilience wrapper (heartbeat + backoff) as every other loop here."""
+    await asyncio.sleep(120)  # let the app finish booting first
+    while True:
+        delay = await _run_loop_iteration(
+            "frank_can_do", "Frank Can Do Queue", _frank_can_do_iteration,
+            on_success_detail=lambda r: f"{r['attempted']} todo(s) attempted",
+            base_interval=3600,
+        )
+        await asyncio.sleep(delay)
+
+
+@app.post("/api/todos/{todo_id}/run-now")
+async def run_frank_can_do_now(todo_id: int, _token: str = Depends(_rate_limited_auth)):
+    """Manual "Send to Frank now" — runs the exact same attempt logic the
+    hourly background loop uses, on demand, instead of waiting up to an hour.
+    Rate-limited (not the plain session-or-bearer read gate) since this
+    triggers a real Anthropic call plus whatever tools the model decides to use."""
+    todos = await asyncio.to_thread(db.list_todos)
+    row = next((t for t in todos if t["id"] == todo_id), None)
+    if not row:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    if row["category"] != "frank_can_do":
+        raise HTTPException(status_code=400, detail="Only frank_can_do todos can be run this way")
+    if row["done"]:
+        raise HTTPException(status_code=409, detail="Already completed")
+    await _attempt_frank_can_do_todo(row)
     return {"ok": True}
 
 
