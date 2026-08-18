@@ -15762,6 +15762,13 @@ _CONTENT_PRICE_BY_CATEGORY = {
     "digital_planner": 12.99,
     "wall_art": 6.99,
     "coloring_pages": 6.99,
+    # uncategorized (2026-08-19): the catch-all for a product that doesn't fit
+    # any real category yet (first case: Sprigit, an interactive HTML app --
+    # not a planner/wall-art/sticker/SVG product). No established comparable
+    # exists for "uncategorized" as a class, so this defaults to wall_art's
+    # tier rather than inventing a number -- Scott overrides per-product via
+    # set-listing-content same as every other category here.
+    "uncategorized": 6.99,
 }
 
 
@@ -15797,6 +15804,17 @@ _PRODUCT_TAXONOMY_BY_CATEGORY = {
     "sticker_pack": 2078,
     "sticker_pack_license": 2078,
     "paper_pack": 2078,
+    # uncategorized (2026-08-19): same "no exact match, 2078 is the closest
+    # real fit" reasoning CLAUDE.md already documents for digital_planner/
+    # wall_art/coloring_pages (Craft Supplies & Tools > Patterns & How To >
+    # Digital Files) -- first real case was Sprigit, a digital download that
+    # isn't a PDF/PNG/ZIP planner/art/sticker/SVG product. Without this,
+    # stage_product_publish() 400s every "uncategorized" product with
+    # "publishing isn't supported yet for category 'uncategorized'" even
+    # after content has been authored -- confirmed live 2026-08-19 trying to
+    # stage Sprigit. Self-corrects against a real live listing the first
+    # time this category actually has one, same as every other entry here.
+    "uncategorized": 2078,
 }
 
 # In-process cache of RESOLVED (possibly live-corrected) taxonomy_id per

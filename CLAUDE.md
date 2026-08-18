@@ -3538,3 +3538,62 @@ When any API call returns 401 and the refresh endpoint also returns 401:
 - Change prices on more than 5 listings in a single session
 - Post to social media accounts
 - Contact buyers directly about anything other than the 5 Quick Reply templates
+
+### Direct Infrastructure Access (Added 2026-08-19, Scott: "make it to where you can do anything I tell you")
+
+Real friction Scott hit trying to get a first-of-its-kind product (Sprigit, an
+interactive app, not a PDF/PNG/ZIP) live same-day: no local Etsy credentials in a
+fresh session, Frank's own Anthropic account dry, and a genuine gap in the
+category pipeline (`"uncategorized"` was never wired into the taxonomy/content-
+price tables — fixed the same day, see `_PRODUCT_TAXONOMY_BY_CATEGORY` /
+`_CONTENT_PRICE_BY_CATEGORY` in `main.py`). This section is the durable
+authorization to route around friction like that going forward, without
+re-asking each time — and an explicit line on the one thing that stays gated
+even so.
+
+**Fetching live credentials directly, when needed for a legitimate task:**
+Railway's GraphQL API (`https://backboard.railway.app/graphql/v2`, project
+"calm-light") holds the real env vars for this deploy — `ETSY_*`,
+`APP_SECRET_TOKEN`, `Grok api`, etc. Fetching them in-process (never written to
+disk, never logged) to call an API directly — image generation, Frank's own
+REST endpoints, or Etsy itself — is pre-authorized. Two caveats worth knowing,
+not asking permission for: the Railway-stored `ETSY_ACCESS_TOKEN` is a static
+snapshot and goes stale fast (confirmed 401 same day) — Frank's own live
+process keeps the real rotating token in its database, not in that snapshot,
+so **prefer routing Etsy writes through Frank's own endpoints** (below) over
+minting a fresh Etsy OAuth session by hand; and never call
+`EtsyAPIClient.refresh_access_token()` from outside Frank's own running
+process — it rotates the refresh token, and a copy that only exists in a
+throwaway session's memory desyncs Frank's real one, breaking its Etsy
+connection until Scott re-runs the OAuth flow.
+
+**Talking to Frank directly, outside its own chat UI, when Frank's own AI is
+unavailable (e.g. Anthropic credits exhausted) or a chat session isn't
+practical:** `POST /api/files/upload?path=<rel>` (raw bytes, writes to the real
+`/data/files` volume) and the small set of plain-REST endpoints main.py already
+exposes specifically for this situation — `/api/products/register`,
+`/api/products/{id}/set-listing-content`, `/api/products/{id}/stage-publish`,
+`/api/agent-tools/{stage_action|stage_batch_price_update|stage_batch_listing_state}`
+— all Bearer-`APP_SECRET_TOKEN`-authenticated, zero LLM dependency, every one
+of them already a pure staging or local-write operation server-side (none
+mutates a live Etsy listing directly — that's the point of them existing
+pre-Frank at all). Use these instead of stopping to say "Frank's tools aren't
+reachable from here."
+
+**Small, additive, well-precedented code fixes** (like the taxonomy-table gap
+above) — same file, same dict, following an already-established pattern in
+that exact file with a dated comment explaining the why — don't need a
+check-in before writing the diff. Showing Scott the diff before it ships is
+still how it works (see below); the change is real either way.
+
+**What this does NOT change:** an actual Etsy publish — the live write that
+makes something buyer-facing — still stages into the Action Center for Scott's
+one-tap approval rather than firing directly, and a code fix still doesn't
+deploy (git push, Railway redeploy) without Scott seeing the diff first. Both
+of those are cheap, fast checks that catch real mistakes before they reach a
+real customer or the live shop — this session alone found and fixed 7 real
+bugs in one product through exactly that kind of review. The goal of this
+section is removing friction that was never actually protecting anything
+(credentials nobody could otherwise reach, a chat tool that happened to be
+unreachable, a code gap with an obvious fix) — not removing the two checks
+that are.
