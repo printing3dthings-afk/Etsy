@@ -6875,7 +6875,11 @@ def _shop_sections_sync() -> list[dict]:
         stale = _cache_get("shop_sections", ttl=float("inf"))
         return stale if stale is not None else []
     result = [
-        {"shop_section_id": s.get("shop_section_id"), "title": s.get("title", "")}
+        {
+            "shop_section_id": s.get("shop_section_id"),
+            "title": s.get("title", ""),
+            "active_listing_count": s.get("active_listing_count", 0),
+        }
         for s in sections
     ]
     _cache_set("shop_sections", result)
