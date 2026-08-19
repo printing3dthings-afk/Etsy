@@ -8,8 +8,10 @@ hash — re-downloading it is pure waste (bandwidth, time, and load that contrib
 to rate-limit pressure). This cache stores {url: hash} on disk so repeat runs only
 fetch photos they have never seen.
 
-Usage:
-    from tools.photo_hash_cache import PhotoHashCache
+Usage (bare import -- callers run standalone with only their own directory on
+sys.path, e.g. listing_integrity_check.py; there is no importable `tools` package
+in that context):
+    from photo_hash_cache import PhotoHashCache
 
     cache = PhotoHashCache()
     h = cache.get_or_compute(url, fetch_fn, hash_fn)   # fetch+hash only on miss

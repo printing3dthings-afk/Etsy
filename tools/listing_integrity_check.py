@@ -467,7 +467,12 @@ _PHOTO_CACHE = None
 def _get_photo_cache():
     global _PHOTO_CACHE
     if _PHOTO_CACHE is None:
-        from tools.photo_hash_cache import PhotoHashCache
+        # 2026-08-19: this file only ever puts its own directory on sys.path (line 54)
+        # and imports everything else bare (e.g. `from etsy_api import ...`) -- the
+        # `tools.` prefix here was the one inconsistent import and crashed every
+        # --full run with ModuleNotFoundError: No module named 'tools' when run
+        # standalone (confirmed live via /api/workflows/listing_integrity_check/run).
+        from photo_hash_cache import PhotoHashCache
         _PHOTO_CACHE = PhotoHashCache()
     return _PHOTO_CACHE
 
