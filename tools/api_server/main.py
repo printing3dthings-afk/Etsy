@@ -6913,6 +6913,40 @@ async def listing_files(listing_id: int, _token: str = Depends(_auth_session_or_
     return result
 
 
+# (2026-08-19) No REST route previously returned a listing's raw content
+# (title/description/tags/price/state/images) verbatim -- every existing
+# route either summarizes (/api/listings), derives a yes/no verdict
+# (gate6-check), or stages a mutation (autofix/*). Needed this to verify
+# what Etsy actually stored for SPRIGIT after publish (specifically: does
+# create_listing()'s own AI-disclosure auto-append fire a SECOND time when a
+# hand-authored description already discloses AI use in different words --
+# it checks for the literal substring "AI assistance").
+@app.get("/api/listings/{listing_id}/raw")
+async def listing_raw(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+    """Read-only: the live listing's title/description/tags/price/state/images
+    straight from Etsy, no summarization. For manual verification after a
+    publish, not used by any UI screen."""
+    listing = await _fetch_listing_for_autofix(listing_id)
+    try:
+        images = await asyncio.to_thread(EtsyAPIClient().get_listing_images, listing_id)
+    except Exception:
+        images = []
+    return {
+        "listing_id": listing_id,
+        "title": listing.get("title", ""),
+        "description": listing.get("description", ""),
+        "tags": listing.get("tags", []),
+        "price": _price_float(listing.get("price")),
+        "state": listing.get("state"),
+        "who_made": listing.get("who_made"),
+        "when_made": listing.get("when_made"),
+        "is_supply": listing.get("is_supply"),
+        "taxonomy_id": listing.get("taxonomy_id"),
+        "image_count": len(images),
+        "image_ranks": [img.get("rank") for img in images],
+    }
+
+
 @app.post("/api/listings/{listing_id}/state")
 async def set_listing_state(listing_id: int, new_state: str, _token: str = Depends(_rate_limited_auth)):
     """Activate or deactivate a listing — powers the Activate/Deactivate button in the
