@@ -3032,6 +3032,7 @@ AGENT_TOOLS = [
                         "update_tags", "update_title", "update_description", "publish_listing",
                         "deactivate_listing", "toggle_listing_state", "update_price",
                         "update_sku_and_category", "update_shop_section", "register_product",
+                        "listing_photo",
                     ],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
@@ -3083,6 +3084,22 @@ AGENT_TOOLS = [
                         "Target shop section id for update_shop_section (or for create_listing "
                         "when staging a new listing into a specific section). Look up ids via "
                         "GET /api/shop-sections; create a new section via POST /api/shop-sections."
+                    ),
+                },
+                "rank": {
+                    "type": "integer",
+                    "description": (
+                        "1-10, position for listing_photo (1 = hero/thumbnail). The file already "
+                        "at that rank shifts down rather than being deleted -- Scott may want to "
+                        "remove the old one manually after approving."
+                    ),
+                },
+                "path": {
+                    "type": "string",
+                    "description": (
+                        "For listing_photo: path to the already-uploaded file, relative to the "
+                        "staged_photos root (e.g. 'WA_MY_PRODUCT/hero_fix.jpg'). Upload it first "
+                        "via POST /api/files/upload?path=staged_photos/<that path>."
                     ),
                 },
                 "product_id": {
@@ -4687,6 +4704,31 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 if not ok:
                     return {"staged": False, "error": msg}
                 aid = db.enqueue_action("register_product", ti.get("summary", ""), payload)
+                return {
+                    "staged": True,
+                    "action_id": aid,
+                    "status": "pending",
+                    "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
+                }
+            if ti.get("action_type") == "listing_photo":
+                # 2026-08-19: another listing_id-centric-but-different-shape action, same
+                # reasoning as register_product above -- rank/path aren't part of the shared
+                # title/tags/price payload builder below, so this gets its own early branch
+                # rather than being folded in. _validate_staged_action's own
+                # _PHOTO_STAGED_ACTION_TYPES branch (main.py ~12734) already does the real
+                # checks (file exists under staged_photos/, pale-background gate, dimensions);
+                # this branch just builds the minimal payload and reuses it, same as every
+                # other action_type here.
+                payload = {
+                    "listing_id": ti.get("listing_id"),
+                    "rank": ti.get("rank"),
+                    "path": (ti.get("path") or "").strip(),
+                }
+                candidate = {"type": "listing_photo", "payload": payload}
+                ok, msg = _validate_staged_action(candidate)
+                if not ok:
+                    return {"staged": False, "error": msg}
+                aid = db.enqueue_action("listing_photo", ti.get("summary", ""), payload)
                 return {
                     "staged": True,
                     "action_id": aid,
