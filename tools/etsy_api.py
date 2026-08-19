@@ -901,6 +901,13 @@ class EtsyAPIClient:
         created = self.create_shop_section(title)
         return int(created["shop_section_id"])
 
+    def delete_shop_section(self, shop_section_id: int | str) -> None:
+        """Delete a shop section. Requires OAuth access token. Etsy caps shops at a
+        fixed number of sections (confirmed live: this shop's real cap is 20) --
+        deleting an empty/duplicate one is how a new one gets created."""
+        self._require_oauth()
+        self._request("DELETE", f"shops/{self.shop_id}/sections/{shop_section_id}")
+
     # ── Listing images ────────────────────────────────────────────────────────
 
     def _upload_multipart_with_retry(self, url: str, body: bytes, headers: dict, timeout: int,

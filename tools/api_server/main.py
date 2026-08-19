@@ -6915,6 +6915,31 @@ async def create_shop_section(body: dict, _token: str = Depends(_rate_limited_au
     return {"shop_section_id": section_id, "title": title}
 
 
+@app.delete("/api/shop-sections/{shop_section_id}")
+async def delete_shop_section(shop_section_id: int, _token: str = Depends(_rate_limited_auth)):
+    """Delete a shop section. Same direct-write reasoning as create above -- refuses
+    unless the section is confirmed empty (re-checked live, not from cache) right
+    before deleting, so this can never silently orphan real listings even if the
+    caller's own information about the section is stale."""
+    fresh = await asyncio.to_thread(EtsyAPIClient().get_shop_sections)
+    match = next((s for s in fresh if int(s.get("shop_section_id", 0)) == shop_section_id), None)
+    if match is None:
+        raise HTTPException(status_code=404, detail=f"shop_section_id {shop_section_id} not found")
+    count = match.get("active_listing_count", 0)
+    if count:
+        raise HTTPException(
+            status_code=409,
+            detail=f"section '{match.get('title')}' has {count} active listing(s) — refusing to delete",
+        )
+    try:
+        await asyncio.to_thread(EtsyAPIClient().delete_shop_section, shop_section_id)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:200]}")
+    with _cache_lock:
+        _cache.pop("shop_sections", None)
+    return {"deleted": True, "shop_section_id": shop_section_id, "title": match.get("title")}
+
+
 @app.get("/api/listings/{listing_id}/files")
 async def listing_files(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
     """Digital files attached to a listing — powers the Listings tab expand-to-detail view."""
