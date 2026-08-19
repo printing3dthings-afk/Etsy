@@ -15511,7 +15511,14 @@ def _next_coloring_pid() -> str:
 # checking every .zip currently listed in product_catalog.json across every
 # category (digital_planner, wall_art, coloring_pages, svg_bundle, paper_pack,
 # svg_3dprint_pack): none are stray/backup files, all are real deliverables.
-_PRODUCT_DELIVERABLE_SUFFIXES = (".pdf", ".zip")
+#
+# (2026-08-19) Added ".html" -- Sprigit (the first "uncategorized" product,
+# see _CONTENT_PRICE_BY_CATEGORY/_PRODUCT_TAXONOMY_BY_CATEGORY's own
+# 2026-08-19 entries) delivers a single self-contained interactive HTML file,
+# not a PDF/ZIP. Without this, stage_product_publish() would 400 with "no
+# deliverable files found for this product" for any HTML-delivered product
+# even after content and photos are staged correctly.
+_PRODUCT_DELIVERABLE_SUFFIXES = (".pdf", ".zip", ".html")
 
 
 def _gather_product_review(product_id: str) -> dict | None:

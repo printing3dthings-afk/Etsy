@@ -66,12 +66,22 @@ MAX_DIGITAL_FILE_BYTES = 20 * 1024 * 1024
 # Magic-byte signatures used to confirm a file's real type matches its extension.
 # Catches the catastrophic failure mode where a raw image (e.g. a lifestyle room
 # scene) gets renamed/uploaded as the product the customer downloads.
+#
+# (2026-08-19) Added ".html" for Sprigit, the first non-PDF/ZIP/image digital
+# product (a self-contained interactive HTML app). Real HTML documents don't
+# share one fixed byte signature the way PDF/ZIP/PNG do (no doctype is a valid
+# leading line -- Sprigit's own file opens with a bare <meta> tag), so this
+# checks for a leading "<" after stripping BOM/whitespace instead of a fixed
+# string. Still defeats the exact failure mode this table exists for: none of
+# PDF/ZIP/JPG/PNG's real signatures start with "<", so a mislabeled binary
+# file is still caught.
 _FILE_MAGIC = {
     ".pdf":  [b"%PDF"],
     ".zip":  [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],  # incl. empty/spanned
     ".jpg":  [b"\xff\xd8\xff"],
     ".jpeg": [b"\xff\xd8\xff"],
     ".png":  [b"\x89PNG\r\n\x1a\n"],
+    ".html": [b"<"],
 }
 
 # A planner PDF that generates correctly is 80+ pages; anything in single digits is
@@ -278,7 +288,9 @@ def validate_digital_file(
         )
 
     with open(file_path, "rb") as fh:
-        head = fh.read(16)
+        head = fh.read(64)
+    if ext == ".html":
+        head = head.lstrip(b"\xef\xbb\xbf \t\r\n")  # strip UTF-8 BOM/whitespace before matching
     if not any(head.startswith(sig) for sig in _FILE_MAGIC[ext]):
         raise FileContentError(
             f"content does not match a {ext} file — header is {head[:8]!r}. "
