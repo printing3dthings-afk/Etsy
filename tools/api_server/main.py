@@ -3031,7 +3031,7 @@ AGENT_TOOLS = [
                     "enum": [
                         "update_tags", "update_title", "update_description", "publish_listing",
                         "deactivate_listing", "toggle_listing_state", "update_price",
-                        "update_sku_and_category", "register_product",
+                        "update_sku_and_category", "update_shop_section", "register_product",
                     ],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
@@ -3076,6 +3076,14 @@ AGENT_TOOLS = [
                 "taxonomy_id": {
                     "type": "integer",
                     "description": "New Etsy taxonomy_id (category) for update_sku_and_category.",
+                },
+                "shop_section_id": {
+                    "type": "integer",
+                    "description": (
+                        "Target shop section id for update_shop_section (or for create_listing "
+                        "when staging a new listing into a specific section). Look up ids via "
+                        "GET /api/shop-sections; create a new section via POST /api/shop-sections."
+                    ),
                 },
                 "product_id": {
                     "type": "string",
@@ -4709,6 +4717,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["sku"] = ti["sku"]
             if ti.get("taxonomy_id") is not None:
                 payload["taxonomy_id"] = ti["taxonomy_id"]
+            if ti.get("shop_section_id") is not None:
+                payload["shop_section_id"] = ti["shop_section_id"]
             listing_for_baseline = None
             if ti.get("action_type") in _ETSY_STAGED_ACTION_TYPES and ti.get("listing_id"):
                 # Best-effort baseline for the approval-time freshness re-check
@@ -6877,6 +6887,28 @@ async def shop_sections(_token: str = Depends(_auth_session_or_bearer)):
     """Shop sections (Etsy's listing categories) for the Listings filter chips."""
     sections = await _fetch_with_degrade("shop_sections", asyncio.to_thread(_shop_sections_sync), timeout=15.0)
     return {"sections": sections}
+
+
+@app.post("/api/shop-sections")
+async def create_shop_section(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Create a new shop section (or return the existing one if a section with this
+    exact title already exists — EtsyAPIClient.get_or_create_section() already does
+    that lookup). Unlike every listing mutation in this app, this is a real Etsy write
+    that ships directly rather than through the staged-action queue: it only ever
+    creates a new, empty organizational folder — touches no existing listing, spends
+    no money, and Scott can rename or delete it from the Etsy dashboard in seconds if
+    he doesn't like it. Assigning an existing LISTING into a section is a real listing
+    mutation and does go through staging -- see the update_shop_section action type."""
+    title = (body or {}).get("title", "").strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="title is required")
+    try:
+        section_id = await asyncio.to_thread(EtsyAPIClient().get_or_create_section, title)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:200]}")
+    with _cache_lock:
+        _cache.pop("shop_sections", None)
+    return {"shop_section_id": section_id, "title": title}
 
 
 @app.get("/api/listings/{listing_id}/files")
@@ -12461,7 +12493,7 @@ async def post_snapshot(_token: str = Depends(_auth_session_or_bearer)):
 _ETSY_STAGED_ACTION_TYPES = (
     "update_tags", "update_title", "update_description", "publish_listing",
     "deactivate_listing", "toggle_listing_state", "update_price",
-    "update_sku_and_category",
+    "update_sku_and_category", "update_shop_section",
 )
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
@@ -12625,6 +12657,13 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                 not isinstance(taxonomy_id, int) or isinstance(taxonomy_id, bool) or taxonomy_id <= 0
             ):
                 return False, "taxonomy_id must be a positive integer"
+        if t == "update_shop_section":
+            shop_section_id = p.get("shop_section_id")
+            if (
+                not isinstance(shop_section_id, int) or isinstance(shop_section_id, bool)
+                or shop_section_id <= 0
+            ):
+                return False, "shop_section_id must be a positive integer"
         if at_approval:
             try:
                 client = EtsyAPIClient()
@@ -12946,6 +12985,8 @@ def _execute_staged_action(a: dict) -> dict:
         # here given the SKU/category backfill sweep touches ~170 listings.
         updates = {k: v for k, v in (("sku", p.get("sku")), ("taxonomy_id", p.get("taxonomy_id"))) if v is not None}
         res = _retry(lambda: client.update_listing(lid, updates))
+    elif t == "update_shop_section":
+        res = _retry(lambda: client.update_listing(lid, {"shop_section_id": p["shop_section_id"]}))
     elif t == "listing_photo":
         abs_path = _resolve_in_root("staged_photos", p["path"])
         if not abs_path.is_file():
@@ -12984,7 +13025,7 @@ def _execute_staged_action(a: dict) -> dict:
     with _cache_lock:
         for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
             _cache.pop(k, None)
-    if t in ("update_tags", "update_title", "update_description", "update_price", "update_sku_and_category"):
+    if t in ("update_tags", "update_title", "update_description", "update_price", "update_sku_and_category", "update_shop_section"):
         # Ranking Recovery cooldown tracker (2026-07-15) — record at EXECUTION
         # time (not staging time), since that's when the content actually
         # changed on Etsy. Read back by db.enqueue_action() to warn against
