@@ -727,7 +727,20 @@ class EtsyAPIClient:
         data.setdefault("who_made", "i_did")
         data.setdefault("when_made", "made_to_order")
         data.setdefault("is_supply", False)
-        # AI disclosure — required for all listings using AI-generated imagery or copy
+        # AI disclosure — required for all listings using AI-generated imagery or copy.
+        #
+        # (2026-08-19) Was a single literal-substring check for "AI assistance" --
+        # every hand-authored listing in this shop uses CLAUDE.md's own mandated
+        # disclosure wording ("designed using AI image generation tools..."),
+        # which never contains that exact phrase, so this fired on every one of
+        # them: appending a SECOND disclosure line after the seller's real one,
+        # with a fixed, possibly-wrong tool/subject claim ("DALL-E ... cover/
+        # lifestyle artwork") regardless of what the listing's own disclosure
+        # already said (confirmed live on SPRIGIT — a non-DALL-E, non-cover-art
+        # product still got that exact claim appended). Broadened to recognize
+        # any of this shop's real disclosure phrasings before falling back to
+        # appending the generic one, so a listing that already discloses AI use
+        # in its own words is left alone.
         desc = data.get("description", "")
         _DISCLOSURE = (
             "\n\n---\n"
@@ -735,7 +748,12 @@ class EtsyAPIClient:
             "for cover/lifestyle artwork). All content has been reviewed and finalized "
             "by the seller."
         )
-        if desc and "AI assistance" not in desc:
+        _DISCLOSURE_MARKERS = (
+            "ai assistance", "ai image generation", "ai-generated", "ai generated",
+            "designed using ai", "created with ai", "about this design",
+        )
+        desc_lower = desc.lower()
+        if desc and not any(marker in desc_lower for marker in _DISCLOSURE_MARKERS):
             data["description"] = desc + _DISCLOSURE
         return self._request("POST", f"shops/{self.shop_id}/listings", body=data)
 
