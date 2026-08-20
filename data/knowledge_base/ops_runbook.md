@@ -26728,3 +26728,68 @@ but not yet evidence it WORKS. Next step once the daily quota allows
 another real call: re-stage and re-approve the same listing
 (4519185019, $4.99) one more time and independently re-check its live
 price via the public endpoint before touching any of the other 70.
+
+## 2026-08-20 — Frank's live app went unreachable (502) during a routine deploy
+
+**Symptom:** the deploy for commit `5c05623` (the `get_api_call_summary`
+NULL-path fix) sat in Railway's `DEPLOYING` state for 35+ minutes with no
+progress, and the live domain (`etsy-production-b2f1.up.railway.app`)
+returned `502 Application failed to respond` for every request during
+that whole window — including `/health`, which has zero external
+dependencies. Confirmed via Railway's own deployment logs
+(`deploymentLogs` GraphQL query) that the container itself was NOT
+crashed: it logged a clean startup (`Application startup complete`,
+Uvicorn listening) within 2 seconds of container start, and continued
+logging normal background-loop activity (`[snapshot]`, `[review_reply_
+draft]`, `[competitor_watch]` retry messages) continuously for the entire
+35+ minutes with no traceback, no OOM signal, nothing indicating an
+app-level crash.
+
+**Ruled out as the cause:** a blocking-sleep-on-the-event-loop hypothesis
+was checked and disproven — `retry_with_backoff()` (which does use a
+blocking `time.sleep()`) has exactly 2 call sites in `main.py`, both
+inside `_execute_staged_action()`, which only ever runs via `asyncio.
+to_thread()` from `approve_action()`. The actual background-loop retry
+path (`_run_loop_iteration()`) is correctly async throughout — it
+computes a backoff delay and returns it to the caller, which does `await
+asyncio.sleep(delay)`, never a blocking sleep on the loop thread. This
+codebase's own architecture is not the bug here.
+
+**What this looked like:** a genuine Railway platform-side stall —
+either the edge/proxy layer failing to route to an otherwise-healthy
+container, or the build/deploy queue itself stuck. Confirmed the queue
+theory directly: after `deploymentCancel` on the stuck deployment and a
+fresh `serviceInstanceRedeploy`, the new deployment sat in `QUEUED` status
+for 10+ minutes with **no associated build at all** (`buildLogs` query
+returned "Deployment does not have an associated build") — Railway's own
+pipeline never even started processing it. This is not something
+diagnosable or fixable from this session's own tooling; it needs either
+more patience or Scott checking Railway's own dashboard/status page
+directly.
+
+**Compounding factors confirmed live in the same log window (both
+pre-existing, not caused by today's changes):**
+- Etsy's daily quota is exhausted *again* (`x-remaining-today=0`) —
+  the reset earlier today was real but short-lived; normal shop
+  operation burns through 5,000/day faster than expected once several
+  background loops are all retrying simultaneously.
+- Frank's own Anthropic account has zero credit balance (`Your credit
+  balance is too low to access the Anthropic API`) — this means Frank's
+  chat interface will not respond to Scott at all right now, independent
+  of the deploy/502 issue. Scott needs to top up Anthropic billing.
+
+**Current state as of this writing:** unresolved. The code fixes from
+earlier today (Inventory API price fix, the schema-stripping fix, the
+NULL-path fix) are all confirmed correct via passing tests and, for the
+inventory fix, real production log evidence of correct startup — but
+none of this can be re-verified live, and Scott's own access to Frank is
+down, until either Railway's deploy pipeline recovers on its own or Scott
+intervenes directly on the Railway dashboard.
+
+**Suggested next action:** if this recurs, escalate to Scott with this
+report rather than re-attempting the same fix a third time — this specific
+incident is a platform-level stall outside what a code change can fix. Once
+the app is reachable again: (1) confirm `/health` reports the expected
+build id, (2) resume the price-fix verification (see the entry above),
+(3) tell Scott his Anthropic account needs a billing top-up before Frank's
+own chat will work again.
