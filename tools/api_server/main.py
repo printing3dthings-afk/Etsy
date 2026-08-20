@@ -3106,8 +3106,29 @@ AGENT_TOOLS = [
                     "type": "string",
                     "description": (
                         "For register_product: the internal product code (e.g. 'P3D0042'). "
-                        "Optional — auto-generated from name + category convention if omitted."
+                        "Optional — auto-generated from name + category convention if omitted. "
+                        "For manifest_only, this must be a product_id that already exists in the "
+                        "catalog (get_product/GET /api/products) — this only maps it to its live "
+                        "listing_id in the manifest, name/category are read from the existing entry."
                     ),
+                },
+                "manifest_only": {
+                    "type": "boolean",
+                    "description": (
+                        "For register_product: set true when product_id ALREADY has a catalog "
+                        "entry (e.g. GET /api/products shows it) but the listing still fails "
+                        "no_manifest_mapping — this writes only the listing_manifest_overrides.json "
+                        "side, never touches the catalog record. Requires etsy_listing_id."
+                    ),
+                },
+                "min_photo_count": {
+                    "type": "integer",
+                    "description": "For register_product with manifest_only: minimum expected photo count for future compliance checks. Defaults to 1 (permissive) if omitted.",
+                },
+                "expected_files": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "For register_product with manifest_only: real deliverable filenames for future compliance checks (e.g. ['coloring_color1003_set_01.zip']). Defaults to none if omitted.",
                 },
                 "name": {
                     "type": "string",
@@ -4687,6 +4708,28 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 # and register_product_directly, main.py ~15195, for the same shape) -- handled
                 # in its own early branch rather than folded into the shared listing-mutation
                 # payload builder below, which assumes a listing_id-centric shape throughout.
+                if ti.get("manifest_only"):
+                    # 2026-08-20: product_id already has a catalog entry -- only close its
+                    # separate listing_manifest_overrides.json gap, category/name come from
+                    # that existing entry (see _execute_register_product_staged_action).
+                    payload = {
+                        "product_id": (ti.get("product_id") or "").strip() or None,
+                        "etsy_listing_id": ti.get("etsy_listing_id"),
+                        "manifest_only": True,
+                        "min_photo_count": ti.get("min_photo_count"),
+                        "expected_files": ti.get("expected_files"),
+                    }
+                    candidate = {"type": "register_product", "payload": payload}
+                    ok, msg = _validate_staged_action(candidate)
+                    if not ok:
+                        return {"staged": False, "error": msg}
+                    aid = db.enqueue_action("register_product", ti.get("summary", ""), payload)
+                    return {
+                        "staged": True,
+                        "action_id": aid,
+                        "status": "pending",
+                        "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
+                    }
                 payload = {
                     "product_id": (ti.get("product_id") or "").strip() or None,
                     "name": (ti.get("name") or "").strip(),
@@ -12904,6 +12947,37 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         product_id = (p.get("product_id") or "").strip()
         if not product_id:
             return False, "missing product_id"
+        etsy_listing_id = p.get("etsy_listing_id")
+        if etsy_listing_id is not None and not str(etsy_listing_id).strip():
+            return False, "etsy_listing_id, if provided, must not be blank"
+        if p.get("manifest_only"):
+            # 2026-08-20: a distinct half of the koozie/planner gap register_product
+            # was built for -- a listing whose product_id is ALREADY known to the
+            # catalog (product_catalog_overrides.json) but whose listing_manifest
+            # mapping is separately missing, so listing_compliance_sweep.py still
+            # flags it no_manifest_mapping. The normal branch below refuses this
+            # exact case ("already exists in the catalog"); manifest_only inverts
+            # that -- requires the product_id to already exist (name/category/price
+            # are read from that existing entry, never re-supplied) and only ever
+            # writes the listing_manifest_overrides.json side.
+            if not etsy_listing_id:
+                return False, "manifest_only requires etsy_listing_id"
+            existing_product = _find_catalog_product(product_id)
+            if existing_product is None:
+                return False, f"manifest_only requires product_id {product_id} to already exist in the catalog"
+            existing_entry = _read_manifest_entry_sync(etsy_listing_id)
+            if existing_entry:
+                return False, (
+                    f"Etsy listing {etsy_listing_id} is already mapped to "
+                    f"{existing_entry.get('dp_codes')} — refusing to double-register the same listing"
+                )
+            min_photo_count = p.get("min_photo_count")
+            if min_photo_count is not None and (not isinstance(min_photo_count, int) or isinstance(min_photo_count, bool) or min_photo_count < 0):
+                return False, "min_photo_count must be a non-negative integer"
+            expected_files = p.get("expected_files")
+            if expected_files is not None and (not isinstance(expected_files, list) or not all(isinstance(f, str) for f in expected_files)):
+                return False, "expected_files must be a list of filename strings"
+            return True, "ok"
         name = (p.get("name") or "").strip()
         if not name:
             return False, "missing name"
@@ -12918,9 +12992,6 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                 return False, f"price ${price:.2f} is negative — refusing"
             if price > 500.00:
                 return False, f"price ${price:.2f} is implausibly high — refusing"
-        etsy_listing_id = p.get("etsy_listing_id")
-        if etsy_listing_id is not None and not str(etsy_listing_id).strip():
-            return False, "etsy_listing_id, if provided, must not be blank"
         # Re-checked at both staging and approval time (unlike create_listing's
         # duplicate check, which is approval-only) -- this is a pure local
         # write with no network round trip either way, so there's no reason
@@ -13250,12 +13321,46 @@ def _execute_register_product_staged_action(a: dict) -> dict:
     call site checked the other one. No manifest entry is written when
     there's no etsy_listing_id yet (a "printed but not listed" physical
     product) -- there's no live listing for request_listing_fix() or the
-    compliance sweep to ever diagnose, so nothing to map."""
+    compliance sweep to ever diagnose, so nothing to map.
+
+    manifest_only (2026-08-20): skips the catalog write entirely -- product_id
+    already has a real product_catalog_overrides.json entry (validated by the
+    caller), this only closes its separate listing_manifest_overrides.json
+    gap. category is read from that existing entry rather than re-supplied,
+    so there's no way for the two records to drift apart."""
     p = a.get("payload", {}) or {}
     product_id = p["product_id"]
-    category = p["category"]
     etsy_listing_id = p.get("etsy_listing_id")
     now = datetime.now(timezone.utc).isoformat()
+
+    if p.get("manifest_only"):
+        existing = _find_catalog_product(product_id) or {}
+        category = existing.get("category", "uncategorized")
+        manifest_type = _CATALOG_CATEGORY_TO_MANIFEST_TYPE.get(category, category)
+        _write_listing_manifest_override(etsy_listing_id, {
+            "dp_codes": [product_id],
+            "type": manifest_type,
+            "expected_file_count": len(p.get("expected_files") or []),
+            "expected_files": p.get("expected_files") or [],
+            "min_photo_count": p.get("min_photo_count", 1),
+            "art_hashes": {},
+            "art_sources": {},
+            "listing_roles": {product_id: "listing_id"},
+            "baseline_captured": now,
+            "baseline_source": "register_product_staged_action_manifest_only",
+        })
+        with _cache_lock:
+            for k in ("products", "listings_active", "listings_draft", "listings_inactive", "actions"):
+                _cache.pop(k, None)
+        return {
+            "product_id": product_id,
+            "category": category,
+            "etsy_listing_id": str(etsy_listing_id),
+            "manifest_entry_written": True,
+            "message": f"Mapped existing product {product_id} to live listing {etsy_listing_id} in the manifest (catalog record untouched).",
+        }
+
+    category = p["category"]
 
     _write_product_catalog_override(product_id, {
         # is_new_product: True is what makes _find_catalog_product() and
