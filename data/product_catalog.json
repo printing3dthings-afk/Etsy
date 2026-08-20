@@ -2306,10 +2306,11 @@
     "category": "recipe_binder",
     "status": "draft",
     "files": [
-      "data/digital_products/product_files/new_product_covers/RB1001_recipe_binder_mocha_latte.png"
+      "data/digital_products/product_files/new_product_covers/RB1001_recipe_binder_mocha_latte.png",
+      "data/digital_products/product_files/RB1001.pdf"
     ],
     "last_updated": "2026-08-20",
-    "note": "New product line approved 2026-08-20 (Claude Code session, market research grounded in real Etsy revenue evidence -- see chat). Interactive fillable PDF recipe binder for GoodNotes/Notability, reusing the DP-series planner engine (generate_planner_v2.py primitives). Mocha Latte theme (#8B5E3C/#D4A96A/#C8A882/#FDF8F0), cover art generated. Planned structure: Welcome/Dashboard/Index, 30+ fillable recipe card pages across categories (Breakfast/Lunch/Dinner/Dessert/Snacks/Drinks/Holiday), undated weekly meal planner, grocery list templates, pantry + freezer inventory trackers, kitchen conversion chart, notes pages, kitchen-themed 5-sheet sticker pack (reuse existing sticker system). Single evergreen PDF (no dated/undated split needed -- recipes aren't year-specific). NOT YET BUILT: content pages, sticker pack, listing photos, listing copy."
+    "note": "Content pages built 2026-08-20 (tools/generate_recipe_binder.py): 49-page evergreen PDF -- cover, welcome, dashboard, index, 28 fillable recipe cards (7 categories x 4 cards, 12 ingredient lines + 10 instruction steps each, generously spaced for real handwriting), weekly meal planner (reused DP-series function), 4 grocery list pages, pantry + freezer inventory trackers, kitchen conversion chart (real standard conversions), 4 notes pages, sticker library reference page. Visually spot-checked across every distinct page type -- clean, on-theme, no rendering defects found. STILL NOT BUILT: the actual sticker pack ZIP (the sticker library page inside the PDF references stickers that don't exist as real files yet -- MUST be built and verified before this can ever be published, per the cardinal truthfulness rule), listing photos, listing copy/title/tags/price-tier confirmation. Status stays 'draft' until all of that closes and Scott reviews."
   },
   {
     "product_id": "PARTY1001",
