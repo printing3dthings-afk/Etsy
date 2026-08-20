@@ -58,6 +58,14 @@ from reportlab.lib.colors import Color
 
 OUT_DIR = Path(PRODUCT_FILES_DIR)
 
+# Real content margin, not _ML directly -- every page in this product carries
+# the nav tab strip (x=8 to x=42, see _NAV_TAB_X/_NAV_TAB_W below) in the left
+# margin, and _ML alone (36pt) sits inside that zone. Confirmed on a real
+# device: welcome/dashboard/index/parents text and buttons were rendering
+# with their left edge cut off under the tabs. Every page's content must
+# start from this, not _ML.
+CML = _ML + 26
+
 EDU1001 = {
     "title": "Kawaii Tracing Workbook",
     "subtitle": "Sunflower Studio",
@@ -127,22 +135,24 @@ def _gen_welcome_page(pcfg):
     c.setFillColorRGB(*A)
     c.rect(0, PH - 14, PW, 6, fill=1, stroke=0)
 
+    CW = PW - CML - _MR
+    cx = CML + CW / 2
     y = PH - 72
     c.setFillColorRGB(*T)
     c.setFont(fn("bold"), 28)
-    c.drawCentredString(PW / 2, y, "Welcome!")
+    c.drawCentredString(cx, y, "Welcome!")
     y -= 24
     c.setFillColorRGB(*DK)
     c.setFont(fn("semibold"), 13)
-    c.drawCentredString(PW / 2, y, pcfg["title"])
+    c.drawCentredString(cx, y, pcfg["title"])
     y -= 16
     c.setFillColorRGB(*T)
     c.setFont(fn("italic"), 10)
-    c.drawCentredString(PW / 2, y, f"{pcfg['subtitle']} — Evergreen Edition (no dates, use anytime)")
+    c.drawCentredString(cx, y, f"{pcfg['subtitle']} — Evergreen Edition (no dates, use anytime)")
 
     y -= 14
     c.setFillColorRGB(*A)
-    c.rect(_ML + (PW - _ML - _MR) * 0.2, y, (PW - _ML - _MR) * 0.6, 2, fill=1, stroke=0)
+    c.rect(CML + CW * 0.2, y, CW * 0.6, 2, fill=1, stroke=0)
     y -= 30
 
     blocks = [
@@ -166,12 +176,12 @@ def _gen_welcome_page(pcfg):
     for heading, lines in blocks:
         c.setFillColorRGB(*T)
         c.setFont(fn("bold"), 11)
-        c.drawString(_ML, y, heading)
+        c.drawString(CML, y, heading)
         y -= 16
         c.setFillColorRGB(*DK)
         c.setFont(fn("regular"), 9)
         for line in lines:
-            c.drawString(_ML + 12, y, line)
+            c.drawString(CML + 12, y, line)
             y -= 14
         y -= 10
 
@@ -197,11 +207,11 @@ def _gen_dashboard_page(pcfg):
     cols = 3
     top = PH - 58 - 20
     gap = 10.0
-    bw = (PW - _ML - _MR - gap * (cols - 1)) / cols
+    bw = (PW - CML - _MR - gap * (cols - 1)) / cols
     bh = 62.0
     for i, label in enumerate(buttons):
         r, col = divmod(i, cols)
-        x = _ML + col * (bw + gap)
+        x = CML + col * (bw + gap)
         y = top - r * (bh + gap) - bh
         ink = _panel_ink(DK, T)
         c.setFillColorRGB(*_bl(T, 0.85))
@@ -232,9 +242,9 @@ def _gen_index_page(pcfg):
     c.setFont(fn("regular"), 9.5)
     for section in pcfg["sections"]:
         c.setFillColorRGB(*T)
-        c.circle(_ML + 3, y + 3, 2.2, fill=1, stroke=0)
+        c.circle(CML + 3, y + 3, 2.2, fill=1, stroke=0)
         c.setFillColorRGB(*DK)
-        c.drawString(_ML + 14, y, section)
+        c.drawString(CML + 14, y, section)
         y -= 17
         if y < 70:
             break
@@ -267,21 +277,21 @@ def _gen_parents_page(pcfg):
     c.setFont(fn("regular"), 9.5)
     for tip in tips:
         c.setFillColorRGB(*T)
-        c.circle(_ML + 3, y + 3, 2.2, fill=1, stroke=0)
+        c.circle(CML + 3, y + 3, 2.2, fill=1, stroke=0)
         c.setFillColorRGB(*DK)
         words = tip.split(" ")
         line = ""
-        max_w = PW - _ML - _MR - 16
+        max_w = PW - CML - _MR - 16
         for w in words:
             test = (line + " " + w).strip()
             if c.stringWidth(test, fn("regular"), 9.5) > max_w:
-                c.drawString(_ML + 14, y, line)
+                c.drawString(CML + 14, y, line)
                 y -= 13
                 line = w
             else:
                 line = test
         if line:
-            c.drawString(_ML + 14, y, line)
+            c.drawString(CML + 14, y, line)
         y -= 22
 
     _draw_nav_tabs(c, pcfg, fn, PW, PH, None)
@@ -714,7 +724,7 @@ def _gen_reward_chart_page(pcfg):
     _gradient_header(c, "MY REWARD CHART", T, A, BG, fn, PW, PH,
                       sub="Color or check a star each time you finish a page!")
 
-    ML = _ML + 20
+    ML = CML
     CW = PW - ML - _MR
     top = PH - 58 - 30
     cols, rows = 6, 8
@@ -745,7 +755,7 @@ def _gen_practice_pages(pcfg, count=2):
         c, buf, PW, PH = _new_canvas()
         _page_bg(c, BG, PW, PH)
         _gradient_header(c, "PRACTICE PAGE", T, A, BG, fn, PW, PH, sub=f"Page {pi + 1} of {count} — write anything you'd like")
-        ML = _ML + 20
+        ML = CML
         CW = PW - ML - _MR
         top = PH - 58 - 30
         row_h = 30
