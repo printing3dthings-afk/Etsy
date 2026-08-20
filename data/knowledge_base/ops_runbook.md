@@ -26667,3 +26667,21 @@ SKILL.md`, do not consider this fixed — however strong the community
 evidence — until one of the 71 real listings has actually been
 re-approved through this new code path and its live price independently
 re-checked. That's the next action once the breaker clears.
+
+**Root cause of the sustained breaker (confirmed 13:52 UTC):** not an
+outage — the app's real Etsy daily quota is exhausted. A direct,
+unauthenticated call against Etsy's public listings endpoint (using the
+real `client_id:client_secret` pair, no OAuth) returned `429 Exceeded
+daily rate limit` with `x-limit-per-day: 5000`, `x-remaining-today: 0`,
+`retry-after: 7673` (≈2h8m from 13:52 UTC, i.e. resets ≈16:00 UTC). This
+is a whole-app daily cap (CLAUDE.md's "~100,000 QPD (example)" was
+illustrative, not this app's real number) — every Etsy call this app
+makes, including background health loops and Frank's own dependency
+probes, draws from the same 5,000/day budget, which explains why the
+breaker kept re-opening with a rising failure count and a moving
+`opened_at` rather than settling: each half-open probe hit the same
+429. No further Etsy calls (verification included) can succeed before
+the quota resets — do not retry before ≈16:00 UTC, and when retrying
+after, do a single real verification call, not another investigation
+burst, to avoid re-tripping the breaker on what should already be a
+confirmed, tested fix.
