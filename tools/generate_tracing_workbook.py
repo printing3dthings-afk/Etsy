@@ -305,15 +305,31 @@ def _gen_parents_page(pcfg):
 # Tracing pages (the real differentiator)
 # ---------------------------------------------------------------------------
 
-def _trace_row(c, text, x_center, y, size_pt, color_rgb, count=3, gap=14):
+def _trace_ink(rgb, dk):
+    """Real print bug, not just a screen-brightness thing: Scott printed the
+    workbook and the dashed outlines barely showed up. First fix attempt
+    (blending 55% toward the theme's dark color) was still visibly too
+    light -- Sunflower Studio's theme color is a bright yellow (#F4C430),
+    and yellow is notoriously the lowest-contrast, lowest-ink-density color
+    in both screen rendering and real printer output, so a partial blend
+    still wasn't enough. Real commercial tracing workbooks use a plain dark
+    gray/black dashed guide for exactly this reason -- the trace line's job
+    is to be seen and followed, not to carry brand color. Using the theme's
+    own dark ink color (dk) directly, with no blend, guarantees that
+    regardless of what color the rest of the page uses."""
+    return dk
+
+
+def _trace_row(c, text, x_center, y, size_pt, color_rgb, dk, count=3, gap=14):
     """Draw `count` dashed-outline repetitions of `text` centered around
     x_center at height y, for repeat-tracing practice (real workbook
     convention: trace several times before writing independently)."""
+    ink = _trace_ink(color_rgb, dk)
     w = text_width(text, size_pt)
     total_w = w * count + gap * (count - 1)
     x = x_center - total_w / 2
     for _ in range(count):
-        draw_dashed_text(c, text, x, y, size_pt, stroke_rgb=color_rgb, dash=(5, 4), stroke_w=2.0)
+        draw_dashed_text(c, text, x, y, size_pt, stroke_rgb=ink, dash=(6, 3), stroke_w=3.0)
         x += w + gap
 
 
@@ -396,7 +412,7 @@ def _gen_letter_pages(pcfg):
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Uppercase — trace it:")
         top -= 46
-        _trace_row(c, upper, ML + CW / 2, top, 88, T, count=4, gap=18)
+        _trace_row(c, upper, ML + CW / 2, top, 88, T, DK, count=4, gap=18)
         top -= 40  # clearance below baseline for any accidental descender-ish glyph
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
@@ -409,7 +425,7 @@ def _gen_letter_pages(pcfg):
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Lowercase — trace it:")
         top -= 46
-        _trace_row(c, lower, ML + CW / 2, top, 88, A, count=4, gap=18)
+        _trace_row(c, lower, ML + CW / 2, top, 88, A, DK, count=4, gap=18)
         top -= 40  # clearance below baseline for a descender (g/j/p/q/y)
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
@@ -425,7 +441,7 @@ def _gen_letter_pages(pcfg):
         c.setFont(fn("italic"), 9)
         c.drawCentredString(ML + CW / 2, top - 16, f"{upper} is for {word}! Trace the word:")
         word_w = text_width(word, 22)
-        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 50, 22, stroke_rgb=DK, dash=(4, 3), stroke_w=1.4)
+        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 50, 22, stroke_rgb=DK, dash=(4, 3), stroke_w=2.0)
         top -= box_h + 18
 
         top = _gen_letter_hunt(c, upper, ML, CW, top, T, DK, fn)
@@ -458,7 +474,7 @@ def _gen_number_pages(pcfg):
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Trace it:")
         top -= 50
-        _trace_row(c, digits, ML + CW / 2, top, 92, T, count=4, gap=20)
+        _trace_row(c, digits, ML + CW / 2, top, 92, T, DK, count=4, gap=20)
         top -= 26
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
@@ -495,7 +511,7 @@ def _gen_number_pages(pcfg):
         c.setFont(fn("italic"), 9)
         c.drawCentredString(ML + CW / 2, top - 16, f"{n} is written \"{word}\" in words! Trace it:")
         word_w = text_width(word, 22)
-        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 50, 22, stroke_rgb=DK, dash=(4, 3), stroke_w=1.4)
+        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 50, 22, stroke_rgb=DK, dash=(4, 3), stroke_w=2.0)
         top -= box_h + 18
 
         c.setFillColorRGB(*DK)
@@ -528,8 +544,8 @@ def _gen_number_pages(pcfg):
     return _merge_pdfs(*chunks)
 
 
-def _dashed_shape(c, kind, cx, cy, size, stroke_rgb, dash=(5, 4), stroke_w=2.2):
-    color = Color(*stroke_rgb)
+def _dashed_shape(c, kind, cx, cy, size, stroke_rgb, dk=None, dash=(6, 3), stroke_w=3.0):
+    color = Color(*(_trace_ink(stroke_rgb, dk) if dk is not None else stroke_rgb))
     c.setStrokeColor(color)
     c.setLineWidth(stroke_w)
     c.setDash(list(dash))
@@ -604,7 +620,7 @@ def _gen_shape_pages(pcfg):
                      (ML + CW * 0.22, top - size * 1.9), (ML + CW * 0.78, top - size * 1.9)]
         colors = [T, A, A, T]
         for (px, py), col in zip(positions, colors):
-            _dashed_shape(c, shape, px, py, size, col)
+            _dashed_shape(c, shape, px, py, size, col, dk=DK)
         top -= size * 2.5
 
         c.setFillColorRGB(*DK)
@@ -657,7 +673,7 @@ def _gen_sight_word_pages(pcfg, words_per_page=4):
             c.setFillColorRGB(*DK)
             c.setFont(fn("bold"), 9)
             c.drawString(ML, top - 6, word)
-            _trace_row(c, word, ML + CW / 2 + 20, top - 24, 34, T, count=3, gap=20)
+            _trace_row(c, word, ML + CW / 2 + 20, top - 24, 34, T, DK, count=3, gap=20)
             _practice_line(c, ML, top - 44, CW, DK, n_boxes=4)
             top -= row_h
 
@@ -740,7 +756,7 @@ def _gen_reward_chart_page(pcfg):
         for col in range(cols):
             cx = ML + col * (cell + 6) + cell / 2
             cy = top - r * (cell + 6) - cell / 2
-            _dashed_shape(c, "Star", cx, cy, cell * 0.9, T, dash=(3, 2), stroke_w=1.4)
+            _dashed_shape(c, "Star", cx, cy, cell * 0.9, T, dk=DK, dash=(4, 3), stroke_w=2.0)
 
     c.setFillColorRGB(*DK)
     c.setFont(fn("italic"), 8)

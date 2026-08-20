@@ -72,11 +72,29 @@ def dashed_glyph_group(char: str, size_pt: float, stroke_rgb=(0.2, 0.2, 0.2),
     pen = ReportLabPen(_glyph_set)
     _glyph_set[glyph_name].draw(pen)
     p = pen.path
+    scale = size_pt / _upm
+    # Real bug, confirmed by direct isolation test: strokeWidth/strokeDashArray
+    # are geometric properties in the Path's OWN (pre-transform) coordinate
+    # space -- Group.scale() later shrinks them right along with the glyph
+    # outline. At size_pt=88 that's barely noticeable (3.0 requested -> ~0.26pt
+    # actual), but at size_pt=22 (the "trace the word" bonus box) the same
+    # "stroke_w=2.0" call ended up under 0.05pt actual, effectively invisible
+    # both on screen and -- what Scott actually caught -- on a real printout.
+    # Dividing by scale here means the value the CALLER passes is what
+    # actually ends up on the page, regardless of glyph size.
     p.fillColor = None
     p.strokeColor = Color(*stroke_rgb)
-    p.strokeWidth = stroke_w
-    p.strokeDashArray = list(dash)
-    scale = size_pt / _upm
+    p.strokeWidth = stroke_w / scale
+    # Dash length must scale by the SAME factor as strokeWidth (both are
+    # geometric properties in the Path's pre-transform space, per the comment
+    # above) -- confirmed live in two failed attempts before this one: leaving
+    # dash un-compensated meant a big glyph (88pt) ends up with a fixed
+    # ~3pt-wide stroke but a dash segment that shrank to a fraction of a
+    # point, so the "dashes" merged into a dense, beady, near-solid line: the
+    # dash length has to be a real multiple of the real stroke width to read
+    # as a clean dashed line at ANY glyph size, not a value relative to the
+    # glyph's own path length. Compensating both keeps that ratio intact.
+    p.strokeDashArray = [d / scale for d in dash]
     g.add(p)
     g.scale(scale, scale)
     return g, _glyph_set[glyph_name].width * scale
