@@ -105,7 +105,21 @@ def dashed_glyph_group(char: str, size_pt: float, stroke_rgb=(0.2, 0.2, 0.2),
     # dash length has to be a real multiple of the real stroke width to read
     # as a clean dashed line at ANY glyph size, not a value relative to the
     # glyph's own path length. Compensating both keeps that ratio intact.
-    p.strokeDashArray = [d / scale for d in dash]
+    #
+    # dash=None means a SOLID outline (no strokeDashArray at all) -- added
+    # after a real dashed cursive WORD trace came back from a real iPhone
+    # (Quick Look/PDFKit) as an illegible smeared blob even after several
+    # rounds of dash/stroke-width tuning that looked clean in this repo's
+    # own PyMuPDF renders at every DPI tested. PDF viewers are known to
+    # handle dashed hairline-ish strokes inconsistently across engines; a
+    # solid outline has no dash pattern to fragment or merge in the first
+    # place, so it sidesteps the whole class of problem rather than tuning
+    # around it. Reserved for closely-set multi-letter word/sentence traces;
+    # single large letters (EDU1001-1003's actual letter-tracing rows) still
+    # use a real dashed outline, which is the more standard convention for
+    # "trace this individual letterform" and has never had this problem.
+    if dash is not None:
+        p.strokeDashArray = [d / scale for d in dash]
     g.add(p)
     g.scale(scale, scale)
     return g, glyph_set[glyph_name].width * scale

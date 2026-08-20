@@ -254,11 +254,21 @@ def _gen_cursive_letter_pages(pcfg):
 # letter) in cursive with _trace_row's Poppins-tuned defaults (stroke_w=3.0,
 # dash=(6,3)) produced an illegible dark smear -- Caveat's curvy, closely-set
 # cursive letterforms overwhelm a stroke that reads fine on one large block
-# letter. Confirmed by direct render comparison across several stroke_w/
-# dash/letter_spacing combinations before picking this one -- thin stroke,
-# fine dash, and extra letter_spacing to keep adjacent cursive letters from
-# visually merging.
-_CURSIVE_WORD_TRACE = dict(stroke_w=0.9, dash=(2.5, 1.8), letter_spacing=4.5)
+# letter. Two dashed-stroke tuning attempts (a thin 0.9pt hairline, then a
+# thicker 1.4pt stroke with wider gaps) both looked clean in this repo's own
+# PyMuPDF renders at every DPI tested, but Scott reported BOTH back as
+# illegible/choppy on a real iPhone (iOS Quick Look/PDFKit) -- PDF viewers
+# are known to handle dashed strokes inconsistently across rendering
+# engines, especially at small multi-letter scale where many short dash
+# segments sit close together. Rather than keep tuning dash parameters
+# blind to how they'll actually render on iOS, switched word/sentence-level
+# cursive traces to a SOLID outline (dash=None -- see glyph_trace.py) --
+# there's no dash pattern left to fragment or merge, so this sidesteps the
+# whole class of problem instead of chasing it. Single large individual
+# letters (the actual letter-tracing pages) keep their dashed outline,
+# which is the more standard "trace this letterform" convention and has
+# never shown this issue.
+_CURSIVE_WORD_TRACE = dict(stroke_w=1.6, dash=None, letter_spacing=3.0)
 
 
 def _gen_sight_word_pages(pcfg, words_per_page=4):
