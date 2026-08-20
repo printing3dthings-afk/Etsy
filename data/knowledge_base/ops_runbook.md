@@ -26629,3 +26629,41 @@ fourth blind fix — three real attempts (original batch, quantity-inclusion
 retry, and the abandoned Inventory-API read) is enough independent
 evidence that this needs either Etsy API support confirmation or a
 completely different mechanism than `updateListing`'s `price` field.
+
+**Resolution (same day, later):** the Inventory-API hypothesis is
+confirmed, not just plausible. Independent research turned up direct
+evidence from Etsy's own developer community: the etsy-api-v2 Google
+Group ("price and quantity updates via the listing update endpoint will
+continue to be supported... if the listing's inventory does not have
+variations controlling price") and etsy/open-api GitHub discussions #977
+and #691, where Etsy staff (etsyachristensen) describe the correct
+pattern directly: `getListingInventory` → mutate the full `products[]`
+array → `updateListingInventory`, with an explicit warning that
+submitting fewer products than exist deletes the missing ones (never a
+partial patch). This matches this incident's exact shape: the top-level
+`price` field is silently ignored once a listing has a real offering
+record, which most listings created through the standard API flow have
+even with `has_variations: false` — exactly what every one of the 71
+failing listings showed.
+
+Implemented: `EtsyAPIClient.update_price_via_inventory()` (read full
+inventory, set price on every offering of every product, write the
+complete structure back unchanged otherwise) and
+`update_listing_inventory()` in `tools/etsy_api.py`. `update_price`'s
+executor in `main.py` now tries this path first, falling back to the
+old top-level-field-plus-quantity path (kept, not removed — cheap and
+harmless) only when a listing genuinely has zero inventory products.
+Regression tests added across `tests/test_etsy_inventory_price_
+update.py` and the rewritten `tests/test_update_price_includes_
+quantity.py`.
+
+**Still not independently verified against a real, still-broken
+listing** — the `etsy_api` circuit breaker has been open for a
+sustained period today (32+ consecutive failures as of this writing,
+opened well after the investigation's own call volume had stopped),
+suggesting a real Etsy-side outage/degradation independent of this
+shop's own call pattern. Per `.claude/skills/verify-etsy-mutations/
+SKILL.md`, do not consider this fixed — however strong the community
+evidence — until one of the 71 real listings has actually been
+re-approved through this new code path and its live price independently
+re-checked. That's the next action once the breaker clears.
