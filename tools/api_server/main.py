@@ -13631,6 +13631,55 @@ def _execute_pinterest_staged_action(a: dict) -> dict:
     return result
 
 
+# 2026-08-20: closes the update_price silent-no-op incident (see ops_runbook.md's
+# 2026-08-20 entry) -- 82 approved price-update actions all recorded status=executed
+# with zero errors, but independently re-checking Etsy's real data afterward found
+# only 11 of 82 had actually changed. Etsy returned 200 and silently dropped the
+# field on the rest. `_execute_staged_action`'s HTTP call succeeding is not proof
+# the mutation happened; only re-reading the real value is. This mirrors two
+# independently-researched production patterns: Cognition/Devin's "verify against
+# the pre-committed expected outcome, deterministically, not left to model
+# discretion" and the Verified-Tool-Calls pattern of wrapping side-effecting calls
+# in unconditional postcondition checks. Deliberately does NOT introduce a new
+# action status -- frank_hud_mockup.py's _actionOutcomeSummary() only special-cases
+# 'failed'/'rejected' and would silently render any unrecognized status as success
+# (the exact bug this closes), so a verification mismatch reuses 'failed' with a
+# real expected-vs-actual message, which the UI already renders correctly.
+_VERIFIABLE_ETSY_FIELDS = {
+    "update_price": ("price", lambda p: round(float(p["price"]), 2), lambda listing: _price_float(listing.get("price"))),
+    "update_title": ("title", lambda p: p["title"].strip(), lambda listing: listing.get("title", "")),
+    "update_tags": ("tags", lambda p: list(p["tags"]), lambda listing: list(listing.get("tags", []))),
+    "toggle_listing_state": ("state", lambda p: p["new_state"], lambda listing: listing.get("state")),
+    "publish_listing": ("state", lambda _p: "active", lambda listing: listing.get("state")),
+    "deactivate_listing": ("state", lambda _p: "inactive", lambda listing: listing.get("state")),
+}
+
+
+def _verify_etsy_mutation(action_type: str, payload: dict) -> str | None:
+    """Re-fetch the real listing and diff the field this action claimed to change.
+    Returns None if verified (or if this action_type isn't covered yet -- silence
+    here means 'unverified', not 'confirmed correct'), or a human-readable mismatch
+    description otherwise. Best-effort: a failure to even fetch the listing is
+    reported as a verification failure too, not silently ignored -- if we can't
+    confirm it worked, we don't get to call it executed."""
+    spec = _VERIFIABLE_ETSY_FIELDS.get(action_type)
+    if spec is None:
+        return None
+    field_name, expected_fn, actual_fn = spec
+    lid = payload.get("listing_id")
+    if not lid:
+        return None
+    try:
+        expected = expected_fn(payload)
+        listing = EtsyAPIClient().get_listing(int(lid))
+        actual = actual_fn(listing)
+    except Exception as exc:
+        return f"could not verify {field_name} after the mutation (fetch failed): {str(exc)[:200]}"
+    if actual != expected:
+        return f"{field_name} mismatch after mutation — requested {expected!r}, Etsy now shows {actual!r}"
+    return None
+
+
 @app.get("/api/queue")
 async def get_queue(status: str = "pending", _token: str = Depends(_auth_session_or_bearer)):
     """List staged actions. status=pending (default) or 'all'."""
@@ -13705,6 +13754,21 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
     except Exception as exc:
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": str(exc)})
         raise HTTPException(status_code=502, detail=f"execution failed: {str(exc)[:200]}")
+    mismatch = await asyncio.to_thread(_verify_etsy_mutation, a["type"], a.get("payload") or {})
+    if mismatch:
+        fail_result = {**(result or {}), "error": f"verification failed: {mismatch}"}
+        await asyncio.to_thread(db.set_action_status, action_id, "failed", fail_result)
+        # Auto-log to Frank's own incident memory the moment this is caught, not
+        # after a human happens to notice -- same file/format _escalate_failure's
+        # Tier 2 path already uses, so this shows up in ceo_learnings/ops_runbook
+        # context on Frank's very next chat turn.
+        await asyncio.to_thread(
+            _append_ops_runbook_entry,
+            f"Verified mutation failed — {a['type']} on listing {(a.get('payload') or {}).get('listing_id')} (known cause)",
+            f"Action #{action_id} ({a.get('summary', '')}) returned success from Etsy's API but "
+            f"the real listing data doesn't match what was requested.\n\n**Diagnosis:** {mismatch}",
+        )
+        raise HTTPException(status_code=502, detail=f"Etsy accepted the request but the change didn't take effect: {mismatch}")
     await asyncio.to_thread(db.set_action_status, action_id, "executed", result)
     ab_test_id = (a.get("payload") or {}).get("ab_test_id")
     if ab_test_id:

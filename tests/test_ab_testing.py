@@ -358,6 +358,7 @@ def test_approve_action_calls_advance_ab_test_when_payload_tagged():
     action_id = db.enqueue_action("update_title", "test A/B swap", {"listing_id": 777, "title": "New Title", "ab_test_id": "1"})
     with patch.object(server, "_validate_staged_action", return_value=(True, "")), \
          patch.object(server, "_execute_staged_action", return_value={"ok": True}), \
+         patch.object(server, "_verify_etsy_mutation", return_value=None), \
          patch.object(server, "_advance_ab_test") as mock_advance:
         asyncio.run(server.approve_action(action_id, _token="test"))
     check(mock_advance.call_count == 1, f"approve should call _advance_ab_test when payload carries ab_test_id, got {mock_advance.call_count} calls")
@@ -368,6 +369,7 @@ def test_approve_action_skips_advance_ab_test_for_ordinary_title_change():
     action_id = db.enqueue_action("update_title", "ordinary title fix", {"listing_id": 888, "title": "Just A Fix"})
     with patch.object(server, "_validate_staged_action", return_value=(True, "")), \
          patch.object(server, "_execute_staged_action", return_value={"ok": True}), \
+         patch.object(server, "_verify_etsy_mutation", return_value=None), \
          patch.object(server, "_advance_ab_test") as mock_advance:
         asyncio.run(server.approve_action(action_id, _token="test"))
     check(mock_advance.call_count == 0, "an ordinary (non-A/B) update_title approval must not touch A/B test state")

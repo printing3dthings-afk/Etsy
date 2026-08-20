@@ -312,6 +312,14 @@ class _FakeEtsyClient:
 
     def update_listing(self, listing_id, fields):
         _FakeEtsyClient.calls.append((listing_id, dict(fields)))
+        if "state" in fields:
+            # Must actually reflect the change -- approve_action's post-execution
+            # verification step (2026-08-20) re-fetches via get_listing() and diffs
+            # against what was requested, so a fake that accepts the write but never
+            # updates its own live_state makes a CORRECTLY working verification step
+            # look like a false failure (confirmed: this test failed with exactly
+            # that shape until this line was added).
+            _FakeEtsyClient.live_state = fields["state"]
         return {"listing_id": listing_id, "state": fields.get("state"), "title": "Fake Listing"}
 
 
