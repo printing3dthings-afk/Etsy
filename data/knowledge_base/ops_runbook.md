@@ -26555,3 +26555,77 @@ UNPROVEN against a real key in this sandbox specifically, same "unproven
 here, needs one real check on Railway" discipline as Grok/veo/gpt-image-1.5
 earlier this session. Ran tools/playwright_smoke.py before shipping. Build
 bumped this deploy.
+
+## 2026-08-20 — update_price silently no-op'd on Etsy for most listings, still unresolved
+
+**Symptom:** Scott approved a blanket price change across 82 listings (71
+wall-art to $4.99, 11 coloring-pages to $1.99) via the normal
+`stage_batch_price_update` → Action Center → `approve_action` path. All 82
+staged actions recorded `status: "executed"` with zero errors. Scott was
+told it was done. It wasn't: independently re-checking the real live price
+on Etsy (via the public `GET /v3/application/listings/{id}` endpoint —
+`x-api-key: {client_id}:{client_secret}`, no OAuth needed — not Frank's own
+queue status) found only 11 of 82 had actually changed. Etsy accepted every
+PATCH with 200 and silently dropped the price field on 71 of them.
+
+**What was tried:**
+- Re-staged and re-approved the 71 failing listings a second time, one
+  action at a time with ~1.2s pacing (to rule out a burst/rate condition) —
+  failed identically, same 71, ruling out a transient blip.
+- Diffed every field the public listing endpoint exposes between a listing
+  that succeeded (4513714013) and one that silently didn't (4519185019):
+  `has_variations`, `skus`, `taxonomy_id`, `listing_type`, `state`,
+  `quantity` were all identical. No visible distinguishing field.
+- Hypothesized Etsy ties price to the same underlying "offering" record as
+  quantity, and a price-only PATCH can be silently dropped without also
+  resending quantity. Shipped a fix (`update_price`'s executor now fetches
+  the listing's current quantity via `get_listing` first and includes it
+  in the same PATCH as price) — deployed, then re-tested on one listing
+  (4519185019, target $4.99). **Still failed** — price unchanged after the
+  fix too.
+- Added a diagnostic-only read of Etsy's real Inventory API
+  (`GET listings/{id}/inventory`, `EtsyAPIClient.get_listing_inventory()`)
+  to `/api/listings/{id}/raw`, suspecting the top-level `price` field on
+  GET/PATCH listing is a read-only/legacy view for listings that have a
+  real offering record, and that the offering itself is what needs the
+  write. Investigation was cut short by the circuit breaker (see below)
+  before this could be checked against a real listing.
+
+**Circuit breaker tripped mid-investigation:** the volume of verification
+calls (dozens of direct `GET` checks against Etsy's public API, plus the
+staging/approval/re-verification cycles above, all within roughly an hour)
+opened the `etsy_api` circuit breaker (`/api/system/dependencies` showed
+`state: "open"`, 7 consecutive failures, opened 2026-08-20T12:24:49Z) —
+confirming Etsy itself was returning real errors under this call volume,
+separate from the original silent-no-op mystery. All further investigation
+paused rather than routing around it, per this file's own existing
+convention of respecting the breaker instead of hammering through it.
+
+**Root-cause hypothesis (unconfirmed):** the quantity-inclusion fix was a
+plausible, reasonable first guess but is now *disproven* by direct
+re-verification — "I found a plausible cause and shipped a fix" was not
+itself proof, and treating it as proof without re-checking would have
+repeated the exact mistake that caused the original incident. The
+Inventory-API-is-the-real-source-of-truth hypothesis is untested. Real
+next step: once the circuit breaker clears, fetch
+`GET listings/{id}/inventory` for one still-wrong listing and compare its
+`offerings[].price` against the top-level `price` field directly, then
+test a write through the Inventory API's own update endpoint (not yet
+implemented in `EtsyAPIClient`) on that one listing before touching the
+other 70.
+
+**Current real state, for anyone reading this before it's resolved:** 71 of
+the 82 listings Scott believes are priced at $4.99/$1.99 are still at
+their original prices. This is a live, customer-facing pricing inaccuracy,
+not just a dashboard cosmetic bug — a customer could be shown the old
+price. Do not report this fixed until a listing has been independently
+re-verified via the public Etsy endpoint after a real, tested code change,
+per `.claude/skills/verify-etsy-mutations/SKILL.md` (added the same
+session this was found).
+
+**Suggested next action:** resume via the Inventory API hypothesis above.
+If that also fails, escalate to Scott directly rather than attempting a
+fourth blind fix — three real attempts (original batch, quantity-inclusion
+retry, and the abandoned Inventory-API read) is enough independent
+evidence that this needs either Etsy API support confirmation or a
+completely different mechanism than `updateListing`'s `price` field.
