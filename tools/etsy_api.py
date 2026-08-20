@@ -660,6 +660,15 @@ class EtsyAPIClient:
         """Get details for a single listing."""
         return self._request("GET", f"listings/{listing_id}")
 
+    def get_listing_inventory(self, listing_id: int | str) -> dict:
+        """Get the listing's real Inventory API record (products/offerings, each with
+        its own price/quantity/sku) -- the actual source of truth Etsy's price change
+        may need to go through for listings that have an offering, distinct from the
+        legacy top-level `price` field on GET listing (read-only in that context for
+        some listings). Requires OAuth."""
+        self._require_oauth()
+        return self._request("GET", f"listings/{listing_id}/inventory")
+
     def get_shop(self, shop_id_or_name: str = "") -> dict:
         """Get shop information by shop ID or name."""
         target = shop_id_or_name or self.shop_id

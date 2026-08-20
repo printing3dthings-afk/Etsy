@@ -7077,6 +7077,17 @@ async def listing_raw(listing_id: int, _token: str = Depends(_auth_session_or_be
         images = await asyncio.to_thread(EtsyAPIClient().get_listing_images, listing_id)
     except Exception:
         images = []
+    inventory = None
+    inventory_error = None
+    try:
+        # 2026-08-20: diagnostic for the update_price silent-no-op investigation --
+        # Etsy's GET listing returns a top-level `price` for backward-compat reads,
+        # but the real source of truth for a listing that has an "offering" record
+        # is the separate Inventory API. Included here (not a new endpoint) since
+        # this route's whole purpose is manual post-mutation verification.
+        inventory = await asyncio.to_thread(EtsyAPIClient().get_listing_inventory, listing_id)
+    except Exception as exc:
+        inventory_error = str(exc)[:200]
     return {
         "listing_id": listing_id,
         "title": listing.get("title", ""),
@@ -7090,6 +7101,8 @@ async def listing_raw(listing_id: int, _token: str = Depends(_auth_session_or_be
         "taxonomy_id": listing.get("taxonomy_id"),
         "image_count": len(images),
         "image_ranks": [img.get("rank") for img in images],
+        "inventory": inventory,
+        "inventory_error": inventory_error,
     }
 
 
