@@ -25,6 +25,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import sqlite3
 import threading
 from datetime import date, datetime, timedelta, timezone
@@ -173,6 +174,35 @@ CREATE TABLE IF NOT EXISTS etsy_rate_limit_log (
   limit_per_second      INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_rate_limit_ts ON etsy_rate_limit_log(ts);
+-- Per-call record of every Etsy API request this app makes (2026-08-20,
+-- added after the update_price silent-no-op incident -- see
+-- data/knowledge_base/ops_runbook.md's 2026-08-20 entry). The rate-limit
+-- log above only ever recorded quota headers; diagnosing that incident
+-- required manually re-checking 82 listings one at a time against Etsy's
+-- own public endpoint because nothing durable recorded which calls this
+-- app actually made or whether each one's *result* matched what was
+-- requested. This table exists so that class of question -- "how many
+-- update_price calls happened today, and how many actually changed the
+-- listing" -- is a single query instead of a multi-hour investigation.
+CREATE TABLE IF NOT EXISTS etsy_api_call_log (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts           TEXT NOT NULL,
+  method       TEXT NOT NULL,     -- GET/POST/PUT/PATCH/DELETE
+  path         TEXT NOT NULL,     -- e.g. 'listings/4519185019/inventory'
+  listing_id   INTEGER,           -- extracted from path when identifiable, else NULL
+  action_type  TEXT,              -- staged-action type when this call was triggered
+                                   -- by approve_action (e.g. 'update_price'), else NULL
+  status_code  INTEGER,           -- HTTP status, 0 for a network-level failure
+  ok           INTEGER NOT NULL,  -- 1 = call succeeded (2xx); 0 = raised EtsyAPIError.
+                                   -- This is about the HTTP call itself, NOT about
+                                   -- whether Etsy's data actually changed as requested
+                                   -- -- see _verify_etsy_mutation in main.py for that
+                                   -- separate, stronger check.
+  error        TEXT,              -- truncated error message when ok=0
+  duration_ms  INTEGER            -- wall-clock time for this call, incl. retries
+);
+CREATE INDEX IF NOT EXISTS idx_api_call_log_ts ON etsy_api_call_log(ts);
+CREATE INDEX IF NOT EXISTS idx_api_call_log_listing ON etsy_api_call_log(listing_id, ts);
 CREATE TABLE IF NOT EXISTS etsy_tokens (
   id                    INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
   access_token          TEXT NOT NULL,
@@ -1004,6 +1034,98 @@ def prune_rate_limit_log(days: int = 30) -> int:
         cur = conn.execute("DELETE FROM etsy_rate_limit_log WHERE ts < ?", (cutoff,))
         conn.commit()
         return cur.rowcount
+    finally:
+        conn.close()
+
+
+_LISTING_ID_IN_PATH = re.compile(r"listings/(\d+)")
+
+
+def record_api_call(
+    method: str,
+    path: str,
+    status_code: int | None,
+    ok: bool,
+    error: str | None = None,
+    duration_ms: int | None = None,
+    action_type: str | None = None,
+) -> None:
+    """Append one Etsy API call record. Called from etsy_api.py's _request()
+    on every call via the same duck-typed hook pattern as the rate-limit
+    sample hook (set_call_log_hook() in etsy_api.py, wired in main.py at
+    boot) -- so this stays a no-op for standalone scripts that never call
+    the setter. listing_id is extracted from the path when present; a path
+    with no listing id (e.g. a search/taxonomy call) just leaves it NULL
+    rather than guessing."""
+    init_db()
+    m = _LISTING_ID_IN_PATH.search(path or "")
+    listing_id = int(m.group(1)) if m else None
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO etsy_api_call_log "
+            "(ts, method, path, listing_id, action_type, status_code, ok, error, duration_ms) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (ts, method, path, listing_id, action_type, status_code, 1 if ok else 0,
+             (error or "")[:500] or None, duration_ms),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def prune_api_call_log(days: int = 30) -> int:
+    """Delete API call log rows older than `days`. Returns rows deleted."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM etsy_api_call_log WHERE ts < ?", (cutoff,))
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def get_api_call_summary(hours: int = 24) -> list:
+    """Group recent Etsy API calls by (method, path-without-id, action_type,
+    ok) with counts -- the query this codebase didn't have during the
+    update_price incident. A path's numeric listing id is stripped so calls
+    to the same endpoint across different listings roll up together (e.g.
+    'listings/{id}' rather than 82 separate rows for 82 listings)."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT method, "
+            "  REPLACE(path, CAST(listing_id AS TEXT), '{id}') AS path_template, "
+            "  action_type, ok, COUNT(*) AS n, "
+            "  SUM(CASE WHEN ok = 0 THEN 1 ELSE 0 END) AS n_failed "
+            "FROM etsy_api_call_log WHERE ts >= ? "
+            "GROUP BY method, path_template, action_type, ok "
+            "ORDER BY n DESC",
+            (cutoff,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_api_calls_for_listing(listing_id: int, limit: int = 50) -> list:
+    """Every logged call that touched one specific listing, most recent
+    first -- the fast path for "what did Frank actually do to listing X
+    and did it work" instead of re-deriving it from scratch."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT ts, method, path, action_type, status_code, ok, error, duration_ms "
+            "FROM etsy_api_call_log WHERE listing_id = ? ORDER BY id DESC LIMIT ?",
+            (listing_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
 

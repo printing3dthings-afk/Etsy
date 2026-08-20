@@ -237,6 +237,25 @@ Scope: `https://www.googleapis.com/auth/calendar` (read + write)
 
 ---
 
+## Trademark Screening (Goalie IP) — Not Yet Authorized
+Added 2026-08-20 as part of "make Frank smarter" work, directly closing a real gap: the Suspension
+Triggers section below has always warned that "Trademark terms in titles/tags — even accidental use
+triggers shop quality score penalty affecting ALL listings," but nothing in this codebase ever
+automatically checked for that before this. **Not yet authorized** — `GOALIEIP_API_KEY` needs to be set
+in `.env`. Sign up free at `goalieip.com/subscribe#api` (200 calls/month, no credit card), get the key
+from `goalieip.com/portal/api-keys`, then set the env var — no separate OAuth flow, just the one key.
+Once set, every `update_title`/`update_tags`/`create_listing` staged action automatically runs an
+advisory-only trademark screen (`tools/trademark_screening.py`) and attaches the result to the staged
+action's payload for the Action Center review — exact-match search against live/registered USPTO marks
+only (never a fuzzy/substring search, which would flag nearly everything). This never blocks staging or
+auto-rejects anything; a flagged phrase can be an exact match in a totally unrelated Nice class (a "MOON"
+mark for pharmaceuticals isn't a real collision risk for wall art), so Scott's own judgment at approval
+time remains the actual gate, same as every other Etsy-mutating action. Until the key is set,
+`is_configured()` returns False and screening is a clean no-op — same pattern as Google Calendar OAuth
+above, code ships ready, activation is a Scott-gated credential step.
+
+---
+
 ## Google / Apple Sign-In (Frank login screen)
 **Not yet authorized — needs Scott.** All the code is shipped and live
 (`tools/api_server/oauth_providers.py`, `/auth/google` + `/auth/apple` routes in

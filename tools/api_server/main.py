@@ -84,6 +84,7 @@ import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
 import etsy_api
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
+import trademark_screening  # noqa: E402 — advisory pre-publish trademark check (Scott-gated, see module docstring)
 import business_tracker  # noqa: E402 — GET /api/business-tracker.xlsx workbook builder
 from resilience import (  # noqa: E402
     classify_tool_exception,
@@ -8110,6 +8111,13 @@ async def _maybe_prune_after_snapshot(delay: float, base_interval: float) -> lis
     except Exception as exc:
         print(f"[rate-limit-log] prune error: {exc}", flush=True)
         failures.append(f"rate-limit-log prune failed: {exc}")
+    try:
+        n = await asyncio.to_thread(db.prune_api_call_log)
+        if n:
+            print(f"[api-call-log] pruned {n} row(s) older than 30 days", flush=True)
+    except Exception as exc:
+        print(f"[api-call-log] prune error: {exc}", flush=True)
+        failures.append(f"api-call-log prune failed: {exc}")
     return failures
 
 
@@ -10825,6 +10833,7 @@ async def _startup() -> None:
         print(f"[sessions] startup purge failed: {exc}", flush=True)
     etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))
     etsy_api.set_rate_limit_sample_hook(db.record_rate_limit_sample)
+    etsy_api.set_call_log_hook(db.record_api_call)
     # Seed every loop's row immediately so the Agents registry always reports
     # all of _AGENT_LOOP_LABELS from boot, rather than waiting on each loop's
     # own startup delay (some sleep minutes before their first real run).
@@ -12714,6 +12723,21 @@ def _warn_if_unexpected_photo_dimensions(path: Path) -> None:
         print(f"[quality-gate] dimension check skipped ({path.name}): {exc}", flush=True)
 
 
+def _screen_for_trademark_flags(title: str = "", tags: list | None = None) -> dict:
+    """Advisory-only trademark screen attached to a staged action's payload
+    at staging time (see trademark_screening.py for why this is exact-match
+    only and never a hard block). Never raises and never blocks staging --
+    a screening failure (not configured, network error, API error) just
+    means the Action Center shows 'not screened' instead of a false 'clean'
+    result; Scott's own review at approval time remains the real gate,
+    exactly as CLAUDE.md's Autonomy Boundaries already require for anything
+    trademark-adjacent."""
+    try:
+        return trademark_screening.screen_listing_content(title=title, tags=tags)
+    except Exception as exc:
+        return {"configured": trademark_screening.is_configured(), "checked": [], "flags": [], "error": str(exc)[:300]}
+
+
 def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool, str]:
     """Quality gate run BOTH at stage time and again at approve time. The gate is
     code — a change that violates the 2026 standards can never be applied.
@@ -12735,6 +12759,7 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
                 return False, "title is empty"
             if len(title) > 140:
                 return False, f"title is {len(title)} chars — max 140 (Etsy's platform limit)"
+            p["_trademark_screening"] = _screen_for_trademark_flags(title=title)
         if t == "update_tags":
             tags = p.get("tags")
             if not isinstance(tags, list) or not tags:
@@ -12916,6 +12941,9 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         gate_failures = EtsyAPIClient.pre_publish_gate(listing_data)
         if gate_failures:
             return False, "pre-publish gate failed: " + "; ".join(gate_failures)
+        p["_trademark_screening"] = _screen_for_trademark_flags(
+            title=listing_data.get("title", ""), tags=listing_data.get("tags"),
+        )
         photo_paths = p.get("photo_paths") or []
         file_paths = p.get("file_paths") or []
         if not file_paths:
@@ -13114,7 +13142,7 @@ def _execute_staged_action(a: dict) -> dict:
     t = a["type"]
     p = a.get("payload", {}) or {}
     lid = p["listing_id"]
-    client = EtsyAPIClient()
+    client = EtsyAPIClient(action_type=t)
 
     def _retry(fn):
         return retry_with_backoff(fn, max_attempts=3, base_delay=1.0, max_delay=10.0, retryable=_retryable_etsy_error)
@@ -17428,6 +17456,24 @@ async def get_system_dependencies(_token: str = Depends(_auth_session_or_bearer)
         })
     capabilities = await asyncio.to_thread(_capability_report)
     return {"dependencies": deps, "capabilities": capabilities}
+
+
+@app.get("/api/system/api-call-log")
+async def get_api_call_log(
+    hours: int = 24, listing_id: int | None = None, _token: str = Depends(_auth_session_or_bearer),
+):
+    """Diagnostic view over etsy_api_call_log (added 2026-08-20 -- see the
+    update_price silent-no-op incident in data/knowledge_base/ops_runbook.md).
+    Without `listing_id`: a grouped summary of every Etsy call this app made
+    in the last `hours` -- method/endpoint/action_type/outcome counts, so "how
+    many update_price calls happened today and how many failed" is one request
+    instead of a multi-hour manual re-check. With `listing_id`: the raw,
+    most-recent-first call history for that one listing."""
+    if listing_id is not None:
+        calls = await asyncio.to_thread(db.get_api_calls_for_listing, listing_id)
+        return {"listing_id": listing_id, "calls": calls}
+    summary = await asyncio.to_thread(db.get_api_call_summary, hours)
+    return {"hours": hours, "summary": summary}
 
 
 @app.post("/api/system/recheck-credentials")
