@@ -385,25 +385,32 @@ def _gen_letter_pages(pcfg):
         CW = PW - ML - _MR
         top = PH - 58 - 26
 
+        # Vertical gaps here must clear real ascender/descender extent, not
+        # just a typical letter's -- confirmed live on "Ff": lowercase f's
+        # ascender (tall, ~0.75x the 88pt trace size = ~66pt above baseline)
+        # reached up into the practice-line box above it because the gap
+        # assumed a short x-height letter like "a". Letters with ascenders
+        # (b,d,f,h,k,l,t) or descenders (g,j,p,q,y) need real headroom, not
+        # the same tight spacing that happens to fit "a".
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Uppercase — trace it:")
         top -= 46
         _trace_row(c, upper, ML + CW / 2, top, 88, T, count=4, gap=18)
-        top -= 26
+        top -= 40  # clearance below baseline for any accidental descender-ish glyph
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Now write it yourself:")
         top -= 14
         _practice_line(c, ML, top, CW, DK, n_boxes=5)
-        top -= 42
+        top -= 62  # clearance above baseline for the tallest lowercase ascender
 
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Lowercase — trace it:")
         top -= 46
         _trace_row(c, lower, ML + CW / 2, top, 88, A, count=4, gap=18)
-        top -= 26
+        top -= 40  # clearance below baseline for a descender (g/j/p/q/y)
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
         c.drawString(ML, top, "Now write it yourself:")
