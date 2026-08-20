@@ -175,6 +175,7 @@ def _gen_welcome_page(pcfg):
             y -= 14
         y -= 10
 
+    _draw_nav_tabs(c, pcfg, fn, PW, PH, None)
     _smart_footer(c, T, A, BG, fn, PW, prev_lbl="", next_lbl="DASHBOARD")
     c.showPage()
     c.save()
@@ -212,6 +213,7 @@ def _gen_dashboard_page(pcfg):
         c.setFont(fn("bold"), 9)
         c.drawCentredString(x + bw / 2, y + bh / 2, label)
 
+    _draw_nav_tabs(c, pcfg, fn, PW, PH, "dashboard")
     _smart_footer(c, T, A, BG, fn, PW, prev_lbl="WELCOME", next_lbl="INDEX")
     c.showPage()
     c.save()
@@ -237,6 +239,7 @@ def _gen_index_page(pcfg):
         if y < 70:
             break
 
+    _draw_nav_tabs(c, pcfg, fn, PW, PH, None)
     _smart_footer(c, T, A, BG, fn, PW, prev_lbl="DASHBOARD", next_lbl="PARENTS")
     c.showPage()
     c.save()
@@ -281,6 +284,7 @@ def _gen_parents_page(pcfg):
             c.drawString(_ML + 14, y, line)
         y -= 22
 
+    _draw_nav_tabs(c, pcfg, fn, PW, PH, None)
     _smart_footer(c, T, A, BG, fn, PW, prev_lbl="INDEX", next_lbl="LETTERS")
     c.showPage()
     c.save()
@@ -409,6 +413,7 @@ def _gen_letter_pages(pcfg):
 
         top = _gen_letter_hunt(c, upper, ML, CW, top, T, DK, fn)
 
+        _draw_nav_tabs(c, pcfg, fn, PW, PH, "letters")
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="LETTERS", next_lbl="LETTERS")
         c.showPage()
         c.save()
@@ -498,6 +503,7 @@ def _gen_number_pages(pcfg):
             c.drawCentredString(bx + bw / 2, top - 24, val if is_given else "")
             bx += bw + gap
 
+        _draw_nav_tabs(c, pcfg, fn, PW, PH, "numbers")
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="NUMBERS", next_lbl="NUMBERS")
         c.showPage()
         c.save()
@@ -605,6 +611,7 @@ def _gen_shape_pages(pcfg):
         c.setFont(fn("bold"), 8.5)
         c.drawCentredString(ML + CW / 2, top - 30, _SHAPE_EXAMPLES[shape])
 
+        _draw_nav_tabs(c, pcfg, fn, PW, PH, "shapes")
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="SHAPES", next_lbl="SHAPES")
         c.showPage()
         c.save()
@@ -637,6 +644,7 @@ def _gen_sight_word_pages(pcfg, words_per_page=4):
             _practice_line(c, ML, top - 44, CW, DK, n_boxes=4)
             top -= row_h
 
+        _draw_nav_tabs(c, pcfg, fn, PW, PH, "words")
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="WORDS", next_lbl="WORDS")
         c.showPage()
         c.save()
@@ -690,6 +698,7 @@ def _gen_math_coloring_pages(pcfg):
                 c.circle(cx, cy, 7, fill=0, stroke=1)
                 c.setDash()
 
+        _draw_nav_tabs(c, pcfg, fn, PW, PH, "math")
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="MATH", next_lbl="MATH")
         c.showPage()
         c.save()
@@ -721,6 +730,7 @@ def _gen_reward_chart_page(pcfg):
     c.drawCentredString(PW / 2, 46,
                          "Love stickers? Check out OnBrandCraftz's kawaii digital sticker packs to decorate this chart!")
 
+    _draw_nav_tabs(c, pcfg, fn, PW, PH, "rewards")
     _smart_footer(c, T, A, BG, fn, PW, prev_lbl="MATH", next_lbl="PRACTICE")
     c.showPage()
     c.save()
@@ -744,6 +754,7 @@ def _gen_practice_pages(pcfg, count=2):
             c.setLineWidth(0.7)
             c.line(ML, top, ML + CW, top)
             top -= row_h
+        _draw_nav_tabs(c, pcfg, fn, PW, PH, None)
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="REWARDS", next_lbl="")
         c.showPage()
         c.save()
@@ -755,6 +766,132 @@ def _gen_practice_pages(pcfg, count=2):
 # Orchestration
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Persistent nav-tab strip -- a real, working substitute for "floating while
+# scrolling." A PDF has no notion of scroll-position-relative overlays (that's
+# an HTML/CSS concept -- pages are static, and PDF JavaScript can't create a
+# fixed-during-scroll widget). What a PDF genuinely supports is real internal
+# link annotations (GoToActions) stamped at the SAME position on every page,
+# so the same tap gets you to the same section from anywhere in the document
+# -- the honest, working equivalent of a floating nav button.
+#
+# Drawn directly into each page's own canvas (not merge_page()'d on as a
+# separate overlay afterward) -- confirmed live that merge_page() badly
+# duplicates resources on pages that already carry many Form XObjects (every
+# letter/number tracing page has dozens, one per dashed glyph): merging even
+# a ~2KB overlay onto a single 78KB letter page ballooned it to 294KB, and
+# across all 71 pages that took the whole PDF from 7MB to 20MB, right at
+# Etsy's hard limit. Drawing on the same canvas that's already drawing the
+# rest of the page shares its existing font/resource references instead of
+# duplicating them, so this costs nothing per page.
+# ---------------------------------------------------------------------------
+
+_NAV_TABS = [
+    ("HOME", "dashboard"),
+    ("Aa", "letters"),
+    ("123", "numbers"),
+    ("SHP", "shapes"),
+    ("WRD", "words"),
+    ("1+1", "math"),
+    ("FUN", "rewards"),
+]
+
+
+def _assert_nav_labels_renderable():
+    """A symbol character silently outside the font's glyph set doesn't
+    raise -- drawCentredString just renders nothing, and the tab ships
+    visibly blank (confirmed live: an original "star"/"diamond" label pair
+    wasn't in Poppins-Bold's cmap and rendered as an empty colored box with
+    no text at all, easy to miss without a real device check). Checking
+    every label's characters against the font's real cmap at import time
+    turns that into a loud failure instead of a silent one.
+    """
+    from tools import glyph_trace
+    glyph_trace._ensure_loaded()
+    for label, key in _NAV_TABS:
+        for ch in label:
+            if ch != " " and ord(ch) not in glyph_trace._cmap:
+                raise ValueError(
+                    f"nav tab {key!r}'s label {label!r} contains {ch!r} (U+{ord(ch):04X}), "
+                    f"which is not in Poppins-Bold's glyph set -- it would render blank."
+                )
+
+
+_assert_nav_labels_renderable()
+
+_NAV_TAB_H = 54.0
+_NAV_TAB_X = 8.0
+_NAV_TAB_W = 34.0
+_NAV_TAB_TOP_MARGIN = 90.0
+
+
+def _nav_tab_rects(PH):
+    """Pure coordinate function -- both the drawing code (per page, at
+    generation time) and the link-annotation code (post-process, on the
+    final merged doc) must agree on exact pixel rects, so this is the one
+    place either of them may compute them."""
+    rects = {}
+    y = PH - _NAV_TAB_TOP_MARGIN
+    for label, key in _NAV_TABS:
+        rects[key] = (_NAV_TAB_X, y - _NAV_TAB_H, _NAV_TAB_X + _NAV_TAB_W, y)
+        y -= _NAV_TAB_H + 6
+    return rects
+
+
+def _draw_nav_tabs(c, pcfg, fn, PW, PH, current_section):
+    """Call once per page, right before c.showPage(). Draws the tab strip
+    directly on the page's own canvas. `current_section` is dimmed/skipped
+    (no point linking a page to its own section)."""
+    T, A = pcfg["theme"], pcfg["accent"]
+    colors = [T, A]
+    rects = _nav_tab_rects(PH)
+    for i, (label, key) in enumerate(_NAV_TABS):
+        x0, y0, x1, y1 = rects[key]
+        is_current = key == current_section
+        col = _bl(colors[i % 2], 0.55) if is_current else colors[i % 2]
+        c.setFillColorRGB(*col)
+        c.roundRect(x0, y0, x1 - x0, y1 - y0, 6, fill=1, stroke=0)
+        c.setFillColorRGB(1, 1, 1)
+        c.setFont(fn("bold"), 8 if len(label) <= 3 else 6.5)
+        c.saveState()
+        c.translate((x0 + x1) / 2, (y0 + y1) / 2)
+        c.rotate(90)
+        c.drawCentredString(0, -3, label)
+        c.restoreState()
+
+
+def _stamp_nav_links(pdf_bytes: bytes, section_start_pages: dict, section_of_page: dict) -> bytes:
+    """Lightweight post-process: add ONLY the clickable link annotations
+    (small dictionary entries, not page content) -- safe, no merge_page()
+    resource duplication, since annotations reference existing page objects
+    rather than adding new content streams."""
+    from PyPDF2 import PdfReader, PdfWriter
+    from PyPDF2.generic import AnnotationBuilder
+    import io as _io
+
+    reader = PdfReader(_io.BytesIO(pdf_bytes))
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+
+    PH = float(reader.pages[0].mediabox.height)
+    rects = _nav_tab_rects(PH)
+    for i in range(len(writer.pages)):
+        current = section_of_page.get(i)
+        for key, rect in rects.items():
+            if key == current:
+                continue
+            target = section_start_pages.get(key)
+            if target is None:
+                continue
+            annot = AnnotationBuilder.link(rect=rect, target_page_index=target)
+            writer.add_annotation(page_number=i, annotation=annot)
+
+    out = _io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
 def build_tracing_workbook():
     pcfg = EDU1001
     cover_cfg = {
@@ -764,21 +901,35 @@ def build_tracing_workbook():
     cover_img_path = OUT_DIR / "new_product_covers" / "EDU1001_kids_tracing_sunflower_studio.png"
     cover_pdf_bytes = _make_cover_page(cover_cfg, str(cover_img_path) if cover_img_path.exists() else None)
 
-    chunks = [
-        cover_pdf_bytes,
-        _gen_welcome_page(pcfg),
-        _gen_dashboard_page(pcfg),
-        _gen_index_page(pcfg),
-        _gen_parents_page(pcfg),
-        _gen_letter_pages(pcfg),
-        _gen_number_pages(pcfg),
-        _gen_shape_pages(pcfg),
-        _gen_sight_word_pages(pcfg),
-        _gen_math_coloring_pages(pcfg),
-        _gen_reward_chart_page(pcfg),
-        _gen_practice_pages(pcfg),
+    named_chunks = [
+        ("cover", cover_pdf_bytes),
+        ("welcome", _gen_welcome_page(pcfg)),
+        ("dashboard", _gen_dashboard_page(pcfg)),
+        ("index", _gen_index_page(pcfg)),
+        ("parents", _gen_parents_page(pcfg)),
+        ("letters", _gen_letter_pages(pcfg)),
+        ("numbers", _gen_number_pages(pcfg)),
+        ("shapes", _gen_shape_pages(pcfg)),
+        ("words", _gen_sight_word_pages(pcfg)),
+        ("math", _gen_math_coloring_pages(pcfg)),
+        ("rewards", _gen_reward_chart_page(pcfg)),
+        ("practice", _gen_practice_pages(pcfg)),
     ]
-    full = _merge_pdfs(*chunks)
+
+    from PyPDF2 import PdfReader
+    import io as _io
+    section_start_pages = {}
+    section_of_page = {}
+    running = 0
+    for name, data in named_chunks:
+        section_start_pages[name] = running
+        n = len(PdfReader(_io.BytesIO(data)).pages)
+        for p in range(running, running + n):
+            section_of_page[p] = name
+        running += n
+
+    full = _merge_pdfs(*(data for _, data in named_chunks))
+    full = _stamp_nav_links(full, section_start_pages, section_of_page)
     out_path = OUT_DIR / "EDU1001.pdf"
     out_path.write_bytes(full)
     return out_path
