@@ -122,6 +122,23 @@ def test_get_api_call_summary_groups_by_path_template_and_ok():
         check("{id}" in r["path_template"], f"listing id must be templated out for grouping, got {r}")
 
 
+def test_get_api_call_summary_preserves_path_for_calls_with_no_listing_id():
+    # Regression: SQLite's REPLACE(path, CAST(listing_id AS TEXT), '{id}') returns NULL
+    # when listing_id is NULL (any NULL arg -> NULL result) -- confirmed live 2026-08-20
+    # when a real incident's summary showed path_template: null for every non-listing
+    # call (shop-level GETs, health checks), hiding exactly the calls that needed
+    # diagnosing. path must fall back to the raw path, never collapse to null.
+    _reset()
+    db.record_api_call("GET", "shops/65012858/listings", 200, True, None, 50)
+    db.record_api_call("GET", "shops/65012858", 500, False, "server error", 50)
+    summary = db.get_api_call_summary(hours=24)
+    check(all(r["path_template"] is not None for r in summary),
+          f"a call with no listing_id must never collapse path_template to null, got {summary}")
+    paths = {r["path_template"] for r in summary}
+    check("shops/65012858/listings" in paths, f"raw path must be preserved when there's no listing id to template, got {summary}")
+    check("shops/65012858" in paths, f"raw path must be preserved when there's no listing id to template, got {summary}")
+
+
 def test_get_api_call_summary_respects_hours_window():
     _reset()
     import datetime as _dt

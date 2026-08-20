@@ -1100,7 +1100,9 @@ def get_api_call_summary(hours: int = 24) -> list:
     try:
         rows = conn.execute(
             "SELECT method, "
-            "  REPLACE(path, CAST(listing_id AS TEXT), '{id}') AS path_template, "
+            "  CASE WHEN listing_id IS NOT NULL "
+            "       THEN REPLACE(path, CAST(listing_id AS TEXT), '{id}') "
+            "       ELSE path END AS path_template, "
             "  action_type, ok, COUNT(*) AS n, "
             "  SUM(CASE WHEN ok = 0 THEN 1 ELSE 0 END) AS n_failed "
             "FROM etsy_api_call_log WHERE ts >= ? "
