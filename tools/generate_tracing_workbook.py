@@ -22,6 +22,7 @@ the same way product-truthfulness matters everywhere else in this shop.
 Run standalone:
     python tools/generate_tracing_workbook.py
 """
+import random
 import sys
 from pathlib import Path
 
@@ -92,6 +93,24 @@ _SIGHT_WORDS = [
 ]
 
 _SHAPES = ["Circle", "Square", "Triangle", "Rectangle", "Star", "Heart", "Oval", "Diamond"]
+
+_SHAPE_EXAMPLES = {
+    "Circle": "a clock, a ball, or the sun",
+    "Square": "a window, a napkin, or a cracker",
+    "Triangle": "a slice of pizza, a tent, or a mountain",
+    "Rectangle": "a door, a book, or a phone",
+    "Star": "the night sky, a sheriff's badge, or a starfish",
+    "Heart": "a valentine card, a love note, or a strawberry's top",
+    "Oval": "an egg, a football, or a watermelon",
+    "Diamond": "a kite, a baseball field, or a gem",
+}
+
+_NUMBER_WORDS = {
+    1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven",
+    8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen",
+    14: "fourteen", 15: "fifteen", 16: "sixteen", 17: "seventeen", 18: "eighteen",
+    19: "nineteen", 20: "twenty",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -305,6 +324,35 @@ def _practice_line(c, x, y, w, dk_rgb, n_boxes=5):
         c.line(x + i * box_w, y, x + i * box_w, y - 30)
 
 
+def _gen_letter_hunt(c, upper, ML, CW, top, T, DK, fn, n_letters=42, n_target=10):
+    """Circle-the-letter activity -- fills the real remaining page space with
+    a genuine letter-recognition exercise tied to THIS page's letter, not
+    generic filler. Seeded per-letter so rebuilds are reproducible rather
+    than shuffling differently every run."""
+    rng = random.Random(f"hunt-{upper}")
+    pool = [ch for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if ch != upper]
+    letters = [upper] * n_target + [rng.choice(pool) for _ in range(n_letters - n_target)]
+    rng.shuffle(letters)
+
+    c.setFillColorRGB(*DK)
+    c.setFont(fn("bold"), 9)
+    c.drawString(ML, top, f"Letter Hunt — circle every {upper} you find:")
+    top -= 26
+
+    cols = 14
+    cell_w = CW / cols
+    cell_h = 30
+    c.setFont(fn("bold"), 13)
+    for i, ch in enumerate(letters):
+        row, col = divmod(i, cols)
+        cx = ML + col * cell_w + cell_w / 2
+        cy = top - row * cell_h
+        c.setFillColorRGB(*DK)
+        c.drawCentredString(cx, cy, ch)
+    rows = -(-n_letters // cols)
+    return top - (rows - 1) * cell_h - 20
+
+
 def _gen_letter_pages(pcfg):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
     fn = _get_fn()
@@ -349,13 +397,17 @@ def _gen_letter_pages(pcfg):
         _practice_line(c, ML, top, CW, DK, n_boxes=5)
         top -= 34
 
+        box_h = 62
         c.setFillColorRGB(*_bl(T, 0.88))
-        c.roundRect(ML, top - 40, CW, 40, 6, fill=1, stroke=0)
+        c.roundRect(ML, top - box_h, CW, box_h, 6, fill=1, stroke=0)
         c.setFillColorRGB(*DK)
         c.setFont(fn("italic"), 9)
-        c.drawCentredString(ML + CW / 2, top - 18, f"{upper} is for {word}! Trace the word:")
-        word_w = text_width(word, 20)
-        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 34, 20, stroke_rgb=DK, dash=(4, 3), stroke_w=1.4)
+        c.drawCentredString(ML + CW / 2, top - 16, f"{upper} is for {word}! Trace the word:")
+        word_w = text_width(word, 22)
+        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 50, 22, stroke_rgb=DK, dash=(4, 3), stroke_w=1.4)
+        top -= box_h + 18
+
+        top = _gen_letter_hunt(c, upper, ML, CW, top, T, DK, fn)
 
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="LETTERS", next_lbl="LETTERS")
         c.showPage()
@@ -410,6 +462,41 @@ def _gen_number_pages(pcfg):
             c.setDash(3, 2)
             c.circle(cx, cy, r_, fill=0, stroke=1)
             c.setDash()
+        count_rows = -(-n // 8)
+        top -= (count_rows - 1) * gap_y + 40
+
+        word = _NUMBER_WORDS[n]
+        box_h = 62
+        c.setFillColorRGB(*_bl(T, 0.88))
+        c.roundRect(ML, top - box_h, CW, box_h, 6, fill=1, stroke=0)
+        c.setFillColorRGB(*DK)
+        c.setFont(fn("italic"), 9)
+        c.drawCentredString(ML + CW / 2, top - 16, f"{n} is written \"{word}\" in words! Trace it:")
+        word_w = text_width(word, 22)
+        draw_dashed_text(c, word, ML + CW / 2 - word_w / 2, top - 50, 22, stroke_rgb=DK, dash=(4, 3), stroke_w=1.4)
+        top -= box_h + 18
+
+        c.setFillColorRGB(*DK)
+        c.setFont(fn("bold"), 9)
+        before = n - 1 if n > 1 else None
+        after = n + 1 if n < 20 else None
+        prompt = "What number comes before and after " + digits + "?"
+        c.drawString(ML, top, prompt)
+        top -= 24
+        blanks = [str(before) if before is not None else "___", digits, str(after) if after is not None else "___"]
+        bw = 60
+        gap = 24
+        total_w = bw * 3 + gap * 2
+        bx = ML + CW / 2 - total_w / 2
+        for i, val in enumerate(blanks):
+            is_given = (i == 1)
+            c.setStrokeColorRGB(*_bl(DK, 0.5))
+            c.setLineWidth(1.0)
+            c.roundRect(bx, top - 34, bw, 34, 5, fill=0, stroke=1)
+            c.setFillColorRGB(*(T if is_given else DK))
+            c.setFont(fn("bold"), 16)
+            c.drawCentredString(bx + bw / 2, top - 24, val if is_given else "")
+            bx += bw + gap
 
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="NUMBERS", next_lbl="NUMBERS")
         c.showPage()
@@ -495,6 +582,28 @@ def _gen_shape_pages(pcfg):
         colors = [T, A, A, T]
         for (px, py), col in zip(positions, colors):
             _dashed_shape(c, shape, px, py, size, col)
+        top -= size * 2.5
+
+        c.setFillColorRGB(*DK)
+        c.setFont(fn("bold"), 8.5)
+        c.drawString(ML, top, "Now draw your own:")
+        top -= 14
+        box_w = (CW - 2 * 14) / 3
+        box_h = 90
+        for i in range(3):
+            bx = ML + i * (box_w + 14)
+            c.setStrokeColorRGB(*_bl(DK, 0.5))
+            c.setLineWidth(0.8)
+            c.roundRect(bx, top - box_h, box_w, box_h, 6, fill=0, stroke=1)
+        top -= box_h + 22
+
+        c.setFillColorRGB(*_bl(A, 0.85))
+        c.roundRect(ML, top - 34, CW, 34, 6, fill=1, stroke=0)
+        c.setFillColorRGB(*DK)
+        c.setFont(fn("italic"), 8.5)
+        c.drawCentredString(ML + CW / 2, top - 20, f"Look around! A {shape.lower()} looks like...")
+        c.setFont(fn("bold"), 8.5)
+        c.drawCentredString(ML + CW / 2, top - 30, _SHAPE_EXAMPLES[shape])
 
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="SHAPES", next_lbl="SHAPES")
         c.showPage()
@@ -538,12 +647,13 @@ def _gen_sight_word_pages(pcfg, words_per_page=4):
 def _gen_math_coloring_pages(pcfg):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
     fn = _get_fn()
-    # Simple, correct addition facts within 10 -- real arithmetic, not filler.
+    # Real, correct addition facts, sums increasing across the 4 pages (2-4,
+    # 4-6, 6-8, 8-10) -- genuine progression, not random filler.
     problems_by_page = [
-        [(1, 1), (2, 1), (1, 3), (2, 2)],
-        [(3, 2), (1, 4), (2, 3), (4, 1)],
-        [(3, 3), (2, 4), (5, 1), (1, 5)],
-        [(4, 3), (3, 4), (5, 2), (2, 5)],
+        [(1, 1), (2, 1), (1, 2), (1, 3), (3, 1), (2, 2)],
+        [(3, 2), (1, 4), (4, 1), (2, 4), (3, 3), (5, 1)],
+        [(2, 5), (4, 3), (6, 1), (3, 5), (4, 4), (6, 2)],
+        [(5, 4), (6, 3), (7, 2), (5, 5), (6, 4), (8, 2)],
     ]
     chunks = []
     for pi, problems in enumerate(problems_by_page):
@@ -556,7 +666,7 @@ def _gen_math_coloring_pages(pcfg):
         ML = _ML + 26
         CW = PW - ML - _MR
         top = PH - 58 - 30
-        cell_h = (top - 60) / 2
+        cell_h = (top - 60) / 3
         for i, (a, b) in enumerate(problems):
             row, col = divmod(i, 2)
             x = ML + col * (CW / 2)
