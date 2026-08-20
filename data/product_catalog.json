@@ -2297,5 +2297,44 @@
     "last_updated": "2026-06-18",
     "source": "etsy_sync",
     "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "RB1001",
+    "name": "Digital Recipe Binder (Mocha Latte)",
+    "etsy_listing_id": "",
+    "price": 9.99,
+    "category": "recipe_binder",
+    "status": "draft",
+    "files": [
+      "data/digital_products/product_files/new_product_covers/RB1001_recipe_binder_mocha_latte.png"
+    ],
+    "last_updated": "2026-08-20",
+    "note": "New product line approved 2026-08-20 (Claude Code session, market research grounded in real Etsy revenue evidence -- see chat). Interactive fillable PDF recipe binder for GoodNotes/Notability, reusing the DP-series planner engine (generate_planner_v2.py primitives). Mocha Latte theme (#8B5E3C/#D4A96A/#C8A882/#FDF8F0), cover art generated. Planned structure: Welcome/Dashboard/Index, 30+ fillable recipe card pages across categories (Breakfast/Lunch/Dinner/Dessert/Snacks/Drinks/Holiday), undated weekly meal planner, grocery list templates, pantry + freezer inventory trackers, kitchen conversion chart, notes pages, kitchen-themed 5-sheet sticker pack (reuse existing sticker system). Single evergreen PDF (no dated/undated split needed -- recipes aren't year-specific). NOT YET BUILT: content pages, sticker pack, listing photos, listing copy."
+  },
+  {
+    "product_id": "PARTY1001",
+    "name": "Printable Birthday Party Decor Kit (Tropical Hibiscus)",
+    "etsy_listing_id": "",
+    "price": 7.99,
+    "category": "party_printables",
+    "status": "draft",
+    "files": [
+      "data/digital_products/product_files/new_product_covers/PARTY1001_birthday_kit_tropical_hibiscus.png"
+    ],
+    "last_updated": "2026-08-20",
+    "note": "New product line approved 2026-08-20 (Claude Code session, market research grounded in real Etsy revenue evidence -- see chat). Print-ready party decor kit, new pipeline (more like the SS-series/wall-art print-ready approach than the planner PDF engine). Tropical Hibiscus theme (#FF6B9D/#FFD166/#06D6A0/#FFFAF0), hero art generated -- entirely original kawaii characters, deliberately no licensed-character tie-ins (trademark risk). Planned contents: bunting banner (letters spelling HAPPY BIRTHDAY + blank age flag), 12 cupcake toppers, 12 gift/favor tags, water bottle labels, a round welcome/centerpiece sign -- delivered as print-ready PDF (US Letter cut grids) + individual 300dpi PNGs. NOT YET BUILT: individual asset designs, print-ready PDF assembly, listing photos, copy. Needs a new category entry in main.py's taxonomy/content-price tables before it can be staged via register_product (same gap the 'uncategorized' fix in CLAUDE.md's Autonomy Boundaries section addressed for Sprigit -- this category doesn't exist there yet either)."
+  },
+  {
+    "product_id": "EDU1001",
+    "name": "Kawaii Interactive Tracing Workbook for Kids (Sunflower Studio)",
+    "etsy_listing_id": "",
+    "price": 6.99,
+    "category": "kids_worksheets",
+    "status": "draft",
+    "files": [
+      "data/digital_products/product_files/new_product_covers/EDU1001_kids_tracing_sunflower_studio.png"
+    ],
+    "last_updated": "2026-08-20",
+    "note": "New product line approved 2026-08-20 (Claude Code session, market research grounded in real Etsy revenue evidence -- see chat). Research explicitly flagged kawaii kids' worksheets as SATURATED with kawaii already common -- this line's differentiator is genuine interactivity (fillable/tappable in GoodNotes/Notability via Apple Pencil), not another static kawaii coloring PDF like the existing COLOR-series. Sunflower Studio theme (#F4C430/#4A7C59/#F8E08E/#FFFDF0), cover art generated. Planned structure: letter tracing A-Z (upper+lowercase), number tracing 1-20, shape tracing, sight-word tracing, a coloring-math combo section, a rewards/sticker chart page (cross-sell into the existing sticker pack system). Priced at the premium end of the $2-30 evidenced range specifically because interactivity is the differentiator, not a race-to-the-bottom static PDF. NOT YET BUILT: content pages, listing photos, listing copy."
   }
 ]
