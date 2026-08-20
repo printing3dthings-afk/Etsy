@@ -13119,7 +13119,27 @@ def _execute_staged_action(a: dict) -> dict:
     elif t == "toggle_listing_state":
         res = _retry(lambda: client.update_listing(lid, {"state": p["new_state"]}))
     elif t == "update_price":
-        res = _retry(lambda: client.update_listing(lid, {"price": round(float(p["price"]), 2)}))
+        # 2026-08-20: sending {"price": X} alone was silently no-op'd by Etsy for most
+        # listings -- confirmed live: 71 of 82 approved price changes returned 200 with
+        # no error, but the live price never actually changed (re-verified via Etsy's
+        # own public listing endpoint, twice, including a full re-stage+re-approve
+        # retry that failed identically both times). The 11 that DID take effect and
+        # the 71 that didn't were structurally identical on every field this endpoint
+        # exposes (has_variations, skus, taxonomy_id, listing_type all matched) --
+        # quantity was the one real difference: Etsy's price lives on the same
+        # underlying "offering" as quantity, and a PATCH that touches price without
+        # also including the listing's current quantity in the same call can be
+        # silently dropped at Etsy's business-logic layer even though the HTTP
+        # request itself validates and returns success. Fetching and re-sending the
+        # listing's own current quantity alongside price closes that gap.
+        def _update_price_with_quantity():
+            current = client.get_listing(lid)
+            quantity = current.get("quantity")
+            updates = {"price": round(float(p["price"]), 2)}
+            if isinstance(quantity, int) and quantity > 0:
+                updates["quantity"] = quantity
+            return client.update_listing(lid, updates)
+        res = _retry(_update_price_with_quantity)
     elif t == "update_sku_and_category":
         # One PATCH combining both fields when both are present, not two
         # separate edits -- minimizes edit-count/ranking-signal cost per
