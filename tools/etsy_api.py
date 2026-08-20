@@ -128,6 +128,26 @@ def set_rate_limit_sample_hook(hook) -> None:
     _rate_limit_sample_hook = hook
 
 
+# Optional per-call log hook, set once at server boot via set_call_log_hook()
+# (wired to db.record_api_call). Same duck-typed/None-default pattern as the
+# two hooks above. Added 2026-08-20 after the update_price silent-no-op
+# incident (see data/knowledge_base/ops_runbook.md) -- the rate-limit hook
+# above only ever recorded quota headers, never which calls were made or
+# whether each one succeeded, so diagnosing that incident meant manually
+# re-checking 82 listings one at a time against Etsy's own public endpoint.
+# This hook makes "what did we actually call, and did it work" a query
+# instead of an investigation.
+_call_log_hook = None
+
+
+def set_call_log_hook(hook) -> None:
+    """Call `hook(method, path, status_code, ok, error, duration_ms,
+    action_type=...)` after every _request() call, success or failure.
+    Pass None to disable."""
+    global _call_log_hook
+    _call_log_hook = hook
+
+
 # Etsy status codes that indicate the dependency itself is unhealthy (rate limit /
 # server-side) -- mirrors resilience.py's _RETRYABLE_ETSY_STATUSES. A clean 4xx (400,
 # 404, etc.) means Etsy responded correctly and our request was wrong, so it must not
@@ -459,10 +479,55 @@ def _dp_code_listing_mismatch(listing_id: int | str, file_path: str) -> str | No
     return None
 
 
+# Fields getListingInventory (GET) returns that updateListingInventory (PUT)
+# rejects outright -- confirmed 2026-08-20 against a real listing (action
+# #750, listing 4519185019): "Etsy API 400: Array contains invalid keys:
+# product_id,is_deleted". Etsy's own migration guidance names the same list
+# ("remove product_id, offering_id, scale_name, is_deleted and value_pairs
+# from the getListingInventory response before using it in an
+# updateListingInventory request") -- these are response-only/computed
+# fields on GET, not part of the PUT request schema at all. Passing the GET
+# response straight back (mutating only the field you want to change) is
+# the correct *shape* of the fix per Etsy staff's own guidance, but the
+# response and request shapes are NOT identical -- this is the missing
+# half of that fix.
+_INVENTORY_PRODUCT_STRIP_KEYS = ("product_id", "is_deleted")
+_INVENTORY_OFFERING_STRIP_KEYS = ("offering_id", "is_deleted")
+_INVENTORY_PROPERTY_VALUE_STRIP_KEYS = ("scale_name", "value_pairs")
+
+
+def _clean_inventory_product(product: dict, new_price: float) -> dict:
+    """Build a PUT-schema-valid product entry from a GET-schema product
+    entry, setting every offering's price to `new_price` along the way (a
+    plain float -- GET returns price as a {amount,divisor,currency_code}
+    Money object, which the PUT schema also does not accept as-is; setting
+    a fresh float here sidesteps that mismatch entirely rather than trying
+    to convert the Money object back)."""
+    cleaned = {k: v for k, v in product.items() if k not in _INVENTORY_PRODUCT_STRIP_KEYS}
+    cleaned["offerings"] = [
+        {**{k: v for k, v in off.items() if k not in _INVENTORY_OFFERING_STRIP_KEYS}, "price": new_price}
+        for off in product.get("offerings") or []
+    ]
+    if "property_values" in cleaned:
+        cleaned["property_values"] = [
+            {k: v for k, v in pv.items() if k not in _INVENTORY_PROPERTY_VALUE_STRIP_KEYS}
+            for pv in cleaned["property_values"] or []
+        ]
+    return cleaned
+
+
 class EtsyAPIClient:
     """Lightweight Etsy Open API v3 client (no third-party dependencies)."""
 
-    def __init__(self, api_key: str = "", access_token: str = ""):
+    def __init__(self, api_key: str = "", access_token: str = "", action_type: str | None = None):
+        # action_type: optional label attached to every call-log row this
+        # instance makes (e.g. "update_price") -- callers that instantiate a
+        # fresh client per staged action (see main.py's _execute_staged_action,
+        # one `client = EtsyAPIClient()` per action) can pass it through so the
+        # log can answer "how many update_price calls happened today" without
+        # re-deriving it from path shape alone. None for callers with no
+        # single-action context (e.g. read-only dashboard fetches).
+        self._call_log_action_type = action_type
         # .strip() every credential: Railway (and any dashboard-pasted env var)
         # can carry trailing newlines/spaces. An embedded "\n" makes urllib raise
         # "Invalid header value" and EVERY Etsy call fails. The .env parser strips
@@ -538,19 +603,33 @@ class EtsyAPIClient:
         """Thin gate around `_request_impl` -- consults the circuit-breaker hook
         (if one was set by main.py at boot) before the call and records the
         outcome after, so a real Etsy outage shows up in /api/system/dependencies
-        instead of always reporting closed/healthy."""
+        instead of always reporting closed/healthy. Also logs every call (success
+        or failure) via the call-log hook, if one is set -- see set_call_log_hook()."""
         cb = _circuit_breaker_hook
         if cb is not None and not cb.allow_request():
             raise EtsyAPIError(0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses")
+        start = time.monotonic()
         try:
             result = self._request_impl(method, path, params, body)
         except EtsyAPIError as e:
             if cb is not None and (e.status == 0 or e.status in _BREAKER_TRIP_STATUSES):
                 cb.record_failure()
+            if _call_log_hook is not None:
+                try:
+                    _call_log_hook(method, path, e.status, False, str(e),
+                                    int((time.monotonic() - start) * 1000), self._call_log_action_type)
+                except Exception:
+                    pass  # logging must never break a live Etsy call
             raise
         else:
             if cb is not None:
                 cb.record_success()
+            if _call_log_hook is not None:
+                try:
+                    _call_log_hook(method, path, 200, True, None,
+                                    int((time.monotonic() - start) * 1000), self._call_log_action_type)
+                except Exception:
+                    pass
             return result
 
     def _request_impl(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
@@ -699,13 +778,11 @@ class EtsyAPIClient:
         -- callers should fall back to plain update_listing(lid, {"price": ...})
         in that case, not silently do nothing."""
         inventory = self.get_listing_inventory(listing_id)
-        products = inventory.get("products") or []
-        if not products:
+        raw_products = inventory.get("products") or []
+        if not raw_products:
             raise EtsyAPIError(0, f"listing {listing_id} has no inventory products -- not an offering-backed listing")
         rounded = round(float(new_price), 2)
-        for product in products:
-            for offering in product.get("offerings") or []:
-                offering["price"] = rounded
+        products = [_clean_inventory_product(p, rounded) for p in raw_products]
         body = {
             "products": products,
             "price_on_property": inventory.get("price_on_property") or [],

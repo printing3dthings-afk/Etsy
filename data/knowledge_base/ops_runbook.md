@@ -26685,3 +26685,46 @@ the quota resets — do not retry before ≈16:00 UTC, and when retrying
 after, do a single real verification call, not another investigation
 burst, to avoid re-tripping the breaker on what should already be a
 confirmed, tested fix.
+
+**Second, real bug found via that single verification call (action #750,
+listing 4519185019, ~14:09 UTC):** once the quota reset early (breaker
+closed ~14:06 UTC, well before the projected ~16:00 UTC — Etsy's rolling
+window apparently recovers faster than a naive `retry-after` estimate
+implies), a fresh `update_price → $4.99` was staged and approved through
+the new Inventory-API code path. It failed — a genuinely different error
+than the original incident: `Etsy API 400: Array contains invalid keys:
+product_id,is_deleted`. This is exactly what
+`.claude/skills/verify-etsy-mutations/SKILL.md` exists to catch: the
+earlier "confirmed" fix was confirmed by community evidence and unit
+tests with hand-written mock fixtures, not by an actual live call — and
+the live call surfaced a real bug the mocks didn't reproduce, because the
+test fixtures didn't match Etsy's real response shape closely enough.
+
+**Root cause:** `getListingInventory` (GET) and `updateListingInventory`
+(PUT) do not share an identical schema. GET returns `product_id`,
+`offering_id`, and `is_deleted` on every product/offering (plus price as
+a `{amount, divisor, currency_code}` Money object) — none of which the
+PUT endpoint accepts; sending the GET response back verbatim (mutating
+only price) is rejected outright. Etsy's own migration guidance confirms
+the exact fix: strip `product_id`, `offering_id`, `scale_name`,
+`is_deleted`, and `value_pairs` from the GET response before using it in
+a PUT, and always send price as a plain float, never the Money object.
+
+**Fixed:** `_clean_inventory_product()` (new, `tools/etsy_api.py`) builds
+a fresh, PUT-schema-valid product dict from each GET-response product —
+stripping the invalid keys at both the product and offering level, and
+converting price to a plain float — instead of mutating the GET response
+in place. `update_price_via_inventory()` now calls this per product
+before building the PUT body. `tests/test_etsy_inventory_price_
+update.py` was rewritten to use realistic GET-response-shaped fixtures
+(including `product_id`/`offering_id`/`is_deleted`/the Money-object
+price) specifically so a regression here reproduces the real failure
+instead of the sanitized shape the original mocks used, which is exactly
+how this slipped through the first time.
+
+**Still not independently re-verified** — action #750 itself failed, so
+the fix in this section has real evidence it was NEEDED (the live 400)
+but not yet evidence it WORKS. Next step once the daily quota allows
+another real call: re-stage and re-approve the same listing
+(4519185019, $4.99) one more time and independently re-check its live
+price via the public endpoint before touching any of the other 70.
