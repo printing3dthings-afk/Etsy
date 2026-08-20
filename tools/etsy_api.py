@@ -669,6 +669,51 @@ class EtsyAPIClient:
         self._require_oauth()
         return self._request("GET", f"listings/{listing_id}/inventory")
 
+    def update_listing_inventory(self, listing_id: int | str, inventory: dict) -> dict:
+        """PUT the full inventory record back to Etsy. This REPLACES the entire
+        products/offerings structure -- it is not a partial patch. Etsy staff have
+        confirmed in the open-api repo's own discussions that submitting fewer
+        products than currently exist deletes the missing ones, so callers must
+        always read the full current inventory via get_listing_inventory() first,
+        mutate only the specific field(s) they actually want to change, and pass
+        everything else back unchanged. Requires OAuth."""
+        self._require_oauth()
+        return self._request("PUT", f"listings/{listing_id}/inventory", body=inventory)
+
+    def update_price_via_inventory(self, listing_id: int | str, new_price: float) -> dict:
+        """Update price through the Inventory API -- the real fix for a confirmed
+        Etsy platform quirk (2026-08-20 investigation, see ops_runbook.md): the
+        top-level `price` field on updateListing is silently ignored (returns 200,
+        no error, no actual change) once a listing has a real inventory offering
+        record, which most listings created through the standard API flow do,
+        even ones with has_variations=False. Confirmed via Etsy's own developer
+        community (etsy-api-v2 Google Group; etsy/open-api discussions #977 and
+        #691, where Etsy staff describe the correct pattern as read-full-inventory,
+        mutate, write-full-inventory-back). Prefer this over update_listing()'s
+        top-level price param for every listing -- it's the modern, always-correct
+        path; the legacy field is the one with silent-failure exceptions, not the
+        other way around.
+
+        Raises EtsyAPIError if the listing genuinely has no inventory products at
+        all (rare/unexpected for this shop's listings, but a real possible state)
+        -- callers should fall back to plain update_listing(lid, {"price": ...})
+        in that case, not silently do nothing."""
+        inventory = self.get_listing_inventory(listing_id)
+        products = inventory.get("products") or []
+        if not products:
+            raise EtsyAPIError(0, f"listing {listing_id} has no inventory products -- not an offering-backed listing")
+        rounded = round(float(new_price), 2)
+        for product in products:
+            for offering in product.get("offerings") or []:
+                offering["price"] = rounded
+        body = {
+            "products": products,
+            "price_on_property": inventory.get("price_on_property") or [],
+            "quantity_on_property": inventory.get("quantity_on_property") or [],
+            "sku_on_property": inventory.get("sku_on_property") or [],
+        }
+        return self.update_listing_inventory(listing_id, body)
+
     def get_shop(self, shop_id_or_name: str = "") -> dict:
         """Get shop information by shop ID or name."""
         target = shop_id_or_name or self.shop_id

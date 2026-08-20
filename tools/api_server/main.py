@@ -13135,24 +13135,32 @@ def _execute_staged_action(a: dict) -> dict:
         # 2026-08-20: sending {"price": X} alone was silently no-op'd by Etsy for most
         # listings -- confirmed live: 71 of 82 approved price changes returned 200 with
         # no error, but the live price never actually changed (re-verified via Etsy's
-        # own public listing endpoint, twice, including a full re-stage+re-approve
-        # retry that failed identically both times). The 11 that DID take effect and
-        # the 71 that didn't were structurally identical on every field this endpoint
-        # exposes (has_variations, skus, taxonomy_id, listing_type all matched) --
-        # quantity was the one real difference: Etsy's price lives on the same
-        # underlying "offering" as quantity, and a PATCH that touches price without
-        # also including the listing's current quantity in the same call can be
-        # silently dropped at Etsy's business-logic layer even though the HTTP
-        # request itself validates and returns success. Fetching and re-sending the
-        # listing's own current quantity alongside price closes that gap.
-        def _update_price_with_quantity():
-            current = client.get_listing(lid)
-            quantity = current.get("quantity")
-            updates = {"price": round(float(p["price"]), 2)}
-            if isinstance(quantity, int) and quantity > 0:
-                updates["quantity"] = quantity
-            return client.update_listing(lid, updates)
-        res = _retry(_update_price_with_quantity)
+        # own public listing endpoint). A first hypothesis (missing quantity in the
+        # same PATCH) was tried and DISPROVEN by re-verification -- still failed
+        # identically after that fix deployed. Root cause confirmed via Etsy's own
+        # developer community (etsy-api-v2 Google Group; etsy/open-api discussions
+        # #977 and #691, Etsy staff responses): the top-level `price` field on
+        # updateListing is silently ignored once a listing has a real Inventory API
+        # "offering" record, which most listings created through the standard API
+        # flow have even when has_variations=False. The correct, always-safe path is
+        # the Inventory API (read full inventory, mutate price, write the whole
+        # structure back) -- see EtsyAPIClient.update_price_via_inventory(). Falls
+        # back to the legacy top-level-field path (still carrying the quantity fix,
+        # cheap and can't hurt) only if the listing genuinely has no inventory
+        # products at all.
+        def _update_price():
+            try:
+                return client.update_price_via_inventory(lid, p["price"])
+            except EtsyAPIError as exc:
+                if "no inventory products" not in str(exc):
+                    raise
+                current = client.get_listing(lid)
+                quantity = current.get("quantity")
+                updates = {"price": round(float(p["price"]), 2)}
+                if isinstance(quantity, int) and quantity > 0:
+                    updates["quantity"] = quantity
+                return client.update_listing(lid, updates)
+        res = _retry(_update_price)
     elif t == "update_sku_and_category":
         # One PATCH combining both fields when both are present, not two
         # separate edits -- minimizes edit-count/ranking-signal cost per
