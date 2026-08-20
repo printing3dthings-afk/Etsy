@@ -5,7 +5,7 @@ New product line approved 2026-08-20 (see chat: market research grounded in
 real Etsy revenue evidence before committing). Reuses generate_planner_v2.py's
 visual primitives (gradient header, drop-shadow boxes, textured background,
 spiral binding, smart footer) and generate_planner.py's shared page generators
-(_gen_meal_plan_page, _gen_notes_pages, _gen_sticker_library, _make_cover_page,
+(_gen_meal_plan_page, _gen_notes_pages, _make_cover_page,
 _merge_pdfs) directly -- the genuinely new work is the recipe-card page type
 plus a few kitchen-specific reference pages, not a new rendering engine.
 
@@ -38,7 +38,6 @@ from tools.generate_planner import (
     _MR,
     _MB,
     _gen_notes_pages,
-    _gen_sticker_library,
     _gen_meal_plan_page,
     _make_cover_page,
     _merge_pdfs,
@@ -74,7 +73,7 @@ RB1001 = {
         "Weekly Meal Planner", "Grocery List × 4",
         "Pantry Inventory", "Freezer Inventory",
         "Kitchen Conversion Chart", "Notes × 4",
-        "Sticker Library × 5",
+        "Sticker Library × 9",
     ],
 }
 
@@ -118,11 +117,11 @@ def _gen_welcome_page(pcfg):
         ("📥 HOW TO DOWNLOAD YOUR FILES", [
             "Your recipe binder PDF and sticker pack ZIP are in your Etsy Purchases page.",
             "Download both to your device before opening — don't open directly from browser.",
-            "Unzip the sticker pack to access all 5 PNG sheets.",
+            "Unzip the sticker pack to access all 9 PNG sheets.",
         ]),
         ("📱 HOW TO IMPORT INTO GOODNOTES / NOTABILITY", [
             "Open the recipe binder PDF directly in GoodNotes 6, Notability, or PDF Expert.",
-            "For stickers: Elements → Stickers tab → + → select all 5 PNG sheet files.",
+            "For stickers: Elements → Stickers tab → + → select all 9 PNG sheet files.",
             "Tap any recipe card to start typing — write with Apple Pencil or the keyboard.",
         ]),
         ("💬 NEED HELP?", [
@@ -433,6 +432,95 @@ def _gen_kitchen_conversion_chart(pcfg):
 
 
 # ---------------------------------------------------------------------------
+# Sticker library reference (real thumbnails, not a generic mockup grid)
+# ---------------------------------------------------------------------------
+
+def _sheet_preview_jpeg(sheet_png_path, bg_rgb, max_px=700, cache_suffix="_preview.jpg"):
+    """Downsized, background-flattened JPEG for embedding a sticker sheet as
+    an in-PDF reference image. The raw sheets are ~0.9-1.1MB transparent PNGs
+    each -- embedding all 9 at full res pushed RB1001.pdf from 5MB to 19MB,
+    dangerously close to Etsy's 20MB per-file hard limit, for what is only a
+    visual reference (the real deliverable is the ZIP). Flattening onto the
+    page background + JPEG compression + a 700px cap keeps this page-count
+    increase cheap. Cached next to the source PNG so re-running the PDF build
+    doesn't redo this work every time."""
+    if not sheet_png_path.exists():
+        return None
+    cache_path = sheet_png_path.with_name(sheet_png_path.stem + cache_suffix)
+    if cache_path.exists() and cache_path.stat().st_mtime >= sheet_png_path.stat().st_mtime:
+        return str(cache_path)
+    from PIL import Image
+    im = Image.open(sheet_png_path).convert("RGBA")
+    im.thumbnail((max_px, max_px), Image.LANCZOS)
+    bg_255 = tuple(int(round(v * 255)) for v in bg_rgb)
+    flat = Image.new("RGB", im.size, bg_255)
+    flat.paste(im, (0, 0), im)
+    flat.save(cache_path, "JPEG", quality=80, optimize=True)
+    return str(cache_path)
+
+
+def _gen_sticker_library_pages(pcfg):
+    """Custom to RB1001 -- generate_planner.py's shared _gen_sticker_library()
+    hardcodes a fixed 5-sheet generic grid (different sheet names/example
+    labels than what RB1001 actually ships: 9 sheets including 4 recipe-
+    specific bonus sheets, and different real per-sticker content). Reusing
+    it here would put an inaccurate reference page in the PDF -- both under-
+    representing what's really in the box (missing 4 real sheets) and
+    misstating the import step count ("select all 5 PNG sheets" when there
+    are 9). Places the REAL generated sheet thumbnail on each page instead of
+    a text mockup, so this page can never drift out of sync with what the
+    ZIP actually contains."""
+    from tools.generate_recipe_binder_sticker_assets import SHEETS as STICKER_SHEETS, ART as STICKER_ART, PID as STICKER_PID
+    from tools.process_sticker_sheets import STICKER_OUT
+
+    T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
+    fn = _get_fn()
+    n_sheets = len(STICKER_SHEETS)
+    chunks = []
+    for n in sorted(STICKER_SHEETS):
+        name, contents = STICKER_SHEETS[n]
+        c, buf, PW, PH = _new_canvas()
+        _page_bg(c, BG, PW, PH)
+        _gradient_header(c, "STICKER LIBRARY", T, A, BG, fn, PW, PH, sub=f"Sheet {n} of {n_sheets}: {name}")
+
+        y = PH - 58 - 16
+        tip_h = 34
+        c.setFillColorRGB(*_bl(T, 0.88))
+        c.roundRect(_ML, y - tip_h, PW - _ML - _MR, tip_h, 5, fill=1, stroke=0)
+        c.setFillColorRGB(*DK)
+        c.setFont(fn("bold"), 7.5)
+        c.drawString(_ML + 8, y - 12,
+                     f"GoodNotes: Elements -> Stickers -> + -> select all {n_sheets} PNG sheets -> stickers appear in library")
+        c.setFont(fn("regular"), 7.5)
+        c.drawString(_ML + 8, y - 24, "Notability: use Photo Stickers  |  Acrobat/Xodo: tap STICKERS button in binder footer")
+        y -= tip_h + 10
+
+        # Prefer the REAL processed/transparent sheet (what buyers actually get in
+        # the ZIP) over the raw solid-gray-background source -- otherwise this
+        # reference page shows stickers on a gray card, which nobody receives.
+        processed_img = STICKER_OUT / STICKER_PID / "png_sheets" / f"{STICKER_PID}_sheet_{n:02d}.png"
+        raw_img = STICKER_ART / f"{STICKER_PID}_sticker_sheet_{n}.png"
+        sheet_img = processed_img if processed_img.exists() else raw_img
+        preview_img = _sheet_preview_jpeg(sheet_img, BG)
+        if preview_img is not None:
+            from reportlab.lib.utils import ImageReader
+            img = ImageReader(preview_img)
+            box_w = PW - _ML - _MR
+            box_h = y - 44
+            c.drawImage(img, _ML, 44, width=box_w, height=box_h, preserveAspectRatio=True, anchor="c")
+        else:
+            c.setFillColorRGB(*DK)
+            c.setFont(fn("italic"), 9)
+            c.drawCentredString(PW / 2, PH / 2, "[sheet preview not yet generated]")
+
+        _smart_footer(c, T, A, BG, fn, PW, prev_lbl="STICKERS", next_lbl="STICKERS")
+        c.showPage()
+        c.save()
+        chunks.append(buf.getvalue())
+    return _merge_pdfs(*chunks)
+
+
+# ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
 
@@ -460,7 +548,7 @@ def build_recipe_binder():
         _gen_pantry_freezer_pages(pcfg),
         _gen_kitchen_conversion_chart(pcfg),
         _gen_notes_pages(pcfg, count=4),
-        _gen_sticker_library(pcfg),
+        _gen_sticker_library_pages(pcfg),
     ]
     full = _merge_pdfs(*chunks)
     out_path = OUT_DIR / "RB1001.pdf"

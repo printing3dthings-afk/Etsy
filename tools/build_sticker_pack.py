@@ -46,6 +46,7 @@ SPEC_MODULES = {
     "DP1032": "tools.generate_midnight_kawaii_assets",
     "DP1033": "tools.generate_sunflower_studio_assets",
     "DP1034": "tools.generate_celestial_assets",
+    "RB1001": "tools.generate_recipe_binder_sticker_assets",
 }
 
 # A single uniform mid-gray reads as clearly-background against BOTH the dark
