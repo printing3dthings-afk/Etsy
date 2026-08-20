@@ -298,6 +298,48 @@ password login for that account is not offered.
 
 ---
 
+## Voice Control for Frank Desktop (Planned, Not Yet Built)
+
+Idea captured 2026-08-20 (from a reviewed third-party workflow — local
+speech-to-text → intent routing → local text-to-speech, no audio ever
+leaving the machine). Not started; documented here so it isn't lost, the
+same way the Google Calendar and Google/Apple Sign-In sections above
+record real planned integrations before they're built.
+
+**Why Frank Desktop specifically, not a browser tab:** `desktop/main.js`
+(Electron) is already a real, running local process with OS-level access
+(global hotkey support, system tray — see "Frank Desktop App" above) —
+the only piece of this stack that isn't purely the hosted Railway
+dashboard. A voice loop has to live somewhere with a persistent local
+process and a global hotkey; the thin-client browser window alone can't
+host that.
+
+**Rough shape, not a commitment to specific libraries:**
+1. A global hotkey (Electron already registers one, `Cmd/Ctrl+Shift+F`,
+   for show/hide — a second one for voice capture would follow the same
+   pattern) starts local audio capture.
+2. Local speech-to-text transcribes the utterance without sending audio
+   to any API — the same reasoning CLAUDE.md already applies elsewhere
+   (`tools/relay/bambu_p1s_bridge.py` runs locally specifically so
+   nothing about Scott's home network has to leave it); voice is a
+   similarly private input channel.
+3. The transcribed text goes through Frank's *existing* chat/tool
+   pipeline exactly like a typed message — this is not a new command
+   language, it reuses `AGENT_TOOLS` and the Action Center approval gate
+   unchanged. A model tier suited to fast intent routing (vs. Frank's
+   primary model for actual reasoning) is worth evaluating once this is
+   real, not decided in advance here.
+4. Local text-to-speech reads Frank's reply back, for hands-free use.
+
+**Explicitly not scoped yet:** which STT/TTS engines, whether this needs
+its own settings screen, and how it interacts with the kill switch
+(`/api/relay/kill`) — voice-triggered actions should almost certainly
+respect it the same way local_* relay actions already do. Pick these up
+when this is actually greenlit for a build, not before — this section is
+intentionally just the shape of the idea, not a spec.
+
+---
+
 ## Bambu P1S Live Monitoring (Frank Integration)
 **Running in production** (confirmed live 2026-08-11 — this doc previously said "Not yet running,"
 which was stale; Scott has it set up and pushing). Frank (the Railway-hosted dashboard) has no route
