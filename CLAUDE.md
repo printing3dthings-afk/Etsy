@@ -795,6 +795,22 @@ Each theme includes: name, hex palette, target aesthetic, target buyer, and the 
 
 ---
 
+#### 🚛 Theme 13 — Truck Zone
+**Tagline:** *"Vroom into learning!"*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#FF6B35` | safety orange |
+| Accent | `#2E5C8A` | steel blue |
+| Neutral | `#FFF8F0` | warm cream |
+| Text | `#1A2530` | deep asphalt navy |
+- **Aesthetic:** Construction site / vehicle-yard, bold and energetic, boys-coded without being a plain-blue cliché
+- **Kawaii motifs:** dump trucks, diggers/excavators, cranes, cement mixers, traffic cones, gears, hard hats, road signs
+- **Target buyer:** Boys ages 3–7 (and their parents buying kids' activity/tracing content), vehicle/construction-obsessed kids
+- **Best product:** EDU1002 Kids Tracing Workbook (built 2026-08-20 — boys-themed sibling of EDU1001)
+- **Trend alignment:** Orange+blue is a well-established high-energy boys' palette on Etsy's kids-activity niche; added on Scott's direct request for a boys-themed tracing workbook, not a macro-trend pull like the other 12
+
+---
+
 ### Theme-to-Product Mapping
 
 | Product | Launch Theme | Phase 2 Covers to Add |

@@ -199,7 +199,7 @@ def _gen_dashboard_page(pcfg):
     _page_bg(c, BG, PW, PH)
     _gradient_header(c, pcfg["title"].upper(), T, A, BG, fn, PW, PH, sub=pcfg["subtitle"])
 
-    buttons = [
+    buttons = pcfg.get("dashboard_buttons") or [
         "For Parents", "Letter Tracing", "Number Tracing",
         "Shape Tracing", "Sight Words", "Math & Coloring",
         "Reward Chart", "Practice Pages", "Workbook Index",
@@ -320,16 +320,34 @@ def _trace_ink(rgb, dk):
     return dk
 
 
-def _trace_row(c, text, x_center, y, size_pt, color_rgb, dk, count=3, gap=14):
+def _trace_row(c, text, x_center, y, size_pt, color_rgb, dk, count=3, gap=14, font="poppins",
+                stroke_w=3.0, dash=(6, 3), letter_spacing=2.0):
     """Draw `count` dashed-outline repetitions of `text` centered around
     x_center at height y, for repeat-tracing practice (real workbook
-    convention: trace several times before writing independently)."""
+    convention: trace several times before writing independently). `font`
+    must be threaded into BOTH text_width and draw_dashed_text -- passing it
+    to only one would compute the wrong total_w for any font whose advance
+    widths differ from Poppins (e.g. EDU1003's cursive Caveat pages), which
+    would silently mis-center every traced row.
+
+    stroke_w/dash default to the values tuned for single LETTERS at Poppins
+    print-style sizes (EDU1001/EDU1002). A real bug found on EDU1003's first
+    render: reusing those same defaults for a whole WORD in the cursive
+    Caveat font produced an illegible dark smear -- a script font's letters
+    are inherently closer/curvier than Poppins's block letters, so the same
+    absolute stroke width that reads as a clean dashed line on one big
+    letter overwhelms a whole traced cursive word at typical word-trace
+    sizes. Callers tracing a multi-letter cursive word must pass a
+    noticeably thinner stroke_w/dash and wider letter_spacing -- see
+    generate_grade2_workbook.py's sight-word/sentence pages for the tuned
+    values (confirmed legible by direct render, not guessed)."""
     ink = _trace_ink(color_rgb, dk)
-    w = text_width(text, size_pt)
+    w = text_width(text, size_pt, font=font, letter_spacing=letter_spacing)
     total_w = w * count + gap * (count - 1)
     x = x_center - total_w / 2
     for _ in range(count):
-        draw_dashed_text(c, text, x, y, size_pt, stroke_rgb=ink, dash=(6, 3), stroke_w=3.0)
+        draw_dashed_text(c, text, x, y, size_pt, stroke_rgb=ink, dash=dash, stroke_w=stroke_w,
+                          font=font, letter_spacing=letter_spacing)
         x += w + gap
 
 
@@ -385,11 +403,12 @@ def _gen_letter_hunt(c, upper, ML, CW, top, T, DK, fn, n_letters=42, n_target=10
 
 def _gen_letter_pages(pcfg):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
+    letter_words = pcfg.get("letter_words", _LETTER_WORDS)
     fn = _get_fn()
     chunks = []
     for i, upper in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
         lower = upper.lower()
-        word = _LETTER_WORDS[upper]
+        word = letter_words[upper]
         c, buf, PW, PH = _new_canvas()
         _page_bg(c, BG, PW, PH)
         _textured_bg(c, BG, PW, PH)
@@ -456,6 +475,7 @@ def _gen_letter_pages(pcfg):
 
 def _gen_number_pages(pcfg):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
+    count_noun = pcfg.get("count_noun", "sun")
     fn = _get_fn()
     chunks = []
     for n in range(1, 21):
@@ -485,7 +505,7 @@ def _gen_number_pages(pcfg):
 
         c.setFillColorRGB(*DK)
         c.setFont(fn("bold"), 9)
-        c.drawString(ML, top, f"Count and color {n} sun{'s' if n != 1 else ''}:")
+        c.drawString(ML, top, f"Count and color {n} {count_noun}{'s' if n != 1 else ''}:")
         top -= 30
         cols = min(n, 8)
         r_ = 16
@@ -598,14 +618,16 @@ def _dashed_shape(c, kind, cx, cy, size, stroke_rgb, dk=None, dash=(6, 3), strok
 
 def _gen_shape_pages(pcfg):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
+    shapes = pcfg.get("shapes", _SHAPES)
+    shape_examples = pcfg.get("shape_examples", _SHAPE_EXAMPLES)
     fn = _get_fn()
     chunks = []
-    for i, shape in enumerate(_SHAPES):
+    for i, shape in enumerate(shapes):
         c, buf, PW, PH = _new_canvas()
         _page_bg(c, BG, PW, PH)
         _textured_bg(c, BG, PW, PH)
         _draw_binding(c, BG, PH)
-        _gradient_header(c, shape.upper(), T, A, BG, fn, PW, PH, sub=f"Shape {i + 1} of {len(_SHAPES)}")
+        _gradient_header(c, shape.upper(), T, A, BG, fn, PW, PH, sub=f"Shape {i + 1} of {len(shapes)}")
 
         ML = _ML + 26
         CW = PW - ML - _MR
@@ -642,7 +664,7 @@ def _gen_shape_pages(pcfg):
         c.setFont(fn("italic"), 8.5)
         c.drawCentredString(ML + CW / 2, top - 20, f"Look around! A {shape.lower()} looks like...")
         c.setFont(fn("bold"), 8.5)
-        c.drawCentredString(ML + CW / 2, top - 30, _SHAPE_EXAMPLES[shape])
+        c.drawCentredString(ML + CW / 2, top - 30, shape_examples[shape])
 
         _draw_nav_tabs(c, pcfg, fn, PW, PH, "shapes")
         _smart_footer(c, T, A, BG, fn, PW, prev_lbl="SHAPES", next_lbl="SHAPES")
@@ -654,11 +676,12 @@ def _gen_shape_pages(pcfg):
 
 def _gen_sight_word_pages(pcfg, words_per_page=4):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
+    sight_words = pcfg.get("sight_words", _SIGHT_WORDS)
     fn = _get_fn()
     chunks = []
-    n_pages = -(-len(_SIGHT_WORDS) // words_per_page)
+    n_pages = -(-len(sight_words) // words_per_page)
     for pi in range(n_pages):
-        page_words = _SIGHT_WORDS[pi * words_per_page:(pi + 1) * words_per_page]
+        page_words = sight_words[pi * words_per_page:(pi + 1) * words_per_page]
         c, buf, PW, PH = _new_canvas()
         _page_bg(c, BG, PW, PH)
         _textured_bg(c, BG, PW, PH)
@@ -687,6 +710,7 @@ def _gen_sight_word_pages(pcfg, words_per_page=4):
 
 def _gen_math_coloring_pages(pcfg):
     T, A, BG, DK = pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"]
+    fill_noun_plural = pcfg.get("math_fill_noun_plural", "sunflower petals")
     fn = _get_fn()
     # Real, correct addition facts, sums increasing across the 4 pages (2-4,
     # 4-6, 6-8, 8-10) -- genuine progression, not random filler.
@@ -721,7 +745,7 @@ def _gen_math_coloring_pages(pcfg):
             c.roundRect(x + CW / 2 - 70, y - 62, 40, 32, 5, fill=0, stroke=1)
             c.setFillColorRGB(*_bl(T, 0.5))
             c.setFont(fn("italic"), 7)
-            c.drawString(x + 10, y - 78, f"Now color {answer} sunflower petals below")
+            c.drawString(x + 10, y - 78, f"Now color {answer} {fill_noun_plural} below")
             for k in range(answer):
                 cx = x + 16 + k * 18
                 cy = y - 96
@@ -830,20 +854,23 @@ _NAV_TABS = [
 ]
 
 
-def _assert_nav_labels_renderable():
+def _assert_nav_labels_renderable(nav_tabs=None):
     """A symbol character silently outside the font's glyph set doesn't
     raise -- drawCentredString just renders nothing, and the tab ships
     visibly blank (confirmed live: an original "star"/"diamond" label pair
     wasn't in Poppins-Bold's cmap and rendered as an empty colored box with
     no text at all, easy to miss without a real device check). Checking
     every label's characters against the font's real cmap at import time
-    turns that into a loud failure instead of a silent one.
+    turns that into a loud failure instead of a silent one. `nav_tabs`
+    defaults to _NAV_TABS -- a sibling product with its own tab set (e.g.
+    EDU1003's cursive/spelling/sentences/math tabs) must call this again
+    with its own list at its own import time, same guarantee.
     """
     from tools import glyph_trace
-    glyph_trace._ensure_loaded()
-    for label, key in _NAV_TABS:
+    _font_obj, _glyph_set, cmap, _upm = glyph_trace._ensure_loaded("poppins")
+    for label, key in (nav_tabs or _NAV_TABS):
         for ch in label:
-            if ch != " " and ord(ch) not in glyph_trace._cmap:
+            if ch != " " and ord(ch) not in cmap:
                 raise ValueError(
                     f"nav tab {key!r}'s label {label!r} contains {ch!r} (U+{ord(ch):04X}), "
                     f"which is not in Poppins-Bold's glyph set -- it would render blank."
@@ -858,14 +885,16 @@ _NAV_TAB_W = 34.0
 _NAV_TAB_TOP_MARGIN = 90.0
 
 
-def _nav_tab_rects(PH):
+def _nav_tab_rects(PH, nav_tabs=None):
     """Pure coordinate function -- both the drawing code (per page, at
     generation time) and the link-annotation code (post-process, on the
     final merged doc) must agree on exact pixel rects, so this is the one
-    place either of them may compute them."""
+    place either of them may compute them. `nav_tabs` defaults to
+    _NAV_TABS (EDU1001/EDU1002's 7-tab set); pass a different list for a
+    sibling product with different sections (e.g. EDU1003)."""
     rects = {}
     y = PH - _NAV_TAB_TOP_MARGIN
-    for label, key in _NAV_TABS:
+    for label, key in (nav_tabs or _NAV_TABS):
         rects[key] = (_NAV_TAB_X, y - _NAV_TAB_H, _NAV_TAB_X + _NAV_TAB_W, y)
         y -= _NAV_TAB_H + 6
     return rects
@@ -874,11 +903,15 @@ def _nav_tab_rects(PH):
 def _draw_nav_tabs(c, pcfg, fn, PW, PH, current_section):
     """Call once per page, right before c.showPage(). Draws the tab strip
     directly on the page's own canvas. `current_section` is dimmed/skipped
-    (no point linking a page to its own section)."""
+    (no point linking a page to its own section). Reads pcfg["nav_tabs"]
+    when present so a sibling product (e.g. EDU1003) can supply its own
+    tab set without any caller-site changes to the many _gen_* functions
+    that already call this with just (c, pcfg, fn, PW, PH, section)."""
     T, A = pcfg["theme"], pcfg["accent"]
+    nav_tabs = pcfg.get("nav_tabs") or _NAV_TABS
     colors = [T, A]
-    rects = _nav_tab_rects(PH)
-    for i, (label, key) in enumerate(_NAV_TABS):
+    rects = _nav_tab_rects(PH, nav_tabs)
+    for i, (label, key) in enumerate(nav_tabs):
         x0, y0, x1, y1 = rects[key]
         is_current = key == current_section
         col = _bl(colors[i % 2], 0.55) if is_current else colors[i % 2]
@@ -893,7 +926,8 @@ def _draw_nav_tabs(c, pcfg, fn, PW, PH, current_section):
         c.restoreState()
 
 
-def _stamp_nav_links(pdf_bytes: bytes, section_start_pages: dict, section_of_page: dict) -> bytes:
+def _stamp_nav_links(pdf_bytes: bytes, section_start_pages: dict, section_of_page: dict,
+                      nav_tabs=None) -> bytes:
     """Lightweight post-process: add ONLY the clickable link annotations
     (small dictionary entries, not page content) -- safe, no merge_page()
     resource duplication, since annotations reference existing page objects
@@ -908,7 +942,7 @@ def _stamp_nav_links(pdf_bytes: bytes, section_start_pages: dict, section_of_pag
         writer.add_page(page)
 
     PH = float(reader.pages[0].mediabox.height)
-    rects = _nav_tab_rects(PH)
+    rects = _nav_tab_rects(PH, nav_tabs)
     for i in range(len(writer.pages)):
         current = section_of_page.get(i)
         for key, rect in rects.items():
@@ -925,13 +959,21 @@ def _stamp_nav_links(pdf_bytes: bytes, section_start_pages: dict, section_of_pag
     return out.getvalue()
 
 
-def build_tracing_workbook():
-    pcfg = EDU1001
+def build_tracing_workbook(pid="EDU1001", pcfg=None, cover_img_name=None):
+    """Build any tracing-workbook product on this shared engine. `pcfg` defaults
+    to EDU1001's config (Sunflower Studio) for backwards compatibility with the
+    original single-product call signature; pass a different pcfg dict (with
+    optional letter_words/sight_words/shapes/shape_examples/count_noun/
+    math_fill_noun_plural overrides -- see the _gen_* functions' pcfg.get(...)
+    calls) to build a themed sibling product like EDU1002/EDU1003 on the same
+    engine, per the 2026-08-20 multi-product refactor."""
+    pcfg = pcfg or EDU1001
+    cover_img_name = cover_img_name or "EDU1001_kids_tracing_sunflower_studio.png"
     cover_cfg = {
         "name": pcfg["title"], "subtitle": pcfg["subtitle"], "year": pcfg.get("year"),
         "bg_rgb": pcfg["bg"], "theme_rgb": pcfg["theme"], "dark_rgb": pcfg["dark"],
     }
-    cover_img_path = OUT_DIR / "new_product_covers" / "EDU1001_kids_tracing_sunflower_studio.png"
+    cover_img_path = OUT_DIR / "new_product_covers" / cover_img_name
     cover_pdf_bytes = _make_cover_page(cover_cfg, str(cover_img_path) if cover_img_path.exists() else None)
 
     named_chunks = [
@@ -962,8 +1004,8 @@ def build_tracing_workbook():
         running += n
 
     full = _merge_pdfs(*(data for _, data in named_chunks))
-    full = _stamp_nav_links(full, section_start_pages, section_of_page)
-    out_path = OUT_DIR / "EDU1001.pdf"
+    full = _stamp_nav_links(full, section_start_pages, section_of_page, nav_tabs=pcfg.get("nav_tabs"))
+    out_path = OUT_DIR / f"{pid}.pdf"
     out_path.write_bytes(full)
     return out_path
 
