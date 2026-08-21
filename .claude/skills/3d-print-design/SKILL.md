@@ -801,6 +801,91 @@ cuts under this renderer's single-directional lighting flatten into one
 dark silhouette with no internal shading gradient — that's expected for
 this renderer on this kind of geometry, not evidence the cuts merged.
 
+## Technique 10 — Bigger/bolder geometry does NOT fix a render-visibility problem, and how to actually prove a carved feature to a human who already pushed back (2026-08-21)
+
+Direct follow-up to Technique 9. Scott's feedback on the delivered pumpkin
+was blunt on two points: "I want a jack o lantern face" (the small,
+close-together cuts weren't reading at all) and "I the stem does not look
+good" (the original 2-segment cone). Two different fix shapes were needed —
+worth separating clearly, because only one of them turned out to be a real
+geometry problem.
+
+**The stem was a real design problem, fixed with a proven technique used
+elsewhere in this skill.** A flat 2-segment cone has no personality. Chained
+`translate()+rotate()` cylinder segments (the same nested-local-frame
+pattern used for other multi-segment shapes) with tapering radius and
+cumulative rotation per segment produces a real pronounced curl/hook —
+confirmed as a decisive visual improvement by direct render inspection, no
+ambiguity, no numeric-verification detour needed:
+
+```openscad
+module stem() {
+    translate([0, 0, 61]) cylinder(h=9, r1=10, r2=8.5, $fn=32);
+    translate([0, 0, 70]) rotate([0, -14, 0]) union() {
+        cylinder(h=9, r1=8.5, r2=7, $fn=32);
+        translate([0, 0, 9]) rotate([0, -22, 0]) union() {
+            cylinder(h=8, r1=7, r2=5.3, $fn=32);
+            translate([0, 0, 8]) rotate([0, -29, 0])
+                cylinder(h=7, r1=5.3, r2=3.2, $fn=32);
+        }
+    }
+}
+```
+Each segment's rotation is applied INSIDE the previous segment's already-
+translated+rotated frame, so the angles are cumulative and the curl
+compounds naturally — no manual trig to re-derive per segment.
+
+**The face was NOT a real geometry problem — it was proven correct twice
+(Technique 9, and again here on a bigger/bolder version) — but "the
+geometry is provably right" was not, by itself, an acceptable answer to
+give Scott a second time.** Making the eyes/nose/mouth larger and more
+widely spaced (bigger triangles, 3 bold teeth instead of 5 small ones) did
+NOT change how the render looked — it was still one dark blob at every
+camera angle tried, including an isolated body+face-only render with the
+stem removed specifically to rule out the stem's bounding box confusing
+`--autocenter --viewall`. This confirms the render limitation is really
+about deep/close cuts on a curved surface under single-directional
+lighting (Technique 7's lesson), not fixable by making the cuts bigger —
+don't burn another render-iteration cycle assuming "bigger will surely show
+up" once this pattern is already established.
+
+**The fix that actually worked: render the cutter geometry ALONE, as solid
+positive shapes, with no body around it.** This sidesteps the whole
+rendering-limitation problem instead of fighting it — a solid triangle/
+rectangle sitting on a plain background has full ordinary shading and reads
+instantly, with zero ambiguity, even though the SAME shapes as negative
+cuts on the curved ribbed body still render as one blob:
+
+```openscad
+// Same exact point data used as face_cuts() -- but linear_extrude()'d as
+// solid positive shapes, not subtracted from anything. No hull()-prism
+// depth needed here since there's no body to cut through.
+module solid_face_preview() {
+    translate([-21, 0, 35]) linear_extrude(height=6) polygon(eye_pts);
+    translate([21, 0, 35]) linear_extrude(height=6) polygon(eye_pts);
+    translate([0, 0, 23]) linear_extrude(height=6) polygon(nose_pts);
+    for (i = [0:n_gaps-1]) { ... }  // same tooth loop as face_cuts()
+}
+```
+
+This rendered as 5 unmistakably separate solids — two triangle eyes, one
+triangle nose, three rectangular teeth, laid out in the exact classic
+jack-o'-lantern arrangement — genuinely legible in one glance, no
+explanation required. Paired with the numeric STL check from Technique 9
+(confirming the SAME point data survives as real material once actually
+cut into the body), this gives two independent, mutually-reinforcing forms
+of proof instead of one contested render.
+
+**The actionable lesson: when a render-visibility limitation has already
+cost you credibility once (a human directly said "I want to see it," not
+"tell me it's there"), don't re-run the same failing verification method
+hoping a bigger version will finally show up, and don't just repeat the
+same numeric-proof explanation that didn't land the first time. Find a
+genuinely different presentation of the SAME underlying data that sidesteps
+the specific rendering limitation** — here, showing the cutter shapes as
+solids instead of as cuts. This is a more convincing, faster, and more
+honest resolution than either "trust me" or a fourth guessed camera angle.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
