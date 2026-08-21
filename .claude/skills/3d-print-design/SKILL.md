@@ -395,50 +395,68 @@ MakerWorld models) — printable with zero extra risk since it's a shallow
 recess in the flat, bed-facing bottom face, not an overhang.
 
 **Whether bottom-engraved text reads correctly or backwards is a genuine
-trap, and this session got it wrong TWICE before landing on the truth —
-document that failure honestly, not a false-confidence "here's the rule."**
-Round 1: shipped `brand_mark()` with no mirror at all. Round 2: Scott asked
-"Is it backwards, the words?" — took that as confirmation it needed a fix,
-built a self-styled verification test (an asymmetric "R", the whole OBJECT
-rotated 180° about X to simulate "picking it up to look at the bottom",
-rendered with a hand-picked `--camera=...`), concluded from that test that
-`mirror([0,1,0])` was required, shipped it. Round 3: Scott opened the
-**actual STL file in a real phone-based 3D viewer app** and reported it
-was now backwards — and that the *original, unmirrored* Round-1 version had
-actually been correct all along. The Round-2 "verification" was itself
-wrong: **rotating the whole OBJECT 180° while leaving the render camera
-fixed does NOT correctly simulate how a real viewer shows the underside**
-(a real viewer orbits the CAMERA around a stationary object; physically
-flipping the object in your hands and rotating the camera around a fixed
-object are NOT the same transform, and conflating them produced a
-confidently-argued, plausible-looking, wrong answer). A follow-up attempt
-to re-verify with hand-picked `--camera=` elevation angles (guessing at
-OpenSCAD's camera-rotation semantics to simulate a camera-only orbit) also
-produced an unrelated, clearly-wrong side-on view on the first try —
-confirming this codebase does not currently have a reliable way to
-independently verify chirality/mirroring from inside a script.
+trap — this session got the VERIFICATION METHOD wrong twice before landing
+on a reliable one, even though the actual fix (`mirror([0,1,0])` on this
+exact `translate`+`linear_extrude` pattern) was right the whole time.**
+Timeline, because the false starts are as instructive as the answer:
+1. Shipped `brand_mark()` with no mirror. Scott asked "Is it backwards?"
+2. Built a self-styled verification test (an asymmetric "R", the whole
+   OBJECT rotated 180° about X to simulate picking it up, rendered with a
+   hand-picked `--camera=...`), concluded `mirror([0,1,0])` was needed,
+   shipped it.
+3. Scott opened the actual STL in a real phone 3D viewer and reported it
+   still looked backwards, alongside a second image that read as
+   confirming the *original unmirrored* version instead — reverted to no
+   mirror on that basis.
+4. Scott reported the reverted (unmirrored) version was ALSO backwards.
+   Net: both a real per-Scott check on Round 2 *and* Round 3 came back
+   "backwards" — an apparent contradiction with no single mirror axis
+   satisfying both reports.
+5. Rather than guess a third time, built a multi-candidate STL: several
+   plates side by side, one per candidate transform (no mirror /
+   mirror-X / mirror-Y / mirror-both), each plate a **different, obvious
+   size** (20/30/40/50mm) so Scott could identify the correct one
+   unambiguously over chat without any position- or marker-based
+   confusion (a first attempt used tiny raised dots as identifiers —
+   too small to see in the viewer; size was the fix). Scott checked in
+   his real viewer and confirmed: the 40mm plate (`mirror([0,1,0])`)
+   reads correctly. Re-applied that exact transform to the real vase and
+   Scott confirmed it correct there too.
+6. The Round-3 "revert" was very likely a misreading of ambiguous
+   feedback, not a real signal that the mirror was wrong — the size-coded
+   multi-candidate test is what finally produced an answer Scott could
+   confirm with zero ambiguity, and it matched the ORIGINAL Round-2 fix
+   all along.
 
-**The actual rule going forward: don't try to self-verify text
-orientation/mirroring with an in-script rotation or hand-picked camera
-trick — trust has to come from opening the real generated file in a real,
-standard STL viewer** (ask Scott to check, the way this was actually
-caught) rather than a from a custom OpenSCAD render dressed up to look like
-a verification. This is a narrower, more honest version of this skill's
-own "render a PNG and look at it" rule: for MOST geometry questions
-(does it have a hole, is a wall too thin, is there a self-intersection) a
-PNG render answers it directly and reliably. Chirality/mirroring is the
-one category where the render pipeline itself was shown to be an
-unreliable witness — treat it differently, and say so plainly rather than
-asserting confidence a second time on the same kind of unverified test.
+**Two separate lessons here, don't conflate them:**
+- **Don't trust an in-script rotation or hand-picked camera trick to
+  verify chirality/mirroring.** Rotating the whole OBJECT 180° while
+  leaving the render camera fixed does NOT correctly simulate how a real
+  viewer shows the underside (a real viewer orbits the CAMERA around a
+  stationary object — physically flipping an object and rotating a camera
+  around a fixed one are different transforms). A separate attempt to
+  verify via hand-picked `--camera=` elevation angles also failed
+  immediately with an unrelated wrong view. This codebase does not have a
+  reliable in-script way to check this — don't invent one.
+- **When asking a human to identify one of several candidates over chat,
+  make the identifying feature impossible to misread or lose in
+  translation.** Position ("the third one") depends on an unstated
+  left/right convention in the viewer that may not match the file's
+  authoring order. Small markers (a few raised dots) can be too tiny to
+  see. A large, unmistakable, independently-verifiable property — plate
+  SIZE, checkable with the viewer's own ruler tool — removed all
+  ambiguity in one shot. Design the disambiguator to survive being
+  described back to you in a single short reply.
 
 ```openscad
 // Engraves into the ACTUAL bottom face (z=0, the face touching the print
 // bed) -- reads as a maker's mark when the piece is picked up or tipped.
-// NO mirror() here -- confirmed correct by Scott opening the real STL in
-// a standard viewer. If a future engraving (different font, different
-// placement pattern) comes out backwards on a real check, don't "fix" it
-// with a guessed mirror() and an in-script rotation test -- get it
-// checked in a real viewer again before re-shipping.
+// mirror([0,1,0]) is REQUIRED for this exact translate+extrude pattern --
+// confirmed correct on the real, assembled vase by Scott checking the
+// generated STL in a real phone 3D viewer (see the saga above for how
+// many wrong turns it took to get an unambiguous answer). Don't treat
+// this axis as generalizable to a different placement/orientation
+// pattern without re-running the size-coded multi-candidate test below.
 logo_depth = 0.8;
 module brand_mark() {
     // z spans -0.5 to logo_depth -- MUST dip below the surface (z<0) for
@@ -449,8 +467,9 @@ module brand_mark() {
     // UNENGRAVED disk -- Simple: yes, zero errors, wrong result).
     translate([0, 3, -0.5])
         linear_extrude(height = logo_depth + 0.5)
-            text("Brand Name", size=9, font="Dancing Script:style=Bold",
-                 halign="center", valign="center");
+            mirror([0, 1, 0])
+                text("Brand Name", size=9, font="Dancing Script:style=Bold",
+                     halign="center", valign="center");
 }
 difference() {
     /* the vessel/part */;
@@ -458,11 +477,42 @@ difference() {
 }
 ```
 
+**The size-coded multi-candidate verification pattern** (reusable
+whenever chirality is in question and a human needs to confirm which of
+N transforms is right):
+
+```openscad
+// One plate per candidate transform, each a distinct, obvious SIZE so
+// the human reporting back can name the answer unambiguously ("the
+// 40mm one") -- no shared position/marker convention needed.
+gap = 70;
+module plate_candidate(idx, size, mirror_x, mirror_y) {
+    translate([idx * gap, 0, 0]) difference() {
+        cube([size, size, 3]);
+        translate([size/2, size/2, -0.5])
+            linear_extrude(height=2) {
+                if (mirror_x && mirror_y) mirror([1,0,0]) mirror([0,1,0])
+                    text("R", size=size*0.45, halign="center", valign="center");
+                else if (mirror_x) mirror([1,0,0])
+                    text("R", size=size*0.45, halign="center", valign="center");
+                else if (mirror_y) mirror([0,1,0])
+                    text("R", size=size*0.45, halign="center", valign="center");
+                else text("R", size=size*0.45, halign="center", valign="center");
+            }
+    }
+}
+plate_candidate(0, 20, false, false);  // no transform
+plate_candidate(1, 30, true, false);   // mirror X
+plate_candidate(2, 40, false, true);   // mirror Y
+plate_candidate(3, 50, true, true);    // mirror both
+```
+
 Checklist for engraved branding:
-- [ ] **Get the actual generated file opened in a real STL viewer and
-      confirm orientation there** — do not trust an in-script rotation or
-      hand-picked camera angle as proof either way, this session's own
-      attempt at that produced a confident, wrong answer
+- [ ] Orientation confirmed via a real human checking the actual generated
+      file in a real STL viewer — never an in-script rotation/camera
+      trick. If more than one transform is plausible, use the size-coded
+      multi-candidate pattern above rather than describing candidates by
+      position or small markers
 - [ ] Font family confirmed real via `fc-list | grep -i '<family>'` — an
       unregistered/misspelled family renders **empty text geometry, no
       error** (see Setup above for the auto-registration this repo now
