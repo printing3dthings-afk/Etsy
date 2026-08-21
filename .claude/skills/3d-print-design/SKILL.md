@@ -1087,6 +1087,91 @@ the model actually is (don't re-guess placement a second time either) and
 resize/reposition against that, rather than re-running the same
 existence-proof techniques that already succeeded.
 
+## Technique 14 — Matching real reference photos exactly: a continuous mouth cavity with solid tooth remnants, not separate tooth blocks with uncut gaps (2026-08-21)
+
+Scott sent two real reference photos of classic commercial jack-o-lantern
+lithophane designs after the previous round still wasn't right. Comparing
+those photos directly against the actual model exposed two concrete, fixable
+mistakes — not vague "make it better" feedback:
+
+**1. The eyes and nose had almost no vertical gap and read as one merged
+shape.** Eye base at z=30, nose apex at z=31 — 1mm apart, nothing near
+enough separation once combined with the render's own flattening tendency.
+Every feature now gets a real multi-mm gap to its neighbors, checked
+numerically (not eyeballed) before rendering anything.
+
+**2. The mouth's whole structure was backwards from a real jack-o-lantern.**
+The prior version had 3 separate solid tooth-blocks with big UNCUT gaps
+between them (only the "teeth" were cut; everything between them was left
+as solid, uncut pumpkin material). Comparing to the reference photos: a
+real carved mouth is the OPPOSITE — ONE continuous cut cavity spanning
+nearly the whole mouth width, with just two or three SMALL SOLID remnants
+left uncut within it to form teeth. The visual difference is large: the
+old version reads as 3 isolated notches in an otherwise-intact wall; the
+correct version reads as one dark grin with small light-catching teeth
+inside it.
+
+**The fix: build the cut as a `difference()` of (cut region) minus (teeth
+to keep solid), nested inside the outer body-carving `difference()`.**
+Each piece is still a simple convex quad through the proven `prism_xz()`
+hull-of-two-Y-depths technique (Technique 9) — the trick is in how they
+combine, not in inventing new cutting geometry:
+
+```openscad
+module mouth_cutter() {
+    difference() {
+        union() {
+            // the whole mouth cavity -- wide flat base + taller "risers"
+            // at each corner so the mouth silhouette isn't a flat slab
+            translate([0, 0, 2]) prism_xz([[-30,0],[30,0],[30,11],[-30,11]]);
+            translate([0, 0, 2]) prism_xz([[-30,0],[-19,0],[-19,17],[-30,17]]);
+            translate([0, 0, 2]) prism_xz([[19,0],[30,0],[30,17],[19,17]]);
+        }
+        union() {
+            // small "keep-solid" rectangles -- subtracted FROM the cutter
+            // itself, so these two spots are excluded from what gets
+            // removed from the body and remain real material (teeth)
+            translate([0, 0, 2]) prism_xz([[-6,0],[-1,0],[-1,7],[-6,7]]);
+            translate([0, 0, 2]) prism_xz([[1,0],[6,0],[6,7],[1,7]]);
+        }
+    }
+}
+```
+
+Because `mouth_cutter()` is itself subtracted from the body in the outer
+`difference()`, subtracting the "keep-solid" zones from the CUTTER (not
+from the body) inverts correctly: those two zones never get removed, so
+they stay as solid teeth poking up into an otherwise fully-open cavity.
+
+**Verification had to go further than prior rounds, because this is more
+complex CSG (a difference nested inside a difference nested inside a
+difference) — more nesting means more chances for a subtle sign/logic
+mistake to produce something that LOOKS plausible on a naive spot-check
+but is actually wrong.** The check that caught this reliably: render a
+SECOND reference STL of the exact same body with `face_cuts()` disabled,
+then for every target coordinate, look up the real uncut-surface vertex
+from that reference file and check whether that EXACT vertex still exists
+in the cut mesh. This is stronger than a generic "radius > threshold"
+heuristic — a naive radius check false-flagged the cut cavity's own wall-
+boundary vertices (right at the cutter's near-Y-plane) as "surviving
+material" near the corners on a first pass, which would have produced a
+false PASS on a real defect. Comparing against the exact known-good vertex
+from an uncut reference eliminates that ambiguity. A fine-resolution sweep
+across the whole mouth width at a fixed height (checking cut/solid/cut/
+solid/cut in sequence) additionally confirmed the cavity is genuinely
+continuous around both teeth, not accidentally left uncut somewhere it
+shouldn't be.
+
+**The actionable lesson: when a human sends real reference photos after
+multiple rounds of "still not right," the fix is comparison, not more
+guessing.** Look at exactly what differs structurally between the
+reference and the current model (not just "make it bigger" again) — here,
+the real structural error was CUT vs. UNCUT being backwards for the mouth,
+not a sizing problem at all. And treat each round's growing CSG complexity
+as a reason to strengthen verification (reference-file vertex lookup, not
+just a radius heuristic), not to skip it because "it passed numeric checks
+last time too."
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
