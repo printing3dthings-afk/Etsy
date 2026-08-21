@@ -237,6 +237,63 @@ Checklist for any functional solid:
       fine" means "prints fine"
 - [ ] Rendered to PNG and actually looked at before calling it done
 
+## Reference: real MakerWorld designs (2026-08-21)
+
+Before iterating further on a design, it's worth checking what actually
+works for other makers — searching MakerWorld (or Printables) surfaces
+real, popular, battle-tested design patterns instead of guessing at what
+"looks nice." Two searches done for this shop's vase/organizer models
+turned up concrete, reusable ideas:
+
+- **Asanoha Kumiko Pen Holder** (6,900+ downloads, 18,500+ likes) — wraps a
+  hexagonal pen holder shell in a hemp-leaf geometric lattice surface
+  pattern, and slants every compartment's opening toward the user for
+  one-handed retrieval. Both ideas translate directly: a repeating raised
+  diamond-trellis texture (Technique 3 below), and validation that a
+  scooped/slanted compartment opening (already in Technique 3's wedge-cut
+  example) is a real, popular ergonomic pattern, not a novelty.
+- **Voronoi/organic-lattice vases** — open cellular surface patterns that
+  catch light and shadow, popular for their visual depth. A true Voronoi
+  tessellation needs real cell-graph math this codebase doesn't have, but
+  a **crossed double-helix** (the helical-rib technique below, run twice
+  with opposite twist direction) gets a comparable woven-lattice look for
+  free, since it reuses the exact same proven `path_sweep()` approach.
+
+**Relief depth only reads correctly from an angled view.** Verifying a
+raised surface texture (ribs, the diamond trellis) against a straight-on
+orthographic render is misleading — a flat-topped raised feature has the
+*same surface normal* as the surrounding wall, so head-on/axial lighting
+shows zero shading difference between them no matter how deep the relief
+actually is; only the feature's *side* walls (facing away from an axial
+light) go dark, so a straight-on render of a real, correctly-raised
+texture can still look like a flat dark silhouette. This isn't a bug to
+chase — it's a property of single-directional-light preview rendering
+under head-on lighting, and it matches how relief generally photographs
+(carvings, embossing, coins all need raking light to read). Always verify
+relief texture from an angled view, matching how it'll actually be seen
+or photographed — a straight-on check can make correct geometry look
+broken and send you chasing a bug that isn't there. Separately, a
+shallow-but-real bump (0.3mm proud, tried first on the organizer) still
+reads as too subtle even at an angle — 0.7–0.9mm proud was the difference
+between "barely visible" and "genuinely bold" texture in direct
+side-by-side renders; don't assume any nonzero relief is enough without
+actually comparing depths.
+
+**Don't reuse an OpenSCAD builtin name as your own variable, even with
+different intent, even in a different scope.** This shop's own scripts
+already use `floor` as a variable name (tray/vessel floor thickness) —
+`floor` is also OpenSCAD's builtin `floor()` function. A module written
+with `ny = floor((panel_h - floor - 4) / cell)` (the outer `floor(...)`
+being the intended builtin call, the inner bare `floor` intended as the
+outer script's floor-thickness variable) happened to work in-context only
+because the outer variable was in scope with a compatible value — copying
+that same module into a different file with no such variable defined
+produced **silently empty geometry** (bare `floor` resolved to `undef`,
+`floor(undef)` propagated, the for-loop range collapsed to nothing, zero
+errors). Rewrite to avoid the name entirely (a plain numeric margin, or a
+differently-named variable) rather than relying on it resolving
+correctly by scope-capture accident.
+
 ## Technique 3 — Adding character (2026-08-21, real worked examples)
 
 A structurally-correct model can still look generic. Two proven ways to add
