@@ -597,6 +597,75 @@ degrees base-to-rim for a visible but not extreme twist). Same `skin()`
 call, same hollowing approach, same wall-thickness-margin rule above
 still applies unchanged.
 
+## Technique 6 — Floating disconnected geometry from an overlapping cut (2026-08-21, real Scott catch)
+
+**A texture/detail feature that's welded onto a wall (a rib, a lattice
+diamond, a boss) can be silently ORPHANED if a later `difference()`
+removes the wall material it was embedded into — the model still renders
+clean, but the printed part has loose disconnected pieces.** Not
+hypothetical: the organizer's Kumiko diamond trellis (Technique 3) is
+welded onto the front wall by embedding half of each diamond into the
+wall surface. The ergonomic scoop cut (also Technique 3) removes a wedge
+of the SAME front wall in the wide bay's region — and several diamonds
+sat inside that wedge's footprint. The scoop removed their embedded half,
+leaving the outer (proud) half floating with nothing connecting it to the
+shell. Scott caught it on the physical/visual result ("There were
+floating parts. We can't have that on 3d prints") — a completely valid,
+correct call; a disconnected fragment either falls off mid-print, gets
+lost inside a support structure, or never bonds to the layer below it.
+
+**How this was actually found and fixed — trace it in the code, don't
+just stare at a render.** The floating pieces were visible in earlier
+renders (small disconnected dots near the top of the wide bay) but had
+been misread as "the back wall's texture, visible through the open bay
+top due to perspective" — a plausible-sounding explanation that was
+never actually verified and turned out to be wrong. The reliable fix
+came from reading the two modules' real numeric ranges side by side: the
+lattice module's diamond Z-positions (`pz = 2 + cell/2 + iy*cell` for
+each row) and the scoop module's Z/X range (`z_low` to `z_top`, `x0` to
+`x1`) — once both are visible as plain numbers, the overlap is obvious
+without needing to render anything.
+
+**The fix: give the texture placer the SAME footprint the cut uses, and
+skip placement inside it — with a margin.**
+
+```openscad
+// Expose the cut's footprint as plain values the placer can check
+// against, not just buried inside the cut module.
+scoop_x0 = bay_start(0);
+scoop_x1 = bay_start(0) + bay_w[0];
+scoop_z_min = floor + scoop_min_wall;
+
+module kumiko_wall(panel_w, panel_h, proud, is_front) {
+    ...
+    // margin = d_size/2 so a diamond whose EDGE (not just center) would
+    // reach into the cut's footprint is also excluded -- a partially
+    // clipped diamond is still a floating-connection risk.
+    in_scoop = is_front
+        && px > scoop_x0 - d_size/2 && px < scoop_x1 + d_size/2
+        && pz > scoop_z_min - d_size/2;
+    if (abs(px) < panel_w/2 - d_size/2 && !in_scoop) {
+        translate([px, 0, pz]) rotate([90,0,45]) cuboid([d_size, d_size, proud*2]);
+    }
+    ...
+}
+```
+
+**A genuinely useful corroborating check for this specific bug class:
+compare CGAL's `Volumes` count before and after, on the SAME model.**
+`openscad --render`'s stats report a `Volumes` count for the Nef
+polyhedron. In isolation this number is NOT reliably interpretable (a
+single correct hollow vessel can report 2 or 3 depending on how CGAL
+counts the interior cavity — don't try to derive meaning from one
+snapshot, that's exactly the mistake that led to a wrong conclusion
+during this session's engraved-vase-mirror investigation). But comparing
+the SAME model's count before and after a fix is a real, cheap signal:
+the buggy organizer reported `Volumes: 11` (many small disconnected
+diamond fragments each counting as their own volume); the fixed version
+reports `Volumes: 2` (solid + hollow interior, matching every other
+known-good model in this skill). A large before/after drop like that is
+worth treating as real evidence; a single absolute number is not.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
