@@ -1012,6 +1012,81 @@ same `smooth_path()` this skill already uses for the body silhouette, plus
 BOSL2's built-in taper/twist parameters) removes the visible-joints problem
 entirely, for less code than the segment-chain version it replaces.
 
+## Technique 13 — Real-viewer confirmation resolves what this pipeline's own render never could, and use it to fix PROPORTIONS not just prove geometry (2026-08-21)
+
+Scott opened the actual STL in a real mobile viewer (screenshot, front
+view) after the previous round's "trust the numbers + here's the cutter
+shapes in isolation" explanation. Two outcomes from that single screenshot,
+worth separating:
+
+**1. It settled the render-vs-geometry question for good, in this
+model's favor.** The real viewer's face reads perfectly clearly — genuine
+depth shading, correctly separated eyes/nose/mouth, no blob. This confirms
+what Technique 9/10/12's numeric STL checks already established
+(real material in every gap) was correct the whole time — this codebase's
+own `render_scad(fmt="png")` pipeline (both `--render` CGAL mode AND plain
+OpenCSG preview mode, both tried) is simply not a reliable way to
+photograph a deep multi-cut carved face at this camera/lighting
+combination, full stop. Stop trying to fix this pipeline's rendering of
+that specific feature class going forward — a numeric STL check plus
+pointing Scott at a real viewer (or this screenshot pattern) is the correct
+resolution, not another camera-angle guess.
+
+**2. But it ALSO surfaced a real, separate defect a render could never
+have caught: PROPORTIONS.** "The face needs a lot of work" wasn't about
+visibility — the geometry was always genuinely a face — it was that the
+eyes/nose/mouth were small and bunched up near the stem, leaving a large
+dead blank band of plain ribbed surface below with no feature on it. This
+is a design-judgment defect, invisible to any geometry-correctness check
+(the cuts WERE separated, WERE real, and STILL looked wrong to a human
+because they were badly placed and undersized). **Numeric verification
+proves cuts don't merge/leak — it does not, and cannot, prove the
+features are well-proportioned or well-placed.** Those are two genuinely
+different questions; don't let a passing numeric check stand in for the
+second one.
+
+**The fix: compute the body's real radius-by-height profile instead of
+eyeballing placement, and size features against the widest usable band.**
+Linearly interpolating `body_ctrl`'s own control points (the same data
+already driving the loft) shows the outer radius stays large (43-46mm)
+from about z=8 to z=35, then tapers toward the stem above that — a ~27mm-
+tall prime "canvas" that the original face placement (eyes at z=35, already
+past the widest point and shrinking) never used. Moved the whole face
+down onto that band and scaled every feature up substantially:
+
+```openscad
+// Eyes: z=30 (was 35), x=±20, 26x22mm triangles (was ~18x15mm)
+eye_pts = [[-13, 0], [13, 0], [0, 22]];
+translate([-20, 0, 30]) prism_xz(eye_pts);
+translate([20, 0, 30]) prism_xz(eye_pts);
+
+// Nose: z=15 (was 23), 20x16mm (was ~14x12mm)
+nose_pts = [[-10, 0], [10, 0], [0, 16]];
+translate([0, 0, 15]) prism_xz(nose_pts);
+
+// Mouth: wider span (66mm vs 56mm), taller teeth (22mm vs 12mm),
+// trapezoid shape (wider at the base) instead of plain rectangles --
+// still a convex quad, so the hull()-prism technique (Technique 9) still
+// applies unchanged.
+mouth_w = 66; top_w = seg_w * 0.65;
+pts = [[-top_w/2, 25], [top_w/2, 25], [seg_w/2, 3], [-seg_w/2, 3]];
+```
+
+Re-verified the SAME way as every prior face iteration (Technique 9/10's
+numeric gap-check, re-run against the new bigger coordinates) before
+shipping — bigger cuts closer together are a real risk of actually merging
+this time, so the check isn't optional just because it passed before at a
+smaller size.
+
+**The actionable lesson: when a human reports a carved/cut feature "needs
+work" after already confirming via a real viewer that it exists and is
+visible, the next round of feedback is almost certainly about
+composition (size, placement, balance on the available surface), not
+about proving existence again.** Go compute where the good real estate on
+the model actually is (don't re-guess placement a second time either) and
+resize/reposition against that, rather than re-running the same
+existence-proof techniques that already succeeded.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
