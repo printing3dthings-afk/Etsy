@@ -717,6 +717,35 @@ Direct STL inspection is slower to set up than another render call but
 gives an unambiguous, arithmetic answer instead of one more subjective
 image to squint at.
 
+## Technique 8 — Market research before design research (2026-08-21)
+
+Before searching MakerWorld for design *ideas*, it's worth checking what
+actually *sells* — MakerWorld's own like/download counts measure "makers
+who like this design," not "buyers who pay for it." For a genuinely new
+product (not iterating on an existing one), search broadly for real
+best-selling-on-Etsy data first (e.g. "best selling 3D printed items on
+Etsy 2026"), THEN go to MakerWorld for design specifics on whatever
+category that research surfaces. Two independent searches for this shop
+both put phone stands at the top — "lead the pack," universal appeal,
+low material cost, high margin — which is a stronger signal than any
+single MakerWorld collection's like count, since it's about what people
+actually buy, not what other makers find interesting to look at.
+
+**A safe pattern for composing a functional part from several distinct
+solid pieces (a base + an angled wall + a lip, not a single lofted
+shape):** anchor each piece so its local origin sits at the specific
+edge/corner where it should meet the base (`anchor=BOTTOM+FRONT` etc.,
+BOSL2 supports compound anchors), position it with a plain `translate()`,
+and — deliberately, not as an afterthought — embed it a small amount
+(~1mm) *below* the surface it's welded onto, not flush with it. A
+flush/coincident join can render fine and still be a fragile edge case;
+a small forced overlap costs nothing (it's inside the part, invisible)
+and removes any doubt. Getting this wrong is easy: swapping an anchor
+from `BOTTOM` to `TOP` without re-deriving the whole position chain
+produced a completely different, wrong shape on the first attempt here —
+change one variable in a position chain, re-render immediately, don't
+assume the rest of the logic still applies with the new anchor.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
