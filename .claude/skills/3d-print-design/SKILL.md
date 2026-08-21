@@ -394,6 +394,27 @@ common convention (matches "printed by / made with" marks seen on
 MakerWorld models) — printable with zero extra risk since it's a shallow
 recess in the flat, bed-facing bottom face, not an overhang.
 
+**Text engraved into a bottom/underside face reads BACKWARDS unless
+explicitly mirrored — this is not optional, and it's easy to get the
+mirror axis wrong.** `text()` is authored to read correctly when viewed
+from the side its extrusion grows *away* from (the "+Z looking down" side).
+A bottom face's outward normal points *down* (away from the solid) — so
+the real physical viewer (someone picking the object up and looking at its
+actual underside) is standing on the *opposite* side from where the text
+reads correctly, same as text looks backwards through the wrong side of a
+pane of glass. Shipped a version of this without the mirror once already
+(Scott caught it: "Is it backwards, the words?" — it was). **Confirmed by
+direct test, don't re-derive from rotation math**: built a flat plate with
+an unmistakably-asymmetric "R" engraved the same way, physically flipped
+it 180° about X (the same motion as picking an object up to check its
+underside) and viewed it with a fixed external camera. Unmirrored: backwards
+R. `mirror([1,0,0])` (the "obvious" horizontal-flip guess): *still* wrong.
+`mirror([0,1,0])` (mirror across the OTHER axis): correct, clean R. The
+axis that fixes it depends on how your text is authored/positioned and
+isn't safe to assume — run the same asymmetric-letter test on any new
+engraving setup rather than trusting a mirror axis that "should" work by
+symmetry.
+
 ```openscad
 // Engraves into the ACTUAL bottom face (z=0, the face touching the print
 // bed) -- reads as a maker's mark when the piece is picked up or tipped.
@@ -405,10 +426,15 @@ module brand_mark() {
     // an off-by-a-hair version of this, cutting from z=3.01 upward on a
     // z:[0,3] solid, rendered a flawless-looking but completely
     // UNENGRAVED disk -- Simple: yes, zero errors, wrong result).
+    //
+    // mirror([0,1,0]) is REQUIRED for this exact translate+extrude
+    // pattern -- confirmed via the asymmetric-letter test above. Omit it
+    // and the engraving is backwards on the real printed part.
     translate([0, 3, -0.5])
         linear_extrude(height = logo_depth + 0.5)
-            text("Brand Name", size=9, font="Dancing Script:style=Bold",
-                 halign="center", valign="center");
+            mirror([0, 1, 0])
+                text("Brand Name", size=9, font="Dancing Script:style=Bold",
+                     halign="center", valign="center");
 }
 difference() {
     /* the vessel/part */;
@@ -417,6 +443,10 @@ difference() {
 ```
 
 Checklist for engraved branding:
+- [ ] **Ran the asymmetric-letter mirror test** (an "R" or similar,
+      flipped 180° the same way the real part will be viewed, checked
+      against a fixed external camera) for THIS specific engraving setup
+      — never assumed a mirror axis "should" be right by symmetry
 - [ ] Font family confirmed real via `fc-list | grep -i '<family>'` — an
       unregistered/misspelled family renders **empty text geometry, no
       error** (see Setup above for the auto-registration this repo now
