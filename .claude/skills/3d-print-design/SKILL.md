@@ -81,6 +81,19 @@ rule this shop already applies to AI photos and Etsy mutations.**
   circles from directly above (`--camera=0,0,60,0,0,0,400`). Don't chase
   a "bug" that's actually just the preview's lighting — but do check,
   don't assume.
+- **Real vendored fonts are available to `text()` for engraved branding.**
+  This repo's existing font sets (`fonts/`, `assets/fonts/` — already used
+  for cover art/listing images) are auto-registered with fontconfig the
+  first time `render_scad()` runs in a process (`_ensure_fonts_registered()`
+  copies them to `~/.fonts` + `fc-cache`, idempotent, never blocks a render
+  if it fails). Reference a font by family name, e.g.
+  `text("...", font="Dancing Script:style=Bold")` — cursive/script options
+  include Dancing Script and Great Vibes, elegant serif options include
+  Cinzel/Cinzel Decorated/Playfair Display. **An unregistered or misspelled
+  font family silently renders empty text geometry — no error** (confirmed
+  live before this was wired up automatically), so if engraved text isn't
+  showing up, check `fc-list | grep -i '<family>'` before assuming the
+  boolean/positioning is wrong.
 
 ## Bambu P1S constraints — design within these, don't guess
 
@@ -373,6 +386,55 @@ subtracting it from the real model (exactly how the scoop above was
 debugged) — it's a five-second render and it turns "why did my model
 vanish" into "here's the wedge, here's why it's wrong" immediately, instead
 of debugging through a `difference()` of a dozen other shapes.
+
+## Technique 4 — Engraved branding/text (2026-08-21)
+
+A maker's mark or product name engraved into the underside is a real,
+common convention (matches "printed by / made with" marks seen on
+MakerWorld models) — printable with zero extra risk since it's a shallow
+recess in the flat, bed-facing bottom face, not an overhang.
+
+```openscad
+// Engraves into the ACTUAL bottom face (z=0, the face touching the print
+// bed) -- reads as a maker's mark when the piece is picked up or tipped.
+logo_depth = 0.8;
+module brand_mark() {
+    // z spans -0.5 to logo_depth -- MUST dip below the surface (z<0) for
+    // the boolean to actually overlap the solid. A cutter placed to only
+    // touch z=0 with no negative overlap removes nothing (confirmed live:
+    // an off-by-a-hair version of this, cutting from z=3.01 upward on a
+    // z:[0,3] solid, rendered a flawless-looking but completely
+    // UNENGRAVED disk -- Simple: yes, zero errors, wrong result).
+    translate([0, 3, -0.5])
+        linear_extrude(height = logo_depth + 0.5)
+            text("Brand Name", size=9, font="Dancing Script:style=Bold",
+                 halign="center", valign="center");
+}
+difference() {
+    /* the vessel/part */;
+    brand_mark();
+}
+```
+
+Checklist for engraved branding:
+- [ ] Font family confirmed real via `fc-list | grep -i '<family>'` — an
+      unregistered/misspelled family renders **empty text geometry, no
+      error** (see Setup above for the auto-registration this repo now
+      does; still worth confirming on a new/unusual family)
+- [ ] Cutter's Z-range actually dips *below* the surface being engraved,
+      not just touches it — verify by checking the numbers, not just that
+      the render succeeded (this exact off-by-a-hair mistake produced a
+      perfectly valid, completely unengraved model on the first attempt)
+- [ ] Text + any underline/rule sized to fit inside the actual available
+      flat area (e.g. within the base radius of a round vessel) — check
+      against the real profile's base dimension, not a guess
+- [ ] Verified on the REAL assembled model from the correct face — an
+      isolated test panel proves the technique works, but the final check
+      needs to be the actual part, viewed from the face the mark is on
+      (rotate the whole model, don't just trust the isolated test carries
+      over — confirmed necessary here: the isolated panel and the real
+      vase's base share the same key dimensions, but only checking the
+      isolated version would still not be "looked at the real output")
 
 ## The one rule that matters most
 

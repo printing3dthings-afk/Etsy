@@ -66,6 +66,49 @@ _SUPPORTED_FORMATS = {"stl", "off", "amf", "3mf", "csg", "png"}
 # from any script this module renders, regardless of the caller's cwd.
 _OPENSCAD_LIBS_DIR = Path(__file__).resolve().parent.parent / "assets" / "openscad_libs"
 
+# This repo already vendors a large font set (fonts/, assets/fonts/) for
+# cover-art/listing-image text -- OpenSCAD's text() can use the SAME files
+# for real engraved branding (a maker's mark, a product name) once they're
+# registered with fontconfig, which OpenSCAD's text() goes through (not a
+# raw file-path parameter). Done once per process, not per render -- fc-list
+# confirmed live (2026-08-21) this is required even for a font already
+# sitting in the repo: text() with an unregistered font family name
+# silently renders EMPTY geometry, no error, the same failure class as
+# every other "clean render, wrong result" pitfall this module has hit.
+_fonts_registered = False
+
+
+def _ensure_fonts_registered() -> None:
+    """Idempotent, best-effort: copies this repo's vendored .ttf/.otf files
+    into ~/.fonts and runs `fc-cache` once so OpenSCAD's text() can find
+    them by family name (e.g. font="Dancing Script"). Never raises -- a
+    render that doesn't use text() shouldn't fail because font setup had a
+    hiccup, and a render that DOES use text() with a missing font already
+    gets a clear empty-geometry result the caller can act on rather than a
+    crash here."""
+    global _fonts_registered
+    if _fonts_registered:
+        return
+    _fonts_registered = True
+    try:
+        user_fonts_dir = Path.home() / ".fonts"
+        user_fonts_dir.mkdir(parents=True, exist_ok=True)
+        repo_root = Path(__file__).resolve().parent.parent
+        copied_any = False
+        for src_dir in (repo_root / "fonts", repo_root / "assets" / "fonts"):
+            if not src_dir.is_dir():
+                continue
+            for font_file in list(src_dir.glob("*.ttf")) + list(src_dir.glob("*.otf")):
+                dest = user_fonts_dir / font_file.name
+                if not dest.exists():
+                    dest.write_bytes(font_file.read_bytes())
+                    copied_any = True
+        if copied_any:
+            subprocess.run(["fc-cache", "-f", str(user_fonts_dir)],
+                            capture_output=True, timeout=30)
+    except Exception:  # noqa: BLE001 - best-effort, never block a render on this
+        pass
+
 
 class OpenSCADError(Exception):
     """Raised for any OpenSCAD failure -- missing binary, bad script syntax,
@@ -101,7 +144,12 @@ def check_openscad_available() -> tuple[bool, str]:
             "xvfb-run: MISSING -- PNG preview rendering will fail with 'Unable to open "
             "a connection to the X server'; apt-get install -y xvfb"
         )
-        return True, f"{version or 'openscad (version unknown)'} | {bosl2_note} | {xvfb_note}"
+        fonts_ok = bool(list((Path(__file__).resolve().parent.parent / "fonts").glob("*.ttf"))) if \
+            (Path(__file__).resolve().parent.parent / "fonts").is_dir() else False
+        fonts_note = "fonts: vendored set available for text()/engraving" if fonts_ok else (
+            "fonts: none vendored -- text() will only see system-default fonts"
+        )
+        return True, f"{version or 'openscad (version unknown)'} | {bosl2_note} | {xvfb_note} | {fonts_note}"
     except Exception as exc:  # noqa: BLE001
         return False, f"openscad found at {exe} but `--version` failed: {exc}"
 
@@ -160,6 +208,7 @@ def render_scad(
     if not available:
         raise OpenSCADError(info)
     exe = shutil.which("openscad")
+    _ensure_fonts_registered()
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
