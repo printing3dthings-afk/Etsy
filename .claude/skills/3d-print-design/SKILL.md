@@ -746,6 +746,61 @@ produced a completely different, wrong shape on the first attempt here —
 change one variable in a position chain, re-render immediately, don't
 assume the rest of the logic still applies with the new anchor.
 
+## Technique 9 — Carving a through-cut face into a curved body (2026-08-21)
+
+Building a jack-o'-lantern's carved face (real through-holes, like an
+actually-carved pumpkin) needed several distinct small cuts — two eyes, a
+nose, a jagged mouth — into an already-ribbed, curved outer wall. Using
+`rotate()` + `linear_extrude()` for these (the pattern used for engraved
+text) means re-deriving a rotation sign for every new feature shape and
+placement, which this session has gotten wrong on the first attempt
+enough times to treat as a real risk, not a one-off.
+
+**Safer for this case: extend the hull()-prism technique from the
+organizer's scoop cut to ALL face features.** Every cutter is built from
+plain 2D points in the XZ plane, each placed at two real Y depths and
+hulled into a prism — no `rotate()`, no sign to get right or wrong:
+
+```openscad
+y0 = 25; y1 = 50;  // chosen with margin past both the inner cavity AND
+                    // the outer rib surface at every feature's height —
+                    // checked against the silhouette's real radius, not
+                    // guessed
+module prism_xz(pts2d) {
+    hull() {
+        for (p = pts2d) {
+            translate([p[0], y0, p[1]]) sphere(r=0.01, $fn=6);
+            translate([p[0], y1, p[1]]) sphere(r=0.01, $fn=6);
+        }
+    }
+}
+eye_pts = [[-6,0],[6,0],[0,11]];
+translate([-16, 0, 34]) prism_xz(eye_pts);   // convex shape -- hull()
+                                              // preserves it correctly
+```
+
+**This only works for a CONVEX 2D shape** (a triangle, a rectangle) —
+`hull()` of two copies of a concave/non-convex shape (like one continuous
+zigzag mouth with teeth) fills in the concave notches, destroying the
+jagged silhouette. For the jack-o'-lantern's toothy grin, decompose it
+into several small convex pieces (a row of separate rectangular mouth
+openings) with gaps of uncut material left BETWEEN them — the gaps read
+as the teeth, without ever needing a concave hull.
+
+**When several small cuts sit close together, a render can make them
+look like one big merged hole even when they aren't — verify by
+checking for real material in the gaps, not by trusting the shading.**
+The finished jack-o'-lantern face rendered as one solid dark blob with no
+visible separation between the eyes/nose/mouth — looked exactly like the
+cuts had merged into one opening. Checking the STL directly (are there
+still real outer-surface vertices, at the expected radius, in the bridge-
+of-nose gap between the eyes, and in each gap between mouth segments?)
+confirmed distinct material remained everywhere it should. Same lesson
+as Technique 7, a different flavor of it: several deep, closely-spaced
+cuts under this renderer's single-directional lighting flatten into one
+dark silhouette with no internal shading gradient — that's expected for
+this renderer on this kind of geometry, not evidence the cuts merged.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
