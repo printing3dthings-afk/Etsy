@@ -530,6 +530,64 @@ Checklist for engraved branding:
       Orientation/mirroring specifically is not (see above) — check that
       part in a real viewer, separately
 
+## Technique 5 — Non-axisymmetric textured bodies: `skin()`, not a segment union (2026-08-21)
+
+`rotate_extrude()` only works for a cross-section that's constant around
+the full 360° — it can't do vertical fluting, faceting, or any texture
+that varies by ANGLE as well as height. For that, loft a series of 2D
+ring profiles (one per height sample) using BOSL2's `skin()`:
+
+```openscad
+function flute_pts(r) = [for (a = [0:5:355])
+    // radius dips near each flute's center, absolute mm depth --
+    // NEVER a fraction of r (see the real bug below)
+    let(rr = r - flute_depth * (1 - abs(cos(a * n_flutes / 2))))
+    [rr * cos(a), rr * sin(a)]
+];
+outer_profiles = [for (p = outer) flute_pts(p.x)];  // `outer` = the usual
+outer_z = [for (p = outer) p.y];                    // smooth_path silhouette
+skin(outer_profiles, z=outer_z, slices=0);
+```
+
+Hollow it by `skin()`-ing a SECOND, smaller set of profiles (radius minus
+wall thickness) and subtracting — since neither shell touches the
+rotation axis (both are just rings of points, no axis-degenerate case),
+this never hits the 2D-`offset()` self-intersection pitfall from
+Technique 1 at all; a plain `difference()` of two independent skins is
+sufficient and safe.
+
+**A real, confirmed performance trap: don't build this as a `union()` of
+many separate per-segment `linear_extrude(scale=...)` pieces — it times
+out.** A first attempt lofted the silhouette by looping over every
+`smooth_path` sample and emitting one `linear_extrude(height=h,
+scale=r1/r0)` per segment (~90 segments × 2 shells). CGAL has to compute
+a pairwise boolean for every one of those ~180 separate solids just to
+union/subtract them — this hung past a 150s timeout. Switching to a
+single `skin()` call per shell (one mesh via triangulation, not a boolean
+union of many solids) rendered the exact same silhouette+texture in under
+45 seconds. If a loft is timing out, this is the first thing to check —
+look for an implicit union of many small extrudes and replace it with one
+`skin()` call. (Also worth knowing: OpenSCAD 2021.01 does NOT support
+passing a `function()` literal as a module argument to pick between ring
+shapes at each step — that syntax parses in newer dev snapshots but not
+this version. Use a plain boolean flag and a ternary/if inside the loop
+instead, confirmed working.)
+
+**A real, confirmed geometry bug: texture depth must be an ABSOLUTE
+value, never a fraction of the local radius.** A first attempt at the
+flute depth above used `r * flute_depth_frac` (a percentage of the local
+radius) — looked fine at the wide base, but at the vase's narrow waist
+(~22mm radius) the groove depth scaled down too, except the WALL
+THICKNESS didn't scale with it, and the flutes punched clean through to
+the interior — confirmed visually, holes clearly visible through to the
+hollow cavity. Fixed by making the depth a fixed mm value, sized well
+under the wall thickness (0.7mm groove on a 2.4mm wall) so it stays a
+safe margin under the wall at every point on the silhouette, not just the
+widest one. Whenever a texture's depth is expressed relative to
+something local (radius, segment length), check it against the SMALLEST
+value that variable takes anywhere on the model, not the value where you
+happened to eyeball it.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
