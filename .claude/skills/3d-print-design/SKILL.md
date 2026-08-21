@@ -1172,6 +1172,146 @@ as a reason to strengthen verification (reference-file vertex lookup, not
 just a radius heuristic), not to skip it because "it passed numeric checks
 last time too."
 
+## Technique 15 — A revolve profile touching the axis at ONE point renders fine in preview but fails EVERY boolean op (2026-08-21, real ghost-build catch)
+
+Building a kawaii ghost (columnar body + domed top, `rotate_extrude()` of a
+`smooth_path()` silhouette that closes to a point at the top: `[..., [14,
+62], [0, 68]]`) — every preview PNG render looked completely correct
+through several iterations of hem-scallop and face work. The first attempt
+to actually render an STL (which requires a real CGAL boolean for the
+`difference()` that carves the hem/face) failed outright:
+
+```
+ERROR: The given mesh is not closed! Unable to convert to CGAL_Nef_Polyhedron.
+Current top level object is empty.
+```
+
+**Root cause, confirmed by isolated repro (not guessed):** a `rotate_extrude()`
+profile whose top point sits exactly ON the rotation axis (`x=0`) closes to
+a single vertex there, not an edge — OpenSCAD's raw polygon closure handles
+this fine for a plain PolySet export (a bare, un-differenced `rotate_extrude()`
+exports to STL with zero complaints), but the moment ANY boolean op
+(`difference()`, even one subtracted sphere) forces a CGAL Nef-polyhedron
+conversion, that single-point axis contact is a degenerate/non-manifold cap
+CGAL rejects outright. Reproduced across `$fn` 16–140 (rules out a
+resolution fluke) and with a minimal 3-point profile — confirming this is a
+structural property of the profile, not a resolution or library issue.
+
+**The fix is a one-character nudge: never let a revolve profile's pole sit
+at exactly `x=0` if the result will ever go through a boolean.** Change
+`[0, 68]` to `[0.5, 68]` (or any small positive value) — visually
+indistinguishable in any render (the top still rounds to what looks like a
+point through `smooth_path()`'s own corner smoothing), but now the profile
+closes across a tiny real disk instead of a single degenerate vertex, and
+every subsequent boolean op succeeds cleanly (confirmed: `Simple: yes`,
+clean `Volumes: 2`, zero warnings, immediately after the fix).
+
+**The actionable lesson, and why this is more dangerous than most bugs in
+this skill: PNG preview rendering (`fmt="png"`, no `--render` OR with
+`--render`) does NOT exercise the same code path as an actual boolean/STL
+export, so a model can preview perfectly through many iterations of design
+work and still be completely un-exportable.** Every technique in this
+skill up to now has been caught by "render a PNG and look at it" — this
+one specifically could NOT be, because the preview succeeded regardless of
+the bug. **The real guard: render an actual STL (via a real `difference()`,
+not just the bare shape) as an early sanity step on any revolve-based
+design, before investing further iteration in face/texture/hem details on
+top of it** — don't wait until the very end to discover the base shape was
+never exportable. Any `rotate_extrude()` profile with a point at `x=0` that
+will be differenced against anything should get this nudge as a matter of
+course, the same reflexive way Technique 1's vessel profiles already keep
+their rim off-axis when the vessel needs to be open.
+
+## Technique 16 — A scalloped/wavy hem via a ring of overlapping sphere cutters (2026-08-21)
+
+For a ghost's classic wavy "draped fabric" bottom edge (or any silhouette
+that needs a repeating wave/scallop around a revolved body's rim), the
+reliable technique is a ring of N overlapping sphere cutters subtracted
+from the body — no `rotate()` sign risk, no concave-hull problem, and it
+reads correctly from any angle since it's genuinely 3D, not a flat relief:
+
+```openscad
+n_legs = 6;
+scallop_r = 12.5;
+module scallop_cutters() {
+    for (i = [0:n_legs-1]) {
+        a = i * 360 / n_legs;
+        translate([17 * cos(a), 17 * sin(a), 3])
+            sphere(r = scallop_r, $fn = 40);
+    }
+}
+```
+
+N cutters placed evenly around the circumference carve N gaps, which
+leaves N rounded points ("legs") of solid material hanging between them —
+cutter count directly equals leg count, no separate accounting needed.
+Tuning notes from getting this right: the cutter's radial position
+(`17` above, versus the body's own rim radius of ~24-27) and its own
+radius (`scallop_r`) both need to be generous enough to bite deep dips —
+an early attempt with cutters barely overlapping the rim produced a
+barely-visible wave, not a real scalloped hem; pulling the cutters further
+IN (smaller radial position, so more of the sphere overlaps the body) and
+using a bigger `scallop_r` produced dramatically better, more clearly
+"legged" results, confirmed via a direct before/after render comparison.
+Real reference photos (classic ghost lithophane designs) show 5-7 gentle
+lobes, not 3-4 — matching that count mattered for the design reading as
+"a ghost" rather than "a cut sphere."
+
+## Technique 17 — Simple face features via shallow dimples, not through-cuts, and a hull()-chain for a smooth curved line (2026-08-21)
+
+For a SOLID decorative figurine (not a lit/hollow luminary like the
+pumpkin), face features don't need the hull()-of-two-Y-depths prism
+technique (Technique 9) at all — that technique exists specifically to cut
+all the way through a shell wall. A shallow dimple is much simpler and has
+zero rotation/orientation risk: position a sphere so it intersects the
+outer surface by only 2-3mm (sphere center placed just inside the nominal
+surface radius, sphere radius large relative to that overlap so it reads
+as a shallow round dimple, not a crater):
+
+```openscad
+// Oval almond eye -- a sphere scaled taller than wide, same shallow-dimple
+// principle, just non-uniformly scaled first.
+translate([-8, eye_r_body - 2.3, eye_z])
+    scale([1, 1, 1.5]) sphere(r = 3.6, $fn = 24);
+```
+
+**A row of separate spheres for a curved line (like a smile) reads as a
+beaded chain of bumps, not a smooth line — even when each dimple is
+individually correct.** First attempt at a smile used 5 independent
+spheres along a gentle arc; even with radius/spacing tuned so they
+technically overlapped, the render showed 5 distinct rounded bumps, not
+one continuous groove. **Fix: `hull()` each ADJACENT PAIR of points along
+the path, and union all those hulls** — this produces a genuinely
+continuous rounded tube instead of a series of spheres that merely touch:
+
+```openscad
+smile_pts = [for (i = [-2, -1, 0, 1, 2])
+    [i * 2.5, eye_r_body - 1.8, eye_z - 11 + abs(i) * 1.3]];
+for (k = [0:len(smile_pts) - 2])
+    hull() {
+        translate(smile_pts[k]) sphere(r = 2.6, $fn = 20);
+        translate(smile_pts[k + 1]) sphere(r = 2.6, $fn = 20);
+    }
+```
+
+This is the same `hull()`-of-two-points primitive used throughout this
+skill (the organizer's scoop cut, the pumpkin's face prisms), just walked
+along a chain instead of used once — confirming it generalizes cleanly to
+"smooth curved line through N points," a genuinely reusable pattern
+whenever a feature needs to read as one continuous stroke rather than a
+row of dots.
+
+**A real sign-flip bug worth flagging even though it's obvious in
+hindsight: a "curls up at the corners" smile needs the OUTER points at
+HIGHER z than the center, not lower.** First attempt used
+`eye_z - 11 - abs(i) * 1.8` (outer points subtract MORE, ending up lower)
+— this draws a frown, not a smile, and it wasn't obvious from the numbers
+alone; it took an actual render to notice the mouth curved the wrong way.
+Fixed by flipping the sign to `+`. Small reminder that "which direction is
+up" sign errors are common enough in this kind of coordinate math that
+even a simple 5-point curve is worth an actual visual check, not just
+"the CSG rendered without error."
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
