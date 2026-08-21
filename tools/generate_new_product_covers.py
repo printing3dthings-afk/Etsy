@@ -25,7 +25,14 @@ STYLE_ANCHOR = (
     "shapes, soft rounded forms, gentle drop shadows, warm inviting color palette, "
     "professional Etsy digital-product cover quality. No photorealistic rendering. "
     "The image contains only the described illustrated elements — no hands, no people, "
-    "no watermarks, no text, no typography anywhere in the image."
+    "no watermarks, no text, no typography anywhere in the image. Absolutely no lettering, "
+    "words, numbers, or title text baked into the image, even if the scene reads as a book "
+    "cover — the real title is composited separately afterward, so any in-image text is both "
+    "redundant and, per two confirmed live tests (2026-08-20), prone to rendering as garbled "
+    "nonsense text. Every character and object must be fully contained within the center 80% "
+    "of the canvas with real empty background margin on all four sides — nothing may touch or "
+    "cross the canvas edge (also confirmed live 2026-08-20: an under-constrained composition "
+    "ran a character off its own canvas edge)."
 )
 
 COVERS = {
@@ -58,15 +65,25 @@ COVERS = {
         "positive, welcoming, appropriate for young children ages 3-7. " + STYLE_ANCHOR
     ),
     "EDU1002_kids_tracing_truck_zone": (
-        "Full-page kawaii illustrated cover for a children's tracing workbook, portrait "
-        "orientation, boys-themed vehicle/construction niche. Bold safety orange (#FF6B35) "
-        "primary with steel blue (#2E5C8A) and caution yellow (#FFC107) accents on a warm "
-        "cream (#FFF8F0) background. Center composition: a large smiling kawaii dump truck "
-        "character with a friendly face on its front grille, surrounded by a small kawaii "
-        "digger/excavator character, a kawaii traffic cone character with a cute face, a road "
-        "sign, and a small pencil character with a smiling face and stubby arms holding a tiny "
-        "practice line. Bright, energetic, welcoming, appropriate for young children ages 3-7. "
-        + STYLE_ANCHOR
+        # Third attempt, confirmed working live 2026-08-20 -- the first attempt (a shorter
+        # version of this prompt, no explicit margin/no-text emphasis) baked in garbled
+        # nonsense title text ("SAFETY TUS WORKBOOK"); the second attempt dropped the text but
+        # let the sign/pencil character run off the canvas edge. This version's explicit
+        # composition rule fixed both. Kept verbose deliberately -- see STYLE_ANCHOR for the
+        # now-shared version of these two constraints, repeated here for extra emphasis on a
+        # composition that's already proven to need it.
+        "Kawaii illustrated scene of construction vehicle characters, portrait orientation, "
+        "no title, no headline, no banner. Bold safety orange (#FF6B35) primary with steel blue "
+        "(#2E5C8A) and caution yellow (#FFC107) accents on a warm cream (#FFF8F0) background with "
+        "a subtle grid pattern. A large smiling kawaii dump truck character centered in the middle "
+        "of the frame, a small kawaii digger/excavator character with a cute face beside it, a "
+        "kawaii traffic cone character with a smiling face in front, and a small pencil character "
+        "with a smiling face nearby. CRITICAL COMPOSITION RULE: every character and object must be "
+        "fully contained within the center 80 percent of the canvas, with real empty background "
+        "margin on all four sides -- left, right, top, and bottom. Nothing may touch or cross the "
+        "canvas edge. Leave generous open empty space in the upper third of the composition for "
+        "text to be added separately afterward. Bright, energetic, welcoming, appropriate for young "
+        "children ages 3-7. " + STYLE_ANCHOR
     ),
     "EDU1003_cursive_skills_ocean_breeze": (
         "Full-page kawaii illustrated cover for a children's cursive handwriting and skills "
