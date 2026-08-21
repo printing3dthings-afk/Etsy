@@ -11,9 +11,10 @@ Before this skill, `render_openscad_model` could render *any* valid OpenSCAD
 script, but nothing in this codebase captured what makes a script produce a
 model that's actually good — printable without supports where avoidable,
 structurally sound, and visually correct rather than subtly broken in a way
-that only shows up when you actually look at the render. Three real,
-non-obvious bugs were found and fixed building the first two real test
-models (a hollow vase, a desk organizer) before this was written down:
+that only shows up when you actually look at the render. Four real,
+non-obvious bugs were found and fixed building the first real test models
+(a hollow vase, a desk organizer, and a follow-up pass adding decorative/
+functional detail to both) before this was written down:
 
 1. A raw `polygon()` through straight-line control points, revolved with
    `rotate_extrude()`, produces visible faceted "ring" bands on the surface
@@ -32,14 +33,27 @@ models (a hollow vase, a desk organizer) before this was written down:
    one — regardless of how correctly the cavity is hollowed. This one is
    easy to miss because the *hollowing* can be perfectly correct and the
    model will still be structurally wrong.
+4. (Found 2026-08-21, adding decorative/functional detail to the first two
+   models) BOSL2's `cuboid(..., rounding=r)` silently produces **empty
+   geometry** — not an error, not a warning printed to the render result,
+   just nothing — when `r` is too large relative to the shape's own
+   thinnest dimension (confirmed: a 1.6mm-thick rib box with a requested
+   1.3mm rounding radius vanished entirely; `openscad --render` on its own
+   showed the real cause via TRACE lines through an internal `if` check in
+   `BOSL2/shapes3d.scad`, but a plain PNG render gave no clue beyond "the
+   whole model came out blank"). Small decorative/functional details (ribs,
+   grooves, thin fins) usually don't need rounding at all — skip it rather
+   than fight the minimum-size constraint.
 
-None of these three produced an OpenSCAD error. All three were only caught
-by actually rendering a PNG and looking at it — which didn't even work in
-this container until the headless-rendering fix below shipped. The
-discipline this skill exists to enforce: **never call a 3D model done from
-reading the .scad source. Render a PNG and look at it, the same
-"verify before reporting success" rule this shop already applies to AI
-photos and Etsy mutations.**
+None of the first three produced an OpenSCAD error, and #4 only became
+legible by re-running the exact failing piece directly through `openscad
+--render` on the command line (not through the PNG pipeline) and reading
+its TRACE output. All four were only caught by actually rendering and
+looking at the result — which didn't even work in this container until the
+headless-rendering fix below shipped. The discipline this skill exists to
+enforce: **never call a 3D model done from reading the .scad source.
+Render a PNG and look at it, the same "verify before reporting success"
+rule this shop already applies to AI photos and Etsy mutations.**
 
 ## Setup — what's already wired up, use it
 
@@ -223,11 +237,92 @@ Checklist for any functional solid:
       fine" means "prints fine"
 - [ ] Rendered to PNG and actually looked at before calling it done
 
+## Technique 3 — Adding character (2026-08-21, real worked examples)
+
+A structurally-correct model can still look generic. Two proven ways to add
+real character without compromising printability, both built and verified
+on the vase/organizer above:
+
+**Spiral/decorative ribs on a revolved body — reuse the silhouette's own
+sample points, don't recompute a radius function.** A helical rib that
+follows a vessel's existing bulge/waist (rather than a plain constant-
+radius spiral) looks intentional, not bolted-on, and is free because
+`smooth_path()`'s output already has the sample points you need:
+
+```openscad
+// outer = the same smooth_path() silhouette used to build the vessel.
+// Winds the SAME points around `turns` full revolutions instead of one --
+// the rib automatically follows the vase's own bulge/waist because it's
+// built from the vase's own profile, not a separately-computed curve.
+turns = 3.5;
+rib_r = 0.9;
+n = len(outer);
+trim = 6;   // skip first/last few samples so the swept tube's flat end
+            // caps land buried mid-wall, not poking out at the base/rim
+            // seam (a real cosmetic artifact seen on the first attempt)
+helix_pts = [for (i = [trim : n - 1 - trim])
+    let(p = outer[i], ang = i * turns * 360 / (n - 1), rr = p.x + rib_r * 0.35)
+    [rr * cos(ang), rr * sin(ang), p.y]
+];
+rib_profile = [for (a = [0:30:359]) [rib_r * cos(a), rib_r * sin(a)]];
+union() {
+    rotate_extrude($fn=140) polygon(profile);   // the verified hollow vessel
+    path_sweep(rib_profile, helix_pts, closed=false);
+}
+```
+
+A shallow continuous helix like this has no overhang problem — it's the
+same "gradual angle change, no sudden step" reasoning that already makes
+vase-mode single-wall printing reliable. Set `rr` (the rib's radial offset
+from the surface) so the tube overlaps the wall by less than its own
+radius — enough to weld on union, not so much it disappears inside. Verify
+with `openscad --render`'s own CGAL stats: `Simple: yes` confirms a valid
+non-self-intersecting mesh; a top-down render is also worth a look since a
+lighting-artifact diagonal band (see Setup above) is easy to mistake for a
+sweep defect on a piece that now has real surface detail to get confused by.
+
+**Ergonomic/decorative cuts via `hull()` of a handful of points — not a
+manually rotated box.** A rotated `cuboid()` positioned by hand-derived
+trig is exactly the kind of thing that either misses its target or (worse)
+oversizes and silently eats the whole model in a `difference()` — this
+happened building the organizer's pen-access scoop: a first attempt with
+`rotate([25,0,0])` on a guessed-size box rendered to a **completely blank
+model**, no error, because the rotated box's true bounding extent was far
+larger than intended and the subtraction consumed everything. `hull()` of
+explicit corner points is fully deterministic — every coordinate is a real
+X/Y/Z you chose on purpose, no rotation math to get wrong, and `hull()`
+always produces a valid convex solid:
+
+```openscad
+// A wedge-shaped cut sloping the top-front of a wall down to
+// `scoop_min_wall` mm above the floor -- e.g. so pens/markers in a
+// compartment can be grabbed without reaching straight down.
+scoop_depth = 26;
+scoop_min_wall = 14;   // NEVER cut below this -- keep real structural wall
+x0 = bay_left; x1 = bay_right;             // the cut's width, in real X
+y_front = size.y / 2 + 1;                  // 1mm past the outer face -- clean cut through
+y_back = y_front - scoop_depth;
+z_top = size.z + 5;                        // well above the model -- clean cut from above
+z_low = floor + scoop_min_wall;
+pts = [
+    [x0, y_back, z_top], [x0, y_front, z_top], [x0, y_front, z_low],
+    [x1, y_back, z_top], [x1, y_front, z_top], [x1, y_front, z_low],
+];
+hull() for (p = pts) translate(p) sphere(r=0.01, $fn=6);
+```
+
+Build and look at any `hull()`-based cut **in isolation** before
+subtracting it from the real model (exactly how the scoop above was
+debugged) — it's a five-second render and it turns "why did my model
+vanish" into "here's the wedge, here's why it's wrong" immediately, instead
+of debugging through a `difference()` of a dozen other shapes.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
-the model is correct.** All three bugs this skill documents rendered
-without error. The only way any of them were caught was generating a real
-PNG (`fmt="png"` — works headless now, see Setup above) and looking at it
+the model is correct.** Every bug this skill documents rendered without
+error — including one that rendered a **completely empty model** with exit
+code 0. The only way any of them were caught was generating a real PNG
+(`fmt="png"` — works headless now, see Setup above) and looking at it
 from more than one angle. Do that for every new model before describing it
 to Scott as ready.
