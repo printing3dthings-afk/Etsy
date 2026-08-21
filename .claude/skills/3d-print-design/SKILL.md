@@ -666,6 +666,57 @@ reports `Volumes: 2` (solid + hollow interior, matching every other
 known-good model in this skill). A large before/after drop like that is
 worth treating as real evidence; a single absolute number is not.
 
+## Technique 7 — When a render looks wrong but the geometry is provably right (2026-08-21)
+
+Built a honeycomb-textured wall (same weld pattern as the Kumiko diamonds
+in Technique 3, hexagons instead) and the render showed only a thin,
+sparse-looking line of texture near the top of the wall — nothing like
+the full multi-row coverage the diamond version showed at the same
+`proud` depth. Spent real effort chasing this as a bug: checked hexagon
+orientation, checked a single hex against axis markers, boosted `proud`
+from 0.9 to 1.3mm, boosted cell size from `hex_r=4.2` to `6.0` — the
+render never meaningfully improved.
+
+**Before accepting "the render looks sparse" as evidence of a bug, parse
+the actual STL and check the numbers directly** — this is what actually
+resolved it, not another render attempt. Three checks in increasing
+specificity, all on the real generated file:
+
+```python
+import re
+verts = re.findall(r'vertex\s+([-\d.eE]+)\s+([-\d.eE]+)\s+([-\d.eE]+)', open(path).read())
+pts = [(float(x),float(y),float(z)) for x,y,z in verts]
+# 1. Do proud (raised) vertices exist at all, and what's their range?
+proud = [p for p in pts if p[1] > wall_surface_y]  # e.g. > 42.6 for a wall at y=42.5
+print(min(p[0] for p in proud), max(p[0] for p in proud))  # X spread
+print(min(p[2] for p in proud), max(p[2] for p in proud))  # Z spread
+# 2. Are they spread across the WHOLE wall, or clustered somewhere?
+from collections import Counter
+print(Counter(round(p[2] / row_step) for p in proud))     # per-row vertex counts
+```
+
+This proved the texture was complete and correctly distributed — every
+expected row had real vertex counts, X/Z spread covered nearly the full
+panel — while every render kept showing only the top rows clearly. The
+render wasn't lying about geometry that didn't exist; it just couldn't
+show it at the default camera/lighting combination, for reasons not
+fully diagnosed (denser/smaller hex cells at tighter row spacing than
+the diamond version, at the same oblique default camera angle, apparently
+compress into an unreadable band — changing `proud` or cell size didn't
+fix it, so it isn't simply "too shallow" the way the earlier diamond
+relief issue was).
+
+**The actionable lesson: when a render's visual read and a direct
+numeric check of the same STL disagree, trust the numbers, not another
+render attempt.** Guessing at a fourth or fifth camera angle to try to
+*make* a correct model look correct is a waste of effort once the
+geometry is already proven — and this session's own history (the
+engraved-vase mirror saga) already established that this codebase's
+render pipeline is not always a reliable arbiter of visual questions.
+Direct STL inspection is slower to set up than another render call but
+gives an unambiguous, arithmetic answer instead of one more subjective
+image to squint at.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
