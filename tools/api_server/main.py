@@ -13463,7 +13463,7 @@ def _execute_register_product_staged_action(a: dict) -> dict:
         "price": p.get("price"),
         "status": "active" if etsy_listing_id else "not_listed",
         "etsy_listing_id": str(etsy_listing_id) if etsy_listing_id else "",
-        "files": [],
+        "files": p.get("files") or [],
         "created_at": now,
         "source": "frank_register",
     })
@@ -16099,10 +16099,19 @@ async def register_product_directly(body: dict | None = None, _token: str = Depe
         prefix = {"3d_print_physical": "P3D"}.get(category, "MISC")
         product_id = await asyncio.to_thread(_slugify_product_id, name, prefix)
 
+    files = b.get("files")
     payload = {
         "product_id": product_id, "name": name, "category": category,
         "price": price, "etsy_listing_id": etsy_listing_id,
     }
+    if files is not None:
+        # 2026-08-21: register_product previously always wrote "files": [],
+        # forcing a second write path for any product whose deliverable/
+        # photos already exist at registration time (unlike the coloring/
+        # calendar pre-publish helpers, which append to an existing entry's
+        # files list). Optional so every existing caller's payload shape
+        # keeps working unchanged.
+        payload["files"] = [str(f) for f in files]
     ok, msg = await asyncio.to_thread(_validate_staged_action, {"type": "register_product", "payload": payload})
     if not ok:
         raise HTTPException(status_code=422, detail=msg)
