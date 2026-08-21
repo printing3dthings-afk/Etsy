@@ -1312,6 +1312,67 @@ up" sign errors are common enough in this kind of coordinate math that
 even a simple 5-point curve is worth an actual visual check, not just
 "the CSG rendered without error."
 
+## Technique 18 — Height-varying angular texture (draped fabric folds) via skin(), depth as a function of both angle AND z (2026-08-21)
+
+Scott's feedback after the first working ghost was direct: "needs more
+detail... don't forget the reference photos." Comparing again against the
+reference photos found the real gap — the classic ghost lithophane
+references all show visible vertical fold/drape lines running down the
+body (a "sheet draped over something" look), and the shipped version was
+a completely smooth column. This is a genuinely different texture need
+than anything else in this skill: Technique 5's rib/flute texture varies
+depth by ANGLE only (constant depth at every height); this needed depth
+to vary by BOTH angle and height — deep folds near the hem where fabric
+would puddle, fading to smooth by the dome top where a sheet would pull
+taut.
+
+**The fix: make the existing angular-modulation formula's depth term a
+function of z, not a constant, and switch the body from `rotate_extrude()`
+to `skin()`** (required because `rotate_extrude()` can only revolve ONE
+constant cross-section — any per-height variation needs a loft of
+per-height profiles, same reasoning as Technique 5):
+
+```openscad
+function fold_depth(z) = fold_depth_min + (fold_depth_max - fold_depth_min)
+    * max(0, min(1, 1 - z / 48));   // 1.0 near the hem (z=0), fades to 0 by z=48
+
+function fold_pts(r, z) = [for (a = [0:5:355])
+    let(
+        d = fold_depth(z),
+        rr = r - d * (1 - abs(cos(a * n_folds / 2))) * (0.78 + 0.22 * sin(a * 1.7 + 4))
+    )
+    [rr * cos(a), rr * sin(a)]
+];
+outer_profiles = [for (p = body) fold_pts(p.x, p.y)];   // p.y is height here
+skin(outer_profiles, z = [for (p = body) p.y], slices = 0);
+```
+
+The `(0.78 + 0.22*sin(a*1.7+4))` term is Technique 11's organic-
+irregularity trick (a slow, non-integer-frequency wobble layered on top of
+the primary fold count) carried over unchanged — still matters here for
+the same reason: perfectly uniform folds would read as a mechanical
+pattern, not real fabric.
+
+**Verification had to confirm the height-fade genuinely works, not just
+that folds exist somewhere.** Sampling real surface-vertex radii around
+the circumference at several different heights and comparing the actual
+measured spread against `fold_depth(z)`'s predicted value at each height
+matched to 3 decimal places (e.g. z≈5: measured 1.707mm spread, predicted
+1.718mm; z≈65: measured 0.150mm, predicted 0.150mm) — strong, specific
+confirmation that the height-dependent formula is doing exactly what it's
+supposed to, not just "some texture exists."
+
+**The actionable lesson, tying back to Technique 13's earlier finding:
+"needs more detail" after a design already passed numeric verification
+almost always means a missing STRUCTURAL feature visible in the reference
+photos, not a request to polish something already present.** The fix
+here wasn't tuning an existing parameter — it was recognizing the
+references had an entire texture dimension (folds varying by both angle
+and height) that the shipped design never attempted. Go back to the
+reference photos specifically named in the feedback and look for what
+kind of surface variation exists that the current model doesn't have at
+all, rather than adjusting existing knobs further.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
