@@ -26847,3 +26847,17 @@ own chat will work again.
   ✗ AD015 generation failed
   → AD016: Ancient Library
   ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+## 2026-08-21 — OpenWhen listing content lost between sessions; recovered and staged
+
+**Symptom:** Scott asked to publish the OpenWhen (digital time-capsule gift app) listing that an earlier session reported as built and delivered. On investigation, none of its files (app HTML, listing photos, catalog registration) existed anywhere durable — not on the Railway volume, not in this repo, not in `generated_listing_content.json`.
+
+**Root cause:** The earlier session's OpenWhen build was never actually saved to Frank's persistent volume or committed to the repo — only sent to Scott as chat file deliveries, which don't round-trip back into this session. `data/digital_products/` is gitignored by design (per its own convention), so nothing backed it up.
+
+**Fix:** Scott supplied his own personal export of the app (`openwhenforjessee.html`) as a starting point — this had his real personal gift data (a message to "Jessee") embedded in a `<script id="capsule-data">` tag. Stripped that back to the app's own documented `EMPTY` sentinel (confirmed via reading the app's own `init()` logic) plus some leftover stale DOM state (a capsule-list entry, a review-summary string) that had also been captured in the saved snapshot — verified with Playwright that the cleaned file shows the blank "create your own" screen, not any trace of the personal content, before treating it as the sellable product file. Full builder → export → reopen round-trip tested clean (0 JS errors, correct lock-state rendering for anytime/past-date/future-date letters).
+
+Also found and fixed two real backend gaps while staging this: (1) `register_product` always hardcoded a new product's `files: []`, so a product whose deliverable/photos already exist at registration had no way to attach them in one call — added an optional `files` param. (2) There was no way to correct a mistake in an already-registered (not-yet-published) product's files list — added a `update_files` mode + a small `POST /api/products/{id}/update-files` endpoint, refusing to touch a product that already has a live Etsy listing. Both changes required a manual `/api/core/redeploy` call to go live — confirmed each was live via a real functional probe (a throwaway `_DEPLOY_PROBE_TMP` catalog registration, and a 422-vs-404 check on the new endpoint) rather than trusting the static `/api/ping` build tag, which doesn't change on every deploy.
+
+Caught my own mistake mid-flow too: first `create_listing` stage (action 758) had `photo_paths: []` because the listing photos were uploaded under `product_files/OPENWHEN/listing_images/` instead of the established `product_files/OPENWHEN_listing_images/` convention (`_gather_product_review()` only recognizes paths containing literal `_listing_images/`). Rejected that action before Scott ever saw it, fixed the upload path, and re-staged (action 759) with all 10 photos + the deliverable correctly attached.
+
+**Status:** OpenWhen registered in the catalog (`product_id: OPENWHEN`, category `uncategorized`, $4.99), app file + all 10 listing photos saved durably to the Railway volume, listing content passed all truthfulness/grounding gates, and a `create_listing` action is staged pending Scott's approval in the Action Center.
