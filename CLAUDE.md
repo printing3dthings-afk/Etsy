@@ -2175,6 +2175,32 @@ every dimension (`size=40; cube([size,size,size]);`), never magic numbers
 baked into the geometry — so a design is genuinely resizable by a future `-D`
 override, the whole point of choosing this over a one-off manual model.
 
+**Real design-quality knowledge, added 2026-08-21**: `render_openscad_model`
+producing a mesh with no error is NOT the same as the design being good —
+several real, non-obvious OpenSCAD/CGAL pitfalls (a naive revolve producing
+visible facet rings instead of a smooth curve, a 2D `offset()` on a
+rotation-axis-touching profile silently producing an internal spike with no
+error, a vessel profile that welds itself shut) were found and fixed while
+building the first real test models, and none of them threw an error — the
+render "succeeded" every time. **Load the `.claude/skills/3d-print-design/
+SKILL.md` skill before writing any real .scad script** — it has the worked
+fixes for all three plus the real Bambu P1S printability constraints
+(overhang limits, minimum wall thickness, which edges are safe to round).
+Two capabilities that skill assumes are available and now are:
+- **BOSL2** (Belfry OpenSCAD Library v2, BSD-2-Clause) is vendored at
+  `assets/openscad_libs/BOSL2/` and always on the include path for every
+  render — `include <BOSL2/std.scad>` just works, no setup, giving real
+  rounding/filleting, `smooth_path()` curve smoothing, `attachable()`
+  positioning, and thread/gear generators.
+- **PNG preview rendering** (`format="png"` on `render_openscad_model`, or
+  `fmt="png"` in `render_scad()`) now actually works in this headless
+  container — it's wrapped in `xvfb-run` + Mesa's software rasterizer
+  automatically. Use it to visually verify a model — the same "look at the
+  actual output before calling it done" discipline this shop already
+  applies to AI-generated listing photos — before producing the final
+  stl/3mf. Default camera framing is `--autocenter --viewall` so the whole
+  model is shown without guessing coordinates.
+
 ---
 
 ## Animated Video Compositions (HyperFrames)

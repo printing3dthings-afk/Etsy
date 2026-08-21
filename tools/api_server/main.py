@@ -3635,11 +3635,22 @@ AGENT_TOOLS = [
             "3d_print_physical catalog category — Scott prints and ships it himself on the "
             "Bambu P1S; this never touches Etsy or publishes anything. Write clean, "
             "parametric OpenSCAD (use variables for every dimension, not magic numbers) so "
-            "the design is genuinely resizable later. Requires the `openscad` system binary "
-            "on this deploy — if it isn't installed, this returns a clear error rather than "
-            "a bare crash; tell Scott it needs `apt-get install openscad` if that happens. "
-            "Use when asked to design/model/generate a 3D-printable object from a "
-            "description, not just a flat sign."
+            "the design is genuinely resizable later. BOSL2 (rounding/filleting, "
+            "smooth_path() curve smoothing, attachable() positioning) is always available via "
+            "`include <BOSL2/std.scad>` — no path setup needed. LOAD THE 3d-print-design SKILL "
+            "before writing scad_source: it has the real Bambu P1S printability constraints "
+            "(overhang limits, wall-thickness minimums, which edges are safe to round) and "
+            "documents three non-obvious OpenSCAD/CGAL pitfalls (faceted revolves, a "
+            "self-intersecting-offset bug that silently produces an internal spike with no "
+            "error, and a vessel profile that silently welds itself shut) that a clean render "
+            "does NOT protect against — a script can render successfully and still be wrong. "
+            "Use format='png' to get a real preview image first (rendered headless via Mesa/ "
+            "xvfb, works in this container) and actually look at it — from more than one "
+            "angle if the shape is rotationally symmetric — before finalizing as stl/3mf. "
+            "Requires the `openscad` system binary on this deploy — if it isn't installed, "
+            "this returns a clear error rather than a bare crash; tell Scott it needs "
+            "`apt-get install openscad` if that happens. Use when asked to design/model/"
+            "generate a 3D-printable object from a description, not just a flat sign."
         ),
         "input_schema": {
             "type": "object",
@@ -3654,9 +3665,14 @@ AGENT_TOOLS = [
                                    "No extension — the format param picks it.",
                 },
                 "format": {
-                    "type": "string", "enum": ["stl", "3mf", "off", "amf"],
-                    "description": "Output mesh format. Default 'stl' (universal — every "
-                                   "slicer including Bambu Studio imports it directly).",
+                    "type": "string", "enum": ["stl", "3mf", "off", "amf", "png"],
+                    "description": "Output format. Default 'stl' (universal — every slicer "
+                                   "including Bambu Studio imports it directly). Use 'png' to "
+                                   "render a real preview image and visually verify the model "
+                                   "BEFORE producing the final mesh — cheap, and catches the "
+                                   "kind of bug a clean render doesn't (see the 3d-print-design "
+                                   "skill). A png output is a preview only, not a deliverable "
+                                   "mesh — always follow up with a real stl/3mf once verified.",
                 },
                 "params": {
                     "type": "object",
@@ -14681,14 +14697,26 @@ def _produce_openscad_render(inp: dict) -> dict:
         return {"error": f"render failed: {exc}"}
 
     size_kb = round(output_path.stat().st_size / 1024, 1)
+    if fmt == "png":
+        message = (
+            f"Rendered a {size_kb} KB preview of {safe_name} — open it from the Files screen "
+            f"and actually look at it (both an angled and, if the shape is rotationally "
+            f"symmetric, a top-down view — see the 3d-print-design skill) before treating the "
+            f"design as correct. This is a preview only; re-run with format='stl' (or '3mf') "
+            f"to produce the real deliverable mesh once verified."
+        )
+    else:
+        message = (
+            f"Rendered {safe_name}.{fmt} ({size_kb} KB) — open it from the Files screen. "
+            f"Register it with stage_action (register_product, category="
+            f"'3d_print_physical') once Scott's confirmed it prints correctly."
+        )
     return {
         "output_name": safe_name,
         "format": fmt,
         "path": f"{_OPENSCAD_OUTPUT_SUBDIR}/{safe_name}.{fmt}",
         "size_kb": size_kb,
-        "message": f"Rendered {safe_name}.{fmt} ({size_kb} KB) — open it from the Files screen. "
-                   f"Register it with stage_action (register_product, category="
-                   f"'3d_print_physical') once Scott's confirmed it prints correctly.",
+        "message": message,
     }
 
 

@@ -25,9 +25,33 @@ digital download, and nothing here ever touches Etsy.
 
 Standalone: python3 tools/openscad_render.py --check
             python3 tools/openscad_render.py model.scad -o out.stl -D size=40
+            python3 tools/openscad_render.py model.scad -o preview.png --view
+
+2026-08-21 additions, per the "learn to actually design 3D models, not just
+script primitives" priority (see .claude/skills/3d-print-design/SKILL.md):
+
+1. BOSL2 (assets/openscad_libs/BOSL2/, vendored, BSD-2-Clause) is now always
+   on OpenSCAD's include path for every render this module runs -- any
+   script can `include <BOSL2/std.scad>` and get real rounding/filleting,
+   smooth_path() curve smoothing, attachable() positioning, thread/gear
+   generators, etc. without the caller needing to know where it lives on
+   disk. Verified live: rotate_extrude() + smooth_path() (not a raw
+   straight-segment polygon(), which produces visible faceted "rings" on a
+   revolved profile) is what actually gets a smooth, professional-quality
+   organic surface for vases/bowls/shades -- see the skill for the worked
+   example and why the naive version looks wrong.
+2. PNG preview rendering (fmt="png" or the --view CLI flag) now actually
+   works in a headless container. It didn't before: OpenSCAD's PNG export
+   needs a real (or virtual) display for its OpenGL preview -- confirmed
+   live via "Unable to open a connection to the X server" -- so this wraps
+   the render in xvfb-run with LIBGL_ALWAYS_SOFTWARE=1 (Mesa's software
+   rasterizer; no GPU needed) automatically. Lets Frank hand Scott a real
+   look at a model before it's ever sliced/printed, the same "verify before
+   calling it done" discipline this shop already applies to AI photos.
 """
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -36,6 +60,11 @@ from pathlib import Path
 
 OPENSCAD_APT_PACKAGE = "openscad"
 _SUPPORTED_FORMATS = {"stl", "off", "amf", "3mf", "csg", "png"}
+
+# assets/openscad_libs/ is the OPENSCADPATH root -- BOSL2 lives at
+# assets/openscad_libs/BOSL2/*.scad, so `include <BOSL2/std.scad>` resolves
+# from any script this module renders, regardless of the caller's cwd.
+_OPENSCAD_LIBS_DIR = Path(__file__).resolve().parent.parent / "assets" / "openscad_libs"
 
 
 class OpenSCADError(Exception):
@@ -61,7 +90,18 @@ def check_openscad_available() -> tuple[bool, str]:
     try:
         result = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=10)
         version = (result.stdout or result.stderr or "").strip()
-        return True, version or "openscad (version unknown)"
+        bosl2_ok = (_OPENSCAD_LIBS_DIR / "BOSL2" / "std.scad").exists()
+        bosl2_note = "BOSL2: vendored" if bosl2_ok else (
+            "BOSL2: MISSING -- rounding()/smooth_path()/attachable() etc. won't be "
+            "available; re-vendor from github.com/BelfrySCAD/BOSL2 (BSD-2-Clause) "
+            "into assets/openscad_libs/BOSL2/"
+        )
+        xvfb_ok = shutil.which("xvfb-run") is not None
+        xvfb_note = "xvfb-run: available (PNG preview works)" if xvfb_ok else (
+            "xvfb-run: MISSING -- PNG preview rendering will fail with 'Unable to open "
+            "a connection to the X server'; apt-get install -y xvfb"
+        )
+        return True, f"{version or 'openscad (version unknown)'} | {bosl2_note} | {xvfb_note}"
     except Exception as exc:  # noqa: BLE001
         return False, f"openscad found at {exe} but `--version` failed: {exc}"
 
@@ -72,13 +112,19 @@ def render_scad(
     params: dict | None = None,
     fmt: str = "stl",
     timeout: int = 120,
+    view: dict | None = None,
 ) -> Path:
-    """Render literal OpenSCAD source to a mesh file. Writes scad_source to a
-    throwaway temp .scad file (OpenSCAD has no "render from stdin" mode),
-    shells out to `openscad -o <output> -D key=value ... <input.scad>` as an
-    argv list (never shell=True -- no shell-injection surface even though
-    scad_source/params both ultimately come from a chat request), and
-    returns output_path on success.
+    """Render literal OpenSCAD source to a mesh file (or a PNG preview).
+    Writes scad_source to a throwaway temp .scad file (OpenSCAD has no
+    "render from stdin" mode), shells out to `openscad -o <output> -D
+    key=value ... <input.scad>` as an argv list (never shell=True -- no
+    shell-injection surface even though scad_source/params both ultimately
+    come from a chat request), and returns output_path on success.
+
+    Every render gets OPENSCADPATH set to assets/openscad_libs, so any
+    script may `include <BOSL2/std.scad>` for real rounding/filleting/
+    smooth-curve support -- see this module's docstring and
+    .claude/skills/3d-print-design/SKILL.md.
 
     params values are passed through OpenSCAD's -D command-line variable
     override VERBATIM -- each must already be a real OpenSCAD literal (a
@@ -87,6 +133,16 @@ def render_scad(
     you, since auto-quoting a numeric override would silently turn it into
     a string and break the script; the caller (Claude, writing the .scad
     source in the same tool call) already knows each variable's real type.
+
+    For fmt="png": rendered headless via xvfb-run + Mesa's software
+    rasterizer (confirmed live this container has no real display -- a
+    bare `openscad -o preview.png` fails with "Unable to open a connection
+    to the X server"). `view` optionally overrides imgsize=[w,h],
+    colorscheme, and camera=[tx,ty,tz,rx,ry,rz,dist]; when camera is
+    omitted, --autocenter --viewall are used instead so the caller doesn't
+    have to hand-guess a distance/angle that might crop the model (a real
+    mistake made while developing this: a hardcoded camera cropped every
+    preview until autocenter/viewall replaced it).
 
     Raises OpenSCADError with a specific, actionable message on any failure:
     binary missing, bad syntax (OpenSCAD's own stderr is preserved verbatim
@@ -112,13 +168,37 @@ def render_scad(
         f.write(scad_source)
         scad_path = Path(f.name)
 
+    env = dict(os.environ)
+    env["OPENSCADPATH"] = str(_OPENSCAD_LIBS_DIR)
+
     try:
         cmd = [exe, "-o", str(output_path)]
         for key, value in (params or {}).items():
             cmd += ["-D", f"{key}={value}"]
+
+        if fmt == "png":
+            v = view or {}
+            cmd += ["--render"]
+            w, h = v.get("imgsize", [900, 900])
+            cmd += ["--imgsize", f"{w},{h}"]
+            cmd += ["--colorscheme", v.get("colorscheme", "Tomorrow")]
+            if v.get("camera"):
+                cmd += ["--camera", ",".join(str(c) for c in v["camera"])]
+            else:
+                cmd += ["--autocenter", "--viewall"]
+            xvfb = shutil.which("xvfb-run")
+            if not xvfb:
+                raise OpenSCADError(
+                    "xvfb-run is not installed -- PNG preview rendering needs a virtual "
+                    "display (`apt-get install -y xvfb`) since OpenSCAD's PNG export uses "
+                    "OpenGL even in --render mode."
+                )
+            cmd = [xvfb, "-a", "--server-args=-screen 0 1024x768x24"] + cmd
+            env["LIBGL_ALWAYS_SOFTWARE"] = "1"
+
         cmd.append(str(scad_path))
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
         except subprocess.TimeoutExpired:
             raise OpenSCADError(
                 f"openscad render timed out after {timeout}s -- the script may be too "
