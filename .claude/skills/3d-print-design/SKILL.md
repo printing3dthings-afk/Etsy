@@ -945,6 +945,73 @@ going to fix "doesn't look natural." When a human says a model doesn't
 look natural/real and references are available, check color/materials
 handling in the render pipeline before assuming it's a shape problem.
 
+## Technique 12 — A stacked-segment stem still reads as fake; a single continuous `path_sweep()` is the fix (2026-08-21)
+
+Even after Technique 11's color fix, Scott said the stem specifically was
+"still off" and needed to be genuinely better, not tweaked. The Technique-
+9-era stem (nested `translate()+rotate()` tapered cylinder segments — see
+the stem module before this fix) LOOKED like an improvement over the flat
+2-segment cone in isolation, but under real color it was obviously a stack
+of distinct barrel segments with visible seam rings at every joint — a
+robot-arm look, not a woody curled stem. The chained-cylinder technique is
+still correct and useful elsewhere in this skill (bent/curled shapes where
+a segment-by-segment approach is the only option), but for a stem
+specifically, a smoothly curving natural form needs ONE continuous swept
+mesh, not discrete joints.
+
+**The fix: BOSL2's `path_sweep()` — one ridged cross-section, swept along a
+smooth curved spline, tapered continuously via the `scale` parameter.** No
+joints, no seams, because it's genuinely one mesh, not a union of several:
+
+```openscad
+// Curl the path in 2D (X = horizontal curl, Z = height), THEN smooth it --
+// smooth_path() on the CONTROL points (not a hand-sampled curve) is what
+// gives the swept stem a continuously accelerating curl instead of visible
+// kinks at each control point.
+stem_ctrl = [
+    [0, 0], [0, 10], [-1, 18], [-4, 24], [-9, 29], [-15, 32], [-20, 33],
+];
+stem_path2d = smooth_path(stem_ctrl, method="corners", size=3, splinesteps=8);
+stem_path3d = [for (p = stem_path2d) [p.x, 0, p.y]];  // lift into 3D (Y=0 plane)
+
+// A real pumpkin stem's cross-section is angular/ridged (5 longitudinal
+// ridges is typical), not a plain circle -- reuses the exact same
+// "absolute-mm-depth cosine dip" technique as the body's ribs (Technique 5),
+// just applied to a small stem-scale radius instead of the body radius.
+n_ridge = 5;
+ridge_depth = 1.1;
+function ridge_pts(r) = [for (a = [0:15:345])
+    let(rr = r - ridge_depth * (1 - abs(cos(a * n_ridge / 2))))
+    [rr * cos(a), rr * sin(a)]
+];
+
+module stem() {
+    translate([0, 0, 59])  // embeds ~2mm into the body top for a clean weld
+        path_sweep(ridge_pts(9), stem_path3d, scale=0.22, twist=30, $fn=32);
+}
+```
+
+`scale=0.22` tapers the cross-section down to 22% of its base size by the
+tip — one parameter, continuously interpolated along the whole sweep
+(`scale_by_length=true` is the default), instead of manually shrinking
+`r1`/`r2` on every separate segment. `twist=30` adds a gentle 30° spiral
+to the ridges along the length — a small, cheap touch that reads as an
+organic growth pattern rather than a machined part. Confirmed clean:
+`Simple: yes`, `Volumes: 2` (body+stem, no floating pieces), unchanged
+from every prior version — the only stderr line is an advisory `PolySet
+has nonplanar faces. Attempting alternate construction`, OpenSCAD's own
+automatic fallback triangulation for a curved swept mesh, non-fatal and
+still produced a simple/manifold result.
+
+**The actionable lesson: when a chained-segment approach is "good enough"
+but a human says a curved organic part still looks wrong, check whether
+the segments themselves are visible as segments (seam rings, faceted
+joints) before assuming the curve shape or color is the problem.** A
+smoothed control-point path fed into a single `path_sweep()` (reusing the
+same `smooth_path()` this skill already uses for the body silhouette, plus
+BOSL2's built-in taper/twist parameters) removes the visible-joints problem
+entirely, for less code than the segment-chain version it replaces.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
