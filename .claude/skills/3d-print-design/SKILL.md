@@ -886,6 +886,65 @@ the specific rendering limitation** — here, showing the cutter shapes as
 solids instead of as cuts. This is a more convincing, faster, and more
 honest resolution than either "trust me" or a fourth guessed camera angle.
 
+## Technique 11 — Making a preview render actually look natural: color() and organic irregularity (2026-08-21)
+
+Scott asked directly whether the pumpkin could "look natural," pointing at
+real references. Two independent fixes, found by checking a real reference
+search (myminifactory/cults3d/printables jack-o-lantern listings) against
+what this model's renders were actually missing:
+
+**1. Color is the single biggest lever, and `render_scad(fmt="png")` cannot
+show it — this is a real, confirmed tool limitation, not a script bug.**
+Every prior render in this whole pumpkin build was OpenSCAD's default flat
+teal ("Tomorrow" colorscheme's object color), which reads as generic
+plastic no matter how good the geometry is. Real jack-o-lantern references
+are unanimous: vivid orange body, brown/woody stem. Adding `color([0.93,
+0.42, 0.08])` / `color([0.40, 0.28, 0.12])` around the body/stem in the
+.scad source is correct and does nothing to the STL (color is a preview-
+only concept; the printed color comes from filament) — but confirmed live:
+`render_scad(..., fmt="png")` always adds `--render` (forces the full CGAL/
+Nef-polyhedron boolean evaluation), and OpenSCAD does not reliably carry
+per-object `color()` through that path once a `union()`/`difference()`
+combines differently-colored children — the PNG comes out in the flat
+default color regardless of what the script says. **The fix: render the
+PNG WITHOUT `--render`** (plain OpenCSG preview mode, `openscad -o out.png
+--imgsize W,H --colorscheme Tomorrow --autocenter --viewall in.scad`, no
+`--render` flag) — colors show up exactly as written. `render_scad()`
+itself hardcodes `--render` for `fmt="png"` (reasonable default — CGAL mode
+is the more "correct" full boolean evaluation, useful when checking
+geometry), so a colored preview currently needs a direct `openscad` CLI
+call (same `xvfb-run -a --server-args="-screen 0 1024x768x24"` +
+`LIBGL_ALWAYS_SOFTWARE=1` + `OPENSCADPATH=assets/openscad_libs` wrapping
+`render_scad()` already does) rather than going through the wrapper
+function for this specific need. Worth knowing next time a model needs a
+natural-looking preview, not just a geometry check.
+
+**2. Perfect uniformity reads as fake — a real pumpkin's ribs are never
+identical.** Added a slow, non-integer-frequency modulation on top of the
+existing per-rib depth function so it varies smoothly around the
+circumference instead of repeating identically on every rib:
+```openscad
+function rib_pts(r) = [for (a = [0:5:355])
+    let(rr = r - rib_depth * (1 - abs(cos(a * n_ribs / 2))) * (0.82 + 0.18 * sin(a * 2.3 + 11)))
+    [rr * cos(a), rr * sin(a)]
+];
+```
+The `2.3` frequency is deliberately non-integer relative to `n_ribs` so the
+irregularity doesn't fall into its own repeating pattern (which would just
+look like a *different* kind of mechanical uniformity). This is additive
+and low-risk: it only scales the SAME depth term that was already proven
+safely under the wall-thickness margin (Technique 5's lesson), so it can't
+introduce a new punch-through — confirmed by re-checking `Simple: yes`/
+`Volumes: 2`/zero warnings after the change, identical to every prior
+version.
+
+**Net result:** the exact same body+face+stem geometry, unchanged in every
+way that matters for printing, immediately read as "a real pumpkin" once
+given real color and slightly irregular ribs — geometry alone was never
+going to fix "doesn't look natural." When a human says a model doesn't
+look natural/real and references are available, check color/materials
+handling in the render pipeline before assuming it's a shape problem.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
