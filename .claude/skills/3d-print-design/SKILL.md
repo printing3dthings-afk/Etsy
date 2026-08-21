@@ -394,30 +394,51 @@ common convention (matches "printed by / made with" marks seen on
 MakerWorld models) — printable with zero extra risk since it's a shallow
 recess in the flat, bed-facing bottom face, not an overhang.
 
-**Text engraved into a bottom/underside face reads BACKWARDS unless
-explicitly mirrored — this is not optional, and it's easy to get the
-mirror axis wrong.** `text()` is authored to read correctly when viewed
-from the side its extrusion grows *away* from (the "+Z looking down" side).
-A bottom face's outward normal points *down* (away from the solid) — so
-the real physical viewer (someone picking the object up and looking at its
-actual underside) is standing on the *opposite* side from where the text
-reads correctly, same as text looks backwards through the wrong side of a
-pane of glass. Shipped a version of this without the mirror once already
-(Scott caught it: "Is it backwards, the words?" — it was). **Confirmed by
-direct test, don't re-derive from rotation math**: built a flat plate with
-an unmistakably-asymmetric "R" engraved the same way, physically flipped
-it 180° about X (the same motion as picking an object up to check its
-underside) and viewed it with a fixed external camera. Unmirrored: backwards
-R. `mirror([1,0,0])` (the "obvious" horizontal-flip guess): *still* wrong.
-`mirror([0,1,0])` (mirror across the OTHER axis): correct, clean R. The
-axis that fixes it depends on how your text is authored/positioned and
-isn't safe to assume — run the same asymmetric-letter test on any new
-engraving setup rather than trusting a mirror axis that "should" work by
-symmetry.
+**Whether bottom-engraved text reads correctly or backwards is a genuine
+trap, and this session got it wrong TWICE before landing on the truth —
+document that failure honestly, not a false-confidence "here's the rule."**
+Round 1: shipped `brand_mark()` with no mirror at all. Round 2: Scott asked
+"Is it backwards, the words?" — took that as confirmation it needed a fix,
+built a self-styled verification test (an asymmetric "R", the whole OBJECT
+rotated 180° about X to simulate "picking it up to look at the bottom",
+rendered with a hand-picked `--camera=...`), concluded from that test that
+`mirror([0,1,0])` was required, shipped it. Round 3: Scott opened the
+**actual STL file in a real phone-based 3D viewer app** and reported it
+was now backwards — and that the *original, unmirrored* Round-1 version had
+actually been correct all along. The Round-2 "verification" was itself
+wrong: **rotating the whole OBJECT 180° while leaving the render camera
+fixed does NOT correctly simulate how a real viewer shows the underside**
+(a real viewer orbits the CAMERA around a stationary object; physically
+flipping the object in your hands and rotating the camera around a fixed
+object are NOT the same transform, and conflating them produced a
+confidently-argued, plausible-looking, wrong answer). A follow-up attempt
+to re-verify with hand-picked `--camera=` elevation angles (guessing at
+OpenSCAD's camera-rotation semantics to simulate a camera-only orbit) also
+produced an unrelated, clearly-wrong side-on view on the first try —
+confirming this codebase does not currently have a reliable way to
+independently verify chirality/mirroring from inside a script.
+
+**The actual rule going forward: don't try to self-verify text
+orientation/mirroring with an in-script rotation or hand-picked camera
+trick — trust has to come from opening the real generated file in a real,
+standard STL viewer** (ask Scott to check, the way this was actually
+caught) rather than a from a custom OpenSCAD render dressed up to look like
+a verification. This is a narrower, more honest version of this skill's
+own "render a PNG and look at it" rule: for MOST geometry questions
+(does it have a hole, is a wall too thin, is there a self-intersection) a
+PNG render answers it directly and reliably. Chirality/mirroring is the
+one category where the render pipeline itself was shown to be an
+unreliable witness — treat it differently, and say so plainly rather than
+asserting confidence a second time on the same kind of unverified test.
 
 ```openscad
 // Engraves into the ACTUAL bottom face (z=0, the face touching the print
 // bed) -- reads as a maker's mark when the piece is picked up or tipped.
+// NO mirror() here -- confirmed correct by Scott opening the real STL in
+// a standard viewer. If a future engraving (different font, different
+// placement pattern) comes out backwards on a real check, don't "fix" it
+// with a guessed mirror() and an in-script rotation test -- get it
+// checked in a real viewer again before re-shipping.
 logo_depth = 0.8;
 module brand_mark() {
     // z spans -0.5 to logo_depth -- MUST dip below the surface (z<0) for
@@ -426,15 +447,10 @@ module brand_mark() {
     // an off-by-a-hair version of this, cutting from z=3.01 upward on a
     // z:[0,3] solid, rendered a flawless-looking but completely
     // UNENGRAVED disk -- Simple: yes, zero errors, wrong result).
-    //
-    // mirror([0,1,0]) is REQUIRED for this exact translate+extrude
-    // pattern -- confirmed via the asymmetric-letter test above. Omit it
-    // and the engraving is backwards on the real printed part.
     translate([0, 3, -0.5])
         linear_extrude(height = logo_depth + 0.5)
-            mirror([0, 1, 0])
-                text("Brand Name", size=9, font="Dancing Script:style=Bold",
-                     halign="center", valign="center");
+            text("Brand Name", size=9, font="Dancing Script:style=Bold",
+                 halign="center", valign="center");
 }
 difference() {
     /* the vessel/part */;
@@ -443,10 +459,10 @@ difference() {
 ```
 
 Checklist for engraved branding:
-- [ ] **Ran the asymmetric-letter mirror test** (an "R" or similar,
-      flipped 180° the same way the real part will be viewed, checked
-      against a fixed external camera) for THIS specific engraving setup
-      — never assumed a mirror axis "should" be right by symmetry
+- [ ] **Get the actual generated file opened in a real STL viewer and
+      confirm orientation there** — do not trust an in-script rotation or
+      hand-picked camera angle as proof either way, this session's own
+      attempt at that produced a confident, wrong answer
 - [ ] Font family confirmed real via `fc-list | grep -i '<family>'` — an
       unregistered/misspelled family renders **empty text geometry, no
       error** (see Setup above for the auto-registration this repo now
@@ -458,13 +474,11 @@ Checklist for engraved branding:
 - [ ] Text + any underline/rule sized to fit inside the actual available
       flat area (e.g. within the base radius of a round vessel) — check
       against the real profile's base dimension, not a guess
-- [ ] Verified on the REAL assembled model from the correct face — an
-      isolated test panel proves the technique works, but the final check
-      needs to be the actual part, viewed from the face the mark is on
-      (rotate the whole model, don't just trust the isolated test carries
-      over — confirmed necessary here: the isolated panel and the real
-      vase's base share the same key dimensions, but only checking the
-      isolated version would still not be "looked at the real output")
+- [ ] Positioning/sizing (does the text fit, is the underline in the right
+      place, is the depth right) is fine to check with a normal render on
+      the assembled model — that part of "render and look" is reliable.
+      Orientation/mirroring specifically is not (see above) — check that
+      part in a real viewer, separately
 
 ## The one rule that matters most
 
