@@ -1373,6 +1373,52 @@ reference photos specifically named in the feedback and look for what
 kind of surface variation exists that the current model doesn't have at
 all, rather than adjusting existing knobs further.
 
+## Technique 19 — Sharp corrugation vs. soft ripple is a formula-shape choice, not an amplitude tweak; and phase-align repeating features so they read as ONE thing (2026-08-21)
+
+Two more rounds of ghost feedback, both resolved by comparing directly
+against the same reference photo rather than guessing at parameters:
+
+**"Smoother surface, put the ripples in like the reference photos"** —
+Technique 18's fold formula used `abs(cos(a*n/2))`, which has a hard,
+non-smooth cusp (kink) at every zero-crossing — this reads as sharp
+pleats/corrugation, not soft draped fabric, no matter how the amplitude
+is tuned. The fix is a different formula SHAPE, not a smaller number:
+drop the `abs()` entirely and use a plain `(0.5 + 0.5*cos(a*n))` term —
+mathematically smooth (C-infinity, no kinks) everywhere. Paired with
+fewer waves (6 broad folds instead of 9 narrow ones, matching what the
+reference photos actually show) and roughly half the amplitude. Verified
+numerically that the new spread scaled proportionally with the amplitude
+ratio (measured 0.578mm vs. predicted ~0.58mm from the 1.1/1.9 depth
+ratio) and that per-step radius change was gradual (no spike), confirming
+"smooth" quantitatively and not just by eye.
+
+**Phase-align a repeating cut pattern with a repeating texture pattern so
+they read as ONE cohesive feature, not two unrelated layers.** The
+reference photos show each fold flowing continuously down into one
+rounded hem point — the fold ridges and the hem legs are the SAME
+visual element, not independent decorations. Getting the math right for
+"put a ridge at the same angle as a leg center" is easy to get
+subtly wrong: `cos(n*a - phase) = -1` solves to `a = (180+phase)/n`, and
+a first attempt claimed `phase=180` gives leg-center alignment when it
+actually doesn't — `(180+180)/6 = 60`, landing ridges exactly on the CUT
+NOTCHES instead (30 degrees off, the opposite of the stated intent).
+**This was caught by numeric verification (sampling real STL surface
+radius around the circumference and finding the true maxima angles),
+not by eye or by re-checking the algebra harder** — the render at this
+scale/lighting didn't make a 30-degree phase error visually obvious. The
+actual fix was almost embarrassingly simple: no phase term needed at all
+(`cos(n*a)` alone already puts the first ridge at `180/n`, which for
+n=6 is exactly 30 degrees, i.e. the leg center) — the bug was an
+unnecessary added term, not a missing one.
+
+**The general lesson: whenever two repeating features (a cut pattern, a
+texture pattern) are meant to visually align, verify the alignment
+numerically against the real mesh — don't trust hand-solved trig or a
+code comment's own claim about what it does.** A comment asserting
+"phase=180 aligns ridges to leg centers" was simply wrong arithmetic that
+looked plausible on the page; only checking the actual rendered geometry
+caught it.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
