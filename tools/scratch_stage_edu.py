@@ -121,16 +121,31 @@ def main():
                          raw=body, content_type="application/json")
     print(f"[overrides] write: {status} {resp}")
 
-    # Step 3: upload the actual binary files
+    # Step 3: upload the actual binary files.
+    #
+    # Real bug found + fixed live 2026-08-21: the catalog "files" entries use
+    # the "data/digital_products/product_files/..." convention (matches
+    # _PRODUCT_FILES_PREFIX in main.py), but that prefix gets STRIPPED before
+    # the volume lookup (_product_file_abs_path()/_product_file_exists() --
+    # "Convention 1"), so the actual file on the volume must live at
+    # "product_files/..." (no "data/digital_products/" prefix), matching
+    # tools/sync_files_to_hub.py's own upload convention. Uploading to the
+    # catalog-entry path verbatim (what an earlier version of this script
+    # did) put the files at the WRONG volume path -- /api/products/{id}/
+    # review then reported every deliverable and photo as exists=False even
+    # though the upload itself returned 200 OK, because the write and the
+    # read were resolving two different paths. Confirmed by fetching the raw
+    # file at the wrong path directly (200, correct bytes) while the review
+    # endpoint still said missing -- the file was real, just not where the
+    # app's own resolver was told to look.
     for pid in pids:
         pdf_local = ROOT / "data" / "digital_products" / "product_files" / f"{pid}.pdf"
-        pdf_rel = f"data/digital_products/product_files/{pid}.pdf"
-        st, resp = upload_file(pdf_local, pdf_rel)
+        st, resp = upload_file(pdf_local, f"product_files/{pid}.pdf")
         print(f"[upload] {pid} PDF: {st} {resp}")
 
         photo_dir = ROOT / "data" / "digital_products" / "product_files" / "listing_photos" / pid
         for p in sorted(photo_dir.glob("photo_*.jpg")):
-            rel = f"data/digital_products/product_files/{pid}_listing_images/{p.name}"
+            rel = f"product_files/{pid}_listing_images/{p.name}"
             st, resp = upload_file(p, rel)
             print(f"[upload] {pid} {p.name}: {st} {'OK' if st == 200 else resp}")
 
