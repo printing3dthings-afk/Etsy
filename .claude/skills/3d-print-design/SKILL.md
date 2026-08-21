@@ -588,6 +588,15 @@ something local (radius, segment length), check it against the SMALLEST
 value that variable takes anywhere on the model, not the value where you
 happened to eyeball it.
 
+**Straight flutes → spiral/barley-twist flutes is a one-parameter change,
+not a new technique.** Give `flute_pts()` a `phase` argument and shift
+each ring's pattern by an amount that grows with height:
+`rr = r - flute_depth * (1 - abs(cos((a - phase) * n_flutes / 2)))`, with
+`phase = p.y / vase_height * total_twist` (e.g. `total_twist = 300`
+degrees base-to-rim for a visible but not extreme twist). Same `skin()`
+call, same hollowing approach, same wall-thickness-margin rule above
+still applies unchanged.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
