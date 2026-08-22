@@ -817,7 +817,7 @@ ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 XAI_KEY = os.getenv("XAI_API_KEY", "").strip()  # 2026-08-05, Grok text + image engine
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "v363-summary-null-fix"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "v364-listing-file-replace"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6360,6 +6360,11 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
         ratings = [r["rating"] for r in reviews if r.get("rating")]
         out["reviews"] = {
             "total_count": reviews_r.get("count", len(reviews)),
+            # A flat average over the last `limit` reviews fetched -- a
+            # windowed proxy, NOT the same number Etsy shows publicly (see
+            # `shop_rating` below). Kept because it's still useful for
+            # "how are my most recent reviews trending," just don't treat
+            # it as authoritative.
             "avg_rating": round(sum(ratings) / len(ratings), 2) if ratings else 0,
             "five_star_pct": round(sum(1 for r in ratings if r == 5) / len(ratings) * 100) if ratings else 0,
         }
@@ -6376,6 +6381,15 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
             "on_vacation": shop_r.get("is_vacation", False),
         }
         out["listings"]["active_count"] = active_count
+        # 2026-08-22: Etsy's own authoritative shop rating (recency-weighted
+        # as of Mar 13, 2026 -- Etsy computes this internally, we just read
+        # it) -- surfaced here so the live dashboard shows the SAME number
+        # Etsy displays publicly, not only the windowed `reviews.avg_rating`
+        # proxy above. Previously only tools/shop_health_check.py (a
+        # standalone script Scott has to run manually) read this field at
+        # all; the live /api/metrics response never exposed it.
+        if "review_average" in shop_r:
+            out["reviews"]["shop_rating"] = shop_r.get("review_average")
 
     return out
 
@@ -7074,6 +7088,69 @@ async def listing_files(listing_id: int, _token: str = Depends(_auth_session_or_
     result = {"listing_id": listing_id, "count": len(files), "files": files}
     _cache_set(cache_key, result)
     return result
+
+
+@app.post("/api/listings/{listing_id}/files/replace")
+async def replace_listing_file(
+    listing_id: int, body: dict, _token: str = Depends(_rate_limited_auth),
+):
+    """Delete one digital file from a listing and upload a replacement in its
+    place. Added 2026-08-22 for a real gap found fixing OpenWhen: upload_
+    listing_file() only ever ADDS a file, and this client had no delete
+    counterpart for files (only delete_listing_image existed) -- so there
+    was no safe way to correct a listing's digital file short of manually
+    deleting it on etsy.com. Direct-execute (no staging queue), mirroring
+    delete_shop_section's existing precedent just above -- guarded to
+    active listings only via an explicit override, since an ACTIVE listing's
+    file is what a paying customer would actually download; a draft has no
+    customer exposure yet, which is the ordinary case this exists for.
+
+    body: {"old_file_id": int, "new_path": str (volume-relative), "confirm_active": bool}
+    """
+    old_file_id = body.get("old_file_id")
+    new_path = (body.get("new_path") or "").strip()
+    if not old_file_id or not new_path:
+        raise HTTPException(status_code=400, detail="old_file_id and new_path are required")
+
+    vol = _FILE_ROOTS.get("volume")
+    if not vol:
+        raise HTTPException(status_code=500, detail="no persistent volume mounted on this deploy")
+    abs_path = (vol / new_path).resolve()
+    if vol.resolve() not in abs_path.parents or not abs_path.is_file():
+        raise HTTPException(status_code=404, detail=f"file not found on volume: {new_path}")
+
+    client = EtsyAPIClient()
+
+    def _do():
+        listing = client.get_listing(listing_id)
+        if listing.get("state") == "active" and not body.get("confirm_active"):
+            raise ValueError(
+                f"listing {listing_id} is ACTIVE (live, purchasable) -- refusing to swap its "
+                "digital file without confirm_active=true. This guard exists because an active "
+                "listing's file is what a paying customer downloads right now; a draft has no "
+                "customer exposure, which is the case this endpoint was built for."
+            )
+        client.delete_listing_file(listing_id, old_file_id)
+        return client.upload_listing_file(listing_id, str(abs_path), rank=1)
+
+    try:
+        result = await asyncio.wait_for(asyncio.to_thread(_do), timeout=60.0)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:300]}")
+
+    with _cache_lock:
+        _cache.pop(f"listing_files_{listing_id}", None)
+    db.log_activity("frank", "replace_listing_file",
+                     f"Replaced file {old_file_id} on listing {listing_id} with {new_path}",
+                     body, outcome="ok")
+    return {
+        "listing_id": listing_id,
+        "deleted_file_id": old_file_id,
+        "new_listing_file_id": result.get("listing_file_id"),
+        "new_filename": result.get("filename"),
+    }
 
 
 # (2026-08-19) No REST route previously returned a listing's raw content
@@ -12960,6 +13037,19 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         p["_trademark_screening"] = _screen_for_trademark_flags(
             title=listing_data.get("title", ""), tags=listing_data.get("tags"),
         )
+        # Advisory-only, same pattern as _trademark_screening above -- see
+        # enqueue_action()'s matching comment (db.py) for why this exists:
+        # no Etsy API v3 field sets the "AI generative technology" toggle,
+        # confirmed against developer.etsy.com and etsy/open-api discussion
+        # #1340 (2026-08-22). This is the structured/payload copy of the
+        # same reminder db.py's enqueue_action() also prepends to the
+        # human-visible summary text.
+        p["_ai_disclosure_manual_step"] = (
+            "Etsy has no public API field for the 'This listing uses AI generative "
+            "technology' toggle or the 'Designed by' (not 'Made by') categorization "
+            "-- who_made=\"i_did\" and the description disclosure paragraph do NOT "
+            "set it. Set it manually in the Etsy listing editor after this publishes."
+        )
         photo_paths = p.get("photo_paths") or []
         file_paths = p.get("file_paths") or []
         if not file_paths:
@@ -13007,6 +13097,26 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         etsy_listing_id = p.get("etsy_listing_id")
         if etsy_listing_id is not None and not str(etsy_listing_id).strip():
             return False, "etsy_listing_id, if provided, must not be blank"
+        if p.get("update_files"):
+            # 2026-08-21: register_product's normal branch below refuses a second
+            # call for a product_id that already exists ("refusing to overwrite"),
+            # but a product registered with an initial `files` list (see the
+            # `files` param added to register_product_directly the same day) has
+            # no way to correct that list afterward -- e.g. a wrong listing-photo
+            # subfolder naming convention caught only after registering. Mirrors
+            # manifest_only's shape: requires the product_id to already exist,
+            # and (safety) refuses once the product has a live Etsy listing --
+            # this replaces `files` wholesale, which must never happen to a
+            # product real customers can already see/buy.
+            existing_product = _find_catalog_product(product_id)
+            if existing_product is None:
+                return False, f"update_files requires product_id {product_id} to already exist in the catalog"
+            if (existing_product.get("etsy_listing_id") or "").strip():
+                return False, f"{product_id} already has a live Etsy listing — refusing to swap its files"
+            files = p.get("files")
+            if not isinstance(files, list) or not all(isinstance(f, str) for f in files):
+                return False, "update_files requires files: a list of path strings"
+            return True, "ok"
         if p.get("manifest_only"):
             # 2026-08-20: a distinct half of the koozie/planner gap register_product
             # was built for -- a listing whose product_id is ALREADY known to the
@@ -13418,6 +13528,18 @@ def _execute_register_product_staged_action(a: dict) -> dict:
     etsy_listing_id = p.get("etsy_listing_id")
     now = datetime.now(timezone.utc).isoformat()
 
+    if p.get("update_files"):
+        files = [str(f) for f in (p.get("files") or [])]
+        _write_product_catalog_override(product_id, {"files": files})
+        with _cache_lock:
+            for k in ("products", "listings_active", "listings_draft", "listings_inactive", "actions"):
+                _cache.pop(k, None)
+        return {
+            "product_id": product_id,
+            "files": files,
+            "message": f"Replaced {product_id}'s files list with {len(files)} entr{'y' if len(files) == 1 else 'ies'}.",
+        }
+
     if p.get("manifest_only"):
         existing = _find_catalog_product(product_id) or {}
         category = existing.get("category", "uncategorized")
@@ -13463,7 +13585,7 @@ def _execute_register_product_staged_action(a: dict) -> dict:
         "price": p.get("price"),
         "status": "active" if etsy_listing_id else "not_listed",
         "etsy_listing_id": str(etsy_listing_id) if etsy_listing_id else "",
-        "files": [],
+        "files": p.get("files") or [],
         "created_at": now,
         "source": "frank_register",
     })
@@ -16099,10 +16221,42 @@ async def register_product_directly(body: dict | None = None, _token: str = Depe
         prefix = {"3d_print_physical": "P3D"}.get(category, "MISC")
         product_id = await asyncio.to_thread(_slugify_product_id, name, prefix)
 
+    files = b.get("files")
     payload = {
         "product_id": product_id, "name": name, "category": category,
         "price": price, "etsy_listing_id": etsy_listing_id,
     }
+    if files is not None:
+        # 2026-08-21: register_product previously always wrote "files": [],
+        # forcing a second write path for any product whose deliverable/
+        # photos already exist at registration time (unlike the coloring/
+        # calendar pre-publish helpers, which append to an existing entry's
+        # files list). Optional so every existing caller's payload shape
+        # keeps working unchanged.
+        payload["files"] = [str(f) for f in files]
+    ok, msg = await asyncio.to_thread(_validate_staged_action, {"type": "register_product", "payload": payload})
+    if not ok:
+        raise HTTPException(status_code=422, detail=msg)
+    result = await asyncio.to_thread(_execute_register_product_staged_action, {"payload": payload})
+    with _cache_lock:
+        _cache.pop("products", None)
+    return result
+
+
+@app.post("/api/products/{product_id}/update-files")
+async def update_product_files(
+    product_id: str, body: dict | None = None, _token: str = Depends(_rate_limited_auth),
+):
+    """Replace an already-registered, not-yet-published product's `files`
+    list wholesale -- for correcting it after registration (e.g. a listing-
+    photo subfolder that didn't match the `{pid}_listing_images/` naming
+    convention _gather_product_review() requires, caught only once the
+    photos silently didn't show up in the review). A pure local write, same
+    safety shape as register_product's update_files sub-branch above: 404s
+    if product_id doesn't exist yet, refuses once the product has a live
+    Etsy listing (this must never touch a real customer-visible listing)."""
+    files = (body or {}).get("files")
+    payload = {"product_id": product_id, "update_files": True, "files": files}
     ok, msg = await asyncio.to_thread(_validate_staged_action, {"type": "register_product", "payload": payload})
     if not ok:
         raise HTTPException(status_code=422, detail=msg)
@@ -19906,6 +20060,32 @@ async def upload_to_volume(request: Request, path: str, _token: str = Depends(_a
     # large sync upload doesn't stall every other request (2026-07-08 performance pass).
     await asyncio.to_thread(_write)
     return {"ok": True, "path": rel, "size": len(body), "size_human": _human_size(len(body))}
+
+
+@app.delete("/api/files/delete")
+async def delete_from_volume(path: str, root: str = "volume", _token: str = Depends(_auth_session_or_bearer)):
+    """Delete a single file from a durable file root (volume by default, or 'local' for
+    the repo's data/ tree in local dev). Mirrors upload_to_volume's exact path-resolution
+    and traversal guards. Only ever deletes a single file, never a directory -- a
+    directory target is rejected rather than recursively removed, since this is a
+    chat-reachable action with real, permanent data loss on the other end."""
+    file_root = _FILE_ROOTS.get(root)
+    if file_root is None:
+        raise HTTPException(status_code=400, detail=f"Unknown file root '{root}' — expected one of {sorted(_FILE_ROOTS)}")
+    rel = (path or "").strip().lstrip("/")
+    if not rel:
+        raise HTTPException(status_code=400, detail="path query param is required")
+    froot = file_root.resolve()
+    target = (froot / rel).resolve()
+    if froot not in target.parents and target != froot:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    if target.is_dir():
+        raise HTTPException(status_code=400, detail=f"path '{rel}' is a directory — delete_from_volume only removes single files")
+    if not target.exists():
+        raise HTTPException(status_code=404, detail=f"'{rel}' does not exist under root '{root}'")
+
+    await asyncio.to_thread(target.unlink)
+    return {"ok": True, "path": rel, "root": root, "deleted": True}
 
 
 @app.get("/api/files/zip-entry")

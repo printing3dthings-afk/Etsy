@@ -1229,6 +1229,16 @@ class EtsyAPIClient:
         self._require_oauth()
         self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/images/{listing_image_id}")
 
+    def delete_listing_file(self, listing_id: int | str, listing_file_id: int | str) -> None:
+        """Delete a specific digital file from a listing. Requires OAuth access token.
+        Added 2026-08-22 -- upload_listing_file() always ADDS a new file entry, it never
+        replaces one at the same rank (confirmed: this client had no delete counterpart
+        for files, only for images, so a "replace the digital file" fix had no safe path
+        before this -- attempting a re-upload without deleting the old file first would
+        have left two files attached to the listing, the fixed one and the broken one)."""
+        self._require_oauth()
+        self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/files/{listing_file_id}")
+
     # ── Digital file upload ───────────────────────────────────────────────────
 
     def upload_listing_file(

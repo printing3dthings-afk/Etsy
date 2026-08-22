@@ -2329,10 +2329,10 @@
   {
     "product_id": "EDU1001",
     "name": "Kawaii Interactive Tracing Workbook for Kids (Sunflower Studio)",
-    "etsy_listing_id": "",
-    "price": 6.99,
+    "etsy_listing_id": "4559982945",
+    "price": 4.99,
     "category": "digital_planner",
-    "status": "draft",
+    "status": "active",
     "files": [
       "data/digital_products/product_files/new_product_covers/EDU1001_kids_tracing_sunflower_studio.png",
       "data/digital_products/product_files/EDU1001.pdf",
@@ -2353,10 +2353,10 @@
   {
     "product_id": "EDU1002",
     "name": "Kawaii Interactive Tracing Workbook for Kids (Truck Zone)",
-    "etsy_listing_id": "",
-    "price": 6.99,
+    "etsy_listing_id": "4559982929",
+    "price": 4.99,
     "category": "digital_planner",
-    "status": "draft",
+    "status": "active",
     "files": [
       "data/digital_products/product_files/EDU1002.pdf",
       "data/digital_products/product_files/EDU1002_listing_images/photo_01_hero.jpg",
@@ -2376,10 +2376,10 @@
   {
     "product_id": "EDU1003",
     "name": "Cursive & Skills Workbook for Kids (Ocean Breeze, Grade 1-2)",
-    "etsy_listing_id": "",
-    "price": 6.99,
+    "etsy_listing_id": "4559982763",
+    "price": 4.99,
     "category": "digital_planner",
-    "status": "draft",
+    "status": "active",
     "files": [
       "data/digital_products/product_files/EDU1003.pdf",
       "data/digital_products/product_files/EDU1003_listing_images/photo_01_hero.jpg",

@@ -3345,6 +3345,38 @@ This product was designed using AI image generation tools, with original prompts
 curation, and finishing by the seller. All products are reviewed for quality before listing.
 ```
 
+### 2026-08-22 update: the June 2025 rule above got real enforcement teeth, and the gap Frank can't close alone
+
+The June 2025 description-paragraph requirement is still necessary but is **no longer
+sufficient**. Etsy's Jan 14, 2026 enforcement tightening added a **separate structured
+toggle** in the listing editor — "This listing uses AI generative technology" — plus a
+"Designed by" vs. "Made by" selector in Item Details. Listings missing the *structured*
+disclosure get filtered from search even when the description paragraph and `who_made:
+"i_did"` are both correct: ~12,000 listings removed and ~8,500 warnings issued
+industry-wide in Q1 2026 alone for this specific gap.
+
+**Confirmed (2026-08-22, via developer.etsy.com and an unanswered `etsy/open-api`
+GitHub discussion, #1340) that the Etsy Open API v3 has NO field for this toggle.**
+`who_made`/`when_made`/`is_supply` and the description text are the only parts of this
+Frank can set programmatically — the toggle itself is editor-UI-only. Every
+`create_listing` action Frank stages now carries this as a mandatory manual follow-up:
+`db.py`'s `enqueue_action()` prepends "📋 After approval, manually enable AI-disclosure
+toggle in Etsy editor" directly onto the Action Center card's summary (the one field
+every card actually renders), and `main.py`'s `_validate_staged_action()` attaches the
+same reminder as a structured `_ai_disclosure_manual_step` payload field. **Scott: after
+approving any new listing, open it in the Etsy editor and flip that toggle + set
+"Designed by" — this is a real gap in what Frank can automate, not an oversight.**
+
+**Also new and NOT yet gated by any tool in this codebase (2026-08-22, flagging so it
+isn't lost — a real build, not done here):** Etsy's Aug 11, 2026 Prohibited Items Policy
+update requires computer-made items to use the seller's own *original* design — a
+licensed template or clipart bundle can now trigger removal even with a valid commercial
+license, separate from the disclosure requirement above. This has direct exposure for
+the SS-series SVG packs and sticker sheets. No current gate verifies every visual
+element traces to an original AI prompt vs. a licensed asset — worth a real
+provenance-manifest build in a future session, not something to assume is covered by
+`validate_digital_file()`'s existing file-quality checks.
+
 ### What Gets Flagged and Removed
 
 - Listings that **look AI-generated but have no AI disclosure** — automated detection catches these

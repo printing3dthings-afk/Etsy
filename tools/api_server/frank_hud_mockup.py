@@ -2202,6 +2202,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div class="panel-title">Live Intelligence Feed <span class="src">/api/queue</span></div>
           <div class="panel-body" id="feed-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
         </div>
+
+        <div class="panel brk col-feed">
+          <div class="panel-title">Recent Activity <span class="src">/api/queue?status=executed</span></div>
+          <div class="panel-body" id="recent-activity-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+        </div>
       </div>
 
     </div>
@@ -4595,7 +4600,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadMovementDigest, loadReviewThemes, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadGrowthBrief, loadAbTests, loadCompetitorWatch, loadMovementDigest, loadReviewThemes, loadStarSeller, loadAdsStatus, loadCogsStatus, loadPrinterStatus, loadInbox, loadMissionTimeline, loadRecentActivity],
   // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
   // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
   // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
@@ -8537,6 +8542,35 @@ function _renderQueue(d, list, offlineNote){
       '<div class="feed-item"><div class="ftxt">'+escHtml(a.summary)+'<div class="t">'+_timeAgo(a.created_at)+'</div></div>'+
       '<span class="feed-tag tip">PENDING</span></div>'
     ).join('') : '<div style="color:var(--muted);font-size:12px">No pending actions — queue is clear.</div>');
+  }
+}
+// ── Recent Activity — "what I did and why," in plain language (2026-08-22).
+// Reuses staged actions' own summary text (already a short, human-readable
+// sentence per action -- see db.py's enqueue_action) rather than parsing
+// ops_runbook.md's free-text incident log, which is written for Frank's own
+// later reference, not really for a quick glance by Scott. Closes the gap
+// the communication research flagged: autonomous/approved actions were only
+// ever logged to ops_runbook.md, never surfaced back to Scott in the app.
+function _renderRecentActivity(d, list, offlineNote){
+  if(!list) return;
+  const items = (d.actions||[]).slice(0, 8);
+  list.innerHTML = (offlineNote||'') + (items.length ? items.map(a=>
+    '<div class="feed-item"><div class="ftxt">'+escHtml(a.summary)+'<div class="t">'+_timeAgo(a.decided_at||a.created_at)+'</div></div>'+
+    '<span class="feed-tag tip">DONE</span></div>'
+  ).join('') : '<div style="color:var(--muted);font-size:12px">No approved actions yet.</div>');
+}
+async function loadRecentActivity(){
+  const list = document.getElementById('recent-activity-list');
+  if (list) list.innerHTML = _skeletonCards(3);
+  try{
+    const r = await authGet('/api/queue?status=executed');
+    const d = await r.json();
+    cacheSet('recentActivity', d);
+    _renderRecentActivity(d, list, null);
+  }catch(e){
+    const cached = cacheGet('recentActivity');
+    if(cached) _renderRecentActivity(cached.data, list, _offlineNote(cached.ts));
+    else if(list) list.innerHTML = '<div style="color:var(--red);font-size:11px">Could not load — offline?</div>';
   }
 }
 async function loadQueue(){
