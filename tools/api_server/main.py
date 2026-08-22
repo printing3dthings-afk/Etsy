@@ -6360,6 +6360,11 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
         ratings = [r["rating"] for r in reviews if r.get("rating")]
         out["reviews"] = {
             "total_count": reviews_r.get("count", len(reviews)),
+            # A flat average over the last `limit` reviews fetched -- a
+            # windowed proxy, NOT the same number Etsy shows publicly (see
+            # `shop_rating` below). Kept because it's still useful for
+            # "how are my most recent reviews trending," just don't treat
+            # it as authoritative.
             "avg_rating": round(sum(ratings) / len(ratings), 2) if ratings else 0,
             "five_star_pct": round(sum(1 for r in ratings if r == 5) / len(ratings) * 100) if ratings else 0,
         }
@@ -6376,6 +6381,15 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
             "on_vacation": shop_r.get("is_vacation", False),
         }
         out["listings"]["active_count"] = active_count
+        # 2026-08-22: Etsy's own authoritative shop rating (recency-weighted
+        # as of Mar 13, 2026 -- Etsy computes this internally, we just read
+        # it) -- surfaced here so the live dashboard shows the SAME number
+        # Etsy displays publicly, not only the windowed `reviews.avg_rating`
+        # proxy above. Previously only tools/shop_health_check.py (a
+        # standalone script Scott has to run manually) read this field at
+        # all; the live /api/metrics response never exposed it.
+        if "review_average" in shop_r:
+            out["reviews"]["shop_rating"] = shop_r.get("review_average")
 
     return out
 
@@ -13023,6 +13037,19 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         p["_trademark_screening"] = _screen_for_trademark_flags(
             title=listing_data.get("title", ""), tags=listing_data.get("tags"),
         )
+        # Advisory-only, same pattern as _trademark_screening above -- see
+        # enqueue_action()'s matching comment (db.py) for why this exists:
+        # no Etsy API v3 field sets the "AI generative technology" toggle,
+        # confirmed against developer.etsy.com and etsy/open-api discussion
+        # #1340 (2026-08-22). This is the structured/payload copy of the
+        # same reminder db.py's enqueue_action() also prepends to the
+        # human-visible summary text.
+        p["_ai_disclosure_manual_step"] = (
+            "Etsy has no public API field for the 'This listing uses AI generative "
+            "technology' toggle or the 'Designed by' (not 'Made by') categorization "
+            "-- who_made=\"i_did\" and the description disclosure paragraph do NOT "
+            "set it. Set it manually in the Etsy listing editor after this publishes."
+        )
         photo_paths = p.get("photo_paths") or []
         file_paths = p.get("file_paths") or []
         if not file_paths:
@@ -13070,6 +13097,26 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         etsy_listing_id = p.get("etsy_listing_id")
         if etsy_listing_id is not None and not str(etsy_listing_id).strip():
             return False, "etsy_listing_id, if provided, must not be blank"
+        if p.get("update_files"):
+            # 2026-08-21: register_product's normal branch below refuses a second
+            # call for a product_id that already exists ("refusing to overwrite"),
+            # but a product registered with an initial `files` list (see the
+            # `files` param added to register_product_directly the same day) has
+            # no way to correct that list afterward -- e.g. a wrong listing-photo
+            # subfolder naming convention caught only after registering. Mirrors
+            # manifest_only's shape: requires the product_id to already exist,
+            # and (safety) refuses once the product has a live Etsy listing --
+            # this replaces `files` wholesale, which must never happen to a
+            # product real customers can already see/buy.
+            existing_product = _find_catalog_product(product_id)
+            if existing_product is None:
+                return False, f"update_files requires product_id {product_id} to already exist in the catalog"
+            if (existing_product.get("etsy_listing_id") or "").strip():
+                return False, f"{product_id} already has a live Etsy listing — refusing to swap its files"
+            files = p.get("files")
+            if not isinstance(files, list) or not all(isinstance(f, str) for f in files):
+                return False, "update_files requires files: a list of path strings"
+            return True, "ok"
         if p.get("manifest_only"):
             # 2026-08-20: a distinct half of the koozie/planner gap register_product
             # was built for -- a listing whose product_id is ALREADY known to the
@@ -13481,6 +13528,18 @@ def _execute_register_product_staged_action(a: dict) -> dict:
     etsy_listing_id = p.get("etsy_listing_id")
     now = datetime.now(timezone.utc).isoformat()
 
+    if p.get("update_files"):
+        files = [str(f) for f in (p.get("files") or [])]
+        _write_product_catalog_override(product_id, {"files": files})
+        with _cache_lock:
+            for k in ("products", "listings_active", "listings_draft", "listings_inactive", "actions"):
+                _cache.pop(k, None)
+        return {
+            "product_id": product_id,
+            "files": files,
+            "message": f"Replaced {product_id}'s files list with {len(files)} entr{'y' if len(files) == 1 else 'ies'}.",
+        }
+
     if p.get("manifest_only"):
         existing = _find_catalog_product(product_id) or {}
         category = existing.get("category", "uncategorized")
@@ -13526,7 +13585,7 @@ def _execute_register_product_staged_action(a: dict) -> dict:
         "price": p.get("price"),
         "status": "active" if etsy_listing_id else "not_listed",
         "etsy_listing_id": str(etsy_listing_id) if etsy_listing_id else "",
-        "files": [],
+        "files": p.get("files") or [],
         "created_at": now,
         "source": "frank_register",
     })
@@ -16162,10 +16221,42 @@ async def register_product_directly(body: dict | None = None, _token: str = Depe
         prefix = {"3d_print_physical": "P3D"}.get(category, "MISC")
         product_id = await asyncio.to_thread(_slugify_product_id, name, prefix)
 
+    files = b.get("files")
     payload = {
         "product_id": product_id, "name": name, "category": category,
         "price": price, "etsy_listing_id": etsy_listing_id,
     }
+    if files is not None:
+        # 2026-08-21: register_product previously always wrote "files": [],
+        # forcing a second write path for any product whose deliverable/
+        # photos already exist at registration time (unlike the coloring/
+        # calendar pre-publish helpers, which append to an existing entry's
+        # files list). Optional so every existing caller's payload shape
+        # keeps working unchanged.
+        payload["files"] = [str(f) for f in files]
+    ok, msg = await asyncio.to_thread(_validate_staged_action, {"type": "register_product", "payload": payload})
+    if not ok:
+        raise HTTPException(status_code=422, detail=msg)
+    result = await asyncio.to_thread(_execute_register_product_staged_action, {"payload": payload})
+    with _cache_lock:
+        _cache.pop("products", None)
+    return result
+
+
+@app.post("/api/products/{product_id}/update-files")
+async def update_product_files(
+    product_id: str, body: dict | None = None, _token: str = Depends(_rate_limited_auth),
+):
+    """Replace an already-registered, not-yet-published product's `files`
+    list wholesale -- for correcting it after registration (e.g. a listing-
+    photo subfolder that didn't match the `{pid}_listing_images/` naming
+    convention _gather_product_review() requires, caught only once the
+    photos silently didn't show up in the review). A pure local write, same
+    safety shape as register_product's update_files sub-branch above: 404s
+    if product_id doesn't exist yet, refuses once the product has a live
+    Etsy listing (this must never touch a real customer-visible listing)."""
+    files = (body or {}).get("files")
+    payload = {"product_id": product_id, "update_files": True, "files": files}
     ok, msg = await asyncio.to_thread(_validate_staged_action, {"type": "register_product", "payload": payload})
     if not ok:
         raise HTTPException(status_code=422, detail=msg)
