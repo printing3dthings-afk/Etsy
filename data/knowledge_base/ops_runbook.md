@@ -26871,3 +26871,73 @@ Caught my own mistake mid-flow too: first `create_listing` stage (action 758) ha
 **Gap found and fixed:** the live listing had `shop_section_id: null` — never assigned to the "Interactive Apps" section (`59937681`) that Sprigit (the shop's other interactive-app product) already uses. Staged `update_shop_section` (action 761, listing 4560574821 → section 59937681) via `POST /api/agent-tools/stage_action`; confirmed it lands in `GET /api/queue` before reporting done.
 
 **Takeaway:** a task's stated premise ("X was lost, rebuild it") can go stale between when it was written and when a session picks it up, especially with multiple sessions able to work the same codebase. Re-verify the premise against live state (git, the volume, the actual product/catalog, and — for anything Etsy-facing — Etsy's own API per the `verify-etsy-mutations` skill) before doing potentially-duplicate work.
+
+
+## 2026-08-22 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficie
+
+
+## 2026-08-22 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
