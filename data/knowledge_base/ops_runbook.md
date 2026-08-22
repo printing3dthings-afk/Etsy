@@ -26941,3 +26941,29 @@ Caught my own mistake mid-flow too: first `create_listing` stage (action 758) ha
 
 ## 2026-08-22 — Monthly competitor research refresh
 Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+## 2026-08-22 — OpenWhen live listing's digital file replaced (real bug fix, zero sales at time of fix)
+
+**Found:** Scott sent the current `OpenWhen.html` build directly in chat. Diffing it against
+what was already attached to the live listing (4560574821, confirmed `state: active` via
+Etsy's own API, not Frank's cache) showed the live file was missing a real fix: a
+`<noscript>` fallback for a confirmed customer-facing failure -- iOS Messages' Quick Look
+preview opens shared `.html` files without running JavaScript, so a recipient would see
+whatever screen was live on the giver's device at export time (their own builder review
+screen, dead buttons) instead of their actual gift.
+
+**Gap in tooling found along the way:** `EtsyAPIClient.upload_listing_file()` only ever adds
+a new file entry -- there was no `delete_listing_file()` counterpart (only
+`delete_listing_image()` existed), so there was no safe way to replace a listing's digital
+file without risking a duplicate. Added `delete_listing_file()` (etsy_api.py) and
+`POST /api/listings/{id}/files/replace` (main.py) -- guarded to refuse touching an ACTIVE
+listing's file unless `confirm_active=true` is explicitly passed. Shipped via PR #16 into
+`claude/etsy-agent-hub-9nnCM`, build `v364-listing-file-replace`.
+
+**Verified before acting:** checked `/api/metrics` -- 6 all-time orders total, none for
+OpenWhen -- confirming zero customers had downloaded the broken file before the fix landed.
+
+**Executed:** deleted the old file (file_id 1508985653192, 122.5 KB) and uploaded the
+corrected one (new file_id 1510237106849, 130.4 KB) via the new endpoint. Re-verified via
+`GET /api/listings/4560574821/files` -- exactly one file attached, correct size, no
+duplicate left behind.
