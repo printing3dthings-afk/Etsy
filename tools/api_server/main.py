@@ -7076,6 +7076,69 @@ async def listing_files(listing_id: int, _token: str = Depends(_auth_session_or_
     return result
 
 
+@app.post("/api/listings/{listing_id}/files/replace")
+async def replace_listing_file(
+    listing_id: int, body: dict, _token: str = Depends(_rate_limited_auth),
+):
+    """Delete one digital file from a listing and upload a replacement in its
+    place. Added 2026-08-22 for a real gap found fixing OpenWhen: upload_
+    listing_file() only ever ADDS a file, and this client had no delete
+    counterpart for files (only delete_listing_image existed) -- so there
+    was no safe way to correct a listing's digital file short of manually
+    deleting it on etsy.com. Direct-execute (no staging queue), mirroring
+    delete_shop_section's existing precedent just above -- guarded to
+    active listings only via an explicit override, since an ACTIVE listing's
+    file is what a paying customer would actually download; a draft has no
+    customer exposure yet, which is the ordinary case this exists for.
+
+    body: {"old_file_id": int, "new_path": str (volume-relative), "confirm_active": bool}
+    """
+    old_file_id = body.get("old_file_id")
+    new_path = (body.get("new_path") or "").strip()
+    if not old_file_id or not new_path:
+        raise HTTPException(status_code=400, detail="old_file_id and new_path are required")
+
+    vol = _FILE_ROOTS.get("volume")
+    if not vol:
+        raise HTTPException(status_code=500, detail="no persistent volume mounted on this deploy")
+    abs_path = (vol / new_path).resolve()
+    if vol.resolve() not in abs_path.parents or not abs_path.is_file():
+        raise HTTPException(status_code=404, detail=f"file not found on volume: {new_path}")
+
+    client = EtsyAPIClient()
+
+    def _do():
+        listing = client.get_listing(listing_id)
+        if listing.get("state") == "active" and not body.get("confirm_active"):
+            raise ValueError(
+                f"listing {listing_id} is ACTIVE (live, purchasable) -- refusing to swap its "
+                "digital file without confirm_active=true. This guard exists because an active "
+                "listing's file is what a paying customer downloads right now; a draft has no "
+                "customer exposure, which is the case this endpoint was built for."
+            )
+        client.delete_listing_file(listing_id, old_file_id)
+        return client.upload_listing_file(listing_id, str(abs_path), rank=1)
+
+    try:
+        result = await asyncio.wait_for(asyncio.to_thread(_do), timeout=60.0)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:300]}")
+
+    with _cache_lock:
+        _cache.pop(f"listing_files_{listing_id}", None)
+    db.log_activity("frank", "replace_listing_file",
+                     f"Replaced file {old_file_id} on listing {listing_id} with {new_path}",
+                     body, outcome="ok")
+    return {
+        "listing_id": listing_id,
+        "deleted_file_id": old_file_id,
+        "new_listing_file_id": result.get("listing_file_id"),
+        "new_filename": result.get("filename"),
+    }
+
+
 # (2026-08-19) No REST route previously returned a listing's raw content
 # (title/description/tags/price/state/images) verbatim -- every existing
 # route either summarizes (/api/listings), derives a yes/no verdict
