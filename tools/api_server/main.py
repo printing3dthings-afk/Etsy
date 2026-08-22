@@ -6360,6 +6360,11 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
         ratings = [r["rating"] for r in reviews if r.get("rating")]
         out["reviews"] = {
             "total_count": reviews_r.get("count", len(reviews)),
+            # A flat average over the last `limit` reviews fetched -- a
+            # windowed proxy, NOT the same number Etsy shows publicly (see
+            # `shop_rating` below). Kept because it's still useful for
+            # "how are my most recent reviews trending," just don't treat
+            # it as authoritative.
             "avg_rating": round(sum(ratings) / len(ratings), 2) if ratings else 0,
             "five_star_pct": round(sum(1 for r in ratings if r == 5) / len(ratings) * 100) if ratings else 0,
         }
@@ -6376,6 +6381,15 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
             "on_vacation": shop_r.get("is_vacation", False),
         }
         out["listings"]["active_count"] = active_count
+        # 2026-08-22: Etsy's own authoritative shop rating (recency-weighted
+        # as of Mar 13, 2026 -- Etsy computes this internally, we just read
+        # it) -- surfaced here so the live dashboard shows the SAME number
+        # Etsy displays publicly, not only the windowed `reviews.avg_rating`
+        # proxy above. Previously only tools/shop_health_check.py (a
+        # standalone script Scott has to run manually) read this field at
+        # all; the live /api/metrics response never exposed it.
+        if "review_average" in shop_r:
+            out["reviews"]["shop_rating"] = shop_r.get("review_average")
 
     return out
 
