@@ -205,9 +205,13 @@ rather than duplicated here — check those before writing new code or
 tests. `.claude/skills/` has vetted third-party Claude Skills (copywriting,
 ad-creative, email-sequences, contract-review, incident-postmortem,
 sop-builder — see `.claude/skills/SOURCES.md` for provenance/licenses) that
-auto-load when relevant. `.mcp.json` connects Context7 (live, version-exact
-library docs) — works with no API key at a lower rate limit; add one free
-at context7.com/dashboard if 429s show up.
+auto-load when relevant. `.claude/commands/research.md` is a project-built
+slash command (`/research <query>`), not a third-party skill — it calls
+`search_etsy` and returns a price/keyword/gap brief against this shop's
+own known products, purpose-built for exactly the title/tag rewrite work a
+batch of zero-view listings needs. `.mcp.json` connects Context7 (live,
+version-exact library docs) — works with no API key at a lower rate limit;
+add one free at context7.com/dashboard if 429s show up.
 
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
