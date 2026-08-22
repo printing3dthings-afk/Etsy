@@ -26847,3 +26847,123 @@ own chat will work again.
   ✗ AD015 generation failed
   → AD016: Ancient Library
   ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+## 2026-08-21 — OpenWhen listing content lost between sessions; recovered and staged
+
+**Symptom:** Scott asked to publish the OpenWhen (digital time-capsule gift app) listing that an earlier session reported as built and delivered. On investigation, none of its files (app HTML, listing photos, catalog registration) existed anywhere durable — not on the Railway volume, not in this repo, not in `generated_listing_content.json`.
+
+**Root cause:** The earlier session's OpenWhen build was never actually saved to Frank's persistent volume or committed to the repo — only sent to Scott as chat file deliveries, which don't round-trip back into this session. `data/digital_products/` is gitignored by design (per its own convention), so nothing backed it up.
+
+**Fix:** Scott supplied his own personal export of the app (`openwhenforjessee.html`) as a starting point — this had his real personal gift data (a message to "Jessee") embedded in a `<script id="capsule-data">` tag. Stripped that back to the app's own documented `EMPTY` sentinel (confirmed via reading the app's own `init()` logic) plus some leftover stale DOM state (a capsule-list entry, a review-summary string) that had also been captured in the saved snapshot — verified with Playwright that the cleaned file shows the blank "create your own" screen, not any trace of the personal content, before treating it as the sellable product file. Full builder → export → reopen round-trip tested clean (0 JS errors, correct lock-state rendering for anytime/past-date/future-date letters).
+
+Also found and fixed two real backend gaps while staging this: (1) `register_product` always hardcoded a new product's `files: []`, so a product whose deliverable/photos already exist at registration had no way to attach them in one call — added an optional `files` param. (2) There was no way to correct a mistake in an already-registered (not-yet-published) product's files list — added a `update_files` mode + a small `POST /api/products/{id}/update-files` endpoint, refusing to touch a product that already has a live Etsy listing. Both changes required a manual `/api/core/redeploy` call to go live — confirmed each was live via a real functional probe (a throwaway `_DEPLOY_PROBE_TMP` catalog registration, and a 422-vs-404 check on the new endpoint) rather than trusting the static `/api/ping` build tag, which doesn't change on every deploy.
+
+Caught my own mistake mid-flow too: first `create_listing` stage (action 758) had `photo_paths: []` because the listing photos were uploaded under `product_files/OPENWHEN/listing_images/` instead of the established `product_files/OPENWHEN_listing_images/` convention (`_gather_product_review()` only recognizes paths containing literal `_listing_images/`). Rejected that action before Scott ever saw it, fixed the upload path, and re-staged (action 759) with all 10 photos + the deliverable correctly attached.
+
+**Status:** OpenWhen registered in the catalog (`product_id: OPENWHEN`, category `uncategorized`, $4.99), app file + all 10 listing photos saved durably to the Railway volume, listing content passed all truthfulness/grounding gates, and a `create_listing` action is staged pending Scott's approval in the Action Center.
+
+## 2026-08-22 — OpenWhen rebuild task re-dispatched after it was already live; verified, not duplicated
+
+**Symptom:** Received a fresh task to build OpenWhen "from scratch" (same premise as 2026-08-21 above: app supposedly lost from git/volume/catalog). By the time this session started work, action 759 from the entry above had already been approved and executed — `product_catalog_overrides.json` showed `OPENWHEN` as `status: "listed_draft"`, `etsy_listing_id: "4560574821"`, `published_at: "2026-08-22T13:45:07Z"`.
+
+**What was checked before assuming the task's premise was still true:** independently confirmed listing 4560574821 is real and live via Etsy's own public `GET /v3/application/listings/{id}` (not Frank's cached view) — `state: "active"`, price $4.99, title/who_made/when_made all correct. Downloaded the actual `OpenWhen.html` and all 10 listing photos back from the Railway volume and re-verified them directly rather than trusting the catalog record alone: wrote an independent 39-check Playwright suite exercising the real file end-to-end (builder validation, anytime/future-date/past-date letters, XSS-safe rendering of special characters, export → fresh-page reopen as a simulated recipient, correct locked-vs-unlocked rendering, opened-state persistence across reload, re-opening an already-opened letter, dark mode, and a deliberately corrupted `capsule-data` payload) — all 39 passed, zero uncaught JS errors. Viewed 6 of the 10 listing photos directly and confirmed they're real screenshots of the actual app composited into on-brand scenes, not fabricated UI. Read the full live description/tags/price — accurate, includes the AI-disclosure paragraph, and is honest that the date-lock is "honor system, not encryption."
+
+**Gap found and fixed:** the live listing had `shop_section_id: null` — never assigned to the "Interactive Apps" section (`59937681`) that Sprigit (the shop's other interactive-app product) already uses. Staged `update_shop_section` (action 761, listing 4560574821 → section 59937681) via `POST /api/agent-tools/stage_action`; confirmed it lands in `GET /api/queue` before reporting done.
+
+**Takeaway:** a task's stated premise ("X was lost, rebuild it") can go stale between when it was written and when a session picks it up, especially with multiple sessions able to work the same codebase. Re-verify the premise against live state (git, the volume, the actual product/catalog, and — for anything Etsy-facing — Etsy's own API per the `verify-etsy-mutations` skill) before doing potentially-duplicate work.
+
+
+## 2026-08-22 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficie
+
+
+## 2026-08-22 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+## 2026-08-22 — OpenWhen live listing's digital file replaced (real bug fix, zero sales at time of fix)
+
+**Found:** Scott sent the current `OpenWhen.html` build directly in chat. Diffing it against
+what was already attached to the live listing (4560574821, confirmed `state: active` via
+Etsy's own API, not Frank's cache) showed the live file was missing a real fix: a
+`<noscript>` fallback for a confirmed customer-facing failure -- iOS Messages' Quick Look
+preview opens shared `.html` files without running JavaScript, so a recipient would see
+whatever screen was live on the giver's device at export time (their own builder review
+screen, dead buttons) instead of their actual gift.
+
+**Gap in tooling found along the way:** `EtsyAPIClient.upload_listing_file()` only ever adds
+a new file entry -- there was no `delete_listing_file()` counterpart (only
+`delete_listing_image()` existed), so there was no safe way to replace a listing's digital
+file without risking a duplicate. Added `delete_listing_file()` (etsy_api.py) and
+`POST /api/listings/{id}/files/replace` (main.py) -- guarded to refuse touching an ACTIVE
+listing's file unless `confirm_active=true` is explicitly passed. Shipped via PR #16 into
+`claude/etsy-agent-hub-9nnCM`, build `v364-listing-file-replace`.
+
+**Verified before acting:** checked `/api/metrics` -- 6 all-time orders total, none for
+OpenWhen -- confirming zero customers had downloaded the broken file before the fix landed.
+
+**Executed:** deleted the old file (file_id 1508985653192, 122.5 KB) and uploaded the
+corrected one (new file_id 1510237106849, 130.4 KB) via the new endpoint. Re-verified via
+`GET /api/listings/4560574821/files` -- exactly one file attached, correct size, no
+duplicate left behind.
