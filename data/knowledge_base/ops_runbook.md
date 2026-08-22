@@ -26967,3 +26967,27 @@ OpenWhen -- confirming zero customers had downloaded the broken file before the 
 corrected one (new file_id 1510237106849, 130.4 KB) via the new endpoint. Re-verified via
 `GET /api/listings/4560574821/files` -- exactly one file attached, correct size, no
 duplicate left behind.
+
+## 2026-08-22 — toggle_listing_state(new_state="inactive") landed listings in Etsy's "edit" state instead
+
+**Symptom:** Staged `toggle_listing_state` actions (deactivate Sprigit 4558607154 and EDU1002
+4559982929, both for real truthfulness violations — see product notes) were approved and executed,
+but Frank's own post-mutation verification flagged both as failed: "state mismatch after mutation —
+requested 'inactive', Etsy now shows 'edit'."
+
+**Checked live:** `EtsyAPIClient.get_listing()` on both confirms `state: "edit"` directly from Etsy,
+not cached. `edit` is a real, distinct Etsy listing state (not `active`, not `inactive`) — Etsy places
+a listing here instead of `inactive` in some cases when deactivating via the API; a listing in `edit`
+state is not visible or purchasable in the shop or search results, so the actual safety goal (pull a
+listing with a real content defect off sale) was achieved despite not landing on the literal requested
+value.
+
+**Not yet root-caused:** why Etsy's API routed this specific transition to `edit` instead of `inactive`
+— worth checking against Etsy's API docs / a support query if this recurs, since Frank's verification
+step will keep (correctly) flagging it as a failure every time until either the code treats `edit` as an
+acceptable terminal state for a deactivation request, or the actual cause of the `inactive`→`edit`
+routing is understood and avoided.
+
+**Action:** left both listings in `edit` state — customer-facing goal met, no urgency to force them to
+literal `inactive`. Flagging so a future session doesn't waste time treating this as an open incident if
+seen again on an unrelated listing.
