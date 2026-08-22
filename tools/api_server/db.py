@@ -597,6 +597,20 @@ def days_since_listing_edited(listing_id) -> int | None:
 def enqueue_action(action_type: str, summary: str, payload: dict) -> int:
     """Stage a proposed change. Returns the new queue id. Status starts 'pending'."""
     init_db()
+    if action_type == "create_listing":
+        # 2026-08-22: Etsy's Jan 2026 AI-disclosure enforcement tightened to
+        # require a structured "This listing uses AI generative technology"
+        # toggle + "Designed by" (not "Made by") categorization in the
+        # listing editor -- confirmed via developer.etsy.com and an
+        # unanswered etsy/open-api GitHub discussion (#1340) that NO public
+        # API v3 field exists for this; who_made="i_did" (which the
+        # pre-publish gate already enforces) and the description-text
+        # disclosure paragraph do NOT set it. Every listing in this shop is
+        # AI-generated content, so every create_listing needs this manual
+        # follow-up -- surfaced directly in the summary (the one thing every
+        # Action Center card renders) rather than only in a payload field
+        # that nothing currently displays, so it can't be silently missed.
+        summary = f"📋 After approval, manually enable AI-disclosure toggle in Etsy editor — {summary}"
     if action_type in _RANKING_RECOVERY_TYPES:
         listing_id = (payload or {}).get("listing_id")
         if listing_id is not None:

@@ -12960,6 +12960,19 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         p["_trademark_screening"] = _screen_for_trademark_flags(
             title=listing_data.get("title", ""), tags=listing_data.get("tags"),
         )
+        # Advisory-only, same pattern as _trademark_screening above -- see
+        # enqueue_action()'s matching comment (db.py) for why this exists:
+        # no Etsy API v3 field sets the "AI generative technology" toggle,
+        # confirmed against developer.etsy.com and etsy/open-api discussion
+        # #1340 (2026-08-22). This is the structured/payload copy of the
+        # same reminder db.py's enqueue_action() also prepends to the
+        # human-visible summary text.
+        p["_ai_disclosure_manual_step"] = (
+            "Etsy has no public API field for the 'This listing uses AI generative "
+            "technology' toggle or the 'Designed by' (not 'Made by') categorization "
+            "-- who_made=\"i_did\" and the description disclosure paragraph do NOT "
+            "set it. Set it manually in the Etsy listing editor after this publishes."
+        )
         photo_paths = p.get("photo_paths") or []
         file_paths = p.get("file_paths") or []
         if not file_paths:
