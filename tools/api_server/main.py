@@ -19908,6 +19908,32 @@ async def upload_to_volume(request: Request, path: str, _token: str = Depends(_a
     return {"ok": True, "path": rel, "size": len(body), "size_human": _human_size(len(body))}
 
 
+@app.delete("/api/files/delete")
+async def delete_from_volume(path: str, root: str = "volume", _token: str = Depends(_auth_session_or_bearer)):
+    """Delete a single file from a durable file root (volume by default, or 'local' for
+    the repo's data/ tree in local dev). Mirrors upload_to_volume's exact path-resolution
+    and traversal guards. Only ever deletes a single file, never a directory -- a
+    directory target is rejected rather than recursively removed, since this is a
+    chat-reachable action with real, permanent data loss on the other end."""
+    file_root = _FILE_ROOTS.get(root)
+    if file_root is None:
+        raise HTTPException(status_code=400, detail=f"Unknown file root '{root}' — expected one of {sorted(_FILE_ROOTS)}")
+    rel = (path or "").strip().lstrip("/")
+    if not rel:
+        raise HTTPException(status_code=400, detail="path query param is required")
+    froot = file_root.resolve()
+    target = (froot / rel).resolve()
+    if froot not in target.parents and target != froot:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    if target.is_dir():
+        raise HTTPException(status_code=400, detail=f"path '{rel}' is a directory — delete_from_volume only removes single files")
+    if not target.exists():
+        raise HTTPException(status_code=404, detail=f"'{rel}' does not exist under root '{root}'")
+
+    await asyncio.to_thread(target.unlink)
+    return {"ok": True, "path": rel, "root": root, "deleted": True}
+
+
 @app.get("/api/files/zip-entry")
 async def open_zip_entry(request: Request, root: str, path: str, entry: str, token: str = "", inline: int = 1, _auth: str = Depends(_auth_session_or_bearer)):
     """Stream a single file OUT of a ZIP without the user unzipping anything.
