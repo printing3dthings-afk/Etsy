@@ -30,7 +30,9 @@ Exit code 0 = all pass, non-zero = a regression (prints which).
 import os
 import sys
 import tempfile
+import time
 import traceback
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -310,6 +312,14 @@ class _FakeEtsyClient:
 
     def update_listing(self, listing_id, fields):
         _FakeEtsyClient.calls.append((listing_id, dict(fields)))
+        if "state" in fields:
+            # Must actually reflect the change -- approve_action's post-execution
+            # verification step (2026-08-20) re-fetches via get_listing() and diffs
+            # against what was requested, so a fake that accepts the write but never
+            # updates its own live_state makes a CORRECTLY working verification step
+            # look like a false failure (confirmed: this test failed with exactly
+            # that shape until this line was added).
+            _FakeEtsyClient.live_state = fields["state"]
         return {"listing_id": listing_id, "state": fields.get("state"), "title": "Fake Listing"}
 
 
@@ -406,6 +416,10 @@ def test_api_costs_reports_all_four_services_honestly():
         check("available" in services[svc], f"{svc} entry should report availability, got {services[svc]}")
         if not services[svc]["available"]:
             check(bool(services[svc].get("reason")), f"{svc} unavailable but has no reason: {services[svc]}")
+        # Every service must carry a real top-up/billing deep link -- the "Top Up"
+        # button in Settings needs somewhere to send Scott even when Frank can't
+        # read the live cost figure for that service yet.
+        check(bool(services[svc].get("dashboard_url")), f"{svc} missing dashboard_url: {services[svc]}")
     check("budget_caps" in body, f"expected budget_caps in response, got {body}")
 
 
@@ -450,6 +464,43 @@ def test_request_listing_fix_requires_auth():
     check(resp.status_code == 401, f"unauthenticated request-fix should 401, got {resp.status_code}")
 
 
+# ── Anthropic usage logging (2026-07-10 — "what used the Anthropic money") ──────
+class _FakeUsage:
+    def __init__(self, input_tokens, output_tokens, cache_creation=0, cache_read=0):
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.cache_creation_input_tokens = cache_creation
+        self.cache_read_input_tokens = cache_read
+
+def test_log_anthropic_usage_then_summed_by_cost_snapshot():
+    # _log_anthropic_usage is the wrapper _anthropic_create()/the chat stream path
+    # both call on every real call -- this proves a logged call is actually
+    # readable back out and priced, without needing a live Anthropic key.
+    before = server._anthropic_cost_snapshot()
+    # Large token counts (not a realistic single call) so the cost survives the
+    # top-level estimate's 2-decimal rounding -- a real ~$0.003 call would round
+    # to $0.00 at that precision and make this assertion flaky, even though the
+    # by_model breakdown (4-decimal) would still show it correctly.
+    server._log_anthropic_usage("test_caller", "claude-haiku-4-5-20251001", _FakeUsage(2_000_000, 1_000_000))
+    after = server._anthropic_cost_snapshot()
+    check(after["available"], f"cost snapshot should be available after logging a call, got {after}")
+    check(after["call_count"] == before.get("call_count", 0) + 1,
+          f"expected call_count to increase by 1, before={before}, after={after}")
+    check(after["estimated_cost_usd"] > before.get("estimated_cost_usd", 0),
+          f"expected estimated cost to increase, before={before}, after={after}")
+    model_stats = after.get("by_model", {}).get("claude-haiku-4-5-20251001")
+    check(model_stats is not None, f"expected claude-haiku-4-5-20251001 in by_model, got {after.get('by_model')}")
+    check(model_stats["input_tokens"] >= 2_000_000, f"expected logged input tokens tracked, got {model_stats}")
+
+def test_log_anthropic_usage_never_raises_on_none_usage():
+    # A caught-but-swallowed edge case could pass usage=None -- must not crash the
+    # real Anthropic call it wraps.
+    try:
+        server._log_anthropic_usage("test_caller_none", "claude-sonnet-5", None)
+    except Exception as exc:
+        check(False, f"_log_anthropic_usage(usage=None) should never raise, got {exc}")
+
+
 # ── health endpoint (unauthenticated by design -- external watchdog hits this) ──
 def test_health_endpoint_is_unauthenticated_and_reports_persistence():
     c = TestClient(server.app, base_url="https://testserver")
@@ -457,6 +508,126 @@ def test_health_endpoint_is_unauthenticated_and_reports_persistence():
     check(resp.status_code == 200, f"/health should be reachable with no auth, got {resp.status_code}")
     body = resp.json()
     check("persistent" in body, f"/health should report persistence status, got: {body}")
+
+
+# ── bare-domain root (2026-07-10 incident: GET / had no route at all, so anyone
+# navigating to the plain domain instead of /frank or /login got a raw
+# {"detail":"Not Found"} JSON blob -- fixed by redirecting to /frank, which itself
+# redirects an unauthenticated visitor on to /login) ──
+def test_root_redirects_to_frank():
+    c = TestClient(server.app, base_url="https://testserver")
+    resp = c.get("/", follow_redirects=False)
+    check(resp.status_code == 307, f"GET / should redirect (307), got {resp.status_code}")
+    check(resp.headers.get("location") == "/frank",
+          f"GET / should redirect to /frank, got {resp.headers.get('location')!r}")
+
+
+# ── graceful degradation on Etsy failures (2026-07-10 incident: /api/listings and
+# four sibling routes let EtsyAPIError -- including the circuit breaker's fast
+# "open" rejection -- propagate as an unhandled 500/504 instead of a clean
+# response; see _fetch_with_degrade in main.py and ops_runbook.md) ──
+def test_listings_returns_clean_503_when_etsy_unavailable_and_no_cache():
+    import etsy_api as etsy_api_module
+
+    server._cache.pop("listings_active", None)  # no stale fallback should mask this case
+
+    def _boom(self, state="active", limit=100):
+        raise etsy_api_module.EtsyAPIError(
+            0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses"
+        )
+
+    original = etsy_api_module.EtsyAPIClient.get_shop_listings_all
+    etsy_api_module.EtsyAPIClient.get_shop_listings_all = _boom
+    try:
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.get("/api/listings?state=active")
+    finally:
+        etsy_api_module.EtsyAPIClient.get_shop_listings_all = original
+
+    check(resp.status_code == 503,
+          f"a real Etsy failure with no cache available should return a clean 503, "
+          f"not an unhandled 500 -- got {resp.status_code}: {resp.text[:200]}")
+    body = resp.json()
+    check(body.get("detail", {}).get("error") == "etsy_unavailable",
+          f"503 body should be a structured etsy_unavailable error, got: {body}")
+
+
+def test_listings_serves_stale_cache_when_etsy_unavailable():
+    import etsy_api as etsy_api_module
+
+    # Seed a cache entry older than _listings_sync's own 30s TTL, so it doesn't
+    # short-circuit before ever calling (the now-broken) live API -- this proves
+    # the OUTER fallback-to-stale-cache path, not just a normal cache hit.
+    server._cache["listings_active"] = {
+        "data": {"listings": [{"listing_id": 1, "title": "cached listing"}], "count": 1, "state": "active"},
+        "ts": time.time() - 60,
+    }
+
+    def _boom(self, state="active", limit=100):
+        raise etsy_api_module.EtsyAPIError(429, "daily rate limit exhausted")
+
+    original = etsy_api_module.EtsyAPIClient.get_shop_listings_all
+    etsy_api_module.EtsyAPIClient.get_shop_listings_all = _boom
+    try:
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.get("/api/listings?state=active")
+    finally:
+        etsy_api_module.EtsyAPIClient.get_shop_listings_all = original
+        server._cache.pop("listings_active", None)
+
+    check(resp.status_code == 200,
+          f"a live failure with a cached value available should still 200 (degraded), got {resp.status_code}")
+    body = resp.json()
+    check(body.get("stale") is True, f"the served fallback should be flagged stale, got: {body}")
+    check(body.get("count") == 1 and body.get("listings", [{}])[0].get("title") == "cached listing",
+          f"the served fallback should be the actual cached data, got: {body}")
+    # 2026-07-31 (Today UX audit): stale/stale_reason were already threaded this
+    # far but had zero frontend consumers -- a real as-of timestamp lets the
+    # frontend show something like "showing cached data from 2m ago" instead of
+    # rendering a possibly-hours-old number with no visual distinction from a
+    # fresh one. Should reflect the seeded cache entry's real age (~60s ago).
+    stale_as_of = body.get("stale_as_of")
+    check(stale_as_of, f"a stale response should carry a real as-of timestamp, got: {body}")
+    if stale_as_of:
+        age_seconds = time.time() - datetime.fromisoformat(stale_as_of).timestamp()
+        check(50 <= age_seconds <= 90, f"stale_as_of should reflect the ~60s-old seeded cache entry, got age {age_seconds}s")
+
+
+# ── Listings screen audit (2026-07-31): state=expired -- _listings_sync() and the
+# chat tools (list_listings/get_listing) already fully supported this state; only
+# the screen's own tab set didn't expose it, even though reactivating an expired
+# listing IS Etsy's real renewal mechanism (see stage_batch_listing_state) ──
+def test_listings_accepts_expired_state():
+    import etsy_api as etsy_api_module
+
+    server._cache.pop("listings_expired", None)
+
+    def _fake(self, state="active", limit=100):
+        check(state == "expired", f"expected the state param to reach get_shop_listings_all as 'expired', got {state!r}")
+        return [{"listing_id": 99, "title": "an expired listing", "state": "expired",
+                  "price": {"amount": 999, "divisor": 100}, "views": 0, "num_favorers": 0, "tags": []}]
+
+    original = etsy_api_module.EtsyAPIClient.get_shop_listings_all
+    etsy_api_module.EtsyAPIClient.get_shop_listings_all = _fake
+    try:
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.get("/api/listings?state=expired")
+    finally:
+        etsy_api_module.EtsyAPIClient.get_shop_listings_all = original
+        server._cache.pop("listings_expired", None)
+
+    check(resp.status_code == 200, f"state=expired should be accepted (200), got {resp.status_code}: {resp.text[:200]}")
+    body = resp.json()
+    check(body.get("count") == 1 and body.get("listings", [{}])[0].get("listing_id") == 99,
+          f"expected the fake expired listing to pass through, got: {body}")
+
+
+def test_listings_rejects_truly_invalid_state():
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.get("/api/listings?state=bogus")
+    check(resp.status_code == 400, f"a nonsense state should still 400, got {resp.status_code}")
+    detail = resp.json().get("detail", "")
+    check("expired" in detail, f"the 400 error message should mention the now-4 valid states, got: {detail!r}")
 
 
 # ── runner ────────────────────────────────────────────────────────────────────

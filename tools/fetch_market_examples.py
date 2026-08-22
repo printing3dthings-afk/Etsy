@@ -16,15 +16,30 @@ Usage:
 """
 
 import os, sys, json, time, argparse, re
-sys.path.insert(0, '/home/user/Etsy')
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_ENV_PATH = _ROOT / ".env"
 
 import requests
 import urllib3
 urllib3.disable_warnings()
 
 # ── Env ───────────────────────────────────────────────────────────────────────
+# This script's token-refresh mechanic rewrites .env in place (see refresh_token()
+# below), which only makes sense against a real local .env file — hosted deploys
+# (Railway) inject env vars directly and have no .env file at all, so this script
+# is inherently a sandbox/local-only tool. Still guarded + made path-portable
+# (matching the fix applied throughout tools/) rather than hardcoded to one
+# specific machine's absolute path.
+if not _ENV_PATH.exists():
+    print(f"ERROR: {_ENV_PATH} not found — this script reads/rewrites a local .env "
+          f"file (Etsy token refresh) and only runs against a real sandbox checkout.")
+    sys.exit(1)
 env = {}
-with open('/home/user/Etsy/.env') as f:
+with open(_ENV_PATH) as f:
     for line in f:
         line = line.strip()
         if '=' in line and not line.startswith('#'):
@@ -38,8 +53,8 @@ session.headers.update({
     'Authorization': f"Bearer {env['ETSY_ACCESS_TOKEN']}"
 })
 
-REFS_DIR = '/home/user/Etsy/data/design_references'
-SCHEDULE_PATH = '/home/user/Etsy/data/art_schedule.json'
+REFS_DIR = str(_ROOT / "data" / "design_references")
+SCHEDULE_PATH = str(_ROOT / "data" / "art_schedule.json")
 
 # ── Per-category search keywords ──────────────────────────────────────────────
 # 2-3 targeted phrases per category to surface the best-performing listings
@@ -84,10 +99,10 @@ def refresh_token():
     if resp.status_code == 200:
         new_token = resp.json()['access_token']
         session.headers.update({'Authorization': f'Bearer {new_token}'})
-        with open('/home/user/Etsy/.env', 'r') as f:
+        with open(_ENV_PATH, 'r') as f:
             content = f.read()
         content = content.replace(env['ETSY_ACCESS_TOKEN'], new_token)
-        with open('/home/user/Etsy/.env', 'w') as f:
+        with open(_ENV_PATH, 'w') as f:
             f.write(content)
         env['ETSY_ACCESS_TOKEN'] = new_token
         return True

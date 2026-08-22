@@ -1,7 +1,7 @@
 {
   "name": "frank-desktop",
-  "version": "1.0.0",
-  "description": "Frank (OnBrandCraftz Etsy automation hub) as a native desktop app -- Electron shell around the bundled Python/FastAPI backend.",
+  "version": "2.0.0",
+  "description": "Frank (OnBrandCraftz Etsy automation hub) as a native desktop app -- thin Electron client onto the live Railway deployment (tray icon, OS alert notifications, global show/hide hotkey). No bundled backend.",
   "main": "main.js",
   "private": true,
   "scripts": {
@@ -23,20 +23,16 @@
       "main.js",
       "package.json"
     ],
-    "extraResources": [
-      {
-        "from": "../dist/desktop-backend/frank-backend",
-        "to": "backend"
-      }
-    ],
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "Frank-Setup.${ext}"
     },
     "mac": {
       "target": "dmg",
       "icon": "build/icon.icns",
-      "category": "public.app-category.business"
+      "category": "public.app-category.business",
+      "artifactName": "Frank.${ext}"
     },
     "nsis": {
       "oneClick": false,

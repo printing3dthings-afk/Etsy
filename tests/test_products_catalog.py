@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""
+Fixture test for tools/api_server/main.py's _build_products_status()
+(2026-07-15 Products screen rebuild) -- GET /api/products used to be
+hardcoded to a ~5-product "Core Products" slice (DP1026-1035) left over
+from when the shop only had a handful of planners; it never grew with the
+catalog, so it looked broken once the shop reached 176 products. This
+tests the pure logic that replaced it: given a catalog list and a
+file-existence checker, compute per-product/per-file status, including
+the "data/digital_products/" prefix-stripping needed to match
+_product_file_exists()'s rel convention.
+
+Dependency-light: `import main as server` (same safe import
+tests/test_staged_actions.py already relies on), a fake file-exists
+function instead of touching real disk -- no live Etsy call.
+
+Run locally:  python tests/test_products_catalog.py
+In CI:        see .github/workflows/ci-smoke.yml
+Exit code 0 = all pass, non-zero = a regression (prints which).
+"""
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
+    sp = str(p)
+    if sp not in sys.path:
+        sys.path.insert(0, sp)
+
+import main as server  # noqa: E402
+
+_failures: list[str] = []
+
+
+def check(cond: bool, msg: str) -> None:
+    if not cond:
+        _failures.append(msg)
+
+
+def test_all_files_present():
+    catalog = [{
+        "product_id": "DP1026", "name": "Ultimate Digital Life Planner",
+        "etsy_listing_id": "4509179201", "category": "digital_planner",
+        "status": "active", "price": 14.99,
+        "files": ["data/digital_products/product_files/DP1026.pdf",
+                  "data/digital_products/product_files/DP1026_sticker_pack.zip"],
+    }]
+    result = server._build_products_status(catalog, lambda rel: True)
+    check(len(result) == 1, f"expected 1 product, got {len(result)}")
+    p = result[0]
+    check(p["id"] == "DP1026", f"expected id DP1026, got {p['id']}")
+    check(p["all_files_present"] is True, f"expected all_files_present True, got {p['all_files_present']}")
+    check(len(p["files"]) == 2, f"expected 2 files, got {p['files']}")
+    check(all(f["exists"] for f in p["files"]), f"expected all files marked existing, got {p['files']}")
+    check(p["files"][0]["name"] == "DP1026.pdf", f"expected basename-only file name, got {p['files'][0]}")
+
+
+def test_some_files_missing():
+    catalog = [{
+        "product_id": "WA1073", "name": "Some Wall Art", "etsy_listing_id": "123",
+        "category": "wall_art", "status": "active", "price": 5.99,
+        "files": ["data/digital_products/wall_art/WA1073_print_sizes.zip"],
+    }]
+    result = server._build_products_status(catalog, lambda rel: False)
+    p = result[0]
+    check(p["all_files_present"] is False, f"expected all_files_present False, got {p['all_files_present']}")
+    check(p["files"][0]["exists"] is False, "the one file should be marked missing")
+
+
+def test_mixed_present_and_missing():
+    catalog = [{
+        "product_id": "DP1027", "name": "Student Planner", "etsy_listing_id": "456",
+        "category": "digital_planner", "status": "active", "price": 9.99,
+        "files": ["data/digital_products/product_files/DP1027.pdf",
+                  "data/digital_products/product_files/DP1027_sticker_pack.zip"],
+    }]
+    # Only the .pdf exists, the .zip doesn't -- exercises real per-file granularity.
+    result = server._build_products_status(
+        catalog, lambda rel: rel.endswith(".pdf")
+    )
+    p = result[0]
+    check(p["all_files_present"] is False, f"one missing file should mark the whole product False, got {p['all_files_present']}")
+    exists_map = {f["name"]: f["exists"] for f in p["files"]}
+    check(exists_map["DP1027.pdf"] is True, f"the .pdf should be marked present: {exists_map}")
+    check(exists_map["DP1027_sticker_pack.zip"] is False, f"the .zip should be marked missing: {exists_map}")
+
+
+def test_product_with_no_files_listed():
+    catalog = [{
+        "product_id": "SS9999", "name": "Draft product", "etsy_listing_id": None,
+        "category": "svg_bundle", "status": "draft", "price": None,
+        "files": [],
+    }]
+    result = server._build_products_status(catalog, lambda rel: True)
+    p = result[0]
+    check(p["all_files_present"] is None,
+          f"a product with zero files listed should be None (unknown), not True/False, got {p['all_files_present']}")
+    check(p["files"] == [], "files list should be empty")
+
+
+def test_file_exists_fn_receives_the_raw_catalog_path():
+    # 2026-07-18: _build_products_status() no longer strips the
+    # data/digital_products/ prefix itself -- most catalog entries (wall_art,
+    # coloring_pages, paper_pack, svg_bundle, etc) were never rooted under that
+    # prefix at all, so a single strip-and-rejoin convention silently mis-resolved
+    # them. The raw path is now handed straight to file_exists_fn, which is
+    # responsible for its own resolution strategy -- see
+    # server._catalog_file_exists() for the real (three-convention) one.
+    seen_paths = []
+
+    def _fake_exists(f):
+        seen_paths.append(f)
+        return True
+
+    catalog = [{
+        "product_id": "DP1026", "name": "x", "etsy_listing_id": "1",
+        "category": "digital_planner", "status": "active", "price": 1.0,
+        "files": ["data/digital_products/product_files/DP1026.pdf"],
+    }]
+    server._build_products_status(catalog, _fake_exists)
+    check(seen_paths == ["data/digital_products/product_files/DP1026.pdf"],
+          f"expected the raw catalog path passed through unchanged, got {seen_paths}")
+
+
+def test_missing_category_and_status_default_gracefully():
+    catalog = [{"product_id": "X1", "name": "y", "files": []}]
+    result = server._build_products_status(catalog, lambda rel: True)
+    p = result[0]
+    check(p["category"] == "uncategorized", f"missing category should default to 'uncategorized', got {p['category']}")
+    check(p["status"] == "active", f"missing status should default to 'active', got {p['status']}")
+
+
+# ── is_new_product overlay synthesis (2026-07-22) ───────────────────────────
+# A brand-new product built via the Create screen's "+ new one" flow for
+# wall_art/coloring_pages has no base-catalog entry at all -- see
+# _register_new_product_overlay() in main.py. _build_products_status() must
+# synthesize a real row for it from the overlay alone.
+
+def test_new_product_overlay_synthesizes_a_row():
+    catalog = [{"product_id": "DP1026", "name": "x", "category": "digital_planner",
+                "status": "active", "price": 1.0, "files": []}]
+    overrides = {"WA9999": {
+        "is_new_product": True, "product_id": "WA9999", "name": "Boho sun art",
+        "category": "wall_art", "price": None, "status": "draft",
+        "etsy_listing_id": "", "files": ["data/digital_products/print_zips/WA9999_print_sizes.zip"],
+    }}
+    result = server._build_products_status(catalog, lambda rel: True, overrides)
+    check(len(result) == 2, f"expected base entry + 1 synthesized row, got {len(result)}: {result}")
+    synth = next((p for p in result if p["id"] == "WA9999"), None)
+    check(synth is not None, f"WA9999 must appear as a synthesized row, got {result}")
+    check(synth["title"] == "Boho sun art", f"got: {synth}")
+    check(synth["category"] == "wall_art", f"got: {synth}")
+    check(synth["status"] == "draft", f"a freshly-registered product must be status=draft, got: {synth}")
+    check(synth["all_files_present"] is True, f"got: {synth}")
+
+
+def test_new_product_overlay_does_not_duplicate_existing_entry():
+    # A pid present in BOTH the base catalog and the overrides-as-is_new_product
+    # (e.g. a stale/incorrect overlay entry) must never produce two rows.
+    catalog = [{"product_id": "WA1001", "name": "Real one", "category": "wall_art",
+                "status": "active", "price": 5.99, "files": []}]
+    overrides = {"WA1001": {"is_new_product": True, "product_id": "WA1001",
+                             "name": "Should never surface", "category": "wall_art",
+                             "price": None, "status": "draft", "files": []}}
+    result = server._build_products_status(catalog, lambda rel: True, overrides)
+    check(len(result) == 1, f"a pid already in the base catalog must never be duplicated, got {len(result)}: {result}")
+    check(result[0]["title"] == "Real one", f"the real base-catalog entry must win, got: {result[0]}")
+
+
+def test_new_product_overlay_missing_files_reports_correctly():
+    overrides = {"COLOR9999": {
+        "is_new_product": True, "product_id": "COLOR9999", "name": "New theme",
+        "category": "coloring_pages", "price": None, "status": "draft",
+        "files": ["data/digital_products/coloring_pages/sets/coloring_color9999_set_01.zip"],
+    }}
+    result = server._build_products_status([], lambda rel: False, overrides)
+    check(len(result) == 1, f"got {result}")
+    check(result[0]["all_files_present"] is False, f"a missing file must report all_files_present=False, got: {result[0]}")
+
+
+def test_overlay_without_is_new_product_marker_is_not_synthesized():
+    # A plain patch-only overlay entry (etsy_listing_id/status update for an
+    # EXISTING product, the pre-2026-07-22 shape) must never be mistaken for
+    # a new-product record just because its pid isn't in this test's catalog.
+    overrides = {"DP1099": {"etsy_listing_id": "555", "status": "listed_draft"}}
+    result = server._build_products_status([], lambda rel: True, overrides)
+    check(result == [], f"a non-is_new_product overlay entry must not synthesize a row, got {result}")
+
+
+def main() -> int:
+    tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
+    ran = 0
+    for t in tests:
+        try:
+            t()
+            ran += 1
+        except Exception as exc:
+            _failures.append(f"{t.__name__} raised an unexpected error: {exc}")
+    if _failures:
+        print("PRODUCTS CATALOG TESTS FAILED:", file=sys.stderr)
+        for f in _failures:
+            print("  -", f, file=sys.stderr)
+        print(f"\n{len(_failures)} failure(s) across {len(tests)} tests.", file=sys.stderr)
+        return 1
+    print(f"PRODUCTS CATALOG TESTS OK — {ran} tests passed "
+          f"(_build_products_status()'s file-status logic, no live Etsy call).")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

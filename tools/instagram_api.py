@@ -38,14 +38,22 @@ from __future__ import annotations
 import os
 import json
 import time
-import urllib.request
 import urllib.parse
-import urllib.error
+import requests
 from typing import Any
 
 ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 
 BASE_URL = "https://graph.facebook.com/v21.0"
+
+# Module-level session (mirrors etsy_api.py's _session, added 2026-07-08 for the
+# same reason) -- also fixes the actual bug this session exists to fix: Meta's API
+# is one of several third-party endpoints observed to reject requests carrying
+# urllib's default User-Agent (the Railway API 403 traced in ops_runbook.md is the
+# proven case; requests' default User-Agent isn't affected). A fresh
+# InstagramAPIClient() is created per call site (main.py's get_client()), so
+# connection/TLS reuse has to live at module scope.
+_session = requests.Session()
 
 # How long (seconds) to poll for a media container to finish processing
 _CONTAINER_POLL_INTERVAL = 3
@@ -122,6 +130,13 @@ class InstagramAPIClient:
         Handles retries on 429 (rate limit) and 503 (transient server error)
         with exponential backoff. On 190/401 (expired token) raises
         InstagramAPIError so the caller can react (e.g. call refresh_token()).
+
+        requests-based (rewritten from raw urllib.request 2026-07-15, same fix
+        as etsy_api.py's 2026-07-08 pass and the Railway redeploy bug this
+        session traced) -- requests does not raise on 4xx/5xx like
+        urllib.error.HTTPError did, so status is checked explicitly instead of
+        caught; retry count, backoff, and the 429/503-retry behavior are
+        otherwise unchanged.
         """
         self._require_auth()
 
@@ -135,50 +150,44 @@ class InstagramAPIClient:
 
         headers = {"Content-Type": "application/json"}
         data = json.dumps(body).encode() if body else None
-        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+
+        def _error_message(resp: requests.Response) -> str:
+            body_text = resp.text
+            try:
+                err = resp.json()
+                # Graph API error details live under {"error": {...}}
+                error_obj = err.get("error", {})
+                if isinstance(error_obj, dict):
+                    return error_obj.get("message", body_text)
+                return str(error_obj) or body_text
+            except Exception:
+                return body_text
 
         retryable_http = {429, 503}
         delays = [3, 6]  # seconds between attempt 1→2 and 2→3
 
         last_exc: Exception | None = None
+        last_resp: requests.Response | None = None
         for attempt in range(3):
             if attempt > 0:
                 time.sleep(delays[attempt - 1])
             try:
-                req = urllib.request.Request(url, data=data, headers=headers, method=method)
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    raw = resp.read().decode()
-                    return json.loads(raw) if raw.strip() else {}
-            except urllib.error.HTTPError as e:
-                if e.code in retryable_http:
-                    last_exc = e
-                    continue
-                body_text = e.read().decode()
-                try:
-                    err = json.loads(body_text)
-                    # Graph API error details live under {"error": {...}}
-                    error_obj = err.get("error", {})
-                    if isinstance(error_obj, dict):
-                        msg = error_obj.get("message", body_text)
-                    else:
-                        msg = str(error_obj) or body_text
-                except Exception:
-                    msg = body_text
-                raise InstagramAPIError(e.code, msg)
-            except (OSError, urllib.error.URLError) as e:
+                resp = _session.request(method, url, data=data, headers=headers, timeout=20)
+            except requests.exceptions.RequestException as e:
                 last_exc = e
                 continue
 
+            if resp.status_code < 400:
+                raw = resp.text
+                return json.loads(raw) if raw.strip() else {}
+            if resp.status_code in retryable_http:
+                last_resp = resp
+                continue
+            raise InstagramAPIError(resp.status_code, _error_message(resp))
+
         # All attempts exhausted
-        if isinstance(last_exc, urllib.error.HTTPError):
-            body_text = last_exc.read().decode()
-            try:
-                err = json.loads(body_text)
-                error_obj = err.get("error", {})
-                msg = error_obj.get("message", body_text) if isinstance(error_obj, dict) else body_text
-            except Exception:
-                msg = body_text
-            raise InstagramAPIError(last_exc.code, msg)
+        if last_resp is not None:
+            raise InstagramAPIError(last_resp.status_code, _error_message(last_resp))
         raise InstagramAPIError(0, f"Network error after retries: {last_exc}")
 
     def _create_media_container(
@@ -477,10 +486,9 @@ class InstagramAPIClient:
             "access_token": self.access_token,
         })
         url = f"https://graph.instagram.com/refresh_access_token?{params}"
-        req = urllib.request.Request(url, method="GET")
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode())
+            resp = _session.get(url, timeout=15)
+            data = resp.json()
         except Exception:
             return False
 

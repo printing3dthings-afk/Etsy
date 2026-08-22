@@ -289,6 +289,82 @@ def test_breaker_transitions_to_half_open_after_cooldown():
     check(row_after["state"] == "half_open", f"expected 'half_open' after cooldown probe, got {row_after['state']!r}")
 
 
+def test_breaker_half_open_only_lets_one_probe_through():
+    """2026-07-10 regression test: allow_request() used to return True
+    unconditionally for every caller while state was half_open, letting a
+    burst of concurrent requests all race through as duplicate probes -- the
+    live incident that turned one Etsy rate-limit into a pile-up of hanging
+    calls and 504s across several dashboard screens at once (see
+    ops_runbook.md). Exactly one caller should win the open->half_open
+    transition; every other caller in the same window must be rejected
+    until the probe resolves via record_success()/record_failure()."""
+    from datetime import datetime, timedelta, timezone
+
+    fake_db = _FakeDB()
+    breaker = CircuitBreaker("test_dep", failure_threshold=1, cooldown_seconds=30.0, db_module=fake_db)
+    breaker.record_failure()  # trips open
+    past = datetime.now(timezone.utc) - timedelta(seconds=60)
+    row = fake_db.get_circuit_breaker_state("test_dep")
+    fake_db.set_circuit_breaker_state("test_dep", "open", row["consecutive_failures"], past.isoformat())
+
+    first = breaker.allow_request()
+    second = breaker.allow_request()
+    third = breaker.allow_request()
+    check(first is True, "the first caller after cooldown elapses should win the probe")
+    check(second is False, "a second caller before the probe resolves must be rejected, not treated as another probe")
+    check(third is False, "a third caller before the probe resolves must also be rejected")
+
+
+def test_breaker_half_open_race_exactly_one_winner_under_concurrency():
+    """Same bug as above, proven under real thread concurrency rather than
+    sequential calls -- the original bug was a plain read-then-write race
+    between threads observing 'open, cooldown elapsed' at the same instant."""
+    import threading
+    from datetime import datetime, timedelta, timezone
+
+    fake_db = _FakeDB()
+    breaker = CircuitBreaker("test_dep", failure_threshold=1, cooldown_seconds=30.0, db_module=fake_db)
+    breaker.record_failure()
+    past = datetime.now(timezone.utc) - timedelta(seconds=60)
+    row = fake_db.get_circuit_breaker_state("test_dep")
+    fake_db.set_circuit_breaker_state("test_dep", "open", row["consecutive_failures"], past.isoformat())
+
+    results: list[bool] = []
+    results_lock = threading.Lock()
+    n = 20
+    barrier = threading.Barrier(n)
+
+    def worker():
+        barrier.wait()  # maximize the chance every thread hits allow_request() near-simultaneously
+        r = breaker.allow_request()
+        with results_lock:
+            results.append(r)
+
+    threads = [threading.Thread(target=worker) for _ in range(n)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    winners = sum(1 for r in results if r is True)
+    check(len(results) == n, f"expected {n} results, got {len(results)}")
+    check(winners == 1, f"expected exactly one caller to win the half-open probe under concurrency, got {winners} of {n}")
+
+
+def test_breaker_stuck_half_open_recovers_after_extended_timeout():
+    """Safety net: since half_open now unconditionally rejects new callers
+    (the fix above), a probe whose caller crashed before reporting
+    success/failure must not wedge the breaker open forever -- it should
+    eventually allow a fresh probe rather than staying stuck."""
+    from datetime import datetime, timedelta, timezone
+
+    fake_db = _FakeDB()
+    breaker = CircuitBreaker("test_dep", failure_threshold=1, cooldown_seconds=10.0, db_module=fake_db)
+    long_ago = datetime.now(timezone.utc) - timedelta(seconds=10 * 3.5)  # past the 3x safety multiplier
+    fake_db.set_circuit_breaker_state("test_dep", "half_open", 1, long_ago.isoformat())
+    check(breaker.allow_request() is True, "a half_open state stuck far past 3x cooldown should allow a fresh probe")
+
+
 def test_breaker_half_open_success_closes_it():
     fake_db = _FakeDB()
     breaker = CircuitBreaker("test_dep", failure_threshold=1, cooldown_seconds=0.0, db_module=fake_db)

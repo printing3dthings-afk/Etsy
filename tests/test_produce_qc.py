@@ -1,0 +1,884 @@
+"""
+Tests for the first one-tap production pipeline exposed to Frank: Quality Check
+(POST /api/produce/qc-check + the qc_check_product agent tool). Verifies the
+deterministic, zero-API path Claude runs by hand is now callable by Frank —
+both when a button hits the endpoint and when the chat agent calls the tool.
+
+Self-contained TestClient-against-the-real-app pattern, same as
+tests/test_voice_config.py. Run: python tests/test_produce_qc.py
+"""
+import os
+import re
+import sys
+import tempfile
+import traceback
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+ROOT = Path(__file__).resolve().parent.parent
+
+_tmp_db = tempfile.NamedTemporaryFile(prefix="frank_produceqc_test_", suffix=".db", delete=False)
+_tmp_db.close()
+os.environ["DB_PATH"] = _tmp_db.name
+os.environ.setdefault("APP_SECRET_TOKEN", "produce-qc-test-not-a-real-secret")
+os.environ["ENABLE_TEST_LOGIN"] = "true"
+os.environ["TEST_LOGIN_USERNAME"] = "produceqctest"
+os.environ["TEST_LOGIN_PASSWORD"] = "ProduceQcTest!2026Only"
+
+for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
+    sp = str(p)
+    if sp not in sys.path:
+        sys.path.insert(0, sp)
+
+import main as server  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+_failures: list[str] = []
+
+
+def check(cond: bool, msg: str) -> None:
+    if not cond:
+        _failures.append(msg)
+
+
+def _logged_in_client() -> TestClient:
+    c = TestClient(server.app, base_url="https://testserver")
+    r = c.post("/login", data={
+        "username": os.environ["TEST_LOGIN_USERNAME"],
+        "password": os.environ["TEST_LOGIN_PASSWORD"],
+        "next": "/frank",
+    }, follow_redirects=False)
+    check(r.status_code in (302, 303), f"login should redirect, got {r.status_code}")
+    return c
+
+
+# A product whose files exist in this repo/deploy; DP1030 was rebuilt + validated.
+# If its files aren't present in this environment the verdict is "no_files", which
+# is still a valid, well-formed response — the tests assert on shape + contract,
+# not on a specific product being present.
+_PID = "DP1030"
+
+
+def test_helper_returns_structured_verdict():
+    out = server._qc_check_product({"pid": _PID})
+    check(isinstance(out, dict), "helper must return a dict")
+    check(out.get("pid") == _PID, f"pid echoed, got {out.get('pid')}")
+    check(out.get("verdict") in ("pass", "warn", "fail", "no_files"),
+          f"verdict must be one of pass/warn/fail/no_files, got {out.get('verdict')}")
+    summ = out.get("summary") or {}
+    for k in ("pass", "warn", "fail", "files"):
+        check(k in summ and isinstance(summ[k], int), f"summary.{k} must be an int, got {summ.get(k)}")
+    check(isinstance(out.get("rows"), list), "rows must be a list")
+
+
+def test_helper_requires_pid():
+    out = server._qc_check_product({})
+    check("error" in out, f"missing pid must return an error, got {out}")
+
+
+def test_agent_tool_dispatch_matches_helper():
+    # The path that fires when the owner tells Frank "check DP1030".
+    out = server._execute_agent_tool("qc_check_product", {"pid": _PID})
+    check(isinstance(out, dict) and out.get("pid") == _PID,
+          f"agent tool dispatch should return the QC result, got {out}")
+    check(out.get("verdict") in ("pass", "warn", "fail", "no_files"),
+          "agent tool must return a valid verdict")
+
+
+def test_tool_is_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("qc_check_product" in names, "qc_check_product must be in AGENT_TOOLS so the agent can call it")
+
+
+def test_http_endpoint():
+    c = _logged_in_client()
+    r = c.post("/api/produce/qc-check", json={"pid": _PID})
+    check(r.status_code == 200, f"endpoint should 200, got {r.status_code}: {r.text[:200]}")
+    data = r.json()
+    check(data.get("pid") == _PID, f"endpoint echoes pid, got {data.get('pid')}")
+    check("summary" in data and "verdict" in data, f"endpoint returns summary+verdict, got keys {list(data)}")
+
+
+def test_listing_photos_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("generate_listing_photos" in names,
+          "generate_listing_photos must be in AGENT_TOOLS so the agent can call it")
+
+
+def test_listing_photos_requires_pid():
+    out = server._produce_listing_photos({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_listing_photos_rejects_non_planner():
+    out = server._produce_listing_photos({"pid": "ZZ9999"})
+    check("error" in out and "planner" in out["error"].lower(),
+          f"a non-planner code must be rejected clearly, got {out}")
+
+
+def test_listing_photos_endpoint_contract():
+    # Don't force a full 10-photo render in the test (slow, writes files); just assert
+    # the endpoint is wired and returns a well-formed result or a clear error.
+    c = _logged_in_client()
+    r = c.post("/api/produce/listing-photos", json={"pid": "ZZ9999"})
+    check(r.status_code == 200, f"endpoint should 200 with a JSON error body, got {r.status_code}")
+    data = r.json()
+    check("error" in data, f"non-planner pid should return a JSON error, got {data}")
+
+
+def test_print_zip_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("generate_print_zip" in names,
+          "generate_print_zip must be in AGENT_TOOLS so the agent can call it")
+
+
+def test_print_zip_requires_pid():
+    out = server._produce_print_zip({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_print_zip_missing_source():
+    out = server._produce_print_zip({"pid": "WA9999"})
+    check("error" in out and "source" in out["error"].lower(),
+          f"missing source art must be reported clearly, got {out}")
+
+
+def test_print_zip_endpoint_contract():
+    c = _logged_in_client()
+    r = c.post("/api/produce/print-zip", json={"pid": "WA9999"})
+    check(r.status_code == 200, f"endpoint should 200 with a JSON error body, got {r.status_code}")
+    check("error" in r.json(), f"missing-source pid should return a JSON error, got {r.json()}")
+
+
+def test_build_planner_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("build_planner" in names,
+          "build_planner must be in AGENT_TOOLS so the agent can build a planner on request")
+
+
+def test_build_planner_requires_pid():
+    out = server._produce_build_planner({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_build_planner_rejects_unconfigured():
+    out = server._produce_build_planner({"pid": "DP9999"})
+    check("error" in out, f"an unconfigured planner code must be rejected, got {out}")
+    # must NOT have spawned a build for a bad code
+    check(not out.get("started"), f"must not start a build for an unconfigured code, got {out}")
+
+
+def test_build_sticker_pack_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("build_sticker_pack" in names,
+          "build_sticker_pack must be in AGENT_TOOLS so the agent can build a pack on request")
+
+
+def test_build_sticker_pack_requires_pid():
+    out = server._produce_build_sticker_pack({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_build_sticker_pack_rejects_unspecced():
+    out = server._produce_build_sticker_pack({"pid": "DP9999"})
+    check("error" in out, f"a code with no sticker spec must be rejected, got {out}")
+    check(not out.get("started"), f"must not start a build for an unspecced code, got {out}")
+
+
+def test_build_sticker_pack_agent_dispatch():
+    # Same clean rejection through the agent path (no build spawned).
+    out = server._execute_agent_tool("build_sticker_pack", {"pid": "DP9999"})
+    check(isinstance(out, dict) and "error" in out,
+          f"agent dispatch of build_sticker_pack should reject an unspecced code, got {out}")
+
+
+def test_art_engine_defaults_to_gemini():
+    eng, err = server._resolve_art_engine({})
+    check(err is None and eng == "gemini",
+          f"no engine specified must default to gemini, got ({eng!r},{err!r})")
+    eng, err = server._resolve_art_engine({"engine": ""})
+    check(err is None and eng == "gemini", f"blank engine must default to gemini, got ({eng!r},{err!r})")
+
+
+def test_art_engine_accepts_approved():
+    for name in ("gemini", "openai", "gpt-image-2", "ideogram", "GEMINI"):
+        eng, err = server._resolve_art_engine({"engine": name})
+        check(err is None and eng == name.lower(), f"{name} should be accepted, got ({eng!r},{err!r})")
+
+
+def test_art_engine_rejects_unknown():
+    eng, err = server._resolve_art_engine({"engine": "midjourney"})
+    check(eng is None and err and "unknown art engine" in err,
+          f"an unapproved engine must be rejected, got ({eng!r},{err!r})")
+
+
+def test_build_planner_rejects_bad_engine():
+    # A bad engine must be caught BEFORE any build is spawned.
+    out = server._produce_build_planner({"pid": "DP1030", "engine": "stablediffusion"})
+    check("error" in out and not out.get("started"),
+          f"bad engine must error without starting a build, got {out}")
+
+
+def test_build_product_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("build_product" in names,
+          "build_product must be in AGENT_TOOLS so the agent can build a whole product")
+
+
+def test_build_product_requires_pid():
+    out = server._produce_build_product({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_build_product_rejects_unconfigured():
+    out = server._produce_build_product({"pid": "DP9999"})
+    check("error" in out and not out.get("started"),
+          f"an unconfigured planner code must be rejected without starting, got {out}")
+
+
+def test_build_product_rejects_bad_engine():
+    out = server._produce_build_product({"pid": "DP1030", "engine": "midjourney"})
+    check("error" in out and not out.get("started"),
+          f"bad engine must error without starting a build, got {out}")
+
+
+def test_build_product_agent_dispatch():
+    out = server._execute_agent_tool("build_product", {"pid": "DP9999"})
+    check(isinstance(out, dict) and "error" in out,
+          f"agent dispatch of build_product should reject an unconfigured code, got {out}")
+
+
+# ── Wall Art / Coloring Pages new-art generation flow (2026-07-22) ─────────
+# Scott: "every action on this page has to work ... if this doesn't work we
+# don't have a business." A genuinely new wall_art/coloring_pages pid with
+# no existing source art/catalog entry can now actually be built by passing
+# `description` -- these test that path's pre-flight validation and
+# successful-kickoff shape (mocked subprocess.Popen, never a real build).
+
+def test_wallart_new_pid_no_source_no_description_rejected_cleanly():
+    out = server._produce_build_product({"pid": "WA_TOTALLY_NEW_TEST_PID", "category": "wall_art"})
+    check("error" in out, f"a new wall_art pid with no description must error, got {out}")
+    check(not out.get("started"), f"must not start, got {out}")
+    check("new one" in out["error"].lower() or "describe" in out["error"].lower(),
+          f"the error should point at the new-art option, got {out}")
+
+
+def test_wallart_new_pid_with_description_starts_generation_steps():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900001
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "WA_TOTALLY_NEW_TEST_PID", "category": "wall_art",
+                "description": "a boho sun in terracotta and cream watercolor",
+            })
+    server._LONG_RUNNING_PROCS.pop(900001, None)
+    check(out.get("started") is True, f"a new pid with a real description must start, got {out}")
+    check("generate art" in out.get("steps", []), f"steps must include the new art-generation step, got {out}")
+    check(out.get("needs_visual_qc") is True, f"AI-generated art needs the visual-QC honesty flag, got {out}")
+    check(out.get("engine") == "gemini", f"default engine should resolve to gemini, got {out}")
+
+
+def test_wallart_description_with_bad_engine_rejected_before_spawning():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WA_TOTALLY_NEW_TEST_PID", "category": "wall_art",
+            "description": "some art", "engine": "midjourney",
+        })
+    check("error" in out and not out.get("started"), f"a bad engine must error without starting, got {out}")
+    check(not mock_popen.called, "a bad engine must be caught BEFORE any subprocess spawns")
+
+
+def test_coloring_new_pid_no_catalog_no_description_rejected_cleanly():
+    out = server._produce_build_product({"pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages"})
+    check("error" in out, f"an uncataloged coloring_pages pid with no description must error, got {out}")
+    check(not out.get("started"), f"must not start, got {out}")
+    check("catalog" in out["error"].lower(), f"got {out}")
+
+
+def test_coloring_new_pid_with_description_starts_generation_steps():
+    # (2026-07-24) main.py's coloring_pages branch now expands the typed theme
+    # into NEW_THEME_SET_SIZE distinct subjects itself via _resolve_coloring_subjects()
+    # -- a real Anthropic call -- before spawning the build. Mock it so this test
+    # stays a pure pre-flight/kickoff-shape check, not an integration test of the
+    # subject-generation LLM call (that's covered by test_coloring_theme_registry.py).
+    # _record_used_coloring_subjects() is left real (not mocked) here on purpose --
+    # it's cheap, synchronous local-file I/O -- but must be pointed at a throwaway
+    # registry path, never the real data/coloring_theme_registry.json sidecar.
+    fake_proc = MagicMock()
+    fake_proc.pid = 900002
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages",
+                "description": "woodland animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900002, None)
+    check(out.get("started") is True, f"a new pid with a theme must start, got {out}")
+    check("coloring pages (new theme)" in out.get("steps", []), f"steps must flag the new-theme path, got {out}")
+    check(out.get("needs_visual_qc") is True, f"got {out}")
+
+
+def _kickoff_coloring_build(pid, extra_inp):
+    """Shared helper for the difficulty->engine default tests below: kicks off
+    a new-theme coloring build with mocked subject generation + subprocess,
+    returns (out, popen_env) so callers can inspect which engine actually got
+    threaded into the spawned subprocess's IMAGE_ENGINE env var -- the real
+    signal build_coloring_product.py's own IMAGE_ENGINE-driven engine picks
+    up, not just the --engine CLI arg (see _subprocess_env_with_engine)."""
+    fake_proc = MagicMock()
+    fake_proc.pid = 900010 + abs(hash(pid)) % 1000
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+            out = server._produce_build_product({
+                "pid": pid, "category": "coloring_pages", "description": "woodland animals",
+                **extra_inp,
+            })
+        server._LONG_RUNNING_PROCS.pop(fake_proc.pid, None)
+        popen_env = mock_popen.call_args.kwargs.get("env") or {}
+    return out, popen_env
+
+
+# ── Difficulty -> engine default (2026-08-09) ────────────────────────────────
+# Scott: "let's make grok more for teen and adult coloring pages. open ai for
+# kids." Confirmed across 3 real side-by-side prompts (cabin/treehouse/monster
+# truck, filed in the Reference Photos library) that Grok renders denser,
+# more intricate line art and OpenAI renders simpler, kid-friendly line art
+# from the identical prompt. main.py's coloring_pages branch now defaults the
+# engine by difficulty ONLY when the caller leaves engine blank -- these
+# cover both the default and the explicit-override escape hatch.
+
+def test_coloring_kids_difficulty_defaults_engine_to_openai():
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_KIDS", {"difficulty": "kids"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "openai",
+          f"difficulty=kids with no explicit engine must default to openai, got env={env}")
+
+
+def test_coloring_standard_difficulty_defaults_engine_to_grok():
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_STD", {"difficulty": "standard"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "grok",
+          f"difficulty=standard with no explicit engine must default to grok, got env={env}")
+
+
+def test_coloring_adult_difficulty_defaults_engine_to_grok():
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_ADULT", {"difficulty": "adult"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "grok",
+          f"difficulty=adult with no explicit engine must default to grok, got env={env}")
+
+
+def test_coloring_explicit_engine_overrides_difficulty_default():
+    """An explicit engine choice (the Create screen's dropdown always sends
+    one) must win over the difficulty-based default -- kids must NOT be
+    force-locked to openai if Scott hand-picks something else."""
+    out, env = _kickoff_coloring_build("COLOR_DIFF_ENGINE_OVERRIDE",
+                                        {"difficulty": "kids", "engine": "ideogram"})
+    check(out.get("started") is True, f"got {out}")
+    check(env.get("IMAGE_ENGINE") == "ideogram",
+          f"an explicit engine must override the kids->openai default, got env={env}")
+
+
+def test_coloring_subject_generation_failure_blocks_build_before_spawn():
+    """_resolve_coloring_subjects() returning an error (e.g. the registry
+    couldn't produce enough non-repeating subjects, or ANTHROPIC_KEY is unset)
+    must reject the build BEFORE any subprocess spawns -- mirrors
+    test_wallart_description_with_bad_engine_rejected_before_spawning's shape."""
+    with patch.object(server, "_resolve_coloring_subjects",
+                       return_value=([], "Could only generate 3/20 distinct new subjects.")), \
+         patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages",
+            "description": "woodland animals",
+        })
+    check("error" in out and not out.get("started"),
+          f"a subject-generation failure must error without starting, got {out}")
+    check(not mock_popen.called, "a subject-generation failure must be caught BEFORE any subprocess spawns")
+
+
+def test_coloring_subjects_recorded_before_spawn():
+    """The registry reservation (_record_used_coloring_subjects) must happen
+    as part of a successful kickoff, using the exact subjects returned by
+    _resolve_coloring_subjects() -- see that function's docstring for why
+    eager (not deferred-to-success) recording is the correct tradeoff here."""
+    fake_proc = MagicMock()
+    fake_proc.pid = 900003
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    recorded = {}
+
+    def _fake_record(product_id, theme, subjects):
+        recorded["product_id"] = product_id
+        recorded["theme"] = theme
+        recorded["subjects"] = subjects
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_record_used_coloring_subjects", side_effect=_fake_record), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_RECORD_TEST_PID", "category": "coloring_pages",
+                "description": "woodland animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900003, None)
+    check(out.get("started") is True, f"got {out}")
+    check(recorded.get("product_id") == "COLOR_RECORD_TEST_PID", f"got {recorded}")
+    check(recorded.get("theme") == "woodland animals", f"got {recorded}")
+    check(recorded.get("subjects") == fake_subjects, f"got {recorded}")
+
+
+# ── Subjects override (2026-08-09) ───────────────────────────────────────────
+# Scott asked for a real coloring-pages product while production's Anthropic
+# credits were exhausted -- _resolve_coloring_subjects()'s own LLM call was
+# unusable (confirmed via real server logs: "Your credit balance is too low
+# to access the Anthropic API", not a registry collision). inp['subjects']
+# lets a caller supply the already-expanded 30 subjects directly, skipping
+# that call, while keeping every other guarantee (exact count, registry
+# dedup, recorded before spawn) identical to the LLM-expansion path.
+
+def test_coloring_subjects_override_bypasses_llm_expansion():
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    with patch.object(server, "_resolve_coloring_subjects") as mock_resolve:
+        out, env = _kickoff_coloring_build("COLOR_SUBJ_OVERRIDE", {
+            "difficulty": "kids", "subjects": my_subjects,
+        })
+    check(out.get("started") is True, f"got {out}")
+    check(not mock_resolve.called, "the LLM-expansion call must be skipped entirely when subjects are supplied")
+    check(env.get("IMAGE_ENGINE") == "openai", f"kids difficulty must still default engine to openai, got env={env}")
+
+
+def test_coloring_subjects_override_wrong_count_rejected():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_SUBJ_SHORT", "category": "coloring_pages",
+            "description": "dinosaurs", "subjects": ["only one subject"],
+        })
+    check("error" in out and not out.get("started"), f"a short subjects list must be rejected, got {out}")
+    check("exactly" in out["error"].lower(), f"the error should explain the required count, got {out}")
+    check(not mock_popen.called, "a bad subjects count must be caught before any subprocess spawns")
+
+
+def test_coloring_subjects_override_rejects_registry_collision():
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    fake_registry = [{"subject": my_subjects[0], "normalized": server._normalize_subject(my_subjects[0]),
+                       "product_id": "COLOR_OLD", "theme": "dinosaurs", "created_at": "2026-01-01T00:00:00+00:00"}]
+    with patch.object(server, "_coloring_theme_registry", return_value=fake_registry), \
+         patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_SUBJ_DUPE", "category": "coloring_pages",
+            "description": "dinosaurs", "subjects": my_subjects,
+        })
+    check("error" in out and not out.get("started"), f"a registry collision must be rejected, got {out}")
+    check("already used" in out["error"].lower(), f"got {out}")
+    check(not mock_popen.called, "a registry collision must be caught before any subprocess spawns")
+
+
+def test_coloring_subjects_override_same_pid_resume_not_blocked_by_own_registry():
+    """2026-08-10: a build interrupted partway through (container restart,
+    crash) must be resumable by resubmitting the identical payload -- its own
+    already-reserved subjects (recorded eagerly, before the subprocess spawns)
+    must NOT self-collide on retry. A DIFFERENT pid reusing the same subject
+    text must still be rejected -- this only exempts the build's own prior
+    reservation, it doesn't weaken the cross-product dedup guarantee."""
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    fake_registry = [
+        {"subject": s, "normalized": server._normalize_subject(s),
+         "product_id": "COLOR_RESUME_PID", "theme": "dinosaurs", "created_at": "2026-08-10T00:00:00+00:00"}
+        for s in my_subjects[:10]  # first 10 already generated before the restart killed the build
+    ]
+    fake_proc = MagicMock()
+    fake_proc.pid = 900011
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_coloring_theme_registry", return_value=fake_registry), \
+             patch.object(server, "_record_used_coloring_subjects"), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_RESUME_PID", "category": "coloring_pages",
+                "description": "dinosaurs", "subjects": my_subjects,
+            })
+    server._LONG_RUNNING_PROCS.pop(900011, None)
+    check(out.get("started") is True, f"a same-pid resume must be allowed to restart, got {out}")
+
+
+def test_coloring_subjects_override_different_pid_still_blocked_by_registry():
+    """The exemption above is scoped to the SAME pid only -- a genuinely
+    different product reusing a subject another product already reserved
+    must still be rejected, unchanged from the pre-fix behavior."""
+    import generate_coloring_pages as _gcp
+    my_subjects = [f"a friendly dinosaur doing thing {i}" for i in range(_gcp.NEW_THEME_SET_SIZE)]
+    fake_registry = [{"subject": my_subjects[0], "normalized": server._normalize_subject(my_subjects[0]),
+                       "product_id": "COLOR_OTHER_PID", "theme": "dinosaurs", "created_at": "2026-01-01T00:00:00+00:00"}]
+    with patch.object(server, "_coloring_theme_registry", return_value=fake_registry), \
+         patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "COLOR_NEW_PID", "category": "coloring_pages",
+            "description": "dinosaurs", "subjects": my_subjects,
+        })
+    check("error" in out and not out.get("started"), f"a different-pid collision must still be rejected, got {out}")
+    check(not mock_popen.called, "a cross-pid collision must be caught before any subprocess spawns")
+
+
+# ── Coloring Pages auto-generated code (2026-07-25) ─────────────────────────
+# Scott: "It should auto generate the code" -- the Create screen no longer
+# collects a typed pid for a new coloring-pages theme. These cover
+# _produce_build_product()'s reordered pid-required logic and
+# _next_coloring_pid()'s own scanning behavior.
+
+def test_coloring_auto_generates_pid_when_none_typed():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900004
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server, "_next_coloring_pid", return_value="COLOR9001"), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "category": "coloring_pages", "description": "ocean animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900004, None)
+    check(out.get("started") is True, f"an auto-generated pid must still start the build, got {out}")
+    check(out.get("pid") == "COLOR9001", f"the assigned pid must be echoed back, got {out}")
+    check("coloring pages (new theme)" in out.get("steps", []), f"got {out}")
+
+
+def test_coloring_no_pid_no_description_gets_theme_specific_error():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({"category": "coloring_pages"})
+    check("error" in out and not out.get("started"), f"got {out}")
+    check("theme" in out["error"].lower(), f"the error should point at describing a theme, not a code, got {out}")
+    check(not mock_popen.called, "must be caught before any subprocess spawns")
+
+
+def test_coloring_explicit_pid_bypasses_auto_generation():
+    """Regression guard on the reordered top-of-function logic: an explicitly
+    typed pid must still be used verbatim, never overridden by the
+    auto-generator."""
+    fake_proc = MagicMock()
+    fake_proc.pid = 900005
+    fake_subjects = [f"subject {i}" for i in range(20)]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        registry_path = Path(tmpdir) / "coloring_theme_registry.json"
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server, "_resolve_coloring_subjects", return_value=(fake_subjects, None)), \
+             patch.object(server, "_COLORING_THEME_REGISTRY_PATH", registry_path), \
+             patch.object(server, "_next_coloring_pid") as mock_next_pid, \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_EXPLICIT_TEST", "category": "coloring_pages",
+                "description": "ocean animals",
+            })
+    server._LONG_RUNNING_PROCS.pop(900005, None)
+    check(out.get("pid") == "COLOR_EXPLICIT_TEST", f"got {out}")
+    check(not mock_next_pid.called, "an explicit pid must never trigger auto-generation")
+
+
+def test_next_coloring_pid_skips_used_codes():
+    taken = {"COLOR1001", "COLOR1002"}
+
+    def _fake_find(product_id):
+        return {"product_id": product_id} if product_id in taken else None
+
+    with patch.object(server, "_find_catalog_product", side_effect=_fake_find):
+        pid = server._next_coloring_pid()
+    check(pid == "COLOR1003", f"expected the first free code after the taken ones, got {pid}")
+
+
+def test_next_coloring_pid_returns_lowest_when_none_taken():
+    with patch.object(server, "_find_catalog_product", return_value=None):
+        pid = server._next_coloring_pid()
+    check(pid == "COLOR1001", f"got {pid}")
+    check(re.fullmatch(r"COLOR\d+", pid), f"expected a COLOR#### shape, got {pid!r}")
+
+
+# ── Coloring bundle merge (2026-08-10, cost-effective-scale request) ────────
+# _produce_coloring_bundle() combines several EXISTING coloring-pages
+# products' real ZIPs into one new bundle product's ZIP -- zero new AI
+# spend. These test the server-level endpoint function's validation/
+# registration wiring; generate_coloring_pages.merge_existing_sets_into_
+# bundle()'s own file-merge mechanics are covered directly in
+# tests/test_coloring_dynamic_theme.py.
+
+def _write_fake_source_zip(sets_dir, pid, n_pages):
+    import zipfile
+    sets_dir.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(sets_dir / f"coloring_{pid.lower()}_set_01.zip", "w") as zf:
+        for i in range(n_pages):
+            zf.writestr(f"{pid}_{i:02d}_coloring.png", b"fake png bytes")
+
+
+def test_coloring_bundle_merges_sources_and_registers_new_product():
+    import generate_coloring_pages as gcp
+    registered = {}
+
+    def _fake_register(pid, category, name, price, files, description):
+        registered.update(pid=pid, category=category, name=name, price=price,
+                           files=files, description=description)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sets_dir = Path(tmpdir) / "sets"
+        _write_fake_source_zip(sets_dir, "COLOR1004", 30)
+        _write_fake_source_zip(sets_dir, "COLOR1005", 30)
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = sets_dir
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        try:
+            with patch.object(server, "_find_catalog_product", return_value=None), \
+                 patch.object(server, "_register_new_product_overlay", side_effect=_fake_register), \
+                 patch.object(server, "_product_log_dir", return_value=img_dir), \
+                 patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path):
+                out = server._produce_coloring_bundle({
+                    "pid": "COLOR_MEGA_BUNDLE", "description": "Mega Kids Bundle",
+                    "source_pids": ["COLOR1004", "COLOR1005"],
+                })
+            # 2026-08-11: photos must be pre-registered at merge time, not left
+            # for a separate manual post-publish step (Scott: "make it so the
+            # photos are in there when the listing goes into drafts so we don't
+            # have to do work more than once"). Checked inside the tempdir
+            # block -- the files it's asserting on are torn down on exit.
+            check(out.get("photos_registered") == 10, f"expected 10 pre-registered photos, got {out}")
+            check((img_dir / "COLOR_MEGA_BUNDLE_listing_images" / "page_01.png").exists(),
+                  "sample photo files must actually be written to disk")
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check(out.get("status") == "merged", f"got {out}")
+    check(out.get("total_pages") == 60, f"expected 60 combined real pages, got {out}")
+    check(out.get("missing") == [], f"expected no missing sources, got {out}")
+    check(registered.get("pid") == "COLOR_MEGA_BUNDLE", f"got {registered}")
+    check(registered.get("category") == "coloring_pages", f"got {registered}")
+
+
+def test_coloring_bundle_rejects_fewer_than_two_sources():
+    out = server._produce_coloring_bundle({
+        "description": "Not enough sources", "source_pids": ["COLOR1004"],
+    })
+    check("error" in out, f"a single source must be rejected, got {out}")
+    check("at least 2" in out["error"], f"got {out}")
+
+
+def test_coloring_bundle_requires_description():
+    out = server._produce_coloring_bundle({"source_pids": ["COLOR1004", "COLOR1005"]})
+    check("error" in out and "description" in out["error"].lower(), f"got {out}")
+
+
+def test_coloring_bundle_rejects_pid_collision():
+    with patch.object(server, "_find_catalog_product", return_value={"product_id": "COLOR_TAKEN"}):
+        out = server._produce_coloring_bundle({
+            "pid": "COLOR_TAKEN", "description": "dup test",
+            "source_pids": ["COLOR1004", "COLOR1005"],
+        })
+    check("error" in out and "already exists" in out["error"], f"got {out}")
+
+
+def test_register_prepublish_coloring_listing_images_merges_with_existing_files():
+    """The photo paths must be ADDED to a product's existing catalog `files`
+    (e.g. the deliverable ZIP already registered by _register_new_product_
+    overlay), never replace them -- a real _write_product_catalog_override
+    round-trip through _find_catalog_product proves the merge, not just a
+    mocked capture."""
+    import zipfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "coloring_color_photo_test_set_01.zip"
+        with zipfile.ZipFile(zpath, "w") as zf:
+            for i in range(15):
+                zf.writestr(f"page_{i:02d}_coloring.png", b"fake png bytes")
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path):
+            server._register_new_product_overlay(
+                "COLOR_PHOTO_TEST", "coloring_pages", "Photo test", None,
+                ["data/digital_products/coloring_pages/sets/coloring_color_photo_test_set_01.zip"], "desc")
+            registered = server._register_prepublish_coloring_listing_images("COLOR_PHOTO_TEST", zpath)
+            entry = server._find_catalog_product("COLOR_PHOTO_TEST")
+    check(len(registered) == 10, f"expected 10 photos (Etsy's cap), got {len(registered)}")
+    check(all("_listing_images/" in r for r in registered), f"got {registered}")
+    files = entry.get("files") or []
+    check(any(f.endswith("coloring_color_photo_test_set_01.zip") for f in files),
+          f"the original deliverable ZIP must still be registered, got {files}")
+    check(all(r in files for r in registered), f"every photo path must be merged into files, got {files}")
+    check(len(files) == 1 + 10, f"expected ZIP + 10 photos == 11 total files, got {files}")
+
+
+def test_register_prepublish_coloring_listing_images_empty_zip_returns_nothing():
+    import zipfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "coloring_color_empty_test_set_01.zip"
+        with zipfile.ZipFile(zpath, "w"):
+            pass  # a real, valid, but empty ZIP -- no page images inside
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path), \
+             patch.object(server, "_write_product_catalog_override") as mock_write:
+            registered = server._register_prepublish_coloring_listing_images("COLOR_EMPTY_TEST", zpath)
+    check(registered == [], f"got {registered}")
+    check(not mock_write.called, "must never write a catalog override when there are no pages to register")
+
+
+def test_coloring_bundle_all_sources_missing_rejected_without_registering():
+    registered = {"called": False}
+
+    def _fake_register(*a, **kw):
+        registered["called"] = True
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        import generate_coloring_pages as gcp
+        orig_sets_dir = gcp.SETS_DIR
+        gcp.SETS_DIR = Path(tmpdir) / "sets"
+        try:
+            with patch.object(server, "_find_catalog_product", return_value=None), \
+                 patch.object(server, "_register_new_product_overlay", side_effect=_fake_register):
+                out = server._produce_coloring_bundle({
+                    "pid": "COLOR_MEGA_GHOST", "description": "ghost sources",
+                    "source_pids": ["COLOR_GHOST_A", "COLOR_GHOST_B"],
+                })
+        finally:
+            gcp.SETS_DIR = orig_sets_dir
+    check("error" in out, f"all-missing sources must be rejected, got {out}")
+    check(not registered["called"], "must never register a product with zero real pages")
+
+
+# ── Wall calendar build wiring (2026-08-11) ──────────────────────────────────
+# _produce_build_product()'s wall_calendar branch (WC-series). The generator's
+# own logic (generate_wall_calendar.py) is covered directly in tests/test_
+# generate_wall_calendar.py; these cover main.py's dispatch/validation/
+# subprocess-args wiring around it.
+
+def test_wall_calendar_build_starts_with_valid_theme():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900020
+    with patch.object(server.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WC1001", "category": "wall_calendar", "theme": "sage_garden",
+        })
+    server._LONG_RUNNING_PROCS.pop(900020, None)
+    check(out.get("started") is True, f"got {out}")
+    check("header art (12 illustrations)" in out.get("steps", []), f"got {out}")
+    args = list(mock_popen.call_args.args[0])
+    check(args[2] == "WC1001", f"pid must be the first CLI arg after the script path, got {args}")
+    check("--theme" in args and "sage_garden" in args, f"got {args}")
+    check("--year" in args and "2026" in args, f"default year must be 2026, got {args}")
+
+
+def test_wall_calendar_build_rejects_unknown_theme():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WC1001", "category": "wall_calendar", "theme": "not_a_real_theme",
+        })
+    check("error" in out and not out.get("started"), f"got {out}")
+    check(not mock_popen.called, "an unknown theme must be caught before any subprocess spawns")
+
+
+def test_wall_calendar_build_rejects_missing_theme():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({"pid": "WC1001", "category": "wall_calendar"})
+    check("error" in out and not out.get("started"), f"got {out}")
+    check(not mock_popen.called, "a missing theme must be caught before any subprocess spawns")
+
+
+def test_wall_calendar_build_requires_explicit_pid():
+    """No auto-pid-generation for calendars (yet) -- matches wall_art's
+    existing precedent, unlike coloring_pages which does auto-generate."""
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({"category": "wall_calendar", "theme": "sage_garden"})
+    check("error" in out and "pid is required" in out["error"], f"got {out}")
+    check(not mock_popen.called, "a missing pid must be caught before any subprocess spawns")
+
+
+def test_wall_calendar_build_honors_explicit_year():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900021
+    with patch.object(server.subprocess, "Popen", return_value=fake_proc) as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WC1002", "category": "wall_calendar", "theme": "matcha_serenity", "year": 2027,
+        })
+    server._LONG_RUNNING_PROCS.pop(900021, None)
+    check(out.get("started") is True, f"got {out}")
+    args = list(mock_popen.call_args.args[0])
+    check("--year" in args and "2027" in args, f"got {args}")
+
+
+def test_register_prepublish_calendar_listing_images_extracts_real_poster():
+    import zipfile as _zipfile
+    from PIL import Image
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "wc1001_calendar_pack.zip"
+        img_buf = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
+        Image.new("RGB", (3000, 3000), (200, 200, 200)).save(img_buf.name, "JPEG")
+        poster_bytes = Path(img_buf.name).read_bytes()
+        with _zipfile.ZipFile(zpath, "w") as zf:
+            zf.writestr("README.txt", "test")
+            zf.writestr("WC1001_2026_yearglance_poster.jpg", poster_bytes)
+            zf.writestr("WC1001_dated_2026_monday_start.pdf", b"fake pdf bytes")
+
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path):
+            server._register_new_product_overlay(
+                "WC1001", "wall_calendar", "Sage Garden 2026 Wall Calendar", None,
+                ["data/digital_products/wall_calendars/packs/wc1001_calendar_pack.zip"], "desc")
+            registered = server._register_prepublish_calendar_listing_images("WC1001", zpath)
+            entry = server._find_catalog_product("WC1001")
+    check(len(registered) == 1, f"expected exactly 1 registered photo (the poster), got {registered}")
+    check("_listing_images/" in registered[0], f"got {registered}")
+    files = entry.get("files") or []
+    check(any(f.endswith("wc1001_calendar_pack.zip") for f in files),
+          f"the original deliverable ZIP must still be registered, got {files}")
+    check(registered[0] in files, f"the poster photo must be merged into files, got {files}")
+
+
+def test_register_prepublish_calendar_listing_images_no_poster_returns_nothing():
+    import zipfile as _zipfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        zpath = Path(tmpdir) / "wc1001_calendar_pack.zip"
+        with _zipfile.ZipFile(zpath, "w") as zf:
+            zf.writestr("README.txt", "test")
+            zf.writestr("WC1001_dated_2026_monday_start.pdf", b"fake pdf bytes")
+        img_dir = Path(tmpdir) / "product_files"
+        overrides_path = Path(tmpdir) / "product_catalog_overrides.json"
+        with patch.object(server, "_product_log_dir", return_value=img_dir), \
+             patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", overrides_path), \
+             patch.object(server, "_write_product_catalog_override") as mock_write:
+            registered = server._register_prepublish_calendar_listing_images("WC1001", zpath)
+    check(registered == [], f"got {registered}")
+    check(not mock_write.called, "must never write a catalog override when there's no poster to register")
+
+
+def run():
+    for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
+        try:
+            fn()
+        except Exception:  # noqa: BLE001
+            _failures.append(f"{fn.__name__} raised:\n{traceback.format_exc()}")
+    if _failures:
+        print("PRODUCE-QC TESTS FAILED:")
+        for f in _failures:
+            print(" -", f)
+        sys.exit(1)
+    print("PRODUCE-QC TESTS OK — helper, agent-tool dispatch, registration, and "
+          "POST /api/produce/qc-check all verified.")
+
+
+if __name__ == "__main__":
+    run()

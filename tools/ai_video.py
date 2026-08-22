@@ -35,7 +35,25 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
-OUTPUT_DIR = Path("data/social/videos")
+_BASE = Path(__file__).parent.parent.resolve()
+
+
+def _resolve_videos_dir() -> Path:
+    """(2026-07-25) Must resolve to the IDENTICAL directory main.py's
+    _FILE_ROOTS["videos"] computes (same HUB_FILES_DIR-or-/data detection,
+    same "social/videos" join) -- see video_generator._resolve_videos_dir()
+    for the full incident note. This file's old constant was doubly wrong:
+    not volume-aware AND relative to the process cwd rather than the repo
+    root, so it broke whenever the server wasn't started from the repo dir."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol:
+        return Path(vol) / "social" / "videos"
+    if Path("/data").is_dir():
+        return Path("/data") / "files" / "social" / "videos"
+    return _BASE / "data" / "social" / "videos"
+
+
+OUTPUT_DIR = _resolve_videos_dir()
 SORA_MODEL = "sora-2"
 
 # aspect_ratio → exact Sora output size. Sora has NO 1:1 size; 1:1 and any

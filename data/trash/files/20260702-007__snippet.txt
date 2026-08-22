@@ -1,5 +1,0 @@
-.mem-row{display:flex;gap:10px;flex:1;min-height:0;overflow-y:auto;align-items:center}
-.mem-canvas-wrap{display:none}
-.mem-stats{display:flex;flex-direction:row;flex-wrap:wrap;gap:16px 24px;flex:1;align-items:center;justify-content:space-around;padding:4px 8px}
-.mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
-.mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}

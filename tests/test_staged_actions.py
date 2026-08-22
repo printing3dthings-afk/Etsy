@@ -18,9 +18,14 @@ server` (same safe import smoke_test.py already relies on — no server start,
 no background loops, no API keys needed) and exercises the pure validation
 branches with tiny in-memory/tmp fixtures. The one branch that talks to Etsy
 (at_approval=True's live-state reconfirmation) is exercised only far enough
-to prove a network/lookup failure is turned into a rejection, not a crash —
-it does not require real credentials since EtsyAPIClient() construction
-itself is expected to raise without them.
+to prove a network/lookup failure is turned into a rejection, not a crash.
+`EtsyAPIClient()` reads credentials straight from os.environ and does NOT
+raise on construction even with none set — the test explicitly clears every
+Etsy credential env var for its own duration (see
+_ETSY_CRED_KEYS/save-restore below) rather than assuming the ambient
+environment has none, which used to cause an intermittent hang whenever this
+sandbox happened to have stale-but-present credentials (2026-07-17 fix — see
+data/knowledge_base/ops_runbook.md).
 
 Run locally:  python tests/test_staged_actions.py
 In CI:        see .github/workflows/ci-smoke.yml
@@ -31,6 +36,7 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
 for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
@@ -71,15 +77,15 @@ def test_update_title_empty_rejected():
     check(ok is False, "an empty/whitespace-only title must be rejected")
 
 
-def test_update_title_over_70_chars_rejected():
-    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 71})
-    check(ok is False, "a 71-char title must be rejected (mobile ranking rule)")
-    check("70" in msg, f"rejection message should mention the 70-char limit, got: {msg!r}")
+def test_update_title_over_140_chars_rejected():
+    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 141})
+    check(ok is False, "a 141-char title must be rejected (exceeds Etsy's platform max)")
+    check("140" in msg, f"rejection message should mention the 140-char limit, got: {msg!r}")
 
 
-def test_update_title_70_chars_exactly_passes():
-    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 70})
-    check(ok is True, f"a title at exactly 70 chars should pass, got: {msg!r}")
+def test_update_title_140_chars_exactly_passes():
+    ok, msg = validate("update_title", {"listing_id": 123, "title": "x" * 140})
+    check(ok is True, f"a title at exactly 140 chars should pass, got: {msg!r}")
 
 
 def test_update_title_valid_passes():
@@ -141,16 +147,81 @@ def test_toggle_listing_state_valid_passes():
 
 
 # ── at_approval=True: live-state reconfirmation ─────────────────────────────
+# 2026-07-17 fix: this used to just ASSUME no Etsy credentials were configured
+# in the test environment, without enforcing it — EtsyAPIClient() reads
+# straight from os.environ at construction (see tools/etsy_api.py) and does NOT
+# raise on missing credentials; it always makes a real network call either way.
+# With no credentials present, Etsy rejects the malformed/empty-auth request
+# fast; with stale-but-present credentials (this exact sandbox, confirmed
+# 2026-07-17 reliability audit), the retry/backoff/circuit-breaker logic in
+# etsy_api.py kicks in and can take much longer to finally fail -- an
+# "intermittent hang" that depended entirely on incidental environment state,
+# not a real bug in the gate being tested. Fixed by explicitly clearing every
+# Etsy credential env var for the duration of this one test (save/restore),
+# so the fast-reject path is guaranteed regardless of what's ambiently
+# configured -- CI, a dev laptop with a real .env, or this sandbox.
+_ETSY_CRED_KEYS = (
+    "ETSY_API_KEY", "ETSY_CLIENT_ID", "ETSY_CLIENT_SECRET",
+    "ETSY_ACCESS_TOKEN", "ETSY_SHOP_ID", "ETSY_SHOP_ID_NUMERIC",
+)
+
+
 def test_update_title_at_approval_without_credentials_rejected_not_crashed():
-    # No Etsy credentials are configured in this test environment, so
-    # EtsyAPIClient().get_listing() must fail -- the gate should turn that
-    # into a clean rejection (never apply a mutation it couldn't reconfirm),
-    # not raise and crash the caller.
-    ok, msg = validate(
-        "update_title", {"listing_id": 123, "title": "A fine title"}, at_approval=True,
-    )
+    import os
+    saved = {k: os.environ.pop(k, None) for k in _ETSY_CRED_KEYS}
+    try:
+        ok, msg = validate(
+            "update_title", {"listing_id": 123, "title": "A fine title"}, at_approval=True,
+        )
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                os.environ[k] = v
     check(ok is False, "at_approval=True with no reachable Etsy API must reject, not silently pass")
     check(isinstance(msg, str) and msg, "rejection must carry a human-readable reason")
+
+
+# ── at_approval=True: zero-photos activation gate (2026-08-05 full-Etsy-audit) ─
+# _execute_create_listing_staged_action deliberately tolerates a partial photo-
+# upload failure (writes the draft override anyway so the real Etsy draft
+# doesn't get "forgotten" -- see its own docstring). Before this fix, nothing
+# stopped that listing from later being activated with ZERO photos if Scott
+# didn't happen to read upload_errors first. This is the one shared gate every
+# activation path (publish_listing, toggle_listing_state->active) funnels
+# through, so it's the right place to catch it.
+def _fake_client(images: list, state: str = "draft"):
+    client = MagicMock()
+    client.get_listing.return_value = {"listing_id": 123, "state": state}
+    client.get_listing_images.return_value = images
+    return client
+
+
+def test_toggle_active_with_zero_photos_rejected():
+    with patch.object(server, "EtsyAPIClient", return_value=_fake_client(images=[])):
+        ok, msg = validate("toggle_listing_state", {"listing_id": 123, "new_state": "active"}, at_approval=True)
+    check(ok is False, "activating a listing with zero photos must be rejected")
+    check("zero photos" in msg, f"expected a clear zero-photos reason, got: {msg!r}")
+
+
+def test_toggle_active_with_photos_passes():
+    with patch.object(server, "EtsyAPIClient", return_value=_fake_client(images=[{"listing_image_id": 1}])):
+        ok, msg = validate("toggle_listing_state", {"listing_id": 123, "new_state": "active"}, at_approval=True)
+    check(ok is True, f"a listing with real photos must be allowed to activate, got: {msg!r}")
+
+
+def test_toggle_inactive_never_checks_photos():
+    client = _fake_client(images=[])
+    with patch.object(server, "EtsyAPIClient", return_value=client):
+        ok, msg = validate("toggle_listing_state", {"listing_id": 123, "new_state": "inactive"}, at_approval=True)
+    check(ok is True, f"deactivating must never be blocked by the photo check, got: {msg!r}")
+    check(not client.get_listing_images.called, "get_listing_images must not even be called for a deactivate")
+
+
+def test_publish_listing_with_zero_photos_rejected():
+    with patch.object(server, "EtsyAPIClient", return_value=_fake_client(images=[])):
+        ok, msg = validate("publish_listing", {"listing_id": 123}, at_approval=True)
+    check(ok is False, "publish_listing (always activates) with zero photos must be rejected")
+    check("zero photos" in msg, f"expected a clear zero-photos reason, got: {msg!r}")
 
 
 # ── listing_photo ────────────────────────────────────────────────────────────

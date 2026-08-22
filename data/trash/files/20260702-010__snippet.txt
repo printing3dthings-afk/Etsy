@@ -1,1 +1,0 @@
-.mem-canvas-wrap{min-height:160px}

@@ -74,3 +74,39 @@ jobs:
       - name: Fail the job if the health check failed
         if: steps.health.outputs.status == 'fail'
         run: exit 1
+
+      # 2026-07-17: piggybacks on this same cron/permissions rather than a new
+      # workflow — see tools/check_default_branch.py's docstring for why this
+      # exists (the 2026-07-10 incident: GitHub's default_branch silently
+      # pointed at a stale integration branch, so every schedule-triggered
+      # workflow — including this one — ran old, broken code for an unknown
+      # period before anyone noticed).
+      - name: Check GitHub default branch hasn't drifted
+        id: branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          output=$(python tools/check_default_branch.py 2>&1)
+          rc=$?
+          set -e
+          echo "$output"
+          if [ $rc -ne 0 ]; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "details<<EOF"
+            echo "$output"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report branch-drift result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/ci_report_branch_drift_issue.py "${{ steps.branch.outputs.status }}" "${{ steps.branch.outputs.details }}"
+
+      - name: Fail the job if the default branch has drifted
+        if: steps.branch.outputs.status == 'fail'
+        run: exit 1

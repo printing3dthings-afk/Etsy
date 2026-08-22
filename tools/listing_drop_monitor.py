@@ -17,6 +17,10 @@ Any issues are printed with the [listing-drop] prefix so they appear in pipeline
 Usage:
   python tools/listing_drop_monitor.py           # run both checks
   python tools/listing_drop_monitor.py --status  # show current state without running
+
+Referenced by tools/api_server/main.py's _WEEKLY_MONITOR_SCRIPTS — restored
+2026-07-15 after an unrelated declutter pass deleted this file thinking it
+was unreferenced. If removing this file again, grep main.py first.
 """
 
 from __future__ import annotations

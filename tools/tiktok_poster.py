@@ -23,7 +23,7 @@ import os
 import sys
 import time
 import urllib.parse
-import urllib.request
+import requests
 from datetime import date, datetime
 from pathlib import Path
 
@@ -45,6 +45,12 @@ TOKEN_URL     = f"{API_BASE}/oauth/token/"
 UPLOAD_URL    = f"{API_BASE}/post/publish/video/init/"
 STATUS_URL    = f"{API_BASE}/post/publish/status/fetch/"
 USER_INFO_URL = f"{API_BASE}/user/info/"
+
+# requests-based (rewritten from raw urllib.request 2026-07-15, same fix as
+# instagram_api.py/facebook_api.py the same day) -- a fresh Session here since
+# this module is invoked both as a long-lived server-side call (main.py's
+# _execute_tiktok_staged_action) and a short-lived CLI script (main()).
+_session = requests.Session()
 
 
 def _load_env() -> dict:
@@ -74,17 +80,22 @@ def _save_env_value(key: str, value: str) -> None:
 
 
 def _api_call(url: str, payload: dict, token: str) -> dict:
-    body = json.dumps(payload).encode()
-    req = urllib.request.Request(
+    # Explicit .post() -- NOT .request() with an inferred method. The prior
+    # urllib.request.Request always sent POST here (urllib infers POST
+    # whenever data= is non-None, and payload is always at least `{}`, never
+    # None), including check_status()'s "GET-style" user-info query-string
+    # call above. Preserve that exact behavior rather than "fixing" it to a
+    # real GET, which would be a genuine change against TikTok's real API.
+    resp = _session.post(
         url,
-        data=body,
+        data=json.dumps(payload).encode(),
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type":  "application/json; charset=UTF-8",
         },
+        timeout=30,
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read())
+    return resp.json()
 
 
 def refresh_token(refresh_tok: str) -> dict:
@@ -94,13 +105,13 @@ def refresh_token(refresh_tok: str) -> dict:
         "grant_type":     "refresh_token",
         "refresh_token":  refresh_tok,
     }).encode()
-    req = urllib.request.Request(
+    resp = _session.post(
         TOKEN_URL,
         data=payload,
         headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=30,
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read())
+    return resp.json()
 
 
 def check_status(token: str) -> None:
@@ -209,19 +220,18 @@ def post_video(video_path: str, caption: str, token: str) -> dict:
     # Step 2: Upload the video bytes
     print(f"  Uploading video...")
     video_bytes = vpath.read_bytes()
-    upload_req = urllib.request.Request(
-        upload_url,
-        data=video_bytes,
-        headers={
-            "Content-Type":  "video/mp4",
-            "Content-Range": f"bytes 0-{file_size-1}/{file_size}",
-            "Content-Length": str(file_size),
-        },
-        method="PUT",
-    )
     try:
-        with urllib.request.urlopen(upload_req, timeout=120) as r:
-            upload_status = r.status
+        r = _session.put(
+            upload_url,
+            data=video_bytes,
+            headers={
+                "Content-Type":  "video/mp4",
+                "Content-Range": f"bytes 0-{file_size-1}/{file_size}",
+                "Content-Length": str(file_size),
+            },
+            timeout=120,
+        )
+        upload_status = r.status_code
     except Exception as e:
         return {"error": f"Upload failed: {e}"}
 

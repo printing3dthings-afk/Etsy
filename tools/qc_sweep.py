@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import sys
 import zipfile
@@ -34,9 +35,28 @@ sys.path.insert(0, str(BASE_DIR))
 
 from tools.etsy_api import validate_digital_file, FileContentError  # noqa: E402
 
-PF_DIR = BASE_DIR / "data" / "digital_products" / "product_files"
-PRINT_ZIP_DIR = BASE_DIR / "data" / "digital_products" / "print_zips"
-DP_BASE = BASE_DIR / "data" / "digital_products"
+
+def resolve_dp_base() -> Path:
+    """Where the digital-product files actually live for THIS environment.
+
+    On a hosted deploy (Railway) the repo's data/ dir is ephemeral/gitignored and
+    the real files sit on the durable volume — sync_files_to_hub.py uploads them
+    under <volume>/files/ with the same layout as data/digital_products/ (so
+    product_files/, print_zips/, stickers/ …). Mirror main.py's resolution so
+    Frank's one-tap Quality Check finds the same files the Files screen shows.
+    Locally (Scott's machine, this sandbox) neither is set → the repo dir, unchanged.
+    """
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE_DIR / "data" / "digital_products"
+
+
+DP_BASE = resolve_dp_base()
+PF_DIR = DP_BASE / "product_files"
+PRINT_ZIP_DIR = DP_BASE / "print_zips"
 
 # Expected planner page counts (from CLAUDE.md catalog). Tolerance applied below.
 # DP1030-1034 corrected 2026-07-09 against actual pypdf page counts — the old
@@ -49,6 +69,13 @@ PLANNER_PAGES = {
 PAGE_TOLERANCE = 8  # generated count may differ slightly from the catalog figure
 
 PRINT_SUBFOLDERS = {"2x3", "4x5", "a_series", "square"}
+
+# The 2 old fixed coloring-pages packs' real ZIP filename prefixes (2026-07-24)
+# -- build_sets() names kawaii ZIPs "coloring_set_NN.zip" and fun_basic ZIPs
+# "coloring_fun_basic_set_NN.zip"; a dynamic new-theme build always uses
+# pack=pid.lower() (e.g. "coloring_color1042_set_01.zip"), which can never
+# collide with either given the existing COLOR#### pid convention.
+_OLD_COLORING_PACK_PREFIXES = ("coloring_set_", "coloring_fun_basic_set_")
 
 
 def _rows():
@@ -97,23 +124,35 @@ def check_planner_pdf(path: Path, rows_add):
             rows_add("PASS", path.name, "page_count", f"{pages}pp (~{expected})")
 
 
+def sticker_zip_counts(names: list[str]) -> dict:
+    """Pure counting logic shared by check_sticker_zip() (severity judgment
+    stays there) and main.py's listing-content generator, which needs the
+    same real numbers to write grounded copy. Takes namelist() rather than a
+    Path so callers control archive-opening -- no duplicate zipfile.ZipFile
+    calls, no PIL dependency for counting alone."""
+    sheets = [n for n in names if "png_sheets/" in n and n.endswith(".png")]
+    indiv = [n for n in names if "individual_stickers/" in n and n.endswith(".png")]
+    # Legacy packs may store sheets flat (no png_sheets/ folder)
+    if not sheets:
+        sheets = [n for n in names if n.lower().endswith((".png", ".jpg")) and "/" not in n]
+    return {"sheet_count": len(sheets), "individual_sticker_count": len(indiv)}
+
+
 def check_sticker_zip(path: Path, rows_add):
     facts = gate(path, rows_add, expected_ext=".zip")
     if not facts:
         return
     with zipfile.ZipFile(path) as zf:
         names = zf.namelist()
-        sheets = [n for n in names if "png_sheets/" in n and n.endswith(".png")]
-        indiv = [n for n in names if "individual_stickers/" in n and n.endswith(".png")]
-        # Legacy packs may store sheets flat (no png_sheets/ folder)
-        if not sheets:
-            sheets = [n for n in names if n.lower().endswith((".png", ".jpg")) and "/" not in n]
+        counts = sticker_zip_counts(names)
+        sheet_count = counts["sheet_count"]
+        indiv_count = counts["individual_sticker_count"]
 
-        if len(sheets) < 5:
+        if sheet_count < 5:
             rows_add("WARN", path.name, "sheet_count",
-                     f"{len(sheets)} sheets (standard is 5+)")
+                     f"{sheet_count} sheets (standard is 5+)")
         else:
-            rows_add("PASS", path.name, "sheet_count", f"{len(sheets)} sheets")
+            rows_add("PASS", path.name, "sheet_count", f"{sheet_count} sheets")
 
         # Transparency check on the first sheet found inside png_sheets/
         png_sheet = next((n for n in names if n.endswith(".png") and "png_sheets/" in n), None)
@@ -129,21 +168,21 @@ def check_sticker_zip(path: Path, rows_add):
             rows_add("WARN", path.name, "transparency",
                      "no png_sheets/*.png to verify (legacy JPG pack — white-box risk)")
 
-        if indiv:
+        if indiv_count:
             # Below 50 is not "a smaller pack" — it's the background-removal blob
             # defect (found 2026-07-09 on DP1030-1034: 9 sheets x 1 sticker each,
             # because the sheet background was never stripped so every sheet fused
             # into a single connected component). A real, working pack never comes
             # in this low, so this is a hard FAIL, not a soft undercount warning.
-            if len(indiv) < 50:
+            if indiv_count < 50:
                 label = "FAIL"
-                detail = f"{len(indiv)} individual stickers (<50 — looks like the background-removal blob defect, not a real pack)"
-            elif len(indiv) < 200:
+                detail = f"{indiv_count} individual stickers (<50 — looks like the background-removal blob defect, not a real pack)"
+            elif indiv_count < 200:
                 label = "WARN"
-                detail = f"{len(indiv)} individual stickers (<200 target)"
+                detail = f"{indiv_count} individual stickers (<200 target)"
             else:
                 label = "PASS"
-                detail = f"{len(indiv)} individual stickers"
+                detail = f"{indiv_count} individual stickers"
             rows_add(label, path.name, "sticker_count", detail)
 
 
@@ -174,26 +213,158 @@ def check_print_zip(path: Path, rows_add):
                              "no embedded color profile (re-run generate_print_sizes.py)")
 
 
+_CALENDAR_YEAR_RE = re.compile(r"\b(202[5-9]|20[3-9]\d)\b")
+
+
+def _pdf_facts_from_bytes(data: bytes) -> tuple[int, str]:
+    """(page_count, extracted_text) for a PDF held in memory (inside a ZIP) --
+    same PyPDF2 reader etsy_api.validate_digital_file() uses for a standalone
+    PDF path, just fed BytesIO instead of a file path."""
+    from PyPDF2 import PdfReader
+    reader = PdfReader(io.BytesIO(data))
+    text = "\n".join((p.extract_text() or "") for p in reader.pages)
+    return len(reader.pages), text
+
+
+def check_wall_calendar_zip(path: Path, rows_add):
+    """WC-series printable wall calendar. Every claim this ZIP's listing
+    makes must be literally true of what's inside: exactly 12 pages in each
+    monthly-grid PDF, dated PDFs actually dated to the claimed year (real
+    weekday-aligned day numbers present), undated PDFs containing ZERO year
+    digits (see generate_wall_calendar.py's own docstring for why the
+    undated variant must never bake in a specific year's weekday alignment
+    -- this check is the QC-side half of that same guarantee), and the
+    year-at-a-glance poster meeting the print-resolution floor every other
+    wall-art image in this shop must clear (>=3000px short edge)."""
+    facts = gate(path, rows_add, expected_ext=".zip")
+    if not facts:
+        return
+    with zipfile.ZipFile(path) as zf:
+        names = zf.namelist()
+        # This pack's own naming convention (generate_wall_calendar.py's
+        # build_calendar_pack): "<PID>_dated_..." vs "<PID>U_undated_...".
+        dated_pdfs = [n for n in names if n.lower().endswith(".pdf") and "_dated_" in n.lower()]
+        undated_pdfs = [n for n in names if n.lower().endswith(".pdf") and "undated" in n.lower()]
+        posters = [n for n in names if n.lower().endswith((".jpg", ".jpeg")) and "yearglance" in n.lower()]
+
+        if len(dated_pdfs) < 1:
+            rows_add("FAIL", path.name, "dated_pdf_present", "no dated monthly-grid PDF found")
+        if len(undated_pdfs) < 1:
+            rows_add("FAIL", path.name, "undated_pdf_present", "no undated monthly-grid PDF found")
+        if len(posters) < 1:
+            rows_add("FAIL", path.name, "poster_present", "no year-at-a-glance poster JPG found")
+
+        for name in dated_pdfs:
+            pages, text = _pdf_facts_from_bytes(zf.read(name))
+            if pages != 12:
+                rows_add("FAIL", name, "page_count", f"{pages} pages (expected exactly 12 — one per month)")
+            else:
+                rows_add("PASS", name, "page_count", "12 pages")
+            # A dated PDF must actually contain real day numbers -- a build that
+            # silently fell back to the undated (blank-cell) template would still
+            # pass the page-count check, so verify day numbers are really present.
+            if not re.search(r"\b(1|2|3)\d\b|\b[1-9]\b", text):
+                rows_add("FAIL", name, "dated_content", "no day numbers found — looks like a blank/undated template")
+
+        for name in undated_pdfs:
+            pages, text = _pdf_facts_from_bytes(zf.read(name))
+            if pages != 12:
+                rows_add("FAIL", name, "page_count", f"{pages} pages (expected exactly 12 — one per month)")
+            else:
+                rows_add("PASS", name, "page_count", "12 pages")
+            leaked_years = _CALENDAR_YEAR_RE.findall(text)
+            if leaked_years:
+                rows_add("FAIL", name, "undated_no_year_leak",
+                         f"found year digit(s) {sorted(set(leaked_years))} in a file marketed as undated/evergreen")
+            else:
+                rows_add("PASS", name, "undated_no_year_leak", "no year digits present")
+
+        for name in posters:
+            with Image.open(io.BytesIO(zf.read(name))) as im:
+                w, h = im.size
+                if min(w, h) < 3000:
+                    rows_add("WARN", name, "poster_resolution", f"{w}x{h} — below the 3000px short-edge floor")
+                else:
+                    rows_add("PASS", name, "poster_resolution", f"{w}x{h}")
+
+        if not any(n.lower().endswith("readme.txt") for n in names):
+            rows_add("WARN", path.name, "readme", "no README.txt")
+
+
 def check_other_zip(path: Path, rows_add):
     gate(path, rows_add, expected_ext=".zip")
 
 
-def main():
-    ap = argparse.ArgumentParser(description="Pre-publish QC sweep of digital deliverables")
-    ap.add_argument("--json", help="Write machine-readable report to this path")
-    ap.add_argument("--only", help="Only files whose name contains this substring")
-    ap.add_argument("--fail-only", action="store_true", help="Print only WARN/FAIL rows")
-    args = ap.parse_args()
+def coloring_zip_page_count(names: list[str]) -> int:
+    """Pure counting logic shared by check_coloring_zip() and main.py's
+    listing-content generator. Counts root-level PNG page files (the same
+    definition check_coloring_zip() already enforces exactly == NEW_THEME_SET_SIZE)."""
+    return len([n for n in names if n.lower().endswith(".png") and "/" not in n])
 
+
+def check_coloring_zip(path: Path, rows_add):
+    """coloring_pages ZIP built via the dynamic new-theme path (Scott types
+    one theme, Frank generates NEW_THEME_SET_SIZE distinct subjects and
+    packages them into exactly one ZIP -- build_coloring_product.py's
+    --description branch) must contain exactly that many individual page
+    image files. The listing copy literally promises "N individual coloring
+    pages" -- CLAUDE.md's top rule is never lie to the customer, so an
+    undercount is a hard FAIL, not a soft WARN (mirrors check_sticker_zip()'s
+    individual_stickers hard-FAIL-below-50 pattern, added after a real past
+    defect, not a hypothetical one).
+
+    Scoped to ONLY the dynamic path -- see sweep()'s dispatch, which routes
+    the 2 old fixed packs (kawaii/fun_basic) to check_other_zip() instead by
+    filename, so this assertion never false-FAILs an existing 5-page-per-ZIP
+    product.
+
+    2026-08-10: a multi-source bundle (generate_coloring_pages.merge_
+    existing_sets_into_bundle()) legitimately has a different total -- it
+    writes a `<zip>.manifest.json` sidecar recording the real combined count.
+    When present, that recorded total_pages is the expected count instead of
+    NEW_THEME_SET_SIZE; absent (every normal single-batch ZIP), behavior is
+    unchanged."""
+    facts = gate(path, rows_add, expected_ext=".zip")
+    if not facts:
+        return
+    # Deferred import -- generate_coloring_pages.py hard-imports PIL at module
+    # level, which this module deliberately avoids until sweep() itself runs
+    # (see the `from PIL import Image` local import above).
+    from tools.generate_coloring_pages import NEW_THEME_SET_SIZE
+    manifest_path = path.with_suffix(".manifest.json")
+    expected = NEW_THEME_SET_SIZE
+    if manifest_path.exists():
+        try:
+            expected = int(json.loads(manifest_path.read_text())["total_pages"])
+        except (OSError, ValueError, KeyError, TypeError):
+            pass  # malformed manifest -- fall back to the standard single-batch expectation
+    with zipfile.ZipFile(path) as zf:
+        page_count = coloring_zip_page_count(zf.namelist())
+    if page_count != expected:
+        rows_add("FAIL", path.name, "page_count",
+                 f"{page_count} individual page files (expected exactly {expected} -- "
+                 f"the listing promises {expected} individual coloring pages)")
+    else:
+        rows_add("PASS", path.name, "page_count", f"{page_count} individual page files")
+
+
+def sweep(only: str | None = None) -> list[dict]:
+    """Run the full pre-publish QC sweep and return the raw rows
+    (list of {severity, file, check, detail}). `only` filters to files whose
+    name contains that substring (e.g. a product code like "DP1030").
+
+    Importable so the dashboard (Frank's one-tap Quality Check) and the CLI run
+    the exact same checks — no shelling out, no drift between the two.
+    """
     global Image
-    from PIL import Image  # local import so --help works without PIL
+    from PIL import Image  # local import so the module imports without PIL present
 
     rows, add = _rows()
 
     def want(p: Path) -> bool:
-        return (args.only.lower() in p.name.lower()) if args.only else True
+        return (only.lower() in p.name.lower()) if only else True
 
-    # Planner PDFs (DP1026-1033, dated + undated)
+    # Planner PDFs (DP1026-1034, dated + undated)
     planner_codes = tuple(PLANNER_PAGES)
     for pdf in sorted(PF_DIR.glob("*.pdf")):
         if not want(pdf):
@@ -211,11 +382,39 @@ def main():
         if want(z):
             check_print_zip(z, add)
 
-    # Other deliverable ZIPs (coloring pages, digital paper)
-    for sub in ("coloring_pages/sets", "digital_paper"):
-        for z in sorted((DP_BASE / sub).glob("*.zip")):
-            if want(z):
-                check_other_zip(z, add)
+    # Coloring-pages ZIPs: the 2 old fixed packs (kawaii/fun_basic) keep the
+    # generic content-only gate (5-page batches, untouched -- Scott: leave
+    # the old packs exactly as they are); anything else in this dir is a
+    # dynamic new-theme ZIP and gets the exact-page-count hard gate.
+    for z in sorted((DP_BASE / "coloring_pages" / "sets").glob("*.zip")):
+        if not want(z):
+            continue
+        if z.stem.startswith(_OLD_COLORING_PACK_PREFIXES):
+            check_other_zip(z, add)
+        else:
+            check_coloring_zip(z, add)
+
+    # Wall calendar ZIPs (WC-series)
+    for z in sorted((DP_BASE / "wall_calendars" / "packs").glob("*.zip")):
+        if want(z):
+            check_wall_calendar_zip(z, add)
+
+    # Other deliverable ZIPs (digital paper)
+    for z in sorted((DP_BASE / "digital_paper").glob("*.zip")):
+        if want(z):
+            check_other_zip(z, add)
+
+    return rows
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Pre-publish QC sweep of digital deliverables")
+    ap.add_argument("--json", help="Write machine-readable report to this path")
+    ap.add_argument("--only", help="Only files whose name contains this substring")
+    ap.add_argument("--fail-only", action="store_true", help="Print only WARN/FAIL rows")
+    args = ap.parse_args()
+
+    rows = sweep(args.only)
 
     # Report
     by_file: dict[str, list[dict]] = {}

@@ -197,6 +197,18 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 
 ---
 
+## Development Conventions
+
+Coding/testing/API conventions for this codebase live as focused files
+under `.claude/rules/` (`code-style.md`, `testing.md`, `api-conventions.md`)
+rather than duplicated here — check those before writing new code or
+tests. `.claude/skills/` has vetted third-party Claude Skills (copywriting,
+ad-creative, email-sequences, contract-review, incident-postmortem,
+sop-builder — see `.claude/skills/SOURCES.md` for provenance/licenses) that
+auto-load when relevant. `.mcp.json` connects Context7 (live, version-exact
+library docs) — works with no API key at a lower rate limit; add one free
+at context7.com/dashboard if 429s show up.
+
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)
@@ -209,7 +221,256 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 **Authorized.** Access token and refresh token are set in `.env`. API calls to OnBrandCraftz are live.
 If the token expires, run `python tools/etsy_oauth.py` to re-authorize.
 Redirect URI registered: `http://localhost:3003/callback`
-Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
+Scopes: shops_r, shops_w, listings_r, listings_w, listings_d, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
+
+## Google Calendar OAuth Status
+**Not yet authorized.** `GOOGLE_CALENDAR_CLIENT_ID`/`GOOGLE_CALENDAR_CLIENT_SECRET` need to be set in `.env`
+(from console.cloud.google.com — enable the Calendar API, configure the OAuth consent screen, create a
+Desktop-app OAuth client), then run `python tools/google_calendar_oauth.py` to authorize. Once connected,
+Scott's Google Calendar events appear in Frank's Calendar tab and as same-day/next-day reminders in the
+alert bell, and Frank pushes its own due-dated to-dos + seasonal/tax deadlines onto the calendar too
+(daily sync, dedup'd so nothing re-creates). Frank can also create events conversationally via the
+`create_calendar_event` agent tool. See `tools/google_calendar_oauth.py`'s module docstring for the full
+Google Cloud Console setup steps.
+Redirect URI to register: `http://localhost:3006/callback`
+Scope: `https://www.googleapis.com/auth/calendar` (read + write)
+
+---
+
+## Trademark Screening (Goalie IP) — Not Yet Authorized
+Added 2026-08-20 as part of "make Frank smarter" work, directly closing a real gap: the Suspension
+Triggers section below has always warned that "Trademark terms in titles/tags — even accidental use
+triggers shop quality score penalty affecting ALL listings," but nothing in this codebase ever
+automatically checked for that before this. **Not yet authorized** — `GOALIEIP_API_KEY` needs to be set
+in `.env`. Sign up free at `goalieip.com/subscribe#api` (200 calls/month, no credit card), get the key
+from `goalieip.com/portal/api-keys`, then set the env var — no separate OAuth flow, just the one key.
+Once set, every `update_title`/`update_tags`/`create_listing` staged action automatically runs an
+advisory-only trademark screen (`tools/trademark_screening.py`) and attaches the result to the staged
+action's payload for the Action Center review — exact-match search against live/registered USPTO marks
+only (never a fuzzy/substring search, which would flag nearly everything). This never blocks staging or
+auto-rejects anything; a flagged phrase can be an exact match in a totally unrelated Nice class (a "MOON"
+mark for pharmaceuticals isn't a real collision risk for wall art), so Scott's own judgment at approval
+time remains the actual gate, same as every other Etsy-mutating action. Until the key is set,
+`is_configured()` returns False and screening is a clean no-op — same pattern as Google Calendar OAuth
+above, code ships ready, activation is a Scott-gated credential step.
+
+---
+
+## Google / Apple Sign-In (Frank login screen)
+**Not yet authorized — needs Scott.** All the code is shipped and live
+(`tools/api_server/oauth_providers.py`, `/auth/google` + `/auth/apple` routes in
+`main.py`) but both buttons stay hidden on `/login` and `/signup` until real
+credentials exist — `_oauth_buttons_html()` only renders a provider's button
+when its full env-var set is present, specifically so the screen never shows a
+button that would 404. Neither OAuth app can be registered by Claude — both
+require a human with account access to Google Cloud Console / the Apple
+Developer Program. Once either is set up, the corresponding button appears with
+no further code changes.
+
+**Google — Google Cloud Console (console.cloud.google.com), free:**
+1. Create/select a project → APIs & Services → OAuth consent screen. External
+   user type is fine (this only needs "Sign in with Google", not Workspace
+   restriction). Add the `openid`, `email`, `profile` scopes (these are the
+   default non-sensitive scopes — no verification review needed).
+2. APIs & Services → Credentials → Create Credentials → OAuth client ID →
+   Application type **Web application**.
+3. Under **Authorized redirect URIs**, add exactly:
+   `https://etsy-production-b2f1.up.railway.app/auth/google/callback`
+   (must match byte-for-byte — no trailing slash).
+4. Copy the generated **Client ID** and **Client secret**.
+5. Set in Railway: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
+
+**Apple — Apple Developer Program (developer.apple.com), $99/year:**
+1. Certificates, Identifiers & Profiles → Identifiers → register an **App ID**
+   first if one doesn't already exist for this project, with the "Sign In with
+   Apple" capability enabled.
+2. Identifiers → **+** → **Services IDs** → register a new Services ID (e.g.
+   `com.onbrandcraftz.frank.web`) — this becomes `APPLE_CLIENT_ID`. Enable
+   "Sign In with Apple" on it, click Configure, and under **Website URLs** add:
+   - Domain: `etsy-production-b2f1.up.railway.app`
+   - Return URL: `https://etsy-production-b2f1.up.railway.app/auth/apple/callback`
+3. Note the **Team ID** (top-right of the Apple Developer account page, under
+   Membership) → `APPLE_TEAM_ID`.
+4. Certificates, Identifiers & Profiles → Keys → **+** → name it, enable "Sign
+   In with Apple", associate it with the App ID from step 1, then **Register**
+   and **Download** — this `.p8` file can only be downloaded once, save it.
+   The Key ID shown on this page → `APPLE_KEY_ID`.
+5. Open the downloaded `.p8` file in a text editor and copy its entire
+   contents (including the `-----BEGIN PRIVATE KEY-----`/`-----END PRIVATE
+   KEY-----` lines) → `APPLE_PRIVATE_KEY` in Railway, pasted as-is (Railway's
+   env var editor handles the embedded newlines fine — no need to strip or
+   escape them).
+6. Set in Railway: `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`,
+   `APPLE_PRIVATE_KEY`.
+
+**How the login itself works (for reference, no action needed):** both are the
+standard OAuth 2.0 authorization-code flow — the button is a plain link (no
+JavaScript SDK, no CSP changes needed), the callback exchanges the code
+server-side, and a hub_users account is created or linked automatically. An
+OAuth identity only ever auto-links to an *existing* password account when the
+provider confirms the email is verified — an unverified email always gets its
+own new account instead, so a Google/Apple sign-in can never silently walk into
+somebody else's existing account. OAuth-created accounts get `role="admin"`
+(same as self-service `/signup`, never `"owner"`) and a random, never-shown
+password hash — they always sign in through the same provider going forward,
+password login for that account is not offered.
+
+---
+
+## Voice Control for Frank Desktop (Planned, Not Yet Built)
+
+Idea captured 2026-08-20 (from a reviewed third-party workflow — local
+speech-to-text → intent routing → local text-to-speech, no audio ever
+leaving the machine). Not started; documented here so it isn't lost, the
+same way the Google Calendar and Google/Apple Sign-In sections above
+record real planned integrations before they're built.
+
+**Why Frank Desktop specifically, not a browser tab:** `desktop/main.js`
+(Electron) is already a real, running local process with OS-level access
+(global hotkey support, system tray — see "Frank Desktop App" above) —
+the only piece of this stack that isn't purely the hosted Railway
+dashboard. A voice loop has to live somewhere with a persistent local
+process and a global hotkey; the thin-client browser window alone can't
+host that.
+
+**Rough shape, not a commitment to specific libraries:**
+1. A global hotkey (Electron already registers one, `Cmd/Ctrl+Shift+F`,
+   for show/hide — a second one for voice capture would follow the same
+   pattern) starts local audio capture.
+2. Local speech-to-text transcribes the utterance without sending audio
+   to any API — the same reasoning CLAUDE.md already applies elsewhere
+   (`tools/relay/bambu_p1s_bridge.py` runs locally specifically so
+   nothing about Scott's home network has to leave it); voice is a
+   similarly private input channel.
+3. The transcribed text goes through Frank's *existing* chat/tool
+   pipeline exactly like a typed message — this is not a new command
+   language, it reuses `AGENT_TOOLS` and the Action Center approval gate
+   unchanged. A model tier suited to fast intent routing (vs. Frank's
+   primary model for actual reasoning) is worth evaluating once this is
+   real, not decided in advance here.
+4. Local text-to-speech reads Frank's reply back, for hands-free use.
+
+**Explicitly not scoped yet:** which STT/TTS engines, whether this needs
+its own settings screen, and how it interacts with the kill switch
+(`/api/relay/kill`) — voice-triggered actions should almost certainly
+respect it the same way local_* relay actions already do. Pick these up
+when this is actually greenlit for a build, not before — this section is
+intentionally just the shape of the idea, not a spec.
+
+---
+
+## Bambu P1S Live Monitoring (Frank Integration)
+**Running in production** (confirmed live 2026-08-11 — this doc previously said "Not yet running,"
+which was stale; Scott has it set up and pushing). Frank (the Railway-hosted dashboard) has no route
+to the home LAN the printer is on, so it can never talk to the P1S directly. `tools/relay/
+bambu_p1s_bridge.py` is a small standalone process that runs ON the same network as the printer, reads
+its status over local MQTT, and pushes a snapshot to Frank roughly every second. To set this up fresh
+(or re-set-up on a new machine):
+1. `pip install -r tools/relay/bambu_requirements.txt`
+2. Create/edit `tools/relay/.env` (same file `frank_relay.py` uses, gitignored — never commit real
+   values here) with: `BAMBU_IP`, `BAMBU_ACCESS_CODE`, `BAMBU_SERIAL` (all three from the printer's own
+   touchscreen — Settings → Network / Device), `FRANK_API_BASE` (the live Railway URL), and
+   `APP_SECRET_TOKEN` (same token the mobile app/relay already use).
+3. `python tools/relay/bambu_p1s_bridge.py --test` to verify the MQTT handshake once before leaving it
+   running unattended; `python tools/relay/bambu_p1s_bridge.py` to run it for real.
+4. Once it's pushing, the "🖨️ Bambu P1S Printer" card on Frank's Home screen shows live state, progress,
+   layer count, ETA, nozzle/bed/chamber temps, speed mode, and AMS tray colors. `GET /api/printer/status`
+   reports `online: false` ("bridge offline") whenever the bridge hasn't pushed in the last 90 seconds,
+   so the card never shows stale numbers as if they were live.
+5. **Click the printer card** to open a detail view with the full live stats plus a periodically-refreshed
+   camera frame (2026-07-30).
+
+**Near-instant updates + the "fields go blank" fix (2026-08-11).** Scott reported "stats keep going away
+and random info pops up" twice — the first pass (2026-07-30) only fixed the card falsely flipping to
+"BRIDGE OFFLINE" (a too-tight 30s staleness cutoff with zero margin against the HUD's own 30s poll).
+Confirmed live in production the underlying bug was still there: `bridge_seen: true`, `age_seconds: 0.6`
+(genuinely connected, actively pushing), yet nearly every field `null` except whichever one the single
+most recent MQTT message happened to mention. Root cause: Bambu's MQTT `print` topic mixes full
+"pushall" reports with small partial deltas that only carry whatever changed, and neither the bridge
+(`_parse_report()`, called fresh per message with no memory of prior values) nor the backend
+(`post_printer_telemetry` — `_printer_telemetry = payload`, a full overwrite) ever merged pushes; any
+field a specific delta didn't mention got wiped from the dashboard.
+
+Fixed on both sides:
+- **Backend** (`main.py`): `_merge_printer_telemetry()` merges each push into the running snapshot
+  instead of replacing it — skips `None` scalar values and empty `ams`/`hms` lists so a field a delta
+  doesn't mention keeps its last known real value. Deliberately defensive against the *old*, not-yet-
+  updated bridge's payload shape too (always-present keys, `None`/`[]` standing in for "not reported"),
+  so this fix took effect the moment it deployed, without waiting on Scott to touch the bridge machine.
+- **Bridge** (`tools/relay/bambu_p1s_bridge.py`): `_parse_report()` now only includes a key in its
+  payload when the raw MQTT message actually reported it (never defaults an absent field to `None`/`[]`)
+  — the producing-side half of the same contract, and what makes the merge exactly correct once Scott
+  pulls this update. Push debounce (`PUSH_MIN_INTERVAL_SECS`) also dropped from 3s to 1s to match real
+  Bambu delta cadence, now that pushing more often no longer risks flickering fields to null either.
+- **Live push channel**: new `GET /ws/printer` (ticket-authed the same way `/ws/chat` is — browsers
+  can't set a Bearer header on a WS handshake) broadcasts the current snapshot the instant the backend
+  receives a new bridge push, instead of the HUD waiting for its next poll tick. The existing 5s poll
+  (`loadPrinterStatus()`) stays in place client-side as a fallback, not replaced — a dropped socket
+  degrades to "slightly less instant," never to "no data."
+
+**This means the bridge fix needs Scott to actually pull and restart it** — the backend/frontend halves
+deploy the normal way and take effect immediately, but `tools/relay/bambu_p1s_bridge.py` runs on Scott's
+own home-network machine, outside this repo's normal deploy path.
+
+**Camera relay.** The P1S's local camera port (6000) has never been officially documented by Bambu Lab.
+The bridge independently verified the protocol shape against a real open-source reference
+(`coelacant1/Bambu-Lab-Cloud-API`, GPLv3 — not copied, since GPLv3 is incompatible with this codebase;
+reimplemented from the underlying protocol facts) before shipping — see the "Camera relay" comment block
+in `tools/relay/bambu_p1s_bridge.py` for exactly what was checked. It's best-effort/unofficial, not
+Bambu-documented, so run `python tools/relay/bambu_p1s_bridge.py --test-camera` on the bridge machine to
+confirm it actually connects to your real printer; report back anything unexpected (that command's output
+says so too). Runs automatically alongside telemetry; pass `--no-camera` to disable it and run telemetry
+only. Frank's backend receives frames at `POST /api/printer/camera-frame` and serves the latest one at
+`GET /api/printer/camera.jpg` (404s if the last frame is older than 15s — never serves a stale image as
+if it were live).
+
+---
+
+## Frank Desktop App
+
+**Architecture: thin client, not a local instance.** `desktop/main.js` (Electron) opens a native window
+pointed directly at the live Railway deployment (`https://etsy-production-b2f1.up.railway.app/frank` by
+default) — the exact same data, listings, chat history, and orders Scott sees in a browser tab. There is
+**no bundled backend, no local database, and no separate copy of anything** — this replaced an earlier
+version (built 2026-07-09, one CI run produced real installers) that spawned a local PyInstaller copy of
+`tools/api_server/main.py` with its own empty database, which meant a fresh install had zero orders/
+listings/history until Scott manually re-entered API keys. Scott confirmed the thin-client direction
+explicitly ("Option a it is") after a pros/cons comparison; the old local-backend packaging scripts
+(`tools/desktop/backend.spec`, `tools/desktop/build_backend.py`) are archived via `tools/trash.py`, not
+deleted — see `data/trash/DELETED.md` if that model is ever needed again.
+
+**Auth:** Electron's default session persists cookies to disk exactly like a real browser profile, so
+Scott logs into `/login` once inside the app window and stays logged in across restarts. Nothing extra
+to configure.
+
+**On top of the live page, the shell adds:**
+- **System tray icon** — click to show/hide the window; right-click for Open Frank / Quit Frank. Closing
+  the window hides it (keeps running in the tray) rather than quitting — real quit is tray menu, app
+  menu, or Cmd/Ctrl+Q.
+- **Global hotkey** (`Cmd/Ctrl+Shift+F`) — show/hide the window from anywhere, even when Frank isn't focused.
+- **Native OS notifications for new alerts** — polls the same `GET /api/alerts` endpoint that already
+  backs the in-app bell (no separate alert logic to keep in sync), injected into the live page via
+  `webContents.executeJavaScript()` after each load. Only fires for alerts that appear *after* launch —
+  the first poll seeds a seen-set silently so restarting the app never re-fires a notification storm for
+  conditions that were already open.
+- **`Frank → Change Server URL...`** menu item opens `<userData>/config.json` in the OS's default editor
+  (same pattern as the old "Edit API Keys..." item) in case the Railway URL ever changes.
+
+**Building installers:** `.github/workflows/build-desktop.yml`, manual `workflow_dispatch` trigger only
+(the app changes rarely, so this doesn't run on every push). Windows `.exe` (NSIS) and macOS `.dmg`,
+both unsigned (no Apple/Microsoft signing certificate configured — Gatekeeper/SmartScreen will warn on
+first launch, right-click → Open bypasses it on macOS).
+
+**Download links (2026-08-06, one-click distribution):** every successful build also publishes both
+installers as assets on a single permanent GitHub Release tagged `desktop-latest` — via
+`softprops/action-gh-release`, which updates that release's assets in place on each run rather than
+creating a new tag, so these two URLs never change no matter how many times the workflow re-runs:
+- Windows: `https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank-Setup.exe`
+- macOS: `https://github.com/printing3dthings-afk/etsy/releases/download/desktop-latest/Frank.dmg`
+
+Scott can bookmark either one directly — one click, no GitHub login, no digging through Actions run
+artifacts. The stable filenames (no version number) come from `package.json`'s `build.win.artifactName`/
+`build.mac.artifactName` overrides, specifically so a version bump never changes the download URL.
 
 ---
 
@@ -270,6 +531,8 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 The shop has grown beyond DP1029. Products DP1030–DP1034 exist on disk (`data/digital_products/product_files/`) as PDFs (~7–9MB each, dated + undated versions + v2 finals) with sticker pack ZIPs present for all five. Detailed documentation (titles, sections, color schemes) has not been added to CLAUDE.md yet — draft listing content exists for DP1030 (ADHD Planner) and DP1033 (Teacher Planner) in `data/dp1030_listing.json` / `data/dp1033_listing.json`; DP1031, DP1032, DP1034 have no listing content authored yet. None of DP1030–1034 are published (`status: draft`/`ready_for_review`, `etsy_listing_id: ""` in `data/product_catalog.json`). **`data/dp_listing_map.json` does NOT have entries for these codes** — those keys were previously double-booked with 5 already-published wall-art listings, since renamed to `WA1030`–`WA1034` (2026-07-09, same treatment as the earlier `DP1026`→`WA1026` fix). Add real `DP1030`–`DP1034` entries to `dp_listing_map.json` when each planner is actually published.
 
 **Note on sticker ZIPs:** DP1026–DP1034 sticker packs all exist on disk and are all live/complete now. DP1030–1034's packs were regenerated 2026-07-09 — they were previously broken (built 2026-06-30, before the background-removal fix below, or on themed-color backgrounds the fix didn't yet handle) and shipped as 9 sheets × 1 sticker each. `tools/process_sticker_sheets.py`'s background detection was generalized to trust any uniform corner color (not just light backgrounds) and re-run; all five now have 9 real sheets and 240–470+ individual stickers each. See `tools/qc_sweep.py`'s `check_sticker_zip()` — an individual-sticker count under 50 is now a hard FAIL (this exact defect class), not just a warning.
+
+**Cut-out engine (2026-07-11):** `tools/process_sticker_sheets.py` now prefers **BiRefNet AI matting via `rembg`** (both MIT — product-safe; do NOT use BRIA RMBG-2.0, non-commercial) over the corner-sampled flood-fill for cleaner transparent edges on soft-shadow / anti-aliased / themed-color sheets. It's an **optional dependency** (`pip install -r requirements-sticker.txt`, lazy-imported) and NOT in the Railway server image; the tool falls back to the original `remove_white_background` flood-fill automatically when rembg isn't installed or a cut-out fails, so behavior is unchanged without the install. Pick explicitly with `--cutout {ai,flood,auto}` (default `auto`). Regenerating + reuploading actual packs stays **Scott-gated**.
 
 ---
 
@@ -532,6 +795,22 @@ Each theme includes: name, hex palette, target aesthetic, target buyer, and the 
 
 ---
 
+#### 🚛 Theme 13 — Truck Zone
+**Tagline:** *"Vroom into learning!"*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#FF6B35` | safety orange |
+| Accent | `#2E5C8A` | steel blue |
+| Neutral | `#FFF8F0` | warm cream |
+| Text | `#1A2530` | deep asphalt navy |
+- **Aesthetic:** Construction site / vehicle-yard, bold and energetic, boys-coded without being a plain-blue cliché
+- **Kawaii motifs:** dump trucks, diggers/excavators, cranes, cement mixers, traffic cones, gears, hard hats, road signs
+- **Target buyer:** Boys ages 3–7 (and their parents buying kids' activity/tracing content), vehicle/construction-obsessed kids
+- **Best product:** EDU1002 Kids Tracing Workbook (built 2026-08-20 — boys-themed sibling of EDU1001)
+- **Trend alignment:** Orange+blue is a well-established high-energy boys' palette on Etsy's kids-activity niche; added on Scott's direct request for a boys-themed tracing workbook, not a macro-trend pull like the other 12
+
+---
+
 ### Theme-to-Product Mapping
 
 | Product | Launch Theme | Phase 2 Covers to Add |
@@ -642,13 +921,16 @@ Research-backed rules that must be applied to every listing:
 
 ---
 
-### Titles (max 70 chars — ALL listing types)
-- **Hard limit: 70 characters.** Etsy's 2026 algorithm applies a mobile ranking penalty above 70 chars. 70%+ of Etsy traffic is mobile.
-- Lead with the PRIMARY search keyword buyers type in first 20-30 characters
-- Use comma separators, not pipes
+### Titles (100–140 chars — ALL listing types) — corrected 2026-08-10
+- **Hard limit: 140 characters** (Etsy's actual platform max). **Target
+  100–140**, not a short title — see "Change 1: Title Length Cap" below for
+  the real competitive research this is based on (every top-favorited
+  competitor across 7 real niche searches ran 100–140 chars, not ≤70).
+- Lead with the PRIMARY search keyword buyers type in first 20-40 characters (mobile still truncates the preview here)
+- Fill the rest with additional real buyer-search phrases, comma-separated, not pipes
 - Include year (2026) or "Undated" for evergreen
 - Include app compatibility (GoodNotes) in first 40 chars
-- Example: `Digital Planner 2026 Undated, GoodNotes iPad, Instant Download` (62 chars)
+- Example: `Digital Planner 2026 Undated, GoodNotes iPad, Fillable Hyperlinked Planner, Daily Weekly Monthly, Kawaii Sticker Pack, Instant Download` (139 chars)
 
 ### Descriptions — Required Sections in Order
 1. **Hook** (1–2 sentences): Emotion-first + primary keyword in sentence 1 for Google indexing
@@ -761,13 +1043,35 @@ Use all 10 slots. Each image tells one chapter of the buyer's story. Technical s
 
 ## Listing Agent Workflow (Step-by-Step)
 
-When asked to list a planner on Etsy:
-1. Call `get_approved_unlisted_products` to see what's ready
-2. Products must have `status: qc_pending` or `status: approved`
-3. Call `generate_listing_content` with the full pre-written template (see below)
-4. Generate all 10 listing photos using `generate_digital_art` with the prompts below
-5. Once ETSY_ACCESS_TOKEN is set (run `python tools/etsy_oauth.py`), call `publish_digital_listing`
-6. After publishing, upload the PDF and sticker pack ZIP as digital files on the Etsy listing
+**Corrected 2026-08-06 (full-system audit)** — the step list below used to name
+`get_approved_unlisted_products`/`generate_listing_content`/`publish_digital_listing`/
+`generate_digital_art`, which came from `tools/etsy_listing_tools.py` and
+`tools/art_creation_tools.py`. Those modules are real and still used directly by a
+few standalone scripts (`run_wall_art_workflow.py`, `build_planners.py`), but their
+chat-tool layer (`TOOL_DEFINITIONS`/`execute_tool()`) was never wired into
+`AGENT_TOOLS` — so none of those four names are actually callable from chat, and
+following this section as written would silently fail at step 1. The real,
+currently-wired workflow is below.
+
+When asked to list a planner (or any digital product) on Etsy:
+1. Call `build_product` with the planner code (e.g. `DP1030`) to generate the whole
+   product end to end — sticker pack, dated + undated PDFs, all 10 listing photos,
+   and a final Quality Check. Runs in the background (~6-10 min); watch
+   `<pid>_product_build.log` in Files for progress and the QC verdict. Nothing is
+   published by this step (Scott-gated).
+2. Once QC passes, review the product on the **Products** screen — tapping a
+   product card opens a review modal (backed by `GET /api/products/{id}/review`)
+   showing every generated file and photo.
+3. From that modal, **Publish** stages a `create_listing` action (via `stage_action`)
+   for Scott's one-tap approval in the Action Center — nothing goes live without it.
+   For a product whose files/photos already exist outside this pipeline (e.g. a
+   physical/manually-produced item), use `register_product` instead to register it
+   into the catalog first.
+4. After Scott approves, the staged action publishes the listing and uploads the
+   digital files automatically.
+5. Use `check_listing_quality` / `diagnose_listing_conversion` on any live listing
+   to catch quality-gate or conversion problems after the fact; `autofix_listing_tags`/
+   `autofix_listing_title` can stage targeted fixes the same way.
 
 ---
 
@@ -775,7 +1079,7 @@ When asked to list a planner on Etsy:
 
 ### DP1026 — Ultimate Digital Life Planner
 
-**Title** (62 chars — 2026 70-char mobile rule):
+**Title** (62 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Digital Planner 2026 Undated, GoodNotes iPad, Instant Download`
 
 **Tags**:
@@ -890,7 +1194,7 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ### DP1027 — Student & School Planner
 
-**Title** (61 chars — 2026 70-char mobile rule):
+**Title** (61 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Kawaii Student Planner 2026, GoodNotes iPad, Instant Download`
 
 **Tags**:
@@ -1004,7 +1308,7 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ### DP1028 — Budget & Finance Planner
 
-**Title** (64 chars — 2026 70-char mobile rule):
+**Title** (64 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Digital Budget Planner 2026 Undated, GoodNotes, Instant Download`
 
 **Tags**:
@@ -1120,7 +1424,7 @@ A: This license is for personal use only. If your partner wants a copy, they'll 
 
 ### DP1029 — Fitness & Wellness Planner
 
-**Title** (65 chars — 2026 70-char mobile rule):
+**Title** (65 chars — pre-2026-08-10 short-title convention; see Change 1 for the corrected 100-140 char guidance for NEW titles):
 `Digital Fitness Planner 2026 Undated, GoodNotes, Instant Download`
 
 **Tags**:
@@ -1493,28 +1797,37 @@ These rules apply regardless of product category. Violations block publishing.
 
 **Lifestyle photos must be generated with an edit-style call (`tools/image_gen.py`'s `edit_image()`) using the actual downloadable product file as input.** No AI-generated stand-in products. No placeholder art. The exact files the customer downloads are passed in as the input image. This is the only method that guarantees the listing photo shows what the customer actually receives. See THE STANDARD LIFESTYLE METHOD in the Image Generation section.
 
-**EVERY photo in EVERY listing must be generated with an approved AI image engine — HARD RULE (Scott, June 2026; updated July 2026 for multi-engine).** Approved engines, selected via the existing `engine=` param / `IMAGE_ENGINE` setting in `tools/image_gen.py` — never a hardcoded choice in a script:
-- **gpt-image-1** (OpenAI) — current default, proven, use when unsure. **Shuts down 2026-10-23** (confirmed on OpenAI's deprecations page) — the only engine that supports `background="transparent"` for sticker/cut-out assets, so it must stay available for that use case even after gpt-image-2 becomes the default for everything else.
-- **gpt-image-2** (OpenAI) — gpt-image-1's successor (shipped 2026-04-21), same account/API key. Native reasoning, sharper in-image text, flexible sizes. Does **not** support `background="transparent"` — `tools/image_gen.py` raises a clear error if you try; use gpt-image-1 for stickers/cut-outs until/unless that changes.
+**EVERY photo in EVERY listing must be generated with an approved AI image engine — HARD RULE (Scott, June 2026; updated July 2026 for multi-engine, updated August 2026 for Grok, updated August 2026 for gpt-image-1.5).** Approved engines, selected via the existing `engine=` param / `IMAGE_ENGINE` setting in `tools/image_gen.py` — never a hardcoded choice in a script:
+- **gpt-image-1** (OpenAI) — current default, proven, use when unsure. **Shuts down 2026-10-23** (confirmed on OpenAI's deprecations page). Was the only transparent-background engine; see gpt-image-1.5 below for its replacement on that specific path.
+- **gpt-image-2** (OpenAI) — gpt-image-1's successor (shipped 2026-04-21), same account/API key. Native reasoning, sharper in-image text, flexible sizes. Does **not** support `background="transparent"` — `tools/image_gen.py` raises a clear error if you try.
+- **gpt-image-1.5** (OpenAI) — added to `tools/image_gen.py` 2026-08-15. Shipped by OpenAI in December 2025 specifically for native transparent PNG cutouts — keeps the capability gpt-image-2 dropped, and its own shutdown is 2026-12-01 (not 2026-10-23), so it's the real migration target for stickers/cut-outs, not a permanent one. **UNPROVEN in this codebase** — no live call against this specific model has been made yet. Run one real sticker-sheet generation and visually verify the alpha channel before pointing any real product's build at it; the "never lie to the customer" rule applies directly to a broken transparent-bg render.
 - **Gemini "Nano Banana"** (`gemini-2.5-flash-image`) — best at keeping the same product consistent across scenes; prefer for multi-photo listing mockups
 - **Ideogram 3.0** — best in-image text (covers/badges); generate-only, no edit/input-image support
-This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software (Stable Diffusion, ComfyUI, or any self-hosted generator) unless a demonstrably better tool replaces one of the four above. Per-slot method:
-- Lifestyle / detail shots: a pure generate call is never acceptable here — use the engine's edit path with the real product file(s) as input (Ideogram can't do this — use gpt-image-1/2 or Gemini for these slots)
+- **Grok Imagine** (`grok-imagine-image-quality`, xAI) — added 2026-08-05, **generate path proven 2026-08-20**: real `generate_image()` calls against the live `XAI_API_KEY` produced multiple on-brand kawaii cover/hero illustrations (clean vector-style linework, correct palette adherence, proper chibi proportions) for the RB1001/PARTY1001/EDU1001 product line — no longer treat plain text-to-image output as unproven. Still **not verified**: the `edit_image()` path (only single-reference-image edits are wired today — xAI's multi-image edit request shape isn't confirmed yet, see `tools/image_gen.py`'s `_grok_edit_bytes()` comment) and transparent-background support — do not use for lifestyle-edit shots or stickers/cut-outs until those are separately confirmed. Worth knowing: this engine has come through as a working fallback when OpenAI/Gemini were both simultaneously out of credit — good to know it's a real option, not just a paper one.
+This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software (Stable Diffusion, ComfyUI, or any self-hosted generator) unless a demonstrably better tool replaces one of the six above. Per-slot method:
+- Lifestyle / detail shots: a pure generate call is never acceptable here — use the engine's edit path with the real product file(s) as input (Ideogram can't do this — use gpt-image-1/1.5/2, Gemini, or Grok for these slots)
 - Flat lays / collection shots with multiple designs: generate the background + pixel-perfect PIL paste of the REAL design files on top (edit-style calls garble small text with 5+ inputs, regardless of engine)
 - Infographics / spec sheets / how-to graphics: generate the background + PIL text overlay (no engine reliably renders text baked into the image — Ideogram and gpt-image-2 are the closest, still verify before shipping)
-- Stickers / cut-out assets requiring a transparent background: engine="openai" (gpt-image-1) only — gpt-image-2 cannot do this
+- Stickers / cut-out assets requiring a transparent background: engine="openai" (gpt-image-1, proven) today; migrate to engine="gpt-image-1.5" once verified — no other engine (including Grok) is confirmed to support this
 
 **Every listing undergoes a complete pre-publish checklist before going live.** A listing cannot be submitted for Scott's review unless every gate below for its category has been run and passed. "Looks good" is not a gate. The gate is code.
 
 ---
 
 ### SS-Series SVG Pack — Title
-- Max 70 chars (hard limit — mobile ranking penalty above)
+- Hard technical limit: 140 chars (Etsy's real platform max — see "Change 1:
+  Title Length Cap" above). The old "70 char hard limit" claim for this
+  category was never independently verified and is now known wrong for wall
+  art/planners/coloring (real competitors run 100–140 chars there) — SVG
+  packs haven't been checked yet, so **keep the 60–70 target below until a
+  dedicated competitive pull confirms or corrects it for this niche
+  specifically.** Don't assume the wall-art/planner finding generalizes here
+  without evidence.
 - Formula: `[Design Theme] SVG, 3D Print [Type], Instant Download`
 - Must contain "SVG" in the first 30 chars
 - Must end with "Instant Download"
 - Comma separators only — no pipes
-- Target: 60–70 chars
+- Target: 60–70 chars (unverified for this niche — see note above)
 
 ### SS-Series SVG Pack — Tags (13 exactly, each ≤20 chars)
 - Zero tags may duplicate any phrase already in the title
@@ -1651,22 +1964,26 @@ Any file below this is rejected from the production pipeline — do NOT create a
 
 ---
 
-### Gate 3: Title — 2026 Algorithm Rules (HARD REQUIREMENT)
-**Maximum 70 characters.** Titles over 70 chars receive a mobile ranking penalty (70%+ of Etsy traffic is mobile).
+### Gate 3: Title — 2026 Algorithm Rules (HARD REQUIREMENT) — corrected 2026-08-10
+**Maximum 140 characters** (Etsy's real platform max). **Target 100–140** —
+real competitive research (7 live Etsy searches, 2026-08-10, see "Change 1:
+Title Length Cap") showed every top-favorited wall-art competitor runs
+100–140 chars, not ≤70. The old "70 char = mobile penalty above" claim had
+no cited source and is contradicted by this data.
 
 **Formula:**
 ```
-[Primary search phrase] Printable Wall Art, Instant Download, [Style/room]
+[Primary search phrase] Printable Wall Art, Instant Download, [Style/room], [additional buyer-search phrases]
 ```
 
 Rules:
-- First 20–30 characters = highest algorithm weight — lead with the exact phrase buyers type
+- First 20–40 characters = highest algorithm weight (mobile still truncates the preview here) — lead with the exact phrase buyers type
 - Must include: "printable" AND "instant download"
 - Use comma separators, not pipes
-- Target: 55–70 characters
+- Target: 100–140 characters
 - **Do NOT repeat title phrases in tags** (wastes ranking slots — see Gate 4)
 
-**Validation:** Run `len(title)` before publishing. Hard reject if > 70.
+**Validation:** Run `len(title)` before publishing. Hard reject if > 140.
 
 ---
 
@@ -1751,7 +2068,7 @@ Run through this in order for every new wall art product:
 - [ ] ZIP verified under 20MB
 
 **Listing Content**
-- [ ] Title: 55–70 characters, leads with buyer search phrase, includes "printable" + "instant download"
+- [ ] Title: 100–140 characters, leads with buyer search phrase in first 40 chars, includes "printable" + "instant download"
 - [ ] Title: does NOT use pipe separators (use commas)
 - [ ] Description: first sentence contains primary keyword + states instant download
 - [ ] Description: all required sections present (hook, what's included, specs, FAQ)
@@ -1775,6 +2092,168 @@ Run through this in order for every new wall art product:
 - [ ] Upload ZIP to listing via `EtsyAPIClient.upload_listing_file()`
 - [ ] Run `tools/audit_fix_wall_art_tags.py` to verify tags pass audit
 - [ ] Check listing live on mobile — does the thumbnail stop the scroll?
+
+---
+
+## WC-Series Printable Wall Calendar Pipeline
+*Built 2026-08-11 from a real competitive-research + adversarial-review pass (a workflow of parallel research agents, a hard Canva-feasibility check for the separate editable-template category, spec synthesis, then an adversarial review of the spec against this shop's own rules) before any code shipped. Reuses `generate_planner.py`/`generate_planner_v2.py`'s reportlab rendering primitives and the exact existing theme RGB tuples for Sage Garden (DP1031), Matcha Serenity (DP1030), and Sunflower Studio (DP1033) — zero new color derivation, zero drift from the shipped planner line.*
+
+### What ships per product
+One ZIP (`tools/generate_wall_calendar.py`, category `wall_calendar`, pid prefix `WC`):
+- 12 AI-generated seasonal header illustrations (one per month, reused across every PDF variant so art cost is fixed regardless of variant count)
+- Dated 2026 monthly-grid PDF — Monday-start and Sunday-start versions (both real, both ship — week-start is a real, buyer-searched calendar attribute this shop's planner line has never needed)
+- Undated evergreen monthly-grid PDF — same two week-start versions, **zero day numbers rendered, only the calendar-agnostic weekday column headers** — see the module's own docstring for why: an earlier planner-code pattern (`_v2_monthly_pages(dated=False)`) silently bakes in the CURRENT year's real weekday alignment even in "undated" mode, which is fine for a notebook-style planner page but a real truthfulness defect for a wall calendar specifically (a buyer uses this to track real dates)
+- One year-at-a-glance poster JPG (3000×3000px, PIL-rendered grid + hero art, weekend cells 15% lighter per the existing Color Design Rule)
+
+**Deliberately NOT included in v1:** the monthly-grid PDF is delivered at ONE size (US Letter, matching the planner convention) and is never run through `generate_print_sizes.py` — that tool resizes a single flat image, and a US-Letter-laid-out PDF does not correctly re-flow to 18×24/A4/A3 (different aspect ratios: 18×24=0.75, Letter=0.773, A4/A3=0.707 → real content would crop). Only the year-at-a-glance poster goes through the real multi-size pipeline. A poster-size tier expansion (18×24/24×36/A1 — real top sellers ship up to 36×48/A0) is a valid v2 addition, scoped out of v1 to avoid touching `generate_print_sizes.py` before a single calendar has actually sold.
+
+### Launch themes (3 of the 12-theme catalog)
+- **Sage Garden** — botanical/cottagecore was the #1 confirmed trending style in real Etsy search snippets pulled for this research.
+- **Matcha Serenity** — minimalist/Japanese-inspired, covers the confirmed "minimalist" trend bucket.
+- **Sunflower Studio** — colorful/botanical hybrid, covers the confirmed "colorful" trend bucket.
+Cherry Blossom held for a spring seasonal re-release (aligns with the existing Feb-6 seasonal calendar trigger).
+
+### QC gate (`qc_sweep.check_wall_calendar_zip()`)
+- [ ] Every dated monthly-grid PDF: exactly 12 pages, real day-number text present (catches a build that silently produced the blank/undated template but named it as the dated file — page count alone can't tell the difference)
+- [ ] Every undated monthly-grid PDF: exactly 12 pages, **zero year digits present anywhere** (regex `202[5-9]|20[3-9]\d` on extracted text) — the QC-side half of the same guarantee the generator's own undated rendering makes structurally true
+- [ ] Year-at-a-glance poster: ≥3000px short edge
+- [ ] `validate_digital_file()` zero errors on the final ZIP (content gate, size, ZIP integrity — shared with every other category)
+- [ ] README.txt present
+
+### Title & tags
+Formula: `[Year] Wall Calendar, [Theme/Style] Printable Calendar, [Week-Start] Start, Instant Download, [additional buyer-search phrases]` — 100–140 chars per Change 1, lead with the primary keyword in the first 40 chars. Real title pattern confirmed from live top-favorited listings: comma-separated, always states the week-start variant (`Sunday start`/`Monday start`) and size call-outs explicitly — this shop's planner pipeline has never needed a week-start attribute before this product line.
+
+13 tags across categories: style (`botanical calendar`), format (`printable calendar`), size (poster size actually shipped), week-start (`monday start cal` / `sunday start cal`), use (`wall calendar 2026`), audience/aesthetic, `instant download` — zero tags may duplicate a title phrase (same rule as every other category).
+
+### Pricing
+Year-at-a-glance poster only: **$5.99**. Full pack (poster + monthly book, dated+undated, both week-starts): **$8.99**. Anchored just above the adjacent wall-art single-print tier and below the $12.99+ wall-art set-of-3 tier — this product's design cost (12 header images) is lower than a full illustrated wall-art set, and real full-price data for this niche was largely unverifiable in live search (only noisy sale-price snippets, $2.67–$4.45) so this leans on the adjacent-category anchor rather than an unconfirmed number.
+
+### 10 listing photos
+1. Hero — poster on a wall, styled room · 2. Second room type · 3. Monthly-book page close-up · 4. Size comparison flat lay · 5. Dated vs. undated side-by-side · 6. Week-start variant callout (Sun vs. Mon grid) · 7. Full 12-month lineup grid · 8. Gallery-wall styled shot · 9. What's-included ZIP contents graphic · 10. Theme palette / cover close-up.
+
+Same as every other category: lifestyle photos (slots 1-2, 6, 8) must use the real delivered files via `images.edit` / `listing_photo_pipeline.py`'s `generate_verified_photo()`, never an AI-generated stand-in — the one-tap build only pre-registers the real poster JPG as photo 1 automatically (so the listing is never photo-less at draft time); the remaining lifestyle-room slots still need the standard AI-photo flow before publishing, same as wall_art's existing "no lifestyle photos in the one-tap build" precedent.
+
+---
+
+## Parametric 3D Print Pipeline (OpenSCAD)
+
+Added 2026-08-14 after reviewing a batch of open-source 3D tooling (TRELLIS,
+Blender, Meshroom, FreeCAD, OpenSCAD) for fit against how this shop already
+works. OpenSCAD is the one that matches the existing pattern used everywhere
+else here — Claude writes a script, a subprocess renders it deterministically,
+resizable later by changing one number — the same shape as
+`generate_planner.py`/`generate_wall_calendar.py`/`svg_converter.py`, just for
+genuinely 3D (non-flat) objects instead of flat PDFs/SVGs. This is a
+**different product shape than the SS-Series pipeline above** — SS-Series is
+flat multi-color SIGNS assembled from layered SVGs/3MF at set Z heights; this
+is real sculpted 3D geometry (a vase, a desk organizer, a bracket, a holder)
+for the existing `3d_print_physical` catalog category — items Scott prints
+and ships himself, not a customer-facing digital download.
+
+**Tool**: `render_openscad_model` (chat) / `tools/openscad_render.py`
+(standalone: `python3 tools/openscad_render.py model.scad -o out.stl -D
+size=40`, or `--check` to confirm the binary is present). Frank writes real
+OpenSCAD source in the tool call; the wrapper shells out to the `openscad`
+CLI and returns a mesh file (STL by default — every slicer including Bambu
+Studio imports it directly; 3MF/OFF/AMF also supported).
+
+**System dependency, not a Python package**: `openscad` is a system binary
+(apt package `openscad`, ~2021.01), **not in the Railway server image or
+requirements.txt** — `check_openscad_available()` reports this clearly
+(`{"error": "openscad is not installed. Install it with apt-get install -y
+openscad..."}`) rather than a bare crash if it's missing on a given deploy.
+Install with `apt-get install -y openscad` to enable real rendering.
+
+**Zero API cost, zero Etsy interaction.** Pure local subprocess — no AI call,
+no money spent, nothing published or staged toward Etsy by the render itself.
+Once a design is confirmed printable, register it via `stage_action`
+(`action_type: register_product`, `category: 3d_print_physical`) — same
+one-tap-approval gate as everything else, per Autonomy Boundaries below.
+
+**Design rule**: write clean, parametric OpenSCAD — real named variables for
+every dimension (`size=40; cube([size,size,size]);`), never magic numbers
+baked into the geometry — so a design is genuinely resizable by a future `-D`
+override, the whole point of choosing this over a one-off manual model.
+
+**Real design-quality knowledge, added 2026-08-21**: `render_openscad_model`
+producing a mesh with no error is NOT the same as the design being good —
+several real, non-obvious OpenSCAD/CGAL pitfalls (a naive revolve producing
+visible facet rings instead of a smooth curve, a 2D `offset()` on a
+rotation-axis-touching profile silently producing an internal spike with no
+error, a vessel profile that welds itself shut) were found and fixed while
+building the first real test models, and none of them threw an error — the
+render "succeeded" every time. **Load the `.claude/skills/3d-print-design/
+SKILL.md` skill before writing any real .scad script** — it has the worked
+fixes for all three plus the real Bambu P1S printability constraints
+(overhang limits, minimum wall thickness, which edges are safe to round).
+Two capabilities that skill assumes are available and now are:
+- **BOSL2** (Belfry OpenSCAD Library v2, BSD-2-Clause) is vendored at
+  `assets/openscad_libs/BOSL2/` and always on the include path for every
+  render — `include <BOSL2/std.scad>` just works, no setup, giving real
+  rounding/filleting, `smooth_path()` curve smoothing, `attachable()`
+  positioning, and thread/gear generators.
+- **PNG preview rendering** (`format="png"` on `render_openscad_model`, or
+  `fmt="png"` in `render_scad()`) now actually works in this headless
+  container — it's wrapped in `xvfb-run` + Mesa's software rasterizer
+  automatically. Use it to visually verify a model — the same "look at the
+  actual output before calling it done" discipline this shop already
+  applies to AI-generated listing photos — before producing the final
+  stl/3mf. Default camera framing is `--autocenter --viewall` so the whole
+  model is shown without guessing coordinates.
+
+---
+
+## Animated Video Compositions (HyperFrames)
+
+Added 2026-08-14 alongside the OpenSCAD pipeline above, from the same batch
+of open-source tooling review. `generate_video` (existing) is a fixed Ken
+Burns pan-zoom slideshow with 4 preset styles, pulled from an already-live
+Etsy listing's photos — good for a fast, no-thought social video. HyperFrames
+is a different tool for when that's not enough: Claude writes a real
+animated composition (HTML + GSAP timing/motion), and a subprocess renders
+it to a genuine MP4 via headless Chrome + ffmpeg — a branded animated intro,
+kinetic-typography sale announcement, or a layered multi-photo reveal that a
+plain pan-zoom can't produce.
+
+**Tool**: `render_hyperframes_video` (chat) / `tools/hyperframes_render.py`
+(standalone: `python3 tools/hyperframes_render.py --check`). Claude writes
+the complete composition HTML in the tool call — a root element with
+`data-composition-id`/`data-start`/`data-duration` (or register a GSAP
+timeline on `window.__timelines[id]` and duration is inferred), child
+elements marked `class="clip"` with their own `data-start`/`data-duration`/
+`data-track-index`. `npx hyperframes docs` has the full authoring reference.
+
+**Real product photos, never a stand-in**: pass a `media_files` map
+(`{"assets/photo.jpg": "product_files/DP1030_listing_images/photo_01.jpg"}`)
+and reference it via a normal `<img src="assets/photo.jpg">` in the
+composition — the wrapper resolves each value against the digital_products
+base (same convention as every other Files-tab path) and copies the real
+file in before rendering. The cardinal rule applies here exactly like every
+other listing asset: never invent a placeholder image in the composition.
+
+**System dependencies, not Python packages**: `hyperframes` is an npm CLI
+(Node.js 22+), rendering needs `ffmpeg` (apt package `ffmpeg`) and a
+one-time Chrome Headless Shell download (`npx hyperframes browser ensure`,
+~115MB, cached after). None of this is in the Railway server image by
+default — `check_hyperframes_available()` reports exactly what's missing
+(`{"error": "hyperframes needs Node.js 22+ ... installed on this deploy."}`)
+rather than a bare crash. For production use, `npm install -g hyperframes`
+once avoids a per-render npm-registry check that `npx` otherwise does.
+
+**Telemetry**: HyperFrames collects anonymous usage telemetry by default
+(can link to a HeyGen account). The wrapper sets `HYPERFRAMES_NO_TELEMETRY=1`
+and `DO_NOT_TRACK=1` on every render call — no config file write, no
+account, nothing opted in silently.
+
+**Known failure mode, guarded against**: a composition with no GSAP
+timeline AND no `data-duration` on its root element can hang well past
+HyperFrames' own internal timeouts rather than failing fast — confirmed
+during development. `render_composition()`'s own `timeout` parameter is the
+real safety net for this, not just defensive boilerplate; don't remove it.
+
+**Zero API cost, zero Etsy interaction** — pure local subprocess, same as
+OpenSCAD above. Nothing is posted or published by the render itself; use
+`stage_tiktok_post`/`stage_pinterest_post` separately once a video is ready.
 
 ---
 
@@ -2267,8 +2746,8 @@ Before publishing any sticker pack:
 - [ ] Files named descriptively: `DP1030_8x10_300dpi.jpg` (not IMG_4456.jpg)
 
 ### Wall Art Listing Quality
-- [ ] Title is 55–70 characters (hard reject above 70 — mobile ranking penalty)
-- [ ] Title leads with buyer search phrase in first 20–30 characters
+- [ ] Title is 100–140 characters (hard reject above 140 — Etsy's platform max)
+- [ ] Title leads with buyer search phrase in first 20–40 characters
 - [ ] Title uses comma separators (not pipes)
 - [ ] Title includes "printable" AND "instant download"
 - [ ] All 13 tag slots used
@@ -2321,7 +2800,7 @@ Before publishing any sticker pack:
 - [ ] Hero photo (Photo 1) reviewed — does it stop the scroll?
 - [ ] Text callouts added in Canva for Photos 2, 6, 7 (not baked into AI image)
 - [ ] Tags: all 13 used, each ≤ 20 chars, no special characters
-- [ ] Title: primary keyword in first 40 chars, total ≤ 70 chars (2026 algorithm: >70 chars = mobile ranking penalty)
+- [ ] Title: primary keyword in first 40 chars, total 100–140 chars (Etsy platform max is 140 — see "Change 1: Title Length Cap")
 - [ ] Title mentions: year (2026), app (GoodNotes/Notability), "Instant Download"
 - [ ] Description: primary keyword in sentence 1 or 2
 - [ ] Description: all 9 required sections present in order
@@ -2397,6 +2876,8 @@ Rules:
 | Financial tracking / COGS per print | Craftybase |
 | Social post scheduling | Buffer or Tailwind |
 | Shop health snapshots | `tools/shop_health_check.py` |
+| **Parametric 3D-print model generation** | `tools/openscad_render.py` / `render_openscad_model` chat tool — see "Parametric 3D Print Pipeline (OpenSCAD)" above. Requires `openscad` installed on the deploy. |
+| **Custom animated social videos** | `tools/hyperframes_render.py` / `render_hyperframes_video` chat tool — see "Animated Video Compositions (HyperFrames)" above. Requires the `hyperframes` npm CLI + `ffmpeg` + a one-time Chrome Headless Shell download on the deploy. |
 | **Backup digital_products/ after producing a new product's files** | `tools/backup_digital_products.py` — run as soon as a new product's source art/PDF/ZIP is generated, since `data/digital_products/` is gitignored and has no other durable backup. Hand the output ZIP to Scott (via chat) to save in his own cloud storage. |
 | **Log infrastructure/dashboard incidents for the CEO Agent (Fucking Frank)** | Append a short dated entry (symptom, root cause, fix) to `data/knowledge_base/ops_runbook.md` any time Claude Code diagnoses or fixes a problem with the live site, API, deploy, or credentials — Frank loads this file fresh on every chat/diagnostic request (`_ops_runbook_block()` in `tools/api_server/main.py`), so Scott can ask Frank directly "why was X broken?" and get a grounded answer instead of a guess. Keep entries short — this is a log, not a report. |
 | **Archive anything before deleting it (recycle bin)** | BEFORE removing any code block or file, archive it first via `tools/trash.py` — `from tools.trash import archive_snippet, archive_file` then `archive_snippet(source_path, exact_removed_text, reason)` for code or `archive_file(path, reason)` for whole files. Everything lands in the committed vault `data/trash/` (ledger `DELETED.md` + byte-exact copies in `files/`), kept **30 days** then auto-pruned, so an accidental or regressive deletion can be recovered with `python tools/trash.py --restore <id>`. This is a hard rule per Scott (2026-06-23): nothing we delete should be unrecoverable. The vault must stay committed (the remote container is ephemeral — uncommitted files are lost). |
@@ -2458,12 +2939,41 @@ The dates below are the script's actual values; `_SEASONAL_TRIGGER_DATES` in
 
 ## Etsy 2026 Algorithm — Confirmed Changes
 
-### Change 1: Title Length Cap (CRITICAL — affects all listings)
-- **Titles > 70 characters face mobile ranking penalty**
-- Mobile = 70%+ of Etsy traffic in 2026
-- Listings that shortened to <70 chars saw +34% mobile CTR and avg +4.2 position ranking boost
-- **Formula:** Lead with product noun → include top 3 keywords → keep buyer-friendly language
-- Example: `Kawaii Digital Planner 2026 | GoodNotes iPad | Sticker Pack` (61 chars) ✓
+### Change 1: Title Length Cap — CORRECTED 2026-08-10 (real competitive research)
+**The flat 70-char cap below was reversed.** It's superseded by the section
+immediately following — kept here (struck through in spirit, not deleted) so
+the correction has an explicit before/after instead of silently vanishing.
+
+~~- **Titles > 70 characters face mobile ranking penalty**~~
+~~- Mobile = 70%+ of Etsy traffic in 2026~~
+~~- Listings that shortened to <70 chars saw +34% mobile CTR and avg +4.2 position ranking boost~~
+~~- Example: `Kawaii Digital Planner 2026 | GoodNotes iPad | Sticker Pack` (61 chars) ✓~~
+
+The "+34% CTR / +4.2 position boost from shortening to <70 chars" claim above
+had no cited source anywhere in this doc and turned out to be contradicted by
+real data: pulling live Etsy public-search results for our top-10-by-views
+digital listings' niches (7 searches: moon/ocean wall art, mountain lake wall
+art, dog wall art, checkerboard floral, paris skyline, digital planners,
+kawaii/adult coloring — full findings in chat, 2026-08-10) showed **every
+single top-favorited competitor listing runs 100–140 characters**, not ≤70.
+Several cluster at exactly 140 — Etsy's real, hard platform max for a title.
+
+**Corrected rule:**
+- **Target 100–140 characters** (Etsy's hard platform max is 140 — enforced
+  by `EtsyAPIClient.pre_publish_gate()`, `listing_qc.py`, and every staged
+  `update_title`/`create_listing` action; nothing above 140 can publish)
+- Mobile still truncates the preview at ~40 characters, so still **lead with
+  the single highest-intent keyword phrase in the first 20–40 chars** — that
+  part of the old rule was never contradicted by the evidence
+- Fill the remaining characters with additional real buyer-search phrases,
+  comma-separated (never pipes) — matches the real winning pattern, not
+  artificial keyword stuffing
+- **Formula:** `[Primary phrase, first 40 chars], [secondary phrase], [tertiary phrase], Instant Download`
+- Example (139 chars, real winning-pattern shape): `Golden Retriever Boy Nursery Decor, Boy Golden Retriever Painting, Dog Decor Boys Room, Fishing Wall Art, Lake Nursery, Printable Dog Art`
+- This is evidence from wall art / digital planner / coloring-page niches
+  specifically — if a future competitive pull in a different category (SVG
+  packs, sticker packs) shows a different pattern, update that category on
+  its own evidence rather than assuming this generalizes further than checked.
 
 ### Change 2: Shipping Cost Penalty
 - US listings with shipping above **$6** face reduced search visibility
@@ -2497,7 +3007,7 @@ Etsy's search operates in two distinct phases:
 **Ranking drop causes:**
 - Policy violations reduce shop quality score, which drags ranking of ALL remaining listings
 - Editing a listing can temporarily reduce its search visibility (expect 2–3 weeks to recover)
-- Titles >70 chars (mobile penalty), shipping >$6 (US domestic penalty)
+- Titles >140 chars (exceeds Etsy's platform max — can't publish), shipping >$6 (US domestic penalty)
 - Seasonal shifts in buyer demand (looks like a drop but is just category-level traffic change)
 
 **Recovery timeline after fixes:** Most sellers see views recovering within 2–3 weeks after optimizing titles/tags. Compliance violations take weeks to months because the algorithm needs to see consistent positive signals before trusting the shop again.
@@ -2831,6 +3341,38 @@ This product was designed using AI image generation tools, with original prompts
 curation, and finishing by the seller. All products are reviewed for quality before listing.
 ```
 
+### 2026-08-22 update: the June 2025 rule above got real enforcement teeth, and the gap Frank can't close alone
+
+The June 2025 description-paragraph requirement is still necessary but is **no longer
+sufficient**. Etsy's Jan 14, 2026 enforcement tightening added a **separate structured
+toggle** in the listing editor — "This listing uses AI generative technology" — plus a
+"Designed by" vs. "Made by" selector in Item Details. Listings missing the *structured*
+disclosure get filtered from search even when the description paragraph and `who_made:
+"i_did"` are both correct: ~12,000 listings removed and ~8,500 warnings issued
+industry-wide in Q1 2026 alone for this specific gap.
+
+**Confirmed (2026-08-22, via developer.etsy.com and an unanswered `etsy/open-api`
+GitHub discussion, #1340) that the Etsy Open API v3 has NO field for this toggle.**
+`who_made`/`when_made`/`is_supply` and the description text are the only parts of this
+Frank can set programmatically — the toggle itself is editor-UI-only. Every
+`create_listing` action Frank stages now carries this as a mandatory manual follow-up:
+`db.py`'s `enqueue_action()` prepends "📋 After approval, manually enable AI-disclosure
+toggle in Etsy editor" directly onto the Action Center card's summary (the one field
+every card actually renders), and `main.py`'s `_validate_staged_action()` attaches the
+same reminder as a structured `_ai_disclosure_manual_step` payload field. **Scott: after
+approving any new listing, open it in the Etsy editor and flip that toggle + set
+"Designed by" — this is a real gap in what Frank can automate, not an oversight.**
+
+**Also new and NOT yet gated by any tool in this codebase (2026-08-22, flagging so it
+isn't lost — a real build, not done here):** Etsy's Aug 11, 2026 Prohibited Items Policy
+update requires computer-made items to use the seller's own *original* design — a
+licensed template or clipart bundle can now trigger removal even with a valid commercial
+license, separate from the disclosure requirement above. This has direct exposure for
+the SS-series SVG packs and sticker sheets. No current gate verifies every visual
+element traces to an original AI prompt vs. a licensed asset — worth a real
+provenance-manifest build in a future session, not something to assume is covered by
+`validate_digital_file()`'s existing file-quality checks.
+
 ### What Gets Flagged and Removed
 
 - Listings that **look AI-generated but have no AI disclosure** — automated detection catches these
@@ -3131,3 +3673,62 @@ When any API call returns 401 and the refresh endpoint also returns 401:
 - Change prices on more than 5 listings in a single session
 - Post to social media accounts
 - Contact buyers directly about anything other than the 5 Quick Reply templates
+
+### Direct Infrastructure Access (Added 2026-08-19, Scott: "make it to where you can do anything I tell you")
+
+Real friction Scott hit trying to get a first-of-its-kind product (Sprigit, an
+interactive app, not a PDF/PNG/ZIP) live same-day: no local Etsy credentials in a
+fresh session, Frank's own Anthropic account dry, and a genuine gap in the
+category pipeline (`"uncategorized"` was never wired into the taxonomy/content-
+price tables — fixed the same day, see `_PRODUCT_TAXONOMY_BY_CATEGORY` /
+`_CONTENT_PRICE_BY_CATEGORY` in `main.py`). This section is the durable
+authorization to route around friction like that going forward, without
+re-asking each time — and an explicit line on the one thing that stays gated
+even so.
+
+**Fetching live credentials directly, when needed for a legitimate task:**
+Railway's GraphQL API (`https://backboard.railway.app/graphql/v2`, project
+"calm-light") holds the real env vars for this deploy — `ETSY_*`,
+`APP_SECRET_TOKEN`, `Grok api`, etc. Fetching them in-process (never written to
+disk, never logged) to call an API directly — image generation, Frank's own
+REST endpoints, or Etsy itself — is pre-authorized. Two caveats worth knowing,
+not asking permission for: the Railway-stored `ETSY_ACCESS_TOKEN` is a static
+snapshot and goes stale fast (confirmed 401 same day) — Frank's own live
+process keeps the real rotating token in its database, not in that snapshot,
+so **prefer routing Etsy writes through Frank's own endpoints** (below) over
+minting a fresh Etsy OAuth session by hand; and never call
+`EtsyAPIClient.refresh_access_token()` from outside Frank's own running
+process — it rotates the refresh token, and a copy that only exists in a
+throwaway session's memory desyncs Frank's real one, breaking its Etsy
+connection until Scott re-runs the OAuth flow.
+
+**Talking to Frank directly, outside its own chat UI, when Frank's own AI is
+unavailable (e.g. Anthropic credits exhausted) or a chat session isn't
+practical:** `POST /api/files/upload?path=<rel>` (raw bytes, writes to the real
+`/data/files` volume) and the small set of plain-REST endpoints main.py already
+exposes specifically for this situation — `/api/products/register`,
+`/api/products/{id}/set-listing-content`, `/api/products/{id}/stage-publish`,
+`/api/agent-tools/{stage_action|stage_batch_price_update|stage_batch_listing_state}`
+— all Bearer-`APP_SECRET_TOKEN`-authenticated, zero LLM dependency, every one
+of them already a pure staging or local-write operation server-side (none
+mutates a live Etsy listing directly — that's the point of them existing
+pre-Frank at all). Use these instead of stopping to say "Frank's tools aren't
+reachable from here."
+
+**Small, additive, well-precedented code fixes** (like the taxonomy-table gap
+above) — same file, same dict, following an already-established pattern in
+that exact file with a dated comment explaining the why — don't need a
+check-in before writing the diff. Showing Scott the diff before it ships is
+still how it works (see below); the change is real either way.
+
+**What this does NOT change:** an actual Etsy publish — the live write that
+makes something buyer-facing — still stages into the Action Center for Scott's
+one-tap approval rather than firing directly, and a code fix still doesn't
+deploy (git push, Railway redeploy) without Scott seeing the diff first. Both
+of those are cheap, fast checks that catch real mistakes before they reach a
+real customer or the live shop — this session alone found and fixed 7 real
+bugs in one product through exactly that kind of review. The goal of this
+section is removing friction that was never actually protecting anything
+(credentials nobody could otherwise reach, a chat tool that happened to be
+unreachable, a code gap with an obvious fix) — not removing the two checks
+that are.

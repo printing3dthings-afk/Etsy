@@ -23,6 +23,7 @@ Usage:
 
 import argparse
 import sys
+import os
 import zipfile
 from pathlib import Path
 
@@ -31,8 +32,24 @@ from PIL import Image
 from scipy import ndimage
 
 BASE_DIR = Path(__file__).parent.parent
-ART_DIR = BASE_DIR / "data" / "digital_products" / "product_files"
-STICKER_OUT = BASE_DIR / "data" / "digital_products" / "stickers"
+
+
+def _resolve_dp_base() -> Path:
+    """digital_products base — the durable Railway volume in production, the repo
+    tree locally. Without this the tool reads/writes ephemeral storage on the
+    server and silently finds ZERO sheets (the 'works in sandbox, breaks in prod'
+    trap documented in ops_runbook.md)."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE_DIR / "data" / "digital_products"
+
+
+DP_BASE = _resolve_dp_base()
+ART_DIR = DP_BASE / "product_files"
+STICKER_OUT = DP_BASE / "stickers"
 
 SHEET_PX = 3000          # final sheet resolution (square)
 WHITE_THRESHOLD = 238    # a pixel is "background-white" if all RGB channels >= this
@@ -167,6 +184,53 @@ def remove_white_background(img: Image.Image) -> Image.Image:
     return Image.fromarray(np.dstack([rgb.astype(np.uint8), alpha]))
 
 
+# ── AI cut-out: rembg + BiRefNet (both MIT) — preferred over the flood-fill above.
+# BiRefNet matting gives clean transparent edges regardless of the sheet background
+# (soft drop-shadows, anti-aliasing, themed-color paper) — the exact cases the
+# corner-sampled flood-fill struggles with. It's an OPTIONAL dependency
+# (`pip install -r requirements-sticker.txt`, lazy-imported), and cutout() falls
+# back to remove_white_background() whenever rembg isn't installed or a cut-out
+# fails, so this tool's behavior is unchanged without the extra install.
+# LICENSE NOTE: BiRefNet is MIT (product-safe). Do NOT swap in BRIA RMBG-2.0 — its
+# weights are NOT freely commercial.
+CUTOUT_MODE = "auto"  # ai | flood | auto  (auto = AI if importable, else flood)
+_rembg_session = None
+_rembg_unavailable = False
+
+
+def _ai_cutout(img: Image.Image) -> Image.Image:
+    """Transparent RGBA cut-out via rembg + BiRefNet. Raises on any failure so
+    cutout() can fall back to the flood-fill."""
+    global _rembg_session
+    from rembg import remove, new_session  # lazy — optional dependency
+    if _rembg_session is None:
+        _rembg_session = new_session("birefnet-general")
+    return remove(img.convert("RGB"), session=_rembg_session,
+                  post_process_mask=True).convert("RGBA")
+
+
+def cutout(img: Image.Image) -> Image.Image:
+    """Make the sheet background transparent. Prefers BiRefNet AI matting; falls
+    back to the corner-sampled flood-fill (remove_white_background) when rembg is
+    unavailable, a cut-out errors, or CUTOUT_MODE == 'flood'."""
+    global _rembg_unavailable
+    if CUTOUT_MODE == "flood":
+        return remove_white_background(img)
+    if not _rembg_unavailable:
+        try:
+            return _ai_cutout(img)
+        except ImportError:
+            _rembg_unavailable = True
+            if CUTOUT_MODE == "ai":
+                raise SystemExit("--cutout ai needs rembg: pip install -r requirements-sticker.txt")
+            print(" [cutout: rembg not installed → flood-fill]", end="", flush=True)
+        except Exception as e:
+            if CUTOUT_MODE == "ai":
+                raise
+            print(f" [cutout: AI failed ({e}) → flood-fill]", end="", flush=True)
+    return remove_white_background(img)
+
+
 def segment_stickers(rgba: Image.Image) -> list[Image.Image]:
     """Split a transparent sheet into individual sticker crops via connected
     components on the alpha channel."""
@@ -245,7 +309,7 @@ def process_pid(pid: str, max_sheets: int | None, make_individual: bool) -> dict
     for sheet_num, src in sources:
         print(f"  Sheet {sheet_num}: {src.name}", end="", flush=True)
         rgb = _load_rgb(src)
-        rgba = remove_white_background(rgb)
+        rgba = cutout(rgb)
         if rgba.size != (SHEET_PX, SHEET_PX):
             rgba = rgba.resize((SHEET_PX, SHEET_PX), Image.Resampling.LANCZOS)
 
@@ -324,7 +388,14 @@ def main():
     ap.add_argument("--sheets", type=int, default=None, help="Max sheet number to process")
     ap.add_argument("--no-individual", action="store_true", help="Skip individual sticker crops")
     ap.add_argument("--no-zip", action="store_true", help="Skip rebuilding the ZIP")
+    ap.add_argument("--cutout", choices=["ai", "flood", "auto"], default="auto",
+                    help="Background removal: 'ai' = BiRefNet via rembg (needs "
+                         "requirements-sticker.txt), 'flood' = the built-in flood-fill, "
+                         "'auto' (default) = AI if installed, else flood-fill")
     args = ap.parse_args()
+
+    global CUTOUT_MODE
+    CUTOUT_MODE = args.cutout
 
     if args.all:
         pids = sorted({p.name.split("_sticker_sheet_")[0]

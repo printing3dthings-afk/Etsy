@@ -1,17 +1,29 @@
 """
 Exports the non-secret state of the live hub.db (todos, action history, activity
-log, settings, user list, relay heartbeat) to a single git-committed JSON file, so a
-Railway redeploy wiping the ephemeral database (confirmed: /health reports
-persistent=false until a Volume is attached, see ops_runbook.md 2026-07-03) has a real
-recovery path instead of total data loss.
+log, settings, user list, relay heartbeat) to a JSON snapshot — a defense-in-depth
+copy distinct from hub.db itself, protecting against volume-level accidents
+(corruption, accidental deletion, a bad migration) rather than the original
+"no Volume attached" scenario this script was built for.
 
-IMPORTANT — this only helps if the output file actually gets committed and pushed.
-Writing it to disk inside the running container does NOT survive a redeploy any more
-than hub.db itself does; the container's whole filesystem resets together. Run this,
-then commit + push data/hub_db_backups/hub_db_state.json (or hand it to Scott to do
-so), the same way tools/backup_digital_products.py's ZIP gets handed to Scott for his
-own cloud storage. The real fix is the Railway Volume (correction-plan todo, Scott);
-this script is the interim safety net until that's attached.
+Durability (2026-07-17, updated): a persistent Railway Volume was attached
+2026-07-09 (confirmed live: /health reports persistent:true, files_volume:true),
+so hub.db itself is no longer wiped on redeploy — the original catastrophic-loss
+scenario this script guarded against is closed. OUT_PATH now resolves via
+db.resolve_persistent_path(), the same /data-detection every other durable-state
+file in this codebase uses (ops_runbook.md, ceo_learnings.md,
+registered_commands.json) — when a volume is mounted, the snapshot lands there
+directly and survives redeploys on its own, no git commit/push required. Falls
+back to the repo-relative path (git-committed, as before) when no volume is
+present, e.g. a local sandbox run. Added to _WEEKLY_MONITOR_SCRIPTS in main.py so
+this actually runs automatically now instead of depending on someone remembering
+an approval-gated command (the reliability audit found the JSON snapshot had
+gone a week stale — see ops_runbook.md 2026-07-17).
+
+Manual runs still work exactly as before:
+  python tools/backup_hub_db.py
+If you want an off-Railway copy too (e.g. before a risky migration), commit +
+push the output file same as always — just no longer required for it to survive
+an ordinary redeploy.
 
 What's excluded, and why:
   - etsy_tokens (access/refresh tokens) — the exact category of secret already
@@ -41,8 +53,11 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools" / "api_server"))
 import db  # noqa: E402
 
-OUT_DIR = ROOT / "data" / "hub_db_backups"
-OUT_PATH = OUT_DIR / "hub_db_state.json"
+_REPO_OUT_PATH = ROOT / "data" / "hub_db_backups" / "hub_db_state.json"
+OUT_PATH = db.resolve_persistent_path(
+    "hub_db_backups/hub_db_state.json", fallback=_REPO_OUT_PATH, seed_from=_REPO_OUT_PATH
+)
+OUT_DIR = OUT_PATH.parent
 
 _SECRET_KEY_PATTERN = re.compile(r"token|secret|password|api_key|client_id", re.IGNORECASE)
 
@@ -75,7 +90,11 @@ def main():
     counts = {k: len(v) if isinstance(v, list) else "n/a" for k, v in state.items() if k not in ("exported_at", "note")}
     print(f"Exported hub.db state -> {OUT_PATH}")
     print(f"Row counts: {counts}")
-    print("Remember: this file must be committed + pushed to actually survive a redeploy.")
+    if OUT_PATH != _REPO_OUT_PATH:
+        print("On the durable volume — survives a redeploy on its own, no commit/push needed.")
+    else:
+        print("No volume detected here — remember to commit + push this file if you want it "
+              "to survive (e.g. a local sandbox run).")
     return OUT_PATH
 
 

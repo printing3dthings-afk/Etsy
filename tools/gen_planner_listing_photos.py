@@ -9,19 +9,45 @@ Usage:
   python tools/gen_planner_listing_photos.py --pid DP1026 # one planner
 """
 import os, sys, shutil, argparse, time, json, urllib.request
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+from pathlib import Path
+
+# Portable + hosted-deploy aware. Was hardcoded to /home/user/Etsy, which crashed
+# on the Railway server (no such path, no .env file there). Resolve the repo root
+# from this file, load .env only if it exists (hosted deploys carry real env vars),
+# and point ART_DIR/DP_BASE at the durable volume when running on the server so
+# Frank's one-tap "generate listing photos" reads the PDF from — and writes the
+# photos back to — the same place the Files screen and sync use.
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_env_file = _ROOT / ".env"
+if _env_file.exists():
+    with open(_env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 import fitz
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
-ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
+
+def _resolve_dp_base() -> Path:
+    """Durable volume (<HUB_FILES_DIR> or /data/files) on the hosted deploy, else
+    the repo data dir locally — mirrors main.py + qc_sweep.resolve_dp_base()."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _ROOT / "data" / "digital_products"
+
+
+_DP_BASE_PATH = _resolve_dp_base()
+ART_DIR = str(_DP_BASE_PATH / "product_files")
+DP_BASE = str(_DP_BASE_PATH)  # for the stickers/<pid>/png_sheets fallback
 APP_COMPAT_SRC = os.path.join(ART_DIR, '07_app_compatibility.jpg')
 CANVAS = 2400
 
@@ -45,7 +71,7 @@ PLANNER_PAGES = {
         'emoji': '🌿',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 241,
+        'sticker_count': 219,  # measured count from the 2026-07-16 rebuild (tools/qc_sweep.py)
     },
     'DP1031': {
         'cover':    1,
@@ -65,7 +91,8 @@ PLANNER_PAGES = {
         'emoji': '🌿',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 183,
+        'sticker_count': 247,  # measured 2026-07-16 rebuild
+        'edition_label': 'Undated — Works Any Year, Forever',  # undated-only, no 2026-dated version
     },
     'DP1032': {
         'cover':    1,
@@ -85,7 +112,7 @@ PLANNER_PAGES = {
         'emoji': '🌙',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 183,
+        'sticker_count': 241,  # measured 2026-07-16 rebuild
     },
     'DP1033': {
         'cover':    1,
@@ -105,7 +132,28 @@ PLANNER_PAGES = {
         'emoji': '🌼',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 177,
+        'sticker_count': 229,  # measured 2026-07-16 rebuild
+        'edition_label': '2026-2027 School Year + Undated',  # academic-year dated, not calendar-2026
+    },
+    'DP1034': {
+        'cover':    1,
+        'monthly':  6,
+        'weekly':   42,
+        'tracker':  131,  # habit tracker
+        'specialty': 129, # budget tracker
+        'name': 'Ultimate Celestial Life Planner 2026',
+        'short': 'Celestial Planner',
+        'pages': 142,
+        'theme': 'Celestial Night',
+        'color': (30, 27, 75),     # deep indigo #1E1B4B
+        'accent': (201, 168, 76),  # starlight gold #C9A84C
+        'bg': (240, 238, 248),     # moonbeam white #F0EEF8
+        'tracker_label': 'Habit Tracker',
+        'specialty_label': 'Budget Tracker',
+        'emoji': '🌙',
+        'sticker_sheets': [1, 5, 6, 9],
+        'sheet_count': 9,
+        'sticker_count': 242,  # measured 2026-07-16 rebuild
     },
     'DP1026': {
         'cover':    4,
@@ -199,6 +247,49 @@ def fr(size):
               '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf']:
         if os.path.exists(p): return ImageFont.truetype(p, size)
     return ImageFont.load_default()
+
+
+def wrap_text(d, text, font, max_width):
+    """Word-wrap `text` to fit max_width, honoring explicit '\\n' as a forced
+    break. PIL's ImageDraw.text() never wraps on its own -- 2026-07-31: the
+    GoodNotes how-to graphic (make_howto) drew each manually-authored '\\n'
+    segment as a single line with zero check against the panel's actual pixel
+    width, so a long segment overran into the next panel. Anything drawing
+    multi-line text into a fixed-width area must measure it, not just split
+    on hardcoded newlines."""
+    lines = []
+    for para in text.split('\n'):
+        words = para.split(' ')
+        cur = ''
+        for w in words:
+            trial = f"{cur} {w}".strip()
+            if cur and d.textbbox((0, 0), trial, font=font)[2] > max_width:
+                lines.append(cur)
+                cur = w
+            else:
+                cur = trial
+        lines.append(cur)
+    return lines
+
+
+def _hue_word(rgb):
+    """Plain-English hue name for an (r,g,b) tuple — used in AI prompts INSTEAD of
+    numeric rgb/hex, because engines leak digits from the prompt as baked-in text.
+    Returns words only."""
+    import colorsys
+    r, g, b = (c / 255.0 for c in rgb[:3])
+    h, s, v = colorsys.rgb_to_hsv(r, g, b)
+    if s < 0.12:
+        return "light grey" if v > 0.5 else "charcoal"
+    deg = h * 360
+    if deg < 20 or deg >= 330: return "soft red"
+    if deg < 45:  return "warm coral"
+    if deg < 70:  return "golden yellow"
+    if deg < 160: return "soft green"
+    if deg < 200: return "teal"
+    if deg < 255: return "soft blue"
+    if deg < 290: return "muted purple"
+    return "soft pink"
 
 
 # ── PDF rendering ──────────────────────────────────────────────────────────────
@@ -340,7 +431,11 @@ def make_hero(pid, cfg, out):
     d.text((CANVAS//2, 166), f"GoodNotes · Notability · Instant Download", font=fr(46), fill=(240,235,250), anchor='mm')
     _sc = cfg.get('sticker_count', 200)
     _sc_label = f"{_sc}+ Kawaii Stickers" if _sc >= 200 else f"{_sc} Kawaii Stickers"
-    d.text((CANVAS//2, CANVAS-55), f"✓ 2026 Dated + Undated Version   ✓ {cfg['pages']} Pages   ✓ {_sc_label}",
+    # Edition label is product-specific — an undated-only planner (e.g. DP1031) must
+    # NOT claim a "2026 Dated" version it doesn't ship. Default matches the dated
+    # products (which include both a 2026-dated and an undated PDF).
+    _edition = cfg.get('edition_label', '2026 Dated + Undated Version')
+    d.text((CANVAS//2, CANVAS-55), f"✓ {_edition}   ✓ {cfg['pages']} Pages   ✓ {_sc_label}",
            font=fr(42), fill=cfg['color'], anchor='mm')
 
     bg.save(out, 'JPEG', quality=93)
@@ -385,7 +480,7 @@ CONTENTS = {
     'DP1030': [
         ("Interactive PDF Planner — 2026 Dated Version",  "130 pages · Matcha Serenity · US Letter"),
         ("Bonus Undated Version — works any year forever", "Same layout, no year dates"),
-        ("Kawaii Sticker Pack ZIP",                        "9 illustrated sheets · 241 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                        "9 illustrated sheets · 219 stickers · transparent PNG"),
         ("Fully fillable text fields",                     "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                           "Jump to any section in one tap"),
         ("Pomodoro focus + habit trackers",                 "ADHD-friendly time-blocking and streak tracking"),
@@ -393,7 +488,7 @@ CONTENTS = {
     'DP1031': [
         ("Interactive PDF Planner — Undated Evergreen",    "141 pages · Sage Garden · US Letter"),
         ("Works any year, forever",                         "No dates to expire — start any month"),
-        ("Kawaii Sticker Pack ZIP",                          "9 illustrated sheets · 183 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                          "9 illustrated sheets · 247 stickers · transparent PNG"),
         ("Fully fillable text fields",                       "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                             "Jump to any section in one tap"),
         ("Budget tracker + habit tracker",                    "Built-in financial and habit-building tools"),
@@ -401,7 +496,7 @@ CONTENTS = {
     'DP1032': [
         ("Interactive PDF Planner — 2026 Dated Version",    "140 pages · Midnight Kawaii · US Letter"),
         ("Bonus Undated Version — works any year forever",   "Same layout, no year dates"),
-        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 183 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 241 stickers · transparent PNG"),
         ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
         ("Dark mode design + brain dump page",                 "Neon-on-dark theme, easy on the eyes at night"),
@@ -409,10 +504,18 @@ CONTENTS = {
     'DP1033': [
         ("Interactive PDF Planner — 2026-2027 School Year", "107 pages · Sunflower Studio · US Letter"),
         ("Bonus Undated Version — works any school year",    "Same layout, no year dates"),
-        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 177 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 229 stickers · transparent PNG"),
         ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
         ("Lesson plans + class roster pages",                  "Weekly lesson planning and student roster tracking"),
+    ],
+    'DP1034': [
+        ("Interactive PDF Planner — 2026 Dated Version",     "142 pages · Celestial Night · US Letter"),
+        ("Bonus Undated Version — works any year forever",    "Same layout, no year dates"),
+        ("Kawaii Sticker Pack ZIP",                            "9 illustrated sheets · 242 stickers · transparent PNG"),
+        ("Fully fillable text fields",                         "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
+        ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
+        ("Zodiac stickers + celestial trackers",              "Moon phases, constellations, star affirmations"),
     ],
 }
 
@@ -485,10 +588,26 @@ def make_sticker_showcase(pid, cfg, out):
     positions = [(120, 250), (1320, 250), (120, 1310), (1320, 1310)]
 
     for i, (sheet_num, (sx, sy)) in enumerate(zip(sheets, positions)):
-        src = os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg')
-        if not os.path.exists(src):
+        # Prefer a flat .jpg sheet, but fall back to the raw .png (the transparent
+        # PNG the pack ships) or the processed png_sheets/ copy — so the showcase
+        # never renders blank cards just because no .jpg was pre-made.
+        # Prefer the PROCESSED transparent sheet (png_sheets/) over the raw
+        # product_files .png — the raw sheet may carry a chroma-key background
+        # (e.g. the mid-gray used for dark-mode packs) that must not show here.
+        src = None
+        for cand in (os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg'),
+                     os.path.join(DP_BASE, 'stickers', pid, 'png_sheets', f'{pid}_sheet_{sheet_num:02d}.png'),
+                     os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.png')):
+            if os.path.exists(cand):
+                src = cand
+                break
+        if not src:
             continue
-        sheet = Image.open(src).convert('RGB').resize((sheet_size, sheet_size), Image.LANCZOS)
+        # Composite over white so a transparent PNG doesn't show as a black square.
+        _raw = Image.open(src).convert('RGBA')
+        _flat = Image.new('RGBA', _raw.size, (255, 255, 255, 255))
+        _flat.alpha_composite(_raw)
+        sheet = _flat.convert('RGB').resize((sheet_size, sheet_size), Image.LANCZOS)
         # White card
         card = Image.new('RGB', (sheet_size+16, sheet_size+16), (255,255,255))
         mask = Image.new('L', (sheet_size+16, sheet_size+16), 0)
@@ -530,8 +649,11 @@ def make_howto(pid, cfg, out):
     ]
 
     panel_w = (CANVAS - 160) // 3
+    text_w = panel_w - 100  # inset from the card's rounded corners/outline
     px = 60
     py = 260
+    title_font = fb(56)
+    body_font = fr(40)
 
     for i, (step, title, body) in enumerate(steps):
         # Panel card
@@ -541,15 +663,17 @@ def make_howto(pid, cfg, out):
         cx, cy = px + panel_w//2, py + 120
         d.ellipse([cx-80, cy-80, cx+80, cy+80], fill=cfg['color'])
         d.text((cx, cy), str(i+1), font=fb(90), fill=(255,255,255), anchor='mm')
-        d.text((px + panel_w//2, py + 240), step, font=fb(44), fill=cfg['color'], anchor='mm')
-        d.text((px + panel_w//2, py + 310), title, font=fb(56), fill=(50,40,70), anchor='mm')
+        d.text((cx, py + 240), step, font=fb(44), fill=cfg['color'], anchor='mm')
 
-        # Body text (word-wrapped manually)
-        lines = body.split('\n')
-        ty = py + 410
-        for line in lines:
-            d.text((px + panel_w//2, ty), line, font=fr(40), fill=(100,85,130), anchor='mm')
-            ty += 60
+        ty = py + 310
+        for line in wrap_text(d, title, title_font, text_w):
+            d.text((cx, ty), line, font=title_font, fill=(50,40,70), anchor='mm')
+            ty += 62
+
+        ty += 30
+        for line in wrap_text(d, body, body_font, text_w):
+            d.text((cx, ty), line, font=body_font, fill=(100,85,130), anchor='mm')
+            ty += 56
 
         px += panel_w + 40
 
@@ -586,7 +710,32 @@ def make_cover_closeup(pid, cfg, out):
 
 # ── Upload photos to Etsy ──────────────────────────────────────────────────────
 
-def upload_photos(listing_id, out_dir, photo_files, client):
+# Human-readable per-photo alt text (2026-07-15 ADA/WCAG audit fix) --
+# filenames already encode what each slot shows (see photo_files below),
+# so this maps the slug to a real description instead of leaving Etsy
+# photos with zero screen-reader alt text. Baseline, not AI-per-photo
+# captioning -- a reasonable quick fix, not the full solution.
+_PHOTO_ALT_LABELS = {
+    'hero': 'lifestyle hero photo on a desk',
+    'whats_included': "what's included overview",
+    'monthly_spread': 'monthly calendar spread preview',
+    'weekly_spread': 'weekly spread preview',
+    'sticker_showcase': 'kawaii sticker sheet showcase',
+    'goodnotes_howto': 'GoodNotes sticker import how-to steps',
+    'app_compatibility': 'compatible apps infographic',
+    'cover_closeup': 'cover art close-up',
+    'tracker': 'tracker page preview',
+    'specialty': 'specialty feature page preview',
+}
+
+
+def _photo_alt_text(product_name, filename):
+    slug = os.path.splitext(filename)[0].split('_', 1)[-1] if '_' in filename else filename
+    label = _PHOTO_ALT_LABELS.get(slug, slug.replace('_', ' '))
+    return f"{product_name} — {label}"[:500]
+
+
+def upload_photos(listing_id, out_dir, photo_files, client, product_name=''):
     auth_headers = {
         "Authorization": f"Bearer {client.access_token}",
         "x-api-key": f"{client.client_id}:{client.client_secret}",
@@ -619,7 +768,8 @@ def upload_photos(listing_id, out_dir, photo_files, client):
             continue
         for attempt in range(3):
             try:
-                result = client.upload_listing_image(listing_id, path, rank=rank)
+                alt_text = _photo_alt_text(product_name, filename) if product_name else None
+                result = client.upload_listing_image(listing_id, path, rank=rank, alt_text=alt_text)
                 print(f"    Uploaded rank {rank}: {filename} (id={result.get('listing_image_id')})")
                 time.sleep(0.8)
                 break
@@ -636,7 +786,72 @@ def upload_photos(listing_id, out_dir, photo_files, client):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def generate_for_planner(pid, client, upload=True):
+def make_app_compat(pid, cfg, dest, engine=None):
+    """Photo 7 — the app-compatibility infographic. Normally a shared static asset
+    reused across every planner (07_app_compatibility.jpg) so it costs nothing. When
+    that shared file is missing (a fresh volume, a brand-new catalog), GENERATE it
+    with the chosen AI engine (default Gemini — no OpenAI needed) so the set is a
+    full 10 photos instead of silently dropping to 9. Text is NOT baked into the AI
+    image (no engine renders text reliably — CLAUDE.md); the label is PIL-overlaid
+    crisply on top, matching the rest of the photo set."""
+    if os.path.exists(APP_COMPAT_SRC) and os.path.abspath(APP_COMPAT_SRC) != os.path.abspath(dest):
+        shutil.copy2(APP_COMPAT_SRC, dest)
+        print("    07_app_compatibility.jpg (copied from shared asset)")
+        return True
+    if os.path.exists(dest):
+        print("    07_app_compatibility.jpg (already present)")
+        return True
+    # Missing everywhere — generate it on the engine.
+    try:
+        from tools.image_gen import generate_image, SQUARE
+        eng = (engine or os.getenv("IMAGE_ENGINE") or "gemini").lower()
+        # Describe the center-icon colour with a plain hue WORD, never numbers/hex —
+        # engines leak digits from the prompt as baked-in text (Gemini rendered
+        # "rgb(126,200,16)" onto the icon once). No numbers in the prompt = nothing
+        # nonsensical to bake in. Text is added by PIL below, so the prompt forbids
+        # all in-image text.
+        prompt = (
+            f"Flat vector infographic, soft cream background. In the exact center a single "
+            f"blank {_hue_word(cfg['color'])} document icon with a folded corner and a few "
+            "plain horizontal lines (no readable words). Arranged evenly in a circle around it, "
+            "five rounded-square note/PDF app icons in green, red-orange, blue, teal, and "
+            "dark-red. Thin dashed pastel lines connect the center document to each app icon, "
+            "and each app icon has a small green circular checkmark badge. Clean, minimal, "
+            "professional, lots of empty cream background space. Absolutely NO text, NO words, "
+            "NO letters, NO numbers, NO labels anywhere in the image."
+        )
+        tmp = os.path.join(os.path.dirname(dest), f"_{pid}_appcompat_raw.png")
+        generate_image(prompt, tmp, size=SQUARE, quality="high", output_format="png", engine=eng)
+        img = Image.open(tmp).convert('RGB')
+        if img.size != (CANVAS, CANVAS):
+            img = img.resize((CANVAS, CANVAS), Image.LANCZOS)
+        # Crisp PIL label band (never trust baked-in AI text).
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, CANVAS - 190, CANVAS, CANVAS], fill=cfg['color'])
+        d.text((CANVAS // 2, CANVAS - 128), "WORKS WITH YOUR FAVORITE APPS",
+               font=fb(58), fill=(255, 255, 255), anchor='mm')
+        d.text((CANVAS // 2, CANVAS - 58),
+               "GoodNotes · Notability · PDF Expert · Xodo · Acrobat",
+               font=fr(40), fill=(240, 235, 250), anchor='mm')
+        img.save(dest, 'JPEG', quality=93)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        # Cache as the shared asset so the next planner reuses it for free.
+        try:
+            if os.path.abspath(dest) != os.path.abspath(APP_COMPAT_SRC):
+                shutil.copy2(dest, APP_COMPAT_SRC)
+        except OSError:
+            pass
+        print(f"    07_app_compatibility.jpg (generated with {eng} + PIL label)")
+        return True
+    except Exception as exc:  # noqa: BLE001 — never let a missing photo 7 kill the whole set
+        print(f"    07_app_compatibility.jpg SKIPPED — generation failed: {exc}")
+        return False
+
+
+def generate_for_planner(pid, client, upload=True, engine=None):
     cfg = PLANNER_PAGES[pid]
     out_dir = os.path.join(ART_DIR, f'{pid}_listing_images')
     os.makedirs(out_dir, exist_ok=True)
@@ -651,13 +866,9 @@ def generate_for_planner(pid, client, upload=True):
     make_spread(pid, cfg, cfg['weekly'], 'WEEKLY SPREAD', 4, os.path.join(out_dir, '04_weekly_spread.jpg'))
     make_sticker_showcase(pid, cfg, os.path.join(out_dir, '05_sticker_showcase.jpg'))
     make_howto(pid, cfg, os.path.join(out_dir, '06_goodnotes_howto.jpg'))
-    # Photo 7: app compatibility — copy existing
+    # Photo 7: app compatibility — reuse the shared asset, or generate it on the engine.
     app_dest = os.path.join(out_dir, '07_app_compatibility.jpg')
-    if os.path.exists(APP_COMPAT_SRC) and os.path.abspath(APP_COMPAT_SRC) != os.path.abspath(app_dest):
-        shutil.copy2(APP_COMPAT_SRC, app_dest)
-        print(f"    07_app_compatibility.jpg (copied)")
-    elif os.path.exists(app_dest):
-        print(f"    07_app_compatibility.jpg (already present)")
+    have_app_compat = make_app_compat(pid, cfg, app_dest, engine=engine)
     make_cover_closeup(pid, cfg, os.path.join(out_dir, '08_cover_closeup.jpg'))
     make_spread(pid, cfg, cfg['tracker'], cfg['tracker_label'], 9, os.path.join(out_dir, '09_tracker.jpg'))
     make_spread(pid, cfg, cfg['specialty'], cfg['specialty_label'], 10, os.path.join(out_dir, '10_specialty.jpg'))
@@ -667,13 +878,127 @@ def generate_for_planner(pid, client, upload=True):
         '04_weekly_spread.jpg', '05_sticker_showcase.jpg', '06_goodnotes_howto.jpg',
         '07_app_compatibility.jpg', '08_cover_closeup.jpg', '09_tracker.jpg', '10_specialty.jpg',
     ]
+    if not have_app_compat:
+        photo_files.remove('07_app_compatibility.jpg')  # don't list a photo that wasn't produced
 
     if upload:
         print(f"\n  Uploading to Etsy listing {cfg['listing_id']}...")
-        upload_photos(cfg['listing_id'], out_dir, photo_files, client)
+        upload_photos(cfg['listing_id'], out_dir, photo_files, client, product_name=cfg['short'])
 
     print(f"\n  ✓ {pid} done")
     return out_dir, photo_files
+
+
+def _find_sticker_sheet(pid: str, sheet_num: int) -> str | None:
+    """Same 3-way fallback chain make_sticker_showcase() already uses to find
+    a real sticker sheet PNG on disk for a given planner + sheet number."""
+    for cand in (
+        os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg'),
+        os.path.join(DP_BASE, 'stickers', pid, 'png_sheets', f'{pid}_sheet_{sheet_num:02d}.png'),
+        os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.png'),
+    ):
+        if os.path.exists(cand):
+            return cand
+    return None
+
+
+_AI_PHOTO_SLOT_ORDER = [
+    "slot_01_hero", "slot_02_whats_included", "slot_03_monthly",
+    "slot_04_weekly", "slot_05_stickers", "slot_06_how_to",
+    "slot_07_compatibility", "slot_08_cover_beauty",
+    "slot_09_habit_tracker", "slot_10_specialty",
+]
+
+
+def generate_ai_photos_for_planner(pid: str, engine: str | None = None,
+                                    out_dir: str | None = None) -> tuple[str, list[dict]]:
+    """Real, self-verifying AI-generated listing photos for a planner, via
+    tools/listing_photo_pipeline.generate_planner_listing_photos() -- THE
+    STANDARD LIFESTYLE METHOD documented in CLAUDE.md.
+
+    Added 2026-07-17 (Wave 4 photo-pipeline audit) to replace
+    generate_for_planner() above as the path _produce_listing_photos() (main.py)
+    actually calls. That function is pure PIL compositing -- a hand-drawn iPad
+    bezel on a flat gradient, no AI rendering at all -- which is the real
+    reason planner photos read as fake: not AI artifacts leaking through, a
+    total absence of photorealistic rendering. Left in place above for
+    reference/manual fallback, but no longer the default path.
+
+    Renders the needed PDF pages to temp JPGs via the existing render_page(),
+    locates real sticker sheet PNGs on disk (_find_sticker_sheet(), the same
+    fallback chain make_sticker_showcase() already uses), and hands
+    everything to the real pipeline with this product's PLANNER_PAGES config
+    (so a product with no hand-tuned STYLE_ANCHORS/SPECIALTY_PROMPTS entry --
+    e.g. DP1030-1034 -- still gets real, on-theme style guidance instead of a
+    blank anchor).
+
+    Returns (out_dir, [{"slot", "filename", "passed", "issues",
+    "realism_issues"}, ...]) -- one entry per of the 10 slots. A failed slot
+    has filename=None and its issues populated; never silently dropped."""
+    if pid not in PLANNER_PAGES:
+        raise ValueError(f"{pid} isn't a configured planner (have {sorted(PLANNER_PAGES)})")
+    cfg = PLANNER_PAGES[pid]
+    out_dir = out_dir or os.path.join(ART_DIR, f'{pid}_listing_images')
+    os.makedirs(out_dir, exist_ok=True)
+    tmp_dir = os.path.join(out_dir, '_source_renders')
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    prior_engine = os.environ.get("IMAGE_ENGINE")
+    if engine:
+        os.environ["IMAGE_ENGINE"] = engine
+    try:
+        def _render_and_save(page_key: str) -> Path:
+            page_num = cfg[page_key]
+            img = render_page(pid, page_num, target_w=1800)
+            path = os.path.join(tmp_dir, f'{page_key}.jpg')
+            img.convert('RGB').save(path, 'JPEG', quality=92)
+            return Path(path)
+
+        cover_path = _render_and_save('cover')
+        spread_paths = {
+            'monthly': _render_and_save('monthly'),
+            'weekly': _render_and_save('weekly'),
+            'habit': _render_and_save('tracker'),
+            'specialty': _render_and_save('specialty'),
+        }
+        sticker_paths = []
+        for sheet_num in (cfg.get('sticker_sheets') or [])[:3]:
+            found = _find_sticker_sheet(pid, sheet_num)
+            if found:
+                sticker_paths.append(Path(found))
+
+        import listing_photo_pipeline
+        results = listing_photo_pipeline.generate_planner_listing_photos(
+            product_id=pid,
+            pdf_cover_path=cover_path,
+            pdf_spread_paths=spread_paths,
+            sticker_sheet_paths=sticker_paths,
+            output_dir=Path(out_dir),
+            cfg=cfg,
+        )
+    finally:
+        if engine:
+            if prior_engine is None:
+                os.environ.pop("IMAGE_ENGINE", None)
+            else:
+                os.environ["IMAGE_ENGINE"] = prior_engine
+
+    photos = []
+    for slot in _AI_PHOTO_SLOT_ORDER:
+        r = results.get(slot)
+        if r is None:
+            continue
+        photos.append({
+            "slot": slot,
+            "filename": Path(r.out_path).name if (r.passed and r.out_path) else None,
+            "passed": r.passed,
+            "issues": r.issues,
+            "realism_issues": r.realism_issues,
+            "physics": r.physics,
+            "scene_prompt": r.scene_prompt,
+            "design_paths": r.design_paths,
+        })
+    return out_dir, photos
 
 
 if __name__ == '__main__':

@@ -4,8 +4,36 @@ name: CI Smoke
 # auto-deploys this repo on push, a red run here is the early-warning that a commit
 # is broken. To make it a HARD gate (block the deploy), enable Railway → service →
 # Settings → "Wait for CI to pass" (a.k.a. Check Suites) so Railway only deploys
-# after this check is green. Needs no secrets by design — it imports the app and
-# inspects the tool registry; it never starts the server or calls any API.
+# after this check is green (see ops_runbook.md 2026-07-10 for the current status
+# of getting this actually confirmed enabled).
+#
+# 2026-07-10 reliability pass: added three checks after a session that shipped
+# three real bugs (a CSP header gap that silently broke all voice audio, two
+# Railway deploy-config bugs, a missing root route) while this workflow stayed
+# green throughout, across 98 runs — because nothing here checked HTTP response
+# headers, deploy config files, or drove a real browser. Those three gaps are
+# exactly what test_security_headers.py, railway_config_lint.py, and
+# playwright_smoke.py close. See each file's module docstring for the specific
+# incident it's a regression test for.
+#
+# Playwright/browser steps mean this workflow is no longer "no secrets, never
+# starts the server" — playwright_smoke.py boots a real local server with a
+# throwaway test-only account (ENABLE_TEST_LOGIN, not a real credential) and
+# drives it with headless Chromium; still zero real API calls or secrets.
+#
+# 2026-07-17: added tools/check_hardcoded_paths.py after finding the SAME
+# "hardcoded /home/user/Etsy, works in sandbox, breaks in prod" bug in 10
+# separate scripts across this codebase's history — a class of bug this
+# workflow had no way to catch before a commit shipped. See
+# data/knowledge_base/ops_runbook.md's 2026-07-17 entries.
+#
+# 2026-07-17 (same pass): also found that 10 of the repo's 19 tests/test_*.py
+# files were never individually wired into this workflow at all (several
+# predating this session) — every step here is added by hand, so a new test
+# file that nobody remembers to add a step for just silently never runs in CI.
+# Added a single "Full test suite" step (tests/run_all.py, glob-discovers every
+# tests/test_*.py) as a catch-all so that specific gap can't recur — the
+# individual named steps above stay too, for per-incident CI visibility.
 
 on:
   push:
@@ -34,11 +62,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Playwright's Chromium (for playwright_smoke.py — real-browser check)
+        run: python -m playwright install --with-deps chromium
+
       - name: Compile all Python (syntax check)
         run: python -m compileall -q tools tests
 
+      - name: Hardcoded-path guardrail (works-in-sandbox-breaks-in-prod bug class — 2026-07-17)
+        run: python tools/check_hardcoded_paths.py
+
+      - name: Hardcoded-path guardrail's own tests (catches real violations, exempts docstrings)
+        run: python tests/test_check_hardcoded_paths.py
+
       - name: Smoke test (import server + tool registry)
         run: python tests/smoke_test.py
+
+      - name: Security header tests (CSP media-src regression — 2026-07-10 voice-silence incident)
+        run: python tests/test_security_headers.py
+
+      - name: Railway deploy-config lint (Dockerfile/rootDirectory + healthcheck consistency)
+        run: python tools/railway_config_lint.py
+
+      - name: CI issue-reporter URL tests (health watchdog crash regression — 2026-07-10)
+        run: python tests/test_ci_report_issue_url.py
+
+      - name: Quality-audit rotation tests (Etsy volume reduction — 2026-07-10)
+        run: python tests/test_quality_audit_rotation.py
 
       - name: Quality-gate tests (pre_publish_gate + validate_digital_file + SVG)
         run: python tests/test_quality_gates.py
@@ -49,8 +98,14 @@ jobs:
       - name: Staged-action approval tests (Action Center gate)
         run: python tests/test_staged_actions.py
 
-      - name: HTTP route tests (login/session/logout + todos API, real requests)
+      - name: HTTP route tests (login/session/logout + todos API + GET /, real requests)
         run: python tests/test_http_routes.py
 
       - name: Listing integrity tests (audit_listing fast-mode checks, fixture-based)
         run: python tests/test_listing_integrity.py
+
+      - name: Full test suite (tests/run_all.py — catches any file not individually named above)
+        run: python tests/run_all.py
+
+      - name: Real-browser smoke test (real server + headless Chromium — 2026-07-10)
+        run: python tools/playwright_smoke.py

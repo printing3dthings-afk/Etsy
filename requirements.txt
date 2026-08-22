@@ -23,6 +23,11 @@ lxml==6.1.1
 PyNaCl==1.6.2
 playwright==1.60.0
 PyPDF2==3.0.1
+# PyMuPDF (fitz) -- powers tools/planner_hyperlinker.py's real hyperlinked
+# navigation/TOC/fillable AcroForm fields on the digital planner PDFs. Restored
+# 2026-07-16 from the trash vault along with the rest of the planner-generation
+# pipeline (was previously an undeclared dependency of a since-archived script).
+PyMuPDF==1.28.0
 moviepy==2.2.1
 imageio-ffmpeg==0.6.0
 # Google GenAI SDK — Veo 3.1 video (AI_VIDEO_ENGINE=veo) + Nano Banana / Gemini image
@@ -34,3 +39,14 @@ google-genai==2.10.0
 # watch_video tool (tools/video_understanding.py). Lazily imported; pure-python wheel.
 # Ships frequent breaking releases — bump this one deliberately, not opportunistically.
 yt-dlp==2026.7.4
+# openpyxl — builds the live Business Tracker workbook (tools/business_tracker.py,
+# GET /api/business-tracker.xlsx). Previously only used by an unwired one-off script
+# kept out of this file deliberately; now a real dependency since it's wired to a
+# live endpoint.
+openpyxl==3.1.5
+# PyJWT[crypto] — Sign in with Apple (tools/api_server/oauth_providers.py): signs the
+# short-lived ES256 client-secret JWT sent to Apple's token endpoint, and verifies the
+# RS256 id_token Apple returns against its published JWKS. The [crypto] extra pulls in
+# `cryptography` for both algorithms. Google Sign-In needs no JWT library at all (its
+# identity is fetched from Google's own userinfo endpoint, not decoded locally).
+PyJWT[crypto]==2.10.1

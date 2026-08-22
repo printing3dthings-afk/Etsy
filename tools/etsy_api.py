@@ -66,12 +66,22 @@ MAX_DIGITAL_FILE_BYTES = 20 * 1024 * 1024
 # Magic-byte signatures used to confirm a file's real type matches its extension.
 # Catches the catastrophic failure mode where a raw image (e.g. a lifestyle room
 # scene) gets renamed/uploaded as the product the customer downloads.
+#
+# (2026-08-19) Added ".html" for Sprigit, the first non-PDF/ZIP/image digital
+# product (a self-contained interactive HTML app). Real HTML documents don't
+# share one fixed byte signature the way PDF/ZIP/PNG do (no doctype is a valid
+# leading line -- Sprigit's own file opens with a bare <meta> tag), so this
+# checks for a leading "<" after stripping BOM/whitespace instead of a fixed
+# string. Still defeats the exact failure mode this table exists for: none of
+# PDF/ZIP/JPG/PNG's real signatures start with "<", so a mislabeled binary
+# file is still caught.
 _FILE_MAGIC = {
     ".pdf":  [b"%PDF"],
     ".zip":  [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],  # incl. empty/spanned
     ".jpg":  [b"\xff\xd8\xff"],
     ".jpeg": [b"\xff\xd8\xff"],
     ".png":  [b"\x89PNG\r\n\x1a\n"],
+    ".html": [b"<"],
 }
 
 # A planner PDF that generates correctly is 80+ pages; anything in single digits is
@@ -100,12 +110,65 @@ def set_circuit_breaker_hook(hook) -> None:
     _circuit_breaker_hook = hook
 
 
+# Optional rate-limit sample recorder, set once at server boot via
+# set_rate_limit_sample_hook() (wired to db.record_rate_limit_sample). Same
+# duck-typed/None-default pattern as the circuit-breaker hook above, for the
+# same reason: standalone scripts using EtsyAPIClient outside the FastAPI
+# server never call the setter, so this stays a no-op for them (2026-07-10 --
+# added so "what's our real daily Etsy call volume" has a measured answer
+# instead of only a code-derived estimate).
+_rate_limit_sample_hook = None
+
+
+def set_rate_limit_sample_hook(hook) -> None:
+    """Call `hook(remaining_today, remaining_this_second, limit_per_day,
+    limit_per_second)` every time a response carries rate-limit headers.
+    Pass None to disable."""
+    global _rate_limit_sample_hook
+    _rate_limit_sample_hook = hook
+
+
+# Optional per-call log hook, set once at server boot via set_call_log_hook()
+# (wired to db.record_api_call). Same duck-typed/None-default pattern as the
+# two hooks above. Added 2026-08-20 after the update_price silent-no-op
+# incident (see data/knowledge_base/ops_runbook.md) -- the rate-limit hook
+# above only ever recorded quota headers, never which calls were made or
+# whether each one succeeded, so diagnosing that incident meant manually
+# re-checking 82 listings one at a time against Etsy's own public endpoint.
+# This hook makes "what did we actually call, and did it work" a query
+# instead of an investigation.
+_call_log_hook = None
+
+
+def set_call_log_hook(hook) -> None:
+    """Call `hook(method, path, status_code, ok, error, duration_ms,
+    action_type=...)` after every _request() call, success or failure.
+    Pass None to disable."""
+    global _call_log_hook
+    _call_log_hook = hook
+
+
 # Etsy status codes that indicate the dependency itself is unhealthy (rate limit /
 # server-side) -- mirrors resilience.py's _RETRYABLE_ETSY_STATUSES. A clean 4xx (400,
 # 404, etc.) means Etsy responded correctly and our request was wrong, so it must not
 # trip the breaker. 403 specifically means auth failure (stale OAuth token) — NOT a
 # service outage, so it must NOT trip the breaker (would show Etsy as DOWN when UP).
 _BREAKER_TRIP_STATUSES = {429, 500, 502, 503}
+
+# HTTP statuses worth an in-call retry-with-backoff (429 rate limit, 5xx transient
+# server/gateway trouble). 2026-08-05 full-Etsy-audit finding: _request_impl and
+# _upload_multipart_with_retry each independently hardcoded their own narrower
+# {429, 503} set (missing 500/502/504), which had silently drifted out of sync with
+# _BREAKER_TRIP_STATUSES above AND with resilience.py's _RETRYABLE_ETSY_STATUSES --
+# a genuine transient 500/502/504 (very plausible on a slow multipart upload, or
+# during Etsy-side maintenance) got zero retry at the one layer that matters most,
+# since by the time a caller's own retry logic runs, this layer has already given up
+# and raised. One shared set for both retry loops in this file; kept intentionally
+# distinct from _BREAKER_TRIP_STATUSES (504 is worth an immediate retry without
+# necessarily meaning the breaker should trip on a single occurrence) and does NOT
+# include 403, matching the reasoning above -- retrying a bare auth failure without
+# refreshing the token first would just burn attempts uselessly.
+_HTTP_RETRYABLE_STATUSES = {429, 500, 502, 503, 504}
 
 
 class FileContentError(Exception):
@@ -141,8 +204,15 @@ def check_svg_quality(svg_text: str) -> dict:
     # Count path elements (handle namespace prefixes like ns0:path)
     path_count = len(_re.findall(r"<(?:\w+:)?path[\s>]", svg_text))
 
-    # Count unique hex fill colors
-    fills = _re.findall(r'fill="(#[0-9a-fA-F]{3,6})"', svg_text)
+    # Count unique hex fill colors. Matches both the XML presentation-attribute
+    # form (fill="#rrggbb", what this shop's own vtracer-based svg_converter.py
+    # emits) and the CSS style-attribute form (style="fill:#rrggbb;...", the
+    # standard Illustrator/Inkscape export shape) -- previously only the first
+    # form was matched, so a traced-raster SVG using style="fill:#.." sailed
+    # through with unique_fills=0 regardless of how many real colors it had
+    # (2026-08-14 functional audit, round 2: reproduced with a 50-distinct-
+    # color style="fill:#.." SVG reporting passes_gate=True).
+    fills = _re.findall(r'fill(?:="|:\s*)(#[0-9a-fA-F]{3,6})', svg_text)
     unique_fills = len(set(f for f in fills if f.lower() != "none"))
 
     problems = []
@@ -238,7 +308,9 @@ def validate_digital_file(
         )
 
     with open(file_path, "rb") as fh:
-        head = fh.read(16)
+        head = fh.read(64)
+    if ext == ".html":
+        head = head.lstrip(b"\xef\xbb\xbf \t\r\n")  # strip UTF-8 BOM/whitespace before matching
     if not any(head.startswith(sig) for sig in _FILE_MAGIC[ext]):
         raise FileContentError(
             f"content does not match a {ext} file — header is {head[:8]!r}. "
@@ -407,10 +479,55 @@ def _dp_code_listing_mismatch(listing_id: int | str, file_path: str) -> str | No
     return None
 
 
+# Fields getListingInventory (GET) returns that updateListingInventory (PUT)
+# rejects outright -- confirmed 2026-08-20 against a real listing (action
+# #750, listing 4519185019): "Etsy API 400: Array contains invalid keys:
+# product_id,is_deleted". Etsy's own migration guidance names the same list
+# ("remove product_id, offering_id, scale_name, is_deleted and value_pairs
+# from the getListingInventory response before using it in an
+# updateListingInventory request") -- these are response-only/computed
+# fields on GET, not part of the PUT request schema at all. Passing the GET
+# response straight back (mutating only the field you want to change) is
+# the correct *shape* of the fix per Etsy staff's own guidance, but the
+# response and request shapes are NOT identical -- this is the missing
+# half of that fix.
+_INVENTORY_PRODUCT_STRIP_KEYS = ("product_id", "is_deleted")
+_INVENTORY_OFFERING_STRIP_KEYS = ("offering_id", "is_deleted")
+_INVENTORY_PROPERTY_VALUE_STRIP_KEYS = ("scale_name", "value_pairs")
+
+
+def _clean_inventory_product(product: dict, new_price: float) -> dict:
+    """Build a PUT-schema-valid product entry from a GET-schema product
+    entry, setting every offering's price to `new_price` along the way (a
+    plain float -- GET returns price as a {amount,divisor,currency_code}
+    Money object, which the PUT schema also does not accept as-is; setting
+    a fresh float here sidesteps that mismatch entirely rather than trying
+    to convert the Money object back)."""
+    cleaned = {k: v for k, v in product.items() if k not in _INVENTORY_PRODUCT_STRIP_KEYS}
+    cleaned["offerings"] = [
+        {**{k: v for k, v in off.items() if k not in _INVENTORY_OFFERING_STRIP_KEYS}, "price": new_price}
+        for off in product.get("offerings") or []
+    ]
+    if "property_values" in cleaned:
+        cleaned["property_values"] = [
+            {k: v for k, v in pv.items() if k not in _INVENTORY_PROPERTY_VALUE_STRIP_KEYS}
+            for pv in cleaned["property_values"] or []
+        ]
+    return cleaned
+
+
 class EtsyAPIClient:
     """Lightweight Etsy Open API v3 client (no third-party dependencies)."""
 
-    def __init__(self, api_key: str = "", access_token: str = ""):
+    def __init__(self, api_key: str = "", access_token: str = "", action_type: str | None = None):
+        # action_type: optional label attached to every call-log row this
+        # instance makes (e.g. "update_price") -- callers that instantiate a
+        # fresh client per staged action (see main.py's _execute_staged_action,
+        # one `client = EtsyAPIClient()` per action) can pass it through so the
+        # log can answer "how many update_price calls happened today" without
+        # re-deriving it from path shape alone. None for callers with no
+        # single-action context (e.g. read-only dashboard fetches).
+        self._call_log_action_type = action_type
         # .strip() every credential: Railway (and any dashboard-pasted env var)
         # can carry trailing newlines/spaces. An embedded "\n" makes urllib raise
         # "Invalid header value" and EVERY Etsy call fails. The .env parser strips
@@ -446,6 +563,11 @@ class EtsyAPIClient:
             rl["remaining_this_second"] = sec
         if day is not None:
             rl["remaining_today"] = day
+        if day is not None and _rate_limit_sample_hook is not None:
+            try:
+                _rate_limit_sample_hook(day, sec, rl["limit_per_day"], rl["limit_per_second"])
+            except Exception:
+                pass  # visibility logging must never break a live Etsy call
 
     def _throttle_if_needed(self) -> None:
         """Pre-emptively pace requests based on the last seen rate-limit headers.
@@ -481,19 +603,33 @@ class EtsyAPIClient:
         """Thin gate around `_request_impl` -- consults the circuit-breaker hook
         (if one was set by main.py at boot) before the call and records the
         outcome after, so a real Etsy outage shows up in /api/system/dependencies
-        instead of always reporting closed/healthy."""
+        instead of always reporting closed/healthy. Also logs every call (success
+        or failure) via the call-log hook, if one is set -- see set_call_log_hook()."""
         cb = _circuit_breaker_hook
         if cb is not None and not cb.allow_request():
             raise EtsyAPIError(0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses")
+        start = time.monotonic()
         try:
             result = self._request_impl(method, path, params, body)
         except EtsyAPIError as e:
             if cb is not None and (e.status == 0 or e.status in _BREAKER_TRIP_STATUSES):
                 cb.record_failure()
+            if _call_log_hook is not None:
+                try:
+                    _call_log_hook(method, path, e.status, False, str(e),
+                                    int((time.monotonic() - start) * 1000), self._call_log_action_type)
+                except Exception:
+                    pass  # logging must never break a live Etsy call
             raise
         else:
             if cb is not None:
                 cb.record_success()
+            if _call_log_hook is not None:
+                try:
+                    _call_log_hook(method, path, 200, True, None,
+                                    int((time.monotonic() - start) * 1000), self._call_log_action_type)
+                except Exception:
+                    pass
             return result
 
     def _request_impl(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
@@ -508,7 +644,7 @@ class EtsyAPIClient:
         if params:
             url = f"{url}?{urllib.parse.urlencode(params)}"
 
-        retryable_http = {429, 503}
+        retryable_http = _HTTP_RETRYABLE_STATUSES
         base_delays = [2, 4]  # exponential backoff base: 2s then 4s
 
         def _jittered(base: float) -> float:
@@ -551,11 +687,19 @@ class EtsyAPIClient:
                 return json.loads(raw) if raw.strip() else {}
 
             if resp.status_code in retryable_http:
-                # Honour the server's retry-after header when present
+                # Honour the server's retry-after header when present, but cap it --
+                # 2026-07-10 fix: an uncapped sleep here let a single in-flight call
+                # block its request thread for however long Etsy asked to wait (seen
+                # live: a daily-quota 429 with no small Retry-After still let this
+                # loop's own 2s/4s backoff run three full attempts before giving up,
+                # and any future Retry-After response could be far larger). Backing
+                # off *beyond* a few seconds is the circuit breaker's job (its own
+                # cooldown_seconds), not a single HTTP call's -- see
+                # resilience.CircuitBreaker for the actual multi-request backoff.
                 retry_after = resp.headers.get("retry-after") or resp.headers.get("Retry-After")
                 if retry_after:
                     try:
-                        time.sleep(float(retry_after) * (0.75 + random.random() * 0.5))
+                        time.sleep(min(float(retry_after), 5.0) * (0.75 + random.random() * 0.5))
                     except ValueError:
                         pass
                 last_exc = EtsyAPIError(resp.status_code, _error_message(resp))
@@ -595,6 +739,58 @@ class EtsyAPIClient:
         """Get details for a single listing."""
         return self._request("GET", f"listings/{listing_id}")
 
+    def get_listing_inventory(self, listing_id: int | str) -> dict:
+        """Get the listing's real Inventory API record (products/offerings, each with
+        its own price/quantity/sku) -- the actual source of truth Etsy's price change
+        may need to go through for listings that have an offering, distinct from the
+        legacy top-level `price` field on GET listing (read-only in that context for
+        some listings). Requires OAuth."""
+        self._require_oauth()
+        return self._request("GET", f"listings/{listing_id}/inventory")
+
+    def update_listing_inventory(self, listing_id: int | str, inventory: dict) -> dict:
+        """PUT the full inventory record back to Etsy. This REPLACES the entire
+        products/offerings structure -- it is not a partial patch. Etsy staff have
+        confirmed in the open-api repo's own discussions that submitting fewer
+        products than currently exist deletes the missing ones, so callers must
+        always read the full current inventory via get_listing_inventory() first,
+        mutate only the specific field(s) they actually want to change, and pass
+        everything else back unchanged. Requires OAuth."""
+        self._require_oauth()
+        return self._request("PUT", f"listings/{listing_id}/inventory", body=inventory)
+
+    def update_price_via_inventory(self, listing_id: int | str, new_price: float) -> dict:
+        """Update price through the Inventory API -- the real fix for a confirmed
+        Etsy platform quirk (2026-08-20 investigation, see ops_runbook.md): the
+        top-level `price` field on updateListing is silently ignored (returns 200,
+        no error, no actual change) once a listing has a real inventory offering
+        record, which most listings created through the standard API flow do,
+        even ones with has_variations=False. Confirmed via Etsy's own developer
+        community (etsy-api-v2 Google Group; etsy/open-api discussions #977 and
+        #691, where Etsy staff describe the correct pattern as read-full-inventory,
+        mutate, write-full-inventory-back). Prefer this over update_listing()'s
+        top-level price param for every listing -- it's the modern, always-correct
+        path; the legacy field is the one with silent-failure exceptions, not the
+        other way around.
+
+        Raises EtsyAPIError if the listing genuinely has no inventory products at
+        all (rare/unexpected for this shop's listings, but a real possible state)
+        -- callers should fall back to plain update_listing(lid, {"price": ...})
+        in that case, not silently do nothing."""
+        inventory = self.get_listing_inventory(listing_id)
+        raw_products = inventory.get("products") or []
+        if not raw_products:
+            raise EtsyAPIError(0, f"listing {listing_id} has no inventory products -- not an offering-backed listing")
+        rounded = round(float(new_price), 2)
+        products = [_clean_inventory_product(p, rounded) for p in raw_products]
+        body = {
+            "products": products,
+            "price_on_property": inventory.get("price_on_property") or [],
+            "quantity_on_property": inventory.get("quantity_on_property") or [],
+            "sku_on_property": inventory.get("sku_on_property") or [],
+        }
+        return self.update_listing_inventory(listing_id, body)
+
     def get_shop(self, shop_id_or_name: str = "") -> dict:
         """Get shop information by shop ID or name."""
         target = shop_id_or_name or self.shop_id
@@ -611,12 +807,23 @@ class EtsyAPIClient:
 
     # ── OAuth-protected endpoints ─────────────────────────────────────────────
 
-    def get_orders(self, limit: int = 25, status: str = "open") -> dict:
-        """Get shop orders. Requires OAuth access token."""
+    def get_orders(
+        self, limit: int = 25, status: str = "open",
+        min_created: int | None = None, max_created: int | None = None,
+    ) -> dict:
+        """Get shop orders. Requires OAuth access token. min_created/max_created
+        are optional Unix timestamps (same param names/shape as get_reviews()'s
+        own min_created) -- added 2026-08-06 for A/B test window comparisons,
+        which need real per-window order counts rather than an undated top-N
+        receipt list."""
         self._require_oauth()
         params: dict = {"limit": limit, "was_paid": True}
         if status != "open":
             params["status"] = status
+        if min_created is not None:
+            params["min_created"] = min_created
+        if max_created is not None:
+            params["max_created"] = max_created
         return self._request("GET", f"shops/{self.shop_id}/receipts", params=params)
 
     def get_messages(self, limit: int = 25) -> dict:
@@ -651,7 +858,20 @@ class EtsyAPIClient:
         data.setdefault("who_made", "i_did")
         data.setdefault("when_made", "made_to_order")
         data.setdefault("is_supply", False)
-        # AI disclosure — required for all listings using AI-generated imagery or copy
+        # AI disclosure — required for all listings using AI-generated imagery or copy.
+        #
+        # (2026-08-19) Was a single literal-substring check for "AI assistance" --
+        # every hand-authored listing in this shop uses CLAUDE.md's own mandated
+        # disclosure wording ("designed using AI image generation tools..."),
+        # which never contains that exact phrase, so this fired on every one of
+        # them: appending a SECOND disclosure line after the seller's real one,
+        # with a fixed, possibly-wrong tool/subject claim ("DALL-E ... cover/
+        # lifestyle artwork") regardless of what the listing's own disclosure
+        # already said (confirmed live on SPRIGIT — a non-DALL-E, non-cover-art
+        # product still got that exact claim appended). Broadened to recognize
+        # any of this shop's real disclosure phrasings before falling back to
+        # appending the generic one, so a listing that already discloses AI use
+        # in its own words is left alone.
         desc = data.get("description", "")
         _DISCLOSURE = (
             "\n\n---\n"
@@ -659,7 +879,12 @@ class EtsyAPIClient:
             "for cover/lifestyle artwork). All content has been reviewed and finalized "
             "by the seller."
         )
-        if desc and "AI assistance" not in desc:
+        _DISCLOSURE_MARKERS = (
+            "ai assistance", "ai image generation", "ai-generated", "ai generated",
+            "designed using ai", "created with ai", "about this design",
+        )
+        desc_lower = desc.lower()
+        if desc and not any(marker in desc_lower for marker in _DISCLOSURE_MARKERS):
             data["description"] = desc + _DISCLOSURE
         return self._request("POST", f"shops/{self.shop_id}/listings", body=data)
 
@@ -676,18 +901,32 @@ class EtsyAPIClient:
         desc  = listing_data.get("description", "")
         tags  = listing_data.get("tags", [])
         price = listing_data.get("price", 0)
+        # is_physical: every current caller (stage_product_publish, the
+        # create_listing staged-action executor) sets "type": "download" or
+        # "physical" -- used below to skip the digital-only title requirement
+        # and add a physical-only shipping-profile requirement, since this is
+        # the one shared gate every listing category funnels through
+        # (2026-08-05 full-Etsy-audit finding: the gate was previously
+        # digital-only despite being documented as "cannot be bypassed" for
+        # every listing).
+        is_physical = listing_data.get("type") == "physical"
 
         # ── Title ──────────────────────────────────────────────────────────────
+        # 2026-08-10: the flat 70-char cap was replaced with Etsy's real 140-char
+        # platform max after live competitive research (real top-favorited listings
+        # pulled from Etsy's public search API across 7 niches) showed every single
+        # winning listing runs 100-140 chars, not <=70 -- the "70-char mobile
+        # penalty" claim this gate encoded had no cited source and was contradicted
+        # by real data. See CLAUDE.md "Change 1: Title Length Cap" for the evidence.
         if not title:
             failures.append("TITLE: missing")
-        elif len(title) > 70:
+        elif len(title) > 140:
             failures.append(
-                f"TITLE: {len(title)}/70 chars — Etsy 2026 algorithm penalizes titles >70 chars "
-                f"on mobile (70%+ of traffic). Shorten to ≤70."
+                f"TITLE: {len(title)}/140 chars — Etsy's hard platform max is 140. Shorten to ≤140."
             )
         if title and len(title) < 30:
             failures.append("TITLE: under 30 chars — too few keywords, Etsy won't rank this")
-        if title and "instant download" not in title.lower():
+        if title and not is_physical and "instant download" not in title.lower():
             failures.append("TITLE: missing 'Instant Download' — required phrase for digital products")
 
         # ── Tags ───────────────────────────────────────────────────────────────
@@ -698,6 +937,7 @@ class EtsyAPIClient:
 
         _SPECIAL = _re.compile(r"[,;!?@#$%^&*()\[\]{}'\"<>/\\|=+]")
         title_lower = title.lower()
+        seen_tags: set[str] = set()
         for tag in tags:
             tag = tag.strip()
             if len(tag) > 20:
@@ -710,6 +950,13 @@ class EtsyAPIClient:
                     f"TAGS: '{tag}' duplicates a title phrase — wasted slot. "
                     f"Use a phrase NOT in your title to cover more search queries."
                 )
+            # Tag must not duplicate another tag in the same list (wastes a slot
+            # the same way, 2026-08-05 full-Etsy-audit finding -- this check
+            # existed for tag-vs-title duplication but never tag-vs-tag).
+            tag_key = tag.lower()
+            if tag_key and tag_key in seen_tags:
+                failures.append(f"TAGS: '{tag}' is duplicated in the tag list — wasted slot")
+            seen_tags.add(tag_key)
 
         # ── Description ────────────────────────────────────────────────────────
         if not desc:
@@ -718,8 +965,14 @@ class EtsyAPIClient:
             failures.append(f"DESC: {len(desc)} chars — too short (minimum 300). Add what's included, apps, FAQ.")
 
         # ── Price ──────────────────────────────────────────────────────────────
-        price_val = float(price) if isinstance(price, (int, float)) else 0.0
-        price_usd = price_val / 100 if price_val > 100 else price_val
+        # 2026-08-05 (full-Etsy-audit finding): this used to guess cents-vs-dollars
+        # from `price_val > 100`, which misfires on any real dollar price ≥ $100.01
+        # (e.g. a legitimate $149.99 mega-bundle -- CLAUDE.md explicitly documents
+        # ZIP bundles as a real strategy). Every real caller (stage_product_publish,
+        # etsy_listing_tools.py, the create_listing staged-action executor) already
+        # passes price in dollars -- there is no legitimate cents-unit caller to
+        # support, so this now trusts the input at face value instead of guessing.
+        price_usd = float(price) if isinstance(price, (int, float)) else 0.0
         if price_usd and price_usd < 4.99:
             failures.append(f"PRICE: ${price_usd:.2f} is below the $4.99 floor")
         if price_usd > 0:
@@ -735,6 +988,22 @@ class EtsyAPIClient:
             failures.append("FIELD: invalid who_made value")
         if listing_data.get("is_supply") is True:
             failures.append("FIELD: is_supply must be False for finished products")
+        # shipping_profile_id for physical listings (2026-08-05 full-Etsy-audit
+        # finding): this gate previously never checked it despite being the
+        # single documented "cannot be bypassed" enforcement point -- a
+        # physical listing (type=physical) with no shipping profile is broken
+        # on Etsy and a ranking-penalty risk per CLAUDE.md, and would have
+        # sailed through with zero protection here. Deliberately NOT adding a
+        # blanket taxonomy_id requirement here even though it has the same
+        # gap: this same function is reused by main.py's content-generation
+        # grounding check (EtsyAPIClient.pre_publish_gate(content) at the
+        # _generate_product_listing_content_core() call site) on a dict that
+        # legitimately has no taxonomy_id yet -- category assignment happens
+        # later, at actual stage_product_publish() time, which already
+        # 400s on a missing taxonomy_id itself (see main.py:13403-ish). Adding
+        # it here would false-fail every content-generation grounding check.
+        if is_physical and not listing_data.get("shipping_profile_id"):
+            failures.append("FIELD: physical listing (type=physical) is missing shipping_profile_id")
 
         return failures
 
@@ -763,10 +1032,117 @@ class EtsyAPIClient:
         created = self.create_shop_section(title)
         return int(created["shop_section_id"])
 
+    def delete_shop_section(self, shop_section_id: int | str) -> None:
+        """Delete a shop section. Requires OAuth access token. Etsy caps shops at a
+        fixed number of sections (confirmed live: this shop's real cap is 20) --
+        deleting an empty/duplicate one is how a new one gets created."""
+        self._require_oauth()
+        self._request("DELETE", f"shops/{self.shop_id}/sections/{shop_section_id}")
+
     # ── Listing images ────────────────────────────────────────────────────────
 
-    def upload_listing_image(self, listing_id: int | str, image_path: str, rank: int = 1) -> dict:
-        """Upload an image file to a listing. rank=1 is the cover photo."""
+    def _upload_multipart_with_retry(self, url: str, body: bytes, headers: dict, timeout: int,
+                                      retries: int = 3) -> dict:
+        """Shared retry/backoff wrapper for the three raw multipart upload calls
+        (upload_listing_image/video/file below).
+
+        2026-07-21: these three built their own multipart body with urllib.request
+        and called urlopen() exactly ONCE, no retry at all -- unlike every JSON API
+        call in this client (_request_impl, 3-attempt exponential backoff + 429/503
+        retry + capped Retry-After honoring), a single transient network blip or an
+        ordinary Etsy 429/503 during an upload failed the whole operation outright.
+        These uploads put the actual product photos/video/digital file live on a
+        listing -- arguably the highest-value calls in this whole client -- so they
+        deserve at least the same resilience as a routine GET. This mirrors
+        _request_impl's policy (retry network errors and 429/5xx, fail fast on any
+        other HTTP error, refresh-and-retry-once on 401) and gates/records through
+        the same circuit-breaker hook, just over urllib instead of the requests-based
+        _session (the multipart body here is hand-built, not JSON, so reusing
+        _request_impl directly isn't a fit).
+
+        2026-08-05 (full-Etsy-audit finding): before this date, a 401 here (access
+        token expiring mid-upload -- plausible on a large photo/video/file batch)
+        just raised immediately with no refresh attempt at all, unlike every JSON
+        call in this client. A caller creating a new listing with 10 photos + a
+        digital file (_execute_create_listing_staged_action) could silently end up
+        with a partial photo set / missing file if the token expired partway
+        through, since each upload call in that loop has no retry wrapper of its
+        own -- this is the one place that protection needed to live. Also widened
+        from the old {429, 503} to the shared _HTTP_RETRYABLE_STATUSES (adds
+        500/502/504), matching the same gap just fixed in _request_impl above."""
+        cb = _circuit_breaker_hook
+        if cb is not None and not cb.allow_request():
+            raise EtsyAPIError(0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses")
+        retryable_http = _HTTP_RETRYABLE_STATUSES
+        base_delays = [2, 4]
+        last_exc: Exception | None = None
+        refreshed_once = False
+        for attempt in range(retries):
+            if attempt > 0:
+                delay = base_delays[min(attempt - 1, len(base_delays) - 1)]
+                time.sleep(delay * (0.75 + random.random() * 0.5))
+            try:
+                req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    result = json.loads(resp.read().decode())
+            except urllib.error.HTTPError as e:
+                body_text = e.read().decode()
+                try:
+                    err = json.loads(body_text)
+                    msg = err.get("error", body_text)
+                except Exception:
+                    msg = body_text
+                if e.code == 401 and not refreshed_once and self.access_token and self.refresh_access_token():
+                    # Token refreshed -- update the Authorization header this
+                    # function was handed (built once by the caller before this
+                    # loop started) and retry on the next loop iteration. Unlike
+                    # _request_impl's 401 handling (a genuinely free extra request
+                    # outside its retry-count loop), this DOES consume one of the
+                    # `retries` attempts and picks up the normal attempt>0 backoff
+                    # sleep before the retry -- an acceptable simplification here
+                    # (reusing the existing for-loop instead of restructuring this
+                    # function) since the alternative it replaces was zero retry
+                    # at all. Only ever attempted once per call (refreshed_once).
+                    refreshed_once = True
+                    headers = dict(headers)
+                    headers["Authorization"] = f"Bearer {self.access_token}"
+                    last_exc = EtsyAPIError(e.code, msg)
+                    continue
+                if e.code in retryable_http:
+                    retry_after = e.headers.get("retry-after") or e.headers.get("Retry-After")
+                    if retry_after:
+                        try:
+                            time.sleep(min(float(retry_after), 5.0) * (0.75 + random.random() * 0.5))
+                        except ValueError:
+                            pass
+                    last_exc = EtsyAPIError(e.code, msg)
+                    continue  # retry with backoff
+                if cb is not None and e.code in _BREAKER_TRIP_STATUSES:
+                    cb.record_failure()
+                raise EtsyAPIError(e.code, msg)
+            except (urllib.error.URLError, OSError) as e:
+                last_exc = e
+                continue  # retry on network errors
+            else:
+                if cb is not None:
+                    cb.record_success()
+                return result
+        # All attempts exhausted
+        if cb is not None and isinstance(last_exc, EtsyAPIError) and last_exc.status in _BREAKER_TRIP_STATUSES:
+            cb.record_failure()
+        if isinstance(last_exc, EtsyAPIError):
+            raise last_exc
+        raise EtsyAPIError(0, f"Network error after retries: {last_exc}")
+
+    def upload_listing_image(self, listing_id: int | str, image_path: str, rank: int = 1,
+                             alt_text: str | None = None) -> dict:
+        """Upload an image file to a listing. rank=1 is the cover photo.
+
+        alt_text (2026-07-15 ADA/WCAG audit fix): Etsy API v3 supports an
+        alt_text field on listing images -- previously never sent by this
+        client, so every customer-facing photo had zero screen-reader
+        description. Optional and backward-compatible: omitting it sends
+        the same request shape as before this fix."""
         self._require_oauth()
         import mimetypes
         import email.mime.multipart
@@ -784,6 +1160,12 @@ class EtsyAPIClient:
         boundary = "----FormBoundary" + os.urandom(8).hex()
         body_parts = []
         body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="rank"\r\n\r\n{rank}'.encode())
+        if alt_text:
+            # Etsy's documented max is 500 chars; truncate rather than 400 on an
+            # oversized value from a long title.
+            body_parts.append(
+                f'--{boundary}\r\nContent-Disposition: form-data; name="alt_text"\r\n\r\n{alt_text[:500]}'.encode()
+            )
         body_parts.append(
             f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="{filename}"\r\nContent-Type: {mime_type}\r\n\r\n'.encode()
             + image_data
@@ -798,18 +1180,7 @@ class EtsyAPIClient:
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": api_key_header,
         }
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(e.code, msg)
+        return self._upload_multipart_with_retry(url, body, headers, timeout=60)
 
     def upload_listing_video(self, listing_id: int | str, video_path: str, rank: int | None = None) -> dict:
         """Upload a marketing video to a listing (Etsy API v3 uploadListingVideo)."""
@@ -840,18 +1211,7 @@ class EtsyAPIClient:
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": api_key_header,
         }
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(e.code, msg)
+        return self._upload_multipart_with_retry(url, body, headers, timeout=120)
 
     def get_listing_images(self, listing_id: int | str) -> list[dict]:
         """Get all images for a listing. Returns list of image records with listing_image_id."""
@@ -868,6 +1228,16 @@ class EtsyAPIClient:
         """Delete a specific image from a listing. Requires OAuth access token."""
         self._require_oauth()
         self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/images/{listing_image_id}")
+
+    def delete_listing_file(self, listing_id: int | str, listing_file_id: int | str) -> None:
+        """Delete a specific digital file from a listing. Requires OAuth access token.
+        Added 2026-08-22 -- upload_listing_file() always ADDS a new file entry, it never
+        replaces one at the same rank (confirmed: this client had no delete counterpart
+        for files, only for images, so a "replace the digital file" fix had no safe path
+        before this -- attempting a re-upload without deleting the old file first would
+        have left two files attached to the listing, the fixed one and the broken one)."""
+        self._require_oauth()
+        self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/files/{listing_file_id}")
 
     # ── Digital file upload ───────────────────────────────────────────────────
 
@@ -937,18 +1307,7 @@ class EtsyAPIClient:
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": api_key_header,
         }
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(e.code, msg)
+        return self._upload_multipart_with_retry(url, body, headers, timeout=120)
 
     def refresh_access_token(self) -> bool:
         """Exchange ETSY_REFRESH_TOKEN for a new access token and persist it to .env.

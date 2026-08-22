@@ -40,7 +40,7 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
 # ROUTES each name — the flat if-chain isn't introspectable. A follow-up (HANDLERS dict) is
 # what makes routing itself testable. Keep this list in sync when core tools are added/removed.
 EXPECTED_CORE_TOOLS = {
-    "get_metrics", "list_listings", "get_listing", "stage_action", "execute_command",
+    "get_metrics", "list_listings", "get_listing", "get_product", "stage_action", "execute_command",
     "local_speak", "get_orders", "get_reviews", "log_learning", "list_todos", "add_todo",
     "complete_todo", "autofix_listing_tags", "autofix_listing_title", "stage_batch_tag_update",
     "toggle_listing_state", "get_conversion_targets", "diagnose_listing_conversion",

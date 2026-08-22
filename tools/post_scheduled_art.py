@@ -27,7 +27,15 @@ Runs automatically every other day via _calendar_tasks_loop-adjacent scheduling
 in tools/api_server/main.py (see _run_scheduled_art_check) — the crontab line
 below is kept for reference/manual use but is no longer how this actually runs
 in production:
-  0 10 */2 * * cd /home/user/Etsy && python tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1
+  0 10 */2 * * cd /path/to/repo && python tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1
+
+Portable + hosted-deploy aware (2026-07-17): every path below used to be
+hardcoded to /home/user/Etsy (a sandbox-only path — no such path or .env file
+exists on the Railway server, where this script actually runs daily via
+_run_scheduled_art_check, so import alone would raise FileNotFoundError before
+any of the script's logic ran). This is the exact "works in sandbox, breaks in
+prod" bug class already fixed in qc_sweep.py/build_sticker_pack.py/etc. — see
+data/knowledge_base/ops_runbook.md for the full pattern.
 """
 
 import os
@@ -39,29 +47,54 @@ import argparse
 import datetime
 import urllib.request
 import urllib.error
+from pathlib import Path
 
-sys.path.insert(0, '/home/user/Etsy')
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-# Load .env manually — never use load_dotenv
-_env = {}
-with open('/home/user/Etsy/.env') as _f:
-    for _line in _f:
-        _line = _line.strip()
-        if _line and not _line.startswith('#') and '=' in _line:
-            _k, _v = _line.split('=', 1)
-            _env[_k.strip()] = _v.strip()
-
-for k, v in _env.items():
-    os.environ.setdefault(k, v)
+# Load .env — guarded, since hosted deploys (Railway) inject env vars directly
+# and have no .env file at all.
+_env_path = _ROOT / ".env"
+if _env_path.exists():
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 from PIL import Image, ImageFilter, ImageEnhance
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 from tools.api_server import db as _db
 
+
+def _resolve_dp_base() -> Path:
+    """digital_products base — the durable Railway volume in production, the
+    repo tree locally. Same resolution order used throughout tools/."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _ROOT / "data" / "digital_products"
+
+
 # ── Paths ─────────────────────────────────────────────────────────────────────
-SCHEDULE_PATH  = '/home/user/Etsy/data/art_schedule.json'
-ART_DIR        = '/home/user/Etsy/data/digital_products/product_files'
-LOG_DIR        = '/home/user/Etsy/logs'
+# (2026-07-25) SCHEDULE_PATH was the git-tracked repo file unconditionally.
+# save_schedule() writes next_post_date/subjects_used/post_history back after
+# every run -- on Railway that file resets to the committed June values on
+# every redeploy, so the scheduler thought it was overdue and would regenerate
+# already-used subjects (duplicate listings). resolve_persistent_path's
+# seed_from migrates the committed file's current state to the volume on the
+# first durable run; locally (no /data) behavior is unchanged.
+SCHEDULE_PATH  = str(_db.resolve_persistent_path(
+    "art_schedule.json",
+    fallback=_ROOT / "data" / "art_schedule.json",
+    seed_from=_ROOT / "data" / "art_schedule.json",
+))
+ART_DIR        = str(_resolve_dp_base() / "product_files")
+LOG_DIR        = str(_ROOT / "logs")
 OPENAI_KEY     = os.environ.get('OPENAI_API_KEY', '')
 
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -192,7 +225,7 @@ def get_or_create_section(client, section_title):
             if s.get('title', '').lower() == section_title.lower():
                 return s['shop_section_id']
         new_sec = client._request('POST', f'/shops/{client.shop_id}/sections',
-                                  json={'title': section_title})
+                                  body={'title': section_title})
         return new_sec.get('shop_section_id')
     except Exception as e:
         print(f"  WARNING: section lookup failed: {e}")
@@ -477,11 +510,12 @@ def post_art(preview_only=False):
     print(f"\n[7/7] Posting to Etsy...")
     client = EtsyAPIClient()
 
-    # Build title — enforce ≤70 chars (2026 algorithm rule)
+    # Build title — enforce ≤140 chars (Etsy's hard platform max; see
+    # etsy_api.py's pre_publish_gate() for why this isn't 70 anymore)
     title_raw = category['title_template'].replace('{subject}', subject)
-    title = title_raw[:70].rstrip(',').rstrip()
+    title = title_raw[:140].rstrip(',').rstrip()
     if len(title) < len(title_raw):
-        print(f"  Title trimmed to 70 chars: {title!r}")
+        print(f"  Title trimmed to 140 chars: {title!r}")
 
     description = build_description(subject, category)
     tags = category['tags'][:13]
@@ -513,7 +547,7 @@ def post_art(preview_only=False):
 
     try:
         listing = client._request('POST', f'/shops/{client.shop_id}/listings',
-                                  json=listing_body)
+                                  body=listing_body)
     except Exception as e:
         print(f"  FAILED to create listing: {e}")
         return None
@@ -552,10 +586,22 @@ def post_art(preview_only=False):
     # same as every other listing publish in this system. See the module
     # docstring for why this changed from a direct PATCH state=active call.
     try:
+        # _state_at_staging (2026-08-05 full-Etsy-audit finding): every other
+        # publish_listing/toggle_listing_state staging site in main.py sets this
+        # so _validate_staged_action's at_approval=True re-check can refuse if
+        # the listing's live state changed between staging and Scott's approval
+        # (which can be days later). This was the one staging site missing it --
+        # not a crash, just a silently-skipped safety check for this one path.
+        # Best-effort: a fetch failure here must not block staging itself.
+        state_at_staging = None
+        try:
+            state_at_staging = client.get_listing(lid).get("state")
+        except Exception:
+            pass
         _db.enqueue_action(
             "publish_listing",
             f"Scheduled art ready to publish: {title[:60]}",
-            {"listing_id": lid},
+            {"listing_id": lid, "_state_at_staging": state_at_staging},
         )
         print(f"  ✓ Staged for approval — draft listing_id={lid}, review in the Action Center")
     except Exception as e:

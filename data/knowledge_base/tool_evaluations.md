@@ -35,3 +35,19 @@ Notion MCP (content calendar / project databases).
   staged-action system — adding a second, parallel calendar in Notion would fragment truth rather
   than add capability. Only reconsider if Scott is already running a personal Notion workspace he
   specifically wants Frank reading from or writing into.
+
+### 2026-08-08 — Dedicated line-art / coloring-page generation tools
+**Tools:** lineart.ai (photo → line art converter), Midjourney coloring-book prompt generators,
+general "AI coloring book maker" SaaS tools.
+**Verdict:** Redundant / wrong problem.
+**Why:** Every dedicated tool found solves "turn an existing photo into an outline drawing" —
+a different job than what `generate_coloring_pages.py` needs, which is "generate original
+themed artwork that IS already clean line art" (a kawaii cat, a stained-glass window motif,
+etc. — no source photo exists to trace). Our own pipeline (gpt-image-1 generate →
+`_enforce_bw()` hard 185-threshold post-process → vision-QA verify/retry via
+`goal_loop.run_until_goal()`) already covers the real requirement end to end, and per
+`creative_tooling_assessment.md`'s existing vtracer/potrace verdict, tracing-based tools
+actively produce the wrong output shape for anything downstream that needs clean paths. Full
+research + the one real prompt-technique gap found (closed-outline instruction, now added to
+all 4 `_STYLE*` constants) is in
+`data/knowledge_base/coloring_page_design_and_market_research.md`.

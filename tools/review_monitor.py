@@ -12,6 +12,10 @@ Usage:
   python tools/review_monitor.py             -- show new reviews + draft responses
   python tools/review_monitor.py --all       -- show all reviews (ignore seen state)
   python tools/review_monitor.py --check     -- exit code 0=no new, 1=new reviews exist
+
+Referenced by tools/api_server/main.py's _WEEKLY_MONITOR_SCRIPTS — restored
+2026-07-15 after an unrelated declutter pass deleted this file thinking it
+was unreferenced. If removing this file again, grep main.py first.
 """
 
 from __future__ import annotations

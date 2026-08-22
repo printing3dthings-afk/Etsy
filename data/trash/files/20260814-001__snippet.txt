@@ -1,0 +1,51 @@
+  /* Studio Warm — dark warm-plum surfaces, coral + gold accents (pulls the coral
+     from the existing Sakura theme's palette and the gold already used site-wide
+     for primary CTAs). --cyan/--cyan2 keep their legacy names for the ~300 existing
+     usages across this file but now hold coral/blush values, not cyan — they were
+     always "the accent hue," never literally required to be cyan. --panel3 is a new
+     4th elevation level (toasts/dropdowns/overlays sit on this, one step lighter
+     than --panel2) — dark-mode surfaces need at least 4 steps to read as depth
+     without relying on box-shadow, which barely shows on dark backgrounds. */
+  /* Brightened 2026-07-15 (Scott: "seems a little dark throughout") -- every
+     surface step lifted ~4-6% lighter and --muted brightened for readability,
+     verified against tools/color_contrast_check.py's WCAG math before shipping:
+     text-on-bg 14.36:1 and muted-on-bg 7.12:1, both still comfortably above the
+     4.5:1 AA floor (muted actually IMPROVED from 5.77:1 -- it was brightened more
+     than the background was). */
+     it here, the ambient shadow is a secondary cue. Overridden per-theme below
+     only where a theme's surface treatment needs it (light theme gets a real
+     drop shadow since it renders well on white). */
+/* ── Color themes — full bg + panel + accent swap. Fonts/radius above are
+   structural (declared once on :root) and apply under every theme unchanged;
+   only surface/accent colors vary per theme, including each theme's own
+   --panel3 elevation step. Card-shadow tokens likewise only need a per-theme
+   override for the light theme (below); every dark-surfaced theme reuses the
+   :root treatment since they all share the same "shadow barely shows" constraint. ── */
+html.theme-light{
+  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#d0d9e2;
+  --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
+  --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
+html.theme-ocean{
+  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#16312c;
+  --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
+  --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-kawaii{
+  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#241a42;
+  --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
+  --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+/* 2026-07-18: bright/light-surfaced theme (Scott: "brighter colors but make sure
+   text is readable") -- every text/muted/accent value below is verified against
+   its actual bg AND panel2 (the more saturated surface a card can sit on) with
+   tools/color_contrast_check.py's real WCAG math, same discipline as the
+   2026-07-15 brightening pass above; nothing here is eyeballed. Reuses the light
+   theme's card-shadow (real drop shadow reads correctly on a light surface,
+   unlike the dark themes' inset-highlight trick above). Originally shipped
+   alongside 3 siblings (Mermaid Bright, Clubroom Gold, Spring Vivid); those were
+   cut in the 2026-08-06 12->5 theme reduction -- this one survived as the kept
+   warm-light alternative to Day Mode. */
+html.theme-sunwashed{
+  --bg:#fff8f0;--panel:#ffffff;--panel2:#ffeee0;--panel3:#ffffff;--border:#f0d5b8;
+  --cyan:#ba4e36;--cyan2:#8f3a28;--gold:#a46400;--gold2:#7a4b00;
+  --text:#3a2418;--muted:#82644d;--green:#19824a;--red:#d6362b;--amber:#a46400;

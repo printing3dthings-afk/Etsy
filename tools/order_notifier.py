@@ -34,12 +34,21 @@ from email.mime.text import MIMEText
 from pathlib import Path
 
 # ── Env loading ───────────────────────────────────────────────────────────────
+# Guarded: Railway has no .env file at all (env vars are injected directly by
+# the platform), only Scott's local checkout does. Without this guard the
+# script crashes with FileNotFoundError before it ever reaches a live Etsy
+# call -- the same bug class diagnosed 2026-06-17 for etsy_autoresponder.py
+# (see its own comment), found here 2026-07-17 while wiring this script in as
+# an agent-callable command: order_notifier.py has run unguarded in the
+# weekly monitor loop this whole time, its FileNotFoundError silently
+# swallowed into that loop's generic per-script "ERROR:" line every week.
 ENV_PATH = Path(__file__).parent.parent / '.env'
 _env: dict[str, str] = {}
-for _line in ENV_PATH.read_text().splitlines():
-    if '=' in _line and not _line.startswith('#'):
-        _k, _, _v = _line.partition('=')
-        _env[_k.strip()] = _v.strip()
+if ENV_PATH.exists():
+    for _line in ENV_PATH.read_text().splitlines():
+        if '=' in _line and not _line.startswith('#'):
+            _k, _, _v = _line.partition('=')
+            _env[_k.strip()] = _v.strip()
 for _k, _v in _env.items():
     os.environ.setdefault(_k, _v)
 
@@ -53,15 +62,48 @@ from etsy_messages import (
     PERSONAL_MESSAGE_GENERIC,
 )
 
-STATE_FILE = Path(__file__).parent.parent / 'data' / 'notified_orders.json'
+def _resolve_state_file() -> Path:
+    """Mirrors tools/api_server/db.py's resolve_persistent_path() -- this
+    script runs as a standalone subprocess (invoked from the weekly monitor
+    loop / execute_command, not imported into the FastAPI app), so it can't
+    just call that function directly. Without this, notified-order state
+    lived at a plain repo-relative path that's wiped on every Railway
+    redeploy, silently re-sending "new order" notifications for orders
+    already emailed before the last deploy (2026-08-06 full-system audit)."""
+    fallback = Path(__file__).parent.parent / 'data' / 'notified_orders.json'
+    vol = Path('/data')
+    if vol.is_dir() and os.access(vol, os.W_OK):
+        p = vol / 'notified_orders.json'
+        p.parent.mkdir(parents=True, exist_ok=True)
+        if not p.exists() and fallback.exists():
+            p.write_text(fallback.read_text())
+        return p
+    return fallback
+
+
+STATE_FILE = _resolve_state_file()
 SHOP_OWNER_EMAIL = os.environ.get('SMTP_USER', 'Printing3dthings@outlook.com')
 
 # ── Product-type classifier ───────────────────────────────────────────────────
 
 def _classify(title: str) -> str:
     t = title.lower()
+    # 2026-08-05 (full-Etsy-audit finding): digital SVG packs use "3D Print" in
+    # their own titles as a matter of shop convention (e.g. "America 250 SVG,
+    # 10 Patriotic 3D Print Signs, Instant Download") -- without this check,
+    # such a listing would classify as the physical '3d_print' branch below
+    # and build_personal_message() would tell a buyer "I'm printing and
+    # shipping this" for a product that's actually an instant digital
+    # download, a direct customer-facing false statement (CLAUDE.md's NEVER
+    # LIE TO THE CUSTOMER rule). Etsy's own listing `type` field is the
+    # authoritative physical-vs-digital signal (see main.py's
+    # classify_listings_batch()), but this classifier only ever sees a bare
+    # title string -- these keywords are a title-only mitigation for the
+    # collision that's actually occurred in this shop's real catalog
+    # (SS_AMERICA_250_SVG), not a full replacement for a structured check.
+    is_explicitly_digital = any(x in t for x in ['svg', 'instant download', 'digital download'])
     # 3D print must be checked before wall_art — "3D Printed" contains "print"
-    if any(x in t for x in ['3d printed', '3d print', 'koozie', 'planter', 'candle holder',
+    if not is_explicitly_digital and any(x in t for x in ['3d printed', '3d print', 'koozie', 'planter', 'candle holder',
                               'tea light', 'lamp shade', 'desk organizer', 'pen holder',
                               'centerpiece', 'vase', 'filament']):
         return '3d_print'
@@ -69,6 +111,14 @@ def _classify(title: str) -> str:
         return 'digital_planner'
     if any(x in t for x in ['sticker', 'sticker pack', 'sticker book']):
         return 'sticker_pack'
+    if 'svg' in t:
+        # A digital SVG/3D-print-file pack, not physical wall art -- route to
+        # the product-agnostic generic template rather than falling through
+        # to the wall_art check below, whose "love it on your wall" framing
+        # would itself be a smaller-but-real content mismatch for a buyer who
+        # actually bought a cut file for their own 3D printer or cutting
+        # machine, not framed art.
+        return 'generic'
     if any(x in t for x in ['wall art', 'art print', 'botanical print', 'poster',
                               'digital download', 'printable', 'instant download',
                               'watercolor', 'illustration', 'photography print']):

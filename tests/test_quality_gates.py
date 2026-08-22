@@ -5,7 +5,7 @@ Quality-gate tests — the executable enforcement of OnBrandCraftz's #1 rule:
 
 Why this exists: `EtsyAPIClient.pre_publish_gate()` and `validate_digital_file()`
 are the code that stops a bad listing or a broken file from ever reaching a buyer
-(title >70 chars, missing "Instant Download", wrong tag count, sub-$4.99 price,
+(title >140 chars, missing "Instant Download", wrong tag count, sub-$4.99 price,
 mislabeled/corrupt/empty ZIP, traced-raster SVGs, near-empty PDFs). That logic had
 ZERO tests — a careless edit could silently disable a check and let a violating
 listing ship, and nothing would catch it. These tests lock each rule down so a
@@ -85,20 +85,24 @@ def test_gate_baseline_passes():
 
 def test_gate_title_too_long():
     d = good_listing()
-    d["title"] = "A" * 71 + " Instant Download"  # >70
+    d["title"] = "A" * 141 + " Instant Download"  # >140
     fails = EtsyAPIClient.pre_publish_gate(d)
-    check(any("TITLE" in f and "70" in f for f in fails),
-          f"title >70 chars must fail, got: {fails}")
+    check(any("TITLE" in f and "140" in f for f in fails),
+          f"title >140 chars must fail, got: {fails}")
 
 
 def test_gate_title_at_limit_ok():
     d = good_listing()
-    # exactly 70 chars, contains the required phrase — must NOT trip the length rule
-    d["title"] = "Budget Planner 2026 Undated GoodNotes iPad, Instant Download Kawaii XX"
-    d["title"] = d["title"][:70]
+    # exactly 140 chars, contains the required phrase — must NOT trip the length rule.
+    # Built to hit exactly 140 while keeping "Instant Download" intact at the end
+    # (truncating a longer string with [:140] risks slicing mid-word through it).
+    suffix = ", Instant Download"
+    base = "Budget Planner 2026 Undated GoodNotes iPad, Fillable Hyperlinked Planner, Daily Weekly Monthly, Kawaii Sticker Pack Filler"
+    d["title"] = (base[:140 - len(suffix)] + suffix)
+    check(len(d["title"]) == 140, f"test fixture bug: title is {len(d['title'])} chars, not 140")
     fails = EtsyAPIClient.pre_publish_gate(d)
-    check(not any("TITLE" in f and "70" in f for f in fails),
-          f"title of exactly 70 chars must not trip the >70 rule, got: {fails}")
+    check(not any("TITLE" in f and "140" in f for f in fails),
+          f"title of exactly 140 chars must not trip the >140 rule, got: {fails}")
 
 
 def test_gate_title_missing_instant_download():
@@ -183,13 +187,23 @@ def test_gate_price_bad_ending():
           f"price not ending in .99/.97/.49 must fail, got: {fails}")
 
 
-def test_gate_price_cents_input():
-    # Etsy sometimes carries price in cents; the gate normalizes >100 as cents.
+def test_gate_price_over_100_dollars_trusted_as_dollars():
+    # 2026-08-05 full-Etsy-audit fix: this test used to assert the OPPOSITE --
+    # that a price >100 gets auto-divided by 100 as "probably cents". That
+    # heuristic was a real bug: every actual caller (stage_product_publish,
+    # etsy_listing_tools.py, the create_listing staged-action executor) always
+    # passes price in dollars, confirmed by grep -- there is no legitimate
+    # cents-unit caller anywhere in this codebase. A real $149.99 bundle
+    # listing (CLAUDE.md explicitly documents ZIP bundles as a real strategy
+    # for working around the 5-digital-file limit) would have been silently
+    # mangled into "$1.50" and false-failed both the price-floor and the
+    # .99/.97/.49-ending checks. The gate now trusts dollars at face value.
     d = good_listing()
-    d["price"] = 1299  # $12.99 in cents
+    d["title"] = "Complete OnBrandCraftz Planner Mega Bundle, GoodNotes, Instant Download"
+    d["price"] = 149.99
     fails = EtsyAPIClient.pre_publish_gate(d)
     check(not any("PRICE" in f for f in fails),
-          f"1299 cents should normalize to $12.99 and pass price checks, got: {fails}")
+          f"a real $149.99 dollar price must be trusted as-is, got: {fails}")
 
 
 def test_gate_is_supply_true_fails():

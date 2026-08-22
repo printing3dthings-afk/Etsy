@@ -1,4 +1,0 @@
-/* Row C: System Monitor | Memory Insights | LLM Status */
-.col-sysmon{flex:1}
-.col-meminsights{flex:1}
-.col-shop{flex:1.3}

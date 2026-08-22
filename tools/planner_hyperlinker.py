@@ -24,6 +24,7 @@ Usage:
     python tools/planner_hyperlinker.py DP1034 --no-cover
 """
 
+import os
 import re
 import sys
 import math
@@ -39,7 +40,21 @@ _MONTHS_FULL = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"]
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
-PRODUCT_FILES_DIR = _BASE_DIR / "data" / "digital_products" / "product_files"
+
+
+def _resolve_dp_base() -> Path:
+    """Durable volume on the hosted deploy, else the repo data dir locally —
+    mirrors main.py + qc_sweep.resolve_dp_base() so the finalized PDFs land where
+    the planner builder + Files screen expect them on the Railway server."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _BASE_DIR / "data" / "digital_products"
+
+
+PRODUCT_FILES_DIR = _resolve_dp_base() / "product_files"
 
 PW, PH = 612.0, 792.0  # US Letter, matches _new_canvas() in generate_planner.py
 

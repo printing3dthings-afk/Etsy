@@ -100,29 +100,53 @@ TOOL_DEFINITIONS: list[dict] = [
 ]
 
 
-def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
+# 2026-08-06 (full-system audit follow-up): get_tax_overview/calculate_quarterly_tax/
+# get_1099k_status/check_etsy_compliance used to read store.analytics/store.listings --
+# fields NOTHING in the live app populates (that's a separate, ad-spend-only local log
+# tools/etsy_ads_tools.py uses honestly; see main.py's own comment on why that one's
+# legit). Reading it here would have silently reported $0 revenue / zero compliance
+# issues as if real. These 4 now take the real numbers as EXPLICIT required params
+# (real_data, populated by main.py from a real date-scoped Etsy receipts fetch and a
+# real live listings fetch) instead of deriving them from the disconnected store --
+# structurally impossible to accidentally call with fabricated data again.
+_REAL_DATA_TOOL_NAMES = frozenset({
+    "get_tax_overview", "calculate_quarterly_tax", "get_1099k_status", "check_etsy_compliance",
+})
+
+
+def execute_tool(tool_name: str, tool_input: dict, store: DataStore, real_data: dict | None = None) -> str:
+    if tool_name in _REAL_DATA_TOOL_NAMES and real_data is None:
+        raise ValueError(
+            f"{tool_name} requires real_data (gross_ytd/listings from a live Etsy fetch) -- "
+            "refusing to silently report zero/fabricated numbers"
+        )
     if tool_name == "get_tax_overview":
-        return _get_tax_overview(store)
+        return _get_tax_overview(store, real_data["gross_ytd"], real_data["ytd_orders_capped"])
     if tool_name == "calculate_quarterly_tax":
-        return _calculate_quarterly_tax(tool_input["quarter"], store)
+        return _calculate_quarterly_tax(tool_input["quarter"], store, real_data["gross_ytd"], real_data["ytd_orders_capped"])
     if tool_name == "log_deductible_expense":
         return _log_deductible_expense(tool_input, store)
     if tool_name == "get_deductions_summary":
         return _get_deductions_summary(tool_input.get("year"), store)
     if tool_name == "check_etsy_compliance":
-        return _check_etsy_compliance(store)
+        return _check_etsy_compliance(real_data["listings"])
     if tool_name == "check_copyright_guidance":
         return _check_copyright_guidance(tool_input["product_concept"])
     if tool_name == "get_1099k_status":
-        return _get_1099k_status(store)
+        return _get_1099k_status(real_data["gross_ytd"], real_data["ytd_orders_capped"])
     if tool_name == "get_tax_calendar":
         return _get_tax_calendar()
     return f"Unknown tax compliance tool: {tool_name}"
 
 
-def _get_tax_overview(store: DataStore) -> str:
-    revenue = store.analytics.get("revenue", {})
-    gross_ytd = revenue.get("this_year", 0)
+_YTD_CAP_NOTE = (
+    "gross_revenue_ytd is based on the most recent 100 paid orders since Jan 1 (Etsy's "
+    "per-call limit) -- this shop has had 100+ orders this year, so actual YTD revenue "
+    "is HIGHER than shown here."
+)
+
+
+def _get_tax_overview(store: DataStore, gross_ytd: float, ytd_orders_capped: bool) -> str:
     fin = store.get("financial_data", default={})
     expenses_ytd = sum(e["amount"] for e in fin.get("expenses", [])
                        if e.get("date", "").startswith(str(date.today().year)))
@@ -134,7 +158,7 @@ def _get_tax_overview(store: DataStore) -> str:
     fed_tax = _estimate_federal_tax(net_profit)
     total_est_tax = se_tax + fed_tax
 
-    return json.dumps({
+    result = {
         "year": date.today().year,
         "gross_revenue_ytd": round(gross_ytd, 2),
         "estimated_etsy_fees": round(etsy_fees_est, 2),
@@ -148,12 +172,13 @@ def _get_tax_overview(store: DataStore) -> str:
         },
         "quarterly_set_aside_recommended": round(total_est_tax / 4, 2),
         "disclaimer": "Estimates only. Consult a CPA for your specific situation.",
-    }, indent=2)
+    }
+    if ytd_orders_capped:
+        result["revenue_caveat"] = _YTD_CAP_NOTE
+    return json.dumps(result, indent=2)
 
 
-def _calculate_quarterly_tax(quarter: int, store: DataStore) -> str:
-    revenue = store.analytics.get("revenue", {})
-    gross_ytd = revenue.get("this_year", 0)
+def _calculate_quarterly_tax(quarter: int, store: DataStore, gross_ytd: float, ytd_orders_capped: bool) -> str:
     quarterly_revenue = gross_ytd / max(quarter, 1)
     quarterly_fees = quarterly_revenue * 0.10
     fin = store.get("financial_data", default={})
@@ -165,7 +190,7 @@ def _calculate_quarterly_tax(quarter: int, store: DataStore) -> str:
 
     due_dates = {1: "April 15", 2: "June 17", 3: "September 16", 4: "January 15 (next year)"}
 
-    return json.dumps({
+    result = {
         "quarter": f"Q{quarter} {date.today().year}",
         "due_date": due_dates.get(quarter, ""),
         "estimated_quarterly_revenue": round(quarterly_revenue, 2),
@@ -173,7 +198,13 @@ def _calculate_quarterly_tax(quarter: int, store: DataStore) -> str:
         "estimated_quarterly_tax": round(total, 2),
         "payment_method": "IRS Direct Pay at irs.gov/payments or EFTPS",
         "disclaimer": "Estimates only. Consult a tax professional.",
-    }, indent=2)
+    }
+    if ytd_orders_capped:
+        result["revenue_caveat"] = (
+            "Based on YTD revenue capped at the most recent 100 paid orders (Etsy's "
+            "per-call limit) -- actual revenue may be higher, which would raise this estimate."
+        )
+    return json.dumps(result, indent=2)
 
 
 def _log_deductible_expense(data: dict, store: DataStore) -> str:
@@ -223,20 +254,28 @@ def _get_deductions_summary(year: int | None, store: DataStore) -> str:
     }, indent=2)
 
 
-def _check_etsy_compliance(store: DataStore) -> str:
-    listings = store.listings
+def _check_etsy_compliance(listings: list[dict]) -> str:
+    """listings are raw Etsy listing dicts (from EtsyAPIClient.get_shop_listings_all(),
+    includes="images") -- NOT the trimmed shape main.py's own _listings_sync() returns,
+    which doesn't carry description/images. See main.py's dispatch comment for why this
+    is a separate fetch rather than reusing that cache."""
     issues = []
     warnings = []
 
     for l in listings:
-        if len(l.get("tags", [])) < 10:
-            warnings.append(f"{l['id']}: Only {len(l.get('tags', []))} tags — use all 13 for best SEO")
-        if not l.get("description") or len(l.get("description", "")) < 100:
-            issues.append(f"{l['id']}: Description too short — Etsy requires complete descriptions")
-        if l.get("images", 0) < 3:
-            warnings.append(f"{l['id']}: Only {l.get('images', 0)} images — 5-10 recommended")
+        lid = l.get("listing_id", "?")
+        tags = l.get("tags", []) or []
+        if len(tags) < 10:
+            warnings.append(f"{lid}: Only {len(tags)} tags — use all 13 for best SEO")
+        description = l.get("description") or ""
+        if len(description) < 100:
+            issues.append(f"{lid}: Description too short — Etsy requires complete descriptions")
+        images = l.get("images", []) or []
+        if len(images) < 3:
+            warnings.append(f"{lid}: Only {len(images)} images — 5-10 recommended")
 
     return json.dumps({
+        "listings_checked": len(listings),
         "compliance_issues": issues,
         "warnings": warnings,
         "etsy_policy_checklist": {
@@ -290,14 +329,12 @@ def _check_copyright_guidance(concept: str) -> str:
     }, indent=2)
 
 
-def _get_1099k_status(store: DataStore) -> str:
-    revenue = store.analytics.get("revenue", {})
-    gross_ytd = revenue.get("this_year", 0)
+def _get_1099k_status(gross_ytd: float, ytd_orders_capped: bool) -> str:
     threshold = 600
 
-    return json.dumps({
+    result = {
         "current_year": date.today().year,
-        "gross_revenue_ytd": gross_ytd,
+        "gross_revenue_ytd": round(gross_ytd, 2),
         "1099k_threshold": threshold,
         "will_receive_1099k": gross_ytd >= threshold,
         "explanation": (
@@ -308,7 +345,14 @@ def _get_1099k_status(store: DataStore) -> str:
             else f"Currently at ${gross_ytd:.2f} — below the ${threshold} 1099-K threshold for this year."
         ),
         "action": "Keep all expense receipts. The 1099-K amount will be higher than your actual profit.",
-    }, indent=2)
+    }
+    if ytd_orders_capped:
+        result["revenue_caveat"] = (
+            "gross_revenue_ytd is capped at the most recent 100 paid orders since Jan 1 "
+            "(Etsy's per-call limit) -- if this shop has had more than 100 orders this year, "
+            "actual revenue is higher, and will_receive_1099k is very likely true regardless."
+        )
+    return json.dumps(result, indent=2)
 
 
 def _get_tax_calendar() -> str:

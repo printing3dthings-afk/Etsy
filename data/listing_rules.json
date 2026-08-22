@@ -16,7 +16,8 @@
       "AI_DISCLOSURE"
     ],
     "photo_sequence_required": false,
-    "notes": "Each listing needs exactly 1 print ZIP. At least 1 of the 10 photos must show the source art (hash distance <=90). Threshold raised from 80→90 to account for JPEG compression drift in flat preview photos.",
+    "price_tier": { "min": 4.99, "max": 7.99 },
+    "notes": "Each listing needs exactly 1 print ZIP. At least 1 of the 10 photos must show the source art (hash distance <=90). Threshold raised from 80→90 to account for JPEG compression drift in flat preview photos. price_tier is the single-print tier (CLAUDE.md Wall Art Gate 7) — gallery_bundle/gallery_set carry the multi-print tiers instead.",
     "fulfillment": "digital"
   },
   "planner": {
@@ -37,7 +38,14 @@
       "FAQ",
       "AI_DISCLOSURE"
     ],
-    "notes": "Planner listings must have at least 2 files (dated PDF + sticker ZIP). Undated PDF adds a 3rd. Photo check skipped since we have no planner art source file to hash.",
+    "price_tier": { "min": 9.99, "max": 16.99 },
+    "dp_code_price_overrides": {
+      "DP1026": 14.99,
+      "DP1027": 9.99,
+      "DP1028": 12.99,
+      "DP1029": 12.99
+    },
+    "notes": "Planner listings must have at least 2 files (dated PDF + sticker ZIP). Undated PDF adds a 3rd. Photo check skipped since we have no planner art source file to hash. price_tier is a fallback range (CLAUDE.md target prices); dp_code_price_overrides are the exact current Pricing Strategy table values and win when a DP code matches — DP1030+ aren't in that table yet, so they fall back to the range.",
     "fulfillment": "digital"
   },
   "sticker_pack": {
@@ -54,7 +62,8 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "One sticker ZIP per listing.",
+    "price_tier": { "min": 4.99, "max": 6.99 },
+    "notes": "One sticker ZIP per listing. price_tier is CLAUDE.md's standalone individual-pack range.",
     "fulfillment": "digital"
   },
   "svg_bundle": {
@@ -71,7 +80,8 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "SVG bundles are for Cricut/Silhouette. One ZIP per listing.",
+    "price_tier": { "valid_values": [9.99, 14.99] },
+    "notes": "SVG bundles are for Cricut/Silhouette. One ZIP per listing. price_tier is exact-match, not a range: CLAUDE.md's SS-Series pricing is two fixed points ($9.99 for 5-design packs, $14.99 for 10+), matching tools/listing_qc.py's own `price not in (9.99, 14.99)` check.",
     "fulfillment": "digital"
   },
   "commercial_license": {
@@ -84,8 +94,10 @@
       "commercial license",
       "instant download"
     ],
-    "required_description_sections": [],
-    "notes": "Commercial license listings — minimal photo requirement.",
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Commercial license listings — minimal photo requirement. AI_DISCLOSURE added 2026-07-15: the underlying licensed art is still AI-generated, so the same disclosure requirement applies.",
     "fulfillment": "digital"
   },
   "gallery_bundle": {
@@ -101,7 +113,8 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "Gallery bundle = set of multiple prints in one listing, multiple ZIP files. quantity_claim_check intentionally NOT set here: the manifest's dp_codes for this type is always 1 entry (one catalog row per listing) regardless of how many prints are actually bundled inside, so there's no reliable ground truth to compare a title's \"Set of N\" claim against. Only gallery_set tracks per-design dp_codes.",
+    "price_tier": { "min": 12.99, "max": 39.99 },
+    "notes": "Gallery bundle = set of multiple prints in one listing, multiple ZIP files. quantity_claim_check intentionally NOT set here: the manifest's dp_codes for this type is always 1 entry (one catalog row per listing) regardless of how many prints are actually bundled inside, so there's no reliable ground truth to compare a title's \"Set of N\" claim against. Only gallery_set tracks per-design dp_codes. price_tier spans CLAUDE.md's 'Set of 3' through 'Gallery wall set of 5-7' tiers.",
     "fulfillment": "digital"
   },
   "gallery_set": {
@@ -116,7 +129,8 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "Gallery set = multiple DP codes but one shared listing/ZIP. The only type whose manifest dp_codes reliably tracks one entry per bundled design, which is why quantity_claim_check is enabled here and nowhere else (see Four Seasons listing 4512784922).",
+    "price_tier": { "min": 12.99, "max": 39.99 },
+    "notes": "Gallery set = multiple DP codes but one shared listing/ZIP. The only type whose manifest dp_codes reliably tracks one entry per bundled design, which is why quantity_claim_check is enabled here and nowhere else (see Four Seasons listing 4512784922). price_tier spans the same multi-print range as gallery_bundle.",
     "fulfillment": "digital",
     "quantity_claim_check": true
   },
@@ -129,8 +143,10 @@
     "required_description_keywords": [
       "instant download"
     ],
-    "required_description_sections": [],
-    "notes": "Generic bundle listing.",
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Generic bundle listing. AI_DISCLOSURE added 2026-07-15: bundled files are AI-generated designs same as any standalone listing.",
     "fulfillment": "digital"
   },
   "sticker_bundle": {
@@ -145,7 +161,8 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "Multi-pack sticker bundle.",
+    "price_tier": { "min": 12.99, "max": 19.99 },
+    "notes": "Multi-pack sticker bundle. price_tier spans CLAUDE.md's 'Bundle (4 packs)' through 'Mega bundle' tiers.",
     "fulfillment": "digital"
   },
   "sublimation": {
@@ -157,8 +174,10 @@
     "required_description_keywords": [
       "instant download"
     ],
-    "required_description_sections": [],
-    "notes": "Sublimation design files.",
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Sublimation design files. AI_DISCLOSURE added 2026-07-15: the design artwork is AI-generated same as any other product line.",
     "fulfillment": "digital"
   },
   "unknown": {
@@ -170,8 +189,10 @@
     "required_description_keywords": [
       "instant download"
     ],
-    "required_description_sections": [],
-    "notes": "Fallback rules for unclassified listing types.",
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Fallback rules for unclassified listing types. AI_DISCLOSURE added 2026-07-15: fail-closed default (same principle listing_compliance_sweep.py uses for unmapped listings) rather than silently exempting anything that falls through classification.",
     "fulfillment": "digital"
   },
   "3d_print_physical": {
@@ -183,8 +204,11 @@
     "required_description_keywords": [
       "3d printed"
     ],
-    "required_description_sections": [],
-    "notes": "Made-to-order physical 3D print, shipped — no digital file to verify. fulfillment=physical so check_fulfillment_match (which guards against digital listings claiming a shipped item) is a no-op here by design.",
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "expected_taxonomy_id": null,
+    "notes": "Made-to-order physical 3D print, shipped — no digital file to verify. fulfillment=physical so check_fulfillment_match (which guards against digital listings claiming a shipped item) is a no-op here by design. AI_DISCLOSURE added 2026-07-15: the underlying SVG/3MF design the item is printed from is still AI-generated art, so the same disclosure requirement applies to the physical product listing. expected_taxonomy_id explicitly disabled (null): CLAUDE.md's 2078 default is the Digital Files category, which does not apply to a physical shipped item, and no physical-goods taxonomy_id is documented anywhere to check against instead.",
     "fulfillment": "physical"
   },
   "paper_pack": {

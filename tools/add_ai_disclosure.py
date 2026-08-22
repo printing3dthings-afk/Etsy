@@ -19,13 +19,21 @@ Usage:
 """
 
 import os, sys, json, urllib.request, time, argparse
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+# Guarded — hosted deploys (Railway) inject env vars directly and have no .env file.
+_env_path = _ROOT / ".env"
+if _env_path.exists():
+    with open(_env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 

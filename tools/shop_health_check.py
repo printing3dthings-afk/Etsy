@@ -43,8 +43,23 @@ UPSCALED_DIR = ROOT / 'data/digital_products/product_files/upscaled'
 PRODUCT_FILES_DIR = ROOT / 'data/digital_products/product_files'
 
 
-def _dhash(img: Image.Image, size: int = 8) -> int:
-    """Difference hash — fast perceptual fingerprint. Returns int bitmask."""
+def _dhash(img: Image.Image, size: int = 32) -> int:
+    """Difference hash — fast perceptual fingerprint. Returns int bitmask.
+
+    2026-08-19: size was 8 (64-bit hash) until a live run flagged 72 "hero-art"
+    issues, 18 of 19 pairs among 9 real wall-art listings reading as dist=0
+    ("exact duplicate — check immediately"). Downloaded and visually inspected
+    all 11 flagged hero images directly from Etsy: every one showed genuinely
+    distinct, correct art (galaxy, muscle car, full moon, lemon window, line-art
+    flower, etc.) on this shop's standard shared couch/frame lifestyle template
+    (CLAUDE.md's mandated composite-into-mockup method). At size=8 the framed
+    art occupies too small a fraction of a 9x8 downsampled grid to survive
+    against the large identical background, so nearly every pair collided.
+    Re-hashing the same 11 real images confirmed size=32 (1024-bit) separates
+    every genuinely-different design (14-67 bits apart) while still hashing a
+    truly re-uploaded duplicate file to exactly 0, same as before -- the
+    "exact duplicate" signal is scale-invariant, only the false positives were
+    a resolution problem."""
     grey = img.convert('L').resize((size + 1, size), Image.LANCZOS)
     px   = list(grey.getdata())
     bits = 0
@@ -119,15 +134,10 @@ def _load_prev_snapshot() -> dict | None:
         return None
 
 
-def _get(client, url):
-    headers = {
-        "Authorization": f"Bearer {client.access_token}",
-        "x-api-key": f"{client.client_id}:{client.client_secret}",
-    }
-    req = urllib.request.Request(url, headers=headers)
+def _get(client, url_or_path):
+    path = url_or_path.replace("https://openapi.etsy.com/v3/application/", "")
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return json.loads(resp.read())
+        return client._request("GET", path)
     except Exception as e:
         return {"error": str(e)}
 
@@ -220,7 +230,18 @@ def check_shop(client):
     # from the raw art even when the correct art is used. The composite_smart()
     # guard in lifestyle_composite.py prevents wrong-art generation at source.
     print("\nHERO-ART AUDIT")
-    MANIFEST_PATH = ROOT / 'data/listing_image_manifest.json'
+    # (2026-07-25) Was the git-tracked repo path unconditionally -- on Railway
+    # the hash baseline reset to the committed values every redeploy, so drift
+    # detection compared against stale hashes: recurring false "hero has
+    # changed" warnings for listings that never changed, or silence about one
+    # that genuinely did. resolve_persistent_path seeds the committed baseline
+    # to the volume once; locally (no /data) behavior is unchanged.
+    from tools.api_server import db as _db
+    MANIFEST_PATH = _db.resolve_persistent_path(
+        'listing_image_manifest.json',
+        fallback=ROOT / 'data/listing_image_manifest.json',
+        seed_from=ROOT / 'data/listing_image_manifest.json',
+    )
     hero_warns    = []
     hero_hashes: dict[str, tuple[str, int]] = {}  # lid → (title_short, hash)
 
@@ -264,18 +285,18 @@ def check_shop(client):
             title_a, h_a = hero_hashes[lid_a]
             title_b, h_b = hero_hashes[lid_b]
             dist = _hamming(h_a, h_b)
-            if dist < 4:
+            if dist < 64:  # proportional to the old dist<4-of-64 threshold, now over 1024 bits
                 severity = "WRONG ART" if dist == 0 else "nearly identical thumbnails"
                 hero_warns.append(
                     f"  [{lid_a}] \"{title_a}\" and [{lid_b}] \"{title_b}\" "
-                    f"— {severity} in hero (pHash dist={dist}/64). "
+                    f"— {severity} in hero (pHash dist={dist}/1024). "
                     f"{'Exact duplicate uploaded — check immediately.' if dist == 0 else 'Verify both show correct art; use different room backgrounds to distinguish in search.'}"
                 )
 
     # 2. Manifest drift detection
     for lid_str, (title, h) in hero_hashes.items():
         stored = manifest.get(lid_str, {}).get('hero_hash')
-        if stored is not None and _hamming(stored, h) > 8:
+        if stored is not None and _hamming(stored, h) > 128:  # proportional to the old >8-of-64 threshold
             hero_warns.append(
                 f"  [{lid_str}] \"{title}\" hero has changed since last upload "
                 f"(stored hash differs by {_hamming(stored, h)} bits) — verify it shows the correct art"
@@ -289,8 +310,12 @@ def check_shop(client):
         manifest[lid_str]['hero_checked_at'] = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     try:
         MANIFEST_PATH.write_text(json.dumps(manifest, indent=2))
-    except Exception:
-        pass
+    except Exception as exc:
+        # (2026-07-25) Was a bare `pass` -- a failed baseline write silently
+        # guaranteed the NEXT run compares against stale hashes and reports
+        # false drift. Never swallow an error that changes reported truth.
+        print(f"  ⚠  could not save hero-hash baseline to {MANIFEST_PATH}: {exc} — "
+              f"next run's drift detection will compare against stale hashes")
 
     if hero_warns:
         print(f"\n  ⚠  {len(hero_warns)} hero-art issue(s) found:")

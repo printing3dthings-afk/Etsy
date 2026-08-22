@@ -39,18 +39,68 @@ from PIL import Image, ImageEnhance
 # Paths
 # ---------------------------------------------------------------------------
 BASE = Path(__file__).parent.parent.resolve()
-COLORING_DIR = BASE / "data" / "digital_products" / "coloring_pages"
+
+
+def _resolve_dp_base() -> Path:
+    """Durable volume (<HUB_FILES_DIR> or /data/files) on the hosted deploy, else
+    the repo data dir locally -- mirrors generate_print_sizes.py/qc_sweep.py/
+    main.py's identical resolution.
+
+    (2026-07-25) COLORING_DIR previously hardcoded BASE/data/digital_products/
+    coloring_pages unconditionally -- the one generator in this codebase that
+    never checked for the persistent volume. On Railway that path is the app's
+    own ephemeral local filesystem, wiped on every redeploy: a coloring-pages
+    product built live on the dashboard would generate its ZIP there, the
+    catalog registration would durably survive (it's volume-backed), but the
+    actual file would vanish on the very next deploy -- confirmed live on
+    COLOR1001 (Scott: "I tried to input it into the Etsy listing generator and
+    it said it did not exist... I also cannot find it in the files tab
+    anymore"). Fixed to resolve the same way every sibling generator already
+    does."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE / "data" / "digital_products"
+
+
+COLORING_DIR = _resolve_dp_base() / "coloring_pages"
 SETS_DIR = COLORING_DIR / "sets"
 PAGES_PER_SET = 5
+# NEW_THEME_SET_SIZE (2026-07-24, bumped 20->30 on 2026-08-08 per Scott: "I need
+# for the coloring pages to be made in groups of 30"): the dynamic Scott-typed-
+# theme path (see generate_dynamic_theme_set()) always produces exactly this many
+# pages, packaged into exactly one ZIP -- deliberately a SEPARATE constant from
+# PAGES_PER_SET, which stays 5 and keeps batching the 2 old fixed kawaii/fun_basic
+# packs into 4 ZIPs each, untouched (Scott: leave the old packs exactly as they
+# are). Do not merge these two constants -- see build_sets()'s batch_size param,
+# which is how the two call sites stopped sharing one global.
+NEW_THEME_SET_SIZE = 30
 
 # ---------------------------------------------------------------------------
 # Style DNA injected into every prompt for consistency
+#
+# _CLOSED_OUTLINE_CLAUSE (2026-08-08, data/knowledge_base/coloring_page_design_and_
+# market_research.md): published coloring-book design guides consistently name
+# closed/fully-enclosed outlines as the single most important technical property of
+# a coloring page -- an open or broken line segment lets color bleed between regions,
+# both on paper (crayon/marker) and in digital coloring apps (bucket-fill leaks
+# through the gap). None of the 4 style tiers below said this explicitly before --
+# they controlled line weight and black/white purity but never outline closure.
+# Appended to all 4 tiers rather than left as a general note, since it's a per-
+# generation instruction like the others, not a one-time pipeline setting.
 # ---------------------------------------------------------------------------
+_CLOSED_OUTLINE_CLAUSE = (
+    "Every outline must form a closed, fully enclosed loop — no open or broken line "
+    "segments, so colored areas can never leak between regions. "
+)
 _STYLE = (
     "STYLE: Professional coloring book illustration. "
     "ONLY clean black lines on pure white background — absolutely ZERO fills, "
     "ZERO shading, ZERO gray tones, ZERO gradients anywhere. "
     "Line weight 2-3px, confident consistent strokes throughout. "
+    + _CLOSED_OUTLINE_CLAUSE +
     "Pure #000000 black outlines on pure #FFFFFF white only. "
     "Suitable for printing on A4/letter paper and coloring with colored pencils or markers. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
@@ -64,8 +114,40 @@ _STYLE_BOLD = (
     "ONLY clean black lines on pure white background — absolutely ZERO fills, "
     "ZERO shading, ZERO gray tones, ZERO gradients anywhere. "
     "Line weight 3-4px, extra bold and simple, very few small details. "
+    + _CLOSED_OUTLINE_CLAUSE +
     "Pure #000000 black outlines on pure #FFFFFF white only. "
     "Suitable for printing on A4/letter paper and coloring with crayons, colored pencils, or markers. "
+    "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
+)
+
+# ---------------------------------------------------------------------------
+# ADULT difficulty — intricate, dense patterns, fine detail, like the Halloween packs
+# ---------------------------------------------------------------------------
+_STYLE_ADULT = (
+    "STYLE: INTRICATE adult coloring book illustration — high complexity. "
+    "Extremely detailed, dense patterns with many small elements to color. "
+    "Fine line weight 1.5-2px, precise hatching, layered textures, ornate borders. "
+    "ONLY clean black lines on pure white background — absolutely ZERO fills, "
+    "ZERO shading, ZERO gray tones. Designed for experienced adult colorists who want "
+    "a challenging, meditative, time-intensive coloring experience. "
+    "Think zentangle, mandala complexity, botanical illustration density. "
+    + _CLOSED_OUTLINE_CLAUSE +
+    "Pure #000000 black outlines on pure #FFFFFF white only. "
+    "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
+)
+
+# ---------------------------------------------------------------------------
+# KIDS difficulty — big bold shapes, very simple, easy for ages 3-8
+# ---------------------------------------------------------------------------
+_STYLE_KIDS = (
+    "STYLE: Simple coloring page for young children ages 3-8. "
+    "ONLY clean black lines on pure white background — absolutely ZERO fills. "
+    "Line weight 4-5px, EXTRA THICK and bold. Very simple shapes, very few details. "
+    "Large open areas easy to color inside the lines with crayons. "
+    "NO intricate patterns, NO small details, NO background clutter. "
+    "ONE main subject per page, big and centered. "
+    + _CLOSED_OUTLINE_CLAUSE +
+    "Pure #000000 black outlines on pure #FFFFFF white only. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
 )
 
@@ -374,9 +456,175 @@ COLORING_THEMES = [
 # ---------------------------------------------------------------------------
 # Pack registry — id prefix is also used to namespace ZIPs/listing JSON per pack
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# ADULT pack — intricate, challenging designs for experienced colorists
+# ---------------------------------------------------------------------------
+def _adult_theme(id_, title, subject, border="ornate filigree"):
+    """Intricate adult-difficulty coloring page — dense detail, fine lines."""
+    return {
+        "id": id_,
+        "title": title,
+        "prompt": (
+            f"SUBJECT: {subject} "
+            f"COMPOSITION: Extremely detailed and intricate illustration filling 90% of the page. "
+            f"Dense layered patterns, fine textures, many small elements to individually color. "
+            f"Elaborate {border} border on all four edges. "
+            + _STYLE_ADULT
+        ),
+    }
+
+ADULT_THEMES = [
+    _adult_theme("AD001", "Gothic Cathedral Interior",
+        "Grand gothic cathedral interior with soaring ribbed vaulted ceilings, ornate rose windows "
+        "with intricate tracery, carved stone pillars with detailed capital decorations, pointed arches, "
+        "floor tiles with geometric patterns, candelabras, stained glass panel outlines"),
+    _adult_theme("AD002", "Steampunk Clockwork City",
+        "A massive steampunk clockwork city — interlocking gears of varying sizes, brass pipes with "
+        "rivets, pressure gauges, Victorian-era buildings with ornate ironwork balconies, a clock tower "
+        "with exposed mechanical innards, airships with propellers, steam vents"),
+    _adult_theme("AD003", "Enchanted Mushroom Forest",
+        "Dense enchanted forest floor covered in intricate mushrooms of every variety — morels, "
+        "fly agaric, chanterelles — each with detailed gill patterns under their caps, fern fronds "
+        "with individual leaflets, moss textures, a fairy cottage hidden among the roots, tiny "
+        "woodland creatures, spiderwebs with dewdrops"),
+    _adult_theme("AD004", "Day of the Dead Sugar Skull",
+        "Extremely ornate Day of the Dead sugar skull filling the page — intricate floral eye sockets, "
+        "detailed petal patterns on the forehead, geometric jaw designs, surrounded by marigolds with "
+        "layered petals, candles with dripping wax patterns, papel picado banner details"),
+    _adult_theme("AD005", "Victorian Botanical Garden",
+        "Lush Victorian botanical garden illustration — detailed roses with layered petals and thorns, "
+        "ferns with individual frond segments, ornate iron garden gate with scrollwork, a stone fountain "
+        "with carved cherub details, wisteria hanging from a trellis, butterflies with wing patterns"),
+    _adult_theme("AD006", "Underwater Coral Kingdom",
+        "Extremely detailed coral reef ecosystem — branching coral with polyp textures, sea anemones "
+        "with individual tentacles, schools of tropical fish with scale patterns, a sea turtle with "
+        "intricate shell hexagons, jellyfish with trailing tentacles, seahorses with bony plate details"),
+    _adult_theme("AD007", "Japanese Temple Garden",
+        "Serene Japanese zen garden — a pagoda temple with layered roof tile details, cherry blossom "
+        "branches with hundreds of individual blossoms, a koi pond with detailed fish scales, "
+        "a torii gate, stone lanterns, raked sand patterns, bamboo grove, a wooden bridge with railings"),
+    _adult_theme("AD008", "Haunted Victorian Mansion",
+        "Sprawling Victorian haunted mansion — ornate gingerbread trim on every eave, a wraparound "
+        "porch with turned spindle railings, Gothic windows with intricate frames, bare gnarled trees, "
+        "a crumbling stone wall with ivy, bats, a full moon, jack-o-lanterns, wrought iron fence"),
+    _adult_theme("AD009", "Art Nouveau Floral Woman",
+        "Art Nouveau portrait of a woman — flowing hair interwoven with lilies, irises, and poppies, "
+        "each flower with detailed stamen and petals, decorative Mucha-style geometric halo behind her, "
+        "vine and leaf border in classic Art Nouveau curves and organic shapes"),
+    _adult_theme("AD010", "Celestial Map of the Cosmos",
+        "Intricate celestial star map — constellations connected by fine lines, the sun with detailed "
+        "corona rays, the moon with crater details, planets with ring systems and surface features, "
+        "zodiac symbols in ornate frames, decorative compass rose, scrollwork cartouche borders"),
+    _adult_theme("AD011", "Moroccan Tile Patterns",
+        "Full-page Moroccan zellige tile pattern — interlocking geometric stars, hexagons, and "
+        "arabesques in traditional Islamic geometric art style, extremely precise symmetry, "
+        "layered borders of different pattern scales, central medallion with radiating designs"),
+    _adult_theme("AD012", "Dragon's Hoard",
+        "A massive dragon coiled atop a mountain of treasure — individual scales covering the entire "
+        "body, each with fine texture, coins and gems piled with visible engravings, ornate crowns, "
+        "chalices with jewel settings, swords with detailed hilts, chains, the dragon's wings with "
+        "membrane vein patterns"),
+    _adult_theme("AD013", "Apothecary Cabinet",
+        "Detailed apothecary/witch's cabinet — shelves of potion bottles with different shapes and "
+        "labels, dried herb bundles, a mortar and pestle, crystals with facets, an open spell book "
+        "with swirling magical text lines, candles in ornate holders, a black cat on the shelf, "
+        "botanical specimens pinned under glass, jars of ingredients"),
+    _adult_theme("AD014", "Peacock in Full Display",
+        "A magnificent peacock with tail feathers fully fanned — each feather eye with concentric "
+        "oval details and fine barb lines, the body with individual feather scale patterns, perched "
+        "on an ornate garden balustrade with carved stone details, surrounded by climbing roses"),
+    _adult_theme("AD015", "Mechanical Butterfly Collection",
+        "Display case of steampunk mechanical butterflies — each with different wing patterns made of "
+        "tiny gears, clock parts, springs, and filigree metal wings, mounted on pins with hand-written "
+        "labels, the case itself has ornate wooden frame details and brass corner fittings"),
+    _adult_theme("AD016", "Ancient Library",
+        "Grand ancient library interior — towering bookshelves with thousands of book spines, a "
+        "spiral staircase with ornate iron railings, reading desks with open books and quill pens, "
+        "a globe with geographic details, hanging oil lamps, stained glass windows, a sleeping owl"),
+    _adult_theme("AD017", "Samurai Warrior",
+        "Highly detailed samurai in full ornate armor — intricate lacing patterns on the chest piece, "
+        "detailed kabuto helmet with crest, layered shoulder guards with rivets, a katana with "
+        "wrapped handle detail, standing before a Japanese castle with layered roofs and stone walls"),
+    _adult_theme("AD018", "Vintage Pocket Watch",
+        "Massive vintage pocket watch with case open revealing the movement — every gear, spring, "
+        "jewel bearing, and escapement mechanism drawn with precision, the watch face with Roman "
+        "numerals and decorative hands, surrounded by roses and ribbon with scroll details"),
+    _adult_theme("AD019", "Mermaid's Grotto",
+        "Intricate mermaid resting in a sea cave — detailed scale pattern covering her entire tail, "
+        "flowing hair interwoven with pearls and seaweed strands, the grotto walls covered in "
+        "barnacles and anemones, treasure scattered on the floor, coral formations, light rays"),
+    _adult_theme("AD020", "Norse Viking Ship",
+        "Detailed Viking longship on stormy seas — carved dragon prow with intertwined knotwork, "
+        "overlapping shield designs along the hull, intricate sail patterns, rope rigging details, "
+        "waves with Celtic spiral patterns, a raven in flight, Norse rune border around the page"),
+]
+
+# ---------------------------------------------------------------------------
+# KIDS pack — big, bold, simple shapes for ages 3-8
+# ---------------------------------------------------------------------------
+def _kids_theme(id_, title, subject):
+    """Simple bold kids coloring page — one big subject, very easy."""
+    return {
+        "id": id_,
+        "title": title,
+        "prompt": (
+            f"SUBJECT: {subject} "
+            "COMPOSITION: ONE large, simple subject centered on the page, fills 50-60% of page. "
+            "Very few details, big open areas easy to color with crayons. NO background elements. "
+            "NO border. Maximum white space around the subject. "
+            + _STYLE_KIDS
+        ),
+    }
+
+KIDS_THEMES = [
+    _kids_theme("KD001", "Happy Dinosaur", "One big friendly cartoon T-Rex with round body, "
+                "big smile, tiny arms, standing upright"),
+    _kids_theme("KD002", "Big Fire Truck", "One simple fire truck with ladder, big wheels, "
+                "two windows, a flashing light on top"),
+    _kids_theme("KD003", "Smiling Cat", "One simple round cat sitting down, big eyes, "
+                "whiskers, short tail curled around its body"),
+    _kids_theme("KD004", "Happy Dog", "One simple cartoon dog with floppy ears, big nose, "
+                "wagging tail, sitting and looking forward"),
+    _kids_theme("KD005", "Simple Butterfly", "One large butterfly with symmetrical wings, "
+                "big round shapes on wings, small body, two antennae"),
+    _kids_theme("KD006", "Big Star", "One enormous five-pointed star with a happy face, "
+                "small sparkle lines around it"),
+    _kids_theme("KD007", "Friendly Fish", "One big simple cartoon fish with round body, "
+                "big eye, simple fins, three bubble circles above it"),
+    _kids_theme("KD008", "Ice Cream Cone", "One big ice cream cone with two scoops, "
+                "simple waffle cone pattern, a cherry on top"),
+    _kids_theme("KD009", "Simple House", "One simple house with triangle roof, square windows, "
+                "a door, a chimney with small smoke puff"),
+    _kids_theme("KD010", "Rocket Ship", "One simple cartoon rocket with round window, "
+                "three small fins, simple flame at the bottom"),
+    _kids_theme("KD011", "Happy Sun", "One giant smiling sun with simple ray lines extending "
+                "outward, two small clouds on the sides"),
+    _kids_theme("KD012", "Cute Bunny", "One round bunny rabbit sitting up, long ears, "
+                "cotton tail, holding a simple carrot"),
+    _kids_theme("KD013", "Simple Train", "One cartoon steam train engine with big smokestack, "
+                "three wheels, one window, small puff of steam"),
+    _kids_theme("KD014", "Big Flower", "One enormous simple flower with round center, "
+                "six large petals, one straight stem, two leaves"),
+    _kids_theme("KD015", "Friendly Elephant", "One simple cartoon elephant with big round body, "
+                "long trunk curled up, big ears, small tail"),
+    _kids_theme("KD016", "Simple Airplane", "One cartoon airplane with two wings, round nose, "
+                "two windows, a small tail fin"),
+    _kids_theme("KD017", "Teddy Bear", "One simple teddy bear sitting down, round head, "
+                "round ears, round belly, small paws"),
+    _kids_theme("KD018", "Cupcake", "One big cupcake with swirled frosting on top, "
+                "sprinkles dots, paper wrapper with simple lines"),
+    _kids_theme("KD019", "Simple Turtle", "One cartoon turtle with hexagon pattern shell, "
+                "four stubby legs, smiling face poking out"),
+    _kids_theme("KD020", "Sailboat", "One simple sailboat on gentle waves, triangular sail, "
+                "small flag on top, three wave curves underneath"),
+]
+
+
 PACKS = {
     "kawaii": COLORING_THEMES,
     "fun_basic": FUN_BASIC_THEMES,
+    "adult": ADULT_THEMES,
+    "kids": KIDS_THEMES,
 }
 
 
@@ -384,20 +632,38 @@ PACKS = {
 # Image generation
 # ---------------------------------------------------------------------------
 
-def _gen_image_openai(prompt: str) -> bytes | None:
-    """Call gpt-image-1 (via the shared helper) and return raw PNG bytes, or None on failure."""
+def _gen_image_openai(prompt: str, engine: str | None = None) -> bytes | None:
+    """Call the approved image engine (via the shared helper) and return raw
+    PNG bytes, or None on failure. `engine` defaults to IMAGE_ENGINE/"openai"
+    same as generate_image() itself when not given (2026-07-22: threaded
+    through so generate_dynamic_theme_set() can honor an explicit engine
+    choice from the Create screen's new-theme flow, same as every other
+    category's AI generation call in this app).
+
+    quality="medium" (2026-08-10, cost audit): generate_image()'s own default
+    is quality="high" ($0.167/image at our SQUARE size on gpt-image-1/2,
+    confirmed against OpenAI's own pricing docs) -- wasted spend for this
+    category specifically, since a coloring page is pure thick black-line-on-
+    white with no gradients, photorealism, or fine detail to lose. "medium"
+    ($0.042/image, ~4x cheaper) is the safe middle ground pending a real
+    visual side-by-side before dropping further to "low" ($0.011/image) --
+    the same verify-before-defaulting discipline the grok-vs-openai engine
+    comparison used, not a blind cost cut. Silently ignored by non-OpenAI-
+    compatible engines (grok/gemini/ideogram don't accept it), so this is
+    safe to pass unconditionally regardless of which engine actually resolves."""
     try:
         from tools.image_gen import generate_image, SQUARE, ImageGenError
     except ImportError:
         sys.path.insert(0, str(BASE))
         from tools.image_gen import generate_image, SQUARE, ImageGenError
     try:
-        tmp_path = generate_image(prompt, BASE / "_tmp_coloring_gen.png", size=SQUARE, output_format="png")
+        tmp_path = generate_image(prompt, BASE / "_tmp_coloring_gen.png", size=SQUARE,
+                                   output_format="png", quality="medium", engine=engine)
         data = tmp_path.read_bytes()
         tmp_path.unlink(missing_ok=True)
         return data
     except ImageGenError as exc:
-        print(f"  ✗ OpenAI error: {exc}", file=sys.stderr)
+        print(f"  ✗ image engine error: {exc}", file=sys.stderr)
     return None
 
 
@@ -422,39 +688,160 @@ def _enforce_bw(img: Image.Image) -> Image.Image:
 # Per-page generation
 # ---------------------------------------------------------------------------
 
-def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False) -> Path | None:
-    """Generate one coloring page PNG. Returns path on success, None on failure."""
+def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False,
+                            engine: str | None = None) -> Path | None:
+    """Generate one coloring page PNG. Returns path on success, None on failure.
+
+    (2026-07-31, Create UX audit) Routed through goal_loop.run_until_goal() +
+    image_gen.verify_original_art() -- the same vision-QA-and-retry pattern
+    generate_wall_art_master() got on 2026-07-30 (garbled baked-in text, wrong
+    subject matter), closing the gap called out in that pass's own ops_runbook
+    entry ("coloring pages are natural follow-ons, not done this round"). This
+    was previously a single-shot generate-and-hope call with only a mechanical
+    black/white post-process, no check that the image actually depicts the
+    requested subject -- notable because generate_dynamic_theme_set() also runs
+    unattended via tools/post_scheduled_coloring.py's recurring cron job, with
+    no human reviewing the raw images before they're staged as a real listing.
+    Skips the QA pass (single generate call, no retry) when GEMINI_API_KEY isn't
+    configured -- see image_gen.gemini_key_available()'s docstring for why."""
+    # generate_dynamic_theme_set() calls this directly without going through main()'s
+    # own COLORING_DIR.mkdir() -- harmless in a real dev/prod checkout where
+    # data/digital_products/ already exists from prior product generation, but a
+    # fresh CI checkout (that whole tree is gitignored) has no such directory yet,
+    # so bw.save() below raised FileNotFoundError and silently failed CI on every
+    # push (confirmed 2026-07-23, blocking every Railway deploy since this function
+    # was added 2026-07-22). exist_ok=True makes this a no-op when it already exists.
+    output_dir.mkdir(parents=True, exist_ok=True)
     dst = output_dir / f"{theme['id']}_coloring.png"
     if dst.exists() and not regen:
         print(f"  ✓ {theme['id']} cached — skipping (--regen to force)")
         return dst
 
     print(f"  → {theme['id']}: {theme['title']}")
-    img_bytes = _gen_image_openai(theme["prompt"])
-    if not img_bytes:
-        print(f"  ✗ {theme['id']} generation failed")
-        return None
 
-    img = Image.open(BytesIO(img_bytes))
-    bw = _enforce_bw(img)
-    bw.save(dst, "PNG", dpi=(300, 300))
+    from tools.image_gen import verify_original_art, gemini_key_available
+    from tools.goal_loop import run_until_goal
+
+    def _generate(correction: str) -> Image.Image:
+        img_bytes = _gen_image_openai(theme["prompt"] + correction, engine=engine)
+        if img_bytes is None:
+            raise RuntimeError("image engine call failed (see stderr above)")
+        return Image.open(BytesIO(img_bytes))
+
+    def _verify(candidate_img: Image.Image) -> dict:
+        # verify_original_art() checks a file on disk -- write the enforced
+        # black/white candidate to dst first so QA judges the exact pixels that
+        # would ship, not the pre-threshold color original. Also means dst always
+        # reflects the latest attempt even if the loop exhausts without passing.
+        _enforce_bw(candidate_img).save(dst, "PNG", dpi=(300, 300))
+        return verify_original_art(dst, theme["prompt"])
+
+    if gemini_key_available():
+        result = run_until_goal(_generate, _verify, max_attempts=2)
+        if not result.passed and not dst.exists():
+            print(f"  ✗ {theme['id']} generation failed")
+            return None
+        if not result.passed:
+            print(f"  ⚠ {theme['id']}: automated art QA did not pass after "
+                  f"{result.attempts} attempt(s): {result.issues}. Using the last "
+                  f"generated image anyway -- review it before publishing.")
+    else:
+        print(f"  ⚠ {theme['id']}: GEMINI_API_KEY not set -- skipping automated "
+              f"art QA. Set it to enable garbled-text/wrong-subject checks.")
+        try:
+            img = _generate("")
+        except RuntimeError:
+            print(f"  ✗ {theme['id']} generation failed")
+            return None
+        _enforce_bw(img).save(dst, "PNG", dpi=(300, 300))
+
     kb = dst.stat().st_size // 1024
     print(f"  ✓ {dst.name}  ({kb} KB)")
     return dst
 
 
 # ---------------------------------------------------------------------------
+# Dynamic (Scott-authored) theme sets — 2026-07-22
+# ---------------------------------------------------------------------------
+# Every product before this was a repackaging of the same 2 fixed 20-prompt
+# packs above (PACKS). This is the first real per-product theme generator:
+# one page per typed subject, wrapped in the SAME _STYLE/_STYLE_BOLD prompt
+# DNA every hardcoded theme already uses (via _fun_theme(), unchanged) --
+# no new visual vocabulary invented, so a dynamically-generated set looks
+# and feels consistent with the rest of the shop's coloring-page catalog.
+_DYNAMIC_BORDER = "subtle"  # generic decorative border text _fun_theme() expects
+
+# DIFFICULTY_CHOICES (2026-08-08, Scott: "make sure the kids coloring pages are
+# separate from the adult due to the adult being more detailed"): before this,
+# generate_dynamic_theme_set() always wrapped every subject in _fun_theme() --
+# the single mid-complexity tier -- with no way to ask for the big-bold/very-easy
+# KIDS style or the intricate/dense ADULT style that the old fixed hardcoded packs
+# (PACKS["kids"]/PACKS["adult"]) already have. One `difficulty` value now governs
+# the WHOLE batch -- every one of the `subjects` passed to a single call gets
+# wrapped in the SAME tier, so a kids page and an adult page can never land in the
+# same 30-page group; a genuinely separate call (separate product_id) is required
+# to build the other tier, exactly like the old fixed packs were already separate
+# products.
+DIFFICULTY_CHOICES = ("standard", "kids", "adult")
+
+
+def generate_dynamic_theme_set(product_id: str, subjects: list[str],
+                                engine: str | None = None,
+                                difficulty: str = "standard") -> list[Path]:
+    """Generate a brand-new, Scott-typed coloring-page set: one page per
+    subject line (each theme id namespaced by product_id so caching via
+    generate_coloring_page()'s own dst.exists() check can never collide with
+    another product's pages, or with a re-run of the same product). Returns
+    the list of successfully generated page paths (skips/omits any subject
+    whose generation failed rather than raising -- the caller decides
+    whether a partial set is still good enough to package).
+
+    `difficulty` picks ONE style tier for every subject in this call (never
+    mixed within a batch) -- "standard" (default, same _fun_theme wrapper this
+    function always used before difficulty existed), "kids" (_kids_theme: big
+    bold single subject, no border, very few details), or "adult" (_adult_theme:
+    intricate, dense, fine line weight). An unrecognized value falls back to
+    "standard" rather than raising -- this is user-typed input reaching here
+    from the Create screen, never trusted blindly."""
+    if difficulty not in DIFFICULTY_CHOICES:
+        difficulty = "standard"
+    if difficulty == "kids":
+        themes = [
+            _kids_theme(f"{product_id}_{i:02d}", subject[:60], subject)
+            for i, subject in enumerate(subjects, start=1)
+        ]
+    elif difficulty == "adult":
+        themes = [
+            _adult_theme(f"{product_id}_{i:02d}", subject[:60], subject)
+            for i, subject in enumerate(subjects, start=1)
+        ]
+    else:
+        themes = [
+            _fun_theme(f"{product_id}_{i:02d}", subject[:60], subject, _DYNAMIC_BORDER)
+            for i, subject in enumerate(subjects, start=1)
+        ]
+    generated = [generate_coloring_page(t, COLORING_DIR, regen=False, engine=engine) for t in themes]
+    return [p for p in generated if p]
+
+
+# ---------------------------------------------------------------------------
 # ZIP packaging
 # ---------------------------------------------------------------------------
 
-def build_sets(coloring_files: list[Path], pack: str = "kawaii") -> list[Path]:
-    """Package coloring PNGs into ZIP sets of PAGES_PER_SET."""
+def build_sets(coloring_files: list[Path], pack: str = "kawaii",
+                batch_size: int | None = None) -> list[Path]:
+    """Package coloring PNGs into ZIP sets of `batch_size` pages each. Defaults
+    to PAGES_PER_SET (5) -- the old fixed-pack behavior, unchanged. The dynamic
+    new-theme path (build_coloring_product.py) passes batch_size=
+    NEW_THEME_SET_SIZE (20) explicitly so its 20 pages land in ONE ZIP instead
+    of being sliced into 4 like the old packs."""
+    batch_size = batch_size or PAGES_PER_SET
     SETS_DIR.mkdir(parents=True, exist_ok=True)
     prefix = "coloring_set" if pack == "kawaii" else f"coloring_{pack}_set"
     zip_paths: list[Path] = []
-    for i in range(0, len(coloring_files), PAGES_PER_SET):
-        batch = coloring_files[i : i + PAGES_PER_SET]
-        set_num = (i // PAGES_PER_SET) + 1
+    for i in range(0, len(coloring_files), batch_size):
+        batch = coloring_files[i : i + batch_size]
+        set_num = (i // batch_size) + 1
         zip_path = SETS_DIR / f"{prefix}_{set_num:02d}.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for page in batch:
@@ -462,6 +849,69 @@ def build_sets(coloring_files: list[Path], pack: str = "kawaii") -> list[Path]:
         print(f"  ZIP {set_num:02d}: {zip_path.name} ({len(batch)} pages)")
         zip_paths.append(zip_path)
     return zip_paths
+
+
+def merge_existing_sets_into_bundle(source_pids: list[str], bundle_pid: str) -> dict:
+    """Combine the real, already-generated ZIPs of several existing coloring-
+    pages products into ONE new ZIP for a bundle listing — zero new AI spend,
+    reuses content that's already paid for. Pure file work: reads each source
+    ZIP under SETS_DIR (the new-pipeline naming convention,
+    `coloring_<pid.lower()>_set_01.zip` — see _produce_build_product()'s
+    reg_files assignment), re-packages every PNG member into one combined ZIP
+    at SETS_DIR / `coloring_<bundle_pid.lower()>_set_01.zip`, prefixing each
+    member's filename with its source pid so pages from different sources can
+    never collide on the same name inside the combined ZIP.
+
+    2026-08-10: only the NEW pipeline's products (COLOR100x, files registered
+    under SETS_DIR with a full catalog path) are reachable this way -- the
+    older kawaii/fun-adventure sets predate the durable-volume fix
+    (_resolve_dp_base()'s own docstring) and their source files were never
+    migrated, so they simply aren't present here to merge. Never silently
+    drops a requested source: any pid whose ZIP isn't found is reported in
+    `missing`, not just skipped without a trace.
+
+    Also writes a `.manifest.json` sidecar next to the combined ZIP recording
+    the real total page count -- qc_sweep.check_coloring_zip()'s page_count
+    gate otherwise hard-expects exactly NEW_THEME_SET_SIZE (a single-batch
+    assumption a multi-source bundle correctly violates); the manifest lets
+    QC verify the ACTUAL claimed count instead of false-FAILing a legitimate
+    bundle. Absent for every non-bundle ZIP, so existing behavior is untouched."""
+    SETS_DIR.mkdir(parents=True, exist_ok=True)
+    included: list[dict] = []
+    missing: list[str] = []
+    seen_names: set[str] = set()
+    out_path = SETS_DIR / f"coloring_{bundle_pid.lower()}_set_01.zip"
+    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as out_zf:
+        for pid in source_pids:
+            src_path = SETS_DIR / f"coloring_{pid.lower()}_set_01.zip"
+            if not src_path.exists():
+                missing.append(pid)
+                continue
+            with zipfile.ZipFile(src_path, "r") as src_zf:
+                members = [n for n in src_zf.namelist() if n.lower().endswith(".png")]
+                for name in members:
+                    new_name = f"{pid}_{name}"
+                    if new_name in seen_names:
+                        continue  # a genuine duplicate write would corrupt the ZIP index
+                    seen_names.add(new_name)
+                    out_zf.writestr(new_name, src_zf.read(name))
+                included.append({"pid": pid, "pages": len(members)})
+    total_pages = sum(e["pages"] for e in included)
+    manifest_path = out_path.with_suffix(".manifest.json")
+    if total_pages == 0:
+        out_path.unlink(missing_ok=True)
+        manifest_path.unlink(missing_ok=True)
+    else:
+        manifest_path.write_text(json.dumps({
+            "bundle_pid": bundle_pid, "total_pages": total_pages, "included": included,
+        }, indent=2))
+    return {
+        "bundle_pid": bundle_pid,
+        "zip_path": out_path,
+        "included": included,
+        "missing": missing,
+        "total_pages": total_pages,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -533,6 +983,70 @@ _LISTING_META = {
             "Pure black outline on white background — zero fills, zero shading",
             "Themes: dinosaurs, race cars, pirates, robots, knights, space, animals & more",
             "Instant digital download — no physical item shipped",
+        ],
+    },
+    "adult": {
+        "title": "Intricate Adult Coloring Pages Printable, Detailed Coloring Book, Instant Download",
+        "price": 3.99,
+        "tags": [
+            "adult coloring pages",
+            "intricate coloring",
+            "detailed coloring pdf",
+            "coloring page download",
+            "instant download",
+            "stress relief art",
+            "mandala coloring",
+            "gothic coloring page",
+            "botanical coloring",
+            "coloring book pdf",
+            "mindful coloring",
+            "digital coloring",
+            "complex line art",
+        ],
+        "hook": (
+            "🧘 Instant download intricate adult coloring pages — ultimate stress relief & creative relaxation!\n\n"
+            "20 highly detailed, complex coloring pages designed for experienced colorists. Features "
+            "Gothic architecture, steampunk clockwork, intricate mandalas, botanical gardens, and mythic dragons. "
+            "Fine black line work on crisp white background — perfect for fine-tip markers or colored pencils."
+        ),
+        "whats_included": [
+            "20 unique intricate adult coloring page PNG files",
+            "High resolution 2400×2400px at 300 DPI",
+            "Fine 1.5-2px black line art on pure white — ultra-detailed",
+            "Themes: Gothic cathedrals, steampunk, celestial maps, Art Nouveau, floral mandalas",
+            "Instant digital download — printable at home or print shop",
+        ],
+    },
+    "kids": {
+        "title": "Simple Kids Coloring Pages Printable, Toddler & Preschooler Coloring Sheets",
+        "price": 3.99,
+        "tags": [
+            "kids coloring pages",
+            "toddler coloring",
+            "preschool coloring",
+            "easy coloring pages",
+            "instant download",
+            "simple coloring book",
+            "dinosaur coloring",
+            "cute animal coloring",
+            "coloring sheets kids",
+            "coloring book pdf",
+            "boy girl coloring",
+            "digital coloring",
+            "first coloring book",
+        ],
+        "hook": (
+            "🖍️ Instant download simple kids coloring pages — extra bold lines for easy coloring!\n\n"
+            "20 fun and easy coloring pages specifically designed for toddlers and young children (ages 3-8). "
+            "Features big, bold 4-5px outlines with large open spaces — perfect for crayons, washable markers, "
+            "and little hands learning to color inside the lines!"
+        ),
+        "whats_included": [
+            "20 unique simple kids coloring page PNG files",
+            "High resolution 2400×2400px at 300 DPI",
+            "Extra thick 4-5px black outlines with zero background clutter",
+            "Themes: dinosaurs, fire trucks, animals, rocket ships, ice cream, animals & shapes",
+            "Instant digital download — print unlimited copies for your kids",
         ],
     },
 }

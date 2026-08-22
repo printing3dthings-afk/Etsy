@@ -6,6 +6,8 @@
 
 OnBrandCraftz Pin Scheduler is a private automation tool used exclusively by OnBrandCraftz to create and schedule Pinterest pins linking to product listings in the OnBrandCraftz Etsy shop. This is not a public-facing application.
 
+*(This document covers the Pinterest pin-scheduling tool only, which never touches customer/order data. For the broader shop-management Hub tool — which does access limited customer order and review data — see [privacy.html](privacy.html)/`/static/privacy.html`.)*
+
 ## Data We Access
 
 This app accesses the Pinterest API on behalf of the OnBrandCraftz business account only. It does not access, store, or process any data belonging to Pinterest users other than the account owner.

@@ -43,6 +43,7 @@ Usage:
 """
 
 import argparse
+import os
 import pathlib
 import re
 import shutil
@@ -50,7 +51,30 @@ import sys
 from datetime import datetime, timedelta
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TRASH_DIR = ROOT / "data" / "trash"
+
+
+def _resolve_trash_dir() -> pathlib.Path:
+    """(2026-07-25) On the hosted deploy, runtime archives (main.py archiving a
+    deleted todo or allowed-folder via archive_snippet) are the SOLE copy of
+    that data between delete and restore -- and the repo dir there is
+    ephemeral, so every redeploy silently destroyed them, defeating this
+    file's whole "nothing deleted is unrecoverable" guarantee. Resolve to the
+    persistent volume when one is mounted (HUB_FILES_DIR override, else a
+    writable /data -- same detection as db.resolve_persistent_path), else the
+    repo vault. Locally nothing changes: the committed data/trash/ vault
+    remains the durability model for dev/agent deletions per CLAUDE.md, and
+    the two vaults are intentionally separate histories (dev deletions live
+    in git; hosted runtime deletions live on the volume)."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol:
+        return pathlib.Path(vol) / "trash"
+    d = pathlib.Path("/data")
+    if d.is_dir() and os.access(d, os.W_OK):
+        return d / "trash"
+    return ROOT / "data" / "trash"
+
+
+TRASH_DIR = _resolve_trash_dir()
 FILES_DIR = TRASH_DIR / "files"
 LEDGER = TRASH_DIR / "DELETED.md"
 RETENTION_DAYS = 30

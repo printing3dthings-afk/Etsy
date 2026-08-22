@@ -1,8 +1,14 @@
 """
-Art Creation Tools — generates digital art (DALL-E 3) and printable planner PDFs.
+Art Creation Tools — generates digital art and printable planner PDFs.
+
+Stale docstring fixed 2026-07-22: image generation is gpt-image-1 (via
+_generate_digital_art()'s own direct call) or, for the newer
+generate_wall_art_master() path, any approved engine (gpt-image-1/gpt-image-2/
+Gemini/Ideogram) routed through tools/image_gen.py's generate_image() — never
+DALL-E 3, despite what this docstring said for a long time.
 
 Requires for full functionality:
-  OPENAI_API_KEY  — DALL-E 3 image generation
+  OPENAI_API_KEY  — gpt-image-1/gpt-image-2 image generation
   Pillow          — image processing (pip install Pillow)
   reportlab       — PDF planner generation (pip install reportlab)
 
@@ -2061,6 +2067,77 @@ def _create_size_comparison(data: dict, store: DataStore) -> str:
         "path":       out,
         "note":       "Size comparison uses the REAL art composited at 3 print sizes.",
     }, indent=2)
+
+
+def generate_wall_art_master(product_id: str, prompt: str, engine: str | None = None,
+                              hand_painted_medium: str | None = None) -> str:
+    """Generate + upscale a print-ready master JPG for product_id, saved to
+    PRODUCT_FILES_DIR/{product_id}.jpg -- the exact path build_wallart_product.py
+    already checks for (see its own docstring). Adapted from
+    _generate_digital_art() below (2026-07-22, Create-screen "+ new one" new-art
+    flow) but decoupled from that function's DataStore/product-record
+    bookkeeping: this is called with a product_id Scott typed himself (no
+    existing "product" record to look up or mint), and routes through
+    tools/image_gen.py's generate_image() (engine-validated against the
+    approved list, same as every other AI image call in this app) instead of
+    _generate_digital_art()'s raw-urllib gpt-image-1-only call.
+
+    Raises ImageGenError (propagated from image_gen.generate_image) or
+    RuntimeError (from _upscale_for_print if Pillow is missing) on failure --
+    the caller (build_wallart_product.py) is expected to let this exit
+    non-zero rather than silently continue with no source art.
+
+    (2026-07-30) Routed through goal_loop.run_until_goal() -- generate, then
+    one vision QA pass (image_gen.verify_original_art()) checking for garbled
+    baked-in text, a broken multi-panel collage, or wrong subject matter, with
+    up to one retry using the specific failures as corrective feedback. This
+    was previously a single-shot generate-and-hope call with zero automated
+    quality check, unlike the listing-photo pipeline's already-proven
+    verify+retry pattern this reuses. If it never passes within the attempt
+    budget, the last attempt is still used (never raises for a QA miss --
+    a real generation error still raises) but a loud warning is printed so a
+    human reviewing the build log knows to double-check it; this matches the
+    existing needs_visual_qc:true flag _produce_build_product() already
+    surfaces to Scott for any wall-art build that generated new AI art.
+
+    (2026-07-31) Skips the QA pass entirely (single generate call, no retry)
+    when GEMINI_API_KEY isn't configured, rather than entering the goal loop --
+    verify_original_art() needs its own Gemini key independent of whichever
+    engine generated the image, and without this guard a missing key would
+    masquerade as an ordinary QA failure: retried uselessly with a "fix this"
+    correction the model can't act on, then still shipped unverified anyway.
+    See image_gen.gemini_key_available()'s docstring for the full mechanism."""
+    from tools.image_gen import generate_image, PORTRAIT, gemini_key_available
+    from tools import image_gen as _image_gen
+    from tools.goal_loop import run_until_goal
+    _ensure_dirs()
+    final_prompt = enrich_prompt_with_medium(prompt, hand_painted_medium)
+    raw_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_raw.png")
+
+    def _generate(correction: str) -> str:
+        generate_image(final_prompt + correction, raw_path, size=PORTRAIT, quality="high",
+                        output_format="png", engine=engine)
+        return raw_path
+
+    def _verify(candidate_path: str) -> dict:
+        return _image_gen.verify_original_art(candidate_path, final_prompt)
+
+    if gemini_key_available():
+        result = run_until_goal(_generate, _verify, max_attempts=2)
+        if not result.passed:
+            print(f"[generate_wall_art_master] ⚠ {product_id}: automated art QA did not "
+                  f"pass after {result.attempts} attempt(s): {result.issues}. Using the last "
+                  f"generated image anyway -- review it before publishing.", flush=True)
+    else:
+        print(f"[generate_wall_art_master] ⚠ {product_id}: GEMINI_API_KEY not set -- "
+              f"skipping automated art QA (no verification pass run). Set it to enable "
+              f"garbled-text/wrong-subject checks. Review this image before publishing.",
+              flush=True)
+        _generate("")
+
+    file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.jpg")
+    _upscale_for_print(raw_path, file_path, target_px=3000)  # Gate 1: >=3000px short edge
+    return file_path
 
 
 def _generate_digital_art(data: dict, store: DataStore) -> str:
@@ -5040,8 +5117,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     if "sticker_pack" in _extras:
         if _design == 3:
-            # Tier 3: unified interactive picker page (linked from every day cell)
-            draw_sticker_picker_page(); page_count += 1
+            # Tier 3: unified interactive picker -- draw_sticker_picker_page() itself
+            # writes 5 real pages (one per sticker sheet: Functional Planning, Widget
+            # Trackers, Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday --
+            # its own `for pg_idx in range(5): ... c.showPage()` loop), so crediting
+            # only +1 here undercounted the function's returned "pages" metadata by 4
+            # against the real PDF (2026-08-13 functional audit, CLAUDE.md Quality
+            # Gate rule "page counts... match the description exactly").
+            draw_sticker_picker_page(); page_count += 5
         else:
             # Tier 1/2: three separate screenshottable sticker pack pages
             for _pi in range(1, 6):

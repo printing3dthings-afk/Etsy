@@ -44,7 +44,27 @@ from moviepy import VideoClip, concatenate_videoclips
 BASE = Path(__file__).parent.parent.resolve()
 sys.path.insert(0, str(BASE))
 
-OUTPUT_DIR  = BASE / "data" / "social" / "videos"
+
+def _resolve_videos_dir() -> Path:
+    """(2026-07-25) Must resolve to the IDENTICAL directory main.py's
+    _FILE_ROOTS["videos"] computes -- same HUB_FILES_DIR-or-/data detection,
+    same "social/videos" join. Previously hardcoded to BASE/data/social/videos
+    unconditionally; commit f6a78c7 made the READ side (/api/studio/videos
+    listing, post-instagram/post-facebook resolution) volume-aware but never
+    touched this WRITE side, so on the hosted deploy a generated video landed
+    in the ephemeral repo dir, never appeared in the Studio list, and social
+    posting 404'd on it. Read and write must always agree."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol:
+        return Path(vol) / "social" / "videos"
+    if Path("/data").is_dir():
+        return Path("/data") / "files" / "social" / "videos"
+    return BASE / "data" / "social" / "videos"
+
+
+OUTPUT_DIR  = _resolve_videos_dir()
+# Re-downloadable cache of Etsy listing images -- deliberately NOT volume-backed
+# (losing it costs bandwidth, not data).
 CACHE_DIR   = BASE / "data" / "social" / "image_cache"
 
 # ── Video constants ───────────────────────────────────────────────────────────

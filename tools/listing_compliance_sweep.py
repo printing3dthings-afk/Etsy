@@ -80,7 +80,12 @@ def _unmapped_result(listing: dict) -> dict:
 
 
 def run_sweep(dry_run: bool = False) -> list[dict]:
-    manifest = lic._load_json(lic.MANIFEST_PATH)
+    # load_manifest_with_overrides() (not a bare MANIFEST_PATH read) -- a listing
+    # registered via main.py's register_product feature lives only in the
+    # gitignored listing_manifest_overrides.json sidecar; reading MANIFEST_PATH
+    # alone used to make this sweep FAIL and auto-stage a deactivate_listing for
+    # a listing Frank had just correctly registered (2026-08-05 finding).
+    manifest = lic.load_manifest_with_overrides()
     rules = lic._load_json(lic.RULES_PATH)
     approvals = lic._load_json(lic.APPROVALS_PATH)
     registry = lic._load_json(lic.REGISTRY_PATH)
@@ -134,7 +139,7 @@ def run_sweep(dry_run: bool = False) -> list[dict]:
                     f"Compliance FAIL — listing {r['listing_id']} ({title_short}): "
                     f"{fail_details} [staged deactivate_listing, queue #{queue_id} — "
                     f"review in Action Center]",
-                    added_by="frank",
+                    added_by="frank", category="question",
                 )
                 todoed += 1
             elif r["status"] == "WARN":
@@ -144,7 +149,7 @@ def run_sweep(dry_run: bool = False) -> list[dict]:
                 title_short = r["title"][:60] if r["title"] else "(no title)"
                 _db.add_todo(
                     f"Compliance WARN — listing {r['listing_id']} ({title_short}): {warn_details}",
-                    added_by="frank",
+                    added_by="frank", category="frank_can_do",
                 )
                 todoed += 1
 

@@ -16,17 +16,27 @@ Without it the code still works — it just resets when the container restarts.
 
 Tables:
   metric_snapshots   — one shop-level row per day (revenue, orders, ratings…)
+  status_snapshots   — one row per (day, panel) for Star Seller/Ads/COGS history
   listing_snapshots  — per-listing daily views/favorites/price (for conversion)
   action_queue       — staged actions awaiting Scott's approval (next layer)
 """
 from __future__ import annotations
 
+import base64
 import json
 import os
+import re
 import sqlite3
 import threading
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+try:
+    import nacl.secret
+    import nacl.utils
+    _NACL_AVAILABLE = True
+except ImportError:  # pragma: no cover — PyNaCl is already a pinned dependency
+    _NACL_AVAILABLE = False
 
 
 def _resolve_db_path() -> str:
@@ -86,6 +96,22 @@ CREATE TABLE IF NOT EXISTS metric_snapshots (
   total_reviews   INTEGER,
   raw_json        TEXT
 );
+-- NOTE: currently write-only (populated by record_metric_snapshot; the reader
+-- get_listing_history was removed 2026-07-11 as dead code). Kept because the
+-- write path is cheap and a per-listing history reader may return.
+CREATE TABLE IF NOT EXISTS status_snapshots (
+  snapshot_date TEXT NOT NULL,
+  panel         TEXT NOT NULL,   -- 'star_seller' | 'ads_roas' | 'cogs_margin'
+  ts            TEXT NOT NULL,
+  status        TEXT,            -- the compute fn's own status string (on_track/at_risk/...)
+  raw_json      TEXT,            -- full _compute_*_status() dict -- one generic table for all
+                                  -- three panels rather than three near-duplicate schemas, since
+                                  -- their shapes differ (and can be {"used": False}) and none of
+                                  -- them need dedicated numeric columns the way metric_snapshots
+                                  -- does for charting -- the /api/status-history route picks the
+                                  -- one representative field per panel out of raw_json itself.
+  PRIMARY KEY (snapshot_date, panel)
+);
 CREATE TABLE IF NOT EXISTS listing_snapshots (
   snapshot_date TEXT NOT NULL,
   listing_id    INTEGER NOT NULL,
@@ -125,19 +151,75 @@ CREATE TABLE IF NOT EXISTS chat_summaries (
   updated_at  TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS quality_audits (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  ts          TEXT NOT NULL,
-  passed      INTEGER,
-  warned      INTEGER,
-  failed      INTEGER,
-  summary     TEXT     -- short text: which listings failed and why
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts            TEXT NOT NULL,
+  passed        INTEGER,
+  warned        INTEGER,
+  failed        INTEGER,
+  audited_count INTEGER,  -- total listings in this run's audited set (added
+                           -- alongside the 2026-07-10 rotation change); NULL for
+                           -- historical rows recorded before rotation, when every
+                           -- run implicitly covered the full catalog
+  summary       TEXT      -- short text: which listings failed and why
 );
+-- NOTE: currently write-only (populated by the rate-limit sample hook + pruned
+-- daily; the reader get_rate_limit_history was removed 2026-07-11 as dead code).
+-- Kept because sampling is the only measured record of Etsy quota consumption.
+CREATE TABLE IF NOT EXISTS etsy_rate_limit_log (
+  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts                    TEXT NOT NULL,
+  remaining_today       INTEGER,
+  remaining_this_second INTEGER,
+  limit_per_day         INTEGER,
+  limit_per_second      INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limit_ts ON etsy_rate_limit_log(ts);
+-- Per-call record of every Etsy API request this app makes (2026-08-20,
+-- added after the update_price silent-no-op incident -- see
+-- data/knowledge_base/ops_runbook.md's 2026-08-20 entry). The rate-limit
+-- log above only ever recorded quota headers; diagnosing that incident
+-- required manually re-checking 82 listings one at a time against Etsy's
+-- own public endpoint because nothing durable recorded which calls this
+-- app actually made or whether each one's *result* matched what was
+-- requested. This table exists so that class of question -- "how many
+-- update_price calls happened today, and how many actually changed the
+-- listing" -- is a single query instead of a multi-hour investigation.
+CREATE TABLE IF NOT EXISTS etsy_api_call_log (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts           TEXT NOT NULL,
+  method       TEXT NOT NULL,     -- GET/POST/PUT/PATCH/DELETE
+  path         TEXT NOT NULL,     -- e.g. 'listings/4519185019/inventory'
+  listing_id   INTEGER,           -- extracted from path when identifiable, else NULL
+  action_type  TEXT,              -- staged-action type when this call was triggered
+                                   -- by approve_action (e.g. 'update_price'), else NULL
+  status_code  INTEGER,           -- HTTP status, 0 for a network-level failure
+  ok           INTEGER NOT NULL,  -- 1 = call succeeded (2xx); 0 = raised EtsyAPIError.
+                                   -- This is about the HTTP call itself, NOT about
+                                   -- whether Etsy's data actually changed as requested
+                                   -- -- see _verify_etsy_mutation in main.py for that
+                                   -- separate, stronger check.
+  error        TEXT,              -- truncated error message when ok=0
+  duration_ms  INTEGER            -- wall-clock time for this call, incl. retries
+);
+CREATE INDEX IF NOT EXISTS idx_api_call_log_ts ON etsy_api_call_log(ts);
+CREATE INDEX IF NOT EXISTS idx_api_call_log_listing ON etsy_api_call_log(listing_id, ts);
 CREATE TABLE IF NOT EXISTS etsy_tokens (
   id                    INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
   access_token          TEXT NOT NULL,
   refresh_token         TEXT NOT NULL,
   parent_refresh_token  TEXT,   -- the refresh_token this one rotated FROM (lineage check)
   updated_at            TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS google_calendar_tokens (
+  id            INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row, same shape as etsy_tokens
+  access_token  TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  updated_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS google_calendar_synced_events (
+  item_key   TEXT PRIMARY KEY,  -- local origin key, e.g. 'todo:42' or 'seasonal:Back to School:2026'
+  event_id   TEXT NOT NULL,     -- the Google Calendar event id this item was synced to
+  created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS todos (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -210,6 +292,15 @@ CREATE TABLE IF NOT EXISTS hub_sessions (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_hub_sessions_user ON hub_sessions(username);
+CREATE TABLE IF NOT EXISTS oauth_identities (
+  provider     TEXT NOT NULL,   -- 'google' | 'apple'
+  provider_sub TEXT NOT NULL,   -- provider's stable, opaque user id ("sub" claim)
+  username     TEXT NOT NULL,   -- FK to hub_users.username (lowercase)
+  email        TEXT,
+  created_at   TEXT NOT NULL,
+  PRIMARY KEY (provider, provider_sub)
+);
+CREATE INDEX IF NOT EXISTS idx_oauth_identities_user ON oauth_identities(username);
 CREATE TABLE IF NOT EXISTS settings (
   key        TEXT PRIMARY KEY,   -- e.g. 'agent_name', 'image_engine', 'model_primary'
   value      TEXT,               -- string value; NULL/absent = fall back to env/default
@@ -246,8 +337,77 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE todos ADD COLUMN due_date TEXT")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            # category/answer/answered_at (2026-07-15): explicit classification for the
+            # Tasks screen's category filter + tap-to-answer flow. category is set at
+            # creation time (see add_todo), never inferred from text -- a repo-wide audit
+            # of every add_todo() call site found no reliable text pattern (nothing ends
+            # in a literal "?", most are directive/FYI statements even when they're
+            # functionally a question). SQLite backfills existing rows to the column
+            # DEFAULT automatically, so old rows land on 'general' with no separate
+            # migration needed for that part.
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN category TEXT NOT NULL DEFAULT 'general'")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN answer TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN answered_at TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            # follow_up/follow_up_at/attempt_count/needs_attention (2026-08-16, Tasks
+            # screen ease-of-use pass): both 'question' and 'frank_can_do' todos now
+            # get real follow-through instead of sitting inert -- answering a question
+            # kicks off a real headless agent turn, and frank_can_do items get worked
+            # by an hourly background loop. follow_up holds Frank's own summary of
+            # what it did/found (shown in the UI as "Frank: ..."); attempt_count +
+            # needs_attention let the frank_can_do loop cap retries and escalate
+            # visibly to Scott instead of silently retrying forever or giving up
+            # silently (Scott's explicit ask: "make sure it gets done").
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN follow_up TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN follow_up_at TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN attempt_count INTEGER NOT NULL DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN needs_attention INTEGER NOT NULL DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             try:
                 conn.execute("ALTER TABLE hub_users ADD COLUMN recovery_code_hash TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            # email/display_name (2026-07-18): self-service signup collects both --
+            # previously every hub_users row was created either at first-run setup
+            # (username/password only) or via the owner-only admin panel (also no
+            # email/name), so these are new, nullable columns on an existing table.
+            try:
+                conn.execute("ALTER TABLE hub_users ADD COLUMN email TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE hub_users ADD COLUMN display_name TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE quality_audits ADD COLUMN audited_count INTEGER")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            # 2026-08-06 Settings audit: powers the new "Active sessions" card --
+            # existing hub_sessions rows had no device info at all, so a Settings
+            # audit finding ("session management genuinely doesn't exist anywhere")
+            # could only be closed with a real column, not just new endpoints.
+            try:
+                conn.execute("ALTER TABLE hub_sessions ADD COLUMN user_agent TEXT")
             except sqlite3.OperationalError:
                 pass  # column already exists
             conn.commit()
@@ -310,6 +470,31 @@ def record_metric_snapshot(metrics: dict, listings: list) -> str:
     return d
 
 
+def get_listing_snapshot_history(listing_id: int, start_date: str | None = None, end_date: str | None = None) -> list:
+    """Real daily views/num_favorers/title/price for one listing, oldest-first,
+    from the listing_snapshots table _snapshot_loop() already populates for
+    every active listing once a day (2026-08-06, A/B testing idea 3/3 --
+    reuses this existing table instead of standing up a second daily
+    per-listing tracker). start_date/end_date are inclusive ISO date strings
+    ('YYYY-MM-DD'); omit either to leave that side of the range open."""
+    init_db()
+    conn = _connect()
+    try:
+        query = "SELECT * FROM listing_snapshots WHERE listing_id = ?"
+        params: list = [listing_id]
+        if start_date:
+            query += " AND snapshot_date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND snapshot_date <= ?"
+            params.append(end_date)
+        query += " ORDER BY snapshot_date ASC"
+        rows = conn.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
 def get_metric_history(days: int = 30) -> list:
     """Most recent `days` shop snapshots, oldest-first (ready for charting)."""
     init_db()
@@ -324,13 +509,36 @@ def get_metric_history(days: int = 30) -> list:
         conn.close()
 
 
-def get_listing_history(listing_id: int, days: int = 30) -> list:
+def record_status_snapshot(panel: str, data: dict) -> str:
+    """Upsert today's snapshot for one status panel (star_seller/ads_roas/
+    cogs_margin). Mirrors record_metric_snapshot()'s upsert-by-day shape,
+    keyed additionally by panel. Returns the date string."""
+    init_db()
+    d = date.today().isoformat()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO status_snapshots (snapshot_date, panel, ts, status, raw_json)
+               VALUES (?,?,?,?,?)
+               ON CONFLICT(snapshot_date, panel) DO UPDATE SET
+                 ts=excluded.ts, status=excluded.status, raw_json=excluded.raw_json""",
+            (d, panel, ts, data.get("status"), json.dumps(data)),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return d
+
+
+def get_status_history(panel: str, days: int = 30) -> list:
+    """Most recent `days` snapshots for one status panel, oldest-first."""
     init_db()
     conn = _connect()
     try:
         rows = conn.execute(
-            "SELECT * FROM listing_snapshots WHERE listing_id=? ORDER BY snapshot_date DESC LIMIT ?",
-            (listing_id, days),
+            "SELECT * FROM status_snapshots WHERE panel = ? ORDER BY snapshot_date DESC LIMIT ?",
+            (panel, days),
         ).fetchall()
         return [dict(r) for r in rows][::-1]
     finally:
@@ -339,10 +547,86 @@ def get_listing_history(listing_id: int, days: int = 30) -> list:
 
 # ── Action queue (staged changes awaiting Scott's approval) ──────────────────────
 
+# Ranking Recovery cooldown (2026-07-15) -- CLAUDE.md's Ranking Recovery
+# Playbook warns that editing a listing again inside its ~2-3 week recovery
+# window resets the clock. Nothing tracked "when was this listing last
+# edited" anywhere before this. Content-mutating types only -- state toggles
+# (deactivate/publish/toggle_listing_state) aren't the kind of "edit" that
+# triggers Etsy's re-index recovery window.
+_RANKING_RECOVERY_TYPES = frozenset({
+    "update_tags", "update_title", "update_description",
+    # update_sku_and_category (2026-07-26, SKU/category backfill sweep) --
+    # a taxonomy_id/sku PATCH is a real listing edit like any other, so it
+    # resets Etsy's re-index recovery window the same way tags/title/
+    # description do -- omitting it here would let the backfill sweep
+    # compound-edit a listing without ever seeing the cooldown warning.
+    "update_sku_and_category",
+})
+_RANKING_RECOVERY_COOLDOWN_DAYS = 21
+
+
+def _listing_last_edited_key(listing_id) -> str:
+    return f"listing_last_edited:{listing_id}"
+
+
+def note_listing_edited(listing_id) -> None:
+    """Record that `listing_id` was just edited -- called by
+    _execute_staged_action() right after a content-mutating action succeeds.
+    Read back by enqueue_action() below to warn against compounding edits."""
+    set_setting(_listing_last_edited_key(listing_id), datetime.now(timezone.utc).isoformat())
+
+
+def days_since_listing_edited(listing_id) -> int | None:
+    """How many days since `listing_id` was last content-edited, or None if
+    never (or the stored timestamp is malformed). Read by _compute_actions()
+    (main.py) so a Needs-Attention card for a listing Frank already fixed
+    reads as "fix applied, waiting on Etsy" instead of repeating the same
+    ask -- the underlying views/sales metrics can't move until Etsy re-
+    indexes, which per CLAUDE.md's Ranking Recovery Playbook takes ~2-3
+    weeks, same window _RANKING_RECOVERY_COOLDOWN_DAYS already tracks."""
+    last_edited_str = get_setting(_listing_last_edited_key(listing_id))
+    if not last_edited_str:
+        return None
+    try:
+        last_edited = datetime.fromisoformat(last_edited_str)
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc) - last_edited).days
+
 
 def enqueue_action(action_type: str, summary: str, payload: dict) -> int:
     """Stage a proposed change. Returns the new queue id. Status starts 'pending'."""
     init_db()
+    if action_type == "create_listing":
+        # 2026-08-22: Etsy's Jan 2026 AI-disclosure enforcement tightened to
+        # require a structured "This listing uses AI generative technology"
+        # toggle + "Designed by" (not "Made by") categorization in the
+        # listing editor -- confirmed via developer.etsy.com and an
+        # unanswered etsy/open-api GitHub discussion (#1340) that NO public
+        # API v3 field exists for this; who_made="i_did" (which the
+        # pre-publish gate already enforces) and the description-text
+        # disclosure paragraph do NOT set it. Every listing in this shop is
+        # AI-generated content, so every create_listing needs this manual
+        # follow-up -- surfaced directly in the summary (the one thing every
+        # Action Center card renders) rather than only in a payload field
+        # that nothing currently displays, so it can't be silently missed.
+        summary = f"📋 After approval, manually enable AI-disclosure toggle in Etsy editor — {summary}"
+    if action_type in _RANKING_RECOVERY_TYPES:
+        listing_id = (payload or {}).get("listing_id")
+        if listing_id is not None:
+            last_edited_str = get_setting(_listing_last_edited_key(listing_id))
+            if last_edited_str:
+                try:
+                    last_edited = datetime.fromisoformat(last_edited_str)
+                    days_since = (datetime.now(timezone.utc) - last_edited).days
+                    if days_since < _RANKING_RECOVERY_COOLDOWN_DAYS:
+                        summary = (
+                            f"⚠️ edited {days_since}d ago — this resets its ranking "
+                            f"recovery window (CLAUDE.md: don't compound edits within "
+                            f"~2-3 weeks). {summary}"
+                        )
+                except ValueError:
+                    pass  # malformed timestamp -- don't block staging over it
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
@@ -593,10 +877,19 @@ def list_chat_sessions() -> list:
 
 
 def get_chat_session(session_id: str, limit: int = 500) -> dict:
-    """Full message history for one session, ascending (oldest-first) — distinct
-    from load_chat_history(), which is newest-N-then-reversed and built only to
-    seed live agent context. Returns {"messages": [...], "truncated": bool}.
-    `limit` is a safety cap, not a UX page size."""
+    """Full message history for one session, ascending (oldest-first), capped
+    to the most recent `limit` messages -- distinct from load_chat_history(),
+    which is built only to seed live agent context (smaller limit, same
+    newest-N-then-reversed shape). Returns {"messages": [...], "truncated": bool}.
+    `limit` is a safety cap, not a UX page size.
+
+    2026-08-01 (Chat History audit): this used to be ORDER BY id ASC LIMIT ?,
+    which returns the OLDEST `limit` messages -- once a long-lived session
+    (CHAT_SESSION is a single per-device UUID reused indefinitely) passed the
+    cap, its newest replies became permanently unreachable on the Chat History
+    screen with no pagination to page forward. Fixed to select the newest
+    `limit` rows (DESC + reverse, same pattern load_chat_history() already
+    uses) so the tail shown is always current."""
     if not session_id:
         return {"messages": [], "truncated": False}
     init_db()
@@ -608,9 +901,10 @@ def get_chat_session(session_id: str, limit: int = 500) -> dict:
         ).fetchone()["n"]
         rows = conn.execute(
             "SELECT id, role, content, created_at FROM chat_messages "
-            "WHERE session_id=? ORDER BY id ASC LIMIT ?",
+            "WHERE session_id=? ORDER BY id DESC LIMIT ?",
             (session_id, limit),
         ).fetchall()
+        rows = list(rows)[::-1]
         return {
             "messages": [
                 {"id": r["id"], "role": r["role"], "content": r["content"], "created_at": r["created_at"]}
@@ -622,15 +916,22 @@ def get_chat_session(session_id: str, limit: int = 500) -> dict:
         conn.close()
 
 
-def search_chat_messages(query: str, limit: int = 50) -> list:
+def search_chat_messages(query: str, limit: int = 50) -> dict:
     """Substring search across all sessions' message content, newest-first, capped
     at `limit`. SQLite's LIKE is case-insensitive for ASCII by default, so no
     LOWER() wrapping is needed. LIKE wildcard characters (% and _) in the user's
     query are escaped so a literal search like "50% off" behaves correctly
-    instead of being interpreted as a wildcard."""
+    instead of being interpreted as a wildcard. Returns {"results": [...],
+    "truncated": bool}.
+
+    2026-08-01 (Chat History audit): queries limit+1 rows and trims to `limit`
+    so `truncated` is a real signal, not guessed from the frontend seeing
+    exactly `limit` results back -- that guess can't tell "capped" apart from
+    "exactly `limit` total matches, nothing truncated," same class of bug
+    get_chat_session()'s truncated flag (a real COUNT(*)) already avoids."""
     query = (query or "").strip()
     if not query:
-        return []
+        return {"results": [], "truncated": False}
     init_db()
     escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     conn = _connect()
@@ -638,18 +939,23 @@ def search_chat_messages(query: str, limit: int = 50) -> list:
         rows = conn.execute(
             "SELECT id, session_id, role, content, created_at FROM chat_messages "
             "WHERE content LIKE ? ESCAPE '\\' ORDER BY id DESC LIMIT ?",
-            (f"%{escaped}%", limit),
+            (f"%{escaped}%", limit + 1),
         ).fetchall()
-        return [
-            {
-                "id": r["id"],
-                "session_id": r["session_id"],
-                "role": r["role"],
-                "content": r["content"],
-                "created_at": r["created_at"],
-            }
-            for r in rows
-        ]
+        truncated = len(rows) > limit
+        rows = rows[:limit]
+        return {
+            "results": [
+                {
+                    "id": r["id"],
+                    "session_id": r["session_id"],
+                    "role": r["role"],
+                    "content": r["content"],
+                    "created_at": r["created_at"],
+                }
+                for r in rows
+            ],
+            "truncated": truncated,
+        }
     finally:
         conn.close()
 
@@ -657,16 +963,27 @@ def search_chat_messages(query: str, limit: int = 50) -> list:
 # ── Quality audit history (automated daily listing_integrity_check runs) ─────
 
 
-def record_quality_audit(passed: int, warned: int, failed: int, summary: str = "") -> int:
+def record_quality_audit(passed: int, warned: int, failed: int, summary: str = "",
+                          audited_count: int | None = None) -> int:
     """Log one automated quality-audit run. Append-only — gives Frank and Scott
-    a trend line instead of only the latest snapshot. Returns the new row id."""
+    a trend line instead of only the latest snapshot. `audited_count` records
+    how many listings were in THIS run's audited set — before the 2026-07-10
+    rotation change every run implicitly covered the full catalog; now some
+    runs cover only a rotating subset, and without this column a trend/
+    percentage comparison across that boundary silently treats the two as
+    equivalent. Defaults to passed+warned+failed (always consistent with the
+    audit's own per-listing status counts) when the caller doesn't pass it
+    explicitly. Returns the new row id."""
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
+    if audited_count is None:
+        audited_count = passed + warned + failed
     conn = _connect()
     try:
         cur = conn.execute(
-            "INSERT INTO quality_audits (ts, passed, warned, failed, summary) VALUES (?,?,?,?,?)",
-            (ts, passed, warned, failed, summary),
+            "INSERT INTO quality_audits (ts, passed, warned, failed, audited_count, summary) "
+            "VALUES (?,?,?,?,?,?)",
+            (ts, passed, warned, failed, audited_count, summary),
         )
         conn.commit()
         return cur.lastrowid
@@ -687,6 +1004,148 @@ def get_quality_audit_history(limit: int = 30) -> list:
         conn.close()
 
 
+# ── Etsy rate-limit history (2026-07-10: before this, `EtsyAPIClient`
+# captured Etsy's x-remaining-today/x-remaining-this-second headers into an
+# in-memory dict only — lost on every restart, never logged anywhere, so
+# "what's our real daily Etsy call volume" had no measured answer, only
+# code-derived estimates. Wired via etsy_api.py's set_rate_limit_sample_hook
+# so etsy_api.py itself never imports this module directly (same duck-typed
+# hook pattern as set_circuit_breaker_hook — keeps standalone scripts that
+# use EtsyAPIClient outside the FastAPI server working unchanged). ─────────
+
+
+def record_rate_limit_sample(
+    remaining_today: int | None,
+    remaining_this_second: int | None,
+    limit_per_day: int | None,
+    limit_per_second: int | None,
+) -> None:
+    """Append one rate-limit snapshot. Called on every Etsy response that
+    carries an x-remaining-today header (i.e. most calls) — cheap at the
+    current (much-reduced) call volume; pruned to 30 days by
+    prune_rate_limit_log(), piggybacked on the daily snapshot loop."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO etsy_rate_limit_log "
+            "(ts, remaining_today, remaining_this_second, limit_per_day, limit_per_second) "
+            "VALUES (?,?,?,?,?)",
+            (ts, remaining_today, remaining_this_second, limit_per_day, limit_per_second),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def prune_rate_limit_log(days: int = 30) -> int:
+    """Delete rate-limit samples older than `days`. Returns rows deleted."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM etsy_rate_limit_log WHERE ts < ?", (cutoff,))
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+_LISTING_ID_IN_PATH = re.compile(r"listings/(\d+)")
+
+
+def record_api_call(
+    method: str,
+    path: str,
+    status_code: int | None,
+    ok: bool,
+    error: str | None = None,
+    duration_ms: int | None = None,
+    action_type: str | None = None,
+) -> None:
+    """Append one Etsy API call record. Called from etsy_api.py's _request()
+    on every call via the same duck-typed hook pattern as the rate-limit
+    sample hook (set_call_log_hook() in etsy_api.py, wired in main.py at
+    boot) -- so this stays a no-op for standalone scripts that never call
+    the setter. listing_id is extracted from the path when present; a path
+    with no listing id (e.g. a search/taxonomy call) just leaves it NULL
+    rather than guessing."""
+    init_db()
+    m = _LISTING_ID_IN_PATH.search(path or "")
+    listing_id = int(m.group(1)) if m else None
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO etsy_api_call_log "
+            "(ts, method, path, listing_id, action_type, status_code, ok, error, duration_ms) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (ts, method, path, listing_id, action_type, status_code, 1 if ok else 0,
+             (error or "")[:500] or None, duration_ms),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def prune_api_call_log(days: int = 30) -> int:
+    """Delete API call log rows older than `days`. Returns rows deleted."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM etsy_api_call_log WHERE ts < ?", (cutoff,))
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def get_api_call_summary(hours: int = 24) -> list:
+    """Group recent Etsy API calls by (method, path-without-id, action_type,
+    ok) with counts -- the query this codebase didn't have during the
+    update_price incident. A path's numeric listing id is stripped so calls
+    to the same endpoint across different listings roll up together (e.g.
+    'listings/{id}' rather than 82 separate rows for 82 listings)."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT method, "
+            "  CASE WHEN listing_id IS NOT NULL "
+            "       THEN REPLACE(path, CAST(listing_id AS TEXT), '{id}') "
+            "       ELSE path END AS path_template, "
+            "  action_type, ok, COUNT(*) AS n, "
+            "  SUM(CASE WHEN ok = 0 THEN 1 ELSE 0 END) AS n_failed "
+            "FROM etsy_api_call_log WHERE ts >= ? "
+            "GROUP BY method, path_template, action_type, ok "
+            "ORDER BY n DESC",
+            (cutoff,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_api_calls_for_listing(listing_id: int, limit: int = 50) -> list:
+    """Every logged call that touched one specific listing, most recent
+    first -- the fast path for "what did Frank actually do to listing X
+    and did it work" instead of re-deriving it from scratch."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT ts, method, path, action_type, status_code, ok, error, duration_ms "
+            "FROM etsy_api_call_log WHERE listing_id = ? ORDER BY id DESC LIMIT ?",
+            (listing_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
 # ── Etsy token durability (survives Railway restarts) ────────────────────────
 #
 # Railway's filesystem is ephemeral: every restart re-injects whatever
@@ -701,21 +1160,137 @@ def get_quality_audit_history(limit: int = 30) -> list:
 # re-authorization (tools/etsy_oauth.py + a fresh dashboard update) still wins.
 
 
+# ── Encryption at rest for etsy_tokens (2026-07-18 compliance hardening) ──────
+# Plaintext access/refresh tokens in SQLite were the strongest real SOC-2-style
+# gap found in a data-handling review: whoever can read hub.db can act as the
+# shop on Etsy. Encrypts transparently when TOKEN_ENCRYPTION_KEY is set (base64
+# 32 raw bytes, see .env.example) using PyNaCl's SecretBox (XSalsa20-Poly1305)
+# — already a pinned dependency (tools/ci_refresh_etsy_secrets.py), no new
+# package needed. Falls back to plaintext, exactly as before this was added,
+# when the key is unset/invalid — never a hard failure, never a lost token.
+# A version-prefixed marker (_TOKEN_ENC_PREFIX) distinguishes an encrypted blob
+# from a legacy/fallback plaintext row, so no migration step is needed: an
+# existing plaintext row just decrypts as a no-op pass-through, and gets
+# re-saved encrypted the next time save_etsy_tokens() runs (the hourly OAuth
+# refresh cycle already calls this — see main.py).
+_TOKEN_ENC_PREFIX = "enc:v1:"
+_token_enc_warned = False
+
+
+def _token_encryption_box():
+    """Loads TOKEN_ENCRYPTION_KEY if set and valid; returns None (after a
+    one-time warning) otherwise. Callers must treat None as "store/return
+    plaintext", never raise for a missing key."""
+    global _token_enc_warned
+    raw = os.getenv("TOKEN_ENCRYPTION_KEY", "").strip()
+    if not raw or not _NACL_AVAILABLE:
+        if not _token_enc_warned:
+            print("[security] TOKEN_ENCRYPTION_KEY not set -- Etsy OAuth tokens will be "
+                  "stored in plaintext. Set it (see .env.example) to encrypt them at rest.",
+                  flush=True)
+            _token_enc_warned = True
+        return None
+    try:
+        key = base64.b64decode(raw)
+        if len(key) != nacl.secret.SecretBox.KEY_SIZE:
+            raise ValueError(f"expected {nacl.secret.SecretBox.KEY_SIZE} raw bytes, got {len(key)}")
+        return nacl.secret.SecretBox(key)
+    except Exception as exc:
+        if not _token_enc_warned:
+            print(f"[security] TOKEN_ENCRYPTION_KEY is set but invalid ({exc}) -- storing "
+                  f"tokens in plaintext until it's fixed.", flush=True)
+            _token_enc_warned = True
+        return None
+
+
+def _encrypt_token(plaintext: str | None) -> str | None:
+    if plaintext is None:
+        return None
+    box = _token_encryption_box()
+    if box is None:
+        return plaintext
+    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    encrypted = box.encrypt(plaintext.encode("utf-8"), nonce)
+    return _TOKEN_ENC_PREFIX + base64.b64encode(encrypted).decode("ascii")
+
+
+def _decrypt_token(value: str | None) -> str | None:
+    if value is None or not value.startswith(_TOKEN_ENC_PREFIX):
+        return value  # None, or a legacy/fallback plaintext row -- pass through
+    box = _token_encryption_box()
+    if box is None:
+        # The row IS encrypted but the key to read it isn't available right now
+        # -- a real, surfaced failure, not a silent "return garbage as if it
+        # were a token" or a quiet fallback that would break Etsy auth mysteriously.
+        raise RuntimeError(
+            "a stored Etsy token is encrypted but TOKEN_ENCRYPTION_KEY is not set/valid "
+            "-- cannot decrypt it. Set the same key that was used to encrypt it."
+        )
+    raw = base64.b64decode(value[len(_TOKEN_ENC_PREFIX):])
+    return box.decrypt(raw).decode("utf-8")
+
+
+_TOKEN_LINEAGE_MAX = 20  # cap on how many past refresh tokens we remember per rotation chain
+
+
+def parse_token_lineage(raw: str | None) -> list[str]:
+    """Parses the etsy_tokens.parent_refresh_token column's value into a list
+    of every historical refresh token this rotation chain has ever seen.
+
+    Bug fixed 2026-07-18: this column used to store a single token string (the
+    immediate parent only), overwritten on every rotation -- so after 2+
+    reactive rotations without a server restart, the lineage more than one
+    generation back was silently lost. If Railway then re-injected a stale
+    env var from before ANY of those rotations, _reconcile_etsy_tokens()
+    could no longer recognize it as part of this app's own history and would
+    mistake it for a genuine fresh manual re-authorization, leaving a
+    provably dead token in place (the exact 2026-06-17 401 invalid_grant
+    landmine this whole mechanism exists to prevent). Now stores a JSON list
+    instead, capped at the most recent _TOKEN_LINEAGE_MAX entries. Handles a
+    pre-existing plain-string row (single legacy token, not JSON) by treating
+    it as a 1-element list, so old data isn't silently discarded."""
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            return [str(x) for x in parsed if x]
+    except (ValueError, TypeError):
+        pass
+    return [raw]  # legacy plain-string row from before this fix
+
+
 def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token: str | None = None) -> None:
-    """Persist the latest known-good Etsy OAuth token pair. Singleton row (id=1)."""
+    """Persist the latest known-good Etsy OAuth token pair. Singleton row (id=1).
+    Encrypted at rest when TOKEN_ENCRYPTION_KEY is set; plaintext otherwise,
+    exactly as before this was added (see _encrypt_token).
+
+    `parent_refresh_token` (a single token string, same call contract as
+    before -- external callers like tools/ci_refresh_etsy_secrets.py and
+    POST /api/etsy-tokens are unchanged) is ACCUMULATED into the growing
+    lineage list (see parse_token_lineage()) rather than overwriting it, so
+    multiple rotations between restarts no longer lose earlier generations."""
     if not access_token or not refresh_token:
         return
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
+        existing = conn.execute("SELECT parent_refresh_token FROM etsy_tokens WHERE id=1").fetchone()
+        existing_raw = _decrypt_token(existing["parent_refresh_token"]) if existing else None
+        lineage = parse_token_lineage(existing_raw)
+        if parent_refresh_token and parent_refresh_token not in lineage:
+            lineage.append(parent_refresh_token)
+        lineage = lineage[-_TOKEN_LINEAGE_MAX:]
+        lineage_json = json.dumps(lineage) if lineage else None
         conn.execute(
             """INSERT INTO etsy_tokens (id, access_token, refresh_token, parent_refresh_token, updated_at)
                VALUES (1, ?, ?, ?, ?)
                ON CONFLICT(id) DO UPDATE SET
                  access_token=excluded.access_token, refresh_token=excluded.refresh_token,
                  parent_refresh_token=excluded.parent_refresh_token, updated_at=excluded.updated_at""",
-            (access_token, refresh_token, parent_refresh_token, ts),
+            (_encrypt_token(access_token), _encrypt_token(refresh_token),
+             _encrypt_token(lineage_json), ts),
         )
         conn.commit()
     finally:
@@ -723,12 +1298,108 @@ def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token
 
 
 def get_etsy_tokens() -> dict | None:
-    """The last persisted Etsy token pair, or None if nothing has been saved yet."""
+    """The last persisted Etsy token pair, or None if nothing has been saved yet.
+    Transparently decrypts an encrypted row (see _decrypt_token) -- callers
+    always get plaintext token strings back, unchanged from before this was
+    added."""
     init_db()
     conn = _connect()
     try:
         r = conn.execute("SELECT * FROM etsy_tokens WHERE id=1").fetchone()
-        return dict(r) if r else None
+        if not r:
+            return None
+        row = dict(r)
+        row["access_token"] = _decrypt_token(row.get("access_token"))
+        row["refresh_token"] = _decrypt_token(row.get("refresh_token"))
+        row["parent_refresh_token"] = _decrypt_token(row.get("parent_refresh_token"))
+        return row
+    finally:
+        conn.close()
+
+
+def save_google_calendar_tokens(access_token: str, refresh_token: str) -> None:
+    """Persist the latest known-good Google Calendar OAuth token pair.
+    Singleton row (id=1), same encrypt-at-rest treatment as save_etsy_tokens()
+    (see _encrypt_token) -- reuses the same generic helper, not a new copy."""
+    if not access_token or not refresh_token:
+        return
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO google_calendar_tokens (id, access_token, refresh_token, updated_at)
+               VALUES (1, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 access_token=excluded.access_token, refresh_token=excluded.refresh_token,
+                 updated_at=excluded.updated_at""",
+            (_encrypt_token(access_token), _encrypt_token(refresh_token), ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_google_calendar_tokens() -> dict | None:
+    """The last persisted Google Calendar token pair, or None if not connected
+    yet. Transparently decrypts an encrypted row, same contract as
+    get_etsy_tokens()."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM google_calendar_tokens WHERE id=1").fetchone()
+        if not r:
+            return None
+        row = dict(r)
+        row["access_token"] = _decrypt_token(row.get("access_token"))
+        row["refresh_token"] = _decrypt_token(row.get("refresh_token"))
+        return row
+    finally:
+        conn.close()
+
+
+def get_google_calendar_synced_event(item_key: str) -> str | None:
+    """The Google Calendar event id a local item (e.g. 'todo:42') was already
+    synced to, or None if it hasn't been pushed yet -- prevents the calendar
+    auto-sync loop from creating duplicate events on repeated runs."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT event_id FROM google_calendar_synced_events WHERE item_key=?", (item_key,)
+        ).fetchone()
+        return r["event_id"] if r else None
+    finally:
+        conn.close()
+
+
+def save_google_calendar_synced_event(item_key: str, event_id: str) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO google_calendar_synced_events (item_key, event_id, created_at)
+               VALUES (?, ?, ?)
+               ON CONFLICT(item_key) DO UPDATE SET event_id=excluded.event_id""",
+            (item_key, event_id, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_google_calendar_synced_event(item_key: str) -> None:
+    """Removes the local item_key -> Google event id mapping. Added
+    2026-07-18 alongside GoogleCalendarClient.delete_event() to close the
+    orphaned-events gap: completing/deleting a synced todo now removes both
+    the real Google Calendar event and this row, instead of leaving the
+    mapping (and the event) behind forever."""
+    init_db()
+    conn = _connect()
+    try:
+        conn.execute("DELETE FROM google_calendar_synced_events WHERE item_key=?", (item_key,))
+        conn.commit()
     finally:
         conn.close()
 
@@ -762,15 +1433,26 @@ def db_info() -> dict:
 # ── Shared to-do list (Scott + Frank, always visible on the dashboard) ───────
 
 
-def add_todo(text: str, added_by: str = "scott", due_date: str | None = None) -> int:
-    """Add one to-do item. added_by is 'scott' or 'frank'. Returns the new id."""
+# Fixed set for the Tasks screen's category filter -- 'question' gets the tap-
+# to-answer UI, the other three are filter-only labels. 'general' is the
+# default/catch-all (most existing todos are FYI notices, not a request of
+# either kind) -- see add_todo()'s category param and the call-site audit in
+# ops_runbook.md's 2026-07-15 entry for why this isn't inferred from text.
+TODO_CATEGORIES = frozenset({"question", "scott_only", "frank_can_do", "general"})
+
+
+def add_todo(text: str, added_by: str = "scott", due_date: str | None = None, category: str = "general") -> int:
+    """Add one to-do item. added_by is 'scott' or 'frank'. category must be one
+    of TODO_CATEGORIES (falls back to 'general' if not). Returns the new id."""
     init_db()
+    if category not in TODO_CATEGORIES:
+        category = "general"
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
         cur = conn.execute(
-            "INSERT INTO todos (text, added_by, done, created_at, due_date) VALUES (?,?,0,?,?)",
-            (text.strip(), added_by, ts, due_date),
+            "INSERT INTO todos (text, added_by, done, created_at, due_date, category) VALUES (?,?,0,?,?,?)",
+            (text.strip(), added_by, ts, due_date, category),
         )
         conn.commit()
         return cur.lastrowid
@@ -806,6 +1488,108 @@ def set_todo_done(todo_id: int, done: bool) -> bool:
             "UPDATE todos SET done=?, completed_at=? WHERE id=?",
             (1 if done else 0, ts, todo_id),
         )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def set_todo_answer(todo_id: int, answer: str) -> bool:
+    """Store Scott's answer to a question-category todo.
+
+    2026-08-16 (Tasks screen ease-of-use pass): previously deliberately did
+    NOT touch `done` (2026-07-15 call: "answering informs the next step, it
+    doesn't mean the underlying task is resolved") -- reversed on Scott's
+    explicit instruction ("auto complete but still have Frank finish it").
+    Scott's own part of the loop -- answering -- is now the completion
+    signal; the caller (POST /api/todos/{id}/answer) marks `done` itself
+    right after this call AND kicks off a real headless agent turn so
+    Frank actually follows through, rather than the answer just sitting in
+    the ops runbook waiting for Frank to notice it on some unrelated future
+    turn. This function's own job stays narrow -- just persist the answer."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET answer=?, answered_at=? WHERE id=?",
+            (answer.strip(), ts, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def set_todo_follow_up(todo_id: int, note: str) -> bool:
+    """Store Frank's own follow-up note after actually acting on a todo --
+    either a real headless agent turn processing an answered question, or a
+    frank_can_do attempt. Shown in the Tasks UI as "Frank: <note>" so
+    answering/creating a task has a visible resolution instead of vanishing
+    into a log file only Frank ever reads."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET follow_up=?, follow_up_at=? WHERE id=?",
+            (note.strip()[:4000], ts, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def bump_todo_attempt(todo_id: int, needs_attention: bool = False) -> bool:
+    """Increment attempt_count for a frank_can_do todo the background loop
+    just tried and didn't complete. needs_attention is only ever set to
+    True here (the loop's escalation signal once it gives up retrying) --
+    the flag naturally stops mattering once the todo is marked done via the
+    normal completion path, so nothing needs to clear it back to False."""
+    init_db()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET attempt_count = attempt_count + 1, "
+            "needs_attention = CASE WHEN ? THEN 1 ELSE needs_attention END WHERE id=?",
+            (1 if needs_attention else 0, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def list_open_frank_can_do_todos(max_attempts: int = 3, limit: int = 3) -> list:
+    """Open frank_can_do todos the background loop should still try, oldest
+    first. Excludes anything already at/over max_attempts -- those stay
+    open and visible (needs_attention is set) but the loop stops
+    re-attempting them automatically, so a task that genuinely can't be
+    done this way surfaces to Scott instead of retrying forever."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM todos WHERE done=0 AND category='frank_can_do' "
+            "AND attempt_count < ? ORDER BY created_at ASC LIMIT ?",
+            (max_attempts, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def set_todo_category(todo_id: int, category: str) -> bool:
+    """Used by the one-time retroactive-categorization pass (2026-07-15) and
+    available for any future manual re-tag. category must be one of
+    TODO_CATEGORIES."""
+    init_db()
+    if category not in TODO_CATEGORIES:
+        return False
+    conn = _connect()
+    try:
+        cur = conn.execute("UPDATE todos SET category=? WHERE id=?", (category, todo_id))
         conn.commit()
         return cur.rowcount > 0
     finally:
@@ -889,7 +1673,7 @@ def ensure_default_sandbox_folder() -> None:
 _CORRECTION_PLAN_MARKER = "[Correction plan 2026-07-08]"
 
 _CORRECTION_PLAN_TODOS = [
-    # (text, added_by) -- added_by='frank' = Claude will do this without Scott.
+    # (text, added_by, category) -- added_by='frank' = Claude will do this without Scott.
     # added_by='scott' = genuinely requires Scott's own account/identity/payment access,
     # not something Frank can do via any existing tool or API key.
     (
@@ -899,7 +1683,7 @@ _CORRECTION_PLAN_TODOS = [
         "local .env -> redeploy. This is not hypothetical: it is causing live 403 errors on "
         "listing sync and review checks right now. Frank cannot do this -- it requires your "
         "Etsy Developer Console login.",
-        "scott",
+        "scott", "scott_only",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Attach a Railway Volume at /data (or upgrade to a plan "
@@ -907,45 +1691,45 @@ _CORRECTION_PLAN_TODOS = [
         "reports persistent=false -- every push wipes every login, chat history, setting, "
         "and this very todo list back to empty. Frank cannot purchase or attach this -- it "
         "requires your Railway billing access.",
-        "scott",
+        "scott", "scott_only",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Optional, your call: decide whether to pursue a second "
         "sales channel (Shopify, Gumroad, etc.) so revenue isn't 100% dependent on Etsy's "
         "cascade-penalty risk. Frank can research options and draft a comparison if you want "
         "one -- the platform choice and account setup still need to be yours.",
-        "scott",
+        "scott", "question",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Build a git-committed backup of the live database's "
         "non-secret state (todos, settings, action history, user list minus password "
         "hashes) so a redeploy wipe has a real recovery path even before a Volume exists.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Add a code-enforced check that a listing description's "
         "claimed page/sticker counts actually match the real uploaded file's contents, "
         "instead of resting only on the AI's self-report and manual review.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Add real HTTP-level tests (not just pure-function tests) "
         "for the highest-risk routes -- login/session handling and the staged-action "
         "approve/reject flow -- since currently zero of the 89+ live routes have request-level "
         "test coverage.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Fix 3 places where a failed session-revocation after a "
         "password change is silently swallowed instead of logged, so a real failure is "
         "actually visible instead of invisible.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Add a one-click 'recheck Etsy credentials now' action so "
         "credential status doesn't wait on the 5-minute health loop -- makes it fast for "
         "Scott to confirm his credential rotation (item above) actually worked.",
-        "frank",
+        "frank", "frank_can_do",
     ),
 ]
 
@@ -968,8 +1752,8 @@ def seed_correction_plan_todos() -> int:
             return 0
     finally:
         conn.close()
-    for text, added_by in _CORRECTION_PLAN_TODOS:
-        add_todo(text, added_by=added_by)
+    for text, added_by, category in _CORRECTION_PLAN_TODOS:
+        add_todo(text, added_by=added_by, category=category)
     return len(_CORRECTION_PLAN_TODOS)
 
 
@@ -1018,6 +1802,32 @@ def list_activity(limit: int = 200, action_type: str | None = None) -> list:
             else:
                 d.pop("payload_json", None)
             out.append(d)
+        return out
+    finally:
+        conn.close()
+
+
+def anthropic_usage_since(since_iso: str, limit: int = 20000) -> list:
+    """Every logged Anthropic call (activity_log action_type='anthropic_usage',
+    see main.py's _log_anthropic_usage) at/after `since_iso` (ISO-8601 UTC).
+    Used by /api/system/costs to sum real token usage into an estimated $ figure
+    from Frank's own data. `limit` is a sane upper bound, not real pagination --
+    this table only grows one row per Anthropic call, never per-request traffic."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT payload_json FROM activity_log WHERE action_type='anthropic_usage' AND ts>=? "
+            "ORDER BY id DESC LIMIT ?",
+            (since_iso, limit),
+        ).fetchall()
+        out = []
+        for r in rows:
+            if r["payload_json"]:
+                try:
+                    out.append(json.loads(r["payload_json"]))
+                except Exception:
+                    pass
         return out
     finally:
         conn.close()
@@ -1161,10 +1971,11 @@ def all_settings() -> dict:
     return {r["key"]: r["value"] for r in rows}
 
 
-# ── Agent heartbeats (live-status registry) — each of the 5 real background
-# loops (and the relay/compactor once built) upserts its own row here on every
-# run so the HUD's Agents screen and Command Center tiles show real state
-# instead of a hardcoded "Running" label. ───────────────────────────────────
+# ── Agent heartbeats (live-status registry) — each real background loop
+# (see _AGENT_LOOP_LABELS in main.py, 9 as of 2026-08-05) plus the relay and
+# context_compactor upserts its own row here on every run so the HUD's
+# Agents screen and Command Center tiles show real state instead of a
+# hardcoded "Running" label. ─────────────────────────────────────────────
 
 
 def set_agent_heartbeat(name: str, label: str, status: str, detail: str = "") -> None:
@@ -1191,18 +2002,6 @@ def list_agent_heartbeats() -> list:
     try:
         rows = conn.execute("SELECT * FROM agent_heartbeats ORDER BY name").fetchall()
         return [dict(r) for r in rows]
-    finally:
-        conn.close()
-
-
-def delete_agent_heartbeat(name: str) -> None:
-    """Remove a loop's row entirely -- for a retired loop that will never run again,
-    so it doesn't sit on the Agents HUD forever frozen at its last status."""
-    init_db()
-    conn = _connect()
-    try:
-        conn.execute("DELETE FROM agent_heartbeats WHERE name = ?", (name,))
-        conn.commit()
     finally:
         conn.close()
 
@@ -1254,7 +2053,8 @@ def get_hub_user(username: str) -> dict | None:
     conn = _connect()
     try:
         r = conn.execute(
-            "SELECT username, pw_hash, role, created_at, recovery_code_hash FROM hub_users WHERE username = ?",
+            "SELECT username, pw_hash, role, created_at, recovery_code_hash, email, display_name "
+            "FROM hub_users WHERE username = ?",
             (username.lower(),),
         ).fetchone()
         return dict(r) if r else None
@@ -1267,21 +2067,23 @@ def list_hub_users() -> list[dict]:
     conn = _connect()
     try:
         rows = conn.execute(
-            "SELECT username, role, created_at FROM hub_users ORDER BY created_at"
+            "SELECT username, role, created_at, email, display_name FROM hub_users ORDER BY created_at"
         ).fetchall()
         return [dict(r) for r in rows]
     finally:
         conn.close()
 
 
-def create_hub_user(username: str, pw_hash: str, role: str = "admin", recovery_code_hash: str | None = None) -> None:
+def create_hub_user(username: str, pw_hash: str, role: str = "admin", recovery_code_hash: str | None = None,
+                     email: str | None = None, display_name: str | None = None) -> None:
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
         conn.execute(
-            "INSERT INTO hub_users (username, pw_hash, role, created_at, recovery_code_hash) VALUES (?, ?, ?, ?, ?)",
-            (username.lower(), pw_hash, role, ts, recovery_code_hash),
+            "INSERT INTO hub_users (username, pw_hash, role, created_at, recovery_code_hash, email, display_name) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (username.lower(), pw_hash, role, ts, recovery_code_hash, email, display_name),
         )
         conn.commit()
     finally:
@@ -1321,20 +2123,88 @@ def hub_users_empty() -> bool:
         conn.close()
 
 
+def get_hub_user_by_email(email: str) -> dict | None:
+    """Case-insensitive email lookup — used only to auto-link a VERIFIED OAuth
+    identity to an existing password account with the same email. Never used
+    to authenticate by itself (email is not a login credential here)."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT username, pw_hash, role, created_at, recovery_code_hash, email, display_name "
+            "FROM hub_users WHERE lower(email) = ?",
+            (email.strip().lower(),),
+        ).fetchone()
+        return dict(r) if r else None
+    finally:
+        conn.close()
+
+
+# ── OAuth identities (Google / Apple Sign-In account linking) ────────────────
+
+
+def get_oauth_identity(provider: str, provider_sub: str) -> dict | None:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT provider, provider_sub, username, email, created_at FROM oauth_identities "
+            "WHERE provider = ? AND provider_sub = ?",
+            (provider, provider_sub),
+        ).fetchone()
+        return dict(r) if r else None
+    finally:
+        conn.close()
+
+
+def create_oauth_identity(provider: str, provider_sub: str, username: str, email: str | None) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO oauth_identities (provider, provider_sub, username, email, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (provider, provider_sub, username.lower(), email, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 # ── Hub sessions (persisted so sessions survive Railway restarts) ─────────────
 
 
-def create_session(session_id: str, username: str, expires_at: float) -> None:
+def create_session(session_id: str, username: str, expires_at: float, user_agent: str | None = None) -> None:
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     exp_iso = datetime.fromtimestamp(expires_at, tz=timezone.utc).isoformat()
     conn = _connect()
     try:
         conn.execute(
-            "INSERT OR REPLACE INTO hub_sessions (session_id, username, expires_at, created_at) VALUES (?,?,?,?)",
-            (session_id, username.lower(), exp_iso, ts),
+            "INSERT OR REPLACE INTO hub_sessions (session_id, username, expires_at, created_at, user_agent) VALUES (?,?,?,?,?)",
+            (session_id, username.lower(), exp_iso, ts, (user_agent or "")[:300] or None),
         )
         conn.commit()
+    finally:
+        conn.close()
+
+
+def list_sessions_for_user(username: str) -> list[dict]:
+    """Active (non-expired) sessions for a user, newest first -- backs the
+    Settings 'Active sessions' card (2026-08-06)."""
+    if not username:
+        return []
+    init_db()
+    conn = _connect()
+    try:
+        now_iso = datetime.now(timezone.utc).isoformat()
+        rows = conn.execute(
+            "SELECT session_id, created_at, expires_at, user_agent FROM hub_sessions "
+            "WHERE username=? AND expires_at >= ? ORDER BY created_at DESC",
+            (username.lower(), now_iso),
+        ).fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
 

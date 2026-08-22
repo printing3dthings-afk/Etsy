@@ -4,18 +4,38 @@ Generate and upload listing photos for the 6 standalone sticker pack listings.
 Uses the actual sticker sheet JPGs — no AI generation needed.
 """
 import os, sys, json, time, urllib.request
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+# Guarded — hosted deploys (Railway) inject env vars directly and have no .env file.
+_env_path = _ROOT / ".env"
+if _env_path.exists():
+    with open(_env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
-ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
+
+def _resolve_dp_base() -> Path:
+    """digital_products base — the durable Railway volume in production, the
+    repo tree locally. Same resolution order used throughout tools/."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _ROOT / "data" / "digital_products"
+
+
+ART_DIR = str(_resolve_dp_base() / "product_files")
 CANVAS = 2400
 
 PACKS = {
@@ -51,6 +71,28 @@ def fr(size):
               '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf']:
         if os.path.exists(p): return ImageFont.truetype(p, size)
     return ImageFont.load_default()
+
+
+def wrap_text(d, text, font, max_width):
+    """Word-wrap `text` to fit max_width, honoring explicit '\\n' as a forced
+    break. PIL's ImageDraw.text() never wraps on its own -- 2026-07-31: this
+    file's make_howto() drew each manually-authored '\\n' segment as a single
+    line with zero check against the panel's actual pixel width, so a long
+    segment overran into the next panel (same defect fixed in
+    gen_planner_listing_photos.py the same day)."""
+    lines = []
+    for para in text.split('\n'):
+        words = para.split(' ')
+        cur = ''
+        for w in words:
+            trial = f"{cur} {w}".strip()
+            if cur and d.textbbox((0, 0), trial, font=font)[2] > max_width:
+                lines.append(cur)
+                cur = w
+            else:
+                cur = trial
+        lines.append(cur)
+    return lines
 
 
 def drop_shadow(canvas, x, y, w, h, blur=20, opacity=45):
@@ -213,6 +255,9 @@ def make_howto(cfg, out):
         ("3", "Use on Any Page", "Tap any sticker in your library\nand drag it onto any planner page!"),
     ]
     panel_w = (CANVAS-180)//3
+    text_w = panel_w - 100  # inset from the card's rounded corners/outline
+    title_font = fb(54)
+    body_font = fr(40)
     px = 60
     for step, title, body in steps:
         d.rounded_rectangle([px, 220, px+panel_w, CANVAS-140], radius=24,
@@ -220,9 +265,17 @@ def make_howto(cfg, out):
         cx = px + panel_w//2
         d.ellipse([cx-75, 310, cx+75, 460], fill=cfg['color'])
         d.text((cx, 385), step, font=fb(86), fill=(255,255,255), anchor='mm')
-        d.text((cx, 510), title, font=fb(54), fill=(50,40,70), anchor='mm')
-        for j, line in enumerate(body.split('\n')):
-            d.text((cx, 610+j*60), line, font=fr(40), fill=(110,90,140), anchor='mm')
+
+        ty = 510
+        for line in wrap_text(d, title, title_font, text_w):
+            d.text((cx, ty), line, font=title_font, fill=(50,40,70), anchor='mm')
+            ty += 60
+
+        ty += 40
+        for line in wrap_text(d, body, body_font, text_w):
+            d.text((cx, ty), line, font=body_font, fill=(110,90,140), anchor='mm')
+            ty += 56
+
         px += panel_w+30
 
     d.rectangle([0,CANVAS-130,CANVAS,CANVAS], fill=cfg['color'])
@@ -318,7 +371,25 @@ def make_bundle_grid(out):
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 
-def upload_photos(listing_id, files, client):
+# Human-readable per-photo alt text (2026-07-15 ADA/WCAG audit fix) --
+# baseline slug->description mapping, not AI-per-photo captioning.
+_PHOTO_ALT_LABELS = {
+    '01_hero': 'sticker sheets flat-lay hero photo',
+    '02_all_sheets': 'all sticker sheets overview',
+    '03_four_themes': 'four planner themes preview',
+    '03_functional': 'functional planning stickers close-up',
+    '04_howto': 'GoodNotes sticker import how-to steps',
+    '05_whats_included': "what's included summary",
+    '06_illustrated': 'illustrated kawaii stickers close-up',
+}
+
+
+def _photo_alt_text(product_name, label):
+    desc = _PHOTO_ALT_LABELS.get(label, label.replace('_', ' '))
+    return f"{product_name} — {desc}"[:500]
+
+
+def upload_photos(listing_id, files, client, product_name=''):
     shop_id = client.shop_id
     auth_headers = {"Authorization": f"Bearer {client.access_token}",
                     "x-api-key": f"{client.client_id}:{client.client_secret}"}
@@ -344,7 +415,8 @@ def upload_photos(listing_id, files, client):
             continue
         for attempt in range(3):
             try:
-                result = client.upload_listing_image(listing_id, path, rank=rank)
+                alt_text = _photo_alt_text(product_name, label) if product_name else None
+                result = client.upload_listing_image(listing_id, path, rank=rank, alt_text=alt_text)
                 print(f"    Uploaded rank {rank}: {label}")
                 time.sleep(0.8)
                 break
@@ -391,14 +463,15 @@ def process_pack(key, cfg, client):
     photo_files = [
         (f('01_hero.jpg'), '01_hero'),
         (f('02_all_sheets.jpg'), '02_all_sheets'),
-        (f('03_four_themes.jpg') if key=='bundle' else f('03_functional.jpg'), '03'),
+        (f('03_four_themes.jpg') if key=='bundle' else f('03_functional.jpg'),
+         '03_four_themes' if key=='bundle' else '03_functional'),
         (f('04_howto.jpg'), '04_howto'),
         (f('05_whats_included.jpg'), '05_whats_included'),
         (f('06_illustrated.jpg'), '06_illustrated'),
     ]
 
     print(f"\n  Uploading to listing {cfg['listing_id']}...")
-    upload_photos(cfg['listing_id'], photo_files, client)
+    upload_photos(cfg['listing_id'], photo_files, client, product_name=cfg['name'])
     print(f"  ✓ Done")
 
 

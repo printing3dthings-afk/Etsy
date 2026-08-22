@@ -8,3 +8,9 @@ These files are static-weight, Latin-subset instances derived from the original 
 font sources for smaller download size — subsetting and weight-instancing are permitted
 under the OFL. No font name was changed in a way that would require renaming under the
 OFL's Reserved Font Name clause.
+
+2026-07-18: added 4 more font-pairing options (Settings → font picker) —
+Playfair Display, Inter, Space Grotesk, Fredoka, Nunito, Sora, and IBM Plex Sans.
+All seven are also SIL Open Font License 1.1, all from https://github.com/google/fonts
+(ofl/playfairdisplay, ofl/inter, ofl/spacegrotesk, ofl/fredoka, ofl/nunito, ofl/sora,
+ofl/ibmplexsans). Same static-weight, Latin-subset treatment as above.

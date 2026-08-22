@@ -1,0 +1,6 @@
+    const badge = document.getElementById('badge-conversations');
+    if (badge) {
+      const total = _convSessions.reduce((sum, s) => sum + (s.message_count || 0), 0);
+      badge.textContent = total > 999 ? '999+' : total;
+      badge.style.display = total > 0 ? '' : 'none';
+    }

@@ -1,7 +1,0 @@
-function updateMemoryWidget(d) {
-  const memEl = document.getElementById('mem-stat-memories');
-  const turnsEl = document.getElementById('mem-stat-turns');
-  if (memEl) memEl.textContent = d.learnings_count;
-  if (turnsEl) turnsEl.textContent = d.total_messages;
-  drawMem(d.recent_session_sizes || []);
-}

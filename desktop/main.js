@@ -1,149 +1,177 @@
-// Frank desktop shell -- spawns the bundled Python/FastAPI backend as a child
-// process, waits for it to come up, then loads it into a native window (no
-// address bar/tabs -- that's just what a plain Electron BrowserWindow already is,
-// nothing extra needed to get the "real app, not a browser tab" feel).
+// Frank desktop shell -- thin client. Loads the real, live Frank dashboard
+// (the same Railway deployment Scott already uses in a browser tab) into a
+// native window: system tray icon, OS notifications for new alerts, and a
+// global show/hide hotkey on top of it. No local backend, no local database,
+// no separate copy of Scott's data -- this is a dedicated window onto the one
+// real Frank, not a second instance of it.
 //
-// First launch: auto-generates <userData>/.env with a random APP_SECRET_TOKEN and a
-// DB_PATH pointing inside the same app-data directory -- never inside the installed
-// app bundle itself (that directory isn't reliably writable, and its contents don't
-// survive an app update/reinstall). Anthropic/Etsy keys are deliberately NOT required
-// for this step: the backend already degrades gracefully without them (see main.py's
-// existing dependency-health pattern), so Scott can add those afterward via either the
-// app's own Settings screen or the "Edit API Keys..." menu item below, which just
-// opens the .env file in the OS's default text editor.
+// (2026-08-06, "make Frank next-level" desktop follow-up) This replaces an
+// earlier version of this file that spawned a bundled PyInstaller copy of
+// tools/api_server/main.py as a child process and pointed the window at
+// 127.0.0.1. That local-instance model was built, worked, and shipped one
+// real Windows/macOS installer via CI -- but it started with an empty local
+// database (no orders, no listings, no chat history) and needed API keys
+// re-entered by hand, so it was never actually a window onto Scott's real
+// shop. Scott confirmed the thin-client direction explicitly ("Option a it
+// is") after a pros/cons comparison. The old local-backend packaging scripts
+// (tools/desktop/backend.spec, tools/desktop/build_backend.py) are archived
+// via tools/trash.py rather than left as dead code -- see data/trash/
+// DELETED.md for the exact entries if that model is ever needed again.
 //
-// Every launch re-reads that .env file and passes its contents as real process
-// environment variables to the spawned backend -- NOT relying on the backend finding
-// the file itself via its own ROOT-relative .env lookup, because ROOT resolves to
-// sys._MEIPASS (PyInstaller's internal bundle dir) when frozen, not this app-data
-// directory (see tools/api_server/main.py's frozen-detection block + this reasoning
-// verified empirically in tools/desktop/backend.spec's build/test pass).
+// Auth: Electron's default session persists cookies to disk the same way a
+// real browser profile does, so Scott logs into /login once inside this
+// window and stays logged in across restarts -- no separate credential
+// handling needed here at all.
 
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
-const { spawn } = require('child_process');
+const { app, BrowserWindow, Tray, Menu, shell, dialog, globalShortcut, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
+const https = require('https');
 const http = require('http');
 
-const isDev = !app.isPackaged;
 const APP_DATA_DIR = app.getPath('userData');
-const ENV_PATH = path.join(APP_DATA_DIR, '.env');
-const DB_PATH = path.join(APP_DATA_DIR, 'hub.db');
-const DEFAULT_PORT = 8891;
+const CONFIG_PATH = path.join(APP_DATA_DIR, 'config.json');
+const DEFAULT_LIVE_URL = 'https://etsy-production-b2f1.up.railway.app';
+const HOTKEY = 'CommandOrControl+Shift+F';
 
-let backendProcess = null;
 let mainWindow = null;
+let tray = null;
 let quitting = false;
 
-function ensureEnvFile() {
-  fs.mkdirSync(APP_DATA_DIR, { recursive: true });
-  if (fs.existsSync(ENV_PATH)) return;
-  const token = crypto.randomBytes(32).toString('hex');
-  const lines = [
-    '# Frank desktop app -- auto-generated on first launch. Safe to edit by hand;',
-    '# restart the app afterward for changes to take effect.',
-    `APP_SECRET_TOKEN=${token}`,
-    `DB_PATH=${DB_PATH}`,
-    `PORT=${DEFAULT_PORT}`,
-    '',
-    '# Add your own keys below, then restart Frank:',
-    '# ANTHROPIC_API_KEY=',
-    '# ETSY_CLIENT_ID=',
-    '# ETSY_CLIENT_SECRET=',
-    '',
-  ];
-  fs.writeFileSync(ENV_PATH, lines.join('\n'), { encoding: 'utf8', mode: 0o600 });
+function iconPath(name) {
+  return path.join(__dirname, 'build', name);
 }
 
-function readEnvFile() {
-  const out = {};
-  const content = fs.readFileSync(ENV_PATH, 'utf8');
-  for (const rawLine of content.split('\n')) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) continue;
-    const eq = line.indexOf('=');
-    if (eq === -1) continue;
-    const key = line.slice(0, eq).trim();
-    const value = line.slice(eq + 1).trim();
-    if (key && value) out[key] = value;
+function readConfig() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+    if (raw && typeof raw.liveUrl === 'string' && raw.liveUrl.trim()) {
+      return { liveUrl: raw.liveUrl.trim().replace(/\/+$/, '') };
+    }
+  } catch (_err) {
+    // Missing or invalid config -- fall through to the default below. This is
+    // the expected state on first launch, not an error worth surfacing.
   }
-  return out;
+  return { liveUrl: DEFAULT_LIVE_URL };
 }
 
-function waitForHealth(port, timeoutMs) {
-  const deadline = Date.now() + timeoutMs;
+function ensureConfigFile() {
+  fs.mkdirSync(APP_DATA_DIR, { recursive: true });
+  if (fs.existsSync(CONFIG_PATH)) return;
+  const initial = { liveUrl: process.env.FRANK_DESKTOP_URL || DEFAULT_LIVE_URL };
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(initial, null, 2) + '\n', 'utf8');
+}
+
+function liveUrl() {
+  // An env var override (for pointing the shell at a local dev server while
+  // working on this file itself) always wins over the saved config.
+  if (process.env.FRANK_DESKTOP_URL) return process.env.FRANK_DESKTOP_URL.replace(/\/+$/, '');
+  return readConfig().liveUrl;
+}
+
+function checkReachable(baseUrl, timeoutMs) {
   return new Promise((resolve, reject) => {
-    const tryOnce = () => {
-      const req = http.get({ host: '127.0.0.1', port, path: '/health', timeout: 2000 }, (res) => {
+    const deadline = Date.now() + timeoutMs;
+    const attempt = () => {
+      let url;
+      try {
+        url = new URL('/health', baseUrl);
+      } catch (err) {
+        reject(err);
+        return;
+      }
+      const lib = url.protocol === 'http:' ? http : https;
+      const req = lib.get(url, { timeout: 5000 }, (res) => {
         res.resume();
-        if (res.statusCode === 200) return resolve();
-        retry();
+        resolve();
       });
       req.on('error', retry);
       req.on('timeout', () => { req.destroy(); retry(); });
     };
     const retry = () => {
-      if (Date.now() > deadline) return reject(new Error('backend did not become healthy in time'));
-      setTimeout(tryOnce, 400);
+      if (Date.now() > deadline) {
+        reject(new Error(`could not reach ${baseUrl} -- check your internet connection`));
+        return;
+      }
+      setTimeout(attempt, 1500);
     };
-    tryOnce();
+    attempt();
   });
 }
 
-function backendExecutablePath() {
-  const platExe = process.platform === 'win32' ? 'frank-backend.exe' : 'frank-backend';
-  return path.join(process.resourcesPath, 'backend', platExe);
+// Injected into the live page after every navigation. Polls the SAME real
+// /api/alerts endpoint that already backs the in-app notification bell (no
+// separate/duplicate alert logic to keep in sync) and fires a native OS
+// notification for any alert that wasn't present on the previous poll.
+// Alerts have no stable ID (they're recomputed live from current conditions
+// each call, see main.py's get_alerts()), so `source + '::' + title` is used
+// as a synthetic dedup key -- stable across polls for the same underlying
+// condition. The FIRST poll after launch/reload seeds the seen-set without
+// notifying, so restarting the app never re-fires a storm of alerts for
+// conditions that were already open before this window existed.
+const NOTIFIER_JS = `
+(function() {
+  if (window.__frankDesktopNotifier) return;
+  window.__frankDesktopNotifier = true;
+  var seen = new Set();
+  var firstPoll = true;
+  function poll() {
+    fetch('/api/alerts', { credentials: 'include' })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (!d || !Array.isArray(d.alerts)) return;
+        d.alerts.forEach(function(a) {
+          var key = (a.source || '') + '::' + (a.title || '');
+          if (seen.has(key)) return;
+          seen.add(key);
+          if (firstPoll) return;
+          try {
+            var n = new Notification(a.title || 'Frank alert', { body: a.detail || '' });
+            n.onclick = function() { window.focus(); };
+          } catch (_e) { /* Notification API unavailable -- skip silently */ }
+        });
+        firstPoll = false;
+      })
+      .catch(function() { /* transient network error -- next poll will retry */ });
+  }
+  poll();
+  setInterval(poll, 60000);
+})();
+`;
+
+function installNotifier() {
+  if (!mainWindow) return;
+  mainWindow.webContents.executeJavaScript(NOTIFIER_JS).catch((err) => {
+    console.error('[desktop] failed to install alert notifier:', err.message);
+  });
 }
 
-function spawnBackend(env) {
-  if (isDev) {
-    // Dev-only path: run the Python source directly (requires a `python3` on PATH with
-    // the repo's requirements.txt installed) so `npm start` works without a full
-    // PyInstaller build on every iteration. End users never take this path.
-    const repoRoot = path.join(__dirname, '..');
-    backendProcess = spawn('python3', ['tools/api_server/main.py'], { cwd: repoRoot, env });
+function toggleWindow() {
+  if (!mainWindow) return;
+  if (mainWindow.isVisible() && mainWindow.isFocused()) {
+    mainWindow.hide();
   } else {
-    backendProcess = spawn(backendExecutablePath(), [], { env });
-  }
-
-  backendProcess.stdout.on('data', (d) => process.stdout.write(`[backend] ${d}`));
-  backendProcess.stderr.on('data', (d) => process.stderr.write(`[backend] ${d}`));
-  backendProcess.on('exit', (code, signal) => {
-    console.log(`[backend] exited (code=${code} signal=${signal})`);
-    backendProcess = null;
-    if (!quitting) {
-      // Unexpected crash -- restart once after a short delay rather than leaving the
-      // window pointed at a dead server with no explanation.
-      setTimeout(() => startBackendAndWindow(), 1500);
-    }
-  });
-}
-
-function killBackend() {
-  if (backendProcess && !backendProcess.killed) {
-    backendProcess.kill();
+    mainWindow.show();
+    mainWindow.focus();
   }
 }
 
-async function startBackendAndWindow() {
-  ensureEnvFile();
-  const envFromFile = readEnvFile();
-  const port = parseInt(envFromFile.PORT || String(DEFAULT_PORT), 10);
-  const env = Object.assign({}, process.env, envFromFile);
-
-  spawnBackend(env);
+async function createWindow() {
+  ensureConfigFile();
+  const url = liveUrl();
 
   try {
-    await waitForHealth(port, 30000);
+    await checkReachable(url, 20000);
   } catch (err) {
-    dialog.showErrorBox('Frank failed to start',
-      `The backend didn't respond in time.\n\n${err.message}\n\nCheck the console log, or try restarting Frank.`);
-    return;
-  }
-
-  if (mainWindow) {
-    mainWindow.loadURL(`http://127.0.0.1:${port}/frank`);
+    const choice = dialog.showMessageBoxSync({
+      type: 'error',
+      title: 'Frank is unreachable',
+      message: `Couldn't reach Frank at ${url}.\n\n${err.message}`,
+      buttons: ['Retry', 'Quit'],
+      defaultId: 0,
+    });
+    if (choice === 0) return createWindow();
+    app.quit();
     return;
   }
 
@@ -153,14 +181,43 @@ async function startBackendAndWindow() {
     minWidth: 960,
     minHeight: 640,
     title: 'Frank',
-    icon: path.join(__dirname, 'build', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+    icon: iconPath(process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
-  mainWindow.loadURL(`http://127.0.0.1:${port}/frank`);
+
+  mainWindow.webContents.on('did-finish-load', installNotifier);
+  mainWindow.loadURL(`${url}/frank`);
+
+  mainWindow.on('close', (event) => {
+    if (quitting) return;
+    // Tray-app behavior: closing the window hides it (so the alert notifier
+    // keeps polling in the background) rather than quitting Frank outright.
+    // Real quit is only via the tray menu, app menu, or Cmd/Ctrl+Q.
+    event.preventDefault();
+    mainWindow.hide();
+  });
   mainWindow.on('closed', () => { mainWindow = null; });
+}
+
+function createTray() {
+  const trayIcon = nativeImage.createFromPath(iconPath('icon.png')).resize({ width: 16, height: 16 });
+  tray = new Tray(trayIcon);
+  tray.setToolTip('Frank — OnBrandCraftz');
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Open Frank', click: () => { if (mainWindow) { mainWindow.show(); mainWindow.focus(); } } },
+    { type: 'separator' },
+    {
+      label: 'Quit Frank',
+      click: () => {
+        quitting = true;
+        app.quit();
+      },
+    },
+  ]));
+  tray.on('click', toggleWindow);
 }
 
 function buildMenu() {
@@ -169,18 +226,22 @@ function buildMenu() {
       label: 'Frank',
       submenu: [
         {
-          label: 'Edit API Keys...',
+          label: 'Change Server URL...',
           click: () => {
-            ensureEnvFile();
-            shell.openPath(ENV_PATH);
+            ensureConfigFile();
+            shell.openPath(CONFIG_PATH);
             dialog.showMessageBox({
               type: 'info',
-              message: 'Restart Frank after saving your changes for them to take effect.',
+              message: 'Edit "liveUrl", save, then restart Frank for the change to take effect.',
             });
           },
         },
         { type: 'separator' },
-        { role: 'quit' },
+        {
+          label: 'Quit',
+          accelerator: 'CommandOrControl+Q',
+          click: () => { quitting = true; app.quit(); },
+        },
       ],
     },
     { role: 'editMenu' },
@@ -192,18 +253,31 @@ function buildMenu() {
 
 app.whenReady().then(() => {
   buildMenu();
-  startBackendAndWindow();
+  createTray();
+  createWindow();
+
+  globalShortcut.register(HOTKEY, toggleWindow);
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) startBackendAndWindow();
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    } else {
+      createWindow();
+    }
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  // Tray app: never quit just because the window closed (it's hidden, not
+  // destroyed -- see the 'close' handler above). Quitting only happens via
+  // the explicit paths that set `quitting = true` first.
+});
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
 
 app.on('before-quit', () => {
   quitting = true;
-  killBackend();
 });

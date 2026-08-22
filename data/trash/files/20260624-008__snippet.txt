@@ -1,8 +1,0 @@
-.gauge-row{display:flex;gap:10px;flex:1;align-items:center;justify-content:space-around}
-.gauge{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  position:relative;flex-shrink:0}
-.gauge .ring{position:absolute;inset:0;border-radius:50%}
-.gauge .inner{position:relative;width:56px;height:56px;border-radius:50%;background:var(--panel2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center}
-.gauge .inner .num{font-size:13px;font-weight:700;color:var(--cyan2)}
-.gauge .inner .lab{font-size:8px;color:var(--muted);letter-spacing:.5px}

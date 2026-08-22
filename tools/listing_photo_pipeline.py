@@ -35,7 +35,7 @@ Flat lays / collection shots (zero perspective → pixel-perfect, never AI-rende
     build_flat_lay(design_paths, layout, bg_prompt_or_path, out_path)
 """
 
-import re, os, base64, io, json, sys
+import re, os, base64, io, json, sys, tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
@@ -150,7 +150,8 @@ PHYSICS = {
 STYLE_ANCHORS: dict[str, str] = {
     "DP1026": (
         "STYLE DNA — apply to every photo in this batch: "
-        "bright airy editorial Etsy lifestyle photography. "
+        "bright airy editorial Etsy lifestyle photography, sharp commercial "
+        "product photography, subtle natural film grain. "
         "Lavender purple (#8666AA) accent props. Cream linen desk surface. "
         "Soft diffused window light from the LEFT, warm white balance 5000K, "
         "gentle shadows to the RIGHT. 50mm lens equivalent, eye-level camera angle, "
@@ -160,7 +161,8 @@ STYLE_ANCHORS: dict[str, str] = {
     ),
     "DP1027": (
         "STYLE DNA — apply to every photo in this batch: "
-        "bright airy Etsy lifestyle photography, student desk aesthetic. "
+        "bright airy Etsy lifestyle photography, student desk aesthetic, sharp "
+        "commercial product photography, subtle natural film grain. "
         "Cotton candy pink (#DE97C6) and sky-blue (#97C6DE) accent props. "
         "Light cream desk surface. Soft bright natural light from the LEFT, "
         "slightly cool-white balance. 50mm lens equivalent, slightly elevated "
@@ -170,7 +172,8 @@ STYLE_ANCHORS: dict[str, str] = {
     ),
     "DP1028": (
         "STYLE DNA — apply to every photo in this batch: "
-        "clean professional Etsy lifestyle photography. "
+        "clean professional Etsy lifestyle photography, sharp commercial "
+        "product photography, subtle natural film grain. "
         "Deep royal blue (#1B2568) and ice-blue (#7BA7C2) accent props. "
         "Dark navy or cream desk surface. Bright clean natural light from the LEFT, "
         "neutral-cool white balance. 50mm lens equivalent, eye-level angle, "
@@ -180,7 +183,8 @@ STYLE_ANCHORS: dict[str, str] = {
     ),
     "DP1029": (
         "STYLE DNA — apply to every photo in this batch: "
-        "bright energetic Etsy lifestyle photography. "
+        "bright energetic Etsy lifestyle photography, sharp commercial product "
+        "photography, subtle natural film grain. "
         "Warm coral (#FD6C49) and peach-gold (#F5B878) accent props. "
         "Warm cream or light wood desk surface. Bright warm morning light from "
         "the LEFT, warm-white balance. 50mm lens equivalent, slightly elevated "
@@ -436,7 +440,112 @@ SPECIALTY_PROMPTS: dict[str, str] = {
         "LIGHTING: bright warm morning light from the LEFT. 50mm equivalent, 20-degree angle.\n"
         "CONSTRAINT: ONLY iPad + shaker + earbuds + succulent. No hands. No text overlays."
     ),
+    # DP1030-1034 added 2026-07-17 (Wave 4 photo-pipeline fix) -- without an
+    # entry here, slot_10_specialty's scene resolves to the literal unformatted
+    # string "{specialty_prompt}" (generate_planner_listing_photos() only
+    # applies .format() to non-slot_10 templates), sending a broken prompt to
+    # the image model. Written from each product's real theme/specialty_label
+    # in gen_planner_listing_photos.py's PLANNER_PAGES.
+    "DP1030": (
+        "SUBJECT: Silver iPad Pro 12.9-inch at 15-degree angle on a light sage-green "
+        "desk mat. Screen shows the Pomodoro Focus Tracker page in Matcha Serenity "
+        "theme (#7EC8A4): a grid of 25-minute focus session boxes with 5-minute break "
+        "markers between them, some sessions checked off, a running daily-total counter.\n"
+        "FOREGROUND: a small kitchen timer to the right of the iPad.\n"
+        "BACKGROUND: a mug of matcha tea, a small potted succulent (2 props).\n"
+        "LIGHTING: soft calm natural light from the LEFT, warm-neutral balance.\n"
+        "CAMERA: 50mm equivalent, eye-level, slight depth of field on background.\n"
+        "CONSTRAINT: ONLY iPad + timer + matcha mug + succulent. No hands. No text overlays."
+    ),
+    "DP1031": (
+        "SUBJECT: Silver iPad Pro 12.9-inch at 15-degree angle on a warm sage-green "
+        "linen surface. Screen shows the Budget Tracker page in Sage Garden theme "
+        "(#8BA888): income row at top, expense category rows below, savings goal "
+        "field, some cells filled with example values.\n"
+        "FOREGROUND: a small potted herb sprig beside the iPad.\n"
+        "BACKGROUND: a ceramic watering can, a woven coaster (2 props).\n"
+        "LIGHTING: soft natural daylight from the LEFT, gentle green-tinted ambiance.\n"
+        "CAMERA: 50mm equivalent, eye-level, slight depth of field on background.\n"
+        "CONSTRAINT: ONLY iPad + herb sprig + watering can + coaster. No hands. No text overlays."
+    ),
+    "DP1032": (
+        "SUBJECT: Silver iPad Pro 12.9-inch at 15-degree angle on a deep charcoal desk "
+        "surface. Screen shows the Brain Dump page in Midnight Kawaii dark-mode theme "
+        "(deep midnight #1A1A2E background, electric-violet #E040FB and neon-aqua "
+        "#00E5FF accents): a free-write grid of dot-matrix lines, a few example bullet "
+        "notes jotted in glowing accent-colored ink, small star and moon doodle icons.\n"
+        "FOREGROUND: a matte black stylus resting beside the iPad.\n"
+        "BACKGROUND: a small string of warm fairy lights out of focus, a dark ceramic mug (2 props).\n"
+        "LIGHTING: moody low-key lighting, cool violet-aqua glow reflecting softly off the "
+        "iPad bezel from the screen itself, otherwise dim ambient room light from the LEFT.\n"
+        "CAMERA: 50mm equivalent, eye-level, shallow depth of field.\n"
+        "CONSTRAINT: ONLY iPad + stylus + fairy lights + mug. No hands. No text overlays."
+    ),
+    "DP1033": (
+        "SUBJECT: Silver iPad Pro 12.9-inch at 15-degree angle on a warm cream desk. "
+        "Screen shows the Class Roster page in Sunflower Studio theme (#F4C430 "
+        "sunflower yellow, #4A7C59 stem-green accents): a table of student name rows "
+        "with attendance checkboxes and a notes column, a few rows filled with example "
+        "initials, a small sunflower doodle in the header.\n"
+        "FOREGROUND: a stack of graded papers with a red pen resting on top.\n"
+        "BACKGROUND: a small potted sunflower, a coffee mug with an apple motif (2 props).\n"
+        "LIGHTING: bright cheerful natural light from the LEFT, warm-white balance.\n"
+        "CAMERA: 50mm equivalent, eye-level, slight depth of field on background.\n"
+        "CONSTRAINT: ONLY iPad + papers/pen + sunflower + mug. No hands. No text overlays."
+    ),
+    "DP1034": (
+        "SUBJECT: Silver iPad Pro 12.9-inch at 15-degree angle on a deep indigo desk "
+        "surface. Screen shows the Budget Tracker page in Celestial Night theme (deep "
+        "indigo #1E1B4B background, starlight-gold #C9A84C accents): income and expense "
+        "rows with gold-accented totals, a small crescent-moon and star doodle in the "
+        "header, some cells filled with example dollar values.\n"
+        "FOREGROUND: a small brass-toned pen resting beside the iPad.\n"
+        "BACKGROUND: a crystal or geode paperweight catching soft light, a small candle "
+        "in a dark holder (2 props).\n"
+        "LIGHTING: moody evening lighting, warm gold accent glow from the upper-right, "
+        "soft shadows falling LEFT and DOWN.\n"
+        "CAMERA: 50mm equivalent, eye-level, slight depth of field on background.\n"
+        "CONSTRAINT: ONLY iPad + pen + crystal + candle. No hands. No text overlays."
+    ),
 }
+
+
+def _hex(rgb) -> str:
+    return "#%02X%02X%02X" % tuple(int(c) for c in rgb)
+
+
+def _is_dark_theme(cfg: dict) -> bool:
+    bg = cfg.get("bg", (255, 255, 255))
+    return sum(bg) < 400  # e.g. DP1032 Midnight Kawaii (26,26,46), DP1034 Celestial Night (30,27,75)
+
+
+def _style_anchor_for(product_id: str, cfg: dict | None) -> str:
+    """Fallback STYLE_ANCHORS entry built from PLANNER_PAGES config (theme
+    name + real RGB color/accent/bg) for any product without a hand-tuned
+    anchor. 2026-07-17: added so DP1030-1034 (and any future planner) get
+    real camera/lighting vocabulary instead of an empty anchor string --
+    previously only DP1026-1029 had one."""
+    if product_id in STYLE_ANCHORS:
+        return STYLE_ANCHORS[product_id]
+    if not cfg:
+        return ""
+    theme = cfg.get("theme", "the product color theme")
+    primary_hex = _hex(cfg.get("color", (0, 0, 0)))
+    accent_hex = _hex(cfg.get("accent", cfg.get("color", (0, 0, 0))))
+    dark = _is_dark_theme(cfg)
+    surface = "deep charcoal desk surface" if dark else "cream linen desk surface"
+    mood = "moody, low-key, cozy after-dark" if dark else "bright, airy, cozy, aspirational"
+    return (
+        "STYLE DNA — apply to every photo in this batch: "
+        "bright airy editorial Etsy lifestyle photography, sharp commercial "
+        "product photography, subtle natural film grain. "
+        f"{theme} theme — primary {primary_hex}, accent {accent_hex} props. "
+        f"{surface}. Soft diffused window light from the LEFT, warm white "
+        "balance, gentle shadows to the RIGHT. 50mm lens equivalent, "
+        "eye-level camera angle, slight depth of field on background. "
+        "No hands, no people, no text overlays, no studio equipment. "
+        f"Mood: {mood}, kawaii."
+    )
 
 
 def generate_planner_listing_photos(
@@ -446,6 +555,7 @@ def generate_planner_listing_photos(
     sticker_sheet_paths: list[Path],
     output_dir: Path,
     client=None,
+    cfg: dict | None = None,
 ) -> dict[str, "PhotoResult"]:
     """Generate all 10 standard listing photos for a digital planner product.
 
@@ -456,13 +566,25 @@ def generate_planner_listing_photos(
                           pointing to rendered PNG images of those planner pages
         sticker_sheet_paths: list of 3 PNG sticker sheet files
         output_dir: where to save photo_01_hero.jpg … photo_10_specialty.jpg
-        client: optional pre-built OpenAI client (created fresh if omitted)
+        client: optional pre-built OpenAI client (created fresh if omitted;
+                left None entirely for a Gemini-only run -- see below)
+        cfg: optional PLANNER_PAGES[product_id]-shaped dict (theme/color/
+             accent/bg) used to derive style/color-theme/accent-color when
+             product_id has no hand-tuned STYLE_ANCHORS/accent_map entry.
+             Only DP1026-1029 have hand-tuned entries; everything else needs
+             this to get real (not blank) style guidance.
 
     Returns:
         dict mapping slot key → PhotoResult (result.passed, result.out_path, result.issues)
     """
-    client = client or _client()
-    anchor = STYLE_ANCHORS.get(product_id, "")
+    # Lazy: only build an OpenAI client if we might actually need one --
+    # generate_verified_photo() already made this same fix internally
+    # (2026-07-14) for a pure-Gemini run; this caller had the same
+    # unconditional _client() call sitting one level up, still forcing an
+    # OPENAI_API_KEY requirement even when IMAGE_ENGINE=gemini end to end.
+    if client is None and os.getenv("IMAGE_ENGINE", "openai").lower().strip() != "gemini":
+        client = _client()
+    anchor = _style_anchor_for(product_id, cfg)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     accent_map = {
@@ -475,8 +597,16 @@ def generate_planner_listing_photos(
         "DP1028": "Midnight Blue (#1B2568 deep royal blue with ice-blue #7BA7C2 accents)",
         "DP1029": "Coral Peach (#FD6C49 warm coral with peach-gold #F5B878 accents)",
     }
-    accent_color = accent_map.get(product_id, "accent")
-    color_theme  = color_theme_map.get(product_id, "the product color theme")
+    if product_id in accent_map:
+        accent_color = accent_map[product_id]
+        color_theme = color_theme_map[product_id]
+    elif cfg:
+        theme = cfg.get("theme", "the product color theme")
+        color_theme = f"{theme} ({_hex(cfg.get('color', (0, 0, 0)))} with {_hex(cfg.get('accent', cfg.get('color', (0, 0, 0))))} accents)"
+        accent_color = theme.split()[0].lower() if theme else "accent"
+    else:
+        accent_color = "accent"
+        color_theme = "the product color theme"
     spread_desc  = f"a beautifully designed kawaii planner spread in {color_theme}"
 
     slot_order = [
@@ -523,7 +653,8 @@ def generate_planner_listing_photos(
         valid_paths = [Path(p) for p in design_paths if p and Path(p).exists()]
         if not valid_paths:
             print(f"  ⚠ Skipping {slot_key} — no valid design file found")
-            results[slot_key] = PhotoResult(False, None, 0, ["design file not found"])
+            results[slot_key] = PhotoResult(False, None, 0, ["design file not found"],
+                                            physics=physics_key, scene_prompt=full_scene)
             continue
 
         print(f"\n📸 [{slot_key}] → {filename}")
@@ -534,6 +665,12 @@ def generate_planner_listing_photos(
             physics=physics_key,
             client=client,
         )
+        # Stamped on afterward -- generate_verified_photo() is a generic,
+        # slot-agnostic primitive shared by other callers (studio endpoint,
+        # SS-series photos, reject-and-refix); it doesn't know about "slots."
+        results[slot_key].physics = physics_key
+        results[slot_key].scene_prompt = full_scene
+        results[slot_key].design_paths = [str(p) for p in valid_paths]
 
     passed = sum(1 for r in results.values() if r.passed)
     total  = len(results)
@@ -541,13 +678,27 @@ def generate_planner_listing_photos(
     return results
 
 
+# Absolute, anchored to this file's own location (mirrors tools/image_gen.py's
+# _BASE_DIR/_ENV_PATH pattern) — NOT a bare relative "*.env*" open. .env is
+# gitignored and does not exist at all in the deployed Railway container, so a
+# relative open() only ever worked by coincidence of the process's cwd; it broke
+# outright the first time this ran live (FileNotFoundError: [Errno 2] ... '.env'
+# — the Create-screen "Generate Lifestyle Photo" crash, 2026-07-14).
+_BASE_DIR = Path(__file__).resolve().parent.parent
+_ENV_PATH = _BASE_DIR / ".env"
+
+
 def load_env() -> dict:
-    env = {}
-    with open(".env") as f:
-        for line in f:
-            m = re.match(r"^\s*([A-Z_]+)\s*=\s*(.+?)\s*$", line)
-            if m:
-                env[m.group(1)] = m.group(2)
+    """Real credentials, preferring already-set process env vars (how the
+    deployed server actually gets them) over parsing .env (a local-dev-only
+    convenience file that isn't present in production)."""
+    env = dict(os.environ)
+    if _ENV_PATH.exists():
+        with open(_ENV_PATH) as f:
+            for line in f:
+                m = re.match(r"^\s*([A-Z_]+)\s*=\s*(.+?)\s*$", line)
+                if m:
+                    env.setdefault(m.group(1), m.group(2))
     return env
 
 
@@ -656,8 +807,17 @@ def verify_render(client, design_paths: list[Path], render: Image.Image,
         "are NEVER issues.\n"
         "IMPORTANT: only report an issue if you can see it CLEARLY and are confident. "
         "If you are uncertain whether something is an issue, do NOT report it — "
-        "uncertain observations are not defects.\n"
-        'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...]}'}]
+        "uncertain observations are not defects.\n\n"
+        "SEPARATELY (does NOT affect pass/fail — a fidelity-perfect render can "
+        "still get realism notes, and vice versa): does this look like a "
+        "genuine, professional product photograph rather than an obviously "
+        "AI-generated or synthetic image? Note (do not fail on) unnaturally "
+        "plastic/waxy surfaces, a complete absence of any grain or texture, "
+        "shadows inconsistent with the stated light direction, or an "
+        "unnaturally flat/lifeless catalog look with zero atmosphere. Only "
+        "note something you are genuinely confident about.\n"
+        'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...], '
+        '"realism_issues": ["specific concern", ...]} (realism_issues: empty list if none).'}]
     for dp in design_paths:
         content.append({"type": "image_url", "image_url": {
             "url": f"data:image/jpeg;base64,{_b64(dp)}"}})
@@ -677,6 +837,36 @@ def verify_render(client, design_paths: list[Path], render: Image.Image,
         return {"pass": False, "issues": [f"verifier returned unparseable: {raw[:200]}"]}
 
 
+def _apply_finish_pass(img: "Image.Image") -> "Image.Image":
+    """Subtle post-processing every finished lifestyle photo runs through: a
+    gentle unsharp for crisp commercial-photo edges, light film grain, and a
+    soft vignette. Closes the "too-clean, obviously-synthetic" look the
+    realism check above can flag but can't fix by itself -- deliberately
+    understated, this should read as "real camera," not "Instagram filter."
+    2026-07-17 Wave 4 photo-pipeline fix; mirrors tools/upscale_art.py's
+    Lanczos+UnsharpMask family, tuned much gentler since this runs on an
+    already-final-size image rather than as part of an upscale."""
+    import numpy as np
+
+    img = img.convert("RGB")
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=65, threshold=2))
+
+    rng = np.random.default_rng()
+    arr = np.array(img).astype(np.int16)
+    grain = rng.normal(0, 4.0, arr.shape[:2])[:, :, None]  # single-channel luminance noise, low sigma
+    arr = np.clip(arr + grain, 0, 255).astype(np.uint8)
+    img = Image.fromarray(arr, mode="RGB")
+
+    w, h = img.size
+    y, x = np.ogrid[:h, :w]
+    cx, cy = w / 2.0, h / 2.0
+    max_dist = (cx ** 2 + cy ** 2) ** 0.5
+    dist = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 / max_dist
+    vignette = 1.0 - 0.12 * np.clip((dist - 0.55) / 0.45, 0, 1)  # darken only the outer ~45%, max 12%
+    arr = (np.array(img).astype(np.float32) * vignette[:, :, None]).clip(0, 255).astype(np.uint8)
+    return Image.fromarray(arr, mode="RGB")
+
+
 # ── Main entry: generate with auto-verify + auto-retry ────────────────────────
 @dataclass
 class PhotoResult:
@@ -684,6 +874,21 @@ class PhotoResult:
     out_path: Path | None
     attempts: int = 0
     issues: list = field(default_factory=list)
+    # 2026-07-17 (Wave 4 photo-pipeline fix): non-blocking realism signal from
+    # verify_render()/gemini_verify_render()'s new "realism_issues" field --
+    # does NOT affect `passed` (a fidelity-perfect render can still carry
+    # realism notes). Surfaced to Scott on the approval card so a photo that
+    # technically passed fidelity but still "looks a bit AI" isn't silently
+    # invisible before publish.
+    realism_issues: list = field(default_factory=list)
+    # Optional, set only by generate_planner_listing_photos() (which knows
+    # per-slot physics/design_paths/scene_prompt) -- lets a caller stage a
+    # result into the Action Center (listing_photo payload shape) without
+    # duplicating that per-slot mapping a second time. generate_verified_photo()
+    # itself never sets these; they stay at their defaults for its other callers.
+    physics: str = ""
+    scene_prompt: str = ""
+    design_paths: list = field(default_factory=list)
 
 
 def generate_verified_photo(
@@ -693,8 +898,26 @@ def generate_verified_photo(
     physics: str = "sign_flat",
     max_attempts: int = MAX_ATTEMPTS,
     client=None,
+    engine: str | None = None,
 ) -> PhotoResult:
-    client = client or _client()
+    # Resolved up front (was computed later, after the OpenAI client was already
+    # built unconditionally) so extraction/verification/generation can all branch
+    # on it, and so a Gemini-only run never needs to build an OpenAI client at all.
+    # `engine` lets a caller (e.g. the Create screen's per-call engine picker)
+    # override the IMAGE_ENGINE env default for just this call (2026-07-30 --
+    # this used to be env-only, so the UI's engine dropdown for this exact flow
+    # had no way to actually take effect).
+    _img_engine = (engine or os.getenv("IMAGE_ENGINE", "openai")).lower().strip()
+    import image_gen
+    # 2026-07-14: this used to be unconditional (`client = client or _client()`),
+    # so even engine="gemini" runs still hard-required a funded OpenAI account --
+    # extract_text()/verify_render() below were hardcoded to OpenAI's GPT vision
+    # models regardless of engine. Now those have Gemini equivalents
+    # (image_gen.gemini_extract_text/gemini_verify_render), so a fully
+    # Gemini-selected run never touches OpenAI, and an OpenAI billing/quota outage
+    # no longer blocks it.
+    if _img_engine != "gemini":
+        client = client or _client()
     design_paths = [Path(p) for p in design_paths]
     for p in design_paths:
         if not p.exists():
@@ -705,7 +928,7 @@ def generate_verified_photo(
     for i, dp in enumerate(design_paths, 1):
         palette = extract_palette(dp)
         palette_lines.append(f"Design {i} palette (exact): {', '.join(palette)}")
-        text = extract_text(client, dp)
+        text = image_gen.gemini_extract_text(dp) if _img_engine == "gemini" else extract_text(client, dp)
         text_lines.append(f"Design {i} contains exactly this text:\n{text}")
         fact_lines.append(f"FACT (measured): for design {i}, {canvas_facts(dp)}. "
                           "The product face is this FULL canvas — same outer shape, "
@@ -743,34 +966,68 @@ def generate_verified_photo(
     # Image engine is swappable (gpt-image-1 deprecates 2026-10-23). Default stays
     # OpenAI; set IMAGE_ENGINE=gemini to drive this same self-verifying loop with
     # Nano Banana (gemini-2.5-flash-image), which is stronger at keeping the exact
-    # product across scenes. The verify + retry loop below is engine-agnostic.
-    _img_engine = os.getenv("IMAGE_ENGINE", "openai").lower().strip()
+    # product across scenes. _img_engine resolved above; extraction/generation/
+    # verification all branch on it, so the whole loop is genuinely engine-agnostic.
 
     def _generate(correction: str) -> "Image.Image":
         prompt = base_prompt + correction
         print(f"  generating (engine={_img_engine})...")
         if _img_engine == "gemini":
-            import image_gen
             raw = image_gen._gemini_edit_bytes(prompt, list(design_paths))
             return Image.open(io.BytesIO(raw)).convert("RGB")
-        images = [(f"design_{i}.png", _prep(dp), "image/png")
-                  for i, dp in enumerate(design_paths, 1)]
-        resp = client.images.edit(
-            model="gpt-image-1",
-            image=images if n > 1 else images[0],
-            prompt=prompt,
-            size="1024x1024",
-            quality="high",
-            input_fidelity="high",
-            output_format="png",
-        )
-        return Image.open(io.BytesIO(
-            base64.b64decode(resp.data[0].b64_json))).convert("RGB")
+        # Routed through the shared image_gen.edit_image() helper (2026-07-30)
+        # instead of a hand-rolled OpenAI-only multipart call hardcoded to
+        # gpt-image-1 -- that hardcoding meant selecting gpt-image-2 in the UI
+        # silently still generated with gpt-image-1. edit_image() already
+        # branches openai/gpt-image-2 correctly (and raises a clear error for
+        # engine='ideogram', which can't do edit calls) plus gets its existing
+        # retry handling for free. Still pre-shrink each source file with _prep()
+        # first (edit_image() sends raw file bytes with no resizing of its own) --
+        # design_paths can be full-size source art (multi-MB), and this is what
+        # kept multipart upload size/cost sane before this change.
+        tmp_paths: list[Path] = []
+        try:
+            for i, dp in enumerate(design_paths, 1):
+                tfd, tname = tempfile.mkstemp(suffix=f"_in{i}.png")
+                os.close(tfd)
+                tp = Path(tname)
+                tp.write_bytes(_prep(dp).read())
+                tmp_paths.append(tp)
+            out_fd, out_name = tempfile.mkstemp(suffix=".png")
+            os.close(out_fd)
+            out_tmp = Path(out_name)
+            try:
+                image_gen.edit_image(
+                    prompt, tmp_paths, out_tmp,
+                    size=image_gen.SQUARE, quality="high", input_fidelity="high",
+                    engine=_img_engine,
+                )
+                return Image.open(out_tmp).convert("RGB")
+            finally:
+                out_tmp.unlink(missing_ok=True)
+        finally:
+            for tp in tmp_paths:
+                tp.unlink(missing_ok=True)
+
+    # run_until_goal() is a generic goal-seeking helper (tools/goal_loop.py)
+    # shared by more than just photo generation -- it only tracks pass/issues,
+    # not the photo-specific "realism_issues" field. Stashed here via closure
+    # instead of widening that shared contract; read back after the loop ends.
+    _last_realism_issues: list = []
 
     def _verify(render: "Image.Image") -> dict:
+        nonlocal _last_realism_issues
         print("    verifying against source design(s)...")
-        return verify_render(client, design_paths, render, PHYSICS[physics],
-                             "\n".join(fact_lines))
+        if _img_engine == "gemini":
+            verdict = image_gen.gemini_verify_render(design_paths, render, PHYSICS[physics],
+                                                      "\n".join(fact_lines))
+        else:
+            verdict = verify_render(client, design_paths, render, PHYSICS[physics],
+                                    "\n".join(fact_lines))
+        _last_realism_issues = list(verdict.get("realism_issues", []) or [])
+        if _last_realism_issues:
+            print(f"    ⚠ realism notes (non-blocking): {_last_realism_issues}")
+        return verdict
 
     def _on_reject(attempt: int, render: "Image.Image", issues: list) -> None:
         reject = out_path.parent.parent / "_rejects" / f"{out_path.stem}_reject{attempt}.jpg"
@@ -784,15 +1041,16 @@ def generate_verified_photo(
 
     if result.passed:
         final = result.output.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
+        final = _apply_finish_pass(final)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         final.save(out_path, "JPEG", quality=95, dpi=(300, 300))
         print(f"  ✓ PASSED verification (attempt {result.attempts}) → {out_path}")
-        return PhotoResult(True, out_path, result.attempts, [])
+        return PhotoResult(True, out_path, result.attempts, [], _last_realism_issues)
 
     print(f"  ✗ FAILED after {result.attempts} attempts. Issues: {result.issues}")
     print("    → Fall back to pixel-perfect flat lay, or swap to a design that "
           "renders reliably (avoid tiny text / fine repeating geometry).")
-    return PhotoResult(False, None, result.attempts, result.issues)
+    return PhotoResult(False, None, result.attempts, result.issues, _last_realism_issues)
 
 
 # ── Flat lays: zero perspective → pixel-perfect PIL, never AI-rendered ────────

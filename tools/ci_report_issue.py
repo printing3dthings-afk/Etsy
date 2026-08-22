@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 MARKER_TITLE = "Daily Listing Integrity Check — FAIL detected"
@@ -43,9 +44,13 @@ def gh_request(method: str, url: str, token: str, body: dict | None = None) -> d
 
 
 def find_open_issue(repo: str, token: str) -> dict | None:
+    # See tools/ci_report_health_issue.py's find_open_issue for why this must be
+    # percent-encoded: MARKER_TITLE's em dash trips Python 3.11's http.client
+    # control-character validator when interpolated raw into the URL.
+    query = f'repo:{repo} type:issue state:open label:{LABEL} in:title "{MARKER_TITLE}"'
     results = gh_request(
         "GET",
-        f"https://api.github.com/search/issues?q=repo:{repo}+type:issue+state:open+label:{LABEL}+in:title+\"{MARKER_TITLE}\"",
+        f"https://api.github.com/search/issues?{urllib.parse.urlencode({'q': query})}",
         token,
     )
     items = results.get("items", [])
