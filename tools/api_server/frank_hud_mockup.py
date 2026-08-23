@@ -64,6 +64,18 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
      Confirmed via a real headless-Chrome run before wiring this in. Loaded as a plain
      script here so it attaches `window.gsap` the way GSAP's docs actually expect. -->
 <script src="/static/vendor/gsap/gsap.min.js"></script>
+<!-- video.js (vendored, /static/vendor/videojs/video.min.js + video-js.min.css, Apache-2.0) --
+     UMD/global build like GSAP above, not an importmap entry. Not wired into a specific
+     panel yet -- vendored 2026-08-22 per Scott's request so a future feature (e.g.
+     previewing a generated HyperFrames/Ken Burns video in the dashboard before posting)
+     doesn't need a fresh library pull; attaches `window.videojs`. -->
+<link rel="stylesheet" href="/static/vendor/videojs/video-js.min.css">
+<script src="/static/vendor/videojs/video.min.js"></script>
+<!-- itemsjs (vendored, /static/vendor/itemsjs/itemsjs.umd.js, MIT) -- fast client-side
+     faceted search/filter engine. Also not wired into a specific panel yet -- vendored
+     2026-08-22 alongside video.js for a future Products-screen search/filter feature
+     (192 catalog items with no real filter UI today); attaches `window.itemsjs`. -->
+<script src="/static/vendor/itemsjs/itemsjs.umd.js"></script>
 <!-- Orb load speed (Scott, 2026-07-10): the default sphere's WebGL setup only
      starts fetching three.module.js (1.3MB) once the giant inline script below has
      been fully downloaded, parsed, and run down to resetOrbToDefault() -- on a real
