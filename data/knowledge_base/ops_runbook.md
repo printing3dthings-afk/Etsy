@@ -27033,3 +27033,73 @@ so Frank's own dashboard stops misreporting a listing that's actually been live 
 **Status:** resolved, verified live. No other listing has been checked for the same double-upload
 pattern — worth a sweep if time allows, since the root cause (multiple photo-generation sessions
 touching the same listing without a "did I already upload these" check) isn't specific to OpenWhen.
+
+
+## 2026-08-25 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficie
+
+
+## 2026-08-25 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
