@@ -5,6 +5,15 @@ description: "Real technique for designing genuinely printable 3D models in Open
 
 # 3D Print Design — OpenSCAD, For Real Printable Models
 
+**Before starting a genuinely new class of model** (first real mechanical
+part, first print-in-place joint, first time a design might need Blender),
+also read `.claude/skills/3d-print-design/ENGINEERING_REFERENCE.md` — a
+separate, sourced theory/technique doc (BOSL2's gear/hinge/thread/snap-fit
+modules, real FDM tolerance numbers, organic-surface tools beyond what's
+used below, the OpenSCAD-vs-Blender tool-choice verdict). This file stays
+what it's always been: a log of real bugs found while building this shop's
+actual models, not a textbook.
+
 ## Why this exists (2026-08-21)
 
 Before this skill, `render_openscad_model` could render *any* valid OpenSCAD
