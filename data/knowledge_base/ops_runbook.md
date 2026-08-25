@@ -26991,3 +26991,45 @@ routing is understood and avoided.
 **Action:** left both listings in `edit` state — customer-facing goal met, no urgency to force them to
 literal `inactive`. Flagging so a future session doesn't waste time treating this as an open incident if
 seen again on an unrelated listing.
+
+## 2026-08-25 — OpenWhen live listing had 20 photos instead of 10 (two overlapping upload passes)
+
+**Symptom:** Scott asked for a general "where do things stand on Etsy" status check. Confirmed
+OpenWhen (listing 4560574821) was already live (`state: active`, matches the 2026-08-22 entries
+above) — but `GET /api/listings/4560574821/raw` showed `image_count: 20` with `image_ranks`
+containing a duplicate 9 and no rank 20 (`[1,2,...,8,9,9,10,...,19]`).
+
+**Checked live, not assumed:** downloaded all 20 remote images via `EtsyAPIClient.get_listing_images()`
+and visually compared several against the 10 canonical photos in
+`product_files/OPENWHEN_listing_images/` on the Railway volume. Exact-md5 comparison was a dead end
+(Etsy always re-encodes uploaded images, so bytes never match even for the identical photo) — had to
+eyeball actual rendered content instead. Confirmed these were NOT simple duplicates: e.g. rank 1
+(hero shot) matched the current local photo_01 by eye, rank 19 was a genuinely different "Good to
+know" FAQ screenshot matching local photo_10's content, rank 9 appeared twice with different builder-
+flow screenshots. Most likely two separate photo-upload passes across sessions (plausibly the
+2026-08-21/2026-08-22 visual-upgrade work) that each added 10 images without deleting the prior set.
+
+**Root cause of the local write failures during the fix, worth flagging for next time:** a fresh
+`EtsyAPIClient()` instantiated outside Frank's own running process has `shop_id == ""` (no
+`ETSY_SHOP_ID`/`ETSY_SHOP_ID_NUMERIC` in this session's `.env`) — every `delete_listing_image` call
+404'd silently against a malformed `shops//listings/.../images/...` URL until this was caught and
+fixed by resolving the real shop_id (65012858) via a plain `GET shops?shop_name=onbrandcraftz` call
+(public, no shop-scoping needed) and setting `client.shop_id` explicitly before any shop-scoped write.
+CLAUDE.md's existing "prefer routing Etsy writes through Frank's own endpoints" guidance is about
+`ETSY_ACCESS_TOKEN` going stale, not shop_id — but this is the same class of "a value that's fine to
+read from a live listing but empty in a fresh local client" trap, worth remembering for the next
+person who instantiates `EtsyAPIClient()` outside Frank's process for a write.
+
+**Fix:** deleted all 20 images (Etsy blocks deleting the last remaining image on a listing — worked
+around by keeping the rank-1 photo alive throughout, deleting the other 19, then re-uploading the
+remaining 9 in order), re-uploaded a clean set of exactly the 10 current canonical photos in the
+correct order with real alt text on each. Independently re-verified afterward via a fresh
+`GET .../raw` call (not trusting the upload script's own printed output): `image_count: 10`,
+`image_ranks: [1..10]`, state still `active`, price still $4.99, digital file still attached. Also
+assigned the listing to the "Interactive Apps" shop section (`shop_section_id` had been unset since
+publish) and corrected `product_catalog_overrides.json`'s stale `status: "listed_draft"` to `"active"`
+so Frank's own dashboard stops misreporting a listing that's actually been live for days.
+
+**Status:** resolved, verified live. No other listing has been checked for the same double-upload
+pattern — worth a sweep if time allows, since the root cause (multiple photo-generation sessions
+touching the same listing without a "did I already upload these" check) isn't specific to OpenWhen.
