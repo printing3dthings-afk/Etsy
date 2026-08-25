@@ -17,6 +17,7 @@ import asyncio
 import base64
 import codecs
 import hashlib
+import hmac
 import inspect
 import io
 import json
@@ -1955,6 +1956,95 @@ def logout_post(request: Request):
     resp = JSONResponse({"ok": True})
     resp.delete_cookie(SESSION_COOKIE)
     return resp
+
+
+def _verify_etsy_webhook_signature(
+    raw_body: bytes, webhook_id: str, webhook_timestamp: str, signature_header: str,
+) -> tuple[bool, str]:
+    """Standard-Webhooks-style HMAC-SHA256 verification, per Etsy's own
+    documented scheme (developers.etsy.com/documentation/essentials/webhooks/,
+    confirmed 2026-08-22): signed_content = "{id}.{timestamp}.{raw_body}",
+    secret = base64-decode(ETSY_WEBHOOK_SECRET with its "whsec_" prefix
+    stripped), expected = base64(HMAC-SHA256(secret, signed_content)).
+    Returns (ok, reason) -- reason is only for logging, never sent back to
+    the caller (an attacker probing signatures shouldn't learn which check
+    failed).
+
+    The webhook-signature header can carry multiple space-separated
+    "v1,<sig>" tokens (secret rotation support, standard in this Svix-based
+    scheme) rather than always a single bare signature -- Etsy's own docs
+    didn't spell out which shape to expect, so this parses defensively and
+    accepts either a bare base64 signature or a comma-prefixed one, checked
+    with a constant-time compare against every token in the header.
+    """
+    secret = os.getenv("ETSY_WEBHOOK_SECRET", "").strip()
+    if not secret:
+        return False, "ETSY_WEBHOOK_SECRET not configured"
+    if not webhook_id or not webhook_timestamp or not signature_header:
+        return False, "missing required webhook headers"
+    try:
+        ts = int(webhook_timestamp)
+    except ValueError:
+        return False, "webhook-timestamp not an integer"
+    if abs(time.time() - ts) > 300:
+        return False, "webhook-timestamp outside the 300s replay window"
+
+    secret_b64 = secret[len("whsec_"):] if secret.startswith("whsec_") else secret
+    try:
+        secret_bytes = base64.b64decode(secret_b64)
+    except Exception:
+        return False, "ETSY_WEBHOOK_SECRET is not valid base64"
+
+    signed_content = f"{webhook_id}.{webhook_timestamp}.".encode() + raw_body
+    expected = base64.b64encode(hmac.new(secret_bytes, signed_content, hashlib.sha256).digest()).decode()
+
+    for token in signature_header.split():
+        candidate = token.split(",")[-1] if "," in token else token
+        if hmac.compare_digest(candidate, expected):
+            return True, "ok"
+    return False, "signature mismatch"
+
+
+@app.post("/api/webhooks/etsy")
+async def post_etsy_webhook(request: Request):
+    """Receives Etsy's order.paid/order.canceled/order.shipped/order.delivered
+    webhook events (see 'Etsy Order Webhooks' below CLAUDE.md's autonomy
+    boundaries for full setup steps -- registering the endpoint in Etsy's
+    Developer Portal and setting ETSY_WEBHOOK_SECRET is a one-time manual
+    step only Scott can do). Deliberately does nothing but verify + log:
+    this replaces polling for order visibility, it does not trigger any
+    Etsy-mutating action on its own -- CLAUDE.md's Autonomy Boundaries keep
+    every real mutation behind stage_action's approval gate, and a webhook
+    receiver is exactly the kind of always-on, unattended surface where
+    that rule matters most. No auth dependency (Etsy itself is the caller,
+    not a logged-in session) -- the HMAC check IS the auth.
+    """
+    raw_body = await request.body()
+    ok, reason = _verify_etsy_webhook_signature(
+        raw_body,
+        request.headers.get("webhook-id", ""),
+        request.headers.get("webhook-timestamp", ""),
+        request.headers.get("webhook-signature", ""),
+    )
+    if not ok:
+        print(f"[etsy_webhook] rejected: {reason}", flush=True)
+        raise HTTPException(status_code=401, detail="invalid signature")
+
+    try:
+        payload = json.loads(raw_body)
+    except Exception:
+        raise HTTPException(status_code=400, detail="body is not valid JSON")
+
+    event_type = str(payload.get("event_type", "unknown"))
+    await asyncio.to_thread(
+        db.log_activity,
+        actor="etsy_webhook",
+        action_type=event_type,
+        detail=f"shop {payload.get('shop_id')}: {payload.get('resource_url', '')}",
+        payload=payload,
+        outcome="received",
+    )
+    return {"ok": True}
 
 
 def _price_float(price_field) -> float:

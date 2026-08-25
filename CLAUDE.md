@@ -228,6 +228,8 @@ CLAUDE.md notes that may have drifted from the real, current spec.
 - `ETSY_API_KEY` / `ETSY_CLIENT_ID` — see `.env`, never paste the literal value here
 - `ETSY_CLIENT_SECRET` — see `.env`, never paste the literal value here
 - `ETSY_ACCESS_TOKEN` / `ETSY_REFRESH_TOKEN` — empty until OAuth is run
+- `ETSY_WEBHOOK_SECRET` — empty until the webhook endpoint is registered in Etsy's Developer Portal;
+  see "Etsy Order Webhooks — Not Yet Authorized" below
 - `SMTP_USER` / `SMTP_PASSWORD` — Outlook email for digital delivery
 
 ## Etsy OAuth Status
@@ -266,6 +268,44 @@ mark for pharmaceuticals isn't a real collision risk for wall art), so Scott's o
 time remains the actual gate, same as every other Etsy-mutating action. Until the key is set,
 `is_configured()` returns False and screening is a clean no-op — same pattern as Google Calendar OAuth
 above, code ships ready, activation is a Scott-gated credential step.
+
+---
+
+## Etsy Order Webhooks — Not Yet Authorized
+Added 2026-08-22, closing a real gap found while researching ways to make Frank generally better:
+Frank has never had any real-time visibility into orders — `/api/metrics`'s `orders` field is
+Etsy-API-call-dependent and goes empty the moment the circuit breaker trips (confirmed live the same
+day), and nothing else polls order state at all. Etsy shipped a real, free (works for personal apps,
+no paid tier needed) webhooks feature this year for exactly this: `order.paid`, `order.canceled`,
+`order.shipped`, `order.delivered`.
+
+**Not yet authorized — two manual steps only Scott can do:**
+1. In the Etsy Developer Portal, open this app → "Go to Webhook portal" → **+Add Endpoint** → enter
+   `https://etsy-production-b2f1.up.railway.app/api/webhooks/etsy` and select all four event types.
+   The portal shows a signing secret starting with `whsec_` — copy the whole thing.
+2. Set `ETSY_WEBHOOK_SECRET` in Railway's env vars to that exact value, then redeploy.
+
+**What's already built and tested (`tools/api_server/main.py`'s `post_etsy_webhook` /
+`_verify_etsy_webhook_signature`, `tests/test_etsy_webhook.py`):** the receiver verifies Etsy's
+HMAC-SHA256 signature exactly as documented at
+`developers.etsy.com/documentation/essentials/webhooks/` — `webhook-id`/`webhook-timestamp`/
+`webhook-signature` headers, signed content `"{id}.{timestamp}.{raw_body}"`, secret is the
+`whsec_`-prefixed value base64-decoded — with a 300-second replay window and a constant-time
+comparison. Until `ETSY_WEBHOOK_SECRET` is set the endpoint rejects every request with 401 (fails
+closed, never silently accepts unsigned traffic).
+
+**Deliberately does nothing but log, on purpose.** A verified event is written to the existing
+`activity_log` table via `db.log_activity()` (actor `etsy_webhook`, action_type is the real event
+name) and nothing else — no auto-reply, no auto-refund, no listing mutation. This is intentional, not
+a missing feature: per Autonomy Boundaries below, an always-on unattended endpoint is exactly the
+wrong place to let a mutation fire without Scott's review, and Etsy's API still has no
+buyer-messaging endpoint for third-party apps regardless (see Star Seller Requirements below) — so
+there's nothing this could auto-send even if it wanted to. The real win is replacing "no visibility
+until the next poll succeeds" with "a durable, queryable record the instant Etsy fires the event" —
+`db.list_activity(action_type="order.paid")` (or any of the other three event names) now has real
+data to show. Surfacing these in the `/api/alerts` feed or the HUD's notification bell is a natural
+next step once Scott confirms the portal setup is live and events are actually arriving — intentionally
+not built speculatively ahead of that confirmation.
 
 ---
 
