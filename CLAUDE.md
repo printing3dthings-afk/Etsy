@@ -1057,6 +1057,31 @@ chat-tool layer (`TOOL_DEFINITIONS`/`execute_tool()`) was never wired into
 following this section as written would silently fail at step 1. The real,
 currently-wired workflow is below.
 
+**Hard rule, added 2026-08-22 (Scott, after an OpenWhen scare):** every
+product's real deliverable files — the digital file(s) the customer
+receives, and all 10 listing photos — MUST be durably saved to Frank's
+persistent volume storage (verified by re-downloading them back and
+checking real byte content, not just a cached "exists: true" flag)
+**before** that product's `create_listing` action is staged, not after.
+A product built in a session's own local/ephemeral workspace (a session
+scratchpad, a container's local disk under `data/digital_products/` which
+is dockerignored and does not survive a Railway redeploy) can go fully
+live on Etsy — real listing, real files uploaded to Etsy itself — while
+its own source files quietly exist nowhere durable Frank can reach again.
+This nearly happened for real: OpenWhen went live while its app file and
+photos sat only in one session's local disk; they happened to already be
+on the persistent volume by the time it was checked, but that was not
+guaranteed and must never be left to chance again. Concretely: after
+building a product's files (via `build_product` or an ad-hoc build) and
+BEFORE calling `stage_action` for `create_listing`, upload every
+deliverable file to Frank's persistent volume via `POST /api/files/upload`
+(the same pattern used for OpenSCAD model STLs — see the "3D-Print SVG
+Pack Production Pipeline" and "Parametric 3D Print Pipeline" sections
+above) and confirm each one downloads back byte-identical. This applies to
+every product category, not just digital planners — physical items
+registered via `register_product`, interactive apps like Sprigit/OpenWhen,
+3D-print STLs, everything.
+
 When asked to list a planner (or any digital product) on Etsy:
 1. Call `build_product` with the planner code (e.g. `DP1030`) to generate the whole
    product end to end — sticker pack, dated + undated PDFs, all 10 listing photos,
@@ -1066,6 +1091,10 @@ When asked to list a planner (or any digital product) on Etsy:
 2. Once QC passes, review the product on the **Products** screen — tapping a
    product card opens a review modal (backed by `GET /api/products/{id}/review`)
    showing every generated file and photo.
+2b. **Before staging publish**, verify every file listed in that review modal is
+   durably saved on Frank's persistent volume per the hard rule above — don't
+   rely on the review modal's own `exists: true` flag alone, since that check
+   also passes for files that only exist on a session's local/ephemeral disk.
 3. From that modal, **Publish** stages a `create_listing` action (via `stage_action`)
    for Scott's one-tap approval in the Action Center — nothing goes live without it.
    For a product whose files/photos already exist outside this pipeline (e.g. a
