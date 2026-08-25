@@ -211,7 +211,16 @@ slash command (`/research <query>`), not a third-party skill — it calls
 own known products, purpose-built for exactly the title/tag rewrite work a
 batch of zero-view listings needs. `.mcp.json` connects Context7 (live,
 version-exact library docs) — works with no API key at a lower rate limit;
-add one free at context7.com/dashboard if 429s show up.
+add one free at context7.com/dashboard if 429s show up — and (added
+2026-08-22) Etsy's own official Dev MCP Server
+(`https://mcp.api.etsycloud.com/mcp`, no auth needed to connect, no cost)
+which exposes Etsy's full OpenAPI v3 spec — every endpoint, schema, and
+required scope — directly to Claude Code during development. It only
+answers spec questions; it never calls the real Etsy API itself (that's
+still `EtsyAPIClient`/`api_key.py`). Point questions like "what fields
+does `getListingImages` return" or "what scope does `createDraftListing`
+need" at it instead of trusting training-data memory or re-reading old
+CLAUDE.md notes that may have drifted from the real, current spec.
 
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
@@ -3251,6 +3260,23 @@ STYLE_ANCHOR = (
 
 For maximum consistency: pass the first accepted image as `@image1` in subsequent calls with:
 `"Maintain identical lighting, color temperature, surface texture, and photography style as Image 1. Change only [specific element]."`
+
+**When a single edit call passes MULTIPLE reference images (confirmed
+2026-08-22 against OpenAI's own cookbook), address each one by index AND
+role, and describe how they interact — don't just list them.** This
+already matches how "Multi-product photos" above are handled (every
+design file passed as input, referenced by number), but the technique
+generalizes to any multi-reference edit, not just flat lays:
+`"Image 1 is the product design. Image 2 is the style/lighting
+reference. Apply Image 2's lighting and color grading to Image 1 —
+do not alter Image 1's proportions, text, or colors."` For a compositing
+edit specifically, name the placement explicitly rather than leaving it
+implied: `"Place the item from Image 2 into the scene from Image 1, next
+to [specific anchor object]."` `input_fidelity="high"` still helps lock
+geometry on the primary image during this kind of edit, but OpenAI's own
+guide doesn't document a specific combined multi-image + input_fidelity
+recipe beyond that — treat it as a general preservation aid, not a
+verified multi-image-specific trick.
 
 ### Material Vocabulary That Works
 | Material | Vocabulary |
