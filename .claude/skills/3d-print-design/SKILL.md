@@ -530,6 +530,94 @@ Checklist for engraved branding:
       Orientation/mirroring specifically is not (see above) — check that
       part in a real viewer, separately
 
+## Technique 20 — Competitive benchmarking when the reference site blocks automated access: what actually separates a "solid decorative shape" from a "top-tier design" (2026-08-21)
+
+Scott asked for a direct quality benchmark against MakerWorld's top items —
+"see how you can get better." MakerWorld sits behind Cloudflare bot
+protection (a legitimate anti-automation measure, not a bug to route
+around — confirmed via direct `curl`: a clean `403` with a Cloudflare
+managed-challenge page, same result whether via plain `curl` or a real
+headless Chromium through this session's proxy). **Don't try to defeat
+that protection** (spoofing more convincing headers, solving the
+challenge, etc.) — it exists on purpose. Two working alternatives instead:
+
+1. **Text-based research via web search still works and is genuinely
+   useful** — search result snippets and cached page descriptions surface
+   real, specific quality signals (e.g. "hollowed-out eyes designed to
+   glow with an internal light source," from real product descriptions)
+   even when the source page itself can't be screenshotted.
+2. **Other top-tier platforms in the same category (Printables, Cults3D,
+   Thingiverse, MyMiniFactory) may not share the same bot-wall** — worth
+   checking each individually (a plain `curl` HEAD-equivalent check, not
+   a full browser) before assuming the whole research approach is
+   blocked. Two of these were reachable in this session even when
+   MakerWorld and Printables both 403'd.
+
+**The concrete finding this research produced: the ghost design's real
+quality gap was structural, not cosmetic.** Every prior round of ghost
+feedback (Techniques 16-19) improved shape, texture, and proportion on a
+model that was completely SOLID with 2mm surface dimples for eyes.
+Research into what actually makes top Halloween lantern/lithophane
+designs read as high-quality surfaced a concrete, specific pattern this
+design was missing entirely: **real ones are hollow lantern shells with
+an open base for a tealight/LED, and the "eyes" are true through-cuts
+that let light escape** — not a decorative shape with shallow surface
+markings. This matches what the reference photo itself already showed
+(genuinely lit, glowing eyes) — a detail that had been visually matched
+in spirit (dark ovals) but never structurally built.
+
+**Converting a solid shape into a hollow lantern shell, safely, reuses
+Technique 5's existing hollowing pattern exactly — the only new
+discipline is computing the inner offset from the FLAT base silhouette,
+never the textured outer radius:**
+
+```openscad
+wall = 3;
+outer_profiles = [for (p = body) fold_pts(p.x, p.y)];   // textured/rippled
+inner_profiles = [for (p = body) circle_pts(max(p.x - wall, 0.1))];  // plain offset from p.x, NOT from fold_pts(p.x,...)
+module shell() {
+    difference() {
+        skin(outer_profiles, z=outer_z, slices=0);
+        skin(inner_profiles, z=inner_z, slices=0);
+    }
+}
+```
+
+If the inner profile were instead computed by subtracting `wall` from the
+ALREADY-textured outer radius, local wall thickness at a fold valley
+would be `wall - fold_depth` — for this design's `fold_depth_max=1.1` and
+`wall=3`, that's still safely positive (1.9mm), but it's a real trap for
+a texture with more amplitude: always compute the inner offset from the
+untextured base silhouette, matching Technique 5's original wall-margin
+lesson (check against the smallest value a variable takes, not the
+typical one).
+
+**No new floor/opening logic was needed for the open base** — BOSL2's
+`skin()` caps both ends by default (confirmed by reading the library
+source directly rather than assuming), so outer and inner are each
+independently closed solids; subtracting one fully-capped solid from
+another naturally leaves only a thin wall-thickness RING at the base
+(where outer's bottom cap extends past inner's smaller bottom cap) with
+the rest of the interior open above it — exactly the "open base with a
+stable contact rim" shape a real tealight lantern needs, for free, from
+the exact same technique already used to hollow the body at all.
+
+**Verification for a hollow-plus-through-cut redesign needs to check
+things that never mattered on a solid model** — wall thickness at the
+thinnest point (not just "it rendered"), whether a "through-cut" really
+reaches the interior (not just a deep-looking dimple), and whether the
+base is genuinely open (not accidentally capped). A useful corroborating
+signal here: CGAL's own `Volumes` count on the WHOLE model (not per-
+region) told a real story once compared against a known control — a
+genuinely sealed hollow shape (`difference(){sphere(20);sphere(17);}`)
+reports `Volumes: 3` (exterior + shell + one sealed interior cavity);
+this ghost reported `Volumes: 2`, meaning CGAL itself sees no separate
+enclosed cavity — independent confirmation that the interior really is
+open to the outside (through the eyes and the base), not sealed. Pair
+that whole-model signal with targeted ray-casting/point-containment
+checks at the specific eye and base coordinates for a result that's
+verified two different ways, not one.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
