@@ -1,6 +1,6 @@
 ---
 name: 3d-print-design
-description: "Real technique for designing genuinely printable 3D models in OpenSCAD -- both functional/practical parts (organizers, brackets, holders) and decorative/organic parts (vases, bowls, shades) -- grounded in this shop's real Bambu Lab P1S constraints and in specific OpenSCAD/CGAL pitfalls found and fixed while building the first real models. Load this whenever writing a .scad script for render_openscad_model / tools/openscad_render.py."
+description: "Real technique for designing genuinely printable 3D models in OpenSCAD -- both functional/practical parts (organizers, brackets, holders) and decorative/organic parts (vases, bowls, shades) -- grounded in this shop's real Bambu Lab P1S constraints and in specific OpenSCAD/CGAL pitfalls found and fixed while building the first real models. Load this whenever writing a .scad script for render_openscad_model / tools/openscad_render.py. For general DfAM judgment and Bambu Studio slicer settings (calibration, per-material presets, strength/wall settings, tolerances, orientation), see data/knowledge_base/3d_printing_expertise.md alongside this skill."
 ---
 
 # 3D Print Design — OpenSCAD, For Real Printable Models
@@ -97,6 +97,17 @@ rule this shop already applies to AI photos and Etsy mutations.**
 
 ## Bambu P1S constraints — design within these, don't guess
 
+**Load `data/knowledge_base/3d_printing_expertise.md` alongside this
+skill for anything beyond writing the .scad itself** — general DfAM
+judgment (tolerances, hole/contour compensation, anisotropy/orientation
+strategy, snap-fit/living-hinge/thread design, infill pattern selection)
+and the actual Bambu Studio slicer-settings knowledge (calibration order,
+per-material presets, strength/wall settings, ironing/seam tuning, the
+P1S's specific no-chamber-sensor quirk). This skill stays focused on the
+OpenSCAD-code-level bugs and techniques found building real models here;
+that doc is the broader reference for judging a design's printability and
+advising Scott on how to actually print it well.
+
 Real printer specs (full detail in the root `CLAUDE.md`'s "3D Printer —
 Bambu Lab P1S" section):
 
@@ -133,6 +144,24 @@ hold liquid/weight.
   height — a profile that bulges outward faster than it rises can still
   violate this even though it "looks smooth." For a wide bulge, check the
   local slope, not just that the curve looks pleasant.
+
+**Tolerances and orientation for functional parts (full detail in
+`3d_printing_expertise.md`, summarized here for quick reference while
+writing code):**
+- A hole in a design prints slightly SMALLER than modeled, and an outer
+  contour prints slightly LARGER — if a part needs a snug fit (a peg
+  into a hole, a lid onto a rim), model in ~0.2-0.3mm of clearance rather
+  than an exact nominal fit; Bambu Studio's own XY Hole/Contour
+  Compensation can correct further after a real test print, but starting
+  with zero clearance in the model guarantees a first-print failure.
+- FDM parts are 4-5× weaker across layers (Z) than within a layer (XY) —
+  when a design has an actual load path (a stand's neck, a bracket's
+  arm), model/orient it so that stress runs parallel to the layers, not
+  perpendicular. This matters more than infill % for anything genuinely
+  load-bearing.
+- Snap-fit clearance for FDM: ~0.5mm between hook and catch — tighter
+  reads as "should work" in CAD and fails on a real print due to normal
+  FDM variance.
 
 ## Technique 1 — Organic/decorative: hollow bodies of revolution
 
