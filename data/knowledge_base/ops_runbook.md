@@ -26847,3 +26847,402 @@ own chat will work again.
   ✗ AD015 generation failed
   → AD016: Ancient Library
   ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+## 2026-08-21 — OpenWhen listing content lost between sessions; recovered and staged
+
+**Symptom:** Scott asked to publish the OpenWhen (digital time-capsule gift app) listing that an earlier session reported as built and delivered. On investigation, none of its files (app HTML, listing photos, catalog registration) existed anywhere durable — not on the Railway volume, not in this repo, not in `generated_listing_content.json`.
+
+**Root cause:** The earlier session's OpenWhen build was never actually saved to Frank's persistent volume or committed to the repo — only sent to Scott as chat file deliveries, which don't round-trip back into this session. `data/digital_products/` is gitignored by design (per its own convention), so nothing backed it up.
+
+**Fix:** Scott supplied his own personal export of the app (`openwhenforjessee.html`) as a starting point — this had his real personal gift data (a message to "Jessee") embedded in a `<script id="capsule-data">` tag. Stripped that back to the app's own documented `EMPTY` sentinel (confirmed via reading the app's own `init()` logic) plus some leftover stale DOM state (a capsule-list entry, a review-summary string) that had also been captured in the saved snapshot — verified with Playwright that the cleaned file shows the blank "create your own" screen, not any trace of the personal content, before treating it as the sellable product file. Full builder → export → reopen round-trip tested clean (0 JS errors, correct lock-state rendering for anytime/past-date/future-date letters).
+
+Also found and fixed two real backend gaps while staging this: (1) `register_product` always hardcoded a new product's `files: []`, so a product whose deliverable/photos already exist at registration had no way to attach them in one call — added an optional `files` param. (2) There was no way to correct a mistake in an already-registered (not-yet-published) product's files list — added a `update_files` mode + a small `POST /api/products/{id}/update-files` endpoint, refusing to touch a product that already has a live Etsy listing. Both changes required a manual `/api/core/redeploy` call to go live — confirmed each was live via a real functional probe (a throwaway `_DEPLOY_PROBE_TMP` catalog registration, and a 422-vs-404 check on the new endpoint) rather than trusting the static `/api/ping` build tag, which doesn't change on every deploy.
+
+Caught my own mistake mid-flow too: first `create_listing` stage (action 758) had `photo_paths: []` because the listing photos were uploaded under `product_files/OPENWHEN/listing_images/` instead of the established `product_files/OPENWHEN_listing_images/` convention (`_gather_product_review()` only recognizes paths containing literal `_listing_images/`). Rejected that action before Scott ever saw it, fixed the upload path, and re-staged (action 759) with all 10 photos + the deliverable correctly attached.
+
+**Status:** OpenWhen registered in the catalog (`product_id: OPENWHEN`, category `uncategorized`, $4.99), app file + all 10 listing photos saved durably to the Railway volume, listing content passed all truthfulness/grounding gates, and a `create_listing` action is staged pending Scott's approval in the Action Center.
+
+## 2026-08-22 — OpenWhen rebuild task re-dispatched after it was already live; verified, not duplicated
+
+**Symptom:** Received a fresh task to build OpenWhen "from scratch" (same premise as 2026-08-21 above: app supposedly lost from git/volume/catalog). By the time this session started work, action 759 from the entry above had already been approved and executed — `product_catalog_overrides.json` showed `OPENWHEN` as `status: "listed_draft"`, `etsy_listing_id: "4560574821"`, `published_at: "2026-08-22T13:45:07Z"`.
+
+**What was checked before assuming the task's premise was still true:** independently confirmed listing 4560574821 is real and live via Etsy's own public `GET /v3/application/listings/{id}` (not Frank's cached view) — `state: "active"`, price $4.99, title/who_made/when_made all correct. Downloaded the actual `OpenWhen.html` and all 10 listing photos back from the Railway volume and re-verified them directly rather than trusting the catalog record alone: wrote an independent 39-check Playwright suite exercising the real file end-to-end (builder validation, anytime/future-date/past-date letters, XSS-safe rendering of special characters, export → fresh-page reopen as a simulated recipient, correct locked-vs-unlocked rendering, opened-state persistence across reload, re-opening an already-opened letter, dark mode, and a deliberately corrupted `capsule-data` payload) — all 39 passed, zero uncaught JS errors. Viewed 6 of the 10 listing photos directly and confirmed they're real screenshots of the actual app composited into on-brand scenes, not fabricated UI. Read the full live description/tags/price — accurate, includes the AI-disclosure paragraph, and is honest that the date-lock is "honor system, not encryption."
+
+**Gap found and fixed:** the live listing had `shop_section_id: null` — never assigned to the "Interactive Apps" section (`59937681`) that Sprigit (the shop's other interactive-app product) already uses. Staged `update_shop_section` (action 761, listing 4560574821 → section 59937681) via `POST /api/agent-tools/stage_action`; confirmed it lands in `GET /api/queue` before reporting done.
+
+**Takeaway:** a task's stated premise ("X was lost, rebuild it") can go stale between when it was written and when a session picks it up, especially with multiple sessions able to work the same codebase. Re-verify the premise against live state (git, the volume, the actual product/catalog, and — for anything Etsy-facing — Etsy's own API per the `verify-etsy-mutations` skill) before doing potentially-duplicate work.
+
+
+## 2026-08-22 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficie
+
+
+## 2026-08-22 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+## 2026-08-22 — OpenWhen live listing's digital file replaced (real bug fix, zero sales at time of fix)
+
+**Found:** Scott sent the current `OpenWhen.html` build directly in chat. Diffing it against
+what was already attached to the live listing (4560574821, confirmed `state: active` via
+Etsy's own API, not Frank's cache) showed the live file was missing a real fix: a
+`<noscript>` fallback for a confirmed customer-facing failure -- iOS Messages' Quick Look
+preview opens shared `.html` files without running JavaScript, so a recipient would see
+whatever screen was live on the giver's device at export time (their own builder review
+screen, dead buttons) instead of their actual gift.
+
+**Gap in tooling found along the way:** `EtsyAPIClient.upload_listing_file()` only ever adds
+a new file entry -- there was no `delete_listing_file()` counterpart (only
+`delete_listing_image()` existed), so there was no safe way to replace a listing's digital
+file without risking a duplicate. Added `delete_listing_file()` (etsy_api.py) and
+`POST /api/listings/{id}/files/replace` (main.py) -- guarded to refuse touching an ACTIVE
+listing's file unless `confirm_active=true` is explicitly passed. Shipped via PR #16 into
+`claude/etsy-agent-hub-9nnCM`, build `v364-listing-file-replace`.
+
+**Verified before acting:** checked `/api/metrics` -- 6 all-time orders total, none for
+OpenWhen -- confirming zero customers had downloaded the broken file before the fix landed.
+
+**Executed:** deleted the old file (file_id 1508985653192, 122.5 KB) and uploaded the
+corrected one (new file_id 1510237106849, 130.4 KB) via the new endpoint. Re-verified via
+`GET /api/listings/4560574821/files` -- exactly one file attached, correct size, no
+duplicate left behind.
+
+## 2026-08-22 — toggle_listing_state(new_state="inactive") landed listings in Etsy's "edit" state instead
+
+**Symptom:** Staged `toggle_listing_state` actions (deactivate Sprigit 4558607154 and EDU1002
+4559982929, both for real truthfulness violations — see product notes) were approved and executed,
+but Frank's own post-mutation verification flagged both as failed: "state mismatch after mutation —
+requested 'inactive', Etsy now shows 'edit'."
+
+**Checked live:** `EtsyAPIClient.get_listing()` on both confirms `state: "edit"` directly from Etsy,
+not cached. `edit` is a real, distinct Etsy listing state (not `active`, not `inactive`) — Etsy places
+a listing here instead of `inactive` in some cases when deactivating via the API; a listing in `edit`
+state is not visible or purchasable in the shop or search results, so the actual safety goal (pull a
+listing with a real content defect off sale) was achieved despite not landing on the literal requested
+value.
+
+**Not yet root-caused:** why Etsy's API routed this specific transition to `edit` instead of `inactive`
+— worth checking against Etsy's API docs / a support query if this recurs, since Frank's verification
+step will keep (correctly) flagging it as a failure every time until either the code treats `edit` as an
+acceptable terminal state for a deactivation request, or the actual cause of the `inactive`→`edit`
+routing is understood and avoided.
+
+**Action:** left both listings in `edit` state — customer-facing goal met, no urgency to force them to
+literal `inactive`. Flagging so a future session doesn't waste time treating this as an open incident if
+seen again on an unrelated listing.
+
+## 2026-08-25 — OpenWhen live listing had 20 photos instead of 10 (two overlapping upload passes)
+
+**Symptom:** Scott asked for a general "where do things stand on Etsy" status check. Confirmed
+OpenWhen (listing 4560574821) was already live (`state: active`, matches the 2026-08-22 entries
+above) — but `GET /api/listings/4560574821/raw` showed `image_count: 20` with `image_ranks`
+containing a duplicate 9 and no rank 20 (`[1,2,...,8,9,9,10,...,19]`).
+
+**Checked live, not assumed:** downloaded all 20 remote images via `EtsyAPIClient.get_listing_images()`
+and visually compared several against the 10 canonical photos in
+`product_files/OPENWHEN_listing_images/` on the Railway volume. Exact-md5 comparison was a dead end
+(Etsy always re-encodes uploaded images, so bytes never match even for the identical photo) — had to
+eyeball actual rendered content instead. Confirmed these were NOT simple duplicates: e.g. rank 1
+(hero shot) matched the current local photo_01 by eye, rank 19 was a genuinely different "Good to
+know" FAQ screenshot matching local photo_10's content, rank 9 appeared twice with different builder-
+flow screenshots. Most likely two separate photo-upload passes across sessions (plausibly the
+2026-08-21/2026-08-22 visual-upgrade work) that each added 10 images without deleting the prior set.
+
+**Root cause of the local write failures during the fix, worth flagging for next time:** a fresh
+`EtsyAPIClient()` instantiated outside Frank's own running process has `shop_id == ""` (no
+`ETSY_SHOP_ID`/`ETSY_SHOP_ID_NUMERIC` in this session's `.env`) — every `delete_listing_image` call
+404'd silently against a malformed `shops//listings/.../images/...` URL until this was caught and
+fixed by resolving the real shop_id (65012858) via a plain `GET shops?shop_name=onbrandcraftz` call
+(public, no shop-scoping needed) and setting `client.shop_id` explicitly before any shop-scoped write.
+CLAUDE.md's existing "prefer routing Etsy writes through Frank's own endpoints" guidance is about
+`ETSY_ACCESS_TOKEN` going stale, not shop_id — but this is the same class of "a value that's fine to
+read from a live listing but empty in a fresh local client" trap, worth remembering for the next
+person who instantiates `EtsyAPIClient()` outside Frank's process for a write.
+
+**Fix:** deleted all 20 images (Etsy blocks deleting the last remaining image on a listing — worked
+around by keeping the rank-1 photo alive throughout, deleting the other 19, then re-uploading the
+remaining 9 in order), re-uploaded a clean set of exactly the 10 current canonical photos in the
+correct order with real alt text on each. Independently re-verified afterward via a fresh
+`GET .../raw` call (not trusting the upload script's own printed output): `image_count: 10`,
+`image_ranks: [1..10]`, state still `active`, price still $4.99, digital file still attached. Also
+assigned the listing to the "Interactive Apps" shop section (`shop_section_id` had been unset since
+publish) and corrected `product_catalog_overrides.json`'s stale `status: "listed_draft"` to `"active"`
+so Frank's own dashboard stops misreporting a listing that's actually been live for days.
+
+**Status:** resolved, verified live. No other listing has been checked for the same double-upload
+pattern — worth a sweep if time allows, since the root cause (multiple photo-generation sessions
+touching the same listing without a "did I already upload these" check) isn't specific to OpenWhen.
+
+
+## 2026-08-25 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 2/2 in 4s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficient_quota",
+ 
+    image_gen retry 1/2 in 2s: HTTP 429: {
+  "error": {
+    "message": "You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+    "type": "insufficie
+
+
+## 2026-08-25 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — Durable volume not writable
+hourly health loop found /tmp/tmpcmxse9qy/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpcmxse9qy/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp2p40l7i8/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 18395). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-08-25 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 18397). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-08-25 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-08-25 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
