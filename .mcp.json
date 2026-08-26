@@ -3,6 +3,10 @@
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
+    },
+    "etsy-dev": {
+      "type": "http",
+      "url": "https://mcp.api.etsycloud.com/mcp"
     }
   }
 }

@@ -205,9 +205,22 @@ rather than duplicated here — check those before writing new code or
 tests. `.claude/skills/` has vetted third-party Claude Skills (copywriting,
 ad-creative, email-sequences, contract-review, incident-postmortem,
 sop-builder — see `.claude/skills/SOURCES.md` for provenance/licenses) that
-auto-load when relevant. `.mcp.json` connects Context7 (live, version-exact
-library docs) — works with no API key at a lower rate limit; add one free
-at context7.com/dashboard if 429s show up.
+auto-load when relevant. `.claude/commands/research.md` is a project-built
+slash command (`/research <query>`), not a third-party skill — it calls
+`search_etsy` and returns a price/keyword/gap brief against this shop's
+own known products, purpose-built for exactly the title/tag rewrite work a
+batch of zero-view listings needs. `.mcp.json` connects Context7 (live,
+version-exact library docs) — works with no API key at a lower rate limit;
+add one free at context7.com/dashboard if 429s show up — and (added
+2026-08-22) Etsy's own official Dev MCP Server
+(`https://mcp.api.etsycloud.com/mcp`, no auth needed to connect, no cost)
+which exposes Etsy's full OpenAPI v3 spec — every endpoint, schema, and
+required scope — directly to Claude Code during development. It only
+answers spec questions; it never calls the real Etsy API itself (that's
+still `EtsyAPIClient`/`api_key.py`). Point questions like "what fields
+does `getListingImages` return" or "what scope does `createDraftListing`
+need" at it instead of trusting training-data memory or re-reading old
+CLAUDE.md notes that may have drifted from the real, current spec.
 
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
@@ -215,6 +228,8 @@ at context7.com/dashboard if 429s show up.
 - `ETSY_API_KEY` / `ETSY_CLIENT_ID` — see `.env`, never paste the literal value here
 - `ETSY_CLIENT_SECRET` — see `.env`, never paste the literal value here
 - `ETSY_ACCESS_TOKEN` / `ETSY_REFRESH_TOKEN` — empty until OAuth is run
+- `ETSY_WEBHOOK_SECRET` — empty until the webhook endpoint is registered in Etsy's Developer Portal;
+  see "Etsy Order Webhooks — Not Yet Authorized" below
 - `SMTP_USER` / `SMTP_PASSWORD` — Outlook email for digital delivery
 
 ## Etsy OAuth Status
@@ -253,6 +268,44 @@ mark for pharmaceuticals isn't a real collision risk for wall art), so Scott's o
 time remains the actual gate, same as every other Etsy-mutating action. Until the key is set,
 `is_configured()` returns False and screening is a clean no-op — same pattern as Google Calendar OAuth
 above, code ships ready, activation is a Scott-gated credential step.
+
+---
+
+## Etsy Order Webhooks — Not Yet Authorized
+Added 2026-08-22, closing a real gap found while researching ways to make Frank generally better:
+Frank has never had any real-time visibility into orders — `/api/metrics`'s `orders` field is
+Etsy-API-call-dependent and goes empty the moment the circuit breaker trips (confirmed live the same
+day), and nothing else polls order state at all. Etsy shipped a real, free (works for personal apps,
+no paid tier needed) webhooks feature this year for exactly this: `order.paid`, `order.canceled`,
+`order.shipped`, `order.delivered`.
+
+**Not yet authorized — two manual steps only Scott can do:**
+1. In the Etsy Developer Portal, open this app → "Go to Webhook portal" → **+Add Endpoint** → enter
+   `https://etsy-production-b2f1.up.railway.app/api/webhooks/etsy` and select all four event types.
+   The portal shows a signing secret starting with `whsec_` — copy the whole thing.
+2. Set `ETSY_WEBHOOK_SECRET` in Railway's env vars to that exact value, then redeploy.
+
+**What's already built and tested (`tools/api_server/main.py`'s `post_etsy_webhook` /
+`_verify_etsy_webhook_signature`, `tests/test_etsy_webhook.py`):** the receiver verifies Etsy's
+HMAC-SHA256 signature exactly as documented at
+`developers.etsy.com/documentation/essentials/webhooks/` — `webhook-id`/`webhook-timestamp`/
+`webhook-signature` headers, signed content `"{id}.{timestamp}.{raw_body}"`, secret is the
+`whsec_`-prefixed value base64-decoded — with a 300-second replay window and a constant-time
+comparison. Until `ETSY_WEBHOOK_SECRET` is set the endpoint rejects every request with 401 (fails
+closed, never silently accepts unsigned traffic).
+
+**Deliberately does nothing but log, on purpose.** A verified event is written to the existing
+`activity_log` table via `db.log_activity()` (actor `etsy_webhook`, action_type is the real event
+name) and nothing else — no auto-reply, no auto-refund, no listing mutation. This is intentional, not
+a missing feature: per Autonomy Boundaries below, an always-on unattended endpoint is exactly the
+wrong place to let a mutation fire without Scott's review, and Etsy's API still has no
+buyer-messaging endpoint for third-party apps regardless (see Star Seller Requirements below) — so
+there's nothing this could auto-send even if it wanted to. The real win is replacing "no visibility
+until the next poll succeeds" with "a durable, queryable record the instant Etsy fires the event" —
+`db.list_activity(action_type="order.paid")` (or any of the other three event names) now has real
+data to show. Surfacing these in the `/api/alerts` feed or the HUD's notification bell is a natural
+next step once Scott confirms the portal setup is live and events are actually arriving — intentionally
+not built speculatively ahead of that confirmation.
 
 ---
 
@@ -1053,6 +1106,31 @@ chat-tool layer (`TOOL_DEFINITIONS`/`execute_tool()`) was never wired into
 following this section as written would silently fail at step 1. The real,
 currently-wired workflow is below.
 
+**Hard rule, added 2026-08-22 (Scott, after an OpenWhen scare):** every
+product's real deliverable files — the digital file(s) the customer
+receives, and all 10 listing photos — MUST be durably saved to Frank's
+persistent volume storage (verified by re-downloading them back and
+checking real byte content, not just a cached "exists: true" flag)
+**before** that product's `create_listing` action is staged, not after.
+A product built in a session's own local/ephemeral workspace (a session
+scratchpad, a container's local disk under `data/digital_products/` which
+is dockerignored and does not survive a Railway redeploy) can go fully
+live on Etsy — real listing, real files uploaded to Etsy itself — while
+its own source files quietly exist nowhere durable Frank can reach again.
+This nearly happened for real: OpenWhen went live while its app file and
+photos sat only in one session's local disk; they happened to already be
+on the persistent volume by the time it was checked, but that was not
+guaranteed and must never be left to chance again. Concretely: after
+building a product's files (via `build_product` or an ad-hoc build) and
+BEFORE calling `stage_action` for `create_listing`, upload every
+deliverable file to Frank's persistent volume via `POST /api/files/upload`
+(the same pattern used for OpenSCAD model STLs — see the "3D-Print SVG
+Pack Production Pipeline" and "Parametric 3D Print Pipeline" sections
+above) and confirm each one downloads back byte-identical. This applies to
+every product category, not just digital planners — physical items
+registered via `register_product`, interactive apps like Sprigit/OpenWhen,
+3D-print STLs, everything.
+
 When asked to list a planner (or any digital product) on Etsy:
 1. Call `build_product` with the planner code (e.g. `DP1030`) to generate the whole
    product end to end — sticker pack, dated + undated PDFs, all 10 listing photos,
@@ -1062,6 +1140,10 @@ When asked to list a planner (or any digital product) on Etsy:
 2. Once QC passes, review the product on the **Products** screen — tapping a
    product card opens a review modal (backed by `GET /api/products/{id}/review`)
    showing every generated file and photo.
+2b. **Before staging publish**, verify every file listed in that review modal is
+   durably saved on Frank's persistent volume per the hard rule above — don't
+   rely on the review modal's own `exists: true` flag alone, since that check
+   also passes for files that only exist on a session's local/ephemeral disk.
 3. From that modal, **Publish** stages a `create_listing` action (via `stage_action`)
    for Scott's one-tap approval in the Action Center — nothing goes live without it.
    For a product whose files/photos already exist outside this pipeline (e.g. a
@@ -3219,6 +3301,23 @@ STYLE_ANCHOR = (
 For maximum consistency: pass the first accepted image as `@image1` in subsequent calls with:
 `"Maintain identical lighting, color temperature, surface texture, and photography style as Image 1. Change only [specific element]."`
 
+**When a single edit call passes MULTIPLE reference images (confirmed
+2026-08-22 against OpenAI's own cookbook), address each one by index AND
+role, and describe how they interact — don't just list them.** This
+already matches how "Multi-product photos" above are handled (every
+design file passed as input, referenced by number), but the technique
+generalizes to any multi-reference edit, not just flat lays:
+`"Image 1 is the product design. Image 2 is the style/lighting
+reference. Apply Image 2's lighting and color grading to Image 1 —
+do not alter Image 1's proportions, text, or colors."` For a compositing
+edit specifically, name the placement explicitly rather than leaving it
+implied: `"Place the item from Image 2 into the scene from Image 1, next
+to [specific anchor object]."` `input_fidelity="high"` still helps lock
+geometry on the primary image during this kind of edit, but OpenAI's own
+guide doesn't document a specific combined multi-image + input_fidelity
+recipe beyond that — treat it as a general preservation aid, not a
+verified multi-image-specific trick.
+
 ### Material Vocabulary That Works
 | Material | Vocabulary |
 |---|---|
@@ -3340,6 +3439,38 @@ Etsy's Creativity Standards (etsy.com/legal/creativity) were updated June 10, 20
 This product was designed using AI image generation tools, with original prompts, 
 curation, and finishing by the seller. All products are reviewed for quality before listing.
 ```
+
+### 2026-08-22 update: the June 2025 rule above got real enforcement teeth, and the gap Frank can't close alone
+
+The June 2025 description-paragraph requirement is still necessary but is **no longer
+sufficient**. Etsy's Jan 14, 2026 enforcement tightening added a **separate structured
+toggle** in the listing editor — "This listing uses AI generative technology" — plus a
+"Designed by" vs. "Made by" selector in Item Details. Listings missing the *structured*
+disclosure get filtered from search even when the description paragraph and `who_made:
+"i_did"` are both correct: ~12,000 listings removed and ~8,500 warnings issued
+industry-wide in Q1 2026 alone for this specific gap.
+
+**Confirmed (2026-08-22, via developer.etsy.com and an unanswered `etsy/open-api`
+GitHub discussion, #1340) that the Etsy Open API v3 has NO field for this toggle.**
+`who_made`/`when_made`/`is_supply` and the description text are the only parts of this
+Frank can set programmatically — the toggle itself is editor-UI-only. Every
+`create_listing` action Frank stages now carries this as a mandatory manual follow-up:
+`db.py`'s `enqueue_action()` prepends "📋 After approval, manually enable AI-disclosure
+toggle in Etsy editor" directly onto the Action Center card's summary (the one field
+every card actually renders), and `main.py`'s `_validate_staged_action()` attaches the
+same reminder as a structured `_ai_disclosure_manual_step` payload field. **Scott: after
+approving any new listing, open it in the Etsy editor and flip that toggle + set
+"Designed by" — this is a real gap in what Frank can automate, not an oversight.**
+
+**Also new and NOT yet gated by any tool in this codebase (2026-08-22, flagging so it
+isn't lost — a real build, not done here):** Etsy's Aug 11, 2026 Prohibited Items Policy
+update requires computer-made items to use the seller's own *original* design — a
+licensed template or clipart bundle can now trigger removal even with a valid commercial
+license, separate from the disclosure requirement above. This has direct exposure for
+the SS-series SVG packs and sticker sheets. No current gate verifies every visual
+element traces to an original AI prompt vs. a licensed asset — worth a real
+provenance-manifest build in a future session, not something to assume is covered by
+`validate_digital_file()`'s existing file-quality checks.
 
 ### What Gets Flagged and Removed
 
