@@ -1428,6 +1428,109 @@ code comment's own claim about what it does.** A comment asserting
 looked plausible on the page; only checking the actual rendered geometry
 caught it.
 
+## Technique 20 — Print-in-place ball-and-socket joints, chained across multiple segments (2026-08-26)
+
+First multi-joint articulated build in this shop (a 4-segment creature —
+head/body1/body2/tail — connected by 3 ball-and-socket joints). An
+isolated single-joint test (ball and socket both centered at the same
+origin, trivially coincident) passed cleanly, but wiring the SAME
+mechanism into a real multi-segment chain surfaced two real, independent
+defects — both invisible in a preview render, both caught only by
+reconstructing the STL's actual connected components from shared
+vertices/edges (not by trusting CGAL's `Volumes` count, which conflates
+the ambient region and doesn't distinguish "3 genuinely separate solids"
+from "1 fused solid + 2 orphaned junk shells").
+
+**Defect 1 — a rod that points away from its own ball.** The intended
+shape: `ball_rod(ball_r, rod_r, rod_len)` should place the ball at local
+`z = -rod_len` (hanging below the segment's own bottom face) and a rod
+connecting that ball UP to the segment's own origin at `z = 0`. The first
+attempt got the ball right but wrote the rod as a bare
+`cylinder(h=rod_len, r=rod_r)` — which defaults to spanning `z=0` to
+`z=+rod_len`, i.e. growing AWAY from the ball, into the segment's own
+already-solid interior, never touching the ball at all. The ball ended up
+a fully-formed, correctly-sized, correctly-clearanced sphere — and a
+completely disconnected island, floating in space with zero material
+connecting it to anything:
+
+```openscad
+// WRONG -- rod extends away from the ball, never reaches it
+module ball_rod(ball_r, rod_r, rod_len) {
+    translate([0, 0, -rod_len]) sphere(r = ball_r);
+    cylinder(h = rod_len, r = rod_r);              // spans z:[0, rod_len]
+}
+// RIGHT -- rod spans the SAME range the ball sits in
+module ball_rod(ball_r, rod_r, rod_len) {
+    translate([0, 0, -rod_len]) sphere(r = ball_r);
+    translate([0, 0, -rod_len]) cylinder(h = rod_len, r = rod_r);  // z:[-rod_len, 0]
+}
+```
+
+**Defect 2 — matching end-radii (or even just touching ends) weld the
+whole chain solid, independent of the joints.** Segments were built as
+`hull()` capsules (a proven safe technique elsewhere in this skill), each
+one a `hull()` of a bottom sphere and a top sphere. Two problems compound
+here: (a) adjacent segments were stacked with literally the SAME radius
+at the touching end (e.g. `head_t = body1_b = 12`) at zero gap — two
+capsules whose meeting end-spheres are identical in position and radius
+fuse into one continuous smooth solid, full stop, regardless of what
+joints exist elsewhere; (b) independent of matching radii, a
+`hull(sphere, sphere)` capsule's rounded end bulges PAST its own nominal
+height along the central axis — `hull()` of a sphere of radius `r` at
+`z=h` reaches up to `z = h + r` at the very top, not just `z = h` — so
+even *mismatched* end radii can still physically overlap into the next
+segment's supposed empty space if you only account for the nominal
+stacking height and not the actual bulge extent.
+
+**The fix has two parts, and both matter:**
+1. **Flat (not rounded) joint-facing ends.** Give `capsule()` a
+   `flat_bottom`/`flat_top` option that swaps the rounding sphere for a
+   flush `cylinder(h=0.02)` disc at whichever end sits at a joint — this
+   caps the segment at EXACTLY its nominal height, no bulge past it.
+   Free ends (the head's own bottom, the tail's own tip) keep the normal
+   rounded sphere cap.
+2. **A real air gap between every segment pair**, bridged by nothing but
+   the thin rod. `rod_len` has to grow to cover the full gap PLUS the
+   reach down to the lower segment's embedded socket:
+   `rod_len_for(h, gap) = (h - embed_z(h)) + gap`. Verified directly: with
+   a 2–3mm gap and flat ends, ray-casting a point in the gap region
+   off-axis (away from the rod) returns genuinely empty space, while a
+   point on the rod's own axis returns solid — confirming the two
+   segments are connected ONLY by the rod, nothing else.
+
+**Verification method that actually caught both defects — reconstruct
+real connected components from the mesh, don't read CGAL's summary
+number.** `Volumes: 5` was reported for BOTH the broken v1 (1 fused
+backbone + 3 disconnected junk shells = 4 real components) and the fixed
+v2 (4 real independent segments = 4 real components) — the CGAL stat
+alone cannot tell these two totally different, one-broken-one-working
+structures apart, because it counts the ambient region the same way in
+both cases and doesn't care whether the "extra" volumes are meaningfully
+attached to anything. The check that actually distinguishes them: union-
+find over every triangle's vertices in the real exported STL, then read
+off (a) how many disjoint components exist, (b) each component's real
+world-Z bounding range (a fused chain shows ONE component spanning the
+entire assembly height; a working chain shows 4 components each spanning
+only its own segment), and (c) which component each joint's ball and
+socket actually belong to (a working joint's ball belongs to the segment
+ABOVE it; its socket cavity boundary belongs to the segment BELOW it —
+they must be in DIFFERENT components, never fused into one).
+
+**The actionable lesson: a mechanism proven correct in isolation
+(Technique-9-style, single joint, both parts trivially centered on the
+same point) does NOT prove the mechanism survives being embedded at a
+real hand-derived offset in a real multi-part assembly.** The placement
+algebra itself (`embed_z`, `rod_len_for`) was accurate to within
+0.001–0.1mm once both defects were fixed — the algebra was never the
+problem. The problem was two structural assumptions (rod direction,
+segment-end geometry) that a single-joint isolated test has no way to
+exercise, because an isolated test has no neighboring segment to
+accidentally fuse with and no reason to get the rod's direction wrong
+when the ball is the only other thing in the file. Chaining a proven
+mechanism into a real assembly is a genuinely different verification
+task, not a formality — budget for a real connected-component check, not
+just "the render still looks fine."
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
