@@ -2355,6 +2355,88 @@ triggered this. Fix: `--render=true` explicitly, or put `--render`
 somewhere `--camera`/`--imgsize` follows it, not immediately before the
 filename.
 
+## Technique 28 — Mochi Fox v2: real reference photos, and a cut buried entirely inside the solid
+
+2026-08-27, same session as Technique 27, reworked after real feedback
+("the detail is not there, I can't tell what it is"). Two changes, one
+new and important bug class.
+
+**Fetch and actually view a real reference photo before styling a
+character piece — don't work from memory of what an animal "generally"
+looks like.** `curl`-ing a real red fox photo (Wikimedia Commons —
+`upload.wikimedia.org` rate-limits aggressively without a real
+User-Agent and via bare filenames; `commons.wikimedia.org/wiki/
+Special:FilePath/<title>.jpg` redirects reliably and dodges both) and
+viewing it directly showed the v1 head (two hulled spheres — a big
+skull ball with a small snout ball stuck on front) reads as a generic
+round animal, not a fox. A real fox head is a continuous WEDGE: wide at
+the cheek/ruff, tapering the whole way to a narrow, distinctly elongated
+muzzle. Rebuilt as a hull-CHAIN (same technique as this file's tail) of
+5-6 spheres shrinking from skull to nose tip — smooth (hull has no
+seams) and unmistakably fox-shaped, confirmed by direct visual
+comparison against the reference photo, not by assuming a "kawaii
+fox" prompt-description was enough on its own.
+
+**A shallow flat-bottomed cut can end up ENTIRELY BURIED inside a solid
+without ever reaching the surface — and the symptom looks exactly like
+a floating disconnected fragment, not an obviously-missing recess.**
+After moving the eyes onto what looked like the head chain's widest
+point, `stl_components.py`'s union-find reported a real disconnected
+component whose bounding box was an EXACT match for the eye cutting
+tool's own dimensions. The reflex reading of that ("recess merged
+strangely with the surface, maybe a CGAL sliver") was wrong. The actual
+cause, confirmed with `intersection(head_shape(), eye())`: the cutting
+tool's ENTIRE volume was inside real material, none of it reaching open
+air — subtracting it just hollowed out a sealed internal bubble, and a
+bubble's own inner shell is topologically a separate component from the
+outer shell, which is exactly what the connectivity checker reported.
+**When a connected-component check reports a fragment whose bounding
+box matches a cutting tool's own dimensions almost exactly, suspect a
+fully-buried cut before suspecting a boolean/precision bug** —
+`intersection(host_shape(), the_cutting_tool())` on the plain host alone
+answers it directly (full tool bounding box back out = buried; a
+partial/clipped shape = the cut is actually reaching the surface).
+
+**Root cause of *why* it was buried:** `hull()` between two spheres
+offset in BOTH Y and Z (this head chain drops in Z while advancing in Y,
+following a real snout's downward taper) bulges its blended "roof"
+surface — the side staying closer to the taller sphere's own Z — much
+farther forward in Y than either control point's own Y coordinate
+suggests. Guessing a cut position from a control point's (x,y,z,r)
+tuple assumes the local cross-section is close to that one sphere;
+for a hull segment sloping in more than one axis, it can be very wrong.
+**Measure the real surface instead of estimating it**: export the host
+shape alone, then for the intended cut's (x,z) window, find the actual
+maximum Y among vertices in that window (`v[1]` in a filtered vertex
+scan) and place the cut relative to that measured number, not the
+nearest control point's coordinates. Every position in the corrected
+version came from exactly this kind of direct measurement.
+
+**Isolate a visible defect by disabling one cut at a time, not by
+guessing which one from the picture.** A separate real defect (a large
+jagged tear visible in a hero-angle render) turned out to be the chest
+"dish" cavity, not the eyes — found by copying the file, commenting out
+each `difference()` child one at a time (`// pen_cavity();`, etc.), and
+re-rendering the identical camera angle after each change until the
+tear disappeared and reappeared with a single specific cut. The dish sat
+right at the seam where `head_shape()` and `body_shape()` overlap and
+union together — not a simple sphere surface the way `body_top_z()`
+assumes, so the analytic-placement technique from Technique 27 doesn't
+cover it. Cut the feature (same call as the stash hatch in Technique
+27) rather than chase an exact-fit position on a union seam that isn't
+analytically tractable the same way a single primitive's surface is.
+
+**Iterate at low `$fn`, finalize at high `$fn` — don't debug at
+production resolution.** Raising `$fn` from the 24-64 range to 96 for
+visible smoothness (a real, valid complaint — the v1 renders were
+noticeably faceted) turned a ~25-30s full `--render` into ~7 minutes.
+Every fix in this technique was found and verified against a `$fn=32`
+copy of the same file (`sed` one line to override the global `$fn`) in
+under 35 seconds per iteration, then re-verified once at the real `$fn`
+only at the end. Debugging placement/connectivity bugs at full print
+resolution wastes minutes per iteration for zero additional diagnostic
+value — the geometry topology being tested doesn't depend on facet count.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof

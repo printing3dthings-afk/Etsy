@@ -100,21 +100,30 @@ foot_r = 7.5; foot_scale = [1, 1, 0.55];
 foot_x = 15; foot_y = 24; foot_z = base_h + 3;
 
 // ---- face ----
-// v1's eyes measured out to a near-invisible partial sliver once cut --
-// the intended dome only partly overlapped real material at that (y,z).
-// v2 moves them onto head_pts[2] (the cheek/ruff sphere, the WIDEST part
-// of the new tapered head, y=25 r=15.5) and enlarges them -- more real
-// material behind the cut, less chance of a partial/clipped result.
-// First try at y_face=33 put the cut on the NARROWING neck between
-// head_pts[2] and [3] (a tapered hull segment, not a simple sphere) --
-// broke through to the outside on one side, a jagged tear visible in a
-// side render, not a clean recess. Moved back to y=24, right at
-// head_pts[2] itself (r=15.5, the head's single widest point) where the
-// local cross-section is close to a plain sphere and much safer to cut.
+// Two wrong guesses before this one, both from estimating the head
+// hull-chain's real surface by eye instead of measuring it. y_face=33
+// broke through the SIDE (a jagged tear in a real render). y_face=24
+// (assuming the surface near head_pts[2] sits close to that control
+// point's own y=25) was actually WORSE: intersection(head_shape(),
+// eye()) came back as a single component with the tool's FULL bounding
+// box -- meaning the cut was entirely BURIED inside the solid, never
+// reaching open air at all, so it carved a hidden internal bubble
+// instead of a visible recess (which is exactly why the exported STL
+// showed a same-shaped disconnected component: the bubble's own inner
+// shell, topologically separate from the outer one).
+//
+// Root cause: a hull() between two spheres offset in BOTH y and z (the
+// head chain drops in z while advancing in y) bulges its "roof" surface
+// (the high-z side) much further forward in y than either control
+// point's own y suggests -- confirmed by directly querying the real
+// exported mesh for the actual front-surface y at the target (x,z)
+// rather than estimating from the sphere centers. Real measured values:
+// (x=9,z=73) -> y=37.8; (x=13,z=62) -> y=30.2. Every position below
+// uses a 2mm margin inside those measured numbers, not a guess.
 eye_depth = 1.8;
-eye_x = 9; eye_y_face = 24; eye_z = 73; eye_dia = 13;
+eye_x = 9; eye_y_face = 36; eye_z = 73; eye_dia = 13;
 nose_r = 3.6; nose_center = [0, 49, 53];
-cheek_r = 4.2; cheek_depth = 0.8; cheek_x = 13; cheek_z = 67;
+cheek_r = 4.2; cheek_depth = 0.8; cheek_x = 13; cheek_y_face = 28.5; cheek_z = 62;
 
 // ---- functional cavities ----
 // body_top_z(x,y): exact analytic top-surface height of the body
@@ -143,7 +152,16 @@ module top_cut(x, y, r, depth, extra = 2) {
 // was a cavernous pit you could see the underside of the head through).
 // Scaled down to a real pen-cup proportion instead of a body-sized pit.
 pen_x = 10; pen_y = -30; pen_r = 9; pen_depth = 20;
-dish_x = 16; dish_y = 6; dish_r = 12; dish_depth = 5;
+
+// Cut, on purpose (2026-08-27, v2): the chest dish cut right at the
+// seam where head_shape() and body_shape() overlap and union together
+// -- isolated by disabling every other cut one at a time until only
+// this one reproduced a large jagged tear visible in a real render.
+// The head/body union boundary there isn't a simple sphere the way
+// body_top_z() assumes, so a "safe" (x,y) for this cut isn't
+// analytically tractable the same way pen_cavity's position is. Same
+// call as the stash hatch: not worth chasing a precise fix for a
+// secondary feature when dropping it removes the defect outright.
 
 // No cut phone slot: the tail (see tail_pts) runs its own path roughly
 // 15-20mm clear of the body surface the whole way up the -X/back side,
@@ -244,7 +262,7 @@ module eye(mirror_x = false) {
 }
 module cheek(mirror_x = false) {
     x = mirror_x ? -cheek_x : cheek_x;
-    translate([x, eye_y_face - 2, cheek_z])
+    translate([x, cheek_y_face, cheek_z])
         rotate([90, 0, 0])
             linear_extrude(height = cheek_depth + 0.5)
                 circle(r = cheek_r, $fn = 48);
@@ -255,7 +273,6 @@ module nose() {
 
 // ---- functional cavities ----
 module pen_cavity() { top_cut(pen_x, pen_y, pen_r, pen_depth); }
-module dish_cavity() { top_cut(dish_x, dish_y, dish_r, dish_depth); }
 
 // ============================================================
 // Brand mark -- underside of base, fitted per the standing rule
@@ -287,7 +304,6 @@ module fox_body() {
             nose();
         }
         pen_cavity();
-        dish_cavity();
         eye(false);
         eye(true);
         cheek(false);
