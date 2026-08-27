@@ -50,27 +50,49 @@ body_r = 30;
 body_scale = [1.05, 0.9, 1.15];
 body_center = [0, -10, base_h + body_r * body_scale[2]];
 
-// ---- head + snout (built as one hulled blob) ----
-head_r = 23;
-head_scale = [1.0, 0.95, 0.95];
-head_center = [0, 9, 65];
-snout_r = 12;
-snout_scale = [0.8, 1.05, 0.72];
-snout_center = [0, 27, 57];
+// ---- head + snout ----
+// v1 built this as hull(2 spheres) -- a big round skull ball with a
+// small round snout ball stuck on the front. Against a real reference
+// photo (fetched and viewed directly, not worked from memory -- a red
+// fox sitting portrait) that reads as generic-animal, not fox: a real
+// fox head is a WEDGE that tapers continuously from a wide cheek/ruff
+// area down to a narrow, distinctly elongated muzzle, not two blobs.
+// v2 uses the same hull-CHAIN technique already proven on the tail
+// (consecutive hull() pairs of shrinking spheres) run along the
+// head-to-nose axis instead -- a continuous taper, still fully smooth
+// (hull of spheres has no seams), much closer to the real silhouette.
+head_pts = [
+    [0,  2, 74, 20],   // back of skull, nestles into the body's front-top
+    [0, 14, 76, 19],   // crown
+    [0, 25, 71, 15.5], // cheek/ruff -- the widest part of the face
+    [0, 34, 62,  9.5], // muzzle base, narrowing
+    [0, 41, 57,  6],   // muzzle mid
+    [0, 46, 54,  3.6], // nose base (the nose bump sits just past this)
+];
 
 // ---- ears ----
-ear_r1 = 10; ear_r2 = 1.4; ear_h = 23;
-ear_base = [10.5, 6, 82];
-ear_tilt = [14, 0, 20];   // splay outward + forward lean
+// v1: a single cylinder(r1,r2) cone -- correct silhouette direction but
+// thin/spindly, and splayed wide (base x=+-10.5) further apart than a
+// real fox's, which sit close together atop the crown. v2: hull() of a
+// wide base sphere + small rounded tip sphere -- a softer, fuller taper
+// (no perfectly sharp point, reads cuter and less spindly), moved onto
+// the actual crown point (head_pts[1]) and closer together in X.
+ear_base_r = 8.5; ear_tip_r = 2.2; ear_len = 21;
+ear_root = [8, 13, 79];
+ear_tilt = [12, 0, 16];   // splay outward + forward lean
 
 // ---- tail (hull-chain of spheres, tapering, curling up the -X side) ----
+// v1 tapered smoothly all the way to a fine point -- a real fox tail is
+// bushiest at the TIP, not the root (a rounded "poof"), confirmed on the
+// same reference photo. Reworked the last two points to widen slightly
+// again instead of continuing to shrink.
 tail_pts = [
     [-19, -35, 19, 13.5],
     [-33, -31, 33, 11.5],
     [-42, -19, 47, 9.5],
-    [-41,  -3, 58, 7.5],
-    [-31,   9, 63, 5.5],
-    [-19,  13, 61, 3.2],
+    [-41,  -3, 58, 8.0],
+    [-32,   9, 64, 7.5],
+    [-20,  15, 65, 7.0],   // poof: widens slightly instead of tapering to a point
 ];
 
 // ---- feet ----
@@ -78,17 +100,21 @@ foot_r = 7.5; foot_scale = [1, 1, 0.55];
 foot_x = 15; foot_y = 24; foot_z = base_h + 3;
 
 // ---- face ----
-eye_depth = 1.6;
-// eye_y_face is the world-Y CUT-START plane (extrudes toward -Y into the
-// head) -- must sit ON the head+snout blob's real front surface, not a
-// guessed height. head_center=[0,9,65], head_r=23*0.95 -> front surface
-// near y=9+21.85=30.9; snout pokes further to y=27+12*1.05=39.6. Placing
-// the eye cut-start at y=34 (between the two, on the upper head lobe
-// above the snout) actually lands on real material -- confirmed below
-// via recess-floor vertex check, not assumed from this arithmetic alone.
-eye_x = 8; eye_y_face = 34; eye_z = 69; eye_dia = 11;
-nose_r = 3.2; nose_center = [0, 38.5, 60];
-cheek_r = 4; cheek_depth = 0.7; cheek_x = 11; cheek_z = 62;
+// v1's eyes measured out to a near-invisible partial sliver once cut --
+// the intended dome only partly overlapped real material at that (y,z).
+// v2 moves them onto head_pts[2] (the cheek/ruff sphere, the WIDEST part
+// of the new tapered head, y=25 r=15.5) and enlarges them -- more real
+// material behind the cut, less chance of a partial/clipped result.
+// First try at y_face=33 put the cut on the NARROWING neck between
+// head_pts[2] and [3] (a tapered hull segment, not a simple sphere) --
+// broke through to the outside on one side, a jagged tear visible in a
+// side render, not a clean recess. Moved back to y=24, right at
+// head_pts[2] itself (r=15.5, the head's single widest point) where the
+// local cross-section is close to a plain sphere and much safer to cut.
+eye_depth = 1.8;
+eye_x = 9; eye_y_face = 24; eye_z = 73; eye_dia = 13;
+nose_r = 3.6; nose_center = [0, 49, 53];
+cheek_r = 4.2; cheek_depth = 0.8; cheek_x = 13; cheek_z = 67;
 
 // ---- functional cavities ----
 // body_top_z(x,y): exact analytic top-surface height of the body
@@ -131,38 +157,61 @@ logo_size = 5.4;   // verified against base footprint below
 // ============================================================
 // Body blob
 // ============================================================
+// Smoothness bump (2026-08-27, v2): v1 used $fn=24-64 across the board
+// and the rendered result read as visibly faceted rather than smooth --
+// a real, fair complaint, not just a rendering-angle issue. Every
+// sphere/cylinder below now uses $fn=96 for the large character forms
+// (body/head/ears) and 48-64 for smaller detail, instead of the mixed
+// 24-64 range v1 used. Render time cost is real (a full --render goes
+// from ~25s to ~60-90s) but this is the flagship piece -- worth it here.
+$fn = 96;
+
 module body_shape() {
-    translate(body_center) scale(body_scale) sphere(r = body_r, $fn = 64);
+    translate(body_center) scale(body_scale) sphere(r = body_r);
 }
 
+// Hull-CHAIN (same technique as tail() below) instead of v1's hull of
+// just 2 spheres -- a continuous multi-point taper reads as an actual
+// wedge-shaped fox muzzle instead of "ball with a smaller ball stuck on
+// the front." See head_pts above for the real-photo-informed profile.
 module head_shape() {
-    hull() {
-        translate(head_center) scale(head_scale) sphere(r = head_r, $fn = 48);
-        translate(snout_center) scale(snout_scale) sphere(r = snout_r, $fn = 48);
+    for (i = [0 : len(head_pts) - 2]) {
+        p0 = head_pts[i]; p1 = head_pts[i + 1];
+        hull() {
+            translate([p0[0], p0[1], p0[2]]) sphere(r = p0[3]);
+            translate([p1[0], p1[1], p1[2]]) sphere(r = p1[3]);
+        }
     }
 }
 
+// hull() of a wide-base sphere + small rounded-tip sphere -- a soft
+// capsule taper, not a mathematically sharp cone (v1's cylinder(r1,r2)
+// read thin/spindly). Rounded tip also sidesteps any single-point-apex
+// faceting artifact a cone's tip can show at lower $fn.
 module ear(mirror_x = false) {
-    x = mirror_x ? -ear_base[0] : ear_base[0];
+    x = mirror_x ? -ear_root[0] : ear_root[0];
     tiltx = mirror_x ? -ear_tilt[0] : ear_tilt[0];
-    translate([x, ear_base[1], ear_base[2]])
+    translate([x, ear_root[1], ear_root[2]])
         rotate([tiltx, ear_tilt[1], mirror_x ? -ear_tilt[2] : ear_tilt[2]])
-            cylinder(r1 = ear_r1, r2 = ear_r2, h = ear_h, $fn = 28);
+            hull() {
+                sphere(r = ear_base_r);
+                translate([0, 0, ear_len]) sphere(r = ear_tip_r);
+            }
 }
 
 module tail() {
     for (i = [0 : len(tail_pts) - 2]) {
         p0 = tail_pts[i]; p1 = tail_pts[i + 1];
         hull() {
-            translate([p0[0], p0[1], p0[2]]) sphere(r = p0[3], $fn = 24);
-            translate([p1[0], p1[1], p1[2]]) sphere(r = p1[3], $fn = 24);
+            translate([p0[0], p0[1], p0[2]]) sphere(r = p0[3]);
+            translate([p1[0], p1[1], p1[2]]) sphere(r = p1[3]);
         }
     }
 }
 
 module foot(mirror_x = false) {
     x = mirror_x ? -foot_x : foot_x;
-    translate([x, foot_y, foot_z]) scale(foot_scale) sphere(r = foot_r, $fn = 28);
+    translate([x, foot_y, foot_z]) scale(foot_scale) sphere(r = foot_r);
 }
 
 module base_plate() {
@@ -173,7 +222,8 @@ module base_plate() {
 // Eyes/cheeks are cut as shallow planar recesses on the head's front
 // hemisphere -- the same linear_extrude()+rotate() approach proven on
 // every brand mark this session, valid here because eye_dia/cheek_r are
-// small relative to head_r (a flat approximation of the local curve).
+// small relative to the head chain's local sphere radius (a flat
+// approximation of the local curve).
 // First draft used intersection(circle, tall square) hoping for a
 // crescent -- rendered as a near-invisible thin sliver instead, because
 // the square only grazed a thin edge of the circle rather than keeping
@@ -181,7 +231,7 @@ module base_plate() {
 // bold: no thin-intersection risk, reads immediately as a closed eye.
 module eye_2d() {
     intersection() {
-        circle(r = eye_dia / 2, $fn = 32);
+        circle(r = eye_dia / 2, $fn = 64);
         translate([0, eye_dia / 4]) square([eye_dia * 1.2, eye_dia / 2], center = true);
     }
 }
@@ -197,10 +247,10 @@ module cheek(mirror_x = false) {
     translate([x, eye_y_face - 2, cheek_z])
         rotate([90, 0, 0])
             linear_extrude(height = cheek_depth + 0.5)
-                circle(r = cheek_r, $fn = 24);
+                circle(r = cheek_r, $fn = 48);
 }
 module nose() {
-    translate(nose_center) sphere(r = nose_r, $fn = 24);
+    translate(nose_center) sphere(r = nose_r);
 }
 
 // ---- functional cavities ----
