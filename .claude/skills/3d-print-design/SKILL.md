@@ -2032,6 +2032,79 @@ can actually prove "these two solids never touch or overlap," which is
 the property that actually matters for a hinge or any other assembled
 mechanism.
 
+## Technique 25 — Multi-mechanism assemblies: a different rotation axis needs its own empirical check, a ray-cast overlap result must be checked for consistency across directions, and structural checks don't catch a bad LAYOUT (2026-08-27)
+
+Building a 3-mechanism fidget card (edge roller wheel, T-slot slide
+switch, captured press-button plunger) on one card body — a scoped-down
+v1 of a 12-mechanism reference — surfaced three more lessons on top of
+Technique 24's, worth separating clearly because two of them are about
+the VERIFICATION METHOD itself, not just new geometry bugs.
+
+**Bug — a NEW rotation axis (`rotate([90,0,0])`, about X) needs its own
+empirical check; Technique 24's fix for `rotate([0,90,0])` (about Y) does
+not transfer.** Building the T-slot channel, a `linear_extrude()`'d 2D
+profile needed reorienting so its extrusion length ran along world Y
+instead of its natural Z. The intuitive choice, `rotate([90,0,0])`, put
+the ENTIRE channel at world Y=[-12,8] instead of the intended [8,28] —
+not a depth-axis mixup like Technique 24's Bug 2, but the extrusion
+DIRECTION itself reversed. Confirmed by rendering the channel module
+alone and reading its real bounding box off the STL — the same
+discipline Technique 24 established, just applied to a genuinely
+different rotation this time. Switching to `rotate([-90,0,0])` fixed the
+Y direction but, as a consequence of pure rotations being unable to swap
+two axes while preserving both their signs (that requires a reflection,
+which changes handedness), also flipped the profile's Z mapping — so the
+2D profile's own y-coordinate sign convention had to be flipped too, to
+compensate. **The actionable lesson: never assume a rotation sign choice
+that worked for one axis generalizes to a different axis** — Technique 24
+fixed a Y-axis rotation; this is an X-axis rotation, and it needed its
+own from-scratch empirical check, which it got, and still took a second
+sign-matching step to fully resolve (the profile convention flip).
+
+**A ray-casting overlap check can itself give an inconsistent answer near
+a boundary — check votes across MULTIPLE random directions, not one.**
+After fixing the rotation and layering three more small clearance fixes
+(a mismatched neck/body transition between the channel and slider, a
+sign error pushing a plunger's flange past its shoulder instead of below
+it, and a vgap/clearance value that numerically canceled out and left the
+slider's floor exactly touching the channel's floor), one ray-cast check
+against a single direction reported 4 slider vertices "inside" the card
+body. Testing the SAME points with 21 different random ray directions
+showed only ~11/21 agreement — a near-50/50 coin-flip — versus the
+~20-21/21 near-unanimous agreement every REAL overlap in this session
+produced (Technique 24's hinge bugs, this file's own earlier plunger/
+slider bugs before they were fixed). A coin-flip vote is the signature of
+a point sitting essentially ON a mesh's boundary surface (an exact-Z
+tangency, in this case: the slider's floor exactly coincided with the
+channel's own floor because a vgap subtraction and a clearance subtraction
+happened to be numerically equal and canceled out), not a genuine
+interior overlap. **Whenever a ray-cast flags a vertex, re-test it with
+10-20 more random directions before treating it as a confirmed bug** — a
+single direction can land in a degenerate case (grazing a shared edge,
+lying in a coplanar face) that a real interior point would never produce,
+and a boundary tangency does not need the same fix as a genuine
+interpenetration (here, widening a clearance value by a fraction of a
+millimeter was enough, not a structural redesign).
+
+**Passing every structural check (connected components, ray-cast overlap,
+`Simple: yes`) does not mean the DESIGN is right — it only proves the
+moving parts don't interpenetrate.** The keychain hole and the press-
+button's bore were placed close enough (5.8mm apart, center to center)
+that their radii summed to more than the distance between them (7.8mm
+combined vs 5.8mm gap) — both are simple static cuts into the SAME card
+body, so nothing in the interpenetration checks above has any reason to
+flag this: two cuts overlapping each other is geometrically harmless to
+a `difference()` (redundant removal, not a defect). The result only
+became visible as an obviously-wrong eclipse-shaped merged hole in a
+top-down PNG render. **Structural verification (does anything
+interpenetrate) and layout verification (does the arrangement of
+features make sense) are two different questions — passing the first
+does not excuse skipping a real visual look at the whole part**, matching
+this skill's oldest standing rule below, now extended to say explicitly:
+a clean structural check is not a substitute for actually looking at the
+rendered part any more than a clean render is a substitute for the
+structural check.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
