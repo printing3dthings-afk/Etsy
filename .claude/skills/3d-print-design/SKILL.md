@@ -1934,6 +1934,104 @@ Not yet built — recorded here as concrete design references (the same
 role reference photos play for the pumpkin/ghost) for when either
 category comes up again.
 
+## Technique 24 — A print-in-place hinge between two large overlapping slabs needs PER-PARITY clearance, not one shared channel; and a vertex-sharing check alone cannot prove two parts don't interpenetrate (2026-08-27)
+
+Building a hinged cable clip (a flat base + a flat lid, both spanning the
+FULL width/depth of the part, joined by a Technique-22-style barrel hinge
+along one edge) surfaced three real, separate bugs — each one individually
+invisible to "render it and check `Simple: yes`", and even invisible to
+the exact-vertex-sharing connected-component check this skill's own
+Technique 20/22 examples rely on. Together they're worth a dedicated
+writeup because Technique 22's original examples (two capsule segments,
+or a base+lid meeting only at a thin edge) never have to solve this
+specific problem: there, the two parts' own bulk naturally DOESN'T occupy
+the same XY footprint near the joint. A cable clip's base and lid are both
+full slabs that overlap in footprint everywhere except at the joint — so
+clearance has to be cut deliberately, and getting it wrong is easy.
+
+**Bug 1 — one shared clearance channel, sized for the BIGGER of two
+different-radius parts, leaves BOTH floating.** A first attempt cut ONE
+cylindrical void (radius `knuckle_r + hinge_clear`, bigger than either the
+collar or the sleeve) the full hinge length from BOTH base and lid, then
+added the collar (fused to base, at EVEN slots) and the sleeve (fused to
+lid, at ODD slots) back via `union()`. Since the void was uniformly BIGGER
+than both mechanisms at every point along the joint, neither one ever
+touched real surrounding material — both ended up floating islands,
+confirmed only by rendering `base_part()` and `lid_part()` completely
+alone and finding each one split into 2 disconnected components
+internally. **The fix: per-parity clearance.** Base gets a deep pocket cut
+ONLY at the ODD (sleeve) slot positions — the EVEN (collar) positions need
+NO cut at all, since the collar simply IS base's own material. Lid is the
+mirror image: deep pockets ONLY at EVEN (collar) positions, plus one small
+continuous pilot bore (radius `pin_r + hinge_clear`) for the rod across
+the whole span, since `union()` of an uncut solid box and a hollow tube in
+the same space has no hole where the box is solid — the box's material
+silently fills whatever bore the tube's own internal `difference()` left
+open. A shallow "skin" recess elsewhere (to stop the two flat slabs
+welding solid across their non-hinge contact area, per Technique 20)
+needs no such per-mechanism exclusion IF it's cut inside the same
+`difference()` block a mechanism will later be added back into via
+`union()` — see Bug 3.
+
+**Bug 2 — a `translate()` meant to shift something along its OWN length
+axis, placed on the wrong side of `rotate()`, silently shifts it
+RADIALLY instead.** Fixing an unrelated bug (a `center=true` bore
+misaligned with an un-centered outer tube — see below) needed the bore
+shifted by `+slot_len/2` along its own length. The length axis of a bare
+`cylinder()` BEFORE any `rotate()` is Z (not X) — X and Y are its RADIAL
+directions. `translate([-0.5,0,0])` therefore shifted the bore radially, in
+local X, not along its length. After the surrounding `rotate([0,90,0])`
+(which maps local `(x,y,z)` to world `(z,y,-x)`), that radial X-shift of
+-0.5 became a WORLD Z-shift of +0.5 — moving the whole bore 0.5mm off the
+hinge axis instead of realigning it. The render looked completely
+unremarkable (same radius, roughly the right place) — this was only
+caught by solving the exact circumcircle (via 3 known points) of a
+suspicious vertex cluster turned up by a ray-casting overlap check, and
+finding its center 0.5mm away from where it should be. **The fix:
+`translate([0, 0, slot_len/2])` — Z, not X — applied BEFORE the
+`rotate()`.** Whenever a translate is meant to reposition something along
+a cylinder's own length, double check which axis that actually is at the
+point the translate is written, not after mentally fast-forwarding
+through the rotate that comes later in the same statement.
+
+**Bug 3 — `center=true` on a bore, next to an un-centered outer tube of a
+different height expression, only overlaps for PART of the tube's
+length.** `cylinder(r=knuckle_r, h=slot_len)` (outer, un-centered, spans
+local `z=[0,slot_len]`) paired with `cylinder(r=pin_r+hinge_clear,
+h=slot_len+1, center=true)` (bore, spans `z=[-(slot_len+1)/2,
++(slot_len+1)/2]`, i.e. centered on z=0, NOT on the outer's own midpoint
+`slot_len/2`) only overlaps the outer tube for part of its length — for
+`slot_len=4` this left `z=[2.9,4]` of the tube completely un-bored, a
+solid disk blocking the rod. This exact pattern is copied verbatim from
+this skill's own Technique 22 reference code, which apparently never
+actually exercised this misalignment for its own original parameters —
+a reminder that even a technique already proven ELSEWHERE in this file
+still needs re-verifying against the actual numbers of a new build, not
+assumed safe by precedent. Caught only by rendering the sleeve module in
+total isolation (no outer `translate()`) and reading its raw local X
+extent directly off the STL.
+
+**The real methodological lesson, tying all three together: an
+exact-vertex-sharing connected-component check (Technique 20's method) is
+a good FIRST check but is not sufficient to prove two parts don't
+interpenetrate.** After fixing Bugs 1–3 above one at a time, `base_only`
+and `lid_only` each rendered as a single connected component, and they
+shared exactly ZERO vertices with each other — yet the combined
+`union()` still fused into ONE component. This can only happen from a
+genuine 3D volumetric overlap that CGAL's own boolean computation
+resolves by generating brand-new intersection vertices that exist in
+NEITHER standalone mesh — meaning a vertex-based check on the two parts
+rendered separately is structurally blind to this failure mode. The
+actual diagnostic that found it: a real ray-casting point-in-mesh test
+(Möller–Trumbore ray-triangle intersection, odd/even crossing count) run
+against every vertex of one part's mesh, checking whether it falls
+inside the other part's closed volume. Worth keeping as a standing tool
+for any future multi-part assembly this skill builds — it's slower to
+set up than a vertex-sharing check but is the only one of the two that
+can actually prove "these two solids never touch or overlap," which is
+the property that actually matters for a hinge or any other assembled
+mechanism.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof

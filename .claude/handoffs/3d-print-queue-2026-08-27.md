@@ -65,13 +65,71 @@ only because a screenshot showed the phone session's live progress.
   the one to trust — it's numerically verified against known sun
   positions, not just eyeballed.
 
-## Open threads
+## Update (continue-f22my6 session, 2026-08-27, later same day)
+
+**No Frank/Etsy/Railway credentials were available in this session's
+container** (no `.env`, nothing in `env`, no Railway token) — the
+"Direct Infrastructure Access" section of root `CLAUDE.md` assumes those
+are reachable; they weren't here. Couldn't check the phone session's live
+state or pull `sundial_WIP.scad` off the volume as a result. Asked Scott
+directly (AskUserQuestion) rather than guess:
+- **Cable clip → "Rebuild it myself."** Done, see below.
+- **Sundial → "Wait for the WIP file."** Not touched this session — the
+  next session should get Frank credentials (or the actual WIP file
+  content) before picking this up, per Scott's own answer.
+- **Fidget-card → "I'll send screenshots."** Not sent yet as of this
+  session ending. Next session: check for a screenshot/description in
+  the conversation before doing anything else on this thread.
+
+**Cable clip: built, verified, DONE.** `openscad_models/cable_clip.scad`
+(committed to git this session). A functional print-in-place design:
+flat base with a semicircular cable channel + 2 screw-mount ears with
+countersunk M3 holes, a hinged lid (Technique 22 barrel hinge, 5
+knuckles) that swings open to load/unload the cable, and a friction
+peg/socket latch to hold it shut. OnBrandCraftz maker's mark engraved on
+the underside per the standing rule.
+
+Getting the hinge geometrically correct (base and lid genuinely
+disconnected — no interpenetration — while still print-in-place
+interlocked) took real, multi-round debugging, now written up as
+**Technique 24** in `.claude/skills/3d-print-design/SKILL.md`: a shared
+one-size clearance channel left both the collar and sleeve floating
+(needed per-slot-parity clearance instead); a `translate()` on the wrong
+side of a `rotate()` shifted a bore 0.5mm off-axis instead of realigning
+it along its own length; and — the most important methodological
+finding — an exact-vertex-sharing connected-component check (this skill's
+established Technique 20 method) is NOT sufficient to prove two parts
+don't interpenetrate: base and lid each rendered as one clean component
+and shared zero vertices with each other, yet still fused into one solid
+on `union()`, because CGAL generates new intersection vertices that exist
+in neither part's standalone mesh. Only a real ray-casting point-in-mesh
+test caught it. Final verification: `openscad --render` reports
+`Simple: yes`; the combined model splits into exactly 2 connected
+components (base X[0,46] Z[0,8.75], lid X[10.3,35.7] Z[2.75,11.5],
+matching the two physical parts); a full point-in-mesh sweep found zero
+vertices of either part inside the other; 4 rendered PNG views (front,
+back showing the 5-knuckle hinge, top-down) all look correct.
+
+**Deviation from the usual "commit code, upload .scad/.stl to Frank's
+volume" rule, because of the credentials gap above:** the `.scad` is
+committed to git at `openscad_models/cable_clip.scad` as the durable
+fallback. It was NOT uploaded to Frank's volume (`POST /api/files/upload`)
+because this session had no `APP_SECRET_TOKEN`/`FRANK_API_BASE` to call
+that endpoint with. **A future session with real Frank credentials should
+upload `openscad_models/cable_clip.scad` (and can regenerate the STL from
+it, `python3 tools/openscad_render.py openscad_models/cable_clip.scad -o
+cable_clip.stl`) to the volume to bring this back in line with the
+standing convention** — nothing about the design itself needs revisiting,
+just the storage step this session couldn't complete.
+
+## Open threads (original, from earlier in the day — see update above for current status)
 
 - **Cable clip** — being actively finished on the phone session as of
   2026-08-27 ~18:28 local (base/hinge/lid/latch assembled, a comprehensive
   verification agent was mid-run). Check `git log` for whether it's
   landed; if not, it may still be in progress or may have been lost the
   same way the first attempt was — ask Scott before rebuilding blind.
+  **[RESOLVED — see update above: rebuilt independently, done.]**
 - **Sundial** — this session built and partially verified a v1
   (7-hour dot-matrix digital sundial, digit-matrix logic visually
   confirmed correct for "12", a full numeric verification agent was
