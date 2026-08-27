@@ -165,11 +165,17 @@ module all_hour_tubes() {
     hour_15_digits();
 }
 
+// size fitted to the plate per the 3d-print-design skill's standing rule --
+// size=5 measured a real 212.56mm wide on this 248mm plate (85.7% of its
+// length), confirmed too large. Re-measure after any further change
+// rather than trusting a linear projection from one data point (see the
+// cable clip's own mark-sizing fix for why: a single measurement can be
+// an artifact of how it was filtered, not the true font scaling).
 module brand_mark() {
     translate([0, -20.0, -3.5])
         linear_extrude(height = 1.2)
             mirror([0, 1, 0])
-                text("OnBrandCraftz", size = 5, font = "Dancing Script:style=Bold",
+                text("OnBrandCraftz", size = 2.4, font = "Dancing Script:style=Bold",
                      halign = "center", valign = "center");
 }
 
