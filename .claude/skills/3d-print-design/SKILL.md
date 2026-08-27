@@ -2027,6 +2027,28 @@ Checklist before calling any product done:
       assumed correct because the number "looks reasonable" or matches
       an earlier model** — a fixed absolute size is only ever right by
       coincidence once the model's own scale changes.
+      **A second real trap, found fixing the SAME mark on the sundial
+      right after: the z-range vertex filter that isolated the mark
+      cleanly on the cable clip does NOT automatically transfer to a
+      different model.** The sundial's hour-digit tubes pass near the
+      same z-band as the mark's shallow recess, so a naive z-range filter
+      counted digit-hole surface points as part of the mark — and the
+      giveaway was that the measured "width" came back IDENTICAL
+      (212.56mm) at two very different `size` values (5 and 2.4), which
+      should have been treated as immediate proof the filter was broken,
+      not evidence the font doesn't scale. **A real measurement always
+      moves when the parameter driving it moves; if it doesn't, the
+      measurement method is wrong, not the model.** The fix that actually
+      worked: instead of filtering by a z-RANGE, isolate the mark's
+      recess FLOOR specifically — a flat plane at exactly the cutter's
+      known overlap depth (here, `z == -2.3` to within float tolerance) —
+      then confirm those isolated points cluster tightly at the mark's
+      intended x/y placement before trusting the resulting number. A
+      z-range filter is a decent first guess for a model with nothing
+      else nearby in that band (true for the cable clip); a model with
+      other deep/tall features sharing the same z-band (true for the
+      sundial's tubes) needs a tighter, feature-specific isolation, not
+      the same filter copied over.
 
 This is a standing requirement going forward, not a one-off — apply it to
 every new physical product design in this pipeline (SS-Series, 3D-print
