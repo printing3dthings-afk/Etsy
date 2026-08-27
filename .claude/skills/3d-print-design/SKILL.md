@@ -1710,6 +1710,167 @@ choice 2026-08-27), given visual site browsing isn't available:**
   discipline (Technique 7, 9, 13) as the check that replaces "browse and
   compare" when browsing isn't available.
 
+## Technique 21 — Real honeycomb lattice (open through-cuts), not raised relief: build it on FLAT faces, not a curved surface (2026-08-27)
+
+Technique 7's "honeycomb" was raised bump RELIEF on a flat panel wall
+(decorative texture). A genuinely different need came up: a honeycomb pen/
+planter holder where the hexagons are real OPEN CELLS you can see through
+— the defining feature of an actual honeycomb lattice, not a texture.
+
+**The reliable way to cut a true hex lattice: make the body's outer shape
+a polygon prism with FLAT faces (a `cylinder($fn=6, ...)` IS a hexagonal
+prism — free, no extra code), then cut each flat face's hex grid with
+plain straight-through cutters in that face's own local frame, rotated
+into world position per face.** This sidesteps the curved-surface cutting
+risk entirely (no hull()-prism depth range needed, no rotate() sign
+ambiguity beyond a single well-understood per-face rotation):
+
+```openscad
+apothem = R * cos(180 / n_sides);      // center-to-face distance
+module hex_cell() {
+    rotate([90, 0, 0])                  // axis along local +y, THROUGH the wall
+        cylinder(r = hex_r, h = wall + 4, $fn = 6, center = true);
+}
+module face_honeycomb() {
+    // lay out a grid in this face's local (x, z), each cell at
+    // translate([x, apothem, z]) so it sits exactly on the flat face
+    for (row = ...) for (col = ...)
+        translate([x, apothem, z]) hex_cell();
+}
+module all_faces() {
+    for (i = [0:n_sides-1]) rotate([0, 0, i * 360/n_sides]) face_honeycomb();
+}
+```
+
+**A real first-attempt bug worth flagging: getting only ONE column of
+cells per face instead of a full lattice.** `n_cols = floor(usable_width /
+pitch)` silently evaluates to 1 when `hex_r` is sized too large relative
+to the face width — the render looked like a single zigzag column of
+hexagons down the middle of each face, not a mistake in the loop logic at
+all, just cell size vs. available space. Fixed by shrinking `hex_r`
+substantially (6.5mm → 2.8mm) and enlarging the body (R 42→50, H 90→100)
+— always sanity-check `n_cols`/`n_rows` come out as more-than-one before
+assuming a grid-generation bug when a render shows too few repeats.
+
+**Keep an uncut rim margin on every edge** (top, bottom, AND the vertical
+seams between faces) — `rim_h` in Z and `rim_h/2` inset in X — so the
+lattice band never perforates the load-bearing edges/corners of the
+prism. Verified via point-in-mesh testing (ray-casting, not raw vertex
+presence — a flat cap can be triangulated with zero interior vertices at
+a test point even though it's genuinely solid there) that the rim bands
+and corner seams stayed solid while the lattice band itself was real
+open cells with a genuine hollow interior behind them.
+
+## Technique 22 — A real working print-in-place hinge: stepped shaft + trapped sleeves (2026-08-27)
+
+First genuinely mechanical (not just decorative) moving-part design this
+shop has built: a barrel hinge that prints already assembled, rotates
+freely, and can't be pulled apart. The standard, correct technique (many
+"print in place hinge" designs on MakerWorld/Thingiverse use this exact
+shape, confirmed by reasoning through the mechanics, not by copying code):
+
+**Part A ("the shaft") is ONE continuous piece: a thin rod running the
+full hinge length, with periodic FAT COLLARS fused onto it at alternating
+slots.** Part B ("the sleeves") are hollow tube segments that ride on the
+THIN sections between A's collars — trapped axially because their own
+inner bore is smaller than A's collar radius on both sides, but free to
+spin because there's real radial clearance around the thin rod:
+
+```openscad
+pin_r = 2.0; clearance = 0.4; knuckle_r = 3.5;
+slot_len = 4; slot_gap = 0.4;            // axial gap so faces don't touch either
+pitch = slot_len + slot_gap;
+
+module a_shaft() {                        // part A -- fuse this to the base body
+    rotate([0,90,0]) cylinder(r=pin_r, h=total_len, $fn=32);      // full-length thin rod
+    for (i = [0,2,4])                                              // fat collars, even slots
+        translate([i*pitch,0,0]) rotate([0,90,0])
+            cylinder(r=knuckle_r, h=slot_len, $fn=32);
+}
+module b_sleeves() {                      // part B -- fuse this to the lid body
+    for (i = [1,3])                                                // sleeves, odd slots (the gaps)
+        translate([i*pitch,0,0]) rotate([0,90,0])
+            difference() {
+                cylinder(r=knuckle_r, h=slot_len, $fn=32);
+                cylinder(r=pin_r+clearance, h=slot_len+1, $fn=32, center=true);
+            }
+}
+```
+
+Both parts share one continuous OpenSCAD file/`union()` for STL export
+(a single file can legitimately contain two disconnected-but-interlocked
+solids — CGAL reports this as `Simple: yes` with a `Volumes` count that
+just reflects two independent closed manifolds, not a defect, the same
+"Volumes:2 is normal for a single real object" caveat noted elsewhere in
+this skill). Verified independently: A and B never share any solid
+volume (confirmed via mesh containment testing, not just "the render
+looks right") — an actual positive ~0.4mm radial gap exists everywhere,
+matching the coded `clearance`, meaning the two pieces would truly rotate
+freely once printed rather than fusing solid. This is this shop's first
+genuinely mechanical (not just aesthetic) OpenSCAD design — build and
+verify the mechanism ALONE, isolated from whatever product it's going
+into, before adding product-specific geometry around it (matching this
+skill's long-standing "test the complex cut in isolation first" discipline
+from Technique 3's scoop-cut lesson, now applied to a moving mechanism).
+
+## Technique 23 — Physically-computed geometry (not hardcoded angles) for a "unique" design, and how to verify math that isn't visually obvious (2026-08-27)
+
+A digital sundial (displays the hour as dot-matrix digits, lit only when
+the real sun aligns with a canted tube drilled through a flat plate) is a
+genuinely different design class from everything else in this skill: the
+geometry comes from real astronomical trigonometry, not from a hand-tuned
+aesthetic curve. Two lessons specific to this class of design:
+
+**Compute the physics as real OpenSCAD functions with named parameters
+(latitude, hour), never hardcode pre-computed angles.** This is what
+makes the design honestly "gnomon-adjustable" (matching the real
+reference product) — changing `latitude` recomputes every tube's aim
+correctly, the same "no magic numbers" rule this skill already applies
+to physical dimensions, just applied to physics-derived values:
+
+```openscad
+function solar_altitude(hour) = asin(cos(latitude) * cos(15 * (hour - 12)));
+function sun_dir(hour) = let(alt = solar_altitude(hour), az = solar_azimuth(hour))
+    [cos(alt) * sin(az), cos(alt) * cos(az), sin(alt)];
+```
+
+**Aim each tube via `hull()` of two points along the computed direction
+vector — never `rotate()` to point something at an arbitrary 3D
+direction.** This generalizes Technique 9's "hull of two Y-depths" trick
+from a fixed axis to a truly arbitrary direction, and sidesteps rotation-
+sign risk completely for what would otherwise be one of the hardest
+rotate() calls to get right in this entire skill (aiming at a computed,
+non-axis-aligned vector):
+
+```openscad
+module sun_tube(px, py, dir, tube_r) {
+    p0 = [px, py, -2];
+    p1 = [px + dir.x*40, py + dir.y*40, -2 + dir.z*40];
+    hull() { translate(p0) sphere(r=tube_r); translate(p1) sphere(r=tube_r); }
+}
+```
+
+**A real coordinate bug caught only by checking the render, not the
+math:** `cuboid(anchor=BOTTOM)` already centers X/Y at the origin — adding
+an extra `translate([-w/2, -d/2, 0])` on top of that double-shifted the
+whole plate, so the digit holes (correctly positioned near world origin)
+ended up looking like they were punched near the plate's edge instead of
+centered. The math for WHERE to put the holes was right the whole time;
+the bug was in the unrelated plate-positioning code. Lesson: when a
+render looks wrong, check the simple placement/anchor code before
+re-deriving the complex math again.
+
+**A render showing "every hour's holes overlaid at once" looks like a
+scattered mess and is NOT a bug** — a static render necessarily shows all
+physically-drilled holes for all 7 hours simultaneously (since a render
+has no sun to selectively illuminate just one hour's set), so of course
+it looks like nothing readable. **The correct verification is to isolate
+ONE hour's active subset** (comment out/parametrize to render just that
+hour's tubes) and confirm THAT reads as a clean digit — matching this
+skill's repeated lesson (Technique 7, 9, 13) that the right verification
+method depends on what's actually being checked, not on trusting whatever
+the default full render happens to show.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
