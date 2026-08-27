@@ -2008,6 +2008,121 @@ every new physical product design in this pipeline (SS-Series, 3D-print
 functional pieces, decorative pieces), the same way AI-disclosure text is
 a standing requirement on every digital listing.
 
+## Technique 25 — A print-in-place hinge+latch box is a genuinely harder verification problem than a bare hinge, and CGAL's Volumes count fails at it repeatedly (2026-08-27)
+
+Building a cable clip (base + hinge + lid + latch — a real functional part,
+not decorative) surfaced four distinct, real bugs, three of them never
+caught by CGAL's own `Simple: yes` / `Volumes: N` summary at all. This
+session's own STL connected-component union-find (already this skill's
+established practice from Technique 20) caught the first three; the
+fourth needed a stronger test still, described below. Worth internalizing
+as a set, since they compound on any print-in-place hinge+latch design,
+not just this one part.
+
+**Bug 1 — a latch's intentional interference fit is fatal in the CLOSED
+export pose, if base and lid share one `union()`.** A friction latch
+(Technique 17's bump/dimple pattern: a sphere fused onto one leaf,
+slightly larger than a matching sphere subtracted from the other) needs a
+few tenths of a millimeter of real geometric overlap to create the
+click/friction — correct for a real, physically-closed, hand-assembled
+pair of parts, but fatal for a **print-in-place** single-file export: if
+both leaves are exported via one top-level `union()` in the CLOSED pose,
+that intentional overlap becomes a permanent structural weld, exactly
+like the notch/knuckle bugs below but from the opposite direction (an
+overlap that's supposed to exist, not one that was supposed to be
+avoided). **The fix, which is also the standard real-world convention for
+this exact part class: export the assembly in the OPEN pose.** Rotate
+only the lid's entire module about the physical hinge axis (translate the
+axis point to origin, `rotate([angle,0,0])` for an axis running along
+world X, translate back) before unioning with the fixed base. This is
+mechanically sound regardless of `open_angle` for a completely different
+reason than "it just avoids the latch": any point that sits exactly ON
+the rotation axis is invariant under rotation, and a barrel hinge's
+sleeve bore centers are deliberately placed exactly on that axis (Technique
+22's own construction) — so rotating the lid never misaligns the hinge
+itself, only moves the rest of the leaf's material away from the base.
+
+**Bug 2 — the sleeve's bore cutter must span the SAME (non-centered)
+range as the outer knuckle, not a centered range of the same nominal
+height.** This is a direct bug in this skill's OWN Technique 22 worked
+example, copied faithfully and only caught here: the outer knuckle is
+built as `cylinder(r=knuckle_r, h=slot_len)`, spanning local z:[0,
+slot_len] — NOT centered. The bore cutter in that same example uses
+`center=true`, which spans z:[-slot_len/2, +slot_len/2] — overlapping the
+outer's real [0, slot_len] range for only HALF its length. The far half
+of the sleeve is left solid, silently blocking the rod. Confirmed by
+directly comparing the outer cylinder's declared range against the bore
+cutter's actual range as plain numbers (the same discipline Technique 19
+already established: don't trust an existing pattern's own comment about
+what it does — check the literal ranges). Fix: translate the (still
+non-centered) bore cutter to `[-margin, slot_len+margin]` so it fully
+spans the outer knuckle with real margin on both ends, matching the exact
+non-centered convention the outer cylinder already uses.
+
+**Bug 3 — a box that spans all the way to the hinge axis is invariant
+there under ANY rotation, so "cut a clearance notch per slot" is not
+sufficient outside the slot band.** A first fix used clearance notches
+(cut circular voids into each leaf's box specifically at the OTHER leaf's
+knuckle slots) while leaving the box's plain edge running flush to
+`y=hinge_y` everywhere else. This looked completely correct in every
+render and passed `Simple: yes / Volumes: 2` — but the two leaves' boxes
+are `total_len` wide while the actual knuckle band (`hinge_len`) is
+narrower, leaving margin at both ends where NEITHER leaf has any notch at
+all, and the box still reaches the exact axis line there. Since
+`y=hinge_y, z=hinge_z` (for any x) is the rotation axis itself, that
+specific line is invariant under `rotate()` regardless of angle — so
+base's and lid's edges stay permanently coincident along that whole
+margin, for every possible `open_angle`, not just the closed pose. The
+"prints already assembled, opens fine" intuition doesn't help here
+because the defect isn't in the hinge mechanism at all — it's in the
+plain box shape surrounding it. **Never let a leaf's flat, otherwise-
+uninvolved geometry reach all the way to a rotation axis it doesn't need
+to touch, even outside the region where the actual mechanism lives.**
+
+**Bug 4 (the subtle one) — a UNIFORM inset that clears the OTHER leaf's
+knuckle radius also clears your OWN leaf's matching knuckle, since
+they're geometrically identical (same radius, same axis).** The fix for
+Bug 3 was to inset both boxes uniformly away from the axis by enough to
+clear a full knuckle radius (`knuckle_r + clearance`) everywhere. This
+correctly stops the boxes from ever touching the OTHER leaf's knuckle —
+but a collar and a sleeve share the exact same outer radius and axis by
+design (that's what makes them interlock at all), so the same inset that
+protects against the other leaf's knuckle ALSO leaves a gap between the
+box and this leaf's OWN matching knuckle, which no longer reaches the
+box at all. **Verification method that actually caught this, and is now
+the recommended check for any print-in-place mechanism going forward:**
+render `intersection() { base_part(); <the same transform used in the
+real assembly, applied to> lid_part(); }` directly. A correct design
+renders this to **"Current top level object is empty"** — any non-empty
+result is definitive, exact proof of real geometric overlap, and openscad
+prints its actual vertex coordinates so the offending feature can be
+identified directly (in this case, the overlap vertices' radius from the
+hinge axis matched `knuckle_r` exactly, immediately pointing at the
+inset-vs-knuckle mismatch rather than requiring more guessing). This is
+stronger than the STL-vertex-distance heuristic used earlier in the same
+session, which produced a **false negative** — comparing vertices from
+two SEPARATELY-rendered STLs can never see an intersection surface that
+only gets computed by CGAL when the two solids are actually unioned
+together in one pass; a real overlap between two coarse ($fn=24) curved
+surfaces can exist well inside the gap between either mesh's own nearest
+vertices. **`intersection()` is a direct, authoritative overlap test;
+comparing separately-exported vertex sets is not — use `intersection()`
+first for any two parts that are supposed to stay separate.**
+
+**The actual fix, which generalizes to any interlocking two-part
+mechanism:** inset BOTH leaves' boxes far enough to clear the FULL
+knuckle radius of either type (not favoring "your own" radius), then add
+a small explicit "root bridge" — a plain block, NOT part of the box
+itself — at ONLY that leaf's own matching slot positions, spanning from
+the axis back out past the box's inset edge with real overlap margin.
+This root bridge needs its OWN bore cut for the rod, with the identical
+margin-based non-centered pattern from Bug 2 — a bridge placed at a
+SLEEVE slot must let the (base-owned, continuous) rod pass through it
+untouched, exactly like the sleeve itself does; forgetting this bore on
+the bridge (even after fixing it on the sleeve) reintroduces the same
+class of collision one level up, and this too only showed up under the
+`intersection()` test, not under any render or the Volumes count.
+
 ## Reference ideas from Scott (2026-08-27) — real Bambu Handy screen recordings
 
 Two real designs Scott found and shared (screen recordings of the Bambu
