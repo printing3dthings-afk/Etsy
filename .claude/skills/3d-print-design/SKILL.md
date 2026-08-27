@@ -2269,6 +2269,92 @@ mechanism risk; it does not remove the need to verify the NEW plumbing
 around it with the same rigor (`intersection()` tests, connected-
 component counts, recess-floor isolation) applied to a brand-new design.
 
+## Technique 27 — Mochi Fox desk organizer (character piece + functional cavities)
+
+2026-08-27, built as a deliberate "best effort" flagship piece: a seated
+chibi fox (hulled-sphere body/head/snout, tapered hull-chain tail, cone
+ears) with a pen cup and shallow dish cut into its back, fitted brand
+mark on the base. Four real findings, one of them a mid-build feature
+cut, not a bug fix.
+
+**Finding 1 — a font referenced by name for months was never a real
+font file.** `fonts/DancingScript-Bold.ttf` is a saved GitHub HTML page
+(`file` reports "HTML document", not TrueType) and was never registered
+with fontconfig regardless (`fc-list | grep -i dancing` returns nothing).
+Every prior brand mark in this shop's OpenSCAD history requesting
+`font="Dancing Script:style=Bold"` silently fell back to OpenSCAD's
+default font — `text()` never errors on an unresolvable font name, it
+just substitutes, so this went undetected across every design built so
+far. **Verify a font actually resolves (`file` on the path, `fc-scan`
+after registering) before trusting any `text()` render — a font name
+that "looks right" in the source is not evidence it rendered.**
+`assets/fonts/Caveat-Bold.ttf` is a real TTF; copying it to `~/.fonts`
+and running `fc-cache -f ~/.fonts` makes `font="Caveat:style=Bold"`
+resolve cleanly, confirmed via `fc-scan` before use.
+
+**Finding 2 — an analytic surface-height function is far more reliable
+than guessing a Z coordinate, but only for the ONE primitive it actually
+models.** `body_top_z(x,y)` solves the body ellipsoid's own top surface
+in closed form and made the pen-cup/dish cavity placement trivially
+correct on the first real attempt (previous designs guessed absolute Z
+values by eye and got them wrong — see Technique 25/26). But the same
+function is blind to anything unioned on TOP of that ellipsoid: a
+belly-hatch mount placed at a point the formula called "safe" still
+collided with the head and ears, because `body_top_z()` only ever knew
+about `body_shape()`, never `head_shape()`/`ear()`. **An analytic
+placement helper is only as complete as the geometry it models — verify
+new placements against `intersection()` with the ACTUAL neighboring
+features, not just the one primitive a formula covers.** Also: a first
+pen-cup draft used `pen_r=17, pen_depth=44` on a body whose own radius
+is 30 — a cutter comparable to the whole body's diameter, confirmed
+blowing out the top and toward the head in a real back-top render before
+being scaled down to a real pen-cup proportion (`pen_r=9, depth=20`).
+
+**Finding 3 — a proven mechanism can pass every interference test and
+still be the wrong call, and only a render catches that.** A small
+bayonet-lock stash hatch (reusing bayonet_jar.scad's exact mechanism)
+was built into this fox's belly/hip and went through three real,
+sequential bugs before it mechanically worked: (a) the lock slots/pins
+were placed at an inner bore radius while the door's skirt was sized to
+clear that same inner number, instead of the boss's real OUTER radius —
+a large, unmissable overlap once tested, fixed by putting both
+consistently at `boss_r`; (b) the door's hollow "ring" section was only
+tall enough to cover the pin's travel distance, not to actually clear
+past the boss's own top face, so the door's solid cap started
+UNDERNEATH the boss — found by testing the boss+socket+door in total
+isolation (`intersection()` with nothing else in the scene) and reading
+off exactly which native-Z band was involved; (c) the chosen mount
+position, picked to be "safe" from an incomplete geometry model (see
+Finding 2), needed the boss pushed taller and taller (5mm proud → 16mm)
+to clear a persistent residual overlap that turned out to be the EAR,
+not the body surface. At proud=16 every mechanical test passed clean —
+and the hero render showed a tall spike poking out of the fox's
+shoulder, an obvious look-and-feel defect no interference test could
+ever flag, because "does it overlap" and "does it look right" are
+different questions. **The fix here wasn't a smaller bug fix — it was
+cutting the feature.** This body (~30mm radius) was already carrying a
+head, two ears, a tail, and two cavities; a systematic obstacle-clearance
+search (real Python distance checks against every existing feature, not
+eyeballing) came back with zero fully-clear positions large enough for
+the mechanism, and the "best available" spots all needed enough proud
+height to create the same visual problem. **Passing every mechanical
+check is necessary, not sufficient — render and actually look before
+calling a feature done, and be willing to drop a feature entirely when a
+crowded host shape can't fit it without compromising the silhouette,**
+rather than continuing to chase the interference test to zero on a
+position that was never going to look right.
+
+**Finding 4 — a CLI flag immediately followed by the input filename can
+silently swallow that filename as its own argument.** `openscad -o
+out.stl --render model.scad` fails with a bare usage dump — this
+OpenSCAD build's `--render` takes an optional argument, and with nothing
+else after it, `model.scad` gets consumed as `--render`'s value, leaving
+no positional file argument at all. Every working `--render` call this
+session had `--camera=...` or another flag after it, which never
+triggered this. Fix: `--render=true` explicitly, or put `--render`
+somewhere `--camera`/`--imgsize` follows it, not immediately before the
+filename.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
