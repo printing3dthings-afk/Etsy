@@ -1649,6 +1649,67 @@ checks at the specific eye and base coordinates for a result that's
 verified two different ways, not one.
 
 
+## Technique 20 — No live visual browsing of MakerWorld/Printables; the real research workflow (2026-08-27)
+
+Scott asked directly whether past "MakerWorld research" in this skill was
+visual (actually looking at the site) or code-driven (text search only).
+Honest answer, confirmed by testing live rather than assuming: **every
+prior MakerWorld/Printables reference in this skill came from `WebSearch`
+text snippets — titles, descriptions, like/download counts — never an
+actual screenshot of the site.** Tested whether that could be fixed with
+a real browser in this environment and found two separate, real blockers,
+worth recording so a future session doesn't re-discover them the hard way:
+
+1. **MakerWorld and Printables return HTTP 403 through this environment's
+   outbound proxy** — a genuine organizational policy denial (confirmed
+   via direct `curl` through the proxy, not a tool bug). Per this
+   environment's own hard rule, a 403/407 policy denial is reported, not
+   retried or routed around.
+2. **Independent of that, Playwright/Chromium in this container currently
+   cannot complete ANY proxied HTTPS navigation** — even a plain,
+   fully-permitted test page (`example.com`, confirmed reachable via
+   `curl` through the same proxy at the same moment) fails with
+   `net::ERR_CONNECTION_RESET` from the browser specifically. This is a
+   browser/proxy integration gap in this container, not a per-site block —
+   don't waste time trying more sites or more Chromium flags (`--no-sandbox`,
+   `--disable-quic`, `ignore_https_errors` were all tried) before checking
+   whether this has been fixed at the environment level first.
+
+**The agreed real workflow going forward (mixed, per Scott's explicit
+choice 2026-08-27), given visual site browsing isn't available:**
+
+- **Default: propose from text research, then build.** Use `WebSearch`
+  for market/popularity signals (Etsy bestseller trends, MakerWorld/
+  Printables/Thingiverse search snippets, r/functionalprint discussion) —
+  same as Technique 8's "market research before design research," just
+  more explicit about citing what was actually found vs. inferred. Present
+  concrete named candidates with real evidence before building, not vague
+  categories.
+- **Scott supplies real reference photos when a design needs visual
+  grounding or isn't landing right** — proven highly effective twice this
+  session (the pumpkin's face proportions, the ghost's fold texture and
+  hem shape) specifically BECAUSE Scott sent real photos and this skill's
+  existing discipline (Technique 13/19: compare directly against the
+  photo, verify numerically, don't just trust a render) already handles
+  that case well. Ask for photos proactively when a design category is
+  visually unfamiliar or a first attempt doesn't match expectations,
+  rather than guessing repeatedly.
+- **For genuinely mechanical/functional designs** (hinges, latches,
+  adjustable joints, snap-fits, gears), load `data/knowledge_base/
+  3d_printing_expertise.md` (DfAM rules, real FDM tolerances, slicer
+  settings) and `.claude/skills/3d-print-design/ENGINEERING_REFERENCE.md`
+  (BOSL2 mechanical/organic tooling) alongside this skill — those are
+  real, sourced, text-researched knowledge (same "no visual browsing"
+  caveat applies to how they were built) that directly inform whether a
+  mechanism will actually function once printed, not just whether the
+  mesh is valid.
+- **Always finish with a real visual comparison pass before calling a
+  design done** — against Scott's reference photos when supplied, or at
+  minimum an honest self-critique against what the text research actually
+  described, using this skill's own render+numeric-verification
+  discipline (Technique 7, 9, 13) as the check that replaces "browse and
+  compare" when browsing isn't available.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
