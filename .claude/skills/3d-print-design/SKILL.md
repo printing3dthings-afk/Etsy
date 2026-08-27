@@ -1871,6 +1871,69 @@ skill's repeated lesson (Technique 7, 9, 13) that the right verification
 method depends on what's actually being checked, not on trusting whatever
 the default full render happens to show.
 
+## Standing rule — every finished physical design gets an OnBrandCraftz maker's mark, as a negative (engraved) cut (2026-08-27)
+
+Scott's explicit, durable instruction: don't forget to add the OnBrandCraftz
+mark, and it must be a NEGATIVE part (an engraved/recessed cut into the
+model), never a raised/positive add-on. This reuses the exact
+confirmed-correct technique from Technique 4 (verified on a real physical
+print) — don't re-derive the mirror axis, don't invent a new placement
+convention:
+
+```openscad
+logo_depth = 0.7;
+module brand_mark() {
+    translate([x, y, -0.5])              // pick a flat face, well clear of
+        linear_extrude(height = logo_depth + 0.5)   // any functional cut/cavity
+            mirror([0, 1, 0])             // REQUIRED for this exact pattern
+                text("OnBrandCraftz", size = 5-7, font = "Dancing Script:style=Bold",
+                     halign = "center", valign = "center");
+}
+// subtract brand_mark() inside the model's own top-level difference()
+```
+
+Checklist before calling any product done:
+- [ ] Placed on a flat, hidden-in-normal-use face (a bottom/underside is
+      ideal — matches the phone stand and vase precedent) — never on a
+      visible/functional surface
+- [ ] Positioned with real clearance from every functional cut, cavity, or
+      mechanism in the design (verify numerically, not by eye — a mark
+      that overlaps a hex cell, a hinge knuckle, or a sun-tube's entry
+      point is a real defect, not just cosmetic)
+- [ ] Cutter Z-range genuinely dips below the surface (`translate` z<0)
+      — the exact off-by-a-hair mistake documented in Technique 4 (a
+      cutter touching but not crossing the surface engraves nothing,
+      renders clean, reports no error) is easy to reintroduce by copying
+      this pattern carelessly
+- [ ] Remaining material above/behind the mark is still comfortably solid
+      (engrave depth well under the local wall/floor thickness)
+
+This is a standing requirement going forward, not a one-off — apply it to
+every new physical product design in this pipeline (SS-Series, 3D-print
+functional pieces, decorative pieces), the same way AI-disclosure text is
+a standing requirement on every digital listing.
+
+## Reference ideas from Scott (2026-08-27) — real Bambu Handy screen recordings
+
+Two real designs Scott found and shared (screen recordings of the Bambu
+Handy app's 3D Preview, not text descriptions) — good concrete references
+for future builds in the "unique"/"fun" categories:
+
+1. **A pleated/fluted folding fan with a print-in-place hinge along one
+   edge and a snowflake motif engraved on the fluted face.** The hinge is
+   a row of interleaved round knuckles (same family as Technique 22's
+   barrel hinge, likely simpler — a single continuous knuckle strip rather
+   than a stepped-shaft+sleeve pair) connecting a fan of fluted/pleated
+   panels that spread open. Seasonal (winter/snowflake) decorative angle.
+2. **A compact ribbed 3-compartment desk organizer/caddy** with horizontal
+   corrugated ridges running around the full exterior (a texture family
+   related to Technique 5's flute/rib technique, just wrapped around a
+   multi-compartment holder body instead of a single vessel).
+
+Not yet built — recorded here as concrete design references (the same
+role reference photos play for the pumpkin/ghost) for when either
+category comes up again.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
