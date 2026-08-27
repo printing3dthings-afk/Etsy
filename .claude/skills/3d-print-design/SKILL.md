@@ -2002,6 +2002,31 @@ Checklist before calling any product done:
       this pattern carelessly
 - [ ] Remaining material above/behind the mark is still comfortably solid
       (engrave depth well under the local wall/floor thickness)
+- [ ] **`size` is fitted to THIS model's actual available flat area, not
+      copied verbatim from a differently-scaled model or from the "5-7"
+      example above** (Scott's real feedback, 2026-08-27: the mark on a
+      46mm-long cable clip at size=4.5 measured 35.47mm wide — 77% of the
+      part's entire length, dominating a face meant to hold a small
+      hidden mark). Compute the real footprint from the model's actual
+      STL, the same z-range vertex-extraction technique used throughout
+      this skill (filter exported vertices to the engraving's z-range and
+      the mark's approximate x/y placement, then take max-min), and
+      target a width comfortably under half of the available flat run —
+      roughly 35-45% is a reasonable default, tighter for a small part.
+      **Don't trust a linear projection from a single measured data
+      point either** — re-measure after applying a new `size`, since a
+      first measurement can itself be an artifact of how it was filtered/
+      bounded (confirmed on the cable clip: a naive projection from one
+      real 35.47mm-at-size-4.5 measurement predicted ~20mm at size=2.5;
+      the real re-measured value was 27.91mm — two DIFFERENT smaller
+      sizes then agreed with each other exactly, confirming the original
+      widely-scaled measurement was the unreliable one, not the physics).
+      This generalizes beyond just the maker's mark: **any parametric
+      feature sized by a formula or a fixed constant should be verified
+      against the model's own real dimensions after rendering, not
+      assumed correct because the number "looks reasonable" or matches
+      an earlier model** — a fixed absolute size is only ever right by
+      coincidence once the model's own scale changes.
 
 This is a standing requirement going forward, not a one-off — apply it to
 every new physical product design in this pipeline (SS-Series, 3D-print

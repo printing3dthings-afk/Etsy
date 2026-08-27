@@ -65,7 +65,24 @@ latch_bump_r  = 2.4;                     // fused to base, protrudes above the s
 latch_dimple_r = 2.2;                    // cut into lid, slightly smaller -> friction interference
 
 // ---- Maker's mark (negative/engraved, per standing rule) ----
+// Sized to the model, not copied verbatim from the skill's own example.
+// "OnBrandCraftz" at the standing rule's example size=4.5 in Dancing
+// Script:style=Bold measured a real 35.47mm wide on THIS clip's STL
+// (via the same z-range vertex extraction used elsewhere in this skill)
+// -- 77% of the clip's own 46mm length, confirmed too large by direct
+// visual review. That single measurement turned out to be a misleading
+// basis for scaling down, though: a naive linear projection from it
+// (assuming ~7.88mm width per unit size) predicted ~20mm at size=2.5, but
+// re-measuring at size=2.5 gave 27.91mm -- a different ratio entirely.
+// Two clean re-measurements (size=1.4 -> 15.63mm, size=2.5 -> 27.91mm)
+// agree with EACH OTHER exactly (11.16mm/unit both times), so the size=4.5
+// figure was almost certainly clipped by the measurement's own x-range
+// filter at that larger size, not a real non-linearity in the font. The
+// actionable lesson: verify a projected/assumed scaling ratio with a
+// SECOND real measurement before trusting it -- one data point can be an
+// artifact of how it was measured, not the model.
 logo_depth = 0.7;
+logo_size  = 1.8;   // -> 20.09mm wide (43.7% of total_len), verified by re-measuring after setting it
 
 // ============================================================
 // Hinge primitives
@@ -166,7 +183,7 @@ module brand_mark() {
     translate([0, -3, -0.5])
         linear_extrude(height = logo_depth + 0.5)
             mirror([0, 1, 0])
-                text("OnBrandCraftz", size = 4.5, font = "Dancing Script:style=Bold",
+                text("OnBrandCraftz", size = logo_size, font = "Dancing Script:style=Bold",
                      halign = "center", valign = "center");
 }
 
