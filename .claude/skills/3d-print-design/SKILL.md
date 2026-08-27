@@ -2105,6 +2105,55 @@ a clean structural check is not a substitute for actually looking at the
 rendered part any more than a clean render is a substitute for the
 structural check.
 
+## Technique 26 — Validate a multi-feature LAYOUT in Python before writing the .scad; a floating part's capture surface must never start exactly at a cavity boundary (2026-08-27)
+
+Expanding the fidget card from 3 mechanisms to 8 (2 roller wheels, a
+slide switch, 3 press buttons, a rotating dial, and a joystick — all on
+one card body, per Scott's "not nearly enough on it" feedback) surfaced
+one process fix and confirmed one bug pattern as a recurring class, not
+a one-off.
+
+**Process fix: write the feature layout as a plain Python list of
+bounding boxes and check pairwise clearance BEFORE writing a single line
+of the .scad.** Technique 25 ended with the keychain-hole/button-bore
+overlap being caught only by eye, after the fact, in a rendered PNG.
+Placing 8 features on one card the same ad-hoc way (pick a coordinate,
+move to the next) would very likely repeat that mistake at this
+density. Instead: list every feature as `(name, cx, cy, half_width_x,
+half_width_y)`, run a simple O(n²) overlap check plus a card-bounds
+check (excluding edge-mounted features like a roller wheel, which are
+SUPPOSED to extend past the card boundary), fix any reported conflict,
+and only then transcribe the validated coordinates into the actual
+model. This turns "did I remember to leave enough room" from a hope
+into a checked fact, for the same reason unit-testing a function beats
+eyeballing it — and it is dramatically cheaper than a full render +
+structural-check + visual-check cycle for something a 20-line script
+can catch in under a second.
+
+**Confirmed pattern, third occurrence: a captured floating part's own
+surface must never start at EXACTLY the same Z (or any coordinate) as
+the cavity's own boundary.** The rotating dial and the joystick both
+followed the exact same design idea — a flanged disc resting "on the
+cavity floor" with clearance only at the top, mirroring how a real
+lazy-susan or grommet sits — and both were built with `flange_z =
+cavity_floor` (the flange's bottom face exactly coincident with the
+card's own floor Z). Both fused solidly into the card body on first
+render, confirmed by the connected-component check (not a ray-cast
+coin-flip this time — a full, unambiguous fusion, matching the earlier
+slide-switch floor bug exactly). This is now the THIRD time in two
+sessions this exact mistake has appeared (a_shaft/b_sleeve's rod-vs-
+sleeve boundary in Technique 24, the slide switch's floor in Technique
+25, now the dial and joystick's floor here) — **treat "a moving part's
+boundary touches a cavity's boundary at an exact shared coordinate" as
+a known, recurring defect class, not a one-off surprise, and give every
+captured part a real, nonzero gap on EVERY side of its cavity as a
+matter of course, not just the sides that seemed to need it.** The fix
+used here: instead of pinning the flange to the floor with clearance
+only at the top, split the total cavity height into `flange_gap` (equal
+margin at both floor and shoulder) plus `flange_h` (`cavity_height -
+2*flange_gap`) — the part floats centered in its cavity by construction,
+so there is no boundary left to accidentally coincide with.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
