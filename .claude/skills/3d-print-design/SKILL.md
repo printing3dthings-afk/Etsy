@@ -1871,6 +1871,101 @@ skill's repeated lesson (Technique 7, 9, 13) that the right verification
 method depends on what's actually being checked, not on trusting whatever
 the default full render happens to show.
 
+## Technique 24 — Sundial finished: verified solar-azimuth formula, and multi-hour cell layout with numeric collision checking (2026-08-27)
+
+Technique 23 documented the sundial's core physics/aiming approach but the
+design itself was never finished/saved before that session ended (a real
+instance of the "save as you go" lesson below — the work existed only in
+that session's memory). Finished here: `openscad_models/sundial.scad` /
+`.stl` — a 248×50×6mm plate, 7 side-by-side cells (hours 9,10,11,12,1,2,3
+at latitude 35), each cell a 3×5-dot-matrix digit made of parallel
+`sun_tube()` through-holes all aimed at that hour's real sun direction.
+
+**The exact azimuth formula, verified numerically against known sun
+positions (not just algebra) before trusting it in OpenSCAD:**
+
+```openscad
+function solar_altitude(lat, hour) = asin(cos(lat) * cos(15 * (hour - 12)));
+function solar_azimuth(lat, hour) =
+    let(H = 15 * (hour - 12), sin_az = -sin(H), cos_az = -sin(lat) * cos(H))
+    atan2(sin_az, cos_az);
+function sun_dir(lat, hour) =
+    let(alt = solar_altitude(lat, hour), az = solar_azimuth(lat, hour))
+    [cos(alt) * sin(az), cos(alt) * cos(az), sin(alt)];
+```
+
+Verified in Python first, against real known sun positions at latitude 35:
+noon → altitude 55° (=90−lat, correct), azimuth 180° (due south, correct);
+6am/6pm → altitude ≈0°, azimuth 90°/270° (due east/west, correct). This is
+the actual fix for the "azimuth 180-degree bug" the prior session found —
+a naive `cos(az) = ...` formula without the `atan2` two-argument form
+flips sign ambiguously and puts the sun on the wrong side of the sky at
+exactly the kind of moment (which quadrant) that's easy to get backwards
+and hard to notice from a render. **Verify solar/astronomical formulas
+against known reference positions numerically before trusting them in
+geometry** — the same "check the math independently of the render"
+discipline as Technique 23, just applied one level earlier (verify the
+physics function itself, not just its geometric consequence).
+
+**Multi-cell layout: lay hour-cells out side-by-side in SEPARATE
+non-overlapping regions, never let two different hours' tube clusters
+share a footprint.** Each hour's tubes are canted at a different angle
+(different sun direction), so even though all cells sit on one flat
+plate, a shallow-angle hour's tubes drift substantially in X/Y over the
+plate's 6mm thickness — real measured drift at this design's shallowest
+hours (9am/3pm, ~35° altitude) was **7.3mm horizontal** over just 6mm of
+material. Putting every hour in its own dedicated cell (34mm wide here)
+with real margin sidesteps the risk of one hour's canted tube drifting
+into a neighboring hour's cell and cutting through its dots entirely —
+confirmed via numeric check (computing each tube's real x/y at both the
+top and bottom face, not just its nominal drill-center position) that
+every hour keeps 3.7mm+ clearance to its neighbors' footprints even in
+the worst case.
+
+**A dot-matrix digit design should be visually verified in true top-down
+orthographic projection, isolated to one hour, before trusting the full
+assembly's numeric checks.** Rendering all 7 hours' tubes at once (the
+only thing a default render shows) looks like scattered noise — expected
+per Technique 23, not a bug. But before spending effort on a full
+numeric verification pass, a cheap `--camera=0,0,0,0,0,0,300
+--projection=ortho` top-down render of ONE isolated hour's cell
+confirmed the digit genuinely reads as "12" (or whichever hour) — catching
+a font/layout bug at this stage is far cheaper than finding it only after
+a full collision/through-hole verification pass on the whole assembly.
+
+## Standing rule — save real, finished work immediately, not at the end of a session (2026-08-27)
+
+A previous attempt at this exact sundial design was lost — built,
+partially verified, discussed in detail — because nothing was committed
+to git or saved to Frank's volume before that session's container ended.
+The design existed only in that session's own memory and conversation
+history, both of which are gone once the container cycles. This cost
+real, duplicated effort: the whole design had to be rebuilt from scratch
+using only the technique documentation that happened to survive in this
+skill file, and even that reconstruction risked colliding with a
+DIFFERENT concurrent session independently rebuilding the same design at
+the same time (this genuinely happened — caught only by a screenshot
+showing the other session's live progress).
+
+**The fix, now a standing rule for every physical design in this
+pipeline:** the moment a design is rendered, verified (numerically, not
+just visually), and confirmed correct, save it — `git add`/`commit`/
+`push` for the `.scad` source and skill documentation, plus
+`POST /api/files/upload` (verified by re-downloading and comparing MD5)
+for the `.stl`/`.scad` on Frank's volume — before moving on to the next
+piece of work, and regardless of whether the overall task or session
+feels "done." Do not batch saves until a natural stopping point; there
+often isn't one, and the cost of losing verified work is much higher than
+the cost of committing slightly more often than strictly necessary.
+
+**Also check for concurrent work before starting, not just before
+finishing.** Multiple sessions can run against this same repo/branch at
+once. Before starting a nontrivial physical design, `git fetch` the real
+branch tip and check whether the thing about to be built already exists
+or is already in progress — a stale local checkout (this session was
+once ~30 commits behind `origin` without realizing it) can make finished
+work look like a gap that needs re-doing.
+
 ## Standing rule — every finished physical design gets an OnBrandCraftz maker's mark, as a negative (engraved) cut (2026-08-27)
 
 Scott's explicit, durable instruction: don't forget to add the OnBrandCraftz
