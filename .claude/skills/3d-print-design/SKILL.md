@@ -2191,6 +2191,84 @@ Not yet built — recorded here as concrete design references (the same
 role reference photos play for the pumpkin/ghost) for when either
 category comes up again.
 
+## Technique 26 — Chaining a proven hinge across multiple panels: axis remap, cuboid's silent X/Y centering, and rotate-direction sign errors compound fast (2026-08-27)
+
+Building an accordion-fold pleated fan (3 panels, 2 barrel hinges, chaining
+the cable clip's already-debugged hinge mechanism instead of inventing a
+new one) surfaced three more real bugs on top of everything already fixed
+for the cable clip and bayonet jar — worth internalizing together, since
+they compounded: fixing one revealed the next only once it was resolved.
+
+**Bug 1 — a coordinate double-offset when reusing a parameterized hinge
+helper across multiple axis positions.** `hinge_root_bridges(hx, ...,
+x_lo, x_hi, ...)` wrapped everything in `translate([hx,0,z0])` internally,
+but the CALLER passed `x_lo`/`x_hi` as if already-absolute world
+coordinates (e.g. `hinge_x[0] - knuckle_r - 1`). The module then added
+`hx` a second time, placing every bridge roughly `hx` millimeters away
+from where it belonged (confirmed directly: bridges intended near x=45
+and x=90 landed at x=175-184 — hx added twice, not a rounding error).
+**Fix: make helper parameters consistently RELATIVE to the position the
+module itself already translates by** (matching how `hinge_collars()`/
+`hinge_sleeves()` in the same file only ever used relative `0` offsets
+internally, which is exactly why THEY didn't have this bug and the newer
+bridge helper did) — collapsed to a plain `is_left` boolean with two
+fixed relative offsets, removing the chance of passing an
+already-absolute value by mistake a second time.
+
+**Bug 2 — `cuboid(..., anchor=BOTTOM)` only anchors the axis you name;
+every other axis stays centered, silently.** `panel_box(n)` computed an
+intended EDGE position (`panel_x0(n)`, `panel_y_lo(n)`) and passed it
+straight into `translate()` before a `cuboid(..., anchor=BOTTOM)` —
+`anchor=BOTTOM` only pins Z to start at 0; X and Y remain centered on the
+cuboid's own local origin regardless. Every panel ended up shifted by
+HALF its own width/thickness from where it belonged, causing each panel
+to overlap roughly half of its neighbor's intended space. This produced
+spectacular, confusing symptoms (24 fragmented STL components, tiny
+floating debris cubes visible in the preview render) that looked like
+they might be several unrelated bugs — bisecting with `intersection()`
+down to "collar cylinder vs panel2's plain box" and computing panel2's
+REAL vs. intended Y-range from first principles is what actually
+resolved it, not guessing from the STL fragment list alone. **The
+general lesson, already true for the cable clip's `base_box()`/
+`lid_box()` (which got this right by explicitly computing `depth/2 -
+box_depth/2` as the center) but re-broken here on a new model: whenever
+a value is meant to be an EDGE of a `cuboid()`/similar primitive, check
+whether that primitive centers on the axes you're not explicitly
+anchoring, and convert edge-to-center explicitly** (`edge + size/2`) —
+never assume a translate lands where a box's corner should be just
+because that's what was intended.
+
+**Bug 3 — `rotate([90,0,0])` sends an extrusion in ONE specific
+direction; a second use of the identical rotate on a differently-facing
+surface needs the opposite sign, and this is NOT visually obvious from a
+render.** Two engraved marks on this same model both used
+`rotate([90,0,0])` after a `linear_extrude()`, matching Technique 4's
+established bottom-face pattern superficially — but one mark (the
+snowflake, cut from a panel's FAR/outer surface) worked correctly, while
+the other (the brand mark, cut from a panel's NEAR/inner surface, same Y
+side of the same panel type) engraved nothing at all: zero recess-floor
+vertices found anywhere, confirmed by the same numeric floor-isolation
+check this skill already established. The fix wasn't a mirror axis this
+time (Technique 4's territory) — it was the ROTATION SIGN, which needed
+to flip because the two marks approach their respective surfaces from
+opposite directions even though both cuts are described by the "same"
+`rotate([90,0,0])` pattern. **A rotate that's correct for cutting into
+one face is not automatically correct for cutting into a different,
+non-parallel or oppositely-approached face, even using the identical
+euler angles — verify each new engraving placement's OWN cut direction
+numerically (does the recess floor exist, at the expected depth, inside
+real material?) rather than assuming a working pattern transfers by
+visual analogy.**
+
+**The meta-lesson tying all three together:** reusing a proven mechanism
+(the hinge) was the right call and avoided re-deriving new mechanical
+risk from scratch — but the ADAPTATION work (remapping axes, wiring the
+helper into a new geometry, placing new decorative cuts) introduced
+three fresh, unrelated bugs of its own. "Reuse what's proven" reduces
+mechanism risk; it does not remove the need to verify the NEW plumbing
+around it with the same rigor (`intersection()` tests, connected-
+component counts, recess-floor isolation) applied to a brand-new design.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
