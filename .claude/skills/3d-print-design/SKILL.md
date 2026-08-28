@@ -2437,6 +2437,92 @@ only at the end. Debugging placement/connectivity bugs at full print
 resolution wastes minutes per iteration for zero additional diagnostic
 value — the geometry topology being tested doesn't depend on facet count.
 
+## Technique 29 — A proven mechanism (bayonet lock) reused deliberately, and a real mechanism taxonomy from 200-print visual research (2026-08-28)
+
+Building "Mushie" (a two-part mushroom night light around the real Bambu
+Lab LED Lamp Kit-001 hardware — a D59×H18mm disc puck), Scott asked for
+the cap to lock onto the stem "like the container you made," pointing
+directly at `openscad_models/bayonet_jar.scad`'s existing push-down-then-
+twist bayonet lock rather than asking for a new mechanism invented from
+scratch. **Reused, not reinvented:** `bayonet_jar.scad`'s `one_slot()` /
+`lid_pins()` pattern (a vertical entry cube + a `rotate_extrude(angle=)`
+horizontal lock channel on the stem side, matched by pin spheres on the
+cap positioned at `entry_angle + lock_angle` so the default render already
+shows the LOCKED pose) was copied onto the mushroom lamp's stem collar /
+cap skirt almost verbatim — same `n_pins`, same `angle_margin` margin
+past `lock_angle` to fully clear the pin's own angular footprint, same
+two-check verification (an `intersection()` against the solid stem must
+be EMPTY; an `intersection()` against the slot's own cut volume must be
+NON-EMPTY). **The one new risk a direct copy doesn't catch for free:**
+the new lock channel's Z-height and the collar_slots' default angular
+offsets can silently collide with an unrelated pre-existing cut on the
+same part (here, `cable_notch()`, added earlier in the same file for the
+LED puck's power cable) — caught by reasoning about both cuts' Z-ranges
+and angles BEFORE rendering (moved `cable_notch` lower, offset
+`collar_slots()` by +60° off the notch's own axis), not by a failed
+render. **Lesson: adapting a proven mechanism from elsewhere in this
+shop's own model library is the right default over inventing a new one**
+— but still re-derive every dimension against the NEW part's own other
+cuts, don't just paste coordinates from the source file.
+
+Scott also asked to keep deepening real design understanding via broader
+visual research (200 more real reference prints, following up on an
+earlier 100-print MakerWorld-adjacent benchmarking pass — see Technique
+21 above). That research (full log: session scratchpad
+`research200/notes.md`) surfaced a genuine, reusable **four-way printable
+mechanism taxonomy**, built from real photos across lamps, planters/
+vases, hinges/locks, kawaii figures, and phone stands — worth checking
+any new mechanical design idea against before modeling starts, the same
+way Mushie's own lock was scoped directly against `bayonet_jar.scad`:
+
+1. **Interleaved-knuckle hinge** (e.g. MyMiniFactory 3552) — two flat
+   plates end in alternating cylindrical knuckle segments around one
+   shared pivot axis. Moving surfaces touch **during printing itself**,
+   with a designed clearance gap — the print head can't assemble this
+   after the fact, so the gap has to be baked into one STL from the
+   start. One fixed rotation axis only.
+2. **Bayonet / multi-start-thread quick-lock** (this shop's own
+   `bayonet_jar.scad` and Mushie; real precedent in a 4-start "quarter-
+   turn" threaded storage-jar lid, MyMiniFactory 96731) — moving surfaces
+   only touch **after a manual assembly step**, so each part can be a
+   separate STL with zero print-time clearance concerns. Built for
+   infrequent, fast lock/unlock. Bayonet = simple `rotate_extrude(angle=)`
+   arc, no true helix math; multi-start thread = stronger, fully
+   circumferential engagement, but needs real helical sweep geometry.
+   Both beat a realistic FINE machine-screw thread on FDM, which is a
+   known pain point (confirmed twice independently — a threaded-jar
+   listing's own instructions say to "screw it back and forth to grind
+   the thread in").
+3. **Ball-chain print-in-place joint** (MyMiniFactory 471925, a kawaii
+   flexi octopus) — like the hinge, surfaces touch DURING printing, but
+   chains many small ball-and-socket joints in series (each joint a
+   small-diameter self-supporting dome, safe under normal FDM overhang
+   limits — the same "small radius = safe overhang" principle as this
+   skill's own dome/skirt work, just applied to a bead chain instead of
+   one big shell) for continuous multi-axis flex instead of one fixed
+   axis.
+4. **Coarse acme leadscrew** (MyMiniFactory 152514) — a thick, square-cut
+   screw thread (deliberately much coarser pitch than a real machine
+   screw) turned by hand for TRUE continuous, infinite-position
+   adjustment; the thread's own friction self-locks any chosen position
+   with no separate latch. The only one of the four giving continuous
+   rather than discrete positioning.
+
+Two more standalone reusable findings from the same research, outside the
+mechanism taxonomy: **a rolled/curled 2D profile (a scroll cross-section,
+extruded straight) is both structurally stronger than a flat sheet of the
+same thickness AND can supply its own foot/stand geometry for free** —
+the curl's own lowest point becomes the ground contact, no separate leg
+needed, and the curl's own tangent angle never overhangs unsafely (real
+example: MyMiniFactory 122279's phone stand). And **a diffusion strategy
+for a lit/lamp shell should be picked deliberately, not defaulted to
+discrete holes** — three real lamps used three different approaches for
+three different aesthetic goals: sparse discrete holes for localized
+accent spots (Mushie's own spore-pattern dots), a lithophane relief shell
+on a gently curved surface for a genuine photographic image, and a full
+Voronoi/organic lattice mesh (no large solid faces anywhere) for uniform
+ambient glow with zero hot spots.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
