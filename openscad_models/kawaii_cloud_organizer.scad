@@ -104,109 +104,72 @@ center_r = 23;
 center_z = lobe_z(center_r);
 function front_y(dx, dz) = sqrt(max(center_r * center_r - dx * dx - dz * dz, 1));
 
-// ---- Eyes + mouth as NEGATIVE (recessed) cuts (2026-08-28). Cheeks
-// removed per direct request. The recessed-cut technique on this curved
-// sphere was already proven correct earlier in this file's history (see
-// git log: near_pole_front_y finds the footprint's own closest-to-pole
-// point -- the true hardest point for a flat tool to clear -- and `poke`
-// guarantees it breaks through everywhere; verified single connected
-// component, no buried cuts) -- reusing that exact math rather than
-// re-deriving it.
-function clamp_toward_zero(v0, h) = (v0 > h) ? v0 - h : (v0 < -h) ? v0 + h : 0;
-function near_pole_front_y(dx0, dz0, hw, hh) =
-    front_y(clamp_toward_zero(dx0, hw), clamp_toward_zero(dz0, hh));
-poke = 0.35;   // guaranteed clearance past the true curved surface at the footprint's hardest point
+// ---- Eyes + mouth: recessed "painted" strokes on the centre lobe ----
+// Third face pass (2026-08-28). Scott's reference photo is a ceramic mug
+// character: a solid dark oval eye and a bold curved smile, both reading
+// as painted-on marks -- simple, soft, inviting.
+//
+// The previous pass tried to hit "soft" by making the cut SHALLOW and
+// WIDE (a 10.4 x 5.2mm ellipsoid dimple only 1.6mm deep) and that is
+// exactly why it failed: this is a single-colour print, so a mark can
+// only read by the shadow it casts, and a dish that wide relative to its
+// depth (a 6.5:1 width-to-depth ratio) catches light evenly across its
+// whole floor and washes out to a pale blank oval. Depth is not the
+// enemy of "soft" -- WIDTH-to-depth ratio is. A narrow recess shades
+// itself and reads dark; the smile already proved this on the same model
+// (a 4mm-wide, ~1.8mm-deep groove read crisply while the much larger
+// eyes right above it vanished).
+//
+// So the eyes are now narrow vertical ovals at a ~1.8:1 width-to-depth
+// ratio, built the same way the smile is -- a hull of two spheres, giving
+// a rounded bottom and a genuinely soft edge rather than the drilled-hole
+// look of the original flat-bottomed cylinder cut. Each cutter sphere is
+// pushed slightly INSIDE the true local surface rather than centred on
+// it: that makes the opening narrower than the sphere's own diameter, so
+// the recess walls meet the surface at a steeper angle and hold a real
+// shadow line, while the bottom stays round.
+center_r_local = center_r;
+function eye_pt(dx, dz) = [dx, front_y(dx, dz) - cut_sink, center_z + dz];
+cut_sink = 0.35;    // how far inside the true surface the cutter centres sit
 
-// Face pass (2026-08-28): Scott's direct feedback -- "the cloud needs
-// work on its face" -- the eyes were tiny (r=2.3 on a 23mm-radius lobe,
-// ~10% of the face) and the mouth was a barely-visible 5x2mm crescent.
-// This shop's own kawaii standard (CLAUDE.md's Chibi/Kawaii Character
-// Proportions) calls for OVERSIZED eyes (40-50% of face height) -- the
-// old size was nowhere close. Nearly doubled the eye radius and widened
-// the spacing to match (bigger circles need more room to stay clear of
-// each other), and rebuilt the mouth as a genuine curved smile using
-// this skill's own proven hull-chain-of-spheres technique (Technique 17
-// in .claude/skills/3d-print-design/SKILL.md) instead of a single
-// stretched, barely-curved crescent -- a chain of small hulled spheres
-// along a real quadratic curve reads as one continuous smiling stroke,
-// not a row of dots (that skill's own documented lesson from the exact
-// same mistake on a different face).
-// Second face pass (2026-08-28): Scott sent a real reference photo (a
-// ceramic mug character) -- the eyes there are drawn-on/painted-looking:
-// closed, gently curved almond shapes sitting lightly on the surface,
-// not deep round holes. The previous pass used a 3.6mm-deep circular
-// cut on a 23mm sphere -- genuinely deep, reading as gouged rather than
-// drawn.
-// First attempt at the shallow version used a flat-faced linear_extrude
-// tool (a scaled/tilted circle pushed straight in), sized via the same
-// near_pole worst-case clearance math the deep version used. Rendered
-// with visibly POINTED tips at the ellipse's long ends, not the
-// reference's soft rounded blob -- root cause, worked out by hand: a
-// flat cutting tool calibrated to just barely clear the surface at its
-// OWN worst point (the tips, farthest from the sphere's local peak)
-// necessarily cuts much deeper everywhere else (the center), so the
-// tips end up as a thin, shallow sliver -- reading as a sharp point --
-// while the center is a much deeper pocket. A flat tool and a curved
-// sphere surface don't share a depth profile.
-// Fix: cut with a SCALED SPHERE (ellipsoid) instead of a flat-faced
-// tool, centered exactly ON the true surface point rather than offset by
-// a worst-case clearance. An ellipsoid's own depth naturally tapers to
-// zero at its edges by construction -- the same reason the mouth's
-// sphere-chain already looked soft and pressed-in rather than gouged --
-// so there's no flat-vs-curved mismatch to create a pointed edge; it
-// reads as a shallow, evenly-rounded dimple everywhere on its boundary,
-// matching the reference's closed-eye shape without needing to copy its
-// wink specifically (not requested). No near-pole clearance math is
-// needed here either: an ellipsoid centered on the surface always pokes
-// into the solid from its center outward (the sphere is convex), so it
-// can never fail to cut at all -- only taper out more or less at its own
-// edges, which is the desired soft look, not a defect to guard against.
-// The tilt is applied to the shape BEFORE the rotate([90,0,0]) that
-// reorients it onto the sphere's face, not folded into a single combined
-// rotate() -- doing it as one rotate([90,0,tilt]) would mix the eye's
-// width axis into the cut's DEPTH axis instead of rotating it within the
-// visible face plane (the same lesson the first attempt already worked
-// out by hand, reused here).
-eye_r = 4.0; eye_w_scale = 1.3; eye_h_scale = 0.65; eye_depth = 1.6; eye_tilt = 8;
-eye_dx = 7.2; eye_dz = 2.5;
-eye_y_face = front_y(eye_dx, eye_dz);
-eye_z = center_z + eye_dz;
+// Spacing was set numerically, not by eye: at eye_dz=2.0 the eyes' own
+// bottoms sat 0.5mm BELOW the smile's corner tips and the two features
+// visibly merged in the render. These values give a real 1.7mm gap.
+eye_dx = 7.4; eye_dz = 3.5;
+eye_ball = 3.05;    // -> opening 6.1mm wide, 3.4mm deep = 1.8:1, shades properly
+eye_half = 1.5;     // half the capsule's length -> 9.1mm tall overall
+eye_tilt = 8;       // outer corner lifted slightly, mirrored -- reads friendlier than dead vertical
 module eye(mirror_x = false) {
-    x = mirror_x ? -eye_dx : eye_dx;
-    tilt = mirror_x ? -eye_tilt : eye_tilt;
-    translate([x, eye_y_face, eye_z])
-        rotate([90, 0, 0])
-            rotate([0, 0, tilt])
-                scale([eye_r * eye_w_scale, eye_r * eye_h_scale, eye_depth])
-                    sphere(r = 1, $fn = 32);
+    sx = mirror_x ? -1 : 1;
+    t = sx * eye_tilt;
+    hull() for (k = [-1, 1]) {
+        ddx = sx * eye_dx + k * eye_half * sin(t);
+        ddz = eye_dz + k * eye_half * cos(t);
+        translate(eye_pt(ddx, ddz)) sphere(r = eye_ball, $fn = 28);
+    }
 }
 
-// Smile: 5 points across a real quadratic curve (center lowest, corners
-// curling UP -- outer points get a HIGHER z than the center; this exact
-// sign is called out in Technique 17 because getting it backwards draws
-// a frown, not a smile, and it isn't obvious from the numbers alone).
-// mouth_r bumped 1.7->2.0 alongside the eye pass -- a slightly bolder
-// stroke, closer to the reference photo's thick painted-on smile.
-mouth_dz = -7; mouth_hw = 6.5; mouth_curl = 2.8; mouth_r = 2.0;
-// 9 points, not 5 -- each hull() segment is a straight chord of the true
-// curve, so too few points reads as an angular "V" instead of a smooth
-// "U" (confirmed by rendering the 5-point version first: a visible sharp
-// kink right at the center). More points shortens each chord until the
-// whole thing reads as one continuous rounded stroke.
+// Smile: a chain of hulled spheres along a real quadratic curve -- the
+// corners curl UP, so the outer points get a HIGHER z than the centre.
+// That sign is called out in Technique 17 because getting it backwards
+// draws a frown and it is not obvious from the numbers alone.
+// 9 points rather than 5: each hull() segment is a straight chord of the
+// true curve, so too few points reads as an angular "V" instead of a
+// smooth "U" (confirmed by rendering the 5-point version first -- a
+// visible kink right at the centre).
+mouth_dz = -7.5; mouth_hw = 6.3; mouth_curl = 2.6; mouth_ball = 2.15;
 mouth_pts_dx = [for (i = [0 : 8]) -mouth_hw + i * (2 * mouth_hw / 8)];
 function mouth_dz_at(dx) = mouth_dz + mouth_curl * (dx / mouth_hw) * (dx / mouth_hw);
 module mouth() {
     for (i = [0 : len(mouth_pts_dx) - 2]) {
         dx0 = mouth_pts_dx[i]; dx1 = mouth_pts_dx[i + 1];
-        dz0 = mouth_dz_at(dx0); dz1 = mouth_dz_at(dx1);
-        y0 = near_pole_front_y(dx0, dz0, mouth_r, mouth_r) + poke;
-        y1 = near_pole_front_y(dx1, dz1, mouth_r, mouth_r) + poke;
         hull() {
-            translate([dx0, y0, center_z + dz0]) sphere(r = mouth_r, $fn = 20);
-            translate([dx1, y1, center_z + dz1]) sphere(r = mouth_r, $fn = 20);
+            translate(eye_pt(dx0, mouth_dz_at(dx0))) sphere(r = mouth_ball, $fn = 24);
+            translate(eye_pt(dx1, mouth_dz_at(dx1))) sphere(r = mouth_ball, $fn = 24);
         }
     }
 }
+
 // ---- pen cup: straight-down cut into the center lobe's own top ----
 // Enlarged per direct request from the original 20mm-diameter cup to
 // 29mm -- still well clear of the lobe's own 46mm diameter (8mm of solid

@@ -2757,6 +2757,73 @@ raw 2D profile curve directly (`echo()` the control points, or plot the
 polygon flat with reference lines) rather than trying to eyeball a subtle
 curvature difference off a small 3D render.
 
+## Technique 33 — A crease at a SEAM cannot be fixed by tuning either surface; and never read an STL a render is still writing (2026-08-28)
+
+Direct follow-up to Technique 32, and the correction that finally landed.
+Twelve consecutive attempts at Mushie's cap treated "it doesn't look like
+a mushroom" as a curve-shape problem and re-tuned the flare profile —
+`t^2`, `t^4`, a quarter-ellipse, a linear/quadratic blend, each verified,
+rendered, and rejected. **All twelve were fixing the wrong object.** The
+cap was a spherical DOME `union()`ed onto a separately-profiled SKIRT.
+Two surfaces meeting at one radius with mismatched tangents leave a
+shoulder crease that is not present in *either* profile — it exists only
+at the seam between them — so no achievable change to either curve could
+ever have removed it.
+
+**The generalizable rule: when a visual defect sits exactly where two
+primitives meet, stop tuning the primitives.** Check first whether the
+feature can be ONE surface instead of two. Rebuilt as a single ellipsoid
+from apex to rim, the crease was gone on the first render, and the shape
+was better for a second reason — "nearly flat near the apex, tangent
+going vertical at the rim" (what the reference photos show, and what every
+power curve had been hand-fitting toward) is literally an ellipse's own
+behaviour, available for free by using one. The same file's stem had the
+identical disease (three stacked `cyl()` primitives) and got the identical
+fix. This is the same lesson as Technique 12's stacked-segment stem, but
+stronger: there, the seams were visible as seams; here the seam read as a
+*shape* problem and sent twelve rounds of work to the wrong place.
+
+**A mechanical constraint that distorts a visible surface belongs on a
+hidden part instead.** The bayonet pins had forced the cap's outer radius
+into a narrow band (Technique 32's postmortem). Moving the whole mechanism
+onto an internal cylindrical SLEEVE at a fixed radius — invisible from
+outside, printing from the same bed as the rest — retired that constraint
+permanently and let the outer surface be judged on looks alone. Bonus: the
+annulus between sleeve and shell is exactly where a real mushroom's gills
+go, so the decorative gills double as the ribs tying sleeve to shell, and
+one feature paid for two.
+
+**Two verification traps hit in the same session, both worth guarding:**
+
+1. **Never read an exported STL while the render that writes it is still
+   running.** A connectivity check on a half-written file reported *12
+   connected components* — 2 real parts plus 10 convincing "floating
+   fragments" whose bounding boxes matched the wart spheres almost
+   exactly. That is an extremely persuasive false positive: it looks
+   precisely like the real, documented floating-geometry bug class
+   (Technique 6, 20, 28), and it burned three separate isolation renders
+   and two numeric sweeps chasing a defect that did not exist. The
+   completed file was 2 clean components. **Gate the check on the process
+   actually having exited, not on the file merely existing** — and treat a
+   fragment count that changes between runs of the same file as evidence
+   of a truncated read, not of nondeterministic geometry.
+2. **An overhang check must exclude geometry that sits inside another
+   solid.** The rebuilt stem's steepest segment measured 76° — apparently
+   a hard fail against the 55° limit — but it sat at z=2.7, entirely
+   inside the base plate, with solid material beneath it. Above the plate
+   the true worst was 53.1°. Filter the profile to the part that is
+   actually a free surface before judging printability, or a supported
+   fillet will read as an unprintable overhang.
+
+**And a real bug the same pass exposed, unrelated to looks: the stem had
+never been printable.** Its neck flared r=15 → 39.5 over 14mm — a
+60.3-degree outward wall, well past the P1S's 55-degree limit — and no
+prior session had checked, because every check had been about connectivity
+and interference, never about wall angle. **Add the overhang sweep to the
+standard pass for any revolved or lofted profile**, not just to designs
+that look risky; it is three lines of arithmetic over the control points
+and it caught a defect that had survived a dozen rounds of review.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
