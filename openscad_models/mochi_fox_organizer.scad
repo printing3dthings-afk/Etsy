@@ -1,6 +1,25 @@
 include <BOSL2/std.scad>
 
 // ============================================================
+// PAUSED 2026-08-28 (Scott's call): this file holds a v3 realism/detail
+// pass (whisker dimples, mouth, brow ridges, chest patch, phone-stand
+// lip) added on top of the verified v2 head/eye rebuild -- v3's cuts
+// were measured against real exported surfaces the same way v2's eye
+// fix was (see the v3 comment block below), but the ADD-type details
+// (brow/chest/lip) were only checked by eye, not fully render-verified
+// at final quality, and the tail/legs/body were flagged as needing more
+// work before this got interrupted. The committed mochi_fox_organizer
+// .stl in this same directory is the LAST FULLY VERIFIED STATE (v2 --
+// single-manifold, forced --render, connectivity-checked) and does NOT
+// yet include any v3 detail from this .scad. Treat this .scad as WIP:
+// don't assume it matches the shipped .stl, and re-run the full
+// verification pipeline (forced --render, stl_components.py
+// connectivity check, recess-floor measurement for every cut) before
+// ever re-exporting from it. Picking this back up is a legitimate
+// option later; for now, effort moved to a simpler design (see
+// openscad_models/ for whatever shipped after this).
+// ============================================================
+//
 // "Mochi Fox" desk organizer -- flagship design, built to combine every
 // verified pattern from this shop's own build history with the market
 // patterns confirmed in the 100-model survey (Bench Marks, 2026-08-27):
@@ -135,14 +154,21 @@ cheek_r = 4.2; cheek_depth = 0.8; cheek_x = 13; cheek_y_face = 28.5; cheek_z = 6
 // cut can, so the risk profile is different and a visual check after
 // rendering is sufficient.
 //
-// Whisker dimples: measured real surface at (x=4-7,z=56-60)->y=45.06
-// and (x=3-6,z=52-56)->y=47.37. Three per side, stepping down the
-// muzzle, each cut-start 1.5mm inside its own measured surface.
+// Whisker dimples: first attempt reused a measurement from a DIFFERENT
+// x window (3-6) at one z and eyeballed the other two -- 2 of 3 landed
+// wrong (one nearly buried, one entirely missing material) once
+// actually checked against the exported mesh. The muzzle narrows fast
+// enough that even a 2mm x-window shift changes the real surface by
+// several mm. Re-measured properly this time: a grid scan at a FIXED
+// x=4-6 window across z=50..60 in 2mm steps, keeping only the z values
+// that actually returned real material (54, 56, 58 -- 50/52/60 found
+// none at this x). Real surfaces: z=54->y=42.03, z=56->y=44.32,
+// z=58->y=45.06; each y_face below is 2mm inside its own measured value.
 whisker_dia = 2.2; whisker_depth = 1.0;
 whisker_pts = [   // [x, y_face, z]
-    [5.5, 43.5, 58],
-    [6.3, 45.8, 55],
-    [6.6, 47.0, 52],
+    [5, 40.0, 54],
+    [5, 42.3, 56],
+    [5, 43.0, 58],
 ];
 
 // Mouth: measured real surface at (x=-1..1,z=48-51)->y=47.7. A small
