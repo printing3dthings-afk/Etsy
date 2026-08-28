@@ -117,7 +117,21 @@ function near_pole_front_y(dx0, dz0, hw, hh) =
     front_y(clamp_toward_zero(dx0, hw), clamp_toward_zero(dz0, hh));
 poke = 0.35;   // guaranteed clearance past the true curved surface at the footprint's hardest point
 
-eye_r = 2.3; eye_dx = 4.2; eye_dz = 2.5; eye_cut_extrude = 3.2;
+// Face pass (2026-08-28): Scott's direct feedback -- "the cloud needs
+// work on its face" -- the eyes were tiny (r=2.3 on a 23mm-radius lobe,
+// ~10% of the face) and the mouth was a barely-visible 5x2mm crescent.
+// This shop's own kawaii standard (CLAUDE.md's Chibi/Kawaii Character
+// Proportions) calls for OVERSIZED eyes (40-50% of face height) -- the
+// old size was nowhere close. Nearly doubled the eye radius and widened
+// the spacing to match (bigger circles need more room to stay clear of
+// each other), and rebuilt the mouth as a genuine curved smile using
+// this skill's own proven hull-chain-of-spheres technique (Technique 17
+// in .claude/skills/3d-print-design/SKILL.md) instead of a single
+// stretched, barely-curved crescent -- a chain of small hulled spheres
+// along a real quadratic curve reads as one continuous smiling stroke,
+// not a row of dots (that skill's own documented lesson from the exact
+// same mistake on a different face).
+eye_r = 4.2; eye_dx = 7.2; eye_dz = 2.5; eye_cut_extrude = 3.6;
 eye_y_face = near_pole_front_y(eye_dx, eye_dz, eye_r, eye_r) + poke;
 eye_z = center_z + eye_dz;
 module eye(mirror_x = false) {
@@ -128,20 +142,29 @@ module eye(mirror_x = false) {
                 circle(r = eye_r, $fn = 40);
 }
 
-mouth_dz = -7; mouth_w = 5; mouth_h = 2; mouth_cut_extrude = 2.5;
-// mouth's own footprint only extends AWAY from the pole in z (a crescent
-// hanging below its reference line), so the reference point itself (not a
-// clamped corner) is already the closest-to-pole point -- no clamp needed.
-mouth_y_face = front_y(0, mouth_dz) + poke;
-mouth_z = center_z + mouth_dz;
+// Smile: 5 points across a real quadratic curve (center lowest, corners
+// curling UP -- outer points get a HIGHER z than the center; this exact
+// sign is called out in Technique 17 because getting it backwards draws
+// a frown, not a smile, and it isn't obvious from the numbers alone).
+mouth_dz = -7; mouth_hw = 6.5; mouth_curl = 2.8; mouth_r = 1.7;
+// 9 points, not 5 -- each hull() segment is a straight chord of the true
+// curve, so too few points reads as an angular "V" instead of a smooth
+// "U" (confirmed by rendering the 5-point version first: a visible sharp
+// kink right at the center). More points shortens each chord until the
+// whole thing reads as one continuous rounded stroke.
+mouth_pts_dx = [for (i = [0 : 8]) -mouth_hw + i * (2 * mouth_hw / 8)];
+function mouth_dz_at(dx) = mouth_dz + mouth_curl * (dx / mouth_hw) * (dx / mouth_hw);
 module mouth() {
-    translate([0, mouth_y_face, mouth_z])
-        rotate([90, 0, 0])
-            linear_extrude(height = mouth_cut_extrude)
-                intersection() {
-                    scale([mouth_w / mouth_h, 1]) circle(r = mouth_h / 2, $fn = 40);
-                    translate([0, -mouth_h / 4]) square([mouth_w * 1.2, mouth_h / 2], center = true);
-                }
+    for (i = [0 : len(mouth_pts_dx) - 2]) {
+        dx0 = mouth_pts_dx[i]; dx1 = mouth_pts_dx[i + 1];
+        dz0 = mouth_dz_at(dx0); dz1 = mouth_dz_at(dx1);
+        y0 = near_pole_front_y(dx0, dz0, mouth_r, mouth_r) + poke;
+        y1 = near_pole_front_y(dx1, dz1, mouth_r, mouth_r) + poke;
+        hull() {
+            translate([dx0, y0, center_z + dz0]) sphere(r = mouth_r, $fn = 20);
+            translate([dx1, y1, center_z + dz1]) sphere(r = mouth_r, $fn = 20);
+        }
+    }
 }
 // ---- pen cup: straight-down cut into the center lobe's own top ----
 // Enlarged per direct request from the original 20mm-diameter cup to

@@ -250,48 +250,75 @@ dome_cut_z = 57.03;      // dome height = cap_sphere_r - dome_cut_z = 15mm, stil
 cap_shell_t = 2.4;
 cap_dot_r = 6.5;
 skirt_r_top = sqrt(cap_sphere_r ^ 2 - dome_cut_z ^ 2);   // = 44.0, matches the dome's own edge exactly
-// Tenth correction: a modest rim (56, ~1.27x skirt_r_top) still read as
-// only a small kick at the very bottom once smoothed -- not a genuine
-// open-umbrella silhouette. Realized the overhang-angle worry that had
-// been capping how wide this could go was never actually binding: a
-// radius that DECREASES as height increases (this flare's own direction,
-// widest at the true rim/bed and narrowing up toward the dome) is always
-// print-safe regardless of steepness when printed rim-down -- the same
-// reasoning that makes a printed traffic-cone shape reliable at any
-// taper angle, since every new layer's perimeter sits fully within the
-// layer below it (the 55deg rule only bounds the OPPOSITE direction, a
-// profile that bulges OUTWARD as it rises). That freed up real room to
-// make the rim genuinely dramatic without hanging any lower (so it still
-// clears the stem exactly as before -- only the RADIUS grew, not the
-// height the flare drops).
-skirt_r_rim = 70;          // the TRUE open rim -- a genuinely wide, open-umbrella flare
-skirt_len = 35;            // total skirt height, true rim to where it meets the dome
-// LOCAL height (measured up from the rim, z=0) where the profile first
-// reaches skirt_r_top -- the point aligned to the stem's real collar
-// base during assembly (see cap_assembly_offset below). skirt_len minus
-// this leaves 22mm (== collar_h exactly) of near-flat coverage above it,
-// reproducing the original, already-verified lock/collar margin exactly.
-collar_interface_z = 13;
+// Eleventh correction (2026-08-28, real reference photos this time):
+// Scott's own words: "yours is a hard flare and doesn't look natural on
+// its curvature... see how it is filled in and sloped." Comparing
+// against real cartoon/kawaii mushroom references, every one of them
+// has ONE continuously bulging underside curve, slow near the top and
+// visibly ACCELERATING toward the rim -- exactly a sphere/ellipse
+// section's own shape (near a pole the surface is nearly flat; near the
+// equator the tangent goes vertical), not a uniform-slope cone.
+// A first attempt at this fix kept the OLD assembly-offset strategy
+// (align the skirt's own "safe for the collar" reference point S to the
+// stem's collar base) and just swapped in a quadratic radius curve --
+// but that strategy has flare_len and world-rim-height WELDED together
+// by construction (world_rim = 37.8 - flare_len, always, independent of
+// curve shape), so a longer/gentler flare unavoidably drops the rim
+// lower, right back toward the Seventh correction's "swallows the
+// stem" failure. Realized this offset choice was never a real mechanical
+// requirement in the first place -- the ONLY hard constraint is that the
+// pin lines up with the lock slot at world height lock_z; nothing
+// requires the skirt's own internal reference point to land at the
+// collar base specifically. Switched the anchor to what the VERY FIRST
+// version of this file did: align the DOME EDGE itself to the stem's
+// collar TOP (world stem_top_z). This makes cap_assembly_offset a FIXED
+// constant (2.77, independent of the skirt's shape entirely) and the
+// pin's local height a fixed 8mm below the dome edge -- so flare_len and
+// world-rim-height are now fully DECOUPLED: a much longer, gentler flare
+// (20mm vs the previous 12mm) no longer costs any extra rim drop at all.
+// Verified numerically before touching OpenSCAD (not by eye): pin lands
+// on exactly 44.0mm local radius (inner 41.6mm, 2.1mm clearance over
+// collar_r=39.5 -- identical to the original always-proven design,
+// since the anchor point is now the same one that design used), profile
+// radius is monotonic non-increasing as height increases (still safe to
+// print rim-down regardless of steepness), and world_rim lands at 25.8mm
+// -- matching the Seventh/Eighth correction's own already-confirmed
+// "doesn't swallow the stem" proportion.
+near44_len = 14;     // dome edge down to S -- just enough to cover the pin (8mm above margin,
+                      // 6mm below) with real margin on both sides, not the whole collar height
+flare_len = 20;       // S down to the true rim -- now fully decoupled from rim height, so this
+                      // can be long and gentle without dropping the rim any further
+skirt_len = near44_len + flare_len;
+skirt_r_rim = 60;     // the TRUE open rim -- real flare, spread over a much longer, gentler run
 cap_rim_z = dome_cut_z - skirt_len;   // the TRUE open rim plane
+// LOCAL height (measured up from the rim, z=0) where the profile first
+// reaches skirt_r_top -- purely descriptive here (unlike the tenth
+// correction's version, this no longer drives the assembly offset).
+collar_interface_z = flare_len;
 
 // Profile control points, LOCAL height measured up from the true rim
-// (z=0) -- fed through smooth_path() so the curved taper and the flat
-// run above it blend with no hard corner, then rotate_extrude()'d as an
-// annular (both-ends-open) shell, matching this shop's own proven
-// vessel-hollowing pattern (outer profile, inner = outer minus wall,
-// polygon()'s own implicit last-to-first closing edge providing the rim
-// and dome-side wall-thickness caps for free -- no floor logic needed,
-// since neither end is closed here).
-skirt_outer_ctrl = [
-    [skirt_r_rim, 0],
-    [skirt_r_rim - 8, 3],
-    [skirt_r_rim - 16, 6],
-    [skirt_r_top + 4, 9],
-    [skirt_r_top + 1, 11],
-    [skirt_r_top, collar_interface_z],
-    [skirt_r_top, skirt_len],
+// (z=0) -- fed through smooth_path() so every segment blends with no
+// hard corner, then rotate_extrude()'d as an annular (both-ends-open)
+// shell, matching this shop's own proven vessel-hollowing pattern
+// (outer profile, inner = outer minus wall, polygon()'s own implicit
+// last-to-first closing edge providing the rim and dome-side
+// wall-thickness caps for free -- no floor logic needed, since neither
+// end is closed here).
+// t=1 (rim) down to t=0 (flare-start) -- ordered so z comes out ASCENDING
+// (rim=0 first, flare-start=collar_interface_z last), matching the
+// polygon's required rim-to-dome winding. Getting this order backwards
+// silently produces a self-intersecting garbled profile with no error
+// (confirmed by reasoning through it numerically before ever rendering,
+// not discovered by trial and error).
+skirt_flare_pts = [for (t = [1.0, 0.8, 0.6, 0.4, 0.2, 0])
+    [skirt_r_top + (skirt_r_rim - skirt_r_top) * t * t,
+     collar_interface_z - t * flare_len]
 ];
-skirt_outer_pts = smooth_path(skirt_outer_ctrl, method = "corners", size = 3, splinesteps = 10);
+skirt_outer_ctrl = concat(
+    skirt_flare_pts,                       // rim (z=0) up to flare-start (z=collar_interface_z, r=skirt_r_top exactly)
+    [[skirt_r_top, skirt_len]]             // dome edge -- exact same radius, a near-flat run between the two
+);
+skirt_outer_pts = smooth_path(skirt_outer_ctrl, method = "corners", size = 2, splinesteps = 8);
 
 // Real spherical-shell cuts: aim each hole's cylinder from OUTSIDE the
 // shell to INSIDE it, along the exact radial direction at that point --
@@ -339,13 +366,6 @@ module cap_dome_only() {
         translate([0, 0, dome_cut_z + 200]) cube([200, 200, 400], center = true);
     }
 }
-
-// World height where the skirt profile's own collar-interface point sits
-// once assembled -- the stem's real collar base (cap_assembly_offset
-// below solves the whole-cap offset against THIS point, not the true
-// rim, since the flare below it means the rim is no longer the
-// sheathing surface -- see the corrections block above).
-sheath_bottom_local_z = cap_rim_z + collar_interface_z;
 
 module cap_skirt_only() {
     // One continuous annular shell (both ends open -- dome side and true
@@ -404,8 +424,7 @@ module cap_shell_raw() {
 // original 28x13mm gills would look sparse and short under it; scaled
 // both up to stay visually proportional to the new rim.
 gill_count = 34;
-gill_len = 40;   // bumped again to match the now much wider (70mm) rim -- otherwise the
-                 // gills only cover the outer third of a much bigger underside
+gill_len = 34;   // sized for the Eleventh-correction rim (60mm, rim_r_inner=57.6) -- comfortably under it
 gill_t = 1.0;
 module gill(theta) {
     // a thin radial fin sitting just inside the rim, hanging down from
@@ -427,16 +446,14 @@ module cap_gills() {
 // ---- bayonet lock pins, matching collar_slots() above ----
 // The cap is defined in its OWN local coordinates, then translated by
 // cap_assembly_offset when actually assembled onto the stem. Assembly
-// aligns the SHEATH band's own bottom edge (sheath_bottom_local_z) with
-// the stem's real collar base (stem_top_z - collar_h) -- NOT the true
-// rim (cap_rim_z) as an earlier version of this formula did, which is
-// exactly the bug the sixth-correction comment above traces through: the
-// rim is no longer the sheathing surface once the flare hangs below it,
-// so anchoring the offset to the rim put the pins in the flare's hollow
-// interior instead of the sheath's solid wall. A pin at LOCAL z must sit
-// at (lock_z - cap_assembly_offset) so that once translated, it lands at
-// the real WORLD height of the lock channel.
-cap_assembly_offset = (stem_top_z - collar_h) - sheath_bottom_local_z;
+// aligns the DOME EDGE (local z=dome_cut_z) to the stem's collar TOP
+// (world stem_top_z) -- see the Eleventh correction above for why this
+// anchor (not the collar base, not the rim) is the right one: it's a
+// FIXED constant independent of the skirt's own shape, which is exactly
+// what decouples flare length from how far the rim drops. A pin at
+// LOCAL z must sit at (lock_z - cap_assembly_offset) so that once
+// translated, it lands at the real WORLD height of the lock channel.
+cap_assembly_offset = stem_top_z - dome_cut_z;
 pin_local_z = lock_z - cap_assembly_offset;
 module cap_pins() {
     // positioned at the LOCKED angle (slot's own start angle + lock_angle)
