@@ -15,6 +15,19 @@ include <BOSL2/std.scad>
 //     translucent-filled), plus a radial "gill" rib pattern on the
 //     underside. Both design cues taken directly from real reference
 //     photos (mushroom_ref1.jpg, mushroom_ref2.jpg), not invented.
+//     Cap and stem lock together via a 3-pin bayonet twist-lock (push
+//     down, twist to lock), adapted from this shop's own proven
+//     openscad_models/bayonet_jar.scad.
+//   "Adult mushroom" pass (2026-08-28): the skirt below the dome was
+//     originally a plain constant-radius drum. It's now ONE smoothly-
+//     interpolated profile (smooth_path()+rotate_extrude(), no hard
+//     seams) that stays narrow near the dome (where it sheaths the
+//     stem's collar and houses the lock pins) and opens into a genuinely
+//     wide flared rim -- a real open-umbrella mushroom-cap silhouette,
+//     not a jar lid. Small proud "warts" scattered on the dome add the
+//     classic spotted-toadstool texture. See the numbered corrections
+//     inline below for the real mechanical/visual dead-ends hit getting
+//     here, and Technique 29 in .claude/skills/3d-print-design/SKILL.md.
 // Every dot-hole cut uses a cylinder aimed along the LOCAL SURFACE
 // NORMAL (radially outward from the dome's own center), not a flat tool
 // on a fixed global axis -- this sidesteps the entire "flat tool vs
@@ -200,12 +213,85 @@ module lamp_stem() {
 // straight (no taper below the safe clearance) for its entire height.
 cap_sphere_r = 72.03;
 dome_cut_z = 57.03;      // dome height = cap_sphere_r - dome_cut_z = 15mm, still flat
-skirt_len = 22;          // straight skirt band hanging from dome_cut_z down to the true rim
-skirt_r_top = sqrt(cap_sphere_r ^ 2 - dome_cut_z ^ 2);   // = 44.0, matches skirt_r_bot -- no taper mismatch
-skirt_r_bot = collar_r + 4.5;             // comfortably clears the stem's collar_r for a slip fit
-cap_rim_z = dome_cut_z - skirt_len;   // the TRUE open rim plane
+// Sixth-ninth corrections (2026-08-28, "adult mushroom" pass), condensed:
+// the skirt was a near-constant-radius cylinder (44mm the whole way down)
+// -- structurally safe, but reads as a drum/jar lid, not a MATURE
+// mushroom cap's broad flared "umbrella". Two hard-learned constraints,
+// found via intersection() checks and real renders, not guessed:
+//   (a) The bayonet lock pin's height is ALWAYS exactly (collar_h -
+//       travel_v) = 14mm above wherever the cap's assembly-reference
+//       point sits, by construction of cap_assembly_offset -- so a big
+//       flare placed too close to that reference point puts the pins in
+//       open air instead of a solid wall (caught by intersection(),
+//       Sixth correction). The reference point needs ~44mm-radius
+//       material for real coverage around it -- roughly collar_h (22mm)
+//       of it, matching the original, already-proven design.
+//   (b) A wide flare needs real vertical room to open without dropping
+//       so low it visually swallows the stem's own foot/neck taper from
+//       every outside angle (caught only by an actual render, Seventh
+//       correction -- both intersection() checks pass regardless of how
+//       bad this looks, since it's a proportion problem, not a collision).
+//   Two flat/cyl()-stacked bands satisfying both constraints (Eighth
+//   correction) still LOOKED like stacked hat brims -- a hard tangent
+//   discontinuity where a straight vertical wall meets a straight
+//   tapered wall at the same radius, and BOSL2's cyl(rounding=) on a
+//   two-piece union pinches inward into a visible gap rather than
+//   blending them (confirmed by rendering it, Ninth correction: a
+//   visible slit opened up right at the seam).
+// The actual fix: build the ENTIRE skirt as ONE smoothly-interpolated
+// profile via smooth_path() + rotate_extrude() -- this shop's own proven
+// hollow-vessel technique (see the 3d-print-design skill's Technique 1),
+// just for an annulus open at BOTH ends (dome side and true rim) instead
+// of a vessel with a floor. A single continuous curve can satisfy both
+// constraints (a) and (b) at once -- near-flat ~44mm radius for real
+// height around the lock reference point, curving out to a modest flare
+// only in the lower portion, close to the rim -- with no hard seam
+// anywhere by construction.
 cap_shell_t = 2.4;
 cap_dot_r = 6.5;
+skirt_r_top = sqrt(cap_sphere_r ^ 2 - dome_cut_z ^ 2);   // = 44.0, matches the dome's own edge exactly
+// Tenth correction: a modest rim (56, ~1.27x skirt_r_top) still read as
+// only a small kick at the very bottom once smoothed -- not a genuine
+// open-umbrella silhouette. Realized the overhang-angle worry that had
+// been capping how wide this could go was never actually binding: a
+// radius that DECREASES as height increases (this flare's own direction,
+// widest at the true rim/bed and narrowing up toward the dome) is always
+// print-safe regardless of steepness when printed rim-down -- the same
+// reasoning that makes a printed traffic-cone shape reliable at any
+// taper angle, since every new layer's perimeter sits fully within the
+// layer below it (the 55deg rule only bounds the OPPOSITE direction, a
+// profile that bulges OUTWARD as it rises). That freed up real room to
+// make the rim genuinely dramatic without hanging any lower (so it still
+// clears the stem exactly as before -- only the RADIUS grew, not the
+// height the flare drops).
+skirt_r_rim = 70;          // the TRUE open rim -- a genuinely wide, open-umbrella flare
+skirt_len = 35;            // total skirt height, true rim to where it meets the dome
+// LOCAL height (measured up from the rim, z=0) where the profile first
+// reaches skirt_r_top -- the point aligned to the stem's real collar
+// base during assembly (see cap_assembly_offset below). skirt_len minus
+// this leaves 22mm (== collar_h exactly) of near-flat coverage above it,
+// reproducing the original, already-verified lock/collar margin exactly.
+collar_interface_z = 13;
+cap_rim_z = dome_cut_z - skirt_len;   // the TRUE open rim plane
+
+// Profile control points, LOCAL height measured up from the true rim
+// (z=0) -- fed through smooth_path() so the curved taper and the flat
+// run above it blend with no hard corner, then rotate_extrude()'d as an
+// annular (both-ends-open) shell, matching this shop's own proven
+// vessel-hollowing pattern (outer profile, inner = outer minus wall,
+// polygon()'s own implicit last-to-first closing edge providing the rim
+// and dome-side wall-thickness caps for free -- no floor logic needed,
+// since neither end is closed here).
+skirt_outer_ctrl = [
+    [skirt_r_rim, 0],
+    [skirt_r_rim - 8, 3],
+    [skirt_r_rim - 16, 6],
+    [skirt_r_top + 4, 9],
+    [skirt_r_top + 1, 11],
+    [skirt_r_top, collar_interface_z],
+    [skirt_r_top, skirt_len],
+];
+skirt_outer_pts = smooth_path(skirt_outer_ctrl, method = "corners", size = 3, splinesteps = 10);
 
 // Real spherical-shell cuts: aim each hole's cylinder from OUTSIDE the
 // shell to INSIDE it, along the exact radial direction at that point --
@@ -254,14 +340,50 @@ module cap_dome_only() {
     }
 }
 
+// World height where the skirt profile's own collar-interface point sits
+// once assembled -- the stem's real collar base (cap_assembly_offset
+// below solves the whole-cap offset against THIS point, not the true
+// rim, since the flare below it means the rim is no longer the
+// sheathing surface -- see the corrections block above).
+sheath_bottom_local_z = cap_rim_z + collar_interface_z;
+
 module cap_skirt_only() {
-    // spans z=cap_rim_z (bottom) up to z=dome_cut_z (top, meeting the dome)
+    // One continuous annular shell (both ends open -- dome side and true
+    // rim -- neither end closes to a point, so no floor/apex logic
+    // needed): outer profile up from the rim, inner = outer minus wall,
+    // reversed back down -- polygon()'s own implicit last-point-to-
+    // first-point closing edge supplies both the rim's and the dome
+    // side's wall-thickness cap for free, exactly like this shop's
+    // proven open-vessel technique.
+    inner_pts = [for (p = skirt_outer_pts) [max(p.x - cap_shell_t, 1), p.y]];
+    inner_rev = [for (i = [len(inner_pts) - 1 : -1 : 0]) inner_pts[i]];
+    profile = concat(skirt_outer_pts, inner_rev);
     translate([0, 0, cap_rim_z])
-        difference() {
-            cyl(h = skirt_len, r1 = skirt_r_bot, r2 = skirt_r_top, anchor = BOTTOM);
-            cyl(h = skirt_len + 2, r1 = skirt_r_bot - cap_shell_t, r2 = skirt_r_top - cap_shell_t,
-                anchor = BOTTOM);
-        }
+        rotate_extrude($fn = 90) polygon(profile);
+}
+
+// ---- decorative surface warts (2026-08-28, "adult mushroom" pass) ----
+// Small proud bumps scattered across the dome -- the classic spotted-
+// toadstool look (Amanita muscaria and kin), and genuine extra surface
+// detail distinct from the dot-hole light vents. Reuses dot_vec()'s
+// exact radial-surface-point math (same proven technique as the holes),
+// just UNIONS a small sphere centered ON the outer surface instead of
+// cutting through it. Positions verified numerically (not eyeballed)
+// against every dot_dirs hole AND against each other, so no wart
+// overlaps a light-hole or another wart -- see the angular-distance
+// check run before finalizing these coordinates. phi stays under the
+// same ~37.5deg dome-region limit dot_dirs already respects.
+wart_r = 2.2;
+wart_dirs = [
+    [ 48,  9], [ 95, 15], [165, 10], [-155, 18], [-25, 24],
+    [ 85, 28], [-95, 14], [160, 26], [ -5, 34], [ 10, 25],
+];
+module wart(theta, phi) {
+    dir = dot_vec(theta, phi);
+    translate(dir * cap_sphere_r) sphere(r = wart_r, $fn = 20);
+}
+module cap_warts() {
+    for (d = wart_dirs) wart(d[0], d[1]);
 }
 
 module cap_shell_raw() {
@@ -277,16 +399,21 @@ module cap_shell_raw() {
 // wedges so they stay thin and printable (rim-side layers first when the
 // cap prints opening-down, dome-up -- the standard safe bowl orientation,
 // no overhangs).
-gill_count = 28;
-gill_len = 13;
+// Gill count/length bumped up along with the flared rim (2026-08-28) --
+// the underside is a much bigger disc now (rim radius 44 -> 64), so the
+// original 28x13mm gills would look sparse and short under it; scaled
+// both up to stay visually proportional to the new rim.
+gill_count = 34;
+gill_len = 40;   // bumped again to match the now much wider (70mm) rim -- otherwise the
+                 // gills only cover the outer third of a much bigger underside
 gill_t = 1.0;
 module gill(theta) {
     // a thin radial fin sitting just inside the rim, hanging down from
     // the skirt's own inner surface toward the true open edge (z=cap_rim_z,
     // the skirt's own bottom -- a constant, known radius, not the sphere
-    // formula, since the rim now sits in the straight skirt band below
-    // the dome, not on the sphere itself)
-    rim_r_inner = skirt_r_bot - cap_shell_t;
+    // formula, since the rim now sits in the flare band below the dome,
+    // not on the sphere itself)
+    rim_r_inner = skirt_r_rim - cap_shell_t;
     rotate([0, 0, theta])
         translate([rim_r_inner - gill_len, -gill_t / 2, cap_rim_z])
             cube([gill_len, gill_t, 7]);
@@ -299,11 +426,17 @@ module cap_gills() {
 
 // ---- bayonet lock pins, matching collar_slots() above ----
 // The cap is defined in its OWN local coordinates, then translated by
-// cap_assembly_offset when actually assembled onto the stem (see the
-// verification block at the bottom of this file). A pin at LOCAL z must
-// therefore sit at (lock_z - cap_assembly_offset) so that once
-// translated, it lands at the real WORLD height of the lock channel.
-cap_assembly_offset = stem_top_z - collar_h - cap_rim_z;
+// cap_assembly_offset when actually assembled onto the stem. Assembly
+// aligns the SHEATH band's own bottom edge (sheath_bottom_local_z) with
+// the stem's real collar base (stem_top_z - collar_h) -- NOT the true
+// rim (cap_rim_z) as an earlier version of this formula did, which is
+// exactly the bug the sixth-correction comment above traces through: the
+// rim is no longer the sheathing surface once the flare hangs below it,
+// so anchoring the offset to the rim put the pins in the flare's hollow
+// interior instead of the sheath's solid wall. A pin at LOCAL z must sit
+// at (lock_z - cap_assembly_offset) so that once translated, it lands at
+// the real WORLD height of the lock channel.
+cap_assembly_offset = (stem_top_z - collar_h) - sheath_bottom_local_z;
 pin_local_z = lock_z - cap_assembly_offset;
 module cap_pins() {
     // positioned at the LOCKED angle (slot's own start angle + lock_angle)
@@ -324,6 +457,7 @@ module lamp_cap() {
                 cap_shell_raw();   // keep gills confined to the shell's own interior, never poking outside it
             }
             cap_pins();
+            cap_warts();
         }
         for (d = dot_dirs) dot_hole(d[0], d[1]);
     }
