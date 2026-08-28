@@ -1933,6 +1933,41 @@ confirmed the digit genuinely reads as "12" (or whichever hour) — catching
 a font/layout bug at this stage is far cheaper than finding it only after
 a full collision/through-hole verification pass on the whole assembly.
 
+## Standing rule — pitch the concept and get a yes BEFORE modelling anything (2026-08-28)
+
+Scott, verbatim: *"Before you start building another print, I want to know
+what it's going to be."*
+
+**Do not open a `.scad` for a NEW design until the concept is approved.**
+Pitch first, in a few lines — not a document:
+
+- **What it is**, concretely enough to picture (not "a desk organizer" —
+  "a 3-compartment caddy with horizontal corrugated ribs, ~120mm wide").
+- **Who buys it**, and why it fits this shop (kawaii/pastel, or the
+  functional-print side).
+- **Rough size and proportion**, as real numbers — the same
+  state-the-ratio discipline as Technique 31.
+- **How it prints**: how many parts, what orientation, whether it needs
+  supports, roughly how long.
+- **Why it's worth making** over the alternatives on the table.
+
+Then wait. A design that gets modelled before the concept is agreed can
+be perfectly executed and still be the wrong object — and the modelling
+is the expensive part, as this session's twelve-correction cap
+demonstrated at length.
+
+**Scope of the rule:** it covers the *concept*, not the *execution*.
+Iterating on an already-approved design (fixing a shape, adding the
+maker's mark, re-proportioning after feedback) does not need a fresh
+approval — that's the work Scott already said yes to. A genuinely new
+object does.
+
+**Ideas already on the table**, both from Scott's own reference material
+rather than invented (see Technique 29's reference-ideas section for the
+full notes): a pleated folding fan with a print-in-place hinge and a
+snowflake motif, and a ribbed 3-compartment desk caddy. Pitch from real
+candidates like these before reaching for something new.
+
 ## Standing rule — save real, finished work immediately, not at the end of a session (2026-08-27)
 
 A previous attempt at this exact sundial design was lost — built,

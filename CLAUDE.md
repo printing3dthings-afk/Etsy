@@ -3763,6 +3763,12 @@ When any API call returns 401 and the refresh endpoint also returns 401:
 - **Any bulk edit touching more than 10 listings** — confirm scope before running
 - **Custom order requests** — pricing and feasibility require Scott's judgment
 - **Re-authorization (OAuth)** — requires Scott to complete browser flow every 90 days
+- **Starting a NEW 3D print design** — Scott's direct instruction, 2026-08-28: "Before you
+  start building another print, I want to know what it's going to be." Pitch the concept
+  (what it is, who buys it, rough size/proportions, how it prints, why it's worth making)
+  and get a yes BEFORE writing any `.scad`. This is about the *concept*, not the execution —
+  iterating on an already-approved design needs no new approval. See the matching standing
+  rule in `.claude/skills/3d-print-design/SKILL.md`.
 
 ### Hard Stops — Never Do Without Explicit Permission
 
