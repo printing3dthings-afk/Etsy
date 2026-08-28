@@ -75,6 +75,46 @@ module stem_body() {
 
 stem_top_z = base_plate_h - 2 + foot_h - 0.1 + neck_h - 0.1 + collar_h;
 
+// ---- bayonet twist-lock between stem collar and cap skirt (2026-08-28) ----
+// Push down, then twist to lock -- the exact mechanism already proven in
+// bayonet_jar.scad, reused rather than re-derived: 3 pins on the cap's
+// skirt engage 3 slots cut through the stem collar's own wall (a vertical
+// entry channel, then a horizontal lock channel swept via rotate_extrude
+// so it follows the collar's real curvature). A correctly-built bayonet
+// lock has zero real overlap in its locked pose -- the pin only ever
+// occupies the slot's own carved-out space -- verified below via
+// intersection(), not assumed, the same discipline this file has needed
+// for every other feature.
+n_pins = 3;
+pin_r = 2.6;
+slot_clear = 0.5;
+slot_r = pin_r + slot_clear;
+travel_v = 8;      // vertical entry length (push distance before twisting)
+lock_angle = 25;   // degrees of horizontal travel to reach the locked position
+angle_margin = 8;  // extra cut angle past lock_angle so the locked pin's own
+                    // angular footprint isn't left overshooting uncut wall --
+                    // must clear atan(pin_r/collar_r), the same lesson
+                    // bayonet_jar.scad already learned the hard way
+lock_z = stem_top_z - travel_v;   // world height of the horizontal lock channel
+
+module one_collar_slot() {
+    collar_wall = collar_r - cavity_r;
+    translate([collar_r - collar_wall - 1, -slot_r, lock_z])
+        cube([collar_wall + 2, 2 * slot_r, travel_v + slot_r + 1]);
+    translate([0, 0, lock_z])
+        rotate_extrude(angle = lock_angle + angle_margin, $fn = 90)
+            translate([collar_r, 0])
+                circle(r = slot_r, $fn = 16);
+}
+
+module collar_slots() {
+    // offset 60deg off the 0/180 axis so no slot lands on the cable
+    // notch's own line (cable_notch spans the full X axis below)
+    for (i = [0 : n_pins - 1])
+        rotate([0, 0, i * 360 / n_pins + 60])
+            one_collar_slot();
+}
+
 module puck_cavity() {
     // opens at the very top of the collar, puck sits LED-face-up
     translate([0, 0, stem_top_z - cavity_h + 0.1])
@@ -82,10 +122,13 @@ module puck_cavity() {
 }
 
 module cable_notch() {
-    // rectangular slot through the collar wall at the cavity's own
-    // height, generously long radially so it reaches open air outside
-    // regardless of the collar's exact taper radius there.
-    notch_z = stem_top_z - cavity_h / 2;
+    // rectangular slot through the collar wall, generously long radially
+    // so it reaches open air outside regardless of the collar's exact
+    // taper radius there. Positioned near the CAVITY FLOOR (not its
+    // vertical center) specifically to stay clear of lock_z above --
+    // the bayonet lock channel sits higher up the collar, and the two
+    // cuts must not overlap.
+    notch_z = stem_top_z - cavity_h + 5;
     translate([0, 0, notch_z])
         cube([70, 10, 9], center = true);
 }
@@ -108,6 +151,7 @@ module lamp_stem() {
         }
         puck_cavity();
         cable_notch();
+        collar_slots();
         stem_brand_mark();
     }
 }
@@ -253,6 +297,24 @@ module cap_gills() {
         gill(i * 360 / gill_count);
 }
 
+// ---- bayonet lock pins, matching collar_slots() above ----
+// The cap is defined in its OWN local coordinates, then translated by
+// cap_assembly_offset when actually assembled onto the stem (see the
+// verification block at the bottom of this file). A pin at LOCAL z must
+// therefore sit at (lock_z - cap_assembly_offset) so that once
+// translated, it lands at the real WORLD height of the lock channel.
+cap_assembly_offset = stem_top_z - collar_h - cap_rim_z;
+pin_local_z = lock_z - cap_assembly_offset;
+module cap_pins() {
+    // positioned at the LOCKED angle (slot's own start angle + lock_angle)
+    // -- this model shows the mechanism already twisted shut, same
+    // convention as bayonet_jar.scad.
+    for (i = [0 : n_pins - 1])
+        rotate([0, 0, i * 360 / n_pins + 60 + lock_angle])
+            translate([collar_r, 0, pin_local_z])
+                sphere(r = pin_r, $fn = 20);
+}
+
 module lamp_cap() {
     difference() {
         union() {
@@ -261,6 +323,7 @@ module lamp_cap() {
                 cap_gills();
                 cap_shell_raw();   // keep gills confined to the shell's own interior, never poking outside it
             }
+            cap_pins();
         }
         for (d = dot_dirs) dot_hole(d[0], d[1]);
     }
