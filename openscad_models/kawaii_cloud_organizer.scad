@@ -58,24 +58,32 @@ center_r = 23;
 center_z = lobe_z(center_r);
 function front_y(dx, dz) = sqrt(max(center_r * center_r - dx * dx - dz * dz, 1));
 
-// ---- REBUILT AS RAISED BUMPS, NOT ENGRAVED CUTS (2026-08-28) ----
-// After three rounds of engraved-cut problems on this curved surface --
-// a fully buried mouth (flat tool never reached the real surface), a
-// figure-8 eye/cheek overlap, and still-wrong proportions after fixing
-// both -- Scott's call was direct: fix it properly or cut it. Switching
-// to RAISED bumps is the real fix, not another parameter tweak: a
-// union() bump has no "does this actually reach the surface" failure
-// mode the way a difference() cut does. The nose bump used this exact
-// technique from the very first version of this file and never had a
-// single bug across the whole project -- every cut-based fix above was
-// fighting a problem this approach doesn't have in the first place.
+// ---- MIXED FINISH (2026-08-28): eyes + mouth NEGATIVE (recessed), cheeks
+// still RAISED bumps. Per direct request: drop the round raised "eyebrow"-
+// looking eye dots and cut real eyes + a real mouth into the surface so
+// they read with actual depth/shadow instead of a flat sticker-like bump.
+// The recessed-cut technique on this curved sphere was already proven
+// correct earlier in this file's history (see git log: near_pole_front_y
+// finds the footprint's own closest-to-pole point -- the true hardest
+// point for a flat tool to clear -- and `poke` guarantees it breaks
+// through everywhere; verified single connected component, no buried
+// cuts) -- reusing that exact math rather than re-deriving it. Cheeks stay
+// as raised bumps (bump_y / union) since that half was never the problem.
 function bump_y(dx, dz, r, embed_frac) = front_y(dx, dz) - r * embed_frac;
+function clamp_toward_zero(v0, h) = (v0 > h) ? v0 - h : (v0 < -h) ? v0 + h : 0;
+function near_pole_front_y(dx0, dz0, hw, hh) =
+    front_y(clamp_toward_zero(dx0, hw), clamp_toward_zero(dz0, hh));
+poke = 0.35;   // guaranteed clearance past the true curved surface at the footprint's hardest point
 
-eye_r = 2.1; eye_dx = 4.2; eye_dz = 2.5;
+eye_r = 2.3; eye_dx = 4.2; eye_dz = 2.5; eye_cut_extrude = 3.2;
+eye_y_face = near_pole_front_y(eye_dx, eye_dz, eye_r, eye_r) + poke;
+eye_z = center_z + eye_dz;
 module eye(mirror_x = false) {
     x = mirror_x ? -eye_dx : eye_dx;
-    translate([x, bump_y(eye_dx, eye_dz, eye_r, 0.35), center_z + eye_dz])
-        sphere(r = eye_r);
+    translate([x, eye_y_face, eye_z])
+        rotate([90, 0, 0])
+            linear_extrude(height = eye_cut_extrude)
+                circle(r = eye_r, $fn = 40);
 }
 
 cheek_r = 3.3; cheek_dx = 9; cheek_dz = -3;
@@ -85,21 +93,20 @@ module cheek(mirror_x = false) {
         sphere(r = cheek_r);
 }
 
-// Smile: a smooth raised arc from a hull-chain of small spheres, each
-// individually placed on the sphere's own exact surface equation -- the
-// same hull-chain technique this shop already uses for smooth curved
-// details, just applied to a small cosmetic raised line instead of a cut.
-smile_pts = [ [-3, -7.0], [-1.5, -8.0], [0, -8.3], [1.5, -8.0], [3, -7.0] ];
-smile_r = 0.9;
-module smile() {
-    for (i = [0 : len(smile_pts) - 2]) {
-        p0 = smile_pts[i];
-        p1 = smile_pts[i + 1];
-        hull() {
-            translate([p0[0], bump_y(p0[0], p0[1], smile_r, 0.4), center_z + p0[1]]) sphere(r = smile_r);
-            translate([p1[0], bump_y(p1[0], p1[1], smile_r, 0.4), center_z + p1[1]]) sphere(r = smile_r);
-        }
-    }
+mouth_dz = -7; mouth_w = 5; mouth_h = 2; mouth_cut_extrude = 2.5;
+// mouth's own footprint only extends AWAY from the pole in z (a crescent
+// hanging below its reference line), so the reference point itself (not a
+// clamped corner) is already the closest-to-pole point -- no clamp needed.
+mouth_y_face = front_y(0, mouth_dz) + poke;
+mouth_z = center_z + mouth_dz;
+module mouth() {
+    translate([0, mouth_y_face, mouth_z])
+        rotate([90, 0, 0])
+            linear_extrude(height = mouth_cut_extrude)
+                intersection() {
+                    scale([mouth_w / mouth_h, 1]) circle(r = mouth_h / 2, $fn = 40);
+                    translate([0, -mouth_h / 4]) square([mouth_w * 1.2, mouth_h / 2], center = true);
+                }
 }
 // ---- pen cup: straight-down cut into the center lobe's own top ----
 // Same lesson the fox's first pen-cup draft learned the hard way: size
@@ -132,13 +139,13 @@ module cloud_organizer() {
         union() {
             base_plate();
             cloud_body();
-            eye(false);
-            eye(true);
             cheek(false);
             cheek(true);
-            smile();
         }
         pen_cavity();
+        eye(false);
+        eye(true);
+        mouth();
         brand_mark();
     }
 }
