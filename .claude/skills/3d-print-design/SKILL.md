@@ -2523,6 +2523,178 @@ on a gently curved surface for a genuine photographic image, and a full
 Voronoi/organic lattice mesh (no large solid faces anywhere) for uniform
 ambient glow with zero hot spots.
 
+## Technique 30 — Continuous-curvature (G2) surfacing: the real, provable difference between "blocky CAD" and "professionally designed" (2026-08-28)
+
+Scott's feedback, stated directly: prints look too blocky, not enough
+"real" designer look, wants genuine depth here rather than incremental
+polish. Researched what actually separates amateur-looking CAD from
+professional product design (Dieter Rams's principles, real industrial-
+design surfacing theory), and the single most concrete, provable,
+directly-actionable finding is about **edge continuity class**, not a
+vague aesthetic instinct:
+
+- **G0 (positional)** — two surfaces just touch. A flat top meeting a
+  vertical wall at a sharp corner. Reads as raw/unfinished.
+- **G1 (tangent)** — the surfaces touch and share a tangent direction at
+  the join — this is what `cyl(rounding=)` / `cuboid(rounding=)` give
+  you: a plain circular-arc fillet. It's smooth in the sense of "no
+  crease," but the *curvature* still jumps abruptly at both ends of the
+  fillet (flat → suddenly curved → suddenly flat again).
+- **G2 (curvature-continuous)** — curvature itself also matches at the
+  join, no jump anywhere. This is the one that actually reads as
+  "premium": light striking a G1 fillet shows **two** distinct highlight
+  lines (one at each tangent-departure point, where curvature jumps);
+  light striking a G2 blend shows **one** soft highlight that migrates
+  smoothly across the whole surface as the viewing angle changes — the
+  same reason a bar of soap or an Apple product edge reads as "flows,"
+  while a cuboid with a filleted corner reads as "a box with the corners
+  knocked off," even at an identical corner radius.
+
+**Every design this shop has built so far uses G1 fillets exclusively**
+(`cyl()`/`cuboid()`'s `rounding=`) — this is very likely the single
+biggest concrete contributor to the "blocky" complaint, not proportion or
+color or texture. The fix isn't a new tool to install — **BOSL2 (already
+vendored) has real G2 continuous-curvature primitives that have gone
+unused this entire time:**
+
+- **`rounded_prism(bottom, height=, joint_top=, joint_bot=, joint_sides=, k=)`**
+  — builds a whole 3D prism with true Bezier-based continuous-curvature
+  rounding on the top edges, bottom edges, AND vertical side edges *at
+  once*, from one call. `k` (default 0.5) controls how gradual the
+  transition is; BOSL2's own docs are explicit that `k=0.92` merely
+  *approximates* a circle and **shows visible seams** where it does —
+  i.e. even this tool can accidentally degrade back to a G1-looking
+  result if `k` is pushed too high. Keep `k` around 0.3–0.6 for a
+  genuinely soft result.
+- **`squircle(size, squareness=, style="superellipse")`** — a 2D
+  superellipse/Fernández-Guasti corner shape (the literal iOS-icon corner
+  language), continuously-varying curvature all the way around instead
+  of "flat edge → sudden constant-radius arc → flat edge." Use as a
+  footprint for `linear_extrude()` or as the polygon fed into
+  `rounded_prism()`.
+- **`offset_sweep(path, height=, top=os_teardrop(r=), bottom=os_circle(r=))`**
+  — for an edge that also needs to stay 3D-printable: `os_teardrop()` is
+  a circular arc for the first ~45° then a straight 45° chamfer for the
+  rest, so a rounded top edge **never exceeds a safe overhang angle** no
+  matter how generous the radius, while a plain large `rounding=` fillet
+  on the same edge either needs supports past ~45-55° or — confirmed by
+  direct render comparison — silently consumes the entire flat top into
+  a dome, losing whatever flat functional surface was supposed to be
+  there. `os_smooth()` is the plain G2 profile (no chamfer) for an edge
+  that isn't overhang-constrained.
+
+**Verified empirically before writing this down, not asserted from
+theory** (three real side-by-side renders, same session):
+1. A `cuboid(rounding=14, edges="Z")` rounded rectangle (this shop's
+   own base-plate pattern, used on Cloudy and others) next to a
+   `rounded_prism()` version at the same nominal footprint/height — the
+   `cuboid` version shows an unmistakable hard edge line where the flat
+   top meets the rounded sides; the `rounded_prism()` version shows zero
+   seam anywhere, reading as one continuously flowing surface.
+2. The same `rounded_prism()` technique hollowed into a real functional
+   shell (`difference()` of a bigger and smaller `rounded_prism()`, same
+   "outer minus independently-dimensioned inner" principle as this
+   shop's existing vessel technique) renders clean (`Simple: yes`,
+   `Volumes: 2`) and looks like a real ceramic/soap-dish tray, not a
+   Tupperware container — confirming this generalizes to functional
+   hollow parts, not just solid decorative blocks.
+3. A plain `rounding2=9` fillet on a cylinder's top edge vs.
+   `os_teardrop(r=9)` at the same nominal radius — the plain fillet
+   consumes the ENTIRE flat top into a rounded dome (and passes through
+   a real unsafe-overhang region on the way there); the teardrop version
+   keeps a proper flat top intact with a soft, safe, supports-free
+   rounded edge around it. This is the both-functional-and-practical
+   case Scott asked for specifically — the "professional" choice here is
+   also the more printable one, not a tradeoff against it.
+
+**When to use which, concretely:**
+- Any primarily-*visible*, hero-angle surface on a decorative or
+  semi-decorative piece (a base plate, an organizer's outer shell, a
+  lamp's dome/skirt, a stand's body) → `rounded_prism()` or
+  `offset_sweep()`+`os_smooth()`/`os_teardrop()`, not `cyl()`/`cuboid()`'s
+  plain `rounding=`, as the new default first choice.
+- A genuinely hidden or purely mechanical edge (inside a cavity no one
+  sees, a hinge knuckle, a bore for a fastener) → the plain G1
+  `rounding=` is still completely fine — spending Bezier-patch complexity
+  on a surface nobody will ever look at or photograph is wasted effort,
+  not "more professional."
+- A shape that's **already rounded, or has many points** (a
+  `smooth_path()`-derived organic silhouette, a many-sided polygon) →
+  BOSL2's own docs warn `rounded_prism()` is not well suited here —
+  further rounding an already-curved input generates tiny interfering
+  Bezier patches and risks an invalid polyhedron. Reach for
+  `offset_sweep()` on the primary profile itself instead, or accept the
+  existing organic curvature as already doing the job G2 rounding would
+  do on a sharp-cornered primitive.
+- A top edge with a real overhang constraint (has to print supports-free,
+  or must keep a genuine flat functional face) → `os_teardrop()`, not a
+  plain large `rounding=`/`joint_top=` value — verify the specific
+  radius doesn't consume the flat face the same way this technique's own
+  test #3 did, by checking the numbers (fillet radius vs. remaining flat
+  width), not by eye.
+
+## Technique 31 — Silhouette-first design judgment: what to decide before modeling, not after (2026-08-28)
+
+Surfacing technique (Technique 30) is necessary but not sufficient — a
+G2-rounded box is still just a rounded box. The other half of "looks
+designed, not blocky" is a set of judgment calls that have to happen
+**before** the first `cuboid()`/`sphere()` is typed, grounded in Dieter
+Rams's "less, but better" framing (aesthetic quality isn't a coat of
+paint applied at the end — it's integral to how the form is conceived) —
+concrete, checkable questions, not a vague "make it nicer" pass:
+
+1. **Decide the hero angle first, model toward it second.** Every piece
+   in this shop's history so far has been modeled primitive-by-primitive
+   (base, then body, then features) with the eventual photograph/render
+   angle decided only once it's time to verify. Real product design
+   works backwards from a primary viewing angle — decide up front
+   whether this piece is meant to be seen from a 3/4 desk-level angle, a
+   straight-on shelf view, or held in-hand, and let that decide which
+   silhouette lines actually matter (the profile that reads at the hero
+   angle) versus which are structural-only and don't need aesthetic
+   investment.
+2. **Silhouette test.** Render the piece as a flat black silhouette
+   (a single un-lit color against a plain background, or just squint at
+   a normal render) at the intended hero angle. A silhouette that's
+   mostly a rectangle-with-rounded-corners reads as blocky regardless of
+   how good the surfacing is — a genuinely interesting silhouette has
+   at least one deliberate asymmetry, taper, or proportion break (the
+   mushroom lamp's flared cap vs. its narrow stem is a real example
+   already in this shop's own work; Cloudy's five-lobe cloud silhouette
+   is another). If the silhouette alone is a plain primitive outline,
+   the surfacing pass won't save it.
+3. **Proportion, stated as a number, not eyeballed.** Pick and write
+   down an actual ratio between a piece's dominant dimensions (e.g. a
+   1:1.6-ish "golden-ish" ratio between a base's width and height reads
+   more intentional than a round-number 1:1 or 1:2 chosen because it was
+   convenient) before finalizing sizes — matches this skill's existing
+   "no magic numbers, name every dimension" rule, just applied to the
+   *relationships between* dimensions, not just the dimensions
+   themselves.
+4. **Count the negative space, don't just fill it.** A design that packs
+   every available surface with texture/holes/features (this shop's own
+   early tendency — see the honeycomb/lattice techniques) reads as busy;
+   a design that leaves deliberate plain, unbroken surface between
+   features reads as considered. When adding a decorative feature, ask
+   whether the surface AROUND it is also doing something (framing it,
+   giving it room) or just incidentally left over.
+5. **One "hero" material/color moment, not several competing ones.**
+   Where a design has 2+ colors or textures available (AMS multi-color,
+   a texture-vs-smooth split like the planter research in Technique 29's
+   own batch findings), let ONE of them carry the visual interest and
+   keep the rest quiet/supporting, rather than treating every added
+   color or texture as equally important — the same "restraint" Rams's
+   principles emphasize directly ("less, but better").
+
+These are judgment calls, not a mechanical checklist to satisfy — but
+they're concrete enough to actually apply before modeling starts, the
+same way this skill's own mechanism taxonomy (Technique 29) gets checked
+against a new mechanical design before code gets written. Pair this with
+Technique 30's surfacing tools for the execution, and with real reference
+photos (this skill's established discipline, Technique 20/21) whenever a
+design category is unfamiliar enough that these judgment calls need
+grounding in a real example rather than instinct alone.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof

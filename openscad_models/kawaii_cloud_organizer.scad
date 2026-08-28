@@ -80,7 +80,19 @@ module cloud_body() {
 }
 
 module base_plate() {
-    cuboid([base_w, base_d, base_h], rounding = base_round, edges = "Z", anchor = BOTTOM);
+    // Continuous-curvature (G2) base instead of a plain circular-arc
+    // fillet (2026-08-28, see 3d-print-design skill Technique 30 for the
+    // full before/after comparison this was verified against) --
+    // joint_bot=0 keeps the BOTTOM edge sharp and flat on purpose (this
+    // skill's own standing rule: never round the bed-contact edge, it
+    // costs first-layer adhesion). joint_top gets a small real round
+    // since base_h=6 doesn't leave much room to work with. base_round is
+    // no longer used here (kept as the informal target for joint_sides'
+    // visual footprint, not passed to rounded_prism directly -- BOSL2's
+    // joint distance and a circular radius aren't the same quantity).
+    footprint = rect([base_w, base_d]);
+    rounded_prism(footprint, height = base_h, joint_top = 2, joint_bot = 0,
+                   joint_sides = base_round + 4, k = 0.4, splinesteps = 24, anchor = BOTTOM);
 }
 
 // ---- face (all on the center lobe -- x=0, z=lobe_z(23), r=23) ----
