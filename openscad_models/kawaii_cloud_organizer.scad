@@ -99,32 +99,30 @@ function near_pole_front_y(dx0, dz0, hw, hh) =
     front_y(clamp_toward_zero(dx0, hw), clamp_toward_zero(dz0, hh));
 poke = 0.35;   // guaranteed clearance past the true curved surface at the footprint's hardest point
 
-// Composition fix (found by actually zooming into the render, not just
-// trusting the connectivity check): eyes and cheeks were close enough to
-// OVERLAP into one lumpy figure-8 blob per side -- the mandatory look-at-
-// the-render step this whole project keeps re-learning to never skip. Eyes
-// now sit higher/closer together near the top of the cluster; cheeks sit
-// lower and further apart, with a real gap (z-ranges don't overlap) so each
-// element stays visually distinct, matching the reference photo's clean
-// separated eye/cheek layout instead of a merged shape.
-eye_dx = 5; eye_dz = 4; eye_w = 6; eye_h = 3.5; eye_cut_extrude = 3.6;
+// Composition fix #2 (found by comparing against a second, more relevant
+// real reference: an actual rainbow-painted wood cloud pen holder, not just
+// the cat-pen-holder used for the earlier "make marks bold" fix). That real
+// competing cloud product's face is much smaller and lower-proportioned
+// than what was here -- two small dot eyes, two small blush dots, a simple
+// smile, and NO nose at all. Its real "top design" quality comes almost
+// entirely from a rainbow paint job on a deliberately simple shape, not
+// from a bigger/busier face. Shrunk every mark down and dropped the nose to
+// match that real minimal proportion -- still non-overlapping (verified
+// same way as fix #1: z-ranges kept disjoint between eye/cheek/mouth).
+eye_dx = 4; eye_dz = 2; eye_w = 4.2; eye_h = 2.6; eye_cut_extrude = 3.0;
 eye_y_face = near_pole_front_y(eye_dx, eye_dz, eye_w / 2, eye_h / 2) + poke;
 eye_z = center_z + eye_dz;
 
-cheek_dx = 10.5; cheek_dz = -5; cheek_r = 3.5; cheek_cut_extrude = 3.5;
+cheek_dx = 8; cheek_dz = -3.5; cheek_r = 2.4; cheek_cut_extrude = 3.0;
 cheek_y_face = near_pole_front_y(cheek_dx, cheek_dz, cheek_r, cheek_r) + poke;
 cheek_z = center_z + cheek_dz;
 
-mouth_dz = -10; mouth_w = 7; mouth_h = 3; mouth_cut_extrude = 2.5;
+mouth_dz = -7; mouth_w = 5; mouth_h = 2; mouth_cut_extrude = 2.2;
 // mouth's own footprint only extends AWAY from the pole in z (a crescent
 // hanging below its reference line), so the reference point itself (not a
 // clamped corner) is already the closest-to-pole point -- no clamp needed.
 mouth_y_face = front_y(0, mouth_dz) + poke;
 mouth_z = center_z + mouth_dz;
-
-nose_dz = -1; nose_r = 2.2;
-nose_y = front_y(0, nose_dz) - nose_r * 0.5;   // proud bump, ~50% embedded (union, not a cut -- burial is harmless here)
-nose_z = center_z + nose_dz;
 
 module eye(mirror_x = false) {
     x = mirror_x ? -eye_dx : eye_dx;
@@ -152,10 +150,6 @@ module mouth() {
                     translate([0, -mouth_h / 4]) square([mouth_w * 1.2, mouth_h / 2], center = true);
                 }
 }
-module nose() {
-    translate([0, nose_y, nose_z]) sphere(r = nose_r);
-}
-
 // ---- pen cup: straight-down cut into the center lobe's own top ----
 // Same lesson the fox's first pen-cup draft learned the hard way: size
 // it to the LOBE it's cut from, not to a generic "big pen cup" number.
@@ -187,7 +181,6 @@ module cloud_organizer() {
         union() {
             base_plate();
             cloud_body();
-            nose();
         }
         pen_cavity();
         eye(false);
