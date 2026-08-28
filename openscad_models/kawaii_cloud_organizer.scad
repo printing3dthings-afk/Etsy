@@ -131,22 +131,63 @@ poke = 0.35;   // guaranteed clearance past the true curved surface at the footp
 // along a real quadratic curve reads as one continuous smiling stroke,
 // not a row of dots (that skill's own documented lesson from the exact
 // same mistake on a different face).
-eye_r = 4.2; eye_dx = 7.2; eye_dz = 2.5; eye_cut_extrude = 3.6;
-eye_y_face = near_pole_front_y(eye_dx, eye_dz, eye_r, eye_r) + poke;
+// Second face pass (2026-08-28): Scott sent a real reference photo (a
+// ceramic mug character) -- the eyes there are drawn-on/painted-looking:
+// closed, gently curved almond shapes sitting lightly on the surface,
+// not deep round holes. The previous pass used a 3.6mm-deep circular
+// cut on a 23mm sphere -- genuinely deep, reading as gouged rather than
+// drawn.
+// First attempt at the shallow version used a flat-faced linear_extrude
+// tool (a scaled/tilted circle pushed straight in), sized via the same
+// near_pole worst-case clearance math the deep version used. Rendered
+// with visibly POINTED tips at the ellipse's long ends, not the
+// reference's soft rounded blob -- root cause, worked out by hand: a
+// flat cutting tool calibrated to just barely clear the surface at its
+// OWN worst point (the tips, farthest from the sphere's local peak)
+// necessarily cuts much deeper everywhere else (the center), so the
+// tips end up as a thin, shallow sliver -- reading as a sharp point --
+// while the center is a much deeper pocket. A flat tool and a curved
+// sphere surface don't share a depth profile.
+// Fix: cut with a SCALED SPHERE (ellipsoid) instead of a flat-faced
+// tool, centered exactly ON the true surface point rather than offset by
+// a worst-case clearance. An ellipsoid's own depth naturally tapers to
+// zero at its edges by construction -- the same reason the mouth's
+// sphere-chain already looked soft and pressed-in rather than gouged --
+// so there's no flat-vs-curved mismatch to create a pointed edge; it
+// reads as a shallow, evenly-rounded dimple everywhere on its boundary,
+// matching the reference's closed-eye shape without needing to copy its
+// wink specifically (not requested). No near-pole clearance math is
+// needed here either: an ellipsoid centered on the surface always pokes
+// into the solid from its center outward (the sphere is convex), so it
+// can never fail to cut at all -- only taper out more or less at its own
+// edges, which is the desired soft look, not a defect to guard against.
+// The tilt is applied to the shape BEFORE the rotate([90,0,0]) that
+// reorients it onto the sphere's face, not folded into a single combined
+// rotate() -- doing it as one rotate([90,0,tilt]) would mix the eye's
+// width axis into the cut's DEPTH axis instead of rotating it within the
+// visible face plane (the same lesson the first attempt already worked
+// out by hand, reused here).
+eye_r = 4.0; eye_w_scale = 1.3; eye_h_scale = 0.65; eye_depth = 1.6; eye_tilt = 8;
+eye_dx = 7.2; eye_dz = 2.5;
+eye_y_face = front_y(eye_dx, eye_dz);
 eye_z = center_z + eye_dz;
 module eye(mirror_x = false) {
     x = mirror_x ? -eye_dx : eye_dx;
+    tilt = mirror_x ? -eye_tilt : eye_tilt;
     translate([x, eye_y_face, eye_z])
         rotate([90, 0, 0])
-            linear_extrude(height = eye_cut_extrude)
-                circle(r = eye_r, $fn = 40);
+            rotate([0, 0, tilt])
+                scale([eye_r * eye_w_scale, eye_r * eye_h_scale, eye_depth])
+                    sphere(r = 1, $fn = 32);
 }
 
 // Smile: 5 points across a real quadratic curve (center lowest, corners
 // curling UP -- outer points get a HIGHER z than the center; this exact
 // sign is called out in Technique 17 because getting it backwards draws
 // a frown, not a smile, and it isn't obvious from the numbers alone).
-mouth_dz = -7; mouth_hw = 6.5; mouth_curl = 2.8; mouth_r = 1.7;
+// mouth_r bumped 1.7->2.0 alongside the eye pass -- a slightly bolder
+// stroke, closer to the reference photo's thick painted-on smile.
+mouth_dz = -7; mouth_hw = 6.5; mouth_curl = 2.8; mouth_r = 2.0;
 // 9 points, not 5 -- each hull() segment is a straight chord of the true
 // curve, so too few points reads as an angular "V" instead of a smooth
 // "U" (confirmed by rendering the 5-point version first: a visible sharp
