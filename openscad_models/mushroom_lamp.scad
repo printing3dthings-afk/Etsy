@@ -76,13 +76,13 @@ cavity_h = puck_h + cavity_clear;
 // per Technique 31 rather than eyeballed).
 stem_top_z = 60;
 collar_r = cavity_r + 7;        // wall around the puck cavity
-base_plate_d = 78; base_plate_h = 4;
+base_plate_d = 78; base_plate_h = 7;   // 7 not 4: the underside cable groove needs a real roof
 
 // (r, z) control points, base to top; closed back down the axis at 0.4
 // rather than 0 -- a revolve profile touching x=0 exactly renders fine
 // in preview but fails EVERY boolean op it is later used in (Technique 15).
 stem_ctrl = [
-    [0.4, 2], [26, 2], [25.5, 7], [21.5, 13], [17, 18],
+    [0.4, 4], [26, 4], [25.5, 8], [21.5, 13], [17, 18],
     [15.5, 22],                                     // waist
     [19.5, 25.5], [25, 30], [31, 34.5], [36.5, 38.8],   // flare, all under 55 deg
     [38.8, 43], [39.3, 48], [39.5, 53], [39.5, stem_top_z],
@@ -137,7 +137,7 @@ module one_collar_slot() {
 
 module collar_slots() {
     // offset 60deg off the 0/180 axis so no slot lands on the cable
-    // notch's own line (cable_notch spans the full X axis below)
+    // route's own line (cable_route runs out along +X below)
     for (i = [0 : n_pins - 1])
         rotate([0, 0, i * 360 / n_pins + 60])
             one_collar_slot();
@@ -149,16 +149,48 @@ module puck_cavity() {
         cylinder(r = cavity_r, h = cavity_h + 1, $fn = 48);
 }
 
-module cable_notch() {
-    // rectangular slot through the collar wall, generously long radially
-    // so it reaches open air outside regardless of the collar's exact
-    // taper radius there. Positioned near the CAVITY FLOOR (not its
-    // vertical center) specifically to stay clear of lock_z above --
-    // the bayonet lock channel sits higher up the collar, and the two
-    // cuts must not overlap.
-    notch_z = stem_top_z - cavity_h + 5;
-    translate([0, 0, notch_z])
-        cube([70, 10, 9], center = true);
+// ---- cable routing (2026-08-28) ----
+// Replaces cable_notch(), which cut a slot out through the COLLAR WALL --
+// a real bug once the cap was rebuilt: the cap's sleeve now wraps that
+// exact band (bore 40.1 against the collar's 39.5, over world z 27..63),
+// so a cable leaving there is blocked by solid cap. And even unblocked it
+// would have exited INSIDE the cap with nowhere to go.
+//
+// The route now runs down the middle of the stem and out a groove in the
+// UNDERSIDE of the base, so the wire lies flat under the lamp and the
+// base still sits flush on a desk.
+//
+// Everything on the path is sized for the PLUG, not the wire. The cable
+// is attached to the puck, so the USB-A end (12 x 4.5mm) has to travel
+// the whole route during assembly -- a channel sized to the 3.5mm cable
+// would look fine in CAD and be impossible to actually thread.
+cable_ch_d = 13;        // vertical channel -- 1mm clearance on a 12mm plug
+cable_groove_w = 13;
+cable_groove_d = 4.2;   // deeper than the ~3.5mm cable, so it sits fully recessed
+cable_relief_w = 6;     // shallow relief across the cavity floor, under the puck
+
+module cable_route() {
+    // 1. relief across the puck cavity's floor, so the cable can leave the
+    //    puck at its back OR its edge and still reach the centre. Stops at
+    //    r=26 -- it sits under the 59mm puck either way, and running it
+    //    further would break out through the stem's own side wall, which is
+    //    only ~33mm in radius down at this height.
+    translate([0, 0, stem_top_z - cavity_h - 1.6])
+        cube([52, cable_relief_w, 3.2], center = true);
+
+    // 2. vertical channel down the stem's axis into the base
+    translate([0, 0, cable_groove_d - 0.5])
+        cylinder(d = cable_ch_d, h = stem_top_z - cavity_h - cable_groove_d + 1.5, $fn = 48);
+    // flared mouth so the cable turns into the channel over a radius
+    // rather than kinking on a sharp lip
+    translate([0, 0, stem_top_z - cavity_h - 3.4])
+        cylinder(d1 = cable_ch_d, d2 = cable_ch_d + 6, h = 3.5, $fn = 48);
+
+    // 3. groove in the base's underside, open downward and running out
+    //    through the rim. Starts behind the channel so the channel's whole
+    //    footprint drops into it rather than leaving a blind pocket.
+    translate([-cable_ch_d / 2 - 1, -cable_groove_w / 2, -1])
+        cube([base_plate_d, cable_groove_w, cable_groove_d + 1]);
 }
 
 // ---- brand mark on the base plate (same fitted pattern as Cloudy) ----
@@ -178,7 +210,7 @@ module lamp_stem() {
             stem_body();
         }
         puck_cavity();
-        cable_notch();
+        cable_route();
         collar_slots();
         stem_brand_mark();
     }

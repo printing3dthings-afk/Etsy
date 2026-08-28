@@ -2824,6 +2824,49 @@ standard pass for any revolved or lofted profile**, not just to designs
 that look risky; it is three lines of arithmetic over the control points
 and it caught a defect that had survived a dozen rounds of review.
 
+## Technique 34 — Rebuilding one part silently breaks features on the OTHER part; and a service route must admit the biggest thing that travels it (2026-08-28)
+
+Two findings from adding real cable routing to Mushie, both generalizable
+beyond this model.
+
+**A rebuild invalidates features on parts you did not touch.** Mushie's
+`cable_notch()` cut an exit slot through the stem's collar wall, and had
+been correct for a year of iterations. Rebuilding the CAP (Technique 33)
+put a new internal sleeve at bore 40.1 directly around the collar's 39.5
+outer radius, across exactly the height band the notch exits at — so the
+cable now had nowhere to go, blocked by solid cap material. Nothing
+errored. Connectivity was clean, the interference check passed (the notch
+is a void, not a solid), and every render looked right, because a blocked
+*service route* is invisible to every check this skill had been running.
+**After redesigning any part of a multi-part assembly, re-check every
+feature on the other parts whose correctness depended on the old
+geometry** — especially voids, clearances and routes, which no
+solid-vs-solid interference test can see. A cheap, direct test:
+render the route's own cut geometry alone and confirm it is ONE connected
+component whose bounding box reaches both endpoints it is supposed to
+connect (here: up into the puck cavity, and out past the base's rim).
+That catches a severed or blocked route immediately.
+
+**Size a service route for the largest object that must travel it, not
+for the thing that ends up living in it.** The obvious sizing input is the
+cable's ~3.5mm diameter; the binding one is the USB-A plug on its end
+(12 × 4.5mm), because the cable is captive to the LED puck, so the plug
+has to pass through the entire route during assembly. A channel sized to
+the wire renders beautifully and is physically impossible to thread. The
+same reasoning applies to any route a connector, knot, strain relief or
+fastener head has to pass. Where a route genuinely cannot be widened,
+the alternative is to make it OPEN along its length (a groove rather than
+a tunnel) so the part can be laid in sideways instead of threaded — which
+is also what lets the base groove here double as the flush wire seat.
+
+**Design note worth reusing: an underside groove is the right answer for
+a lamp/appliance base.** Running the wire down the middle and out a groove
+milled into the base's underside keeps the base sitting flush on a desk
+(no rocking, no wire pinched under a rim) and hides the route completely.
+Budget the plate thickness for it up front — the groove must be deeper
+than the cable so it fully recesses, and still leave a real roof above it
+(here 7mm plate, 4.2mm groove, 2.8mm roof).
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
