@@ -125,6 +125,48 @@ eye_x = 9; eye_y_face = 36; eye_z = 73; eye_dia = 13;
 nose_r = 3.6; nose_center = [0, 49, 53];
 cheek_r = 4.2; cheek_depth = 0.8; cheek_x = 13; cheek_y_face = 28.5; cheek_z = 62;
 
+// ---- v3 realism details (2026-08-28) ----
+// Applying the v2 lesson before writing a single one of these: every
+// CUT below was placed only after exporting the relevant shape alone
+// and measuring its real front-surface y at the target (x,z) window
+// (same technique as the eye fix), not estimated from head_pts. The
+// ADDs (brow ridges, chest patch, phone-stand lip) skip that step on
+// purpose -- an add can't create a hidden-buried-void defect the way a
+// cut can, so the risk profile is different and a visual check after
+// rendering is sufficient.
+//
+// Whisker dimples: measured real surface at (x=4-7,z=56-60)->y=45.06
+// and (x=3-6,z=52-56)->y=47.37. Three per side, stepping down the
+// muzzle, each cut-start 1.5mm inside its own measured surface.
+whisker_dia = 2.2; whisker_depth = 1.0;
+whisker_pts = [   // [x, y_face, z]
+    [5.5, 43.5, 58],
+    [6.3, 45.8, 55],
+    [6.6, 47.0, 52],
+];
+
+// Mouth: measured real surface at (x=-1..1,z=48-51)->y=47.7. A small
+// downward-arc groove (same dome-shape technique as eye_2d, just
+// smaller and thinner) sitting just under the nose base.
+mouth_y_face = 46.5; mouth_z = 48; mouth_dia = 7; mouth_depth = 1.0;
+
+// Brow ridges: small raised arcs just above each eye -- an ADD, so
+// placed by eye/embed-depth rather than measured (see note above).
+brow_x = 9; brow_y = 37.5; brow_z = 80.5;
+
+// Chest patch: a raised, gently domed patch on the lower-front body,
+// suggesting the lighter belly-fur tuft real foxes have. An ADD, deeply
+// embedded (only proud_frac of its own radius pokes out) -- generous
+// embed depth applied from the start this time instead of discovered
+// the hard way (see the stash-hatch and dish-cavity postmortems above).
+chest_center = [0, 8, 48]; chest_scale = [1.3, 0.6, 1.0]; chest_r = 12;
+
+// Phone-stand lip: a small raised nub at the base of the tail/body gap
+// (near tail_pts[0], the tail's own thickest/lowest point) so a leaned
+// phone has a real physical stop instead of just an open gap -- makes
+// the stand function both more real and more visible.
+lip_center = [-24, -28, 10]; lip_r = 5; lip_scale = [1, 1, 0.6];
+
 // ---- functional cavities ----
 // body_top_z(x,y): exact analytic top-surface height of the body
 // ellipsoid above world point (x,y) -- replaces an earlier version that
@@ -271,6 +313,52 @@ module nose() {
     translate(nose_center) sphere(r = nose_r);
 }
 
+// Small pinprick recesses, plain full circles (no dome-clipping needed
+// at this size) -- see whisker_pts above for the measured positions.
+module whisker(pt, mirror_x = false) {
+    x = mirror_x ? -pt[0] : pt[0];
+    translate([x, pt[1], pt[2]])
+        rotate([90, 0, 0])
+            linear_extrude(height = whisker_depth + 0.5)
+                circle(r = whisker_dia / 2, $fn = 16);
+}
+module whiskers(mirror_x = false) {
+    for (p = whisker_pts) whisker(p, mirror_x);
+}
+
+// Same dome-clip technique as eye_2d() -- upper half only, so it stays
+// within the measured z>=48 material band instead of risking the empty
+// space below the snout's underside (found empty during measurement).
+module mouth_2d() {
+    intersection() {
+        circle(r = mouth_dia / 2, $fn = 32);
+        translate([0, mouth_dia / 4]) square([mouth_dia * 1.2, mouth_dia / 2], center = true);
+    }
+}
+module mouth() {
+    translate([0, mouth_y_face, mouth_z])
+        rotate([90, 0, 0])
+            linear_extrude(height = mouth_depth + 0.5)
+                mouth_2d();
+}
+
+// Brow ridges, chest patch, phone-stand lip -- all ADDs, not cuts, so
+// none of them can create a hidden-buried-void defect the way a cut
+// can; embed depth just needs to be generous enough to fuse, checked
+// visually after render rather than pre-measured (see v3 note above).
+module brow(mirror_x = false) {
+    x = mirror_x ? -brow_x : brow_x;
+    translate([x, brow_y, brow_z])
+        scale([1.7, 1, 0.55])
+            sphere(r = 3.4, $fn = 32);
+}
+module chest_patch() {
+    translate(chest_center) scale(chest_scale) sphere(r = chest_r, $fn = 64);
+}
+module phone_lip() {
+    translate(lip_center) scale(lip_scale) sphere(r = lip_r, $fn = 48);
+}
+
 // ---- functional cavities ----
 module pen_cavity() { top_cut(pen_x, pen_y, pen_r, pen_depth); }
 
@@ -302,12 +390,19 @@ module fox_body() {
             foot(false);
             foot(true);
             nose();
+            brow(false);
+            brow(true);
+            chest_patch();
+            phone_lip();
         }
         pen_cavity();
         eye(false);
         eye(true);
         cheek(false);
         cheek(true);
+        whiskers(false);
+        whiskers(true);
+        mouth();
         brand_mark();
     }
 }
