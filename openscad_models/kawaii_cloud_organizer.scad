@@ -33,13 +33,47 @@ base_w = 104; base_d = 62; base_h = 6; base_round = 26;
 lobe_embed = 2;
 function lobe_z(r) = base_h - lobe_embed + r;
 lobes = [   // [x, r]
-    [-34, 13],
-    [-17, 19],
+    [-24, 13],
+    [-11, 19],
     [  0, 23],   // center -- carries the face and the pen cup
-    [ 17, 19],
-    [ 34, 13],
+    [ 11, 19],
+    [ 24, 13],
 ];
 
+// Smooth transitions between lobes (2026-08-28) -- a real engineering
+// dead-end worth recording so it isn't re-attempted blind next time:
+//   1. hull() between adjacent pairs -- WRONG. A full hull between two
+//      whole spheres is their convex hull, filling the entire concave
+//      valley between them, not just the crease -- erased the lobed
+//      "cloud" silhouette into one plain dome (confirmed by rendering).
+//   2. minkowski(union, ball) -- also wrong, caught from the math before
+//      wasting render time: Minkowski sum distributes over union,
+//      (A union B) + ball = (A+ball) union (B+ball), so it only produces
+//      bigger spheres with the exact same crease, never smooths it.
+//   3. A small fillet sphere positioned at the midpoint between adjacent
+//      lobe centers -- had ZERO visible effect (confirmed: identical
+//      triangle/facet count before and after adding it). Root cause,
+//      found by directly measuring the exported mesh: the seam is a
+//      NORMAL discontinuity, not a height gap -- the union boundary's
+//      height is already continuous (verified by scanning real STL
+//      vertices across the seam, monotonic, no dip to fill), so a bump
+//      placed in "the gap" was geometrically redundant with the existing
+//      union the whole time. An added bump can only fix a height gap; it
+//      cannot fix a normal/tangent discontinuity.
+//   4. BOSL2's round3d() -- the actually-correct tool (proper 3D
+//      rounding of both convex and concave edges), but its own docs
+//      warn "I cannot emphasize enough just how slow it is" -- confirmed
+//      firsthand: didn't finish in 90s even at $fn=12 or a tiny radius.
+//      Not usable in this project's iteration loop.
+// Real, practical fix: there is no cheap true smooth-blend tool available
+// here (no metaballs in this vendored BOSL2, and the correct CSG rounding
+// op is too slow to render). Deepened the lobe overlap substantially
+// (spacing 17mm -> 11mm) instead -- a plain union() still has a technical
+// crease, but a deep enough overlap makes its intersection angle shallow
+// enough that it reads as a soft rounded fold rather than a hard seam
+// (confirmed by rendering multiple overlap depths and comparing). This
+// keeps the exact same per-sphere geometry the face-cut math depends on,
+// so center_r and every eye/mouth calc below are untouched.
 module cloud_body() {
     for (l = lobes)
         translate([l[0], 0, lobe_z(l[1])]) sphere(r = l[1]);
@@ -58,18 +92,14 @@ center_r = 23;
 center_z = lobe_z(center_r);
 function front_y(dx, dz) = sqrt(max(center_r * center_r - dx * dx - dz * dz, 1));
 
-// ---- MIXED FINISH (2026-08-28): eyes + mouth NEGATIVE (recessed), cheeks
-// still RAISED bumps. Per direct request: drop the round raised "eyebrow"-
-// looking eye dots and cut real eyes + a real mouth into the surface so
-// they read with actual depth/shadow instead of a flat sticker-like bump.
-// The recessed-cut technique on this curved sphere was already proven
-// correct earlier in this file's history (see git log: near_pole_front_y
-// finds the footprint's own closest-to-pole point -- the true hardest
-// point for a flat tool to clear -- and `poke` guarantees it breaks
-// through everywhere; verified single connected component, no buried
-// cuts) -- reusing that exact math rather than re-deriving it. Cheeks stay
-// as raised bumps (bump_y / union) since that half was never the problem.
-function bump_y(dx, dz, r, embed_frac) = front_y(dx, dz) - r * embed_frac;
+// ---- Eyes + mouth as NEGATIVE (recessed) cuts (2026-08-28). Cheeks
+// removed per direct request. The recessed-cut technique on this curved
+// sphere was already proven correct earlier in this file's history (see
+// git log: near_pole_front_y finds the footprint's own closest-to-pole
+// point -- the true hardest point for a flat tool to clear -- and `poke`
+// guarantees it breaks through everywhere; verified single connected
+// component, no buried cuts) -- reusing that exact math rather than
+// re-deriving it.
 function clamp_toward_zero(v0, h) = (v0 > h) ? v0 - h : (v0 < -h) ? v0 + h : 0;
 function near_pole_front_y(dx0, dz0, hw, hh) =
     front_y(clamp_toward_zero(dx0, hw), clamp_toward_zero(dz0, hh));
@@ -84,13 +114,6 @@ module eye(mirror_x = false) {
         rotate([90, 0, 0])
             linear_extrude(height = eye_cut_extrude)
                 circle(r = eye_r, $fn = 40);
-}
-
-cheek_r = 3.3; cheek_dx = 9; cheek_dz = -3;
-module cheek(mirror_x = false) {
-    x = mirror_x ? -cheek_dx : cheek_dx;
-    translate([x, bump_y(cheek_dx, cheek_dz, cheek_r, 0.65), center_z + cheek_dz])
-        sphere(r = cheek_r);
 }
 
 mouth_dz = -7; mouth_w = 5; mouth_h = 2; mouth_cut_extrude = 2.5;
@@ -109,11 +132,11 @@ module mouth() {
                 }
 }
 // ---- pen cup: straight-down cut into the center lobe's own top ----
-// Same lesson the fox's first pen-cup draft learned the hard way: size
-// it to the LOBE it's cut from, not to a generic "big pen cup" number.
-// center_r=23 -> a 20mm-diameter, 22mm-deep cup is a real, comfortably
-// proportioned cavity, nowhere near the lobe's own 46mm diameter.
-pen_r = 10; pen_depth = 22;
+// Enlarged per direct request from the original 20mm-diameter cup to
+// 29mm -- still well clear of the lobe's own 46mm diameter (8mm of solid
+// wall remains at the widest point), just a real, noticeably bigger
+// pen/pencil capacity.
+pen_r = 14.5; pen_depth = 24;
 module pen_cavity() {
     top_z = center_z + center_r;
     translate([0, 0, top_z - pen_depth + 2])
@@ -139,8 +162,6 @@ module cloud_organizer() {
         union() {
             base_plate();
             cloud_body();
-            cheek(false);
-            cheek(true);
         }
         pen_cavity();
         eye(false);
