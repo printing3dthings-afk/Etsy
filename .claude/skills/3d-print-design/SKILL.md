@@ -2695,6 +2695,68 @@ photos (this skill's established discipline, Technique 20/21) whenever a
 design category is unfamiliar enough that these judgment calls need
 grounding in a real example rather than instinct alone.
 
+## Technique 32 — Decoupling a mechanical clearance from the visible silhouette (and a camera-angle trap that hid the real fix from view) (2026-08-28)
+
+Mushie's cap flare (Technique 29's bayonet cap) needed a second real pass:
+Scott marked up a render directly, circling a genuinely flat, near-vertical
+band sitting right under the dome before the flare opened out — "It's
+still to dramatic of a hard slope. It's not like a mushroom."
+
+**The wrong assumption that cost the most time: that the flat band was a
+curve-family problem.** The band existed because the bayonet pin (a small
+sphere on the cap, meant to fuse into the cap's own skirt wall) only
+overlaps that wall when the wall's OUTER radius at the pin's exact height
+stays under a hard bound (`collar_r + wall_t + pin_r`) — and the dome's
+own geometry fixes the flare's starting radius so close to that bound
+that any curve satisfying it has to grow very slowly for a real stretch
+right at the start. Three different curve families were tried against
+this same constraint — plain `t^2`, `t^4`, and a literal quarter-ellipse
+(chosen specifically to match the dome's own spherical family — flat
+tangent at the join, steep at the rim) — and **all three rendered as
+visually the same flat-drum silhouette**, confirmed by directly
+differentiating each formula: every one of them has `dr/dt=0` at `t=0`
+by construction (a power `t^p` for `p>1`, and the ellipse, both hit zero
+slope at their start on purpose). The exponent never mattered; the
+zero-slope start was the actual defect, and it was shared by every
+curve tried up to that point.
+
+**The real fix: stop making the OUTER (visible) surface responsible for
+the pin's mechanical clearance at all.** Give the pin its own small
+support POST — a plain radial cylinder from inside the pin sphere out to
+a fixed depth safely inside the shell's wall thickness (verified to stay
+below the curve's own hard-minimum radius everywhere, so it can never
+poke through the visible surface) — and let the outer curve be picked
+for looks alone. Once mechanical and visual concerns are cleanly
+separated like this, the actual visual fix was simple: use a curve with
+a real, nonzero initial slope (a linear/quadratic blend), so the surface
+visibly leans outward starting immediately at the join, rather than
+forcing a flat-tangent match with the dome that a viewer reads as "still
+vertical." This is a generalizable move, not a one-off: whenever a
+mechanical feature (a lock pin, a boss, a magnet pocket) forces an
+unwanted constraint onto a visible surface, check whether the feature can
+get its own small dedicated connector instead of bending the whole
+surface's shape around it.
+
+**A second, purely-verification lesson from the same session, worth its
+own warning: a near-top-down camera angle can hide a real curvature fix
+from your own eyes.** After the post/curve fix, three separate renders
+(all genuinely different geometry, confirmed by different STL md5sums)
+looked visually IDENTICAL at `--camera=...,80,0,...` (rotate-X=80°, i.e.
+almost bird's-eye) — a flared/tapered profile is foreshortened hardest
+from nearly directly above, so a real change in how fast a cone opens up
+can be almost invisible from that angle. Switching to a level product-
+shot angle (rotate-X≈65°, closer to how the piece would actually be
+photographed) immediately revealed the fix was working — the same
+geometry that looked like an unchanged flat drum from 80° read as an
+obviously continuous, gently bulging mushroom cap from 65°. When a
+render doesn't seem to reflect an edit you're sure you made, checking the
+camera angle is a real, non-obvious debugging step, not "recheck it just
+in case" — verify with a level, close-to-final-presentation angle before
+trusting what a render appears to show, and when in doubt, extract the
+raw 2D profile curve directly (`echo()` the control points, or plot the
+polygon flat with reference lines) rather than trying to eyeball a subtle
+curvature difference off a small 3D render.
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof

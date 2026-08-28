@@ -284,17 +284,92 @@ skirt_r_top = sqrt(cap_sphere_r ^ 2 - dome_cut_z ^ 2);   // = 44.0, matches the 
 // print rim-down regardless of steepness), and world_rim lands at 25.8mm
 // -- matching the Seventh/Eighth correction's own already-confirmed
 // "doesn't swallow the stem" proportion.
-near44_len = 14;     // dome edge down to S -- just enough to cover the pin (8mm above margin,
-                      // 6mm below) with real margin on both sides, not the whole collar height
-flare_len = 20;       // S down to the true rim -- now fully decoupled from rim height, so this
-                      // can be long and gentle without dropping the rim any further
-skirt_len = near44_len + flare_len;
-skirt_r_rim = 60;     // the TRUE open rim -- real flare, spread over a much longer, gentler run
+// Twelfth correction (2026-08-28): Scott marked up the render directly --
+// a real ~14mm dead-FLAT vertical band was still sitting right under the
+// dome (the Eleventh correction's "near44_len" zone, both its endpoints
+// pinned to the exact same radius on purpose) before the flare began.
+// Real mushroom caps have no such feature anywhere -- confirmed against
+// the reference photos Scott pointed at directly: the whole cap, dome
+// to rim, is ONE uninterrupted curve. There is no separate "collar band"
+// visible on a real mushroom because there's no reason there should be
+// one -- that band existed here only as a leftover of needing ~44mm
+// radius for the pin, modeled as a literal flat plateau instead of just
+// checking whether the constraint holds.
+// First attempt at "one continuous curve, no flat zone" used a plain t^2
+// power -- broke the bayonet lock (stl_components.py found 3 floating
+// pins, not the expected 2 solid parts). Root-caused by extracting real
+// vertices from the exported STL, not by re-guessing the math: the pin
+// is a SPHERE (center at radius collar_r=39.5, radius pin_r=2.6), so the
+// real embedding test isn't "is the shell's radius close to 44" -- it's
+// "does the pin's widest cross-section (its own equator, at the pin's
+// exact height) reach past the shell's INNER radius there." That
+// requires shell outer radius at the pin's height to stay under
+// collar_r + cap_shell_t + pin_r = 39.5 + 2.4 + 2.6 = 44.5mm -- a
+// tighter, and different-shaped, bound than "clearance over collar_r"
+// (an earlier, backwards version of this same check that had been
+// silently wrong all along -- it computed inner_radius - collar_r and
+// treated a positive number as safe margin, when the real requirement is
+// inner_radius < collar_r + pin_r, the opposite direction). A plain t^2
+// curve overshoots 44.5mm at the pin's fixed height (44.89mm, verified
+// against the real exported mesh) -- BUT a full-sphere overlap isn't
+// actually required either: since the pin is one solid sphere, any real
+// overlap anywhere in its volume (even just through its own equator,
+// not its poles) is enough to fuse it into the shell as one connected
+// solid -- confirmed against the ORIGINAL always-working flat-zone
+// design, which itself only ever had positive margin at the pin's own
+// center height (+0.5mm there), not across its whole vertical span.
+// So the real, sufficient test is just: shell radius at the pin's exact
+// center height must clear 44.5mm, with enough margin to survive
+// $fn=90 mesh discretization. A plain t^2 curve grows too fast near the
+// dome edge to clear it (t^2 term dominates immediately); a higher power
+// (t^4) stays far flatter for longer near t=0 -- which is also the
+// CORRECT visual direction per the reference photos (mushroom caps grow
+// slowly near the top and visibly accelerate toward the rim, so a curve
+// that's flatter near the dome and steeper near the rim is more natural,
+// not less) -- and is still perfectly C-infinity smooth everywhere, so
+// there is no corner/discontinuity anywhere on the curve, unlike the
+// flat-band-plus-corner shape this correction is replacing.
+// First real fix attempt used a t^4 power curve on the OUTER profile
+// (staying flatter than t^2 for longer, since that's what clearing
+// 44.5mm at the pin's fixed t=0.235 required). It rendered mechanically
+// sound (verified: pins fuse into the shell, stl_components.py reports
+// the expected 2 parts) -- but a real render of the assembled piece
+// showed the SAME visual defect this correction exists to fix: a power
+// curve that's forced flat enough near t=0 to satisfy a mechanical bound
+// at t=0.235 is *necessarily* still barely rising by t=0.5 (r=45.0mm --
+// only an eighth of the total 16mm rise halfway up the curve), which
+// reads as the same near-vertical "drum" silhouette Scott rejected, just
+// smoothed at the derivative level instead of having an actual corner.
+// Smoothness alone doesn't fix a visual complaint about *shape*.
+// Second attempt swapped in a quarter-ellipse (flat tangent at the dome
+// edge, matching the dome's own sphere family) -- mathematically the
+// "right" shape per the Eleventh correction's reference-photo research,
+// but a real zoomed render (view15_zoom.png) showed it STILL reads as a
+// flat drum for a clearly visible stretch right under the dome.
+// Third attempt: a plain t^2 (the very first thing tried, before the
+// pin-support-post fix existed to decouple it from mechanical margin) --
+// re-rendered (view16_zoom.png) and STILL visually indistinguishable
+// from the ellipse version. Root cause, found by actually differentiating
+// both formulas rather than trusting "t^2 looks less flat than t^4 in a
+// spreadsheet": EVERY power t^p for p>1 has dr/dt=0 exactly at t=0, and
+// so does the quarter-ellipse (derived that way on purpose) -- all three
+// curves tried so far share the exact same defect, a perfectly flat
+// starting TANGENT at the dome edge, just with different how-fast-it-
+// stops-being-flat rates. That's why they all rendered the same: the
+// zero-slope start, not the exponent, is what reads as "drum."
+// The actual fix: give the curve a real, nonzero initial slope at the
+// dome edge instead of a flat one -- blend a genuine linear term into
+// the quadratic so the surface visibly leans outward immediately, still
+// curving progressively steeper toward the rim (keeping the
+// "accelerating toward the rim" character the reference photos showed)
+// rather than opening at one constant cone angle the whole way (the
+// original, separately-rejected "uniform-slope cone" look).
+// Mechanical clearance no longer depends on this curve at all -- the pin
+// support POST in cap_pins() below handles that independently -- so this
+// choice is free to be judged on appearance alone.
+skirt_len = 34;      // dome edge to true rim, ALL of it one continuous curve now
+skirt_r_rim = 60;    // the TRUE open rim
 cap_rim_z = dome_cut_z - skirt_len;   // the TRUE open rim plane
-// LOCAL height (measured up from the rim, z=0) where the profile first
-// reaches skirt_r_top -- purely descriptive here (unlike the tenth
-// correction's version, this no longer drives the assembly offset).
-collar_interface_z = flare_len;
 
 // Profile control points, LOCAL height measured up from the true rim
 // (z=0) -- fed through smooth_path() so every segment blends with no
@@ -304,20 +379,25 @@ collar_interface_z = flare_len;
 // last-to-first closing edge providing the rim and dome-side
 // wall-thickness caps for free -- no floor logic needed, since neither
 // end is closed here).
-// t=1 (rim) down to t=0 (flare-start) -- ordered so z comes out ASCENDING
-// (rim=0 first, flare-start=collar_interface_z last), matching the
-// polygon's required rim-to-dome winding. Getting this order backwards
-// silently produces a self-intersecting garbled profile with no error
-// (confirmed by reasoning through it numerically before ever rendering,
-// not discovered by trial and error).
-skirt_flare_pts = [for (t = [1.0, 0.8, 0.6, 0.4, 0.2, 0])
-    [skirt_r_top + (skirt_r_rim - skirt_r_top) * t * t,
-     collar_interface_z - t * flare_len]
+// t=1 (rim) down to t=0 (dome edge) -- ordered so z comes out ASCENDING
+// (rim=0 first, dome edge=skirt_len last), matching the polygon's
+// required rim-to-dome winding. Getting this order backwards silently
+// produces a self-intersecting garbled profile with no error (confirmed
+// by reasoning through it numerically before ever rendering, not
+// discovered by trial and error).
+// blend fraction: real, nonzero initial slope (the actual fix -- see
+// correction notes above) plus enough quadratic weight that the curve
+// visibly accelerates toward the rim rather than reading as a straight
+// cone frustum -- confirmed by rendering both: a 0.6 blend (mostly
+// linear) looked like a plain cone (view17_level_zoom2.png); dropping to
+// 0.35 keeps the same real lean right off the dome edge while giving
+// the lower half of the flare noticeably more outward bulge, closer to
+// the reference photos' "accelerating toward the rim" curvature.
+skirt_lean = 0.35;
+skirt_outer_ctrl = [for (t = [1.0, 0.85, 0.7, 0.55, 0.4, 0.25, 0.1, 0])
+    [skirt_r_top + (skirt_r_rim - skirt_r_top) * (skirt_lean * t + (1 - skirt_lean) * t * t),
+     skirt_len - t * skirt_len]
 ];
-skirt_outer_ctrl = concat(
-    skirt_flare_pts,                       // rim (z=0) up to flare-start (z=collar_interface_z, r=skirt_r_top exactly)
-    [[skirt_r_top, skirt_len]]             // dome edge -- exact same radius, a near-flat run between the two
-);
 skirt_outer_pts = smooth_path(skirt_outer_ctrl, method = "corners", size = 2, splinesteps = 8);
 
 // Real spherical-shell cuts: aim each hole's cylinder from OUTSIDE the
@@ -455,14 +535,36 @@ module cap_gills() {
 // translated, it lands at the real WORLD height of the lock channel.
 cap_assembly_offset = stem_top_z - dome_cut_z;
 pin_local_z = lock_z - cap_assembly_offset;
+// Each pin gets its own short support POST fusing it to the skirt's
+// inner wall -- added once the aesthetic curve (the quarter-ellipse
+// above) was freed to do whatever a real mushroom cap's silhouette
+// needs, independent of the pin's own mechanical clearance. Without
+// this, the pin sphere's own overlap with the wall shrinks to a hair
+// (confirmed: as little as 0.05mm with the ellipse curve at this pin's
+// exact height, since skirt_r_top=44.0 is a hard geometric floor the
+// dome forces regardless of curve shape) -- workable in theory but too
+// thin to trust against $fn mesh discretization or print tolerance.
+// The post is a plain radial cylinder from inside the pin sphere
+// (post_r0=collar_r-1, well inside the sphere's own [36.9,42.1] extent
+// so it fuses with zero gap) out to post_r0+post_len=43.3 -- comfortably
+// past the inner wall at this height (~42mm) but a real margin short of
+// skirt_r_top=44.0, the curve's own hard minimum everywhere -- so the
+// post can never poke through the visible outer surface regardless of
+// which exact point on the curve it lands under.
+pin_post_r = 1.8;
+pin_post_len = 4.8;
 module cap_pins() {
     // positioned at the LOCKED angle (slot's own start angle + lock_angle)
     // -- this model shows the mechanism already twisted shut, same
     // convention as bayonet_jar.scad.
     for (i = [0 : n_pins - 1])
-        rotate([0, 0, i * 360 / n_pins + 60 + lock_angle])
+        rotate([0, 0, i * 360 / n_pins + 60 + lock_angle]) {
             translate([collar_r, 0, pin_local_z])
                 sphere(r = pin_r, $fn = 20);
+            translate([collar_r - 1, 0, pin_local_z])
+                rotate([0, 90, 0])
+                    cylinder(r = pin_post_r, h = pin_post_len, $fn = 20);
+        }
 }
 
 module lamp_cap() {
