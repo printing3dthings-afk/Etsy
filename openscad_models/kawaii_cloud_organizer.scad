@@ -58,97 +58,48 @@ center_r = 23;
 center_z = lobe_z(center_r);
 function front_y(dx, dz) = sqrt(max(center_r * center_r - dx * dx - dz * dz, 1));
 
-// Reworked after comparing against a real, popular kawaii pen holder
-// (Puff Puff Pastries' "Cat Pen Holder," MyMiniFactory -- fetched and
-// viewed directly, not worked from memory) that reads instantly as a
-// face from across a room: every element there is BOLD and FILLED
-// (solid black eye, solid pink blush circles, thick brow/mouth lines),
-// tightly clustered, and sized large relative to the surface it sits
-// on. The first draft here used a thin dome-shaped crescent for the
-// eyes -- geometrically a true semicircle, not a sliver, but a thin
-// arc riding a curved surface recedes out of view from most angles
-// (only the flat base of the dome stays visible face-on), which is
-// exactly why it read as scattered thin marks rather than a face. Eyes
-// are now flattened FILLED OVALS instead -- a solid shape has a real
-// silhouette from any angle, the same reason the cheeks (already solid
-// circles) were the one part of v1's face that actually read fine.
-// Also added a mouth (missing before) and moved everything closer
-// together into one compact cluster instead of spreading toward the
-// lobe's edges.
-// ---- CRITICAL FIX #2 (found by re-deriving the direction of the bug after
-// fix #1 made the cheek WORSE, not better -- re-verified against the
-// exported mesh again rather than trusting the first correction by eye):
-// a cut's extrusion cap is FLAT, the sphere surface it lands on is CURVED,
-// and front_y is MAXIMIZED at the pole (dx=dz=0) and falls off outward. The
-// hardest point for a flat tool to clear is therefore the point in the
-// footprint CLOSEST to the pole (highest local surface bulge) -- NOT the
-// farthest corner. Fix #1 used the farthest corner, which pushed the tool
-// even deeper inside the solid and made the cheek's cut fully buried
-// (confirmed: stl_components.py reported a new sealed fragment whose bbox
-// exactly matched the cheek tool). Corrected: `near_pole_front_y` finds the
-// footprint's own closest-to-pole point (the true hardest constraint) and
-// `poke` is added on top of THAT, guaranteeing the tool clears the surface
-// everywhere in its footprint, with more clearance (deeper cut) toward the
-// far side where the surface naturally recedes -- expected and fine for a
-// small cosmetic dimple, not a bug. Also pulled every mark closer to the
-// pole (bigger offsets = more curvature spread = harder to cut cleanly with
-// a flat tool) -- a tighter, more centered cluster both reads better as a
-// face (per the reference image) and keeps this math well-behaved.
-function clamp_toward_zero(v0, h) = (v0 > h) ? v0 - h : (v0 < -h) ? v0 + h : 0;
-function near_pole_front_y(dx0, dz0, hw, hh) =
-    front_y(clamp_toward_zero(dx0, hw), clamp_toward_zero(dz0, hh));
-poke = 0.35;   // guaranteed clearance past the true curved surface at the footprint's hardest point
+// ---- REBUILT AS RAISED BUMPS, NOT ENGRAVED CUTS (2026-08-28) ----
+// After three rounds of engraved-cut problems on this curved surface --
+// a fully buried mouth (flat tool never reached the real surface), a
+// figure-8 eye/cheek overlap, and still-wrong proportions after fixing
+// both -- Scott's call was direct: fix it properly or cut it. Switching
+// to RAISED bumps is the real fix, not another parameter tweak: a
+// union() bump has no "does this actually reach the surface" failure
+// mode the way a difference() cut does. The nose bump used this exact
+// technique from the very first version of this file and never had a
+// single bug across the whole project -- every cut-based fix above was
+// fighting a problem this approach doesn't have in the first place.
+function bump_y(dx, dz, r, embed_frac) = front_y(dx, dz) - r * embed_frac;
 
-// Composition fix #2 (found by comparing against a second, more relevant
-// real reference: an actual rainbow-painted wood cloud pen holder, not just
-// the cat-pen-holder used for the earlier "make marks bold" fix). That real
-// competing cloud product's face is much smaller and lower-proportioned
-// than what was here -- two small dot eyes, two small blush dots, a simple
-// smile, and NO nose at all. Its real "top design" quality comes almost
-// entirely from a rainbow paint job on a deliberately simple shape, not
-// from a bigger/busier face. Shrunk every mark down and dropped the nose to
-// match that real minimal proportion -- still non-overlapping (verified
-// same way as fix #1: z-ranges kept disjoint between eye/cheek/mouth).
-eye_dx = 4; eye_dz = 2; eye_w = 4.2; eye_h = 2.6; eye_cut_extrude = 3.0;
-eye_y_face = near_pole_front_y(eye_dx, eye_dz, eye_w / 2, eye_h / 2) + poke;
-eye_z = center_z + eye_dz;
-
-cheek_dx = 8; cheek_dz = -3.5; cheek_r = 2.4; cheek_cut_extrude = 3.0;
-cheek_y_face = near_pole_front_y(cheek_dx, cheek_dz, cheek_r, cheek_r) + poke;
-cheek_z = center_z + cheek_dz;
-
-mouth_dz = -7; mouth_w = 5; mouth_h = 2; mouth_cut_extrude = 2.2;
-// mouth's own footprint only extends AWAY from the pole in z (a crescent
-// hanging below its reference line), so the reference point itself (not a
-// clamped corner) is already the closest-to-pole point -- no clamp needed.
-mouth_y_face = front_y(0, mouth_dz) + poke;
-mouth_z = center_z + mouth_dz;
-
+eye_r = 2.1; eye_dx = 4.2; eye_dz = 2.5;
 module eye(mirror_x = false) {
     x = mirror_x ? -eye_dx : eye_dx;
-    translate([x, eye_y_face, eye_z])
-        rotate([90, 0, 0])
-            linear_extrude(height = eye_cut_extrude)
-                scale([eye_w / eye_h, 1])
-                    circle(r = eye_h / 2, $fn = 40);
+    translate([x, bump_y(eye_dx, eye_dz, eye_r, 0.35), center_z + eye_dz])
+        sphere(r = eye_r);
 }
+
+cheek_r = 3.3; cheek_dx = 9; cheek_dz = -3;
 module cheek(mirror_x = false) {
     x = mirror_x ? -cheek_dx : cheek_dx;
-    translate([x, cheek_y_face, cheek_z])
-        rotate([90, 0, 0])
-            linear_extrude(height = cheek_cut_extrude)
-                circle(r = cheek_r, $fn = 32);
+    translate([x, bump_y(cheek_dx, cheek_dz, cheek_r, 0.65), center_z + cheek_dz])
+        sphere(r = cheek_r);
 }
-// Same flattened-oval technique as the eyes, kept slightly thinner and
-// a touch curved (bottom-half of an ellipse) for a soft closed smile.
-module mouth() {
-    translate([0, mouth_y_face, mouth_z])
-        rotate([90, 0, 0])
-            linear_extrude(height = mouth_cut_extrude)
-                intersection() {
-                    scale([mouth_w / mouth_h, 1]) circle(r = mouth_h / 2, $fn = 40);
-                    translate([0, -mouth_h / 4]) square([mouth_w * 1.2, mouth_h / 2], center = true);
-                }
+
+// Smile: a smooth raised arc from a hull-chain of small spheres, each
+// individually placed on the sphere's own exact surface equation -- the
+// same hull-chain technique this shop already uses for smooth curved
+// details, just applied to a small cosmetic raised line instead of a cut.
+smile_pts = [ [-3, -7.0], [-1.5, -8.0], [0, -8.3], [1.5, -8.0], [3, -7.0] ];
+smile_r = 0.9;
+module smile() {
+    for (i = [0 : len(smile_pts) - 2]) {
+        p0 = smile_pts[i];
+        p1 = smile_pts[i + 1];
+        hull() {
+            translate([p0[0], bump_y(p0[0], p0[1], smile_r, 0.4), center_z + p0[1]]) sphere(r = smile_r);
+            translate([p1[0], bump_y(p1[0], p1[1], smile_r, 0.4), center_z + p1[1]]) sphere(r = smile_r);
+        }
+    }
 }
 // ---- pen cup: straight-down cut into the center lobe's own top ----
 // Same lesson the fox's first pen-cup draft learned the hard way: size
@@ -181,13 +132,13 @@ module cloud_organizer() {
         union() {
             base_plate();
             cloud_body();
+            eye(false);
+            eye(true);
+            cheek(false);
+            cheek(true);
+            smile();
         }
         pen_cavity();
-        eye(false);
-        eye(true);
-        cheek(false);
-        cheek(true);
-        mouth();
         brand_mark();
     }
 }
