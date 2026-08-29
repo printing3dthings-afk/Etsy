@@ -1968,6 +1968,30 @@ full notes): a pleated folding fan with a print-in-place hinge and a
 snowflake motif, and a ribbed 3-compartment desk caddy. Pitch from real
 candidates like these before reaching for something new.
 
+## Standing rule — one home for every STL, and hand it to Scott (2026-08-28)
+
+**`openscad_models/` in this repo is the single canonical home for every
+`.scad` and its exported `.stl`.** Do not scatter finished models into
+scratch directories, per-product folders, or Frank's volume as their
+primary location. One folder, committed, so the whole set can be pulled
+or browsed at
+`github.com/printing3dthings-afk/etsy/tree/main/openscad_models`.
+
+**Sessions run in an ephemeral cloud container, not on Scott's machine.**
+There is no desktop here, no `~/Desktop`, and nothing written to local
+disk survives the container being reclaimed. So "put it on my desktop"
+cannot be done literally — say so plainly rather than writing a folder
+somewhere that will silently vanish. What actually delivers:
+
+1. Commit the `.scad` and `.stl` to `openscad_models/` (the durable copy).
+2. Hand Scott the file itself so it lands on his own machine — a single
+   STL for one model, or a zip of the folder when he wants the set.
+   ASCII STL compresses roughly 8:1, so the whole library is a small
+   download even when the raw files are ~100MB.
+3. Verify before sending: `unzip -tq` on the archive, and md5 a couple of
+   members against the repo originals. An archive that is truncated or
+   built from a stale copy looks perfectly fine from the outside.
+
 ## Standing rule — save real, finished work immediately, not at the end of a session (2026-08-27)
 
 A previous attempt at this exact sundial design was lost — built,
