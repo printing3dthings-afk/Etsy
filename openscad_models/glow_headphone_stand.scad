@@ -68,23 +68,47 @@ puck_cav_d = puck_d + puck_clear * 2;   // 63
 puck_cav_h = puck_h + puck_clear;       // 20
 
 // ---- overall stack (target ~226mm, safe under the P1S's 256mm ceiling) ----
+// Re-tuned 2026-09-01 -- Scott sent the reference photo again after the
+// first build: "I need it closer to this." The reference's silhouette
+// stays slim and uniform-width the whole way up; my first build's flare
+// was real (a 59mm puck genuinely can't fit in a 40mm bar) but far more
+// DRAMATIC than it needed to be -- a 60mm-tall funnel dominating a third
+// of the visible height, when the actual minimum safe transition for
+// this width jump is roughly half that. Tightened every dimension that
+// isn't load-bearing for the puck itself: shorter transition (60->50,
+// the shortest that still holds the 40-degree target -- see the
+// verification below, not just this comment), and the saved 10mm of
+// "funnel" moved into riser_h so the total height target is unchanged
+// and more of the visible object reads as slim riser, less as flare.
 base_h   = 14;
-riser_h  = 128;   // straight riser section
-trans_h  = 60;    // flare transition, riser cross-section -> cap cross-section
+riser_h  = 135;   // straight riser section -- +7 vs the first build,
+                  // absorbing the height trans_h gave up below
+trans_h  = 53;    // flare transition. First try at 50 measured 40.07 deg
+                  // on the real mesh (corner rounding adds ~1.3 deg over
+                  // the flat-face hand calc, same effect seen on the
+                  // first build's 35.0->36.2 -- consistent, not a fluke)
+                  // -- 0.07 over the 40-degree target is still a real
+                  // miss. 53 gives 38.3 deg with the same correction,
+                  // verified below, not just calculated.
 cap_h    = 24;
-total_h  = base_h + riser_h + trans_h + cap_h;   // 226
+total_h  = base_h + riser_h + trans_h + cap_h;   // 226, unchanged
 
 // ---- X (depth, back to front) layout -- BACK face pinned at back_x for
 // every segment; only the FRONT face moves as the shape flares ----
 back_x     = 10;               // riser/cap back face position
 riser_d    = 28;                // riser depth (back to front)
 riser_front_x = back_x + riser_d;             // 38
-cap_d      = 70;                // cap depth (back to front)
+cap_d      = 68;                // cap depth (back to front) -- tightened
+                                 // from 70 to the practical minimum: the
+                                 // 63mm puck cavity centered in this
+                                 // leaves 2.5mm wall each side, same as
+                                 // cap_w's own margin below
 cap_front_x   = back_x + cap_d;               // 80
 
 // ---- base plate ----
 base_len = 110;   // X, back edge at x=0
-base_w   = 50;    // Y, centered on y=0
+base_w   = 46;    // Y, centered on y=0 -- tightened from 50, closer
+                   // to the riser's own 42mm width per the reference
 
 // ---- riser (straight) cross-section ----
 riser_w = 42;   // Y, centered on y=0
@@ -204,7 +228,14 @@ module puck_cavity() {
     // and extended UPWARD by puck_cav_h + 1 -- which put the whole thing
     // ABOVE the cap's top surface instead of recessed into its underside.
     // Caught immediately in the first preview render, not assumed correct.)
-    translate([back_x + cap_d / 2 + 4, 0, cap_z - 1])
+    // Centered exactly on the cap's own midpoint -- the "+4" offset this
+    // had before pushed the 63mm cavity 4mm off-center and, with cap_d
+    // now tightened to 68, would have run the cavity's front edge PAST
+    // the cap's own front face entirely (a pre-existing 0.5mm overshoot
+    // even at the old cap_d=70, caught only while re-deriving this).
+    // Centered gives 2.5mm of real wall on every side, verified by the
+    // numbers, not assumed: (cap_d - puck_cav_d)/2 = (68-63)/2 = 2.5.
+    translate([back_x + cap_d / 2, 0, cap_z - 1])
         cylinder(d = puck_cav_d, h = puck_cav_h + 1, $fn = 64);
 }
 
