@@ -2918,13 +2918,96 @@ the alternative is to make it OPEN along its length (a groove rather than
 a tunnel) so the part can be laid in sideways instead of threaded — which
 is also what lets the base groove here double as the flush wire seat.
 
+**Addendum (2026-09-01): this rule bit the exact same model a second
+time, because "the largest object" was still guessed rather than
+measured.** The route was widened to 13mm for the USB-A plug and that felt
+like the answer. It was not: the kit's inline on/off switch is moulded onto
+the same captive cord, Scott measured it at **21mm across**, and it has to
+make the identical trip. So the honest procedure is not "size it for the
+plug" — it is **enumerate every object permanently attached to the cord and
+take the max**: connector, inline switch, strain relief, moulded ferrite,
+knot. Ask for the measurement rather than inferring it from a product
+photo. And when only one dimension of the route needs to grow that far,
+grow it *locally*: here the vertical channel went to 23mm and the base
+groove stayed at wire width (13mm), with a short 23mm drop-out box only
+where the channel meets the underside — so the switch leaves the lamp
+straight downward at the centre, the wire is laid into the narrow groove
+from below afterwards, and the base's underside never has to bridge a
+23mm flat span.
+
 **Design note worth reusing: an underside groove is the right answer for
 a lamp/appliance base.** Running the wire down the middle and out a groove
 milled into the base's underside keeps the base sitting flush on a desk
 (no rocking, no wire pinched under a rim) and hides the route completely.
 Budget the plate thickness for it up front — the groove must be deeper
 than the cable so it fully recesses, and still leave a real roof above it
-(here 7mm plate, 4.2mm groove, 2.8mm roof).
+(here 9mm plate, 4.2mm groove, 4.8mm roof).
+
+## Technique 35 — 55 degrees is the STRUCTURAL overhang limit, not the surface-quality one; and the first real printed part is the only honest reviewer (2026-09-01)
+
+Scott printed the mushroom lamp's stem and sent photos. The flare came out
+visibly rough — "it was dropping too much filament and making it very rough
+looking." That flare had been verified, on this project, at **53.1 degrees
+from vertical**, deliberately placed under the P1S's documented 55-degree
+unsupported-wall limit. It passed the check and still printed badly.
+
+**The 55-degree number answers "will the wall stand up at all." It does not
+answer "will the wall look good."** Those are different thresholds and this
+skill had been conflating them.
+
+The number that actually predicts surface quality is **unsupported width per
+layer**:
+
+```
+overhang_per_layer = layer_height * tan(angle_from_vertical)
+```
+
+At a 0.2mm layer height and a 0.4mm nozzle:
+
+| Angle from vertical | Overhang per layer | Fraction of the extrusion hanging over air | Result |
+|---|---|---|---|
+| 30 deg | 0.115 mm | 29% | clean |
+| 38 deg | 0.156 mm | 39% | clean |
+| 45 deg | 0.200 mm | 50% | acceptable, slight texture |
+| 50 deg | 0.238 mm | 60% | visible banding |
+| 53 deg | 0.265 mm | 66% | droops — what Scott photographed |
+| 55 deg | 0.286 mm | 71% | stands up, looks bad |
+
+**Rule: for any free outward surface a customer will see, target 40 degrees
+or shallower — not 55.** Reserve 45–55 for internal, hidden, or
+support-touching geometry where only "does it survive" matters. On a
+product listing photo, "it printed" is not the bar.
+
+Two consequences that showed up immediately when applying it:
+
+1. **A shallower flare costs height, and that height has to come from
+   somewhere.** Covering the same radius gain at 38 instead of 53 needs
+   `dr/tan(38)` instead of `dr/tan(53)` — roughly **1.7x more vertical
+   travel**. Ask for it explicitly: Scott's own answer here was "if need be,
+   you can make the base taller," which is exactly the trade to surface
+   before spending an hour trying to keep the original height.
+
+2. **Check how much of the new, longer flare the design still hides.** On a
+   two-part assembly the amount of hidden height is often fixed by the
+   mechanism, not free — here it was
+   `(stem_top - cavity_depth) - cap_rim = travel_v + pin_local_z - cavity_h`,
+   a constant 12mm no matter how tall the stem got. So the flare could not
+   be hidden by making the part taller; more of it necessarily became
+   visible. Compute that budget before re-cutting the profile, or the fix
+   silently changes the silhouette Scott already approved.
+   (It turned out fine here — a 38-degree flare reads as a gentle trumpet,
+   which is closer to the real mushroom shape than the 53-degree version
+   Scott had earlier rejected as "too dramatic of a hard slope." Worth
+   noticing: the printability fix and the aesthetic fix pointed the same way.)
+
+**And the meta-lesson.** Every check this project runs — connectivity,
+interference, wall thickness, overhang angle — is a check against a *model
+of reality*, and each one is only as good as the threshold baked into it.
+The 55-degree threshold had been in this skill from the start, unquestioned,
+and no amount of re-running the check would ever have found it wrong. It
+took a physical print. **When Scott sends a photo of a real part, that photo
+outranks every green check in this file.** Read it as evidence that a
+threshold is wrong, not just that this one model is wrong.
 
 ## The one rule that matters most
 

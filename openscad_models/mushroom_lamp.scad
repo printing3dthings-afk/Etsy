@@ -63,29 +63,52 @@ cavity_h = puck_h + cavity_clear;
 // The mechanical one, and it was a real defect nobody had checked: the
 // old neck flared r=15 -> 39.5 over just 14mm of height, a 60.3-degree
 // outward wall -- well past the P1S's 55-degree unsupported limit, so
-// the stem as shipped could not actually print cleanly base-down. The
-// profile below is verified to stay under 55 at every control segment
-// (worst 53.1) while still reaching the radius the puck cavity needs.
+// the stem as shipped could not actually print cleanly base-down.
 //
-// Shape intent: the wide part is now placed so the CAP HIDES IT. The
-// puck is 59mm across and forces ~79mm of stem width to house it, which
-// is not a mushroom-stem proportion at any angle -- so the flare that
-// gets there happens above the cap's rim line, and what stays visible is
-// just the bulbous foot tapering to a 31mm waist under a 120mm cap
-// (26% of the cap's width -- a real mushroom ratio, stated as a number
-// per Technique 31 rather than eyeballed).
-stem_top_z = 60;
+// Re-cut again 2026-09-01, and this one came from a REAL PRINTED PART,
+// not a calculation. The 53.1-degree rebuild passed the 55-degree limit
+// and still printed visibly rough through the whole flare -- Scott's
+// photos show the droop. 55 degrees is the STRUCTURAL limit (will the
+// wall stand up at all); it is nowhere near the SURFACE-QUALITY limit.
+// The number that actually matters is unsupported width per layer:
+// 0.2 * tan(angle). At 53 degrees that is 0.265mm of a 0.4mm extrusion
+// hanging over air every single layer -- 66% unsupported, which droops
+// and leaves exactly the rough banding in the photo. At 38 degrees it is
+// 0.156mm, under 40%, which the previous layer carries cleanly. So the
+// whole flare now runs at a constant 37.95 degrees (verified on the
+// SMOOTHED path, not just the control segments -- smoothing can only
+// interpolate between neighbouring slopes here, never exceed the
+// steepest one, and the measured worst case matches the design value
+// exactly).
+//
+// A shallower flare needs more height to cover the same radius, which is
+// why stem_top_z moved 60 -> 70 (Scott: "you can make the base taller to
+// help with the overhang issue"). The cap's own rim rides up with it, so
+// the hidden/visible split below is preserved rather than accidentally
+// exposing the puck housing.
+//
+// Shape intent: the wide part is placed so the CAP HIDES IT. The puck is
+// 59mm across and forces ~79mm of stem width to house it, which is not a
+// mushroom-stem proportion at any angle -- so the flare that gets there
+// happens above the cap's rim line, and what stays visible is the
+// bulbous foot tapering to a 34mm waist under a 120mm cap (28% of the
+// cap's width -- a real mushroom ratio, stated as a number per Technique
+// 31 rather than eyeballed) and then the first 16mm of the flare -- which at
+// 38 degrees reads as a gentle trumpet rather than the "hard flare, not like
+// a mushroom" Scott rejected at 53.
+stem_top_z = 72;
 collar_r = cavity_r + 7;        // wall around the puck cavity
-base_plate_d = 78; base_plate_h = 7;   // 7 not 4: the underside cable groove needs a real roof
+base_plate_d = 78; base_plate_h = 9;   // 9 not 4: the underside cable groove needs a real roof
 
 // (r, z) control points, base to top; closed back down the axis at 0.4
 // rather than 0 -- a revolve profile touching x=0 exactly renders fine
 // in preview but fails EVERY boolean op it is later used in (Technique 15).
 stem_ctrl = [
-    [0.4, 4], [26, 4], [25.5, 8], [21.5, 13], [17, 18],
-    [15.5, 22],                                     // waist
-    [19.5, 25.5], [25, 30], [31, 34.5], [36.5, 38.8],   // flare, all under 55 deg
-    [38.8, 43], [39.3, 48], [39.5, 53], [39.5, stem_top_z],
+    [0.4, 4], [27, 4], [26.5, 9], [23, 14], [19.5, 18.5],
+    [17, 23],                                       // waist -- 5.5mm of wall
+                                                    // around the 23mm channel
+    [20.9, 28], [24.8, 33], [28.7, 38], [32.6, 43], [36.5, 48],  // 37.95 deg
+    [38.9, 53], [39.5, 59], [39.5, stem_top_z],
     [0.4, stem_top_z],
 ];
 // $fn=96 / splinesteps=5 chosen against real print resolution, not by
@@ -129,10 +152,19 @@ module one_collar_slot() {
     collar_wall = collar_r - cavity_r;
     translate([collar_r - collar_wall - 1, -slot_r, lock_z])
         cube([collar_wall + 2, 2 * slot_r, travel_v + slot_r + 1]);
+    // $fn=360 on the sweep and 32 on the section are both real numbers, not
+    // habit (2026-09-01). At $fn=90 a 33-degree sweep is only ~8 facets, and
+    // an INSCRIBED polygonal sweep sits up to r*(1-cos(2deg)) = 0.024mm
+    // inside the true circle -- so the carved channel came out fractionally
+    // narrower than designed and the cap pin's own faceted hull clipped it by
+    // 0.11mm radially. Not a print-relevant amount, but it made the assembled
+    // interference check report a non-empty result, and a verification test
+    // that cries wolf stops being a verification test. These values put the
+    // faceting error at 0.0015mm, well under any real tolerance.
     translate([0, 0, lock_z])
-        rotate_extrude(angle = lock_angle + angle_margin, $fn = 90)
+        rotate_extrude(angle = lock_angle + angle_margin, $fn = 360)
             translate([collar_r, 0])
-                circle(r = slot_r, $fn = 16);
+                circle(r = slot_r, $fn = 32);
 }
 
 module collar_slots() {
@@ -160,12 +192,19 @@ module puck_cavity() {
 // UNDERSIDE of the base, so the wire lies flat under the lamp and the
 // base still sits flush on a desk.
 //
-// Everything on the path is sized for the PLUG, not the wire. The cable
-// is attached to the puck, so the USB-A end (12 x 4.5mm) has to travel
-// the whole route during assembly -- a channel sized to the 3.5mm cable
-// would look fine in CAD and be impossible to actually thread.
-cable_ch_d = 13;        // vertical channel -- 1mm clearance on a 12mm plug
-cable_groove_w = 13;
+// Everything on the path is sized for the biggest thing that has to
+// TRAVEL it, not for the wire. First pass sized it to the USB-A plug
+// (12 x 4.5mm) and 13mm cleared that fine -- but the plug was never the
+// binding constraint: the kit's inline switch is moulded onto the same
+// cord, Scott measured it at 21mm across, and it has to make the identical
+// trip during assembly. 23mm gives it 1mm of clearance. This is the same
+// class of miss as Technique 34's -- a service route is only as big as the
+// largest object that must pass through it, and the largest object is
+// rarely the one you were picturing.
+cable_ch_d = 23;        // vertical channel -- 1mm clearance on the 21mm switch
+cable_groove_w = 13;    // the bare wire alone lies here -- see cable_drop_w
+cable_drop_w = 23;      // local widening directly under the channel
+cable_drop_len = 27;
 cable_groove_d = 4.2;   // deeper than the ~3.5mm cable, so it sits fully recessed
 cable_relief_w = 6;     // shallow relief across the cavity floor, under the puck
 
@@ -180,15 +219,29 @@ module cable_route() {
 
     // 2. vertical channel down the stem's axis into the base
     translate([0, 0, cable_groove_d - 0.5])
-        cylinder(d = cable_ch_d, h = stem_top_z - cavity_h - cable_groove_d + 1.5, $fn = 48);
+        cylinder(d = cable_ch_d, h = stem_top_z - cavity_h - cable_groove_d + 1.5, $fn = 64);
     // flared mouth so the cable turns into the channel over a radius
-    // rather than kinking on a sharp lip
+    // rather than kinking on a sharp lip. Kept to +4mm over 3.5mm (29.7 deg)
+    // rather than the +6 it was: at 23mm bore the wider flare put a 40.6-deg
+    // overhang on the mouth's own ceiling.
     translate([0, 0, stem_top_z - cavity_h - 3.4])
-        cylinder(d1 = cable_ch_d, d2 = cable_ch_d + 6, h = 3.5, $fn = 48);
+        cylinder(d1 = cable_ch_d, d2 = cable_ch_d + 4, h = 3.5, $fn = 64);
 
-    // 3. groove in the base's underside, open downward and running out
-    //    through the rim. Starts behind the channel so the channel's whole
-    //    footprint drops into it rather than leaving a blind pocket.
+    // 3a. drop-out zone: the channel's full 23mm carried straight out through
+    //     the base's underside, so the switch leaves the lamp DOWNWARD at the
+    //     centre instead of having to slide the whole length of the groove.
+    //     That is what lets 3b stay wire-width. It is deliberately short, so
+    //     the only flat spans the base's underside has to bridge are the few
+    //     millimetres between the round bore and this box's own corners --
+    //     never a 23mm flat roof.
+    translate([-cable_ch_d / 2 - 1, -cable_drop_w / 2, -1])
+        cube([cable_drop_len, cable_drop_w, cable_groove_d + 1]);
+
+    // 3b. the wire's own groove, open downward and running out through the
+    //     rim. Sized for the ~3.5mm cable, not the switch -- the switch is
+    //     already outside the lamp by the time the wire is pressed up into
+    //     this (the groove is open along its whole underside, so the cable is
+    //     laid in from below, never threaded along it).
     translate([-cable_ch_d / 2 - 1, -cable_groove_w / 2, -1])
         cube([base_plate_d, cable_groove_w, cable_groove_d + 1]);
 }
@@ -265,10 +318,13 @@ cap_shell_t = 2.4;
 // where that plane sits in world coordinates once assembled -- chosen
 // deliberately, not inherited from another feature's height: it hides the
 // stem's unavoidable 79mm-wide puck housing while leaving the narrow part
-// of the stem visible, and puts the whole piece at 120mm wide x 78mm tall
-// = 1.54:1, close to the ~1:1.6 proportion Technique 31 asks to state as
-// a real number instead of eyeballing.
-cap_assembly_offset = 27;
+// of the stem visible, and puts the whole piece at 120mm wide x 90mm tall
+// = 1.33:1. Moved 27 -> 39 on 2026-09-01 in lockstep with stem_top_z's
+// 60 -> 72, chosen by that constraint rather than picked: it keeps
+// pin_local_z (= lock_z - this) at exactly 25, so the entire cap --
+// dome, sleeve, gills, pins, dots, warts -- is bit-for-bit unchanged by
+// the stem's overhang fix.
+cap_assembly_offset = 39;
 
 // A plain ellipsoid's tangent is exactly vertical where it meets the rim
 // plane, so cutting it there leaves a hard sawn-off vertical edge -- the
@@ -413,7 +469,17 @@ module cap_warts() {
 // cap prints rim-down. The ramp lives entirely at r >= collar_r, outside
 // the stem collar's own surface, so it never fouls the twist.
 pin_local_z = lock_z - cap_assembly_offset;
-pin_ramp_drop = 3.2;
+// 2.6, not the 3.2 it was (2026-09-01). At 3.2 the hull's lower tangent
+// surface reaches its minimum at world z = 60.90 near r = 39.4 -- which is
+// EXACTLY the lock channel's own floor (lock_z - slot_r). Solving the hull's
+// tangent-line family by hand rather than eyeballing a render showed the two
+// were tangent, not overlapping: real clearance was zero at that one point,
+// so every faceted render produced a sub-0.1mm interference sliver and the
+// assembled interference check could never come back clean. Dropping to 2.6
+// lifts that minimum to 61.19 and buys 0.29mm of genuine clearance, which
+// survives faceting. Costs nothing: the ramp's underside is still 58 degrees
+// from horizontal, and it is inside the cap where nobody sees it.
+pin_ramp_drop = 2.6;
 module cap_pins() {
     for (i = [0 : n_pins - 1])
         rotate([0, 0, i * 360 / n_pins + 60 + lock_angle])
