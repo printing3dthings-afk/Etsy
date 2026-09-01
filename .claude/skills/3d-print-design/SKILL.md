@@ -3086,6 +3086,83 @@ sweeps, wall-thickness checks — reads STL, and rewriting that pipeline
 for 3MF wasn't the ask); export a `.3mf` alongside it specifically for
 handing to Scott.
 
+## Technique 37 — BOSL2 cuboid()'s default CENTER anchor silently defeats a "back edge fixed, cutter reaches the front face" translate (2026-09-01)
+
+Building the Glow Stand headphone lamp's front window (a recess cut into a
+panel so a translucent insert shows through), the cutter was positioned
+as `translate([riser_front_x - window_recess_d, 0, ...]) cuboid([...])`
+-- the clear intent being "place the recess's BACK edge at this X, so its
+FRONT edge reaches all the way to riser_front_x." It compiled, rendered
+without error, and the very first preview PNG *looked* right (an assembled
+mockup with the insert drawn at its intended position visually lined up
+with a shadowed area on the shell). It was wrong: `cuboid()`'s default
+anchor is CENTER, so that translate placed the cutter's CENTER at
+`riser_front_x - window_recess_d`, not its back edge -- the recess ended
+up 3.5-4mm short of the panel's real outer face on every side. It was a
+fully sealed blind pocket, invisible from outside, and would have shipped
+completely unnoticed: the interference check (insert vs. shell) reported
+EMPTY -- correctly, since nothing was there to interfere with -- and the
+render looked plausible because the render draws the insert at its
+*intended* location regardless of whether the shell actually has room for
+it there.
+
+**Two lessons, not one bug fix:**
+
+1. **A cuboid()/cyl() call authored by computing a translate for one
+   specific edge, corner, or face is a translate/anchor mismatch waiting
+   to happen** unless the anchor is stated explicitly to match. Either
+   pass BOSL2's own `anchor=` parameter for the edge you mean (`anchor=
+   FRONT+BOTTOM`, etc.) so the translate target IS that edge, or -- often
+   more readable when reasoning in raw min/max coordinates like this file
+   already does everywhere else -- use plain `cube()`/`cylinder()`, whose
+   native corner-anchor makes "translate to the corner you mean" literally
+   correct with no anchor keyword to get wrong. This file mixed both
+   styles already (native cube() for the cable groove, cuboid() for
+   rounded panels) -- the bug was specifically in a cuboid() call using
+   center-anchor math without realizing it.
+
+2. **"The render looks right" and "the interference check is empty" are
+   BOTH insufficient on their own for a cutter/insert pair -- verify the
+   cutter's OWN bounding box independent of anything else.** Render
+   `window_cut()` (or whatever the cutter module is called) completely
+   alone, with nothing else in the scene, and read its literal min/max
+   extents off the exported mesh. That single check catches this exact
+   bug in seconds; guessing from an assembled visual or from an
+   interference-being-empty result does not, because both of those can
+   look/read correct for the WRONG reason (nothing there to intersect
+   with is not the same as something there that correctly doesn't
+   intersect). Found here specifically by point-probing a grid of X
+   values with `intersection(shell, tiny_cube_at_x)` and reading which
+   ones came back empty vs. solid -- a fast, unambiguous per-point
+   ground truth that doesn't depend on interpreting a render's shading.
+
+## Technique 38 — An outward-flaring overhang's surface normal points DOWN, not up; get this sign backwards and an overhang scanner silently finds nothing (2026-09-01)
+
+Writing a script to measure the Glow Stand's transition-zone overhang
+angle from the real exported mesh (not just the hand-computed 35 degrees
+from the design's control dimensions), the first version filtered for
+faces with `nz > 0` on the theory that an "overhang wall looks up at the
+sky, so its outward normal should point up." That filter matched exactly
+zero faces in the transition zone -- not because there was no overhang
+(there obviously was, by construction), but because the sign convention
+was backwards. **A surface that flares outward as height increases -- the
+overhang case -- has its outward-facing normal pointing DOWN, not up**:
+picture the underside of a mushroom cap or a roof eave, where standing
+underneath and looking up at the surface, you are looking at its
+downward-facing outer side. `nz < 0` (with a real horizontal component)
+is the correct filter for "this is a wall that needs the overhang check";
+`nz > 0` on a similarly-shaped face is just the INSIDE of a cavity or a
+completely different, unrelated upward-facing surface, not an overhang at
+all. Confirmed by hand on the actual output: every real transition-zone
+overhang face in the mesh had a normal like `(0.79, -0.16, -0.59)` --
+negative Z -- and the angle from vertical is simply
+`degrees(asin(abs(nz)))` once the sign filter is right, which matched the
+independently hand-computed 35.0 degrees to within 1.2 degrees (36.2,
+the small difference being real corner-rounding effect, not measurement
+error). **When a numeric verification script reports "zero matches" for a
+condition you can SEE is true in a render, suspect the check's own sign
+convention before suspecting the geometry.**
+
 ## The one rule that matters most
 
 **A clean OpenSCAD render (no errors, non-zero output size) is not proof
