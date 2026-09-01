@@ -90,6 +90,23 @@ rule this shop already applies to AI photos and Etsy mutations.**
   circles from directly above (`--camera=0,0,60,0,0,0,400`). Don't chase
   a "bug" that's actually just the preview's lighting — but do check,
   don't assume.
+- **A headless Blender studio render is available for design review**
+  (`tools/blender_render.py`, added 2026-09-01 — system binary, `apt-get
+  install -y blender`, ~25MB). OpenSCAD's own PNG preview (above) is flat,
+  unlit and single-material — it has repeatedly hidden real defects in
+  this project (Technique 33's seam, the overhang droop in Technique 35)
+  because nothing about it resembles how the printed part will actually
+  look. `render_review(mesh_path, out.png)` imports the STL, centers it on
+  a floor plane, lights it with real three-point area lighting, gives it a
+  matte-plastic material in a color you choose, and renders through Cycles
+  (~50-90s at the defaults — denoising is forced OFF because this
+  container's Blender build has no OpenImageDenoiser and errors if you try
+  to enable it). Use this as the last check before calling a model done,
+  the same way an AI-generated listing photo gets looked at before
+  shipping. It is a REVIEW tool only — OpenSCAD stays the only place
+  geometry gets authored, and this never substitutes for the AI-photo
+  pipeline CLAUDE.md requires for actual Etsy listings. It also has no
+  3MF importer in this container (confirmed live) — feed it STL/OBJ/PLY.
 - **Real vendored fonts are available to `text()` for engraved branding.**
   This repo's existing font sets (`fonts/`, `assets/fonts/` — already used
   for cover art/listing images) are auto-registered with fontconfig the
@@ -123,7 +140,7 @@ Bambu Lab P1S" section):
 | Constraint | Value | Design implication |
 |---|---|---|
 | Build volume | 256×256×256mm | Hard ceiling on any single-piece dimension |
-| Max overhang without supports | 55° from vertical | Steeper than that either needs supports (extra post-processing, worse surface) or a redesigned angle/orientation |
+| Max overhang without supports (STRUCTURAL limit) | 55° from vertical | Steeper collapses/needs supports. **This is not the surface-quality limit — see Technique 35.** For any free surface a customer will see, design to ≤40° instead; reserve up to 55° for hidden/internal geometry only. |
 | Layer heights | 0.05 / 0.1 / 0.2mm | 0.2mm is standard production; 0.1mm for visible fine detail (organic surfaces, small text) |
 | Nozzle | 0.4mm stock brass (PLA/PETG/TPU); hardened steel only for CF/GF filaments | Minimum realistic single-wall thickness ≈ nozzle width; **use 2× nozzle width (≈0.8mm) as the practical minimum wall for anything structural**, more for anything handled/stressed |
 | Bed plates | Textured PEI (PETG/ABS/ASA/PA), Smooth PEI (PLA/Silk PLA) | Doesn't change the model, but matters when telling Scott what to print it on |
@@ -1984,10 +2001,16 @@ cannot be done literally — say so plainly rather than writing a folder
 somewhere that will silently vanish. What actually delivers:
 
 1. Commit the `.scad` and `.stl` to `openscad_models/` (the durable copy).
-2. Hand Scott the file itself so it lands on his own machine — a single
-   STL for one model, or a zip of the folder when he wants the set.
-   ASCII STL compresses roughly 8:1, so the whole library is a small
-   download even when the raw files are ~100MB.
+2. Hand Scott the file itself so it lands on his own machine. **Prefer
+   3MF over STL for the file you actually send** (added 2026-09-01):
+   `render_scad(src, out.3mf, fmt="3mf")` produces the identical geometry
+   at roughly 1/13th the file size on a real comparison (Mushie: 27.3MB
+   STL vs. 2.1MB 3MF) and embeds real millimeter units, so Bambu Studio
+   can't misread the scale the way it can with a bare STL. Keep the `.stl`
+   as the repo's committed analysis copy (`stl_components.py` and every
+   numeric verification in this skill reads STL) and export a `.3mf`
+   alongside it purely for delivery. A zip of the folder still works when
+   Scott wants the whole set.
 3. Verify before sending: `unzip -tq` on the archive, and md5 a couple of
    members against the repo originals. An archive that is truncated or
    built from a stale copy looks perfectly fine from the outside.
@@ -3008,6 +3031,60 @@ and no amount of re-running the check would ever have found it wrong. It
 took a physical print. **When Scott sends a photo of a real part, that photo
 outranks every green check in this file.** Read it as evidence that a
 threshold is wrong, not just that this one model is wrong.
+
+## Technique 36 — A studio-lit render sees defects a flat CAD preview cannot; 3MF beats STL for delivery (2026-09-01)
+
+Scott reposted a collage of AI/3D-print tooling and asked which parts we'd
+benefit from. Most of it was either not applicable (GUI modeling tools
+that don't fit this shop's scripted-and-verified pipeline) or a genuine
+security no (a third-party repo under PolyForm Noncommercial — unusable
+for a commercial shop; two other repos this session had no access to read
+at all, scoped out by this repo's own GitHub permissions). Two things in
+it were real and got built the same session:
+
+**1. Headless Blender as a design-review step (`tools/blender_render.py`).**
+Not for modeling — OpenSCAD stays the only place geometry gets authored.
+The value is purely in *seeing* a finished model the way a photo would
+show it: real area lights, a floor plane for contact shadows, a matte
+plastic material, rendered through Cycles. OpenSCAD's own PNG preview
+(`--colorscheme=Tomorrow`, flat ambient-ish shading, no shadows) has
+repeatedly been the reason a real defect survived multiple "verified"
+renders in this project — Technique 33's cap seam and Technique 35's
+overhang droop were BOTH invisible in that flat preview and only became
+obvious once real light and shadow were in the picture. A quick sanity
+check confirms this isn't hypothetical: the very first Blender render of
+the ribbed desk caddy, at a soft three-quarter lighting angle, showed the
+1.5mm-amplitude flutes reading as almost flat — much fainter than they
+look in the flat OpenSCAD preview's harder single-directional shading.
+That is a genuine, previously-invisible signal: shallow relief that reads
+fine under CAD's synthetic lighting can wash out under realistic soft
+light, which is closer to how a customer's own photos will look. Treat a
+washed-out Blender render as a cue to deepen relief texture, not as a
+tool quirk.
+
+Practical notes from getting it running in this container: Blender's apt
+build (4.0.2) ships with **no OpenImageDenoiser** — enabling
+`cycles.use_denoising` throws `RuntimeError: Build without
+OpenImageDenoiser` and aborts the render entirely, confirmed live. Leave
+it off and compensate with more samples (96 was enough to be clean at
+1200×1200 in ~50-90s per render, no GPU). It also has **no bundled 3MF
+importer** — `bpy.ops` has no `*_3mf` operator and `addon_utils` lists
+none — so this tool takes STL/OBJ/PLY only; it doesn't need to read 3MF
+since OpenSCAD's own STL export already exists for every model here.
+
+**2. 3MF over STL as the delivery format.** `openscad_render.py` already
+supported `fmt="3mf"` — nothing new to build, just a real comparison run
+that had never been done: Mushie's full STL is 27.3MB; the identical
+geometry as 3MF is 2.1MB, roughly 1/13th the size, and the 3MF carries a
+real `unit="millimeter"` attribute a bare STL has no field for at all.
+CLAUDE.md already called 3MF "the gold standard" for the SS-series sign
+packs for exactly this reason (pre-assembled color layers, no unit
+ambiguity) — this just extends the same reasoning to every printed part's
+*delivery* copy. The repo's own `.stl` stays the analysis copy (every
+numeric verification in this skill — `stl_components.py`, overhang
+sweeps, wall-thickness checks — reads STL, and rewriting that pipeline
+for 3MF wasn't the ask); export a `.3mf` alongside it specifically for
+handing to Scott.
 
 ## The one rule that matters most
 
