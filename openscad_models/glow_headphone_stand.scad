@@ -16,9 +16,13 @@ include <BOSL2/std.scad>
 //     warm white, 1.5m cable -- store.bambulab.com/products/led-lamp-
 //     kit-001). Reuses that same puck-cavity and cable-route knowledge
 //     directly rather than re-deriving it.
-//   INSERT -- a slim panel that friction-fits into a recessed front
-//     window in the riser and diffuses the puck's light down its length,
-//     the same edge-lit effect the reference photos show. Print it in a
+//   INSERT -- an L-shaped channel piece (re-scoped 2026-09-01 after
+//     re-checking Scott's reference photos more closely: the real
+//     product's glow is CONTINUOUS from the base's front edge, across
+//     the base's top, up the whole riser -- not a window confined to
+//     just the riser, which the first version got wrong) that friction-
+//     fits into a matching recessed channel running the same path and
+//     diffuses the puck's light along its whole length. Print it in a
 //     light/translucent color; the shell in an opaque one.
 //
 // Why this shape, not a uniform bent bar: an early plan tried a single
@@ -94,19 +98,33 @@ cap_hook_fillet = 10;   // single rounding for the whole cap -- vertical
                         // rounded along with everything else
 
 // ---- front window / insert ----
+// Re-scoped 2026-09-01 after re-checking Scott's own reference photos
+// more carefully: the real product's glow is CONTINUOUS from the base's
+// front edge, across its top, up the whole riser -- one bent channel and
+// one bent insert, not an isolated window partway up the riser. The
+// first version only covered the riser; this section and base_solid()/
+// base_window_cut() below now cover the whole path.
 window_rim   = 4;      // solid rim left around the window opening
-window_bottom_rim = 6; // solid margin left at the very bottom of the riser
 window_w     = riser_w - 2 * window_rim;        // 34
 window_recess_d = 8;    // how deep the window cuts in from the riser's front face
-window_h     = riser_h - window_bottom_rim;     // open at the TOP -- no top rim,
-                                                 // so light from the cap above
-                                                 // reaches the insert directly
+window_h     = riser_h;    // open at BOTH the top (light from the cap above)
+                            // and the bottom (meets the base's own channel,
+                            // window_bottom_rim retired -- there is no gap
+                            // between them any more)
 
 insert_w = window_w - 0.6;   // 0.3mm clearance/side for a real friction fit
 insert_t = window_recess_d - 0.3;   // back flush against the recess floor
                                      // (acts as a reflector); front sits
                                      // 0.3mm shy of the true outer surface
 insert_h = window_h - 0.6;
+
+// ---- base channel (the base-plate half of the same continuous window) ----
+base_recess_d = 6;      // depth cut into the base's TOP face (base_h=14,
+                         // leaves an 8mm floor -- safe)
+base_front_open = true; // the recess runs all the way to the base's own
+                         // front face (x=base_len), matching the reference
+                         // photos' glowing front edge, rather than stopping
+                         // short with a solid lip
 
 // ---- cable route (same sizing discipline as Mushie -- 13mm clears the
 // USB-A plug on the puck's captive cable; widen later the same way if a
@@ -208,8 +226,22 @@ module window_cut() {
     // intended span explicit instead of relying on a center calculation.
     x0 = riser_front_x - window_recess_d;
     x1 = riser_front_x + 1;   // 1mm past the true front face for a clean cut
-    translate([x0, -window_w / 2, base_h + window_bottom_rim])
+    translate([x0, -window_w / 2, base_h - 1])
         cube([x1 - x0, window_w, window_h + 2]);
+}
+
+module base_window_cut() {
+    // the base-plate half of the same continuous channel -- a recess in
+    // the base's TOP face, running the base's full length so the glow
+    // reaches all the way to its front edge, matching the reference
+    // photos (the base's front edge is visibly lit, not just its top).
+    // x1 extends 1mm past base_len so this also breaks through the
+    // base's own front face, the same "+1 past the true face" pattern
+    // window_cut() already uses -- a plain corner-anchored cube(), no
+    // BOSL2 center-anchor to get wrong (Technique 37).
+    x1 = base_front_open ? base_len + 1 : base_len - 8;
+    translate([back_x, -window_w / 2, base_h - base_recess_d])
+        cube([x1 - back_x, window_w, base_recess_d + 1]);
 }
 
 module light_duct() {
@@ -237,6 +269,16 @@ module light_duct() {
         cube([window_recess_d, 28, duct_z1 - duct_z0]);
 }
 
+module cable_bore_cylinder(z0, z1) {
+    // shared shape -- the SAME bore diameter/position, used to cut both
+    // the shell (full height) and, separately, the insert's base-channel
+    // arm (just the band where the two now overlap in footprint). Having
+    // one module rather than two independent cylinder() calls means the
+    // insert's notch can never silently drift out of alignment with the
+    // shell's own bore if cable_bore_x/cable_ch_d ever change.
+    translate([cable_bore_x, 0, z0]) cylinder(d = cable_ch_d, h = z1 - z0, $fn = 40);
+}
+
 module cable_route() {
     // 1. vertical bore from the puck cavity's floor down through the
     //    transition and riser's solid back-wall spine into the base.
@@ -244,8 +286,7 @@ module cable_route() {
     //    (cap_z + 5, well within the cavity's own z=[cap_z-1,cap_z+20]
     //    range) so the two definitely overlap and merge into one void --
     //    never just touching tangentially.
-    translate([cable_bore_x, 0, -1])
-        cylinder(d = cable_ch_d, h = cap_z + 5 + 1, $fn = 40);
+    cable_bore_cylinder(-1, cap_z + 5 + 1);
     // 2. groove in the base's underside, open downward, running from
     //    beneath the bore out through the base's front edge (identical
     //    proven pattern to Mushie's stem_base_plate groove). Length is
@@ -263,12 +304,16 @@ module cable_route() {
 }
 
 module brand_mark() {
-    // engraved on the base's top face, near the front edge -- same
-    // fitted-and-verified pattern as Mushie/Cloudy's brand marks
-    translate([base_len - 16, 0, base_h - 0.5])
-        linear_extrude(height = 1.2)
-            text("OnBrandCraftz", size = 5.2, font = "Caveat:style=Bold",
-                 halign = "center", valign = "center");
+    // moved to the base's UNDERSIDE (2026-09-01): the base's top face is
+    // now the base_window_cut() glow channel for its whole length, so
+    // there is no flat, unrecessed top-face area left to engrave into
+    // near the front edge any more -- the underside is always safe from
+    // whatever the top-face feature set does.
+    translate([base_len - 16, 0, 0.5])
+        mirror([0, 0, 1])
+            linear_extrude(height = 1.2)
+                text("OnBrandCraftz", size = 5.2, font = "Caveat:style=Bold",
+                     halign = "center", valign = "center");
 }
 
 module glow_stand_shell() {
@@ -280,6 +325,7 @@ module glow_stand_shell() {
             cap_block_solid();
         }
         window_cut();
+        base_window_cut();
         light_duct();
         puck_cavity();
         cable_route();
@@ -288,17 +334,52 @@ module glow_stand_shell() {
 }
 
 // ============================================================
-// Insert -- the diffusing panel, sits in the window recess
+// Insert -- the diffusing channel, now a single L-shaped piece running
+// from the base's front edge, along the base's top, up the whole riser
+// (2026-09-01, re-scoped after re-checking the reference photos: the
+// real product's glow is continuous base-to-top, not an isolated window
+// partway up the riser). Built as a union of two overlapping rounded
+// boxes -- the riser arm and the base arm -- meeting at the corner where
+// window_cut() and base_window_cut() themselves meet (z = base_h). Both
+// cutters already overlap there by design, so the two insert arms do
+// too; union() merges them into one printable, one-piece part with no
+// separate mitre geometry needed.
 // ============================================================
-module glow_stand_insert() {
-    // back face flush against the recess floor (x0, matching window_cut's
-    // own floor exactly), front face left 0.3mm shy of the true outer
-    // surface for a subtle recessed reveal -- matches the reference
-    // photos, which show the panel sitting slightly inset behind a rim,
-    // not perfectly flush.
+module glow_stand_insert_riser_arm() {
+    // Extends 1mm BELOW base_h into the base arm's own z-range on purpose
+    // -- the two arms would otherwise only share a boundary FACE (zero
+    // volume overlap) where they meet, which is exactly the kind of
+    // exact-touching geometry this project has been burned by before
+    // (Technique 15's x=0 axis-touching case). A real 1mm overlap here
+    // guarantees union() merges them into one manifold solid rather than
+    // a coincident-face edge case that renders "fine" until it doesn't.
     x0 = riser_front_x - window_recess_d;
-    translate([x0 + insert_t / 2, 0, base_h + window_bottom_rim + insert_h / 2])
-        cuboid([insert_t, insert_w, insert_h], rounding = 2, edges = "Z", $fn = 32);
+    h = insert_h + 1;
+    translate([x0 + insert_t / 2, 0, base_h - 1 + h / 2])
+        cuboid([insert_t, insert_w, h], rounding = 2, edges = "Z", $fn = 32);
+}
+
+module glow_stand_insert_base_arm() {
+    x1 = base_front_open ? base_len - 0.3 : base_len - 8.3;
+    base_insert_t = base_recess_d - 0.3;   // sits flush on the recess floor,
+                                            // 0.3mm shy of the top opening
+    difference() {
+        translate([(back_x + x1) / 2, 0, base_h - base_insert_t / 2])
+            cuboid([x1 - back_x, insert_w, base_insert_t], rounding = 2, edges = "Z", $fn = 32);
+        // notch for the cable bore -- this arm's footprint fully covers
+        // the bore's (x,y) position (Technique: found by checking the
+        // actual footprints against each other, not assumed clear), so
+        // without this cut the insert would physically block the one
+        // path the puck's cable has to reach the base's underside groove.
+        cable_bore_cylinder(base_h - base_insert_t - 1, base_h + 1);
+    }
+}
+
+module glow_stand_insert() {
+    union() {
+        glow_stand_insert_riser_arm();
+        glow_stand_insert_base_arm();
+    }
 }
 
 // ============================================================
