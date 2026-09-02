@@ -3416,3 +3416,105 @@ Pick one whose real anatomy is already segmented and whose natural pose is a
 curl in one plane, and the articulation stops looking imposed. A seahorse's
 body is genuinely bony rings and its signature pose is a curled prehensile
 tail — so the joints are the animal, not a mechanism bolted through it.
+
+---
+
+## Technique 41 — What 253 real, selling 3D prints look like, and the design standard that comes out of it (2026-09-02)
+
+Scott, on the flexi seahorse: *"Not bad, can definitely be better. Do more real
+visual research looking at how and the exact model structures of 200 different
+3d prints."* This is that research and the standard it produced. It supersedes
+nothing above — it is the pass to run BEFORE Technique 30's surfacing work,
+because it governs *what to build*, not *how to smooth it*.
+
+### The corpus (reproducible)
+
+1,556 unique thumbnail URLs harvested from Cults3D across 20 category queries
+(flexi articulated animal · print in place dragon · articulated fish · flexi
+keychain · print in place hinge box · snap fit storage box · desk organizer ·
+pen holder · vase spiral · planter pot · lamp shade · phone stand · headphone
+stand · cable clip · kawaii figurine · cute animal figurine · multicolor sign ·
+fidget toy · puzzle box · articulated lizard), sampled evenly to 260, 258
+downloaded, **253 valid images reviewed** as 8 numbered contact sheets.
+
+**Network reality worth recording:** WebFetch's allowlist is *narrower* than the
+agent proxy's — several hosts WebFetch refuses return 200 to plain `curl`.
+Printables, MakerWorld, stlfinder, all3dp = 403 to everything. Cults3D, Thangs,
+Sketchfab, Thingiverse, pinshape, grabcad, Bing, DuckDuckGo = 200. Cults3D is
+the workable thumbnail source; go straight there next time.
+
+### The ten structural findings
+
+1. **Almost nothing has a large plain smooth surface.** Across 253 images, plain
+   surfaces are rare enough to be notable. Fluting, scales, knurl, Voronoi
+   lattice, basket weave, faceting, perforation, twisted ribs — surface
+   treatment is the *product* in whole categories (lamp shades, vases, pen cups,
+   fidget keychains). A smooth panel reads as unfinished, not as minimal.
+2. **Winning silhouettes are ONE swept profile, not stacked masses.** Every
+   selling vase is an ogee — convex belly into concave neck into a small lip
+   flare — revolved and twisted. The good headphone stands are a single
+   cantilevered arc whose cross-section changes as it sweeps. Stacked primitives
+   are what "blocky" actually means, and no amount of edge rounding fixes it.
+3. **Detail density is 5–10× what a first pass produces.** An armored-lizard
+   flexi carries ~50 discrete spikes plus a full scale field; dragon flexis
+   carry layered scales on *every* segment. Nine rings with five tubercles each
+   is a sketch of detail, not detail.
+4. **The head carries the value on any creature.** The clearest pattern in the
+   flexi category: a rigid, highly expressive HEAD plus a *short* articulated
+   body — the "Bendy Buddies" shape, chunky cartoon animal, 2–4 joints total.
+   Nine identical tail joints is effort spent where buyers do not look.
+5. **Top articulated animals articulate LIMBS, not just a spine.** Geckos,
+   lizards and character figures all put joints at shoulders and hips.
+   Spine-only articulation is the easy version.
+6. **Sets sell; single models are the exception.** "10 PREMIUM STL MODELS", six
+   colorways of one sign as one listing, four lizards on one plate, a rack of
+   textured keychains. Design a parametric *family* from the outset — one
+   `.scad` emitting N variants from a top-level parameter.
+7. **Multicolor is mostly geometric, not painted.** The strongest two-colour
+   work is either a **layered 2D offset stack** (glyph → `offset(delta)` backing
+   → optional second offset; the entire multicolor-sign category is this one
+   construction) or a **contrasting inner body seen through slots cut in the
+   outer** (twisted flute vases, spinner tops). Both print on a plain 2-colour
+   AMS with no painting step.
+8. **The marketing pose is part of the model.** Flexis are photographed curled,
+   gripping a board edge, wrapped round a tube — never straight. That means the
+   model must have enough total curl to actually grip (>360°) and a `pose`
+   parameter is a real deliverable, not a render convenience.
+9. **"PRINT IN PLACE — NO SUPPORTS" is a headline, not a constraint.** It is
+   printed on half these listings. Design toward it and state it.
+10. **Small wins on plate economics.** Sets are small models, 4–8 to a plate.
+    A 180mm one-per-plate model is a long print and a weak set.
+
+### The standard — run this on every model from now on
+
+Before geometry:
+- [ ] **Reference pass first.** Pull real images of this specific object class
+      and name its structural language out loud before writing a line of code.
+- [ ] **Silhouette as a named point list**, reviewed as a 2D profile, before any
+      3D exists. If the profile is not interesting flat, the model will not be
+      interesting round.
+- [ ] **State the surface treatment explicitly** as a design decision, and
+      implement it as a periodic modulation of the profile — never decals
+      unioned onto a finished body.
+- [ ] **State a detail budget as a number** (discrete features per major
+      surface) and generate them procedurally with per-instance variation.
+- [ ] **Decide set-or-single.** If a family is plausible, parameterise for it
+      now; retrofitting a family onto a bespoke model does not work.
+- [ ] **Size for the plate**: can 4–8 fit on 256×256?
+
+During geometry:
+- [ ] **Every junction between two masses gets an explicit blend** — `hull()` of
+      overlapping spheres, or a BOSL2 rounding — and the blend is *verified* on
+      an oblique render, not assumed. Head-on renders hide relief entirely
+      (learned the hard way on the OBC medallion: flat-topped relief shows
+      identical normals from straight down).
+- [ ] **On a creature, ~half the modelling effort goes to the head.**
+- [ ] **Multicolor by geometry** — layered offset, or an inner body through
+      slots — before reaching for anything else.
+
+Verification (unchanged, still the part that catches real bugs):
+- [ ] Connected-component count over STL vertices — the primary check.
+- [ ] `intersection()` tests for anything that must touch (and must NOT touch).
+- [ ] Overhang scan **in print orientation** (rotate, never negate z alone).
+- [ ] Joint throat/retention/swing measured on the *finished, decorated*
+      segment.
