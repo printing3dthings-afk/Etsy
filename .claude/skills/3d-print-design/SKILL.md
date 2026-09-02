@@ -3844,3 +3844,98 @@ And: **STL files ship in DESIGN orientation, not print orientation.** Both the
 reference case lid and my own snap box lid store rim-down with almost no bed
 contact. Never infer print orientation from a file — and never trust a
 bed-contact number without checking the part is actually posed for printing.
+
+---
+
+## Technique 44 — SLICE IT. A mesh that passes every geometric check can still print as one solid lump (2026-09-02)
+
+The most important thing found in three rounds of research, and it invalidates
+part of Technique 40.
+
+`tools/gcode_probe.py` (new) rasterises the real extrusion moves of a sliced
+layer and counts connected islands of material — the toolpath equivalent of a
+connected-component check on a mesh. **If two parts that should be free come out
+as one island, the model prints fused, whatever the geometry says.**
+PrusaSlicer 2.7 is installable here (`apt-get install -y prusa-slicer`) and has
+a CLI; `p1s.ini`-style config with `nozzle_diameter=0.4`, `layer_height=0.2`,
+`extrusion_width=0.42` approximates the P1S closely enough for this question.
+
+### The finding
+
+**The flexi seahorse prints as a solid stick.** Sliced at 0.2mm layers with a
+0.4mm nozzle, the entire tail is **one connected island** through every layer
+from z=2.6 to z=5.8 — the band containing every ball.
+
+Everything else had passed:
+* mesh splits into exactly 10 components ✓
+* measured gap exactly 0.25mm everywhere ✓
+* overhang scan clean, renders correct ✓
+
+None of it mattered. The defect exists only in the toolpaths.
+
+### Why — it is the socket SHAPE, not the clearance
+
+Control test, two cubes at a measured gap, sliced and island-counted:
+
+| modelled gap | islands |
+|---|---|
+| 0.15 mm | **1 (fused)** |
+| 0.20 mm | 2 |
+| 0.25 mm | 2 |
+| 0.40 mm | 2 |
+
+So 0.2mm resolves fine between *flat* walls. But a **sphere inside a spherical
+cup** leaves a crescent-shaped void that is thinner than one extrusion
+everywhere except the single tangent point — the slicer bridges straight across
+it. Re-slicing with `--gap-fill-enabled=0 --thin-walls=0` changes **nothing**:
+this is geometry, not a setting, and therefore not fixable by telling a
+customer to change their slicer profile.
+
+The measured standard slot socket (Technique 43) sliced at the same settings:
+
+| model | modelled clearance | islands per layer |
+|---|---|---|
+| reference centipede joint pair | 0.198 mm | **2** (4 at the ball height) |
+| my rounded-rect slot prototype | **0.175 mm** | **2** (4 at the ball height) |
+| my seahorse, spherical cup | 0.250 mm | **1 — fused** |
+
+**A slot socket at a SMALLER clearance separates cleanly; a spherical cup at a
+larger one does not.** This is why every real designer uses the slot: it is not
+a style choice, it is the only socket shape that survives slicing. The 1.46mm
+of swing-direction relief measured in Technique 42 is not generosity — it is
+the part of the void that is wide enough for the slicer to see.
+
+It also explains, retroactively, the advice in the seahorse print guide that
+0.25mm was "near the reliable floor". That was the wrong diagnosis: the number
+was compensating for a shape that does not work at any clearance.
+
+### The rule
+
+**Slicing is now a mandatory verification step for anything with a moving
+joint, a thin slot, or two surfaces that must stay separate.** Mesh component
+count proves the SOLIDS are separate; only an island count on the toolpaths
+proves the PRINT will be. Run both.
+
+```
+prusa-slicer --load p1s.ini -g -o out.gcode model.stl
+python3 tools/gcode_probe.py out.gcode --scan          # islands per layer
+python3 tools/gcode_probe.py out.gcode --layer-z 3.4 --plot paths.png
+```
+
+### Free bonus: real print time and cost, which we never had
+
+Sliced at 0.2mm / 3 walls / 15% gyroid, PLA at $20/kg:
+
+| model | time | filament | cost |
+|---|---|---|---|
+| flexi seahorse | 1h 47m | 13 g | $0.26 |
+| snap box base | 3h 59m | 48 g | $0.96 |
+| snap box lid | 2h 19m | 25 g | $0.50 |
+| **snap box, complete set** | **~6h 30m** | **~75 g** | **~$1.50** |
+| mushroom lamp | 12h 24m | 159 g | $3.18 |
+| glow headphone stand | **24h 00m** | 331 g | $6.63 |
+
+Filament is nearly free; **printer time is the entire cost**. A 24-hour part
+caps the shop at one unit per day and cannot carry a sellable margin. Check the
+sliced time BEFORE committing to a physical product, not after — and treat
+roughly 4 hours per sellable unit as the ceiling worth designing toward.
