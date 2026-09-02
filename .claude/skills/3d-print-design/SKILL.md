@@ -3665,3 +3665,182 @@ real look to them" means, and now it has a threshold:
 5. Make the joint gap a deliberate, readable dark band.
 6. Give every segment its own secondary form (the trilobite's three lobes and
    per-plate crown) — a plain segment with a few tubercles is not detail.
+
+---
+
+## Technique 43 — Mechanisms and DFAM statistics, measured off 88 real models (2026-09-02)
+
+Technique 42 dissected articulated creatures and vases. This round went after
+everything I had never actually measured: snap fits, hinges, four-bar linkages,
+multi-colour interfaces, wall thickness, support need — plus a calibration of
+OpenSCAD's own tessellation against the smoothness numbers real models hit.
+
+Tool added: `tools/dfam_probe.py` — wall thickness by ray-casting into the
+solid, overhang distribution in print orientation, bed contact, edge radii,
+plate footprint. Validated by pointing it at my own snap box: it recovered the
+2.0mm wall (p01 1.999, p05 2.003) with no access to the source.
+
+### 0.2mm per side is a universal constant
+
+Three unrelated mechanisms, three unrelated designers, same number:
+
+| mechanism | measured clearance |
+|---|---|
+| print-in-place ball joint (centipede/trilobite) | 0.198 mm |
+| tongue-and-groove case lid (parametric case) | 0.195 mm |
+| my own snap box, lid skirt over base plug | 0.190 mm |
+
+Anywhere two printed surfaces must slide or seat against each other, 0.2mm per
+side is the answer. Do not re-derive it per project.
+
+### The ball joint, corrected and VALIDATED in OpenSCAD
+
+Technique 42 got the socket proportions right but read the 0.833 D feature as a
+"flat ceiling". Slicing an isolated pair of segments both ways shows what it
+actually is: **the mouth** — the opening on the neighbour-facing face, through
+which the neck passes. It is narrower than the ball, and that is the retention.
+
+```
+D       = ball diameter, the only design choice
+sock_l  = 1.600  * D     socket length, swing axis
+sock_h  = 1.073  * D     socket height  -> 0.0365 D clearance per side
+corner  = 0.3835 * D     socket corner radius (falls out of mouth width)
+mouth   = 0.833  * D     opening toward the neighbour -- NARROWER than the ball
+neck_d  <= 0.60  * D     must pass the mouth freely
+```
+
+The socket is a **rounded rectangle in the swing plane, swept across the body
+width** — not a sphere, not a capsule. Swing comes from the 0.30 D of free run
+along the slot. Retention is the ball having to spread the mouth by **0.167 D**
+(0.8mm at D=4.8) to escape — firm and positive, unlike a cone-relief cup.
+
+Built it in OpenSCAD from these ratios alone and measured it: **two free
+components, 0.181mm surface-to-surface gap** against the reference's 0.198.
+The recipe reproduces. Two mistakes made on the way, both worth avoiding:
+the socket block must extend PAST its own pocket (otherwise the pocket cuts the
+front face away and there is no retaining wall left, and it still renders
+happily), and the mouth slot must be cut in the same sweep as the pocket.
+
+### Snap versus locate — they are different joints and I had been conflating them
+
+The parametric case lid is a **locator**, not a snap: groove 1.21mm wide × 1.0mm
+deep, tongue 0.82mm wide × 0.8mm tall, 0.195mm clearance on BOTH sides and
+0.2mm of bottom relief. No barb, no interference. It positions the lid; friction
+or fasteners hold it.
+
+My snap box is a real **snap**: 0.19mm sliding clearance on the plain wall, and
+the bead crest stands 0.54mm proud into a 0.76mm groove, giving 0.35mm of
+interference per side that the skirt must spring over. Measured seated, the bead
+sits in the groove with 0.41mm to spare, so it never bottoms out. That checks
+out — the box is sound.
+
+Rule: **a locate is 0.2mm clearance; a snap is 0.2mm clearance PLUS deliberate
+interference on the barb only.**
+
+And one principle I had not been applying — **separate the locating feature from
+the seating datum.** The reference tongue is 0.2mm shorter than its groove is
+deep, so the lid seats on the wide flat rim faces and the tongue only locates it
+laterally. A feature that tries to do both does neither accurately.
+
+### Lattice (living) hinge, fully measured
+
+From a book box that folds flat. Panel 1.8mm thick, slots cut all the way
+through:
+
+```
+rib width      1.74-1.83 mm   (~= panel thickness; square in section)
+slot width     0.50 mm        (one clean nozzle-width void)
+pitch          2.30 mm        12 slots across a 27.9mm hinge zone
+bridge length  4.5 mm
+bridge spacing 27.7 mm along the hinge axis
+stagger        adjacent slots' bridges offset by HALF the spacing
+```
+
+Flexibility comes from the long unbridged spans twisting; strength comes from
+the staggered bridges, which leave no straight tear path across the hinge.
+Ratios: slot/pitch = 0.22, bridge/spacing = 0.16.
+
+### Print-in-place four-bar hinge (SD card box)
+
+Six components in one printed part: body, lid, and two mirrored pairs of links.
+Each side runs body—long link—lid and body—short link—lid.
+
+```
+pin diameter        ~4 mm
+clearance at body pivots   0.149-0.150 mm
+clearance at lid pivots    0.200-0.204 mm
+lid-to-body parting gap    0.596 mm   (they never touch; the linkage carries it)
+link volume                0.07-0.14 cm3
+```
+
+Note the deliberate asymmetry: tighter at the body (the datum), looser at the
+moving end.
+
+### Multi-colour parts overlap slightly — they are not exact complements
+
+Measured on a dual-colour print-in-place truck: each colour is **its own
+watertight solid**, they share a coincident boundary surface, and about **2% of
+one part's vertices sit strictly inside the other**. That small deliberate
+interpenetration is what guarantees no hairline gap at the colour boundary.
+
+My snap box lid inlay is exactly complementary — `difference()` and
+`intersection()` against the same prism, zero overlap. It works, but giving the
+inlay ~0.05mm of interference into the body would be strictly safer.
+
+### THE tessellation finding — OpenSCAD's defaults ARE the "blocky" problem
+
+Measured mean dihedral angle on a hemisphere rendered at various settings:
+
+| setting | mean dihedral | p95 | triangles (r=40) |
+|---|---|---|---|
+| `$fa=12; $fs=2;` (**OpenSCAD default**) | 13.8° | 107.9° | 472 |
+| `$fa=6;  $fs=0.8;` | 7.2° | 6.0° | 1 788 |
+| `$fa=4;  $fs=0.5;` | 5.2° | 4.0° | 3 772 |
+| **`$fa=2;  $fs=0.4;`** | **2.7°** | **2.0°** | **14 388** |
+
+Real sculpted models measure 1.8–1.9°; the smooth swept vase 3.8°; **my
+seahorse 12.9° and my mushroom lamp 11.2° — which is exactly OpenSCAD default
+territory.** The "not enough real look" was never a modelling-talent problem in
+the first place; it was a two-line settings problem.
+
+`$fn` is a *count*, so its facet angle depends on feature size — a 5mm boss and
+a 200mm body at the same `$fn` are not equally smooth. `$fa`/`$fs` are an angle
+and a length, and they hold ~2.5–2.7° across a 8× size range. **Put
+`$fa = 2; $fs = 0.4;` at the top of every organic model.** Keep defaults for
+flat functional parts — real ones measure 604–2 014 triangles and do not need
+more.
+
+### DFAM statistics — 88 real models, measured not asserted
+
+|  | p10 | median | p90 |
+|---|---|---|---|
+| min feature (wall p05) | 0.73 mm | **1.45 mm** | 3.00 mm |
+| typical wall (median) | 1.40 mm | **3.21 mm** | 10.99 mm |
+| smallest edge radius | 0.11 mm | **0.41 mm** | 1.08 mm |
+| tallness, h / max(w,d) | 0.12 | **0.38** | 1.48 |
+| longest bbox edge | 40 mm | **113 mm** | 236 mm |
+| copies per 256×256 plate | 1.6 | **11** | 135 |
+| triangles | 7 556 | **27 708** | 162 368 |
+| **% of downward area needing support** | 0% | **5.5%** | 38% |
+
+Read the last row carefully: **real models are designed to print essentially
+support-free.** The median part has 5.5% of its downward-facing area steeper
+than 55° and off the bed. That is a design constraint being honoured, not luck.
+
+Also: parts are **wide and low** (tallness 0.38) and **small enough to batch**
+(11 per plate). And useful individual walls seen: 1.6mm uniform throughout a
+stackable bottle holder, 1.2mm on a tool holder, 0.8mm minimum on a case,
+0.2mm single-wall on an ultralight glider.
+
+### A trap in my own tooling, now fixed
+
+`probe_joints()` measures vertex-to-vertex distance, which is only accurate on
+dense meshes. On the coarse OpenSCAD prototype (1 620 triangles) a real 0.18mm
+gap measured as **4.0mm** — the nearest vertices were nowhere near the nearest
+surfaces. `surface_gap()` in `mesh_anatomy.py` does the honest measurement;
+use it on anything not densely tessellated.
+
+And: **STL files ship in DESIGN orientation, not print orientation.** Both the
+reference case lid and my own snap box lid store rim-down with almost no bed
+contact. Never infer print orientation from a file — and never trust a
+bed-contact number without checking the part is actually posed for printing.

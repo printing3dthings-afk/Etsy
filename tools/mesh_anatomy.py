@@ -194,6 +194,20 @@ def main():
 # minimum vertex-to-vertex distance between two neighbouring components, and
 # the real ball radius is a least-squares sphere fit to the socket wall.
 # ---------------------------------------------------------------------------
+def surface_gap(a, b, n=20000):
+    """True surface-to-surface distance between two components.
+
+    probe_joints() uses vertex-to-vertex, which is accurate only on dense
+    meshes. On a coarse CSG export (a few thousand triangles) the nearest
+    vertices can sit far from the nearest SURFACES -- a prototype joint with a
+    real 0.18mm gap measured 4.0mm that way. Use this whenever the meshes are
+    not densely tessellated.
+    """
+    pts, _ = trimesh.sample.sample_surface(a, n)
+    d = trimesh.proximity.closest_point(b, pts)[1]
+    return float(d.min())
+
+
 def probe_joints(m, max_gap=1.5):
     from scipy.spatial import cKDTree
     comps = m.split(only_watertight=False)
