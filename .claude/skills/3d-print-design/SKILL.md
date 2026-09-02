@@ -3939,3 +3939,68 @@ Filament is nearly free; **printer time is the entire cost**. A 24-hour part
 caps the shop at one unit per day and cannot carry a sellable margin. Check the
 sliced time BEFORE committing to a physical product, not after — and treat
 roughly 4 hours per sellable unit as the ceiling worth designing toward.
+
+---
+
+## Technique 45 — Geometry does not predict popularity. A negative result worth keeping (2026-09-02)
+
+The question: across real published models, do measurable geometry properties
+track how well a design does? If they did, we could aim at them.
+
+**They do not.** Recording this so it is not re-investigated.
+
+### Method
+
+107 models, **stratified across five likes bands** (1–10, 10–40, 40–150,
+150–600, 600+; ~22 each, sampled at random within band from a pool of 3,734
+downloadable prints). Stratification matters: the first attempt reused the
+earlier corpus, where every model already had ≥780 likes — a truncated sample
+that can only produce nonsense. Each model measured with `dfam_probe.py`, then
+Spearman rank correlation against likes.
+
+### Result
+
+| property | Spearman vs likes |
+|---|---|
+| support fraction | **−0.210** (weak) |
+| triangle count | +0.189 |
+| longest bbox edge | +0.156 |
+| component count | +0.124 |
+| smallest edge radius | −0.117 |
+| wall thickness, plate area, copies per plate, tallness, thin fraction, min feature, bed fraction | **all \|r\| < 0.10 — noise** |
+
+Print time and filament mass, sliced for a 33-model subset: **+0.13 and +0.09.
+No signal.** Median print time was 223 min for the low-likes group and 263 min
+for the high-likes group — if anything slightly *longer* for popular models.
+
+### The one signal, and the one that evaporated
+
+**Support fraction survives.** Median % of downward area needing support, by
+likes band: 12.5 → 10.5 → 2.3 → 5.8 → **0.54**. Controlling for category it
+holds strongly among decorative items (21.8% for the low-likes group vs
+**0.0%** for the high-likes group) and weakly for boxes/organizers (7.2 → 5.5).
+Support-free printing is a real quality marker.
+
+**Triangle count does NOT survive.** It looked like a monotone rise across
+bands (12.4k → 21.9k), but controlling for category it *reverses* for
+decorative items (29.1k low-likes vs 9.3k high-likes). It was a category
+artefact. Do not use mesh density as a quality proxy.
+
+Category mix was checked and is stable across bands (boxes/organizers dominate
+every band at 10–14 of ~22), so the band comparisons are not a mix effect.
+
+### What this means for choosing what to build
+
+**You cannot pick a winner from geometry metrics.** Size, wall thickness,
+plate efficiency, part count, tallness, minimum feature, print time and
+filament cost all predict nothing. What separates a 5-like model from a
+5,000-like model is subject and execution, and neither is in the mesh.
+
+The one actionable half: **design it to print without supports.** That is the
+only measurable property that tracks, and it is a craft discipline rather than
+a dimension to tune.
+
+Caveats stated plainly: n=107 for geometry, n=33 for print time; within-category
+cells are 2–14 models, so the support finding is suggestive, not proven. Likes
+also confound age, author following and thumbnail quality — none of which are
+measurable here.
