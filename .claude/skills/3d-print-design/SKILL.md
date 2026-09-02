@@ -3518,3 +3518,150 @@ Verification (unchanged, still the part that catches real bugs):
 - [ ] Overhang scan **in print orientation** (rotate, never negate z alone).
 - [ ] Joint throat/retention/swing measured on the *finished, decorated*
       segment.
+
+---
+
+## Technique 42 — Reading real models' GEOMETRY: the measured anatomy of top print-in-place designs (2026-09-02)
+
+Scott: *"I need you to truly see how they are built and structured so you can
+get better."* Technique 41 came from marketing thumbnails, which teach almost
+nothing about construction. This one comes from **downloading real mesh files
+and cutting them open.** Every number below is measured off actual geometry,
+not read off a page.
+
+### How to get real geometry (works today, save the trouble of rediscovering)
+
+Printables' GraphQL API at `https://api.printables.com/graphql/` answers
+**unauthenticated**. Introspection is off and `prints(...)` search returns
+empty, but `print(id: N)` works, and **GraphQL aliases batch it**: 200 ids in
+one POST, ~85% of ids live. That makes a keyword+likes scan over the whole id
+space cheap (64k ids ≈ 3 minutes at 10 threads).
+
+```
+{ p1: print(id:1){id name likesCount downloadCount}  p2: print(id:2){...} ... }
+```
+
+Valid `stls{}` subfields: `id name fileSize filePreviewPath note created folder`.
+There is **no download field** — but for prints below id ≈ 900000 the preview
+path is `.../<lowercased file name>_preview.png` in the file's own directory,
+so the real file is `https://files.printables.com/<dirname>/<name.lower()>`.
+Verified byte-exact against `fileSize`. Above id ≈ 900000 previews became
+opaque uuids and this no longer derives — **scan the 200000–880000 band.**
+
+Dead ends, so they are not retried: `www.printables.com` is behind a Cloudflare
+challenge (403 to curl AND to headless Chromium through the agent proxy —
+`ERR_CONNECTION_RESET`); Thingiverse is a JS SPA with a token-gated API; Bing
+image search returns unrelated junk for technical queries.
+
+### The tools this produced
+
+* `tools/mesh_anatomy.py` — cross-sections along any axis, silhouette
+  envelope, dihedral-angle distribution, component count, and `--joints`
+  (real clearance + least-squares ball radius between components). Validated
+  by pointing it at my own seahorse: it recovered `clear = 0.25` and
+  `R = 2.9` from the mesh alone.
+* `tools/quick_render.py` — numpy z-buffer render. Blender in this container
+  takes >15s to answer `--version`, which kills the look-at-it-now loop.
+
+### THE STANDARD PRINT-IN-PLACE BALL JOINT — measured, and it is not what I built
+
+Measured on two unrelated designers' models (Centibug/Trilospike, and a
+goldfish carp flexi). **Normalised by ball diameter D, they are identical to
+three decimal places** — this is a shared standard, not a coincidence:
+
+| | goldfish D=3.06 | goldfish D=3.60 | trilobite/centipede D=4.80 | **ratio** |
+|---|---|---|---|---|
+| socket width (swing axis) | 4.903 | 5.768 | 7.690 | **1.600 × D** |
+| socket height (retention) | 3.283 | 3.863 | 5.150 | **1.073 × D** |
+| clearance, tight direction | 0.126 | 0.149 | 0.198 | **0.0413 × D** |
+| clearance, swing direction | 0.929 | 1.089 | 1.457 | **0.303 × D** |
+| flat ceiling bridge | 2.55 | 3.00 | 4.00 | **0.833 × D** |
+
+Read what that actually says:
+
+* **The socket is a flat-topped capsule slot, not a sphere.** The ball is
+  round (roundness 1.000) but the pocket is 1.6 D long and only 1.07 D tall.
+* **Swing comes from slot length**, not from cone angles. 0.30 D of free run
+  fore and aft. My cone-angle scheme (Technique 40) is a more fragile way to
+  buy the same motion.
+* **Retention is structural and absolute.** Socket height is only 7% more than
+  the ball, and the pocket is fully enclosed — the ball physically cannot
+  leave. No "retention distance" to compute, no pop-off.
+* **The flat ceiling is the printability trick.** 0.833 D of flat bridge
+  directly over the ball instead of a spherical dome overhang.
+* **They DO scale clearance with ball size** — a constant 4.13% of D. This
+  contradicts the "never scale a functional clearance" rule for *this* joint,
+  and at D=3.06 it lands at 0.126mm, well under one 0.4mm extrusion. That is
+  deliberate: the joint **prints lightly fused and is freed by the first
+  flex.** It is why their joints feel tight and mine (0.25mm) would rattle.
+
+### Segment proportions — the number that explains "too blocky / tubular"
+
+| | pitch/girth | segment length ÷ pitch (overlap) | girth taper |
+|---|---|---|---|
+| trilobite | 0.21 | 3.61 | 73% |
+| goldfish carp | 0.39 | 2.43 | 93% |
+| **my seahorse** | **1.20** | **1.67** | **~0%** |
+
+* **Segments must be 2.5–5× wider than they are long** (pitch ≈ 0.2–0.4 ×
+  girth). Mine were longer than wide, which is exactly why the body reads as a
+  tube of beads instead of an animal with plates.
+* **Each segment overlaps 2.4–3.6 pitches of its neighbours.** The lap is what
+  hides the joint line — that is why good flexis look continuous.
+* **Girth tapers 70–93% head to tail.** Mine barely tapers at all.
+* And the joint gap is a **design feature**: on the real models it is a deep,
+  wide, dark band that stripes the body rhythmically. Mine were hairlines.
+
+### Surface quality, as a number
+
+Dihedral angle between adjacent faces, and `profile_kink` (2nd derivative of
+the silhouette envelope) separate the three real design languages cleanly:
+
+| | mean dihedral | p95 | hard edges >45° | kink mean | tris |
+|---|---|---|---|---|---|
+| centipede (sculpted smooth) | 1.77° | 2.9° | 0.52% | — | 3.93 M |
+| goldfish (sculpted smooth) | 1.89° | 2.8° | 0.69% | — | 1.21 M |
+| spiral vase (smooth swept) | 3.76° | 8.5° | 1.46% | 0.174 | 268 k |
+| *low-poly vase (deliberate)* | 45.5° | 108.8° | 59.0% | 7.17 | 6.8 k |
+| **my seahorse** | **12.9°** | **76.5°** | **9.7%** | **6.55** | **60 k** |
+| **my snap box lid** | **27.1°** | **90.0°** | **28.3%** | **1.91** | **27 k** |
+| **my mushroom lamp** | **11.2°** | **90.0°** | **11.0%** | **6.64** | **145 k** |
+
+**My organic models sit in the dead zone** — too faceted to read as smooth,
+too smooth to read as intentional low-poly. That is precisely what "not enough
+real look to them" means, and now it has a threshold:
+
+* **Smooth organic target: mean dihedral < 4°, p95 < 9°, hard edges < 1.5%,
+  profile kink mean < 0.2.** Reaching it needs BOTH a genuinely continuous
+  profile AND real tessellation — 1–4 M triangles is normal for these, against
+  my 60 k. `$fn`/`$fs` must go up accordingly; a smooth surface cannot be
+  faked with a coarse mesh.
+* **Deliberate low-poly is the other valid answer** — but then commit: mean
+  dihedral 28–45° applied uniformly to the whole body, and very few triangles.
+* Never land in between.
+
+### Vessel proportions, measured (Spiral Vase No.2)
+
+* Silhouette is a true ogee: foot r=33, **widest at z=25 of 133 — the belly
+  sits at 19% height, not the middle**, r=44; waist r=13.5 at z=115; small lip
+  flare to r=17.
+* **neck ÷ belly radius = 0.31.**
+* The repeating surface unit is **not a sine wave** — it is an asymmetric
+  comma/teardrop lobe with an undercut hook on the leading edge. That
+  asymmetry is what makes it read as carved rather than corrugated.
+* **The detail breathes**: lobe amplitude starts shallow at the foot, grows
+  through the belly, and collapses back to nearly circular at the lip. Detail
+  is resolved at both ends, never chopped off at a boundary.
+
+### What to do differently, concretely
+
+1. Use the **flat-topped capsule socket** above, sized off D, instead of the
+   sphere+cone cutter. Enclose the ball fully.
+2. Clearance = **0.041 × D**, accepting a lightly-fused joint freed by the
+   first flex — not a 0.25mm "guaranteed free" gap.
+3. **pitch ≈ 0.3 × girth**, segments overlapping ~2.5 pitches, girth tapering
+   ~80% along the body.
+4. Raise tessellation until mean dihedral < 4°, or commit to low-poly.
+5. Make the joint gap a deliberate, readable dark band.
+6. Give every segment its own secondary form (the trilobite's three lobes and
+   per-plate crown) — a plain segment with a few tubercles is not detail.
