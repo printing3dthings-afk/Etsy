@@ -3297,3 +3297,122 @@ about 70mm wide they fall below one 0.4mm extrusion and the slicer drops
 them — the wordmark breaks into disconnected blobs. That number drove the box's
 whole footprint (92x62 up to 106x72). A logo that will not fit is a reason to
 use a simpler mark, never to shrink this one.
+
+## Technique 40 — Print-in-place flexi joints: what actually governs strength, retention and swing (2026-09-02)
+
+First articulated *animal* in this shop (`openscad_models/flexi_seahorse.scad`).
+The research and the build disagreed with each other in useful ways.
+
+### What the sources actually say
+
+Reachable, and worth citing: JLC3DP's articulated-animal design guide, which is
+unusually specific. MakerWorld, Printables, MyMiniFactory and Cults3D all 403
+through this environment's proxy (unchanged from Technique 20). WebFetch's own
+allowlist is *narrower* than the proxy's — several domains that WebFetch refuses
+return 200 to a plain `curl`, so fetch the HTML directly and strip it rather
+than reporting the source unavailable.
+
+Real numbers, all for a 0.4mm nozzle:
+
+| | Value |
+|---|---|
+| Moving-surface clearance | **0.2–0.3mm per side** (0.4–0.6 total) |
+| More forgiving | 0.3–0.5mm per side |
+| Wall, general structure | 1.2–1.6mm |
+| Wall, repeatedly stressed joint | **1.6–2.0mm+** |
+| Smallest reliable feature | 1.0–1.2mm |
+
+Three rules that matter more than the numbers:
+
+1. **Never scale a functional clearance.** A 0.6mm gap at 50% is 0.3mm and the
+   joints fuse, even though every proportion is still "correct". Scale the
+   decoration, hold the clearance.
+2. **Strength comes from connector diameter, fillets and perimeter count —
+   not infill.** Filling a thin leg with more infill does nothing; widening the
+   connector fixes it.
+3. **Check clearance around the whole rotation path**, not at one spot. A joint
+   with a 0.3mm gap at its widest can still close to zero somewhere else in its
+   travel.
+
+### What the reference photos teach that text does not
+
+A photo of four production flexi animals side by side (dragon, shark, gecko,
+axolotl) settles several design questions at once:
+
+* **Heads and legs are always rigid.** Only the spine articulates. The fragile
+  appendages are never joints — that is where the strength comes from.
+* **Undersides are completely flat.** Toes, gills and fins all lie in the bed
+  plane, not on the body's centreline.
+* **Articulation stops before the tail gets thin.** The gecko's tail tip is a
+  solid taper. Shrinking a joint to keep segmenting a tapering tail is how a
+  tip becomes a fused stub or a snapped one.
+* **Partial articulation is a legitimate choice.** The shark is one rigid body
+  with four tail segments — rigid where the silhouette matters, flexi where the
+  movement does.
+
+### Orientation is structural
+
+Printed flat, each neck's bending stress runs along the layer plane — the
+strong direction. A neck standing up in Z loads the layer bonds in tension,
+4–5× weaker, and that is the documented way these snap. So a flat-printed
+flexi animal must articulate **in the print plane**. Pick an animal whose
+natural motion is in that plane and nothing is compromised for it.
+
+### The geometry, and the trade nobody writes down
+
+Ball-and-collar: each segment ends in a ball on a neck; the next segment's
+collar is a cup of `R + clear` that runs `lip` past the ball's centre and traps
+it. Retention is `R - throat`, where the **throat is the collar's narrowest
+inner radius** — and the throat is set by *two* surfaces fighting:
+
+```
+throat = min over x in [0, lip] of max( sqrt(Rc^2 - x^2),  neck_r + clear + x*tan(mouth) )
+                                        cup closing in      mouth cone opening out
+```
+
+Neither surface tells you the answer alone. Widen the mouth for swing and the
+throat opens and the tail pulls apart; narrow it for grip and the tail stiffens.
+Sweep this in Python before touching OpenSCAD — the whole retention landscape
+costs a second, where each CGAL swing test costs a minute.
+
+**Swing is governed by pitch/R, not by the mouth angle.** The limit is the
+collar rim striking the next segment's flank. At pitch/R = 3.0 it is 16–18°; at
+2.5 the identical joint drops to 12°. Change the spacing and the swing changes.
+
+**A two-stage mouth relief buys both.** One cone cannot be narrow at the ball
+(for the throat) and wide at the rim (for swing). Split it: keep the shallow
+cone through the throat, then flare hard past it to chamfer the rim. On the
+finished seahorse segment a single 22° cone gave **6°** of swing; adding a 45°
+flare starting just past the throat took it to **14°** with retention only
+dropping 0.42 → 0.34.
+
+Final: `R 2.9, clear 0.25, neck dia 2.9, mouth 22°, pitch 8.7, wall 1.6` →
+bead dia 9.5, retention 0.42mm, swing 14°/joint on the real decorated segment.
+
+### Verification that actually catches things
+
+* **Component count is the primary check.** N segments must be N+1 components
+  (body + each segment). The seahorse's first build had 15 where 13 was right —
+  the two extras were the eye pupils, sitting almost concentric inside their
+  own sockets and touching nothing. Loose balls in each eye, invisible in every
+  render.
+* **The body must CUP the first ball, not swallow it.** A trunk that simply
+  overlaps the first ball fuses the top joint solid, and it looks identical to
+  a working one in any render. Give the body the same cup, mouth relief and rim
+  trim every bead gets.
+* **Re-test swing on the FINISHED segment**, decoration and belly trim included.
+  The bare joint measured 16°; the decorated one 14°. Anything added to a bead
+  can eat into the swing.
+* **Run the overhang scan and read where it points.** On the seahorse it
+  flagged 90° at the snout tip: the snout, fins and coronet were all thinner
+  than the belly trim plane and would have printed hanging 1–2mm above the
+  plate with nothing under them. Thin features must be placed ON the bed
+  (`z = bed + r*squash`), not on the body's centreline — which is exactly what
+  the reference photos' flat undersides were showing all along.
+
+### Choosing the animal
+
+Pick one whose real anatomy is already segmented and whose natural pose is a
+curl in one plane, and the articulation stops looking imposed. A seahorse's
+body is genuinely bony rings and its signature pose is a curled prehensile
+tail — so the joints are the animal, not a mechanism bolted through it.
