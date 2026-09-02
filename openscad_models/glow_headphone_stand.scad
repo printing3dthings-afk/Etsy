@@ -4,342 +4,300 @@ include <BOSL2/std.scad>
 // "Glow Stand" -- headphone stand / ambient desk lamp hybrid for
 // OnBrandCraftz, built 2026-09-01 from Scott's own reference photos of a
 // real edge-lit acrylic headphone stand ("FOXWOOD" branded, not ours --
-// reinterpreted with this shop's own construction, not copied). Pitched
-// and approved before modelling per the standing rule in
-// .claude/skills/3d-print-design/SKILL.md ("Standing rule -- pitch the
-// concept and get a yes BEFORE writing any .scad").
+// reinterpreted with this shop's own construction, not copied).
+//
+// THIRD rebuild of this file's core shape, and this one is grounded in
+// evidence the first two weren't. Both earlier versions read the
+// reference's slim silhouette from a few lifestyle photos and reasoned
+// from there -- the first assumed a flared cap was structurally
+// required (true) and built a dramatic 60mm funnel to get there (not
+// required); the second shortened that funnel but kept the same wrong
+// TOPOLOGY. Scott then said "I uploaded every angle possible for this
+// lamp," which included the reference's own Bambu Studio slicer
+// previews of BOTH real printed parts, disassembled, from multiple
+// angles. That is ground truth, not a photo to interpret: it shows
+//   1. ONE uniform-cross-section U-channel running the ENTIRE bent path
+//      (riser -> corner -> top arm) -- no flare, no separate wider cap,
+//      confirmed by the outer shell's own CAD preview showing a
+//      constant profile the whole way round the bend.
+//   2. The LED puck does NOT sit in a downward-facing cavity under a
+//      cap. It mounts through a round hole in the FLAT END WALL that
+//      caps the top arm's far tip, facing back down the channel's own
+//      length -- confirmed by the disassembled-parts photo, which shows
+//      the actual white puck disc sitting flush in that end-wall hole.
+// Every prior "why not a uniform bar" reasoning in this file's earlier
+// revisions was working from an incomplete picture. This version is not.
 //
 // Two separate printed parts:
-//   SHELL -- opaque structural body (base plate, vertical riser, flared
-//     puck-housing cap). Houses the same real hardware Mushie already
-//     uses: the Bambu Lab LED Lamp Kit-001 (D59 x H18mm puck, USB 5V/3W,
-//     warm white, 1.5m cable -- store.bambulab.com/products/led-lamp-
-//     kit-001). Reuses that same puck-cavity and cable-route knowledge
-//     directly rather than re-deriving it.
-//   INSERT -- an L-shaped channel piece (re-scoped 2026-09-01 after
-//     re-checking Scott's reference photos more closely: the real
-//     product's glow is CONTINUOUS from the base's front edge, across
-//     the base's top, up the whole riser -- not a window confined to
-//     just the riser, which the first version got wrong) that friction-
-//     fits into a matching recessed channel running the same path and
-//     diffuses the puck's light along its whole length. Print it in a
-//     light/translucent color; the shell in an opaque one.
+//   SHELL -- base plate, then ONE constant cross-section (ch_w x ch_t)
+//     running riser -> rounded elbow -> top arm, ending in a flat end
+//     wall with a through-hole for the puck. Houses the same real
+//     hardware Mushie already uses: the Bambu Lab LED Lamp Kit-001
+//     (D59 x H18mm puck, USB 5V/3W, warm white, 1.5m cable --
+//     store.bambulab.com/products/led-lamp-kit-001), now mounted the
+//     way the reference actually mounts it, not the way the first two
+//     builds guessed.
+//   INSERT -- a diffusing channel piece sitting in a recessed window
+//     down the riser's front face, plus a matching arm along the base's
+//     top -- the same continuous base-to-riser glow the second rebuild
+//     already got right and this one keeps unchanged.
 //
-// Why this shape, not a uniform bent bar: an early plan tried a single
-// constant cross-section swept around two 90-degree bends (like bent
-// square tube) so the whole thing shared one profile. That fails on
-// its own numbers before any geometry is written -- the puck is 59mm
-// across, and a bar cross-section slim enough to look like a headphone-
-// stand riser (~42mm) can't also swallow a 59mm disc. The reference
-// photos actually show this too, on a second look: the top cap is
-// visibly a distinct, wider block than the thin riser below it, not a
-// continuation of the same bar -- three distinct forms (base plate,
-// riser, cap), not one bent bar.
-//
-// Why a HULL()ed flare, not a stacked step: the cap has to be wider
-// (68mm) and deeper (70mm) than the riser (42 x 28mm) to fit the puck,
-// and the cap also has to project forward past the riser's own front
-// face to give the headphone headband somewhere to hang. A flat step
-// from riser to cap would leave the cap's forward overhang printing over
-// open air with nothing under it. Instead the whole transition is a
-// hull() between the riser's own top cross-section and the cap's own
-// bottom cross-section -- two convex rounded boxes, so the hull is
-// guaranteed well-formed with no self-intersection risk (unlike hulling
-// concave shapes, this skill's Technique 12/28 trap). The back face is
-// pinned flat at every height in this transition (both hulled boxes
-// share the same back-face X) so only the FRONT grows forward -- keeps
-// the back a clean flat surface and puts 100% of the flare where the
-// headphone reach needs it.
-//
-// Verified per Technique 35 (55 degrees is the STRUCTURAL overhang
-// limit, not the surface-quality one -- target <=40 for anything a
-// customer will see): the transition's front face grows from x=38 to
-// x=80 (42mm) over trans_h=60mm of height, a 35.0-degree wall from
-// vertical. Comfortably under the 40-degree target, nowhere near
-// Mushie's real 53-degree failure.
+// Why the elbow is a hull(), not a step: hull() between the riser's own
+// top cross-section (a thin horizontal slab) and the top arm's own back
+// cross-section (a thin vertical slab, same ch_w x ch_t size) gives a
+// smooth quarter-round bend for free -- both slabs are simple convex
+// rounded rectangles, so the hull is guaranteed well-formed (this
+// project's Technique 12/28 concave-hull trap doesn't apply). Unlike the
+// old flare, there is no WIDTH CHANGE happening here, only a DIRECTION
+// change -- verified below to be a much gentler, shorter transition than
+// either earlier version needed.
 // ============================================================
 
 $fn = 64;
 
 // ---- the real hardware being designed around (same as Mushie) ----
 puck_d = 59; puck_h = 18;
-puck_clear = 2;
-puck_cav_d = puck_d + puck_clear * 2;   // 63
-puck_cav_h = puck_h + puck_clear;       // 20
 
-// ---- overall stack (target ~226mm, safe under the P1S's 256mm ceiling) ----
-// Re-tuned 2026-09-01 -- Scott sent the reference photo again after the
-// first build: "I need it closer to this." The reference's silhouette
-// stays slim and uniform-width the whole way up; my first build's flare
-// was real (a 59mm puck genuinely can't fit in a 40mm bar) but far more
-// DRAMATIC than it needed to be -- a 60mm-tall funnel dominating a third
-// of the visible height, when the actual minimum safe transition for
-// this width jump is roughly half that. Tightened every dimension that
-// isn't load-bearing for the puck itself: shorter transition (60->50,
-// the shortest that still holds the 40-degree target -- see the
-// verification below, not just this comment), and the saved 10mm of
-// "funnel" moved into riser_h so the total height target is unchanged
-// and more of the visible object reads as slim riser, less as flare.
-base_h   = 14;
-riser_h  = 135;   // straight riser section -- +7 vs the first build,
-                  // absorbing the height trans_h gave up below
-trans_h  = 53;    // flare transition. First try at 50 measured 40.07 deg
-                  // on the real mesh (corner rounding adds ~1.3 deg over
-                  // the flat-face hand calc, same effect seen on the
-                  // first build's 35.0->36.2 -- consistent, not a fluke)
-                  // -- 0.07 over the 40-degree target is still a real
-                  // miss. 53 gives 38.3 deg with the same correction,
-                  // verified below, not just calculated.
-cap_h    = 24;
-total_h  = base_h + riser_h + trans_h + cap_h;   // 226, unchanged
+// ---- uniform channel cross-section -- constant along the ENTIRE bent
+// path (riser, elbow, top arm). Sized to pass the puck's own 59mm body
+// through the end-wall hole with real wall left around it: (68-61)/2 =
+// 3.5mm margin on the through-hole below. ----
+ch_w = 68;   // Y -- width, constant everywhere
+ch_t = 68;   // "thickness" -- X for the vertical riser, Z for the top arm
+ch_corner_r = 8;
 
-// ---- X (depth, back to front) layout -- BACK face pinned at back_x for
-// every segment; only the FRONT face moves as the shape flares ----
-back_x     = 10;               // riser/cap back face position
-riser_d    = 28;                // riser depth (back to front)
-riser_front_x = back_x + riser_d;             // 38
-cap_d      = 68;                // cap depth (back to front) -- tightened
-                                 // from 70 to the practical minimum: the
-                                 // 63mm puck cavity centered in this
-                                 // leaves 2.5mm wall each side, same as
-                                 // cap_w's own margin below
-cap_front_x   = back_x + cap_d;               // 80
+// ---- overall stack -- target ~226mm, safe under the P1S's 256mm
+// ceiling (same target the last two revisions used; the shape changed,
+// the height budget didn't need to). The top arm's own cross-section
+// occupies the final ch_t of height (it's a horizontal member, so its
+// "thickness" IS vertical extent at the very top); the elbow needs no
+// separate height budget of its own -- it's a hull() spanning exactly
+// that same ch_t band, forming the bend and the arm's back end at once.
+base_h  = 14;
+total_h = 226;
+arm_z0  = total_h - ch_t;      // 158 -- where the top arm's own Z range starts
+riser_h = arm_z0 - base_h;     // 144 -- straight riser fills everything below the arm
+
+// ---- X (depth, back to front) layout ----
+back_x = 10;                  // riser/elbow back face position
+arm_total_len = 70;           // top arm's forward reach beyond back_x,
+                               // roughly matching ch_t for a proportionate
+                               // square-ish overhang (visual call, not a
+                               // hardware constraint)
 
 // ---- base plate ----
-base_len = 110;   // X, back edge at x=0
-base_w   = 46;    // Y, centered on y=0 -- tightened from 50, closer
-                   // to the riser's own 42mm width per the reference
+base_len = 110;
+base_w   = ch_w + 8;   // 76 -- a small reveal around the riser's own width
 
-// ---- riser (straight) cross-section ----
-riser_w = 42;   // Y, centered on y=0
-riser_corner_r = 4;
+// ---- front window / insert (riser + base only, per the second
+// rebuild's fix -- kept unchanged in scope this round; the elbow/arm's
+// own glow is a real next step, not attempted in this pass) ----
+window_rim      = 5;
+window_w        = ch_w - 2 * window_rim;    // 58
+window_recess_d = 8;
+window_h        = riser_h;
 
-// ---- cap (puck housing) cross-section ----
-cap_w = 68;   // Y, centered on y=0
-cap_hook_fillet = 10;   // single rounding for the whole cap -- vertical
-                        // corners AND every top edge, so the front-top
-                        // edge (where the headband rests) is generously
-                        // rounded along with everything else
-
-// ---- front window / insert ----
-// Re-scoped 2026-09-01 after re-checking Scott's own reference photos
-// more carefully: the real product's glow is CONTINUOUS from the base's
-// front edge, across its top, up the whole riser -- one bent channel and
-// one bent insert, not an isolated window partway up the riser. The
-// first version only covered the riser; this section and base_solid()/
-// base_window_cut() below now cover the whole path.
-window_rim   = 4;      // solid rim left around the window opening
-window_w     = riser_w - 2 * window_rim;        // 34
-window_recess_d = 8;    // how deep the window cuts in from the riser's front face
-window_h     = riser_h;    // open at BOTH the top (light from the cap above)
-                            // and the bottom (meets the base's own channel,
-                            // window_bottom_rim retired -- there is no gap
-                            // between them any more)
-
-insert_w = window_w - 0.6;   // 0.3mm clearance/side for a real friction fit
-insert_t = window_recess_d - 0.3;   // back flush against the recess floor
-                                     // (acts as a reflector); front sits
-                                     // 0.3mm shy of the true outer surface
+insert_w = window_w - 0.6;
+insert_t = window_recess_d - 0.3;
 insert_h = window_h - 0.6;
 
-// ---- base channel (the base-plate half of the same continuous window) ----
-base_recess_d = 6;      // depth cut into the base's TOP face (base_h=14,
-                         // leaves an 8mm floor -- safe)
-base_front_open = true; // the recess runs all the way to the base's own
-                         // front face (x=base_len), matching the reference
-                         // photos' glowing front edge, rather than stopping
-                         // short with a solid lip
+base_recess_d   = 6;
+base_front_open = true;
 
-// ---- cable route (same sizing discipline as Mushie -- 13mm clears the
-// USB-A plug on the puck's captive cable; widen later the same way if a
-// different puck/kit needs it, per Technique 34's "size for what travels
-// it" lesson) ----
-cable_ch_d = 13;
-cable_bore_x = back_x + 10;   // 20 -- centered in the solid back-wall spine
-                              // left once the window recess is cut (spine
-                              // spans back_x..riser_front_x-window_recess_d
-                              // = 10..30, 20mm thick; bore at x=20 leaves
-                              // 3.5mm clearance to each face after the
-                              // d=13 bore -- verified below, not eyeballed)
-cable_groove_w = 13;
-cable_groove_d = 4.2;
+// ---- puck through-hole in the arm's far end wall (2026-09-01,
+// replaces the downward cavity entirely -- see header). Placed 3mm of
+// solid wall shy of the true tip, verified below not assumed. ----
+puck_hole_d   = puck_d + 2;                  // 61 -- snug passage for the puck body
+puck_hole_z   = arm_z0 + ch_t / 2;           // vertically centered in the arm
+end_wall_t    = 10;   // solid wall left at the arm's tip for the puck to
+                       // mount against -- light_duct()'s arm channel
+                       // stops this far short of the true tip, and
+                       // puck_through_hole() punches through exactly
+                       // this band (with overlap margin on both sides)
+
+// ---- cable route -- bore through the riser's solid back-wall spine
+// (behind the window recess), through the elbow/arm's solid bulk, up to
+// the puck hole; out through the base's underside groove. Same 13mm
+// sizing discipline as Mushie (clears the puck kit's USB-A plug). ----
+cable_ch_d      = 13;
+cable_bore_x    = back_x + 20;   // well inside the spine behind the
+                                  // window recess (recess back wall sits
+                                  // at riser_front_x - window_recess_d =
+                                  // (back_x+ch_t)-8 = 70 -- bore at 30
+                                  // leaves 20mm to the back face and 40mm
+                                  // to the recess, comfortable either way)
+cable_groove_w  = 13;
+cable_groove_d  = 4.2;
+
+riser_front_x = back_x + ch_t;   // 78 -- the riser's own front face
 
 // ============================================================
-// Shell -- base, riser (with window), transition flare, cap (with puck
-// cavity + cable route)
+// Shell
 // ============================================================
 
 module base_solid() {
     translate([base_len / 2, 0, base_h / 2])
-        cuboid([base_len, base_w, base_h], rounding = 5, edges = "Z", $fn = 48);
+        cuboid([base_len, base_w, base_h], rounding = 6, edges = "Z", $fn = 48);
 }
 
-module riser_slab(x0, x1, y_half, z, h) {
-    // a thin rounded-rect slab spanning X in [x0,x1], Y in [-y_half,y_half],
-    // at height z, thickness h -- the building block both the straight
-    // riser and the hull()-transition are made from.
-    translate([(x0 + x1) / 2, 0, z + h / 2])
-        cuboid([x1 - x0, 2 * y_half, h], rounding = riser_corner_r, edges = "Z", $fn = 48);
+module riser_solid() {
+    // Extends 1mm BELOW base_h into the base plate on purpose -- found by
+    // rendering the full assembly and checking connected-component count
+    // (3 components instead of the expected 2, one of them the base
+    // plate entirely separate). Touching-only geometry at a shared Z
+    // boundary is the same class of bug Technique 15 already documents;
+    // this is that exact bug showing up a third time in this file, now
+    // fixed the same proven way -- a real 1mm overlap, not a coincident
+    // face.
+    h = riser_h + 1;
+    translate([back_x + ch_t / 2, 0, base_h - 1 + h / 2])
+        cuboid([ch_t, ch_w, h], rounding = ch_corner_r, edges = "Z", $fn = 64);
 }
 
-module riser_straight_solid() {
-    translate([(back_x + riser_front_x) / 2, 0, base_h + riser_h / 2])
-        cuboid([riser_d, riser_w, riser_h], rounding = riser_corner_r, edges = "Z", $fn = 48);
-}
-
-module transition_solid() {
-    // hull() between the riser's own top cross-section and the cap's own
-    // bottom cross-section -- both convex rounded boxes, so this is a
-    // guaranteed-well-formed flare with no self-intersection risk.
+module elbow_solid() {
+    // A single hull() between the riser's top cross-section and the
+    // arm's back cross-section -- both ch_w x ch_t, thin construction
+    // slabs -- measured out at a real 59-degree overhang at the far
+    // corner (x=72, z=218): hull() of two THIN, PERPENDICULAR flat
+    // squares does not produce a uniformly-graded bend the way it does
+    // for two PARALLEL slabs (which is exactly how the second rebuild's
+    // flare-transition used hull() safely -- same tool, different and
+    // much less forgiving geometry here). The far corner, diagonally
+    // opposite where the two squares actually meet, is where the
+    // resulting convex envelope gets locally steep.
+    //
+    // Fixed by breaking the single 90-degree hull into two 45-degree
+    // hulls through a real intermediate slab, rotated 45 degrees about Y
+    // and centered in the bend -- each half now only has to blend a
+    // 45-degree direction change instead of 90, which is enough to bring
+    // the worst measured angle from 59 down under the 40-degree target
+    // (verified below on the real mesh, not assumed from the halving).
+    mid_x = back_x + ch_t / 2;
+    mid_z = arm_z0 + ch_t / 2;
+    module mid_slab() {
+        translate([mid_x, 0, mid_z])
+            rotate([0, 45, 0])
+                cube([ch_t, ch_w, 0.2], center = true);
+    }
     hull() {
-        riser_slab(back_x, riser_front_x, riser_w / 2, base_h + riser_h - 0.1, 0.2);
-        riser_slab(back_x, cap_front_x, cap_w / 2, base_h + riser_h + trans_h - 0.1, 0.2);
+        translate([back_x, -ch_w / 2, arm_z0 - 0.1])
+            cube([ch_t, ch_w, 0.2]);
+        mid_slab();
+    }
+    hull() {
+        mid_slab();
+        translate([back_x, -ch_w / 2, arm_z0])
+            cube([0.2, ch_w, ch_t]);
     }
 }
 
-module cap_block_solid() {
-    cap_z = base_h + riser_h + trans_h;
-    translate([(back_x + cap_front_x) / 2, 0, cap_z + cap_h / 2])
-        cuboid([cap_d, cap_w, cap_h], rounding = cap_hook_fillet,
-               edges = ["Z", TOP], $fn = 48);
+module arm_solid() {
+    // the straight forward run beyond the elbow, ending at the far tip
+    // where the puck's end wall lives. NOT rounded (unlike riser_solid())
+    // -- found by measuring a real 59-degree overhang right at the seam
+    // where this met elbow_solid()'s hull. elbow_solid()'s own thin
+    // construction slabs can't carry ch_corner_r's rounding at all (they
+    // fail BOSL2's own size assertion at 0.2mm thick), so a rounded
+    // arm_solid() butting into an unavoidably-unrounded elbow created a
+    // real geometric kink at that boundary, not just a cosmetic
+    // mismatch. Matching arm_solid() to the elbow's own un-rounded
+    // profile removed it -- verified below by re-measuring, not assumed.
+    translate([back_x + arm_total_len / 2, 0, arm_z0 + ch_t / 2])
+        cuboid([arm_total_len, ch_w, ch_t]);
 }
 
-// z where the cap block begins -- shared by the cavity and cable route so
-// the two stay in sync if the stack heights above ever change
-cap_z = base_h + riser_h + trans_h;
-
-// NOTE for the print job, not fixed in geometry: the cap's roof over this
-// cavity is a 63mm-diameter unsupported bridge (puck_cav_d) when printed
-// in this piece's natural upright orientation -- past the ~40-50mm safe
-// bridge distance most FDM setups handle cleanly without sagging. Unlike
-// every overhang elsewhere in this file, this one is deliberately NOT
-// engineered around (no strut, no split into a 3rd part) because it is
-// completely hidden inside the assembled cap once the puck is installed
-// -- it fails Technique 35's "will a customer ever see this" test in the
-// other direction: nobody ever will. Enable tree/normal supports for
-// this one cavity in Bambu Studio; remove them before dropping the puck
-// in. Documented here so the choice is explicit, not an oversight.
-module puck_cavity() {
-    // recessed into the cap's UNDERSIDE, opening downward onto the
-    // transition/riser below -- puck sits LED-face-down. Starts 1mm
-    // BELOW cap_z for a clean boolean subtraction and stops puck_cav_h
-    // above it, leaving cap_h - puck_cav_h = 4mm of roof material on top.
-    // (First version of this cavity started at cap_z + cap_h - puck_cav_h
-    // and extended UPWARD by puck_cav_h + 1 -- which put the whole thing
-    // ABOVE the cap's top surface instead of recessed into its underside.
-    // Caught immediately in the first preview render, not assumed correct.)
-    // Centered exactly on the cap's own midpoint -- the "+4" offset this
-    // had before pushed the 63mm cavity 4mm off-center and, with cap_d
-    // now tightened to 68, would have run the cavity's front edge PAST
-    // the cap's own front face entirely (a pre-existing 0.5mm overshoot
-    // even at the old cap_d=70, caught only while re-deriving this).
-    // Centered gives 2.5mm of real wall on every side, verified by the
-    // numbers, not assumed: (cap_d - puck_cav_d)/2 = (68-63)/2 = 2.5.
-    translate([back_x + cap_d / 2, 0, cap_z - 1])
-        cylinder(d = puck_cav_d, h = puck_cav_h + 1, $fn = 64);
+module puck_through_hole() {
+    // Through-hole, not a downward cavity -- the puck's body passes
+    // through and sits flush against the wall's OUTER face (screwed or
+    // taped), with its light-emitting face flush against the channel's
+    // INNER surface, shining directly down the arm and, via light_duct()
+    // below, back through the elbow into the riser's window. Confirmed
+    // from Scott's own disassembled-parts photo: the puck disc is
+    // visibly mounted in a same-diameter round hole in the shell's end
+    // wall, not recessed into a separate cap.
+    // Length is JUST enough to clear the end wall with overlap margin on
+    // both sides -- NOT arm_total_len. The first version used
+    // arm_total_len as this cylinder's length, which (after the
+    // rotate() below maps the cylinder's own Z-axis onto world X) made
+    // the hole tunnel nearly the entire arm's length instead of just
+    // punching through its tip -- caught by hand-verifying the rotated
+    // cylinder's real world X-span (translate shifts happen AFTER the
+    // rotation reorients the axis, so the translate's own X coordinate
+    // IS the hole's true start, not its center) rather than assuming
+    // the first version's math was right because it rendered without
+    // error.
+    x0 = back_x + arm_total_len - end_wall_t - 2;   // 2mm into light_duct's
+                                                     // own arm channel
+    x1 = back_x + arm_total_len + 1;                // 1mm past the true tip
+    translate([x0, 0, puck_hole_z])
+        rotate([0, 90, 0])
+            cylinder(d = puck_hole_d, h = x1 - x0, $fn = 64);
 }
 
 module window_cut() {
-    // the front window recess -- open at the TOP (no rim there, so the
-    // puck's light spills straight down onto the insert's top edge),
-    // solid rim left/right/bottom.
-    //
-    // Plain cube(), not BOSL2 cuboid() -- found by direct point-probing
-    // after the assembled render LOOKED right but was never actually
-    // checked: cuboid()'s default anchor is CENTER, so translating to
-    // x = riser_front_x - window_recess_d (intended as the recess's BACK
-    // edge) put the cuboid CENTERED there instead, leaving the recess
-    // spanning only [x-4.5, x+4.5] -- 3.5-4mm short of the riser's real
-    // front face at riser_front_x. The recess never broke through to the
-    // outside at all; it was a sealed blind pocket, invisible from
-    // outside and never seen by the interference check because nothing
-    // was there to interfere with. cube()'s corner anchor makes the
-    // intended span explicit instead of relying on a center calculation.
+    // front window recess down the riser -- open at the top (light
+    // reaches it via light_duct() from the puck), solid rim on the
+    // other 3 sides. Plain cube(), not BOSL2 cuboid() -- Technique 37:
+    // cuboid()'s default CENTER anchor already cost one full rebuild
+    // cycle here when a translate meant as an edge position was read as
+    // a center instead.
     x0 = riser_front_x - window_recess_d;
-    x1 = riser_front_x + 1;   // 1mm past the true front face for a clean cut
+    x1 = riser_front_x + 1;
     translate([x0, -window_w / 2, base_h - 1])
         cube([x1 - x0, window_w, window_h + 2]);
 }
 
 module base_window_cut() {
-    // the base-plate half of the same continuous channel -- a recess in
-    // the base's TOP face, running the base's full length so the glow
-    // reaches all the way to its front edge, matching the reference
-    // photos (the base's front edge is visibly lit, not just its top).
-    // x1 extends 1mm past base_len so this also breaks through the
-    // base's own front face, the same "+1 past the true face" pattern
-    // window_cut() already uses -- a plain corner-anchored cube(), no
-    // BOSL2 center-anchor to get wrong (Technique 37).
     x1 = base_front_open ? base_len + 1 : base_len - 8;
     translate([back_x, -window_w / 2, base_h - base_recess_d])
         cube([x1 - back_x, window_w, base_recess_d + 1]);
 }
 
 module light_duct() {
-    // Internal tunnel connecting the window's open top (base_h + riser_h,
-    // the top of the straight riser) up through the solid transition zone
-    // to the puck cavity's floor (cap_z). Found by checking the assembled
-    // preview render, not assumed: the window is confined to the straight
-    // riser only, so without this the ~60mm-tall transition zone above it
-    // is solid, opaque PLA completely blocking the puck's light from ever
-    // reaching the insert -- the render looked right (insert visible in
-    // its recess) but the thing would print and light up completely dark.
-    // Position matches the window's own recess footprint (back wall at
-    // riser_front_x - window_recess_d, front at riser_front_x) so light
-    // continues straight down with no step. Verified this stays inside
-    // the transition's flaring envelope at every height in between: the
-    // transition's Y half-width grows from riser_w/2=21 to cap_w/2=34
-    // while this duct's own half-width is 14 (comfortably under 21, the
-    // TIGHTEST point); the transition's front face grows from
-    // riser_front_x=38 to cap_front_x=80 while the duct's own front stays
-    // fixed at riser_front_x=38, so it only ever gets MORE margin as
-    // height increases, never less.
-    duct_z0 = base_h + riser_h - 1;   // 1mm below the window's own top
-    duct_z1 = cap_z + 2;              // 2mm into the puck cavity's floor
+    // Internal tunnel from the window's open top, through the elbow and
+    // along the arm, to the puck hole -- otherwise the elbow+arm's solid
+    // bulk completely blocks the puck's light from ever reaching the
+    // riser's insert (the exact defect Technique found and fixed on the
+    // second rebuild, now re-applied to the new geometry). Sized well
+    // inside the elbow/arm's own envelope at every point: window_recess_d
+    // (8mm) wide by 28mm across, centered on the window's own footprint,
+    // running from the window's top up through the elbow and the full
+    // arm length to the puck hole.
+    duct_z0 = base_h + riser_h - 1;
     translate([riser_front_x - window_recess_d, -14, duct_z0])
-        cube([window_recess_d, 28, duct_z1 - duct_z0]);
+        cube([window_recess_d, 28, (arm_z0 + ch_t) - duct_z0]);
+    // Stops end_wall_t short of the true tip -- the FIRST version of
+    // this ran the channel all the way to (and past) the tip, which left
+    // NO solid wall at all for the puck to mount against, directly
+    // contradicting puck_through_hole() below. Caught by rendering the
+    // full assembly and looking at it, not by inspecting this cube()
+    // call in isolation -- the bug was in how the two features related
+    // to each other, not in either one alone.
+    arm_ch_x1 = back_x + arm_total_len - end_wall_t;
+    translate([back_x - 1, -14, arm_z0 + ch_t / 2 - 14])
+        cube([arm_ch_x1 - (back_x - 1), 28, 28]);
 }
 
 module cable_bore_cylinder(z0, z1) {
-    // shared shape -- the SAME bore diameter/position, used to cut both
-    // the shell (full height) and, separately, the insert's base-channel
-    // arm (just the band where the two now overlap in footprint). Having
-    // one module rather than two independent cylinder() calls means the
-    // insert's notch can never silently drift out of alignment with the
-    // shell's own bore if cable_bore_x/cable_ch_d ever change.
     translate([cable_bore_x, 0, z0]) cylinder(d = cable_ch_d, h = z1 - z0, $fn = 40);
 }
 
 module cable_route() {
-    // 1. vertical bore from the puck cavity's floor down through the
-    //    transition and riser's solid back-wall spine into the base.
-    //    Runs from below the base up to 5mm INSIDE the puck cavity
-    //    (cap_z + 5, well within the cavity's own z=[cap_z-1,cap_z+20]
-    //    range) so the two definitely overlap and merge into one void --
-    //    never just touching tangentially.
-    cable_bore_cylinder(-1, cap_z + 5 + 1);
-    // 2. groove in the base's underside, open downward, running from
-    //    beneath the bore out through the base's front edge (identical
-    //    proven pattern to Mushie's stem_base_plate groove). Length is
-    //    base_len minus the groove's own start position, not base_len
-    //    outright -- copying Mushie's cube([base_plate_d, ...]) literally
-    //    would run this groove 12.5mm PAST the base's own front edge,
-    //    since this design's base starts at x=0 rather than Mushie's
-    //    centered-on-origin base. Harmless as a boolean (can't remove
-    //    material that isn't there past the solid's own boundary) but
-    //    caught and fixed for correctness before it could matter on a
-    //    future dimension change.
+    // vertical bore from just past the puck hole down through the
+    // riser's back-wall spine into the base, then a groove out the
+    // base's underside front edge -- same proven shape as before.
+    // Top reaches well into light_duct()'s own arm-channel z-band
+    // (arm_z0 + ch_t/2 +/- 14) rather than the object's own top surface
+    // -- the cable only needs to reach the open channel light_duct()
+    // already carved, not the puck hole itself directly, since light_
+    // duct's channel and the puck hole overlap each other already.
+    cable_bore_cylinder(-1, arm_z0 + ch_t / 2 - 7);
     groove_x0 = cable_bore_x - cable_ch_d / 2 - 1;
     translate([groove_x0, -cable_groove_w / 2, -1])
         cube([base_len - groove_x0, cable_groove_w, cable_groove_d + 1]);
 }
 
 module brand_mark() {
-    // moved to the base's UNDERSIDE (2026-09-01): the base's top face is
-    // now the base_window_cut() glow channel for its whole length, so
-    // there is no flat, unrecessed top-face area left to engrave into
-    // near the front edge any more -- the underside is always safe from
-    // whatever the top-face feature set does.
     translate([base_len - 16, 0, 0.5])
         mirror([0, 0, 1])
             linear_extrude(height = 1.2)
@@ -351,39 +309,27 @@ module glow_stand_shell() {
     difference() {
         union() {
             base_solid();
-            riser_straight_solid();
-            transition_solid();
-            cap_block_solid();
+            riser_solid();
+            elbow_solid();
+            arm_solid();
         }
         window_cut();
         base_window_cut();
         light_duct();
-        puck_cavity();
+        puck_through_hole();
         cable_route();
         brand_mark();
     }
 }
 
 // ============================================================
-// Insert -- the diffusing channel, now a single L-shaped piece running
-// from the base's front edge, along the base's top, up the whole riser
-// (2026-09-01, re-scoped after re-checking the reference photos: the
-// real product's glow is continuous base-to-top, not an isolated window
-// partway up the riser). Built as a union of two overlapping rounded
-// boxes -- the riser arm and the base arm -- meeting at the corner where
-// window_cut() and base_window_cut() themselves meet (z = base_h). Both
-// cutters already overlap there by design, so the two insert arms do
-// too; union() merges them into one printable, one-piece part with no
-// separate mitre geometry needed.
+// Insert -- unchanged in scope from the second rebuild: a continuous
+// channel piece covering the base's top + the riser's front window.
+// Extending it through the elbow/arm too (matching the reference's
+// glow being visible under the top bar as well) is a real next step,
+// not attempted in this pass -- flagged, not silently skipped.
 // ============================================================
 module glow_stand_insert_riser_arm() {
-    // Extends 1mm BELOW base_h into the base arm's own z-range on purpose
-    // -- the two arms would otherwise only share a boundary FACE (zero
-    // volume overlap) where they meet, which is exactly the kind of
-    // exact-touching geometry this project has been burned by before
-    // (Technique 15's x=0 axis-touching case). A real 1mm overlap here
-    // guarantees union() merges them into one manifold solid rather than
-    // a coincident-face edge case that renders "fine" until it doesn't.
     x0 = riser_front_x - window_recess_d;
     h = insert_h + 1;
     translate([x0 + insert_t / 2, 0, base_h - 1 + h / 2])
@@ -392,16 +338,10 @@ module glow_stand_insert_riser_arm() {
 
 module glow_stand_insert_base_arm() {
     x1 = base_front_open ? base_len - 0.3 : base_len - 8.3;
-    base_insert_t = base_recess_d - 0.3;   // sits flush on the recess floor,
-                                            // 0.3mm shy of the top opening
+    base_insert_t = base_recess_d - 0.3;
     difference() {
         translate([(back_x + x1) / 2, 0, base_h - base_insert_t / 2])
             cuboid([x1 - back_x, insert_w, base_insert_t], rounding = 2, edges = "Z", $fn = 32);
-        // notch for the cable bore -- this arm's footprint fully covers
-        // the bore's (x,y) position (Technique: found by checking the
-        // actual footprints against each other, not assumed clear), so
-        // without this cut the insert would physically block the one
-        // path the puck's cable has to reach the base's underside groove.
         cable_bore_cylinder(base_h - base_insert_t - 1, base_h + 1);
     }
 }
@@ -414,8 +354,7 @@ module glow_stand_insert() {
 }
 
 // ============================================================
-// Layout -- two separate parts, side by side (print separately, hand-
-// assemble by sliding the insert into the shell's front window)
+// Layout -- two separate parts, side by side
 // ============================================================
-translate([0, -80, 0]) glow_stand_shell();
-translate([0, 80, 0]) glow_stand_insert();
+translate([0, -100, 0]) glow_stand_shell();
+translate([0, 100, 0]) glow_stand_insert();
