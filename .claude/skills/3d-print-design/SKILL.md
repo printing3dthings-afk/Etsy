@@ -3172,3 +3172,128 @@ code 0. The only way any of them were caught was generating a real PNG
 (`fmt="png"` — works headless now, see Setup above) and looking at it
 from more than one angle. Do that for every new model before describing it
 to Scott as ready.
+
+## Technique 39 — Flush multi-colour logo inlays: face-down printing, SVG import, and a wall budget that must be derived (2026-09-02)
+
+Scott asked for the brand logo on a print "as a flat svg file in a different
+colour so I can print the lid face down and it be a smooth surface." That is a
+specific, correct manufacturing instruction, not a styling preference, and it
+drives the whole design. Built as `openscad_models/snap_box.scad`. Six findings,
+four of them real defects that rendered clean.
+
+**The inlay itself.** The logo is neither engraved nor embossed. It is a
+separate solid body occupying the top `inlay_h` (0.8mm = 4 layers) of the lid,
+exactly filling a matching void in the lid body, so the printed face is dead
+flat and the logo is purely a filament change in the first few layers. Because
+the lid's top face is flat where the logo sits, the two are exact complements
+by construction:
+
+```openscad
+module logo_prism(which) { /* extrude from lid_h - inlay_h upward, past the top */ }
+module lid_body_part()   { difference()   { lid_shell(); logo_all(); } }
+module lid_script_part() { intersection() { lid_shell(); logo_prism("script"); } }
+```
+
+Verify all three ways, not one: each pair's `intersection()` must be EMPTY, and
+`difference(lid_shell, body, script, swash)` must ALSO be empty. Non-overlapping
+is not the same as gap-free, and only the second check catches a void the inlay
+fails to fill.
+
+**A studio render is the proof, and it looks like a failure.** The Blender
+review render of the finished lid shows *no logo at all* — under real area
+lighting a zero-relief inlay casts no shadow, so there is nothing to see. That
+is the design working. Do not read a blank studio render here as a missing
+feature; read it as confirmation, and use a flat colour preview to show the
+logo.
+
+**os_teardrop is what makes a face-down lid printable.** Printed inverted, the
+lid's top edge becomes a flare rising off the plate, and a plain fillet there
+starts at 90 degrees of overhang. `os_teardrop(r=)` is a circular arc for the
+shallow part and a straight 45-degree run exactly where a fillet would go
+unprintable — so the same edge that reads soft right-side-up prints
+support-free upside-down. Confirmed by scanning real face normals on the
+rotated mesh: worst case 45 degrees except for the snap groove's own 0.75mm
+radius.
+
+**Bug 1 — negating Z to simulate a flip is a MIRROR, and inverts every
+normal.** The first overhang scan of the face-down lid mapped `(x,y,z) ->
+(x,y,-z)`. That is a reflection, not a rotation: it flips triangle winding, so
+every computed normal points the wrong way and the scan reports nonsense.
+Rotate: `(x,y,z) -> (x,-y,-z)`. Related to Technique 38's sign lesson and just
+as silent.
+
+**Bug 2 — scan the part AS PRINTED, not the part in isolation.** Even with the
+rotation fixed, `lid_body` alone reported 5,152 faces at a full 90 degrees.
+Those are the logo pocket's floor — which in the real print is supported by the
+inlay material sitting in it. Scanning the union of body+script+swash, which is
+what actually goes on the plate, they vanish. A part that is one object in the
+slicer must be one object in the check.
+
+**Bug 3 — a wall budget that is guessed instead of derived produces a floating
+part.** The base's locating plug steps inward from the outer face by
+`(lid_wall + clear)` to clear the lid skirt, so it only lands on real base
+material while `base_wall > lid_wall + clear`. A first pass had `base_wall =
+2.4` against a 2.65mm step: the plug hung 0.25mm clear of the cavity wall on
+every side, a completely detached ring. It rendered clean, exported clean, and
+reported `Simple: yes`. `intersection(base_shell, base_plug)` coming back EMPTY
+is what exposed it. A second pass at 3.2 reattached it but left a 1.0mm
+unsupported internal ledge. **The fix is not a better number, it is removing the
+number**: `base_wall = lid_wall + clear + plug_wall` puts the plug's inner face
+flush with the cavity wall, fully supported, zero ledge — and the constraint can
+never silently drift again. Whenever two parts' clearances feed a third
+dimension, derive that dimension from them.
+
+**Bug 4 — mirror() before centring destroys the centring.** The maker's mark
+used `translate(centre) scale(s) mirror([0,1,0]) import(...)`. The mirror is
+applied to the raw import, which sits at Y 550..807 in its own units, so
+mirroring sends it to -807..-550 and the centring offset then pushes it further
+the same way — the mark landed ~23mm off the part and engraved *nothing*. It
+still rendered and exported clean, because a cutter that misses removes nothing.
+Mirror the ALREADY-CENTRED shape: `translate([0,0,-0.5]) mirror([0,1,0])
+translate(centre) scale(s) linear_extrude(...) import(...)`. Chirality is
+unchanged by the reorder, so Technique 4's confirmed axis still applies. Catch
+it by isolating the recess-floor plane (`abs(z - mark_depth) < 1e-3`) and
+checking it exists at all before checking its width.
+
+### Using a real SVG logo in OpenSCAD
+
+**This OpenSCAD build imports SVG.** Confirmed live against all five of this
+shop's vendor wordmarks plus a fresh potrace output — `import("file.svg")`
+inside `linear_extrude()` just works, groups and `transform="scale(1,-1)"`
+included. Measure the result's bounds from a real import+export; the viewBox
+carries padding the ink never reaches.
+
+**But the brand logo is not vector.** `static/brand/onbrandcraftz-wordmark.svg`
+is an SVG wrapper around a base64 PNG — no geometry in it. The
+`static/vendor/wordmark/` files ARE real outlines but they are HUD font
+pairings, not the brand mark. `tools/vectorize_brand_logo.py` traces the real
+one into `assets/brand_vector/`, split by hue into the charcoal script and the
+gold swash so each can take its own filament.
+
+**import() over-tessellates and ignores $fs/$fa.** The traced script came in at
+391,576 facets, and a single boolean against it ran past eight minutes without
+finishing. `$fs=5` changed nothing — identical facet count. Coarsening the trace
+barely helped (`-O 0.2 -> 2.0`, `-a 1.0 -> 1.334`: 305k -> 299k). The lever that
+works is flattening the beziers to straight segments up front, so import() has
+nothing left to subdivide: `tools/flatten_svg_paths.py` took it to 19,596 facets
+and 15 seconds, with the same bounding box to within 0.001 units. Flatten any
+traced SVG before booleaning against it.
+
+**Two masks traced from one image will overlap where they touch, and clipping
+them in OpenSCAD does not fix it.** The gold swash passes under the script's
+descenders, so both masks share a boundary and potrace does not put the two
+outlines on the same sub-pixel line. `intersection(script, swash)` came back
+with 50 volumes. Subtracting the script from the swash in OpenSCAD made *those*
+two parts manifold but left razor-thin slivers along the same boundary, and any
+boolean involving both was still `Simple: no`. **Open a real gap in the bitmap,
+before tracing** — cut the second mask back from a dilated first mask (8px at 4x
+upsample, ~0.15mm). It only removes ink adjacent to the other colour, so the
+swash keeps full width everywhere else.
+
+**Minimum size is set by the thinnest stroke, and it is a hard floor.** Measure
+it off the source bitmap with an erosion-depth pass rather than guessing: this
+script's thin connectors run ~8px against a 1232px logo, so at anything under
+about 70mm wide they fall below one 0.4mm extrusion and the slicer drops
+them — the wordmark breaks into disconnected blobs. That number drove the box's
+whole footprint (92x62 up to 106x72). A logo that will not fit is a reason to
+use a simpler mark, never to shrink this one.
