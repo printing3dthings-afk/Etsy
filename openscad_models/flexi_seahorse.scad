@@ -92,7 +92,6 @@ trunk_pts = [[-9.8, 53.6, 6.3], [-8.0, 50.0, 6.3], [-5.0, 42.0, 7.4],
 
 tail_r0 = 5.55;      // at the first joint
 tail_r1 = 4.80;      // at the last -- never below R + clear + 1.6 of collar
-function tail_y(i) = -1.5 - i * pitch;
 function tail_r(i) = tail_r0 + (tail_r1 - tail_r0) * (i / n_joint);
 
 module fsphere(r) { scale([1, 1, z_squash]) sphere(r = r); }
@@ -105,24 +104,56 @@ module chain(p, on_bed = false) {
 }
 
 // ── tail: one continuous tapering solid, joints carved into it later ────
-module tail_solid() {
-    for (i = [0 : n_joint - 1]) hull() {
-        translate([2.0, tail_y(i),     0]) sphere(r = tail_r(i));
-        translate([2.0, tail_y(i + 1), 0]) sphere(r = tail_r(i + 1));
+//
+// Built in NESTED FRAMES: each segment is drawn in its own frame, then the next
+// frame advances one pitch and turns by `curl`. Solid and cutters walk the same
+// frames, so the two always agree.
+//
+// The first version instead built the tail at absolute positions and posed it
+// by rotating the whole solid in one pass and the cutters in another. At curl 0
+// they agreed and the printable model was correct, but any non-zero curl made
+// the two passes compound differently and the preview came apart -- segments
+// torn open, a loose blob in mid air. One construction cannot drift from
+// itself.
+module tail_seg_solid(i) {
+    hull() {
+        sphere(r = tail_r(i));
+        translate([pitch, 0, 0]) sphere(r = tail_r(i + 1));
     }
-    // solid tapered tip -- articulation stops before the tail gets too thin to
-    // hold a joint, which is what every good flexi animal does. Shrinking the
-    // joint to keep segmenting is how a tail tip becomes a fused stub.
-    tip = [for (t = [0 : 0.08 : 1]) [2.0 + t * t * 6, tail_y(n_joint) - t * 18, 0]];
+    // ring sits in the window between this joint's cone and the next socket
+    translate([ring_d, 0, 0]) ring_local(tail_r(i + ring_d / pitch), 1.8, 0.45,
+                                         0.72 - 0.02 * i);
+}
+module tail_tip_local() {
+    tip = [for (t = [0 : 0.08 : 1]) [t * 18, -t * t * 6, 0]];
     for (j = [0 : len(tip) - 2]) hull() {
         translate(tip[j])     sphere(r = tail_r1 * (1 - 0.94 * (j / (len(tip) - 1))));
         translate(tip[j + 1]) sphere(r = tail_r1 * (1 - 0.94 * ((j + 1) / (len(tip) - 1))));
     }
 }
+module tail_local(i) {
+    if (i < n_joint) {
+        tail_seg_solid(i);
+        translate([pitch, 0, 0]) rotate([0, 0, curl]) tail_local(i + 1);
+    } else tail_tip_local();
+}
+module tail_cuts_local(i) {
+    if (i < n_joint) {
+        joint_cutter();
+        translate([pitch, 0, 0]) rotate([0, 0, curl]) tail_cuts_local(i + 1);
+    }
+}
+tail_at = [2.0, -1.5, 0];
 
 // ── detail ──────────────────────────────────────────────────────────────
 // A seahorse is armour: bony rings all the way down, with a tubercle at each
 // ring's corners. That repetition is most of what makes one read as detailed.
+module ring_local(r, w, proud, nub) {
+    rotate([0, 90, 0]) scale([z_squash, 1, 1])
+        cyl(h = w, r = r + proud, rounding = min(0.9, w * 0.42));
+    for (s = [-1, 1]) translate([0, s * (r + proud * 0.35), 0])
+        scale([1.15, 1, 1.1]) sphere(r = nub, $fn = 14);
+}
 module ring_at(p, q, r, w, proud, nub) {
     a = atan2(q[1] - p[1], q[0] - p[0]);
     translate([p[0], p[1], 0]) rotate([0, 0, a]) {
@@ -146,16 +177,6 @@ module trunk_rings() {
               trunk_pts[j][1] + (trunk_pts[j+1][1] - trunk_pts[j][1]) * f];
         r  = trunk_pts[j][2] + (trunk_pts[j+1][2] - trunk_pts[j][2]) * f;
         ring_at(p, [trunk_pts[j+1][0], trunk_pts[j+1][1]], r, 2.3, 0.55, 0.85);
-    }
-}
-
-module tail_rings() {
-    // one ring per segment, sat just behind each joint so the carve does not
-    // eat it, tapering with the tail
-    for (i = [0 : n_joint - 1]) {
-        y = tail_y(i) - ring_d;
-        r = tail_r(i + ring_d / pitch);
-        ring_at([2.0, y], [2.0, y - 1], r, 1.8, 0.45, 0.72 - 0.02 * i);
     }
 }
 
@@ -248,9 +269,8 @@ module creature_solid() {
     chain(snout_pts, on_bed = true);
     chain(head_pts);
     chain(trunk_pts);
-    tail_solid();
+    translate(tail_at) rotate([0, 0, -90]) tail_local(0);
     trunk_rings();
-    tail_rings();
     coronet();
     head_spines();
     fin(dorsal_pts, 1.7);
@@ -261,33 +281,16 @@ module creature_solid() {
     obc_letters();
 }
 
-// Each joint is carved at its own place along the tail, and in the curled
-// preview every joint downstream carries the accumulated rotation.
-module carve(i) {
-    if (i < n_joint) {
-        translate([2.0, tail_y(i), 0]) rotate([0, 0, -90]) joint_cutter();
-        translate([2.0, tail_y(i), 0]) rotate([0, 0, curl])
-            translate([-2.0, -tail_y(i), 0]) carve(i + 1);
-    }
-}
-module posed_solid(i) {
-    if (i < n_joint) {
-        translate([2.0, tail_y(i), 0]) rotate([0, 0, curl])
-            translate([-2.0, -tail_y(i), 0]) posed_solid(i + 1);
-    } else creature_solid();
-}
-
 module seahorse() {
     difference() {
         union() {
             difference() {
-                // a ternary cannot stand in for a module CALL in OpenSCAD
-                if (pose == "curled") posed_solid(0); else creature_solid();
+                creature_solid();
                 eye_sockets(); gills(); mouth();
             }
             eye_pupils();
         }
-        carve(0);
+        translate(tail_at) rotate([0, 0, -90]) tail_cuts_local(0);
         translate([0, 0, bed]) cube([500, 500, 500], anchor = TOP);
     }
 }
