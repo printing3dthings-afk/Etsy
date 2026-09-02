@@ -3969,9 +3969,12 @@ Spearman rank correlation against likes.
 | smallest edge radius | −0.117 |
 | wall thickness, plate area, copies per plate, tallness, thin fraction, min feature, bed fraction | **all \|r\| < 0.10 — noise** |
 
-Print time and filament mass, sliced for a 33-model subset: **+0.13 and +0.09.
-No signal.** Median print time was 223 min for the low-likes group and 263 min
-for the high-likes group — if anything slightly *longer* for popular models.
+Print time and filament mass, sliced for **83 of the 107**: **−0.03 and −0.02.
+No signal whatsoever.** Band medians run 193 / 148 / 127 / 318 / 147 minutes
+from lowest to highest likes — no trend at all. (Reported first at n=33, where
+they read +0.13 and +0.09; the rest of the batch finished and those collapsed
+to zero, which is exactly what small-sample noise does. The conclusion did not
+change, only its strength.)
 
 ### The one signal, and the one that evaporated
 
@@ -4000,7 +4003,7 @@ The one actionable half: **design it to print without supports.** That is the
 only measurable property that tracks, and it is a craft discipline rather than
 a dimension to tune.
 
-Caveats stated plainly: n=107 for geometry, n=33 for print time; within-category
+Caveats stated plainly: n=107 for geometry, n=83 for print time; within-category
 cells are 2–14 models, so the support finding is suggestive, not proven. Likes
 also confound age, author following and thumbnail quality — none of which are
 measurable here.
