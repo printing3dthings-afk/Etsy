@@ -5,7 +5,7 @@ articulated: **flex each joint once to break the tiny adhesion at the contact
 points** and the tail poses freely. That first flex is normal for every
 print-in-place model, not a sign anything is wrong.
 
-Prints flat on its belly exactly as modelled. ~174mm tall straight, ~120mm once
+Prints flat on its belly exactly as modelled. ~180mm tall straight, ~120mm once
 the tail is curled.
 
 | Setting | Value | Why |
@@ -25,23 +25,34 @@ exists for exactly this.
 
 ## The joint
 
-Ball-and-collar, designed and verified on its own before the animal was drawn
-around it:
+The joints are **carved, not built**. The whole seahorse is sculpted as one
+continuous solid and each joint is a ring-shaped cutter subtracted from it —
+which is how the good flexi models are made, and why the skin stays unbroken
+and the joint reads as a line rather than a step between beads.
 
 ```
-ball dia 5.8    clearance 0.25/side    neck dia 2.9    mouth relief 22°
-pitch 8.7       collar wall 1.6        bead dia 9.5
+ball dia 5.8    clearance 0.25/side    cone angles 37 / 55 deg
+pitch 10.0      9 joints               narrowest neck dia 3.7
 ```
 
-* **Retention 0.42mm** — how far the collar must spread for a ball to escape.
-  The tail holds together under normal handling; a determined pull will pop a
-  bead off, and it clicks back on.
-* **Swing 14° per joint, 11 joints = 154° of curl.** Measured on the finished
-  decorated segment, not the bare joint — the bony ring and dorsal crest cost 2°.
+* **Retention 0.33mm** — how far the collar must spread for a ball to escape.
+  It holds under normal handling; a determined pull pops a joint, and it clicks
+  back on.
+* **Swing 18° per joint, 9 joints = 162° of curl**, measured on the real joint.
 
-Tail stiff or fused → raise `clear` to 0.30. Tail floppy → drop to 0.20. Either
-way print a two-segment coupon first (`-D part=joint_test`) rather than
-committing to the whole animal.
+The two cone angles are the design: their 18° difference IS the swing, and the
+outer one sets retention. Give both cones the same angle and the joint binds at
+about 4° no matter how much clearance you give it.
+
+Tail stiff or fused → raise `clear` to 0.30. Tail floppy → drop to 0.20. Print
+a one-joint coupon first (`-D part=joint_test`) rather than committing to the
+whole animal.
+
+## The OBC medallion
+
+A raised oval plate on the left flank with OBC standing 1.0mm proud of it. It
+prints face-up with no support, and it is the only feature that adds to the
+model's thickness.
 
 ## Why it prints flat, and why that matters
 
