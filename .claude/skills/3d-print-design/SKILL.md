@@ -4220,3 +4220,160 @@ rather than a moving one.
    segmented into shell panels along real seam lines**, each with its own
    safe print orientation, before modeling starts — not decided after
    discovering the first attempt doesn't fit the plate.
+
+## Technique 47 — Fidget clickers: three real mechanism families, not one (2026-09-04)
+
+Scott's follow-up to Technique 46: *"Research clickers also."* Fidget
+clickers are their own real design niche on Printables (a "clicker" keyword
+scan of ids 1,200,000–1,340,000 — the newest band, almost entirely
+undownloadable per Technique 42's era limit — turned up 90 real candidates
+after dedup). No full mesh geometry was downloadable for the true fidget-toy
+examples (all in the non-derivable modern era, confirmed with direct probes
+on five separate candidates, all 404), so this technique leans on two things
+instead: real preview-image geometry at scale (90 images, both whole-print
+thumbnails and, valuably, individual per-STL-file previews for multi-part
+prints — Printables exposes a `filePreviewPath` per file, not just per
+print, so a multi-file print's *internal mechanism parts* render separately
+and are visible even when the print's outer shell isn't), and a real
+industry engineering reference on snap-dome switches
+(metal-domes.com's design guide, fetched and read in full). Facts below are
+tagged by source; nothing here is asserted from a downloaded, measured mesh
+the way Technique 46's gears were — that's the honest limit of what this
+round could verify.
+
+### The corpus
+
+Same scan method as Technique 46 (GraphQL id sweep + keyword filter), one
+new band: ids 1,200,000–1,340,000, filtered for "clicker"/"fidget click".
+90 real, distinct prints survived dedup, likes ranging from 5 to 1,312.
+Sorted by popularity, the top of the list is itself a finding — real working
+titles, not invented categories:
+
+| id | likes | name |
+|---|---|---|
+| 1282820 | 1,312 | Fidget Clicker Wheel 3.0 |
+| 1212184 | 871 | spiky clicky stim toy |
+| 1244780 | 813 | Cute Cat Paw Clicker – No Keyboard Switch Required |
+| 1308207 | 782 | Fidget Toggle Switch Clicker – Print in Place |
+| 1227432 | 513 | Cactus Fidget Clicker |
+| 1264787 | 477 | Mario Mushroom Fidget Clicker |
+
+Below the top few, the corpus splits cleanly into three mechanically
+distinct families — not variations on one idea.
+
+### Family 1 — bistable dome/membrane (snap-through buckling)
+
+The largest visual family: a decorative body (flower, animal, food) hides a
+thin curved shell that buckles between two stable states, giving the
+"click" as elastic snap-through, not a moving part. Confirmed visually
+across many independent designs (Cactus, Mario Mushroom, Tulip Clicker,
+Capybara, Toucan, Wasabi, Easter Egg). Two real dome-shape variants both
+appear in the corpus, not just one:
+
+- **Scalloped/petaled rim** (the dominant variant) — the dome's edge is cut
+  into a flower-like petal pattern rather than a plain circle. This reads as
+  decoration but is very likely functional: a large, thin FDM shell needs
+  more edge compliance than a small stamped-metal dome does to buckle
+  reliably, and scalloping gives that flex while also constraining the
+  buckle to a repeatable direction. Disguising the spring element as a
+  flower/petal shape is why so many of these toys are flower- or
+  plant-themed — the theme follows the mechanism, not the other way round.
+- **Plain oblong/stadium dome** — also present (a clean thin curved
+  stadium-shaped shell, no scalloping), matching the "oblong" shape
+  metal-domes.com's guide lists as one of the four common real dome
+  profiles (round, triangle, oblong, four-leg). Seen paired with a
+  **socket ring carrying 3–4 short pillar legs** around its rim in a
+  separate mechanism-part preview (from "Print-in-Place Fidget Clicky
+  Gear," 1246751) — a printed analog of a real membrane-switch retention
+  ring, holding the dome captive from beneath while leaving its center free
+  to flex down. A flat hex plate with a small central boss (seen in another
+  multi-part print) is the matching **mounting base** half of the same
+  captured-dome subassembly — base plate + retention ring + free-flexing
+  membrane, all three parts visible separately across different real prints.
+
+**Sourced engineering framing (metal-domes.com, real industry guide, not
+inferred):** a snap dome's key spec is **click ratio** = tactile drop ÷
+total travel, with 40–60% called "balanced" (their worked example: 1.2mm
+travel, 0.6mm drop = 50%). Common failure modes they name: misalignment,
+wrong actuation force, incorrect spacing, skipping physical prototypes.
+**Their numbers are for stamped stainless steel (SUS301/304) at
+sub-millimeter scale and do not transfer directly to FDM plastic** — real
+printed clicker domes run far larger (40–60mm) than any metal dome, because
+a thick, stiff FDM wall needs a much bigger radius-to-thickness ratio to
+buckle elastically at all without cracking. Treat "click ratio" as the right
+*concept* to design around (how much of the travel is felt as a snap versus
+soft compression), not the literal metal-dome dimensions.
+
+### Family 2 — cantilever finger/comb spring array
+
+A second, mechanically different family: instead of one buckling dome, a row
+of **parallel flexible cantilever fingers** (a comb), each one flexing and
+releasing independently. Directly confirmed on "Fidget Toggle Switch
+Clicker – Print in Place" (1308207, 782 likes) — its preview shows an
+interlocking comb of fingers, not a dome. The same rib/comb motif recurs
+repeatedly as internal housing geometry across several other, unrelated
+clicker prints (vertical fin arrays inside box housings) — this looks like a
+generically reusable spring element for a printed switch, not a one-off.
+Mechanically this is closer to a row of small cantilever snap-fit fingers
+(Technique 43's cantilever math applies directly — beam length, thickness,
+and material modulus set the flex force) than to true bistable buckling: a
+comb gives a ratchet-like *series* of small clicks as fingers release in
+sequence, where a dome gives one sharp bistable snap.
+
+### Family 3 — sawtooth ratchet + spring pawl (the classic click-pen mechanism)
+
+The single most popular design in the whole corpus (1282820, "Fidget
+Clicker Wheel 3.0," 1,312 likes — nearly 1.5× the next entry) is neither a
+dome nor a finger comb. Its main part preview is unambiguous: a wheel with
+**sawtooth ratchet teeth cut around its full outer rim**, meant to spin
+inside a two-piece case (`Case_M`/`Case_F`) against a spring pawl mounted on
+a separate `InnerFrame` part — the exact kinematic of a retractable
+ballpoint pen's click mechanism (rotating notched cam + flexing pawl), not a
+push-button dome at all. This is not an isolated example: at least four more
+independently-named designs in the same corpus use the identical
+notch-and-pawl principle — "Fidget Clicker (Ratchet) – Simple and
+Satisfying!" (1278237, explicitly named "Ratchet"), "Fidget Clicky Gear
+{PRINT IN PLACE}" (958862), "Clicky Gear Fidget Toy [FAST PRINT]" (1020773),
+and "CN3D Gear Clicker Key Tag" (996183) — four separate, popular, real
+prints converging on the same non-dome, non-comb mechanism.
+
+**A real design-practice finding worth copying directly:** the top design's
+own file list ships **two versions of the moving wheel part at different
+fits** — `Wheel_v3.0.stl` and `Wheel_tolerance0.1mm_v3.0.stl` — letting the
+buyer pick based on how their own printer's tolerance runs. This is the same
+principle behind this shop's own Gauntlet calibration tile (a swept ladder
+of clearances so a buyer/printer finds their own working fit) converged on
+independently by one of the most-liked designers on the platform — real
+outside confirmation that "ship a tolerance ladder, don't guess one number"
+is a sound practice, not just an internal habit.
+
+### What to do differently, concretely
+
+1. **"Clicker" is not one mechanism — pick a family deliberately.** Bistable
+   dome (single sharp snap, quietest, best for a small toy), cantilever comb
+   (a rippling series of smaller clicks, good for a wider/flatter form
+   factor), or sawtooth ratchet + pawl (loudest, most mechanical-feeling,
+   the only one of the three that naturally supports many clicks per
+   rotation from one part). Choose based on the felt experience wanted, not
+   by defaulting to whichever is easiest to model.
+2. **A bistable dome for FDM needs a scalloped/petaled rim, not a plain
+   circle**, unless it's built oversized (40mm+) as a plain oblong/stadium
+   shape — a small plain-circle dome in stiff FDM plastic is unlikely to
+   buckle reliably at hobby wall thickness.
+3. **Build a captured-dome subassembly as three real parts**, matching what
+   the corpus actually ships: a base plate with a central boss, a
+   retention ring with 3–4 short pillar legs holding the dome's rim
+   captive, and the free-flexing dome/membrane itself — don't try to mold
+   the dome directly into a single-piece housing.
+4. **For a ratchet mechanism, ship the moving part at more than one
+   clearance** (a ~0.1mm spread, matching the top design's own two-file
+   pattern) rather than committing to one dimension and hoping it fits every
+   printer.
+5. **This round's real limit:** every genuinely new fidget-clicker candidate
+   sits in the non-derivable id era (Technique 42) — none of the actual
+   toy meshes could be downloaded and measured directly, only their preview
+   renders. The three-family split above is well-supported by many
+   independent images and real product names, but treat exact tooth counts,
+   wall thickness, and dome radius-to-height ratios for this category as
+   still unverified against real geometry — a good target the next time a
+   Printables session cookie or an older-era equivalent becomes available.
