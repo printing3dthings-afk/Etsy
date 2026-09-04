@@ -4377,3 +4377,304 @@ is a sound practice, not just an internal habit.
    wall thickness, and dome radius-to-height ratios for this category as
    still unverified against real geometry — a good target the next time a
    Printables session cookie or an older-era equivalent becomes available.
+
+## Technique 48 — Real technique upgrades this shop hasn't used yet: fuzzy skin, TPMS infill, layered-color painting, embedded hardware, and a print-in-place gear-train mechanism (2026-09-04)
+
+Scott: *"figure out if there's any new ways to print stuff that haven't been
+done... structurally strong, makes sense, and very usable... very good at
+details so that way our prints will look phenomenal."* This is a genuine
+technique/process research pass (what the printer and slicer can DO), not
+another geometry-corpus pass like Technique 41–47 — sourced from real,
+citable research and Bambu/community documentation, verified against what
+this shop's specific hardware (Bambu P1S, single hardened/brass 0.4mm
+nozzle, AMS 4-slot) can actually run today. Every item below is flagged as
+either **usable now, zero new hardware** or **out of reach on this printer**
+— don't let "novel" read as "buy new equipment."
+
+### Usable now — genuinely new to this shop, zero new hardware
+
+**1. Layered-colour "filament painting" for true photographic/logo detail
+(HueForge-style) — the single biggest "phenomenal detail" win available.**
+A standalone free/paid tool (HueForge) takes a flat image and computes,
+per-pixel, which stack of translucent filament layers and layer heights
+reproduce its color and value using a CMYK-style optical-mixing model —
+the same physical principle as a lithophane, generalized to full color
+instead of grayscale. Output is a real, sliceable file with height-mapped
+color-change instructions. **Confirmed compatible with this exact
+hardware class**: HueForge's own 3MF Export Plugin reads the target
+printer's AMS/CFS slot count directly from the imported profile and
+inserts either an automatic AMS swap (when the printer has enough slots)
+or a manual pause-and-swap prompt only for colors beyond the physical
+slot count — so a 4-slot P1S AMS handles up to 4-colour photographic
+prints **fully automatically**, no operator intervention mid-print. This
+is a real, different-in-kind capability from anything in this shop's
+current pipeline: a genuinely photorealistic image (a pet portrait, a
+logo, a landscape) rendered as a flat backlit panel or a bas-relief
+lithophane, using filament this shop already stocks. Where to apply it:
+a backlit nightlight panel (pairs directly with the existing Mushie
+lamp-shell work), a customer-photo memorial/pet portrait plaque, or a
+logo medallion with real photographic shading instead of a flat engraved
+mark.
+
+**2. Fuzzy skin for texture and grip — a two-setting slicer change, not a
+new model.** Bambu Studio's Fuzzy Skin (outer-wall-only, or walls+top)
+randomly jitters the outer wall's toolpath within a small band, producing
+a fine matte/grippy texture that also hides layer lines. Real, current
+community use split into two clear categories worth applying deliberately
+rather than as a novelty toggle: **functional** — extra grip on a handle,
+knob, or phone-stand contact surface — and **material-mimicry** — an
+uneven, slightly randomized surface reads as fur, bark, stone, or raw
+metal far better than a smooth wall does, confirmed on real published
+examples (ice-cream/plant-pot decorative prints, faux-metal enclosures).
+**Directly relevant to this shop's own Technique 47 finding**: one of the
+top-liked real keychains in this session's own corpus is explicitly named
+"Bic Lighter Case Keychain ... Fuzzy Skin" — independent confirmation
+this is a real, marketed differentiator buyers respond to, not an
+internal guess. Apply per-surface (Bambu Studio supports painting fuzzy
+skin onto specific faces via the same paint-tool UI as seam painting) —
+never blanket the whole model, since a fuzzy-skin flat top loses the
+crisp G2 surfacing this skill already invests in elsewhere (Technique 30).
+
+**3. TPMS/gyroid infill as a genuine structural choice, not a default
+percentage.** Real 2024–2026 mechanical testing (cited below) confirms
+gyroid infill is the most **isotropic** common infill pattern — it
+distributes load roughly evenly across all three axes because its
+surface has no flat parallel planes to concentrate stress the way grid/
+line infill does, while a simple grid is strongest along its own two
+printed axes and comparatively weak on a diagonal/twisting load. Cubic
+infill can still edge out gyroid on raw compressive tensile strength at
+very high density (~80%) in some published tests, so gyroid is not
+universally "the strongest" — its real advantage is **not caring which
+direction the load comes from**, which matters specifically for a part
+handled/dropped/twisted in unpredictable ways (a toy, a keychain, a
+carried tool) rather than a part loaded in one known, fixed direction
+(a bracket, per Technique 46, where a directional web/lattice beats
+uniform infill anyway). **Recommended default going forward for anything
+without a single dominant, known load direction: gyroid, 20–35%, 4 walls,
+5 top/bottom layers** — matching the real published recommendation, and a
+real change from this shop's prior unstated default.
+
+**4. Embedded hardware, with real numbers instead of guessed clearances.**
+Two techniques already conceptually known in this shop (mentioned in
+passing) but never given real design numbers — worth having on hand:
+- **Heat-set threaded inserts**: bore a straight (not tapered) blind
+  hole, sized to the specific insert (never guessed), roughly 1mm deeper
+  than the insert's own length, no chamfer at the hole mouth. Press in
+  with a heated tip (a soldering iron at low heat, or a purpose tip) —
+  never a soldering-iron-hot embed near an already-placed magnet in the
+  same part (next point).
+- **Embedded magnets**: cavity = magnet diameter/thickness **+0.2–0.4mm**
+  for a snug press fit, **1–2mm minimum wall** around the pocket to keep
+  it structurally sound, and — a real, easy-to-miss trap — never heat-set
+  an insert near an already-embedded magnet in the same print: a
+  soldering iron's tip runs well past 200°C, comfortably above the
+  demagnetization threshold of a standard neodymium magnet. Sequence
+  magnet-then-insert operations by which one goes in last, or keep them
+  physically far apart in the design.
+
+### A genuinely new mechanism family for THIS shop, confirmed via real geometry
+
+Extending Technique 47's clicker-family research to the broader toy/
+fidget corpus (see Technique 49 below for the full toy/keychain pass)
+turned up a fourth real mechanism family that Techniques 20/22/29/40/43's
+existing taxonomy (hinge, bayonet, ball-joint, leadscrew) doesn't cover:
+**a captive print-in-place planetary or idler gear train, sized as a
+handheld spinner/fidget rather than a functional drivetrain.** Two real
+examples measured visually: "Fidget Gear Ring" (5,097 likes) — a torus
+with a full ring of small meshing gear teeth captive inside its bore,
+grip dimples on the outer face — and "Planetary Gear Fidget Toy" (2,568
+likes) — a coin-disc with a real sun+4-planet+ring gear train visible
+through cutouts in the front face, knurled rim for grip. Mechanically
+this reuses Technique 46's real planetary-gear math (`Z_ring = Z_sun +
+2·Z_planet`, module chosen once and held for every meshing gear) and
+Technique 44's corrected 0.15mm gear-mesh print-in-place clearance
+exactly — the novelty here is entirely in the USE CASE (a satisfying
+"watch it spin" toy/keychain, not a torque-transferring drivetrain), so
+no new mechanical technique needs inventing, just a new application of
+what Technique 46 already measured. Worth pitching as a future keychain/
+fidget concept specifically because it's a real, popular, structurally-
+proven mechanism this shop has the exact math for and has never applied
+to a small handheld form factor.
+
+### Out of reach on this printer — real, but not a false promise to Scott
+
+**Non-planar / conformal slicing** (varying Z height across a single
+layer to follow a curved surface instead of flat planes) is real, active
+research with strong, well-documented results — one framework reports up
+to 6.35× strength increases by aligning filament paths with the direction
+of greatest stress, and non-planar top surfaces measurably reduce the
+staircase effect and improve surface finish at shallow inclination angles
+(≤25°, with benefits continuing up to 55°). **None of this is available
+in Bambu Studio today.** The published implementations are custom
+slicing frameworks/multi-axis or 5-axis printer setups, not a toggle in
+a standard slicer profile — flag this honestly as "real, tracked,
+currently unusable on the P1S's standard 3-axis motion + Bambu Studio,"
+not as something to promise a customer or build toward without a real
+hardware/software path. Worth re-checking again in a future research pass
+if Bambu Studio ever ships a non-planar mode, but don't spend build time
+chasing it now.
+
+### What to do differently, concretely
+
+1. **Pitch a HueForge-style layered-colour panel as a real new product
+   concept** (per the standing "pitch before modeling" rule) — this is
+   the one finding in this pass most directly answering "make our prints
+   look phenomenal," and it needs zero new printer hardware.
+2. **Default new models without a single dominant load direction to
+   gyroid infill, 20–35%, 4 walls, 5 top/bottom layers** — a real,
+   sourced upgrade over an unstated default.
+3. **Apply fuzzy skin per-surface via Bambu Studio's paint tool**, on
+   grip/handle surfaces or material-mimicry surfaces specifically — never
+   as a blanket setting, and never on a surface this skill's G2 surfacing
+   work (Technique 30) is already carrying.
+4. **Use the real embedded-hardware numbers above** (insert bore = insert
+   length + 1mm, straight/no chamfer; magnet pocket = magnet size +
+   0.2–0.4mm, 1–2mm wall) instead of guessing on the next design that
+   needs a fastener or a magnetic catch.
+5. **A captive gear-train spinner (ring or coin form factor) is a real,
+   proven, structurally-solved keychain/fidget concept** ready to pitch —
+   reuses Technique 46's gear math and Technique 44's corrected mesh
+   clearance directly, nothing new to derive.
+
+Sources for the sourced (not visually-inferred) claims above: gyroid/TPMS
+comparative strength — [Zbotic infill comparison](https://zbotic.in/slicer-infill-patterns-compared-which-is-strongest-and-fastest/),
+[PMC TPMS gyroid optimization study](https://pmc.ncbi.nlm.nih.gov/articles/PMC11053662/),
+[ScienceDirect FDM infill mechanical properties](https://www.sciencedirect.com/science/article/pii/S0142941822001787);
+non-planar printing — [3D Printing Industry, 6.35x strength framework](https://3dprintingindustry.com/news/researchers-achieve-6-35x-part-strength-increases-with-new-non-planar-fdm-framework-175248/),
+[ScienceDirect non-planar surface quality study](https://www.sciencedirect.com/science/article/pii/S2590123025043178);
+fuzzy skin — [How-To Geek](https://www.howtogeek.com/fuzzy-skin-best-3d-printing-trick/),
+[Bambu Lab forum, fuzzy skin textures](https://forum.bambulab.com/t/new-fuzzy-skin-textures-for-2-5-3/249218);
+HueForge/AMS — [HueForge 3MF Export Plugin](https://shop.thehueforge.com/pages/3mf-export-how-it-works),
+[About HueForge](https://shop.thehueforge.com/pages/about-hueforge);
+embedded hardware — [Hackaday, embedding magnets](https://hackaday.com/2026/06/04/ways-to-embed-magnets-in-3d-prints-and-not-ruin-printers/),
+[CNC Kitchen, heat-set inserts](https://www.cnckitchen.com/blog/tipps-amp-tricks-fr-gewindeeinstze-im-3d-druck-3awey).
+
+## Technique 49 — Kids' toys and keychains: real safety rules and real design conventions from 49 measured/visual real prints (2026-09-04)
+
+Same session, second half of Scott's request: *"research how to 3-D print
+toys fun things for kids and keychain."* Two distinct bodies of evidence:
+sourced safety standards (real, citable, non-negotiable), and a fresh
+49-print visual pass across this shop's own 12,276-record Printables
+corpus (Technique 46's cache, filtered for zero new API calls) plus
+individual preview images for the mechanically-interesting ones.
+
+### Kids' toys — the safety rules are real regulatory standards, not style guidance
+
+Two real standards bodies govern this, cited directly rather than
+paraphrased from memory:
+
+- **ASTM F963 / CPSIA (US)** and **EN 71-1/-2 (EU)** both regulate small
+  parts, sharp edges/points, and flammability. The relevant mechanical
+  test for choking hazard is the **US CPSC small-parts cylinder, 16 CFR
+  Part 1501** — a real, checkable physical test fixture, not a vague
+  "make it big enough" rule.
+- **The FDM-specific risk is layer adhesion, not just part size.** A
+  print that passes a size check can still shed a sharp, brittle
+  fragment along a weak Z-layer bond if bitten, dropped, or repeatedly
+  flexed — this is a materials/process risk a resin or injection-molded
+  toy doesn't share, and it means a toy aimed at a child under 3 needs
+  **zero small or detachable parts, full stop** (no glued-on eyes, no
+  separate small props, nothing that can snap off along a layer line and
+  present a fresh sharp edge).
+- **Concrete design rule for this shop's own age-3+ audience**: round
+  every exposed edge/corner (this skill's own G1/G2 surfacing work from
+  Technique 30 already does this for aesthetic reasons — it is now ALSO
+  a safety requirement, not just a look), avoid any single feature
+  thinner than roughly 3–4 perimeter-widths (~1.2–1.6mm) in a load path a
+  child might flex or chew, and treat any part smaller than the CPSC
+  cylinder test as a hard no regardless of how it's attached.
+- **Filament choice**: PLA/PETG are the standard non-toxic choices for
+  this category — already this shop's default material, no change
+  needed — but "the filament is non-toxic" and "the finished PRINT is
+  age-safe" are two different claims; the second depends on the specific
+  design (thickness, part count, edges), not just the material spec
+  sheet.
+
+### Toys and keychains, from real measured/visual geometry (49 prints, this session)
+
+Filtered this shop's existing 12,276-record Printables cache (zero new
+API calls) for toy and keychain keywords: **844 toy matches, 604
+keychain matches.** Reviewed the top ~50 by likes as full preview images
+(both whole-print thumbnails and, for the mechanically interesting ones,
+individual close-ups) — real, popular, currently-selling designs, not
+invented categories.
+
+**1. Flexi articulated creatures are not just a toy category — they are
+THE dominant keychain form factor.** Of the top real keychains by likes,
+a large majority are articulated print-in-place creatures (bone dragon,
+forest dragon, Tardigrade, baby bull dragon, articulated dragon, flexi
+platypus, articulated octopus) — directly confirming this shop's own
+Technique 40/41/42 flexi-joint research is not academic: it is the exact
+mechanism the keychain market already runs on. **A keychain is one of
+the best-fit products for everything already measured in this skill's
+ball-and-socket joint work** — no new mechanism needed, just a smaller,
+keychain-scaled application of Technique 43's corrected slot-socket
+standard (`sock_l=1.6D, sock_h=1.073D, mouth=0.833D, clearance=0.0413D`)
+with a real attachment loop added (next point).
+
+**2. Keychain attachment loop — real, sourced numbers, not a guess.**
+For a standard split-ring: **hole diameter ≈ 4–5mm**, **≥3mm of solid
+wall around the hole** (the loop is the single weakest point on almost
+every keychain design, and under-building it is the #1 real failure
+mode). The underlying rule, worth deriving rather than memorizing:
+`hole_diameter = (strands_through_hole × wire_thickness) + ~1mm
+clearance` — a standard split ring is a DOUBLED loop of wire (two
+strands occupy the hole, not one), which is exactly why a 3mm hole feels
+tight and 4mm is the real minimum that "just works."
+
+**3. A genuinely new-to-this-shop mechanism family, confirmed via real
+geometry: captive gear-train spinners.** "Fidget Gear Ring" (5,097
+likes) and "Planetary Gear Fidget Toy" (2,568 likes) — full writeup and
+sourcing under Technique 48 above, cross-referenced here because it
+surfaced from this same toy/keychain pass, not the process-research half.
+
+**4. Functional (non-toy) keychains are a real, distinct, high-like
+sub-category worth keeping separate from character/fidget pieces**:
+"KeyCarry EDC Key Organizer" (1,878 likes, M3-screw-compatible multi-key
+holder), "Mini Bit Driver Keychain" (1,944 likes), "Würth keychain
+screwdriver" (1,908 likes), "Blood Type Keychain with NFC Tag" (1,101
+likes — a real embedded-electronics keychain, pairing directly with this
+shop's own embedded-hardware numbers above). These sell on genuine
+day-to-day utility, not cuteness — a different value proposition from
+the flexi-creature category, worth having at least one candidate in each
+bucket rather than only building character pieces.
+
+**5. Ball-joint chibi proportions hold outside the flexi-spine category
+too.** "Mini Articulated Robot" (2,228 likes) uses the exact chibi
+proportion rule already in this skill (Technique 40's "head-to-body 1.5–2:1,
+oversized round head") on a fully ball-jointed multi-limb figure rather
+than a flexi spine — confirms the proportion rule generalizes across
+articulation mechanism, not just to the flexi-spine creatures it was
+originally measured from.
+
+**6. Market-side confirmation, sourced**: keychains carry **80–90% profit
+margins** on $0.20–$1 material cost against $3–$12 typical sale price —
+among the best margin categories this shop could add, and personalization
+(name plates, custom text) and licensed/character fidget designs
+(Pokemon evolutions, anime keychains) are the two named 2026 trend
+buckets, alongside practical items (phone stands, organizational tools)
+consistent with finding #4 above.
+
+### What to do differently, concretely
+
+1. **Any toy aimed at under-3 gets zero small/detachable parts** — this
+   is a hard CPSC/ASTM rule, not a style preference; check every design
+   against the small-parts cylinder test conceptually before pitching it.
+2. **Build the next keychain on Technique 43's slot-socket ball-joint
+   standard, scaled down**, with a real 4–5mm split-ring hole and ≥3mm of
+   wall around it — don't re-derive either number from scratch.
+3. **Pitch at least one functional (non-character) keychain concept**
+   alongside any character/fidget pitch — EDC organizer, bit driver, or
+   a small embedded-magnet catch (Technique 48's numbers) are all real,
+   proven, higher-utility alternatives to another flexi animal.
+4. **The captive gear-ring spinner is a real, doubly-confirmed concept**
+   (popular on Printables, mechanically solved by this shop's own
+   Technique 44/46 gear-mesh math) — a strong candidate for the next
+   concept pitch under the standing "propose before modeling" rule.
+
+Sources: [ASTM/CPSIA/EN71 toy safety overview, Polymaker](https://wiki.polymaker.com/polymaker-products/more-about-our-products/safety-in-3d-printing/child-and-toy-safety),
+[3D printing toy safety materials](https://www.aoseed.com/blogs/aoseed-sale/3d-printing-safety-materials-safe-for-childrens-toys-explained-6),
+[Custom3DToys safety guide](https://custom3dtoys.com/blogs/news/safety-of-3d-printed-toys);
+keychain hole sizing — [QIDI keychain hole guide](https://qidi3d.com/blogs/guides/add-hole-to-3d-model-keychain),
+[Siraya Tech keychain guide](https://siraya.tech/blogs/news/3d-printed-keychain);
+market/margin data — [eufyMake best-selling 3D print items 2026](https://www.eufymake.com/blogs/business-ideas/best-3d-print-sell-profitable-items).
