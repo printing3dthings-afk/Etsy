@@ -5092,6 +5092,47 @@ bold lobes**. Below ~4% it is invisible on a printed object — it disappears
 into layer lines. Our models run 1.6–3.4%: not subtle, *absent*. Fixing this
 is a one-line change to a profile function, not a redesign.
 
+### Why our texture is shallow: we model the wall, they don't
+
+The obvious reading of the gap above — "just cut the grooves deeper" — is
+wrong, and checking it produced the most useful finding of the pass.
+
+Our fairy house has a mean radius of 24.3mm and a 2.2mm wall. Cutting the
+corpus-median 8% of radius means a **1.94mm** groove, leaving 0.26mm of
+backing. That is a breach, not a design. At 2.2mm of wall the deepest
+honest cut is roughly **3.5% of radius** — which is exactly what it has.
+The model is not under-detailed by carelessness; it is at the physical
+limit of its own construction.
+
+So how do the references get 10–20%? **They are solid.** Taking a
+cross-section at three heights through `289126` Vase 914, `243453` spiral
+planter, `413057` Vase 794, `288453` Vase 650 and `441252` Lamp Shade 0102
+returns a polygon with **no interior ring at any height on any of them** —
+no modelled cavity at all. The wall is left entirely to the slicer (vase
+mode's single perimeter, or ordinary walls + infill). With no wall in the
+geometry, groove depth is unconstrained. Our hollow shell caps it. Only 3
+of the 71 deep-textured models say "vase mode" in their name, so this is
+not something you can spot from titles — it took sectioning the meshes.
+
+**The three ways out, in order of preference:**
+
+1. **Raise the texture outward instead of cutting it in.** A ridge standing
+   1.9mm proud of a 2.2mm wall costs nothing structurally — the wall is
+   still 2.2mm at the valley — and reads identically at arm's length. This
+   is a one-line change to a profile function and is the right default for
+   anything we model hollow.
+2. **Model solid and let the slicer make the wall**, for pure vessels with
+   no interior features. Depth becomes free. Not available for anything with
+   a modelled cavity, a floor detail, or a door — i.e. not for the fairy
+   house.
+3. **Thicken the wall to buy depth.** 8% of radius on a 24mm body needs
+   ~4mm of wall. Real, but it is print time and filament, so treat it as the
+   fallback.
+
+The general rule: **texture depth is a wall-thickness decision made at
+design time, not a finishing pass.** Decide the relief budget when the wall
+goes in, or accept 3–4% forever.
+
 ### The negative result: likes do not measure craft
 
 Texture has **no relationship to likes** in this corpus. Top-quartile-by-likes
