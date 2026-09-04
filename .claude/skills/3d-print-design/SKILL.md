@@ -4678,3 +4678,266 @@ Sources: [ASTM/CPSIA/EN71 toy safety overview, Polymaker](https://wiki.polymaker
 keychain hole sizing — [QIDI keychain hole guide](https://qidi3d.com/blogs/guides/add-hole-to-3d-model-keychain),
 [Siraya Tech keychain guide](https://siraya.tech/blogs/news/3d-printed-keychain);
 market/margin data — [eufyMake best-selling 3D print items 2026](https://www.eufymake.com/blogs/business-ideas/best-3d-print-sell-profitable-items).
+
+## Technique 50 — Miniature figure anatomy: fairies, gnomes, and real human proportion, and which of the three is actually buildable in OpenSCAD (2026-09-04)
+
+Scott: *"Research miniature figures... fairies, gnomes, actual people get
+their body structures down... understand exactly how to detail design
+them."* Combines a real proportion-canon research pass (sourced, for real
+human anatomy and real gnome/fairy design conventions) with a 26-image
+visual pass across this shop's own Printables corpus, and — the most
+load-bearing finding — an honest read of which of the resulting styles
+this shop's actual toolchain (OpenSCAD + BOSL2 CSG) can build well versus
+which one needs the not-yet-built Blender handoff already scoped in
+`ENGINEERING_REFERENCE.md` §1.
+
+### Three real, distinct commercial figure styles — not one "miniature figure" category
+
+Visual review of 26 real figures/statues (chess pieces, movie-license
+minis, garden gnomes, modern decor sculpture) sorts cleanly into three
+families that use different geometry and different skill:
+
+1. **Chibi / "soft clay" whimsical** — Mini Vader (1,741 likes), Mini
+   Mandalorian (867), Yoda (642), Mini Stormtrooper (628), Grumpy Cat
+   Figurine (1,937), and the garden gnome family below. A dominant
+   oversized head or hat, a single unbroken torso blob with no visible
+   waist, short stubby non-articulated limbs, minimal separate finger/
+   joint detail. **This is exactly this shop's existing hull()-chain
+   toolkit** — the same technique already used for the fox (Technique
+   27/28) and seahorse (Technique 40): a handful of hulled spheres for
+   the body, one dominant sphere/cone for the head or hat, stub cylinders
+   for limbs. Nothing new to invent here; it's the shop's strongest
+   existing style, confirmed independently popular across 5 unrelated
+   real licensed-character lines.
+2. **Realistic / dynamic-pose action figure** — Samurai Warrior Figurine
+   (995 likes), Vyke Elden Ring Statue (131). Real human proportions
+   (roughly the classical 7–8 head-unit canon, not chibi), an asymmetric
+   dramatic pose, flowing cape/scarf cloth, fine armor-plate and
+   musculature surface detail. **This is a mesh-sculpting problem, not a
+   CSG problem** — see the tool-choice verdict below.
+3. **Minimalist / geometric sculptural** — ANGEL Figurine (687, smooth
+   continuous draped-robe abstraction with no facial detail), Modern
+   Black Cat Figurine (1,116, sleek continuous-curve silhouette), Modern
+   Elephant Figurine (1,213), Geometric HORSE Figurine (1,427, deliberate
+   low-poly faceted planes mid-gallop). **This is squarely within
+   OpenSCAD's existing swept/lofted-profile toolkit** — `path_sweep()`/
+   `skin()` for the smooth-abstraction sub-style (this shop's ghost/
+   pumpkin/seahorse work already proves this out), or a handful of
+   explicit `polyhedron()` facets for the deliberate low-poly sub-style
+   (a genuinely different, currently strong, decor-market trend — sells
+   on silhouette and finish, not anatomical fidelity, so it doesn't need
+   fine detail work at all, just a confident, well-chosen facet count).
+
+### The real proportion math, sourced, for whichever style needs it
+
+**Classical human canon (Loomis / Polykleitos head-unit system, sourced):**
+the "head" (crown to chin) is the base unit; an idealized heroic adult
+figure is **8 head-units tall** — a real, citable canon used for
+centuries specifically to make a figure read as noble/elevated rather
+than naturalistic. Sub-divisions from the same tradition worth having on
+hand for a style-2 (realistic) figure: eye-line sits at the head's own
+vertical center: use these only if a genuinely realistic human figure is
+attempted (style 2) — a chibi/gnome figure (styles 1) deliberately
+violates every one of them on purpose.
+
+**Chibi ratio, already in this skill (Technique 27/29/40), now cross-
+confirmed by an unrelated real corpus**: head:body roughly 1.5–2:1 for a
+"cute collectible" chibi. **The garden gnome sub-style pushes this
+further** — visual review of the "Whimsical Clay Style" garden gnome
+family (5 real, currently-listed designs, ids 1322038/1323089/1323040/
+1322121/1324223, 30–126 likes) shows a torso-to-hat ratio closer to
+**1:1 or the hat even dominating** — the conical hat alone is often
+taller than the entire body beneath it, with the body itself a single
+rounded blob with no visible waist or neck. This is a visual estimate
+(these ids are all in Technique 42's non-derivable modern era, so no
+real mesh measurement was possible this round) but is consistent across
+all 5 independently-posed family members, which is a decent signal on
+its own.
+
+**Real, sourced garden gnome design convention (not invented, not a
+generic "gnome" guess):** the modern garden gnome's visual language
+traces directly to Rien Poortvliet's 1976 illustrated book *Gnomes*
+(with Wil Huygen) — a real, hugely influential source (#1 New York Times
+bestseller for over a year) that fixed the now-standard look: **tall red
+conical cap, blue tunic, brown belt, grey boots, white beard** — tracing
+even further back to a 470 AD description of "a miniature person who
+wore a red cap and blue shirt and had a white beard." **Building a
+garden gnome without this palette/silhouette is building something
+buyers won't recognize as a gnome at all** — the red hat + white beard +
+belted tunic combination is the actual product, not an arbitrary style
+choice, the same way this shop's own kawaii palette rules (CLAUDE.md's
+Color Design System) are non-negotiable brand language, not decoration.
+
+**Fairy anatomy, sourced framework (no single canonical proportion the
+way gnomes/humans have one — fairies are deliberately more license-able):**
+real convention across sourced fairy-design guides is **human-like
+slender proportions with deliberately elongated limbs** for grace, and
+**wings attached from the upper back, just below the shoulder blades**
+(not the shoulders themselves) — mechanically the right place to model
+a wing root in a swept/lofted OpenSCAD body, matching the same "give a
+mechanical/structural feature its own dedicated attachment, don't distort
+the body around it" principle already established in Technique 32.
+**Wing silhouette is a real, sourced characterization tool, not just
+decoration** — soft/rounded wings read as innocent/kind, sharp/angular
+wings read as dark/villainous, elongated wings read as royal/ethereal,
+tattered/asymmetric wings read as aged or battle-worn. Pick the wing
+shape to match the character brief before modeling, the same way this
+skill already treats silhouette as a design decision (Technique 31) —
+don't default to one generic butterfly-wing shape regardless of the
+character.
+
+### Tool-choice verdict for this category, stated plainly
+
+This skill's own `ENGINEERING_REFERENCE.md` §1 already settled this in
+general terms ("freeform sculpted asymmetry... is fundamentally a
+mesh-sculpting problem" for Blender, not CSG) — this research confirms
+it specifically for miniature figures:
+- **Chibi and geometric/minimalist styles: stay in OpenSCAD.** Both are
+  well inside the hull-chain / swept-profile toolkit this shop already
+  has proven working examples of.
+- **A genuinely realistic human figure with real musculature, cloth-fold
+  detail, and an asymmetric dynamic pose (style 2 above) is NOT a good
+  CSG target.** Don't attempt to hand-build a samurai's flowing cape or
+  a face with real anatomical detail as OpenSCAD primitives — that is
+  exactly the class of problem `ENGINEERING_REFERENCE.md` already flags
+  for the (not-yet-built) OpenSCAD-block-out → Blender-Subdivision-
+  Surface → re-export pipeline. If a style-2 figure is ever actually
+  wanted, build that pipeline first rather than fighting CSG for months
+  to approximate it badly.
+
+### What to do differently, concretely
+
+1. **Default new "cute figure" pitches to style 1 (chibi) or style 3
+   (geometric/minimalist)** — both are provably buildable at this shop's
+   current skill level and both are independently confirmed popular by
+   real, unrelated products.
+2. **Any garden gnome design must hit the real Poortvliet palette/
+   silhouette** (red cap, blue tunic, brown belt, grey boots, white
+   beard) to read as a gnome at all — treat this as fixed brand language
+   for the character, not a style option.
+3. **Build one parametric gnome base, not five bespoke models** — the
+   real family (Chubby/Elderly/Explorer/Bearded, 5 named variants from
+   one designer) is exactly this skill's own Technique 41 "sets sell,
+   parameterize for the family from the outset" finding applied to this
+   category: one hull-chain body + swappable head/prop/pose parameters.
+4. **A fairy needs its wing style chosen deliberately per the character
+   brief** (soft/round = innocent, sharp/angular = dark, elongated =
+   ethereal/royal) and attached as its own dedicated feature at the
+   upper back below the shoulder blades — not bolted onto wherever looks
+   convenient after the body is finished.
+5. **Never attempt a realistic style-2 human figure in pure OpenSCAD
+   CSG** — if that style is ever greenlit, build the Blender-handoff
+   pipeline first (per `ENGINEERING_REFERENCE.md` §1), rather than
+   spending build time re-discovering that CSG can't do it.
+
+Sources: [Anatomy4Sculptors, human proportions](https://anatomy4sculptors.com/blog/about-human-proportions-calculator/),
+[Sculpture Atelier, canon of proportions](https://www.sculptureatelier.com/blog/canon-of-proportions-sculpture),
+[Wikipedia, body proportions / 8-head canon](https://en.wikipedia.org/wiki/Body_proportions);
+gnome history — [Wikipedia, Rien Poortvliet](https://en.wikipedia.org/wiki/Rien_Poortvliet),
+[Wikipedia, Gnomes (book)](https://en.wikipedia.org/wiki/Gnomes_(book)),
+[The Garden History Blog, origins of garden gnomes](https://thegardenhistory.blog/2022/03/05/the-origins-of-garden-gnomes/);
+fairy design — [Unvale, designing a fairy OC](https://blog.unvale.io/tips-for-designing-a-fairy-oc/),
+[Foxsy, fairy proportions and poses](https://foxsy.com/courses/introduction-to-drawing-fairies-proportions-and-poses/).
+
+## Technique 51 — Garden accessories and statues: what's actually evergreen, and the material constraint that changes everything (2026-09-04)
+
+Second half of the same request: *"research garden accessories, as far as
+statues, things that we can sell, that will be popular, that will never go
+away."* Two real findings, one of them a hard material constraint this
+shop's entire existing product line has never had to deal with.
+
+### The real evergreen categories, sourced
+
+Cross-referencing real bestseller-tracking sources (Amazon/Home Depot/
+Wayfair garden-statue bestseller categories) rather than guessing:
+
+- **Classic nature/animal motifs, not novelty**: frog statues (family
+  sets, and stacked-frog designs with solar-lit eyes as the modern
+  update), turtle and butterfly statuary, geese, roosters, peacocks.
+  These are described directly as evergreen specifically **because**
+  they're classic animal/nature motifs on durable, weather-resistant
+  finishes — the design itself doesn't chase seasonal trends, only the
+  finish/material needs to be genuinely durable (next section).
+- **The garden gnome itself is the single most durable archetype in this
+  entire category** — a 50-year-old illustrated book (Technique 50's
+  Poortvliet source) still defines what "garden gnome" means to a buyer
+  today. This is about as close to a proven-evergreen SKU as this
+  research turned up anywhere in either research pass this session.
+- **A light/solar element is the real "modern update" pattern, not a
+  redesign of the classic form** — real bestsellers pair a traditional
+  animal/gnome silhouette with a **solar light or LED accent** (solar
+  peacocks, solar-lit stacked frogs) rather than reinventing the
+  silhouette. This is a genuine, low-risk way to differentiate a classic
+  design without abandoning the archetype that makes it sell.
+- **Fairy-garden micro-accessories are a real, distinct, currently
+  strong sub-niche this shop has not touched at all**: toadstool/
+  mushroom houses (confirmed in this shop's own corpus — "Mushroom
+  house / toadstool jewelry organizer," 114 likes — a real, currently
+  popular motif already being reused across product categories),
+  miniature fairy doors, tiny furniture, and stone-circle/miniature-
+  henge props (this shop's own corpus: "Fairy Circle / Stone Henge
+  Miniature," 217 likes). These are small, fast, low-material-cost
+  prints — a strong complement to this shop's existing digital-planner
+  economics (low COGS, high margin) rather than a competing large-format
+  product line.
+
+### The hard constraint this category adds: material, not geometry
+
+**Every design this shop has built so far (Mushie, the flexi creatures,
+the snap box, the ball-joint chain) has been implicitly indoor-only, in
+PLA.** A garden accessory changes that assumption completely, and it's a
+real, sourced, non-negotiable constraint, not a style preference:
+
+| Material | Outdoor UV/weather performance |
+|---|---|
+| **PLA** | Not viable outdoors at all — this shop's current default material has no place in this product category |
+| **PETG** | Moderate UV stability; **noticeably degrades within about a year** of real outdoor sun exposure |
+| **ASA** | The real right answer — **maintains structural integrity, color, and surface quality after 12 months of full UV exposure**, in conditions where PETG has already visibly degraded |
+
+**Concretely: any garden/outdoor product this shop builds must be
+specified and quoted in ASA, never PLA, and the listing/product notes
+need to say so explicitly** — this is a genuine "never lie to the
+customer" issue (per this codebase's top-priority rule) if a garden
+statue were ever accidentally printed and sold in PLA and failed outdoors
+within weeks. The P1S's full enclosure (already in this shop's hardware,
+per the root CLAUDE.md printer spec) is exactly what ASA needs to print
+well — no new hardware required, just a real material-selection
+discipline that doesn't exist yet for any current product.
+
+**Outdoor-specific geometry rules, beyond material** (general DfAM
+knowledge, applied to this category specifically): design in real
+drainage wherever a horizontal surface could hold rainwater (a gnome's
+hat brim, a base plate, a birdbath bowl's own rim) — trapped water that
+freezes can crack a part regardless of material, and a small drain hole
+is nearly free to add and never optional for an outdoor part with any
+flat-ish upward face. A base thick enough to resist wind-tip (a real
+outdoor failure mode indoor decor never faces) is also worth checking
+explicitly — model the base as its own named dimension (per this skill's
+"no magic numbers" rule), sized to the piece's real height/wind-catching
+silhouette, not copied from an indoor piece's base proportions.
+
+### What to do differently, concretely
+
+1. **Any garden-category pitch is quoted and printed in ASA, never
+   PLA** — a hard, sourced material rule specific to this product
+   category, distinct from every indoor product this shop has built so
+   far.
+2. **Lead with a classic animal/nature motif or the gnome archetype**,
+   not a novel silhouette — the evidence says the archetype itself is
+   what's evergreen, not any particular designer's reinterpretation of it.
+3. **Add a solar-light or LED accent as the differentiator**, reusing
+   this shop's own real lamp/lighting work (Mushie's diffusion-strategy
+   research, Technique 29) rather than redesigning the classic silhouette.
+4. **Pitch the fairy-garden micro-accessory line as a real, low-risk
+   complement to the existing digital-product economics** — small,
+   fast, cheap prints (toadstool houses, fairy doors, miniature henge
+   props) rather than one large-format statue as the first garden SKU.
+5. **Design real drainage into every outdoor-facing horizontal surface**,
+   and size the base against the piece's own real height/silhouette
+   rather than reusing an indoor piece's base proportions.
+
+Sources: [Sagebrook Home, best garden statues 2026](https://sagebrookhome.com/blogs/best-garden-statues-buy/),
+[ASINsight, best-selling garden statues by real sales](https://www.asinsight.com/report/US/garden-statues);
+material — [MatterHackers, best filament for outdoor use](https://www.matterhackers.com/articles/the-best-3d-printing-filament-for-outdoor-use),
+[Sovol3D, ASA vs PETG vs ABS outdoor comparison](https://www.sovol3d.com/blogs/news/best-filament-for-outdoor-3d-prints-asa-vs-petg-vs-abs),
+[MakeLab, PETG vs ASA](https://www.makelab.com/compare/petg-vs-asa).
