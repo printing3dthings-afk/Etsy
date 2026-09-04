@@ -1,0 +1,404 @@
+// Fairy House — a toadstool cottage with a hanging wood sign over the door.
+// OnBrandCraftz — built per Scott's request 2026-09-04.
+//
+// Design notes (see .claude/skills/3d-print-design/SKILL.md for the
+// techniques this reuses):
+//   - Body is a toadstool: hollow planked "stem" house + a solid mushroom
+//     cap roof, built as ONE continuous smooth_path() profile through the
+//     flare-to-apex transition (Technique 33 — a seam between two glued
+//     domes reads as a crease no curve-tuning fixes; one surface avoids it
+//     entirely).
+//   - Door and window are hull()-prism cuts through the stem shell
+//     (Technique 9), each filled back in with a raised/recessed insert.
+//   - The hanging sign is its own welded sub-assembly above the door
+//     (bracket + two chain loops + a plank), engraved with real text
+//     (Technique 4's confirmed mirror([0,1,0]) pattern).
+//   - Maker's mark engraved into the underside per the shop standing rule.
+include <BOSL2/std.scad>
+$fa = 4; $fs = 0.5;
+
+// ---------------------------------------------------------------------
+// Named dimensions — nothing baked in as a bare number in the geometry.
+// ---------------------------------------------------------------------
+floor_h      = 3;         // solid base disc
+stem_base_r  = 26;        // stem radius at the floor
+stem_top_r   = 24.5;      // stem radius where the cap begins -- kept close
+                          // to stem_base_r on purpose: a flat door/window
+                          // insert has to sit flush against this surface,
+                          // and a bigger taper than ~1.5mm over the stem's
+                          // height makes a single flat y-position wrong at
+                          // one end or the other (found rendering v1)
+stem_h       = 42;        // floor top -> cap start, absolute z
+wall         = 2.2;       // stem shell thickness
+
+cap_flare_r  = 34;        // cap's widest point (the eave overhang)
+cap_flare_z  = 58;        // z of the cap's widest point
+cap_apex_z   = 90;        // z of the cap's rounded tip
+
+n_planks     = 14;        // vertical plank-board count around the stem
+plank_depth  = 0.65;      // absolute mm groove depth (Technique 5 rule)
+
+door_w       = 12;        // door width at its base
+door_wall_h  = 13;        // door's straight-sided height before the arch
+door_z0      = 6;         // door's own base height above the floor
+door_leaf_in = 1.3;       // how far the door leaf sits recessed
+
+win_r        = 6.5;       // window radius
+win_z        = 24;        // window center height
+win_ang      = 46;        // window's angular position (door sits at 0)
+
+sign_w       = 17;        // hanging sign plank width
+sign_h       = 10;        // hanging sign plank height
+sign_t       = 2.2;       // hanging sign plank thickness
+sign_gap     = 5.5;       // vertical gap, top of door arch -> bottom of sign
+
+chim_r       = 4;         // chimney radius
+chim_h       = 13;        // chimney height above the cap surface
+
+// ---------------------------------------------------------------------
+// The stem+cap silhouette, ONE continuous profile (Technique 33).
+// Points are (radius, z). Passed through smooth_path() so the flare's
+// widest point and the dome above it are one smooth curve, not a kink.
+// ---------------------------------------------------------------------
+house_ctrl = [
+    [stem_base_r + 1.5, 0],          // tiny root-flare at the very foot
+    [stem_base_r,       4],
+    [stem_base_r - 0.7, 20],
+    [stem_top_r,        stem_h],     // stem meets the cap here -- gentle,
+                                      // near-constant taper the whole way
+    [cap_flare_r,        cap_flare_z],   // widest point of the cap (the eave)
+    [cap_flare_r - 6,    cap_flare_z + 10],
+    [16,                 cap_flare_z + 22],
+    [6,                  cap_flare_z + 30],
+    [0.6,                cap_apex_z],    // nudged off-axis -- Technique 15
+];
+house_profile = smooth_path(house_ctrl, method = "corners", size = 4, splinesteps = 10);
+
+// Real wall radius at a given z, piecewise-linear off the RAW control
+// points (monotonic between them, so this is safe for min/margin math
+// even though the rendered surface is the smoothed spline) -- every
+// applied feature below (door, window, sign) positions itself against
+// this instead of a flat stem_base_r, so nothing floats past the
+// house's own real tapered surface.
+function stem_r_at(z) = lookup(z, [for (p = house_ctrl) [p.y, p.x]]);
+
+// Split the profile into the STEM band (z <= stem_h) and the CAP band
+// (z >= stem_h) -- the stem gets a hollow planked shell, the cap is solid.
+stem_profile = [for (p = house_profile) if (p.y <= stem_h + 0.01) p];
+cap_profile  = [for (p = house_profile) if (p.y >= stem_h - 0.01) p];
+
+// ---------------------------------------------------------------------
+// Plank texture -- vertical boards, angle-only groove (Technique 5).
+// Absolute-mm depth, margin-checked against the wall thickness below.
+// ---------------------------------------------------------------------
+function plank_pts(r) = [for (a = [0:6:354])
+    let(rr = r - plank_depth * (1 - abs(cos(a * n_planks / 2))))
+    [rr * cos(a), rr * sin(a)]
+];
+
+module stem_outer() {
+    outer_profiles = [for (p = stem_profile) plank_pts(p.x)];
+    skin(outer_profiles, z = [for (p = stem_profile) p.y], slices = 0);
+}
+module stem_inner() {
+    // Offset from the UNTEXTURED radius, never the textured one --
+    // Technique 5's wall-margin rule.
+    inner_profiles = [for (p = stem_profile) circle_pts(max(p.x - wall, 0.3))];
+    skin(inner_profiles, z = [for (p = stem_profile) p.y], slices = 0);
+}
+function circle_pts(r) = [for (a = [0:6:354]) [r * cos(a), r * sin(a)]];
+
+module stem_shell() {
+    difference() {
+        stem_outer();
+        translate([0, 0, 0.5]) stem_inner();   // 0.5mm embed keeps a floor seam
+    }
+}
+
+module floor_disc() {
+    cylinder(h = floor_h + 0.01, r = stem_base_r + 1.5, $fn = 96);
+}
+
+// ---------------------------------------------------------------------
+// Cap -- one solid rotate_extrude() of the smoothed silhouette (safe:
+// the apex is nudged off-axis per Technique 15 before any boolean runs).
+// ---------------------------------------------------------------------
+module cap_solid() {
+    rotate_extrude($fn = 120) polygon(cap_profile);
+}
+
+// Warty toadstool dimples: shallow sphere-cuts placed using the cap
+// profile's OWN sample points (Technique 3's "reuse the silhouette's own
+// samples" pattern), skipping the lowest band (the underside eave, which
+// should stay smooth) and the very tip.
+module cap_dimples() {
+    // Fewer, sparser rings than the first pass: that version stepped every
+    // 3rd profile sample with ~6 dimples per ring, ~90 total, and read as
+    // dense connected chains rather than scattered warts (and cost most
+    // of this file's render time as ~90 separate CGAL sphere subtractions).
+    // Coarser step + a per-ring skip roll gives a natural scatter instead.
+    n = len(cap_profile);
+    lo = floor(n * 0.30);
+    hi = floor(n * 0.84);
+    for (i = [lo : 7 : hi]) {
+        p = cap_profile[i];
+        n_at_height = max(3, round(p.x / 9));
+        phase = i * 53;                 // decorrelate ring-to-ring, Technique 11
+        for (k = [0 : n_at_height - 1]) {
+            a = k * 360 / n_at_height + phase;
+            translate([p.x * cos(a), p.x * sin(a), p.y])
+                sphere(r = 2.4, $fn = 14);
+        }
+    }
+}
+
+module chimney() {
+    // Placed on the flare band, opposite the door, tilted slightly outward
+    // so it reads from the hero (door-facing) angle.
+    a = 200;
+    p = cap_profile[round(len(cap_profile) * 0.42)];
+    translate([p.x * cos(a) * 0.72, p.x * sin(a) * 0.72, p.y - 4])
+        rotate([0, -8, 0]) {
+            cylinder(h = chim_h, r1 = chim_r + 0.6, r2 = chim_r, $fn = 28);
+            translate([0, 0, chim_h])
+                cylinder(h = 1.6, r1 = chim_r + 1.6, r2 = chim_r + 0.8, $fn = 28);
+        }
+}
+
+// ---------------------------------------------------------------------
+// Door -- a rounded-arch cutter (Technique 9's hull()-prism, extended to
+// a stadium/arch shape), filled with a recessed planked leaf + knob.
+// ---------------------------------------------------------------------
+// dw/dwh let the leaf be built ~1mm larger than the cutter on every side,
+// so it overlaps real wall material at the arch boundary instead of a
+// coincident face (Technique 4/8/39's "a flush face is not a weld" rule).
+function door_arch_pts(dw = door_w, dwh = door_wall_h, base_drop = 0) = concat(
+    [[-dw/2, -base_drop], [dw/2, -base_drop]],
+    [for (a = [0:20:180]) [ (dw/2) * cos(a), dwh + (dw/2) * sin(a) ]]
+);
+
+module door_cutter() {
+    y0 = 6; y1 = stem_base_r + 4;   // through the whole wall, real margin
+    translate([0, 0, door_z0])
+        hull() for (p = door_arch_pts())
+            for (yy = [y0, y1]) translate([p.x, yy, p.y]) sphere(r = 0.01, $fn = 6);
+}
+
+module door_leaf() {
+    // Sits recessed door_leaf_in behind the outer wall surface at door
+    // height, thick enough to read as a real applied leaf, with 4 plank
+    // lines and a small round knob. Built ~1mm oversized vs. the cutter
+    // so its arch boundary bites into real, uncut wall material.
+    // world y spans [y_face - 2.4, y_face] -- front face at y_face,
+    // extending 2.4mm inward toward the hollow interior. Uses the
+    // SMALLER of the door's top/bottom real wall radius so the leaf
+    // never pokes past the tapered surface at either end.
+    door_top_z = door_z0 + door_wall_h + door_w/2;
+    // Midpoint radius, not min/max of the endpoints -- with the gentle
+    // taper above (<1mm across the door's own height) a flat leaf at the
+    // midpoint stays inside the wall band at both the top and bottom of
+    // the door, verified numerically after rendering.
+    y_face = stem_r_at((door_z0 + door_top_z) / 2) - door_leaf_in;
+    leaf_pts = door_arch_pts(door_w + 2, door_wall_h + 1, base_drop = 0.6);
+    leaf_t = 2.4;
+    union() {
+        translate([0, y_face, door_z0])
+            rotate([90, 0, 0])
+                linear_extrude(height = leaf_t)
+                    polygon(leaf_pts);
+        // round knob, offset toward one side like a real door
+        translate([door_w/2 - 3.2, y_face + 0.3, door_z0 + door_wall_h * 0.55])
+            rotate([90, 0, 0]) sphere(r = 1.1, $fn = 16);
+        // plank lines as RAISED ridges, not cut grooves -- a subtracted
+        // groove here produced real disconnected slivers (caught by a
+        // connected-component check on the exported STL, not by eye:
+        // four 0.0135cm3 fragments, each matching the groove cutter's
+        // own bbox exactly). A proud ridge is a plain union with the
+        // leaf, so it cannot detach the same way.
+        for (gx = [-door_w/2 + 2.4 : (door_w - 4.8)/3 : door_w/2 - 2.4])
+            translate([gx, y_face + 0.01, door_z0])
+                rotate([90, 0, 0])
+                    linear_extrude(height = 0.5)
+                        square([0.7, door_wall_h + door_w/2 - 2], center = false);
+    }
+}
+
+// ---------------------------------------------------------------------
+// Window -- round cutter, recessed pane + raised cross mullions, and a
+// small flower-box ledge underneath.
+// ---------------------------------------------------------------------
+module window_cutter() {
+    translate([win_r * 0 , 0, 0])
+        rotate([0, 0, win_ang])
+            translate([0, 0, win_z])
+                rotate([90, 0, 0])
+                    cylinder(h = 2 * stem_base_r, r = win_r, center = true, $fn = 40);
+}
+
+module window_insert() {
+    // Real wall radius at the window's own height -- NOT stem_base_r,
+    // which would float the whole assembly past the true tapered surface.
+    wr = stem_r_at(win_z);
+    rotate([0, 0, win_ang]) {
+        // ONE solid disc, not a separate frame+pane at slightly different
+        // Y-depths -- the first version's three thin overlapping pieces
+        // produced real disconnected slivers (found via a real connected-
+        // component check on the exported STL, not by eye). A single
+        // disc, oversized past the cutter's own radius so its rim bites
+        // into real uncut wall material, is simpler and unambiguous: it
+        // spans from inside the wall to slightly proud of the surface.
+        win_y1 = wr + 0.6;   // front face, proud of the wall
+        win_y0 = wr - 2.6;   // back face, inside the wall/cavity boundary
+        translate([0, win_y1, win_z])
+            rotate([90, 0, 0])
+                cylinder(h = win_y1 - win_y0, r = win_r + 1.8, $fn = 40);
+        // cross mullions, raised proud of the disc's own front face --
+        // translate_y is 0.3 (not 0.5) past win_y1 so the mullion's own
+        // inner face embeds 0.2mm into the disc; a coincident face at
+        // exactly win_y1 was this window's last real floating fragment
+        // (0.021cm3, caught by the same connected-component check).
+        translate([0, win_y1 + 0.3, win_z])
+            rotate([90, 0, 0]) {
+                cube([win_r * 2 - 1, 0.9, 1.0], center = true);
+                cube([0.9, win_r * 2 - 1, 1.0], center = true);
+            }
+        // Little flower-box ledge under the sill -- a REAL 3D box (two
+        // distinct Y depths, not a flat single-Y hull, which would be a
+        // zero-volume face). Starts inside the wall (box_y0) and ends
+        // proud of it (box_y1), so it welds the same way the frame does.
+        box_y0 = wr - 3.2;
+        box_y1 = wr - 0.6;
+        box_z0 = win_z - win_r - 3.0;
+        box_z1 = win_z - win_r - 1.6;
+        translate([0, (box_y0 + box_y1) / 2, (box_z0 + box_z1) / 2])
+            cube([win_r * 2 + 2, box_y1 - box_y0, box_z1 - box_z0], center = true);
+        // flowers sit on top of the box, overlapping down into it by a
+        // real margin (0.6mm) so they're not a hairline/marginal weld.
+        for (fx = [-win_r + 1.5 : (win_r * 2 - 3) / 3 : win_r - 1.5])
+            translate([fx, box_y1 - 0.5, box_z1 + 0.5])
+                color([0.9, 0.4, 0.55]) sphere(r = 1.1, $fn = 12);
+    }
+}
+
+// ---------------------------------------------------------------------
+// Hanging sign -- bracket arm welded into the stem wall, two small chain
+// loops, and the plank itself with "Jessee's House" engraved two-line.
+// Sits directly above the door arch (door faces +Y, angle 0).
+// ---------------------------------------------------------------------
+sign_center_z = door_z0 + door_wall_h + door_w/2 + sign_gap + sign_h/2;
+sign_attach_z = sign_center_z + sign_h/2 + 3;   // bracket/chain top height
+// Real wall radius at each attachment height -- the sign sits in the
+// flare band (z > stem_h), where radius is already growing outward
+// again, so stem_base_r would badly misplace it.
+wall_r_sign   = stem_r_at(sign_center_z);
+wall_r_attach = stem_r_at(sign_attach_z);
+sign_y        = wall_r_sign + 3.0;   // plank's own front-face Y (proud of wall)
+
+// A single short arm centered above the door, embedded into the wall and
+// projecting out to roughly where the sign hangs.
+module sign_bracket() {
+    hull() {
+        translate([0, wall_r_attach - 3, sign_attach_z]) sphere(r = 1.3, $fn = 16);
+        translate([0, sign_y - 0.5, sign_attach_z]) sphere(r = 1.0, $fn = 16);
+    }
+}
+
+// Two thin support rods, each a hull() between a point embedded in the
+// wall and the plank's own top-left/top-right corner -- guarantees real
+// contact at both ends (Technique 9/23's "hull of two points" pattern),
+// instead of separate rings that can end up floating with no real weld.
+module sign_chains() {
+    for (sx = [-sign_w/2 + 2.2, sign_w/2 - 2.2])
+        hull() {
+            translate([sx, wall_r_attach - 2, sign_attach_z]) sphere(r = 1.0, $fn = 14);
+            translate([sx, sign_y - 0.3, sign_center_z + sign_h/2 - 0.5]) sphere(r = 1.0, $fn = 14);
+        }
+}
+
+module sign_plank() {
+    translate([0, sign_y, sign_center_z])
+        rotate([90, 0, 0])
+            linear_extrude(height = sign_t)
+                offset(r = 0.8) offset(delta = -0.8)
+                    square([sign_w, sign_h], center = true);
+}
+
+sign_engrave = 0.9;
+module sign_text() {
+    // Must actually CROSS the plank's front face (y = sign_y), not stop
+    // short of it -- a cutter buried entirely inside the plank engraves
+    // nothing and still renders clean (Technique 4/28's exact trap).
+    // mirror axis verified with a real 4-candidate "TEST" render viewed
+    // from a front camera at (0,+Y,z) looking toward -Y (the direction a
+    // customer actually views the sign from): for THIS transform chain
+    // (translate -> rotate([90,0,0]) -> extrude -> mirror -> text),
+    // mirror([1,0,0]) is the one that reads correctly -- NOT the
+    // mirror([0,1,0]) used for Technique 4's bottom-engraved mark, which
+    // is a different rotate chain. Confirmed: do not assume that axis
+    // carries over to a new placement pattern (Technique 4's own warning).
+    // translate's Y IS the cutter's outer (max-Y) bound here, since the
+    // extrude then walks INWARD (decreasing Y) by `height` -- the earlier
+    // version pre-subtracted sign_engrave from this translate too, which
+    // double-counted the depth and left the whole cutter buried short of
+    // the front face (Technique 28's exact "buried cut" trap, confirmed
+    // by deriving the real world-Y range by hand rather than trusting
+    // the render).
+    translate([0, sign_y + 0.05, sign_center_z])
+        rotate([90, 0, 0])
+            linear_extrude(height = sign_engrave + 0.05)
+                mirror([1, 0, 0]) {
+                    translate([0, 1.8]) text("Jessee's", size = 3.4, font = "Caveat:style=Bold",
+                        halign = "center", valign = "center");
+                    translate([0, -2.2]) text("House", size = 3.4, font = "Caveat:style=Bold",
+                        halign = "center", valign = "center");
+                }
+}
+
+module sign_assembly() {
+    sign_bracket();
+    sign_chains();
+    difference() {
+        sign_plank();
+        sign_text();   // already carries its own real-world placement
+    }
+}
+
+// ---------------------------------------------------------------------
+// Maker's mark -- engraved into the underside of the floor.
+// ---------------------------------------------------------------------
+module brand_mark() {
+    translate([0, 0, -0.5])
+        linear_extrude(height = 1.2)
+            mirror([0, 1, 0])
+                text("OnBrandCraftz", size = 3.0, font = "Caveat:style=Bold",
+                     halign = "center", valign = "center");
+}
+
+// ---------------------------------------------------------------------
+// Assembly.
+// ---------------------------------------------------------------------
+module house_body() {
+    difference() {
+        union() {
+            floor_disc();
+            translate([0, 0, 0]) stem_shell();
+            cap_solid();
+            chimney();
+        }
+        cap_dimples();
+        door_cutter();
+        window_cutter();
+        translate([0, 0, -0.01]) brand_mark();
+    }
+}
+
+module house() {
+    union() {
+        house_body();
+        door_leaf();
+        window_insert();
+        sign_assembly();
+    }
+}
+
+house();
