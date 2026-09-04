@@ -1,0 +1,86 @@
+def ring_texture(m, slices=140, smooth=9):
+    """Horizontal banding: high-frequency ripple in radius-vs-height.
+
+    Deliberately NOT measured by slicing along X. An X-slice contains the
+    model's whole silhouette profile, so a vase neck or a pumpkin stem
+    dimple reads as huge "texture" -- the exact form-contamination the four
+    rejected metrics all suffered from. Instead: take the median radius of
+    each horizontal slice, subtract a moving average of itself, and keep
+    what's left. Taper, flare and belly are low-frequency and vanish in the
+    subtraction; a stack of ridges or beads is high-frequency and survives.
+    """
+    try:
+        # One body only. A plate holding a box AND its lid AND three tools
+        # makes the median radius jump every time a different part enters
+        # the slice, which reads as violent "banding" -- a plain Game Card
+        # Box topped the ranking at 41.8% that way, and counting the
+        # oscillations did not reject it because there genuinely were 64.
+        # The assumption this metric rests on is a single body, so enforce
+        # it rather than trying to filter the symptom.
+        try:
+            parts = m.split(only_watertight=False)
+            if len(parts) > 1:
+                m = max(parts, key=lambda p: len(p.faces))
+        except Exception:
+            pass
+        V = np.asarray(m.vertices, dtype=np.float64)
+        zc = V[:, 2]
+        z0, z1 = np.percentile(zc, 6), np.percentile(zc, 94)
+        if z1 - z0 <= 0:
+            return None
+        cx, cy = np.median(V[:, 0]), np.median(V[:, 1])
+        rad = np.hypot(V[:, 0] - cx, V[:, 1] - cy)
+        edges = np.linspace(z0, z1, slices + 1)
+        prof, round_ratio = [], []
+        for b in range(slices):
+            sel = (zc >= edges[b]) & (zc < edges[b + 1])
+            if sel.sum() < 8:
+                prof.append(np.nan)
+                continue
+            rb = rad[sel]
+            prof.append(float(np.median(rb)))
+            lo_r = float(np.percentile(rb, 10))
+            if lo_r > 1e-6:
+                round_ratio.append(float(np.percentile(rb, 90)) / lo_r)
+        # "Radius from the centroid" only means something on a roughly
+        # rotational body. On a flat hinged box it is noise, and that noise
+        # topped the banding ranking (a Game Card Box at 41.8%) even after
+        # single-body and oscillation filters, because the box really is one
+        # body and really does oscillate. Gate on the shape instead: a round
+        # or square-ish section stays under ~1.5, a slab does not.
+        if not round_ratio or float(np.median(round_ratio)) > 1.5:
+            return None
+        prof = np.array(prof)
+        ok = ~np.isnan(prof)
+        if ok.sum() < slices * 0.6:
+            return None
+        prof = np.interp(np.arange(slices), np.flatnonzero(ok), prof[ok])
+        k = np.ones(smooth) / smooth
+        base = np.convolve(np.pad(prof, smooth // 2, mode="edge"), k, mode="valid")[:slices]
+        resid = np.abs(prof - base)
+        # trim the ends: the moving average is least reliable there
+        resid = resid[smooth:-smooth] if len(resid) > 3 * smooth else resid
+        amp = float(np.median(resid))
+        mr = float(np.median(prof))
+        if mr < 1.0:
+            return None
+        # Amplitude alone is not banding. A single ledge -- a box lid step,
+        # a base flange -- is a step function, and a step is high-frequency,
+        # so it scored as hard as a stack of ridges (a plain "Game Card Box"
+        # topped the amplitude ranking at 41.8%). Real banding OSCILLATES,
+        # so count how many times the residual actually crosses its own
+        # baseline: one ledge gives ~2, a run of beads gives 10+.
+        signed = prof - base
+        signed = signed[smooth:-smooth] if len(signed) > 3 * smooth else signed
+        live = np.abs(signed) > max(amp * 0.5, 1e-6)
+        s = np.sign(signed[live])
+        cycles = int((np.diff(s) != 0).sum()) if len(s) > 1 else 0
+        return {
+            "ring_amp_mm": round(amp, 3),
+            "ring_amp_pct": round(100.0 * amp / mr, 3),
+            "ring_cycles": cycles,
+        }
+    except Exception:
+        return None
+
+

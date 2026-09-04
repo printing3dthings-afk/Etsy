@@ -4941,3 +4941,160 @@ Sources: [Sagebrook Home, best garden statues 2026](https://sagebrookhome.com/bl
 material — [MatterHackers, best filament for outdoor use](https://www.matterhackers.com/articles/the-best-3d-printing-filament-for-outdoor-use),
 [Sovol3D, ASA vs PETG vs ABS outdoor comparison](https://www.sovol3d.com/blogs/news/best-filament-for-outdoor-3d-prints-asa-vs-petg-vs-abs),
 [MakeLab, PETG vs ASA](https://www.makelab.com/compare/petg-vs-asa).
+
+---
+
+## Technique 52 — Measuring visual detail: five metric attempts, one that works, and the numbers our own models are missing by (2026-09-04)
+
+Scott's ask was blunt: *"Things need to visually be much better. Shoot for
+another 1,000 3d prints in mesh form and finished form so you can see how
+they look."* So this pass looked at 996 real preview renders and downloaded
+**343 real STL meshes** to measure — not eyeball — what separates a print
+that reads as finished from one that reads as a blank shape.
+
+The headline is uncomfortable and worth stating first: **12 of this shop's
+26 shipped models score exactly 1.000 on the texture metric below, meaning
+geometrically zero surface relief.** Our "spiral fluted vase" has flutes
+1.59% of its radius deep. Real fluted vases in the corpus cut 8–20%. We
+have been shipping the right *shapes* with none of the *surface*.
+
+### The metric: contour rugosity
+
+`tools/detail_probe.py` reports **rugosity** — a horizontal cross-section's
+perimeter divided by the perimeter of its own convex hull.
+
+- **1.00** — a geometrically bare surface. Round, oval, tapered, boxy: all
+  score 1.00 if nothing is carved into them.
+- **1.05–1.15** — light relief.
+- **1.25+** — genuinely textured.
+- **1.5+** — heavily textured (lattice, deep flutes, scales).
+
+It works because it is **blind to form**. Taper, flare, ovality and
+asymmetry move the contour and the hull by the same amount and cancel. That
+property is the whole point, and it is the property four earlier attempts
+all lacked.
+
+### Four metrics that failed, and exactly how
+
+Recorded in full because each looked correct in reasoning and was only
+caught by testing against *known-plain vs known-carved* real models — the
+same discipline as Technique 45's negative results. If a future pass is
+tempted by one of these, it has already been tried.
+
+| Attempt | Idea | How it failed |
+|---|---|---|
+| 1 | Laplacian-smooth the mesh, measure vertex displacement | Measured **thin-shell collapse**, not texture. A plain hollow PC case scored 39.4% "relief" against a genuinely carved Pineapple Crown planter's 30.2%. |
+| 2 | Spread of surface normals within a fixed 3mm patch | Read coarse **faceting** as texture. Our own low-poly fairy house scored 42.26°, beating every real carved planter in the corpus. |
+| 3 | Residual from a local plane fit | Neighbourhoods straddling a **hard edge** gave huge residuals; a smooth functional spool holder scored 0.702mm of "relief". Several meshes errored outright. |
+| 4 | Spread of radius within a height band | Measured departure from **rotational symmetry** — form again. The fairy house topped the entire set at 52.65%, purely because a mushroom's stem and cap have wildly different radii. |
+
+A fifth metric — horizontal banding, measured as high-frequency ripple in
+radius-vs-height — was built, failed three separate fixes, and was **cut**
+(archived via `tools/trash.py`, recoverable). Raw amplitude scored a single
+box-lid ledge as hard as a stack of ridges; counting baseline crossings did
+not reject it, because multi-part plates genuinely oscillate; a single-body
+filter plus a roundness gate finally rejected the box but also rejected
+every deeply fluted vase, since deep flutes make a rotational body look
+non-rotational to a radius-spread test. Shipping one metric that is proven
+beats shipping two where one lies.
+
+### The benchmark: 343 real meshes
+
+| rugosity | value |
+|---|---|
+| p25 | **1.000** |
+| median | **1.068** |
+| p75 | **1.245** |
+| p90 | **1.576** |
+| max | 4.51 (`291961`, "The finvase") |
+
+55.3% of real prints exceed 1.05; 34.2% exceed 1.15.
+
+**Where this shop sits:** `snap_box_lid_script` 1.784 (the engraved script
+lid — our one genuinely textured piece), `kumiko_organizer` 1.372,
+`flexi_seahorse` 1.153, `mochi_fox_organizer` 1.086, `fairy_house` 1.062,
+`honeycomb_pen_holder` 1.053 — then a cliff. `halloween_pumpkin` 1.017,
+`spiral_fluted_vase` 1.0035, and **exactly 1.000** for axolotl, bayonet_jar,
+cable_clip, cable_hook, gauntlet_tile, mushroom_lamp, phone_stand,
+ribbed_organizer, snap_box_base, snap_box_lid_body, sundial. Our median sits
+at the corpus's 25th percentile.
+
+### The recipe: what to actually model
+
+`tools/texture_recipe.py` reads a reference print's texture back out as
+numbers that drop straight into an OpenSCAD profile function. It FFTs
+radius-against-angle around the ring; the dominant harmonic **is** the
+flute count, twice its amplitude is the peak-to-valley depth. Harmonics
+below 6 are discarded — 3/4/5 are triangular/square/pentagonal *bodies*,
+and leaving them in swamped the ranking with rectangular trays reporting
+"4 flutes, 175% deep".
+
+**Decorative vessels, lamps and statues only (n=67):**
+
+| | p25 | median | p75 | p90 |
+|---|---|---|---|---|
+| flute count | 6 | **8** | 15 | 32 |
+| depth, % of local radius | 4.2 | **7.9** | 13.7 | 29.0 |
+| depth, mm | 0.84 | **2.24** | 3.49 | 6.84 |
+| surface pitch, mm | 6.5 | **16.3** | 35.9 | 59.4 |
+
+Real worked examples, measured off the actual meshes:
+
+| Print | flutes | depth | pitch |
+|---|---|---|---|
+| `289126` Vase 914 | 36 | 13.8% (4.73mm) | 6.0mm |
+| `243453` Spiral flower pot | 72 | 10.6% (6.26mm) | 5.2mm |
+| `256411` Spiral Vase No. 2 | 12 | 36.3% (7.97mm) | 11.5mm |
+| `413057` Vase 794 | 8 | 19.7% (6.84mm) | 27.2mm |
+| **our `spiral_fluted_vase`** | 18 | **1.6% (0.46mm)** | 10.2mm |
+| **our `halloween_pumpkin`** | 10 | **3.4% (1.16mm)** | 21.7mm |
+
+**The design rule this yields:** surface texture wants **8–20% of the local
+radius** in depth, at a **5–12mm pitch for fine texture** or **25–35mm for
+bold lobes**. Below ~4% it is invisible on a printed object — it disappears
+into layer lines. Our models run 1.6–3.4%: not subtle, *absent*. Fixing this
+is a one-line change to a profile function, not a redesign.
+
+### The negative result: likes do not measure craft
+
+Texture has **no relationship to likes** in this corpus. Top-quartile-by-likes
+median rugosity 1.061 vs bottom-quartile 1.072 — and within the decorative
+subset specifically, 1.0785 vs 1.0755. Printables likes reward *utility and
+novelty* (the top of the list is dominated by Gridfinity kits, cable clips
+and print-in-place toys), which is a different question from whether an
+object looks finished on a shelf.
+
+So: **do not use likes to pick what to imitate.** This shop sells decorative
+objects to Etsy buyers who are looking at a photograph. Use the *distribution*
+as a craft benchmark and the recipe numbers as design targets; ignore the
+popularity ranking entirely when the question is how something should look.
+
+### Visual motifs that recur across the striking end of the corpus
+
+From reviewing 10 of the 16 contact sheets (≈640 renders), the prints that
+read as finished share one structural habit: **surface treatment covers
+essentially 100% of the visible body**, never a decorated panel on a plain
+form. Recurring, directly reusable:
+
+- **Overlapping scale / shingle courses** — `855433`, `287392`, `1316432`
+- **All-over diamond or knurl lattice** — `273336`, `273486`, `856902`,
+  `641704442`-era cube, `882/274011`
+- **Full-height fluting** — `1312934`, `1041618`, `851656`, `860/278797`
+- **Gathered ribs converging at a neck** — `449/252190`, `496/289126`,
+  `657/585481`, `676/585485`, `691/606558`. The strongest single motif
+  found: vertical ribs that pinch together at a waist or neck read as
+  hand-thrown craft, and cost nothing but a radius-varying rib depth.
+- **Voronoi / open lattice** — `731338`, `708618` Voronoi Lamp
+- **Layered molding at form transitions** — `581579`'s column: base molding
+  → shaft → capital. Where two sections of a form meet, real objects put a
+  band there. Ours mostly just change diameter.
+
+### Tools shipped
+
+- `tools/detail_probe.py` — rugosity plus triangle density and the
+  Technique 42/43 dihedral stats. Run it on any model before calling it
+  done; under 1.05 means the surface is bare.
+- `tools/texture_recipe.py` — flute count, depth (mm and % of radius) and
+  pitch, read off a real reference mesh.
+
+Both need `trimesh` + `shapely` (already present). Neither costs an API call.

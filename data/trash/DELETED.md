@@ -6,143 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260725-001 date=2026-07-25 kind=file source="tools/health_check.py" reason="orphaned -- zero references anywhere (not imported/subprocess-invoked by main.py or any other tools/*.py file, no CLAUDE.md mention, no CI workflow reference, no real test coverage); superseded by shop_health_check.py + main.py builtin health loop (2026-07-25 cleanup pass, verified via dedicated read-only cross-reference agent)" -->
-## 20260725-001 · 2026-07-25 · file · `tools/health_check.py`
-**Reason:** orphaned -- zero references anywhere (not imported/subprocess-invoked by main.py or any other tools/*.py file, no CLAUDE.md mention, no CI workflow reference, no real test coverage); superseded by shop_health_check.py + main.py builtin health loop (2026-07-25 cleanup pass, verified via dedicated read-only cross-reference agent)  
-**Payload:** `data/trash/files/20260725-001__health_check.py`
-
-```
-#!/usr/bin/env python3
-"""
-health_check.py
-
-Daily automated health check for the OnBrandCraftz pipeline.
-Catches silent failures before they cost a week of sales.
-
-Checks:
-  1. Etsy OAuth token — valid and not near expiry
-  2. OpenAI API — reachable and not billing-limited
-  3. Active listings — none incorrectly in draft state
-  4. SVG bundles — manifests valid, ZIPs under 20MB
-  5. Sublimation ZIPs — under 20MB each
-  6. Tag compliance — all listing titles ≤70 chars
-  7. Decision log — confirm autonomous actions are being logged
-  8. Report freshness — warn if no report in 8+ days
-
-Outputs a health summary and appends to data/health_log.json.
-Exits with code 1 if any critical issue is found (for cron alerting).
-
-Usage:
-  python tools/health_check.py              # full check, verbose
-  python tools/health_check.py --quiet      # only print failures
-  python tools/health_check.py --json       # machine-readable JSON output
-"""
-
-import json, os, sys, re, time
-from datetime import date, datetime, timedelta
-from pathlib import Path
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-_env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-with open(_env_path) as _f:
-    for _line in _f:
-        _line = _line.strip()
-        if _line and not _line.startswith("#") and "=" in _line:
-            _k, _v = _line.split("=", 1)
-            os.environ.setdefault(_k.strip(), _v.strip())
-
-HEALTH_LOG      = Path("data/health_log.json")
-REPORTS_DIR     = Path("data/reports")
-SVG_BUNDLES_DIR = Path("data/svg_bundles")
-SUBLIM_DIR      = Path("data/sublimation_pack")
-DECISION_LOG    = Path("data/decision_log.json")
-
-MAX_ZIP_MB = 20
-
-
-# ── Individual checks ─────────────────────────────────────────────────────────
-
-def check_etsy_token() -> dict:
-    try:
-        from etsy_api import EtsyAPIClient, EtsyAPIError
-        client = EtsyAPIClient()
-        if not client.access_token:
-            return {"name": "Etsy OAuth token", "status": "CRITICAL",
-                    "detail": "ETSY_ACCESS_TOKEN is empty — run: python tools/etsy_oauth.py"}
-        # Make a lightweight authenticated call
-        client._require_oauth()
-        client.get_shop()
-        return {"name": "Etsy OAuth token", "status": "OK",
-                "detail": "Token valid — authenticated API call succeeded"}
-    except Exception as e:
-        err = str(e)
-        if "401" in err or "Unauthorized" in err:
-            return {"name": "Etsy OAuth token", "status": "CRITICAL",
-                    "detail": f"Token expired or invalid — run: python tools/etsy_oauth.py"}
-        return {"name": "Etsy OAuth token", "status": "WARN",
-                "detail": f"Check failed (may be network): {err[:100]}"}
-
-
-def check_openai_api() -> dict:
-    try:
-        import openai
-        api_key = os.environ.get("OPENAI_API_KEY", "")
-        if not api_key:
-            return {"name": "OpenAI API", "status": "CRITICAL",
-                    "detail": "OPENAI_API_KEY missing from .env"}
-        client = openai.OpenAI(api_key=api_key)
-        # Use a tiny cheap call to test billing status
-        r = client.models.list()
-        return {"name": "OpenAI API", "status": "OK",
-                "detail": "API reachable and billing active"}
-    except Exception as e:
-        err = str(e)
-        if "billing" in err.lower() or "hard_limit" in err.lower():
-            return {"name": "OpenAI API", "status": "CRITICAL",
-                    "detail": "Billing hard limit reached — top up at platform.openai.com"}
-        if "401" in err or "auth" in err.lower():
-            return {"name": "OpenAI API", "status": "CRITICAL",
-                    "detail": "API key invalid — check OPENAI_API_KEY in .env"}
-        return {"name": "OpenAI API", "status": "WARN",
-                "detail": f"API check failed: {err[:100]}"}
-
-
-def check_active_listings() -> dict:
-    try:
-        from etsy_api import EtsyAPIClient, EtsyAPIError
-        client = EtsyAPIClient()
-        if not client.access_token:
-  
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260725-001 -->
-<!-- TRASH id=20260731-001 date=2026-07-31 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="More screen UX audit (2026-07-31): dead badge-conversations lookup -- no element with id='badge-conversations' exists anywhere on either platform (removed when Conversations was merged into Knowledge, task #21), the DOM lookup was never cleaned up. Guarded by if(badge), so harmless, but unfinished plumbing." -->
-## 20260731-001 · 2026-07-31 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** More screen UX audit (2026-07-31): dead badge-conversations lookup -- no element with id='badge-conversations' exists anywhere on either platform (removed when Conversations was merged into Knowledge, task #21), the DOM lookup was never cleaned up. Guarded by if(badge), so harmless, but unfinished plumbing.  
-**Payload:** `data/trash/files/20260731-001__snippet.txt`
-
-```python
-    const badge = document.getElementById('badge-conversations');
-    if (badge) {
-      const total = _convSessions.reduce((sum, s) => sum + (s.message_count || 0), 0);
-      badge.textContent = total > 999 ? '999+' : total;
-      badge.style.display = total > 0 ? '' : 'none';
-    }
-```
-
-<!-- /TRASH 20260731-001 -->
-<!-- TRASH id=20260731-002 date=2026-07-31 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="More screen UX audit (2026-07-31): vestigial CSS rule referencing a .more-row class that has never existed in the actual DOM (the real markup uses .pmore-item/.pmore-grp) -- already flagged as vestigial in the 2026-07-17 ops_runbook entry and never removed." -->
-## 20260731-002 · 2026-07-31 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** More screen UX audit (2026-07-31): vestigial CSS rule referencing a .more-row class that has never existed in the actual DOM (the real markup uses .pmore-item/.pmore-grp) -- already flagged as vestigial in the 2026-07-17 ops_runbook entry and never removed.  
-**Payload:** `data/trash/files/20260731-002__snippet.txt`
-
-```python
-body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}
-```
-
-<!-- /TRASH 20260731-002 -->
 <!-- TRASH id=20260806-001 date=2026-08-06 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed 7 CSS theme blocks (Dark Purple, Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid), keeping Studio Warm, Day Mode, Ocean Teal, Midnight Kawaii, Sunwashed." -->
 ## 20260806-001 · 2026-08-06 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed 7 CSS theme blocks (Dark Purple, Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid), keeping Studio Warm, Day Mode, Ocean Teal, Midnight Kawaii, Sunwashed.  
@@ -418,7 +281,6 @@ html.theme-sunwashed{
 ```
 
 <!-- /TRASH 20260814-001 -->
-
 <!-- TRASH id=20260815-001 date=2026-08-15 kind=file source="tests/test_view_transitions.py" reason="Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior." -->
 ## 20260815-001 · 2026-08-15 · file · `tests/test_view_transitions.py`
 **Reason:** Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior.  
@@ -513,4 +375,96 @@ def test_double_motion_guard_is_scoped_to_the_view_transition_path_only():
 ```
 
 <!-- /TRASH 20260815-001 -->
+<!-- TRASH id=20260904-001 date=2026-09-04 kind=snippet source="tools/detail_probe.py" reason="Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for." -->
+## 20260904-001 · 2026-09-04 · snippet · `tools/detail_probe.py`
+**Reason:** Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for.  
+**Payload:** `data/trash/files/20260904-001__snippet.txt`
 
+```python
+def ring_texture(m, slices=140, smooth=9):
+    """Horizontal banding: high-frequency ripple in radius-vs-height.
+
+    Deliberately NOT measured by slicing along X. An X-slice contains the
+    model's whole silhouette profile, so a vase neck or a pumpkin stem
+    dimple reads as huge "texture" -- the exact form-contamination the four
+    rejected metrics all suffered from. Instead: take the median radius of
+    each horizontal slice, subtract a moving average of itself, and keep
+    what's left. Taper, flare and belly are low-frequency and vanish in the
+    subtraction; a stack of ridges or beads is high-frequency and survives.
+    """
+    try:
+        # One body only. A plate holding a box AND its lid AND three tools
+        # makes the median radius jump every time a different part enters
+        # the slice, which reads as violent "banding" -- a plain Game Card
+        # Box topped the ranking at 41.8% that way, and counting the
+        # oscillations did not reject it because there genuinely were 64.
+        # The assumption this metric rests on is a single body, so enforce
+        # it rather than trying to filter the symptom.
+        try:
+            parts = m.split(only_watertight=False)
+            if len(parts) > 1:
+                m = max(parts, key=lambda p: len(p.faces))
+        except Exception:
+            pass
+        V = np.asarray(m.vertices, dtype=np.float64)
+        zc = V[:, 2]
+        z0, z1 = np.percentile(zc, 6), np.percentile(zc, 94)
+        if z1 - z0 <= 0:
+            return None
+        cx, cy = np.median(V[:, 0]), np.median(V[:, 1])
+        rad = np.hypot(V[:, 0] - cx, V[:, 1] - cy)
+        edges = np.linspace(z0, z1, slices + 1)
+        prof, round_ratio = [], []
+        for b in range(slices):
+            sel = (zc >= edges[b]) & (zc < edges[b + 1])
+            if sel.sum() < 8:
+                prof.append(np.nan)
+                continue
+            rb = rad[sel]
+            prof.append(float(np.median(rb)))
+            lo_r = float(np.percentile(rb, 10))
+            if lo_r > 1e-6:
+                round_ratio.append(float(np.percentile(rb, 90)) / lo_r)
+        # "Radius from the centroid" only means something on a roughly
+        # rotational body. On a flat hinged box it is noise, and that noise
+        # topped the banding ranking (a Game Card Box at 41.8%) even after
+        # single-body and oscillation filters, because the box really is one
+        # body and really does oscillate. Gate on the shape instead: a round
+        # or square-ish section stays under ~1.5, a slab does not.
+        if not round_ratio or float(np.median(round_ratio)) > 1.5:
+            return None
+        prof = np.array(prof)
+        ok = ~np.isnan(prof)
+        if ok.sum() < slices * 0.6:
+            return None
+        prof = np.interp(np.arange(slices), np.flatnonzero(ok), prof[ok])
+        k = np.ones(smooth) / smooth
+        base = np.convolve(np.pad(prof, smooth // 2, mode="edge"), k, mode="valid")[:slices]
+        resid = np.abs(prof - base)
+        # trim the ends: the moving average is least reliable there
+        resid = resid[smooth:-smooth] if len(resid) > 3 * smooth else resid
+        amp = float(np.median(resid))
+        mr = float(np.median(prof))
+        if mr < 1.0:
+            return None
+        # Amplitude alone is not banding. A single ledge -- a box lid step,
+        # a base flange -- is a step function, and a step is high-frequency,
+        # so it scored as hard as a stack of ridges (a plain "Game Card Box"
+        # topped the amplitude ranking at 41.8%). Real banding OSCILLATES,
+        # so count how many times the residual actually crosses its own
+        # baseline: one ledge gives ~2, a run of beads gives 10+.
+        signed = prof - base
+        signed = signed[smooth:-smooth] if len(signed) > 3 * smooth else signed
+        live = np.abs(signed) > max(amp * 0.5, 1e-6)
+        s = np.sign(signed[live])
+        cycles = int((np.diff(s) != 0).sum()) if len(s) > 1 else 0
+        return {
+            "ring_amp_mm": round(amp, 3),
+            "ring_amp_pct": round(100.0 * amp / mr, 3),
+            "ring_cycles": cycles,
+        }
+    except Exception:
+        return None
+```
+
+<!-- /TRASH 20260904-001 -->
