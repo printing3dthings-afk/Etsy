@@ -59,6 +59,26 @@ def detail_metrics(m):
     except Exception:
         pass
 
+    # Two hard limits on what rugosity can honestly say, both found by
+    # checking the tool's own verdicts against models whose construction is
+    # known from their .scad source:
+    #
+    #  - It sees VERTICAL texture only. A body whose relief runs horizontally
+    #    (stacked ridges, corrugation, banding) slices to a plain outline and
+    #    scores 1.000 while genuinely being textured. `ribbed_organizer` --
+    #    6 real 1.5mm corrugations -- scores exactly 1.000. 1.000 means "no
+    #    vertical relief", never "no relief".
+    #  - It is meaningless on a plate. A 0.8mm-tall engraved lid has no body
+    #    to take a cross-section of, and the engraving's own outline becomes
+    #    the contour: `snap_box_lid_script` scored 1.784, higher than any
+    #    real vase in the reference corpus, on a flat sheet of text.
+    ext = m.bounding_box.extents
+    footprint = float(max(ext[0], ext[1]))
+    aspect = float(ext[2]) / footprint if footprint > 0 else 0.0
+    out["h_over_footprint"] = round(aspect, 2)
+    if aspect < 0.5:
+        out["rugosity_na"] = "plate-like (h/footprint < 0.5); cross-section is not a body"
+        return out
     rug = contour_rugosity(m, axis=2)
     if rug is not None:
         out["rugosity"] = round(rug, 4)

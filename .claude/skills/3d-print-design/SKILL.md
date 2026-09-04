@@ -4952,11 +4952,13 @@ they look."* So this pass looked at 996 real preview renders and downloaded
 **343 real STL meshes** to measure — not eyeball — what separates a print
 that reads as finished from one that reads as a blank shape.
 
-The headline is uncomfortable and worth stating first: **12 of this shop's
-26 shipped models score exactly 1.000 on the texture metric below, meaning
-geometrically zero surface relief.** Our "spiral fluted vase" has flutes
-1.59% of its radius deep. Real fluted vases in the corpus cut 8–20%. We
-have been shipping the right *shapes* with none of the *surface*.
+The headline is uncomfortable and worth stating first: **of this shop's 15
+measurable models, the most textured scores 1.086 — barely above the
+reference corpus's *median* of 1.061, and not one reaches its 75th
+percentile of 1.235.** Seven score 1.000: no vertical surface relief at all.
+Our "spiral fluted vase" has flutes 1.59% of its radius deep; real fluted
+vases in the corpus cut 8–20%. We have been shipping the right *shapes*
+with none of the *surface*.
 
 ### The metric: contour rugosity
 
@@ -4973,6 +4975,28 @@ It works because it is **blind to form**. Taper, flare, ovality and
 asymmetry move the contour and the hull by the same amount and cancel. That
 property is the whole point, and it is the property four earlier attempts
 all lacked.
+
+**Two hard limits, both found by checking the tool's verdicts against models
+whose construction is known from their own `.scad` source. Read these before
+quoting a number.**
+
+1. **It sees vertical texture only.** A body whose relief runs horizontally
+   — stacked ridges, corrugation, banding — slices to a plain outline and
+   scores 1.000 while genuinely being textured. Our own `ribbed_organizer`,
+   which carries six real 1.5mm corrugations by construction, scores exactly
+   1.000. **1.000 means "no vertical relief", never "no relief."**
+2. **It is meaningless on a plate.** A flat panel has no body to take a
+   cross-section of, so the engraving's own outline becomes the contour.
+   `snap_box_lid_script` — a 0.8mm-tall engraved sheet — scored **1.784**,
+   higher than any real vase in the corpus. The first draft of this technique
+   quoted that as our best-textured model. It was an artifact.
+
+The tool now refuses to report rugosity when height is under half the
+footprint, returning `rugosity_na` instead of a misleading number. Every
+figure below is computed after that gate. Gating drops 53% of the corpus
+(mostly functional trays and plates) and barely moves the distribution —
+median 1.068 → 1.061 — but it removes the flat-plate scores that were
+sitting at the top of both rankings.
 
 ### Four metrics that failed, and exactly how
 
@@ -4998,26 +5022,39 @@ every deeply fluted vase, since deep flutes make a rotational body look
 non-rotational to a radius-spread test. Shipping one metric that is proven
 beats shipping two where one lies.
 
-### The benchmark: 343 real meshes
+### The benchmark: 157 real meshes (of 343 downloaded; the rest are plates)
 
 | rugosity | value |
 |---|---|
-| p25 | **1.000** |
-| median | **1.068** |
-| p75 | **1.245** |
-| p90 | **1.576** |
-| max | 4.51 (`291961`, "The finvase") |
+| p25 | **1.002** |
+| median | **1.061** |
+| p75 | **1.235** |
+| p90 | **1.477** |
+| max | 3.22 (`246588`, Fractal Pyramid vase) |
 
-55.3% of real prints exceed 1.05; 34.2% exceed 1.15.
+55% exceed 1.05, 34% exceed 1.15, 24% sit at exactly 1.000. The top of the
+gated ranking is almost purely decorative vessels — `243453` spiral planter
+2.73, `288453` Vase 650 2.72, `708618` Voronoi Lamp 2.58, `441252` Lamp
+Shade 2.56, `413057` Vase 794 2.26, `289126` Vase 914 1.78 — which is itself
+a check that the gate is doing the right thing.
 
-**Where this shop sits:** `snap_box_lid_script` 1.784 (the engraved script
-lid — our one genuinely textured piece), `kumiko_organizer` 1.372,
-`flexi_seahorse` 1.153, `mochi_fox_organizer` 1.086, `fairy_house` 1.062,
-`honeycomb_pen_holder` 1.053 — then a cliff. `halloween_pumpkin` 1.017,
-`spiral_fluted_vase` 1.0035, and **exactly 1.000** for axolotl, bayonet_jar,
-cable_clip, cable_hook, gauntlet_tile, mushroom_lamp, phone_stand,
-ribbed_organizer, snap_box_base, snap_box_lid_body, sundial. Our median sits
-at the corpus's 25th percentile.
+**Where this shop sits.** Fifteen of our models are measurable:
+
+| model | rugosity |
+|---|---|
+| `mochi_fox_organizer` | 1.086 |
+| `fairy_house` | 1.062 |
+| `pleated_fan` | 1.059 |
+| `glow_headphone_stand` | 1.057 |
+| `honeycomb_pen_holder` | 1.053 |
+| `halloween_pumpkin` | 1.017 |
+| `spiral_fluted_vase` | 1.004 |
+| `halloween_ghost` | 1.002 |
+| axolotl · ball_socket_joint_test · bayonet_jar · cable_clip · cable_hook · phone_stand · ribbed_organizer | **1.000** |
+
+Our single best model sits just above the corpus median; **none reaches its
+p75**. `ribbed_organizer`'s 1.000 is the honest exception noted above — its
+relief is horizontal, and the metric cannot see it.
 
 ### The recipe: what to actually model
 
@@ -5093,7 +5130,10 @@ form. Recurring, directly reusable:
 
 - `tools/detail_probe.py` — rugosity plus triangle density and the
   Technique 42/43 dihedral stats. Run it on any model before calling it
-  done; under 1.05 means the surface is bare.
+  done; under 1.05 means the surface carries no vertical relief. It reports
+  `rugosity_na` rather than a number on plate-like models, and it cannot see
+  horizontal ribbing at all — check the source before concluding a 1.000 is
+  a real defect.
 - `tools/texture_recipe.py` — flute count, depth (mm and % of radius) and
   pitch, read off a real reference mesh.
 
