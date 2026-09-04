@@ -4069,3 +4069,154 @@ Caveats stated plainly: n=107 for geometry, n=104 for print time; within-categor
 cells are 2–14 models, so the support finding is suggestive, not proven. Likes
 also confound age, author following and thumbnail quality — none of which are
 measurable here.
+
+---
+
+## Technique 46 — Gears, brackets, threads and cosplay armor: real geometry from 500+ more prints (2026-09-04)
+
+Scott: *"Look at 500 different prints visually and make sure to get how they
+are designed and the details... I need you to be able to design prints with
+great detail and quality."* This round went after mechanism classes never
+touched before — gears, brackets, threads, cosplay armor, jewelry — using the
+same method as Technique 42–45: real preview images at scale plus real
+downloaded geometry, not marketing photos.
+
+### The corpus
+
+Cults3D is now behind a Cloudflare challenge (403 to everything, unlike
+earlier sessions) — noted so it isn't retried. Pivoted entirely to
+Printables, which is still fully open. Two moves that made this fast:
+
+1. **Re-filtered 8,457 print records already cached from prior sessions**
+   against 13 new category keywords (gear, thread, bracket, cosplay/armor,
+   miniature, jewelry, chess, RC, phone case, keycap, coaster, watch/tool) —
+   zero new API calls, 585 real matches instantly.
+2. **A fresh 224,021-id GraphQL scan** (ids 900,000–1,200,000, the band the
+   original scan never reached) against the same keyword set found 3,819
+   more, at up to 6,400 likes — much higher quality than the first pass.
+
+**Corrected a wrong assumption from Technique 42 while doing this:** the
+"preview path only derives below id ≈ 900,000" limitation is real for
+*reconstructing a download URL from a filename*, but the preview PNG path
+itself is always returned directly in `filePreviewPath` regardless of era —
+no derivation needed for images, only for guessing an undisclosed STL URL.
+That single fix is what made a 1,015-image visual pass (316 + 699) possible
+in this session, on top of Technique 41's earlier 253 — over 1,500 real
+prints visually reviewed across the two sessions combined.
+
+### A tool bug found and fixed while extending Technique 44 to gears
+
+Slicing a real 0.15mm gear-mesh gap for a fresh check came back fused —
+contradicting Technique 44's own control table, which said 0.15mm resolves.
+That contradiction turned out to be real: `gcode_probe.py`'s default
+rasterization (`px=0.15`) closes gaps up to ~0.3mm, aliasing right at the
+range this whole technique measures. Full correction, control-table fix, and
+the new "sweep px to convergence" rule are recorded under Technique 44 above,
+not repeated here. The fix (`px=0.06` default, `--px` exposed) is what made
+every gear-mesh measurement below trustworthy.
+
+### Gears — real involute proportions, and a genuinely different "gear" shape
+
+Downloaded a complete real planetary gear set (sun, planet ×1, ring, carrier
+— separate parts, not print-in-place) and measured tooth geometry directly
+off the mesh by sectioning perpendicular to the rotation axis and finding
+radius peaks/troughs around the circumference:
+
+| part | teeth | r_max | r_min | pitch r (est) | module (est) |
+|---|---|---|---|---|---|
+| sun | 26 | 29.00 | 24.66 | 26.83 | **2.06** |
+| planet | 11 | 14.60 | 10.26 | 12.43 | **2.26** |
+| ring (internal) | ~48–50 | — | — | ~52.4 | (2.0 implied) |
+
+Both gears land on **module 2** within measurement noise, as they must to
+mesh — and the classic planetary formula holds: `Z_ring = Z_sun + 2·Z_planet`
+= 26 + 22 = 48, matching the ~48–50 measured. **This is the check to run on
+any new gear train**: pick a module, and every meshing gear's tooth count
+must satisfy this relationship or it won't fit.
+
+**A "gear" is not always a spur gear.** A real drill-driven gear pump's
+"Gear.stl" turned out to be a 6-lobe gerotor/rotor profile — broad rounded
+lobes (radius swinging 9.88↔23.78mm, a 2.4× ratio no involute tooth ever
+has), not fine teeth. For a pumping/rotary-displacement mechanism, model a
+lobed rotor, not a toothed gear — they solve a different problem
+(displacement vs. torque transfer) and look nothing alike up close even
+though both get called "gears."
+
+**Print-in-place planetary gear mesh clearance measured at 0.15–0.16mm** —
+tighter than the 0.2mm ball-joint/snap standard from Technique 43, and
+correctly so: a gear tooth only needs to clear its mating tooth's flank, not
+a full ball escaping a socket. Verified real at the corrected slicing
+resolution (`--px 0.04`): the mesh checked as 2–6 genuinely separate islands
+depending on layer height (more at the tooth band, fewer where the carrier
+plate legitimately fuses the planets together by design) — confirmed
+correct, not the false single-island reading the uncorrected tool gave at
+its old default.
+
+### Brackets — two real gusset-weight-reduction strategies, neither a solid triangle
+
+Measured a "corner bracket, optimized for 3D printing" (6,649 likes) by
+computing the true silhouette (min/max Z per X bin across all Y, not a
+single planar section — the shape isn't a pure extrusion). It is NOT a solid
+flat gusset triangle: web thickness varies from a full 16mm at the flange
+roots down to **2.5mm in the low-stress middle of the diagonal**, with a
+genuine lightening hole cut through the thinnest region. Material sits where
+the load path needs it and is removed everywhere else — a real
+topology-optimized profile, not hand-drawn.
+
+A second real bracket (a "Honeycomb Shelf Bracket," 531 likes) solves the
+same problem a different way: a **solid perimeter frame carrying the load
+path around the triangle's edge, with the entire interior gusset area
+through-cut as a genuine hex lattice** — the exact Technique 21 hex-lattice
+construction, confirmed here as a real structural gusset strategy, not only
+a decorative vase/planter texture. Measured: 1.6mm min wall, 8.0mm median,
+and only 9.6% of its downward area needs support despite the lattice —
+consistent with the "design to print support-free" standard from
+Technique 45.
+
+**Both approaches soundly beat a solid flat triangle**, and they are not
+interchangeable style choices — pick the topology-optimized variable-web
+version when the load is genuinely concentrated along a known path (a
+diagonal brace under one direction of load), and the perimeter-frame +
+lattice version when the load is more evenly distributed and the *visual*
+lightness matters as much as the weight (a shelf bracket meant to be seen).
+
+Every bracket sampled shares the same skeleton regardless of gusset
+strategy: two flat mounting flanges at 90°, each with 1–2 round or slotted
+holes, joined by *some* form of a lightened diagonal web — never a solid
+right-angle wedge.
+
+### Cosplay/armor — always a segmented shell, never one hollow piece
+
+Every wearable helmet or armor panel in the sample (dozens, from Spartan
+helmets to sci-fi pauldrons) is split into **multiple curved shell panels
+along visible seam lines** — never printed as one large hollow shell. This
+is a real build constraint, not a style choice: a wearable helmet exceeds
+the P1S's 256mm build volume in at least one dimension, and a single-shell
+print of that size has no good print orientation (every face is a
+compound curve, so any orientation puts large regions past a safe overhang
+angle). Segmenting into panels solves both problems at once: each panel fits
+the plate and can be oriented so its outer (visible) face prints support-free
+against the direction of least curvature. Several panels show a locating
+tab/pin pattern at the seam edge for glue-up alignment — the same
+locate-vs-snap distinction from Technique 43 applied to a glued assembly
+rather than a moving one.
+
+### What to do differently, concretely
+
+1. **Pick a module and verify tooth counts against the meshing formula**
+   before modeling any gear train — `Z_ring = Z_sun + 2·Z_planet` for a
+   planetary set, or the plain `pitch_dia = module × teeth` relationship for
+   a simple pair. Don't guess proportions by eye.
+2. **A rotary-displacement pump needs a lobed rotor profile, not gear
+   teeth** — different mechanism, different shape.
+3. **Gear-mesh clearance: 0.15mm**, not the 0.2mm ball-joint standard —
+   confirmed at the corrected slicing resolution.
+4. **Never model a bracket gusset as a solid flat triangle.** Either taper
+   the web thickness to the real load path (thick at the flange roots, thin
+   in the low-stress middle, optionally a lightening hole) or through-cut
+   the interior as a hex lattice inside a solid perimeter frame. Pick based
+   on whether the load is concentrated or distributed.
+5. **Any wearable piece that could exceed ~200mm in a dimension gets
+   segmented into shell panels along real seam lines**, each with its own
+   safe print orientation, before modeling starts — not decided after
+   discovering the first attempt doesn't fit the plate.
