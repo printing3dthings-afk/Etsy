@@ -152,17 +152,155 @@ module cap_dimples() {
     }
 }
 
+chim_ang  = 200;
+chim_p    = cap_profile[round(len(cap_profile) * 0.42)];
+chim_base = [chim_p.x * cos(chim_ang) * 0.72, chim_p.x * sin(chim_ang) * 0.72, chim_p.y - 4];
+
 module chimney() {
     // Placed on the flare band, opposite the door, tilted slightly outward
     // so it reads from the hero (door-facing) angle.
-    a = 200;
-    p = cap_profile[round(len(cap_profile) * 0.42)];
-    translate([p.x * cos(a) * 0.72, p.x * sin(a) * 0.72, p.y - 4])
+    translate(chim_base)
         rotate([0, -8, 0]) {
             cylinder(h = chim_h, r1 = chim_r + 0.6, r2 = chim_r, $fn = 28);
             translate([0, 0, chim_h])
                 cylinder(h = 1.6, r1 = chim_r + 1.6, r2 = chim_r + 0.8, $fn = 28);
         }
+}
+
+// A thin curling wisp of smoke off the chimney cap -- path_sweep of a
+// shrinking circular cross-section along a loosening spiral (Technique
+// 12's "one continuous swept mesh" pattern, radius/height driven by
+// named functions instead of hand-placed segments). Purely decorative,
+// welds by starting well inside the chimney cap's own solid material.
+module chimney_smoke() {
+    n = 40;
+    path = [for (i = [0 : n])
+        let(t = i / n, ang = t * 620, rise = t * 22, wander = sin(t * 300) * (1.5 + t * 3))
+        [wander * cos(ang) * 0.4, wander * sin(ang) * 0.4, rise]
+    ];
+    // scale= tapers the cross-section continuously along the path
+    // (Technique 12's proven pattern) instead of chaining segments.
+    translate(chim_base + [0, 0, chim_h + 0.8])
+        rotate([0, -8, 0])
+            path_sweep(circle(r = 1.7, $fn = 10), path, scale = 0.2, closed = false);
+}
+
+// ---------------------------------------------------------------------
+// Climbing vine + leaves -- one continuous swept stem winding up the
+// BACK of the house (angle 75-300, deliberately leaving the front third
+// clear of the door/window/sign per Technique 31's "negative space"
+// principle -- a house wrapped in vine on every side reads as busy, one
+// side climbing toward the roof reads as a real cottage detail).
+// ---------------------------------------------------------------------
+vine_ang0 = 75;
+vine_ang1 = 300;
+vine_z0   = 4;
+vine_z1   = 50;
+vine_n    = 60;
+function vine_pt(t) =
+    let(
+        ang = vine_ang0 + (vine_ang1 - vine_ang0) * t + 10 * sin(t * 540),
+        z   = vine_z0 + (vine_z1 - vine_z0) * t,
+        // sits proud of the real tapered wall surface at this height,
+        // embedding ~0.5mm in so the tube has real overlap to weld to
+        r   = stem_r_at(min(z, stem_h)) + 0.9
+    )
+    [r * cos(ang), r * sin(ang), z];
+vine_path = [for (i = [0 : vine_n]) vine_pt(i / vine_n)];
+
+module climbing_vine() {
+    path_sweep(circle(r = 1.4, $fn = 10), vine_path, closed = false);
+    // small oval leaves budding off the vine at intervals, alternating
+    // sides -- each a scaled sphere (Technique 17's shallow-dimple
+    // convexity, used here as a raised blob instead of a cut) positioned
+    // to overlap the vine tube by a real margin
+    for (i = [4 : 4 : vine_n - 4]) {
+        t = i / vine_n;
+        p = vine_pt(t);
+        side = (i % 8 == 0) ? 1 : -1;
+        outward = [p.x, p.y, 0] / norm([p.x, p.y, 0]);
+        leaf_center = p + outward * 2.4 + [0, 0, 1.2] * side;
+        translate(leaf_center)
+            rotate([0, 0, atan2(p.y, p.x)])
+                rotate([90, 0, 0])
+                    scale([1.7, 0.9, 0.4])
+                        sphere(r = 2.3, $fn = 14);
+    }
+}
+
+// ---------------------------------------------------------------------
+// Gill fringe -- a ring of small overlapping petal bumps right at the
+// cap's underside eave (its widest point), reusing the cap profile's own
+// sample point at that radius (Technique 3's "reuse the silhouette's own
+// samples" pattern) so it sits exactly on the real surface, not a
+// guessed coordinate.
+// ---------------------------------------------------------------------
+module gill_fringe() {
+    // the eave is the cap profile's own radius maximum -- find it instead
+    // of assuming it's cap_flare_r/cap_flare_z exactly (the smoothed
+    // spline's true max can drift slightly from the raw control point)
+    eave_i = search(max([for (p = cap_profile) p.x]), [for (p = cap_profile) p.x])[0];
+    eave = cap_profile[eave_i];
+    n_petals = 26;
+    for (k = [0 : n_petals - 1]) {
+        a = k * 360 / n_petals;
+        translate([eave.x * cos(a), eave.x * sin(a), eave.y - 1.0])
+            rotate([0, 0, a])
+                scale([1.0, 1.6, 0.55])
+                    sphere(r = 2.6, $fn = 12);
+    }
+}
+
+// ---------------------------------------------------------------------
+// Root tendrils -- curling roots at the foot of the house, hull-chains
+// of shrinking spheres (this shop's proven fox-tail/hull-chain pattern)
+// running from inside the stem's base out across the floor.
+// ---------------------------------------------------------------------
+module root_tendril(ang, curl) {
+    r0 = stem_r_at(2) - 2.5;   // starts embedded in the stem's base
+    // z tracks bead_r + a fixed 0.2mm margin, not an independent height
+    // curve -- a separately-chosen z formula let the SPHERE (center +/-
+    // its own radius) dip to z=-0.4 even though the center itself never
+    // went negative (found via a real bed-contact check after the first
+    // render: bed_contact_mm2 collapsed to 47 from 2325, and the mesh's
+    // true z-min was -0.366). Tying z to the radius directly guarantees
+    // every sphere's own lowest point stays above the floor.
+    pts = [for (i = [0:5])
+        let(t = i / 5, rr = r0 + t * 13, a = ang + curl * t * t, bead_r = 2.6 - t * 2.0)
+        [rr * cos(a), rr * sin(a), bead_r + 0.2, bead_r]
+    ];
+    for (i = [0 : len(pts) - 2])
+        hull() {
+            translate([pts[i].x, pts[i].y, pts[i].z]) sphere(r = max(0.5, pts[i][3]), $fn = 12);
+            translate([pts[i+1].x, pts[i+1].y, pts[i+1].z]) sphere(r = max(0.5, pts[i+1][3]), $fn = 12);
+        }
+}
+module root_tendrils() {
+    root_tendril(20, 22);
+    root_tendril(150, -18);
+    root_tendril(215, 16);
+    root_tendril(330, -20);
+}
+
+// ---------------------------------------------------------------------
+// Baby companion mushroom -- a small toadstool growing against the
+// house's own foot, off to the side of the door. Its stem plugs into the
+// house wall with real overlap (same "embed, don't touch" rule as every
+// other applied feature in this file); its cap is its own small dome.
+// ---------------------------------------------------------------------
+baby_ang = -58;
+baby_r0  = stem_r_at(2) - 3.5;
+module baby_mushroom() {
+    translate([baby_r0 * cos(baby_ang), baby_r0 * sin(baby_ang), 0]) {
+        cylinder(h = 9, r1 = 3.0, r2 = 2.3, $fn = 20);
+        translate([0, 0, 8.5])
+            scale([1, 1, 0.6])
+                sphere(r = 5.2, $fn = 24);
+        // two small dimples so it reads as the same toadstool family as
+        // the main roof, at a glance
+        translate([1.6, 0, 10.3]) sphere(r = 1.0, $fn = 10);
+        translate([-1.3, 1.2, 10.1]) sphere(r = 0.9, $fn = 10);
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -398,6 +536,11 @@ module house() {
         door_leaf();
         window_insert();
         sign_assembly();
+        chimney_smoke();
+        climbing_vine();
+        gill_fringe();
+        root_tendrils();
+        baby_mushroom();
     }
 }
 
