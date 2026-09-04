@@ -36,16 +36,25 @@ cap_flare_z  = 58;        // z of the cap's widest point
 cap_apex_z   = 90;        // z of the cap's rounded tip
 
 n_planks     = 14;        // vertical plank-board count around the stem
-plank_depth  = 0.65;      // absolute mm groove depth (Technique 5 rule)
+plank_depth  = 0.85;      // absolute mm groove depth (Technique 5 rule) --
+                          // deepened from 0.65 and given a crisper profile
+                          // (see plank_pts()) for better-defined boards
 
 door_w       = 12;        // door width at its base
 door_wall_h  = 13;        // door's straight-sided height before the arch
 door_z0      = 6;         // door's own base height above the floor
-door_leaf_in = 1.3;       // how far the door leaf sits recessed
+door_frame_d = 0.6;       // shallow surrounding frame reveal depth
+door_recess  = 1.3;       // deeper inner pocket depth where the leaf sits
+                          // -- both well under `wall` (2.2), so the door
+                          // is a relief in the solid wall, never a hole
+                          // through to the hollow interior (outdoor piece
+                          // -- no openings that let water reach inside)
 
 win_r        = 6.5;       // window radius
 win_z        = 24;        // window center height
 win_ang      = 46;        // window's angular position (door sits at 0)
+win_recess   = 1.4;       // same "shallow relief, never a through-hole"
+                          // rule as the door -- under `wall` (2.2)
 
 sign_w       = 17;        // hanging sign plank width
 sign_h       = 10;        // hanging sign plank height
@@ -90,9 +99,20 @@ cap_profile  = [for (p = house_profile) if (p.y >= stem_h - 0.01) p];
 // ---------------------------------------------------------------------
 // Plank texture -- vertical boards, angle-only groove (Technique 5).
 // Absolute-mm depth, margin-checked against the wall thickness below.
+// Refined from the original plain cosine dip: raising it to a power
+// sharpens the groove into a narrow reveal with flatter board FACES
+// between grooves (a real plank wall reads as flat boards with a crisp
+// seam, not a continuous corrugated wave), and a slow secondary wobble
+// (Technique 11's organic-irregularity trick) keeps the boards from
+// looking machine-uniform.
 // ---------------------------------------------------------------------
 function plank_pts(r) = [for (a = [0:6:354])
-    let(rr = r - plank_depth * (1 - abs(cos(a * n_planks / 2))))
+    let(
+        base   = 1 - abs(cos(a * n_planks / 2)),
+        sharp  = pow(base, 2.4),
+        wobble = 0.82 + 0.18 * sin(a * 2.3 + 7),
+        rr     = r - plank_depth * sharp * wobble
+    )
     [rr * cos(a), rr * sin(a)]
 ];
 
@@ -229,25 +249,29 @@ module climbing_vine() {
 }
 
 // ---------------------------------------------------------------------
-// Gill fringe -- a ring of small overlapping petal bumps right at the
-// cap's underside eave (its widest point), reusing the cap profile's own
-// sample point at that radius (Technique 3's "reuse the silhouette's own
-// samples" pattern) so it sits exactly on the real surface, not a
-// guessed coordinate.
+// Gill fringe / eave trim -- a ring of small overlapping petal bumps
+// right at the ROOFLINE (where the planked stem meets the cap), not at
+// the cap's own widest point further up. Moved here specifically to fix
+// "the roof looks like it's floating": the first version sat at the
+// cap's eave (16mm above the roofline), leaving a bald band of plain cap
+// material between the end of the siding and the first roof detail --
+// exactly the gap that reads as "the roof isn't attached." Sitting right
+// on the seam, this now doubles as a real fascia/trim board: siding
+// visibly runs right up to it, the roof visibly rests on it.
 // ---------------------------------------------------------------------
 module gill_fringe() {
-    // the eave is the cap profile's own radius maximum -- find it instead
-    // of assuming it's cap_flare_r/cap_flare_z exactly (the smoothed
-    // spline's true max can drift slightly from the raw control point)
-    eave_i = search(max([for (p = cap_profile) p.x]), [for (p = cap_profile) p.x])[0];
-    eave = cap_profile[eave_i];
-    n_petals = 26;
+    // First cap_profile sample at/above the roofline, not the profile's
+    // own radius maximum (Technique 3's "reuse the silhouette's own
+    // samples" pattern, just anchored to the seam instead of the eave).
+    trim_i = [for (i = [0 : len(cap_profile) - 1]) if (cap_profile[i].y >= stem_h - 0.01) i][0];
+    trim = cap_profile[trim_i];
+    n_petals = 30;
     for (k = [0 : n_petals - 1]) {
         a = k * 360 / n_petals;
-        translate([eave.x * cos(a), eave.x * sin(a), eave.y - 1.0])
+        translate([trim.x * cos(a), trim.x * sin(a), trim.y - 0.6])
             rotate([0, 0, a])
-                scale([1.0, 1.6, 0.55])
-                    sphere(r = 2.6, $fn = 12);
+                scale([1.0, 1.5, 0.5])
+                    sphere(r = 2.2, $fn = 12);
     }
 }
 
@@ -304,60 +328,93 @@ module baby_mushroom() {
 }
 
 // ---------------------------------------------------------------------
-// Door -- a rounded-arch cutter (Technique 9's hull()-prism, extended to
-// a stadium/arch shape), filled with a recessed planked leaf + knob.
+// Door -- a shallow two-stage recess (Technique 9's hull()-prism, extended
+// to a stadium/arch shape) cut into the SOLID wall thickness only -- never
+// through it. This is a hard requirement for an outdoor piece: no cut may
+// reach the hollow interior, or rain finds a seam straight into the
+// cavity. A wide shallow "frame reveal" plus a narrower, deeper "pocket"
+// gives a real recessed-door-in-a-frame look; the leaf sits in the
+// pocket, its own oversized edges biting into the frame reveal's
+// remaining (uncut-to-full-depth) material for the weld.
 // ---------------------------------------------------------------------
-// dw/dwh let the leaf be built ~1mm larger than the cutter on every side,
-// so it overlaps real wall material at the arch boundary instead of a
-// coincident face (Technique 4/8/39's "a flush face is not a weld" rule).
+door_top_z = door_z0 + door_wall_h + door_w/2;
+// Midpoint radius, not min/max of the endpoints -- the taper across the
+// door's own height is under 1mm, so a single flat reference plane stays
+// inside the wall band at both ends (verified numerically after v1).
+door_mid_r = stem_r_at((door_z0 + door_top_z) / 2);
+
 function door_arch_pts(dw = door_w, dwh = door_wall_h, base_drop = 0) = concat(
     [[-dw/2, -base_drop], [dw/2, -base_drop]],
     [for (a = [0:20:180]) [ (dw/2) * cos(a), dwh + (dw/2) * sin(a) ]]
 );
 
 module door_cutter() {
-    y0 = 6; y1 = stem_base_r + 4;   // through the whole wall, real margin
+    // Frame reveal: wider, shallow (door_frame_d deep).
     translate([0, 0, door_z0])
-        hull() for (p = door_arch_pts())
-            for (yy = [y0, y1]) translate([p.x, yy, p.y]) sphere(r = 0.01, $fn = 6);
+        hull() for (p = door_arch_pts(door_w + 3, door_wall_h + 1.5, base_drop = 0.8))
+            for (yy = [door_mid_r - door_frame_d, door_mid_r + 1.0])
+                translate([p.x, yy, p.y]) sphere(r = 0.01, $fn = 6);
+    // Inner pocket: the door's own footprint, deeper (door_recess).
+    translate([0, 0, door_z0])
+        hull() for (p = door_arch_pts(door_w, door_wall_h, base_drop = 0.5))
+            for (yy = [door_mid_r - door_recess, door_mid_r + 1.0])
+                translate([p.x, yy, p.y]) sphere(r = 0.01, $fn = 6);
 }
 
+// A thin raised architrave trim around the frame reveal was tried here
+// and cut: in isolation it rendered clean, but unioned into the full
+// assembly it produced a real degenerate sliver (a near-zero-volume,
+// 2-face fragment right at the frame reveal's own boundary -- a CGAL
+// precision artifact from two surfaces sitting suspiciously close
+// together, caught by re-checking watertightness on the full model, not
+// by eye). The frame reveal + deeper pocket + hinges + knob + plank
+// ridges already carry the "better door" detail on their own; this one
+// extra flourish wasn't worth reintroducing a real manifold risk for.
+
 module door_leaf() {
-    // Sits recessed door_leaf_in behind the outer wall surface at door
-    // height, thick enough to read as a real applied leaf, with 4 plank
-    // lines and a small round knob. Built ~1mm oversized vs. the cutter
-    // so its arch boundary bites into real, uncut wall material.
-    // world y spans [y_face - 2.4, y_face] -- front face at y_face,
-    // extending 2.4mm inward toward the hollow interior. Uses the
-    // SMALLER of the door's top/bottom real wall radius so the leaf
-    // never pokes past the tapered surface at either end.
-    door_top_z = door_z0 + door_wall_h + door_w/2;
-    // Midpoint radius, not min/max of the endpoints -- with the gentle
-    // taper above (<1mm across the door's own height) a flat leaf at the
-    // midpoint stays inside the wall band at both the top and bottom of
-    // the door, verified numerically after rendering.
-    y_face = stem_r_at((door_z0 + door_top_z) / 2) - door_leaf_in;
-    leaf_pts = door_arch_pts(door_w + 2, door_wall_h + 1, base_drop = 0.6);
-    leaf_t = 2.4;
+    // Front face sits well inside the pocket (recessed, per Scott's
+    // request -- never proud), back face reaches past the frame reveal's
+    // own cut depth into its still-solid backing for a real weld.
+    y_face = door_mid_r - 0.3;
+    leaf_t = 1.3;
+    leaf_pts = door_arch_pts(door_w, door_wall_h, base_drop = 0.5);
     union() {
         translate([0, y_face, door_z0])
             rotate([90, 0, 0])
                 linear_extrude(height = leaf_t)
                     polygon(leaf_pts);
         // round knob, offset toward one side like a real door
-        translate([door_w/2 - 3.2, y_face + 0.3, door_z0 + door_wall_h * 0.55])
-            rotate([90, 0, 0]) sphere(r = 1.1, $fn = 16);
+        translate([door_w/2 - 3.2, y_face + 0.4, door_z0 + door_wall_h * 0.55])
+            rotate([90, 0, 0]) sphere(r = 1.0, $fn = 16);
         // plank lines as RAISED ridges, not cut grooves -- a subtracted
-        // groove here produced real disconnected slivers (caught by a
-        // connected-component check on the exported STL, not by eye:
-        // four 0.0135cm3 fragments, each matching the groove cutter's
-        // own bbox exactly). A proud ridge is a plain union with the
-        // leaf, so it cannot detach the same way.
-        for (gx = [-door_w/2 + 2.4 : (door_w - 4.8)/3 : door_w/2 - 2.4])
+        // groove here produced real disconnected slivers in v1 (caught
+        // by a connected-component check on the exported STL, not by
+        // eye). A proud ridge is a plain union with the leaf, so it
+        // cannot detach the same way.
+        for (gx = [-door_w/2 + 2.2 : (door_w - 4.4)/4 : door_w/2 - 2.2])
             translate([gx, y_face + 0.01, door_z0])
                 rotate([90, 0, 0])
-                    linear_extrude(height = 0.5)
-                        square([0.7, door_wall_h + door_w/2 - 2], center = false);
+                    linear_extrude(height = 0.45)
+                        square([0.6, door_wall_h + door_w/2 - 1.5], center = false);
+        // two strap hinges on the side opposite the knob -- thin tapered
+        // straps with small rivet bumps, reaching from the leaf onto the
+        // surrounding frame reveal so they read as real applied hardware
+        // bridging door and frame, not just leaf decoration.
+        // mounted at -door_w/2-0.2 (not further out) so the strap's own
+        // outer edge stays inside the frame reveal's cut footprint --
+        // reaching past it would touch the plain (uncut) wall surface
+        // exactly flush, the same "coincident face" risk flagged
+        // throughout this file wherever two pieces are meant to weld.
+        for (hz = [door_z0 + 3.5, door_z0 + door_wall_h - 1])
+            translate([-door_w/2 - 0.2, y_face + 0.3, hz])
+                rotate([90, 0, 0]) {
+                    hull() {
+                        translate([0, 0, 0]) cylinder(h = 0.7, r = 1.1, $fn = 12);
+                        translate([4.6, 0, 0]) cylinder(h = 0.7, r = 0.7, $fn = 12);
+                    }
+                    translate([-0.3, 0, 0.75]) sphere(r = 0.55, $fn = 10);
+                    translate([2.6, 0, 0.75]) sphere(r = 0.5, $fn = 10);
+                }
     }
 }
 
@@ -366,11 +423,17 @@ module door_leaf() {
 // small flower-box ledge underneath.
 // ---------------------------------------------------------------------
 module window_cutter() {
-    translate([win_r * 0 , 0, 0])
+    // A shallow round POCKET, not a through-hole -- capped at win_recess
+    // deep, well under the 2.2mm wall, so the window never opens into
+    // the hollow interior (this piece lives outdoors; no seam anywhere
+    // may reach the cavity). Oversized radius (win_r+1.5) gives a visible
+    // reveal ring around the actual window opening.
+    wr = stem_r_at(win_z);
+    translate([0, 0, 0])
         rotate([0, 0, win_ang])
-            translate([0, 0, win_z])
+            translate([0, wr + 0.5, win_z])
                 rotate([90, 0, 0])
-                    cylinder(h = 2 * stem_base_r, r = win_r, center = true, $fn = 40);
+                    cylinder(h = win_recess + 0.5, r = win_r + 1.5, $fn = 40);
 }
 
 module window_insert() {
@@ -378,24 +441,28 @@ module window_insert() {
     // which would float the whole assembly past the true tapered surface.
     wr = stem_r_at(win_z);
     rotate([0, 0, win_ang]) {
-        // ONE solid disc, not a separate frame+pane at slightly different
-        // Y-depths -- the first version's three thin overlapping pieces
-        // produced real disconnected slivers (found via a real connected-
-        // component check on the exported STL, not by eye). A single
-        // disc, oversized past the cutter's own radius so its rim bites
-        // into real uncut wall material, is simpler and unambiguous: it
-        // spans from inside the wall to slightly proud of the surface.
-        win_y1 = wr + 0.6;   // front face, proud of the wall
-        win_y0 = wr - 2.6;   // back face, inside the wall/cavity boundary
-        translate([0, win_y1, win_z])
+        // ONE solid disc filling the pocket -- the same proven pattern
+        // this window used in v1 (a separate frame+pane+mullion at three
+        // slightly different Y-depths produced real disconnected slivers
+        // there, caught by a connected-component check). Repositioned
+        // here to sit RECESSED (front face behind wr) instead of proud,
+        // per Scott's "recess into the siding, not stick out" request.
+        // Outer radius (win_r+1.0) stays under the cutter's own radius
+        // (win_r+1.5), leaving a real 0.5mm lip of untouched original
+        // wall as a visible reveal around the recess. Back face embeds
+        // 0.3mm past the pocket's own cut floor into the still-solid
+        // backing for the weld -- never reaching the hollow interior
+        // (wall is 2.2mm; win_recess+0.3 stays well under that).
+        pane_y_front = wr - 0.5;
+        pane_y_back  = wr - win_recess - 0.3;
+        translate([0, pane_y_front, win_z])
             rotate([90, 0, 0])
-                cylinder(h = win_y1 - win_y0, r = win_r + 1.8, $fn = 40);
-        // cross mullions, raised proud of the disc's own front face --
-        // translate_y is 0.3 (not 0.5) past win_y1 so the mullion's own
-        // inner face embeds 0.2mm into the disc; a coincident face at
-        // exactly win_y1 was this window's last real floating fragment
-        // (0.021cm3, caught by the same connected-component check).
-        translate([0, win_y1 + 0.3, win_z])
+                cylinder(h = pane_y_front - pane_y_back, r = win_r + 1.0, $fn = 40);
+        // cross mullions, proud of the disc's own front face but capped
+        // at wr-0.2 (their outer/max-Y bound, since these cubes are
+        // center=true: translate_y +/- 0.5) -- 0.2mm recessed from the
+        // main wall surface, never sticking out past it.
+        translate([0, wr - 0.7, win_z])
             rotate([90, 0, 0]) {
                 cube([win_r * 2 - 1, 0.9, 1.0], center = true);
                 cube([0.9, win_r * 2 - 1, 1.0], center = true);
