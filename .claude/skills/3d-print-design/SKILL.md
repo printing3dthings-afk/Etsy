@@ -3922,6 +3922,64 @@ python3 tools/gcode_probe.py out.gcode --scan          # islands per layer
 python3 tools/gcode_probe.py out.gcode --layer-z 3.4 --plot paths.png
 ```
 
+### Correction (2026-09-04): the flat-wall control-test numbers above were wrong
+
+Extending this research to gears (Technique 46) needed the island-count check
+again, on a mesh gap of 0.15mm — and it came back fused. That contradicted the
+control table above, which said 0.15mm resolves. Chasing the contradiction
+found a real bug in `gcode_probe.py` itself, not in either print.
+
+**The rasterizer's dilation, at its default `px=0.15`, closes real gaps up to
+about 0.3mm** — comparable to the gap sizes this whole technique is built on
+measuring. Sweeping the same layer across `px` from 0.15 down to 0.02 on the
+original two-cube control does not converge smoothly; it flips between 1 and 2
+islands non-monotonically until `px` reaches about 0.06–0.04mm, where it
+stabilizes. That instability is the signature of a check operating at its own
+resolution limit, not a real physical effect — confirmed by measuring the
+actual toolpath centerlines directly (no rasterization at all): a modeled
+0.15mm gap prints with a real 0.57mm gap between bead centerlines, because
+each bead's own extrusion width (0.42mm here) holds the nozzle back from the
+true surface on both sides. There was never a physical reason for it to fuse.
+
+Re-swept the flat-wall control properly at `px=0.04` (now the tool's default,
+down from 0.15) with the true toolpath-gap cross-check added:
+
+| modelled gap | islands | true printed gap |
+|---|---|---|
+| 0.05 mm | 1 (fused) | 0.78 mm (merged into one wide bead) |
+| 0.08 mm | 1 (fused) | 0.78 mm |
+| **0.10 mm** | **2** | 0.52 mm |
+| 0.15 mm | 2 | 0.57 mm |
+| 0.20 mm | 2 | 0.62 mm |
+| 0.40 mm | 2 | 0.82 mm |
+
+**The real flat-wall fusion threshold for a 0.4mm nozzle at these settings is
+between 0.08mm and 0.10mm — not 0.15–0.20mm as first reported.** Once resolved,
+the true printed gap tracks `modelled_gap + one_extrusion_width` almost
+exactly (0.15 + 0.42 = 0.57, matched). Below the threshold the slicer doesn't
+leave a sliver at all; it merges the two beads into one deposit roughly
+`2 x extrusion_width` wide.
+
+**What this does and does not change.** Every real joint validated in
+Technique 42–44 — the reference centipede joint (0.198mm) and the rounded-rect
+slot prototype (0.175mm) — was re-checked at the corrected resolution and
+gives the identical island count it gave before, because both clearances sit
+comfortably above the corrected ~0.10mm threshold. The seahorse's spherical
+cup also still fails at the corrected resolution — more informatively than
+before: instead of one clean fused blob it fragments into 6 disconnected
+slivers (84.9/68.7/64.5/8.5/1.7/1.7 mm²), which is the fine-grained signature
+of a crescent void that's sub-bead-width almost everywhere except one tangent
+point. **Nothing about which sockets work changes.** What changes is that
+0.15–0.2mm clearances were never as close to the edge as this file claimed —
+there is more real margin in the measured ball-joint standard than reported.
+
+**The standing rule this adds to Technique 44's "slice it" rule: when an
+island count is close to 1 vs 2, or the finding is new, sweep `--px` down
+until the count stops changing before trusting it.** A single reading at
+whatever the tool's default happens to be is exactly the kind of unverified
+number this shop's rules exist to catch. `gcode_probe.py`'s default is now
+`px=0.06` (was 0.15) and `--px` is exposed on the CLI for exactly this sweep.
+
 ### Free bonus: real print time and cost, which we never had
 
 Sliced at 0.2mm / 3 walls / 15% gyroid, PLA at $20/kg:

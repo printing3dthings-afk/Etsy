@@ -62,7 +62,7 @@ def parse(path):
     return layers
 
 
-def islands(segs, width=0.42, px=0.15, window=None):
+def islands(segs, width=0.42, px=0.06, window=None, dilate=True):
     """Rasterise extrusions and count separate blobs of material."""
     from scipy import ndimage
     if not segs:
@@ -86,7 +86,8 @@ def islands(segs, width=0.42, px=0.15, window=None):
         cc = ((xs - lo[0]) / px).astype(int); rr = ((ys - lo[1]) / px).astype(int)
         ok = (rr >= 0) & (rr < shape[0]) & (cc >= 0) & (cc < shape[1])
         grid[rr[ok], cc[ok]] = True
-    grid = ndimage.binary_dilation(grid, ndimage.generate_binary_structure(2, 2), iterations=r)
+    if dilate:
+        grid = ndimage.binary_dilation(grid, ndimage.generate_binary_structure(2, 2), iterations=r)
     lab, n = ndimage.label(grid, structure=np.ones((3, 3)))
     areas = sorted((lab == i).sum() * px * px for i in range(1, n + 1))[::-1]
     return n, [round(v, 2) for v in areas[:12]]
@@ -116,6 +117,7 @@ def main():
     ap.add_argument("--layer-z", type=float, default=None)
     ap.add_argument("--window", default=None, help="cx,cy,half in mm")
     ap.add_argument("--scan", action="store_true", help="island count for every layer")
+    ap.add_argument("--px", type=float, default=0.06, help="raster pixel size in mm -- coarser than ~0.1mm can falsely merge a real gap under ~0.15mm (found on a gear-mesh print, see SKILL.md)")
     ap.add_argument("--plot", default=None, help="write a PNG of this layer's toolpaths")
     a = ap.parse_args()
     if a.summary:
@@ -128,11 +130,11 @@ def main():
     win = tuple(float(v) for v in a.window.split(",")) if a.window else None
     if a.scan:
         for z, segs in layers[::max(len(layers) // 25, 1)]:
-            n, areas = islands(segs, window=win)
+            n, areas = islands(segs, window=win, px=a.px)
             print(f"   z={z:7.2f}  islands={n:3d}  areas={areas[:6]}")
     else:
         best = min(layers, key=lambda t: abs(t[0] - a.layer_z))
-        n, areas = islands(best[1], window=win)
+        n, areas = islands(best[1], window=win, px=a.px)
         print(f"   z={best[0]:.2f}  islands={n}  areas(mm2)={areas}")
         if a.plot:
             import matplotlib; matplotlib.use("Agg")
