@@ -43,7 +43,14 @@ sock_depth  = 3.4;                  // engages 3.4 of the 3.6mm stem
 // ---------- derived Z stack (nothing below here is eyeballed) ----------
 bk_floor    = 1.6;
 well_z0     = bk_floor;
-well_h      = mx_below + mx_pins + 0.6;
+// Body clearance ONLY. The pins' 3.3mm used to be added to the whole well,
+// which made the basket 3.3mm taller than it needed to be everywhere -- and
+// the reference steamer is a shallow dish, not a drum. Cherry's own footprint
+// drawing shows the pins inside a ~13x9mm patch near the centre, so they get
+// their own small relief through the floor instead.
+well_h      = mx_below + 0.6;
+pin_slot    = [13.0, 9.0];          // covers the 1-pole footprint incl. fixation pins
+pin_slot_y  = 2.5;
 plate_z0    = well_z0 + well_h;             // 10.5  plate underside
 plate_z1    = plate_z0 + mx_plate_t;        // 12.0  plate top; housing sits here
 housing_top = plate_z1 + mx_above;          // 18.6
@@ -53,36 +60,49 @@ rim_pressed = bao_rim_z - mx_travel;        // 14.8  cap rim fully pressed
 
 // ---------- steamer basket ----------
 bk_r        = 17.6;                 // outer radius at the slat valleys
-bk_bore     = 15.5;                 // upper bore -- the bun nests INTO this
+bk_bore     = 15.60;                // upper bore. The bun's rim is 15.2, so the
+                                    // visible gap around it is 0.4mm -- the
+                                    // previous 14.6 rim in a 15.5 bore left a
+                                    // 0.9mm ring you could see down into, which
+                                    // the reference does not have.
 bk_well     = 12.0;                 // lower well, clears the 11.03 half-diag
 // A real bamboo steamer is a smooth drum with MANY fine scribed lines and a
 // distinct proud collar at the rim -- not a stack of fat rings. The first
 // pass used 4 deep cosine swells and read as a screw thread; counted off the
 // reference photo, the real thing has 8 shallow incised grooves between a
 // plain base band and that collar.
-n_slat      = 8;
-slat_depth  = 0.45;                 // incised INWARD, narrow -- a scribed line
-slat_w      = 0.9;                  // groove width at the surface
-band_lo     = 3.6;                  // plain base band below the slats
-band_hi     = 14.4;                 // slats stop here; collar starts
+// Measured off the reference photo rather than spread evenly: the collar is
+// the DOMINANT feature, about a third of the whole height, with a shorter
+// band of fine lines below it and a plain foot. Spreading 8 grooves over the
+// full drum -- the previous version -- inverts that and reads as a spool.
+n_slat      = 6;
+slat_depth  = 0.42;                 // incised INWARD, narrow -- a scribed line
+slat_w      = 0.85;
+band_lo     = 2.4;                  // plain foot below the lines
 collar_r    = 18.35;                // the rim stands proud of the drum
-collar_z    = 15.2;                 // top of the 40deg flare up to the collar
+collar_top_r = 17.55;               // bullnose: the collar rolls over at the top
 
 // The rim sits 0.6mm under the bun's own rim at rest, so the bun visually
 // NESTS in the steamer instead of perching on it with the grey switch
 // showing through the gap. It can go this high because the bun descends
 // INSIDE the bore -- the only real floor is the plate, and the bun's rim
 // only ever reaches rim_pressed, which is 2.8mm above it.
-bk_h        = bao_rim_z - 0.6;
+bk_h        = bao_rim_z - 0.5;
+band_hi     = bk_h - 5.6;           // lines stop here; collar owns the rest
+collar_z    = bk_h - 4.8;           // top of the 40deg flare into the collar
 
 // ---------- bao ----------
-bao_r       = 14.6;                 // rim radius; peak 15.0 at the belly
+bao_r       = 15.20;                // rim radius, and the WIDEST point. The
+                                    // belly bulge is gone: the reference bun's
+                                    // side drops straight into the steamer, and
+                                    // a bulge below the rim is also what forced
+                                    // the bore wide enough to show a gap ring.
 bao_h       = 16.6;                 // 30.0 wide x 16.6 tall = 1.81:1. A real
                                     // bao is a squat dome, not a ball --
                                     // Technique 31: state the ratio, don't
                                     // eyeball it.
 n_pleat     = 14;
-pleat_amp   = 1.50;                 // 10% of radius: Technique 52's 8-20% band.
+pleat_amp   = 1.28;                 // 8.4% of radius, the low end of Technique 52's
                                     // RAISED outward, never cut in, so no wall
                                     // is ever thinned (Technique 52's "we model
                                     // the wall, they don't" finding).
@@ -97,6 +117,10 @@ echo(str("plate_top=", plate_z1, " housing_top=", housing_top,
 ring_hole   = 4.2;                  // a split ring is a DOUBLED wire: 4-5mm
 ring_wall   = 3.0;                  // >=3mm of solid around it
 ring_t      = 4.0;
+// Sits low enough that the lug's own outer radius stays under the rim. It was
+// standing 1.5mm proud of the collar, which made the whole basket measure and
+// read taller than the shallow dish in the photo.
+tab_z       = bk_h - (ring_hole / 2 + ring_wall) - 0.5;
 
 // ============================================================
 // BAO -- lofted dome, gathered pleats, hollow underside, MX socket
@@ -107,12 +131,12 @@ ring_t      = 4.0;
 // and fails EVERY boolean afterwards.
 bao_ctrl = [
     [bao_r,  0],
-    [15.0,   2.6],
-    [14.6,   6.4],
-    [13.0,  10.0],
-    [9.6,   13.2],
-    [5.0,   15.4],
-    [1.2,   bao_h],
+    [15.10,  2.8],
+    [14.70,  6.4],
+    [13.00, 10.0],
+    [9.60,  13.2],
+    [5.00,  15.4],
+    [1.20,  bao_h],
 ];
 bao_prof = smooth_path(bao_ctrl, method="corners", size=2.6, splinesteps=14);
 
@@ -300,8 +324,10 @@ function slat_profile() = concat(
       : k == 1 ? [bk_r - slat_depth, gz]
       :          [bk_r, gz + slat_w / 2]],
     // 40deg flare out to the proud rim collar -- a square step here would be
-    // a horizontal overhang all the way round
-    [[bk_r, band_hi + 0.4], [collar_r, collar_z], [collar_r, bk_h], [0, bk_h]]
+    // a horizontal overhang all the way round -- then a bullnose roll at the
+    // very top, which is what the photographed rim actually does
+    [[bk_r, band_hi + 0.4], [collar_r, collar_z], [collar_r, bk_h - 0.8],
+     [collar_top_r, bk_h], [0, bk_h]]
 );
 
 module basket_outer() {
@@ -328,26 +354,36 @@ module floor_weave() {
 module ring_tab() {
     tab_x = bk_r + ring_hole / 2 + ring_wall - 2.6;
     hull() {
-        translate([bk_r - 2.0, 0, bk_h - ring_t / 2 - 1.6])
+        translate([bk_r - 2.0, 0, tab_z])
             rotate([90, 0, 0]) cylinder(h = ring_t, r = 3.4, center = true, $fn = 40);
-        translate([tab_x, 0, bk_h - ring_t / 2 - 1.6])
+        translate([tab_x, 0, tab_z])
             rotate([90, 0, 0])
                 cylinder(h = ring_t, r = ring_hole / 2 + ring_wall, center = true, $fn = 56);
     }
 }
 
+// The switch's pins hang 3.3mm below its body. Rather than sink the whole
+// basket to clear them, they get this slot through the floor.
+module pin_relief() {
+    translate([0, pin_slot_y, -1])
+        linear_extrude(height = bk_floor + 2)
+            offset(r = 2) offset(r = -2)
+                square([pin_slot.x, pin_slot.y], center = true);
+}
+
 module ring_bore() {
     tab_x = bk_r + ring_hole / 2 + ring_wall - 2.6;
-    translate([tab_x, 0, bk_h - ring_t / 2 - 1.6])
+    translate([tab_x, 0, tab_z])
         rotate([90, 0, 0])
             cylinder(h = ring_t + 2, r = ring_hole / 2, center = true, $fn = 48);
 }
 
 logo_depth = 0.6;
-logo_size  = 7.4;   // fitted to THIS part's real 35mm base and re-measured
+logo_size  = 6.2;   // fitted to THIS part's real 35mm base and re-measured
                     // off the exported mesh -- never copied from another model
 module brand_mark() {
-    translate([0, 0, -0.5])
+    // Pushed to -Y so it never collides with the pin relief slot at +2.5Y
+    translate([0, -11.0, -0.5])
         linear_extrude(height = logo_depth + 0.5)
             mirror([0, 1, 0])
                 text("OBC", size = logo_size, font = "Caveat:style=Bold",
@@ -364,6 +400,7 @@ module basket() {
                 cylinder(h = bk_h - plate_z1 + 1, r = bk_bore, $fn = 160);
             translate([-mx_cutout/2, -mx_cutout/2, plate_z0 - 0.02])
                 cube([mx_cutout, mx_cutout, mx_plate_t + 0.04]);
+            pin_relief();
             ring_bore();
             brand_mark();
         }
