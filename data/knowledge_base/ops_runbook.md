@@ -27246,3 +27246,96 @@ hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_back
 
 ## 2026-08-25 — hub_db_state.json backup is stale
 hourly health loop found the hub.db snapshot at /home/user/Etsy/data/hub_db_backups/hub_db_state.json is 16.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-09-05 — Frank could not read any of this shop's own skill docs, and CLAUDE.md has never been in the image
+**Symptom:** Scott asked whether Frank knows what Claude Code has learned about 3D
+printing. It did not. `.claude/skills/3d-print-design/SKILL.md` is 300KB of 53
+numbered techniques — every one a real measured finding or a real bug from building
+actual models — and Frank had no route to it at all.
+
+**Root cause (two separate layers):**
+1. `_resolve_kb_doc()` in main.py hard-restricts reads to `data/knowledge_base/*.md`
+   plus a special case for CLAUDE.md. Skills live under `.claude/skills/`, which
+   Claude Code loads and Frank cannot reach. `_kb_docs()`/`_kb_search()` had the same
+   blind spot, so the docs were neither listed nor searchable.
+2. **`.dockerignore`'s `*.md` rule excludes CLAUDE.md from every image ever built
+   here.** A single `*` does not cross `/` (that is why `**/*.go`-style patterns
+   exist), so the rule catches root-level markdown only. `_resolve_kb_doc` has an
+   explicit CLAUDE.md branch and Frank's system prompt tells it to read that file for
+   the full printer specs, quality-gate rules, product catalog and autonomy
+   boundaries — in the container that call can only ever have returned 404. This is
+   the **third** time this file's blanket rules have swallowed a runtime read path;
+   see its own two 2026-07-09 incidents.
+
+**Fix:** `_KB_SKILL_DOCS` allowlist exposes `skill_3d_print_design.md` and
+`skill_verify_etsy_mutations.md` through the existing list/read/search paths (an
+allowlist, not a glob — most of `.claude/skills/` is vendored third-party web tooling
+that would bury the real docs). `.dockerignore` gained `!CLAUDE.md` and
+`!.claude/skills/**/SKILL.md`. System prompt and tool description updated so Frank
+knows to reach for the 3D doc first on any print-design question. Regression test:
+`tests/test_kb_skill_docs.py`, which also pins the `.dockerignore` negations.
+
+**Still to confirm after the next deploy:** `GET /api/kb/CLAUDE.md` and
+`GET /api/kb/skill_3d_print_design.md` should both return content, not 404. The
+CLAUDE.md 404 was diagnosed from Docker's documented glob semantics, not observed
+live — there is no Docker daemon in the dev container and no APP_SECRET_TOKEN to
+call production with. Verify it rather than assuming.
+
+
+## 2026-09-05 — Scheduled coloring run
+============================================================
+ [SCHEDULED COLORING] Generating Pack: 'adult' (Position 1/3)
+============================================================
+
+  → AD001: Gothic Cathedral Interior
+  ⚠ AD001: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD001 generation failed
+  → AD002: Steampunk Clockwork City
+  ⚠ AD002: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD002 generation failed
+  → AD003: Enchanted Mushroom Forest
+  ⚠ AD003: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD003 generation failed
+  → AD004: Day of the Dead Sugar Skull
+  ⚠ AD004: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD004 generation failed
+  → AD005: Victorian Botanical Garden
+  ⚠ AD005: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD005 generation failed
+  → AD006: Underwater Coral Kingdom
+  ⚠ AD006: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD006 generation failed
+  → AD007: Japanese Temple Garden
+  ⚠ AD007: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD007 generation failed
+  → AD008: Haunted Victorian Mansion
+  ⚠ AD008: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD008 generation failed
+  → AD009: Art Nouveau Floral Woman
+  ⚠ AD009: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD009 generation failed
+  → AD010: Celestial Map of the Cosmos
+  ⚠ AD010: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD010 generation failed
+  → AD011: Moroccan Tile Patterns
+  ⚠ AD011: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD011 generation failed
+  → AD012: Dragon's Hoard
+  ⚠ AD012: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD012 generation failed
+  → AD013: Apothecary Cabinet
+  ⚠ AD013: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD013 generation failed
+  → AD014: Peacock in Full Display
+  ⚠ AD014: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD014 generation failed
+  → AD015: Mechanical Butterfly Collection
+  ⚠ AD015: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-text/wrong-subject checks.
+  ✗ AD015 generation failed
+  → AD016: Ancient Library
+  ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+
+## 2026-09-05 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes, coloring pages printable digital download, 3d print svg file bundle.

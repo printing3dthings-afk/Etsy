@@ -54,6 +54,24 @@ __pycache__/
 *.md
 !data/knowledge_base/*.md
 
+# Found 2026-09-05, and it is the THIRD time this file's blanket rules have
+# swallowed a doc the server actively tries to read at runtime (see the two
+# 2026-07-09 incidents documented above).
+#
+# `*.md` matches root-level markdown only -- a single `*` does not cross `/`,
+# which is why `**/*.go`-style patterns exist -- so CLAUDE.md has been excluded
+# from every image ever built here. main.py's `_resolve_kb_doc` special-cases
+# "CLAUDE.md" and Frank's own system prompt tells it to read that file for the
+# full 3D printer specs, quality-gate rules, product catalog and autonomy
+# boundaries. In the container that call can only ever have 404'd.
+#
+# The `.claude/skills/**` line is belt-and-braces: by the same root-only rule
+# those nested SKILL.md files should already survive `*.md`, but this file's
+# own history says do not bet a runtime read path on a subtle glob semantic.
+# Both are a few hundred KB against the ~4GB this file exists to carve down.
+!CLAUDE.md
+!.claude/skills/**/SKILL.md
+
 # Local DB (never ship into the image)
 **/hub_data/
 *.db
