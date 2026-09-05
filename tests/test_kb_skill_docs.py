@@ -9,7 +9,7 @@ Claude Code loads and Frank had no route to at all -- `_resolve_kb_doc` hard
 These tests pin the three things that had to be true for that to be fixed, and
 one that was found while fixing it.
 """
-import os, sys, tempfile
+import os, re as _re, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -89,6 +89,44 @@ def test_dockerignore_ships_what_the_server_reads():
           "special-cases it -- .dockerignore needs `!CLAUDE.md`")
     check(any(r.startswith("!.claude/skills") for r in rules),
           ".dockerignore has no negation re-including the skill docs Frank now reads")
+
+
+def test_suite_never_writes_to_the_real_runbook():
+    """No test may append to the git-tracked ops_runbook.md.
+
+    Found 2026-09-05: test_health_check_reap and test_health_check_broadened
+    exercise the escalation paths on purpose, and _append_ops_runbook_entry()
+    writes to _OPS_RUNBOOK_PATH -- which is _volume_or_local(...), so with no
+    volume mounted it falls back to the real data/knowledge_base copy. A suite
+    run put eight fabricated incidents (TESTCRASH, TESTHUNG, a /tmp/... volume)
+    into the document Frank reads as ground truth when Scott asks why something
+    broke. Any test that can reach that writer must repoint _OPS_RUNBOOK_PATH
+    at a tempfile first.
+    """
+    # Reaching the writer means calling something that appends, directly or via
+    # the health loop. A bare "_escalate" substring was too loose on the first
+    # pass -- it matched a test NAMED test_escalates_..., which writes nothing.
+    reaches = ("_append_ops_runbook_entry(", "server._escalate", "_health_check_iteration(")
+    # Two valid isolations: repoint the path, or mock the writer outright.
+    # Matched against CODE only. The first version of this check searched the
+    # raw file text, so the explanatory comment naming _OPS_RUNBOOK_PATH was
+    # enough to satisfy it -- deleting the actual assignment left the guard
+    # silently green. Verified by deleting it and watching this fail.
+    isolates = (_re.compile(r"^\s*server\._OPS_RUNBOOK_PATH\s*=", _re.M),
+                _re.compile(r'patch\.object\(\s*server\s*,\s*"_append_ops_runbook_entry"'))
+    for path in sorted((ROOT / "tests").glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue  # this file names the patterns it searches for
+        src = path.read_text()
+        if not any(r in src for r in reaches):
+            continue
+        code = "\n".join(ln for ln in src.splitlines()
+                         if not ln.lstrip().startswith("#"))
+        check(any(pat.search(code) for pat in isolates),
+              f"{path.name} can reach the ops_runbook writer but neither repoints "
+              "server._OPS_RUNBOOK_PATH at a tempfile nor mocks "
+              "_append_ops_runbook_entry — it will append test fixtures to the "
+              "real git-tracked doc Frank reads as ground truth")
 
 
 def run() -> None:
