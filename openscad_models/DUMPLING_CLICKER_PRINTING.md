@@ -133,6 +133,17 @@ retail on 80-90% margins; the binding cost here is the switch, not the print.
 - **Maker's mark**: "OBC" engraved into the basket's underside, 15.46mm wide
   = 44% of the 35.2mm base, inside the 35–45% standing target, and its
   recess floor was confirmed to physically exist (2954 vertices on the plane).
+- **The four-colour split will actually print in four colours** — a separate
+  question from whether the split is geometrically correct, and checked with
+  `tools/inlay_probe.py` (Technique 53). Per-layer region width against one
+  0.42mm extrusion: eyes+smile 6 thin layers of 112 holding 0.2% of the
+  part's volume, blush 0 of 44, highlight 2 of 30 holding 0.4%. Every thin
+  layer is a top/bottom cap sliver — none is caused by one inlay crowding
+  another, and the highlight's z-range contains zero of them.
+- **Socket wall at the cross ARM TIP: 0.594mm** (not the 0.69mm across the
+  flat this file and the .scad both used to claim). A real FDM-optimised MX
+  keycap with ~9.8k downloads measures 0.628mm the same way, so this is
+  within 6% of a proven print and 1.4 extrusions wide.
 
 ## Real bugs caught during the build, for whoever touches this next
 - **The eye dimples punched straight through into the hollow cavity.** The
@@ -155,6 +166,17 @@ retail on 80-90% margins; the binding cost here is the switch, not the print.
   have bottomed out on the floor and held it 2.7mm proud of the plate. Caught
   only by point-containment testing three coordinates inside the intended
   slot; nothing visual would have shown it.
+- **Growing the eye highlight "to make it print better" made it worse.**
+  At r=1.38 it gained sliver layers of its own AND closed to 0.24mm of the
+  eye's outline, which would have dropped a ring of eye colour too thin to
+  print — a white notch bitten out of the black eye. Fixed by moving it
+  inboard (3.3° offset instead of 5.0°) at r=1.18, not by resizing. A
+  highlight is bounded by the ring of colour it sits inside.
+- **Three parts were once overwritten with garbage by `openscad` run without
+  `OPENSCADPATH`.** It warns that it cannot find `BOSL2/std.scad`, then
+  carries on ignoring every BOSL2 module and writes a valid-looking STL. The
+  only tell was the file size collapsing from 8.0MB to 0.3MB. Render through
+  `tools/openscad_render.py`, or export `OPENSCADPATH=assets/openscad_libs`.
 - **The keyring lug stood 1.5mm above the rim**, which made the basket both
   measure and read taller than the dish in the photo. Its Z is now derived
   from its own outer radius rather than set by hand.

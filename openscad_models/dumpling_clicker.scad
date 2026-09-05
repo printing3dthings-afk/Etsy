@@ -34,7 +34,8 @@ mx_travel   = 4.0;                  // full travel
 // Cherry's keycap slot spec is a 4.1mm cross with 1.17mm arms. An FDM hole
 // prints UNDER size, so it is opened by sock_fit. Technique 47: the
 // best-selling real clicker ships two tolerances instead of betting on
-// one -- so does this (see dumpling_clicker_bao_loose.scad).
+// one -- so does this. The loose bun is not a second source file, it is this
+// one re-rendered with -D sock_fit=0.22.
 sock_fit    = 0.12;
 sock_span   = 4.10 + sock_fit;
 sock_arm    = 1.17 + sock_fit;
@@ -185,7 +186,14 @@ module cavity_solid() {
 // as the cap travels, so its lower section is slender (5.6mm dia, the same
 // as a real injection-moulded MX keycap) and only as long as the travel
 // needs. It thickens immediately above that, so the thin section is short.
-post_r_lo   = 2.80;                 // 0.69mm wall at the cross arm tips
+// 2026-09-05: this used to be commented "0.69mm wall at the cross arm tips".
+// That was the wall across the cross's FLAT (2.80 - 4.22/2). The thin spot is
+// the arm TIP CORNER, at radius sqrt(2.11^2 + 0.645^2) = 2.206, so the real
+// wall is 0.594mm -- confirmed by sectioning the exported mesh. Measure a
+// cross socket at the arm tip, never across the flat. Left at 2.80: a real
+// FDM-optimised MX cap with ~9.8k downloads measures 0.628mm the same way,
+// so 0.594 is within 6% of a proven print and is 1.4 extrusions wide.
+post_r_lo   = 2.80;                 // 0.594mm wall at the cross arm tips
 post_r_hi   = 5.20;
 post_lo_h   = 5.0;
 post_cone_h = 2.2;
@@ -275,10 +283,26 @@ module blush_cut() { difference() { blush_raw(); eye_cut(); } }
 // as well as from the body -- otherwise the eye and the highlight would both
 // own it. On a cream bun this can simply be assigned the body filament and
 // costs no extra AMS slot; on the blue bun it wants white.
+// Sized against a real threshold, not by eye. A flush colour inlay only gets
+// its own filament where its region on a given LAYER is at least one
+// extrusion wide (0.42mm on the 0.4mm profile) -- anywhere narrower, the
+// slicer merges it into the body and the colour just disappears.
+//
+// Two things measuring this taught me, both counter-intuitive:
+//   - The MINIMUM layer width of any curved inlay is always near zero, because
+//     its topmost and bottommost layers are slivers by geometry. That is not a
+//     defect and cannot be designed away; what matters is the FRACTION of
+//     layers below one extrusion (4% here), not the minimum.
+//   - Growing this dot to r=1.38 made things WORSE, not better: it added
+//     sliver layers of its own AND pushed its edge to within 0.24mm of the
+//     eye's outline, which would have left a sub-extrusion sliver of black
+//     that vanishes -- a white notch breaking the eye's edge. A highlight is
+//     bounded by the ring of colour it has to sit inside, not by its own
+//     printability.
 module shine_cut() {
     for (s = [-1, 1])
-        translate(face_pos(s * 17 - s * 5.0, eye_z + 1.25, 0.50))
-            sphere(r = 1.15);
+        translate(face_pos(s * 17 - s * 3.3, eye_z + 1.35, 0.55))
+            sphere(r = 1.18);
 }
 
 // Everything the bun is, before any colour split -- the shell, the cavity,

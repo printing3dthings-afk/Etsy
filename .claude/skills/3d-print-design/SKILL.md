@@ -5179,3 +5179,104 @@ form. Recurring, directly reusable:
   pitch, read off a real reference mesh.
 
 Both need `trimesh` + `shapely` (already present). Neither costs an API call.
+
+---
+
+## Technique 53 — A flush colour inlay can pass every geometry check and still print in one colour (2026-09-05)
+
+Technique 39's flush-inlay method has two mandatory tests: the parts must
+not overlap (`intersection(partA, partB)` empty) and must leave no gap
+(`gross - all parts` empty). The dumpling clicker's four-colour face passed
+both, every mesh watertight, every component count right — and **none of
+that says the colours will actually appear.**
+
+The slicer decides that, not the geometry. On each layer it has to lay a
+bead of the inlay's filament, and a bead is one extrusion wide (0.42mm on
+the 0.4mm profile). Where the inlay's region on a layer is narrower than
+that, there is nothing it can print, so it merges the region into the body
+and **the colour silently disappears** — no warning, no error, just a plain
+bun coming off a four-filament print.
+
+`tools/inlay_probe.py` measures it: slice the part at real layer heights and
+report each layer's region as `2*area/perimeter`, the width of the
+equivalent strip an extrusion has to fit inside.
+
+### Read `frac_thin`, never `min_width`
+
+The minimum layer width of any curved inlay is always near zero. Its
+topmost and bottommost layers are slivers **by geometry** — that is what a
+sphere or a lens does when you slice it. It is not a defect and it cannot
+be designed away. Chasing `min_width` up is how you break a design that was
+already fine.
+
+The number that matters is the **fraction of layers** below one extrusion,
+and the share of the part's volume sitting in them:
+
+| part | layers | thin | `frac_thin` | `vol_thin` | median width |
+|---|---|---|---|---|---|
+| eyes + smile | 112 | 6 | 5.4% | **0.2%** | 1.032mm |
+| blush | 44 | 0 | 0% | 0% | 1.788mm |
+| highlight | 30 | 2 | 6.7% | **0.4%** | 0.987mm |
+
+Under ~5% of layers and a `vol_thin` near zero is fine. All six thin eye
+layers were confirmed to be cap slivers — four in the eye's own top band,
+two on the smile — with **zero** in the highlight's z-range, i.e. none
+caused by one inlay crowding another.
+
+### The regression that produced this rule
+
+The highlight looked marginal by eye at r=1.15, so it was grown to r=1.38
+"to make it print better." That made things worse two ways at once:
+
+1. A bigger sphere has a **taller** cap band, so it gained sliver layers of
+   its own — the opposite of the intent.
+2. It closed to **0.24mm** of the eye's outline. That leaves a ring of eye
+   colour under one extrusion wide, which the slicer drops — reading as a
+   white notch bitten out of the edge of the black eye.
+
+**A highlight is bounded by the ring of colour it sits inside, not by its
+own printability.** Fixed by repositioning instead of resizing: r=1.18 at a
+3.3° offset from the eye's centre rather than 5.0°, which moves it inboard
+and keeps a full ring of eye around it. `inlay_probe.py --near` reports the
+closest approach between every pair of parts for exactly this check; a pair
+that legitimately shares a boundary reports 0.0 and is not a failure.
+
+### Measure a cross socket at the arm TIP, not across the flat
+
+Separate bug found in the same pass, in a comment rather than in geometry.
+The dumpling clicker's socket post was documented as having a "0.69mm wall
+at the cross arm tips." That is the wall across the cross's **flat**
+(`post_r - span/2`). The thin spot is the arm tip **corner**, at radius
+`sqrt((span/2)^2 + (arm/2)^2)` — for a 4.22 × 1.29 socket that is 2.206mm,
+so the real wall is **0.594mm**, confirmed by sectioning the exported mesh.
+
+Left as-is rather than "fixed": a real FDM-optimised MX keycap with ~9.8k
+downloads measures **0.628mm** the same way, so 0.594 is within 6% of a
+proven print and is still 1.4 extrusions wide. Worth knowing for the next
+socket — and worth noting the reference's cross bore is **asymmetric**
+(4.16 × 4.04 against Cherry's 4.10 nominal) because it prints on-end, so
+one axis gets elephant-foot compensation and the other does not. A socket
+whose axis is vertical has the whole cross in-layer and should stay
+symmetric; do not copy an on-end model's asymmetry into an upright one.
+
+### Two traps that cost time, recorded so they don't again
+
+- **`openscad` without `OPENSCADPATH` fails almost silently.** It prints
+  `WARNING: Can't open include file 'BOSL2/std.scad'` and then *keeps
+  going*, ignoring every BOSL2 module, and writes a plausible-looking STL
+  that is wrong. Three parts were overwritten with garbage this way before
+  the size drop (8.0MB → 0.3MB) gave it away. Always render via
+  `tools/openscad_render.py`, or set
+  `OPENSCADPATH=assets/openscad_libs` explicitly.
+- **PrusaSlicer centres the part on the bed.** Checking generated G-code for
+  extrusion near a feature at the model's origin finds nothing, because the
+  part is now at X 100.0, Y 99.6. Re-run the check against the part's actual
+  bed position before concluding a feature produces no toolpath.
+
+### Tool shipped
+
+`tools/inlay_probe.py` — per-layer region width for every part of a
+multi-colour split, plus `--near` for closest approach between parts. Needs
+`trimesh` + `shapely`; no API call. **Run it on every flush-inlay model
+before export** — Technique 39's two tests prove the split is *correct*,
+this one proves it is *printable*.
