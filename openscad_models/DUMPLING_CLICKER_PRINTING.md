@@ -4,11 +4,52 @@ A kawaii bao bun keycap that presses a **real Cherry MX switch**, seated in a
 bamboo steamer basket with a keyring tab. Two printed parts plus one
 off-the-shelf switch — the switch is the click; nothing printed has to flex.
 
-| File | What it is |
-|---|---|
-| `dumpling_clicker_basket.3mf` / `.stl` | steamer basket, switch plate, keyring tab |
-| `dumpling_clicker_bao.3mf` / `.stl` | the bun — **standard socket fit** |
-| `dumpling_clicker_bao_loose.3mf` / `.stl` | the bun — **loose socket**, if the first is too tight |
+| File | What it is | Filament |
+|---|---|---|
+| `dumpling_clicker_basket` | steamer basket, switch plate, keyring tab | bamboo / tan |
+| `dumpling_clicker_bao` | the bun — **standard socket fit** | bun colour |
+| `dumpling_clicker_bao_loose` | the bun — **loose socket**, if the first is tight | bun colour |
+| `dumpling_clicker_bao_eyes` | eyes + smile, one flush inlay | **black** |
+| `dumpling_clicker_bao_blush` | the two cheeks | **pink** |
+| `dumpling_clicker_bao_shine` | the two catchlights | **white** |
+
+Each ships as both `.3mf` (use these — real mm units, ~1/13th the size) and `.stl`.
+
+## The face is real colour, not a painted dimple
+
+The eyes, smile, blush and catchlights are **separate solids that exactly
+fill their own recesses in the bun**, so the printed surface stays smooth and
+the face is purely a filament change (Technique 39's flush-inlay method).
+
+- **Multi-colour (AMS):** load all four bun parts as one object in Bambu
+  Studio and assign bun / black / pink / white. Four slots — exactly one AMS
+  unit. On a cream or white bun the catchlight can share the bun's filament,
+  dropping it to three.
+- **Single colour:** print `dumpling_clicker_bao` alone and skip the three
+  inlays. The face then reads as recessed dimples — still a face, carved
+  rather than coloured.
+
+Verified with the two tests that actually matter for a colour split, both
+returning empty geometry:
+- `intersection(eyes, blush)` — **empty**. No two colour parts share volume.
+  They did at first: at 33 degrees against the eyes' 17 the blush genuinely
+  overlapped, which no render would have shown and which would have had two
+  printed parts claiming the same space. Rather than hunt for an angle that
+  happens to clear, the eye is now subtracted from the blush, so they are
+  disjoint by construction at any placement.
+- `bao_gross − body − eyes − blush − shine` — **empty**. The four parts
+  reconstitute the bun exactly, leaving no gap between them.
+
+## The basket is built from the reference photo, not from memory
+
+A real bamboo steamer is a smooth drum with **many fine scribed lines** and a
+**distinct proud collar** at the rim, above a plain base band. The first
+version used 4 deep cosine swells and read as a screw thread — a cosine has
+no flat between its dips, so the drum never reads as a barrel with lines
+scribed on it. Counted off the photo: **8 shallow V-notches, 0.45mm deep and
+0.9mm wide**, between a plain base band and a rim collar standing 0.75mm
+proud on a 40-degree flare. A square step at the collar would have been a
+horizontal overhang all the way round.
 
 Print the standard bun first. If it will not press onto the switch stem,
 print the loose one — that is the whole reason both exist (Technique 47: the
@@ -40,9 +81,12 @@ MX-clones fit too.
 
 | | time | filament | cost @ $20/kg |
 |---|---|---|---|
-| bun | 36m 50s | 5.24 g | $0.10 |
-| basket | 53m 18s | 9.03 g | $0.18 |
-| **one complete unit** | **~1h 30m** | **14.3 g** | **~$0.28** + one switch |
+| bun | 36m 54s | 5.25 g | $0.11 |
+| basket | 51m 15s | 8.60 g | $0.17 |
+| **one complete unit** | **~1h 28m** | **13.9 g** | **~$0.28** + one switch |
+
+Multi-colour adds purge on top of that — budget roughly double for a
+four-filament bun, since the face spans ~37 layers and every one swaps.
 
 Well inside the ~4h-per-sellable-unit ceiling Technique 44 sets, and the
 basket batches ~40 to a 256x256 plate, so a full plate is a day's run and

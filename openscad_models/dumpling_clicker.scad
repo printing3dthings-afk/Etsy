@@ -55,8 +55,18 @@ rim_pressed = bao_rim_z - mx_travel;        // 14.8  cap rim fully pressed
 bk_r        = 17.6;                 // outer radius at the slat valleys
 bk_bore     = 15.5;                 // upper bore -- the bun nests INTO this
 bk_well     = 12.0;                 // lower well, clears the 11.03 half-diag
-n_slat      = 4;                    // bamboo courses
-slat_depth  = 0.85;                 // Technique 3: 0.7-0.9mm reads as bold
+// A real bamboo steamer is a smooth drum with MANY fine scribed lines and a
+// distinct proud collar at the rim -- not a stack of fat rings. The first
+// pass used 4 deep cosine swells and read as a screw thread; counted off the
+// reference photo, the real thing has 8 shallow incised grooves between a
+// plain base band and that collar.
+n_slat      = 8;
+slat_depth  = 0.45;                 // incised INWARD, narrow -- a scribed line
+slat_w      = 0.9;                  // groove width at the surface
+band_lo     = 3.6;                  // plain base band below the slats
+band_hi     = 14.4;                 // slats stop here; collar starts
+collar_r    = 18.35;                // the rim stands proud of the drum
+collar_z    = 15.2;                 // top of the 40deg flare up to the collar
 
 // The rim sits 0.6mm under the bun's own rim at rest, so the bun visually
 // NESTS in the steamer instead of perching on it with the grey switch
@@ -197,7 +207,7 @@ eye_z  = 8.6;   // 52% of the bun's height. Also has to clear the 2.7mm of
                 // skirt that hides inside the basket at full press --
                 // a face detail below that line is invisible when clicked.
 
-module bao_face() {
+module eye_cut() {
     // Cut depth is (sphere r - bite), and it has to be ordered on purpose:
     // eyes deepest, smile mid, blush barely a dish. The first attempt had
     // the blush cutting 1.55mm against the eyes' 1.3mm -- the shallowest
@@ -221,13 +231,36 @@ module bao_face() {
             translate(smile[k + 1]) sphere(r = 0.95);
         }
 
-    // blush: wide and only 0.45mm deep -- barely a dish, reads as a cheek
-    for (s = [-1, 1])
-        translate(face_pos(s * 33, eye_z - 3.6, 1.45))
-            rotate([0, 0, s * 33]) scale([1.6, 1, 0.65]) sphere(r = 1.90);
 }
 
-module bao() {
+// Blush is its own colour part. It MUST NOT share volume with the eyes or
+// both printed parts would claim the same space -- and at 33 degrees against
+// the eyes' 17 it genuinely did: intersection(eyes, blush) came back with
+// real geometry, which no render would have shown. Rather than hunt for an
+// angle that happens to clear, the eye is subtracted from it, so they are
+// disjoint by construction at any placement. The blush tucking behind the
+// eye is also how the reference photo actually looks.
+module blush_raw() {
+    for (s = [-1, 1])
+        translate(face_pos(s * 34, eye_z - 3.0, 1.35))
+            rotate([0, 0, s * 34]) scale([1.25, 1, 0.9]) sphere(r = 1.95);
+}
+module blush_cut() { difference() { blush_raw(); eye_cut(); } }
+
+// The catchlight. Sits INSIDE the eye, so it is subtracted from the eye part
+// as well as from the body -- otherwise the eye and the highlight would both
+// own it. On a cream bun this can simply be assigned the body filament and
+// costs no extra AMS slot; on the blue bun it wants white.
+module shine_cut() {
+    for (s = [-1, 1])
+        translate(face_pos(s * 17 - s * 5.0, eye_z + 1.25, 0.50))
+            sphere(r = 1.15);
+}
+
+// Everything the bun is, before any colour split -- the shell, the cavity,
+// the socket post and its bore. All four colour parts are carved out of THIS,
+// so together they reconstitute it exactly (Technique 39).
+module bao_gross() {
     difference() {
         union() {
             difference() {
@@ -237,26 +270,42 @@ module bao() {
             socket_post();
         }
         mx_socket();
-        bao_face();
     }
 }
+
+module bao_body()  { difference()  { bao_gross(); eye_cut(); blush_raw(); shine_cut(); } }
+module bao_eyes()  { intersection() { bao_gross(); difference() { eye_cut(); shine_cut(); } } }
+module bao_blush() { intersection() { bao_gross(); blush_cut(); } }
+module bao_shine() { intersection() { bao_gross(); shine_cut(); } }
+
+
 
 // ============================================================
 // BASKET -- bamboo courses, switch plate, nesting bore, keyring tab
 // ============================================================
 
-// Slat courses swell OUTWARD from the structural wall, so the wall itself
-// is never thinned by the texture.
-function slat_r(z) =
-    let(t = (z - bk_floor) / max(bk_h - bk_floor, 0.001))
-    bk_r + slat_depth * (0.5 + 0.5 * cos(t * n_slat * 360));
-
 function ring_pts(r) = [for (a = [0 : 3 : 357]) [r * cos(a), r * sin(a)]];
 
+// Outer profile, revolved. Explicit V-notches rather than a cosine: a cosine
+// has no flat between its dips, so the drum never reads as a smooth barrel
+// with lines scribed on it -- it reads as corrugation, which is exactly what
+// went wrong the first time.
+slat_pitch = (band_hi - band_lo) / (n_slat - 1);
+
+function slat_profile() = concat(
+    [[0, 0], [bk_r, 0], [bk_r, band_lo]],
+    [for (i = [0 : n_slat - 1], k = [0 : 2])
+        let(gz = band_lo + i * slat_pitch)
+        k == 0 ? [bk_r, gz - slat_w / 2]
+      : k == 1 ? [bk_r - slat_depth, gz]
+      :          [bk_r, gz + slat_w / 2]],
+    // 40deg flare out to the proud rim collar -- a square step here would be
+    // a horizontal overhang all the way round
+    [[bk_r, band_hi + 0.4], [collar_r, collar_z], [collar_r, bk_h], [0, bk_h]]
+);
+
 module basket_outer() {
-    zs = [for (i = [0 : 100]) bk_floor + (bk_h - bk_floor) * i / 100];
-    skin([for (z = zs) ring_pts(slat_r(z))], z = zs, slices = 0);
-    cylinder(h = bk_floor + 0.01, r = bk_r, $fn = 160);
+    rotate_extrude($fn = 180) polygon(slat_profile());
 }
 
 // Radiating woven slats on the visible floor of the basket (reference
@@ -345,13 +394,28 @@ module mx_mock() {
 module assembly(press = 0) {
     basket();
     mx_mock();
-    color("wheat") translate([0, 0, bao_rim_z - press]) bao();
+    translate([0, 0, bao_rim_z - press]) {
+        color("wheat")     bao_body();
+        color("#141414")   bao_eyes();
+        color("#F49AC1")   bao_blush();
+        color("white")     bao_shine();
+    }
 }
 
-if      (part == "bao")      bao();
-else if (part == "basket")   basket();
-else if (part == "assembly") assembly(0);
-else if (part == "pressed")  assembly(mx_travel);
+// "bao" IS the body. Printed on its own in one filament the face reads as
+// recessed dimples; printed alongside the three inlays it is the bun colour
+// and the face is real colour, flush with the surface.
+if      (part == "bao")        bao_body();
+else if (part == "bao_eyes")   bao_eyes();
+else if (part == "bao_blush")  bao_blush();
+else if (part == "bao_shine")  bao_shine();
+else if (part == "basket")     basket();
+else if (part == "assembly")   assembly(0);
+else if (part == "pressed")    assembly(mx_travel);
+// the two tests that matter for a multi-colour split: no two colour parts may
+// share volume, and together they must leave nothing behind
+else if (part == "chk_overlap") intersection() { bao_eyes(); bao_blush(); }
+else if (part == "chk_gap")     difference() { bao_gross(); bao_body(); bao_eyes(); bao_blush(); bao_shine(); }
 else {
     translate([-24, 0, 0]) basket();
     translate([ 24, 0, 0]) bao();
