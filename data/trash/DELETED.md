@@ -468,3 +468,50 @@ def ring_texture(m, slices=140, smooth=9):
 ```
 
 <!-- /TRASH 20260904-001 -->
+
+<!-- TRASH id=20260905-001 date=2026-09-05 kind=snippet source="tests/test_kb_skill_docs.py" reason="Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide." -->
+## 20260905-001 · 2026-09-05 · snippet · `tests/test_kb_skill_docs.py`
+**Reason:** Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide.  
+**Payload:** `data/trash/files/20260905-001__snippet.txt`
+
+```python
+def test_suite_never_writes_to_the_real_runbook():
+    """No test may append to the git-tracked ops_runbook.md.
+
+    Found 2026-09-05: test_health_check_reap and test_health_check_broadened
+    exercise the escalation paths on purpose, and _append_ops_runbook_entry()
+    writes to _OPS_RUNBOOK_PATH -- which is _volume_or_local(...), so with no
+    volume mounted it falls back to the real data/knowledge_base copy. A suite
+    run put eight fabricated incidents (TESTCRASH, TESTHUNG, a /tmp/... volume)
+    into the document Frank reads as ground truth when Scott asks why something
+    broke. Any test that can reach that writer must repoint _OPS_RUNBOOK_PATH
+    at a tempfile first.
+    """
+    # Reaching the writer means calling something that appends, directly or via
+    # the health loop. A bare "_escalate" substring was too loose on the first
+    # pass -- it matched a test NAMED test_escalates_..., which writes nothing.
+    reaches = ("_append_ops_runbook_entry(", "server._escalate", "_health_check_iteration(")
+    # Two valid isolations: repoint the path, or mock the writer outright.
+    # Matched against CODE only. The first version of this check searched the
+    # raw file text, so the explanatory comment naming _OPS_RUNBOOK_PATH was
+    # enough to satisfy it -- deleting the actual assignment left the guard
+    # silently green. Verified by deleting it and watching this fail.
+    isolates = (_re.compile(r"^\s*server\._OPS_RUNBOOK_PATH\s*=", _re.M),
+                _re.compile(r'patch\.object\(\s*server\s*,\s*"_append_ops_runbook_entry"'))
+    for path in sorted((ROOT / "tests").glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue  # this file names the patterns it searches for
+        src = path.read_text()
+        if not any(r in src for r in reaches):
+            continue
+        code = "\n".join(ln for ln in src.splitlines()
+                         if not ln.lstrip().startswith("#"))
+        check(any(pat.search(code) for pat in isolates),
+              f"{path.name} can reach the ops_runbook writer but neither repoints "
+              "server._OPS_RUNBOOK_PATH at a tempfile nor mocks "
+              "_append_ops_runbook_entry — it will append test fixtures to the "
+              "real git-tracked doc Frank reads as ground truth")
+```
+
+<!-- /TRASH 20260905-001 -->
+
