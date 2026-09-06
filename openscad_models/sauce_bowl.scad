@@ -72,9 +72,17 @@ top_cham_h  = 1.20;
 top_cham_r  = 1.00;
 
 // ---------- maker's mark ----------
-// 35-45% of the 70.9mm centre pad bounded by the cavities = 24.8-31.9mm.
-// Measure it on the exported mesh; a linear projection has been wrong before.
-mark_size   = 3.60;
+// The centre pad bounded by the cavities is 70.9mm across (radius
+// ring_r - cav_top_r). Scott asked for bigger branding 2026-09-06, so this
+// runs at ~50% of that pad rather than the 35-45% standing default -- a
+// deliberate call, not drift. Measured at 35.78mm on the real mesh.
+// Same derivation as sauce_tray.scad: 7.157mm of width per unit of size for
+// this exact string and font, measured. Derived from the pad so a -D variant
+// on a smaller footprint cannot inherit an oversized mark.
+mark_per_size = 7.157;
+mark_frac     = 0.50;
+mark_pad      = 2 * (ring_r - cav_top_r);
+mark_size     = mark_pad * mark_frac / mark_per_size;
 mark_depth  = 0.70;
 
 

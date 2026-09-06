@@ -128,5 +128,9 @@ size is a set of `-D` overrides, not a new file. The 1oz variant is exactly:
 -D n_flutes=28 -D flute_depth=2.0
 ```
 
+The maker's mark needs no override: `mark_size` is **derived** from each
+model's own centre pad (50% of it), so a smaller variant automatically gets a
+proportionate mark instead of inheriting an oversized one.
+
 `part=` also accepts `preview` (tray with cup mock-ups), `cutters` and `mark`
 for checking a cutter's own extents in isolation.

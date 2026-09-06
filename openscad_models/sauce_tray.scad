@@ -113,10 +113,24 @@ top_cham_r  = 1.00;         // radius shrinking as z rises = every layer sits
 // Sized against THIS model's own flat run, never copied from another model.
 // The largest uninterrupted flat area on the underside is the centre pad
 // bounded by the bores: radius ring_r - well_bore_d/2 = 39.5, so 79mm across.
-// The standing target is 35-45% of that = 27.7-35.6mm. size=7 measured 50.1mm
-// (63%) on the real exported mesh and had to come down. Re-measure after
-// changing this -- a linear projection from one sample has been wrong before.
-mark_size   = 4.40;
+//
+// 2026-09-06, Scott: "make the branding a little bigger." This now runs at
+// ~50% of that pad, deliberately above the 35-45% default the standing rule
+// gives. That default came from Scott's own earlier correction on a cable clip
+// whose mark hit 77% of the part; 50% is a considered middle, not a drift back
+// to the old mistake. Do not "fix" this down to 45% without asking.
+// Measured on the real exported mesh at 39.36mm -- re-measure after any change,
+// a linear projection from one sample has been wrong here before.
+// Measured: "OnBrandCraftz" in Caveat Bold renders 7.157mm of width per unit
+// of size (checked at seven sizes, dead linear). Deriving mark_size from the
+// pad instead of setting it means a -D variant on a smaller footprint cannot
+// silently inherit an oversized mark -- which is exactly what happened to the
+// 1oz tray, sitting at 50.8% of its pad while the 2oz sat at 39.9%.
+// CHANGING THE TEXT OR FONT INVALIDATES 7.157 -- re-measure via part="mark".
+mark_per_size = 7.157;
+mark_frac     = 0.50;
+mark_pad      = 2 * (ring_r - well_bore_d / 2);
+mark_size     = mark_pad * mark_frac / mark_per_size;
 mark_depth  = 0.70;
 
 

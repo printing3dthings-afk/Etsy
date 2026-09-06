@@ -107,8 +107,12 @@ new cup size is a set of `-D` overrides. The 1oz variant is exactly:
 ```
 -D cup_rim_d=44.5 -D cup_base_d=31.75 -D cup_h=31.75 -D cav_depth=20 \
 -D ring_r=50 -D rim_r=72 -D foot_r=66 -D petal_amp=9.1 \
--D bowl_h=27 -D dish_lo=22 -D mark_size=2.7
+-D bowl_h=27 -D dish_lo=22
 ```
+
+The maker's mark needs no override: `mark_size` is **derived** from each
+model's own centre pad (50% of it), so a smaller variant automatically gets a
+proportionate mark instead of inheriting an oversized one.
 
 `part=` also accepts `preview` (with cup mock-ups), `cavity` and `mark` for
 checking a cutter's own extents in isolation.
