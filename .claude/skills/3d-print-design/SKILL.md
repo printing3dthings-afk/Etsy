@@ -107,6 +107,23 @@ rule this shop already applies to AI photos and Etsy mutations.**
   geometry gets authored, and this never substitutes for the AI-photo
   pipeline CLAUDE.md requires for actual Etsy listings. It also has no
   3MF importer in this container (confirmed live) — feed it STL/OBJ/PLY.
+- **`tools/mesh_gate.py` is the pass/fail check before a mesh ships.**
+  `python3 tools/mesh_gate.py model.stl --overhang` (add `-c N` for a
+  print-in-place assembly whose N separate bodies are intentional). It
+  returns a non-zero exit code on: outside the P1S 256mm build volume, not
+  watertight, inconsistent winding, non-positive volume, an unexpected body
+  count, or degenerate faces. These are the same trimesh checks that had
+  been retyped by hand for every model in this tree — having one committed
+  thing with an exit code is the point, and a wrong body count is exactly
+  the signal that a cutter broke through a wall it should not have.
+  **Overhang is reported, never failed on, and that is deliberate:** the
+  first version of this failed all three verified, already-sliced models at
+  once, and every face it flagged on the sauce tray was the 0.7mm-deep
+  ceiling of the engraved maker's mark on the underside — a bridge that
+  short prints on any FDM machine. Angle alone cannot tell that from a real
+  unsupported span, so the tool prints the flagged area and its z range and
+  you make the call.
+
 - **Real vendored fonts are available to `text()` for engraved branding.**
   This repo's existing font sets (`fonts/`, `assets/fonts/` — already used
   for cover art/listing images) are auto-registered with fontconfig the

@@ -95,3 +95,40 @@ claude-plugins-official — **use it, and it is already installed**. one-skill �
 - **Not assessed: licences.** Nothing here was checked for licence compatibility. Per the
   2026-09-01 finding (a reviewed repo under PolyForm Noncommercial, unusable for a commercial
   shop), check the licence before vendoring any of these, not after.
+
+### 2026-09-06 — 3D-printing Claude skills roundup (3 repos from a social screenshot)
+**Tools:** flowful-ai/cad-skill, EdwinjJ1/3d-print-skill, jirihelmich/3print-starter.
+Plus three closer alternatives found while checking: swh/openscad-skill,
+andreahaku/openscad_claude_skill, iancanderson/openscad-agent.
+**Verdict:** cad-skill — **hard no, PolyForm Noncommercial**. 3print-starter — **does not
+exist**. The other four — real and legal-or-not, but **no capability gap**; nothing vendored.
+One genuine gap found and closed with our own code: `tools/mesh_gate.py`.
+**Why:**
+- **flowful-ai/cad-skill is PolyForm Noncommercial 1.0.0.** Unusable in a commercial shop,
+  full stop — the second time in five days a screenshot-sourced repo has been PolyForm-NC
+  (see 2026-09-01). It is also CadQuery, not OpenSCAD, so adopting it would mean a second
+  modelling stack next to the one 53 techniques are written against.
+- **jirihelmich/3print-starter does not resolve** on GitHub and does not appear in search.
+  The screenshot's list is itself LLM-written; treat every repo name in one as unverified
+  until `git ls-remote` says otherwise. Two of its three entries were wrong or unusable.
+- **Licence reading needs the README, not just the file list.** `EdwinjJ1/3d-print-skill`
+  and `iancanderson/openscad-agent` both have NO LICENSE file, which looked like all-rights-
+  reserved, but each declares MIT in its README (the former in a Chinese-language section).
+  Check both before writing off a repo — or before trusting one.
+- **No capability gap.** These are starter kits: spec search, mesh validation, STL→3MF,
+  a Gridfinity generator. `tools/openscad_render.py` already exports 3MF natively, BOSL2 is
+  vendored, PNG preview works headless, and `tools/mesh_anatomy.py` + `tools/inlay_probe.py`
+  go considerably further than anything in them. Our own skill is 5,282 lines of measured,
+  P1S-specific findings against their few hundred of generic advice.
+- **The one real gap: no committed pre-slice gate.** Watertight / winding / component /
+  bbox checks had been retyped by hand for every model (five in one session). Closed with
+  `tools/mesh_gate.py` — our own code, our conventions, no vendoring needed for ~100 lines
+  of trimesh calls.
+- **The multi-agent carousel in the same screenshot is marketing, not a tool.**
+  "PLAN → CODE → FIX → TEST → REVIEW" is the built-in Plan/Explore agents plus the three
+  reviewers already in `.claude/agents/`. Nothing to install.
+
+**Correction to the 2026-09-06 agent-memory entry above:** it said claude-plugins-official
+"is already installed... there is nothing to install." That was wrong — this repo had no
+`.claude/settings.json` at all, so no marketplace was registered and no plugin was enabled.
+Fixed the same day; `claude-md-management` and `claude-code-setup` are now enabled there.
