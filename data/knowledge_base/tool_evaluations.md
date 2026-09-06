@@ -132,3 +132,45 @@ One genuine gap found and closed with our own code: `tools/mesh_gate.py`.
 "is already installed... there is nothing to install." That was wrong — this repo had no
 `.claude/settings.json` at all, so no marketplace was registered and no plugin was enabled.
 Fixed the same day; `claude-md-management` and `claude-code-setup` are now enabled there.
+
+### 2026-09-06 — cognee + agentmemory (third memory roundup this week)
+**Tools:** topoteretes/cognee (Apache-2.0, active), rohitg00/agentmemory (Apache-2.0, active).
+**Verdict:** cognee — **no, hard dependency conflict**. agentmemory — **hard stop, it would
+persist this shop's live credentials**. Nothing installed.
+**Why:**
+- **Both licences are clean and both repos are real and actively maintained** (cognee pushed
+  the same day, agentmemory two weeks prior). Unlike the two previous roundups, licence is
+  not the blocker — these were assessed on fit.
+- **cognee requires `fastapi>=0.116.2,<1.0.0`; Frank pins `fastapi==0.111.0`.** Verified with
+  a real specifier check, not by eye. This is not theoretical: a container whose fastapi had
+  drifted to 0.141.1 broke 113 of 180 tests earlier the same day. Installing cognee beside
+  Frank forces that upgrade; isolating it in its own venv means running a standing separate
+  service with its own vector store (lancedb) and its own LLM spend to build the graph
+  (openai + litellm + instructor are required deps). 45 required dependencies, 3,594 files,
+  to serve a retrieval need `_kb_search` already covers.
+- **agentmemory is a genuine Claude Code plugin** (`plugin/.claude-plugin/plugin.json`, 12
+  hooks, Apache-2.0) — the first thing in any of these roundups that is directly installable.
+  It is still a hard stop, for a reason specific to this repo.
+- **Its PostToolUse hook posts `tool_input` raw and unredacted** to `http://localhost:3111`
+  (`plugin/scripts/post-tool-use.mjs:74`), plus 8KB of tool output, for LLM compression.
+  Server-side redaction does exist and is applied on ingest (`src/functions/privacy.ts`,
+  imported by `observe.ts`) and its pattern set is better than average — OpenAI, Anthropic,
+  GitHub, Slack, AWS, Google, JWT, GitLab prefixes. **It does not catch the two shapes this
+  repo actually produces.** Tested against the real patterns:
+    - `{"access_token": "1234567.abc..."}` — LEAKS. The generic rule wants `token` immediately
+      followed by `=` or `:`; the quote in `token":` breaks it, so any Etsy OAuth JSON
+      response passes through intact.
+    - `{"name":"ETSY_CLIENT_SECRET","value":"a1b2..."}` — LEAKS. The Railway GraphQL dump puts
+      the name and the value in separate JSON fields, so no `secret=value` adjacency exists
+      to match at all.
+    - `export ETSY_ACCESS_TOKEN=...` and `-H "x-api-key: ..."` — both correctly redacted.
+  Those two leaking shapes are exactly what CLAUDE.md's Direct Infrastructure Access section
+  authorises fetching in-process and requires be "never written to disk, never logged." A
+  hook that persists them to a local store and then sends them to an LLM does the opposite.
+  This is not a knock on agentmemory: a pattern blocklist fails open by construction, and no
+  list can cover a shop whose secrets are arbitrary strings arriving inside JSON bodies.
+- **Standing conclusion for this category:** stop re-evaluating agent-memory tools on their
+  merits. Three roundups in one week, eight tools, zero adopted, and the reason has been the
+  same each time — the memory is already plain markdown in git, and the real constraint is
+  retrieval over it. Any future candidate needs to clear two bars before it is worth an
+  hour: it must not require a standing service, and it must never persist raw tool I/O.
