@@ -2120,6 +2120,28 @@ Checklist before calling any product done:
       the real re-measured value was 27.91mm — two DIFFERENT smaller
       sizes then agreed with each other exactly, confirming the original
       widely-scaled measurement was the unreliable one, not the physics).
+      **Overall width is NOT the printability check, and passing it
+      proves nothing about whether the mark can actually print**
+      (2026-09-06, found by measurement after this rule had already
+      shipped four models). The rule above sizes the mark against the
+      available flat run and is silent on how thick each individual
+      stroke ends up — so "OnBrandCraftz" in Caveat Bold passed the width
+      check on the sauce tray and bowl while its letter strokes measured
+      **0.48-1.08 extrusions** (0.42mm on the 0.4mm profile). Under one
+      extrusion the slicer emits nothing at all: three of four models
+      carried a mark that would have come out blank, and every check then
+      in place said they were fine. Measure the strokes, not the word:
+      rasterise the cutter's cross-section, distance-transform it, and
+      read the thinnest stroke off the ridge (local maxima of the
+      transform). Require **at least 2 extrusions** on the thinnest
+      stroke. The fix that worked was shortening the text, not shrinking
+      the size — "OBC" is 2.089 mm per size unit against
+      "OnBrandCraftz"'s 7.157, so at the same footprint every stroke gets
+      3.43x thicker (2.56-3.77 extrusions, comfortably printable).
+      **Derive `mark_size` from each model's own pad**, never inherit it
+      from a sibling: the 1oz tray reused the 2oz's value and landed at
+      50.8% of its smaller pad instead of the intended ~40%.
+
       This generalizes beyond just the maker's mark: **any parametric
       feature sized by a formula or a fixed constant should be verified
       against the model's own real dimensions after rendering, not
