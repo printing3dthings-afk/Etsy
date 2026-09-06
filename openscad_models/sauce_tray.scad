@@ -110,25 +110,30 @@ top_cham_r  = 1.00;         // radius shrinking as z rises = every layer sits
 // it is where a drip off a cup ends up rather than on the table.
 
 // ---------- maker's mark ----------
-// Sized against THIS model's own flat run, never copied from another model.
-// The largest uninterrupted flat area on the underside is the centre pad
-// bounded by the bores: radius ring_r - well_bore_d/2 = 39.5, so 79mm across.
+// Sized against THIS model's own flat run: the centre pad bounded by the bores,
+// 2 * (ring_r - well_bore_d/2). mark_size is DERIVED from it so a -D variant on
+// a smaller footprint cannot inherit an oversized mark -- which is exactly what
+// the 1oz tray did, sitting at 50.8% of its pad while the 2oz sat at 39.9%.
 //
-// 2026-09-06, Scott: "make the branding a little bigger." This now runs at
-// ~50% of that pad, deliberately above the 35-45% default the standing rule
-// gives. That default came from Scott's own earlier correction on a cable clip
-// whose mark hit 77% of the part; 50% is a considered middle, not a drift back
-// to the old mistake. Do not "fix" this down to 45% without asking.
-// Measured on the real exported mesh at 39.36mm -- re-measure after any change,
-// a linear projection from one sample has been wrong here before.
-// Measured: "OnBrandCraftz" in Caveat Bold renders 7.157mm of width per unit
-// of size (checked at seven sizes, dead linear). Deriving mark_size from the
-// pad instead of setting it means a -D variant on a smaller footprint cannot
-// silently inherit an oversized mark -- which is exactly what happened to the
-// 1oz tray, sitting at 50.8% of its pad while the 2oz sat at 39.9%.
-// CHANGING THE TEXT OR FONT INVALIDATES 7.157 -- re-measure via part="mark".
-mark_per_size = 7.157;
-mark_frac     = 0.50;
+// THE MARK IS "OBC", NOT THE FULL WORDMARK, AND THAT IS A PRINTABILITY
+// DECISION. The standing rule sizes a mark by its WIDTH against the flat run,
+// and says nothing about stroke width -- but stroke width is what decides
+// whether it survives the printer. Measured on the real cutter cross-sections:
+// "OnBrandCraftz" in Caveat Bold has thinnest strokes of 0.45 / 0.40 / 0.34 /
+// 0.20mm on the four variants at 50% of pad, i.e. 1.08 / 0.94 / 0.81 / 0.48 of
+// a single 0.42mm extrusion. Three of the four cannot print at all and the
+// fourth is one bead wide. "OBC" is 3.43x shorter per unit of size, so at the
+// same overall width it gets 3.43x the size and the same multiple of stroke:
+// 1.2-1.8mm, or 2.6-3.8 extrusions, on every variant including the smallest.
+//
+// If the full wordmark is ever wanted back, it needs a pad roughly 3.4x wider
+// or a much heavier font -- re-measure, do not assume.
+mark_text     = "OBC";
+mark_per_size = 2.089;      // mm of width per unit of size, MEASURED for this
+                            // exact string and font. Changing either invalidates
+                            // it; re-measure via part="mark", which renders the
+                            // cutter alone in about a second.
+mark_frac     = 0.45;       // top of the 35-45% standing range
 mark_pad      = 2 * (ring_r - well_bore_d / 2);
 mark_size     = mark_pad * mark_frac / mark_per_size;
 mark_depth  = 0.70;
@@ -234,7 +239,7 @@ module brand_mark() {
     translate([0, 0, -0.5])
         linear_extrude(height = mark_depth + 0.5)
             mirror([0, 1, 0])
-                text("OnBrandCraftz", size = mark_size,
+                text(mark_text, size = mark_size,
                      font = "Caveat:style=Bold",
                      halign = "center", valign = "center");
 }

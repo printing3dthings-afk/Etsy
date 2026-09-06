@@ -72,15 +72,30 @@ top_cham_h  = 1.20;
 top_cham_r  = 1.00;
 
 // ---------- maker's mark ----------
-// The centre pad bounded by the cavities is 70.9mm across (radius
-// ring_r - cav_top_r). Scott asked for bigger branding 2026-09-06, so this
-// runs at ~50% of that pad rather than the 35-45% standing default -- a
-// deliberate call, not drift. Measured at 35.78mm on the real mesh.
-// Same derivation as sauce_tray.scad: 7.157mm of width per unit of size for
-// this exact string and font, measured. Derived from the pad so a -D variant
-// on a smaller footprint cannot inherit an oversized mark.
-mark_per_size = 7.157;
-mark_frac     = 0.50;
+// Sized against THIS model's own flat run: the centre pad bounded by the cavities,
+// 2 * (ring_r - cav_top_r). mark_size is DERIVED from it so a -D variant on
+// a smaller footprint cannot inherit an oversized mark -- which is exactly what
+// the 1oz tray did on the sibling model.
+//
+// THE MARK IS "OBC", NOT THE FULL WORDMARK, AND THAT IS A PRINTABILITY
+// DECISION. The standing rule sizes a mark by its WIDTH against the flat run,
+// and says nothing about stroke width -- but stroke width is what decides
+// whether it survives the printer. Measured on the real cutter cross-sections:
+// "OnBrandCraftz" in Caveat Bold has thinnest strokes of 0.45 / 0.40 / 0.34 /
+// 0.20mm on the four variants at 50% of pad, i.e. 1.08 / 0.94 / 0.81 / 0.48 of
+// a single 0.42mm extrusion. Three of the four cannot print at all and the
+// fourth is one bead wide. "OBC" is 3.43x shorter per unit of size, so at the
+// same overall width it gets 3.43x the size and the same multiple of stroke:
+// 1.2-1.8mm, or 2.6-3.8 extrusions, on every variant including the smallest.
+//
+// If the full wordmark is ever wanted back, it needs a pad roughly 3.4x wider
+// or a much heavier font -- re-measure, do not assume.
+mark_text     = "OBC";
+mark_per_size = 2.089;      // mm of width per unit of size, MEASURED for this
+                            // exact string and font. Changing either invalidates
+                            // it; re-measure via part="mark", which renders the
+                            // cutter alone in about a second.
+mark_frac     = 0.45;       // top of the 35-45% standing range
 mark_pad      = 2 * (ring_r - cav_top_r);
 mark_size     = mark_pad * mark_frac / mark_per_size;
 mark_depth  = 0.70;
@@ -161,7 +176,7 @@ module brand_mark() {
     translate([0, 0, -0.5])                 // MUST dip below z=0; a cutter that
         linear_extrude(height = mark_depth + 0.5)   // only touches removes nothing
             mirror([0, 1, 0])               // confirmed axis, Technique 4
-                text("OnBrandCraftz", size = mark_size,
+                text(mark_text, size = mark_size,
                      font = "Caveat:style=Bold", halign = "center", valign = "center");
 }
 
