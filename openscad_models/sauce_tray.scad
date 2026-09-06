@@ -77,14 +77,27 @@ petal_amp   = 16.00;   // the hero form: one bold lobe per cup. Deep valleys
 // relief; and the rim now overhangs the fluted band, which is a shadow line
 // rather than a defect. There is a real wall budget for this: even at a petal
 // valley the nearest bore is 18mm away, so a 2.6mm groove costs nothing.
+// OFF (depth 0). Two studio renders settled this empirically rather than by
+// argument: at 2.6mm the flutes vanished under soft light, and at 3.4mm with
+// deliberately raking light they STILL vanished -- because the rim sits at the
+// full petal radius and overhangs them, so the fluted band is only visible
+// from near floor level. On a tray that lives on a table, nobody ever sees it.
+// The petal silhouette is the hero and carries the piece alone (Technique 31:
+// spend boldness in one place); a feature no one can see is not texture, it is
+// print time. Left parameterised, not deleted -- on a taller-skirted variant,
+// or one without the overhanging rim, this would read fine.
 n_flutes    = 36;
-flute_depth = 2.60;
-flute_rise  = 2.00;         // fade in off the bed: the first layer prints the
+flute_depth = 0.00;
+flute_rise  = 1.20;         // fade in off the bed: the first layer prints the
                             // full clean outline
-flute_top   = 11.50;        // flutes are gone by here, so the rim is one
-flute_fall  = 4.50;         // unbroken line. 2.6mm over 4.5mm of fade is
-                            // 30 deg from vertical -- inside the 40 deg limit
-                            // Technique 35 sets for a surface anyone sees.
+flute_top   = 13.00;        // flutes are gone by here, so the rim is one
+flute_fall  = 4.40;         // unbroken line. 3.4mm over 4.4mm of fade is
+                            // 37.7 deg from vertical -- inside the 40 deg
+                            // limit Technique 35 sets for a visible surface.
+                            // Depth went 2.6 -> 3.4 because the STUDIO render
+                            // showed the shallower cut washing out completely
+                            // under soft light while looking fine in the flat
+                            // CAD preview -- Technique 36's exact warning.
 
 // ---------- top edge ----------
 top_cham_h  = 1.20;
@@ -134,8 +147,18 @@ function skirt_r(a, z) =
 function ring(z) = [for (a = [0 : 1 : 359]) [skirt_r(a,z) * cos(a),
                                              skirt_r(a,z) * sin(a)]];
 
-z_samples = [0, 0.4, 0.8, 1.2, 1.6, 2.0, 3.5, 5.0, 6.5, 8.0, 9.5, 11.0,
-             12.5, 14.0, 15.5, 15.8, 16.2, 16.6, 17.0];
+// DERIVED from plate_h, never a literal list. This was hardcoded ending at
+// 17.0, and when plate_h was changed to 14 the body silently stayed 17mm tall
+// -- the dish cut hid it in every render, and only measuring the exported
+// mesh's bounding box caught it (16.1mm where 14 was intended). Same class of
+// bug as any magic number: a -D override appears to work and does nothing.
+// Dense near the bed for the flute fade-in and near the rim for the chamfer,
+// coarse through the middle where nothing changes.
+z_samples = concat(
+    [0, 0.4, 0.8, 1.2, 1.6, 2.0],
+    [for (i = [1 : 8]) 2.0 + (plate_h - top_cham_h - 2.0) * i / 8],
+    [plate_h - top_cham_h * 0.66, plate_h - top_cham_h * 0.33, plate_h]
+);
 
 // One skin(), never a union of per-segment extrudes -- Technique 5 measured
 // that as the difference between 45 seconds and a timeout.
