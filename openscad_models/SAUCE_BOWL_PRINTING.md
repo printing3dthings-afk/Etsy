@@ -41,7 +41,12 @@ question.** The parameter carries the same warning in the source.
 | | size | time | filament | cost |
 |---|---|---|---|---|
 | 2oz bowl | 212 × 190 × 25mm | **14h 16m** | 149.4 g | $2.99 |
-| 1oz bowl | _measuring — figures added when sliced_ | | | |
+| 1oz bowl | 161 × 144 × 27mm | **9h 18m** | 101.4 g | $2.03 |
+
+Note the 1oz bowl is *taller* than the 2oz (27 vs 25mm) even though it is much
+smaller in plan: the 1oz cup is 31.75mm tall against the 2oz's 28.6mm, so its
+cavity has to be deeper and the body has to carry it. Shrinking the footprint by
+42% only buys back 35% of the time.
 
 For comparison, the through-bore tray is 7h 34m. **The bowl costs roughly double
 because it is a solid 25mm body where the tray is a 14mm plate with six large
@@ -49,8 +54,21 @@ holes punched through it** — those holes were removing most of the layer area
 that drives the cost. Filament is nearly free either way; printer time is the
 entire cost, and 14 hours means one unit every day and a half.
 
-That is a real business fact about this shape, not a defect to fix. The levers
-are the 1oz size or a shallower cavity, both parametric.
+That is a real business fact about this shape, not a defect to fix. And the 1oz
+size is a weaker lever here than it was on the tray: the whole set, sliced, runs
+
+| | time |
+|---|---|
+| tray, 1oz | 4h 58m |
+| tray, 2oz | 7h 34m |
+| bowl, 1oz | 9h 18m |
+| bowl, 2oz | 14h 16m |
+
+so even the *small* bowl costs more machine time than the *large* tray. A closed
+solid body is simply an expensive thing to print at this footprint; the through-
+bores were removing most of the layer area that drives the cost. If the bowl form
+matters more than throughput, that is the price; if throughput matters more, the
+tray is the product.
 
 ## Verified before shipping — on the real exported mesh
 - Watertight, **1 connected component**, flat at z=0.
@@ -59,8 +77,10 @@ are the 1oz size or a shallower cavity, both parametric.
 - **Minimum wall between any cavity and the exterior: 3.08mm** — swept over
   every (angle, height) pair, not spot-checked.
 - **4.9mm web between adjacent cavity mouths**, 5.7mm between cup rims.
-- Maker's mark **25.76mm** = 36.3% of the 70.9mm centre pad, inside the 35–45%
-  standing target.
+- Maker's mark **25.76mm** = 36.3% of the 70.9mm centre pad (2oz) and **19.32mm**
+  = 35.3% of the 54.7mm pad (1oz), both inside the 35–45% standing target.
+- 1oz variant independently verified: 160.9 × 143.9 × 27.0mm, watertight, one
+  component, **0.000 mm² of downward area past 40°** out of 12,618 mm².
 
 ## Real bugs caught during the build
 - **The cavity nearly breached the outer wall, and no render showed it.** The
