@@ -5319,3 +5319,85 @@ multi-colour split, plus `--near` for closest approach between parts. Needs
 `trimesh` + `shapely`; no API call. **Run it on every flush-inlay model
 before export** — Technique 39's two tests prove the split is *correct*,
 this one proves it is *printable*.
+
+## Technique 54 — A shallow upward surface terraces, and no slicer setting fixes it (2026-09-08, first real printed part)
+
+Scott printed the sauce bowl. The mark was legible, the underside was flat and
+clean across 212mm, the cavities were smooth, no supports. The **entire top
+face** came off the plate ringed with concentric terraces. `mesh_gate.py` had
+passed it on every check: watertight, one body, in the envelope, no overhang.
+Nothing in this skill or that tool looked at whether a surface was shallow
+enough to stair-step. This is the technique that closes that.
+
+### The one number
+
+A surface of gradient `g = |∇f|` steps sideways by `layer_h / g` every layer.
+That step width is the whole story:
+
+| terrace width | what you see |
+|---|---|
+| `< 1 extrusion` (0.42mm) | nothing — it blends |
+| 1–4 extrusions | a visible ring |
+| `>> that` | a shelf |
+
+The bowl's top face was a paraboloid rising **5.50mm over 95mm of radius**.
+Its *steepest* slope anywhere was **6.6°** → a 1.73mm terrace, 4 beads wide. At
+the axis the slope is zero, so the first terrace was **18.12mm** — a 36.2mm
+flat disc in the middle, then 26 more rings tightening outward. Measured ring
+radii 18.1 / 25.6 / 31.4 / 36.2 / 40.5mm matched the photograph exactly.
+
+### Why you cannot slice your way out of it
+
+- **Ironing** smooths *within* a terrace. It cannot fill a vertical step.
+- **Adaptive layer height** helps where the slope is already high and does
+  nothing at a stationary point. A dome's slope → 0 at its apex, so halving the
+  layer height just produces more, finer rings in the middle.
+- Hiding a 0.2mm step needs gradient ≥ 0.48 (26°). That bowl face would only
+  have reached it at r = 391mm. It stopped at 95mm.
+
+**So the rule is: flat, or steep. Never gently curved on an upward face.**
+A truly flat face is *one top surface with no steps at all* — it is the good
+outcome, not a compromise. Aim for it deliberately.
+
+### The same math governs a filleted floor — this is what "lines in the bottom" is
+
+A tangent fillet is horizontal where it meets the floor, so its **first** layer
+steps by `sqrt(2*R*layer - layer²)` all at once:
+
+| floor treatment | first step | beads |
+|---|---|---|
+| tangent fillet R=5 | 1.40mm | 3.3 |
+| tangent fillet R=3 | 1.08mm | 2.6 |
+| tangent fillet R=1.5 | 0.75mm | 1.8 |
+| **45° chamfer** | **0.20mm** | **0.5** |
+
+A fillet small enough to hide the step (R ≤ 0.54mm) is not a rounded floor any
+more. **Use a flat floor plus a constant-angle chamfer.** A 45° run steps
+exactly one layer height — the floor of what FDM can do — and the flat disc
+irons smooth. The tapered wall above it (gradient 0.276) steps 0.055mm and was
+already invisible, which is why the print's *walls* looked fine and only the
+floors ringed.
+
+### Two things that bite when you flatten a top face
+
+1. **A cavity lid ending flush with the new top plane is coplanar with it**, and
+   CGAL leaves zero-area slivers where each mouth circle crosses y=0. Carry the
+   cutter ~1mm into the air above the face. Caught by the degenerate-face check.
+2. **Changing a body's height changes its flare angle.** Flattening took the
+   bowl from 25mm to 22.15mm, so the same 8mm of radius change happened over
+   less height and `flare_ease = 1.5` pushed the steepest flare from 25.6° to
+   **40.1°** — exactly Technique 35's ceiling for a buyer-visible surface, with
+   zero margin. Re-measure overhang after *any* height change; it is a function
+   of height, not a free style knob.
+
+### It is checked now
+
+`tools/mesh_gate.py` reports `terracing`: upward-facing area whose slope is too
+shallow to hide a layer step, plus the worst terrace width. The band is bounded
+at both ends — under one bead is invisible, and a "terrace" wider than 50mm
+means the surface is effectively flat, which is the target. Calibrated against
+this shop's whole model tree: it puts the two dished sauce products at the top
+(86 and 65 cm²) and scores the vase, sundial and box lids at exactly zero.
+
+It is **reported, not fatal** — an organic model can carry real shallow area on
+purpose. But a number that large on a flat-ish product face means it will ring.

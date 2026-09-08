@@ -81,6 +81,36 @@ def _overhang_report(m, plate_eps=0.05):
     return float(areas[over].sum()), float(from_vertical.max()), (float(z.min()), float(z.max()))
 
 
+def _terrace_report(m, layer_h=0.20, extr=0.42, flat_cutoff=50.0):
+    """Upward-facing area whose slope is too shallow to hide a layer step.
+
+    2026-09-08, from the first real printed sauce bowl. Its top face was a
+    paraboloid rising 5.5mm over 95mm of radius, and it came off the plate
+    ringed with 27 concentric terraces. Every check here passed it: the mesh
+    was watertight, one body, in the envelope, and had no overhang. Nothing
+    looked at whether a surface was shallow enough to STAIR-STEP.
+
+    A surface of gradient g steps sideways by layer_h/g every layer. Under one
+    extrusion the step blends away; much above it, it reads as a ring. So the
+    band that matters is bounded at BOTH ends: below one bead is invisible, and
+    a "terrace" wider than flat_cutoff means the surface is effectively flat --
+    one clean top surface, which is the thing to aim for, not a defect. A
+    genuinely flat face has gradient ~0 and lands outside the band by design.
+    """
+    n = m.face_normals
+    up = n[:, 2] > 0.5
+    if not up.any():
+        return 0.0, 0.0
+    grad = np.hypot(n[up, 0], n[up, 1]) / n[up, 2]
+    with np.errstate(divide="ignore"):
+        width = np.where(grad > 0, layer_h / np.maximum(grad, 1e-12), np.inf)
+    stepped = (width > extr) & (width < flat_cutoff)
+    if not stepped.any():
+        return 0.0, 0.0
+    areas = m.area_faces[up]
+    return float(areas[stepped].sum()), float(width[stepped].max())
+
+
 def gate(path, expected_components=1, check_overhang=False):
     m = _load(path)
     ext = [float(v) for v in m.extents]
@@ -109,6 +139,12 @@ def gate(path, expected_components=1, check_overhang=False):
 
     degenerate = int((m.area_faces <= 1e-12).sum())
     add("no_degenerate_faces", degenerate == 0, f"{degenerate} zero-area faces")
+
+    area, worst = _terrace_report(m)
+    add("terracing", True,
+        f"{area / 100.0:.2f} cm2 of upward surface too shallow to hide a layer step "
+        f"(worst terrace {worst:.2f} mm)" if area else "no shallow upward surface",
+        fatal=False)
 
     if check_overhang:
         area, worst, zr = _overhang_report(m)

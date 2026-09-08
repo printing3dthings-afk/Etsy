@@ -7,9 +7,17 @@
 //
 // WHY THE CAVITY IS THE SHAPE IT IS. Each cavity follows the actual 2oz
 // portion cup's taper — 60.3mm rim, 0.2762mm of radius lost per mm of depth,
-// measured from two suppliers — plus 0.8mm of fit. A real cup drops in and
-// nests against the wall down its whole length, standing 10.6mm proud so it
-// can still be pinched out.
+// measured from two suppliers. A real cup drops in, sits flat on the floor and
+// stands 10.6mm proud so it can be pinched back out.
+//
+// IT DOES NOT GRIP THE WALL, and an earlier version of this comment said it
+// did. Measured 2026-09-08: cav_top_r was set so the cup's RIM (30.15) clears
+// the MOUTH (30.55), but the rim sits 10.6mm ABOVE the mouth — at the mouth the
+// cup is only 27.22. The gap is a constant 3.33mm of radius, 6.7mm across, the
+// entire way up. The cup is held by being 18mm down a well, not by contact.
+// Making it actually nest means cav_top_r = 27.62 (a 55.2mm mouth, not 61.1),
+// which visibly shrinks every well and wants ring_r re-solved with it — a look
+// change, not a tweak, so it is Scott's call and has not been made.
 //
 // That is a deliberate choice, not a coincidence. FDM layer lines are porous
 // and the P1S runs a stock BRASS nozzle, which sheds trace lead, so a dish
@@ -36,8 +44,30 @@ n_wells     = 6;
 cav_fit     = 0.80;
 cav_depth   = 18.00;        // shallower than the cup on purpose: 10.6mm proud
 cav_top_r   = (cup_rim_d + cav_fit) / 2;
-cav_fillet  = 5.00;         // rounded floor — wipes clean, reads as a bowl
-cav_flat_r  = cav_top_r - cup_taper_r * (cav_depth - cav_fillet) - cav_fillet;
+// THE FLOOR IS A FLAT DISC MEETING THE WALL AT 45 DEGREES, NOT A TANGENT
+// FILLET (2026-09-08, from the first real printed part). A tangent fillet is
+// horizontal where it meets the floor, so its FIRST layer steps sideways by
+// sqrt(2*R*layer - layer^2) all at once: 1.40mm at R=5, i.e. 3.3 extrusions,
+// which reads as a hard ring in the bottom of every well. Scott saw it on the
+// print. The step shrinks with radius, but a fillet small enough to hide it
+// (R <= 0.54mm) is not a rounded floor any more. A constant 45-degree run
+// steps exactly one layer height -- 0.20mm, half a bead -- the whole way, and
+// that is the floor of what FDM can do. The flat disc is one clean top
+// surface and irons smooth.
+// No chamfer at the MOUTH, deliberately. One was tried and it cost 1mm of
+// radius on each of two neighbouring wells: the web between mouths fell 4.90
+// -> 2.90mm, and 4.90 was itself chosen over a 1.9mm "sliver that reads as a
+// mistake" (below). A nicer edge is not worth re-opening a margin someone
+// already decided.
+// The cavity overshoots the top face instead of ending flush with it. Ending
+// flush put the cavity's own mouth lid exactly coplanar with the body's top
+// plane, and CGAL left a zero-area sliver where each mouth circle crosses y=0
+// -- two of them, caught by mesh_gate's degenerate-face check. Carrying the
+// taper 1mm into the air above the face removes the coincidence entirely.
+cav_over    = 1.00;
+cav_cham    = 2.50;         // 45 deg: horizontal run == vertical rise
+cav_floor_r = cav_top_r - cav_cham - cup_taper_r * (cav_depth - cav_cham);
+
 // Adjacent centres are exactly ring_r apart for six around. On the through-
 // bore tray the binding clearance was the cup RIM (60.3) against a 53mm mouth,
 // which 63 satisfied. Here the cavity mouth IS the cup rim plus fit (61.1), so
@@ -46,8 +76,21 @@ cav_flat_r  = cav_top_r - cup_taper_r * (cav_depth - cav_fillet) - cav_fillet;
 ring_r      = 66.00;
 
 // ---------- bowl body ----------
-bowl_h      = 25.00;        // rim height
-dish_lo     = 19.50;        // top face at the axis -- set by the floor budget
+// THE TOP FACE IS FLAT. It was a shallow paraboloid (19.5 at the axis rising
+// to 25 at the rim) and the first real print came out ringed across its whole
+// face: 27 concentric terraces, a 36.2mm flat disc in the middle, then rings
+// tightening outward. No slicer setting fixes that. The face rose 5.50mm over
+// 95mm of radius, so its steepest slope anywhere was 6.6 degrees -- a 1.73mm
+// terrace, 4 beads wide. Hiding a 0.2mm step needs slope >= 0.48, which this
+// face would only reach at r=391mm. Ironing smooths WITHIN a terrace and
+// cannot fill a vertical step; adaptive layers help at the rim and do nothing
+// at the axis, because a paraboloid's slope goes to zero at its apex --
+// thinner layers just make more, finer rings. A flat face is one top surface
+// with no steps at all. The cost is the rim scallop the dish gave for free;
+// the flower still reads from the petal outline in plan, which is what the
+// eye actually picks up.
+floor_min   = 4.15;         // material under every cavity -- unchanged budget
+bowl_h      = floor_min + cav_depth;
 // The 61mm cavity mouth is far bigger than the tray's 53mm bore, and it does
 // NOT fit inside the tray's outline: a numeric sweep of every (angle, height)
 // pair found the cavity coming within 0.09mm of breaching the exterior near
@@ -61,10 +104,18 @@ petal_foot  = 0.60;         // petals are 60% developed at the foot, 100% at the
                             // rim: the flower opens as it rises, and the foot
                             // stays broad enough that the flare never exceeds
                             // the overhang limit
-flare_ease  = 1.50;         // >1 keeps the lower body near-vertical and puts
+flare_ease  = 1.20;         // >1 keeps the lower body near-vertical and puts
                             // the flare up top, which is the printable
                             // direction. A real bowl flares hardest at the
                             // BOTTOM, which is the unprintable one.
+                            // Was 1.50. Flattening the top took the body from
+                            // 25mm to 22.15mm, so the same 8mm of radius change
+                            // now happens over less height and 1.50 pushed the
+                            // steepest flare to 40.1 deg -- exactly Technique
+                            // 35's ceiling for a surface a buyer can see, with
+                            // no margin. 1.20 gives 34.4 deg. Re-measure this
+                            // if bowl_h ever moves again; it is a function of
+                            // height, not a free style knob.
 
 // dish_lo is set by the floor budget, not picked: dish_z(ring_r) - cav_depth
 // = 4.15mm of material under every cavity.
@@ -128,43 +179,27 @@ z_samples = concat(
 
 module bowl_solid() { skin([for (z = z_samples) ring(z)], z = z_samples, slices = 0); }
 
-// Top face: a shallow paraboloid, low at the axis and rising to the rim. It
-// also makes the rim scallop for free -- at a petal the body reaches rim_r and
-// keeps full height, at a valley it stops short and the dish has already cut
-// it down.
-function dish_z(r) = dish_lo + (bowl_h - dish_lo) * pow(r / rim_r, 2);
-dish_far = rim_r * 1.5;
-module dish_cut() {
-    rotate_extrude($fn = 240)
-        polygon(concat([for (i = [0 : 48]) let(r = dish_far * i / 48) [r, dish_z(r)]],
-                       [[dish_far, bowl_h + 30], [0, bowl_h + 30]]));
-}
-
-
 // ============================================================
 // CAVITY — follows the real cup's taper, flat floor, filleted corner
 // ============================================================
 
 module cup_cavity() {
     rotate_extrude($fn = 160)
-        polygon(concat(
-            [[0, 0], [cav_flat_r, 0]],
-            [for (i = [0 : 12]) let(th = -90 + 90 * i / 12)
-                [cav_flat_r + cav_fillet * cos(th), cav_fillet + cav_fillet * sin(th)]],
-            [[cav_top_r, cav_depth], [0, cav_depth]]
-        ));
+        polygon([
+            [0, 0],
+            [cav_floor_r, 0],                        // flat floor, one top surface
+            [cav_floor_r + cav_cham, cav_cham],      // 45 deg, 0.20mm steps
+            [cav_top_r + cup_taper_r * cav_over,     // the real cup's own taper,
+             cav_depth + cav_over],                  // carried past the top face
+            [0, cav_depth + cav_over]
+        ]);
 }
 
 module cavities() {
     for (i = [0 : n_wells - 1])
         rotate([0, 0, i * 360 / n_wells])
-            translate([ring_r, 0, dish_z(ring_r) - cav_depth])
-                // extend the open top well past the dished surface so the
-                // cavity mouth is cut by the real top face, not by its own
-                // flat lid
-                union() { cup_cavity();
-                          translate([0, 0, cav_depth])
-                              cylinder(h = bowl_h, r = cav_top_r); }
+            translate([ring_r, 0, bowl_h - cav_depth])
+                cup_cavity();
 }
 
 
@@ -186,7 +221,7 @@ module brand_mark() {
 // ============================================================
 
 module cup_mock() {
-    translate([0, 0, dish_z(ring_r) - cav_depth + 0.4])
+    translate([0, 0, bowl_h - cav_depth + 0.4])
         cylinder(h = cup_h, d1 = cup_base_d, d2 = cup_rim_d);
 }
 module cups() {
@@ -194,7 +229,7 @@ module cups() {
         rotate([0, 0, i * 360 / n_wells]) translate([ring_r, 0, 0]) cup_mock();
 }
 
-module bowl() { difference() { bowl_solid(); dish_cut(); cavities(); brand_mark(); } }
+module bowl() { difference() { bowl_solid(); cavities(); brand_mark(); } }
 
 if      (part == "bowl")    bowl();
 else if (part == "cavity")  cavities();      // check a cutter's own extents alone
