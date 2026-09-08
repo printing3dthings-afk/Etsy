@@ -45,17 +45,24 @@ well_mouth_d= 53.00;        // top of the entry chamfer. Kept SHORT on
 ring_r      = 63.00;        // cup_rim_d + 2.7 gap between neighbouring rims
 
 // ---------- plate ----------
-// A flat slab 10mm thick under 28.6mm cups rendered as a coaster with cups
-// standing on it, not as a designed piece. The top face is a shallow
-// paraboloid instead: low in the middle, rising to the rim. That single
-// change also makes the rim SCALLOP for free -- at a petal the body reaches
-// base_r and keeps full height, at a valley it stops short and the dish has
-// already cut it down, so the edge rises and falls with the petals without
-// any extra geometry.
+// THE TOP FACE IS FLAT (2026-09-08). It was a shallow paraboloid -- 7.5 at the
+// axis rising to 14 at the rim -- which scalloped the rim for free but printed
+// as 32 concentric terraces across the whole face, a 30.9mm flat disc in the
+// middle and rings tightening outward. Its steepest slope anywhere was 8.4
+// degrees: a 1.35mm terrace, 3.2 extrusions wide. The sibling bowl printed
+// with the identical defect and Scott saw it on the real part -- see
+// Technique 54, and SAUCE_BOWL_PRINTING.md. No slicer setting fixes it;
+// ironing cannot fill a vertical step and adaptive layers do nothing at a
+// stationary point. A flat face is one clean top surface with no steps.
+//
+// plate_h is now the real, constant thickness and is DERIVED from the well
+// stack rather than picked: the cup seats on the bore's top edge, the chamfer
+// runs above that, and mouth_straight of parallel bore above THAT keeps the
+// visible mouth a clean circle instead of the chamfer's top edge.
 bore_top    = 6.00;         // cup seats on the bore's top edge, here
 chamfer_h   = 3.00;
-plate_h     = 14.00;        // max height, at the rim
-dish_lo     = 7.50;         // top face at the centre
+mouth_straight = 3.00;
+plate_h     = bore_top + chamfer_h + mouth_straight;   // 12.00, flat
 base_r      = 88.00;
 
 // ---------- silhouette: six petals, one per cup ----------
@@ -185,23 +192,6 @@ module skirt_solid() {
     skin([for (z = z_samples) ring(z)], z = z_samples, slices = 0);
 }
 
-// Top face: z = dish_lo at the axis, rising to plate_h at base_r.
-function dish_z(r) = dish_lo + (plate_h - dish_lo) * pow(r / base_r, 2);
-
-// Everything ABOVE that surface, as a solid to subtract. Built as a
-// rotate_extrude of an explicit arc rather than a huge sphere -- a sphere of
-// the required radius (755mm) would carry an enormous facet count under this
-// file's $fa/$fs. The profile spans a real segment of the axis, never closing
-// to a single point on it (Technique 15).
-dish_far    = base_r * 1.4;
-module dish_cut() {
-    rotate_extrude($fn = 240)
-        polygon(concat(
-            [for (i = [0 : 48]) let(r = dish_far * i / 48) [r, dish_z(r)]],
-            [[dish_far, plate_h + 30], [0, plate_h + 30]]
-        ));
-}
-
 module tray_gross() { skirt_solid(); }
 
 
@@ -263,7 +253,7 @@ module cups() {
 
 
 module tray() {
-    difference() { tray_gross(); dish_cut(); wells(); brand_mark(); }
+    difference() { tray_gross(); wells(); brand_mark(); }
 }
 
 

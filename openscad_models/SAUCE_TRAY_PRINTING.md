@@ -58,8 +58,12 @@ through, so a stuck cup pushes out from underneath.
 
 | | time | filament | cost @ $20/kg |
 |---|---|---|---|
-| 2oz tray — 208.0 × 184.6 × 14.0mm | **7h 34m** | 78.4 g | $1.57 |
-| 1oz tray — 158.4 × 140.6 × 14.0mm | **4h 58m** | 52.0 g | $1.04 |
+| 2oz tray — 208.0 × 184.6 × 12.0mm | **6h 33m** | 74.4 g | $1.49 |
+| 1oz tray — 158.4 × 140.6 × 13.0mm | **4h 27m** | 51.4 g | $1.03 |
+
+Re-sliced 2026-09-08 after the top face was flattened (see below). Both got
+cheaper: the 2oz dropped 1h01m and 4.0g, the 1oz 31m and 0.6g. A flat face
+needs far less solid top-layer area than a dished one.
 
 **Filament is nearly free; printer time is the entire cost.** At 7.5 hours the
 2oz tray is well past the ~4h-per-sellable-unit ceiling this shop designs
@@ -83,6 +87,26 @@ unit. The 1oz gets close to two a day. Both are the same design.
   z-range — the bores share that z band and poison a range filter.
 - Material at the thinnest point between a petal valley and the nearest well:
   **9.5mm**.
+
+## The dished top face was wrong, and the printed part proved it (2026-09-08)
+
+The top face was a shallow paraboloid — 7.5mm at the axis rising to 14mm at the
+rim. It scalloped the rim for free, and it printed as **32 concentric terraces**
+across the whole face: a 30.9mm flat disc in the middle, then rings tightening
+outward. Its steepest slope anywhere was 8.4°, giving a 1.35mm terrace — 3.2
+extrusions wide.
+
+Scott printed the sibling bowl, which had the identical defect, and it is
+plainly visible on the real part. No slicer setting fixes it: ironing smooths
+*within* a terrace and cannot fill a vertical step, and adaptive layer height
+does nothing at a stationary point, which is what the axis of a dome is.
+
+**The top face is now flat at 12mm**, and `plate_h` is derived from the well
+stack rather than picked: `bore_top + chamfer_h + mouth_straight` = 6 + 3 + 3.
+`mesh_gate.py` now reports terracing and scores both trays at zero. The cost is
+the rim scallop; the flower still reads from the petal outline in plan.
+
+Full write-up in the 3d-print-design skill, Technique 54.
 
 ## Real bugs caught during the build, for whoever touches this next
 - **The cup RIMS collided and nothing flagged it.** Well spacing was sized
@@ -114,7 +138,7 @@ unit. The 1oz gets close to two a day. Both are the same design.
   zero (still parameterised — on a taller skirt without that overhang it would
   read). A feature no one can see is not texture, it is print time.
 - **A flat slab reads as a coaster, not a tray.** The top face is a shallow
-  paraboloid instead — which also makes the rim scallop for free, rising at
+  paraboloid instead — which also made the rim scallop for free, rising at
   each petal and dipping at each notch, with no extra geometry.
 
 ## Regenerating a variant
