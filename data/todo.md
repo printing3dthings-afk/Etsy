@@ -1,5 +1,5 @@
 # OnBrandCraftz — Master TODO List
-*Last updated: 2026-06-04*
+*Last updated: 2026-09-08*
 
 ---
 
@@ -48,6 +48,7 @@
 | 15 | **Connect Buffer.com for TikTok** (after #4) — Buffer.com free account → connect TikTok → schedule from `data/tiktok_content_calendar.json` | 10 min | 30 days of content already written |
 | 16 | **Test SMTP from your machine** — run `python tools/ads_monitor.py` and confirm email arrives at Printing3dthings@outlook.com | 5 min | SMTP port 587 is blocked in this environment, works fine from Windows |
 | 17 | **Etsy re-auth** — due ~September 1, 2026 — run `python tools/etsy_oauth.py` | 2 min | OAuth refresh token expires 90 days after last auth |
+| 20 | **Measure your Stanley cup** — three numbers with calipers, for the Stanley snack tray design: (1) lid **outer diameter** at its widest, where a tray would rest, (2) **straw outer diameter**, (3) **straw offset from centre** — centre of lid to centre of straw. Send all three. | 2 min | Stanley publishes the bounding box and base diameter but **not** the lid OD or straw diameter, and no retailer lists them. "Fits a Stanley" is a compatibility claim — CLAUDE.md's top rule makes an untested one a hard stop, so this cannot be guessed |
 | 18 | **Back-to-school keywords** — by July 4, 2026 — run `python tools/seasonal_keywords.py --push` | 5 min | Updates all planner keywords for back-to-school peak season |
 
 ---
@@ -130,6 +131,23 @@ python tools/upload_sticker_listings.py
 ---
 
 ## 📋 BACKLOG (future work, no deadline)
+
+### 3D print designs
+*Added 2026-09-08. There was no 3D-print queue in this file before; design work
+was tracked only in `openscad_models/*_PRINTING.md` per product, which records
+what was built and not what is still wanted.*
+
+| Design | Status | Blocked on |
+|---|---|---|
+| **Stanley-style tumbler snack tray** — sits on the lid of a Quencher-type cup, straw hole through the middle, self-centring conical seat underneath so it fits a *range* of tumbler diameters rather than one model, 3–4 shallow snack compartments. Same six-petal flower language as the sauce trays. | Concept approved by Scott 2026-09-08, geometry **not started** | The three measurements in YOUR ACTIONS #20. Also needs a concept pitch before any `.scad` is written, per the standing rule |
+| **Tighter sauce-cup fit** — the 2oz cavity has a constant 3.33mm radial gap (6.7mm across); the cup is held by being 18mm down a well, not by contact. A real nesting fit needs a 55.2mm mouth instead of 61.1mm, which visibly shrinks every well and wants `ring_r` re-solved with it. | Measured and documented 2026-09-08, **not changed** | Scott's call — it is a look change to an approved design, not a bug fix |
+
+**Not on this list on purpose:** adding the straw hole to the existing 6-well
+sauce tray. Measured 2026-09-08 — the tray's solid centre is only 73mm across
+and a Quencher rim needs to land at 98mm, so the rim falls where the wells
+already are. Moving the wells out means `ring_r` 63 → 78, which scales the tray
+to ~251mm (the bed is 256) and ~11.8 hours. A separate, smaller product is the
+right answer.
 
 ### More planners
 | ID | Product | Theme | Season |
