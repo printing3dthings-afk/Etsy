@@ -43,34 +43,76 @@ _RELS = """<?xml version="1.0" encoding="UTF-8"?>
 </Relationships>"""
 
 
-def _mesh_xml(obj_id: int, mesh: trimesh.Trimesh, name: str,
-              pid: int, pindex: int) -> str:
-    v = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>'
-                for x, y, z in mesh.vertices)
-    t = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>'
-                for a, b, c in mesh.faces)
-    return (f'<object id="{obj_id}" type="model" name="{name}" '
-            f'pid="{pid}" pindex="{pindex}">'
-            f'<mesh><vertices>{v}</vertices><triangles>{t}</triangles></mesh>'
-            f'</object>')
+def _volume_meta(name: str, extruder: int) -> str:
+    return (f'<metadata type="volume" key="name" value="{name}"/>'
+            f'<metadata type="volume" key="volume_type" value="ModelPart"/>'
+            f'<metadata type="volume" key="extruder" value="{extruder}"/>')
+
+
+def _object_xml(obj_id: int, meshes: list, names: list) -> tuple[str, str, str]:
+    """One <object> holding every part, plus the two config flavours that name
+    the parts as VOLUMES.
+
+    This is the whole trick, and getting it wrong is invisible. A <components>
+    assembly LOOKS right and round-trips through PrusaSlicer as N SEPARATE
+    OBJECTS -- verified 2026-09-09: a 5-part dumpling clicker came back as
+    "objects: 5, components: 0, items: 5", so the slicer offered five objects
+    to arrange rather than one object with five colourable parts. A real
+    multi-part object is ONE mesh whose parts are declared as triangle RANGES
+    in Metadata/*.config. That is exactly how PrusaSlicer itself writes one.
+    """
+    verts, tris, ranges, base = [], [], [], 0
+    for m in meshes:
+        off = len(verts)
+        verts.extend(m.vertices.tolist())
+        for a, b, c in m.faces:
+            tris.append((a + off, b + off, c + off))
+        ranges.append((base, len(tris) - 1))
+        base = len(tris)
+
+    v = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in verts)
+    t = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in tris)
+    obj = (f'<object id="{obj_id}" type="model">'
+           f'<mesh><vertices>{v}</vertices><triangles>{t}</triangles></mesh></object>')
+
+    vols = "".join(
+        f'<volume firstid="{lo}" lastid="{hi}">{_volume_meta(n, i + 1)}</volume>'
+        for i, (n, (lo, hi)) in enumerate(zip(names, ranges)))
+    slic3r = (f'<object id="{obj_id}" instances_count="1">'
+              f'<metadata type="object" key="name" value="{names[0]}"/>{vols}</object>')
+
+    # Bambu Studio / OrcaSlicer read their own file. Parts are indexed 1..N and
+    # carry the extruder directly, which is what makes the model open already
+    # coloured instead of all one filament.
+    parts = "".join(
+        f'<part id="{i+1}" subtype="normal_part">'
+        f'<metadata key="name" value="{n}"/>'
+        f'<metadata key="extruder" value="{i+1}"/></part>'
+        for i, n in enumerate(names))
+    bambu = (f'<object id="{obj_id}">'
+             f'<metadata key="name" value="{names[0]}"/>'
+             f'<metadata key="extruder" value="1"/>{parts}</object>')
+    return obj, slic3r, bambu
 
 
 def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
              mode: str = "assembly", gap: float = 6.0) -> dict:
     """groups: each inner list is one printed object, made of one or more
     colour parts. In assembly mode there is exactly one group."""
-    flat = [pc for g in groups for pc in g]
-    meshes = []
-    for path, _ in flat:
-        m = trimesh.load(str(path), force="mesh")
-        if isinstance(m, trimesh.Scene):
-            m = trimesh.util.concatenate(tuple(m.geometry.values()))
-        meshes.append(m)
+    loaded = []
+    for g in groups:
+        ms = []
+        for path, _ in g:
+            m = trimesh.load(str(path), force="mesh")
+            if isinstance(m, trimesh.Scene):
+                m = trimesh.util.concatenate(tuple(m.geometry.values()))
+            ms.append(m)
+        loaded.append(ms)
 
-    # Strip the shared prefix so the slicer's part list reads "ring / rotor /
-    # letter" rather than three near-identical 30-character filenames. Picking
-    # a part to recolour is the whole point of shipping it assembled.
-    stems = [p.stem for p, _ in flat]
+    stems = [p.stem for g in groups for p, _ in g]
+    # Only ever cut at an underscore. The naive longest-common-prefix found
+    # "dumpling_clicker_ba" across bao/bao_eyes/basket and turned the parts into
+    # "o", "o_eyes" and "sket".
     prefix = ""
     if len(stems) > 1:
         first = stems[0]
@@ -78,55 +120,33 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
             if all(t.startswith(first[:i]) for t in stems):
                 prefix = first[:i]
                 break
-    names = [(t[len(prefix):].strip("_-") or t) for t in stems] if prefix else stems
-    colours = [c for _, c in flat]
-    mat_id = 100
-    bases = "".join(f'<base name="{n}" displaycolor="{c if c.startswith("#") else "#"+c}FF"/>'
-                    for n, c in zip(names, colours))
-    materials = f'<basematerials id="{mat_id}">{bases}</basematerials>'
+        prefix = prefix[:prefix.rfind("_") + 1] if "_" in prefix else ""
+    flat_names = [(t[len(prefix):].strip("_-") or t) for t in stems] if prefix else stems
+    colours = [c for g in groups for _, c in g]
 
-    objs = [_mesh_xml(i + 1, m, n, mat_id, i)
-            for i, (m, n) in enumerate(zip(meshes, names))]
-
-    # Each group becomes one printed object. A group of one is that mesh; a
-    # group of several is a <components> assembly, so every part keeps its own
-    # coordinates and the object arrives already aligned.
-    next_id = len(meshes) + 1
-    group_ids, idx = [], 0
+    names, k = [], 0
     for g in groups:
-        ids = list(range(idx + 1, idx + 1 + len(g)))
-        idx += len(g)
-        if len(ids) == 1:
-            group_ids.append(ids[0])
-        else:
-            comps = "".join(f'<component objectid="{i}"/>' for i in ids)
-            objs.append(f'<object id="{next_id}" type="model" name="{out_path.stem}">'
-                        f'<components>{comps}</components></object>')
-            group_ids.append(next_id)
-            next_id += 1
+        names.append(flat_names[k:k + len(g)])
+        k += len(g)
 
-    if mode == "assembly":
-        items = f'<item objectid="{group_ids[0]}"/>'
-        layout = f"one object, {len(meshes)} parts"
-    else:
-        # Laid out left to right with a real gap, so they arrive arranged
-        # rather than stacked on the origin.
-        items, x, gi = "", 0.0, 0
-        for g, oid in zip(groups, group_ids):
-            gm = meshes[gi:gi + len(g)]
-            gi += len(g)
-            w = float(max(m.bounds[1][0] for m in gm) - min(m.bounds[0][0] for m in gm))
+    objs, slic3rs, bambus, items = [], [], [], ""
+    x = 0.0
+    for gi, (ms, ns) in enumerate(zip(loaded, names)):
+        o, sl, bm = _object_xml(gi + 1, ms, ns)
+        objs.append(o); slic3rs.append(sl); bambus.append(bm)
+        if mode == "assembly":
+            items += f'<item objectid="{gi+1}"/>'
+        else:
+            w = float(max(m.bounds[1][0] for m in ms) - min(m.bounds[0][0] for m in ms))
             if items:
                 x += gap + w / 2.0
-            items += (f'<item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 '
+            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
                       f'{x:.4f} 0 0"/>')
             x += w / 2.0
-        layout = (f"{len(groups)} separate objects on one plate "
-                  f"({len(meshes)} parts total)")
 
     model = (f'<?xml version="1.0" encoding="UTF-8"?>\n'
              f'<model unit="millimeter" xml:lang="en-US" xmlns="{_NS}">'
-             f'<resources>{materials}{"".join(objs)}</resources>'
+             f'<resources>{"".join(objs)}</resources>'
              f'<build>{items}</build></model>')
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -134,9 +154,18 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
         z.writestr("[Content_Types].xml", _CONTENT_TYPES)
         z.writestr("_rels/.rels", _RELS)
         z.writestr("3D/3dmodel.model", model)
+        z.writestr("Metadata/Slic3r_PE_model.config",
+                   '<?xml version="1.0" encoding="UTF-8"?>\n<config>'
+                   + "".join(slic3rs) + "</config>")
+        z.writestr("Metadata/model_settings.config",
+                   '<?xml version="1.0" encoding="UTF-8"?>\n<config>'
+                   + "".join(bambus) + "</config>")
+    n_parts = sum(len(g) for g in groups)
+    layout = (f"one object, {n_parts} parts" if mode == "assembly"
+              else f"{len(groups)} separate objects on one plate ({n_parts} parts total)")
     return {"file": str(out_path), "mode": mode, "layout": layout,
-            "parts": names, "colours": colours,
-            "triangles": int(sum(len(m.faces) for m in meshes))}
+            "parts": flat_names, "colours": colours,
+            "triangles": int(sum(len(m.faces) for ms in loaded for m in ms))}
 
 
 def main() -> None:

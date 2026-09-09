@@ -38,19 +38,27 @@ letter_h  = T - Th;         // letter top sits FLUSH with the frame, so the
 // all 26 at size 22, then scaled to fit inside the bezel (r=11.1 after the halo
 // offset), the only faces that BOTH fit and print are:
 //
-//   Caveat Bold          size 14.7   3.87 extrusions   <- shipped
+//   Caveat Bold          size 14.7   3.87 extrusions
 //   Bebas Neue           size 18.2   5.46
 //   Fredoka              size 13.9   6.63
-//   Dancing Script Bold  size 12.9   2.09  (right at the limit)
+//   Dancing Script Bold  size 12.9   2.09  <- Scott's pick, and 2.09 against a
+//                                             2.00 floor is not a margin
 //   Cinzel Decorative    size  8.7   1.21  FAILS -- its Q is 47mm wide at 22,
 //                                          decorative swashes, so fitting it
 //                                          shrinks every stroke below a bead
 //   Great Vibes          size  8.2   0.76  FAILS
 //
-// Caveat Bold is also the face the OBC maker's mark already uses, so the
-// monogram and the brand mark are the same hand.
-letter_font = "Caveat:style=Bold";
-letter_sz = 14.5;
+// letter_bold is what makes Dancing Script safe rather than borderline. An
+// offset fattens every stroke by 2*letter_bold while leaving the letterform
+// alone, so the face still reads as the same script. Measured across all 26:
+//   offset 0.00 -> size 12.85, worst stroke 2.09 extrusions
+//   offset 0.15 -> size 12.71, worst stroke 2.48
+//   offset 0.25 -> size 12.62, worst stroke 2.80   <- shipped
+// The glyph barely shrinks paying for it. Re-measure with
+// `glyph_probe.py --alphabet --offset` if the face or the face size changes.
+letter_font = "Dancing Script:style=Bold";
+letter_sz   = 12.6;
+letter_bold = 0.25;
 halo_off  = 0.9;            // offset backing behind the letter -- corpus
 halo_h    = 0.6;            // finding 7's layered 2D offset stack, which is
                             // the whole multicolour-sign category in one move
@@ -88,10 +96,14 @@ module rotor() {
     }
 }
 
-module glyph() {
+module glyph_raw() {
     text(letter, size = letter_sz, font = letter_font,
          halign = "center", valign = "center");
 }
+
+// Every downstream feature offsets from the BOLDED glyph, so the halo sits a
+// constant distance off the letter that actually prints.
+module glyph() { offset(letter_bold) glyph_raw(); }
 
 module letter_body() {
     translate([0, 0, Th]) linear_extrude(letter_h) glyph();

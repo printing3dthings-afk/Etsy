@@ -37,12 +37,19 @@ _EXTRUSION_MM = 0.42          # one bead on the 0.4mm nozzle, 0.2mm layer profil
 _MIN_EXTRUSIONS = 2.0         # the standing rule for a maker's mark
 
 
-def _glyph_polygons(text: str, font: str, size: float):
+def _glyph_polygons(text: str, font: str, size: float, offset: float = 0.0):
     """Extrude the text in OpenSCAD and return its cross-section polygons."""
     # json.dumps, never repr: Python's !r emits SINGLE quotes and OpenSCAD only
     # accepts double-quoted strings, so every call was a silent parser error.
-    scad = (f'linear_extrude(2) text({json.dumps(text)}, size={size}, '
-            f'font={json.dumps(font)}, halign="center", valign="center");')
+    # `offset` fattens every stroke by 2*offset while keeping the letterform --
+    # how to make an elegant but thin face printable without changing which face
+    # it is. Measure the OFFSET glyph, never the bare one, or the number does
+    # not describe what actually gets printed.
+    body = (f'text({json.dumps(text)}, size={size}, font={json.dumps(font)}, '
+            f'halign="center", valign="center")')
+    if offset:
+        body = f'offset({offset}) {body}'
+    scad = f'linear_extrude(2) {body};'
     with tempfile.TemporaryDirectory() as td:
         src, stl = Path(td) / "g.scad", Path(td) / "g.stl"
         src.write_text(scad)
@@ -59,8 +66,9 @@ def _glyph_polygons(text: str, font: str, size: float):
     return section.to_2D()[0].polygons_full
 
 
-def stroke_widths(text: str, font: str, size: float, px: float = 0.02):
-    polys = _glyph_polygons(text, font, size)
+def stroke_widths(text: str, font: str, size: float, px: float = 0.02,
+                  offset: float = 0.0):
+    polys = _glyph_polygons(text, font, size, offset)
     bounds = np.array([p.bounds for p in polys])
     minx, miny = bounds[:, 0].min(), bounds[:, 1].min()
     maxx, maxy = bounds[:, 2].max(), bounds[:, 3].max()
@@ -130,6 +138,8 @@ def main() -> None:
     ap.add_argument("--alphabet", action="store_true",
                     help="sweep A-Z and report the worst letter -- a monogram "
                          "product is only as printable as its weakest glyph")
+    ap.add_argument("--offset", type=float, default=0.0,
+                    help="fatten every stroke by 2*this, keeping the letterform")
     ap.add_argument("--max-thin", type=float, default=0.05,
                     help="max fraction of the glyph allowed to vanish under a one-bead opening")
     a = ap.parse_args()
@@ -138,7 +148,7 @@ def main() -> None:
         rows = []
         for ch in string.ascii_uppercase:
             try:
-                rows.append(stroke_widths(ch, a.font, a.size))
+                rows.append(stroke_widths(ch, a.font, a.size, offset=a.offset))
             except Exception as exc:
                 print(f"  {ch}: FAILED -- {exc}")
         rows.sort(key=lambda r: -r["frac_lost"])
@@ -154,7 +164,7 @@ def main() -> None:
               f'allow {a.max_thin*100:.0f}% -> {"PASS" if ok else "FAIL"}')
         sys.exit(0 if ok else 1)
 
-    r = stroke_widths(a.text, a.font, a.size)
+    r = stroke_widths(a.text, a.font, a.size, offset=a.offset)
     print(f'{r["text"]!r} in {r["font"]} @ {r["size"]}')
     print(f'  glyph        : {r["extent_mm"][0]} x {r["extent_mm"][1]} mm')
     print(f'  typical stroke: {r["typical_mm"]} mm = {r["typical_extrusions"]} extrusions')

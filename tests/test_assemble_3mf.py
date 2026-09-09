@@ -40,20 +40,41 @@ def _cube(n, size, out_dir):
 def _counts(path):
     with zipfile.ZipFile(path) as z:
         xml = z.read("3D/3dmodel.model").decode()
-    return {t: xml.count(f"<{t}") for t in ("object ", "component ", "item ", "base ")}
+        cfg = z.read("Metadata/Slic3r_PE_model.config").decode()
+    return {"object": xml.count("<object "), "item": xml.count("<item "),
+            "volume": cfg.count("<volume ")}
 
 
-def test_assembly_is_one_object_with_parts():
-    """Parts that go together: one item in the build, N components under it."""
+def _parts_per_object(path):
+    """How a PrusaSlicer-family slicer will actually list the parts."""
+    import re
+    with zipfile.ZipFile(path) as z:
+        cfg = z.read("Metadata/Slic3r_PE_model.config").decode()
+    out = []
+    for _, body in re.findall(r'<object id="(\d+)"[^>]*>(.*?)</object>', cfg, re.S):
+        out.append(re.findall(r'<volume[^>]*>.*?key="name" value="([^"]+)"', body, re.S))
+    return out
+
+
+def test_assembly_is_one_object_with_named_volumes():
+    """Parts that go together: ONE object, parts declared as triangle ranges.
+
+    A <components> assembly looks right and is not: PrusaSlicer flattens it into
+    N separate objects, so the slicer offers N things to arrange instead of one
+    object with N colourable parts. Verified on the real 5-part dumpling clicker
+    -- it came back "objects: 5, components: 0, items: 5".
+    """
     import tempfile
     with tempfile.TemporaryDirectory() as td:
         parts = [(_cube("a", 10, td), "#111111"), (_cube("b", 8, td), "#222222")]
         out = Path(td) / "asm.3mf"
         assemble_3mf.assemble(out, [parts], "assembly")
         c = _counts(out)
-        check(c["item "] == 1, f"assembly must be ONE item, got {c['item ']}")
-        check(c["component "] == 2, f"expected 2 components, got {c['component ']}")
-        check(c["base "] == 2, f"expected a colour per part, got {c['base ']}")
+        check(c["object"] == 1, f"assembly must be ONE object, got {c['object']}")
+        check(c["item"] == 1, f"assembly must be ONE item, got {c['item']}")
+        check(c["volume"] == 2, f"parts must be volumes, got {c['volume']}")
+        check(_parts_per_object(out) == [["a", "b"]],
+              f"parts must be named: {_parts_per_object(out)}")
 
 
 def test_plate_is_separate_objects():
@@ -65,7 +86,8 @@ def test_plate_is_separate_objects():
         out = Path(td) / "plate.3mf"
         assemble_3mf.assemble(out, [g1, g2], "plate")
         c = _counts(out)
-        check(c["item "] == 2, f"plate must have one item per object, got {c['item ']}")
+        check(c["item"] == 2, f"plate must have one item per object, got {c['item']}")
+        check(c["object"] == 2, f"plate must have one object per group, got {c['object']}")
 
 
 def test_plated_objects_do_not_overlap():
@@ -99,22 +121,39 @@ def test_a_plate_entry_may_itself_be_multipart():
         basket = [(_cube("basket", 24, td), "#333333")]
         out = Path(td) / "plate.3mf"
         assemble_3mf.assemble(out, [bun, basket], "plate")
-        c = _counts(out)
-        check(c["item "] == 2, f"expected 2 objects on the plate, got {c['item ']}")
-        check(c["component "] == 2, f"the bun's 2 parts must be components, got {c['component ']}")
+        check(c := _parts_per_object(out),
+              "no parts listed at all")
+        check(len(c) == 2, f"expected 2 objects on the plate, got {len(c)}")
+        check(len(c[0]) == 2, f"the bun must keep its 2 parts, got {c[0]}")
 
 
 def test_the_shipped_files_really_kept_their_parts():
     """The whole point. A merged 3MF slices fine and is silently useless."""
-    for name, want in (("monogram_keychain_J", 4), ("dumpling_clicker", 5),
-                       ("snap_box", 4)):
+    for name, want in (("monogram_keychain_J", [4]), ("dumpling_clicker", [4, 1]),
+                       ("snap_box", [1, 3])):
         f = ROOT / "openscad_models" / f"{name}.3mf"
         if not f.exists():
             continue
-        sc = trimesh.load(str(f))
-        got = len(sc.geometry) if hasattr(sc, "geometry") else 1
-        check(got == want, f"{name}.3mf carries {got} parts, expected {want} "
-                           f"-- a merged export cannot have filaments assigned")
+        got = [len(v) for v in _parts_per_object(f)]
+        check(got == want, f"{name}.3mf lists parts per object as {got}, expected "
+                           f"{want} -- a slicer can only colour what it lists")
+
+
+def test_part_names_are_readable():
+    """A prefix strip that cuts mid-word turned bao/bao_eyes/basket into
+    "o"/"o_eyes"/"sket". Names are how a part is picked for recolouring."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        g1 = [(_cube("widget_bao", 10, td), "#111111"),
+              (_cube("widget_bao_eyes", 4, td), "#222222")]
+        g2 = [(_cube("widget_basket", 12, td), "#333333")]
+        out = Path(td) / "n.3mf"
+        assemble_3mf.assemble(out, [g1, g2], "plate")
+        names = [n for grp in _parts_per_object(out) for n in grp]
+        check(all("_" not in n[:1] and len(n) > 2 for n in names),
+              f"part names look truncated: {names}")
+        check("bao" in names and "basket" in names,
+              f"expected whole words, got {names}")
 
 
 def run() -> None:
@@ -129,9 +168,10 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("ASSEMBLE 3MF TESTS OK -- assembled parts stay one object, a container "
-          "and lid stay separate objects on one plate without overlapping, and "
-          "every shipped 3MF still carries its real part count.")
+    print("ASSEMBLE 3MF TESTS OK -- assembled parts are ONE object with named "
+          "volumes (not components, which a slicer flattens into loose objects), "
+          "a container and lid stay separate objects on one plate without "
+          "overlapping, and every shipped 3MF lists the parts a slicer can colour.")
 
 
 if __name__ == "__main__":

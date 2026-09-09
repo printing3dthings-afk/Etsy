@@ -15,6 +15,12 @@ off-the-shelf switch — the switch is the click; nothing printed has to flex.
 
 Each ships as both `.3mf` (use these — real mm units, ~1/13th the size) and `.stl`.
 
+**Print this:** `dumpling_clicker.3mf` — one file. The bun arrives as one
+object with **4 colourable parts** (`bao`, `bao_eyes`, `bao_blush`,
+`bao_shine`) and the steamer basket as a second object on the same plate.
+Assign a filament per part; the face is a flush inlay, so it is invisible until
+the parts differ in colour.
+
 ## The face is real colour, not a painted dimple
 
 The eyes, smile, blush and catchlights are **separate solids that exactly

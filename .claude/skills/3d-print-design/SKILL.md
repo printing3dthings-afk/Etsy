@@ -2017,6 +2017,32 @@ Two cases, and the deliverable is a single `.3mf` either way:
 | what it is | how it ships |
 |---|---|
 | parts that assemble into one object — colour bodies, a flush inlay, a raised monogram, a print-in-place rotor inside its frame | **one object, N parts.** Every part keeps its own coordinates, so it opens already aligned and a filament is assigned per part. |
+
+### A `<components>` assembly is NOT how you do this, and it looks like it is
+
+The obvious construction — one `<object>` built from `<component>` references —
+produces a file that opens, slices, and is wrong. **PrusaSlicer flattens it into
+N separate objects.** Verified 2026-09-09 by round-tripping the 5-part dumpling
+clicker back out: `objects: 5, components: 0, items: 5`. The slicer offered five
+loose objects to arrange instead of one object with five colourable parts, and
+the flush face — which is invisible until its parts get different filaments —
+could not be coloured at all. Scott caught it: *"the dumpling doesnt have its
+face."*
+
+A real multi-part object is **ONE mesh whose parts are declared as triangle
+ranges** in `Metadata/Slic3r_PE_model.config`, which is exactly how PrusaSlicer
+writes one itself:
+
+```xml
+<object id="1" instances_count="1">
+  <volume firstid="0" lastid="41507">
+    <metadata type="volume" key="name" value="bao"/>
+    <metadata type="volume" key="volume_type" value="ModelPart"/>
+```
+
+`tools/assemble_3mf.py` writes that, plus Bambu/Orca's own
+`Metadata/model_settings.config` with a per-part extruder, so the model opens
+with colours already assigned rather than all one filament.
 | things that separate in use — a container and its lid, a clicker's bun and its basket | **N separate objects, one plate**, laid out with a real gap so they arrive arranged rather than stacked on the origin. A plate entry may itself be multi-part. |
 
 ### OpenSCAD cannot produce either of these, and it fails silently
@@ -2047,9 +2073,12 @@ is the single assembled `.3mf`.
 
 A 3MF that merged silently still slices. Check the parts survived:
 
-```python
-sc = trimesh.load("out.3mf")
-len(sc.geometry)          # must equal the number of parts, not 1
+Counting meshes is NOT the check — a correct file has one mesh per object, with
+the parts inside it. Round-trip it through a real slicer and read the parts back:
+
+```bash
+prusa-slicer --load tools/p1s_slice_profile.ini --export-3mf -o /tmp/rt.3mf out.3mf
+# then read Metadata/Slic3r_PE_model.config: one <volume> per colourable part
 ```
 
 and slice it for real before calling it done — `prusa-slicer --load
