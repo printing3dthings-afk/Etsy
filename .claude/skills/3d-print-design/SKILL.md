@@ -5483,3 +5483,148 @@ this shop's whole model tree: it puts the two dished sauce products at the top
 
 It is **reported, not fatal** — an organic model can carry real shallow area on
 purpose. But a number that large on a flat-ish product face means it will ring.
+
+---
+
+## Technique 55 — A captive mechanism needs a SEAT and a CEILING, not just a slot (2026-09-09, second real printed part)
+
+Scott printed the bayonet jar and reported: *"The bottom part where the lid
+locks is pretty flimsy... The lid rattles when locked."* Both were real, both
+had passed every gate in this skill, and neither was a tolerance problem —
+which is what they look like, and what "tighten the tolerances" would fix
+only cosmetically. Two separate structural mistakes.
+
+### 55a — A slot cut into a wall thinner than the slot is a SEVERANCE
+
+The lock channel was a swept tube of radius 2.5 centred on the outer radius
+(25). It therefore spanned **r 22.5 .. 27.5**. The wall spanned **22.6 .. 25**.
+
+    channel inner 22.50  <  wall inner 22.60   ->  nothing behind it
+
+The neck was cut clean through over 3 × 33° of its circumference. What was
+left holding the rim on was three thin webs. It *looked* fine in preview,
+rendered as one watertight body, and passed the mesh gate — a through-cut is
+not a topology error, it is a hole, and a hole is perfectly manifold.
+
+**The check no gate performs, and you must do by hand for every slot, groove,
+channel, keyway or counterbore cut into a curved wall:**
+
+    material_behind = (feature_inner_radius) - (bore_radius)
+    require >= 1.2 mm  (about 3 extrusions)
+
+Do it in arithmetic before rendering. A swept tube of radius `r` centred on
+radius `R` reaches inward to `R - r`, and that number is almost never the one
+you were thinking about when you chose `r`.
+
+Tightening clearance does **not** save you. Dropping this jar's clearance from
+0.50 to 0.25 moved the channel inner from 22.50 to 22.75 — a whole 0.15mm of
+material behind it. Still a through-cut in every meaningful sense.
+
+**The fix is an internal collar**, not a thicker wall everywhere (which wastes
+material and print time over the whole height for a defect confined to 12mm):
+
+- Thicken the bore inward across the lock zone only, to whatever radius gives
+  the 1.2mm.
+- **The collar's underside is a downward-facing annular ledge — a 90° overhang
+  printing into open air.** Taper it: make the radial step equal the vertical
+  step and it is 45° from vertical, self-supporting, and disappears from the
+  overhang report entirely. (Confirmed: the overhang breakdown after the fix
+  showed 0.00 cm² anywhere in the collar's z-band.)
+- Cut the entry slot only as deep as the channel actually needs. The obvious
+  move — extending it inward "to be safe" — slots the collar three times and
+  undoes the whole repair.
+
+The collar is also the *right* fix rather than a patch: an uncut 360° hoop at
+the neck is exactly the hoop stiffness a bayonet neck wants, and it is
+stiffer than the original wall ever was.
+
+### 55b — "It rattles" is an axial-constraint bug, not a clearance bug
+
+The lid hung on three spheres in oversized channels with its cap underside
+**7mm above the jar rim**. Nothing touched anything. No clearance number
+fixes that, because the parts were never in contact to begin with.
+
+A captive mechanism needs **two** surfaces, and they are usually different
+features:
+
+1. **A seat** — a real face-to-face contact that stops the part in one
+   direction. Here: the lid cap underside landing flat on the jar rim. Derive
+   the dimension that produces it (`lid_skirt_h = base_h - lid_skirt_bottom_z`)
+   — do not type a plausible-looking number, which is exactly how 20 got in
+   where 13 belonged.
+2. **A ceiling** — something stopping the part in the opposite direction.
+   Here: the lock channel's upper surface bearing on the pin.
+
+**The subtle half, and the one I got wrong on the first attempt:** placing the
+pin on the channel's *centreline* in the locked pose feels correct and is not.
+It leaves exactly `clearance` of free lift — the part still rattles, just
+less, and you will have "fixed" it while changing nothing a hand can feel.
+Place the pin against the **ceiling**:
+
+    pin_z_locked = channel_z_at_lock + clearance
+
+Then verify by tabulating the gap through the whole motion, not just at the
+end pose:
+
+    0 deg: ceiling 39.250  pin top 38.900  gap +0.350
+   25 deg: ceiling 38.900  pin top 38.900  gap +0.000   <- captured, zero lift
+
+and separately confirm the channel **floor** never rises to the pin's
+underside, or the mechanism levers the lid back off its own seat at some
+intermediate angle — a failure that is invisible in the locked pose alone.
+
+**Prefer tangency to interference.** Tangent contact removes 100% of the
+*designed* play while keeping the assembly exportable as non-overlapping
+bodies and the lid turnable by hand. A real 0.1mm interference across stiff
+PLA at three points risks a lid that will not turn, or a sheared pin, and buys
+nothing the ramp below does not already buy.
+
+### 55c — Ramp the capture so the motion tightens it
+
+A constant-height channel captures the part only at the instant it arrives. A
+channel that descends over the lock travel *draws* the part onto its seat the
+whole way in, which is what gives a bayonet its screw-like, positive feel.
+0.35mm over 25° here: 0.25 of it absorbs the pin's own vertical slop, the rest
+closes the last of the gap.
+
+Build the ramp as a **chain of hulled pairs of the pin itself** along the
+helix — `hull()` of two spheres, ~16 segments. This is exactly the pin's swept
+envelope, so clearance is uniform everywhere *including at the ends*, which
+`rotate_extrude` cannot do (it is constant-z, so it cannot ramp at all) and
+which a union of per-angle extrudes reaches by timing out (Technique 5). Chord
+error at r=25 over 2° segments is 0.005mm.
+
+While you are there: end the channel just past the locked pin's own angular
+footprint, `atan(pin_r/R)`, plus ~1.5° of margin. The original left 8° of free
+over-rotation past the lock — the part arrives and then keeps going, which
+reads as looseness even once the axial play is gone.
+
+### 55d — Export the pose the fit needs; ship the pose the printer needs
+
+The lid must be *modelled* assembled (skirt down, cap up) — that is the only
+pose in which the fit can be reasoned about or the interference checked. It
+must be *printed* cap-down. Exporting the modelling pose asked the slicer to
+begin a 20 cm² disc in mid-air:
+
+    lid, as modelled : 20.11 cm2 past 55 deg
+    lid, flipped     :  0.09 cm2 past 55 deg
+
+Same geometry, same gate, 200× difference. **A mesh gate reports on the mesh
+you hand it, and orientation is part of the mesh.** Put the flip in the export
+branch of the .scad so the exported part is print-ready standalone and the
+assembled preview stays honest.
+
+### The check that would have caught all of this
+
+Before rendering any mechanism, write out the arithmetic:
+
+- every slot: `feature_inner_radius - bore_radius >= 1.2`
+- every captive part: name the seat face and the ceiling face, by feature
+- the locked pose: `ceiling - part_top == 0`, and `floor < part_bottom` at
+  **every** angle, not just the last one
+- every exported part: is this the orientation it prints in?
+
+None of these are visible in a render, and none are caught by watertightness,
+winding, volume, body count, terracing or overhang. They are arithmetic, and
+they are the difference between a mechanism and a part that merely looks like
+one.
