@@ -5715,3 +5715,67 @@ ended a thing that had already burned four build-verify-ship cycles.
 geometry was right, the label was backwards, and it went out twice. When
 a drawing has a handedness, verify the caption against the transform, not
 against intent.
+
+## Technique 57 — The modelled gap is not the printed gap: beads eat over half of it (2026-09-09, third real printed part)
+
+The monogram keychain's spinner came off the plate **fused solid** — could not
+be freed with pliers. The mesh was measured afterwards and the rotor/frame gap
+was a uniform **0.400mm at every height**, exactly as designed. The model was
+not wrong, which is the whole point of this entry: the number in the source is
+not the number on the plate.
+
+### What the slicer actually leaves
+
+Slice it and rasterise the real extrusion moves, dilated by half a bead
+(`gcode_probe.py`'s own raster — reuse it, do not write a second one; a
+one-pixel dilation fragments every layer into dozens of false islands and the
+"two largest" are then meaningless):
+
+| | modelled gap | **real air between deposited beads** |
+|---|---|---|
+| fused part, first layer | 0.400 | **0.170 mm** |
+| fused part, mid-height | 0.400 | 0.175 mm |
+
+**A 0.42mm bead lands centred so its outer edge sits on the nominal surface, so
+two facing walls consume well over half of the gap between them.** 0.400mm
+modelled → 0.170mm of actual air. That sits close enough to the ~0.08–0.10mm
+fusion threshold that any first-layer squish closes it outright, and a weld
+around 94mm of circumference is exactly the kind that will not come apart.
+
+**So when a print-in-place clearance is quoted anywhere — including in this
+file — ask whether it is a modelled number or a measured one.** 0.4mm is the
+figure everyone repeats. It is a modelled figure. Design to the air you will
+actually get.
+
+### Relieve where it welds; do not just widen everything
+
+Widening the whole interface is the lazy fix and it costs real function: on a
+V-capture, clearance and axial rattle are the same knob (play ≈ clearance /
+sin(V half-angle) — here 0.45/sin 22° ≈ 1.2mm of vertical slop). A
+print-in-place gap does not weld along its whole height. It welds where the
+process attacks it:
+
+- **the first layer**, where squish spreads the beads of *both* bodies, and
+- **any top surface beside the gap**, where ironing drags melt across it.
+
+Chamfering the moving part's outer edges by 0.6mm and flaring the housing's
+bore to match opened those two places to 1.209mm and 1.020mm while leaving the
+load-bearing V at 0.234mm — margin exactly where the failure lives, tightness
+exactly where the mechanism lives.
+
+**Turn ironing off on any print-in-place part**, and never brim one: a brim
+bridges the two bodies at the bed by design.
+
+### Two honesty notes from this one
+
+**The slicer was not the culprit and checking that is cheap.** Old and new both
+came out as **two separate islands on every layer** — nothing merged in
+software. Establishing that took one `--scan` and moved the search from "the
+geometry or the slicer" to "the process", which is where it actually was.
+
+**A diagnostic is only worth offering if its outcomes differ.** Scott was asked
+to twist the fused part with pliers, on the claim that breaking free would mean
+a bed weld and not breaking would mean a V weld. It does not discriminate at
+all — a bed ring welded over 94mm resists pliers just as well as a welded V.
+Before proposing a test, check that its two outcomes actually lead somewhere
+different; otherwise it costs the other person effort and returns nothing.
