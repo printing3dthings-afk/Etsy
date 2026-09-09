@@ -24,7 +24,7 @@ $fa = 2;  $fs = 0.4;
 
 include <BOSL2/std.scad>
 
-part  = "all";              // all | bin | label
+part  = "all";              // all | bin | tile | tiletext
 size  = "S";                // S | M | L | XL
 label = "PARTS";
 
@@ -78,18 +78,41 @@ tng_off = 30;               // front/back tongues sit OUTBOARD of the scoop.
                             // the front half of the stacking feature.
 tng_c   = (wall + pad_d) / 2;   // tongue centred across wall+pad
 
-// ---- label plate ---------------------------------------------------------
+// ---- label: a SLIDE-IN TILE, not a moulded-in inlay -----------------------
+// The label was originally a two-colour inlay in this vertical face. That is
+// the wrong construction and the reason is purge, not looks: the text spans 56
+// layers, so a 2-colour print makes 112 tool changes, and at Bambu's default
+// ~350mm3 flush that is 48.6 g thrown into the wipe tower -- MORE THAN THE
+// 45 g BIN. Even a tuned 150mm3 flush costs 20.8 g.
+//
+// A separate tile printed FLAT, text face down on smooth PEI, puts the text in
+// three layers: 6 tool changes, ~2.6 g, and a mirror-smooth face. It is also
+// re-labelable, which is the actual point of a labelled storage system -- swap
+// one tile instead of reprinting a four-hour bin.
+//
+// SLIDE-IN, NOT SNAP. A snap needs a spring-arm force calculation, fatigues,
+// and fights you every time you change it. A slot has none of that and the
+// tile drops in under gravity.
 plate_w     = min(W - 24, 76);
 plate_h     = 20;
 plate_r     = 3;
-plate_proud = 1.6;          // raised, not recessed: keeps the wall at full
-                            // thickness behind the text (Technique 52's
-                            // "raise it outward instead of cutting in")
+plate_proud = 1.6;
 plate_zc    = floor_t + plate_h/2 + 6;
-inlay_d     = 1.0;
-label_size  = 11;           // "PARTS" measures ~58mm at this size; a longer
-                            // word needs this reduced -- re-run glyph_probe.
+label_size  = 11;           // "PARTS" measures 52.1 x 11.2mm at this size and
+                            // must fit the tile's 63.6 x 16.6 window.
 label_font  = "Montserrat:style=Black";
+
+slot_w   = 64;              // tile window
+lip_w    = 2.0;             // how far each retaining lip overhangs the tile
+lip_t    = 0.6;             // lip thickness, at the front of the pocket
+pocket_d = 2.0;             // total pocket depth. The plate is 1.6 proud on a
+                            // 1.68 wall = 3.28mm of material, so this leaves
+                            // 1.28mm behind the tile.
+stop_h   = 1.5;             // plate left below the slot, so the tile lands on
+                            // something instead of falling through
+tile_t   = 1.2;             // 6 layers flat
+tile_clr = 0.2;
+text_d   = 0.6;             // 3 layers -- the whole purge budget
 
 module outer_2d() { offset(r = out_r) square([W - 2*out_r, D - 2*out_r], center = true); }
 module cav_2d()   { offset(r = -wall) outer_2d(); }
@@ -120,9 +143,13 @@ module base_pockets() { wall_feature(tng_t + 2*stk_clr, tng_len + 2*stk_clr,
 // Shrinking the profile by `k` chamfers all four edges at 45 when hulled
 // against the unshrunk one -- the underside is the edge that matters, since
 // a square-shouldered proud plate would print as a 1.6mm unsupported ledge.
+// Shrinks the sides and the BOTTOM by k while leaving the TOP where it is, so
+// hulling against the unshrunk profile chamfers the underside (the only edge
+// that overhangs) and keeps the top square -- the top has to stay square or
+// the chamfer narrows the slot's mouth and the tile will not go in.
 module plate_2d(k) {
-    offset(r = -k) offset(r = plate_r)
-        square([plate_w - 2*plate_r, plate_h - 2*plate_r], center = true);
+    offset(r = plate_r) offset(r = -plate_r)
+        translate([0, k/2]) square([plate_w - 2*k, plate_h - k], center = true);
 }
 module plate_slice(k, y) {
     translate([0, y, plate_zc]) rotate([90, 0, 0])
@@ -139,12 +166,31 @@ module label_2d() {
     text(label, size = label_size, font = label_font,
          halign = "center", valign = "center");
 }
-// Extrudes along world -Y (outward) so the glyphs stay upright; starting at
-// the pocket's back plane and running past the face covers the full depth.
-module label_body(extra) {
-    translate([0, -D/2 - plate_proud + inlay_d, plate_zc]) rotate([90, 0, 0])
-        linear_extrude(inlay_d + extra) label_2d();
+
+// The slot: a T in horizontal section. A narrow mouth between the two lips at
+// the front, a full-width cavity behind them, both running out through the top
+// so the tile slides down in.
+module label_slot() {
+    yf = -D/2 - plate_proud;
+    zt = plate_zc + plate_h/2 + 0.1;
+    zb = plate_zc - plate_h/2 + stop_h;
+    translate([0, yf + lip_t/2 - 0.25, (zb + zt)/2])
+        cube([slot_w - 2*lip_w, lip_t + 0.5, zt - zb], center = true);
+    translate([0, yf + lip_t + (pocket_d - lip_t)/2, (zb + zt)/2])
+        cube([slot_w, pocket_d - lip_t, zt - zb], center = true);
 }
+
+// ---- the tile, printed FLAT, text face down ------------------------------
+tile_w = slot_w - 2 * tile_clr;
+tile_h = plate_h - stop_h - 2 * tile_clr;
+module tile_2d() {
+    offset(r = plate_r - 0.5) offset(r = -(plate_r - 0.5))
+        square([tile_w, tile_h], center = true);
+}
+module label_tile()      { difference() { linear_extrude(tile_t) tile_2d();
+                                          translate([0,0,-0.01])
+                                              linear_extrude(text_d + 0.01) label_2d(); } }
+module label_tile_text() { linear_extrude(text_d) label_2d(); }
 
 // ---- front scoop ---------------------------------------------------------
 // A plain-fronted box is a box; a bin you can see into and reach into is a
@@ -204,12 +250,11 @@ module bin() {
         }
         base_pockets();
         front_scoop();
-        label_body(0.5);
+        label_slot();
         brand_mark();
     }
 }
-module label_inlay() { label_body(0); }
-
-if      (part == "bin")   bin();
-else if (part == "label") label_inlay();
-else if (part == "all") { bin(); label_inlay(); }
+if      (part == "bin")      bin();
+else if (part == "tile")     label_tile();
+else if (part == "tiletext") label_tile_text();
+else if (part == "all")    { bin(); }

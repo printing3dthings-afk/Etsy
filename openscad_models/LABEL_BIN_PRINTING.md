@@ -1,16 +1,21 @@
 # Labeled Stacking Bin — printing notes
 
-One parametric family, four sizes, two colours. `label_bin_<SIZE>.3mf` is the
-file to print — one object, two parts, colours already assigned.
+One parametric family, four sizes. **Two separate prints:** the bin
+(`label_bin_<SIZE>.stl`, single colour) and the label tile
+(`label_tile.3mf`, two parts, colours assigned). One tile fits every size.
 
 ## Real print cost — sliced, not estimated
 
-| size | outside | time | filament | sellable? |
+| part | outside | time | filament | sellable? |
 |---|---|---|---|---|
-| **S** | 90 × 71.6 × 47 | **3h 53m** | 45 g | **yes** |
-| M | 90 × 71.6 × 92 | 6h 16m | 75 g | no |
-| L | 180 × 71.6 × 47 | 6h 57m | 76 g | no |
-| XL | 180 × 71.6 × 92 | 10h 47m | 122 g | no |
+| **bin S** | 90 × 71.6 × 47 | **3h 59m** | 43 g | **yes** |
+| bin M | 90 × 71.6 × 92 | 6h 17m | 73 g | no |
+| bin L | 180 × 71.6 × 47 | 7h 08m | 75 g | no |
+| bin XL | 180 × 71.6 × 92 | 11h 01m | 121 g | no |
+| **tile** | 63.6 × 18.1 × 1.2 | **14m** | 1.7 g | — |
+
+The bins are **single colour and purge nothing**. Only the tile is two-colour,
+and it makes about six tool changes.
 
 **Only S comes in under the ~4h-per-unit ceiling this shop designs to.** That
 is worth saying plainly rather than shipping a "family" and letting the
@@ -45,14 +50,45 @@ family grows to. Verified on L: 10 tongues engaging, none lost.
 The scoop bottoms at z=30 and the label plate tops out at z=28, so it can never
 orphan the plate off the wall — the failure mode Technique 6 documents.
 
+## Why the label is a separate tile
+
+It was originally moulded into the bin's front face as a flush two-colour
+inlay. That construction is wrong, and the reason is **purge, not looks**:
+
+The text spans **56 layers**, so a two-colour print makes **112 tool changes**,
+each flushing into the wipe tower.
+
+| flush volume | purge |
+|---|---|
+| 150 mm³ (tuned, similar colours) | 20.8 g |
+| 250 mm³ | 34.7 g |
+| **350 mm³ (Bambu default)** | **48.6 g** |
+
+**The bin weighs 45 g.** At stock settings you would throw away more plastic
+than the part. Worth noting the earlier "3h 53m / 45 g" figure for the moulded
+version was a *single-extruder* slice — it never modelled the colour change or
+the wipe tower at all, so it was never the real cost.
+
+A tile printed **flat, text face down on smooth PEI** puts the text in three
+layers: six tool changes, ~2.6 g, and a mirror-smooth face. It is also
+**re-labelable** — swap a 14-minute tile instead of reprinting a four-hour bin,
+which is the actual point of a labelled storage system.
+
+**Slide-in, not snap.** A snap needs a spring-force calculation, fatigues, and
+fights you every time you change it. The slot has none of that: the tile drops
+in from the top under gravity and lands on a 1.5mm stop. Two lips overhang the
+opening by 2.0mm each, so the 63.6mm tile cannot pass back out through the
+60.0mm mouth — **retained by 1.80mm per side**. Verified: a seated tile
+intersects the bin at **EMPTY**.
+
 ## The label
 
 The point of the design. A printed bin normally gets a peel-off sticker; this
 one carries its label as a second filament, flush in a raised plate, so it
 cannot peel or fade.
 
-Change it by re-rendering with `-D 'label="SCREWS"'`. **Check any new word
-before printing it:**
+Change it by re-rendering the tile with `-D 'label="SCREWS"' -D 'part="tile"'`
+(and `part="tiletext"`). **Check any new word before printing it:**
 
 ```sh
 python3 tools/glyph_probe.py "SCREWS" --font "Montserrat:style=Black" --size 11
