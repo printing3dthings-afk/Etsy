@@ -69,9 +69,18 @@ function env(t) = env_floor + (1 - env_floor) * sin(180 * pow(max(t, 0), 0.8));
 // (Technique 19). This one is C-infinity everywhere.
 function lobe(a, n, ph) = 0.5 + 0.5 * cos(n * (a - ph));
 
-// A slow, deliberately NON-integer wobble layered over the primary count.
-// Perfectly uniform flutes read as machined, not thrown (Technique 11).
-function wobble(a) = 0.86 + 0.14 * sin(a * 2.3 + 11);
+// A slow secondary wobble over the primary count -- perfectly uniform flutes
+// read as machined, not thrown (Technique 11).
+//
+// THE FREQUENCY MUST BE A WHOLE NUMBER OF CYCLES PER REVOLUTION. Technique 11's
+// worked example uses 2.3, and 2.3 does not close: wobble(0) = 0.8867 against
+// wobble(359.5) = 0.9838, which at the belly is a 1.90mm radial STEP -- a ridge
+// running the vase's entire height, clearly visible in a shaded render and
+// invisible in every numeric gate. 7 closes exactly and is coprime with 12, 24
+// and 48, so it still never locks in phase with the flutes, which is the whole
+// point of the term. (halloween_pumpkin.scad carries the same 2.3 and very
+// likely the same seam.)
+function wobble(a) = 0.86 + 0.14 * sin(a * 7 + 11);
 
 function ring_r(r, z, a) =
     let(
