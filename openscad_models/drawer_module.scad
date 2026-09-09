@@ -227,20 +227,68 @@ body_z1 = H - wall - 4.5;                       // headroom under the cavity roo
 drw_y0  = plate_t;
 drw_y1  = cav_d - clear;
 
-// Finger pull: the face's top band is recessed full width, rather than a
-// pocket floating in the middle of a plain slab -- which is what the first
-// version was, and it read as a mail slot. Open at the top, so there is no
-// roof to bridge and no overhang at all; the 45 deg step at its bottom is
-// the surface a fingertip actually pulls against.
+// ---- finger pull: four interchangeable options ----------------------
+// Every one of these has to work from the FRONT FACE ALONE. Modules stack,
+// so a pull you reach over the top edge for -- the obvious handle-less
+// answer, and a good one on a single unit -- is unreachable the moment
+// anything sits on top of it. That constraint is what rules the field.
+//
+//   band   flush, nothing protrudes, but only 3mm of fingertip purchase.
+//          The weakest grip of the four; it is the quietest to look at.
+//   ledge  a proud shelf with a 45 deg underside, so it is self-supporting
+//          along its whole length with no stems. Best grip by a distance.
+//          Costs 10mm of depth, so the module footprint goes 71 -> 81mm.
+//   slot   cut clean through: a whole fingertip goes in, nothing protrudes.
+//          You can see into the drawer, which reads as either architectural
+//          or as clutter depending on what is in it. Its top edge is a
+//          56mm bridge over a 5mm wall -- routine, but it IS a bridge, the
+//          only one anywhere in this design.
+//   lip    a blind pocket with a flat, undercut roof, so there is a real
+//          hook to pull on without protruding and without seeing in. Its
+//          roof is a 4mm cantilever -- a small overhang, buried inside the
+//          pocket where nobody looks.
+pull = "band";   // "band" | "ledge" | "slot" | "lip"
+
 plate_top = H - wall - clear_lat;
-pull_d = 3.0;
-pull_h = 9;      // 9 of the face's 39mm; at 12 it swallowed the top
+pull_w = 56;
+band_d = 3.0;
+band_h = 9;      // 9 of the face's 39mm; at 12 it swallowed the top
                  // third of the front and read as a lid, not a pull.
 
-module pull_recess() {
-    z1 = plate_top;  z0 = z1 - pull_h;
-    rotate([90, 0, 90]) linear_extrude(W + 10, center = true)
-        polygon([[-1, z0 - pull_d], [pull_d, z0], [pull_d, z1 + 2], [-1, z1 + 2]]);
+module face_prism(pts, w) {
+    rotate([90, 0, 90]) linear_extrude(w, center = true) polygon(pts);
+}
+
+module pull_cut() {
+    if (pull == "band") {
+        z1 = plate_top;  z0 = z1 - band_h;
+        face_prism([[-1, z0 - band_d], [band_d, z0], [band_d, z1 + 2], [-1, z1 + 2]], W + 10);
+    } else if (pull == "slot") {
+        z1 = plate_top - 5;  z0 = z1 - 14;
+        // Chamfered mouth funnelling into a straight through-cut. Both
+        // halves are real 4-point rectangles: a 2-point polygon renders as
+        // a non-manifold solid, and OpenSCAD only warns about it.
+        hull() {
+            face_prism([[-1, z0 - 2], [0.01, z0 - 2], [0.01, z1 + 2], [-1, z1 + 2]], pull_w + 4);
+            face_prism([[2.0, z0], [2.2, z0], [2.2, z1], [2.0, z1]], pull_w);
+        }
+        face_prism([[2.0, z0], [plate_t + 1, z0], [plate_t + 1, z1], [2.0, z1]], pull_w);
+    } else if (pull == "lip") {
+        // 3.0 deep, not 4.0: at 4 the pocket left only 1mm of plate behind
+        // it, and that 1mm is what the undercut roof cantilevers off.
+        z1 = plate_top - 4;  z0 = z1 - 16;
+        face_prism([[-1, z0 - 4], [3.0, z0], [3.0, z1], [-1, z1]], pull_w);
+    }
+}
+
+module pull_add() {
+    if (pull == "ledge") {
+        z1 = plate_top - 3;
+        // embedded 1.5mm, PAST the 1.0mm face flutes -- at 0.5 the ledge
+        // only met the lands between grooves and bridged the grooves with
+        // gaps behind it
+        face_prism([[1.5, z1], [-10, z1], [-10, z1 - 5], [1.5, z1 - 15]], pull_w);
+    }
 }
 
 // Flutes on the face are CUT IN, not raised, so the drawer front stays
@@ -276,17 +324,24 @@ module drawer() {
         translate([0, (drw_y0 + body_wall + drw_y1 - body_wall)/2, (fl_z1 + body_z1 + 1)/2])
             cube([body_w - 2*body_wall, (drw_y1 - drw_y0) - 2*body_wall, body_z1 - fl_z1 + 1], center = true);
         face_flutes();
-        pull_recess();
+        pull_cut();
     }
 }
+
+module drawer_with_pull() { union() { drawer(); pull_add(); } }
 
 // ---- output ---------------------------------------------------------
 // Each part is exported in the pose it PRINTS in, not the pose it is
 // modelled in. The shell rotates onto its back; the drawer only drops to
 // the plate. Rotations, never a mirrored -z, which would flip every normal.
 module shell_printed()  { translate([0, 0, D]) rotate([-90, 0, 0]) shell(); }
-module drawer_printed() { translate([0, 0, -fl_z0]) drawer(); }
+module drawer_printed() { translate([0, 0, -fl_z0]) drawer_with_pull(); }
 
+// Explicit branches, no catch-all else: part="none" emits nothing, which
+// is what lets another file include<> this one (the only way to override
+// `pull`, since use<> imports modules but not variable overrides) without
+// the assembled model landing in the output alongside whatever that file
+// is actually trying to measure.
 if (part == "shell")       shell_printed();
 else if (part == "drawer") drawer_printed();
-else { shell(); drawer(); }
+else if (part == "all")  { shell(); drawer_with_pull(); }
