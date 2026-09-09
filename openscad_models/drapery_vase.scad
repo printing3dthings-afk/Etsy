@@ -28,10 +28,17 @@ H          = 180;         // overall height
 n_lo       = 12;          // foot harmonic
 n_mid      = 24;          // belly
 n_hi       = 48;          // rim
-twist      = 90;          // total degrees of twist, foot to rim
-depth_frac = 0.17;        // peak flute depth as a fraction of LOCAL radius.
-                          // Corpus p25/median/p75 = 4.2 / 7.9 / 13.7 percent;
-                          // below ~4% it vanishes into layer lines entirely.
+twist      = 70;          // total degrees of twist, foot to rim
+depth_frac = 0.35;        // peak flute depth as a fraction of LOCAL radius.
+env_floor  = 0.40;        // amplitude at foot and lip (see env()).
+                          // Corpus p25/median/p75/p90 = 4.2 / 7.9 / 13.7 / 29.0
+                          // percent; below ~4% it vanishes into layer lines.
+                          // MEASURED BACK off the real mesh at this setting:
+                          // 21.5% of radius, 8.84mm, depth:pitch 0.82 -- inside
+                          // the corpus's real 0.69-1.20 band. The envelope and
+                          // the harmonic crossfade both scale this down, which
+                          // is why 0.35 here reads as 21.5% there; 0.17 measured
+                          // back as only 9.2% and scored 1.32.
 astep      = 0.5;         // angular sample. n_hi=48 needs >=10 samples/lobe;
                           // 0.5 deg gives 15, and a 0.52mm chord at the belly.
 
@@ -55,7 +62,7 @@ function gw(t, c, s) = exp(-((t - c) * (t - c)) / (2 * s * s));
 // (Technique 42). Amplitude rises off the foot, peaks near the belly, and
 // eases back toward the lip without going to zero -- the rim keeps its fine
 // ribs, just quieter.
-function env(t) = 0.25 + 0.75 * sin(180 * pow(max(t, 0), 0.8));
+function env(t) = env_floor + (1 - env_floor) * sin(180 * pow(max(t, 0), 0.8));
 
 // Smooth lobe. NOT abs(cos()): that has a cusp at every zero crossing and
 // reads as sharp corrugation no matter how the amplitude is tuned
