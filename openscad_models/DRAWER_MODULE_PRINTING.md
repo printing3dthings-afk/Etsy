@@ -6,8 +6,8 @@ oriented. 91 × 71 × 44mm assembled; the drawer holds about 136 cm³.
 | Object | Orientation | Time | Filament |
 |---|---|---|---|
 | `shell` | **on its back, opening up** — as loaded | 4h 19m | 48.7 g |
-| `drawer` | as it sits in use, open side up — as loaded | 3h 01m | 36.9 g |
-| | **per module** | **7h 19m** | **86 g** |
+| `drawer` | as it sits in use, open side up — as loaded | 3h 13m | 38.6 g |
+| | **per module** | **7h 31m** | **87 g** |
 
 Two complete modules fit on one plate.
 
@@ -47,6 +47,26 @@ your desk. There is no stop.
 If it binds on your first print, open `clear_lat` from 0.30 to 0.40 and
 re-slice. If it rattles side to side, close it to 0.25. That is the one
 number worth touching.
+
+## The pull
+
+A blind pocket with a **flat, undercut roof**, and its floor carries on
+forward as a **5 mm shelf with a 2.5 mm front lip**.
+
+The undercut is the point. A pocket resists your pull with its back wall,
+and what makes a shallow pocket feel bad is the fingertip sliding down and
+out — which is exactly what a 45° ramped floor invites. Here the finger is
+boxed in: undercut roof above, shelf lip below, nowhere to slide to. It
+gets a real hook out of 3 mm of pocket depth.
+
+It costs 5 mm of depth (module 71 → 76 mm) and 12 minutes. The shelf's
+underside is a 45° chamfer, so it is self-supporting along its whole
+length with no stems — it adds **zero** overhang over the plain pocket.
+
+Four other pulls are built in and one word apart, if you want to compare
+on a real print: set `pull` at the top of `drawer_module.scad` to `band`
+(flush, no lip), `ledge` (a 10 mm proud shelf, the strongest grip of the
+lot), `slot` (cut clean through), or `lip` (the pocket without the shelf).
 
 ## Stacking
 

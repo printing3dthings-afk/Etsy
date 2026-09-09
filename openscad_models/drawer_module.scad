@@ -247,7 +247,14 @@ drw_y1  = cav_d - clear;
 //          hook to pull on without protruding and without seeing in. Its
 //          roof is a 4mm cantilever -- a small overhang, buried inside the
 //          pocket where nobody looks.
-pull = "band";   // "band" | "ledge" | "slot" | "lip"
+//   shelf  lip, plus the fix for the one thing wrong with it. A pocket
+//          resists the pull with its back wall, and what actually fails is
+//          the fingertip sliding DOWN and OUT along the pocket's 45 deg
+//          floor. So the floor goes flat and carries on forward as a 5mm
+//          shelf with a 2.5mm front lip: the finger is now trapped between
+//          the undercut roof above and that lip below, and has nowhere to
+//          slide to. Costs 5mm of depth against the ledge option's 10.
+pull = "shelf";  // "band" | "ledge" | "slot" | "lip" | "shelf"
 
 plate_top = H - wall - clear_lat;
 pull_w = 56;
@@ -273,6 +280,9 @@ module pull_cut() {
             face_prism([[2.0, z0], [2.2, z0], [2.2, z1], [2.0, z1]], pull_w);
         }
         face_prism([[2.0, z0], [plate_t + 1, z0], [plate_t + 1, z1], [2.0, z1]], pull_w);
+    } else if (pull == "shelf") {
+        // flat floor, not a ramp -- the ramp is what let the finger escape
+        face_prism([[-1, shelf_z0], [3.0, shelf_z0], [3.0, shelf_z1], [-1, shelf_z1]], pull_w);
     } else if (pull == "lip") {
         // 3.0 deep, not 4.0: at 4 the pocket left only 1mm of plate behind
         // it, and that 1mm is what the undercut roof cantilevers off.
@@ -281,7 +291,20 @@ module pull_cut() {
     }
 }
 
+shelf_z1 = plate_top - 4;        // undercut roof
+shelf_z0 = shelf_z1 - 15;        // pocket floor, and the shelf's top face
+shelf_out = 5;                   // protrusion
+shelf_lip = 2.5;                 // front lip thickness
+
 module pull_add() {
+    if (pull == "shelf") {
+        // Top face is level with the pocket floor, so a fingertip slides
+        // down the pocket and lands on it. Embedded 1.5mm, past the 1.0mm
+        // face flutes. Underside is 45 deg -- self-supporting, no stems.
+        face_prism([[1.5, shelf_z0], [-shelf_out, shelf_z0],
+                    [-shelf_out, shelf_z0 - shelf_lip],
+                    [1.5, shelf_z0 - shelf_lip - (shelf_out + 1.5)]], pull_w);
+    }
     if (pull == "ledge") {
         z1 = plate_top - 3;
         // embedded 1.5mm, PAST the 1.0mm face flutes -- at 0.5 the ledge
