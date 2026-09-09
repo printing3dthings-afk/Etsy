@@ -7,10 +7,10 @@ file to print — one object, two parts, colours already assigned.
 
 | size | outside | time | filament | sellable? |
 |---|---|---|---|---|
-| **S** | 90 × 71.6 × 47 | **3h 44m** | 46 g | **yes** |
-| M | 90 × 71.6 × 92 | 6h 04m | 80 g | no |
-| L | 180 × 71.6 × 47 | 6h 32m | 77 g | no |
-| XL | 180 × 71.6 × 92 | 10h 06m | 130 g | no |
+| **S** | 90 × 71.6 × 47 | **3h 53m** | 45 g | **yes** |
+| M | 90 × 71.6 × 92 | 6h 16m | 75 g | no |
+| L | 180 × 71.6 × 47 | 6h 57m | 76 g | no |
+| XL | 180 × 71.6 × 92 | 10h 47m | 122 g | no |
 
 **Only S comes in under the ~4h-per-unit ceiling this shop designs to.** That
 is worth saying plainly rather than shipping a "family" and letting the
@@ -18,13 +18,32 @@ arithmetic surface later: XL is a ten-hour print, which caps the printer at one
 unit a day and cannot carry a margin. Treat S as the product; M/L/XL are real,
 correct and gated, but they are made-to-order or personal-use sizes.
 
-**Slice with internal perimeters at ~200 mm/s.** The shop profile runs BOTH
+These are sliced with `tools/p1s_slice_profile.ini` as it now stands. That
+profile was **changed on 2026-09-09** as part of this build: it ran BOTH
 perimeter speeds at 50 mm/s, which is right for the *outer* wall (CLAUDE.md's
-production rule — it stops ringing on the visible surface) and wrong for the
-inner ones. A thin-walled bin is almost entirely perimeter, so it inherits the
-outer-wall speed everywhere: **3h 44m at 200 mm/s internal vs 4h 16m at 50.**
-External perimeter stays 50 and nothing visible changes. This applies to every
-thin-walled part this shop prints, not just the bin.
+production rule stops ringing on the visible surface) and wrong for the inner
+ones — and a thin-walled part is almost entirely perimeter, so it inherited 50
+everywhere. Internal is now 200, external still 50, nothing visible changed,
+and the bin went 4h 16m → 3h 44m. **Every print-time figure quoted in this repo
+before that date is pessimistic, not wrong.**
+
+## The scoop
+
+The front of each column is scooped open so you can see into the bin and reach
+in, instead of it being a plain box. It costs about 27 minutes — a sloped cut
+adds perimeters and top surfaces, and it forced the front/back tongues outboard
+to ±30 (a single centred tongue sits exactly where the scoop cuts and would be
+deleted by it, silently). That was paid back by taking the floor to 1.6mm and
+the pads to 8mm, so S still lands under 4h *with* the scoop where the plain box
+was 4h 00m.
+
+**One scoop per column, not one wide one.** Scaling a single scoop to a 180mm
+bin spans ±52 and swallows the inner tongues at ±15. Per column, every scoop
+sits between its own column's two tongues by construction, at any width the
+family grows to. Verified on L: 10 tongues engaging, none lost.
+
+The scoop bottoms at z=30 and the label plate tops out at z=28, so it can never
+orphan the plate off the wall — the failure mode Technique 6 documents.
 
 ## The label
 
@@ -58,7 +77,8 @@ above. Verified both ways, which is the only way this is worth claiming:
 - solids **must not** touch → `intersection()` = **0.0000 mm³** (a single
   degenerate facet at the contact plane, which is the bins resting on each
   other, not overlapping)
-- tongue **must** enter pocket → **96.0 mm³ across 4 tongues, full 2.00 mm**
+- tongue **must** enter pocket → **S: 144 mm³ / 6 tongues · L: 240 mm³ / 10
+  tongues**, full 2.00 mm each
 
 Sizes share a 90mm grid, so an L bin stacks across two S bins.
 

@@ -44,7 +44,10 @@ wall    = 1.68;             // EXACTLY 4 x 0.42 extrusions. 1.6 looks
                             // ceiling, the wall alone being 34.6 of its 53.4
                             // cm3. A storage bin is a commodity and cannot cost
                             // four hours of printer time.
-floor_t = 2.0;
+floor_t = 1.6;             // 8 layers. The scoop and the extra tongues it
+                            // forced cost ~27 min; this and the shorter pads buy
+                            // it back. Nothing structural sits on the floor but
+                            // the contents.
 out_r   = 6;
 
 // ---- stacking: discrete tongues on local pads ----------------------------
@@ -66,9 +69,13 @@ tng_t   = 1.2;
 tng_h   = 2.0;
 tng_len = 10;
 pad_d   = 2.4;              // pad depth into the cavity, past the wall
-pad_len = 10;
+pad_len = 8;
 stk_clr = 0.25;
 pkt_d   = tng_h + 0.3;
+tng_off = 30;               // front/back tongues sit OUTBOARD of the scoop.
+                            // A single centred tongue is exactly where the
+                            // scoop cuts, so the scoop would silently delete
+                            // the front half of the stacking feature.
 tng_c   = (wall + pad_d) / 2;   // tongue centred across wall+pad
 
 // ---- label plate ---------------------------------------------------------
@@ -97,8 +104,9 @@ function col_x(c) = -W/2 + UNIT_W/2 + c * UNIT_W;
 // centre sits from the outer face.
 module wall_feature(t, l, h, z, inset) {
     for (c = [0 : cols - 1]) {
-        for (sy = [-1, 1])
-            translate([col_x(c), sy * (D/2 - inset), z]) cube([l, t, h], center = true);
+        for (sy = [-1, 1]) for (sx = [-1, 1])
+            translate([col_x(c) + sx * tng_off, sy * (D/2 - inset), z])
+                cube([l, t, h], center = true);
         if (c == 0)          translate([-W/2 + inset, 0, z]) cube([t, l, h], center = true);
         if (c == cols - 1)   translate([ W/2 - inset, 0, z]) cube([t, l, h], center = true);
     }
@@ -138,6 +146,34 @@ module label_body(extra) {
         linear_extrude(inlay_d + extra) label_2d();
 }
 
+// ---- front scoop ---------------------------------------------------------
+// A plain-fronted box is a box; a bin you can see into and reach into is a
+// bin. Built as a hull() of explicit corner points at two Y depths -- never a
+// rotated cuboid, which is how this shop has twice produced a cutter whose
+// real bounding extent quietly ate the whole model.
+//
+// The profile is deliberately CONVEX so hull() reproduces it exactly. It also
+// stops well above the label plate (plate tops out at z=28, the scoop bottoms
+// at 30) so it can never orphan the plate off the wall.
+sc_w        = 26;           // half-width; tongues sit at 30, outboard of it
+sc_low      = 30;
+sc_shoulder = 38;
+module prism_xz(pts, y0, y1) {
+    hull() for (q = pts) for (y = [y0, y1])
+        translate([q[0], y, q[1]]) sphere(r = 0.01, $fn = 6);
+}
+// ONE SCOOP PER COLUMN, not one wide one. A single scoop scaled to a 180mm
+// bin spans +/-52 and swallows the inner tongues at +/-15; keeping it per
+// column puts every scoop between its own column's two tongues by
+// construction, at any width the family grows to.
+module front_scoop() {
+    for (c = [0 : cols - 1]) translate([col_x(c), 0, 0])
+        prism_xz([[-sc_w, Hgt + 6], [sc_w, Hgt + 6],
+                  [sc_w, sc_shoulder], [sc_w * 0.55, sc_low],
+                  [-sc_w * 0.55, sc_low], [-sc_w, sc_shoulder]],
+                 -D/2 - plate_proud - 2, -D/2 + wall + 1);
+}
+
 // ---- maker's mark --------------------------------------------------------
 // Bottom face, engraved negative, Technique 4's confirmed pattern verbatim.
 // Sized to ~40% of the 70mm short run, not inherited from a sibling model.
@@ -167,6 +203,7 @@ module bin() {
             rim_tongues();
         }
         base_pockets();
+        front_scoop();
         label_body(0.5);
         brand_mark();
     }
