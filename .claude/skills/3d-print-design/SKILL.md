@@ -5628,3 +5628,90 @@ None of these are visible in a render, and none are caught by watertightness,
 winding, volume, body count, terracing or overhang. They are arithmetic, and
 they are the difference between a mechanism and a part that merely looks like
 one.
+
+---
+
+## Technique 56 — A ramped undercut grips better AND prints better; and when words fail, build the drawing surface (2026-09-09)
+
+Two lessons from getting a drawer pull wrong four times in a row. The
+second one is the more expensive of the two.
+
+### 56a — "An undercut IS an overhang" is false as usually stated
+
+I asserted this twice, in a file and in a message, as a reason a pull's
+roof had to stay flat:
+
+> An undercut IS an overhang — ramping it to be self-supporting is
+> exactly what removes the hook.
+
+That is true only of a *flat* undercut. Ramp the roof back instead and you
+keep the hook and lose the overhang, because the two are answering
+different questions:
+
+- **What makes a hook** is that the void gets TALLER as it goes deeper, so
+  a fingertip can enter under a lip and curl up behind it.
+- **What makes an overhang** is how fast material appears going UP a layer
+  at a time.
+
+A roof rising at 45° from the mouth satisfies the first and not the
+second. Measured on the real part:
+
+| pocket roof | grip | 90° overhang | total flagged |
+|---|---|---|---|
+| flat, 5mm deep | press on a ceiling | **5.0 mm wide** | 2.71 cm² |
+| ramped back 45° | fingertip hooks up into it | **1.5 mm wide** | **0.75 cm²** |
+
+Same pocket, same depth, better grip, 72% less overhang. Every earlier
+round had treated grip and printability as a trade to be balanced; they
+were never actually opposed, and the belief that they were is what stopped
+the right answer being found for four rounds.
+
+**Keep a small flat at the mouth.** Running the ramp all the way to the
+face tapers the lip to a knife edge exactly where a finger loads it —
+fragile, and it prints badly. 1.5mm of flat underside (3.6 extrusions)
+before the ramp starts fixes it for nothing.
+
+**Depth is bounded by more than the visible wall.** The pocket here is
+5mm into a 6.5mm face plate, which sounds impossible until you notice the
+drawer body's own front wall sits directly behind it: 8.18mm of real
+material, 3.16mm still left behind the pocket. Measure what is actually
+behind a feature (`mesh.contains` down a line through it) rather than
+reading one wall thickness off the source.
+
+### 56b — After the third failed round, stop describing and build the pad
+
+The sequence, honestly: a 3mm ramped band; then a protruding ledge; then a
+deeper pocket; then a second slot with a bar. Each was built, verified,
+gated and shipped. Each was wrong. The failure was never geometry — every
+one of those passed every check in this file — it was that "a slotted area
+under here for your fingers to grip" does not resolve to a shape, and
+neither did my questions, my labelled zone diagrams, or my rendered
+option sets.
+
+What resolved it in one round was **an artifact with the real model
+rendered as a drawable background**, storing strokes as coordinates:
+
+- Render the actual STL (not a schematic — this was itself a wrong turn;
+  a hand-drawn diagram of the face got rejected because it was not the
+  part) at a few angles, embed as data URIs.
+- Include a **cross-section board**. Front views answer *where*; only the
+  section answers *how deep and what shape*, which is the question a
+  verbal description almost never carries.
+- Store **vector strokes in real units**, never a canvas PNG: a 256 KiB
+  document cap makes rasters risky, and strokes read back as numbers you
+  can measure. His wedge measured 46.3° off the saved coordinates, which
+  is what let it be rebuilt at exactly 45° with confidence.
+- Colour the pens by *intent* — cut / add / note — so the markup is
+  self-describing.
+
+**The signal to build one:** a third round of iteration on the same
+feature where each attempt is technically sound and still rejected. That
+is not a modelling problem, it is a shared-reference problem, and more
+renders of more options do not fix it. It cost maybe twenty minutes and
+ended a thing that had already burned four build-verify-ship cycles.
+
+**A related own-goal worth avoiding:** a section drawing was captioned
+"face on the left" while the code plotted the face on the RIGHT. The
+geometry was right, the label was backwards, and it went out twice. When
+a drawing has a handedness, verify the caption against the transform, not
+against intent.
