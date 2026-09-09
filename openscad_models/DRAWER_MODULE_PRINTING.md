@@ -6,8 +6,8 @@ oriented. 91 × 71 × 44mm assembled; the drawer holds about 136 cm³.
 | Object | Orientation | Time | Filament |
 |---|---|---|---|
 | `shell` | **on its back, opening up** — as loaded | 4h 19m | 48.7 g |
-| `drawer` | as it sits in use, open side up — as loaded | 3h 13m | 38.6 g |
-| | **per module** | **7h 31m** | **87 g** |
+| `drawer` | as it sits in use, open side up — as loaded | 3h 12m | 38.8 g |
+| | **per module** | **7h 30m** | **88 g** |
 
 Two complete modules fit on one plate.
 
@@ -50,23 +50,30 @@ number worth touching.
 
 ## The pull
 
-A blind pocket with a **flat, undercut roof**, and its floor carries on
-forward as a **5 mm shelf with a 2.5 mm front lip**.
+A pocket cut into the face — **5 mm deep, 13 mm tall, with a dead flat
+floor and a flat lip above it**. Nothing protrudes.
 
-The undercut is the point. A pocket resists your pull with its back wall,
-and what makes a shallow pocket feel bad is the fingertip sliding down and
-out — which is exactly what a 45° ramped floor invites. Here the finger is
-boxed in: undercut roof above, shelf lip below, nowhere to slide to. It
-gets a real hook out of 3 mm of pocket depth.
+The floor is the shelf. Your fingertip goes in, sits on it, and pulls
+against 5 mm of lip overhead. The two things that made a shallow version
+feel bad were both the floor: it was a 45° ramp, so the finger slid down
+and out of the pocket, and at 3 mm there was barely anything to slide
+into.
 
-It costs 5 mm of depth (module 71 → 76 mm) and 12 minutes. The shelf's
-underside is a 45° chamfer, so it is self-supporting along its whole
-length with no stems — it adds **zero** overhang over the plain pocket.
+Depth is limited by what sits behind it, and there is more there than the
+plate alone — the drawer body's own front wall backs the whole pull, so a
+6.5 mm plate gives 8.18 mm of material and a 5 mm pocket still leaves
+**3.16 mm**.
+
+The cost is the roof: a flat 5 mm cantilever, 56 mm long, facing down
+inside the pocket. It has to be flat — an undercut *is* an overhang, and
+ramping it to be self-supporting is exactly what removes the hook. It will
+print with a slightly rough underside. Nobody sees it.
 
 Four other pulls are built in and one word apart, if you want to compare
 on a real print: set `pull` at the top of `drawer_module.scad` to `band`
-(flush, no lip), `ledge` (a 10 mm proud shelf, the strongest grip of the
-lot), `slot` (cut clean through), or `lip` (the pocket without the shelf).
+(a shallow flush band), `ledge` (a 10 mm proud shelf — the strongest grip
+of the lot, but it sticks out), `slot` (cut clean through), or `lip` (the
+shallow ramped pocket this replaced).
 
 ## Stacking
 
