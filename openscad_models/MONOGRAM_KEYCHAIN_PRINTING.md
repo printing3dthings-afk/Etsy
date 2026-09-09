@@ -108,11 +108,27 @@ a 7.4mm-tall journal facing the frame around its whole circumference: roughly
 A print-in-place gap does not weld along its whole height. It welds in two
 places, and both are now relieved rather than merely widened:
 
-| where | why it welds there | before | after |
-|---|---|---|---|
-| first layer, on the plate | elephant's foot spreads the first layers of **both** bodies into the gap | 0.400 | **1.549** |
-| rotor's top face | ironing drags melt off the rim and over the gap | 0.400 | **1.020** |
-| V apex (load-bearing) | nothing — this is the capture and stays tight | 0.400 | **0.454** |
+| where | modelled gap, before → after | **real air between beads**, before → after |
+|---|---|---|
+| first layer, on the plate | 0.400 → 1.549 | **0.170 → 1.209 mm** |
+| rotor's top face | 0.400 → 1.020 | — (open, ironing is the risk here) |
+| V apex (load-bearing capture) | 0.400 → 0.454 | 0.175 → **0.234 mm** |
+
+**The modelled gap was never the printed gap, and this is the finding worth
+keeping.** Both versions were sliced and the toolpaths rasterised
+(`gcode_probe.py`'s own raster, dilated by half a bead): the old part carried
+**0.170mm of actual air**, not 0.400mm. A bead is 0.42mm wide and lands centred
+so its outer edge sits on the nominal surface, so two facing walls eat well over
+half of a 0.4mm gap between them. 0.170mm is close enough to the ~0.08–0.10mm
+fusion threshold that any first-layer squish closes it outright — and a weld
+around 94mm of circumference is exactly the one that will not come apart with
+pliers.
+
+Worth being straight about what is *not* proven: the slicer kept both parts as
+**two separate islands on every layer**, old and new alike, so nothing merged in
+software. The weld happened physically, and whether it was bed squish or ironing
+is still unsettled. Both now have large margins, which is why this is worth a
+reprint rather than more analysis.
 
 The relief is a 0.6mm chamfer on the rotor's two outer edges with the frame's
 bore flared to match, so the gap opens exactly where the welding happens and
@@ -120,11 +136,18 @@ stays tight where the mechanism lives. The clearance itself went to 0.45mm —
 worth 12% more margin for 0.12mm more axial play (0.99 → **1.110mm**), which is
 set by the 22° V angle, not by the clearance.
 
-**Worth doing before printing the replacement:** twist the fused J hard with
-pliers. If it breaks free and then spins, the weld was at the bed and thin —
-which says elephant's foot, and the chamfer is the fix. If it will not break,
-the weld runs the V and ironing is the likelier culprit. Ten seconds, and it
-tells us which mechanism to trust.
+The J would not break loose with pliers (tried 2026-09-09). That was offered
+here as a test that would discriminate bed-weld from V-weld, and **it does not**
+— a bed ring welded over 94mm of circumference resists pliers just as well as a
+welded V. It narrows the answer only to "large-area weld," which the 0.170mm
+measurement above already explains.
+
+**If the next one still fuses**, the remaining lever is the V apex at 0.234mm —
+relieve the frame's bore in two bands away from the apex, which removes about
+half the facing area without touching the capture, the clearance, or the axial
+play. Deliberately not done pre-emptively: the two mechanisms with actual
+evidence behind them are fixed with large margins, and adding an unproven
+feature to a part about to print buys risk, not confidence.
 
 The bore is defined **once**, by the rotor's own envelope, and cut from the
 frame. Defining it in both places left 40 zero-volume slivers where two
