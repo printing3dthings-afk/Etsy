@@ -274,7 +274,20 @@ drw_y1  = cav_d - clear;
 // Back to "shelf" 2026-09-09: Scott rejected the rail outright ("it's
 // wrong"). The rail stays available as an option, but the single deep
 // pocket is the live design again until he says otherwise.
-pull = "shelf";  // "band" | "ledge" | "slot" | "lip" | "shelf" | "rail"
+//   hook   Scott's own markup (2026-09-09), read straight off the
+//          coordinates he drew: a wedge cut ABOVE the pocket's roof --
+//          nothing taken at the face, opening to ~4.3mm of extra height
+//          at the back. In other words the flat roof becomes a RAMP
+//          rising toward the back, and that changes the pull from a
+//          ceiling you press on into a hook you pull: the fingertip goes
+//          in under the lip and curls UP into the wedge.
+//          It also fixes the worst thing about the part. The flat roof
+//          was a 5.0mm 90-degree cantilever, 2.71 cm2, the single largest
+//          overhang on the drawer. A 45 deg ramp is self-supporting, so
+//          his change improves the grip AND the print at the same time --
+//          the two had been pulling against each other every round until
+//          now.
+pull = "hook";   // "band" | "ledge" | "slot" | "lip" | "shelf" | "rail" | "hook"
 
 plate_top = H - wall - clear_lat;
 pull_w = 56;
@@ -306,6 +319,9 @@ module pull_cut() {
         // dead flat, which is the whole point of it.
         face_prism([[-1, shelf_z0 - 1], [1.0, shelf_z0], [shelf_d, shelf_z0],
                     [shelf_d, shelf_z1], [-1, shelf_z1]], pull_w);
+    } else if (pull == "hook") {
+        face_prism([[-1, shelf_z0 - 1], [1.0, shelf_z0], [shelf_d, shelf_z0],
+                    [shelf_d, hook_top], [hook_flat, shelf_z1], [-1, shelf_z1]], pull_w);
     } else if (pull == "rail") {
         rail_slot(rail_up_z0, rail_up_z1, rail_up_d);
         rail_slot(rail_lo_z0, rail_lo_z1, rail_lo_d);
@@ -338,6 +354,13 @@ rail_lo_z0 = rail_lo_z1 - rail_lo_h;
 module rail_slot(z0, z1, dep) {
     face_prism([[-1, z0 - 1], [1.0, z0], [dep, z0], [dep, z1], [-1, z1]], pull_w);
 }
+
+// The lip keeps a flat underside for the first hook_flat of depth before
+// the ramp starts. Running the ramp all the way to the face would taper
+// the lip to a knife edge exactly where a finger pulls on it -- fragile,
+// and it prints badly. 1.5mm is 3.6 extrusions of solid ledge.
+hook_flat = 1.5;
+hook_top  = 35.02 + (5.0 - hook_flat);   // 45 deg exactly; 3.5mm of plate above
 
 shelf_d  = 5.0;                  // pocket depth; 3.18mm of plate left behind
 shelf_z1 = plate_top - 7;        // the lip you pull on

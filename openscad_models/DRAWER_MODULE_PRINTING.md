@@ -6,8 +6,8 @@ oriented. 91 × 71 × 44mm assembled; the drawer holds about 136 cm³.
 | Object | Orientation | Time | Filament |
 |---|---|---|---|
 | `shell` | **on its back, opening up** — as loaded | 4h 19m | 48.7 g |
-| `drawer` | as it sits in use, open side up — as loaded | 3h 13m | 38.6 g |
-| | **per module** | **7h 33m** | **87 g** |
+| `drawer` | as it sits in use, open side up — as loaded | 3h 13m | 39.0 g |
+| | **per module** | **7h 31m** | **88 g** |
 
 Two complete modules fit on one plate.
 
@@ -50,39 +50,35 @@ number worth touching.
 
 ## The pull
 
-Two recesses in the face with a **5 mm bar of material between them**.
-Fingers curl into the upper slot and pull the bar. That is the strongest
-grip available on a flush face — you are pulling a rail, not pressing on
-a back wall and hoping for friction.
+A pocket in the face, **5 mm deep and 13 mm tall**, whose roof **ramps back
+at 45°**. Nothing protrudes.
 
-Down the face, all derived from the plate's own top edge:
+That ramp is the whole thing. A flat-roofed pocket is a ceiling you press
+on and hope for friction; a ramped one is a hook — the fingertip goes in
+under the lip and curls *up* into the wedge. The lip keeps a **1.5 mm flat
+underside** at the mouth, where a finger actually pulls, so it is never a
+knife edge.
 
-| | height | depth | material behind |
-|---|---|---|---|
-| solid top | 4.5 mm | — | — |
-| **upper slot** | 10 mm | 5.5 mm | 2.66 mm |
-| **grip bar** | 5 mm | — | full plate |
-| lower pocket | 11 mm | 5.0 mm | 3.16 mm |
-| solid bottom | 8.8 mm | — | — |
+| | |
+|---|---|
+| pocket floor | 5 mm deep, flat |
+| lip underside | flat for the first 1.5 mm, then 45° |
+| top of the wedge | 3.5 mm of plate above it |
+| behind the pocket | 1.5 mm of plate |
 
-Depth is limited by what sits behind, and there is more there than the
-plate alone — the drawer body's own front wall backs the whole pull, so a
-6.5 mm plate gives 8.18 mm. The upper slot's top is held at z 37.5 so it
-stays inside the band that wall actually covers rather than running off
-the end of it into bare plate.
+Depth is set by what sits behind, and there is more there than the plate
+alone — the drawer body's own front wall backs the whole pull, so a 6.5 mm
+plate gives 8.18 mm.
 
-Both slot roofs are flat cantilevers (5.5 and 5.0 mm, 5.46 cm² between
-them) and have to be: an undercut *is* an overhang, and ramping one to be
-self-supporting removes the grip. They print with slightly rough
-undersides, facing down inside the recesses.
+**The ramp also fixed the worst thing about this part.** The flat roof was
+a 5.0 mm 90° cantilever — 2.71 cm², the single largest overhang on the
+drawer. Ramping it drops that to a 1.5 mm ledge and **0.75 cm² total**. It
+is the one change in this whole design where grip and printability pulled
+the same way instead of against each other.
 
-**A look worth considering:** the two bands cut the eight face flutes into
-short stubs, and the face reads busy — like a vent grille. Set
-`face_fluted = false` and the pull becomes the design while the shell's
-sides keep the fluting. Costs nothing: 3h 15m against 3h 13m.
-
-Four other pulls are also one word apart — set `pull` to `band`, `ledge`,
-`slot`, `lip`, or `shelf` (the single deep pocket this replaced).
+Five other pulls are one word apart — set `pull` to `band`, `ledge`,
+`slot`, `lip`, `shelf` (this pocket with a flat roof) or `rail` (two slots
+with a bar between them).
 
 ## Stacking
 
