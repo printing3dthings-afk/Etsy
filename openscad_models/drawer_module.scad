@@ -261,7 +261,17 @@ drw_y1  = cav_d - clear;
 //          flat 5mm cantilever, and it has to be, because an undercut IS
 //          an overhang -- ramp it to make it self-supporting and the hook
 //          is gone. It is 56mm of ledge facing down inside a pocket.
-pull = "shelf";  // "band" | "ledge" | "slot" | "lip" | "shelf"
+//   rail   Scott's pick: a second, deeper slot ABOVE the pocket. What
+//          that really creates is the bar of material between the two --
+//          and a bar is the strongest grip available on a flush face,
+//          because fingers curl into the upper slot and pull the rail
+//          rather than pressing on a back wall and hoping for friction.
+//          Zone 3 on its own is only 7mm tall, nowhere near enough for a
+//          usable slot plus a solid top margin, so the whole face is
+//          rebalanced around the pair. The pull now occupies 26 of the
+//          39mm face, which is a lot -- that is what two recesses on a
+//          small face costs.
+pull = "rail";   // "band" | "ledge" | "slot" | "lip" | "shelf" | "rail"
 
 plate_top = H - wall - clear_lat;
 pull_w = 56;
@@ -293,12 +303,37 @@ module pull_cut() {
         // dead flat, which is the whole point of it.
         face_prism([[-1, shelf_z0 - 1], [1.0, shelf_z0], [shelf_d, shelf_z0],
                     [shelf_d, shelf_z1], [-1, shelf_z1]], pull_w);
+    } else if (pull == "rail") {
+        rail_slot(rail_up_z0, rail_up_z1, rail_up_d);
+        rail_slot(rail_lo_z0, rail_lo_z1, rail_lo_d);
     } else if (pull == "lip") {
         // 3.0 deep, not 4.0: at 4 the pocket left only 1mm of plate behind
         // it, and that 1mm is what the undercut roof cantilevers off.
         z1 = plate_top - 4;  z0 = z1 - 16;
         face_prism([[-1, z0 - 4], [3.0, z0], [3.0, z1], [-1, z1]], pull_w);
     }
+}
+
+// ---- rail: upper slot + grip bar + lower pocket ----------------------
+// Every z is derived down the stack from the plate's own top, so the whole
+// arrangement stays put if the module is ever resized. Depths are limited
+// by what is behind: plate 6.5 + the drawer body's own front wall 1.68 =
+// 8.18mm, and the upper slot's top is held at 37.52 so it stays inside the
+// band that wall actually covers (5.68..37.82) rather than running off the
+// end of it into bare plate.
+rail_top_solid = 4.5;
+rail_up_h = 10;   rail_up_d = 5.5;   // the slot fingers go into
+rail_bar_h = 5;                      // the bar they pull on
+rail_lo_h = 11;   rail_lo_d = 5.0;
+rail_up_z1 = plate_top - rail_top_solid;
+rail_up_z0 = rail_up_z1 - rail_up_h;
+rail_lo_z1 = rail_up_z0 - rail_bar_h;
+rail_lo_z0 = rail_lo_z1 - rail_lo_h;
+
+// 1mm lead-in on each slot's bottom edge so a fingertip is not dragged
+// over a sharp corner; the rest of each floor stays dead flat.
+module rail_slot(z0, z1, dep) {
+    face_prism([[-1, z0 - 1], [1.0, z0], [dep, z0], [dep, z1], [-1, z1]], pull_w);
 }
 
 shelf_d  = 5.0;                  // pocket depth; 3.18mm of plate left behind
@@ -319,9 +354,13 @@ module pull_add() {
 // flush in its opening -- the 5mm plate has the depth to spare, where the
 // shell's 1.68mm wall does not (hence raised flutes there). Same pitch on
 // both, so the two read as one system.
+// With the rail pull, the two bands cut the face flutes into short stubs
+// and the face reads busy -- set this false to let the pull be the design
+// and leave the fluting to the shell's sides.
+face_fluted = true;
 fl_n = 8;  fl_depth = 1.0;  fl_R = 10.625;   // 9.0mm chord at 1.0mm deep
 module face_flutes() {
-    for (i = [0 : fl_n - 1]) {
+    if (face_fluted) for (i = [0 : fl_n - 1]) {
         xc = (i - (fl_n - 1)/2) * rib_pitch;
         translate([xc, -(fl_R - fl_depth), 0]) cylinder(r = fl_R, h = H + 10, $fn = 96);
     }
