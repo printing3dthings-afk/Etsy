@@ -271,7 +271,10 @@ drw_y1  = cav_d - clear;
 //          rebalanced around the pair. The pull now occupies 26 of the
 //          39mm face, which is a lot -- that is what two recesses on a
 //          small face costs.
-pull = "rail";   // "band" | "ledge" | "slot" | "lip" | "shelf" | "rail"
+// Back to "shelf" 2026-09-09: Scott rejected the rail outright ("it's
+// wrong"). The rail stays available as an option, but the single deep
+// pocket is the live design again until he says otherwise.
+pull = "shelf";  // "band" | "ledge" | "slot" | "lip" | "shelf" | "rail"
 
 plate_top = H - wall - clear_lat;
 pull_w = 56;
