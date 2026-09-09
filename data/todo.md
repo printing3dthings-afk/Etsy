@@ -149,6 +149,59 @@ already are. Moving the wells out means `ring_r` 63 → 78, which scales the tra
 to ~251mm (the bed is 256) and ~11.8 hours. A separate, smaller product is the
 right answer.
 
+### 3D print tooling — getting a file to the P1S
+*Written up 2026-09-08 so this can be decided later without re-deriving it.
+Today the answer is **no, Frank cannot send a print**, and that is by design,
+not an oversight — see "Why it cannot today" below.*
+
+**Option A — drop the file where Bambu Studio can see it.** *Small, low risk.*
+The relay already has `local_write_binary_file`, which writes into an Allowed
+Folder on Scott's machine. Point it at a folder, and a finished `.3mf` lands
+there ready to open — no downloading files out of chat. Scott still slices and
+still presses Print. This uses an existing, already-scoped capability rather
+than opening any new path to the printer. Roughly an afternoon.
+
+**Option B — real job submission.** *Bigger, and it has a blocker that is not
+about permissions.* Two steps on a P1S in LAN mode:
+
+1. **Upload** the file to the printer over FTPS (implicit TLS, port 990, user
+   `bblp`, password = the printer's Access Code).
+2. **Publish** an MQTT command referencing it.
+
+Step 2 is **already proven in this repo** — `tools/relay/bambu_p1s_bridge.py`
+connects on MQTT/TLS 8883 as `bblp` with the Access Code and publishes to
+`device/{SERIAL}/request` every second. The command channel exists and works;
+only the payload differs.
+
+Step 1 is **NOT verified here.** The FTPS details above are community-
+documented, the same status the camera protocol had before the bridge checked
+it against a real open-source reference (see the "Camera relay" comment block
+in the bridge). Verify it against a real printer before trusting it.
+
+**The real blocker is slicing, not access.** A P1S expects a Bambu-flavoured
+3MF carrying its own metadata and AMS handling. This container has
+`prusa-slicer`, which is fine for the honest time/cost estimates in the
+`*_PRINTING.md` notes, but its output is not a drop-in for a P1S — sending it
+would likely fail or print badly. Real submission wants Bambu Studio or Orca
+doing the slice on Scott's machine, which is where Option A already puts the
+file anyway.
+
+**Why it cannot today, verified in code:**
+- The bridge publishes exactly one MQTT message ever: `{"pushing": {"command":
+  "pushall"}}` — a status request. No upload, no print command.
+- `_LOCAL_EXEC_WHITELIST = {"dir_listing", "disk_usage"}`, with the comment
+  *"Step 1 scope, Scott's locked-in decision: read-only diagnostics only."* The
+  relay re-checks against its own hardcoded copy rather than trusting the
+  server's, so a compromised Frank could not widen it.
+- Frank is on Railway and has no route to the home LAN at all.
+- Starting a print is a physical, irreversible action on a machine with hot
+  parts — the class the Autonomy Boundaries section gates. Even built, it
+  should stage for approval rather than fire, same as an Etsy publish.
+
+**Recommendation:** Option A on its own merits. Option B only if unattended
+queueing turns out to be worth it, and never without the slicing question
+answered first.
+
 ### More planners
 | ID | Product | Theme | Season |
 |---|---|---|---|
