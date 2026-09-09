@@ -3,38 +3,57 @@
 Print-in-place spinner, three colours, one letter per unit. `letter="J"` today;
 the file takes any of A–Z from the same parameter.
 
-| file | what it is |
-|---|---|
-| `monogram_keychain_J_ring.3mf` | knurled frame + keyring lug — **colour A** |
-| `monogram_keychain_J_rotor.3mf` | the spinning disc — **colour B** |
-| `monogram_keychain_J_letter.3mf` | the raised monogram — **colour C** |
-| `monogram_keychain_J_all.3mf` | everything, for checking the assembly |
+**Print this:** `monogram_keychain_J.3mf` — one file, one object, three parts,
+already aligned. Open it and assign a filament to each part.
 
-Load the three colour bodies as parts of ONE object in Bambu Studio and assign
-a filament to each. They already share an origin, so "load as single object"
-lands them correctly with no positioning.
+| part | what it is |
+|---|---|
+| ring | knurled frame + keyring lug |
+| rotor | the spinning disc |
+| halo | the offset surround behind the letter |
+| letter | the raised monogram |
+
+Each part is independently selectable — right-click one in Bambu Studio and set
+its filament. The parts are named `ring` / `rotor` / `halo` / `letter`, not by
+filename, so the list is readable.
+
+The per-part `.stl` files are the source the assembler consumes and what
+`mesh_gate.py` checks — they are not the deliverable.
+
+> **Do not export the 3MF from OpenSCAD.** Its 3MF writer merges every body
+> into a single object with no materials (verified: 1 object, 1 item, 0
+> basematerials, 20,065 fused triangles). That file slices fine and no filament
+> can be assigned to any part of it. Build the deliverable with
+> `tools/assemble_3mf.py` and confirm the parts survived.
 
 ## Why this font, and why that is not a matter of taste
 
-`tools/glyph_probe.py` swept all 26 letters in six candidate faces. The
-decisive numbers, at size 18:
+A monogram product ships 26 letters and is only as good as its **widest** glyph
+and its **thinnest**. `tools/glyph_probe.py` measured every letter in every
+candidate face, then scaled each to fit inside the bezel (r=11.1mm after the
+halo offset) and re-checked the stroke that survives:
 
-| font | J's typical stroke | verdict |
-|---|---|---|
-| **Fredoka** | **9.05 extrusions** | **shipped** |
-| Poppins SemiBold | 7.43 | fine, less character |
-| Bebas Neue | 6.00 | fine, condensed |
-| Caveat Bold | 4.48 | fine |
-| Montserrat | 3.81 | fine |
-| Cinzel Decorative | **0.57** | **would print as nothing** |
+| font | size that fits all 26 | worst stroke | |
+|---|---|---|---|
+| **Caveat Bold** | **14.7** | **3.87 extrusions** | **shipped** |
+| Bebas Neue | 18.2 | 5.46 | modern, not elegant |
+| Fredoka | 13.9 | 6.63 | prints beautifully, reads basic |
+| Dancing Script Bold | 12.9 | 2.09 | passes, no margin |
+| Cinzel Decorative Bold | 8.7 | **1.21** | **fails** |
+| Great Vibes | 8.2 | **0.76** | **fails** |
 
-Cinzel's J is a 0.24mm hairline against a 0.42mm bead. It renders beautifully
-and prints blank. Fredoka's weakest glyph across the whole alphabet loses
-**0.01%** of its area to a one-bead opening.
+Cinzel Decorative is the trap worth remembering. Judged on stroke width alone at
+a fixed size it passes comfortably — but its **Q is 47mm wide at size 22**,
+decorative swashes, so fitting the worst glyph on the face shrinks every stroke
+to 1.21 extrusions. **A font can fail on proportion rather than on weight**, and
+only measuring both catches it.
 
-The probe is validated against real ground truth, not theory: it **rejects**
-"OnBrandCraftz" at the exact size that printed blank on three of four sauce
-models, and **accepts** the "OBC" that replaced it and verifiably printed.
+Caveat Bold is also the face the OBC maker's mark already uses, so the monogram
+and the brand mark are the same hand.
+
+The probe is validated against real ground truth: it **rejects** "OnBrandCraftz"
+at the size that actually printed blank on three of four sauce models, and
+**accepts** the "OBC" that replaced it and verifiably printed.
 
 ## The print-in-place trap
 
@@ -63,14 +82,17 @@ exactly like the sauce bowl's top did (Technique 54).
 
 | | size | time | filament | cost |
 |---|---|---|---|---|
-| one keychain | 57.1 × 43.7 × 9.0 mm | **50m 12s** | 8.8 g | $0.17 |
+| one keychain | 57.1 × 43.7 × 9.0 mm | **50m 00s** | 8.7 g | $0.17 |
 
 Small enough to plate 6–8 at once, which is corpus finding 10 — *"a 180mm
 one-per-plate model is a long print and a weak set."* Against the sauce bowl's
 11h53m for a single unit, this is the shape of product that actually pays.
 
 ## Verified before shipping — on the real exported mesh
-- Watertight, **3 bodies** (frame / rotor / letter), 0 degenerate faces.
+- Watertight, 0 degenerate faces. The merged mesh reports **3** bodies, not 4:
+  the halo is a flange that touches the letter, so they fuse there. That shared
+  boundary is exactly right for multi-material — no gap, no overlap — and the
+  shipped `.3mf` carries all **4** as independent, individually colourable parts.
 - **Zero terracing** — no upward surface shallow enough to stair-step.
 - Overhang past 55°: **1.24 cm²**, all of it accounted for — 0.35 cm² is the
   0.7mm-deep OBC mark ceiling on the rotor underside (a bridge that short prints

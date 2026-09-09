@@ -19,7 +19,7 @@ $fa = 2;  $fs = 0.4;
 
 include <BOSL2/std.scad>
 
-part      = "all";          // all | ring | rotor | letter
+part      = "all";          // all | ring | rotor | halo | letter
 letter    = "J";
 mark_text = "OBC";
 
@@ -33,7 +33,27 @@ Ro        = R + bulge + clear + wall;
 
 letter_h  = T - Th;         // letter top sits FLUSH with the frame, so the
                             // proudest feature is protected from pocket wear
-letter_sz = 18.0;
+// THE SIZE IS SET BY THE WORST GLYPH, NOT BY 'J'. A monogram product ships 26
+// letters and is only as good as its widest and its thinnest. Measured across
+// all 26 at size 22, then scaled to fit inside the bezel (r=11.1 after the halo
+// offset), the only faces that BOTH fit and print are:
+//
+//   Caveat Bold          size 14.7   3.87 extrusions   <- shipped
+//   Bebas Neue           size 18.2   5.46
+//   Fredoka              size 13.9   6.63
+//   Dancing Script Bold  size 12.9   2.09  (right at the limit)
+//   Cinzel Decorative    size  8.7   1.21  FAILS -- its Q is 47mm wide at 22,
+//                                          decorative swashes, so fitting it
+//                                          shrinks every stroke below a bead
+//   Great Vibes          size  8.2   0.76  FAILS
+//
+// Caveat Bold is also the face the OBC maker's mark already uses, so the
+// monogram and the brand mark are the same hand.
+letter_font = "Caveat:style=Bold";
+letter_sz = 14.5;
+halo_off  = 0.9;            // offset backing behind the letter -- corpus
+halo_h    = 0.6;            // finding 7's layered 2D offset stack, which is
+                            // the whole multicolour-sign category in one move
 
 bezel_r   = R - 3.0;        // a groove ringing the letter, for depth
 bezel_w   = 1.0;
@@ -68,11 +88,21 @@ module rotor() {
     }
 }
 
+module glyph() {
+    text(letter, size = letter_sz, font = letter_font,
+         halign = "center", valign = "center");
+}
+
 module letter_body() {
+    translate([0, 0, Th]) linear_extrude(letter_h) glyph();
+}
+
+// A thin plate ringing the letter, one offset out. Reads as a struck monogram
+// rather than a letter dropped on a disc, and costs one filament slot.
+module halo_body() {
     translate([0, 0, Th])
-        linear_extrude(letter_h)
-            text(letter, size = letter_sz, font = "Fredoka:style=Regular",
-                 halign = "center", valign = "center");
+        linear_extrude(halo_h)
+            difference() { offset(halo_off) glyph(); glyph(); }
 }
 
 // ---------------- ring ----------------
@@ -114,10 +144,12 @@ module ring() {
 
 if      (part == "ring")   ring();
 else if (part == "rotor")  rotor();
+else if (part == "halo")   halo_body();
 else if (part == "letter") letter_body();
 else if (part == "preview") {
     color("#2b2f38") ring();          // charcoal frame
     color("#f2f0e9") rotor();         // bone face
+    color("#c9a84c") halo_body();     // struck-gold surround
     color("#e0553d") letter_body();   // brand-adjacent accent
 }
-else { ring(); rotor(); letter_body(); }
+else { ring(); rotor(); halo_body(); letter_body(); }

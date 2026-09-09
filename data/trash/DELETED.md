@@ -6,221 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260806-001 date=2026-08-06 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed 7 CSS theme blocks (Dark Purple, Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid), keeping Studio Warm, Day Mode, Ocean Teal, Midnight Kawaii, Sunwashed." -->
-## 20260806-001 · 2026-08-06 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed 7 CSS theme blocks (Dark Purple, Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid), keeping Studio Warm, Day Mode, Ocean Teal, Midnight Kawaii, Sunwashed.  
-**Payload:** `data/trash/files/20260806-001__snippet.txt`
-
-```python
-html.theme-purple{
-  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--panel3:#291a3e;--border:#221537;
-  --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
-  --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-charcoal{
-  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--panel3:#332c22;--border:#2e281d;
-  --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
-  --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
-}
-html.theme-sakura{
-  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--panel3:#35192b;--border:#311826;
-  --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
-  --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-matcha{
-  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--panel3:#223424;--border:#1e2e21;
-  --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
-  --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-mermaid{
-  --bg:#f0fbfa;--panel:#ffffff;--panel2:#dff6f3;--panel3:#ffffff;--border:#bfe8e2;
-  --cyan:#007d73;--cyan2:#005850;--gold:#7a45e0;--gold2:#5b2fb0;
-  --text:#0b3b38;--muted:#3a736c;--green:#12814d;--red:#d6362b;--amber:#a46400;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-clubroom{
-  --bg:#fffdf5;--panel:#ffffff;--panel2:#f5ebd0;--panel3:#ffffff;--border:#e8d9a8;
-  --cyan:#2d6cdf;--cyan2:#1e4fa8;--gold:#916c08;--gold2:#6b4f05;
-  --text:#1c1608;--muted:#6b5a2e;--green:#1a8548;--red:#d53a3a;--amber:#916c08;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-springvivid{
-  --bg:#fbf7ff;--panel:#ffffff;--panel2:#f0e6fb;--panel3:#ffffff;--border:#dcc7f5;
-  --cyan:#c4157f;--cyan2:#8e0e5c;--gold:#bc4f1b;--gold2:#8a3a13;
-  --text:#241541;--muted:#6b5490;--green:#18804f;--red:#d0342a;--amber:#bc4f1b;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-```
-
-<!-- /TRASH 20260806-001 -->
-<!-- TRASH id=20260806-002 date=2026-08-06 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed the corresponding 7 _UI_THEMES swatch entries (same removal as the CSS blocks)." -->
-## 20260806-002 · 2026-08-06 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed the corresponding 7 _UI_THEMES swatch entries (same removal as the CSS blocks).  
-**Payload:** `data/trash/files/20260806-002__snippet.txt`
-
-```python
-  {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
-  {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
-  {name:'sakura',  label:'Sakura',        bg:'#140a10', accent:'#f4a7b9'},
-  {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
-  {name:'sunwashed',   label:'Sunwashed',     bg:'#fff8f0', accent:'#ba4e36'},
-  {name:'mermaid',     label:'Mermaid Bright',bg:'#f0fbfa', accent:'#007d73'},
-  {name:'clubroom',    label:'Clubroom Gold', bg:'#fffdf5', accent:'#916c08'},
-  {name:'springvivid', label:'Spring Vivid',  bg:'#fbf7ff', accent:'#c4157f'},
-```
-
-<!-- /TRASH 20260806-002 -->
-<!-- TRASH id=20260806-003 date=2026-08-06 kind=snippet source="tools/post_scheduled_coloring.py" reason="Broken: PACKS[pack] is a plain theme list not a {themes,style} dict, and generate_pack() does not exist in generate_coloring_pages.py -- TypeError crashed every scheduled run since this script was written. Replaced with the real per-theme loop main() actually uses." -->
-## 20260806-003 · 2026-08-06 · snippet · `tools/post_scheduled_coloring.py`
-**Reason:** Broken: PACKS[pack] is a plain theme list not a {themes,style} dict, and generate_pack() does not exist in generate_coloring_pages.py -- TypeError crashed every scheduled run since this script was written. Replaced with the real per-theme loop main() actually uses.  
-**Payload:** `data/trash/files/20260806-003__snippet.txt`
-
-```python
-    # Generate full page set
-    themes = gcp.PACKS[pack]["themes"]
-    style_dna = gcp.PACKS[pack]["style"]
-    generated_files = gcp.generate_pack(pack, themes, style_dna=style_dna)
-```
-
-<!-- /TRASH 20260806-003 -->
-<!-- TRASH id=20260806-004 date=2026-08-06 kind=file source="tools/desktop/backend.spec" reason="Desktop app moved to a thin-client architecture (2026-08-06, Option A) -- BrowserWindow loads the live Railway deployment directly instead of a locally spawned backend, so there is no backend executable left to build a PyInstaller spec for." -->
-## 20260806-004 · 2026-08-06 · file · `tools/desktop/backend.spec`
-**Reason:** Desktop app moved to a thin-client architecture (2026-08-06, Option A) -- BrowserWindow loads the live Railway deployment directly instead of a locally spawned backend, so there is no backend executable left to build a PyInstaller spec for.  
-**Payload:** `data/trash/files/20260806-004__backend.spec`
-
-```
-# -*- mode: python ; coding: utf-8 -*-
-"""
-PyInstaller spec for Frank's backend (tools/api_server/main.py), bundled as a
-standalone executable for the desktop app (desktop/ Electron shell spawns this as a
-child process). No pre-installed Python required on the end-user machine.
-
-Build (must run ON the target OS -- PyInstaller does not cross-compile):
-  python -m PyInstaller tools/desktop/backend.spec --distpath dist/desktop-backend
-
-Why onedir, not onefile: main.py resolves sys.path.insert(0, ROOT / "tools") at import
-time and imports sibling modules (daily_brief, trash, etc.) as bare names -- that only
-works if tools/ exists as real files on disk next to the executable, which onedir mode
-gives for free (the datas entry below copies the whole tools/ tree into the bundle).
-onefile mode self-extracts to a temp dir per launch, which would also work but adds
-startup latency and an extra temp-cleanup failure mode for no benefit here.
-
-main.py itself has a matching frozen-detection branch (search `getattr(sys, "frozen"`)
-that computes ROOT as the directory containing the frozen executable instead of walking
-up from __file__, since __file__ for a frozen entry script doesn't sit 3 directories
-under the repo root the way it does when run from source.
-"""
-from pathlib import Path
-
-REPO_ROOT = Path(SPECPATH).resolve().parent.parent  # tools/desktop -> tools -> repo root
-MAIN_PY = REPO_ROOT / "tools" / "api_server" / "main.py"
-
-a = Analysis(
-    [str(MAIN_PY)],
-    pathex=[str(REPO_ROOT), str(REPO_ROOT / "tools"), str(REPO_ROOT / "tools" / "api_server")],
-    binaries=[],
-    datas=[
-        # The whole tools/ tree (incl. tools/api_server/static/'s ~34MB vendor JS) as
-        # real files on disk -- see the onedir rationale above. Harmless if this also
-        # duplicates main.py's own source alongside the compiled entry script.
-        (str(REPO_ROOT / "tools"), "tools"),
-        # Read-mostly reference docs the CEO agent reads at runtime (business_standards.md,
-        # ops_runbook.md, etc.) -- NOT the rest of data/ (staged_photos, digital_products,
-        # backups, trash are large/gitignored/user-specific and don't belong in an installer).
-        (str(REPO_ROOT / "data" / "knowledge_base"), "data/knowledge_base"),
-        (str(REPO_ROOT / "data" / "dp_listing_map.json"), "data"),
-    ],
-    hiddenimports=[],
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    noarchive=False,
-)
-
-pyz = PYZ(a.pure)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    [],
-    exclude_binaries=True,
-    name="frank-backend",
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,
-    console=True,  # keep a console window for now -- makes startup errors visible
-                   # during bring-up; Electron can hide it later once this is proven stable
-    disable_windowed_traceback=False,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=False,
-    name="frank-backend",
-)
-```
-
-<!-- /TRASH 20260806-004 -->
-<!-- TRASH id=20260806-005 date=2026-08-06 kind=file source="tools/desktop/build_backend.py" reason="Same thin-client architecture change as backend.spec -- this script built the now-unused local backend executable via PyInstaller." -->
-## 20260806-005 · 2026-08-06 · file · `tools/desktop/build_backend.py`
-**Reason:** Same thin-client architecture change as backend.spec -- this script built the now-unused local backend executable via PyInstaller.  
-**Payload:** `data/trash/files/20260806-005__build_backend.py`
-
-```
-#!/usr/bin/env python3
-"""
-Builds the standalone Frank backend executable for the desktop app, using
-tools/desktop/backend.spec. Must run ON the target OS -- PyInstaller does not
-cross-compile a Windows .exe from Linux/Mac or vice versa. In practice this means:
-  - Local runs (this script) only ever produce a binary for the OS you ran it on.
-  - The real Windows .exe / Mac .app come from .github/workflows/build-desktop.yml's
-    matrix build on windows-latest / macos-latest GitHub-hosted runners.
-
-Run:  python tools/desktop/build_backend.py
-Output: dist/desktop-backend/frank-backend/ (a directory -- onedir mode, see the
-        spec's docstring for why onedir instead of onefile).
-"""
-import subprocess
-import sys
-from pathlib import Path
-
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SPEC = REPO_ROOT / "tools" / "desktop" / "backend.spec"
-DIST = REPO_ROOT / "dist" / "desktop-backend"
-BUILD = REPO_ROOT / "build" / "desktop-backend"
-
-
-def main() -> int:
-    cmd = [
-        sys.executable, "-m", "PyInstaller",
-        str(SPEC),
-        "--distpath", str(DIST),
-        "--workpath", str(BUILD),
-        "--noconfirm",
-    ]
-    print("Running:", " ".join(cmd))
-    result = subprocess.run(cmd, cwd=str(REPO_ROOT))
-    if result.returncode != 0:
-        return result.returncode
-    out_dir = DIST / "frank-backend"
-    print(f"\nBuilt: {out_dir}")
-    print(f"Run it directly to test: {out_dir / 'frank-backend'}")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-```
-
-<!-- /TRASH 20260806-005 -->
 <!-- TRASH id=20260814-001 date=2026-08-14 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced the flat 5-theme system (default/light/ocean/kawaii/sunwashed) with a 2-axis 3-palette x 2-mode (dark/light) system (Studio Warm / Transformative Teal / Clubroom Contrast), per Scott (2026-08-14): change the color scheme, add a dark/light setting, 3 schemes x light+dark = 6 total. Archived before removal per the standing recycle-bin rule." -->
 ## 20260814-001 · 2026-08-14 · snippet · `tools/api_server/frank_hud_mockup.py`
 **Reason:** Replaced the flat 5-theme system (default/light/ocean/kawaii/sunwashed) with a 2-axis 3-palette x 2-mode (dark/light) system (Studio Warm / Transformative Teal / Clubroom Contrast), per Scott (2026-08-14): change the color scheme, add a dark/light setting, 3 schemes x light+dark = 6 total. Archived before removal per the standing recycle-bin rule.  
@@ -468,7 +253,6 @@ def ring_texture(m, slices=140, smooth=9):
 ```
 
 <!-- /TRASH 20260904-001 -->
-
 <!-- TRASH id=20260905-001 date=2026-09-05 kind=snippet source="tests/test_kb_skill_docs.py" reason="Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide." -->
 ## 20260905-001 · 2026-09-05 · snippet · `tests/test_kb_skill_docs.py`
 **Reason:** Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide.  
@@ -514,4 +298,47 @@ def test_suite_never_writes_to_the_real_runbook():
 ```
 
 <!-- /TRASH 20260905-001 -->
+<!-- TRASH id=20260909-001 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_all.3mf" reason="OpenSCAD's 3MF export MERGES every body into one object with no materials (verified: 1 object, 1 item, 0 basematerials, 20,065 fused triangles). This file looked like the print-ready deliverable and could not have filaments assigned at all. Superseded by monogram_keychain_J.3mf from tools/assemble_3mf.py." -->
+## 20260909-001 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_all.3mf`
+**Reason:** OpenSCAD's 3MF export MERGES every body into one object with no materials (verified: 1 object, 1 item, 0 basematerials, 20,065 fused triangles). This file looked like the print-ready deliverable and could not have filaments assigned at all. Superseded by monogram_keychain_J.3mf from tools/assemble_3mf.py.  
+**Payload:** `data/trash/files/20260909-001__monogram_keychain_J_all.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-001 -->
+
+<!-- TRASH id=20260909-002 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_ring.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
+## 20260909-002 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_ring.3mf`
+**Reason:** superseded by the assembled monogram_keychain_J.3mf  
+**Payload:** `data/trash/files/20260909-002__monogram_keychain_J_ring.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-002 -->
+
+<!-- TRASH id=20260909-003 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_rotor.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
+## 20260909-003 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_rotor.3mf`
+**Reason:** superseded by the assembled monogram_keychain_J.3mf  
+**Payload:** `data/trash/files/20260909-003__monogram_keychain_J_rotor.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-003 -->
+
+<!-- TRASH id=20260909-004 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_letter.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
+## 20260909-004 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_letter.3mf`
+**Reason:** superseded by the assembled monogram_keychain_J.3mf  
+**Payload:** `data/trash/files/20260909-004__monogram_keychain_J_letter.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-004 -->
 

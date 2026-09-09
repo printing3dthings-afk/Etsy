@@ -2002,6 +2002,59 @@ full notes): a pleated folding fan with a print-in-place hinge and a
 snowflake motif, and a ribbed 3-compartment desk caddy. Pitch from real
 candidates like these before reaching for something new.
 
+## Standing rule — a model with multiple parts ships as ONE print-ready file (2026-09-09)
+
+Scott's instruction, after being handed a monogram keychain as three separate
+3MFs to load and align himself:
+
+> *"the keychain and all other files that have multiple parts that go together
+> need to be assembled in one file so it is ready to print. the exception would
+> be like a container with a lid. those need to stay separate parts but same
+> plate if possible."*
+
+Two cases, and the deliverable is a single `.3mf` either way:
+
+| what it is | how it ships |
+|---|---|
+| parts that assemble into one object — colour bodies, a flush inlay, a raised monogram, a print-in-place rotor inside its frame | **one object, N parts.** Every part keeps its own coordinates, so it opens already aligned and a filament is assigned per part. |
+| things that separate in use — a container and its lid, a clicker's bun and its basket | **N separate objects, one plate**, laid out with a real gap so they arrive arranged rather than stacked on the origin. A plate entry may itself be multi-part. |
+
+### OpenSCAD cannot produce either of these, and it fails silently
+
+**`openscad -o out.3mf` MERGES every body into a single object with no
+materials.** Verified 2026-09-09 on a real export: one `<object>`, one `<item>`,
+zero `<basematerials>`, 20,065 triangles fused into one mesh. The file opens
+fine, slices fine, and there is no way to assign a second filament to anything
+in it — the colour split is simply gone. It looked like the print-ready
+deliverable and was the opposite of one.
+
+Use **`tools/assemble_3mf.py`**, which writes the 3MF directly:
+
+```bash
+# parts that assemble into one object
+python3 tools/assemble_3mf.py out.3mf ring.stl:#2B2F38 rotor.stl:#F2F0E9 letter.stl:#E0553D
+
+# a container and its lid -- "+" starts a new object, and a group can be multi-part
+python3 tools/assemble_3mf.py --plate out.3mf base.stl:#2B2F38 \
+    + lid_body.stl:#2B2F38 lid_script.stl:#D4A96A
+```
+
+Per-part STLs stay in the tree — they are the source the assembler consumes and
+what `mesh_gate.py` checks. What ships to Scott, and what a customer downloads,
+is the single assembled `.3mf`.
+
+### Verify the assembly, never assume it
+
+A 3MF that merged silently still slices. Check the parts survived:
+
+```python
+sc = trimesh.load("out.3mf")
+len(sc.geometry)          # must equal the number of parts, not 1
+```
+
+and slice it for real before calling it done — `prusa-slicer --load
+tools/p1s_slice_profile.ini -g` accepts a 3MF directly.
+
 ## Standing rule — one home for every STL, and hand it to Scott (2026-08-28)
 
 **`openscad_models/` in this repo is the single canonical home for every
