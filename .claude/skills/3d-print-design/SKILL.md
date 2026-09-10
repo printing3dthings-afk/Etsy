@@ -4117,7 +4117,20 @@ Sliced at 0.2mm / 3 walls / 15% gyroid, PLA at $20/kg:
 Filament is nearly free; **printer time is the entire cost**. A 24-hour part
 caps the shop at one unit per day and cannot carry a sellable margin. Check the
 sliced time BEFORE committing to a physical product, not after — and treat
-roughly 4 hours per sellable unit as the ceiling worth designing toward.
+roughly 4 hours per sellable unit as the number to design toward.
+
+**4 hours is a goal, not a hard stop — corrected 2026-09-10 by Scott:** *"The 4
+hour was for other products when I started. That's still the goal but not a hard
+stop limit."* It was set against the commodity end of the catalogue, where it
+still bites hard: a storage bin at 4h00 is a real problem, because nobody pays a
+premium for a bin (see `label_bin.scad`, where the wall alone was 34.6 of its
+53.4 cm³). It does not transfer unchanged to a display piece. The haunted manor
+lantern is 7h 10m and that is fine at lamp pricing.
+
+So the rule to actually apply is: **always slice and always report the time
+plainly, before the design is committed** — never bury it, never discover it
+afterwards. Then judge it against what the piece sells for, not against a single
+number. What is NOT acceptable is a long print nobody decided on.
 
 ---
 

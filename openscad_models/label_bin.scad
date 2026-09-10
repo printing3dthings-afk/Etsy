@@ -40,8 +40,8 @@ wall    = 1.68;             // EXACTLY 4 x 0.42 extrusions. 1.6 looks
                             // the same bin sliced 48 MINUTES SLOWER on LESS
                             // material. Wall thickness wants to be a whole
                             // number of extrusions. The first build used 2.4 with a
-                            // 3.5 floor and printed in 4h00 -- over the 4h/unit
-                            // ceiling, the wall alone being 34.6 of its 53.4
+                            // 3.5 floor and printed in 4h00 -- at the 4h/unit
+                            // target, the wall alone being 34.6 of its 53.4
                             // cm3. A storage bin is a commodity and cannot cost
                             // four hours of printer time.
 floor_t = 1.6;             // 8 layers. The scoop and the extra tongues it

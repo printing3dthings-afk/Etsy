@@ -12,8 +12,12 @@ through the open base; light escapes only through the windows and door.
 | supports | none — see the overhang note |
 | brim | none — the base footprint is large and open |
 
-**7h 10m is over this shop's 4h/unit ceiling and that is a deliberate open
-question, not an oversight.** See "The size decision" below.
+**7h 10m is a deliberate choice, settled 2026-09-10.** The shop's 4h/unit
+figure is a goal aimed at the commodity end of the catalogue, not a hard stop —
+Scott: *"The 4 hour was for other products when I started. That's still the goal
+but not a hard stop limit."* This is a 163 mm lit display piece and is priced as
+a lamp. "The size decision" below is kept as the recipe for a smaller variant,
+not as an outstanding problem.
 
 ## Verified
 
@@ -268,13 +272,16 @@ g-code, rather than lived with:
 
 ## The size decision
 
-At 163 mm tall this is a 6-hour print. The levers, in order of effect:
+Not a problem to solve — the levers, kept in case a smaller variant is ever
+wanted:
 
 1. **Height.** Most of the volume is roof and turret.
-2. **Wall.** Nominal 2.52 mm because the groove is budgeted into it. Dropping
-   the inner offset to 1.26 mm gives a 2.10 mm wall and 1.26 mm at the groove
-   floor — still 3 extrusions — for about 17% less shell.
-3. **Scale.** 80% would land near 4h, but it also shrinks the wall below whole
-   extrusions, so it needs the parameters re-solved rather than a scale factor.
+2. **Wall.** Nominal 2.52 mm because the clapboard groove is budgeted into it.
+   Dropping the inner offset to 1.26 mm gives a 2.10 mm wall and 1.26 mm at the
+   groove floor — still 3 extrusions — for about 17% less shell.
+3. **Scale.** 80% would land near 4h30, but it also shrinks the wall below whole
+   extrusions, so it needs the parameters re-solved rather than a scale factor
+   applied. It would also take the lantern faces and the tower bats below the
+   size at which they read.
 
-Not applied yet — this is a pricing question as much as a design one.
+None of it is applied. At lamp pricing the full-size piece is the product.
