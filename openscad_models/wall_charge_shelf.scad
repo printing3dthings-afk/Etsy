@@ -146,107 +146,11 @@ module toe_stops() {
 mark_size = 7.0;
 mark_deep = 0.6;
 
-// =========================================================================
-// helpers
-// =========================================================================
-
-// child 2D is drawn as (x, z); result spans y in [0, thk]
-module extrude_xz(thk) { rotate([90,0,0]) translate([0,0,-thk]) linear_extrude(thk) children(); }
-
-// child 2D is drawn as (z, y); result spans x in [-thk, 0].
-// rotate([0,90,0]) is the trap here and it renders, gates watertight and
-// slices: it sends the profile's x to world MINUS z, so the whole shelf came
-// out mirrored into negative depth (bounds z -65..65 instead of 0..65) while
-// every other check passed. rotate([0,-90,0]) is the one that puts depth
-// where depth belongs.
-module extrude_zy(thk) { rotate([0,-90,0]) linear_extrude(thk) children(); }
-
-// ---- lattice placement ---------------------------------------------------
-// Cells are PLACED ONLY IF THEY FIT WHOLE. The obvious construction --
-// intersect an infinite hex field with the region -- renders, gates and slices
-// fine, and looks wrong: a cell clipped by the region boundary leaves a
-// tapering needle of material between it and its neighbour. Measured on the
-// first build, those needles were 1.26-1.68mm wide, so nothing flagged them --
-// they are perfectly printable, they just read as a modelling mistake on the
-// face of a product whose whole point is being seen. Testing each cell's six
-// real vertices against the outline costs ~60 lines and removes them entirely,
-// and the solid frame is then whatever is left over rather than a separate
-// inset shape.
-function rot2(p, a) = [p.x*cos(a) - p.y*sin(a), p.x*sin(a) + p.y*cos(a)];
-
-function pip(p, pts) =
-    (len([for (i = [0 : len(pts)-1])
-        let (a = pts[i], b = pts[(i+1) % len(pts)])
-        if (((a.y > p.y) != (b.y > p.y)) &&
-            (p.x < (b.x-a.x) * (p.y-a.y) / (b.y-a.y) + a.x)) 1]) % 2) == 1;
-
-function seg_d(p, a, b) =
-    let (v = b - a, w = p - a, L2 = v*v,
-         t = L2 == 0 ? 0 : max(0, min(1, (w*v) / L2)))
-    norm(p - (a + t*v));
-
-function edge_d(p, pts) =
-    min([for (i = [0 : len(pts)-1]) seg_d(p, pts[i], pts[(i+1) % len(pts)])]);
-
-function far_in(p, pts, d)  =  pip(p, pts) && edge_d(p, pts) >= d;
-function far_out(p, pts, d) = !pip(p, pts) && edge_d(p, pts) >= d;
-
-function cell_fits(c, vs, outline, keepouts, d) =
-    len([for (v = vs) if (!far_in(c + v, outline, d)) 1]) == 0 &&
-    len([for (k = keepouts) for (v = vs) if (!far_out(c + v, k, d)) 1]) == 0;
-
-function rrect_pts(w, h, r, seg = 6) =
-    [for (q = [0 : 3], i = [0 : seg])
-        let (cx = (q == 0 || q == 3 ? 1 : -1) * (w/2 - r),
-             cy = (q < 2 ? 1 : -1) * (h/2 - r),
-             a  = (q == 0 ? 0 : q == 1 ? 90 : q == 2 ? 180 : 270) + 90 * i / seg)
-        [cx + r*cos(a), cy + r*sin(a)]];
-
-function rect_pts(cx, cy, w, h) =
-    [[cx-w/2, cy-h/2], [cx+w/2, cy-h/2], [cx+w/2, cy+h/2], [cx-w/2, cy+h/2]];
-
-module cell_2d(R, k) { offset(r = -rib/2) scale([1, k]) rotate(30) circle(r = R, $fn = 6); }
-
-module lattice(outline, keepouts, R, k, brd, turn = 0, reach = 130) {
-    px = sqrt(3) * R;
-    py = 1.5 * R * k;
-    vs = [for (j = [0:5]) rot2([R*cos(30 + 60*j), k*R*sin(30 + 60*j)], turn)];
-    for (j = [-ceil(reach/py) : ceil(reach/py)], i = [-ceil(reach/px) : ceil(reach/px)])
-        let (c = rot2([(i + (j % 2 == 0 ? 0 : 0.5)) * px, j * py], turn))
-            if (cell_fits(c, vs, outline, keepouts, brd))
-                translate(c) rotate(turn) cell_2d(R, k);
-}
-
-// The 3D version, for a lattice cut along the build axis. Every cell gets a
-// 45 deg lead-in on the room-facing face: a phone narrower than ~55mm misses
-// the mounting bosses and leans on the lattice itself, and a raw through-cut
-// would present it fifty sharp edges. linear_extrude(scale=) is safe here
-// only because each cell is already translated to its own origin inside the
-// loop -- scaling the assembled union instead would fan the cells outward.
-// The flare faces the room, so in the print it is a 45 deg downward face,
-// inside the 55 deg limit. It is a hull between the plain cell and an
-// offset() one, NOT linear_extrude(scale=): scale ramps over the whole
-// extrude height, so a 0.6mm chamfer asked for that way only delivered
-// 0.22mm inside a 2.52mm plate -- measured, not assumed.
-module lattice_cut(outline, keepouts, R, k, brd, h, cham, turn = 0, reach = 130) {
-    px = sqrt(3) * R;
-    py = 1.5 * R * k;
-    vs = [for (j = [0:5]) rot2([R*cos(30 + 60*j), k*R*sin(30 + 60*j)], turn)];
-    for (j = [-ceil(reach/py) : ceil(reach/py)], i = [-ceil(reach/px) : ceil(reach/px)])
-        let (c = rot2([(i + (j % 2 == 0 ? 0 : 0.5)) * px, j * py], turn))
-            if (cell_fits(c, vs, outline, keepouts, brd))
-                translate(c) rotate(turn) {
-                    translate([0, 0, -1]) linear_extrude(h + 2) cell_2d(R, k);
-                    hull() {
-                        translate([0, 0, h - cham]) linear_extrude(0.01) cell_2d(R, k);
-                        translate([0, 0, h + 0.5]) linear_extrude(0.01)
-                            offset(r = cham + 0.5) cell_2d(R, k);
-                    }
-                }
-}
-
-// rounded slot between two points, in 2D
-module slot2d(x0, y0, x1, y1, d) { hull() { translate([x0,y0]) circle(d=d); translate([x1,y1]) circle(d=d); } }
+// Shared geometry -- extrude helpers, polygon predicates and the whole-cell
+// hex lattice -- lives in lattice_lib.scad, which the outlet shelf also uses.
+// It must be included BEFORE this file's own parameters: include<> inlines,
+// and last assignment wins, so an override placed above it silently loses.
+include <lattice_lib.scad>
 
 // =========================================================================
 // back plate  (2D in world X,Y -- extruded along the build axis)
@@ -277,7 +181,7 @@ module back_plate() {
             linear_extrude(foot_t)  boss_2d(0, foot_y, foot_w, foot_w);
         }
         lattice_cut(rrect_pts(W, H, corner_r), plate_keepouts(),
-                    cellR_p, 1, brd_p, plate_t, lat_cham);
+                    cellR_p, 1, brd_p, rib, plate_t, lat_cham);
     }
 }
 
@@ -316,7 +220,7 @@ module panels() {
         extrude_zy(panel_t)
             difference() {
                 panel_2d();
-                lattice(panel_pts(), [], cellR_s, stretch, brd_s, 90);
+                lattice(panel_pts(), [], cellR_s, stretch, brd_s, rib, 90);
             }
 }
 

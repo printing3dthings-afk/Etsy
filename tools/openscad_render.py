@@ -161,6 +161,7 @@ def render_scad(
     fmt: str = "stl",
     timeout: int = 120,
     view: dict | None = None,
+    source_dir: "str | Path | None" = None,
 ) -> Path:
     """Render literal OpenSCAD source to a mesh file (or a PNG preview).
     Writes scad_source to a throwaway temp .scad file (OpenSCAD has no
@@ -173,6 +174,16 @@ def render_scad(
     script may `include <BOSL2/std.scad>` for real rounding/filleting/
     smooth-curve support -- see this module's docstring and
     .claude/skills/3d-print-design/SKILL.md.
+
+    source_dir is prepended to OPENSCADPATH so a script can also include a
+    SIBLING file. Because this renders from a throwaway temp copy, a plain
+    `include <lattice_lib.scad>` next to the real .scad could not resolve --
+    and OpenSCAD treats a missing include as a WARNING, not an error: it
+    silently ignores every module the missing file defined and writes a
+    perfectly valid STL of whatever geometry is left. That is how a wall
+    shelf rendered, gated watertight and sliced with a third of its volume
+    quietly absent (2026-09-10). The CLI passes the input file's own
+    directory automatically.
 
     params values are passed through OpenSCAD's -D command-line variable
     override VERBATIM -- each must already be a real OpenSCAD literal (a
@@ -218,7 +229,10 @@ def render_scad(
         scad_path = Path(f.name)
 
     env = dict(os.environ)
-    env["OPENSCADPATH"] = str(_OPENSCAD_LIBS_DIR)
+    lib_path = [str(_OPENSCAD_LIBS_DIR)]
+    if source_dir:
+        lib_path.insert(0, str(Path(source_dir).resolve()))
+    env["OPENSCADPATH"] = os.pathsep.join(lib_path)
 
     try:
         cmd = [exe, "-o", str(output_path)]
@@ -258,6 +272,29 @@ def render_scad(
                 f"openscad exited {result.returncode} rendering to {fmt}: "
                 f"{(result.stderr or result.stdout or 'no output').strip()[-2000:]}"
             )
+        # A missing include or an ignored unknown module exits 0 and still
+        # writes a valid mesh of the geometry that DID resolve. Never pass one
+        # of those back as a success -- it is the most dangerous failure this
+        # wrapper can have, because everything downstream (mesh_gate, the
+        # slicer, a render) will happily agree the wrong model is fine.
+        noise = (result.stderr or "") + (result.stdout or "")
+        for marker, why in (("Can't open include file", "an include did not resolve"),
+                            ("Ignoring unknown module", "a module was never defined"),
+                            ("Ignoring unknown function", "a function was never defined")):
+            if marker in noise:
+                bad = [ln.strip() for ln in noise.splitlines() if marker in ln]
+                # OpenSCAD already wrote the wrong mesh. Delete it: raising while
+                # leaving a plausible-looking STL on disk is worse than either
+                # failing or succeeding, because the next command to touch that
+                # path gets a wrong model with no warning attached.
+                output_path.unlink(missing_ok=True)
+                raise OpenSCADError(
+                    f"openscad exited 0 but {why}, so the mesh it produced is missing "
+                    f"geometry. This is a warning to OpenSCAD, never an error -- pass "
+                    f"source_dir (the CLI does this from the input path) if the script "
+                    f"includes a sibling file. Offending lines:\n  "
+                    + "\n  ".join(dict.fromkeys(bad))[:1500]
+                )
         if not output_path.exists() or output_path.stat().st_size == 0:
             raise OpenSCADError(
                 f"openscad exited 0 but produced no/empty output at {output_path} -- "
@@ -289,8 +326,9 @@ def _cli() -> None:
     params = dict(kv.split("=", 1) for kv in args.define)
     output = Path(args.output or Path(args.scad_file).with_suffix(".stl"))
     fmt = args.format or output.suffix.lstrip(".")
+    source_dir = Path(args.scad_file).resolve().parent
     try:
-        render_scad(scad_source, output, params=params, fmt=fmt)
+        render_scad(scad_source, output, params=params, fmt=fmt, source_dir=source_dir)
     except OpenSCADError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
