@@ -8,9 +8,9 @@ Replaces a receptacle's cover plate with a shelf. One parametric file,
 | fits | classic two-round-socket outlet | rocker / GFCI rectangle |
 | fixing | one central 6-32 | two 6-32 at 3-13/16″ centres |
 | on the wall | 120 w × 161 h × 65 deep mm | same |
-| volume | 70.6 cm³ | 68.5 cm³ |
-| time | **3h 26m** | **3h 23m** |
-| supports | **none** — 0.00 cm² past 55° | same |
+| volume | 73.0 cm³ | 70.7 cm³ |
+| time | **3h 32m** | **3h 28m** |
+| supports | **none needed** — but read the bridge note | same |
 
 Filament weights the slicer quotes (62.0 g / 60.6 g) are at this profile's
 **PLA** density of 1.24. Print this in PC FR and the real weight differs;
@@ -65,6 +65,7 @@ measured back out of the finished mesh:
 | Decora opening | 33.30 × 66.70 mm | 33.70 × 67.15 |
 | Decora fixing | 3-13/16″ centres | Ø3.8 at y = ±48.43 |
 | plate coverage | 69.85 × 114.30 mm | 74 × 114.30 |
+| back relief | ~1.2 mm strap to clear | 2.10 mm deep, 35 mm wide |
 
 The plate zone is 74 mm wide against the 69.85 mm standard, so it covers about
 2 mm past the old plate's edge on each side — enough to hide a paint outline.
@@ -76,13 +77,52 @@ is where every one of these figures is quoted from.
 
 Back-flat, same as the wall charging shelf: the plate lies on the bed and the
 shelf grows upward, so the build direction is the shelf's own depth. Every
-visible surface prints as a side wall. Measured **0.00 cm² past 55°**, worst
-face 49.1°, and zero gap fill in both slices.
+visible surface prints as a side wall, and there is zero gap fill in both
+slices.
 
-The plate is **3.36 mm** (8 × 0.42), thicker than the wall shelf's 2.52,
-because the screw countersink eats 1.84 mm of it and what is left still has to
-be a plate. The countersink opens toward the room, which makes it an up-facing
+Overhang past 55° measures 9.1 / 8.7 cm², and **all of it is the strap relief's
+ceiling** — see below. Every other face in the part is 49.1° or better.
+
+The plate is **3.78 mm** (9 × 0.42), thicker than the wall shelf's 2.52,
+because the screw countersink eats 1.84 mm of it and the strap relief eats
+2.10 more, and what is left still has to be a plate. The countersink opens toward the room, which makes it an up-facing
 cone in the print — no bridge.
+
+## The back is recessed, like a real plate — and that costs one bridge
+
+A cover plate has to be recessed on its back. The receptacle's mounting strap
+sits **on** the drywall rather than in it, so the device stands about a strap's
+thickness (~1.2 mm) proud of the wall. A flat-backed plate lands on that strap
+and rocks on it, with a visible gap all round the perimeter. The first build of
+this model was flat-backed — measured 100% solid to the wall face right across
+the strap band — and would have done exactly that.
+
+The relief is **2.10 mm deep** (5 × 0.42), leaving **1.68 mm** of plate above
+it, in two pockets **35 mm wide**: one above and one below the device opening.
+Only where the strap actually is, not the whole central area. That keeps the
+perimeter bearing — this design's entire load path — at full thickness, and
+leaves the centre band solid for a duplex, where the plate is *supposed* to
+bear on the device's threaded centre boss.
+
+**The one unsupported bridge in the part is that pocket's ceiling: 36.8 mm.**
+It is unavoidable in this print orientation. The pocket opens into the device
+cut-out on its inner edge, so the slicer can only anchor it across the width;
+closing that edge would leave a strip of plate bearing on the strap, which is
+the problem the relief exists to solve. A 45° gable ceiling would be
+self-supporting but needs 6.75 mm of rise inside a 3.78 mm plate, so it does
+not fit either.
+
+PrusaSlicer says **"Floating bridge anchors, Long bridging extrusions —
+consider enabling supports"** on this part, and it is talking about exactly
+this. Do not enable supports: they would be inside a 2.10 mm pocket facing the
+wall and impossible to remove cleanly. The relief is 2.10 mm against a ~1.2 mm
+strap precisely so that **up to 0.9 mm of bridge sag is harmless**.
+
+**Check this on the first article, especially in PC FR.** Polycarbonate is
+printed with reduced part cooling, which is the condition bridges sag most in.
+Look at the back of the plate before fitting it: if the bridge has drooped
+enough to close the gap, deepen `relief_d` and reprint. Nothing else in the
+part depends on it.
 
 ## The plate is deliberately not latticed
 

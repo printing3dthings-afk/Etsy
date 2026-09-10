@@ -52,6 +52,27 @@ op_clr      = 0.4;          // never let the plate foul the device
 scr_clear   = 3.8;          // #6 shank clearance
 scr_head    = 7.0;          // 6-32 oval head
 
+// ---- strap relief --------------------------------------------------------
+// A real cover plate is recessed on its BACK. It has to be: the receptacle's
+// mounting strap sits ON the drywall, not in it, so the device stands roughly
+// a strap's thickness proud of the wall. A flat-backed plate lands on that
+// strap and rocks on it, with a visible gap all round the perimeter. Every
+// injection-moulded plate solves this and so does this one.
+//
+// Relieved only where the strap actually is -- two pockets above and below the
+// device opening -- rather than the whole central area. That keeps the bridge
+// spans short, keeps the perimeter bearing (which is this design's entire load
+// path) at full thickness, and leaves the centre band solid for a duplex,
+// where the plate is SUPPOSED to bear on the device's threaded centre boss.
+//
+// 2.10mm against a ~1.2mm strap. Erring deep costs nothing here: too little
+// relief and the plate sits proud, too much and nothing happens at all.
+relief_d   = 2.10;          // 5 x 0.42, leaving 1.68 (4 x 0.42) of plate
+relief_w   = 35;            // strap is ~33.3 wide; every mm here is a mm of
+                            // unsupported bridge, so it is sized to the strap
+                            // and not a millimetre wider.
+relief_top = 46;            // stops short of the Decora screws at +/-48.42
+
 // ---- overall -------------------------------------------------------------
 PW      = 74;               // plate zone width -- covers the 69.85 standard
 W       = 120;              // shelf width
@@ -73,9 +94,10 @@ flare_y  = -38;             // plate zone narrows above here. The flare has to
                             // with nothing behind them and bear straight on
                             // the drywall.
 
-plate_t = 3.36;             // 8 x 0.42. Thicker than the 2.52 the wall shelf
+plate_t = 3.78;             // 9 x 0.42. Thicker than the 2.52 the wall shelf
                             // uses because the screw countersink eats 1.84mm
-                            // of it and the rest has to still be a plate.
+                            // of it and the strap relief below eats 2.10 more,
+                            // and what is left has to still be a plate.
 deck_t  = 2.94;
 panel_t = 3.36;
 rib     = 1.68;
@@ -120,6 +142,22 @@ module device_opening_2d() {
 
 function screw_ys() = device == "duplex" ? [0] : [-DEC_SCREW_DY, DEC_SCREW_DY];
 
+// outer edge of the device opening -- where the relief starts
+function op_outer() = device == "duplex"
+    ? DUP_OP_DY + (DUP_OP_H + op_clr)/2
+    : (DEC_OP_H + op_clr)/2;
+
+// The pocket deliberately starts 1mm INSIDE the opening. Stopping it flush
+// with the opening edge would leave a 1mm-wide rib of half-thickness plate
+// between two voids; overlapping into a through-cut costs nothing.
+module strap_relief() {
+    y0 = op_outer() - 1;
+    h  = relief_top - y0;
+    for (sy = [-1, 1]) translate([0, sy * (y0 + relief_top)/2, -1])
+        linear_extrude(relief_d + 1)
+            offset(r = 3) square([relief_w - 6, h - 6], center = true);
+}
+
 // Countersink opens toward the ROOM, so it is an up-facing cone in the print
 // and needs no bridge. 82 deg included, which is what a 6-32 oval head wants.
 module screw_holes() {
@@ -146,6 +184,7 @@ module back_plate() {
         // 90 deg overhang that renders, gates watertight and slices.
         translate([0, 0, -1]) linear_extrude(plate_t + 2) device_opening_2d();
         screw_holes();
+        strap_relief();
         lattice_cut(body_pts(), body_keepouts(), cellR_p, 1, brd_p, rib, plate_t, lat_cham);
     }
 }
