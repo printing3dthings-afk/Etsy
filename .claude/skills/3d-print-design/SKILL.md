@@ -6157,3 +6157,97 @@ carving and prints dark. Extrude the cut **one-directionally** from outside the
 boss to inside the cavity and check both ends numerically — and one-directional
 matters: centring the same cut drove it straight through a porch column
 standing behind the lantern.
+
+---
+
+## Technique 61 — Cutting a fine crease into a body of revolution, and five silent failures on the way (2026-09-10, jack-o'-lantern ribs)
+
+Scott, on a pumpkin built as eight lobes swelling 2.2 mm out of a smaller core:
+*"the outer ridges need to be very small. Almost thin lines or small inward
+ridges made in modeling."* He was right — additive lobes at that depth read as
+a gourd carved out of balloons. What a fine rib actually wants is a **cut**,
+0.3–0.4 mm deep and about one extrusion wide.
+
+### The method: intersect a profile SHELL with slabs through the axis
+
+The obvious approach — subtract vertical cylinders at some radius — does not
+work. A straight cylinder bites deep at the equator and misses the shoulders
+entirely, because the surface it is cutting is not a cylinder.
+
+What works for any body of revolution:
+
+```openscad
+difference() {
+    rotate_extrude() polygon(prof());
+    intersection() {
+        difference() {                       // a shell of the body's OWN profile
+            rotate_extrude() intersection() {
+                offset(r = 0.4) polygon(prof());          // oversized, see (4)
+                translate([0,-1]) square([R + 2, top + 3]);
+            }
+            rotate_extrude() union() {
+                offset(r = -rib_d) polygon(prof());
+                square([rib_d + 0.3, top]);               // plug the axis, see (2)
+            }
+        }
+        for (i = [0 : n/2 - 1]) rotate([0, 0, phase + i*360/n]) rib_slab();
+    }
+}
+```
+
+The shell makes the cut follow the surface at **constant depth**; the slabs
+select which meridians get one. Each slab through the axis gives two opposite
+creases, so `n/2` slabs give `n` ribs. Slab width is an absolute number, so the
+creases stay thin lines instead of widening at the equator — which is the whole
+point.
+
+Taper each slab to a hairline at both ends (a `hull()` of a narrow box and a
+full-width one). A crease that starts with a step looks wrong and, as below,
+also grazes.
+
+### Five failures, none of which raised an error
+
+1. **A profile apex clamped to `r = 0.001` instead of landing on the axis.**
+   Done to avoid a zero radius. It leaves a full-height near-axis edge for
+   `rotate_extrude` to sweep, and it cannot close the result: *"The given mesh
+   is not closed"*, with **0.02 cm³ of a 1.35 cm³ part surviving**. A profile
+   touching x = 0 is the normal case — it is how a semicircle becomes a sphere.
+   Never clamp the pole.
+2. **`offset(r = -d)` shrinks a closed profile away from the AXIS too**, not
+   just from the surface. The inner solid comes out with a `d`-radius bore down
+   its middle, and since every slab passes through the axis, the rib cut
+   hollows that bore into a **sealed void running the height of the part** —
+   `Volumes: 3` and a negative-volume body. Union a square along the axis into
+   the offset shape.
+3. **Anything that must survive the cut has to be unioned after it.** Near the
+   apex of a body of revolution the entire cross-section is shell, so slabs
+   crossing at the axis cut a star clean through the top. A stem unioned before
+   the cut is severed and becomes its own body.
+4. **Building the cutter at the profile exactly makes its outer surface the
+   body's own surface** — coincident faces between a solid and its subtrahend,
+   the same trap as a brace landing flush on a post. It shows up as zero-area
+   facets and micro-volume inverted bodies at the crease ends. Oversize the
+   cutter (0.4 mm here); only the part that reaches inside cuts anything.
+5. **The last one was floating-point luck.** With no rib phase, the taper ends
+   at 210° and 240° produced two zero-area facets **on one instance only** —
+   identical geometry was clean at the mirrored position and clean again in
+   isolation at the origin. 15° of phase clears it. Instance-dependent defects
+   are the tell: if the same module is clean at one translation and dirty at
+   another, stop looking for a modelling error and move a number.
+
+**Test the part in isolation.** Every one of these was found in seconds by
+rendering `pumpkin_body();` alone (5–30 s) instead of the whole model (2.5 min).
+Swapping the file's last line for the single module under test is the cheapest
+debugging loop available here.
+
+### Choosing the profile: a superellipse, not an ellipsoid
+
+`r(z) = R · (1 − |(z−zc)/cz|^p)^(1/p)`. At **p = 2** (a plain ellipsoid) two
+things go wrong at once for a squat form: it is too narrow near the top — a
+carved face's eyes broke through the silhouette — and the base flare, where a
+flat base plane cuts it, reaches **62.7° from vertical**, past the 55° limit.
+
+**p = 2.5** gives a full-shouldered, flat-topped gourd whose steepest base
+flare is 49.3°, on a footprint two-thirds of the equator diameter. The general
+lever: raising `p` fattens the shoulders *and* stands the base flare up, so it
+fixes silhouette and printability together.

@@ -440,28 +440,119 @@ module porch() {
 // two inverted sliver bodies -- while still reporting the mesh watertight. A
 // 77mm2 weld to the deck is plenty; the wall was never carrying it.
 pk_x = 15; pk_y = 43.2; pk_z = 9.5;
-pk_R = 7.2; pk_cz = 6.0; pk_zc = 5.10; pk_off = 2.45; pk_lr = 4.75; pk_core = 5.0;
+pk_R  = 7.2;                // equator radius -- unchanged, so every porch
+                            // clearance solved around the old lantern still holds
+pk_cz = 6.0;                // vertical semi-axis
+pk_zc = 4.5;                // height of the equator above the flat base
+pk_p  = 2.5;                // superellipse exponent. A plain ellipsoid (p = 2)
+                            // is too narrow near the top -- the eyes broke
+                            // through its silhouette -- and its base flare
+                            // reaches 62.7 deg from vertical, past the limit.
+                            // 2.5 gives a squat, full-shouldered gourd with the
+                            // steepest point of the base at 49.3 deg.
+pk_top = pk_zc + pk_cz;
+pk_fz  = 4.2;               // face centre, just under the equator
+pk_fs  = 0.85;              // face scale
+
+rib_n = 12;                 // meridian creases
+rib_d = 0.35;               // HOW DEEP. Scott: "very small, almost thin lines".
+rib_w = 0.9;                // The previous lantern was eight lobes swelling
+                            // 2.2mm out of a smaller core -- real relief, and
+                            // far too coarse: it read as a gourd carved out of
+                            // eight balloons. A crease cut 0.35mm into a smooth
+                            // body is under one layer deep and one extrusion
+                            // wide, which is exactly a drawn line.
+
+function pk_r(z) = let (u = abs(z - pk_zc) / pk_cz)
+    pk_R * pow(max(1 - pow(min(u, 1), pk_p), 0), 1/pk_p);
+// Closed profile in the (r, z) half plane, flat base included, so
+// rotate_extrude gives a flat-bottomed solid with no cutting plane needed.
+// The apex must land EXACTLY on the axis. Clamping it to r = 0.001 to avoid a
+// zero radius left a 10.5mm near-axis edge for rotate_extrude to sweep, and it
+// could not close the result: "The given mesh is not closed", twice, with
+// 0.02cm3 of the 1.3cm3 lantern surviving. A profile that touches x = 0 is the
+// normal case -- it is how a semicircle becomes a sphere.
+function pk_prof(n = 40) = concat([[0, 0]],
+    [for (i = [0 : n]) [pk_r(i/n * pk_top), i/n * pk_top]]);
+
+// A crease tapers to a hairline at both ends instead of starting with a step.
+// That is what a real crease does, and it also removes a defect: a slab with a
+// flat bottom face grazed the shell almost tangentially where it began, and
+// left a 0.02mm3 inverted sliver as its own body.
+module rib_slab() {
+    L = 2.4 * pk_R;
+    hull() {
+        translate([-L/2, -0.12,     1.0]) cube([L, 0.24,   0.1]);
+        translate([-L/2, -rib_w/2,  3.0]) cube([L, rib_w,  0.1]);
+    }
+    translate([-L/2, -rib_w/2, 3.0]) cube([L, rib_w, 5.6]);
+    hull() {
+        translate([-L/2, -rib_w/2,  8.5]) cube([L, rib_w,  0.1]);
+        translate([-L/2, -0.12,     9.9]) cube([L, 0.24,   0.1]);
+    }
+}
 
 module pumpkin_body() {
-    $fn = 48;
-    difference() {
-        union() {
-            translate([0, 0, pk_zc]) scale([1, 1, pk_cz/pk_core]) sphere(r = pk_core);
-            for (i = [0 : 7]) rotate([0, 0, i*45])
-                translate([pk_off, 0, pk_zc]) scale([1, 1, pk_cz/pk_lr]) sphere(r = pk_lr);
-            // Stem: a five-lobed profile tapered and twisted as it rises, seated
-            // 2.5mm inside the dome so it is never a separate body balanced on
-            // a curve. The flutes are BUILT, not cut. Cut as five vertical
-            // channels they were deeper than the stem was thick at the top and
-            // sawed it into loose fins -- visible in the render as two prongs
-            // where a stem should be. Taper is 9.8 deg from vertical.
-            translate([0, 0, 8.6]) linear_extrude(5.2, scale = 0.42, twist = 30, slices = 20)
-                union() {
-                    circle(r = 1.05);
-                    for (i = [0 : 4]) rotate(i*72) translate([1.0, 0]) circle(r = 0.55);
+    $fn = 64;
+    union() {
+        difference() {
+            rotate_extrude() polygon(pk_prof());
+            // MERIDIAN CREASES. A straight vertical cylinder cannot cut one of
+            // these: it would bite deep at the equator and miss the shoulders
+            // entirely. This takes a rib_d-thick SHELL of the gourd's own
+            // profile -- so the cut follows the surface at constant depth all
+            // the way up -- and keeps only the parts of it inside rib_n/2 thin
+            // slabs through the axis. Each slab gives two opposite creases, and
+            // rib_w is an ABSOLUTE width, so they stay thin lines rather than
+            // widening at the equator.
+            intersection() {
+                difference() {
+                    // OVERSIZED on purpose. Built at the profile exactly, this
+                    // cutter's outer surface IS the gourd's outer surface --
+                    // coincident faces between a solid and its subtrahend, and
+                    // the crease ends came out as zero-area facets and a
+                    // 0.0002mm3 inverted body. Pushing it 0.4mm proud costs
+                    // nothing: only the rib_d that reaches inside does any
+                    // cutting. The square clip keeps x >= 0, which
+                    // rotate_extrude requires and offset(+r) would break.
+                    rotate_extrude() intersection() {
+                        offset(r = 0.4) polygon(pk_prof());
+                        translate([0, -1]) square([pk_R + 2, pk_top + 3]);
+                    }
+                    // the square below is not decoration. offset(r = -rib_d) pulls the
+                    // profile away from the AXIS as well as from the surface,
+                    // so the inner solid came out with a 0.35mm bore down its
+                    // middle -- and since every slab passes through the axis,
+                    // the crease cut then hollowed that bore into a sealed void
+                    // running the height of the gourd. CGAL reported Volumes: 3
+                    // and a -2.92mm3 inverted body. The square plugs the axis.
+                    rotate_extrude() union() {
+                        offset(r = -rib_d) polygon(pk_prof());
+                        square([rib_d + 0.3, pk_top]);
+                    }
                 }
+                // +15 deg of phase, for two reasons. The face is on +Y, so
+                // an unphased rib runs straight down the middle of it and
+                // through the nose. And at 0 deg the taper ends of the ribs at
+                // 210 and 240 deg produced two zero-area facets and a
+                // -0.0002mm3 inverted body -- on the LEFT lantern only, with
+                // the identical geometry clean at x = +15 and clean again in
+                // isolation at the origin. That is floating-point luck, not
+                // structure, and the fix for it in this file is always the
+                // same: move a number and say why.
+                for (i = [0 : rib_n/2 - 1]) rotate([0, 0, 15 + i*360/rib_n]) rib_slab();
+            }
         }
-        translate([0, 0, -40]) cylinder(h = 40, r = pk_R + 3);      // flat base
+        // Stem: a five-lobed profile tapered and twisted as it rises. UNIONED
+        // AFTER the creases are cut, not before. Before, it was severed: near
+        // the apex the whole cross-section is shell, so the six slabs crossing
+        // at the axis cut a star clean through the top and left each stem
+        // floating as its own body.
+        translate([0, 0, 8.6]) linear_extrude(5.2, scale = 0.42, twist = 30, slices = 20)
+            union() {
+                circle(r = 1.05);
+                for (i = [0 : 4]) rotate(i*72) translate([1.0, 0]) circle(r = 0.55);
+            }
     }
 }
 
@@ -505,8 +596,8 @@ module lantern_faces() {
     // the post (51.8), and runs 20mm back -- through the lantern, across the
     // gap, and out through the house wall into the cavity at 33.2. The
     // triangles it leaves in the siding sit entirely behind the lantern.
-    for (i = [0, 1]) translate([(i ? 1 : -1)*pk_x, 51.0, pk_z + pk_zc]) rotate([90, 0, 0])
-        linear_extrude(20) face_2d(tilt = i ? 14 : 0,
+    for (i = [0, 1]) translate([(i ? 1 : -1)*pk_x, 51.0, pk_z + pk_fz]) rotate([90, 0, 0])
+        linear_extrude(20) scale(pk_fs) face_2d(tilt = i ? 14 : 0,
                                    hs = i ? [2.0,2.6,3.2,2.6,2.0] : [2.2,2.9,2.8,2.9,2.2]);
 }
 

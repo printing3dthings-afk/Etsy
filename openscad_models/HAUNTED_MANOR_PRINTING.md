@@ -7,12 +7,12 @@ through the open base; light escapes only through the windows and door.
 |---|---|
 | size | 98.1 × 104.6 × 163 mm |
 | volume | 127.8 cm³ |
-| **time** | **7h 08m** |
+| **time** | **7h 10m** |
 | filament | 130.2 g |
 | supports | none — see the overhang note |
 | brim | none — the base footprint is large and open |
 
-**7h 08m is over this shop's 4h/unit ceiling and that is a deliberate open
+**7h 10m is over this shop's 4h/unit ceiling and that is a deliberate open
 question, not an oversight.** See "The size decision" below.
 
 ## Verified
@@ -133,26 +133,67 @@ detail. Two jack-o'-lanterns nobody can see is not.
 
 ## The jack-o'-lanterns
 
-Built the way the fruit is: eight lobes swelling out of a smaller core, so the
-ribs are 2.2 mm of real relief with genuine valleys, not a scratch on a sphere.
-The stem is a five-lobed profile tapered and twisted as it rises.
+Scott, on the first version: *"the outer ridges need to be very small. Almost
+thin lines or small inward ridges made in modeling."* He was right. That
+version was eight lobes swelling 2.2 mm out of a smaller core — real relief,
+and far too coarse: it read as a gourd carved out of eight balloons.
 
-Two things had to be got right:
+The body is now a single smooth surface of revolution and the ribs are **cut
+in, 0.35 mm deep and 0.9 mm wide** — under one layer deep and about one
+extrusion wide, which is exactly a drawn line. Twelve of them, tapering to a
+hairline at both ends the way a real crease does.
 
-- **Where the base plane cuts.** Cut near the bottom of a lobe and the surface
-  there is nearly horizontal, and the first few layers flare past 55°. Cutting
-  at 0.85 of the vertical semi-axis puts the steepest point of the flare at
-  51.9° on a lobe and 53.4° on the core, and gives a 9.9 mm footprint on the
-  deck.
-- **The stem flutes are built, not cut.** As five vertical channels they were
-  deeper than the stem was thick near the top and sawed it into loose fins —
-  visible in the render as two prongs where a stem should be.
+**A vertical cylinder cannot cut a crease like this.** It bites deep at the
+equator and misses the shoulders entirely — which is what the first version's
+two "ribs" actually were. The cut here is a 0.35 mm-thick **shell of the
+gourd's own profile**, so it follows the surface at constant depth all the way
+up, intersected with six thin slabs through the axis. Each slab gives two
+opposite creases, and the slab width is absolute, so they stay thin lines
+instead of widening at the equator.
+
+The profile is a superellipse, `p = 2.5`. A plain ellipsoid is too narrow near
+the top — the eyes broke through its silhouette — and its base flare reaches
+62.7° from vertical, past the limit. 2.5 gives a squat, full-shouldered gourd
+whose base flare tops out at 49.3°, on an 11 mm footprint.
+
+The stem is a five-lobed profile tapered and twisted as it rises. **The flutes
+are built, not cut** — cut as five vertical channels they were deeper than the
+stem was thick at the top and sawed it into loose fins.
 
 Each lantern stands 1.2 mm **clear** of the house wall, on the deck and nothing
 else. Embedded in the siding it was tangent to the clapboard grooves along a
 long shallow arc, and CGAL turned that into 13 zero-area faces and two inverted
 sliver bodies — while still reporting the mesh watertight. A 77 mm² weld to the
 deck is plenty; the wall was never carrying it.
+
+### Four ways the crease cut broke first, none of which raised an error
+
+1. **The profile apex was clamped to r = 0.001** rather than landing on the
+   axis, to avoid a zero radius. That left a 10.5 mm near-axis edge for
+   `rotate_extrude` to sweep and it could not close the result — *"The given
+   mesh is not closed"*, twice, with **0.02 cm³ of the 1.35 cm³ lantern
+   surviving**. A profile that touches x = 0 is the normal case; it is how a
+   semicircle becomes a sphere.
+2. **`offset(r = -rib_d)` pulls the profile off the AXIS as well as off the
+   surface**, so the inner solid came out with a 0.35 mm bore down its middle.
+   Every slab passes through the axis, so the crease cut then hollowed that
+   bore into a sealed void running the height of the gourd — `Volumes: 3` and a
+   −2.92 mm³ inverted body. A square plugging the axis fixes it.
+3. **The stem was unioned before the creases were cut.** Near the apex the
+   whole cross-section is shell, so the six slabs crossing at the axis cut a
+   star clean through the top and left each stem floating as its own body. It
+   is unioned after now.
+4. **The cutter's outer surface was the gourd's own surface.** Coincident faces
+   between a solid and its subtrahend — the same trap the knee braces fell
+   into. The crease ends came out as zero-area facets and a −0.0002 mm³
+   inverted body. The cutter is 0.4 mm oversized now; only the `rib_d` that
+   reaches inside does any cutting.
+
+A fifth was pure floating-point luck: at 0° phase the taper ends of the ribs at
+210° and 240° produced two zero-area facets **on the left lantern only**, with
+identical geometry clean at x = +15 and clean again in isolation at the origin.
+15° of rib phase clears it — and it also stops a crease running straight down
+the middle of the face and through the nose.
 
 ## The one thing that dictated the whole construction
 
