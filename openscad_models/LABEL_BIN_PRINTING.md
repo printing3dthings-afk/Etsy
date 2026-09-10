@@ -8,20 +8,23 @@ One parametric family, four sizes. **Two separate prints:** the bin
 
 | part | outside | time | filament | sellable? |
 |---|---|---|---|---|
-| **bin S** | 90 × 71.6 × 47 | **3h 59m** | 43 g | **yes** |
-| bin M | 90 × 71.6 × 92 | 6h 17m | 73 g | no |
-| bin L | 180 × 71.6 × 47 | 7h 08m | 75 g | no |
-| bin XL | 180 × 71.6 × 92 | 11h 01m | 121 g | no |
+| **bin S** | 90 × 71.6 × 47 | **2h 30m** | 43 g | **yes** |
+| **bin M** | 90 × 71.6 × 92 | **4h 14m** | 73 g | borderline |
+| **bin L** | 180 × 71.6 × 47 | **4h 11m** | 75 g | borderline |
+| bin XL | 180 × 71.6 × 92 | 7h 07m | 121 g | no |
 | **tile** | 63.6 × 18.1 × 1.2 | **14m** | 1.7 g | — |
 
 The bins are **single colour and purge nothing**. Only the tile is two-colour,
 and it makes about six tool changes.
 
-**Only S comes in under the ~4h-per-unit ceiling this shop designs to.** That
-is worth saying plainly rather than shipping a "family" and letting the
-arithmetic surface later: XL is a ten-hour print, which caps the printer at one
-unit a day and cannot carry a margin. Treat S as the product; M/L/XL are real,
-correct and gated, but they are made-to-order or personal-use sizes.
+**S is the product; M and L now sit right on the ~4h-per-unit ceiling this shop
+designs to, and XL is still over it.** These are the second set of numbers for
+this family — see the profile note below. The first set (S 3h 59m, M 6h 17m,
+L 7h 08m, XL 11h 01m) was measured against a slicer profile that was leaving
+three speed keys unset, and every one of those figures was too high by
+35-40%. Nothing about the geometry changed: the filament weights are identical
+to the gram. XL at seven hours still caps the printer at one unit a day and
+cannot carry a margin.
 
 These are sliced with `tools/p1s_slice_profile.ini` as it now stands. That
 profile was **changed on 2026-09-09** as part of this build: it ran BOTH
@@ -31,6 +34,16 @@ ones — and a thin-walled part is almost entirely perimeter, so it inherited 50
 everywhere. Internal is now 200, external still 50, nothing visible changed,
 and the bin went 4h 16m → 3h 44m. **Every print-time figure quoted in this repo
 before that date is pessimistic, not wrong.**
+
+**Changed again on 2026-09-10**, found the same way while building the wall
+charging shelf, and three keys wider. `solid_infill_speed`,
+`top_solid_infill_speed` and `small_perimeter_speed` were never set at all, so
+PrusaSlicer's own stock defaults ran them — 20, 15 and 15 mm/s. Solid infill
+alone was 37% of the shelf's print time. They are now 200, 80 and 50;
+`small_perimeter_speed` is pinned to the same 50 the outer wall already uses so
+that no surface a customer sees got faster. The table above is re-sliced
+against this. Filament is unchanged to the gram in all four sizes, which is the
+check that says a speed change and nothing else happened.
 
 ## The scoop
 
