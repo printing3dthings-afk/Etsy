@@ -6,8 +6,8 @@ One part, one print, no supports, no brim.
 |---|---|
 | on the wall | 120 wide × 90 tall × 65 deep mm |
 | on the plate | 120 × 90 footprint, 65 mm tall (prints back-flat) |
-| time | **3h 22m** |
-| filament | **58.8 g** |
+| time | **3h 25m** |
+| filament | **59.0 g** |
 | supports | **none** — 0.00 cm² past 55°, worst face 49.1° |
 | brim | none — the first layer is a 120 × 90 plate |
 

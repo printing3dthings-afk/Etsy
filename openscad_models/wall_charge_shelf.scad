@@ -107,6 +107,36 @@ slot_z0 = 8;                // keep the deck's root at the wall intact -- that
 slot_z1 = 32;               // is where the bending moment is highest
 slot_r  = 3;
 
+// ---- phone toe stops -----------------------------------------------------
+// Two low pads the phone's bottom edge sits behind, so it is CAPTURED between
+// them and the backrest instead of merely balanced against it. A standing
+// phone on a vertical backrest cannot be raked backwards -- its back is
+// already flush against the wall plane, there is nothing to lean into -- so
+// the fix is not a rake, it is a stop. With the pads at z=22 the phone's base
+// sits about 16mm out and its back rests on the mounting bosses, which stand
+// 3.48mm proud: a bare ~10mm phone ends up about 7 deg off vertical, a thick
+// cased one about 2 deg, and neither can tip forward.
+//
+// Two pads, not one ridge across the deck: they sit OUTBOARD of the plug slot
+// in x, so the slot keeps its full length and the middle of the tray stays
+// flat. A phone spans about +/-37mm and lands on both.
+//
+// The low-z face is a 48 deg ramp, not a wall. It is the print's only
+// downward-facing surface here, and it doubles as the stop -- the phone's
+// bottom edge butts into it.
+toe_x    = 28;
+toe_len  = 24;
+toe_h    = 4;
+toe_z    = 22;              // the stop line: phone base sits behind this
+toe_ramp = 4;
+
+module toe_stops() {
+    for (sx = [-1, 1])
+        translate([sx * toe_x + toe_len/2, 0, 0]) extrude_zy(toe_len)
+            polygon([[toe_z - toe_ramp, -0.5], [toe_z, toe_h],
+                     [toe_z + 4, toe_h], [toe_z + 4, -0.5]]);
+}
+
 // ---- maker's mark --------------------------------------------------------
 // Front face of the lip, which is the TOP surface as printed -- the crispest
 // engraving this part can carry, and the face you actually look at on a wall.
@@ -364,7 +394,7 @@ module brand_mark() {
 // =========================================================================
 module shelf() {
     difference() {
-        union() { back_plate(); deck(); panels(); front_lip(); }
+        union() { back_plate(); deck(); panels(); front_lip(); toe_stops(); }
         plug_slot();
         keyhole(-key_x);
         keyhole( key_x);
