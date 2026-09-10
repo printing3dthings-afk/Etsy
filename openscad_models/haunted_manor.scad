@@ -249,9 +249,24 @@ module grooves() {
 // as well the porch had nowhere to go: a lantern big enough to read reaches
 // z = 20, which is exactly where those sills started. Ten windows, a door, a
 // rose and two bats are already more openings than the shell needs for light.
+// THREE WINDOW POSITIONS ARE GONE BECAUSE THE TOWER STANDS WHERE THEIR WALL
+// WOULD BE. Where the turret sits, the outside face of the house is the
+// turret's, not the body's, so a window cut there opens into solid tower or
+// into the interior and reads as an opening sliced in half. Scott found it in
+// the viewer. The tower's plan is offset(r=2) on a 22 x 22 square at
+// (-34, 30), which is x -47..-21 and y 17..43 -- and the overlaps are exact:
+//
+//   front  x = -19  spans x -24.5..-13.5  ->  3.5 mm (32%) inside the tower
+//   -X     y = +17  spans y  11.5..22.5   ->  5.5 mm (50%) inside the tower
+//
+// so the front's left-hand upper window and BOTH -X windows at y = +17 are
+// removed. Nothing else moved, per Scott. I had checked this earlier and
+// cleared it, using 19..41 for the tower's y extent -- the raw square, before
+// its own offset(r=2). The 2 mm I thought was clearance was 2 mm of overlap.
 module openings() {
-    for (x = [-19, 19]) { place_win(1, x, 20); place_win(0, x, 56); place_win(1, x, 56); }
-    for (f = [2, 3]) for (y = [-17, 17]) { place_win(f, y, 20); place_win(f, y, 56); }
+    for (x = [-19, 19]) { place_win(1, x, 20); place_win(1, x, 56); }
+    place_win(0, 19, 56);
+    for (z = [20, 56]) { place_win(2, -17, z); place_win(2, 17, z); place_win(3, -17, z); }
     // the door is shorter than it was: its apex now lands at 35.9, clear of the
     // porch beam whose underside is at 40. At the old 41 the beam ran through
     // the head of the door.
@@ -592,12 +607,21 @@ module face_2d(tilt = 0, hs = [2.2, 2.9, 2.8, 2.9, 2.2]) {
 
 module lanterns() { for (sx = [-1, 1]) translate([sx*pk_x, pk_y, pk_z]) pumpkin_body(); }
 module lantern_faces() {
-    // starts at y = 51, which is outside the gourd (50.4) but still short of
-    // the post (51.8), and runs 20mm back -- through the lantern, across the
-    // gap, and out through the house wall into the cavity at 33.2. The
-    // triangles it leaves in the siding sit entirely behind the lantern.
+    // STOPS IN THE AIR GAP, 15.4mm back from y = 51: outside the gourd (50.4)
+    // but short of the post (51.8) at one end, and past the gourd's back face
+    // (36.0) but short of the siding (34.84) at the other. It used to run 20mm
+    // and carry straight on through the house wall, which left a second set of
+    // eyes, nose and teeth cut into the siding behind each lantern -- Scott saw
+    // them in the viewer. The end plane now lands in the 1.2mm gap, where there
+    // is nothing to cut, so it cannot graze anything either.
+    //
+    // The cost is real and worth stating: the faces no longer glow. Light was
+    // reaching them through those siding holes. A single opening in the wall,
+    // small enough to sit entirely behind the gourd's silhouette, would bring
+    // the glow back without any of it being visible -- not built, because it
+    // was not asked for.
     for (i = [0, 1]) translate([(i ? 1 : -1)*pk_x, 51.0, pk_z + pk_fz]) rotate([90, 0, 0])
-        linear_extrude(20) scale(pk_fs) face_2d(tilt = i ? 14 : 0,
+        linear_extrude(15.4) scale(pk_fs) face_2d(tilt = i ? 14 : 0,
                                    hs = i ? [2.0,2.6,3.2,2.6,2.0] : [2.2,2.9,2.8,2.9,2.2]);
 }
 

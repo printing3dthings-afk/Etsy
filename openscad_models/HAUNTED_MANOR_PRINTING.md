@@ -6,13 +6,13 @@ through the open base; light escapes only through the windows and door.
 | | |
 |---|---|
 | size | 98.1 × 104.6 × 163 mm |
-| volume | 127.8 cm³ |
-| **time** | **7h 10m** |
-| filament | 130.2 g |
+| volume | 129.1 cm³ |
+| **time** | **7h 05m** |
+| filament | 131.9 g |
 | supports | none — see the overhang note |
 | brim | none — the base footprint is large and open |
 
-**7h 10m is a deliberate choice, settled 2026-09-10.** The shop's 4h/unit
+**7h 05m is a deliberate choice, settled 2026-09-10.** The shop's 4h/unit
 figure is a goal aimed at the commodity end of the catalogue, not a hard stop —
 Scott: *"The 4 hour was for other products when I started. That's still the goal
 but not a hard stop limit."* This is a 163 mm lit display piece and is priced as
@@ -198,6 +198,43 @@ A fifth was pure floating-point luck: at 0° phase the taper ends of the ribs at
 identical geometry clean at x = +15 and clean again in isolation at the origin.
 15° of rib phase clears it — and it also stops a crease running straight down
 the middle of the face and through the nose.
+
+## Two things Scott caught in the viewer, and the arithmetic behind them
+
+**A second face was cut into the siding behind each lantern.** The face cut ran
+20 mm back from y = 51 — through the gourd, across the 1.2 mm air gap, and on
+through the house wall — so every eye, nose and tooth appeared twice, once in
+the pumpkin and once in the clapboard behind it. It now runs 15.4 mm and ends
+at y = 35.6: past the gourd's back face at 36.0, short of the siding at 34.84.
+The end plane lands in the air gap where there is nothing to cut, so it cannot
+graze anything either.
+
+The cost is real: **the faces no longer glow.** Light was reaching them through
+those siding holes. A single opening in the wall, small enough to sit entirely
+behind the gourd's silhouette, would bring the glow back with none of it
+visible — not built, because it was not asked for.
+
+**Three windows were sliced in half by the tower.** Where the turret sits, the
+outside face of the house is the turret's and not the body's, so a window cut
+there opens into solid tower or into the interior. The turret's plan is
+`offset(r=2)` on a 22 × 22 square at (−34, 30) — x −47…−21, y 17…43 — and the
+overlaps are exact:
+
+| window | span | inside the tower |
+|---|---|---|
+| front, x = −19 | x −24.5…−13.5 | 3.5 mm of 11 mm (32%) |
+| −X wall, y = +17 | y 11.5…22.5 | 5.5 mm of 11 mm (50%) |
+
+So the front's left-hand upper window and **both** −X windows at y = +17 are
+removed, and nothing else moved. The front now reads as a rose with one window
+beside it and the tower taking the other corner, which is where a Victorian
+tower puts itself anyway.
+
+**This was checked once and cleared, wrongly.** The earlier check used 19…41
+for the tower's y extent — the raw square, before its own `offset(r=2)`. The
+2 mm that looked like clearance was 2 mm of overlap. Any check of "does this
+opening land on real wall" has to use the plan **after** every offset that
+builds it, not the literal it started from.
 
 ## The one thing that dictated the whole construction
 
