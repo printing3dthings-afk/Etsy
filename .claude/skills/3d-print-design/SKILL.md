@@ -5872,6 +5872,34 @@ so a part with both gets two different cells, and that is correct, not sloppy.
 Give the openings a 0.6mm 45° lead-in on whichever face something rests
 against. A raw through-cut hex field is fifty sharp edges.
 
+### Check a render's own orientation before reading anything off it
+
+Three orientation mistakes in one session, and only the first was in a model:
+`rotate([0,90,0])` sending a profile's depth to negative z; a review render
+rotated -90 deg about X instead of +90, which put the whole part upside down;
+and an earlier mirror call on a monogram that went the wrong way.
+
+The render one is the nastiest, because a wrong render does not fail anything
+— it just quietly answers a different question, and then a real defect gets
+reported against a model that is fine. That happened here: the mark was called
+upside down off a back view that was itself upside down.
+
+**Two habits fix the whole class.** First, put a known asymmetric landmark in
+view and confirm it before judging anything else — this part has the
+receptacle openings above and the honeycomb below, so "honeycomb at the top"
+is instantly wrong. Second, for anything where left/right or up/down is the
+actual question (a maker's mark, text, a keyhole's drop direction), do not
+judge it from a shaded render at all: **sample the geometry and print it as a
+character map**, rows from high Y down and columns from low X up, which is
+exactly what a viewer on the +Z side with +Y up sees. Letterforms are
+unambiguous in a character map and nearly unreadable as a 0.6mm engraving
+under flat lighting.
+
+Useful check while doing it: "OBC" is almost invariant under a vertical flip
+(O and C are symmetric, B nearly so), so a 180 deg rotation shows up as the
+letters running C-B-O rather than as obviously upside-down glyphs. Read the
+ORDER, not the shapes.
+
 ### The slicer profile had three speed keys nobody had ever set
 
 The day before, `perimeter_speed` was found running the *internal* walls at the
