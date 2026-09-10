@@ -5779,3 +5779,128 @@ a bed weld and not breaking would mean a V weld. It does not discriminate at
 all — a bed ring welded over 94mm resists pliers just as well as a welded V.
 Before proposing a test, check that its two outcomes actually lead somewhere
 different; otherwise it costs the other person effort and returns nothing.
+
+## Technique 58 — Three transforms that render, gate and slice while being wrong; and a slicer profile that was lying (2026-09-10, wall charging shelf)
+
+The shelf is a wall-mounted phone shelf: a back plate, a deck, two hex-lattice
+brackets, a front lip. Nothing about it is exotic. It still produced three
+separate defects that passed **every** automated check — watertight, single
+component, no degenerate faces, sliceable — and were only caught by measuring
+the geometry directly. All three are transform/boolean traps, not design
+mistakes, which is exactly why they slip through.
+
+### 1. `rotate([0,90,0])` sends a profile's x to world MINUS z
+
+Rotating about +Y by 90° maps `(x,y,z) → (z, y, -x)`. Extruding a 2D profile
+drawn as `(depth, height)` through it therefore puts depth on **negative** z.
+The shelf's side panels and front lip came out mirrored into negative depth —
+bounds `z -65..65` instead of `0..65`. It was watertight, one component, and
+sliced without complaint, because the mirrored halves still met the back plate
+at the z=0 plane and CGAL happily unioned them.
+
+`rotate([0,-90,0])` is the one that maps local x to world **+z** (and local z
+to world −x, so shift the translate accordingly).
+
+**The check that catches it is the bounding box, and it costs nothing.** After
+any render, compare `mesh.bounds` against the dimensions you intended, per
+axis, before looking at anything else. `mesh_gate` prints the box on its first
+line for exactly this reason — read it, don't skim past it to the PASS/FAIL.
+
+### 2. A `hull()` flush with a peak's base leaves the flat roof you built the peak to avoid
+
+A horizontal hole in a vertical wall needs a peaked roof, not a flat bridge.
+The obvious construction is `union(rounded_rect, triangle_on_top)` — and
+whichever shape is *wider at the join* leaves a horizontal ledge there. Here
+the rounded rect was full-width right up to the triangle's base, so the union's
+outline ran vertically up, stepped horizontally inward 2mm, and only then went
+45°: a flat roof plus two zero-area faces where the coincident edges
+tessellated.
+
+Neither nudging the join up nor down fixes it; one of the two shapes is always
+wider. **If the outline is convex — and a slot with a peaked end is — build it
+as ONE `hull()`** of the parts (two corner circles plus the peak triangle).
+The hull is exactly the intended shape, with tangent-straight sides, a sharp
+apex, and no coincident edges anywhere.
+
+Related, same build: a side panel's front edge landing *exactly* on the deck's
+own bottom-front edge produced two collinear zero-area faces. Giving the panel
+a 2mm return past the deck removed them and reads better. **Coincident
+boundaries between two unioned solids are a degenerate-face generator.** Give
+them a real overlap or a real offset; never make them flush.
+
+### 3. `linear_extrude(scale=)` ramps over the whole extrude height
+
+Asking for a 0.6mm 45° lead-in on a lattice hole with
+`linear_extrude(cham + 1, scale = grow)` delivered **0.22mm** inside a 2.52mm
+plate — because `scale` interpolates linearly from 1 to `grow` across the
+*entire* extrusion, and most of that extrusion stuck out past the plate where
+it did nothing.
+
+Use a per-cell `hull()` between the plain profile and an `offset(r = cham)` one
+at the right two heights instead. It gives exactly 45° and exactly the depth
+asked for. (`scale=` is still safe *inside* a per-cell loop where each cell has
+been translated to its own origin — scaling an already-assembled union of cells
+fans them outward from the model origin instead of growing each in place.)
+
+### A bounded hex lattice: place whole cells, don't clip an infinite field
+
+Technique 46 says a bracket gusset is a hex lattice inside a solid perimeter
+frame. The obvious way to build one — intersect an infinite hex field with the
+region — is wrong in a way no gate reports: a cell clipped by the boundary
+leaves a **tapering needle** of material beside its neighbour. Measured here at
+1.26–1.68mm wide, i.e. 3–4 extrusions, so they print perfectly. They just look
+like a modelling error, on the face of a part whose whole point is being seen.
+
+Test each cell's six real vertices against the outline and place only cells
+that fit whole. In OpenSCAD that is a ray-crossing `pip()` plus a
+point-to-segment distance, ~30 lines, and it subsumes the frame: require every
+vertex to be at least `border` from every edge and the solid frame is simply
+whatever is left over — no separate inset shape to keep in sync. Where the
+region narrows past one cell it goes solid on its own, which is where the
+material belongs anyway.
+
+**Sizing the cell: the stretch is set by the real 55° limit, not by 45°.** A
+lattice cut *across* the build axis has a roof; a regular pointy-up hexagon
+puts its top two edges at **60° from vertical**, just past what the P1S holds.
+Stretching the cell by `k` along the build axis brings them to
+`atan(1.732 / k)`. Reaching for 45° means `k = 1.73` and a visibly squashed
+2.2:1 cell; targeting the actual limit with margin gives `k = 1.5`, a measured
+**49.1°**, and a 1.7:1 cell that still reads as a honeycomb. A lattice cut
+*along* the build axis is a plain vertical hole and needs no stretch at all —
+so a part with both gets two different cells, and that is correct, not sloppy.
+
+Give the openings a 0.6mm 45° lead-in on whichever face something rests
+against. A raw through-cut hex field is fifty sharp edges.
+
+### The slicer profile had three speed keys nobody had ever set
+
+The day before, `perimeter_speed` was found running the *internal* walls at the
+50 mm/s meant for the outer one. Re-checking the same file while this shelf
+sliced at 5h 20m found three more keys that were **never set at all**, so
+PrusaSlicer's own stock defaults ran them:
+
+| key | stock default | set to |
+|---|---|---|
+| `solid_infill_speed` | 20 mm/s | 200 |
+| `top_solid_infill_speed` | 15 mm/s | 80 |
+| `small_perimeter_speed` | 15 mm/s | 50 |
+
+Solid infill alone was **37%** of the print. `small_perimeter_speed` matters
+far more than it sounds on any latticed or thin-walled part: every hex cell is
+a "small" loop, and over 39,000 perimeter moves had dropped to 15 mm/s.
+
+Result: **5h 20m → 3h 22m on filament identical to the gram**, and the label
+bin family dropped 35–40% across all four sizes. Nothing visible got faster —
+`small_perimeter_speed` is pinned to the same 50 the outer wall already uses,
+so the "outer wall 50 mm/s or lower" production rule still holds everywhere a
+customer looks.
+
+**Two things to carry forward.** First: an *unset* key in a slicer config is
+not a neutral default, it is whoever-wrote-the-slicer's default from a decade
+ago, and it will not announce itself. When a print time looks wrong, dump the
+real feedrates out of the g-code per `;TYPE:` section before touching the
+model — that is a 20-line script and it names the culprit directly, where
+staring at the geometry does not. Second: **identical filament weight before
+and after is the proof that a speed change and nothing else happened.** Quote
+it whenever a profile changes; without it, a "faster" profile could just be
+extruding less.
