@@ -5932,3 +5932,116 @@ staring at the geometry does not. Second: **identical filament weight before
 and after is the proof that a speed change and nothing else happened.** Quote
 it whenever a profile changes; without it, a "faster" profile could just be
 extruding less.
+
+---
+
+## Technique 59 — On a LIT object, light beats relief; and how to make a slicer name your defect for you (2026-09-10, haunted manor lantern)
+
+Three findings from adding Halloween detail to a lantern. All three generalise
+past that one model.
+
+### 1. Relief on a lit object is a losing bet — spend the detail on light
+
+Technique 52 already says relief below ~4% of the body dimension is invisible.
+A lantern is a harder case than that, and in a direction worth stating
+separately: **its whole promise is that it glows, so anything that does not
+participate in the light is competing with the thing people bought.**
+
+A 22 mm bat standing 2.2 mm proud on a 76 mm clapboard wall is 2.9% and reads
+as a scribble — same tone as the wall, one shadow's worth of cue, and a shelf
+lamp will not even give it that. The same 16 mm bat cut *clean through* a wall
+reads unlit (it is a hole) and reads lit (it is a bat-shaped glow). Same
+manufacturing class, none of the ambiguity.
+
+So on any lit product, rank detail like this:
+1. **Through-cuts.** They work in both states and cost nothing but the cut.
+2. **Real 3D objects with their own silhouette** — but they must stand on
+   something. A pumpkin on a wall is a boss; a pumpkin on a step is an object.
+   Grow the step off the build plate and there is no underside anywhere.
+3. **Relief**, last, and only above ~4%.
+
+And the trap that is easy to ship: a face cut *into* a boss that sits on a
+solid wall is a **blind pocket**. It looks carved in a render and prints dark.
+If a feature is supposed to glow, its cut has to run all the way through the
+shell wall into the cavity — measure it end to end (outside the boss → inside
+the cavity) rather than trusting that "I subtracted a face."
+
+### 2. Two triangles meeting at one point is a non-manifold 2D union
+
+A carved grin drawn as four apex-up teeth on a common baseline, at a pitch of
+exactly twice the half-base, puts each tooth's corner on its neighbour's corner
+— one shared point, no shared edge. OpenSCAD extrudes it happily and CGAL then
+says:
+
+```
+ERROR: The given mesh is not closed! Unable to convert to CGAL_Nef_Polyhedron.
+```
+
+once per instance. **The STL still exported and still gated watertight.** That
+error line is the only place it surfaces, so a build that pipes render output
+through `| tail` or greps only for `Volumes:` will never see it. Grep renders
+for `ERROR` explicitly.
+
+Fix: overlap neighbours by a real amount (0.15 mm was enough). The general rule
+— *never let two 2D shapes touch at exactly one point* — applies to any
+tiled/repeated cut: teeth, scallops, chevrons, tread patterns.
+
+### 3. Bisect the slicer's stability warning; it is a real localiser
+
+PrusaSlicer's "Detected print stability issues" names a *class* but not a
+*place*. Slicing partial models finds the place fast, and the two messages mean
+genuinely different things:
+
+- **Floating bridge anchors** — a bridge exists, but its ends land on something
+  that is itself unsupported. Cause here: a flat 8.3 mm mouth ceiling whose two
+  ends sat on the pumpkin dome's own leaning surface. Fix: remove the flat
+  ceiling entirely by cutting the opening as overlapping apex-up teeth, so the
+  top boundary is a zigzag at 64° from horizontal and no layer bridges at all.
+- **Collapsing overhang** — material with too little under it.
+
+The bisect is just repeated `difference()` truncations, one feature at a time:
+
+| model | warning |
+|---|---|
+| outer solid form only | clean |
+| solid − cavity (bare shell) | clean |
+| solid − cavity − openings | **Collapsing overhang** |
+| same, transom bars disabled | clean |
+
+Four renders, and the answer is a named feature rather than a hunch. Then
+**measure the real span before acting on it**: those transoms are 1.68 mm bars
+whose mullion splits each into two 4.66 mm bridges — a span a P1S does without
+comment. Making it strictly self-supporting needs a ceiling rising at 35° over
+the half-light, which is 1.63 mm of rise inside a 1.68 mm bar: impossible
+without a chunky 3.3 mm transom on a 20.8 mm window. **Accepting a flagged
+feature is a legitimate outcome, but only after it has a name and a number.**
+
+### 4. Fence a decorative feature against the geometry, not by eye
+
+The first bat sat at z = 63 and its wingtips merged into the lancet head at
+60.8 — it read as a fault, not a bat. The placement rule that works is to write
+down the neighbours' real extents first (lower window apex 60.8, upper sill 82)
+and centre in the gap. A decorative cut near an existing opening needs the same
+clearance arithmetic a structural one does; "looks about right" in a render at
+one camera angle is how the chimney ended up through a window in the first
+place.
+
+### Rendering PNGs in this container
+
+`render_openscad_model`'s 120 s timeout is too short for a model like this
+(~90 s CGAL per view). Direct CLI works, but a PNG needs a display *and* a
+software rasteriser, and without them OpenSCAD exits 0 having written a
+zero-byte file:
+
+```bash
+export OPENSCADPATH="$REPO/openscad_models:$REPO/assets/openscad_libs"
+export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+xvfb-run -a openscad -o out.png --render \
+  --camera=0,0,82,90,0,180,470 --projection=p --colorscheme=Tomorrow in.scad
+```
+
+Without `--render` you get the F5 preview, which paints cut surfaces orange and
+is useless for judging a difference-heavy model. The 7-argument `--camera` is
+`tx,ty,tz,rx,ry,rz,dist`; `rx=90` looks horizontally and **`rz=0` shows the −Y
+face** — check which elevation you are actually looking at before concluding a
+feature is missing.

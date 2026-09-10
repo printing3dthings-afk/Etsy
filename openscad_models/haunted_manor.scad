@@ -190,7 +190,11 @@ module solid() {
     // Masonry stack: corbelled cap in three courses, each stepping out 1.2mm
     // over 3mm of rise so nothing overhangs past 22 deg. Built as a plain
     // prism family so it only ever unions against plain surfaces.
-    translate([25, -35.5, 0]) {
+    // ON THE +X WALL, not the back. On the back it sat at x 17..33 while the
+    // back window at x=+19 spans 13.5..24.5 -- the window cut straight through
+    // the stack. The +X wall's windows are at y = +/-17, leaving y -11.5..11.5
+    // clear, which is 23mm of uninterrupted masonry to land on.
+    translate([38.5, 0, 0]) rotate([0, 0, 90]) {
         linear_extrude(99) offset(r = 1.5) square([13, 8], center = true);
         for (i = [0 : 2]) translate([0, 0, 96 + i*3])
             linear_extrude(3.2) offset(r = 1.5) square([13 + (i+1)*2.4, 8 + (i+1)*2.4], center = true);
@@ -229,10 +233,15 @@ module grooves() {
         translate([0, 0, body_top + k*sid_p - 0.45]) linear_extrude(0.9) tring();
 }
 
+// The FRONT ground floor has no windows on purpose. It is the entrance
+// elevation -- door, stoop, jack-o'-lanterns -- and with windows at x = +/-19
+// as well the porch had nowhere to go: a lantern big enough to read reaches
+// z = 20, which is exactly where those sills started. Ten windows, a door, a
+// rose and two bats are already more openings than the shell needs for light.
 module openings() {
-    for (f = [0, 1]) for (x = [-19, 19]) { place_win(f, x, 20); place_win(f, x, 44); }
+    for (x = [-19, 19]) { place_win(1, x, 20); place_win(0, x, 44); place_win(1, x, 44); }
     for (f = [2, 3]) for (y = [-17, 17]) { place_win(f, y, 20); place_win(f, y, 44); }
-    place_win(0, 0, plinth_h + 1, 8, 16, false);
+    place_win(0, 0, plinth_h + 1, 7, 16, false);
     place_twin(0, 40); place_twin(3, 40);
     place_twin(0, 82); place_twin(3, 82);
 }
@@ -242,7 +251,141 @@ module brand_mark() {
         text("OBC", size = 6.0, font = "Montserrat:style=Black", halign = "center", valign = "center");
 }
 
+// ---- Halloween ------------------------------------------------------------
+// WHAT ACTUALLY READS ON A LIT OBJECT IS LIGHT AND SILHOUETTE, NOT RELIEF.
+// The first pass put flat bosses on the walls -- a 22mm bat standing 2.2mm
+// proud -- and rendered them straight on. They read as scribbles, because a
+// 22 x 3mm wing lying on clapboard is the same tone as the clapboard and its
+// only cue is a 2.2mm shadow that a shelf lamp will not give it. Worse, the
+// jack-o-lantern faces were cut only 0.9mm into a boss standing on a solid
+// wall: blind pockets, dark, on a product whose whole promise is that it
+// lights up.
+//
+// So the Halloween content is now the two things that survive at 90mm on a
+// shelf, and neither needs support:
+//   - REAL 3D OBJECTS with their own silhouette, standing on the ground
+//     (the porch and its two jack-o-lanterns), and
+//   - THROUGH-CUTS that glow (the spiderweb rose, the pumpkin faces, and two
+//     bats on the tower).
+// A hole in a vertical wall is a bridge, not an overhang: its ceiling is
+// anchored on both sides, so a bat cut only has to keep every unsupported
+// span short, which at a 16mm wingspan it does (longest is about 4mm).
+
+// ---- porch ----------------------------------------------------------------
+// Two steps growing off the plate, so there is no underside anywhere -- the
+// lower tread IS the build surface. It is what gives the lanterns something
+// to stand on; a pumpkin floating on a wall is a boss, a pumpkin on a step is
+// an object. Deliberately part of the relief pass, not solid(), so the
+// clapboard grooves never run across it.
+module stoop() {
+    translate([0, 40, 0]) linear_extrude(5)  offset(r = 1.5) square([48, 16], center = true);
+    translate([0, 37, 0]) linear_extrude(10) offset(r = 1.5) square([40, 11], center = true);
+}
+
+// ---- jack-o-lantern -------------------------------------------------------
+// Flat-bottomed dome: hull of a small disc on the tread and a sphere above it,
+// so the sides lean OUT at 20 deg from vertical on the way up and the only
+// true overhang is the top of the dome, which is the printable end.
+pk_x = 15; pk_y = 39.44; pk_z = 9.5; pk_r = 6.4;
+
+module pumpkin_body() {
+    difference() {
+        union() {
+            hull() { cylinder(h = 0.5, r = 4.2); translate([0, 0, 6.0]) sphere(r = pk_r); }
+            translate([0, 0, 11.5]) cylinder(h = 3.4, r1 = 1.6, r2 = 1.1);   // stem
+        }
+        // ribs: vertical channels, so they carry no overhang at all. Placed at
+        // +/-45 and +/-78 from the face so they never clip an eye or a tooth.
+        for (a = [-78, -45, 45, 78]) rotate([0, 0, a]) translate([0, 6.1, -1])
+            cylinder(h = 22, r = 0.85);
+    }
+}
+
+// THE FACE IS CARVED, NOT BRIDGED. The first version's mouth was one flat
+// 8.3mm ceiling, and PrusaSlicer's stability check named it exactly:
+// "Floating bridge anchors" -- the two ends of that bridge landed on the
+// dome's own leaning surface rather than on anything solid. Cutting the grin
+// as four overlapping apex-up teeth removes every horizontal ceiling: the
+// opening's top boundary is a zigzag at 64 deg from horizontal, which is the
+// same self-supporting logic as the lancet windows and needs no bridge at
+// all. Eyes and nose are apex-up triangles for the same reason.
+module pumpkin_face_2d() {
+    for (sx = [-1, 1]) translate([sx * 2.6, 0.9]) polygon([[-1.5,0],[1.5,0],[0,2.8]]);
+    translate([0, -0.5]) polygon([[-0.9,0],[0.9,0],[0,1.6]]);
+    // half-base 1.0 against a 1.85 pitch, so neighbouring teeth OVERLAP by
+    // 0.15mm. At exactly half the pitch they met at a single coincident point,
+    // which is a non-manifold 2D union: OpenSCAD extruded it and CGAL rejected
+    // the result with "The given mesh is not closed", once per lantern.
+    for (i = [0 : 3]) translate([-2.775 + i*1.85, -3.6])
+        polygon([[-1.0,0],[1.0,0],[0, i == 0 || i == 3 ? 1.9 : 2.5]]);
+}
+
+// ---- bat ------------------------------------------------------------------
+function bat_half() = [[0,5.0],[1.8,3.6],[3.2,6.4],[4.4,3.2],[7.2,4.4],
+                       [11.0,2.8],[8.6,0.4],[6.8,1.6],[5.0,-1.4],[3.2,0.2],
+                       [1.7,-3.2],[0,-4.4]];
+module bat_2d(span = 16) {
+    h = bat_half();
+    scale(span / 22)
+        polygon(concat(h, [for (i = [len(h)-2 : -1 : 1]) [-h[i][0], h[i][1]]]));
+}
+// On the TOWER, whose two exposed faces are the only 26mm of blank wall left
+// on the model -- a 16mm bat covers 62% of that face, so it is unmistakable
+// even unlit, and at night it is a bat-shaped hole full of light. The tower
+// sits clear of the body on both of these faces (x = -47 against the body's
+// -38, y = 43 against +34), so neither cut can reach anything but tower wall.
+module place_tur_cut(face, z) {
+    r  = [0, 180, -90, 90][face];
+    px = tur_x + (face == 2 ? tur_s/2 : face == 3 ? -tur_s/2 : 0);
+    py = tur_y + (face == 0 ? tur_s/2 : face == 1 ? -tur_s/2 : 0);
+    translate([px, py, z]) rotate([0, 0, r]) rotate([90, 0, 0])
+        linear_extrude(14, center = true) children();
+}
+
+// A rose window whose tracery is a spiderweb -- eight radials and two rings.
+// It is the strongest Halloween cue available to a LIT object, because it
+// costs nothing but the same through-cut the ordinary windows already use,
+// and the web only appears when the tealight is in. The tracery is subtracted
+// from the cut so it survives as material, exactly like the mullions, and it
+// breaks a 22mm opening into 24 panes none wider than about 5mm.
+module web_2d(d = 22) {
+    difference() {
+        circle(d = d);
+        for (a = [0 : 45 : 179]) rotate(a) square([d + 2, mull], center = true);
+        difference() { circle(d = d*0.64); circle(d = d*0.64 - 2*mull); }
+        difference() { circle(d = d*0.32); circle(d = d*0.32 - 2*mull); }
+    }
+}
+
+module halloween_relief() {
+    stoop();
+    for (sx = [-1, 1]) translate([sx * pk_x, pk_y, pk_z]) pumpkin_body();
+}
+module halloween_cuts() {
+    // 26mm of Y starts outside the dome (45.8) and finishes inside the cavity
+    // (33.2), so the channel is genuinely open end to end -- the face is a
+    // window into the lit interior, not a dimple.
+    for (sx = [-1, 1]) translate([sx * pk_x, pk_y, pk_z + 6.0]) rotate([90, 0, 0])
+        linear_extrude(26, center = true) pumpkin_face_2d();
+    translate([0, D/2, 54]) rotate([90, 0, 0]) linear_extrude(16, center = true) web_2d(22);
+    // z is fenced by the tower's own windows, not chosen by eye: the lower
+    // twin's lancet apex lands at 60.8 and the upper twin's sill at 82, so a
+    // bat centred at 71 (span 16 -> 67.1..74.9) is clear of both by ~7mm. At
+    // z = 63 the wingtips merged into the lancet head and read as a fault.
+    place_tur_cut(0, 71) bat_2d(16);
+    place_tur_cut(3, 69) bat_2d(15);
+}
+
+// The relief is unioned AFTER the grooves, deliberately: it is appliqué ON the
+// siding, and cutting clapboard stripes through a bat would look like a fault.
+// The pumpkin faces are then cut through the bosses that carry them.
 module manor() {
-    difference() { solid(); cavity(); grooves(); openings(); brand_mark(); }
+    difference() {
+        union() {
+            difference() { solid(); cavity(); grooves(); openings(); brand_mark(); }
+            halloween_relief();
+        }
+        halloween_cuts();
+    }
 }
 if (part == "solid") solid(); else manor();
