@@ -5,14 +5,14 @@ through the open base; light escapes only through the windows and door.
 
 | | |
 |---|---|
-| size | 98.1 × 87.8 × 163 mm |
-| volume | 106.6 cm³ |
-| **time** | **6h 20m** |
-| filament | 116.8 g |
+| size | 98.1 × 104.6 × 163 mm |
+| volume | 127.8 cm³ |
+| **time** | **7h 08m** |
+| filament | 130.2 g |
 | supports | none — see the overhang note |
 | brim | none — the base footprint is large and open |
 
-**6h 20m is over this shop's 4h/unit ceiling and that is a deliberate open
+**7h 08m is over this shop's 4h/unit ceiling and that is a deliberate open
 question, not an oversight.** See "The size decision" below.
 
 ## Verified
@@ -98,6 +98,62 @@ lower twin's lancet apex lands at z = 60.8 and the upper twin's sill at 82, so
 a bat centred at 71 clears both by about 7 mm. At the first attempt (z = 63)
 the wingtips merged into the lancet head and read as a fault, not a bat.
 
+## The front porch
+
+Scott asked for a porch with steps "so it looks more accurate". It is a real
+four-column portico — deck, three treads, columns with plinths and capitals,
+knee braces both ways, a frieze board, a flared cornice and a hip roof — and
+it needed three things solved.
+
+**Nothing in the substructure has an underside.** The deck and all three treads
+start at z = 0, so the lower tread *is* the build surface. A porch is normally
+the classic support case; here it costs nothing.
+
+**The house had to grow to make room.** A porch roof has to clear the door
+below it and the upper windows above, and the old ground floor left a 3 mm gap
+between the two. Three more clapboard courses open that to 25 mm. `ridge_z` is
+unchanged, so the house is exactly as tall as it was — the roof simply got
+shallower, 39.5° from vertical, still well inside the limit. The door came down
+to a 35.9 mm apex so the beam soffit at 40 clears its head.
+
+**The ceiling span was measured, not guessed — and the intuition was wrong.**
+The beam soffit is the one real ceiling in the porch. With two columns it
+bridged **41.1 mm**. The obvious reading is that it should bridge front-to-back,
+wall to beam, about 15 mm — but the slicer picks the bridging direction itself,
+and it chose to run across the width. Two more columns took it to **16.1 mm**;
+a frieze board along the wall (which is a real Victorian member anyway) carries
+the back edge 5.2 mm out and holds it there. The four columns are load-bearing
+in the literal sense — they are not styling.
+
+**There is deliberately no balustrade.** One was drawn. A railing scaled
+correctly to this house stands about 11 mm above the deck, and the lanterns are
+11 mm tall: it hid both of them completely from straight on, which is the only
+view a listing thumbnail gets. A low porch with no railing is a real and common
+detail. Two jack-o'-lanterns nobody can see is not.
+
+## The jack-o'-lanterns
+
+Built the way the fruit is: eight lobes swelling out of a smaller core, so the
+ribs are 2.2 mm of real relief with genuine valleys, not a scratch on a sphere.
+The stem is a five-lobed profile tapered and twisted as it rises.
+
+Two things had to be got right:
+
+- **Where the base plane cuts.** Cut near the bottom of a lobe and the surface
+  there is nearly horizontal, and the first few layers flare past 55°. Cutting
+  at 0.85 of the vertical semi-axis puts the steepest point of the flare at
+  51.9° on a lobe and 53.4° on the core, and gives a 9.9 mm footprint on the
+  deck.
+- **The stem flutes are built, not cut.** As five vertical channels they were
+  deeper than the stem was thick near the top and sawed it into loose fins —
+  visible in the render as two prongs where a stem should be.
+
+Each lantern stands 1.2 mm **clear** of the house wall, on the deck and nothing
+else. Embedded in the siding it was tangent to the clapboard grooves along a
+long shallow arc, and CGAL turned that into 13 zero-area faces and two inverted
+sliver bodies — while still reporting the mesh watertight. A 77 mm² weld to the
+deck is plenty; the wall was never carrying it.
+
 ## The one thing that dictated the whole construction
 
 OpenSCAD 2021.01's CGAL **aborts outright** — assertion violation in
@@ -137,11 +193,11 @@ Each of these rendered, and most gated watertight:
   It is now on the **+X wall**, whose windows are at y = ±17, leaving 23 mm of
   uninterrupted masonry between them to land on.
 
-## The one warning the slicer still gives, and where it actually is
+## The warnings the slicer gives, and what each one actually is
 
-PrusaSlicer reports **Collapsing overhang**. It is not new — the same warning
-is on the version before any Halloween work — and it was worth locating rather
-than living with, so it was bisected by slicing partial models:
+PrusaSlicer reports **Floating bridge anchors, Long bridging extrusions**. Every
+one of them was located by slicing partial models and then measured out of the
+g-code, rather than lived with:
 
 | model | warning |
 |---|---|
@@ -149,15 +205,25 @@ than living with, so it was bisected by slicing partial models:
 | solid − cavity (the bare shell) | clean |
 | solid − cavity − openings | **Collapsing overhang** |
 | same, with the window transom bars disabled | clean |
+| full model without the porch canopy | **Collapsing overhang** only |
 
-So it is the **transom bars** — the horizontal glazing bar left as material
-across each window. Each one is 1.68 mm tall and 1.68 mm deep, and the mullion
-splits its span into two bridges of **4.66 mm**. That is a span a P1S bridges
-without comment; the flag is the slicer's island heuristic, not a real risk.
-Making it strictly self-supporting would need a ceiling rising at 35° over the
-half-light, which is 1.63 mm of rise inside a 1.68 mm bar — it cannot be done
-without a chunky 3.3 mm transom on a 20.8 mm window. Left as is, deliberately,
-and recorded here so nobody hunts it again.
+- **Collapsing overhang** is the **transom bars** — the horizontal glazing bar
+  left as material across each window. Each is 1.68 mm tall and 1.68 mm deep,
+  and the mullion splits its span into two bridges of **4.66 mm**. That is a
+  span a P1S bridges without comment. Making it strictly self-supporting would
+  need a ceiling rising at 35° over the half-light, which is 1.63 mm of rise
+  inside a 1.68 mm bar — impossible without a chunky 3.3 mm transom on a
+  20.8 mm window. Present since the first build, left alone deliberately.
+- **The porch ceiling** bridges **16.1 mm** (was 41.1 mm before the extra
+  columns and the frieze). Hidden surface, well inside what the machine does.
+- **The rest are lines running ALONG narrow ledges, not across voids.** The
+  longest single bridging move in the whole print is 74.1 mm at z 81.6 — a line
+  following the top clapboard groove around the body. The down-facing area in
+  that band measures **315.5 mm²**, which is perimeter × groove depth; if it
+  were a real 74 mm void the area would be orders of magnitude larger. The
+  cornice used to add a 42.6 mm line of the same kind along its 1.5 mm lip;
+  flaring the cornice (1.5 mm out over 3 mm of rise, 26.6° from vertical)
+  removed that ledge entirely.
 
 ## The size decision
 

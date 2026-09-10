@@ -6045,3 +6045,115 @@ is useless for judging a difference-heavy model. The 7-argument `--camera` is
 `tx,ty,tz,rx,ry,rz,dist`; `rx=90` looks horizontally and **`rz=0` shows the −Y
 face** — check which elevation you are actually looking at before concluding a
 feature is missing.
+
+---
+
+## Technique 60 — You cannot reason about a bridge span from your own geometry; and four ways a mesh gates watertight while being wrong (2026-09-10, haunted manor porch)
+
+Adding a covered front porch to the manor lantern produced five separate
+defects, none of which threw an error and four of which passed `watertight`.
+All five generalise.
+
+### 1. The slicer picks the bridging direction, not you
+
+A porch ceiling 42 mm wide and 21 mm deep, anchored on the house wall along its
+whole back edge and on two corner columns. The obvious reading is that it
+bridges front-to-back — wall to beam, about 15 mm. It does not. PrusaSlicer
+chose to bridge **across the width: 41.1 mm.**
+
+Adding two more columns took it to **16.1 mm**. A frieze board along the wall,
+which by the front-to-back reading should have been the whole fix, did almost
+nothing on its own.
+
+The rule: **measure the bridge out of the g-code, do not derive it from the
+model.** A twenty-line scan of `;TYPE:Bridge infill` moves gives the real
+number and its z, and it is the only number worth acting on:
+
+```python
+if line.startswith(";TYPE:"): typ = line[6:].strip()
+...
+if "E" in m and float(m["E"]) > 0 and typ == "Bridge infill":
+    spans.append((math.hypot(nx-x, ny-y), z, x, y, nx, ny))
+```
+
+Printing the endpoints in **model** coordinates (subtract the bed offset) is
+what turns "41 mm somewhere" into "across the porch, at the beam soffit".
+
+### 2. A long bridging *move* is usually a line ALONG a ledge
+
+The longest single bridging move in this print is 74.1 mm. It is not a 74 mm
+void — it is a line following the top clapboard groove around the body. The
+test that separates the two is down-facing **area** in that layer band:
+
+```
+z 80.0-82.2 down-facing area: 315.5 mm2   ≈ perimeter x 0.94mm groove depth
+```
+
+A real 74 mm span would be orders of magnitude larger. Run this before
+redesigning anything: most alarming bridge numbers on a textured model are this.
+
+Where a ledge *is* worth removing, flare it instead of stepping it. A cornice
+1.5 mm wider than the beam under it gave a 90° lip and a 42.6 mm line along it;
+the same 1.5 mm spread over 3 mm of rise is 26.6° from vertical and the ledge
+is gone.
+
+### 3. Coincident faces: not just solid-to-solid, but part-to-part
+
+Already known: two unioned boxes sharing a face exactly produce degenerate
+faces. What this build added is how easy it is to do **by construction**. Two
+knee braces extruded at exactly `post_s` and centred on their post put their
+side faces on the post's faces *and on each other's*, and stopped exactly on
+the beam soffit plane. That is 12 zero-area facets from three coincidences
+nobody typed deliberately.
+
+Make every landing part **strictly smaller** than what it lands on, and run it
+**past** the plane it meets: `brace_t = 3.6` against `post_s = 4.4`, and
+`beam_z0 + 0.5` rather than `beam_z0`.
+
+### 4. A tangency between a skinned surface and a prism costs one facet, and moves
+
+The 13th facet was somewhere else entirely: a ring of the skinned main roof
+landed at z = 112.95 with its rounded corner passing within microns of the
+tower's. One zero-area facet, from a corner-to-corner tangency that only
+appeared because the eave had moved.
+
+There is no clean geometric fix — the roof shrinks past the tower at *some*
+height whatever you do. **Move a parameter half a millimetre.** Changing `eave`
+from 4 to 4.5 shifts every ring z and the coincidence goes away. Record why, or
+the next person will "tidy" it back.
+
+### 5. A hanging tooth is fine; a hanging tooth with its top cut off is not
+
+Technique 59 established that cutting a grin as overlapping apex-up triangles
+leaves material teeth hanging at 26° from vertical, which prints. The trap
+underneath it: with an **even** tooth count there is a material wedge on the
+centreline — exactly where the nose is cut — and the nose lops its top off. The
+tooth becomes a free-floating body inside the mouth, plus a matching loose
+sliver in the wall the cut passes through. Watertight, rendered, and only
+`component_count` caught it.
+
+Two rules: **odd count**, so the centreline is a hole; and put the feature above
+it clear of the *tallest* tooth apex by a real margin (1.26 mm here, three
+extrusions), not just clear of the one below it.
+
+### 6. Correct scale can defeat the thing you scaled it for
+
+A porch railing scaled correctly to this house stands ~11 mm above the deck.
+The jack-o'-lanterns are 11 mm tall. The railing hid both of them completely
+from straight on — the only view a listing thumbnail gets.
+
+When a decorative element is deliberately oversized (these lanterns are about
+1.2 m at the house's own scale), everything around it has to be checked against
+the **oversized** thing, not against realism. The fix was to delete the railing,
+which is a real and common detail on a low porch. Deleting the correct element
+to keep the deliberately-wrong one visible is the right call when the wrong one
+is the product.
+
+### 7. Cut relief on a boss is blind unless it reaches the cavity
+
+Restating from the same build because it is the cheapest thing to get wrong: a
+face cut into a boss standing on a solid wall is a pocket. It renders as
+carving and prints dark. Extrude the cut **one-directionally** from outside the
+boss to inside the cavity and check both ends numerically — and one-directional
+matters: centring the same cut drove it straight through a porch column
+standing behind the lantern.

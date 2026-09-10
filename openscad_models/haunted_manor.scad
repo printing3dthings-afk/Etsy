@@ -48,8 +48,19 @@ plinth_g = 1.2;             // stands proud of the siding
 plinth_w = 2.52;            // 6 x 0.42 -- thick enough to carry the mark
                             // without it glowing through when lit
 
-sid_courses = 13;
-eave     = 4;
+sid_courses = 16;           // 13 before the porch. A porch roof has to clear
+                            // the door below it and the upper windows above,
+                            // and the old ground floor gave a 3mm gap between
+                            // the two. Three more courses open it to 25mm.
+                            // ridge_z is unchanged, so the house is exactly as
+                            // tall as it was -- the roof simply got shallower
+                            // (39.5 deg from vertical, still well inside 55).
+eave     = 4.5;             // 4 before. Half a millimetre, purely to break a
+                            // tangency: at eave 4 a roof ring landed at
+                            // z = 112.95 with its rounded corner passing within
+                            // microns of the tower's, and CGAL emitted a
+                            // zero-area facet there. Moving the eave moves
+                            // every ring z and the coincidence goes away.
 cap      = 6;
 sid_p    = 4.5;             // clapboard course pitch
 sid_d    = 0.84;            // 2 x 0.42 of relief -- the floor for something
@@ -239,9 +250,12 @@ module grooves() {
 // z = 20, which is exactly where those sills started. Ten windows, a door, a
 // rose and two bats are already more openings than the shell needs for light.
 module openings() {
-    for (x = [-19, 19]) { place_win(1, x, 20); place_win(0, x, 44); place_win(1, x, 44); }
-    for (f = [2, 3]) for (y = [-17, 17]) { place_win(f, y, 20); place_win(f, y, 44); }
-    place_win(0, 0, plinth_h + 1, 7, 16, false);
+    for (x = [-19, 19]) { place_win(1, x, 20); place_win(0, x, 56); place_win(1, x, 56); }
+    for (f = [2, 3]) for (y = [-17, 17]) { place_win(f, y, 20); place_win(f, y, 56); }
+    // the door is shorter than it was: its apex now lands at 35.9, clear of the
+    // porch beam whose underside is at 40. At the old 41 the beam ran through
+    // the head of the door.
+    place_win(0, 0, plinth_h + 1, 6.5, 12, false);
     place_twin(0, 40); place_twin(3, 40);
     place_twin(0, 82); place_twin(3, 82);
 }
@@ -271,53 +285,229 @@ module brand_mark() {
 // anchored on both sides, so a bat cut only has to keep every unsupported
 // span short, which at a 16mm wingspan it does (longest is about 4mm).
 
-// ---- porch ----------------------------------------------------------------
-// Two steps growing off the plate, so there is no underside anywhere -- the
-// lower tread IS the build surface. It is what gives the lanterns something
-// to stand on; a pumpkin floating on a wall is a boss, a pumpkin on a step is
-// an object. Deliberately part of the relief pass, not solid(), so the
-// clapboard grooves never run across it.
-module stoop() {
-    translate([0, 40, 0]) linear_extrude(5)  offset(r = 1.5) square([48, 16], center = true);
-    translate([0, 37, 0]) linear_extrude(10) offset(r = 1.5) square([40, 11], center = true);
+// ---- front porch ----------------------------------------------------------
+// EVERY PIECE OF THE SUBSTRUCTURE GROWS OFF THE BUILD PLATE. The deck, all
+// three steps and the newels start at z = 0, so between them there is not one
+// square millimetre of underside -- the lower tread IS the build surface. That
+// is what makes a porch, which is normally the classic support case, free here.
+//
+// The one real ceiling is the beam soffit at z = 40. It is not a wide bridge:
+// the beam is attached to the house wall along its whole back edge, so the
+// furthest any bridging line has to reach is the 17mm from that wall out to
+// the post line, and the knee braces cut the corners off even that.
+por_hw   = 21;              // deck half width
+por_yb   = 33;              // back edge, buried in the siding
+por_yf   = 57;              // front edge of the deck. 53 before: a 20mm porch
+                            // could not fit a 14.4mm lantern between the wall
+                            // and the post without one of them intersecting
+                            // it, and 24mm is closer to a real porch anyway.
+deck_h   = 10;              // deck top == door threshold
+post_s   = 4.4;
+brace_t  = 3.6;             // strictly inside post_s -- see the braces
+post_hx  = 19;
+post_ix  =  9.5;            // inner pair. With only the outer two, the beam
+                            // soffit was a 42 x 21mm flat ceiling anchored on
+                            // the house wall and two corners, and PrusaSlicer
+                            // called it: "Long bridging extrusions, Floating
+                            // bridge anchors". Four columns with the stair
+                            // between the middle pair is the period-correct
+                            // portico anyway.
+post_y   = 54;
+beam_z0  = 40;              // soffit
+beam_z1  = 44.5;
+corn_z1  = 47.5;            // cornice top
+proof_z1 = 53.5;            // porch roof ridge, against the house wall
+
+module rrect(w, d, cy, r) { translate([0, cy]) offset(r = r) square([w - 2*r, d - 2*r], center = true); }
+module post_2d(g = 0) { offset(r = 0.7 + g) square([post_s - 1.4, post_s - 1.4], center = true); }
+
+module porch() {
+    linear_extrude(deck_h) rrect(2*por_hw, por_yf - por_yb, (por_yb + por_yf)/2, 1.5);
+    // three treads, each overlapping the one behind it so no two boxes share a
+    // face exactly -- coincident faces between unioned solids are what produced
+    // degenerate faces and detached bodies earlier in this model
+    linear_extrude(7.5) rrect(14, 4.1, 58.6, 1.0);
+    linear_extrude(5.0) rrect(14, 4.1, 61.2, 1.0);
+    linear_extrude(2.5) rrect(14, 4.1, 63.8, 1.0);
+
+    // inner pair: shaft, plinth, capital and a wall-ward brace each. No brace
+    // toward the door -- at z 33.5..40.5 it would sit right across the head of
+    // the door arch, which tops out at 35.9.
+    for (sx = [-1, 1]) {
+        translate([sx*post_ix, post_y, deck_h - 1]) linear_extrude(beam_z0 - deck_h + 2) post_2d();
+        translate([sx*post_ix, post_y, deck_h - 0.5]) linear_extrude(2.8) post_2d(0.8);
+        translate([sx*post_ix, post_y, beam_z0 - 3.2]) linear_extrude(3.7) post_2d(0.8);
+        translate([sx*post_ix, post_y, 0]) rotate([0, 0, 90])
+            translate([0, brace_t/2, 0]) rotate([90, 0, 0]) linear_extrude(brace_t)
+                polygon([[0, beam_z0 + 0.5], [-6.5, beam_z0 + 0.5], [0, beam_z0 - 6.5]]);
+    }
+
+    for (sx = [-1, 1]) {
+        // Front post only. There is DELIBERATELY no pilaster on the house wall
+        // behind it: at x = +/-19 a pilaster sits inside the lantern, which
+        // reaches x = 22.2 at its equator, and the two met almost tangentially
+        // -- that produced 9 zero-area faces and two inverted sliver bodies
+        // while still gating watertight. The beam is let into the wall
+        // directly, which is what the real detail does anyway.
+        translate([sx*post_hx, post_y, deck_h - 1]) linear_extrude(beam_z0 - deck_h + 2) post_2d();
+        // Knee braces, one each way: a straight 45 deg diagonal, so no face in
+        // one is worse than 45 deg from vertical. A sawn ogee bracket would
+        // look better and would go horizontal where it meets the beam.
+        // brace_t is deliberately NARROWER than the post. At exactly post_s the
+        // two braces' side faces landed on the post's own faces and on each
+        // other's, and every one of those coincident planes produced a
+        // zero-area facet -- 12 of them, on a mesh that still gated watertight.
+        // They also run 0.5mm up INTO the beam rather than stopping on its
+        // soffit plane, for the same reason.
+        translate([sx*post_hx, post_y + brace_t/2, 0]) rotate([90, 0, 0])
+            linear_extrude(brace_t)
+                polygon([[0, beam_z0 + 0.5], [-sx*6.5, beam_z0 + 0.5], [0, beam_z0 - 6.5]]);
+        // the wall-ward brace. Rotating the PLACED brace about z is the only
+        // form of this that lands where it reads: composing rotate([0,0,-90])
+        // with rotate([90,0,0]) turns the extrude axis into X instead, and the
+        // first attempt left both braces sitting at y = 0..6.5 -- floating
+        // inside the house, 6.5mm from anything they were meant to touch.
+        translate([sx*post_hx, post_y, 0]) rotate([0, 0, 90])
+            translate([0, brace_t/2, 0]) rotate([90, 0, 0]) linear_extrude(brace_t)
+                polygon([[0, beam_z0 + 0.5], [-6.5, beam_z0 + 0.5], [0, beam_z0 - 6.5]]);
+
+        // post plinth and capital. Square blocks, so they are pure vertical
+        // prisms with one 0.8mm ledge each -- the same class of overhang the
+        // clapboard grooves already carry, and the thing that stops a post
+        // reading as a length of stick.
+        translate([sx*post_hx, post_y, deck_h - 0.5]) linear_extrude(2.8) post_2d(0.8);
+        translate([sx*post_hx, post_y, beam_z0 - 3.2]) linear_extrude(3.7) post_2d(0.8);
+    }
+
+    // deck nosing: a 0.8mm lip under the deck edge, which is what gives the
+    // deck a shadow line instead of a raw extruded rectangle
+    translate([0, 0, deck_h - 1.5]) linear_extrude(1.5)
+        rrect(2*por_hw + 1.6, por_yf - por_yb + 1.6, (por_yb + por_yf)/2, 2.0);
+
+    // NO BALUSTRADE, and that is a decision rather than an omission. A railing
+    // scaled correctly to this house is about 11mm above the deck, and the
+    // lanterns are 11mm tall -- one drawn and rendered hid both of them
+    // completely from straight on, which is the only view that matters in a
+    // listing photo. A low porch with no railing is a real and common detail;
+    // two jack-o-lanterns nobody can see is not a trade worth making.
+    // Frieze board along the house wall. It is a real Victorian member, and it
+    // is here for a measured reason: without it the beam soffit bridged the
+    // full 21.6mm from the wall out to the front beam, front to back, with
+    // nothing under it between the columns. The board carries the back edge
+    // 5.2mm out and takes that span down to 16.4mm. Its own underside is a
+    // 5.2mm ledge, which is short enough not to matter. It starts at 36.5 --
+    // above the door arch, which tops out at 35.9 -- so it never crosses the
+    // head of the door.
+    translate([0, 0, 36.5]) linear_extrude(beam_z0 - 36.3) rrect(2*por_hw, 7, 36.5, 1.0);
+
+    translate([0, 0, beam_z0]) linear_extrude(beam_z1 - beam_z0)
+        rrect(2*por_hw, por_yf - por_yb - 1.5, (por_yb + por_yf - 1.5)/2, 1.0);
+    // The cornice FLARES rather than stepping. As a straight prism 1.5mm wider
+    // than the beam it presented a 90 deg lip all the way round, and the
+    // slicer ran a 42.6mm bridging line ALONG that 1.5mm ledge -- the same
+    // shape of measurement as the clapboard grooves, a long line on a narrow
+    // ledge rather than a long span. Flared, it is 1.5mm out over 3mm of rise,
+    // which is 26.6 deg from vertical, and the ledge is gone.
+    translate([0, 0, beam_z1])
+        skin([[for (q = rrect_pts(42, 22.5, 1.0, 4)) [q[0], q[1] + 44.25]],
+              [for (q = rrect_pts(45, 26,   1.0, 4)) [q[0], q[1] + 44.5 ]]],
+             z = [0, corn_z1 - beam_z1], slices = 0);
+    // hip roof, narrowing as it rises, so its outer faces are the printable
+    // direction all the way up and its back edge stays flat on the wall
+    translate([0, 0, corn_z1])
+        skin([[for (q = rrect_pts(45, 26,   1.5, 4)) [q[0], q[1] + 44.5 ]],
+              [for (q = rrect_pts(34, 17.5, 1.5, 4)) [q[0], q[1] + 40.25]]],
+             z = [0, proof_z1 - corn_z1], slices = 0);
 }
 
 // ---- jack-o-lantern -------------------------------------------------------
-// Flat-bottomed dome: hull of a small disc on the tread and a sphere above it,
-// so the sides lean OUT at 20 deg from vertical on the way up and the only
-// true overhang is the top of the dome, which is the printable end.
-pk_x = 15; pk_y = 39.44; pk_z = 9.5; pk_r = 6.4;
+// A REAL GOURD, NOT A DOME WITH SCRATCHES IN IT. The previous lantern was a
+// hull of a disc and a sphere with two cut grooves standing in for ribs, which
+// is a shape that only reads as a pumpkin because it is orange in your head.
+// This one is built the way the fruit is: eight lobes swelling out of a
+// smaller core, so the ribs are 2.2mm of real relief with genuine valleys
+// between them rather than a scratch on a sphere.
+//
+// The base is a plane cut, and WHERE it cuts is the printability decision.
+// Cut too near the bottom of a lobe and the surface there is nearly
+// horizontal, which flares out past 55 deg on the first few layers. Cutting at
+// 0.85 of the vertical semi-axis puts the steepest point of the base flare at
+// 51.9 deg on a lobe and 53.4 deg on the core -- inside the limit, and it also
+// gives a wide, stable 9.9mm footprint on the deck.
+// pk_y stands the lantern 1.2mm CLEAR of the siding, resting on the deck and
+// nothing else. Embedded in the wall it was tangent to the clapboard grooves
+// over a long, shallow arc, and CGAL turned that into 13 zero-area faces and
+// two inverted sliver bodies -- while still reporting the mesh watertight. A
+// 77mm2 weld to the deck is plenty; the wall was never carrying it.
+pk_x = 15; pk_y = 43.2; pk_z = 9.5;
+pk_R = 7.2; pk_cz = 6.0; pk_zc = 5.10; pk_off = 2.45; pk_lr = 4.75; pk_core = 5.0;
 
 module pumpkin_body() {
+    $fn = 48;
     difference() {
         union() {
-            hull() { cylinder(h = 0.5, r = 4.2); translate([0, 0, 6.0]) sphere(r = pk_r); }
-            translate([0, 0, 11.5]) cylinder(h = 3.4, r1 = 1.6, r2 = 1.1);   // stem
+            translate([0, 0, pk_zc]) scale([1, 1, pk_cz/pk_core]) sphere(r = pk_core);
+            for (i = [0 : 7]) rotate([0, 0, i*45])
+                translate([pk_off, 0, pk_zc]) scale([1, 1, pk_cz/pk_lr]) sphere(r = pk_lr);
+            // Stem: a five-lobed profile tapered and twisted as it rises, seated
+            // 2.5mm inside the dome so it is never a separate body balanced on
+            // a curve. The flutes are BUILT, not cut. Cut as five vertical
+            // channels they were deeper than the stem was thick at the top and
+            // sawed it into loose fins -- visible in the render as two prongs
+            // where a stem should be. Taper is 9.8 deg from vertical.
+            translate([0, 0, 8.6]) linear_extrude(5.2, scale = 0.42, twist = 30, slices = 20)
+                union() {
+                    circle(r = 1.05);
+                    for (i = [0 : 4]) rotate(i*72) translate([1.0, 0]) circle(r = 0.55);
+                }
         }
-        // ribs: vertical channels, so they carry no overhang at all. Placed at
-        // +/-45 and +/-78 from the face so they never clip an eye or a tooth.
-        for (a = [-78, -45, 45, 78]) rotate([0, 0, a]) translate([0, 6.1, -1])
-            cylinder(h = 22, r = 0.85);
+        translate([0, 0, -40]) cylinder(h = 40, r = pk_R + 3);      // flat base
     }
 }
 
-// THE FACE IS CARVED, NOT BRIDGED. The first version's mouth was one flat
-// 8.3mm ceiling, and PrusaSlicer's stability check named it exactly:
-// "Floating bridge anchors" -- the two ends of that bridge landed on the
-// dome's own leaning surface rather than on anything solid. Cutting the grin
-// as four overlapping apex-up teeth removes every horizontal ceiling: the
-// opening's top boundary is a zigzag at 64 deg from horizontal, which is the
-// same self-supporting logic as the lancet windows and needs no bridge at
-// all. Eyes and nose are apex-up triangles for the same reason.
-module pumpkin_face_2d() {
-    for (sx = [-1, 1]) translate([sx * 2.6, 0.9]) polygon([[-1.5,0],[1.5,0],[0,2.8]]);
-    translate([0, -0.5]) polygon([[-0.9,0],[0.9,0],[0,1.6]]);
-    // half-base 1.0 against a 1.85 pitch, so neighbouring teeth OVERLAP by
-    // 0.15mm. At exactly half the pitch they met at a single coincident point,
-    // which is a non-manifold 2D union: OpenSCAD extruded it and CGAL rejected
-    // the result with "The given mesh is not closed", once per lantern.
-    for (i = [0 : 3]) translate([-2.775 + i*1.85, -3.6])
-        polygon([[-1.0,0],[1.0,0],[0, i == 0 || i == 3 ? 1.9 : 2.5]]);
+// The face is cut through the gourd AND the wall behind it, so it is an
+// opening into the lit interior. It is extruded in ONE direction, from just
+// outside the gourd backwards -- centring it would have driven the cut
+// straight through the porch post standing behind the lantern.
+//
+// Every ceiling in it is a tooth flank or a triangle side, never a flat span:
+// the teeth are cut as overlapping apex-up triangles, so the material teeth
+// between them hang from the top at 26 deg from vertical, and the eyes and
+// nose are apex-up triangles for the same reason. `tilt` leans the eyes so the
+// two lanterns are not the same face twice.
+// THE TOOTH COUNT MUST BE ODD, and the nose must clear the tallest tooth.
+// Cutting the grin as overlapping apex-up triangles leaves a material tooth
+// hanging between each neighbouring pair. With an EVEN count there is a
+// material wedge on the centreline -- exactly where the nose is cut -- and the
+// nose lops its top off, leaving a tooth floating free inside the mouth (and a
+// matching loose sliver in the wall the cut passes through). It gated
+// watertight and rendered fine; only component_count caught it. An odd count
+// puts a HOLE on the centreline instead, and every wedge hangs from material
+// that is still attached above it.
+//
+// The same reasoning fixes the height: the nose sits 1.26mm above the tallest
+// tooth apex, so the web between them is three extrusions wide everywhere,
+// rather than pinching to a knife edge wherever the two nearly meet.
+//
+// Everything here is a triangle side or a tooth flank -- 60 deg or steeper
+// from horizontal -- so no layer of this face bridges anything.
+module face_2d(tilt = 0, hs = [2.2, 2.9, 2.8, 2.9, 2.2]) {
+    for (sx = [-1, 1]) translate([sx*2.9, 2.9]) rotate(-sx*tilt)
+        polygon([[-1.55,0],[1.55,0],[0,2.8]]);
+    translate([0, 0.9]) polygon([[-0.9,0],[0.9,0],[0,1.6]]);
+    for (i = [0 : 4]) let (x = -4 + i*2)
+        translate([x, -3.6 + 0.085*x*x]) polygon([[-1.05,0],[1.05,0],[0,hs[i]]]);
+}
+
+module lanterns() { for (sx = [-1, 1]) translate([sx*pk_x, pk_y, pk_z]) pumpkin_body(); }
+module lantern_faces() {
+    // starts at y = 51, which is outside the gourd (50.4) but still short of
+    // the post (51.8), and runs 20mm back -- through the lantern, across the
+    // gap, and out through the house wall into the cavity at 33.2. The
+    // triangles it leaves in the siding sit entirely behind the lantern.
+    for (i = [0, 1]) translate([(i ? 1 : -1)*pk_x, 51.0, pk_z + pk_zc]) rotate([90, 0, 0])
+        linear_extrude(20) face_2d(tilt = i ? 14 : 0,
+                                   hs = i ? [2.0,2.6,3.2,2.6,2.0] : [2.2,2.9,2.8,2.9,2.2]);
 }
 
 // ---- bat ------------------------------------------------------------------
@@ -357,17 +547,10 @@ module web_2d(d = 22) {
     }
 }
 
-module halloween_relief() {
-    stoop();
-    for (sx = [-1, 1]) translate([sx * pk_x, pk_y, pk_z]) pumpkin_body();
-}
+module halloween_relief() { porch(); lanterns(); }
 module halloween_cuts() {
-    // 26mm of Y starts outside the dome (45.8) and finishes inside the cavity
-    // (33.2), so the channel is genuinely open end to end -- the face is a
-    // window into the lit interior, not a dimple.
-    for (sx = [-1, 1]) translate([sx * pk_x, pk_y, pk_z + 6.0]) rotate([90, 0, 0])
-        linear_extrude(26, center = true) pumpkin_face_2d();
-    translate([0, D/2, 54]) rotate([90, 0, 0]) linear_extrude(16, center = true) web_2d(22);
+    lantern_faces();
+    translate([0, D/2, 67]) rotate([90, 0, 0]) linear_extrude(16, center = true) web_2d(22);
     // z is fenced by the tower's own windows, not chosen by eye: the lower
     // twin's lancet apex lands at 60.8 and the upper twin's sill at 82, so a
     // bat centred at 71 (span 16 -> 67.1..74.9) is clear of both by ~7mm. At
