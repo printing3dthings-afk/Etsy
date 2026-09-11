@@ -41,6 +41,45 @@ paper over; the scriptable substitute for organic surface *variation* (not
 deliberate sculpted shape) is a Displace modifier or Geometry Nodes driven by a
 procedural noise texture.
 
+**TESTED IN THIS CONTAINER, 2026-09-11 — the verdict above holds, and now with
+numbers.** Everything above was reasoned from sources; this is what actually
+happened when it was run headless on a real part (the tombstone stone, 16,444
+triangles out of OpenSCAD). Scripted modelling works: primitive → modifier
+stack → apply → export → `mesh_gate` PASSED, with zero human clicking. It is
+also *fast* — faster than the CSG it would replace.
+
+| approach | hard edges | grain | mesh | time |
+|---|---|---|---|---|
+| Simple subdiv ×3 + Displace | **kept** | inherits the CSG triangulation — reads as creases, not stone | watertight, 1.58M tris | 18s |
+| **Voxel** remesh 0.55mm + Displace | **melted** | **real, topology-independent** | watertight, 172k tris | **1.8s** |
+| **Sharp** remesh + Displace | — | — | **NOT watertight — 26 open edges, gate FAILED** | 2.1s |
+
+The two usable rows trade off directly and neither is a net win on a
+hard-surface part. Simple subdivision divides each *triangle* into four, so
+density follows the CSG topology rather than space, and displacing it draws the
+original triangulation on the surface as visible creases. A voxel remesh gives
+genuinely uniform density and real granular texture — and rounds off every
+sharp edge, which on this model destroyed exactly the angular chipping the
+weathering rebuild existed to produce. The sharp-preserving remesh mode failed
+the manifold gate on the first attempt, which is the reliability problem §1
+warns about showing up unprompted.
+
+**So: reach for Blender when the whole surface is MEANT to be organic, not to
+add texture to a CSG part whose edges matter.** Displacement costs almost
+nothing at print time (3h 03m 39s → 3h 04m 23s, 50.49g → 50.53g) — the cost is
+the edges, not the printer.
+
+Three bpy gotchas that cost real time, all specific to the 4.0.2 build here:
+- **`bpy.ops` attribute access is lazy, so `hasattr(bpy.ops.wm, "stl_export")`
+  returns True for an operator that does not exist** and only fails on call.
+  Probe with `dir(bpy.ops.wm)` instead. 4.0.2 has `wm.stl_import` but the
+  exporter is still the old `export_mesh.stl` — import and export are not
+  symmetric.
+- `modifier_apply` refuses with *"Modifiers cannot be applied to multi-user
+  data"* on a freshly imported mesh. `o.data = o.data.copy()` first.
+- Set the object active **and** selected before applying; the importer does not
+  reliably leave it that way.
+
 **The correct integration pattern, if/when this gets built:** OpenSCAD builds
 the precise, dimensioned structure and exports STL → Blender (headless,
 `--background`) imports that STL, applies Subdivision Surface for pure organic
