@@ -6904,6 +6904,13 @@ for a part where you know there is no fine detail.
    of the *text* (`"Intersect Face: 11"`); the indices in the payload are what
    let you locate them. Only reading the text throws away the useful half.
 
+**Before any boolean, gate the CUTTER too:** `python3 tools/mesh_gate.py
+cutter.stl --cutter-for target.stl`. It fails on the cutter defects that
+silently produce a wrong result — open, flipped, degenerate, missing the
+target, or enclosing it — and flags an instanced/scattered cutter with the
+`use_self=True` advisory. See BLENDER_REFERENCE.md section 2 for the measured
+failure behind each check.
+
 **Run both gates on anything new.** `mesh_gate` is the hard structural gate;
 `print_check` is the one that sees through the surface. Neither is a superset
 of the other, and a model that passes only one has not been checked.

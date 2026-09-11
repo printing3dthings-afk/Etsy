@@ -158,17 +158,109 @@ def gate(path, expected_components=1, check_overhang=False):
             "bbox_mm": [round(e, 2) for e in ext]}
 
 
+def gate_cutter(cutter_path, target_path, expect_multi_body=None):
+    """Gate a boolean CUTTER against the TARGET it will be subtracted from.
+
+    Exists because every check here is a failure that actually happened, most
+    of them twice, and each was written down as prose that then got skipped at
+    the moment of use. Prose does not run; this does.
+
+    The findings behind each check (measured, see BLENDER_REFERENCE.md section 2):
+      open cutter        -> result silently NON-MANIFOLD (172 open edges) and
+                            its volume went UP
+      flipped normals    -> silent NO-OP: target volume identical to 4 decimals,
+                            face count changed, every gate still clean
+      degenerate cutter  -> result silently non-manifold (2 open edges)
+      no bbox overlap    -> a no-op, not an error. Cost an hour today: a cutter
+                            placed from the target's bounding box instead of its
+                            real surface simply missed it
+      cutter encloses    -> the one legitimate empty result (A minus B where
+                            B contains A). Catch it here, not after the boolean
+      many bodies        -> a scattered/instanced cloud self-intersects, and
+                            with use_self=False the Exact solver removed 100%
+                            of a 112,183 mm3 stone and left 223 faces
+    """
+    c = _load(cutter_path)
+    t = _load(target_path)
+    checks = []
+
+    def add(name, passed, detail, fatal=True):
+        checks.append({"check": name, "pass": bool(passed), "detail": detail,
+                       "level": "FAIL" if fatal else "INFO"})
+
+    add("cutter_watertight", c.is_watertight,
+        "closed" if c.is_watertight else
+        "OPEN -- an open cutter makes the RESULT non-manifold even though the target went in clean")
+
+    add("cutter_winding", c.is_winding_consistent,
+        "normals agree" if c.is_winding_consistent else "mixed normals -- inside/outside is ambiguous")
+
+    cvol = float(c.volume) if c.is_volume else 0.0
+    if cvol > 0:
+        vol_detail = f"{cvol / 1000.0:.3f} cm3"
+    elif not c.is_watertight:
+        # An open mesh has no meaningful signed volume. Saying "flipped normals"
+        # here would send the reader after the wrong defect.
+        vol_detail = "no enclosed volume -- follows from the open surface above, not a separate defect"
+    else:
+        vol_detail = (f"{cvol / 1000.0:.3f} cm3 -- FLIPPED NORMALS cut nothing and change "
+                      f"the mesh anyway, silently")
+    add("cutter_positive_volume", cvol > 0, vol_detail)
+
+    deg = int((c.area_faces <= 1e-12).sum())
+    add("cutter_no_degenerate_faces", deg == 0, f"{deg} zero-area faces")
+
+    cb, tb = c.bounds, t.bounds
+    overlap = all(cb[0][i] < tb[1][i] and tb[0][i] < cb[1][i] for i in range(3))
+    add("bbox_overlaps_target", overlap,
+        "cutter and target overlap" if overlap else
+        "NO OVERLAP -- this boolean is a silent no-op; the cutter misses the target entirely")
+
+    encloses = all(cb[0][i] <= tb[0][i] and cb[1][i] >= tb[1][i] for i in range(3))
+    add("cutter_does_not_enclose_target", not encloses,
+        "cutter is smaller than the target" if not encloses else
+        "cutter ENCLOSES the target -- the difference is correctly EMPTY, which is "
+        "almost always a placement or scale bug, not a Blender bug")
+
+    bodies = int(c.body_count)
+    if expect_multi_body is None:
+        expect_multi_body = bodies > 1
+    add("self_intersection_risk", True,
+        (f"{bodies} bodies -- an instanced/scattered cloud. Set use_self=True on the "
+         f"boolean (Blender) or expect a wrong result; run tools/print_check.py on the "
+         f"cutter for the real self-intersection count"
+         if bodies > 1 else "single body"),
+        fatal=False)
+
+    vol_ratio = (cvol / float(t.volume)) if (t.is_volume and t.volume > 0 and cvol > 0) else 0.0
+    add("removal_scale", True,
+        f"cutter is {vol_ratio * 100:.1f}% of target volume (upper bound on what it can remove)",
+        fatal=False)
+
+    failed = [x for x in checks if not x["pass"] and x["level"] == "FAIL"]
+    return {"cutter": cutter_path, "target": target_path,
+            "passed": not failed, "checks": checks,
+            "cutter_bbox_mm": [round(float(v), 2) for v in c.extents],
+            "target_bbox_mm": [round(float(v), 2) for v in t.extents]}
+
+
 def main():
     ap = argparse.ArgumentParser(description="Pre-slice mesh gate (P1S).")
     ap.add_argument("mesh")
     ap.add_argument("-c", "--components", type=int, default=1,
                     help="Expected separate bodies (default 1; raise it for print-in-place assemblies)")
     ap.add_argument("--overhang", action="store_true", help="Also scan for unprintable overhangs")
+    ap.add_argument("--cutter-for", metavar="TARGET",
+                    help="Treat the mesh as a boolean CUTTER and gate it against TARGET "
+                         "before running the boolean. Checks the failures that silently "
+                         "produce a wrong result: open/flipped/degenerate cutter, a cutter "
+                         "that misses the target, and one that encloses it.")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
 
     try:
-        res = gate(a.mesh, a.components, a.overhang)
+        res = (gate_cutter(a.mesh, a.cutter_for) if a.cutter_for
+               else gate(a.mesh, a.components, a.overhang))
     except Exception as exc:
         # A mesh that will not even load is a gate failure, never a stack trace the
         # caller has to interpret.
@@ -181,10 +273,19 @@ def main():
     if a.json:
         print(json.dumps(res, indent=2))
     else:
-        print(f"{a.mesh}  [{' x '.join(f'{v:g}' for v in res['bbox_mm'])} mm]")
+        if a.cutter_for:
+            print(f"cutter {a.mesh}  [{' x '.join(f'{v:g}' for v in res['cutter_bbox_mm'])} mm]")
+            print(f"target {a.cutter_for}  [{' x '.join(f'{v:g}' for v in res['target_bbox_mm'])} mm]")
+        else:
+            print(f"{a.mesh}  [{' x '.join(f'{v:g}' for v in res['bbox_mm'])} mm]")
         for c in res["checks"]:
-            tag = "ok  " if c["pass"] else (c["level"] + "  ")
-            print(f"  {tag}{c['check']}: {c['detail']}")
+            if not c["pass"]:
+                tag = c["level"] + "  "
+            elif c["level"] == "INFO":
+                tag = "note"
+            else:
+                tag = "ok  "
+            print(f"  {tag}  {c['check']}: {c['detail']}")
         print("PASSED" if res["passed"] else "FAILED")
     sys.exit(0 if res["passed"] else 1)
 

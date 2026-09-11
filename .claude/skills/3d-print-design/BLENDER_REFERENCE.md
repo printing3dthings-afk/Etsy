@@ -112,9 +112,21 @@ Read the rows in order, because each is a different lesson:
 it only when an operand is known to self-intersect. `use_hole_tolerant` likewise
 made no difference.
 
-**The rule:** gate the *cutter* before the boolean, not just the result. A
-cutter must be closed, positively oriented, non-degenerate, and actually
-intersecting.
+**The rule is now executable — use it, do not re-derive it:**
+
+```
+python3 tools/mesh_gate.py cutter.stl --cutter-for target.stl
+```
+
+`gate_cutter()` fails on an open, flipped, degenerate, missing or enclosing
+cutter, and flags a multi-body (instanced/scattered) cutter with the
+`use_self=True` advisory. Every check is one of the failures in the table
+above. This exists because the prose version of this rule was written in this
+file and then skipped, twice, within the same session — including by me, on
+the very next task. Prose does not run.
+
+Verified against the real cutter cloud from the failed weathering rebuild
+(section 9): 339 bodies, correctly flagged for `use_self`.
 
 ---
 
