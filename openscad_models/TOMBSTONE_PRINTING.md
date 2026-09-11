@@ -354,9 +354,31 @@ bronze plaque on a granite stone is the standard real-world monument, and a dark
 oxidised field with bright raised lettering is exactly what a two-filament
 layer change produces.
 
-Split the regions yourself with the four `intersection`/`difference` planes
-listed above against `stone()` and `plate()`; the colours are assigned in the
-slicer, not in the model, so nothing about the shipped STLs changes.
+### `tombstone.3mf` carries the colours — and is the only file laid out for the plate
+
+Both parts in **print pose, side by side on the bed**, as two named objects with
+four base materials assigned per triangle. Open it and slice; 56.6 g, 3h 25m for
+the pair. The STLs are unchanged and remain the single-colour path.
+
+```bash
+for r in 1 2 3 4; do
+  python3 tools/openscad_render.py openscad_models/tombstone.scad -o r$r.stl \
+      -D 'part="color"' -D 'style="plate"' -D region=$r
+done
+python3 tools/make_color_3mf.py -o openscad_models/tombstone.3mf \
+  --object stone  --region r1.stl:#2B2B2E --region r2.stl:#8C8C86 \
+  --object plaque --region r3.stl:#3A2A18 --region r4.stl:#C08A2E
+```
+
+**The version of this file shipped before 2026-09-11 was not a print file and
+should be replaced.** OpenSCAD's own 3MF export writes geometry and nothing
+else — no materials, and every top-level object merged into one. Exported from
+the assembled pose it came out as a **single fused shell**: the plaque's back
+face is coincident with its pocket floor, so CGAL unioned the two parts, and
+the plaque stood vertical 40mm up inside the stone rather than on the bed. It
+looked right in any viewer and could not be printed. `basematerials` 0,
+`object` 1, one connected shell of 118.57 cm³ — which is exactly the sum of the
+two parts, the tell that they had been welded rather than placed.
 
 ## Rendering a custom order
 

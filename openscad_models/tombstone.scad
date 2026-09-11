@@ -681,6 +681,36 @@ module plate_for_print() {
     translate([0, pl_z + st_z0, -(st_t/2 - pl_d)]) rotate([90, 0, 0]) plate();
 }
 
+// =========================================================================
+// COLOUR-SPLIT EXPORT, for building the four-filament 3MF (added 2026-09-11).
+//
+// The model prints in four colours and every boundary is a flat plane at a
+// CONSTANT Z IN THE PRINT POSE, which is the whole reason it is worth doing:
+// each one is an ordinary filament change at a layer, not colour painting.
+//   region 1  socle           world z <= 18
+//   region 2  stone body      world z >= 18
+//   region 3  plaque field    print z <= 3.0   (of a 4.0mm part)
+//   region 4  raised letters  print z >= 3.0   -- laid down last, on top
+//
+// Regions 3 and 4 are why the plate style earns this and carved does not: the
+// plaque's letters stand proud and print last, so the colour change is a clean
+// layer boundary. Carved letters are recessed and would need real painting.
+//
+// Both parts come out HERE IN PRINT POSE AND LAID OUT ON THE PLATE, side by
+// side, not assembled. The assembled pose is for looking at; a 3MF is a print
+// file. tools/make_color_3mf.py turns these four meshes into one 3MF with two
+// objects and per-triangle materials.
+pl_off = 82;   // plaque's x offset on the plate: 44 (stone half) + 9 + 28.8
+module _below(h) { translate([-150, -150, -1]) cube([300, 300, h + 1]); }
+module color_region(r) {
+    if (r == 1) intersection() { stone(); _below(18); }
+    if (r == 2) difference()   { stone(); _below(18); }
+    if (r == 3) translate([pl_off, 0, 0]) intersection() { plate_for_print(); _below(3.0); }
+    if (r == 4) translate([pl_off, 0, 0]) difference()   { plate_for_print(); _below(3.0); }
+}
+
+region = 1;
 if (part == "stone")      stone();
 else if (part == "plate") plate_for_print();
+else if (part == "color") color_region(region);
 else { stone(); if (style == "plate") plate(); }
