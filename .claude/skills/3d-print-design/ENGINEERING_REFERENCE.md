@@ -16,6 +16,43 @@ number, it's stated as such.
 
 ---
 
+## 0. CORRECTION (2026-09-11): I had not read the library, and it cost a wrong recommendation
+
+Scott asked whether I had researched these tools to an industry standard. The
+honest answer was no — 64 techniques in SKILL.md, every one earned from a real
+failure in this shop's own models, and almost nothing from the reference
+material. An audit made it concrete: **of BOSL2's 1,057 module/function
+definitions, this shop's entire catalogue calls 35 — 3.3%** — and several of
+those are base OpenSCAD, not BOSL2 at all.
+
+**The cost was not hypothetical.** §1 below stated, and I repeated to Scott as
+fact, that concave fillets where a limb meets a body are "the one thing worth
+coming back [to Blender] for" because `hull()` is a convex hull. That is
+**wrong**. BOSL2 ships `join_prism()` — *"Join an arbitrary prism to a plane,
+sphere, cylinder or another arbitrary prism with a fillet… continuous curvature
+rounding"* — plus `prism_connector()`, described in its own docs as "much
+easier to use". Verified live: a 9mm leg joined to a 30mm sphere with a 5mm
+fillet renders watertight, one body, zero degenerate faces, `mesh_gate` PASSED.
+I went to Blender partly on a premise I had never checked.
+
+**Capability areas this shop has never touched, with the problem each solves:**
+
+| BOSL2 file | defs | what it is | the bug it would have prevented |
+|---|---|---|---|
+| `attachments.scad` | 83 | `attach`/`position`/`align`/`anchor`/`orient`, `edge_profile`, `face_profile` | **every** "I estimated where the surface was" failure — the fox eye ×3, the manor windows sliced by the tower, the tombstone recess |
+| `rounding.scad` | 66 | `join_prism`, `prism_connector`, filleted prism joints | the concave-fillet claim above |
+| `skin.scad` | 51 | `texture()` — named procedural textures (dots, dimples, cones, bricks, diamonds, checkers) with a `roughness=` parameter, for sweeps, revolutions and VNF arrays | the tombstone's weathering, built from ~100 boolean cutters and then attempted again in Blender |
+| `vnf.scad` + `beziers.scad` | 97 | arbitrary polyhedra, `vnf_vertex_array`, and bezier **surfaces** | "true organic double-curvature is out of reach of CSG" — overstated at best |
+| `masks.scad` | 48 | edge profiling: roundover, cove, teardrop, ogee | every hand-rolled edge treatment |
+| `geometry.scad` | 95 | line/plane/circle intersections, circle from 3 points | the coordinate maths done by hand in half these models |
+| `distributors.scad` | 43 | copy/distribute onto a line, grid or path | every hand-written `for` loop |
+| `partitions.scad` | 22 | cut with a plane, partition into interlocking pieces | anything larger than the 256mm bed |
+
+**The rule this produces:** before concluding a tool *cannot* do something,
+check its library index. "CSG cannot express X" was asserted three times in
+this document and was wrong at least once. Reading a file list takes two
+minutes; acting on a false limit costs a session.
+
 ## 1. Tool choice: OpenSCAD stays primary, Blender is a narrow secondary tool
 
 **Verdict, and why:** for anything with real dimensions — mechanical parts,
@@ -105,8 +142,10 @@ visible in a lit render side by side:
    them the Blender fox reads as a blob; with the face, v2 reads as a fox. The
    hard part of that model was never the body.
 
-What Blender genuinely did buy, and it is real: **concave fillets at every
-junction**. `hull()` is a convex hull, so on the v2 fox the neck, ear roots,
+What Blender appeared to buy — **concave fillets at every junction** — is NOT
+in fact unique to it; see §0. `join_prism()`/`prism_connector()` do exactly this
+in OpenSCAD, verified. The observation below about `hull()` swelling outward is
+true; the conclusion that only Blender could fix it was not. `hull()` is a convex hull, so on the v2 fox the neck, ear roots,
 tail root and every foot swell OUTWARD where they meet the body. A voxel union
 plus a light smooth gives the soft inward fillet a sculpted creature has. That
 is the one thing worth coming back for — and on this model it did not outweigh
