@@ -21,22 +21,22 @@ Sliced against `tools/p1s_slice_profile.ini` as it now stands.
 
 | part | outside | time | filament |
 |---|---|---|---|
-| **stone, `plate` style** | 88 × 28 × 118 | **2h 54m** | 50.1 g |
-| stone, `carved`, gag | 88 × 28 × 118 | 3h 09m | 51.7 g |
-| stone, `carved`, memorial | 88 × 28 × 118 | 3h 09m | 51.7 g |
+| **stone, `plate` style** | 88 × 28 × 118 | **3h 04m** | 50.5 g |
+| stone, `carved`, gag | 88 × 28 × 118 | 3h 19m | 52.2 g |
+| stone, `carved`, memorial | 88 × 28 × 118 | 3h 19m | 52.2 g |
 | **plaque, gag** | 57.6 × 41.6 × 4 | **21m** | 6.1 g |
 | plaque, memorial | 57.6 × 41.6 × 4 | 20m | 6.0 g |
 
-A first `plate` unit is **3h 15m**; every reorder after that is **21 minutes**.
-`carved` is 3h 09m per unit, every unit. Both are inside the ~4h-per-unit target
+A first `plate` unit is **3h 25m**; every reorder after that is **21 minutes**.
+`carved` is 3h 19m per unit, every unit. Both are inside the ~4h-per-unit target
 this shop designs to, and `plate` is the only one of the two that stays there
 as volume grows.
 
-Carving costs 15 minutes and 1.6g over the blank-recess stone — the incised
-strokes add perimeters, nothing structural. The weathering rebuild of
-2026-09-11 cost about 6 minutes and 0.2g on top of the numbers this table
-held before it; the surface is real geometry, not a texture map, so it is not
-free — it is just cheap.
+Carving costs 15 minutes and 1.7g over the blank-recess stone — the incised
+strokes add perimeters, nothing structural. The two weathering rebuilds of
+2026-09-11 cost about 16 minutes and 0.6g between them on top of the numbers
+this table held before them; modelled surface is real geometry, not a texture
+map, so it is not free — it is just cheap.
 
 ## Orientation — upright, and that is the whole design
 
@@ -125,14 +125,51 @@ only ever cut a circular rim around an evenly curved bowl. Thirty-eight of
 those, each biting the same fraction of its own radius, is a wheel of cheese.
 The regularity was the tell, not the size. Nothing outside this section changed.
 
-### The primitive is a spall, not a ball
+### Second pass: the edges are hard because granite's are
 
-Every scar is now the convex hull of six spheres of **different radii** at
-scattered offsets. Its surface is a patchwork of caps joined by the flat bridges
-between them, so the rim it cuts is a ragged polygon and its floor is tilted and
-stepped rather than dished. It is then stretched along one in-plane axis and
-spun to a random heading, so nothing is round in plan and no two scars share a
-profile.
+Scott again, on the first rebuild: *"still too rounded looking on the chips…
+make use of reference to other tombstones with chips from online sources."*
+He was right a second time, and the reason is that the first rebuild made the
+scars irregular while still hulling **spheres** — so every rim was still a
+smooth curve. This time it was checked against how stone actually breaks
+instead of guessed at twice.
+
+[Rock & Gem](https://www.rockngem.com/conchoidal-fracture-lucky-break/), on
+conchoidal fracture, settles the material question outright: *"Unlike the
+**jagged breaks of common granite**, a conchoidal break produces a surface
+that catches light in a series of shimmering, curved arcs."* Granite — which
+is what a headstone is — does not break in smooth curves at all. Curved scars
+were modelling obsidian.
+
+The [ICOMOS-ISCS Illustrated Glossary on Stone Deterioration
+Patterns](https://iscs.icomos.org/wp-content/uploads/2022/06/Monuments_and_Sites_15_ISCS_Glossary_Stone.pdf),
+the standard reference for this vocabulary, gives the geometry directly:
+
+| pattern | ICOMOS wording |
+|---|---|
+| **Fragmentation** | *"into portions of variable dimensions that are irregular in form, thickness and volume"*, substrate sound *"on both sides of the **detachment plane**"* |
+| **Splintering** | *"detachment of **sharp, slender** pieces of stone"* (Fr. *"aux arêtes vives"* — live edges) |
+| **Chipping** | *"breaking off of pieces… **from the edges** of a block"* |
+| **Scaling** | detaching *"**parallel to the stone surface**"*, thickness *"negligeable compared to its surface dimension"* |
+| **Rounding** | *"preferential erosion of **originally angular** stone"* |
+| **Pitting** | *"generally have a **cylindrical or conical** shape"* — not spherical |
+
+Every one of those says the same thing geometrically: a scar's floor is a
+**plane**, its rim is a **straight-edged polygon**, and *rounding is what
+happens to that later* — a separate decay pattern, not the default state.
+
+### The primitive is a faceted flake, not a ball
+
+Every scar is the convex hull of a **point cloud held near two parallel
+planes** — not a hull of spheres. Hulling tiny cubes is how you take the convex
+hull of a point set in OpenSCAD; 0.05mm of cube is slop too small to round an
+edge. The result has a planar floor (the detachment plane), planar side facets
+meeting it at hard angles (the rim), and **no curved surface anywhere on it**.
+It is then stretched along one in-plane axis and spun to a random heading, so
+nothing is round in plan and no two scars share a profile.
+
+It is also **cheaper** than the sphere version — 8 vertices per point instead of
+roughly 100 — which took a full carved render from 6m11s down to 2m48s.
 
 Four things are randomised **separately**, and that is the point — one shared
 "size" knob is what made the first version look stamped:
@@ -157,8 +194,8 @@ three levels, is the single biggest visual difference from the sphere version.
 ### Grain
 
 The discrete scars are the events; the grain is the surface they happened to.
-Fifty-two broad, hard-flattened scallops 0.4–0.9mm deep across the front, 34 on
-the back, 15 on the socle. **Without it the stone between the chips is
+Forty-eight broad, hard-flattened flakes 0.35–0.7mm deep across the front, 30 on
+the back, 11 on the socle. **Without it the stone between the chips is
 glass-smooth, and under real light that one fact reads as plastic no matter how
 good the chips are** — confirmed on a lit render before this existed, which is
 the only kind of render that shows it.
@@ -173,9 +210,9 @@ The front is scarred in three zones rather than one scatter with a fence:
 
 | zone | where | scars |
 |---|---|---|
-| crown | z 63–96, full width | 15, the big ones |
-| sill | z 7–17, full width | 9 |
-| flanks | \|x\| 29.5–34.5, z 20–60 | 13, small, allowed to run off the edge |
+| crown | z 63–96, full width | 11, the big ones |
+| sill | z 7–17, full width | 8 |
+| flanks | \|x\| 29.5–34.5, z 20–60 | 12, small, allowed to run off the edge |
 
 A uniform scatter loses half its candidates to the panel fence and the survivors
 are almost all above it — the first attempt put nearly everything in the crown
@@ -222,6 +259,16 @@ off the same file are the same stone. These are the traps that cost real time:
   flattened grain layer and again on cluster satellites. `d` is now clamped to
   `0.8 · R · f`, which keeps the centre outside the face *by construction* at
   every size rather than by a range that happens to work.
+- **A cluster satellite must genuinely overlap its parent, not merely land near
+  it.** At ±1.15·R with radii from 0.38·R the two solids could meet along a
+  sliver, and where that happened at the stone's own silhouette it left a rind
+  of stone 0.30 × 0.12 × 0.41mm standing free — **0.0015 cubic millimetres**,
+  smaller than one extrusion bead in every dimension, and a separate body as far
+  as the mesh is concerned. Isolating it took one render per cutter group: edge
+  chips, grain and flanks were each clean alone, the crown clusters were not,
+  and re-seeding the other two — twice — never moved it, which is the tell that
+  a seed was never the cause. Satellites now sit within ±0.85·R with radii from
+  0.45·R, so the overlap is at least 0.6·R by construction.
 - **A chip is only placed where the outline is exposed.** One landing on the
   stone's bottom corners sits entirely inside the socle — same sealed-bubble
   class, reached a different way.
@@ -246,15 +293,16 @@ Where every build stands:
 |---|---|
 | stone, `plate` (the stock blank) | **PASSED**, 0 zero-area faces |
 | stone, `carved`, gag | **PASSED**, 0 zero-area faces |
-| stone, `carved`, memorial | **FAILED**, 10 zero-area faces |
+| stone, `carved`, memorial | **FAILED**, 15 zero-area faces |
 | plaque, gag | **PASSED**, 0 |
 | plaque, memorial | **PASSED**, 0 |
 
 `mesh_gate.py` reports a handful of zero-area faces on some `carved` strings
-(10 on the memorial set; none on the gag set, none on either plaque, none on
+(15 on the memorial set; none on the gag set, none on either plaque, none on
 the blank stone). **They are a triangulation artifact, not geometry,
-and they were located rather than guessed at:** all ten sat at *one* z on the
-y=6 plane, spanning exactly the width of the bottom text row. Every letter in a
+and they were located rather than guessed at:** every one of them sits at `y =
+6.00` exactly — the face plane — on just two z values, each the shared baseline
+of one text row (10 on the bottom row, 5 on the dates row). Every letter in a
 row shares a baseline, which puts 42 collinear vertices in a straight line
 through a single large planar face, and CGAL's constrained triangulation
 resolves that with slivers.

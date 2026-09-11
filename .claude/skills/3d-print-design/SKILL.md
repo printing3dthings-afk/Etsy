@@ -6404,6 +6404,33 @@ sliced clean, and Scott's first look at it was **"it looks like a cheese style
 cut out."** He was right, and the reason generalises to any surface this shop
 distresses — a fairy-house wall, a rock-textured planter, a faux-stone base.
 
+### 0. Go and look up how the material actually breaks — it is a two-minute search and it settles the geometry
+
+Two rebuilds happened here. The first made the scars irregular and still hulled
+**spheres**, so every rim stayed a smooth curve and the second round of feedback
+was *"still too rounded."* What ended the guessing was reading two sources:
+
+[Rock & Gem](https://www.rockngem.com/conchoidal-fracture-lucky-break/) on
+conchoidal fracture — *"Unlike the **jagged breaks of common granite**, a
+conchoidal break produces a surface that catches light in a series of
+shimmering, curved arcs."* Granite does not break in smooth curves at all;
+curved scars were modelling obsidian.
+
+The [ICOMOS-ISCS Illustrated Glossary on Stone Deterioration
+Patterns](https://iscs.icomos.org/wp-content/uploads/2022/06/Monuments_and_Sites_15_ISCS_Glossary_Stone.pdf)
+— the standard conservation reference — gives the geometry outright:
+fragmentation leaves the substrate sound *"on both sides of the **detachment
+plane**"*; splintering is *"detachment of **sharp, slender** pieces"* (Fr.
+*"aux arêtes vives"*); chipping is *"breaking off of pieces… **from the edges**
+of a block"*; scaling detaches *"**parallel to the stone surface**"* with
+thickness *"negligeable compared to its surface dimension"*; and **rounding**
+is *"preferential erosion of **originally angular** stone"* — a separate,
+later pattern, not the default.
+
+That is a complete spec: **flat floor, straight-edged rim, angular by default.**
+The PDF does not extract cleanly through a fetch tool — pull it down and run
+`pdftotext -layout`, then grep the pattern names.
+
 ### 1. One sphere can only ever cut one shape
 
 A sphere pushed into a flat face cuts a **circular rim** around an **evenly
@@ -6413,24 +6440,37 @@ cheese: the regularity is the tell, not the size. Scattering them harder,
 adding more, or varying the radius does not help, because none of those change
 the one shape.
 
-**The primitive has to be irregular, not the placement.** What worked is the
-convex hull of ~6 spheres of *different* radii at scattered offsets:
+**The primitive has to be irregular AND planar, and the placement barely
+matters.** Hulling spheres of different radii gets you irregular but still
+curved. What matches the sources above is the convex hull of a point cloud held
+near **two parallel planes** — hulling tiny cubes is how you take the convex
+hull of a point set in OpenSCAD:
 
 ```openscad
-module spall(sd, R, e = 1, f = 1) {
-    ox = rands(-0.55*R, 0.55*R, 6, sd);
-    oy = rands(-0.55*R, 0.55*R, 6, sd + 101);
-    oz = rands(-0.55*R, 0.55*R, 6, sd + 211);
-    rr = rands( 0.20*R, 0.50*R, 6, sd + 307);
+sp_n = 7;
+module spall(sd, R, e = 1, f = 1) {        // e stretches in plane, f flattens
+    ax = rands(-R, R, sp_n, sd);           // into the face: f << 1 is a scale
+    az = rands(-R, R, sp_n, sd + 101);
+    bx = rands(-R, R, sp_n, sd + 211);
+    bz = rands(-R, R, sp_n, sd + 307);
+    jy = rands(-0.12*R, 0.12*R, 2*sp_n, sd + 401);
     scale([e, f, 1])
-        hull() for (i = [0:5]) translate([ox[i], oy[i], oz[i]]) sphere(r = rr[i]);
+        hull() {
+            for (i = [0:sp_n-1]) translate([ax[i], -R + jy[i],        az[i]]) cube(0.05, center=true);
+            for (i = [0:sp_n-1]) translate([bx[i],  R + jy[sp_n+i],   bz[i]]) cube(0.05, center=true);
+        }
 }
 ```
 
-The hull's surface is a patchwork of spherical caps joined by the flat bridges
-between them, so its rim is a ragged polygon and its floor is tilted and
-stepped. Cheap, robust (no near-degenerate geometry, unlike a hull of points),
-and it costs one `hull()` per scar.
+Planar floor, planar side facets meeting it at hard angles, no curved surface
+anywhere. 0.05mm of cube is slop too small to round an edge. Two more things
+worth knowing:
+
+- **It is FASTER than hulling spheres** — 8 vertices per point instead of ~100
+  at `$fa=2/$fs=0.4`. A full carved render went 6m11s → 2m48s with about the
+  same scar count.
+- The two-plane cloud is what forces the flat floor. A single uniform cloud
+  hulls to a chunky blob whose bottom is just another random facet.
 
 ### 2. Randomise four things separately, not one "size"
 
@@ -6513,6 +6553,31 @@ asking for anyway.
 
 **`Volumes: N` on the render output is a real gate and it is free.** Grep for it
 on every render; watertight-plus-one-body does not cover the same ground.
+
+### 6b. A second sealed-void cousin: a satellite that only GRAZES its parent
+
+Faceted cutters fill their bounding box where spheres did not, which makes
+near-miss contacts much more likely. Cluster satellites placed within ±1.15·R
+with radii from 0.38·R could meet their parent along a sliver, and where that
+happened at the model's own silhouette it left a rind of stone **0.30 × 0.12 ×
+0.41mm standing free** — 0.0015 mm³, smaller than one extrusion bead in every
+dimension, and a separate body as far as `component_count` is concerned.
+
+Two things about how it was found are the transferable part:
+
+- **Locate the stray body before touching anything.** `mesh.split()`, sorted by
+  volume, prints the offender's volume and bounding box in one second. Here it
+  named the exact spot (`x≈27.4`, right on the outline) which is what made the
+  next step obvious.
+- **Re-seeding twice and getting a byte-identical stray is proof a seed is not
+  the cause.** That is the cheap experiment that stops seed roulette. One render
+  per cutter group then isolated it outright: edge chips, grain and flanks were
+  each clean alone; the clusters were not.
+
+The fix is structural, not a seed: satellites now sit within ±0.85·R with radii
+from 0.45·R, so the overlap is **at least 0.6·R by construction**. Tighter
+clusters read better anyway — a cluster should look like one event that took its
+neighbours with it, not three dots that happen to touch.
 
 ### 7. Distress everything, or the join shows
 

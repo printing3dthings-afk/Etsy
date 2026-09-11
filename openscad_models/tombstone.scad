@@ -184,21 +184,57 @@ module socle() {
 // one flake takes its neighbours with it, and the compound scar that leaves,
 // with a floor at two or three levels, is the single biggest difference
 // between this and the sphere version.
-// f flattens the spall along the face normal. f = 1 is a chunk taken out; f
-// well under 1 is a broad shallow scallop -- the difference between a chip and
-// worn-away surface, and both are on a real stone. It is a separate axis from
-// e (in-plane stretch) on purpose: a scar can be long and deep, long and
-// shallow, round and deep, or round and shallow, and a single "size" knob can
-// only ever produce one of the four.
-sp_n = 6;
+// THE CUTTER IS A FACETED FLAKE, AND THAT IS FROM THE LITERATURE, NOT TASTE
+// (rebuilt 2026-09-11, second pass -- Scott: "still too rounded looking").
+// The first rebuild made the scars irregular but kept hulling SPHERES, so
+// every rim was still a smooth curve. Checked against how stone actually
+// breaks rather than guessing twice:
+//
+//   Rock & Gem, on conchoidal fracture: "Unlike the JAGGED BREAKS OF COMMON
+//   GRANITE, a conchoidal break produces a surface that catches light in a
+//   series of shimmering, curved arcs." Granite -- which is what a headstone
+//   is -- does not break in smooth curves at all. Curved scars were modelling
+//   obsidian.
+//
+//   ICOMOS-ISCS Illustrated Glossary on Stone Deterioration Patterns, the
+//   standard reference for this vocabulary:
+//     FRAGMENTATION  "into portions of variable dimensions that are irregular
+//                    in form, thickness and volume", with the substrate sound
+//                    "on both sides of the DETACHMENT PLANE"
+//     Splintering    "detachment of SHARP, SLENDER pieces of stone"
+//                    (Fr. "aux ARETES VIVES" -- live edges)
+//     Chipping       "breaking off of pieces ... FROM THE EDGES of a block"
+//     Scaling        detaching "PARALLEL TO THE STONE SURFACE", thickness
+//                    "negligeable compared to its surface dimension"
+//     Rounding       "preferential erosion of ORIGINALLY ANGULAR stone"
+//
+// Every one of those says the same thing geometrically: the floor of a scar
+// is a PLANE, its rim is a straight-edged polygon, and rounding is what
+// happens to that LATER -- it is a separate decay pattern, not the default.
+//
+// So the cutter is the convex hull of a point cloud held near two parallel
+// planes. Hulling tiny cubes is how you take the convex hull of a point set
+// in OpenSCAD; 0.05mm of cube is slop too small to round an edge. The result
+// has a planar floor (the detachment plane), planar side facets meeting it at
+// hard angles (the rim), and no curved surface anywhere on it. It is also
+// CHEAPER than the sphere version -- 8 vertices per point instead of ~100.
+//
+// e stretches it in plane; f flattens it into the face. f well under 1 is a
+// scale -- thin, broad, parallel to the surface, exactly as defined above.
+sp_n = 7;
 module spall(sd, R, e = 1, f = 1) {
-    ox = rands(-0.55*R, 0.55*R, sp_n, sd);
-    oy = rands(-0.55*R, 0.55*R, sp_n, sd + 101);
-    oz = rands(-0.55*R, 0.55*R, sp_n, sd + 211);
-    rr = rands( 0.20*R, 0.50*R, sp_n, sd + 307);
+    ax = rands(-R, R, sp_n, sd);
+    az = rands(-R, R, sp_n, sd + 101);
+    bx = rands(-R, R, sp_n, sd + 211);
+    bz = rands(-R, R, sp_n, sd + 307);
+    jy = rands(-0.12*R, 0.12*R, 2*sp_n, sd + 401);
     scale([e, f, 1])
-        hull() for (i = [0 : sp_n - 1])
-            translate([ox[i], oy[i], oz[i]]) sphere(r = rr[i]);
+        hull() {
+            for (i = [0 : sp_n - 1])
+                translate([ax[i], -R + jy[i], az[i]]) cube(0.05, center = true);
+            for (i = [0 : sp_n - 1])
+                translate([bx[i],  R + jy[sp_n + i], bz[i]]) cube(0.05, center = true);
+        }
 }
 
 // One scar against a face whose outward normal is +Y (side = 1) or -Y (-1).
@@ -229,10 +265,24 @@ function bite(R, f, d) = min(d, 0.8 * R * f);
 module scar(sd, side, x, z, R, d, e, a, sat = 0, f = 1) {
     translate([x, side * (st_t/2 + R*f - bite(R, f, d)), z + st_z0])
         rotate([0, a, 0]) spall(sd, R, e, f);
+    // A SATELLITE MUST GENUINELY OVERLAP ITS PARENT, not merely land near it.
+    // At +/-1.15R with radii from 0.38R the two solids could meet along a
+    // sliver, and where that happened at the stone's own silhouette it left a
+    // rind of stone 0.30 x 0.12 x 0.41mm standing free -- 0.0015 cubic
+    // millimetres, smaller than one extrusion bead in every dimension, and a
+    // separate body as far as the mesh is concerned. Isolating it took one
+    // render per cutter group: chips, grain and flanks were each clean alone,
+    // the crown clusters were not, and re-seeding the other two (twice) never
+    // moved it, which is the tell that a seed was never the cause.
+    //
+    // At +/-0.85R with radii from 0.45R the overlap is at least 0.6R by
+    // construction, so there is no sliver to leave behind. Tighter compound
+    // scars read better too -- a cluster should look like one event that took
+    // its neighbours with it, not three dots that happen to touch.
     if (sat > 0) {
-        ux = rands(-1.15*R, 1.15*R, sat, sd + 401);
-        uz = rands(-1.15*R, 1.15*R, sat, sd + 503);
-        uR = rands( 0.38*R, 0.72*R, sat, sd + 601);
+        ux = rands(-0.85*R, 0.85*R, sat, sd + 401);
+        uz = rands(-0.85*R, 0.85*R, sat, sd + 503);
+        uR = rands( 0.45*R, 0.75*R, sat, sd + 601);
         ud = rands( 0.45,   1.40,   sat, sd + 701);
         for (k = [0 : sat - 1])
             translate([x + ux[k],
@@ -324,10 +374,10 @@ module zone_scars(n, sd, x0, x1, z0, z1, R0, R1, d0, d1, e1, cl) {
 }
 
 module pits() {
-    zone_scars(15, 3100,  0.0, 30.0, 63, 96,  1.8, 4.4, 0.5, 2.8, 1.8, 0.40);
-    zone_scars( 9, 3700,  0.0, 31.0,  7, 17,  1.5, 3.2, 0.5, 2.0, 1.7, 0.35);
-    zone_scars(13, 4300, 29.5, 34.5, 20, 60,  1.1, 2.4, 0.5, 1.7, 1.6, 0.25);
-    grain(52, 5900,  1, 0.5);
+    zone_scars(11, 3100,  0.0, 30.0, 63, 96,  1.6, 3.6, 0.5, 2.2, 1.8, 0.32);
+    zone_scars( 8, 3700,  0.0, 31.0,  7, 17,  1.4, 2.9, 0.5, 1.8, 1.7, 0.30);
+    zone_scars(12, 4300, 29.5, 34.5, 20, 60,  1.1, 2.3, 0.5, 1.6, 1.6, 0.22);
+    grain(48, 5900,  1, true);
 }
 
 // GRAIN. The discrete scars above are the events; this is the surface they
@@ -348,8 +398,8 @@ module pits() {
 module grain(n, sd, side, pl_keep) {
     px = rands(-st_w/2 + 2, st_w/2 - 2, n, sd);
     pz = rands(6, st_h - 5, n, sd + 2111);
-    pR = rands(2.2, 4.0, n, sd + 2221);
-    pd = rands(0.40, 0.90, n, sd + 2333);
+    pR = rands(1.6, 3.0, n, sd + 2221);
+    pd = rands(0.35, 0.70, n, sd + 2333);
     pe = rands(1.05, 1.75, n, sd + 2447);
     pf = rands(0.34, 0.58, n, sd + 2551);
     pa = rands(0, 360, n, sd + 2663);
@@ -383,7 +433,7 @@ module back_pits() {
         if (abs(px[i]) > 19 || abs(pz[i] - 15) > 11)
             scar(4700 + 31*i, -1, px[i], pz[i], pR[i], pd[i], pe[i], pa[i],
                  pc[i] < 0.30 ? 1 : 0);
-    grain(34, 7300, -1, false);
+    grain(30, 7300, -1, false);
 }
 
 // The socle weathers too. A crisp moulded base under a chewed-up stone reads
@@ -396,10 +446,10 @@ module back_pits() {
 // region and the part of the base a viewer reads as the ground line; a scar
 // there costs first-layer adhesion and gains no appearance.
 module socle_wear() {
-    n = 10;
+    n = 7;
     fx = rands(-so_w/2 + 6, so_w/2 - 6, n, 1213);
     fz = rands(4.5, so_h - 3.5, n, 1327);
-    fR = rands(1.8, 3.6, n, 1439);
+    fR = rands(1.6, 3.0, n, 1439);
     fd = rands(0.40, 0.85, n, 1553);
     fe = rands(1.10, 1.80, n, 1667);
     ff = rands(0.34, 0.55, n, 1789);
@@ -414,7 +464,7 @@ module socle_wear() {
     // The two ends. rotate([0,0,90]) swaps the spall's own stretch and flatten
     // axes into world Y and X, so the same primitive works against a face whose
     // normal is X without needing a second version of it.
-    m = 5;
+    m = 4;
     ey = rands(-so_d/2 + 5, so_d/2 - 5, m, 2141);
     ez = rands(4.5, so_h - 3.5, m, 2251);
     eR = rands(1.6, 3.0, m, 2371);
