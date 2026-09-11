@@ -5,6 +5,14 @@ description: "Real technique for designing genuinely printable 3D models in Open
 
 # 3D Print Design — OpenSCAD, For Real Printable Models
 
+**Before doing anything in Blender** — a hollow shell, a scattered surface
+pattern, an organic form, any Boolean — read
+`.claude/skills/3d-print-design/BLENDER_REFERENCE.md`. Every claim in it was
+run in this container, and it contains two documented Blender features that
+do **not** work (`Remesh → Remove Disconnected`; welded curve-bevel caps),
+the Solidify mode whose output fails `mesh_gate` outright, and the Boolean
+cutter defects that corrupt a mesh silently.
+
 **Before starting a genuinely new class of model** (first real mechanical
 part, first print-in-place joint, first time a design might need Blender),
 also read `.claude/skills/3d-print-design/ENGINEERING_REFERENCE.md` — a

@@ -55,6 +55,16 @@ minutes; acting on a false limit costs a session.
 
 ## 1. Tool choice: OpenSCAD stays primary, Blender is a narrow secondary tool
 
+> **CORRECTED 2026-09-11 by direct test — see `BLENDER_REFERENCE.md` §2.**
+> The Boolean paragraph below is sourced from bug reports and is too harsh.
+> Run against a real 59k-face organic shell, the **Exact** solver was correct
+> every time; the failures reproduce only when the *cutter* is defective
+> (flipped normals → silent no-op; open or degenerate → silently non-manifold;
+> enclosing → correctly empty), and the **Fast** solver gives a different,
+> wrong answer while still gating watertight. Read the warning as *"validate
+> the cutter, always `solver='EXACT'`"* — not *"avoid Blender booleans."*
+> The verdict that OpenSCAD stays primary for dimensioned parts is unchanged.
+
 **Verdict, and why:** for anything with real dimensions — mechanical parts,
 snap-fits, gears, threads, precise assemblies — stay in OpenSCAD. Blender's
 Boolean modifier is documented as measurably less reliable than OpenSCAD/CGAL
@@ -484,10 +494,14 @@ and **wall thickness** — and running it found 11 self-intersecting faces on
 coordinates, and the tool built from it (`tools/print_check.py`) are in
 SKILL.md Technique 66. Run both gates; neither is a superset of the other.
 
-**The standing criticism this audit does not resolve.** This doc has argued
-twice that Blender throws away parametrics — a mesh, once built, has no
-`size=40` to override. Geometry Nodes is the honest counterexample: it is a
-node graph with real typed inputs, re-evaluated on change, i.e. parametric in
-the sense the criticism means. 175 node types unexamined is not enough to
-either retract the criticism or defend it. Say so plainly until it has been
-tested; do not quietly keep repeating a claim whose counterexample is known.
+**The standing criticism, now RESOLVED — and it was wrong.** This doc argued
+twice that Blender throws away parametrics: a mesh, once built, has no
+`size=40` to override. Geometry Nodes was flagged as the likely counterexample
+and left untested. **It has now been tested** (`BLENDER_REFERENCE.md` §4): a
+node group built entirely in headless Python, driven by a named `Density`
+input, regenerated 5,760 → 17,760 faces on a parameter change with no script
+re-run. That is exactly the `-D size=40` equivalent.
+
+**Retract the criticism for Geometry Nodes.** It still holds for a plain
+sculpted or voxel-remeshed mesh, which genuinely has no parameters left. State
+it that narrowly from now on.
