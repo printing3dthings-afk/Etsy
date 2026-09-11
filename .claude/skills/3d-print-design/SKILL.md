@@ -6904,6 +6904,16 @@ for a part where you know there is no fine detail.
    of the *text* (`"Intersect Face: 11"`); the indices in the payload are what
    let you locate them. Only reading the text throws away the useful half.
 
+**STL output is BINARY, not OpenSCAD's default ASCII.** `openscad_render.py`
+passes `--export-format binstl` for every `fmt="stl"`. Identical geometry to
+float32 and ~73% smaller — measured across all 62 real models in
+`openscad_models/`: 296MB of ASCII became 81MB of binary, with every one
+verified to keep its exact triangle count, body count, watertightness, and
+volume to within 1e-6 relative. `drapery_vase` alone went 48.1MB → 12.5MB at
+261,248 triangles either way. Every slicer reads binary STL; ASCII only ever
+cost disk and git history. Do not "fix" this back to ASCII for readability — a
+mesh is not read by eye.
+
 **Before any boolean, gate the CUTTER too:** `python3 tools/mesh_gate.py
 cutter.stl --cutter-for target.stl`. It fails on the cutter defects that
 silently produce a wrong result — open, flipped, degenerate, missing the

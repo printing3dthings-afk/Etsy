@@ -329,6 +329,12 @@ def render_scad(
 
     try:
         cmd = [exe, "-o", str(output_path)]
+        # BINARY STL, not OpenSCAD's default ASCII. Identical geometry to
+        # float32, ~73% smaller (measured across 62 real models: 296MB -> 81MB;
+        # drapery_vase alone 48.1MB -> 12.5MB at 261,248 triangles either way).
+        # Every slicer reads binary STL; ASCII only ever cost disk and git.
+        if fmt == "stl":
+            cmd += ["--export-format", "binstl"]
         for key, value in (params or {}).items():
             cmd += ["-D", f"{key}={value}"]
 
