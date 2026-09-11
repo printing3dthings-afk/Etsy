@@ -127,6 +127,58 @@ time a real design genuinely needs it". Its guard is the manifold check: it
 refuses a non-watertight result and deletes it, because that is Blender's
 characteristic failure the way a silently-ignored module is OpenSCAD's.
 
+**SECOND SESSION ON IT (2026-09-11, Scott: "put some more work in on blender.
+Just like openscad you will get better results"). He was right that one
+afternoon is not a verdict.** What came out of actually working at it:
+
+**The unique capability is that Blender can MEASURE ITS OWN SURFACE at author
+time.** `obj.ray_cast(origin, direction, depsgraph=dg)` returns the exact hit
+point and normal on the finished mesh. That is the thing OpenSCAD structurally
+cannot do, and it is exactly what `mochi_fox_organizer.scad` spends a long
+comment failing at: three attempts to place ONE eye recess, because a
+hull-chain's surface cannot be predicted from its control points and had to be
+measured out of an exported mesh by hand each time. In Blender it is one line.
+
+Better still, **scan a column instead of asking for one point.** Walking z at
+fixed x and printing the hit y gives the whole face profile, including where
+the head ENDS and the chest begins (a sudden drop in y is that boundary). Doing
+that corrected v2's own numbers: v2 cuts a cheek at (x=13, z=62), and on this
+shell z=62 at x=13 is **15mm back, on the chest** — the head surface at that x
+does not start until z=64. A guess cannot tell you that; a measurement cannot
+fail to.
+
+**The working pipeline is the hybrid, and it is worth the handoff:**
+Blender builds the organic shell and measures it → decimate → OpenSCAD
+`import()` + `difference()` does every cut with the measured coordinates.
+Result on the fox: **110.03 × 100.92 × 101.61mm, 241.8 cm³, watertight, one
+body, Volumes: 2, mesh_gate PASSED** — against v2's 110 × 101.1 × 101.7 and
+242.9 cm³. 55 seconds for the cut.
+
+Three hard-won mechanics:
+
+- **BAKE TRANSFORMS BEFORE JOINING.** `join()` keeps only the ACTIVE object's
+  transform and rewrites everyone else into its frame, so a cutter cloud whose
+  first member carried a rotation gets that rotation applied to the whole cloud
+  about the origin. Eleven raycast-placed recesses, each individually correct,
+  collectively swung out to x −34…+35. `bake()`/`join_all()` in
+  `tools/blender_model.py` exist for this.
+- **`bpy.ops.object.transform_apply()` defaults every axis to True.** Calling
+  it as `transform_apply(scale=True)` also applies location and rotation. That
+  is usually what you want and never what you wrote.
+- **DECIMATE BEFORE HANDING A MESH TO CGAL.** A 212k-triangle import made
+  OpenSCAD's Nef conversion blow past a two-minute timeout before the boolean
+  started. Blender's decimate to ~60k takes seconds, and on a smooth organic
+  shell it costs nothing visible. 212k → 59k turned a timeout into 55 seconds.
+
+**Still unresolved, and routed around rather than solved:** a Boolean
+DIFFERENCE against the full fox shell returns an EMPTY mesh, while the same
+boolean works on a cube, on a remeshed three-sphere body, and on the full fox
+with a trivial cutter. Signed volume is positive (normals outward), the cutter
+is closed with zero open edges, and the mesh gates clean. Nothing in ~10
+instrumented runs isolated it. That is precisely the reliability §1 cites, and
+the correct response is the handoff above rather than more attempts — CGAL does
+this boolean in 55 seconds and is right.
+
 **The correct integration pattern, if/when this gets built:** OpenSCAD builds
 the precise, dimensioned structure and exports STL → Blender (headless,
 `--background`) imports that STL, applies Subdivision Surface for pure organic

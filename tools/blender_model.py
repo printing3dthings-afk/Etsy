@@ -85,6 +85,36 @@ def solo(o):
     bpy.context.view_layer.objects.active = o
     return o
 
+def bake(o):
+    """Apply location/rotation/scale into the mesh so the object sits at identity.
+
+    DO THIS TO ANYTHING THAT WILL BE JOINED OR USED AS A BOOLEAN CUTTER. join()
+    keeps only the ACTIVE object's transform and rewrites everyone else into its
+    frame -- so a cutter cloud whose first member carried a rotation ends up
+    with that rotation applied to the whole cloud about the origin. Cost here:
+    11 face recesses placed by raycast, each one correct, collectively swung out
+    to x -35.6..38.7 and the boolean then subtracted the entire model (0 tris).
+    Baking first makes join() a pure merge with nothing left to reinterpret.
+    """
+    solo(o)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    return o
+
+def join_all(objs, name=None):
+    """Bake every object, then join. The bake is not optional -- see bake()."""
+    for o in objs:
+        bake(o)
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = objs[0]
+    if len(objs) > 1:
+        bpy.ops.object.join()
+    o = bpy.context.view_layer.objects.active
+    if name:
+        o.name = name
+    return solo(o)
+
 def apply_all(o):
     solo(o)
     for m in list(o.modifiers):
@@ -171,8 +201,33 @@ def build_model(script_src: str, output_path: Path, params: dict | None = None,
                 f"blender exited {r.returncode} without completing the model:\n"
                 + out.strip()[-2500:])
         stats = json.loads(out.split("MODEL_STATS ", 1)[1].splitlines()[0])
+        # Anything the model script printed itself. Without this the guarded
+        # failures below swallow print() debugging, which cost a whole cycle the
+        # first time one fired -- an error that hides the evidence is worse than
+        # the error.
+        said = "\n".join(l for l in out.splitlines()
+                          if l.startswith(("PROBE", "INFO", "WARN", "DEBUG")))
+        # Echo the script's own prints ALWAYS, not only on a guarded failure.
+        # Hiding them on success cost two debugging cycles: a run that returned
+        # 12 triangles looked like a success and swallowed every PROBE line
+        # explaining why.
+        if said:
+            print(said, file=sys.stderr)
+        said = ("\nscript output:\n" + said) if said else ""
         if not output_path.exists() or output_path.stat().st_size == 0:
             raise BlenderModelError(f"no/empty mesh written to {output_path}")
+        # An empty result is not a "built" model. The first real use of this
+        # wrapper returned tris=0 and it still printed success, because the
+        # manifold check passes trivially on nothing -- a guard that only looks
+        # for its expected failure mode will wave through every other one.
+        if stats["tris"] == 0:
+            output_path.unlink(missing_ok=True)
+            raise BlenderModelError(
+                "the script produced an EMPTY mesh (0 triangles). Usual causes: a "
+                "Boolean DIFFERENCE whose cutter swallowed the whole object or had "
+                "inverted normals, or a smoothing modifier that collapsed the mesh. "
+                "Build without the boolean first and check the triangle count, then "
+                "add one operation back at a time." + said)
         if stats["nonmanifold_edges"] and not allow_nonmanifold:
             # Blender's characteristic failure. Delete it: leaving a
             # plausible-looking STL on disk is worse than failing, because the
@@ -185,7 +240,7 @@ def build_model(script_src: str, output_path: Path, params: dict | None = None,
                 f"remesh produced exactly this on its first real use here. Prefer "
                 f"VOXEL remesh, avoid Boolean modifiers, and check that every "
                 f"metaball/primitive actually overlaps its neighbour. Mesh deleted; "
-                f"pass allow_nonmanifold=True only to inspect a known-bad result.")
+                f"pass allow_nonmanifold=True only to inspect a known-bad result." + said)
         return stats
     finally:
         script_path.unlink(missing_ok=True)
