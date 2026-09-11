@@ -327,8 +327,36 @@ a feature and finer ones show it less.
 The bed-contact face is the **bottom of the socle**, 88 × 28 — invisible in use,
 so plate texture does not matter to the look.
 
-A second colour is not needed and would not help: the letters read on relief and
-shadow, and a two-tone stone reads as plastic.
+A second colour is not needed for the stone itself — the carved letters read on
+relief and shadow, and a two-tone *stone* reads as plastic.
+
+## Four colours, if you want them
+
+The model does split cleanly into **four printable colour regions**, and this is
+worth knowing because **every boundary is a flat plane at a constant Z in the
+print pose** — an ordinary filament change at a layer. No colour painting, no
+AMS strictly required, no paint-the-region guesswork:
+
+| # | region | boundary | how it prints |
+|---|---|---|---|
+| 1 | socle | world z ≤ 18 | filament change at layer z = 18 on the stone |
+| 2 | stone body | world z ≥ 18 | — |
+| 3 | plaque field | print z ≤ 3.0 | filament change at layer z = 3.0 on the plaque |
+| 4 | raised letters | print z ≥ 3.0 | the letters are the last thing laid down |
+
+Region 3/4 is the reason the `plate` style earns this and `carved` does not: on
+the plaque the letters **stand proud and print last**, so the colour change is a
+clean layer boundary. Carved letters are recessed into the face, which needs
+real colour painting and gets you a worse result.
+
+Two schemes rendered below. The bronze one is not a stylistic invention — a
+bronze plaque on a granite stone is the standard real-world monument, and a dark
+oxidised field with bright raised lettering is exactly what a two-filament
+layer change produces.
+
+Split the regions yourself with the four `intersection`/`difference` planes
+listed above against `stone()` and `plate()`; the colours are assigned in the
+slicer, not in the model, so nothing about the shipped STLs changes.
 
 ## Rendering a custom order
 
