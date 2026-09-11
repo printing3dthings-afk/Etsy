@@ -47,13 +47,41 @@ tool is for when the user, a CLAUDE.md, or a skill actually asks for it.
 Everything else — design calls, verification, anything touching a live
 listing or a customer-facing claim — stays inline.
 
-## Known gap, not yet closed
+## Gap closed 2026-09-11 — `/review`
 
-Only `security-reviewer` is wired to anything (`/security-scan`).
-`fastapi-reviewer` and `silent-failure-hunter` are declared but nothing ever
-invokes them, so in practice they never run. Either wire them to a command
-or invoke them deliberately after a substantial change to `main.py` — a
-review agent that never fires is a review that never happens.
+This section used to read: only `security-reviewer` is wired to anything
+(`/security-scan`); `fastapi-reviewer` and `silent-failure-hunter` are declared
+but nothing ever invokes them, so in practice they never run.
+
+`.claude/commands/review.md` closes it. `/review [target]` reviews a diff and
+**routes by what changed**, which is where the real judgment lives:
+
+| changed | runs |
+|---|---|
+| `tools/api_server/*.py` | `fastapi-reviewer` + `silent-failure-hunter` |
+| any other `.py` | `silent-failure-hunter` |
+| auth/secrets/webhooks/subprocess/file I/O | adds `security-reviewer` |
+| `.scad`, `openscad_models/`, `.claude/skills/`, `CLAUDE.md`, docs | **nothing** |
+
+That last row is this file's own argument applied honestly. A cold agent
+reviewing a `.scad` does not know the maker's-mark rule, the P1S overhang
+limit, the sealed-void class, or that a clean `mesh_gate` is not proof of
+correctness — it will produce confident, wrong review. Those passes stay
+inline. The command spawns exactly where case 2 above says a cold start is the
+feature and nowhere else.
+
+Findings come back as claims and are verified against the real lines before
+anything is reported, per the caution at the top of this file. Nothing is
+auto-applied.
+
+**Why this instead of a plugin.** Anthropic's `/feature-dev` plugin was
+evaluated the same day (Scott, from a TikTok). It is legitimate — Anthropic
+Verified, 256k installs — and still the wrong fit: its `code-explorer` is the
+built-in `Explore` agent this file already endorses, its `code-reviewer`
+duplicates three reviewers already declared here, and its `code-architect`
+("proposes multiple implementation approaches with clear trade-offs") is the
+opposite of CLAUDE.md's delivery rule, which asks for a recommendation rather
+than a survey. The shortage was never review agents. It was wiring.
 
 ## What not to take from the carousel
 
