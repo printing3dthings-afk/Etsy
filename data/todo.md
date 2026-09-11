@@ -1,5 +1,5 @@
 # OnBrandCraftz — Master TODO List
-*Last updated: 2026-09-08*
+*Last updated: 2026-09-11*
 
 ---
 
@@ -14,6 +14,7 @@
 | 3 | **Photograph filament tags** — send photos of filament spools tonight so I can log them into `tools/filament_tracker.py`. Include the spool used for OBC-3DRK-002 (Skinny Can Koozie) | Tonight | Needed to track COGS per product |
 | 4 | **Run TikTok OAuth** — `python tools/tiktok_oauth.py` | 5 min | Unlocks TikTok auto-posting |
 | 19 | **Set up Gmail relay for digital delivery emails** — Microsoft killed basic-auth/app-password SMTP for personal Outlook.com mailboxes (Sept 2024), so `SMTP_PASSWORD` can't be an Outlook app password. Create or use an existing Gmail account → Google Account → Security → 2-Step Verification → App passwords → generate one → send the Gmail address + app password to Claude to add to `.env` as `SMTP_USER`/`SMTP_PASSWORD` (host becomes `smtp.gmail.com`). Customers still see OnBrandCraftz / Printing3dthings@outlook.com as the reply-to. | 10 min | Unlocks `tools/digital_delivery_tools.py` — direct email delivery of corrected/replacement files to customers (e.g. Christina Curry's wrong-file order) |
+| 21 | **Rotate `APP_SECRET_TOKEN`** — the current value was read aloud in a Claude session transcript on 2026-09-10, so treat it as disclosed. It is the bearer token for every plain-REST staging endpoint on Frank *and* the shared secret the mobile app and the P1S bridge authenticate with, so all three have to change together: (a) generate a new random value, (b) set `APP_SECRET_TOKEN` in Railway and redeploy, (c) update `tools/relay/.env` on the bridge machine and restart `bambu_p1s_bridge.py`, (d) update the mobile app's stored token. Doing (b) alone silently kills printer telemetry. | 15 min | Nothing is broken today — this is a disclosed-credential rotation, not an outage |
 
 ### New platform accounts (free — each unlocks a new revenue stream)
 

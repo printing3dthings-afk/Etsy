@@ -6264,3 +6264,135 @@ flat base plane cuts it, reaches **62.7° from vertical**, past the 55° limit.
 flare is 49.3°, on a footprint two-thirds of the equator diameter. The general
 lever: raising `p` fattens the shoulders *and* stands the base flare up, so it
 fixes silhouette and printability together.
+
+## Technique 62 — Text on a face is mirrored half the time, and you cannot tell from the render that would show you (2026-09-11, tombstone)
+
+A personalized gravestone: an inscription cut into the front of the stone, a
+maker's mark cut into the back, and a separate plaque whose letters stand
+proud. Three strings on two opposite faces. **Two of the three were mirrored,
+and the file carried a confident comment explaining why they were not.**
+
+### 1. The comment was reasoning, and the reasoning was wrong
+
+The file said, of `rotate([90,0,0])` on a +Y face: *"maps local +Z to world -Y,
+so the extrude runs INTO the front face, and local +Y to world +Z so the text
+stands upright ... no mirror on a front face."* Every clause of that is true.
+The conclusion does not follow, because it never asks which side of the text
+plane the reader is standing on.
+
+Text drawn in the XY plane and extruded to +Z is readable **from the side the
+extrusion travels toward**. `rotate([90,0,0])` sends local +Z to world **−Y**,
+so the string's readable side faces the BACK of the stone. Cutting with it
+leaves an incised inscription that is mirrored to anyone standing in front.
+
+The corrected pairing, for a part whose faces are at ±Y:
+
+| face | rotation | extrude runs | translate must |
+|---|---|---|---|
+| **front (+Y)** | `rotate([90,0,180])` | toward **+Y** | start *inside* at `face_y − depth` and run outward |
+| **back (−Y)** | `rotate([90,0,0])` | toward **−Y** | start inside at `−face_y + depth` and run outward |
+
+They are the opposite of what "the extrude must run into the face" suggests,
+and note the consequence in column four: the correct rotation makes the cutter
+run **out** through the face, so the translate subtracts the depth instead of
+adding clearance in front of it. Getting the rotation right and leaving the old
+translate gives you a cutter floating in the air outside the part.
+
+### 2. The check that settles it takes one render, and it is not a render of the part
+
+Rendering the finished stone head-on and looking for mirrored letters **does not
+work** — confirmed here, not assumed. A 1.2mm engraving viewed straight down its
+own axis under OpenSCAD's flat lighting produced an image with **three colours
+in it**: background, front face, and the stone's silhouette. The recess walls
+are the only thing that shades, and head-on they are edge-on. The defect is
+invisible in precisely the view that should show it.
+
+**Render the CUTTER on its own, as a positive solid, from where the reader
+stands.** A glyph solid is a silhouette; a mirror is unmissable. Use a
+deliberately asymmetric string — `R7` is ideal, `OBC` works, and anything
+palindromic or symmetric (`OXO`, `WOW`, `1881`) proves nothing.
+
+```bash
+# the module, extracted from the real file so the real transform is tested
+head -n -3 model.scad > /tmp/probe.scad
+echo 'inscription();' >> /tmp/probe.scad          # or back_mark(), plate_letters()
+xvfb-run -a openscad -o probe.png --camera=0,220,44,0,0,44 \
+         --projection=o /tmp/probe.scad           # eye on the +Y side, looking at it
+```
+
+`head -n -3` to strip the file's own top-level dispatch and append a single
+module call is the cheap way to probe any internal module without adding a
+debug flag to the real source.
+
+### 3. Fixing the handedness silently fixed a boolean artifact I had spent an hour bisecting
+
+The plaque had been emitting 2 zero-area facets for *some* names and not
+others. Exhaustive bisection had proved every piece clean alone, every pair
+clean, and only the three-way chain degenerate — the conclusion was "CGAL
+triangulating a chained boolean, nothing to do." Changing the letter
+extrusion's **start and direction** for the handedness fix cleared it, on every
+name, with no other change.
+
+The lesson is not that bisection was wrong; it correctly showed no single piece
+was at fault. It is that *"this artifact is inherent"* is a conclusion worth
+holding loosely while any other geometry in the same region is still moving.
+
+### 4. Locate degenerate faces by coordinate before bisecting modules
+
+The stone then produced 10 zero-area facets on one text set. A module-level
+bisection would have been six 90-second renders. Reading the coordinates took
+one second and named the cause outright:
+
+```python
+m = trimesh.load(path); a = m.area_faces
+for i in np.where(a <= 1e-12)[0]:
+    v = m.vertices[m.faces[i]]
+    print(a[i], v.mean(axis=0), v.max(axis=0) - v.min(axis=0))
+```
+
+All ten sat at `y = 6.00` exactly (the front face plane) and **one single z**,
+with extent purely in x, spanning exactly the width of the bottom text row.
+Every letter in a row shares a baseline, which puts 42 collinear vertices in a
+straight line through one large planar face, and CGAL's constrained
+triangulation resolves that run with slivers.
+
+**Do the coordinate dump first, every time.** A degenerate face's centroid and
+extent tell you which plane, which feature, and which axis — which is usually
+the whole answer.
+
+That one was then deliberately *not* fixed, and the reason matters for any
+personalized product: the string is whatever the customer types, so a number
+nudged until CGAL is happy with `REST WELL` says nothing about the next name.
+It was verified inert instead — watertight, one body, Euler 2, volume right to
+0.1%, and sliced by PrusaSlicer with zero warnings and zero repairs — and
+written down in the printing notes. A luck-dependent fix on a parametric
+product is worse than a documented artifact, because it looks solved.
+
+### 5. A detail that "fades out" by shrinking must not fade into tangency
+
+The stone's crack was a hull-chain of shrinking spheres whose centres sat
+0.7mm **proud** of the face, so the cut depth was `r − 0.7`. Across the chain
+that ran 0.45 → 0.32 → 0.19 → **0.06** → **−0.07** mm. The last link does not
+cut at all and the one before it grazes the surface by 60 microns.
+
+Both ends of that are defects. 0.45mm is two layers — at arm's length it is not
+a shallow crack, it is nothing. And a 0.06mm graze is not a shallow cut, it is a
+**surface tangency**, the exact generator of zero-area facets this same file had
+already been bitten by twice elsewhere. Fade a detail by a factor of two, not to
+zero: every link now cuts 1.1 → 0.55mm, and the shallowest is still well clear
+of the surface it is cutting.
+
+The same pass caught the crack running down *through* the inscription panel, on
+a file that already fenced its pits away from that exact region. When you add a
+second decorative cutter, apply the first one's fence to it.
+
+### 6. A guard clause that can never fire is worse than no guard clause
+
+The pit scatter read `if (abs(px) > pl_w/2 + 4 || abs(pz - pl_z) > pl_h/2 + 4)`
+— "keep a pit off the panel unless it clears sideways." The first half can
+never be true: the panel is 58 wide inside a 72 stone, so the side margin is
+7mm total, and the pit centres were already held 7mm off the edge. It reads
+live, it is dead, and it makes the real constraint (vertical only) look like
+one of two options. Delete the branch and say in one line why there is no
+sideways case, so the next person does not re-add it.
+
