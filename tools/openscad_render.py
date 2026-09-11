@@ -51,6 +51,9 @@ script primitives" priority (see .claude/skills/3d-print-design/SKILL.md):
 """
 from __future__ import annotations
 
+import hashlib
+import json
+import re
 import os
 import shutil
 import subprocess
@@ -154,6 +157,83 @@ def check_openscad_available() -> tuple[bool, str]:
         return False, f"openscad found at {exe} but `--version` failed: {exc}"
 
 
+# --- render cache -----------------------------------------------------------
+# Renders dominate wall-clock time here (the carved tombstone was 6m11s before
+# its spall primitive was optimised) and nothing ever skipped an unchanged one.
+#
+# The cache key MUST cover everything that can change the mesh, or this becomes
+# the worst bug class this repo has: a stale, plausible-looking STL served as
+# fresh. So it hashes the source, the params, the format, the view, AND the
+# real CONTENTS of every include it can resolve, followed recursively. If any
+# include cannot be resolved, the key is None and nothing is cached -- an
+# unresolvable include is already the documented silent-geometry-loss trap
+# below, and guessing about it here would compound it.
+_INCLUDE_RE = re.compile(r'^\s*(?:include|use)\s*<([^>]+)>', re.MULTILINE)
+_CACHE_SUFFIX = ".rendercache"
+_MAX_CACHE_DEPS = 800
+
+
+def _resolve_include(name: str, search: list[Path]) -> Path | None:
+    for root in search:
+        cand = (root / name)
+        if cand.is_file():
+            return cand
+    return None
+
+
+def _dependency_digest(source: str, search: list[Path]) -> str | None:
+    """sha256 over the source and every include reachable from it.
+
+    Returns None when any include fails to resolve -- caller must then skip
+    caching entirely rather than key on an incomplete picture.
+    """
+    h = hashlib.sha256()
+    h.update(source.encode("utf-8", "replace"))
+    seen: set[Path] = set()
+    queue = list(dict.fromkeys(_INCLUDE_RE.findall(source)))
+    pending = [(n, search) for n in queue]
+    while pending:
+        if len(seen) > _MAX_CACHE_DEPS:
+            return None
+        name, roots = pending.pop()
+        target = _resolve_include(name, roots)
+        if target is None:
+            return None
+        target = target.resolve()
+        if target in seen:
+            continue
+        seen.add(target)
+        try:
+            body = target.read_bytes()
+        except OSError:
+            return None
+        h.update(str(target).encode("utf-8", "replace"))
+        h.update(body)
+        try:
+            text = body.decode("utf-8", "replace")
+        except Exception:
+            continue
+        child_roots = [target.parent] + roots
+        for child in _INCLUDE_RE.findall(text):
+            pending.append((child, child_roots))
+    for p in sorted(seen):
+        h.update(str(p).encode("utf-8", "replace"))
+    return h.hexdigest()
+
+
+def _cache_key(source: str, params: dict | None, fmt: str, view: dict | None,
+               search: list[Path]) -> str | None:
+    dep = _dependency_digest(source, search)
+    if dep is None:
+        return None
+    h = hashlib.sha256()
+    h.update(dep.encode())
+    h.update(repr(sorted((params or {}).items())).encode())
+    h.update(fmt.encode())
+    h.update(repr(sorted((view or {}).items())).encode())
+    return h.hexdigest()
+
+
 def render_scad(
     scad_source: str,
     output_path: Path,
@@ -162,6 +242,7 @@ def render_scad(
     timeout: int = 120,
     view: dict | None = None,
     source_dir: "str | Path | None" = None,
+    use_cache: bool = True,
 ) -> Path:
     """Render literal OpenSCAD source to a mesh file (or a PNG preview).
     Writes scad_source to a throwaway temp .scad file (OpenSCAD has no
@@ -234,6 +315,18 @@ def render_scad(
         lib_path.insert(0, str(Path(source_dir).resolve()))
     env["OPENSCADPATH"] = os.pathsep.join(lib_path)
 
+    search_roots = [Path(p) for p in lib_path]
+    key = _cache_key(scad_source, params, fmt, view, search_roots) if use_cache else None
+    meta_path = output_path.with_suffix(output_path.suffix + _CACHE_SUFFIX)
+    if key:
+        try:
+            if (output_path.exists() and output_path.stat().st_size > 0
+                    and json.loads(meta_path.read_text()).get("key") == key):
+                scad_path.unlink(missing_ok=True)
+                return output_path
+        except (OSError, ValueError):
+            pass
+
     try:
         cmd = [exe, "-o", str(output_path)]
         for key, value in (params or {}).items():
@@ -301,6 +394,14 @@ def render_scad(
                 f"check the script for geometry that resolves to nothing (e.g. an empty "
                 f"difference()). stderr: {(result.stderr or '').strip()[-1000:]}"
             )
+        # Written only after every success check above has passed, so a cache
+        # hit can never stand in for a render that produced a wrong or empty
+        # mesh -- the failure paths all raise before reaching here.
+        if key:
+            try:
+                meta_path.write_text(json.dumps({"key": key, "fmt": fmt}))
+            except OSError:
+                pass
         return output_path
     finally:
         scad_path.unlink(missing_ok=True)
@@ -318,6 +419,10 @@ def _cli() -> None:
     ap.add_argument("-f", "--format", help="Output format, e.g. stl/3mf/off (default: from -o's extension)")
     ap.add_argument("-D", "--define", action="append", default=[], metavar="key=value",
                      help="Variable override, repeatable, e.g. -D size=40")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="Re-render even if an identical previous render is cached. "
+                         "The cache keys on the source, params, format, view and the "
+                         "contents of every include, so a normal edit already misses it.")
     ap.add_argument("--check", action="store_true", help="Just check whether openscad is installed")
     args = ap.parse_args()
 
@@ -332,7 +437,8 @@ def _cli() -> None:
     fmt = args.format or output.suffix.lstrip(".")
     source_dir = Path(args.scad_file).resolve().parent
     try:
-        render_scad(scad_source, output, params=params, fmt=fmt, source_dir=source_dir, timeout=args.timeout)
+        render_scad(scad_source, output, params=params, fmt=fmt, source_dir=source_dir,
+                    timeout=args.timeout, use_cache=not args.no_cache)
     except OpenSCADError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

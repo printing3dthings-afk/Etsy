@@ -44,6 +44,8 @@ Standalone: python3 tools/blender_render.py --check
 from __future__ import annotations
 
 import shutil
+import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -210,6 +212,29 @@ def check_blender_available() -> tuple[bool, str]:
         return False, f"blender found at {exe} but --version failed: {exc}"
 
 
+# --- render cache -----------------------------------------------------------
+# A Cycles review render is 50-90s at the defaults and nothing skipped an
+# unchanged one -- several were burned this session re-rendering the same mesh
+# at a camera angle that was only wrong once. Keys on the real CONTENT of every
+# mesh (not mtime, which a re-export bumps even when the geometry is identical)
+# plus every parameter that changes a pixel.
+_CACHE_SUFFIX = ".rendercache"
+
+
+def _render_key(parts, color, azimuth, elevation, samples, resolution, lens) -> str | None:
+    h = hashlib.sha256()
+    try:
+        for path, col in parts:
+            pth = Path(path)
+            h.update(str(pth.name).encode())
+            h.update(pth.read_bytes())
+            h.update(repr(tuple(col) if col is not None else None).encode())
+    except OSError:
+        return None
+    h.update(repr((tuple(color), azimuth, elevation, samples, resolution, lens)).encode())
+    return h.hexdigest()
+
+
 def render_review(
     mesh_path: Path | list | tuple,
     output_path: Path,
@@ -220,6 +245,7 @@ def render_review(
     resolution: int = 1200,
     lens: float = 85.0,
     timeout: int = 300,
+    use_cache: bool = True,
 ) -> Path:
     """Render a studio-lit three-quarter product photo of mesh_path (STL/
     OBJ/PLY) to output_path (PNG). Three-point area lighting, a matte
@@ -267,6 +293,16 @@ def render_review(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    key = _render_key(parts, color, azimuth, elevation, samples, resolution, lens) if use_cache else None
+    meta_path = output_path.with_suffix(output_path.suffix + _CACHE_SUFFIX)
+    if key:
+        try:
+            if (output_path.exists() and output_path.stat().st_size > 0
+                    and json.loads(meta_path.read_text()).get("key") == key):
+                return output_path
+        except (OSError, ValueError):
+            pass
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as f:
         f.write(_SCENE_SCRIPT)
         script_path = Path(f.name)
@@ -296,6 +332,13 @@ def render_review(
             raise BlenderRenderError(
                 f"blender exited 0 but produced no/empty output at {output_path}"
             )
+        # Only after every success check above, so a hit can never stand in for
+        # a render that failed or produced nothing.
+        if key:
+            try:
+                meta_path.write_text(json.dumps({"key": key}))
+            except OSError:
+                pass
         return output_path
     finally:
         script_path.unlink(missing_ok=True)
@@ -318,6 +361,10 @@ def _cli() -> None:
     ap.add_argument("--lens", type=float, default=85.0,
                     help="Camera focal length in mm. Lower to fit a tall part -- the "
                          "default 85 crops anything much taller than it is wide.")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="Re-render even if an identical previous render is cached. The key "
+                         "covers every mesh's real content plus colour, angle, samples, "
+                         "resolution and lens, so any real change already misses it.")
     ap.add_argument("--check", action="store_true", help="Just check whether blender is installed")
     args = ap.parse_args()
 
@@ -347,7 +394,7 @@ def _cli() -> None:
         render_review(target, output, color=color,
                        azimuth=args.azimuth, elevation=args.elevation,
                        samples=args.samples, resolution=args.resolution,
-                       lens=args.lens)
+                       lens=args.lens, use_cache=not args.no_cache)
     except BlenderRenderError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

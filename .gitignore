@@ -125,3 +125,8 @@ data/browser_screenshots/
 
 # graphify generated codebase-graph output + AST cache (regenerate with `graphify update .`)
 graphify-out/
+
+# Render-cache sidecars (tools/openscad_render.py, tools/blender_render.py).
+# Purely local build state -- keyed on source+include contents+params, so a
+# committed one from another machine would be noise at best.
+*.rendercache
