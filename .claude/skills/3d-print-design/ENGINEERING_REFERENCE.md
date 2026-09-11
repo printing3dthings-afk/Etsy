@@ -80,6 +80,53 @@ Three bpy gotchas that cost real time, all specific to the 4.0.2 build here:
 - Set the object active **and** selected before applying; the importer does not
   reliably leave it that way.
 
+**THE FOX, RUN FOR REAL (2026-09-11, Scott: "try the fox in blender to see how
+it comes out") — and the answer sharpened the rule above.** `mochi_fox_organizer`
+looked like the ideal Blender candidate: a chibi animal, paused mid-detail-pass,
+whose `.scad` carries a long comment about three failed attempts to place ONE
+eye recess because a hull-chain's real surface cannot be predicted from its
+control points. Built it in Blender at v2's exact proportions. Result: **110 ×
+98 × 102mm, 250.1 cm³, one body, watertight, mesh_gate PASSED** — against v2's
+110 × 101 × 102 and 242.9 cm³. Dimensionally it lands.
+
+**And the OpenSCAD version is still the better object.** Three reasons, all
+visible in a lit render side by side:
+
+1. **The fox's form is EXPRESSIBLE in CSG** — it is spheres and hull-chains.
+   That means it was never in Blender's territory. Blender's territory is a
+   form CSG *cannot* express; "chibi animal made of blobs" turns out to be
+   exactly what CSG is fine at. Being organic-looking is not the test. Being
+   inexpressible is.
+2. **Voxel remesh quantises the surface to a grid**, so smooth curves come back
+   with subtle terracing — visible banding on the tail and crown at 0.55mm
+   voxels. OpenSCAD's surfaces are analytic and have none.
+3. **The face would have to be re-authored.** Eyes, cheeks, whisker dimples and
+   mouth are all CSG cuts placed against measured surface positions. Without
+   them the Blender fox reads as a blob; with the face, v2 reads as a fox. The
+   hard part of that model was never the body.
+
+What Blender genuinely did buy, and it is real: **concave fillets at every
+junction**. `hull()` is a convex hull, so on the v2 fox the neck, ear roots,
+tail root and every foot swell OUTWARD where they meet the body. A voxel union
+plus a light smooth gives the soft inward fillet a sculpted creature has. That
+is the one thing worth coming back for — and on this model it did not outweigh
+points 1–3.
+
+**Two approaches tried; record both.** Metaballs first, because they blend
+natively — and the proportions were uncontrollable: a metaball surface is the
+SUM of every element's field, so the ~26 balls forming the head taper summed
+into a field that swallowed the single body ball entirely. Head and body fused
+into one sphere, the feet vanished, 91 cm³ against an expected 243. **Metaballs
+are for a shape you are free-forming, and wrong for one whose radii are already
+decided.** What worked instead is **voxel-remesh union**: real primitives at the
+exact radii, joined as overlapping shells, resolved by ONE voxel remesh. No
+Boolean modifier anywhere — that is deliberate, given §1's reliability point.
+
+`tools/blender_model.py` is the wrapper this section said to build "the first
+time a real design genuinely needs it". Its guard is the manifold check: it
+refuses a non-watertight result and deletes it, because that is Blender's
+characteristic failure the way a silently-ignored module is OpenSCAD's.
+
 **The correct integration pattern, if/when this gets built:** OpenSCAD builds
 the precise, dimensioned structure and exports STL → Blender (headless,
 `--background`) imports that STL, applies Subdivision Surface for pure organic
