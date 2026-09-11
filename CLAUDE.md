@@ -222,6 +222,36 @@ does `getListingImages` return" or "what scope does `createDraftListing`
 need" at it instead of trusting training-data memory or re-reading old
 CLAUDE.md notes that may have drifted from the real, current spec.
 
+**Tool suggestions evaluated and declined (2026-09-11).** Three arrived from
+TikTok in one day, so the reasoning is recorded once rather than re-derived:
+
+- **Anthropic's `/feature-dev` plugin** — legitimate (Anthropic Verified, 256k
+  installs), wrong fit. Its `code-explorer` is the built-in `Explore` agent
+  `.claude/rules/subagents.md` already endorses; its `code-reviewer` duplicates
+  three reviewers this repo already declares; its `code-architect` ("multiple
+  implementation approaches with clear trade-offs") is the opposite of the
+  delivery rule, which asks for a recommendation, not a survey. The real gap
+  was that two of our own reviewers were never invoked — closed by
+  `/review` instead.
+- **Firecrawl MCP** — declined. Overlaps four things already here: `WebFetch`,
+  `curl` through the agent proxy (which works when `WebFetch` gets a 403 —
+  confirmed live on `docs.blender.org`), Playwright + Chromium pre-installed at
+  `/opt/pw-browsers` for JS-heavy pages, and the `defuddle` skill for clean
+  markdown. What it uniquely adds is **bulk crawling with anti-bot bypass**,
+  and in this shop that points straight at scraping Etsy listings at volume —
+  an account risk, not a feature: see "Suspension Triggers" below on Etsy
+  revoking API access from AutoDS/ShineOn/CJDropshipping, and on one violation
+  dragging the shop quality score across *every* listing. Real competitive
+  research has been done without it (the 2026-08-10 title-length correction
+  came from seven live Etsy searches via WebSearch).
+- **Context7** — was already connected; the suggestion was to add what we had.
+  Verified live 2026-09-11 against FastAPI: current, source-cited docs, no key
+  needed. Keep as is; add the free key only if 429s actually appear.
+
+The pattern worth keeping: before adding a tool, check what the environment
+already does. The premise behind most of these pitches ("Claude has no web, no
+browser, no current docs") is false for this setup.
+
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)
