@@ -57,11 +57,17 @@ s = bpy.context.scene.print_3d
 s.thickness_min = float(thickness)
 s.angle_overhang = float(angle)
 bpy.ops.mesh.print3d_check_all()
-out = {}
+out, odd = {}, []
 for msg, _payload in report.info():
-    k, _, v = msg.rpartition(":")
-    out[k.strip()] = int(v)
-print("PRINT3D_JSON " + json.dumps(out))
+    k, sep, v = msg.rpartition(":")
+    try:
+        if not sep: raise ValueError(msg)
+        out[k.strip()] = int(v)
+    except ValueError:
+        # One unparseable entry must not abort every other check. Carry it back
+        # so it is visible rather than silently dropped.
+        odd.append(msg)
+print("PRINT3D_JSON " + json.dumps({"counts": out, "unparsed": odd}))
 '''
 
 FAIL_KEYS = ("Non Manifold Edges", "Bad Contiguous Edges", "Intersect Face")
@@ -72,7 +78,7 @@ class PrintCheckError(Exception):
 
 
 def check(mesh_path: Path, thickness: float = 1.2, overhang_deg: float = 45.0,
-          timeout: int = 900) -> dict:
+          timeout: int = 900) -> tuple[dict, list]:
     exe = shutil.which("blender")
     if not exe:
         raise PrintCheckError(
@@ -85,26 +91,47 @@ def check(mesh_path: Path, thickness: float = 1.2, overhang_deg: float = 45.0,
         raise PrintCheckError(
             f"unsupported extension {mesh_path.suffix!r}; this container's Blender "
             f"has no 3MF importer -- check the STL you exported alongside it.")
-    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False,
-                                     encoding="utf-8") as f:
-        f.write(_SCRIPT)
-        sp = Path(f.name)
+    sp = None
     try:
+        with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False,
+                                         encoding="utf-8") as f:
+            f.write(_SCRIPT)
+            sp = Path(f.name)
         r = subprocess.run(
             [exe, "-b", "--python", str(sp), "--", str(mesh_path),
              str(thickness), str(90.0 - overhang_deg)],
-            capture_output=True, text=True, timeout=timeout)
-        m = re.search(r"PRINT3D_JSON (\{.*\})", (r.stdout or "") + (r.stderr or ""))
+            # errors="replace": a crash line or an odd filename byte must not
+            # turn a decode error into an exit code that looks like a real
+            # mesh failure.
+            capture_output=True, text=True, errors="replace", timeout=timeout)
+        m = re.search(r"PRINT3D_JSON (\{.*\})\s*$", (r.stdout or "") + (r.stderr or ""),
+                      re.MULTILINE)
         if not m:
             raise PrintCheckError(
                 f"blender exited {r.returncode} without reporting:\n"
                 + ((r.stderr or r.stdout or "").strip()[-1500:]))
-        return json.loads(m.group(1))
+        payload = json.loads(m.group(1))
+        counts, unparsed = payload["counts"], payload["unparsed"]
+        # THE GATE'S OWN GATE. `bad` is only ever set from keys that are
+        # PRESENT, so a report that silently lost them would print PASSED for a
+        # mesh nothing actually checked -- reproduced: an empty report exits 0.
+        # A missing required key is a tool failure, never a pass.
+        missing = [k for k in FAIL_KEYS if k not in counts]
+        if missing:
+            raise PrintCheckError(
+                "blender ran but did not report " + ", ".join(missing)
+                + " -- refusing to call this a pass. "
+                + (f"unparsed: {unparsed}" if unparsed else
+                   "the 3D-Print Toolbox message format may have changed."))
+        return counts, unparsed
     except subprocess.TimeoutExpired:
         raise PrintCheckError(f"timed out after {timeout}s -- a dense mesh makes "
                               f"the self-intersection test expensive")
+    except (json.JSONDecodeError, KeyError, TypeError, OSError) as exc:
+        raise PrintCheckError(f"could not read blender's report ({type(exc).__name__}: {exc})")
     finally:
-        sp.unlink(missing_ok=True)
+        if sp is not None:
+            sp.unlink(missing_ok=True)
 
 
 def _cli() -> None:
@@ -119,12 +146,17 @@ def _cli() -> None:
                     help="Also exit non-zero when any thin wall is reported.")
     a = ap.parse_args()
     try:
-        res = check(Path(a.mesh), a.thickness, a.overhang)
+        res, unparsed = check(Path(a.mesh), a.thickness, a.overhang)
     except PrintCheckError as exc:
+        # exit 2 = the check could not be made. exit 1 = the mesh failed it.
+        # Keeping these apart matters: a crash that exits 1 is indistinguishable
+        # from a real defect to anything gating on the exit code.
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(2)
     bad = False
     print(f"{a.mesh}")
+    for m in unparsed:
+        print(f"  warn  unparsed report line: {m}")
     for k, v in res.items():
         hard = k in FAIL_KEYS
         flag = "FAIL" if (hard and v) else ("warn" if v else "ok  ")

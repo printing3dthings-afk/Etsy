@@ -6907,3 +6907,20 @@ for a part where you know there is no fine detail.
 **Run both gates on anything new.** `mesh_gate` is the hard structural gate;
 `print_check` is the one that sees through the surface. Neither is a superset
 of the other, and a model that passes only one has not been checked.
+
+**`print_check` shipped with a false PASS in it, found the same day by the
+review it prompted.** Its `bad` flag was only ever set from keys *present* in
+the report, so a report that lost them — an empty or partial `report.info()`,
+or a future addon whose message format differs — printed **PASSED and exited
+0** for a mesh nothing had actually checked. Reproduced before fixing, not
+theorised. Two consequences worth carrying to any other gate written here:
+
+- **A gate must assert that the checks it gates on actually ran.** Absent is
+  not the same as zero. `check()` now refuses to return unless every one of
+  `FAIL_KEYS` is present, and a missing key is a tool error, never a pass.
+- **Keep "the check failed" and "the mesh failed" on different exit codes.**
+  An unhandled exception exits 1 — the same code as a real defect — so any
+  script gating on the exit status reads a crash as a finding. `print_check`
+  now uses **2 = could not check, 1 = mesh failed, 0 = passed**, verified
+  against a missing file, an unsupported extension, a clean mesh and a
+  defective one.
