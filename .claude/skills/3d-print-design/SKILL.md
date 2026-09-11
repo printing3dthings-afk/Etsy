@@ -6811,3 +6811,91 @@ index. "CSG cannot express X" was asserted three times in this project's docs
 and was wrong at least once. Reading a file list takes two minutes; acting on a
 false limit costs a session.
 
+
+---
+
+## Technique 66 — `mesh_gate` has two blind spots, and both were already open on shipped models (2026-09-11, Blender capability audit)
+
+Scott asked whether I was using everything Blender can do for print design.
+Answering that honestly meant auditing rather than asserting, and the audit
+found something more useful than the answer to the question.
+
+**Blender ships an official 3D-print checker and this repo had never enabled
+it.** `object_print3d_utils` — the "3D-Print Toolbox" add-on, bundled with
+every Blender install, present in this container the whole time — exposes
+`print3d_check_all()`: non-manifold edges, bad contiguous edges,
+**self-intersection**, **wall thickness**, zero-area faces/edges, sharp edges,
+overhang. `tools/mesh_gate.py` (trimesh) covers build volume, watertightness,
+winding, volume sign, body count, degenerate faces. **Two checks are in the
+first list and not the second, and they are the two that matter most:**
+
+| check | mesh_gate | print3d |
+|---|---|---|
+| watertight / winding / volume / bodies | ✅ | partial |
+| build volume | ✅ | ✅ (not its job) |
+| **self-intersection** | ❌ | ✅ |
+| **wall thickness** | ❌ | ✅ |
+
+**Self-intersection is invisible to every test `mesh_gate` makes.** A surface
+that passes through itself is still closed, still consistently wound, still
+has positive volume, still counts as one body. It gates PASSED. The slicer is
+then left to guess which side is inside.
+
+Run across four shipped models:
+
+| model | Intersect Face | Thin Faces (<1.2mm) | Zero Faces |
+|---|---|---|---|
+| `sleeping_fox` | 0 | 0 | 24 |
+| `tombstone_plaque` | 0 | 5,264 | 105 |
+| **`tombstone_stone`** | **11** | 3,572 | 77 |
+| **`mochi_fox_organizer`** | **38** | 9,032 | 2,148 |
+
+All four PASS `mesh_gate`. All four sliced without complaint in PrusaSlicer.
+**So this is not "those parts are broken" — it is "nothing was looking."**
+That distinction is the whole finding; do not let a future session inflate it
+into a defect claim it cannot support.
+
+**Where they actually are, because "11 faces" alone means nothing.** Located
+by reading `report.info()`'s payload indices back to `polygon.center`:
+
+- All 11 tombstone faces are 0.0035–0.33 mm² triangles sitting at `y≈±6.0` —
+  *exactly* the front/back face planes (`st_t=12`) — or at the flank/back
+  corner, plus two at the crown. Every one is a weathering cutter grazing the
+  face plane at a tangent, nicking it instead of cutting cleanly through.
+- The fox's 38 total **6.08 mm² across a 241 cm³ model**, max single face
+  0.87 mm².
+
+Every one is smaller than the footprint of a single 0.42mm extrusion bead, at
+a 0.2mm layer height. That is why the slicer never noticed, and why the prints
+came out fine. It is *also* why they must not be dismissed: a grazing tangent
+is the same failure mode that produced the free-floating 0.0015 mm³ rind in
+Technique 63 — sometimes it nicks, sometimes it detaches, and which one you
+get is a seed away.
+
+**The tool:** `tools/print_check.py`.
+
+```
+python3 tools/print_check.py model.stl [--thickness 1.2] [--overhang 45] [--strict]
+```
+
+Exits non-zero on **Non Manifold Edges, Bad Contiguous Edges, Intersect Face**.
+Everything else — thin/zero/sharp/overhang — is *reported and never failed on*,
+the same treatment `mesh_gate` already gives overhang and for the identical
+reason: carved lettering, fine relief and sharp detail all legitimately measure
+"thin" (the tombstone's 3,572 thin faces are its inscription), so the number
+needs a person, not an exit code. `--strict` opts into failing on thin walls
+for a part where you know there is no fine detail.
+
+**Three Blender-API traps this hit, all already-known ones biting again:**
+1. A freshly imported mesh is **multi-user data** — operators refuse on it.
+   `o.data = o.data.copy()` first. (Same trap as `modifier_apply` in the fox
+   work.)
+2. The importer does not leave the object active *and* selected. Deselect all,
+   `select_set(True)`, set `view_layer.objects.active` — all three.
+3. `report.info()` returns `(text, (kind, indices))`. The counts are parsed out
+   of the *text* (`"Intersect Face: 11"`); the indices in the payload are what
+   let you locate them. Only reading the text throws away the useful half.
+
+**Run both gates on anything new.** `mesh_gate` is the hard structural gate;
+`print_check` is the one that sees through the surface. Neither is a superset
+of the other, and a model that passes only one has not been checked.

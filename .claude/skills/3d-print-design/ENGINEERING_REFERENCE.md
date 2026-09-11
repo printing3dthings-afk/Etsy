@@ -454,3 +454,40 @@ Sources: [MakerWorld Flexi Animal collection](https://makerworld.com/en/collecti
 [3DSEARCH — best-selling 3D printed Etsy items 2026](https://3dsearch.net/blog/best-selling-3d-printed-items-etsy-2026),
 [Insight Agent — best-selling 3D printed items](https://www.insightagent.app/guides/best-selling-3d-printed-items-etsy),
 [Sovol — PIP hinges/joints design guide](https://www.sovol3d.com/blogs/news/print-in-place-3d-printing-how-to-design-hinges-joints-and-moving-parts-that-actually-work)
+
+---
+
+## Blender capability audit (2026-09-11, Scott: "Are you using everything blender has the ability to do when it comes to designing a 3d print?")
+
+Answered by counting rather than asserting, same as the BOSL2 audit in §0.
+
+**8 of 57 modifiers used — 14%.** Used: REMESH (voxel), BOOLEAN, DECIMATE,
+SMOOTH, LAPLACIANSMOOTH, SUBSURF, DISPLACE, TRIANGULATE. **175 Geometry Node
+types and ~80 `bmesh.ops` never touched at all.**
+
+Of the 49 unused modifiers, four have real print applications this repo has
+hand-rolled or gone without:
+
+| modifier | what it would do here |
+|---|---|
+| **SOLIDIFY** | hollow a closed shell to a wall thickness in one step — currently done by revolving a hand-built closed cross-section (Technique 1) or by CSG subtraction |
+| **CURVE bevel** (via a curve object) | sweep a real profile along a path — would fix the `sleeping_fox` tail's voxel scalloping, which decimation only softened |
+| **MIRROR** | symmetry with a real seam weld, instead of authoring both halves |
+| **SCREW / SKIN** | revolutions and limb-from-skeleton generation |
+
+**The find that mattered more than the answer: `object_print3d_utils`.**
+Blender's own official 3D-Print Toolbox was present and never enabled. It
+covers the two checks `tools/mesh_gate.py` cannot make — **self-intersection**
+and **wall thickness** — and running it found 11 self-intersecting faces on
+`tombstone_stone` and 38 on `mochi_fox_organizer`, both of which pass
+`mesh_gate` and both of which sliced clean. Full finding, the located
+coordinates, and the tool built from it (`tools/print_check.py`) are in
+SKILL.md Technique 66. Run both gates; neither is a superset of the other.
+
+**The standing criticism this audit does not resolve.** This doc has argued
+twice that Blender throws away parametrics — a mesh, once built, has no
+`size=40` to override. Geometry Nodes is the honest counterexample: it is a
+node graph with real typed inputs, re-evaluated on change, i.e. parametric in
+the sense the criticism means. 175 node types unexamined is not enough to
+either retract the criticism or defend it. Say so plainly until it has been
+tested; do not quietly keep repeating a claim whose counterexample is known.
