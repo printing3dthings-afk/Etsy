@@ -6396,3 +6396,135 @@ live, it is dead, and it makes the real constraint (vertical only) look like
 one of two options. Delete the branch and say in one line why there is no
 sideways case, so the next person does not re-add it.
 
+## Technique 63 — Why modelled weathering reads as cheese, and the sealed void that comes with fixing it (2026-09-11, tombstone)
+
+A gravestone's weathering *is* the product, so it was modelled rather than
+implied: 10 edge chips, 28 face pits, a hull-chained crack. It gated clean,
+sliced clean, and Scott's first look at it was **"it looks like a cheese style
+cut out."** He was right, and the reason generalises to any surface this shop
+distresses — a fairy-house wall, a rock-textured planter, a faux-stone base.
+
+### 1. One sphere can only ever cut one shape
+
+A sphere pushed into a flat face cuts a **circular rim** around an **evenly
+curved bowl**. That is the only scar it can make, at any radius. Thirty-eight
+of them, each seated to bite the same fraction of its own radius, is a wheel of
+cheese: the regularity is the tell, not the size. Scattering them harder,
+adding more, or varying the radius does not help, because none of those change
+the one shape.
+
+**The primitive has to be irregular, not the placement.** What worked is the
+convex hull of ~6 spheres of *different* radii at scattered offsets:
+
+```openscad
+module spall(sd, R, e = 1, f = 1) {
+    ox = rands(-0.55*R, 0.55*R, 6, sd);
+    oy = rands(-0.55*R, 0.55*R, 6, sd + 101);
+    oz = rands(-0.55*R, 0.55*R, 6, sd + 211);
+    rr = rands( 0.20*R, 0.50*R, 6, sd + 307);
+    scale([e, f, 1])
+        hull() for (i = [0:5]) translate([ox[i], oy[i], oz[i]]) sphere(r = rr[i]);
+}
+```
+
+The hull's surface is a patchwork of spherical caps joined by the flat bridges
+between them, so its rim is a ragged polygon and its floor is tilted and
+stepped. Cheap, robust (no near-degenerate geometry, unlike a hull of points),
+and it costs one `hull()` per scar.
+
+### 2. Randomise four things separately, not one "size"
+
+| | |
+|---|---|
+| `R` | how big the scar is |
+| `d` | how deep it bites — **independent of** `R` |
+| `e` | in-plane stretch, so nothing is round in plan |
+| `f` | flattening into the face: a chunk taken out vs. worn-away surface |
+
+Tying depth to radius is what made the first version look stamped — every scar
+became the same event at five sizes. A broad shallow flake and a small deep
+gouge are different events on a real object, and you need both.
+
+### 3. Clusters, not a Poisson scatter
+
+A third of the scars carry one or two smaller satellites overlapping them. Real
+spalling is not isolated dots — one flake takes its neighbours with it, and the
+compound scar that leaves, with a floor at two or three levels, was the single
+biggest visual jump of the whole rebuild.
+
+### 4. The scars are the events; the grain is the surface they happened to
+
+This was the piece that actually removed the plastic read. Between the discrete
+scars the face was still glass-smooth, and **under real light that one fact
+reads as plastic no matter how good the chips are.** A second layer of ~50
+hard-flattened (`f ≈ 0.4`) broad scallops, 0.4–0.9mm deep, fixed it.
+
+Two numbers matter: **0.4mm is the floor** (two layers at 0.2mm — anything
+shallower is under a layer, so the slicer does not cut it and it costs render
+and print time to produce nothing), and on this part the whole rebuild cost
+**~6 minutes of print time and 0.2g**. Modelled surface is real geometry, not a
+texture map, so it is not free — it is just cheap.
+
+Note the review that caught it: the flat OpenSCAD preview showed the chips
+fine. It took a lit Blender render to show that the space *between* them was
+wrong. Surface quality is the one thing the unlit preview cannot judge.
+
+### 5. Placement: zones beat a scatter-plus-fence
+
+A uniform scatter over a face with a keep-out region (an inscription panel,
+here 42 tall in the middle of a 106 stone) loses half its candidates to the
+fence, and the survivors cluster wherever the fence is loosest — the first
+attempt put nearly everything in the crown and left the bottom two thirds bare,
+which reads as "the top weathered and the rest is new". Three explicit zones,
+each sized to the room it actually has, fixed it in one pass. The zone that
+mattered most was the 7mm-wide *flanks* beside the panel: they are the only
+scars level with the inscription, and without them the middle of the object is
+a blank rectangle with a plaque on it.
+
+Zones also removed a guess: with a fence you must inflate it by how far a
+cluster's satellites reach, which nobody knows exactly.
+
+### 6. THE TRAP: a cutter whose centre sinks below the face gets swallowed whole
+
+Seating a scar at `face + R·f − d` bites `d` deep — but when `d` exceeds the
+cutter's own half-depth the **centre** goes under the surface, and a small
+enough cutter then sits entirely inside the solid. That is not a shallow scar,
+it is a sealed void.
+
+It gates **watertight**. It gates **one body**. `component_count` does not see
+it, because a cavity's inner shell is connected to nothing — the only thing
+that reports it is OpenSCAD's own CGAL summary line saying `Volumes: 4` instead
+of the expected 2.
+
+It bit twice in one session, both times on *small* cutters where the arithmetic
+is tightest: the hard-flattened grain layer (`f ≈ 0.3` makes `R·f` small) and
+cluster satellites (radius a fraction of the parent's, depth drawn from a fixed
+range). The fix is one clamp, applied in the scar module so nothing can bypass
+it:
+
+```openscad
+function bite(R, f, d) = min(d, 0.8 * R * f);
+```
+
+That keeps the centre outside the face **by construction**, at every size,
+rather than by a parameter range that happens to work today. A scar that wanted
+to be deeper than its cutter is wide was never going to look like what it was
+asking for anyway.
+
+**`Volumes: N` on the render output is a real gate and it is free.** Grep for it
+on every render; watertight-plus-one-body does not cover the same ground.
+
+### 7. Distress everything, or the join shows
+
+Two sub-surfaces got left crisp and both read as a different material glued on:
+the **back** of the stone (fixed in an earlier pass) and the **socle**. A moulded
+base under a chewed-up top reads as two objects, and the base is the part that
+would actually sit in dirt. Same for the separately-printed plaque, whose own
+pitting was still spheres after the stone's had been rebuilt — a surface the
+customer sees next to the upgraded one is the most obvious place for the old
+treatment to survive.
+
+One exception worth keeping: **nothing is cut in the bed-contact region**
+(here, below z = 4.5). That is first-layer adhesion and the ground line; a scar
+there costs something real and gains no appearance.
+

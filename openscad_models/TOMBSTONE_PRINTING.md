@@ -21,19 +21,22 @@ Sliced against `tools/p1s_slice_profile.ini` as it now stands.
 
 | part | outside | time | filament |
 |---|---|---|---|
-| **stone, `plate` style** | 88 × 28 × 118 | **2h 48m** | 49.9 g |
-| stone, `carved`, gag | 88 × 28 × 118 | 3h 02m | 51.5 g |
-| stone, `carved`, memorial | 88 × 28 × 118 | 3h 02m | 51.5 g |
+| **stone, `plate` style** | 88 × 28 × 118 | **2h 54m** | 50.1 g |
+| stone, `carved`, gag | 88 × 28 × 118 | 3h 09m | 51.7 g |
+| stone, `carved`, memorial | 88 × 28 × 118 | 3h 09m | 51.7 g |
 | **plaque, gag** | 57.6 × 41.6 × 4 | **21m** | 6.1 g |
-| plaque, memorial | 57.6 × 41.6 × 4 | 19m | 6.0 g |
+| plaque, memorial | 57.6 × 41.6 × 4 | 20m | 6.0 g |
 
-A first `plate` unit is **3h 09m**; every reorder after that is **21 minutes**.
-`carved` is 3h per unit, every unit. Both are inside the ~4h-per-unit target
+A first `plate` unit is **3h 15m**; every reorder after that is **21 minutes**.
+`carved` is 3h 09m per unit, every unit. Both are inside the ~4h-per-unit target
 this shop designs to, and `plate` is the only one of the two that stays there
 as volume grows.
 
-Carving costs 14 minutes and 1.6g over the blank-recess stone — the incised
-strokes add perimeters, nothing structural.
+Carving costs 15 minutes and 1.6g over the blank-recess stone — the incised
+strokes add perimeters, nothing structural. The weathering rebuild of
+2026-09-11 cost about 6 minutes and 0.2g on top of the numbers this table
+held before it; the surface is real geometry, not a texture map, so it is not
+free — it is just cheap.
 
 ## Orientation — upright, and that is the whole design
 
@@ -115,30 +118,118 @@ well. Check the fitted size before committing a long one.
 
 ## Weathering
 
-Modelled, not implied — 10 edge chips, 16 pits on the front, 12 on the back,
-one hull-chained crack. **The back is pitted too, and that is not decoration for
-its own sake:** rendered without it the stone reads as two different objects
-joined at the edge, a weathered front and a moulded plastic back. The back
-carries no crack (one is enough — the same crack on both faces reads as a crack
-straight *through* the stone) and fences the maker's mark the way the front
-fences the panel.
-Every seed is fixed, so the chipping is identical on every render; two stones
-off the same file are the same stone.
+**Rebuilt 2026-09-11** (Scott, on the first version: *"it looks like a cheese
+style cut out"*). He was right, and the reason is worth writing down: every scar
+on that version was **one sphere**, and a sphere pushed into a flat face can
+only ever cut a circular rim around an evenly curved bowl. Thirty-eight of
+those, each biting the same fraction of its own radius, is a wheel of cheese.
+The regularity was the tell, not the size. Nothing outside this section changed.
 
-Two things in there exist because of specific failures:
+### The primitive is a spall, not a ball
 
-- A chip is only placed where the outline is **exposed**. One landing on the
-  stone's bottom corners sits entirely inside the socle, and a cut with no path
-  to open air is not a chip — it is a sealed bubble that counts as its own body.
-- A chip centre is interpolated **along** an outline segment and pushed out
-  along that segment's normal, never snapped to a vertex. Snapped to a vertex it
-  put the sphere's surface exactly through the point where two facets meet and
-  CGAL emitted zero-area facets at three of the ten.
+Every scar is now the convex hull of six spheres of **different radii** at
+scattered offsets. Its surface is a patchwork of caps joined by the flat bridges
+between them, so the rim it cuts is a ragged polygon and its floor is tilted and
+stepped rather than dished. It is then stretched along one in-plane axis and
+spun to a random heading, so nothing is round in plan and no two scars share a
+profile.
 
-The crack cuts 1.1mm deep at the top and 0.55mm at the bottom, and stops at
-z=66 — clear of the inscription panel in both styles. An earlier version faded
-to a 0.06mm kiss on the face, which is a surface tangency rather than a shallow
-crack, and it ran down through where the customer's name goes.
+Four things are randomised **separately**, and that is the point — one shared
+"size" knob is what made the first version look stamped:
+
+| | |
+|---|---|
+| `R` | how big the scar is |
+| `d` | how deep it bites, **independent of** how big it is |
+| `e` | how elongated it is in plan |
+| `f` | how flattened it is into the face — a chunk taken out vs. worn-away surface |
+
+A broad shallow flake and a small deep gouge are different events on a real
+stone. Tying depth to radius made every scar the same event at five sizes.
+
+### And they cluster
+
+About a third of the scars carry one or two smaller satellites overlapping them.
+Real spalling is not a Poisson scatter of isolated dots — one flake takes its
+neighbours with it, and the compound scar that leaves, with a floor at two or
+three levels, is the single biggest visual difference from the sphere version.
+
+### Grain
+
+The discrete scars are the events; the grain is the surface they happened to.
+Fifty-two broad, hard-flattened scallops 0.4–0.9mm deep across the front, 34 on
+the back, 15 on the socle. **Without it the stone between the chips is
+glass-smooth, and under real light that one fact reads as plastic no matter how
+good the chips are** — confirmed on a lit render before this existed, which is
+the only kind of render that shows it.
+
+0.4mm is the floor on purpose: at 0.2mm layers that is two layers of relief,
+which shows. Anything shallower is under a layer, so the slicer does not cut it
+and it would cost render and print time to produce nothing.
+
+### Placement: by zone, not by scatter
+
+The front is scarred in three zones rather than one scatter with a fence:
+
+| zone | where | scars |
+|---|---|---|
+| crown | z 63–96, full width | 15, the big ones |
+| sill | z 7–17, full width | 9 |
+| flanks | \|x\| 29.5–34.5, z 20–60 | 13, small, allowed to run off the edge |
+
+A uniform scatter loses half its candidates to the panel fence and the survivors
+are almost all above it — the first attempt put nearly everything in the crown
+and left the bottom two thirds bare, which reads as "the top weathered and the
+rest is new". The **flanks** are what matter: they are the only scars level with
+the inscription, and without them the middle of the stone is a blank rectangle
+with a plaque sitting on it.
+
+Nothing is placed on the panel — a pit through an inscription reads as a
+misprint, not as age.
+
+### The socle weathers too
+
+A crisp moulded base under a chewed-up stone reads as two materials bolted
+together, and the base is the part that would actually sit in dirt. Grain only,
+no chips: the socle's edges are what the print stands on and what the eye uses
+to read it as level. **Nothing is cut below z = 4.5** — that is the bed-contact
+region and the ground line; a scar there costs first-layer adhesion and gains no
+appearance.
+
+### The crack
+
+Cuts 1.1mm at the top down to 0.35mm, stops at z=66 clear of the panel in both
+styles, and **forks** — the path is denser and no longer monotonic, with radii
+that wander up as well as down and two short branches that split off and die. A
+chain of steadily shrinking spheres tapers smoothly, which is the one thing a
+fracture never does.
+
+An earlier version faded to a **0.06mm kiss** on the face, which is a surface
+tangency rather than a shallow crack, and it ran down through where the
+customer's name goes.
+
+### Four failures this section has actually produced
+
+Every seed is fixed, so the chipping is identical on every render — two stones
+off the same file are the same stone. These are the traps that cost real time:
+
+- **A cutter whose centre sinks below the face can be swallowed whole.** Seating
+  a spall at `face + R·f − d` bites `d` deep, but when `d` exceeds the cutter's
+  own half-depth the centre goes under the surface and a small enough cutter
+  ends up entirely inside the stone. That is not a shallow scar, it is a sealed
+  void — the mesh still gates watertight and single-bodied, and the only thing
+  that sees it is CGAL reporting `Volumes: 4` instead of 2. It happened on the
+  flattened grain layer and again on cluster satellites. `d` is now clamped to
+  `0.8 · R · f`, which keeps the centre outside the face *by construction* at
+  every size rather than by a range that happens to work.
+- **A chip is only placed where the outline is exposed.** One landing on the
+  stone's bottom corners sits entirely inside the socle — same sealed-bubble
+  class, reached a different way.
+- **A chip centre is interpolated along an outline segment and pushed out along
+  that segment's normal, never snapped to a vertex.** Snapped to a vertex it put
+  the cutter's surface exactly through the point where two facets meet, and CGAL
+  emitted zero-area facets at three of the ten.
+- **The 0.06mm crack kiss above** — a fade that ends in tangency is not a fade.
 
 ## Maker's mark
 

@@ -155,6 +155,93 @@ module socle() {
 // the right shapes with no surface on them. A gravestone is the one object
 // where the weathering IS the product, so it is modelled rather than implied.
 // Every seed is fixed, so the "random" chipping is identical on every render.
+//
+// REBUILT 2026-09-11 (Scott: "it looks like a cheese style cut out"). Every
+// scar on the first version was ONE SPHERE, and a sphere pushed into a flat
+// face can only ever make a circular rim around an evenly curved bowl. Thirty
+// eight of those, every one of them biting the same fraction of its own
+// radius, is a wheel of cheese -- the regularity is the tell, not the size.
+// This section is the only part of the model that changed.
+//
+// THE PRIMITIVE IS A SPALL, NOT A BALL. Each scar is the convex hull of six
+// spheres of DIFFERENT radii at scattered offsets, so its surface is a
+// patchwork of caps joined by the flat bridges between them: the rim it cuts
+// is a ragged polygon and its floor is tilted and stepped rather than dished.
+// It is then squashed along one in-plane axis and spun to a random heading, so
+// nothing is round in plan and no two scars share a profile.
+//
+// FOUR THINGS ARE RANDOMISED SEPARATELY, and that is the point -- one shared
+// "size" parameter is what made the first version look stamped:
+//   R  how big the scar is
+//   d  how deep it actually bites, INDEPENDENT of how big it is
+//   e  how elongated it is in plan
+//   a  which way that elongation points
+// A broad shallow flake and a small deep gouge are different events on a real
+// stone; tying depth to radius made every scar the same event at five sizes.
+//
+// AND THEY CLUSTER. Around a third carry one or two smaller satellites
+// overlapping them. Real spalling is not a Poisson scatter of isolated dots --
+// one flake takes its neighbours with it, and the compound scar that leaves,
+// with a floor at two or three levels, is the single biggest difference
+// between this and the sphere version.
+// f flattens the spall along the face normal. f = 1 is a chunk taken out; f
+// well under 1 is a broad shallow scallop -- the difference between a chip and
+// worn-away surface, and both are on a real stone. It is a separate axis from
+// e (in-plane stretch) on purpose: a scar can be long and deep, long and
+// shallow, round and deep, or round and shallow, and a single "size" knob can
+// only ever produce one of the four.
+sp_n = 6;
+module spall(sd, R, e = 1, f = 1) {
+    ox = rands(-0.55*R, 0.55*R, sp_n, sd);
+    oy = rands(-0.55*R, 0.55*R, sp_n, sd + 101);
+    oz = rands(-0.55*R, 0.55*R, sp_n, sd + 211);
+    rr = rands( 0.20*R, 0.50*R, sp_n, sd + 307);
+    scale([e, f, 1])
+        hull() for (i = [0 : sp_n - 1])
+            translate([ox[i], oy[i], oz[i]]) sphere(r = rr[i]);
+}
+
+// One scar against a face whose outward normal is +Y (side = 1) or -Y (-1).
+// The spall's half-extent is about R, so seating its centre at face + R - d
+// makes it bite d deep; its own lumpiness then varies that by roughly +/-20%
+// across the scar, which is the irregularity a sphere cannot give at any size.
+//
+// Rotation is about Y only, deliberately: a Y-rotation leaves the y-extent
+// untouched, so the bite depth stays exactly d whatever the heading. Tumbling
+// the spall on all three axes would look no better and would make every depth
+// a guess.
+// THE DEPTH CLAMP IS LOAD-BEARING, not defensive tidiness. Seating the spall
+// at face + R*f - d bites d deep -- but if d exceeds the cutter's own y
+// half-extent, the centre sinks BELOW the face, and a small enough cutter then
+// sits entirely inside the stone. That is not a shallow scar, it is a sealed
+// void: the mesh still gates watertight and single-bodied, and the only thing
+// that sees it is CGAL reporting Volumes: 4 instead of 2. It happened here the
+// first time the flattened grain layer ran (f ~ 0.3 makes R*f small) and again
+// on cluster satellites, whose radius is a fraction of the parent's while
+// their depth was drawn from a fixed range.
+//
+// Clamping d to 0.8 * R*f keeps the centre outside the face by construction,
+// for every scar, at every size, which is a guarantee rather than a range that
+// happens to work. A scar that wanted to be deeper than its cutter is wide was
+// never going to look like what it was asking for anyway.
+function bite(R, f, d) = min(d, 0.8 * R * f);
+
+module scar(sd, side, x, z, R, d, e, a, sat = 0, f = 1) {
+    translate([x, side * (st_t/2 + R*f - bite(R, f, d)), z + st_z0])
+        rotate([0, a, 0]) spall(sd, R, e, f);
+    if (sat > 0) {
+        ux = rands(-1.15*R, 1.15*R, sat, sd + 401);
+        uz = rands(-1.15*R, 1.15*R, sat, sd + 503);
+        uR = rands( 0.38*R, 0.72*R, sat, sd + 601);
+        ud = rands( 0.45,   1.40,   sat, sd + 701);
+        for (k = [0 : sat - 1])
+            translate([x + ux[k],
+                       side * (st_t/2 + uR[k]*f - bite(uR[k], f, ud[k])),
+                       z + uz[k] + st_z0])
+                rotate([0, a + 55*(k + 1), 0])
+                    spall(sd + 811 + k, uR[k], 1 + 0.5*(e - 1), f);
+    }
+}
 
 // Chips bite the outline itself, which is what actually reads at arm's length
 // -- a perfect arc is the tell that something was printed rather than carved.
@@ -167,7 +254,7 @@ function chip_y() = rands(-st_t/2 - 1, st_t/2 + 1, chip_n, 313);
 //
 // The centre is interpolated ALONG a segment and then pushed out along that
 // segment's own outward normal. Snapping it to an outline VERTEX instead put
-// the sphere's surface exactly through the point where two facets meet, and
+// the cutter's surface exactly through the point where two facets meet, and
 // CGAL emitted a zero-area facet at three of the ten -- the same tangency
 // class as Technique 60's roof-against-tower, and it moves if you move a
 // number. Pushing out by 0.3r also makes each chip a nick in the edge rather
@@ -177,8 +264,15 @@ function chip_y() = rands(-st_t/2 - 1, st_t/2 + 1, chip_n, 313);
 // stone's bottom corners sits entirely inside the socle, and a cut with no
 // path to open air is not a chip -- it is a sealed bubble whose inner shell
 // counts as its own body.
+//
+// The cutter is a spall now, tumbled about Z so the nick runs across the edge
+// at a slant instead of taking a clean round bite out of it. This is the one
+// place a spall rotates about something other than Y: an edge has no face to
+// hold a depth against, so there is no depth to lose.
 module chips() {
     tb = tab_pts();  u = chip_u();  r = chip_r();  y = chip_y();
+    ca = rands(0, 360, chip_n, 4409);
+    ce = rands(1.2, 1.8, chip_n, 5519);
     m = len(tb) - 1;
     for (i = [0 : chip_n - 1]) {
         f = u[i] * m;  k = floor(f);  t = f - k;
@@ -188,42 +282,149 @@ module chips() {
         nv = norm(d) > 1e-6 ? [-d[1], d[0]] / norm(d) : [1, 0];
         if (p[1] > sink + r[i] + 1)
             translate([p[0] + nv[0]*0.3*r[i], y[i], p[1] + nv[1]*0.3*r[i] + st_z0])
-                sphere(r = r[i]);
+                rotate([0, 0, ca[i]]) spall(6100 + 23*i, r[i], ce[i]);
     }
 }
 
-// Pitting: shallow spherical caps, 0.6-1.3mm deep. Deliberately kept off the
-// panel -- a pit through an inscription reads as a misprint, not as age.
+// Front-face scarring, placed by ZONE rather than by one scatter with a fence.
 //
-// The test is vertical only, on purpose. The obvious companion clause -- allow
-// a pit that clears the panel SIDEWAYS -- can never fire: the panel is 58 wide
-// inside a 72 stone, so the side margin is 7mm total, and a pit centre is held
-// 7mm off the edge already. There is no sideways case to allow, so there is no
-// clause for one rather than a clause that reads live and is not.
-pit_n = 16;
-module pits() {
-    px = rands(-st_w/2 + 7, st_w/2 - 7, pit_n, 991);
-    pz = rands(7, st_h - 9, pit_n, 1237);
-    pr = rands(1.9, 3.8, pit_n, 4471);
-    for (i = [0 : pit_n - 1])
-        if (abs(pz[i] - pl_z) > pl_h/2 + 4)
-            translate([px[i], st_t/2 + pr[i]*0.66, pz[i] + st_z0]) sphere(r = pr[i]);
+// The scatter-plus-fence version put nearly every scar in the crown and left
+// the bottom two thirds of the face bare, which reads as "the top weathered
+// and the rest is new". The panel is 42 tall in the middle of a 106 stone, so
+// a uniform scatter loses half its candidates to the fence and the survivors
+// are almost all above it. Three explicit zones instead, each sized to the
+// room it actually has:
+//
+//   crown   z 63-96, full width        the exposed top, so the big scars
+//   sill    z  7-17, full width        the band between socle and panel
+//   flanks  |x| 29.5-34.5, z 20-60     the 7mm margins either side of the
+//                                      panel: small scars only, and they are
+//                                      allowed to run off the edge
+//
+// The flanks are what matter for the read. They are the only scars level with
+// the inscription, and without them the middle of the stone is a blank
+// rectangle with a plaque sitting on it. Nothing is placed ON the panel -- a
+// pit through an inscription reads as a misprint, not as age -- and the zones
+// are what enforce that now, instead of a fence that also had to guess at how
+// far a cluster's satellites reach.
+module zone_scars(n, sd, x0, x1, z0, z1, R0, R1, d0, d1, e1, cl) {
+    px = rands(x0, x1, n, sd);
+    pz = rands(z0, z1, n, sd + 1301);
+    pR = rands(R0, R1, n, sd + 1409);
+    pd = rands(d0, d1, n, sd + 1511);
+    pe = rands(1.05, e1, n, sd + 1613);
+    pa = rands(0, 360, n, sd + 1721);
+    pc = rands(0, 1,   n, sd + 1823);
+    ps = rands(0, 1,   n, sd + 1931);
+    for (i = [0 : n - 1])
+        scar(sd + 37*i, 1,
+             px[i] * (ps[i] < 0.5 ? 1 : -1), pz[i],
+             pR[i], pd[i], pe[i], pa[i],
+             pc[i] < cl*0.45 ? 2 : (pc[i] < cl ? 1 : 0));
 }
 
-// The back gets its own pitting, and it is not decoration for its own sake:
+module pits() {
+    zone_scars(15, 3100,  0.0, 30.0, 63, 96,  1.8, 4.4, 0.5, 2.8, 1.8, 0.40);
+    zone_scars( 9, 3700,  0.0, 31.0,  7, 17,  1.5, 3.2, 0.5, 2.0, 1.7, 0.35);
+    zone_scars(13, 4300, 29.5, 34.5, 20, 60,  1.1, 2.4, 0.5, 1.7, 1.6, 0.25);
+    grain(52, 5900,  1, 0.5);
+}
+
+// GRAIN. The discrete scars above are the events; this is the surface they
+// happened to. Without it the stone between the chips is glass-smooth, and
+// under real light that one fact reads as plastic no matter how good the chips
+// are -- confirmed on a lit render before this existed. These are the same
+// spall, flattened hard (f ~ 0.4) so each is a broad shallow scallop 0.4-0.9mm
+// deep rather than a hole: worn-away surface, not damage.
+//
+// 0.4mm is the floor on purpose. At 0.2mm layers that is two layers of relief,
+// which shows; anything shallower is under a layer and the slicer simply does
+// not cut it, so it would cost render time and print time to produce nothing.
+//
+// Placement is a straight scatter with one rejection test: nothing may land on
+// the inscription panel, checked against the scar's own in-plane reach rather
+// than a fixed margin, since these vary in size. `side` lets the back reuse it
+// unchanged -- the back has no panel, so pl_keep is passed false there.
+module grain(n, sd, side, pl_keep) {
+    px = rands(-st_w/2 + 2, st_w/2 - 2, n, sd);
+    pz = rands(6, st_h - 5, n, sd + 2111);
+    pR = rands(2.2, 4.0, n, sd + 2221);
+    pd = rands(0.40, 0.90, n, sd + 2333);
+    pe = rands(1.05, 1.75, n, sd + 2447);
+    pf = rands(0.34, 0.58, n, sd + 2551);
+    pa = rands(0, 360, n, sd + 2663);
+    for (i = [0 : n - 1]) {
+        reach = pR[i] * pe[i] + 1.5;
+        clear = !pl_keep
+             || abs(px[i]) - reach > pl_w/2
+             || abs(pz[i] - pl_z) - reach > pl_h/2;
+        if (clear)
+            scar(sd + 41*i, side, px[i], pz[i], pR[i], pd[i], pe[i], pa[i], 0, pf[i]);
+    }
+}
+
+// The back gets its own scarring, and it is not decoration for its own sake:
 // rendered without it the stone reads as two different objects joined at the
 // edge -- a weathered front and a moulded plastic back. It carries no crack
-// (one is enough, and a crack that appears on both faces reads as a crack
-// straight THROUGH the stone), and it fences the maker's mark the same way
-// the front fences the inscription panel.
-bpit_n = 12;
+// (one is enough, and the same crack on both faces reads as a crack straight
+// THROUGH the stone), and it fences the maker's mark the way the front zones
+// fence the panel. One scatter is fine here because there is no panel taking
+// the middle of the face out of play.
+bpit_n = 15;
 module back_pits() {
-    px = rands(-st_w/2 + 7, st_w/2 - 7, bpit_n, 2029);
+    px = rands(-st_w/2 + 6, st_w/2 - 6, bpit_n, 2029);
     pz = rands(8, st_h - 9, bpit_n, 8837);
-    pr = rands(1.8, 3.6, bpit_n, 6151);
+    pR = rands(1.5, 3.9, bpit_n, 6151);
+    pd = rands(0.45, 2.1, bpit_n, 9931);
+    pe = rands(1.05, 1.8, bpit_n, 1451);
+    pa = rands(0, 360, bpit_n, 3571);
+    pc = rands(0, 1, bpit_n, 6229);
     for (i = [0 : bpit_n - 1])
-        if (abs(px[i]) > 17 || abs(pz[i] - 15) > 9)
-            translate([px[i], -st_t/2 - pr[i]*0.66, pz[i] + st_z0]) sphere(r = pr[i]);
+        if (abs(px[i]) > 19 || abs(pz[i] - 15) > 11)
+            scar(4700 + 31*i, -1, px[i], pz[i], pR[i], pd[i], pe[i], pa[i],
+                 pc[i] < 0.30 ? 1 : 0);
+    grain(34, 7300, -1, false);
+}
+
+// The socle weathers too. A crisp moulded base under a chewed-up stone reads
+// as two different materials bolted together -- and the base is the part that
+// actually sits in dirt, so if anything it should be the rougher of the two.
+// Grain only, no chips: the socle's edges are what the print stands on and
+// what the eye uses to read it as level, and nibbling them buys nothing.
+//
+// Nothing is cut below z = 4.5. The first few millimetres are the bed-contact
+// region and the part of the base a viewer reads as the ground line; a scar
+// there costs first-layer adhesion and gains no appearance.
+module socle_wear() {
+    n = 10;
+    fx = rands(-so_w/2 + 6, so_w/2 - 6, n, 1213);
+    fz = rands(4.5, so_h - 3.5, n, 1327);
+    fR = rands(1.8, 3.6, n, 1439);
+    fd = rands(0.40, 0.85, n, 1553);
+    fe = rands(1.10, 1.80, n, 1667);
+    ff = rands(0.34, 0.55, n, 1789);
+    fa = rands(0, 360, n, 1861);
+    fs = rands(0, 1, n, 1973);
+    for (i = [0 : n - 1])
+        translate([fx[i],
+                   (fs[i] < 0.5 ? 1 : -1) * (so_d/2 + fR[i]*ff[i] - bite(fR[i], ff[i], fd[i])),
+                   fz[i]])
+            rotate([0, fa[i], 0]) spall(9100 + 43*i, fR[i], fe[i], ff[i]);
+
+    // The two ends. rotate([0,0,90]) swaps the spall's own stretch and flatten
+    // axes into world Y and X, so the same primitive works against a face whose
+    // normal is X without needing a second version of it.
+    m = 5;
+    ey = rands(-so_d/2 + 5, so_d/2 - 5, m, 2141);
+    ez = rands(4.5, so_h - 3.5, m, 2251);
+    eR = rands(1.6, 3.0, m, 2371);
+    ed = rands(0.40, 0.80, m, 2477);
+    ef = rands(0.34, 0.55, m, 2591);
+    es = rands(0, 1, m, 2683);
+    for (i = [0 : m - 1])
+        translate([(es[i] < 0.5 ? 1 : -1) * (so_w/2 + eR[i]*ef[i] - bite(eR[i], ef[i], ed[i])),
+                   ey[i], ez[i]])
+            rotate([0, 0, 90]) spall(9700 + 47*i, eR[i], 1.4, ef[i]);
 }
 
 // One crack, hull-chained so it is a continuous groove rather than a row of
@@ -237,25 +438,35 @@ module back_pits() {
 // crack, it is a surface tangency -- the exact generator of zero-area facets
 // this file has already been bitten by twice -- and 0.45mm is under three
 // layers, which at arm's length is not a crack, it is nothing. The centre now
-// sits 0.25mm proud and the chain runs 1.35 -> 0.8mm radius, so every link
-// cuts between 1.1 and 0.55mm deep and the shallowest is still two full
-// layers. Nothing in the chain comes near tangency.
+// sits 0.25mm proud and the radii run 1.35 down to 0.6, so every link cuts
+// between 1.1 and 0.35mm and nothing comes near tangency.
 //
 // And it used to run down to z=55, which is INSIDE the inscription panel
 // (top edge 61) -- a crack through the customer's name is the same defect the
-// pits above are fenced away from. It now stops at 66, clear of both styles.
-crack_pts = [[-26, 100], [-22, 88], [-24, 76], [-19, 66]];
+// zones above keep scars away from. It stops at 66, clear of both styles.
+//
+// The path is denser and no longer monotonic (2026-09-11, same pass as the
+// spalls): a four-point chain of steadily shrinking spheres tapers smoothly,
+// which is the one thing a fracture never does. The radii now wander up as
+// well as down along the run, and two short branches split off and die -- a
+// real crack forks where it meets a hard grain and one fork stops.
+crack_pts = [[-26, 100], [-24.5, 95], [-21.5, 89], [-23, 83],
+             [-24.5, 77], [-21, 72], [-19.5, 66]];
+crack_r   = [1.35, 1.05, 1.25, 0.9, 1.15, 0.8, 0.6];
+crack_br  = [[2, [-27.5, 84.5], 0.7], [4, [-20.5, 74.5], 0.62]];
 crack_y   = st_t/2 + 0.25;
-module crack() {
-    n = len(crack_pts);
-    for (i = [0 : n - 2]) hull() {
-        translate([crack_pts[i][0],   crack_y, crack_pts[i][1]   + st_z0])
-            sphere(r = 1.35 - 0.183*i);
-        translate([crack_pts[i+1][0], crack_y, crack_pts[i+1][1] + st_z0])
-            sphere(r = 1.35 - 0.183*(i+1));
+module crack_link(p0, r0, p1, r1) {
+    hull() {
+        translate([p0[0], crack_y, p0[1] + st_z0]) sphere(r = r0);
+        translate([p1[0], crack_y, p1[1] + st_z0]) sphere(r = r1);
     }
 }
-
+module crack() {
+    for (i = [0 : len(crack_pts) - 2])
+        crack_link(crack_pts[i], crack_r[i], crack_pts[i+1], crack_r[i+1]);
+    for (b = crack_br)
+        crack_link(crack_pts[b[0]], crack_r[b[0]] * 0.8, b[1], b[2]);
+}
 // =========================================================================
 // TEXT HANDEDNESS, MEASURED RATHER THAN REASONED. Every face-mounted string
 // in this file goes through rotate([90,0,180]) on the FRONT (+Y) face and
@@ -342,6 +553,7 @@ module stone() {
         chips();
         pits();
         back_pits();
+        socle_wear();
         crack();
         back_mark();
         if (style == "plate") plate_pocket(); else inscription();
@@ -396,14 +608,21 @@ module plate() {
 // margins -- a pristine flat plaque on a chipped stone reads as two objects
 // rather than one.
 module plate_pits() {
-    n = 8;
+    n = 10;
     px = rands(-pl_w/2 + 3.5, pl_w/2 - 3.5, n, 5501);
     pz = rands(-pl_h/2 + 3.5, pl_h/2 - 3.5, n, 6607);
-    pr = rands(1.3, 2.4, n, 7703);
+    pR = rands(1.4, 2.8, n, 7703);
+    pd = rands(0.40, 0.80, n, 8807);
+    pe = rands(1.05, 1.70, n, 9013);
+    pf = rands(0.34, 0.58, n, 9203);
+    pa = rands(0, 360, n, 9403);
+    fy = st_t/2 - 0.2;
     for (i = [0 : n - 1])
         if (abs(px[i]) > pl_w/2 - 5.5 || abs(pz[i]) > pl_h/2 - 4.5)
-            translate([px[i], st_t/2 - 0.2 + pr[i]*0.80, pl_z + pz[i] + st_z0])
-                sphere(r = pr[i]);
+            translate([px[i],
+                       fy + pR[i]*pf[i] - bite(pR[i], pf[i], pd[i]),
+                       pl_z + pz[i] + st_z0])
+                rotate([0, pa[i], 0]) spall(8300 + 53*i, pR[i], pe[i], pf[i]);
 }
 
 // Face up, back on the bed: the raised inscription is the final top surface
