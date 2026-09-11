@@ -6593,3 +6593,121 @@ One exception worth keeping: **nothing is cut in the bed-contact region**
 (here, below z = 4.5). That is first-layer adhesion and the ground line; a scar
 there costs something real and gains no appearance.
 
+## Technique 64 — Four process failures from one session, including deleting five modules and not noticing across two renders (2026-09-11, tombstone)
+
+Techniques 62 and 63 record what went wrong with the *geometry*. These four
+went wrong with the *work*, and they cost more time than any of the geometry
+bugs did. None of them are exotic; all four are things to check for by habit.
+
+### 1. Never replace a span of source between two searched markers
+
+Restructuring a section, the edit was a Python splice:
+
+```python
+start = s.index("// ====...\n// WEATHERING.")
+end   = s.index("// ====...\nmodule stone()")     # 80 lines further than intended
+open(p,"w").write(s[:start] + new + s[end:])
+```
+
+The end marker was the next `// ====` divider *after* the one intended, so the
+splice silently deleted five modules that lived in between —
+`inscription_2d`, `inscription_cut`, `inscription`, `plate_pocket` and
+`back_mark`. Everything the model says to the customer, gone in one assignment.
+
+An `.index()` pair is not an edit, it is a guess about file structure that
+happens to be executable. Either:
+
+- **splice by line number**, after printing the span you are about to remove
+  (`grep -n '^module \|^// ===='` first, then `sed -n 'A,Bp'` to *look at* it), or
+- assert the span's size: `assert 100 < end - start < 200`, or
+- use Edit with an exact `old_string` and let it fail.
+
+The `git checkout HEAD -- <file>` that recovered it only worked because the
+file had been committed twenty minutes earlier. Commit before restructuring.
+
+### 2. A deleted module is a WARNING, and a bare `openscad` call will hand you the wrong mesh at exit 0
+
+This is the mechanism that let #1 survive. Confirmed directly:
+
+```
+$ openscad -o out.stl script_calling_a_missing_module.scad
+WARNING: Ignoring unknown module 'does_not_exist' ...     # stderr
+$ echo $?
+0
+$ stat -c%s out.stl
+1503                                                       # a real, valid, WRONG mesh
+```
+
+An undefined module inside a `difference()` is a cutter that silently does
+nothing. The mesh is watertight, one body, zero degenerate faces, and slices
+perfectly — `mesh_gate` cannot see the problem, because nothing is wrong with
+the geometry that *is* there.
+
+**The galling part: this repo already solved this.** `tools/openscad_render.py`
+greps for `Ignoring unknown module` / `Can't open include file`, raises, and
+**deletes the mesh it just wrote** — and its docstring cites the 2026-09-10
+wall shelf that rendered and sliced with a third of its volume missing. The
+failure here was routing around it: a two-line scratchpad `osc.sh` wrapper
+(`exec openscad -o "$2" "${@:3}" "$1"`) was faster to type, and it has no guard.
+
+`python3 tools/openscad_render.py model.scad -o out.stl -D 'part="plate"'`
+handles `-D` overrides and the BOSL2 path fine — verified on the real model.
+**Use it. A hand-rolled wrapper re-opens every hole the real one was built to
+close.** If you must shell out directly, the bare minimum is
+`2>&1 | grep -E "WARNING|ERROR|Volumes"` — never `| tail -1`, which is exactly
+what threw the warnings away here.
+
+### 3. "I rendered it and looked at it" only verifies what you were looking for
+
+Two PNGs were rendered and examined after #1 happened. Both were studied
+closely — for weathering, which was the task. Neither look registered that the
+inscription panel, the plaque and the maker's mark had all vanished from the
+model, because that was not the question being asked of the image.
+
+A render answers the question you bring to it. When a change is scoped to one
+feature, **look once at the whole object with no question in mind**, or compare
+against the previous render rather than inspecting the new one alone. The
+give-away here was in the frame the entire time.
+
+### 4. A committed mesh can drift from the source that made it
+
+`haunted_manor.stl` in the tree was three geometry commits stale: the `.scad`
+had been edited and committed three more times, and the `.stl` beside it was
+still the version from before those changes. Found by accident while looking at
+directory listings, not by any check.
+
+Committed artifacts are not self-validating. Whenever a `.scad` is committed,
+**re-export its meshes in the same commit** — and when picking up a model after
+a break, compare `git log -1 -- model.scad` against `git log -1 -- model.stl`
+before trusting the mesh on disk. It takes one command:
+
+```bash
+for f in openscad_models/*.scad; do
+  m="${f%.scad}.stl"; [ -f "$m" ] || continue
+  a=$(git log -1 --format=%ct -- "$f"); b=$(git log -1 --format=%ct -- "$m")
+  [ "$a" -gt "$b" ] && echo "STALE: $m is older than $f"
+done
+```
+
+**It flags more than it should, and the triage is the point.** Run across the
+whole tree it named three models besides the manor, and two were fine:
+
+- `wall_charge_shelf` — source refactored to pull shared helpers into an
+  included library, mesh never re-exported. Re-rendered and compared:
+  **identical to four decimal places** (60.398 cm³, same bounds, one body), so
+  the refactor was geometry-neutral. "Almost certainly unchanged" was not a
+  state to ship in — a refactor that moves code behind an `include` is
+  *precisely* the change that can silently drop geometry (see #2) — but the
+  check is one render, not a re-export of everything it flags.
+- `mochi_fox_organizer` — mesh is the finished v2, source moved on to a v3 that
+  was paused mid-design. Deliberate, and **already documented in the .scad's own
+  header**: *"The committed mochi_fox_organizer.stl in this same directory is
+  the LAST FULLY VERIFIED STATE (v2…)"*. That is the right way to leave an
+  intentional mismatch — a note at the top of the source, where whoever reaches
+  for the mesh will be reading anyway.
+
+So the rule is not "re-export everything the timestamp check flags". It is:
+the check costs one command, every hit gets two minutes of triage, and a hit
+that is *meant* to be there earns a header note so it stops costing two minutes
+every time.
+
