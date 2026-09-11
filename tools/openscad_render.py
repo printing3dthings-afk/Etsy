@@ -310,6 +310,10 @@ def _cli() -> None:
     import argparse
     ap = argparse.ArgumentParser(description="Render an OpenSCAD (.scad) file to a mesh, or check availability.")
     ap.add_argument("scad_file", nargs="?", help="Path to a .scad script")
+    ap.add_argument("--timeout", type=int, default=120,
+                    help="Seconds before giving up. The 120s default suits plain CSG; "
+                         "BOSL2 fillet solvers (join_prism) and large imported meshes "
+                         "need far more -- both hit this limit in real use.")
     ap.add_argument("-o", "--output", help="Output file path (extension picks the format if -f is omitted)")
     ap.add_argument("-f", "--format", help="Output format, e.g. stl/3mf/off (default: from -o's extension)")
     ap.add_argument("-D", "--define", action="append", default=[], metavar="key=value",
@@ -328,7 +332,7 @@ def _cli() -> None:
     fmt = args.format or output.suffix.lstrip(".")
     source_dir = Path(args.scad_file).resolve().parent
     try:
-        render_scad(scad_source, output, params=params, fmt=fmt, source_dir=source_dir)
+        render_scad(scad_source, output, params=params, fmt=fmt, source_dir=source_dir, timeout=args.timeout)
     except OpenSCADError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

@@ -6711,3 +6711,103 @@ the check costs one command, every hit gets two minutes of triage, and a hit
 that is *meant* to be there earns a header note so it stops costing two minutes
 every time.
 
+## Technique 65 — The BOSL2 subsystems this shop had been hand-rolling for a year (2026-09-11, after a library audit)
+
+Scott asked whether I had researched these tools to an industry standard. The
+audit said no: **35 of BOSL2's 1,057 definitions in use, 3.3%**, several of
+those base OpenSCAD. Reading the library turned up three subsystems that each
+map onto a bug class already logged in this file, and one of them contradicts
+advice I had given as fact. Every claim below was run, gated and rendered.
+
+### 1. `join_prism()` — concave fillets where a limb meets a body
+
+`hull()` is a **convex** hull, so every limb on every model here swells OUTWARD
+where it meets its parent. I told Scott that only Blender could produce the
+inward fillet a sculpted creature has. That is wrong:
+
+> `join_prism()` — *"Join an arbitrary prism to a plane, **sphere**, cylinder or
+> another arbitrary prism **with a fillet**… continuous curvature rounding."*
+
+**THE IDIOM IS NOT OBVIOUS AND `attach()` IS THE WRONG TOOL FOR IT.** The base
+object is centred on the ORIGIN and the prism axis is **+Z by default**, rooted
+where that axis meets the base. So you aim a limb by rotating the whole call:
+
+```openscad
+module limb(dir, prof_d, len, fil, base_r, sc=1)
+    rot(from=UP, to=dir)
+        join_prism(circle(d=prof_d), base="sphere", base_r=base_r,
+                   length=len, fillet=fil, scale=sc, n=8);
+
+sphere(r=R);
+limb([0.6,0.5,-0.6], 13, 26, 5, R);     // a leg, filleted into the body
+```
+
+Wrapping it in `attach()` instead applies the placement **twice** — the first
+fox attempt came out 123mm wide (should be 110) with **four loose bodies**,
+because each prism was positioned against its base and then moved again.
+
+`prism_connector()` is the friendlier interface when connecting two *described*
+objects; `join_prism` is right when one end just needs a length and a direction.
+
+**Cost:** fillet solving is slow. Nine of them plus a tagged diff took well past
+`openscad_render.py`'s 120s default, which is why that wrapper now has
+`--timeout`. Budget minutes, not seconds.
+
+### 2. `attach()` takes an ARBITRARY DIRECTION VECTOR
+
+> *"You can generally use an arbitrary vector to get an anchor positioned
+> anywhere on the curved [surface]."*
+
+`attach([0.46, 0.80, 0.30], BOT)` lands a child on the parent's real surface at
+that direction, **oriented to the surface normal**. Nothing is estimated.
+
+Read that against what `mochi_fox_organizer.scad` records: **three failed
+attempts to place one eye recess**, because a hull-chain's surface cannot be
+predicted from its control points — `y_face=33` tore out through the side,
+`y_face=24` carved a hidden internal bubble that never reached open air, and the
+fix was exporting the mesh and querying its real surface by hand. Every
+"I estimated where the surface was" failure in this file — that eye, the manor
+windows sliced by the tower, the tombstone recess — is an attachment problem
+solved by a library that was already vendored.
+
+### 3. `diff()` + `tag("remove")` — cutting a child out of its parent
+
+The library introduces this itself as addressing
+
+> *"differences between a parent and child object, something that is
+> **impossible with the native `difference()` module**."*
+
+Which is exactly the shape of the problem above: you want the eye positioned
+**relative to the head** and subtracted **from** it, and plain `difference()`
+cannot express both at once.
+
+```openscad
+diff("cut")
+sphere(r=head_r) {
+    tag("cut") attach([0.46,0.80,0.30], BOT, overlap=1.8) cyl(d=11, h=3, rounding=1.4);
+}
+```
+
+**A trap worth the warning:** a `difference()` with only ONE child silently
+subtracts nothing. My first attempt wrapped the whole model in `difference() {
+union() { ... } }` with the cutters attached *inside* the union — so they were
+added rather than removed. **It gated watertight, one body, zero degenerate
+faces, and PASSED.** Only the render showed the eyes were bumps. A clean gate
+is not a correct model; that is the third time this file has had to say so.
+
+### 4. Still unused, and each maps to something already hand-rolled here
+
+| file | defs | what it replaces |
+|---|---|---|
+| `skin.scad`'s `texture()` | — | named procedural textures (dots, dimples, cones, bricks, diamonds) with a `roughness=` param, for sweeps/revolutions/VNF arrays — the tombstone's weathering is ~100 hand-placed boolean cutters |
+| `vnf.scad` + `beziers.scad` | 97 | arbitrary polyhedra and bezier **surfaces**, against this repo's own claim that double curvature is out of reach of CSG |
+| `masks.scad` | 48 | roundover/cove/teardrop/ogee edge profiling, hand-rolled every time |
+| `geometry.scad` | 95 | line/plane/circle intersections computed by hand in half these models |
+| `distributors.scad` | 43 | every hand-written `for` loop over a grid or path |
+| `partitions.scad` | 22 | splitting anything over the 256mm bed |
+
+**The rule:** before concluding a tool cannot do something, read its library
+index. "CSG cannot express X" was asserted three times in this project's docs
+and was wrong at least once. Reading a file list takes two minutes; acting on a
+false limit costs a session.
+
