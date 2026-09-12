@@ -80,29 +80,55 @@ def _kb_fingerprint() -> dict[str, str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--fail-fast", action="store_true", help="Stop at the first failing test")
+    ap.add_argument("--fail-fast", action="store_true",
+                    help="Stop at the first failing test (forces -j 1)")
     ap.add_argument("--verbose", action="store_true", help="Print each test's full output, not just failures")
+    ap.add_argument("-j", "--jobs", type=int, default=0,
+                    help="Test files to run at once (default: one per CPU). Each test is "
+                         "already its own subprocess with its own tempfile DB and no test "
+                         "binds a port, so they do not collide. -j 1 for serial.")
     args = ap.parse_args()
 
     tests = discover_tests()
-    print(f"Running {len(tests)} test file(s) from {TESTS_DIR}...\n")
+    jobs = 1 if args.fail_fast else (args.jobs or os.cpu_count() or 1)
+    jobs = max(1, min(jobs, len(tests)))
+    print(f"Running {len(tests)} test file(s) from {TESTS_DIR}"
+          + (f" ({jobs} at a time)" if jobs > 1 else "") + "...\n")
 
     kb_before = _kb_fingerprint()
 
-    results: list[tuple[str, bool, float]] = []
-    for path in tests:
-        print(f"  {path.name} ... ", end="", flush=True)
+    def _run(path):
         try:
-            ok, elapsed, output = run_one(path)
+            return (path, *run_one(path))
         except subprocess.TimeoutExpired:
-            ok, elapsed, output = False, 600.0, "TIMED OUT after 600s"
-        results.append((path.name, ok, elapsed))
-        print(f"{'PASS' if ok else 'FAIL'} ({elapsed:.1f}s)")
+            return (path, False, 600.0, "TIMED OUT after 600s")
+
+    results: list[tuple[str, bool, float]] = []
+
+    def _report(path, ok, elapsed, output):
+        # Printed in discovery order regardless of completion order, so two runs
+        # are diffable.
+        print(f"  {path.name} ... {'PASS' if ok else 'FAIL'} ({elapsed:.1f}s)")
         if args.verbose or not ok:
             for line in output.strip().splitlines()[-40:]:  # tail -40 to keep failures scannable
                 print(f"      {line}")
-        if not ok and args.fail_fast:
-            break
+        results.append((path.name, ok, elapsed))
+
+    if jobs == 1:
+        for path in tests:
+            _report(*_run(path))
+            if not results[-1][1] and args.fail_fast:
+                break
+    else:
+        # Threads, not processes: every unit of work is already a subprocess, so
+        # the GIL is never the bottleneck here.
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=jobs) as ex:
+            done = {}
+            for path, ok, elapsed, output in ex.map(_run, tests):
+                done[path.name] = (path, ok, elapsed, output)
+            for path in tests:
+                _report(*done[path.name])
 
     passed = sum(1 for _, ok, _ in results if ok)
     failed = [name for name, ok, _ in results if not ok]

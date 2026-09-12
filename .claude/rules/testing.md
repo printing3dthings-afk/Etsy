@@ -89,6 +89,22 @@ each as a subprocess, reporting PASS/FAIL per file. Always run this before
 shipping — a new test file needs no registration, it's picked up
 automatically.
 
+**It runs one file per CPU by default (2026-09-12): 264s → 71s on 4 cores.**
+Verified that every one of the 183 files returns the identical verdict under
+`-j 4` as it did serially, and output stays in sorted discovery order so two
+runs are diffable. Safe because each test is already its own subprocess with
+its own tempfile DB and none bind a port. `-j 1` for serial; `--fail-fast`
+forces serial, since "stop at the first failure" has no clean meaning when
+four are in flight.
+
+**Actually run it.** On 2026-09-12 the suite had been red for three days —
+`test_assemble_3mf.py` expected the monogram keychain to list 4 parts after
+a commit had legitimately added a 5th — and nothing surfaced it, because
+nothing ran the suite. That is the third instance in one day of something
+declared here but never executed (the other two: two review agents nothing
+invoked, and a skill whose CLI was never installed). Four minutes was the
+excuse; it is now one.
+
 ## Browser/UI tests
 
 `tools/playwright_smoke.py` is one long script (not per-feature files),
