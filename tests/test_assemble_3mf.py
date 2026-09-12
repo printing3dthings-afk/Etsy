@@ -129,7 +129,12 @@ def test_a_plate_entry_may_itself_be_multipart():
 
 def test_the_shipped_files_really_kept_their_parts():
     """The whole point. A merged 3MF slices fine and is silently useless."""
-    for name, want in (("monogram_keychain_J", [4]), ("dumpling_clicker", [4, 1]),
+    # monogram_keychain_J went 4 -> 5 parts in 74c6837, which added the `mark`
+    # part (the standing maker's-mark rule). The model was right and this
+    # expectation was simply never updated, so the suite has been red since
+    # 2026-09-09. Verified against the .scad's own part list before changing it:
+    # ring, rotor, halo, letter, mark.
+    for name, want in (("monogram_keychain_J", [5]), ("dumpling_clicker", [4, 1]),
                        ("snap_box", [1, 3])):
         f = ROOT / "openscad_models" / f"{name}.3mf"
         if not f.exists():
