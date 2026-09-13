@@ -3793,12 +3793,33 @@ When any API call returns 401 and the refresh endpoint also returns 401:
 - **Any bulk edit touching more than 10 listings** — confirm scope before running
 - **Custom order requests** — pricing and feasibility require Scott's judgment
 - **Re-authorization (OAuth)** — requires Scott to complete browser flow every 90 days
-- **Starting a NEW 3D print design** — Scott's direct instruction, 2026-08-28: "Before you
-  start building another print, I want to know what it's going to be." Pitch the concept
-  (what it is, who buys it, rough size/proportions, how it prints, why it's worth making)
-  and get a yes BEFORE writing any `.scad`. This is about the *concept*, not the execution —
-  iterating on an already-approved design needs no new approval. See the matching standing
-  rule in `.claude/skills/3d-print-design/SKILL.md`.
+- **Starting a NEW 3D print design** — Scott, 2026-08-28: "Before you start building
+  another print, I want to know what it's going to be," and **extended 2026-09-13**
+  after a direct critique that the models being produced were not at a sellable
+  standard: functional-part thinking, a primitive with a pattern applied, judged by
+  whether it printed rather than whether it sells.
+
+  **These are retail products competing in a grid of thumbnails.** The bar Scott set:
+  the silhouette has to read at thumbnail size, and the form needs at least one
+  deliberate design decision beyond a primitive with a pattern on it. The ribbed vase
+  and the faceted lamp already in the shop are the reference level of intent.
+
+  **The process, every new product, in this order:**
+  1. Present **4–5 genuinely different formal approaches** — different *forms*, not
+     variations on one idea — one sentence each. No code yet.
+  2. Scott picks one.
+  3. Only then write the `.scad`.
+  4. Run `tools/product_gate.py` — it FAILS the build, it does not advise.
+  5. Render three views (`tools/blender_render.py --views`) and show him before
+     anything is called done.
+
+  **Printability is a hard constraint, not a tradeoff.** Minimum wall 1.2mm, no
+  unsupported overhang past 45°, flat base with a real footprint, no floating
+  geometry, watertight and manifold. **If a form cannot meet these, discard the
+  form — never thin the walls to rescue it.**
+
+  Iterating on an already-approved design needs no new approval. See the matching
+  standing rule in `.claude/skills/3d-print-design/SKILL.md`.
 
 ### Hard Stops — Never Do Without Explicit Permission
 

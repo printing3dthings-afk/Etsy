@@ -22,6 +22,42 @@ used below, the OpenSCAD-vs-Blender tool-choice verdict). This file stays
 what it's always been: a log of real bugs found while building this shop's
 actual models, not a textbook.
 
+## THE BAR FOR A RETAIL PRODUCT (Scott, 2026-09-13) — read before designing
+
+Scott's critique, verbatim in substance: the models being produced **are not at a
+sellable standard**. They were functional-part thinking — a primitive with a
+pattern applied, validated by whether it printed rather than whether it sells.
+
+These are retail products competing against other listings **in a grid of
+thumbnails**. Two requirements follow:
+
+- **The silhouette has to read at thumbnail size.** Not the surface texture, not
+  the detail — the outline, at 200px, against a dozen competitors.
+- **The form needs at least one deliberate design decision** beyond a primitive
+  with a pattern on it. The ribbed vase and the faceted lamp already in the shop
+  are the reference level of intent.
+
+**Process, every new product:** present **4–5 genuinely different formal
+approaches** — different forms, not variations on one idea — one sentence each,
+*before writing any code*. Scott picks. Then build.
+
+**Printability is a hard constraint, not a tradeoff:** wall ≥1.2mm, no
+unsupported overhang past 45°, flat base with a real footprint, no floating
+geometry, watertight and manifold. **If a form cannot meet those, discard the
+form — do not thin the walls to rescue it.**
+
+`tools/product_gate.py` asserts all of it and FAILS, unlike `mesh_gate`/
+`print_check`, which report and leave the judgment to a person. Then
+`tools/blender_render.py --views` for the three views Scott reviews before
+anything is called done.
+
+Validated on purpose-built shapes rather than on the existing catalogue, which
+would have meant tuning thresholds until old parts passed: a tapered 2mm-wall
+vessel passes every check with a steepest downward face of 7°, and a mushroom
+(wide cap on a narrow stem) fails on overhang span 50.6mm, a 4.3% footprint,
+and wall. **Existing models in `openscad_models/` mostly do NOT pass this gate.
+That is the point of the critique, not a bug in the gate.**
+
 ## Why this exists (2026-08-21)
 
 Before this skill, `render_openscad_model` could render *any* valid OpenSCAD

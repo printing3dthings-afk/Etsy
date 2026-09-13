@@ -344,6 +344,27 @@ def render_review(
         script_path.unlink(missing_ok=True)
 
 
+def render_views(mesh_path, out_prefix, color=(0.8, 0.8, 0.82), samples=96,
+                 resolution=900, lens=85.0, use_cache=True):
+    """Three views of one model: front, three-quarter, top-down.
+
+    Scott, 2026-09-13: "Render three PNG views after every generation so I can
+    see the result before printing." One angle hides things -- the session that
+    produced this had a tombstone reviewed from the back and a fox whose tail
+    scalloping only showed in profile.
+    """
+    out_prefix = Path(out_prefix)
+    spec = (("front", 180.0, 5.0), ("three_quarter", 215.0, 25.0), ("top", 180.0, 78.0))
+    made = []
+    for name, az, el in spec:
+        out = out_prefix.with_name(f"{out_prefix.stem}_{name}.png")
+        render_review(mesh_path, out, color=color, azimuth=az, elevation=el,
+                      samples=samples, resolution=resolution, lens=lens,
+                      use_cache=use_cache)
+        made.append(out)
+    return made
+
+
 def _cli() -> None:
     import argparse
     ap = argparse.ArgumentParser(description="Render a studio-lit review photo of a mesh file via headless Blender.")
@@ -361,6 +382,9 @@ def _cli() -> None:
     ap.add_argument("--lens", type=float, default=85.0,
                     help="Camera focal length in mm. Lower to fit a tall part -- the "
                          "default 85 crops anything much taller than it is wide.")
+    ap.add_argument("--views", action="store_true",
+                    help="Render three views (front, three-quarter, top) instead of one, "
+                         "written as <output>_front.png etc.")
     ap.add_argument("--no-cache", action="store_true",
                     help="Re-render even if an identical previous render is cached. The key "
                          "covers every mesh's real content plus colour, angle, samples, "
@@ -391,6 +415,13 @@ def _cli() -> None:
     output = Path(args.output or first.with_suffix(".review.png"))
     color = tuple(float(x) for x in args.color.split(","))
     try:
+        if args.views:
+            made = render_views(target, output, color=color, samples=args.samples,
+                                resolution=args.resolution, lens=args.lens,
+                                use_cache=not args.no_cache)
+            for f in made:
+                print(f"rendered -> {f}")
+            raise SystemExit(0)
         render_review(target, output, color=color,
                        azimuth=args.azimuth, elevation=args.elevation,
                        samples=args.samples, resolution=args.resolution,
