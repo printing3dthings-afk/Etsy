@@ -34,6 +34,14 @@ to something `tools/blender_render.py` and `tools/print_check.py` depend on.
 | Native 3MF import/export | ❌ | ❌ |
 | STL export operator | `bpy.ops.export_mesh.stl` | `wm.stl_export` (and `export_mesh` still present) |
 
+**Amended 2026-09-13 — there IS now a reason to have 5.x: USD/USDZ.** Ubuntu's
+4.0.2 has no USD support whatsoever (`bpy.ops.wm.usd_export` does not exist —
+the op list comes back empty). An official blender.org 5.x build has it, and a
+USDZ opens natively in iOS Quick Look: tap the file in Files and it is rotatable
+full screen with no app and no import step. See `tools/usdz_export.py`. The
+"no reason to upgrade" verdict above still holds for the two traps and for 3MF;
+it was wrong as a blanket statement.
+
 3MF needs a community extension in every version (Ghostkeeper's, or
 Clonephaze's 4.2+ fork which handles Orca/Bambu modifier parts and painted
 multi-material). Until one is installed, `tools/make_color_3mf.py` — which
