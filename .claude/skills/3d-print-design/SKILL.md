@@ -22,6 +22,45 @@ used below, the OpenSCAD-vs-Blender tool-choice verdict). This file stays
 what it's always been: a log of real bugs found while building this shop's
 actual models, not a textbook.
 
+## THE VIRTUAL P1S — run the real slicer, stop inferring (2026-09-13)
+
+`tools/virtual_printer.py` slices with PrusaSlicer 2.7.2 on a P1S profile and
+reads the slicer's own decisions back out of the G-code. **Prefer it over the
+geometry checks whenever the question is "will this print well".**
+
+Why: `mesh_gate` and `product_gate` approximate a slicer with ray casts and face
+normals, and every one of those approximations has been wrong here at least
+once — an overhang scan that flagged base fillets, a thickness check that
+measured engraved grooves. This asks the slicer instead. "Does it need
+supports" stops being an inference and becomes a fact.
+
+**Scott's confirmed machine (2026-09-13):** stock 0.4mm brass nozzle, one AMS
+with 4 slots, textured PEI plate, stock 0.20mm Standard. He also has tuned
+profiles of his own — ask for them before any claim about time or finish.
+
+Validated on three models:
+
+| model | slicer's verdict |
+|---|---|
+| tapered 2mm vessel | clean — no supports, 0 overhang perimeters, full height |
+| mushroom (wide cap, narrow stem) | **62,142 support moves, 5,723 overhang perimeters** |
+| `sauce_tray` | clean — 60 layers, full 12mm, 78.8g |
+
+**Layer-line rendering works.** Parse the G-code's extrusion moves, draw each as
+a 0.42 × 0.2mm bead, render the result: 168,768 segments on a simple vessel,
+and the render shows real layer banding and the skirt ring on the plate. That
+is what the part will actually look like, not a smooth CAD surface.
+
+**Two honest limits — state them, never imply otherwise:**
+1. PrusaSlicer is not Bambu Studio. Same engine lineage (Bambu Studio and Orca
+   are both PrusaSlicer forks) so the *geometric* decisions track closely.
+   Speeds and time estimates will not match Bambu's.
+2. **It models nothing thermal.** Warping, bed adhesion, stringing, layer
+   delamination, heat creep — all invisible. A part can pass every check here
+   and still fail on the plate for a reason this cannot see. `sauce_tray` comes
+   back clean, so whatever went wrong with it was not something the slicer can
+   see from geometry.
+
 ## THE BAR FOR A RETAIL PRODUCT (Scott, 2026-09-13) — read before designing
 
 Scott's critique, verbatim in substance: the models being produced **are not at a
