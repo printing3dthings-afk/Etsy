@@ -57,9 +57,15 @@ is what the part will actually look like, not a smooth CAD surface.
    Speeds and time estimates will not match Bambu's.
 2. **It models nothing thermal.** Warping, bed adhesion, stringing, layer
    delamination, heat creep — all invisible. A part can pass every check here
-   and still fail on the plate for a reason this cannot see. `sauce_tray` comes
-   back clean, so whatever went wrong with it was not something the slicer can
-   see from geometry.
+   and still fail on the plate for a reason this cannot see.
+
+**Correction, same day:** this section first read that `sauce_tray` slicing
+clean meant "whatever went wrong with it is invisible to a slicer." Wrong.
+Scott: *"The bad sauce bowl print was the old version. The file has been
+fixed."* The clean verdict is simply correct — it is reporting on the fixed
+file. Before treating a clean result as a blind spot, check whether the part
+was actually fixed; a sim agreeing with reality is the normal case, not a
+suspicious one.
 
 ## THE BAR FOR A RETAIL PRODUCT (Scott, 2026-09-13) — read before designing
 
@@ -86,7 +92,17 @@ geometry, watertight and manifold. **If a form cannot meet those, discard the
 form — do not thin the walls to rescue it.**
 
 `tools/product_gate.py` asserts all of it and FAILS, unlike `mesh_gate`/
-`print_check`, which report and leave the judgment to a person. Then
+`print_check`, which report and leave the judgment to a person.
+
+**Its overhang verdict comes from the real slicer, not from geometry** — and
+the reason is a caught mistake worth keeping. The first version ray-cast its
+own answer and failed all four sauce parts on unsupported spans of 13–19mm.
+`virtual_printer.py` slices the same four and reports every one clean: no
+supports, no overhang perimeters, full height. They are printed, sold parts, so
+the geometry check was simply wrong. Raising the span limit until they passed
+would have been fitting the threshold to the answer. Delegating to the engine
+that actually makes the decision is the fix, and the geometric version is now
+only a fallback for when `prusa-slicer` is missing. Then
 `tools/blender_render.py --views` for the three views Scott reviews before
 anything is called done.
 

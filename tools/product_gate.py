@@ -146,11 +146,32 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
             f"1st pct {w['p1']:.2f}mm, median {w['median']:.2f}mm "
             f"(floor {wall_min}mm); {100*w['frac_below_nozzle']:.2f}% below one bead")
 
-    area, worst, span = _unsupported_overhang(m, overhang_limit)
-    add("no_unsupported_overhang", span <= bridge_max,
-        f"widest unsupported span {span:.1f}mm (limit {bridge_max:.0f}mm); "
-        f"{area/100:.2f} cm2 total past {overhang_limit:.0f}deg, "
-        f"steepest downward face {worst:.0f}deg")
+    # OVERHANG IS ASKED OF THE SLICER, NOT INFERRED. The geometric version below
+    # is a fallback for when prusa-slicer is missing, and it is demonstrably
+    # wrong: it failed all four sauce parts on spans of 13-19mm, and the real
+    # slicer reports every one of them clean -- no supports, no overhang
+    # perimeters, full height. They are printed, sold parts. Tuning the span
+    # limit until they passed would have been fitting the threshold to the
+    # answer; delegating to the engine that actually decides is the fix.
+    try:
+        from virtual_printer import report as _slice_report
+        import tempfile as _tf
+        with _tf.TemporaryDirectory() as td:
+            r = _slice_report(path, Path(td) / "g.gcode", supports=True)
+        ok = r["support_moves"] == 0 and r["overhang_perimeters"] == 0
+        add("no_unsupported_overhang", ok,
+            f"slicer: {r['support_moves']} support moves, "
+            f"{r['overhang_perimeters']} overhang perimeters, "
+            f"{r['printed_height_mm']}mm printed of {r['model_height_mm']}mm")
+        add("geometry_survives_slicing", not r.get("geometry_dropped", False),
+            f"printed height {r['printed_height_mm']}mm vs modelled "
+            f"{r['model_height_mm']}mm")
+    except Exception as exc:
+        area, worst, span = _unsupported_overhang(m, overhang_limit)
+        add("no_unsupported_overhang", span <= bridge_max,
+            f"[GEOMETRIC FALLBACK -- slicer unavailable: {str(exc)[:60]}] widest "
+            f"unsupported span {span:.1f}mm (limit {bridge_max:.0f}mm), steepest "
+            f"downward face {worst:.0f}deg")
 
     barea, inside, reach, d = _base_report(m)
     foot = barea / max(ext[0] * ext[1], 1e-9)
