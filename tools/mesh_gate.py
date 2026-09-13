@@ -111,7 +111,8 @@ def _terrace_report(m, layer_h=0.20, extr=0.42, flat_cutoff=50.0):
     return float(areas[stepped].sum()), float(width[stepped].max())
 
 
-def gate(path, expected_components=1, check_overhang=False):
+def gate(path, expected_components=1, check_overhang=False,
+         check_thickness=False, strict_thickness=False):
     m = _load(path)
     ext = [float(v) for v in m.extents]
     checks = []
@@ -146,6 +147,16 @@ def gate(path, expected_components=1, check_overhang=False):
         f"(worst terrace {worst:.2f} mm)" if area else "no shallow upward surface",
         fatal=False)
 
+    if check_thickness:
+        w = wall_thickness(path)
+        if "error" not in w:
+            add("wall_thickness",
+                w["frac_below_nozzle"] < 0.001 or not strict_thickness,
+                f"median {w['median']:.2f}mm, 1st pct {w['p1']:.2f}mm, "
+                f"{100*w['frac_below_nozzle']:.2f}% of material below one "
+                f"{w['nozzle']}mm bead ({100*w['frac_below_2x']:.2f}% below two)",
+                fatal=strict_thickness)
+
     if check_overhang:
         area, worst, zr = _overhang_report(m)
         where = f", z {zr[0]:.2f}-{zr[1]:.2f} mm" if zr else ""
@@ -156,6 +167,66 @@ def gate(path, expected_components=1, check_overhang=False):
     failed = [c for c in checks if not c["pass"] and c["level"] == "FAIL"]
     return {"file": path, "passed": not failed, "checks": checks,
             "bbox_mm": [round(e, 2) for e in ext]}
+
+
+def wall_thickness(path, samples=64, nozzle=0.42):
+    """Real through-material wall thickness, by ray casting.
+
+    WHY NOT Blender's 3D-Print Toolbox thickness check (which tools/print_check.py
+    reports): it casts from each face along the inverted normal to the FIRST hit,
+    so on any engraved model it measures the width of the GROOVE and calls that
+    the wall. Measured 2026-09-13: it claims 11,216 mm2 of sub-nozzle surface on
+    sundial.stl. Ray casting straight through the same plate gives a minimum of
+    1.35mm and a median of 6.00mm, with ZERO sample points under 1.2mm. The plate
+    is 6mm thick; the toolbox was measuring its hour lines. Same false-positive
+    class as the tombstone's inscription. That check is fine as a report and is
+    useless as a gate.
+
+    This casts a grid of rays along all three axes and measures each SOLID SPAN
+    (consecutive entry/exit pairs), so a hollow shell reports its wall rather
+    than its outside dimension.
+    """
+    m = _load(path)
+    spans = []
+    for axis in range(3):
+        u, v = [a for a in range(3) if a != axis]
+        lo, hi = m.bounds[0], m.bounds[1]
+        gu = np.linspace(lo[u] + 1e-3, hi[u] - 1e-3, samples)
+        gv = np.linspace(lo[v] + 1e-3, hi[v] - 1e-3, samples)
+        U, V = np.meshgrid(gu, gv)
+        origins = np.zeros((U.size, 3))
+        origins[:, u] = U.ravel(); origins[:, v] = V.ravel()
+        origins[:, axis] = hi[axis] + max(m.extents) * 0.1
+        dirs = np.zeros((U.size, 3)); dirs[:, axis] = -1.0
+        loc, ray_idx, tri_idx = m.ray.intersects_location(origins, dirs, multiple_hits=True)
+        if len(loc) == 0:
+            continue
+        # Drop GRAZING hits. A ray that clips a corner tangentially records a
+        # span of ~0 and is not a thin wall -- it is why raw `min` came back as
+        # 0.00 on models measured thick by every other method. Keep only hits
+        # within 60 degrees of head-on, where the span is a real thickness.
+        incidence = np.abs(m.face_normals[tri_idx][:, axis])
+        keep = incidence > 0.5
+        loc, ray_idx = loc[keep], ray_idx[keep]
+        if len(loc) == 0:
+            continue
+        order = np.argsort(ray_idx, kind="stable")
+        loc, ray_idx = loc[order], ray_idx[order]
+        start = 0
+        for i in range(1, len(ray_idx) + 1):
+            if i == len(ray_idx) or ray_idx[i] != ray_idx[start]:
+                t = np.sort(loc[start:i, axis])
+                # pair them: (in,out)(in,out)... a lone trailing hit is a graze
+                for a, b in zip(t[0::2], t[1::2]):
+                    spans.append(float(b - a))
+                start = i
+    if not spans:
+        return {"error": "no ray hit the mesh"}
+    sp = np.array(spans)
+    return {"samples": int(sp.size), "min": float(sp.min()),
+            "p1": float(np.percentile(sp, 1)), "median": float(np.median(sp)),
+            "frac_below_nozzle": float((sp < nozzle).mean()),
+            "frac_below_2x": float((sp < 2 * nozzle).mean()), "nozzle": nozzle}
 
 
 def gate_cutter(cutter_path, target_path, expect_multi_body=None):
@@ -250,6 +321,12 @@ def main():
     ap.add_argument("-c", "--components", type=int, default=1,
                     help="Expected separate bodies (default 1; raise it for print-in-place assemblies)")
     ap.add_argument("--overhang", action="store_true", help="Also scan for unprintable overhangs")
+    ap.add_argument("--thickness", action="store_true",
+                    help="Measure real wall thickness by ray casting. REPORTED, not failed on "
+                         "-- an inlay or engraved relief is legitimately thinner than a bead.")
+    ap.add_argument("--strict-thickness", action="store_true",
+                    help="Fail when >0.1%% of material is below one nozzle width. Only for a part "
+                         "you KNOW has no intentional thin detail.")
     ap.add_argument("--cutter-for", metavar="TARGET",
                     help="Treat the mesh as a boolean CUTTER and gate it against TARGET "
                          "before running the boolean. Checks the failures that silently "
@@ -260,7 +337,8 @@ def main():
 
     try:
         res = (gate_cutter(a.mesh, a.cutter_for) if a.cutter_for
-               else gate(a.mesh, a.components, a.overhang))
+               else gate(a.mesh, a.components, a.overhang,
+                         a.thickness or a.strict_thickness, a.strict_thickness))
     except Exception as exc:
         # A mesh that will not even load is a gate failure, never a stack trace the
         # caller has to interpret.

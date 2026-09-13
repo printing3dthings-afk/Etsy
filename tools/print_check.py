@@ -12,10 +12,14 @@ and has TWO BLIND SPOTS that matter for a printed part:
   which side is inside. Found on real shipped models here the first time this
   ran: tombstone_stone 11 intersecting faces, mochi_fox_organizer 38.
 
-  WALL THICKNESS. The classic 3D-print check, and mesh_gate has nothing for
-  it. Reported, never failed on -- carved lettering, fine relief and sharp
-  detail legitimately measure "thin", so the number needs a person. Same
-  treatment mesh_gate already gives overhang, for the same reason.
+  WALL THICKNESS. Reported, never failed on -- and as of 2026-09-13 treat this
+  particular number as UNRELIABLE. The toolbox casts from each face along the
+  inverted normal to the first hit, so on an engraved model it measures the
+  width of the GROOVE and calls that the wall. Measured: it claims 11,216 mm2
+  of sub-nozzle surface on sundial.stl, whose plate is 6mm thick -- ray casting
+  straight through gives a 1.35mm minimum and a 6.00mm median with ZERO sample
+  points under 1.2mm. Use `mesh_gate.py --thickness`, which measures real
+  through-material spans and filters grazing hits, when the answer matters.
 
 Both sliced without complaint in PrusaSlicer, so this is not a claim that
 those parts are broken -- it is a claim that nothing was LOOKING. A check

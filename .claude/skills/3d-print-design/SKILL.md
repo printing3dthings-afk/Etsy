@@ -6914,6 +6914,25 @@ volume to within 1e-6 relative. `drapery_vase` alone went 48.1MB → 12.5MB at
 cost disk and git history. Do not "fix" this back to ASCII for readability — a
 mesh is not read by eye.
 
+**Wall thickness: measure it with `mesh_gate.py --thickness`, and do NOT trust
+`print_check`'s thin-face number.** Blender's 3D-Print Toolbox casts from each
+face along the inverted normal to the first hit, so on anything engraved it
+measures the GROOVE and reports that as the wall. Proven 2026-09-13: it claims
+11,216 mm2 of sub-nozzle surface on `sundial.stl`, a plate that is 6mm thick;
+ray casting straight through gives min 1.35mm, median 6.00mm, and zero sample
+points under 1.2mm. Face count is the wrong metric at every threshold — 56 of
+64 models flag even at one nozzle width, because a tapering edge always has
+faces below any number.
+
+`--thickness` casts a grid along all three axes, measures each solid SPAN (so a
+hollow shell reports its wall, not its outside dimension), and discards grazing
+hits beyond 60° off head-on (which is what made raw `min` read 0.00 on parts
+that are demonstrably thick). It is **reported, never failed on** by default,
+because it still cannot tell an intentional thin inlay from an accidental thin
+wall — `snap_box_lid_script` is 8.32% below a bead and is correct, being a
+script inlay backed by the lid body. `--strict-thickness` fails at >0.1% for a
+part you know has no intentional thin detail.
+
 **Before any boolean, gate the CUTTER too:** `python3 tools/mesh_gate.py
 cutter.stl --cutter-for target.stl`. It fails on the cutter defects that
 silently produce a wrong result — open, flipped, degenerate, missing the
