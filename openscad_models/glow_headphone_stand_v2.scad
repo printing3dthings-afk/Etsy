@@ -3,9 +3,10 @@
 // The original file remains unchanged.
 //
 // Improvements:
-//   * longer usable headphone arm
+//   * extended headphone arm with downward-facing LED mount
 //   * shallow curved headband saddle and front retaining lip
-//   * continuous base/riser/under-arm diffuser
+//   * base/riser/short under-arm diffuser, clear of the LED opening
+//     (downlight is primary; diffuser brightness requires physical testing)
 //   * removable snap-in LED puck retainer
 //   * accessory tray, cable-wrap posts, rubber-foot pockets
 //   * optional weighted-base pocket with removable cover
@@ -34,7 +35,7 @@ total_h = 226;
 arm_z0 = total_h - ch_t;
 riser_h = arm_z0 - base_h;
 back_x = 15;
-arm_total_len = 115;        // creates a useful overhang beyond the riser
+arm_total_len = 145;        // +30 mm reach; puck clears the upright
 riser_front_x = back_x + ch_t;
 arm_tip_x = back_x + arm_total_len;
 
@@ -44,9 +45,20 @@ window_w = ch_w - 2 * window_rim;
 window_recess_d = 8;
 base_recess_d = 6;
 upper_recess_d = 6;
-end_wall_t = 10;
 puck_hole_d = puck_d + 2;
-puck_hole_z = arm_z0 + ch_t / 2;
+puck_center_x = riser_front_x + 40;  // 123 mm, above the front of the base
+puck_pocket_depth = puck_h + 9;      // 18 mm puck plus cable access headroom
+upper_window_end_x = riser_front_x + 6;
+retainer_flange_t = 2.4;
+retainer_z = arm_z0 - retainer_flange_t;
+
+assert(puck_center_x - (ch_w-1)/2 > riser_front_x,
+       "LED retainer must clear the upright");
+assert(arm_tip_x - (puck_center_x+puck_hole_d/2) >= 5,
+       "Keep at least 5 mm at the closed front end");
+assert(puck_center_x < base_len, "LED center must remain over the base");
+assert(upper_window_end_x < puck_center_x-(ch_w-1)/2,
+       "Diffuser must not obstruct the retainer");
 
 // ---------- cable path ----------
 cable_ch_d = 13;
@@ -121,8 +133,8 @@ module saddle_and_lip() {
     difference() {
         translate([saddle_cx, 0, total_h-1])
             rounded_box_z([saddle_len, ch_w-4, 9], 5);
-        translate([saddle_cx, -(ch_w+2)/2, total_h+22])
-            rotate([-90,0,0]) cylinder(r=21, h=ch_w+2);
+        translate([saddle_cx, -(ch_w+2)/2, total_h+62])
+            rotate([-90,0,0]) cylinder(r=61, h=ch_w+2);
     }
 
     // 7 mm front stop measured from the saddle's low contact surface.
@@ -139,10 +151,15 @@ module cable_wrap_posts() {
     }
 }
 
-module puck_through_hole() {
-    x0 = arm_tip_x - end_wall_t - 2;
-    translate([x0, 0, puck_hole_z])
-        rotate([0,90,0]) cylinder(d=puck_hole_d, h=end_wall_t+3);
+module puck_downward_pocket() {
+    // Blind cylindrical pocket opens only on the underside (axis Z).
+    // The front face stays closed. Insert the puck from below, with its
+    // emitting face toward -Z, then install the removable retaining ring.
+    translate([puck_center_x, 0, arm_z0-1])
+        cylinder(d=puck_hole_d, h=puck_pocket_depth+1);
+    // Mating groove for the retaining collar's flexible bead.
+    translate([puck_center_x, 0, retainer_z+7.2])
+        cylinder(d=puck_hole_d+0.5, h=1.4);
 }
 
 module riser_window_cut() {
@@ -156,24 +173,23 @@ module base_window_cut() {
 }
 
 module upper_window_cut() {
-    // Visible diffuser continues around the inside corner and along the
-    // underside of the extended arm.
+    // Diffuser turns the inside corner, stopping before the LED retaining
+    // ring so neither insert nor upright blocks the downward light.
     translate([riser_front_x-window_recess_d,
                -window_w/2,
                arm_z0-1])
-        cube([arm_tip_x-end_wall_t-(riser_front_x-window_recess_d)+1,
+        cube([upper_window_end_x-(riser_front_x-window_recess_d),
               window_w,
               upper_recess_d+1]);
 }
 
 module light_duct() {
-    // Vertical transfer duct behind the riser window.
+    // Keep the original internal transfer space behind the diffuser.
+    // End below the top skin; avoid the previous open slot on the top.
     translate([riser_front_x-window_recess_d, -14, arm_z0-1])
-        cube([window_recess_d, 28, ch_t+2]);
-
-    // Horizontal duct overlaps the under-arm diffuser and the puck hole.
-    translate([back_x-1, -14, arm_z0+upper_recess_d-0.5])
-        cube([arm_total_len-end_wall_t+1, 28, 42]);
+        cube([window_recess_d, 28, ch_t-7]);
+    translate([back_x+4, -14, arm_z0+upper_recess_d-0.5])
+        cube([upper_window_end_x-(back_x+4), 28, 42]);
 }
 
 module cable_bore(z0, z1) {
@@ -183,6 +199,11 @@ module cable_bore(z0, z1) {
 
 module cable_route() {
     cable_bore(-1, arm_z0+28);
+    // 13 mm horizontal feed connects the spine to the pocket. Cable is
+    // routed before inserting the puck; the front wall is never pierced.
+    translate([cable_bore_x, 0, arm_z0+puck_h+2])
+        rotate([0,90,0]) cylinder(d=cable_ch_d,
+                                  h=puck_center_x-cable_bore_x+1);
     groove_x0 = cable_bore_x-cable_ch_d/2-1;
     translate([groove_x0, -cable_groove_w/2, -1])
         cube([base_len-groove_x0+1, cable_groove_w, cable_groove_d+1]);
@@ -231,7 +252,7 @@ module glow_stand_v2_shell() {
         base_window_cut();
         upper_window_cut();
         light_duct();
-        puck_through_hole();
+        puck_downward_pocket();
         cable_route();
         accessory_tray_cut();
         weight_pocket_cut();
@@ -261,8 +282,8 @@ module glow_stand_v2_diffuser() {
             // Under-arm insert.
             translate([riser_front_x-window_recess_d+fit_clearance,
                        -iw/2, arm_z0+fit_clearance])
-                cube([arm_tip_x-end_wall_t-
-                      (riser_front_x-window_recess_d)-fit_clearance,
+                cube([upper_window_end_x-
+                      (riser_front_x-window_recess_d)-2*fit_clearance,
                       iw, ut]);
         }
         cable_bore(base_h-base_recess_d-1, base_h+2);
@@ -279,10 +300,12 @@ module weight_cover() {
 }
 
 module puck_retainer() {
-    // Printed flat. Pushes into the 61 mm opening after the puck is
-    // installed; three relief slots let the collar flex over its bead.
+    // Print flange flat; the collar enters upward into the underside pocket.
+    // Collar bore clears the 59 mm puck; the smaller flange opening holds
+    // its rim. PETG fit-test required before relying on the snap retention.
     collar_od = puck_hole_d - 2*press_clearance;
-    inner_d = 52;
+    inner_d = puck_d - 4;
+    collar_inner_d = puck_d + 0.6;
     difference() {
         union() {
             difference() {
@@ -291,11 +314,11 @@ module puck_retainer() {
             }
             difference() {
             translate([0,0,2.2]) cylinder(d=collar_od, h=6.2);
-                translate([0,0,1.4]) cylinder(d=inner_d, h=8);
+                translate([0,0,1.4]) cylinder(d=collar_inner_d, h=8);
             }
             difference() {
                 translate([0,0,7.4]) cylinder(d=collar_od+0.7, h=1.0);
-                translate([0,0,7]) cylinder(d=inner_d, h=2);
+                translate([0,0,7]) cylinder(d=collar_inner_d, h=2);
             }
         }
         for (a=[0,120,240])
@@ -307,6 +330,11 @@ module puck_retainer() {
 module assembled() {
     color("dimgray") glow_stand_v2_shell();
     color([0.92,0.93,0.85,0.75]) glow_stand_v2_diffuser();
+    color("dimgray") translate([puck_center_x,0,retainer_z]) puck_retainer();
+    // Visual-only nominal hardware envelope, never included in exports.
+    if ($preview) color("ivory")
+        translate([puck_center_x,0,arm_z0+fit_clearance])
+            cylinder(d=puck_d,h=puck_h);
 }
 
 if (part == "shell") glow_stand_v2_shell();
@@ -317,6 +345,6 @@ else if (part == "assembled") assembled();
 else {
     translate([0,-105,0]) glow_stand_v2_shell();
     translate([0,105,0]) glow_stand_v2_diffuser();
-    translate([170,-28,0]) weight_cover();
-    translate([170,45,0]) puck_retainer();
+    translate([220,-28,0]) weight_cover();
+    translate([220,45,0]) puck_retainer();
 }
