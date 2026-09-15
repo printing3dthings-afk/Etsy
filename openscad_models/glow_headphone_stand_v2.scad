@@ -231,11 +231,11 @@ module foot_pockets() {
 }
 
 module brand_mark() {
-    translate([base_len-18, base_w/2-4, 3])
-        rotate([90,0,180])
+    // Approved print vector, underside only; clear of feet, weight pocket and cable.
+    // Keep OBC.svg next to this SCAD. Engrave 0.7 mm; no raised branding.
+    translate([107, -15, -0.5])
             linear_extrude(height=1.2)
-                text("OnBrandCraftz", size=4.6,
-                     halign="center", valign="center");
+                mirror([0,1,0]) import("OBC.svg", center=true);
 }
 
 module glow_stand_v2_shell() {
