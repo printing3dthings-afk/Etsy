@@ -726,6 +726,8 @@ function paintPrinter() {
     row('Enclosed', p.enclosed ? 'Yes' : 'No') +
     row('Nozzle', p.nozzle.toFixed(1) + ' mm brass') +
     row('Layer height', (JOB ? JOB.raw.layerHeight : 0.2).toFixed(2) + ' mm') +
+    row('First layer', (JOB && JOB.raw.firstLayerHeight ?
+        JOB.raw.firstLayerHeight : 0.2).toFixed(2) + ' mm') +
     row('Extrusion width', (JOB ? JOB.raw.beadWidth : 0.42).toFixed(2) + ' mm') +
     row('Perimeters', '2') +
     row('Top / bottom layers', '5 / 4') +

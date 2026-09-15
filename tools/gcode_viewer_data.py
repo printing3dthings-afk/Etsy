@@ -96,7 +96,7 @@ def parse(gcode_path):
     layer_time = 0.0
     layer_filament = 0.0
     layer_z = None
-    layer_h = 0.2
+    layer_h = None
     slicer_seconds = None
 
     def flush_run():
@@ -111,7 +111,7 @@ def parse(gcode_path):
         run_speed = []
 
     def flush_layer():
-        nonlocal layer_start_poly, layer_time, layer_filament
+        nonlocal layer_start_poly, layer_time, layer_filament, layer_h
         flush_run()
         n = len(polys) // 3 - layer_start_poly
         if n > 0:
@@ -119,11 +119,12 @@ def parse(gcode_path):
                 int(round((layer_z if layer_z is not None else 0.0) * 100)),
                 layer_start_poly, n,
                 round(layer_time, 2), round(layer_filament, 2),
-                round(layer_h, 3),
+                round(layer_h if layer_h is not None else 0.2, 3),
             ])
         layer_start_poly = len(polys) // 3
         layer_time = 0.0
         layer_filament = 0.0
+        layer_h = None
 
     with open(gcode_path, "r", errors="replace") as fh:
         for line in fh:
@@ -146,10 +147,18 @@ def parse(gcode_path):
                     except ValueError:
                         pass
                 elif line.startswith(";HEIGHT:"):
-                    try:
-                        layer_h = float(line[8:])
-                    except ValueError:
-                        pass
+                    # PrusaSlicer emits ;HEIGHT: whenever the EXTRUSION height
+                    # changes, not once per layer -- a bridge or a first pass
+                    # over a print-in-place gap reports 0.4 inside a 0.2 layer.
+                    # Verified: a plain 20mm cube gives 100 LAYER_CHANGE but 101
+                    # HEIGHT lines. Take only the first after the layer change,
+                    # which is the layer's own nominal height; keeping the last
+                    # made those beads render at twice their real thickness.
+                    if layer_h is None:
+                        try:
+                            layer_h = float(line[8:])
+                        except ValueError:
+                            pass
                 elif "estimated printing time" in line:
                     m = _EST_TIME.search(line)
                     if m:
@@ -232,6 +241,19 @@ def _b64(values, fmt):
     return base64.b64encode(struct.pack(f"<{len(values)}{fmt}", *values)).decode()
 
 
+def _modal_layer_height(layers):
+    """Most common layer height across the job, to 3dp. A job is not one
+    height -- supports and bridges vary it -- so the honest single number is
+    the one the bulk of the layers actually use."""
+    if not layers:
+        return 0.2
+    counts = {}
+    for layer in layers:
+        h = round(layer[5], 3)
+        counts[h] = counts.get(h, 0) + 1
+    return max(counts.items(), key=lambda kv: (kv[1], kv[0]))[0]
+
+
 def build_job(gcode_path, name, notes=""):
     raw = parse(gcode_path)
     layers = raw["layers"]
@@ -279,7 +301,12 @@ def build_job(gcode_path, name, notes=""):
         "notes": notes,
         "types": TYPES,
         "bbox": raw["bbox"],
-        "layerHeight": layers[0][5] if layers else 0.2,
+        # The MODAL layer height, not layers[0]'s -- the first layer is pinned
+        # to 0.2 by first-layer-height, so reading index 0 reported "0.20 mm"
+        # while showing a 0.28 mm job. Caught by looking at the panel next to
+        # the render, not by reading this.
+        "layerHeight": _modal_layer_height(layers),
+        "firstLayerHeight": round(layers[0][5], 3) if layers else 0.2,
         "beadWidth": 0.42,
         "totalSeconds": round(total_time, 1),
         "timeFromSlicer": bool(slicer_total),

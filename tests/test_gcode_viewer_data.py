@@ -109,6 +109,38 @@ def test_travel_move_breaks_the_polyline():
         path.unlink(missing_ok=True)
 
 
+# PrusaSlicer emits ;HEIGHT: whenever the EXTRUSION height changes, not once
+# per layer -- a bridge inside a 0.2mm layer reports 0.4. A plain 20mm cube
+# gives 100 ;LAYER_CHANGE and 101 ;HEIGHT lines.
+BRIDGE_FIXTURE = """\
+M83
+;LAYER_CHANGE
+;Z:0.2
+;HEIGHT:0.2
+;TYPE:External perimeter
+G1 X10 Y10 F9000
+G1 X20 Y10 E0.5 F1800
+;HEIGHT:0.4
+;TYPE:Bridge infill
+G1 X20 Y20 E0.5 F3600
+"""
+
+
+def test_layer_height_is_the_layers_own_not_a_bridge_inside_it():
+    with tempfile.NamedTemporaryFile("w", suffix=".gcode", delete=False) as fh:
+        fh.write(BRIDGE_FIXTURE)
+        path = Path(fh.name)
+    try:
+        raw = gvd.parse(path)
+        h = raw["layers"][0][5]
+        check(abs(h - 0.2) < 1e-6,
+              f"layer height reported as {h} -- a later ;HEIGHT: inside the layer "
+              "(here a bridge at 0.4) overwrote the layer's own nominal height, "
+              "which renders those beads at twice their real thickness")
+    finally:
+        path.unlink(missing_ok=True)
+
+
 def test_build_job_keeps_the_label_it_was_given():
     """The exact shadowing bug: the label came back as a feature type."""
     with tempfile.NamedTemporaryFile("w", suffix=".gcode", delete=False) as fh:
@@ -128,6 +160,17 @@ def test_build_job_keeps_the_label_it_was_given():
               f"speed range should be 30-80, got {job['speedMin']}-{job['speedMax']}")
     finally:
         path.unlink(missing_ok=True)
+
+
+def test_layer_height_reported_is_modal_not_the_first_layers():
+    """first-layer-height is pinned to 0.2, so reading layers[0] reported a
+    0.28mm job as '0.20 mm' in the printer panel."""
+    layers = [[20, 0, 1, 1.0, 1.0, 0.2]] + [[20 + 28 * i, 0, 1, 1.0, 1.0, 0.28]
+                                            for i in range(1, 12)]
+    check(gvd._modal_layer_height(layers) == 0.28,
+          f"modal layer height should be 0.28, got {gvd._modal_layer_height(layers)} "
+          "-- the pinned first layer is being reported as the job's layer height")
+    check(gvd._modal_layer_height([]) == 0.2, "empty layer list should fall back to 0.2")
 
 
 def test_payload_round_trips_through_base64():

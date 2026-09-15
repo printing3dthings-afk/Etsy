@@ -50,6 +50,24 @@ dark end still clear of the `#0d0e11` background. The same numbers appear in
 three places (the GLSL ramp, `speedColor()` for legend swatches, the CSS
 gradient) -- change one and change all three.
 
+## Two slicer facts this surfaced, both verified against real output
+
+**A layer count is layer changes, not height / layer height.** With supports
+on, the slicer gives support material its own layer heights and injects extra
+layer changes. Measured on `halloween_pumpkin.stl`: 469 uniform 0.2mm layers
+with supports off, 604 with them on, same 93.8mm part. A plain 20mm cube
+slices to exactly 100 uniform layers, which is how the config was cleared of
+suspicion. The layer-height comparison jobs are sliced WITHOUT supports so
+the three differ only in layer height.
+
+**`;HEIGHT:` is per extrusion, not per layer.** A bridge inside a 0.2mm layer
+reports 0.4. The cube emits 100 `;LAYER_CHANGE` and 101 `;HEIGHT:` lines.
+Take the first after each layer change; taking the last rendered those beads
+at twice their real thickness.
+
+**A job's layer height is the modal one, not `layers[0]`.** `first-layer-height`
+is pinned to 0.2, so reading index 0 reported a 0.28mm job as "0.20 mm".
+
 ## Why the payload looks the way it does
 
 Consecutive extrusions are chained into polylines and XY is quantized to

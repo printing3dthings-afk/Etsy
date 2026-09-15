@@ -136,6 +136,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
 .viewbtns button:hover{color:var(--amber)}
 
 /* ── overlays ─────────────────────────────────────────── */
+#hint .narrow{display:none}
+@media (max-width:1180px){#hint .wide{display:none}#hint .narrow{display:inline}}
 #hint{position:absolute;left:14px;bottom:12px;font-family:var(--fm);font-size:10.5px;
   color:var(--faint);pointer-events:none;letter-spacing:.03em}
 #loading{position:absolute;inset:0;display:grid;place-items:center;
@@ -192,8 +194,34 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
   aside{max-height:none;overflow:visible}
   #jobs{max-height:none;-webkit-mask-image:none;mask-image:none}
   #stage{min-height:340px}
+  header{padding:8px 14px;gap:8px}
   header h1{font-size:15px}
+  /* The subtitle is explanatory, not operational; on a phone it costs
+     ~50px of the 3D viewport for nothing. */
+  header .sub{display:none}
+  #buildchip{font-size:10px}
   .scrub{order:5;flex-basis:100%;min-width:0}
+
+  /* The transport is the only control you use continuously, and the page is
+     ~2700px tall on a phone -- letting it scroll away means scrolling back up
+     to pause. Pinned, with the last rail padded so nothing hides under it. */
+  footer{position:sticky;bottom:0;z-index:6;
+    box-shadow:0 -10px 22px rgba(0,0,0,.5)}
+  #right{padding-bottom:72px}
+
+  /* Thumb-sized targets. Measured at 22-29px before this; 44 is the floor. */
+  .leg{min-height:44px;padding:4px 6px}
+  .modeswap button{padding:13px 4px}
+  .speeds button,.viewbtns button{padding:14px 15px}
+  .tbtn{width:46px;height:46px}
+  .tabs button{padding:15px 4px}
+  select,input[type=number]{padding:12px 9px}
+  input[type=range]{height:44px}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px}
+  .mat td{padding:9px 6px 9px 0}
+  .kv td{padding:7px 0}
+  #hint{font-size:10px}
 }
 </style>
 
@@ -248,7 +276,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
 
   <div id="stage">
     <div id="loading">Slicing data<div class="barwrap"><div class="bar"></div></div></div>
-    <div id="hint">drag orbit · wheel or pinch to zoom · shift-drag pan</div>
+    <div id="hint"><span class="wide">drag orbit · wheel to zoom · shift-drag pan</span><span class="narrow">drag to orbit · pinch to zoom</span></div>
   </div>
 
   <aside id="right">
@@ -278,6 +306,13 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         the move count and none of them lay plastic, so they are dropped from the
         payload. The nozzle marker jumps between paths the way the real head does,
         but the flight path is not shown.</div>
+      <div class="caveat"><b>A layer count is layer changes, not height divided
+        by layer height.</b> On any plate with supports the two differ, because
+        the slicer gives support material its own layer heights and injects
+        extra layer changes between the object's. Measured: this pumpkin at
+        0.20 mm is 469 uniform layers with supports off and 604 with them on,
+        same 93.8 mm part. The number shown is the real count of layer changes
+        the printer performs.</div>
       <div class="caveat"><b>Coordinates are rounded to 0.01 mm.</b> That is a
         fortieth of a 0.42 mm bead — below anything this view can resolve — and it
         is what makes an 830,000-move plate fit in a web page.</div>
