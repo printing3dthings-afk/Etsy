@@ -292,6 +292,29 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
       <p>Every path on screen came out of a real slicer, run against the real STL
         in this shop's <span class="mono">openscad_models/</span> tree. Nothing
         here is a drawing of a print — it is the print instructions, drawn.</p>
+      <h3>A clean replay here is NOT a clean print</h3>
+      <div class="caveat"><b>Nothing on this page is physics.</b> No gravity, no
+        molten plastic, no heat, no cooling, no bed adhesion, no layer bonding,
+        no moisture. The Material tab changes text on this screen and nothing
+        about the toolpath — the same G-code prints in PLA or PETG. A part can
+        replay perfectly here and still fail on the plate, and the failures this
+        cannot see (warping, a curled corner the nozzle then hits, delamination,
+        stringing) are the ones that actually ruin prints.</div>
+      <div class="caveat">Predicting warping for real means thermo-mechanical
+        FEA — a different class of tool entirely. What <b>is</b> honest to do is
+        measure signals from the real file that correlate with known failures:
+        the longest genuinely unsupported span, layers too quick to cool, the
+        area gripping the plate, the tall-and-narrow ratio. That is
+        <span class="mono">tools/print_risk.py</span>, and it reports numbers,
+        not verdicts — its thresholds stay guesses until real prints are logged
+        against them with <span class="mono">--record</span>.</div>
+      <div class="caveat"><b>Worked example of why a number needs care.</b> The
+        longest bridge MOVE on the sauce tray is 107.9 mm, which sounds
+        unprintable. The longest genuinely unsupported run inside that move is
+        <b>5.6 mm</b> — the rest passes over ground already printed. It sits at
+        z=0.8 mm: the ceiling of the engraved maker's mark on the underside.
+        The scary number was the wrong measurement.</div>
+
       <h3>What it is not</h3>
       <div class="caveat"><b>This is PrusaSlicer, not Bambu Studio.</b> They share
         an engine lineage — Bambu Studio and Orca are both PrusaSlicer forks — so

@@ -123,6 +123,11 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
          bridge_max=10.0):
     m = trimesh.load(path, force="mesh")
     checks = []
+    # ADVISORIES NEVER FAIL THE GATE, deliberately. The thresholds behind them
+    # are uncalibrated guesses until real prints are logged against them
+    # (tools/print_risk.py --record). Failing a real product on an uncalibrated
+    # number would be exactly the threshold-fitting this gate exists to avoid.
+    advisories = []
 
     def add(name, ok, detail):
         checks.append({"check": name, "pass": bool(ok), "detail": detail})
@@ -157,7 +162,15 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
         from virtual_printer import report as _slice_report
         import tempfile as _tf
         with _tf.TemporaryDirectory() as td:
-            r = _slice_report(path, Path(td) / "g.gcode", supports=True)
+            gpath = Path(td) / "g.gcode"
+            r = _slice_report(path, gpath, supports=True)
+            # Same slice, reused: risk signals cost one extra pass over the
+            # file, not a second slice.
+            try:
+                from print_risk import analyse as _risk
+                advisories.append(_risk(gpath))
+            except Exception as rexc:
+                advisories.append({"error": f"risk signals unavailable: {rexc}"})
         ok = r["support_moves"] == 0 and r["overhang_perimeters"] == 0
         add("no_unsupported_overhang", ok,
             f"slicer: {r['support_moves']} support moves, "
@@ -183,7 +196,8 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
         f"centre of mass is {d:.1f}mm from the nearest contact, base reach {reach:.1f}mm -- it tips")
 
     failed = [c for c in checks if not c["pass"]]
-    return {"file": str(path), "passed": not failed, "checks": checks}
+    return {"file": str(path), "passed": not failed, "checks": checks,
+            "advisories": advisories}
 
 
 def _cli():
@@ -210,6 +224,17 @@ def _cli():
         print(a.mesh)
         for c in res["checks"]:
             print(f"  {'ok  ' if c['pass'] else 'FAIL'}  {c['check']}: {c['detail']}")
+        for adv in res.get("advisories", []):
+            if "error" in adv:
+                print(f"  note  risk: {adv['error']}")
+                continue
+            at = f" at z={adv['unsupported_span_at_z']}mm" if adv.get("unsupported_span_at_z") else ""
+            print(f"  note  risk (uncalibrated, never fails the gate): "
+                  f"{adv['unsupported_span_mm']}mm widest unsupported span{at}; "
+                  f"{adv['short_layers']} layer(s) under the "
+                  f"{adv['slowdown_threshold_s']}s cooling threshold; "
+                  f"{adv['first_layer_area_mm2']}mm2 on the plate; "
+                  f"aspect {adv['aspect_ratio']}")
         print("PRODUCT GATE PASSED" if res["passed"] else "PRODUCT GATE FAILED")
     raise SystemExit(0 if res["passed"] else 1)
 

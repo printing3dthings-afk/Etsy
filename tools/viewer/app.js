@@ -39,13 +39,13 @@ var PRINTERS = {
 
 // Starting points only. Scott's own tuned profiles override every one of these.
 var MATERIALS = [
-  {n:'PLA',      noz:'190\u2013230', bed:'35\u201360',  dry:'45 \u00b0C / 6\u20138 h',  plate:'Smooth PEI', use:'Decorative, sharpest detail, lowest failure rate'},
-  {n:'Silk PLA', noz:'200\u2013230', bed:'35\u201360',  dry:'45 \u00b0C / 6\u20138 h',  plate:'Smooth PEI', use:'Premium metallic finish, no post-processing'},
-  {n:'PETG',     noz:'230\u2013260', bed:'70\u201390',  dry:'65 \u00b0C / 6\u20138 h',  plate:'Textured PEI', use:'Functional, moisture and heat resistant'},
-  {n:'TPU',      noz:'200\u2013240', bed:'30\u201350',  dry:'\u2014',              plate:'Textured PEI', use:'Flexible \u2014 koozies, grips, gaskets'},
-  {n:'ABS',      noz:'240\u2013270', bed:'90\u2013100', dry:'60 \u00b0C / 4\u20136 h',  plate:'Textured PEI', use:'Heat resistant; needs the enclosure'},
-  {n:'ASA',      noz:'240\u2013280', bed:'90\u2013100', dry:'60 \u00b0C / 4\u20136 h',  plate:'Textured PEI', use:'Outdoor, UV stable; needs the enclosure'},
-  {n:'PA / PC',  noz:'270\u2013300', bed:'90\u2013100', dry:'80 \u00b0C / 12+ h',  plate:'Textured PEI', use:'Engineering parts; wet filament ruins these'}
+  {n:'PLA', rho:1.24,     noz:'190\u2013230', bed:'35\u201360',  dry:'45 \u00b0C / 6\u20138 h',  plate:'Smooth PEI', use:'Decorative, sharpest detail, lowest failure rate'},
+  {n:'Silk PLA', rho:1.24, noz:'200\u2013230', bed:'35\u201360',  dry:'45 \u00b0C / 6\u20138 h',  plate:'Smooth PEI', use:'Premium metallic finish, no post-processing'},
+  {n:'PETG', rho:1.27,    noz:'230\u2013260', bed:'70\u201390',  dry:'65 \u00b0C / 6\u20138 h',  plate:'Textured PEI', use:'Functional, moisture and heat resistant'},
+  {n:'TPU', rho:1.21,     noz:'200\u2013240', bed:'30\u201350',  dry:'\u2014',              plate:'Textured PEI', use:'Flexible \u2014 koozies, grips, gaskets'},
+  {n:'ABS', rho:1.04,     noz:'240\u2013270', bed:'90\u2013100', dry:'60 \u00b0C / 4\u20136 h',  plate:'Textured PEI', use:'Heat resistant; needs the enclosure'},
+  {n:'ASA', rho:1.07,     noz:'240\u2013280', bed:'90\u2013100', dry:'60 \u00b0C / 4\u20136 h',  plate:'Textured PEI', use:'Outdoor, UV stable; needs the enclosure'},
+  {n:'PA / PC', rho:1.17, noz:'270\u2013300', bed:'90\u2013100', dry:'80 \u00b0C / 12+ h',  plate:'Textured PEI', use:'Engineering parts; wet filament ruins these'}
 ];
 
 // \u2500\u2500 dom \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -503,7 +503,7 @@ function refreshReadout(force) {
   $('r-rem').innerHTML = hms(JOB.total - play.t);
   var a0 = JOB.layerSeg[li], a1 = JOB.layerSeg[li + 1];
   var fil = layerFilCum[li] + (L[4] * ((seg - a0) / Math.max(1, a1 - a0)));
-  $('r-fil').innerHTML = (fil * 2.98e-3).toFixed(1) + ' <small>g</small>';
+  $('r-fil').innerHTML = grams(fil).toFixed(1) + ' <small>g</small>';
   var v = seg > 0 ? JOB.segSpeed[seg - 1] : 0;
   $('r-spd').innerHTML = v + ' <small>mm/s</small>';
   $('r-seg').textContent = seg.toLocaleString() + ' moves';
@@ -574,6 +574,17 @@ var MAGMA = [
   [8.353717,-3.577720,0.314468],[-27.668733,14.264731,-13.649213],
   [52.176140,-27.943606,12.944169],[-50.768525,29.046583,4.234153],
   [18.655705,-11.489774,-5.601962]];
+
+var FIL_AREA_MM2 = Math.PI * Math.pow(1.75 / 2, 2);   // 1.75mm filament
+
+function density() {
+  var m = MATERIALS.filter(function (x) { return x.n === materialId; })[0];
+  return m && m.rho ? m.rho : 1.24;
+}
+
+function grams(mm) {
+  return mm * FIL_AREA_MM2 / 1000 * density();
+}
 
 function speedColor(v) {
   if (!JOB) { return '#888'; }

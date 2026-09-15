@@ -237,6 +237,39 @@ rule this shop already applies to AI photos and Etsy mutations.**
   showing up, check `fc-list | grep -i '<family>'` before assuming the
   boolean/positioning is wrong.
 
+## The virtual printer is not a simulator (2026-09-15)
+
+Scott asked whether a clean replay in the P1S viewer means a clean print. It
+does not, and the distinction is worth holding onto because it is easy to
+drift the other way as the tooling gets better.
+
+`virtual_printer.py` runs a real slicer, so everything it reports about
+DECISIONS is fact: supports, bridges, overhang classification, feature types,
+speeds, layer count, filament length. The viewer draws those instructions
+exactly. **Neither models any physics.** No gravity, no melt behaviour, no
+thermal contraction, no bed adhesion, no layer bonding, no moisture. Warping,
+a curled corner the nozzle then hits, delamination and stringing are all
+invisible. A part can pass `product_gate.py`, replay perfectly, and still fail
+on the plate.
+
+`tools/print_risk.py` measures five signals that correlate with known failure
+modes (longest genuinely unsupported span, layers under the cooling threshold,
+first-layer area, aspect ratio, overhang length). Two rules on it:
+
+1. **Its thresholds are guesses until real prints are logged against them**
+   (`--record`, `--calibration`). The calibration report refuses to claim any
+   signal separates good from bad with fewer than 3 examples on each side.
+2. **It never fails the gate.** Advisories only. Failing a real product on an
+   uncalibrated threshold is the same threshold-fitting mistake that made the
+   geometric overhang check fail four verified, selling sauce parts.
+
+Measure the right thing, too. "Longest bridge move" on the sauce tray is
+107.9mm; the longest genuinely unsupported run inside that move is 5.6mm,
+because a straight extrusion passes over ground already printed. The 5.6mm
+sits at z=0.8mm, the ceiling of the engraved maker's mark -- the same place an
+earlier overhang investigation independently landed. Reporting the move length
+would have condemned a clean part.
+
 ## Bambu P1S constraints — design within these, don't guess
 
 **Load `data/knowledge_base/3d_printing_expertise.md` alongside this

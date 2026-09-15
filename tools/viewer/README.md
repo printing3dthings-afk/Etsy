@@ -50,6 +50,44 @@ dark end still clear of the `#0d0e11` background. The same numbers appear in
 three places (the GLSL ramp, `speedColor()` for legend swatches, the CSS
 gradient) -- change one and change all three.
 
+## This is not a simulator, and the difference matters
+
+Scott asked directly: "if it prints perfect in this it should print perfect in
+the real world?" No.
+
+The viewer draws the instruction file exactly. It models **no physics**: no
+gravity, no melt rheology, no thermal contraction, no bed adhesion, no layer
+bonding, no moisture. The Material tab is reference text; the same G-code
+prints in PLA or PETG. The failure modes that actually ruin prints -- warping,
+a curled corner the nozzle then strikes, delamination, stringing -- are all
+invisible to it. Predicting warping for real is thermo-mechanical FEA, a
+different class of tool.
+
+What IS honest is measuring signals from the real file that correlate with
+known failures. `tools/print_risk.py` reports five, and reports numbers rather
+than verdicts:
+
+| signal | why it correlates |
+|---|---|
+| `unsupported_span_mm` | longest CONTIGUOUS run of a bridge with nothing beneath |
+| `short_layers` | layers under the profile's own `slowdown_below_layer_time` |
+| `first_layer_area_mm2` | grip on the plate |
+| `aspect_ratio` | tall and narrow gets knocked over |
+| `overhang_mm` | length the slicer itself tagged as overhang perimeter |
+
+**Its thresholds are guesses.** They stay guesses until real prints are logged
+against them (`--record ok|failed|partial`, `--calibration`), and the report
+refuses to claim a signal separates good from bad below 3 examples on each
+side. `product_gate.py` prints these as advisories that **never fail the
+gate** -- failing a real product on an uncalibrated number is precisely the
+threshold-fitting that gate exists to avoid.
+
+The measurement care this needs is real. The longest bridge MOVE on the sauce
+tray is 107.9mm, which sounds unprintable; the longest genuinely unsupported
+run inside it is 5.6mm, at z=0.8mm -- the ceiling of the engraved maker's mark,
+independently where an earlier overhang investigation landed. Reporting 107.9
+would have condemned a clean, selling part.
+
 ## Two slicer facts this surfaced, both verified against real output
 
 **A layer count is layer changes, not height / layer height.** With supports
