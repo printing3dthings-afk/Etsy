@@ -215,14 +215,32 @@ function updateCamera() {
 // note on why. uScale converts back; nothing else in the page sees raw units.
 var VERT = [
   'attribute float aType;',
+  'attribute float aSpeed;',
   'uniform vec3 uColor[12];',
   'uniform float uVis[12];',
+  'uniform float uMode;',      // 0 = colour by feature, 1 = colour by speed
+  'uniform vec2 uSpd;',        // slowest / fastest mm/s in this job
   'varying vec3 vColor;',
   'varying float vVis;',
   'varying vec3 vPos;',
+  // Magma, reversed, with the ends pulled in. Reversed so the BRIGHT end is
+  // slow -- the outer wall and top surface, the parts a customer actually
+  // sees. Ends clamped so the fast end lands on deep violet rather than black,
+  // which would make infill invisible against the chamber.
+  'vec3 magma(float t){',
+  '  const vec3 c0=vec3(-0.002136,-0.000750,-0.005386);',
+  '  const vec3 c1=vec3(0.251661,0.677523,2.494027);',
+  '  const vec3 c2=vec3(8.353717,-3.577720,0.314468);',
+  '  const vec3 c3=vec3(-27.668733,14.264731,-13.649213);',
+  '  const vec3 c4=vec3(52.176140,-27.943606,12.944169);',
+  '  const vec3 c5=vec3(-50.768525,29.046583,4.234153);',
+  '  const vec3 c6=vec3(18.655705,-11.489774,-5.601962);',
+  '  return clamp(c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6))))),0.0,1.0);',
+  '}',
   'void main(){',
   '  int t = int(aType + 0.5);',
-  '  vColor = uColor[t];',
+  '  float f = clamp((aSpeed - uSpd.x) / max(uSpd.y - uSpd.x, 1.0), 0.0, 1.0);',
+  '  vColor = mix(uColor[t], magma(mix(0.92, 0.28, f)), uMode);',
   '  vVis = uVis[t];',
   '  vec3 p = position * 0.01;',
   '  vPos = p;',
@@ -256,6 +274,8 @@ function makeMaterial(dim) {
     uniforms: {
       uColor: {value: cols},
       uVis:   {value: new Array(12).fill(1)},
+      uMode:  {value: 0},
+      uSpd:   {value: new THREE.Vector2(15, 80)},
       uDim:   {value: dim}
     },
     vertexShader: VERT, fragmentShader: FRAG,
@@ -276,6 +296,7 @@ var JOB = null;           // decoded payload + derived arrays
 function buildJob(raw) {
   var pts = b64(raw.pts, Int16Array);
   var polys = b64(raw.polys, Int32Array);
+  var spd = b64(raw.speeds, Uint8Array);
   var layers = raw.layers;               // [z*100, polyStart, polyCount, sec, mm, h]
   var nPoly = polys.length / 3;
 
@@ -285,6 +306,7 @@ function buildJob(raw) {
 
   var vPos  = new Int16Array(nPt * 3 * 3);   // 3 verts across the bead tent
   var vType = new Uint8Array(nPt * 3);
+  var vSpd  = new Uint8Array(nPt * 3);
   var index = new Uint32Array(nSeg * 12);
   var segEnd = new Float32Array(nSeg * 3);
   var segLen = new Float32Array(nSeg);
@@ -327,7 +349,11 @@ function buildJob(raw) {
         vPos[vi * 3] = x + ax; vPos[vi * 3 + 1] = y + ay; vPos[vi * 3 + 2] = zlow;
         vPos[vi * 3 + 3] = x;  vPos[vi * 3 + 4] = y;      vPos[vi * 3 + 5] = ztop;
         vPos[vi * 3 + 6] = x - ax; vPos[vi * 3 + 7] = y - ay; vPos[vi * 3 + 8] = zlow;
+        // A point is shared by two segments; take the one ENDING here so the
+        // colour changes at the same place the slowdown starts.
+        var sv = spd[Math.min(si + Math.max(i - 1, 0), spd.length - 1)];
         vType[vi] = t; vType[vi + 1] = t; vType[vi + 2] = t;
+        vSpd[vi] = sv; vSpd[vi + 1] = sv; vSpd[vi + 2] = sv;
         vi += 3;
 
         if (i > 0) {
@@ -365,13 +391,14 @@ function buildJob(raw) {
   var g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Int16BufferAttribute(vPos, 3));
   g.setAttribute('aType', new THREE.Uint8BufferAttribute(vType, 1));
+  g.setAttribute('aSpeed', new THREE.Uint8BufferAttribute(vSpd, 1));
   g.setIndex(new THREE.BufferAttribute(index, 1));
   g.boundingSphere = new THREE.Sphere(
     new THREE.Vector3(128, 128, 128), 400);   // set by hand: positions are raw int16
 
   return {raw:raw, geom:g, nSeg:si, segEnd:segEnd, segCum:segCum,
           segLayer:segLayer, layerSeg:layerSeg, total:cum,
-          filPerSeg:null, layers:layers};
+          segSpeed:spd, layers:layers};
 }
 
 function mountJob(job) {
@@ -412,6 +439,7 @@ var SPEEDS = [
 ];
 var play = {on:false, t:0, speed:1000, seg:0, last:0, scrubbing:false};
 var visible = new Array(12).fill(true);
+var colorMode = 'feature';
 var layerFilCum = null;
 
 function segAtTime(t) {
@@ -476,7 +504,9 @@ function refreshReadout(force) {
   var a0 = JOB.layerSeg[li], a1 = JOB.layerSeg[li + 1];
   var fil = layerFilCum[li] + (L[4] * ((seg - a0) / Math.max(1, a1 - a0)));
   $('r-fil').innerHTML = (fil * 2.98e-3).toFixed(1) + ' <small>g</small>';
-  $('r-seg').innerHTML = seg.toLocaleString();
+  var v = seg > 0 ? JOB.segSpeed[seg - 1] : 0;
+  $('r-spd').innerHTML = v + ' <small>mm/s</small>';
+  $('r-seg').textContent = seg.toLocaleString() + ' moves';
   var tIdx = seg > 0 ? typeOfSeg(seg - 1) : -1;
   var nf = $('nowfeat');
   nf.firstElementChild.style.background = tIdx >= 0 ? TYPE_COLOR[tIdx] : 'var(--faint)';
@@ -539,6 +569,41 @@ function paintJobList() {
     ' extrusion moves on file';
 }
 
+var MAGMA = [
+  [-0.002136,-0.000750,-0.005386],[0.251661,0.677523,2.494027],
+  [8.353717,-3.577720,0.314468],[-27.668733,14.264731,-13.649213],
+  [52.176140,-27.943606,12.944169],[-50.768525,29.046583,4.234153],
+  [18.655705,-11.489774,-5.601962]];
+
+function speedColor(v) {
+  if (!JOB) { return '#888'; }
+  var lo = JOB.raw.speedMin, hi = JOB.raw.speedMax;
+  var f = Math.min(1, Math.max(0, (v - lo) / Math.max(hi - lo, 1)));
+  var t = 0.92 + (0.28 - 0.92) * f;      // same clamped, reversed mapping
+  var c = [0, 0, 0];
+  for (var k = 0; k < 3; k++) {
+    var acc = 0;
+    for (var i = 6; i >= 0; i--) { acc = acc * t + MAGMA[i][k]; }
+    c[k] = Math.round(Math.min(1, Math.max(0, acc)) * 255);
+  }
+  return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
+}
+
+function paintSpeedPanel() {
+  var s = JOB.raw.speedByType, lo = JOB.raw.speedMin, hi = JOB.raw.speedMax;
+  var rows = Object.keys(s).sort(function (a, b) { return s[a].med - s[b].med; })
+    .map(function (n) {
+      var e = s[n];
+      var range = e.min === e.max ? e.med + '' : e.min + '\u2013' + e.max;
+      return '<tr><td><span class="sw" style="background:' + speedColor(e.med) +
+        '"></span>' + n + '</td><td>' + range + '</td></tr>';
+    }).join('');
+  $('speedpanel').innerHTML =
+    '<div class="ramp"></div><div class="ends"><span>' + lo +
+    ' mm/s \u00b7 slow</span><span>fast \u00b7 ' + hi + ' mm/s</span></div>' +
+    '<table>' + rows + '</table>';
+}
+
 function paintLegend() {
   var host = $('legend');
   host.innerHTML = '';
@@ -562,11 +627,30 @@ function paintLegend() {
   });
 }
 
+function setColorMode(mode) {
+  colorMode = mode;
+  Array.prototype.forEach.call($('modeswap').children, function (b) {
+    b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode));
+  });
+  var speedy = mode === 'speed';
+  $('speedpanel').hidden = !speedy;
+  $('legend').hidden = speedy;
+  $('legnote').innerHTML = speedy
+    ? 'Feedrate straight out of the G-code. Brightest is slowest \u2014 the outer '
+      + 'wall and the top surface, the parts a buyer actually sees. The dark, fast '
+      + 'paths are infill nobody will ever look at.'
+    : 'Click a type to hide it. Every colour here is the slicer\'s own '
+      + '<span class="mono">;TYPE:</span> tag \u2014 nothing is inferred from the shape.';
+  applyVisibility();
+}
+
 function applyVisibility() {
   [jobMesh, ghostMesh].forEach(function (m) {
     if (!m) { return; }
     var u = m.material.uniforms.uVis.value;
     for (var i = 0; i < 12; i++) { u[i] = visible[i] ? 1 : 0; }
+    m.material.uniforms.uMode.value = colorMode === 'speed' ? 1 : 0;
+    if (JOB) { m.material.uniforms.uSpd.value.set(JOB.raw.speedMin, JOB.raw.speedMax); }
   });
 }
 
@@ -586,7 +670,8 @@ window.__JOB_LOADED = function (raw) {
     $('ltot').textContent = '/ ' + raw.layers.length;
     _lastFeat = null;
     $('jobnote').textContent = raw.notes || '';
-    paintLegend(); paintJobList(); paintPrinter();
+    paintLegend(); paintSpeedPanel(); paintJobList(); paintPrinter();
+    setColorMode(colorMode);
     play.t = 0; setSeg(0); setPlaying(true);
     refreshReadout(true);
     loading.hidden = true;
@@ -755,6 +840,12 @@ function initUI() {
         else { cam.phi = 1.06; cam.theta = -0.72; }
       });
     });
+
+  Array.prototype.forEach.call($('modeswap').children, function (b) {
+    b.addEventListener('click', function () {
+      setColorMode(b.getAttribute('data-mode'));
+    });
+  });
 
   $('ghost').addEventListener('click', function () {
     var on = $('ghost').getAttribute('aria-pressed') !== 'true';

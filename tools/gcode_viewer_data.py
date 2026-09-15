@@ -86,9 +86,11 @@ def parse(gcode_path):
 
     pts = []                 # flat int16 x,y pairs
     polys = []               # flat int32 triples: type, startPoint, nPoints
+    speeds = []              # uint8 mm/s, one per SEGMENT, in draw order
     layers = []              # [z_hundredths, polyStart, polyCount, time_s, filament_mm]
 
     run = []                 # current polyline as [(x, y), ...]
+    run_speed = []           # mm/s for the segment ENDING at each run point
     run_type = _OTHER
     layer_start_poly = 0
     layer_time = 0.0
@@ -98,13 +100,15 @@ def parse(gcode_path):
     slicer_seconds = None
 
     def flush_run():
-        nonlocal run
+        nonlocal run, run_speed
         if len(run) >= 2:
             polys.extend((run_type, len(pts) // 2, len(run)))
             for px, py in run:
                 pts.append(int(round(px * 100)))
                 pts.append(int(round(py * 100)))
+            speeds.extend(run_speed)
         run = []
+        run_speed = []
 
     def flush_layer():
         nonlocal layer_start_poly, layer_time, layer_filament
@@ -195,6 +199,9 @@ def parse(gcode_path):
                     run_type = cur_type
                     run.append((px, py))
                 run.append((x, y))
+                # Clamped, not scaled: a P1S profile tops out well under 255
+                # mm/s, so one byte holds the real number with no unit games.
+                run_speed.append(max(1, min(255, int(round(feed / 60.0)))))
             elif dist > 0:
                 flush_run()      # a travel ends the current path
 
@@ -208,9 +215,13 @@ def parse(gcode_path):
 
     xs = pts[0::2]
     ys = pts[1::2]
+    assert len(speeds) == sum(polys[i + 2] - 1 for i in range(0, len(polys), 3)), \
+        "speed array and segment count diverged -- the run/flush bookkeeping is wrong"
+
     return {
         "pts": pts,
         "polys": polys,
+        "speeds": speeds,
         "layers": layers,
         "slicerSeconds": slicer_seconds,
         "bbox": [min(xs) / 100, min(ys) / 100, max(xs) / 100, max(ys) / 100],
@@ -241,10 +252,28 @@ def build_job(gcode_path, name, notes=""):
 
     total_fil = sum(l[4] for l in layers)
     grams = total_fil * math.pi * (1.75 / 2) ** 2 / 1000 * 1.24
+    # Per-type speed summary. This is the payload's own teaching point: the
+    # slicer runs the outer wall at roughly half the inner wall, and the top
+    # surface slowest of all. Reporting the real min/median/max per type beats
+    # asserting it in prose.
     per_type = {}
+    spd_by_type = {}
+    seg = 0
     for i in range(0, len(raw["polys"]), 3):
         t, _s, n = raw["polys"][i:i + 3]
-        per_type[TYPES[t]] = per_type.get(TYPES[t], 0) + n - 1
+        # `tname`, not `name` -- `name` is this function's own parameter, and
+        # shadowing it here silently stamped the last feature type onto every
+        # job's label in index.js. Caught in the browser, not by reading this.
+        tname = TYPES[t]
+        per_type[tname] = per_type.get(tname, 0) + n - 1
+        spd_by_type.setdefault(tname, []).extend(raw["speeds"][seg:seg + n - 1])
+        seg += n - 1
+    speed_summary = {}
+    for tname, vals in spd_by_type.items():
+        vals.sort()
+        speed_summary[tname] = {"min": vals[0], "med": vals[len(vals) // 2],
+                                "max": vals[-1], "n": len(vals)}
+    all_spd = sorted(raw["speeds"])
     return {
         "name": name,
         "notes": notes,
@@ -257,9 +286,13 @@ def build_job(gcode_path, name, notes=""):
         "filamentMm": round(total_fil, 1),
         "filamentG": round(grams, 1),
         "segmentsByType": per_type,
+        "speedByType": speed_summary,
+        "speedMin": all_spd[0],
+        "speedMax": all_spd[-1],
         "layers": layers,
         "pts": _b64(raw["pts"], "h"),
         "polys": _b64(raw["polys"], "i"),
+        "speeds": _b64(raw["speeds"], "B"),
     }
 
 
@@ -298,11 +331,13 @@ def main(argv=None):
             "maxZ": job["layers"][-1][0] / 100,
             "totalSeconds": job["totalSeconds"], "filamentG": job["filamentG"],
             "bbox": job["bbox"], "sizeMB": round(mb, 2),
+            "speedMin": job["speedMin"], "speedMax": job["speedMax"],
             "needsSupport": "Support material" in job["segmentsByType"],
         })
         print(f"{stem:28s} {len(job['layers']):4d} layers  "
               f"{segments:9,d} segments  {job['filamentG']:7.1f}g  "
-              f"{job['totalSeconds'] / 60:6.0f} min  {mb:5.2f} MB")
+              f"{job['totalSeconds'] / 60:6.0f} min  "
+              f"{job['speedMin']}-{job['speedMax']} mm/s  {mb:5.2f} MB")
 
     (out / "index.js").write_text(
         "window.__PRINT_INDEX = " + json.dumps(index, separators=(",", ":")) + ";\n")

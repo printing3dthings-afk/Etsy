@@ -50,7 +50,7 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
   -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),rgba(0,0,0,.15));
   mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),rgba(0,0,0,.15))}
 #jobnote{font-size:12px;line-height:1.55;color:#b9b7b2;margin:9px 0 0}
-#featnote{font-size:11.5px;line-height:1.5;color:var(--dim);margin:8px 0 0;min-height:52px}
+#featnote{font-size:11.5px;line-height:1.5;color:var(--dim);margin:8px 0 0;min-height:46px}
 .job{display:block;width:100%;text-align:left;border:1px solid var(--line);
   border-radius:3px;padding:9px 11px;margin-bottom:7px;background:var(--rail);
   transition:border-color .12s,background .12s}
@@ -75,6 +75,22 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
 .cell .v small{font-family:var(--fm);font-size:11px;font-weight:400;color:var(--dim)}
 #nowfeat{font-family:var(--fm);font-size:12px;padding:8px 10px;margin-top:1px;
   background:var(--rail);border:1px solid var(--line);display:flex;align-items:center;gap:8px}
+#r-seg{margin-left:auto;color:var(--faint);font-size:10.5px;font-variant-numeric:tabular-nums}
+.modeswap{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);
+  margin-bottom:11px}
+.modeswap button{flex:1;padding:6px 4px;background:var(--rail);font-size:11.5px;
+  letter-spacing:.03em}
+.modeswap button[aria-pressed="true"]{background:var(--amber);color:#160c02;font-weight:600}
+#speedpanel .ramp{height:11px;border-radius:2px;margin:2px 0 5px;
+  background:linear-gradient(90deg,#fbdb97,#ff996a,#ef6160,#c63d71,#912684,#5b1880)}
+#speedpanel .ends{display:flex;justify-content:space-between;font-family:var(--fm);
+  font-size:10.5px;color:var(--dim);margin-bottom:11px;font-variant-numeric:tabular-nums}
+#speedpanel table{width:100%;border-collapse:collapse;font-size:11.5px}
+#speedpanel td{padding:3px 0;border-bottom:1px solid var(--line)}
+#speedpanel td:last-child{text-align:right;font-family:var(--fm);font-size:11px;
+  font-variant-numeric:tabular-nums}
+#speedpanel .sw{display:inline-block;width:9px;height:9px;border-radius:2px;
+  margin-right:7px;vertical-align:-1px}
 #nowfeat .sw{width:11px;height:11px;border-radius:2px;flex:none}
 
 /* ── legend ───────────────────────────────────────────── */
@@ -206,18 +222,23 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
           <div class="cell"><div class="k">Elapsed</div><div class="v" id="r-el">—</div></div>
           <div class="cell"><div class="k">Remaining</div><div class="v" id="r-rem">—</div></div>
           <div class="cell"><div class="k">Filament</div><div class="v" id="r-fil">—</div></div>
-          <div class="cell"><div class="k">Moves</div><div class="v" id="r-seg">—</div></div>
+          <div class="cell"><div class="k">Speed</div><div class="v" id="r-spd">—</div></div>
         </div>
         <div id="nowfeat"><span class="sw" style="background:var(--faint)"></span>
-          <span id="r-feat">idle</span></div>
+          <span id="r-feat">idle</span><span id="r-seg" class="mono"></span></div>
         <p id="featnote"></p>
       </div>
     </div>
     <div class="sect">
-      <h2>Feature types</h2>
+      <h2>Colour by</h2>
       <div class="body">
+        <div class="modeswap" id="modeswap" role="group" aria-label="Colour by">
+          <button type="button" data-mode="feature" aria-pressed="true">Feature</button>
+          <button type="button" data-mode="speed" aria-pressed="false">Speed</button>
+        </div>
+        <div id="speedpanel" hidden></div>
         <div id="legend"></div>
-        <p class="legnote">Click a type to hide it. Every colour here is the
+        <p class="legnote" id="legnote">Click a type to hide it. Every colour here is the
           slicer's own <span class="mono">;TYPE:</span> tag — nothing is inferred
           from the shape.</p>
       </div>
