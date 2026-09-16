@@ -55,7 +55,10 @@ gradient) -- change one and change all three.
 Built to the real outside dimensions, **389 x 389 x 458 mm** around the 256mm
 build cube (bambulab.com and the US store listing, checked 2026-09-16). Solid
 exterior panels, smoked glass front door, inset top cover, screen and knob on
-the bottom-right bezel, feet, rear spool holder.
+the bottom-right bezel, feet, rear spool holder. The machine-view framing is
+computed from the real outer extent rather than a tuned constant, because an
+AMS on the lid makes the stack half again as tall and a fixed radius left it
+hanging off the top of the frame.
 
 **Deliberately unbranded.** The proportions are the machine's; the logo is not
 mine to reproduce, so there isn't one.
@@ -65,6 +68,29 @@ and rotated ~110 degrees. Which edge is a **profile setting** (`hingeLeft`),
 not a baked assumption -- no primary source I could reach stated the P1S hinge
 side, so it is exposed rather than guessed. Flip it in `PRINTERS` if it is
 backwards.
+
+**You open it by touching it.** The glass, the frame and the handle are all
+hit targets (`userData.door`); a pointerup that travelled under 7px raycasts
+against them and toggles. The threshold is in pixels rather than time because
+a phone "tap" always carries a few pixels of finger travel, and a drag that
+starts on the door has to orbit, not open it. On a mouse the cursor turns to a
+pointer over the door -- a phone has no hover, so that raycast is skipped
+there rather than run on every touchmove. The toolbar button still works.
+
+**The AMS on the lid is Scott's, at its real size**: the standard 4-slot unit,
+**368 x 283 x 224 mm, 2.5 kg**, from Bambu Lab's own "AMS Tech Specs" table
+(us.store.bambulab.com, checked 2026-09-16). Getting this right took a
+deliberate second look -- searching "AMS dimensions" surfaces the **AMS HT**
+(114 x 280 x 245) first, and the **AMS 2 Pro** (372 x 280 x 226) is a third
+box again. All three get called "the AMS" and only one is the one on screen.
+`tests/test_viewer_machine_profile.py` fails if those numbers are ever swapped
+for a neighbour's. It is a profile field, so the A-series entry declares none
+(AMS Lite is a different unit, not P-series compatible) and nothing is drawn
+for it. The spools are drawn at the AMS's own published compatibility range,
+197-202mm across and 50-68mm wide, which is why they nearly fill the box --
+their colours are illustrative and the panel says so, because nothing here is
+reading a real machine. The AMS steps aside in chamber view: it is furniture
+on the lid, and in cutaway it would sit on top of the hole the cutaway opened.
 
 Two view modes, because the two jobs conflict:
 
@@ -100,14 +126,30 @@ Two geometry traps this exposed, both found by rendering and looking:
   interior of the far ones, which is how you look into a real enclosure. The
   nearest corner post is culled per frame for the same reason.
 
+**Inside: verified motion, schematic hardware, and the page says which.** Two
+rear lead screws, vertical rails, a bed carriage that descends with the bed
+(it lives inside `bedGroup`, which is the whole point of drawing it), the two
+Y rails the gantry beam travels on, and a chamber LED that is a real
+`PointLight` rather than a painted glow -- so opening the door reveals a lit
+interior. What is **verified** is the motion: fixed gantry, descending bed.
+The ironmongery around it is representative, because no primary source I could
+reach documents the P1S's internal Z layout, and a learner should not read a
+guess as a photograph. The printer panel carries that caveat on screen, next
+to the dimensions that are real.
+
+The lamp is deliberately invisible to the print: the bead shader is unlit, so
+the light changes the machine around the part and never the part itself.
+
 Everything is generated -- PEI speckle, shell gradient, contact shadow, nozzle
 glow are all canvas textures, because the artifact CSP blocks image hosts.
 The enclosure is deliberately unbranded.
 
 ## Performance
 
-3.07M triangles for the heaviest plate in **30 draw calls** -- one mesh, one
-`setDrawRange`, no per-frame rebuild.
+3.07M triangles for the heaviest plate. The toolpath itself is **one draw
+call** -- one mesh, one `setDrawRange`, no per-frame rebuild. The machine
+around it costs the rest: 30 calls bare, 70 with the interior hardware and the
+AMS, all of them static boxes and cylinders.
 
 `--simplify` (default 0.02mm) drops points whose removal shifts the path less
 than a twentieth of a bead: 8-30% of points on real plates, with time, mass and

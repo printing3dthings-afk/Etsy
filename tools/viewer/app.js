@@ -28,6 +28,11 @@ var TYPE_HELP = {
 var PRINTERS = {
   p1s: {label:'Bambu Lab P1S', bed:[256,256,256], enclosed:true, nozzle:0.4, hingeLeft:true,
         motion:'CoreXY', chamber:'Passive, ~40 \u00b0C', plate:'Textured PEI',
+        // Standard 4-slot AMS, the one Scott owns. 368 x 283 x 224 mm, 2.5 kg,
+        // from Bambu Lab's own "AMS Tech Specs" table (us.store.bambulab.com,
+        // checked 2026-09-16). Not the AMS 2 Pro (372 x 280 x 226) and not the
+        // AMS HT (114 x 280 x 245) -- three different boxes, easy to conflate.
+        ams: {slots: 4, w: 368, d: 283, h: 224, kg: 2.5},
         note:'The machine every job on this page was sliced for.'},
   a2l: {label:'Bambu Lab A2L', bed:[330,320,325], enclosed:false, nozzle:0.4,
         motion:'Bedslinger', chamber:'None (open frame)', plate:'\u2014',
@@ -56,6 +61,7 @@ var stage = $('stage'), loading = $('loading');
 var renderer, scene, camera, chamber, plate, grid, nozzle, gantry;
 var bedGroup, shadowPlane, glowSprite, headScale = 1;
 var doorGroup, extPanels = [], machineBounds = null;
+var amsGroup, yRails, chamberLamp;
 var doorOpen = false, doorAngle = 0, doorTarget = 0;
 var viewMode = 'machine';   // 'machine' = solid exterior, 'chamber' = cutaway
 var jobMesh = null, ghostMesh = null, jobGeom = null;
@@ -67,7 +73,9 @@ function initScene() {
   renderer.setClearColor(0x07080a, 1);
   stage.appendChild(renderer.domElement);
 
-  window.__R = renderer;   // deterministic render stats for the test harness
+  // Deterministic render stats and named scene objects for the test harness.
+  // Everything else stays inside the closure.
+  window.__R = renderer;
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x07080a, 950, 2200);
   camera = new THREE.PerspectiveCamera(38, 1, 1, 4000);
@@ -86,6 +94,7 @@ function initScene() {
   nozzle.visible = false;
   scene.add(nozzle);
 
+  window.__VP = {scene: scene, camera: camera, cam: cam};
   onResize();
   window.addEventListener('resize', onResize);
   attachOrbit(renderer.domElement);
@@ -101,7 +110,7 @@ function initScene() {
 var EXT = {w: 389, d: 389, h: 458, wall: 6};
 
 function buildChamber(bed) {
-  [chamber, plate, grid, gantry, bedGroup, doorGroup].forEach(function (o) {
+  [chamber, plate, grid, gantry, bedGroup, doorGroup, amsGroup, yRails].forEach(function (o) {
     if (o) { scene.remove(o); }
   });
   var X = bed[0], Y = bed[1], Z = bed[2];
@@ -208,14 +217,43 @@ function buildChamber(bed) {
   doorGroup.add(grip);
   doorGroup.position.set(hingeLeft ? dx0 : dx1, y0 + 1, (dz0 + dz1) / 2);
   doorGroup.userData.sign = hingeLeft ? 1 : -1;
+  doorGroup.name = 'door';
   scene.add(doorGroup);
 
   buildBed(X, Y, ox, oy);
   buildGantry(EXT.w, ox, oy);
+  buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t);
+  buildAMS(PRINTERS[printerId].ams, ox, oy, y1, zTop);
 
-  cam.tx = ox; cam.ty = oy; cam.tz = (zBot + zTop) / 2;
-  cam.r = 1260;
-  machineBounds = {zBot: zBot, zTop: zTop, ox: ox, oy: oy};
+  // An AMS on the lid makes the machine half again as tall, so the framing has
+  // to come from the real outer extent rather than a number tuned to a bare
+  // printer -- otherwise the AMS hangs off the top of the frame as a dark slab.
+  var amsSpec = PRINTERS[printerId].ams;
+  machineBounds = {zBot: zBot, zTop: zTop, ox: ox, oy: oy,
+                   zOuter: zTop + (amsSpec ? amsSpec.h + 8 : 0)};
+  cam.tx = ox; cam.ty = oy;
+  cam.tz = (machineBounds.zBot + machineBounds.zOuter) / 2;
+  cam.r = machineRadius();
+}
+
+function machineRadius() {
+  var mb = machineBounds;
+  return mb ? Math.max(980, (mb.zOuter - mb.zBot) * 1.95) : 1260;
+}
+
+// Two machine-view framings: the whole stack when the door is shut, and a
+// close stand-in-front-of-it framing when it is open. Loading a job runs this
+// too, so opening the door and then switching plates doesn't fly back out.
+function machineCamera(open) {
+  var mb = machineBounds;
+  if (open) {
+    cam.theta = -1.15; cam.phi = 1.33;
+    cam.r = 880;
+    cam.tz = mb ? mb.zBot * 0.36 : -100;
+  } else {
+    cam.tz = mb ? (mb.zBot + mb.zOuter) / 2 : 40;
+    cam.r = machineRadius();
+  }
 }
 
 function buildBed(X, Y, ox, oy) {
@@ -262,8 +300,148 @@ function buildGantry(W, ox, oy) {
   railTop.position.z = 3.8;
   gantry.add(railTop);
   gantry.position.set(ox, oy, 0);
+  gantry.name = 'gantry';
   gantry.visible = false;
   scene.add(gantry);
+}
+
+// The Z stage and the rails the gantry rides on. What is VERIFIED here is the
+// motion, not the ironmongery: a P1S has a fixed gantry and a heatbed that
+// descends on a Z stage, so the print sinks away from a nozzle that holds one
+// height. The exact internal layout of that stage is drawn schematically --
+// two rear lead screws and a carriage -- because no primary source I could
+// reach documents it, and the printer panel says so on screen rather than
+// letting a learner read this as a photograph.
+function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t) {
+  var METAL = 0x555c69, DARK = 0x21252c;
+  var sx = [x0 + 34, x1 - 34], sy = y1 - t - 24;
+
+  sx.forEach(function (x) {
+    var lo = zBot + 14, hi = zTop - 92;
+    var screw = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, hi - lo, 14),
+      new THREE.MeshLambertMaterial({color: METAL}));
+    screw.rotation.x = Math.PI / 2;
+    screw.position.set(x, sy, (lo + hi) / 2);
+    chamber.add(screw);
+    var rail = new THREE.Mesh(new THREE.BoxGeometry(13, 13, hi - lo),
+      new THREE.MeshLambertMaterial({color: DARK}));
+    rail.position.set(x, sy - 26, (lo + hi) / 2);
+    chamber.add(rail);
+  });
+
+  // The carriage lives in bedGroup, so it descends with the bed it carries --
+  // the whole point of drawing it at all.
+  var beam = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 - 46, 15, 11),
+    new THREE.MeshLambertMaterial({color: 0x2c313a}));
+  beam.position.set(ox, sy - 13, -14);
+  bedGroup.add(beam);
+  sx.forEach(function (x) {
+    var nut = new THREE.Mesh(new THREE.BoxGeometry(24, 30, 19),
+      new THREE.MeshLambertMaterial({color: 0x3d4552}));
+    nut.position.set(x, sy - 8, -14);
+    bedGroup.add(nut);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(13, sy - oy, 9),
+      new THREE.MeshLambertMaterial({color: 0x2c313a}));
+    arm.position.set(x, (oy + sy) / 2, -14);
+    bedGroup.add(arm);
+  });
+
+  // The two Y rails the CoreXY gantry beam travels on. They hold a fixed
+  // height, so they cannot live inside the gantry group -- setSeg keeps them
+  // level with it instead.
+  yRails = new THREE.Group();
+  [x0 + t + 7, x1 - t - 7].forEach(function (x) {
+    var r = new THREE.Mesh(new THREE.BoxGeometry(11, y1 - y0 - 2 * t - 16, 9),
+      new THREE.MeshLambertMaterial({color: DARK}));
+    r.position.set(x, oy, 0);
+    yRails.add(r);
+  });
+  yRails.visible = false;
+  yRails.name = 'yrails';
+  scene.add(yRails);
+
+  // Chamber LED: a real light, not a painted-on glow, so opening the door
+  // actually reveals a lit interior. The bead shader is deliberately unlit,
+  // so this changes the machine around the print and never the print itself.
+  var bar = new THREE.Mesh(new THREE.BoxGeometry(EXT.w - 120, 7, 4),
+    new THREE.MeshBasicMaterial({color: 0xffe9c6}));
+  bar.position.set(ox, y0 + t + 13, zTop - 26);
+  chamber.add(bar);
+  chamberLamp = new THREE.PointLight(0xffdcae, 0.62, 470, 1.4);
+  chamberLamp.position.set(ox, y0 + 70, zTop - 44);
+  chamber.add(chamberLamp);
+}
+
+// The AMS, at its real size, sitting where one actually sits. The spools drawn
+// inside are illustrative -- nothing here reads the machine, so they are four
+// plausible colours and the panel says as much rather than implying a feed.
+function buildAMS(spec, ox, oy, y1, zTop) {
+  amsGroup = null;
+  if (!spec) { return; }
+  amsGroup = new THREE.Group();
+  var cy = y1 - spec.d / 2 - 6, cz = zTop + 4 + spec.h / 2;
+
+  // Built as panels, not a solid block: a closed box would hide the spools
+  // behind its own lit top face no matter how transparent the lid above it is.
+  var wall = 8, shell = new THREE.MeshLambertMaterial({color: 0x2a2e35});
+  function panel(w, d, h, x, y, z) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), shell);
+    m.position.set(x, y, z);
+    amsGroup.add(m);
+  }
+  panel(spec.w, spec.d, wall, ox, cy, cz - spec.h / 2 + wall / 2);
+  panel(wall, spec.d, spec.h, ox - spec.w / 2 + wall / 2, cy, cz);
+  panel(wall, spec.d, spec.h, ox + spec.w / 2 - wall / 2, cy, cz);
+  panel(spec.w, wall, spec.h, ox, cy + spec.d / 2 - wall / 2, cz);
+  panel(spec.w, wall, spec.h, ox, cy - spec.d / 2 + wall / 2, cz);
+  var amsEdge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(spec.w, spec.d, spec.h)),
+    new THREE.LineBasicMaterial({color: 0x4a515e}));
+  amsEdge.position.set(ox, cy, cz);
+  amsGroup.add(amsEdge);
+
+  var SPOOL = [0xd9dbe0, 0x24272d, 0x8d939d, 0xc08a5a];
+  for (var i = 0; i < spec.slots; i++) {
+    var x = ox - (spec.slots - 1) * 46 + i * 92;
+    // Spool size is the AMS's own published compatibility range -- 197-202 mm
+    // across, 50-68 mm wide -- which is why they very nearly fill the box.
+    var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 56, 28),
+      new THREE.MeshLambertMaterial({color: SPOOL[i % SPOOL.length]}));
+    fil.rotation.z = Math.PI / 2;
+    fil.position.set(x, cy, cz - 2);
+    amsGroup.add(fil);
+    var core = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 60, 20),
+      new THREE.MeshLambertMaterial({color: 0x15171c}));
+    core.rotation.z = Math.PI / 2;
+    core.position.set(x, cy, cz - 2);
+    amsGroup.add(core);
+  }
+
+  // Smoked lid over the spools -- the reason you can see them at all.
+  var lid = new THREE.Mesh(new THREE.BoxGeometry(spec.w - 22, spec.d - 22, 5),
+    new THREE.MeshLambertMaterial({color: 0x59616e, transparent: true,
+      opacity: 0.36, depthWrite: false}));
+  lid.position.set(ox, cy, cz + spec.h / 2 - 3);
+  amsGroup.add(lid);
+  var lz = cz + spec.h / 2 - 3, fm = new THREE.MeshLambertMaterial({color: 0x21252b});
+  [[spec.w, 11, ox, cy - spec.d / 2 + 5.5], [spec.w, 11, ox, cy + spec.d / 2 - 5.5],
+   [11, spec.d, ox - spec.w / 2 + 5.5, cy], [11, spec.d, ox + spec.w / 2 - 5.5, cy]]
+    .forEach(function (f) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(f[0], f[1], 7), fm);
+      m.position.set(f[2], f[3], lz);
+      amsGroup.add(m);
+    });
+
+  // PTFE bundle looping out of the back and into the top of the machine.
+  var curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(ox, cy + spec.d / 2 - 4, cz - 40),
+    new THREE.Vector3(ox, y1 + 54, cz - 74),
+    new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
+  amsGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
+    new THREE.MeshLambertMaterial({color: 0x171a20})));
+
+  amsGroup.name = 'ams';
+  scene.add(amsGroup);
 }
 
 function buildToolhead() {
@@ -361,8 +539,25 @@ function onResize() {
 }
 
 // \u2500\u2500 orbit (hand-rolled: OrbitControls is not on the allowed CDN as a UMD) \u2500\u2500\u2500
+// A door you can see is a door you expect to be able to touch. A tap is an
+// orbit drag that never moved, so the threshold is in pixels, not timing --
+// on a phone a "tap" always carries a few pixels of finger travel.
+var _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
+function pickDoor(clientX, clientY) {
+  if (!doorGroup || !doorGroup.visible) { return false; }
+  var r = renderer.domElement.getBoundingClientRect();
+  _ndc.set((clientX - r.left) / r.width * 2 - 1,
+           -((clientY - r.top) / r.height) * 2 + 1);
+  _ray.setFromCamera(_ndc, camera);
+  var hits = _ray.intersectObjects(doorGroup.children, false);
+  for (var i = 0; i < hits.length; i++) {
+    if (hits[i].object.userData.door) { return true; }
+  }
+  return false;
+}
+
 function attachOrbit(el) {
-  var down = null, touches = {}, pinch = null;
+  var down = null, touches = {}, pinch = null, travel = 0, start = null;
   el.style.touchAction = 'none';
   function pinchDist() {
     var k = Object.keys(touches);
@@ -378,6 +573,8 @@ function attachOrbit(el) {
       return;
     }
     down = {x:e.clientX, y:e.clientY, pan:e.shiftKey || e.button === 2 || e.button === 1};
+    start = {x:e.clientX, y:e.clientY};
+    travel = 0;
   });
   el.addEventListener('pointermove', function (e) {
     if (touches[e.pointerId]) { touches[e.pointerId] = {x:e.clientX, y:e.clientY}; }
@@ -389,6 +586,7 @@ function attachOrbit(el) {
     if (!down) { return; }
     var dx = e.clientX - down.x, dy = e.clientY - down.y;
     down.x = e.clientX; down.y = e.clientY;
+    travel += Math.abs(dx) + Math.abs(dy);
     if (down.pan) {
       var s = cam.r * 0.0016;
       var st = Math.sin(cam.theta), ct = Math.cos(cam.theta);
@@ -399,12 +597,24 @@ function attachOrbit(el) {
       cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, cam.phi - dy * 0.006));
     }
   });
+  el.addEventListener('pointerup', function (e) {
+    if (start && travel < 7 && !pinch && pickDoor(e.clientX, e.clientY)) {
+      setDoor(!doorOpen);
+    }
+    start = null;
+  });
   ['pointerup','pointercancel'].forEach(function (t) {
     el.addEventListener(t, function (e) {
       delete touches[e.pointerId];
       if (Object.keys(touches).length < 2) { pinch = null; }
       down = null;
     });
+  });
+  // Mouse only: the cursor is the one affordance that says the door is live.
+  // A phone has no hover, and a raycast per touchmove would be waste.
+  el.addEventListener('pointermove', function (e) {
+    if (down || pinch || e.pointerType !== 'mouse') { return; }
+    el.style.cursor = pickDoor(e.clientX, e.clientY) ? 'pointer' : '';
   });
   el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   el.addEventListener('wheel', function (e) {
@@ -433,6 +643,9 @@ function updateDoor() {
 function updateCutaway() {
   var cut = viewMode === 'chamber';
   var c = machineBounds;
+  // The AMS is furniture on the lid, not chamber content. In cutaway it would
+  // simply sit on top of the hole the cutaway just opened.
+  if (amsGroup) { amsGroup.visible = !cut; }
   for (var i = 0; i < extPanels.length; i++) {
     var p = extPanels[i];
     if (!cut) { p.mesh.visible = true; continue; }
@@ -690,9 +903,7 @@ function frameJob(job) {
   // and fixed. The radius has a floor: framing tightly on a small part cropped
   // the enclosure out entirely and the machine stopped reading as a machine.
   if (viewMode === 'machine') {
-    var mb = machineBounds;
-    cam.tz = mb ? (mb.zBot + mb.zTop) / 2 : 40;
-    cam.r = 1260;
+    machineCamera(doorOpen);
   } else {
     cam.tz = machineMotion ? 8 : z * 0.45;
     cam.r = Math.max(w * 2.55, machineMotion ? 410 : 320);
@@ -701,7 +912,8 @@ function frameJob(job) {
   nozzle.scale.setScalar(headScale);
   gantry.scale.set(1, headScale, headScale);
   gantry.visible = true;
-  cam.theta = -0.72; cam.phi = 1.06;
+  if (yRails) { yRails.visible = true; }
+  if (!(viewMode === 'machine' && doorOpen)) { cam.theta = -0.72; cam.phi = 1.06; }
 }
 
 // \u2500\u2500 playback state \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -740,6 +952,7 @@ function setSeg(seg) {
     nozzle.position.set(JOB.segEnd[i], JOB.segEnd[i + 1], zTop - drop);
     gantry.position.y = JOB.segEnd[i + 1];
     gantry.position.z = zTop - drop + 44 * headScale;
+    if (yRails) { yRails.position.z = gantry.position.z; }
   }
 }
 
@@ -977,11 +1190,7 @@ function setDoor(open) {
   $('door').textContent = open ? 'Close door' : 'Open door';
   // Opening the door is a request to see inside, so swing the camera round to
   // the front where the opening actually is.
-  if (open && viewMode === 'machine') {
-    cam.theta = -1.14; cam.phi = 1.20;   // front-right, slightly above the bed
-    cam.r = 1080;
-    if (machineBounds) { cam.tz = -machineBounds.zBot * -0.30; }
-  }
+  if (viewMode === 'machine') { machineCamera(open); }
 }
 
 function setViewMode(mode) {
@@ -1089,6 +1298,8 @@ function paintPrinter() {
     row('Build volume', p.bed[0] + ' \u00d7 ' + p.bed[1] + ' \u00d7 ' + p.bed[2] + ' mm') +
     row('Motion', p.motion) + row('Chamber', p.chamber) +
     row('Enclosed', p.enclosed ? 'Yes' : 'No') +
+    row('AMS', p.ams ? p.ams.slots + ' slots, ' + p.ams.w + ' \u00d7 ' + p.ams.d +
+        ' \u00d7 ' + p.ams.h + ' mm, ' + p.ams.kg.toFixed(1) + ' kg' : 'None fitted') +
     row('Nozzle', p.nozzle.toFixed(1) + ' mm brass') +
     row('Layer height', (JOB ? JOB.raw.layerHeight : 0.2).toFixed(2) + ' mm') +
     row('First layer', (JOB && JOB.raw.firstLayerHeight ?
@@ -1111,7 +1322,13 @@ function paintPrinter() {
     '<div class="caveat">Changing the machine redraws the chamber and the volume ' +
     'row. It does <b>not</b> re-slice \u2014 every toolpath here came out of the P1S ' +
     'profile above. Re-slicing lives in <span class="mono">tools/virtual_printer.py' +
-    '</span>.</div>';
+    '</span>.</div>' +
+    '<div class="caveat">Outside dimensions, build volume and AMS size are the ' +
+    'manufacturer\'s published figures. The <b>inside</b> is drawn schematically: ' +
+    'the fixed gantry and the descending bed are how the machine really moves, ' +
+    'but the lead screws, rails and carriage around them are representative \u2014 ' +
+    'no primary source documents the P1S\u2019s internal Z layout. The AMS spool ' +
+    'colours are illustrative; nothing here is reading your machine.</div>';
   $('psel').addEventListener('change', function (e) {
     printerId = e.target.value;
     buildChamber(PRINTERS[printerId].bed);
