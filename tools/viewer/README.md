@@ -50,6 +50,36 @@ dark end still clear of the `#0d0e11` background. The same numbers appear in
 three places (the GLSL ramp, `speedColor()` for legend swatches, the CSS
 gradient) -- change one and change all three.
 
+## The machine itself
+
+Built to the real outside dimensions, **389 x 389 x 458 mm** around the 256mm
+build cube (bambulab.com and the US store listing, checked 2026-09-16). Solid
+exterior panels, smoked glass front door, inset top cover, screen and knob on
+the bottom-right bezel, feet, rear spool holder.
+
+**Deliberately unbranded.** The proportions are the machine's; the logo is not
+mine to reproduce, so there isn't one.
+
+**The door is a real hinge**, not a fade: a Group pivoted on one vertical edge
+and rotated ~110 degrees. Which edge is a **profile setting** (`hingeLeft`),
+not a baked assumption -- no primary source I could reach stated the P1S hinge
+side, so it is exposed rather than guessed. Flip it in `PRINTERS` if it is
+backwards.
+
+Two view modes, because the two jobs conflict:
+
+* **View: machine** keeps the exterior solid, so the printer looks like a
+  printer. You see in through the glass, or through the opening once the door
+  swings.
+* **View: chamber** hides whichever panels sit between the camera and the
+  build volume (dot product of panel normal against the camera vector). It is
+  the only way to watch a print from an arbitrary angle without the case in
+  the way.
+
+Exterior and toolhead use `MeshLambertMaterial` with a real key/rim/ambient
+rig. The bead shader is unlit and independent -- lights do not touch it. Flat
+unlit panels read as cardboard, which is what the first pass looked like.
+
 ## What the scene gets right about the machine
 
 **The gantry is fixed and the BED descends.** On a P1S the toolhead moves only

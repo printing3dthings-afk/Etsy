@@ -133,7 +133,9 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
 .speeds{display:flex;gap:1px;background:var(--line);border:1px solid var(--line)}
 .speeds button{padding:6px 9px;background:var(--rail);font-family:var(--fm);font-size:11px}
 .speeds button[aria-pressed="true"]{background:var(--amber);color:#160c02}
-.viewbtns{display:flex;gap:1px;background:var(--line);border:1px solid var(--line)}
+.viewbtns{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);
+  flex-wrap:wrap;min-width:0}
+.speeds{flex-wrap:wrap;min-width:0}
 .viewbtns button{padding:6px 10px;background:var(--rail);font-size:11.5px}
 .viewbtns button:hover{color:var(--amber)}
 
@@ -214,7 +216,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
   /* Thumb-sized targets. Measured at 22-29px before this; 44 is the floor. */
   .leg{min-height:44px;padding:4px 6px}
   .modeswap button{padding:13px 4px}
-  .speeds button,.viewbtns button{padding:14px 15px}
+  .speeds button,.viewbtns button{padding:13px 11px;font-size:11px}
+  .viewbtns,.speeds{flex:1 1 100%}
   .tbtn{width:46px;height:46px}
   .tabs button{padding:15px 4px}
   select,input[type=number]{padding:12px 9px}
@@ -372,6 +375,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         <button data-view="iso">Iso</button>
         <button data-view="front">Front</button>
         <button data-view="top">Top</button>
+        <button id="door" aria-pressed="false" title="Swing the chamber door open">Open door</button>
+        <button id="viewmode" aria-pressed="true" title="Solid exterior, or cut away to watch the print">View: machine</button>
         <button id="ghost" aria-pressed="false">Ghost</button>
         <button id="motion" aria-pressed="true" title="P1S gantry is fixed; the bed descends">Bed drops</button>
         <button id="quality" aria-pressed="true" title="Specular highlight and Fresnel edge; step down if the frame rate suffers">Detail: high</button>

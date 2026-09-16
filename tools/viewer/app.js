@@ -26,7 +26,7 @@ var TYPE_HELP = {
 // Only profiles with a documented build volume are listed. "Custom" exists so a
 // machine can be dialled in without editing this file; nothing here is guessed.
 var PRINTERS = {
-  p1s: {label:'Bambu Lab P1S', bed:[256,256,256], enclosed:true, nozzle:0.4,
+  p1s: {label:'Bambu Lab P1S', bed:[256,256,256], enclosed:true, nozzle:0.4, hingeLeft:true,
         motion:'CoreXY', chamber:'Passive, ~40 \u00b0C', plate:'Textured PEI',
         note:'The machine every job on this page was sliced for.'},
   a2l: {label:'Bambu Lab A2L', bed:[330,320,325], enclosed:false, nozzle:0.4,
@@ -54,7 +54,10 @@ var stage = $('stage'), loading = $('loading');
 
 // \u2500\u2500 three.js scene \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 var renderer, scene, camera, chamber, plate, grid, nozzle, gantry;
-var bedGroup, shadowPlane, glowSprite, headScale = 1, cornerPosts = [];
+var bedGroup, shadowPlane, glowSprite, headScale = 1;
+var doorGroup, extPanels = [], machineBounds = null;
+var doorOpen = false, doorAngle = 0, doorTarget = 0;
+var viewMode = 'machine';   // 'machine' = solid exterior, 'chamber' = cutaway
 var jobMesh = null, ghostMesh = null, jobGeom = null;
 var cam = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
 
@@ -67,8 +70,15 @@ function initScene() {
   window.__R = renderer;   // deterministic render stats for the test harness
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x07080a, 950, 2200);
-  camera = new THREE.PerspectiveCamera(38, 1, 1, 3000);
+  camera = new THREE.PerspectiveCamera(38, 1, 1, 4000);
   camera.up.set(0, 0, 1);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.46));
+  var key = new THREE.DirectionalLight(0xfff0dd, 0.85);
+  key.position.set(-260, -420, 520);
+  scene.add(key);
+  var rim = new THREE.DirectionalLight(0x8fb4ff, 0.32);
+  rim.position.set(430, 300, 140);
+  scene.add(rim);
 
   buildChamber(PRINTERS.p1s.bed);
 
@@ -82,71 +92,136 @@ function initScene() {
   renderer.setAnimationLoop(tick);
 }
 
+// ── the machine ────────────────────────────────────────────────────────────
+// Real P1S outside dimensions, 389 x 389 x 458 mm, around a 256mm cube of
+// build volume (bambulab.com / us.store.bambulab.com, checked 2026-09-16).
+// The nozzle plane is world z=0; the bed hangs below it and travels down.
+// Deliberately unbranded: the proportions are the machine's, the logo is not
+// mine to reproduce.
+var EXT = {w: 389, d: 389, h: 458, wall: 6};
+
 function buildChamber(bed) {
-  [chamber, plate, grid, gantry, bedGroup].forEach(function (o) { if (o) { scene.remove(o); } });
+  [chamber, plate, grid, gantry, bedGroup, doorGroup].forEach(function (o) {
+    if (o) { scene.remove(o); }
+  });
   var X = bed[0], Y = bed[1], Z = bed[2];
-  var W = X + 76, D = Y + 70;
   var ox = X / 2, oy = Y / 2;
-  // The nozzle plane is world z=0 and never moves. The bed starts there and
-  // travels DOWN the full build height, which is how a P1S actually works --
-  // at layer 1 the bed sits near the top of the chamber. So the interior has
-  // to reach from below the lowest bed position to above the gantry, or the
-  // plate sinks through the floor and vanishes, which is exactly what the
-  // first build did at 88mm into the vase.
-  var zFloor = -(Z + 50), zCeil = Z + 60, H = zCeil - zFloor;
-  var zMid = (zFloor + zCeil) / 2;
+  // Vertical layout: bed at z=0 on layer 1, travelling down to -Z. Base
+  // electronics below that, gantry and top cover above.
+  var zBot = -(Z + 44), zTop = zBot + Math.max(EXT.h, Z + 200);
+  var x0 = ox - EXT.w / 2, x1 = ox + EXT.w / 2;
+  var y0 = oy - EXT.d / 2, y1 = oy + EXT.d / 2;
+  var t = EXT.wall;
 
   chamber = new THREE.Group();
-  function panel(w, d, h, color, opacity) {
-    return new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
-      new THREE.MeshBasicMaterial({color: color, transparent: opacity < 1,
-        opacity: opacity, side: THREE.DoubleSide, depthWrite: opacity > 0.9}));
-  }
-  function strut(w, d, h, x, y, z) {
-    var m = panel(w, d, h, 0x2f343e, 1);
-    m.position.set(x, y, z); chamber.add(m); return m;
+  extPanels = [];
+
+  function slab(w, d, h, color, x, y, z, normal) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
+      new THREE.MeshLambertMaterial({color: color}));
+    m.position.set(x, y, z);
+    chamber.add(m);
+    if (normal) { extPanels.push({mesh: m, n: normal}); }
+    return m;
   }
 
-  // ONE INVERTED BOX, not six panels. With side:BackSide the wall nearest the
-  // camera is culled and you see the interior of the far ones -- which is how
-  // you look into a real enclosure. Six opaque panels put the near wall
-  // between the camera and the print, and that render came out solid black.
-  var shell = new THREE.Mesh(new THREE.BoxGeometry(W, D, H),
+  var BODY = 0x26282e, TRIM = 0x171a1f;
+  var cz = (zBot + zTop) / 2, ch = zTop - zBot;
+
+  slab(t, EXT.d, ch, BODY, x0 + t / 2, oy, cz, new THREE.Vector3(-1, 0, 0));
+  slab(t, EXT.d, ch, BODY, x1 - t / 2, oy, cz, new THREE.Vector3(1, 0, 0));
+  slab(EXT.w, t, ch, BODY, ox, y1 - t / 2, cz, new THREE.Vector3(0, 1, 0));
+  slab(EXT.w, EXT.d, t, TRIM, ox, oy, zBot + t / 2, new THREE.Vector3(0, 0, -1));
+
+  // Front face: bezel below and above the door opening, narrow side stiles.
+  var dz0 = zBot + 56, dz1 = zTop - 54;              // door opening in Z
+  var dx0 = x0 + 9, dx1 = x1 - 9;                    // door opening in X
+  slab(EXT.w, t, dz0 - zBot, BODY, ox, y0 + t / 2, (zBot + dz0) / 2, new THREE.Vector3(0, -1, 0));
+  slab(EXT.w, t, zTop - dz1, BODY, ox, y0 + t / 2, (dz1 + zTop) / 2, new THREE.Vector3(0, -1, 0));
+  slab(dx0 - x0, t, dz1 - dz0, BODY, (x0 + dx0) / 2, y0 + t / 2, (dz0 + dz1) / 2, new THREE.Vector3(0, -1, 0));
+  slab(x1 - dx1, t, dz1 - dz0, BODY, (dx1 + x1) / 2, y0 + t / 2, (dz0 + dz1) / 2, new THREE.Vector3(0, -1, 0));
+
+  // Top cover, inset and lighter, the way the removable lid reads.
+  slab(EXT.w - 26, EXT.d - 26, 4, 0x3b4048, ox, oy, zTop - 2, new THREE.Vector3(0, 0, 1));
+  slab(EXT.w, EXT.d, 10, TRIM, ox, oy, zTop - 9, new THREE.Vector3(0, 0, 1));
+
+  // Interior liner: one inverted box so the inside is its own darker surface.
+  var liner = new THREE.Mesh(
+    new THREE.BoxGeometry(EXT.w - 2 * t, EXT.d - 2 * t, ch - 2 * t),
     new THREE.MeshBasicMaterial({map: shellTexture(), side: THREE.BackSide}));
-  shell.position.set(ox, oy, zMid);
-  chamber.add(shell);
+  liner.position.set(ox, oy, cz);
+  chamber.add(liner);
 
-  var door = panel(W - 8, 2, H - 40, 0x5d6b79, 0.07);
-  door.material.depthWrite = false;
-  door.position.set(ox, oy - D / 2 + 3, zMid); chamber.add(door);
-  var base = panel(W, D, 46, 0x101319, 1);
-  base.position.set(ox, oy, zFloor - 24); chamber.add(base);
+  // Screen and knob, bottom right of the front bezel -- the one detail that
+  // makes the front read as this machine rather than a generic box.
+  slab(62, 2, 34, 0x0b0d10, x1 - 66, y0 - 0.6, zBot + 28, null);
+  var knob = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 4, 24),
+    new THREE.MeshLambertMaterial({color: 0x666e7c}));
+  knob.rotation.x = Math.PI / 2;
+  knob.position.set(x1 - 22, y0 - 1.5, zBot + 28);
+  chamber.add(knob);
 
-  var t = 5;
-  // The nearest corner post is culled per frame (see tick). A real enclosure
-  // is looked into through its open front; leaving all four drawn put a
-  // vertical bar straight through the middle of the print.
-  cornerPosts = [[-1,-1],[1,-1],[-1,1],[1,1]].map(function (c) {
-    return strut(t, t, H, ox + c[0] * (W / 2 - t / 2),
-                 oy + c[1] * (D / 2 - t / 2), zMid);
-  });
-  [zFloor + t / 2, zCeil - t / 2].forEach(function (z) {
-    strut(W, t, t, ox, oy - D / 2 + t / 2, z);
-    strut(W, t, t, ox, oy + D / 2 - t / 2, z);
-    strut(t, D, t, ox - W / 2 + t / 2, oy, z);
-    strut(t, D, t, ox + W / 2 - t / 2, oy, z);
-  });
-  var led = panel(W - 40, 4, 3, 0xfff1d6, 0.5);
-  led.material.depthWrite = false;
-  led.position.set(ox, oy - D / 2 + 30, zCeil - 26); chamber.add(led);
+  // Feet and the rear spool holder
+  [[x0 + 24, y0 + 24], [x1 - 24, y0 + 24], [x0 + 24, y1 - 24], [x1 - 24, y1 - 24]]
+    .forEach(function (p) {
+      var f = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 9, 16),
+        new THREE.MeshLambertMaterial({color: 0x101216}));
+      f.rotation.x = Math.PI / 2;
+      f.position.set(p[0], p[1], zBot - 4);
+      chamber.add(f);
+    });
+  var spool = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 62, 24),
+    new THREE.MeshLambertMaterial({color: 0x2b2f36}));
+  spool.rotation.z = Math.PI / 2;
+  spool.rotation.x = Math.PI / 2;
+  spool.position.set(ox, y1 + 34, zBot + 96);
+  chamber.add(spool);
   scene.add(chamber);
 
-  // A P1S has a FIXED gantry: the toolhead moves only in XY and the HEATBED
-  // descends as the print grows. Plate, grid, shadow and the printed part are
-  // all children here so one transform moves them exactly as the bed does.
+  // ── the door ─────────────────────────────────────────────────────────────
+  // Hinged at one vertical edge and swung by a real rotation, so "open the
+  // door" is the machine's own motion rather than a fade. Which edge is a
+  // PROFILE SETTING, not a baked assumption: no primary source I could reach
+  // stated the P1S hinge side, so it is exposed rather than guessed at.
+  var hingeLeft = PRINTERS[printerId].hingeLeft !== false;
+  doorGroup = new THREE.Group();
+  var dw = dx1 - dx0, dh = dz1 - dz0;
+  var glass = new THREE.Mesh(new THREE.BoxGeometry(dw, 3, dh),
+    new THREE.MeshBasicMaterial({color: 0x6f7f8c, transparent: true,
+      opacity: 0.17, depthWrite: false, side: THREE.DoubleSide}));
+  glass.position.set(hingeLeft ? dw / 2 : -dw / 2, 0, 0);
+  glass.userData.door = true;
+  doorGroup.add(glass);
+  var frameCol = 0x1d2026;
+  [[dw, 7, 0, (dh - 7) / 2], [dw, 7, 0, -(dh - 7) / 2],
+   [7, dh, -(dw - 7) / 2, 0], [7, dh, (dw - 7) / 2, 0]].forEach(function (f) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(f[0], 5, f[1]),
+      new THREE.MeshLambertMaterial({color: frameCol}));
+    m.position.set((hingeLeft ? dw / 2 : -dw / 2) + f[2], 0, f[3]);
+    m.userData.door = true;
+    doorGroup.add(m);
+  });
+  var grip = new THREE.Mesh(new THREE.BoxGeometry(9, 13, 74),
+    new THREE.MeshLambertMaterial({color: 0x7b8493}));
+  grip.position.set(hingeLeft ? dw - 16 : -dw + 16, -7, 0);
+  grip.userData.door = true;
+  doorGroup.add(grip);
+  doorGroup.position.set(hingeLeft ? dx0 : dx1, y0 + 1, (dz0 + dz1) / 2);
+  doorGroup.userData.sign = hingeLeft ? 1 : -1;
+  scene.add(doorGroup);
+
+  buildBed(X, Y, ox, oy);
+  buildGantry(EXT.w, ox, oy);
+
+  cam.tx = ox; cam.ty = oy; cam.tz = (zBot + zTop) / 2;
+  cam.r = 1260;
+  machineBounds = {zBot: zBot, zTop: zTop, ox: ox, oy: oy};
+}
+
+function buildBed(X, Y, ox, oy) {
   bedGroup = new THREE.Group();
   plate = new THREE.Mesh(new THREE.BoxGeometry(X + 14, Y + 14, 7),
-    new THREE.MeshBasicMaterial({map: peiTexture()}));
+    new THREE.MeshLambertMaterial({map: peiTexture()}));
   plate.position.set(ox, oy, -3.6);
   bedGroup.add(plate);
   var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 30, Y + 30, 10),
@@ -176,27 +251,26 @@ function buildChamber(bed) {
   shadowPlane.visible = false;
   bedGroup.add(shadowPlane);
   scene.add(bedGroup);
+}
 
+function buildGantry(W, ox, oy) {
   gantry = new THREE.Group();
-  gantry.add(new THREE.Mesh(new THREE.BoxGeometry(W - 24, 9, 6.5),
-    new THREE.MeshBasicMaterial({color: 0x262a33})));
-  var railTop = new THREE.Mesh(new THREE.BoxGeometry(W - 24, 9, 1.3),
+  gantry.add(new THREE.Mesh(new THREE.BoxGeometry(W - 40, 9, 6.5),
+    new THREE.MeshLambertMaterial({color: 0x3a404b})));
+  var railTop = new THREE.Mesh(new THREE.BoxGeometry(W - 40, 9, 1.3),
     new THREE.MeshBasicMaterial({color: 0x454b58}));
   railTop.position.z = 3.8;
   gantry.add(railTop);
   gantry.position.set(ox, oy, 0);
   gantry.visible = false;
   scene.add(gantry);
-
-  cam.tx = ox; cam.ty = oy; cam.tz = 0;
-  cam.r = Math.max(X, Y) * 1.75;
 }
 
 function buildToolhead() {
   var g = new THREE.Group();
   function part(w, d, h, color, z, y) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
-      new THREE.MeshBasicMaterial({color: color}));
+      new THREE.MeshLambertMaterial({color: color}));
     m.position.set(0, y || 0, z);
     g.add(m);
     return m;
@@ -337,6 +411,35 @@ function attachOrbit(el) {
     e.preventDefault();
     cam.r = Math.max(40, Math.min(1600, cam.r * (1 + Math.sign(e.deltaY) * 0.11)));
   }, {passive:false});
+}
+
+// The door swings on a real hinge rather than fading, so the motion is the
+// machine's own. Eased toward the target every frame; no tween library.
+function updateDoor() {
+  if (!doorGroup) { return; }
+  var want = doorOpen ? doorTarget : 0;
+  if (Math.abs(doorAngle - want) > 0.0015) {
+    doorAngle += (want - doorAngle) * 0.13;
+  } else {
+    doorAngle = want;
+  }
+  doorGroup.rotation.z = doorAngle;
+}
+
+// Machine view keeps the exterior solid, because Scott asked for a printer
+// that looks like the printer. Chamber view hides whichever panels sit
+// between the camera and the build volume, which is the only way to watch a
+// print from an arbitrary angle without the case in the way.
+function updateCutaway() {
+  var cut = viewMode === 'chamber';
+  var c = machineBounds;
+  for (var i = 0; i < extPanels.length; i++) {
+    var p = extPanels[i];
+    if (!cut) { p.mesh.visible = true; continue; }
+    var toCam = camera.position.clone().sub(
+      new THREE.Vector3(c ? c.ox : 128, c ? c.oy : 128, 0));
+    p.mesh.visible = p.n.dot(toCam) <= 0;
+  }
 }
 
 function updateCamera() {
@@ -586,8 +689,14 @@ function frameJob(job) {
   // Bed-drop keeps the action at the nozzle near z=0, so the target sits low
   // and fixed. The radius has a floor: framing tightly on a small part cropped
   // the enclosure out entirely and the machine stopped reading as a machine.
-  cam.tz = machineMotion ? 8 : z * 0.45;
-  cam.r = Math.max(w * 2.55, machineMotion ? 410 : 320);
+  if (viewMode === 'machine') {
+    var mb = machineBounds;
+    cam.tz = mb ? (mb.zBot + mb.zTop) / 2 : 40;
+    cam.r = 1260;
+  } else {
+    cam.tz = machineMotion ? 8 : z * 0.45;
+    cam.r = Math.max(w * 2.55, machineMotion ? 410 : 320);
+  }
   headScale = Math.max(0.42, Math.min(1.0, w / 170));
   nozzle.scale.setScalar(headScale);
   gantry.scale.set(1, headScale, headScale);
@@ -644,15 +753,8 @@ function tick(now) {
   play.last = now;
   if (JOB) { refreshReadout(); }
   updateCamera();
-  if (cornerPosts.length === 4) {
-    var near = 0, nd = Infinity;
-    for (var ci = 0; ci < 4; ci++) {
-      var d2 = cornerPosts[ci].position.distanceToSquared(camera.position);
-      cornerPosts[ci].visible = true;
-      if (d2 < nd) { nd = d2; near = ci; }
-    }
-    cornerPosts[near].visible = false;
-  }
+  updateDoor();
+  updateCutaway();
   if (jobMesh) {
     jobMesh.material.uniforms.uEye.value.copy(camera.position);
     ghostMesh.material.uniforms.uEye.value.copy(camera.position);
@@ -866,6 +968,27 @@ function autoQuality() {
       }
     }
   })();
+}
+
+function setDoor(open) {
+  doorOpen = open;
+  doorTarget = (doorGroup ? doorGroup.userData.sign : 1) * -1.92;   // ~110 degrees
+  $('door').setAttribute('aria-pressed', String(open));
+  $('door').textContent = open ? 'Close door' : 'Open door';
+  // Opening the door is a request to see inside, so swing the camera round to
+  // the front where the opening actually is.
+  if (open && viewMode === 'machine') {
+    cam.theta = -1.14; cam.phi = 1.20;   // front-right, slightly above the bed
+    cam.r = 1080;
+    if (machineBounds) { cam.tz = -machineBounds.zBot * -0.30; }
+  }
+}
+
+function setViewMode(mode) {
+  viewMode = mode;
+  $('viewmode').textContent = mode === 'machine' ? 'View: machine' : 'View: chamber';
+  $('viewmode').setAttribute('aria-pressed', String(mode === 'machine'));
+  if (JOB) { frameJob(JOB); }
 }
 
 function setColorMode(mode) {
@@ -1089,6 +1212,13 @@ function initUI() {
     b.addEventListener('click', function () {
       setColorMode(b.getAttribute('data-mode'));
     });
+  });
+
+  $('door').addEventListener('click', function () {
+    setDoor(!doorOpen);
+  });
+  $('viewmode').addEventListener('click', function () {
+    setViewMode(viewMode === 'machine' ? 'chamber' : 'machine');
   });
 
   $('quality').addEventListener('click', function () {
