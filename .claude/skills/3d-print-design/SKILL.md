@@ -237,6 +237,22 @@ rule this shop already applies to AI photos and Etsy mutations.**
   showing up, check `fc-list | grep -i '<family>'` before assuming the
   boolean/positioning is wrong.
 
+## P1S kinematics, for anything that animates a print (2026-09-16)
+
+**The gantry is fixed; the BED descends.** The toolhead moves only in XY and
+the heatbed travels down its lead screws as the print grows. At layer 1 the
+bed sits near the TOP of the chamber. Anything that animates a print growing
+upward with a rising nozzle is modelling a bedslinger, not this machine.
+
+Two consequences that only showed up by rendering it:
+
+* An enclosure drawn to the obvious height is too short. The bed travels the
+  full build height downward, so the interior must reach from below the lowest
+  bed position to above the gantry -- otherwise the plate sinks through the
+  floor and disappears partway through a tall print.
+* Draw an enclosure as one INVERTED box (back-face only), never as six panels.
+  Six opaque panels put the near wall between the camera and the part.
+
 ## The virtual printer is not a simulator (2026-09-15)
 
 Scott asked whether a clean replay in the P1S viewer means a clean print. It

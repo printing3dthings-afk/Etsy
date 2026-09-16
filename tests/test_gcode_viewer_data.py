@@ -63,6 +63,13 @@ G1 X20 Y10 E0.5
 """
 
 
+def _write_gcode(text):
+    fh = tempfile.NamedTemporaryFile("w", suffix=".gcode", delete=False)
+    fh.write(text)
+    fh.close()
+    return Path(fh.name)
+
+
 def _parse_fixture():
     with tempfile.NamedTemporaryFile("w", suffix=".gcode", delete=False) as fh:
         fh.write(FIXTURE)
@@ -171,6 +178,51 @@ def test_layer_height_reported_is_modal_not_the_first_layers():
           f"modal layer height should be 0.28, got {gvd._modal_layer_height(layers)} "
           "-- the pinned first layer is being reported as the job's layer height")
     check(gvd._modal_layer_height([]) == 0.2, "empty layer list should fall back to 0.2")
+
+
+# Four collinear points. Segments run 30, 30, then 80 mm/s. Collinearity alone
+# would drop both interior points; the speed change at point 2 must save it,
+# or the merged segment invents a feedrate and the speed view moves a colour
+# boundary that the slicer never drew.
+SPEED_BREAK_FIXTURE = """\
+M83
+;LAYER_CHANGE
+;Z:0.2
+;HEIGHT:0.2
+;TYPE:Internal infill
+G1 X0 Y0 F9000
+G1 X10 Y0 E1.0 F1800
+G1 X20 Y0 E1.0
+G1 X30 Y0 E1.0 F4800
+"""
+
+
+def test_simplify_never_merges_across_a_speed_change():
+    path = _write_gcode(SPEED_BREAK_FIXTURE)
+    try:
+        raw = gvd.parse(path)
+        before = list(raw["speeds"])
+        check(before == [30, 30, 80], f"fixture speeds should be 30,30,80 got {before}")
+        out = gvd.simplify(raw, 0.02)
+        check(out["speeds"] == [30, 80],
+              f"expected the 30/30 pair to merge and the 80 to survive on its own, "
+              f"got {out['speeds']} -- a merge across the speed change would lose it")
+        check(len(out["pts"]) // 2 == 3,
+              f"expected 3 surviving points (ends plus the speed break), got "
+              f"{len(out['pts']) // 2}")
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def test_simplify_zero_tolerance_is_a_no_op():
+    path = _write_gcode(SPEED_BREAK_FIXTURE)
+    try:
+        raw = gvd.parse(path)
+        same = gvd.simplify(raw, 0)
+        check(same["pts"] == raw["pts"] and same["speeds"] == raw["speeds"],
+              "--simplify 0 must return the payload untouched")
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def test_payload_round_trips_through_base64():

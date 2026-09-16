@@ -54,38 +54,25 @@ var stage = $('stage'), loading = $('loading');
 
 // \u2500\u2500 three.js scene \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 var renderer, scene, camera, chamber, plate, grid, nozzle, gantry;
+var bedGroup, shadowPlane, glowSprite, headScale = 1, cornerPosts = [];
 var jobMesh = null, ghostMesh = null, jobGeom = null;
 var cam = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
-var headScale = 1;
 
 function initScene() {
   renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setClearColor(0x08090b, 1);
+  renderer.setClearColor(0x07080a, 1);
   stage.appendChild(renderer.domElement);
 
+  window.__R = renderer;   // deterministic render stats for the test harness
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x08090b, 700, 1600);
+  scene.fog = new THREE.Fog(0x07080a, 950, 2200);
   camera = new THREE.PerspectiveCamera(38, 1, 1, 3000);
   camera.up.set(0, 0, 1);
 
   buildChamber(PRINTERS.p1s.bed);
 
-  var ncone = new THREE.Mesh(
-    new THREE.ConeGeometry(2.6, 9, 14),
-    new THREE.MeshBasicMaterial({color:0xff8a2b}));
-  ncone.rotation.x = Math.PI;           // tip down, Z-up world
-  ncone.position.z = 4.5;
-  var nblock = new THREE.Mesh(
-    new THREE.BoxGeometry(11, 9, 11),
-    new THREE.MeshBasicMaterial({color:0x22252c}));
-  nblock.position.z = 13;
-  var nedge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(11, 9, 11)),
-    new THREE.LineBasicMaterial({color:0x4a505e}));
-  nedge.position.z = 13;
-  nozzle = new THREE.Group();
-  nozzle.add(ncone); nozzle.add(nblock); nozzle.add(nedge);
+  nozzle = buildToolhead();
   nozzle.visible = false;
   scene.add(nozzle);
 
@@ -96,48 +83,199 @@ function initScene() {
 }
 
 function buildChamber(bed) {
-  [chamber, plate, grid, gantry].forEach(function (o) {
-    if (o) { scene.remove(o); }
-  });
+  [chamber, plate, grid, gantry, bedGroup].forEach(function (o) { if (o) { scene.remove(o); } });
   var X = bed[0], Y = bed[1], Z = bed[2];
+  var W = X + 76, D = Y + 70;
+  var ox = X / 2, oy = Y / 2;
+  // The nozzle plane is world z=0 and never moves. The bed starts there and
+  // travels DOWN the full build height, which is how a P1S actually works --
+  // at layer 1 the bed sits near the top of the chamber. So the interior has
+  // to reach from below the lowest bed position to above the gantry, or the
+  // plate sinks through the floor and vanishes, which is exactly what the
+  // first build did at 88mm into the vase.
+  var zFloor = -(Z + 50), zCeil = Z + 60, H = zCeil - zFloor;
+  var zMid = (zFloor + zCeil) / 2;
 
-  plate = new THREE.Mesh(
-    new THREE.BoxGeometry(X, Y, 6),
-    new THREE.MeshBasicMaterial({color:0x181b21}));
-  plate.position.set(X / 2, Y / 2, -3.2);
-  scene.add(plate);
+  chamber = new THREE.Group();
+  function panel(w, d, h, color, opacity) {
+    return new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
+      new THREE.MeshBasicMaterial({color: color, transparent: opacity < 1,
+        opacity: opacity, side: THREE.DoubleSide, depthWrite: opacity > 0.9}));
+  }
+  function strut(w, d, h, x, y, z) {
+    var m = panel(w, d, h, 0x2f343e, 1);
+    m.position.set(x, y, z); chamber.add(m); return m;
+  }
 
-  grid = new THREE.Group();
-  var gm = new THREE.LineBasicMaterial({color:0x282c35});
-  var gp = [];
-  for (var i = 0; i <= X; i += 32) { gp.push(i, 0, 0.02, i, Y, 0.02); }
-  for (var j = 0; j <= Y; j += 32) { gp.push(0, j, 0.02, X, j, 0.02); }
-  var gg = new THREE.BufferGeometry();
-  gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
-  grid.add(new THREE.LineSegments(gg, gm));
-  var edge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.PlaneGeometry(X, Y)),
-    new THREE.LineBasicMaterial({color:0x5a616f}));
-  edge.position.set(X / 2, Y / 2, 0.05);
-  grid.add(edge);
-  scene.add(grid);
+  // ONE INVERTED BOX, not six panels. With side:BackSide the wall nearest the
+  // camera is culled and you see the interior of the far ones -- which is how
+  // you look into a real enclosure. Six opaque panels put the near wall
+  // between the camera and the print, and that render came out solid black.
+  var shell = new THREE.Mesh(new THREE.BoxGeometry(W, D, H),
+    new THREE.MeshBasicMaterial({map: shellTexture(), side: THREE.BackSide}));
+  shell.position.set(ox, oy, zMid);
+  chamber.add(shell);
 
-  var box = new THREE.BoxGeometry(X, Y, Z);
-  chamber = new THREE.LineSegments(
-    new THREE.EdgesGeometry(box),
-    new THREE.LineBasicMaterial({color:0x3c424f}));
-  chamber.position.set(X / 2, Y / 2, Z / 2);
+  var door = panel(W - 8, 2, H - 40, 0x5d6b79, 0.07);
+  door.material.depthWrite = false;
+  door.position.set(ox, oy - D / 2 + 3, zMid); chamber.add(door);
+  var base = panel(W, D, 46, 0x101319, 1);
+  base.position.set(ox, oy, zFloor - 24); chamber.add(base);
+
+  var t = 5;
+  // The nearest corner post is culled per frame (see tick). A real enclosure
+  // is looked into through its open front; leaving all four drawn put a
+  // vertical bar straight through the middle of the print.
+  cornerPosts = [[-1,-1],[1,-1],[-1,1],[1,1]].map(function (c) {
+    return strut(t, t, H, ox + c[0] * (W / 2 - t / 2),
+                 oy + c[1] * (D / 2 - t / 2), zMid);
+  });
+  [zFloor + t / 2, zCeil - t / 2].forEach(function (z) {
+    strut(W, t, t, ox, oy - D / 2 + t / 2, z);
+    strut(W, t, t, ox, oy + D / 2 - t / 2, z);
+    strut(t, D, t, ox - W / 2 + t / 2, oy, z);
+    strut(t, D, t, ox + W / 2 - t / 2, oy, z);
+  });
+  var led = panel(W - 40, 4, 3, 0xfff1d6, 0.5);
+  led.material.depthWrite = false;
+  led.position.set(ox, oy - D / 2 + 30, zCeil - 26); chamber.add(led);
   scene.add(chamber);
 
-  gantry = new THREE.Mesh(
-    new THREE.BoxGeometry(X, 2.5, 2.5),
-    new THREE.MeshBasicMaterial({color:0x2a2e37}));
-  gantry.position.set(X / 2, Y / 2, 0);
+  // A P1S has a FIXED gantry: the toolhead moves only in XY and the HEATBED
+  // descends as the print grows. Plate, grid, shadow and the printed part are
+  // all children here so one transform moves them exactly as the bed does.
+  bedGroup = new THREE.Group();
+  plate = new THREE.Mesh(new THREE.BoxGeometry(X + 14, Y + 14, 7),
+    new THREE.MeshBasicMaterial({map: peiTexture()}));
+  plate.position.set(ox, oy, -3.6);
+  bedGroup.add(plate);
+  var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 30, Y + 30, 10),
+    new THREE.MeshBasicMaterial({color: 0x191d25}));
+  carrier.position.set(ox, oy, -12);
+  bedGroup.add(carrier);
+
+  grid = new THREE.Group();
+  var gp = [];
+  for (var i = 0; i <= X; i += 32) { gp.push(i, 0, 0.06, i, Y, 0.06); }
+  for (var k = 0; k <= Y; k += 32) { gp.push(0, k, 0.06, X, k, 0.06); }
+  var gg = new THREE.BufferGeometry();
+  gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
+  grid.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({
+    color: 0x5b6475, transparent: true, opacity: 0.7})));
+  var edge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.PlaneGeometry(X, Y)),
+    new THREE.LineBasicMaterial({color: 0x99a3b5}));
+  edge.position.set(X / 2, Y / 2, 0.08);
+  grid.add(edge);
+  bedGroup.add(grid);
+
+  shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshBasicMaterial({map: blobTexture(), transparent: true,
+      opacity: 0.5, depthWrite: false}));
+  shadowPlane.position.z = 0.12;
+  shadowPlane.visible = false;
+  bedGroup.add(shadowPlane);
+  scene.add(bedGroup);
+
+  gantry = new THREE.Group();
+  gantry.add(new THREE.Mesh(new THREE.BoxGeometry(W - 24, 9, 6.5),
+    new THREE.MeshBasicMaterial({color: 0x262a33})));
+  var railTop = new THREE.Mesh(new THREE.BoxGeometry(W - 24, 9, 1.3),
+    new THREE.MeshBasicMaterial({color: 0x454b58}));
+  railTop.position.z = 3.8;
+  gantry.add(railTop);
+  gantry.position.set(ox, oy, 0);
   gantry.visible = false;
   scene.add(gantry);
 
-  cam.tx = X / 2; cam.ty = Y / 2; cam.tz = Z * 0.28;
+  cam.tx = ox; cam.ty = oy; cam.tz = 0;
   cam.r = Math.max(X, Y) * 1.75;
+}
+
+function buildToolhead() {
+  var g = new THREE.Group();
+  function part(w, d, h, color, z, y) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
+      new THREE.MeshBasicMaterial({color: color}));
+    m.position.set(0, y || 0, z);
+    g.add(m);
+    return m;
+  }
+  part(26, 15, 15, 0x2d323c, 44);            // X-carriage on the gantry beam
+  var body = part(23, 20, 21, 0x1b1e25, 12, -4);
+  var edges = new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry),
+    new THREE.LineBasicMaterial({color: 0x4b5261}));
+  edges.position.set(0, -4, 12);
+  g.add(edges);
+  part(19, 7, 11, 0x23262e, 5.5, -11);       // part-cooling duct
+  part(9, 9, 5, 0x4a3a22, 3.6);              // heater block
+  var tip = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5, 16),
+    new THREE.MeshBasicMaterial({color: 0xc98b46}));
+  tip.rotation.x = Math.PI;
+  tip.position.z = 1.2;
+  g.add(tip);
+  glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture(),
+    transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, opacity: 0.85}));
+  glowSprite.scale.set(26, 26, 1);
+  glowSprite.position.z = 0.6;
+  g.add(glowSprite);
+  return g;
+}
+
+// Textures are generated, never fetched: the artifact CSP blocks image hosts,
+// and a canvas costs nothing.
+function shellTexture() {
+  var c = document.createElement('canvas');
+  c.width = 4; c.height = 128;
+  var g = c.getContext('2d');
+  var lg = g.createLinearGradient(0, 0, 0, 128);
+  lg.addColorStop(0, '#0a0c11');
+  lg.addColorStop(0.55, '#111420');
+  lg.addColorStop(1, '#161a24');
+  g.fillStyle = lg; g.fillRect(0, 0, 4, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+function peiTexture() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 256;
+  var g = c.getContext('2d');
+  g.fillStyle = '#343943'; g.fillRect(0, 0, 256, 256);
+  var img = g.getImageData(0, 0, 256, 256), d = img.data;
+  for (var i = 0; i < d.length; i += 4) {
+    var n = (Math.random() - 0.5) * 54;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n * 0.9;
+  }
+  g.putImageData(img, 0, 0);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(9, 9);
+  return tex;
+}
+
+function blobTexture() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 128;
+  var g = c.getContext('2d');
+  var rg = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  rg.addColorStop(0, 'rgba(0,0,0,0.85)');
+  rg.addColorStop(0.55, 'rgba(0,0,0,0.35)');
+  rg.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+function glowTexture() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 64;
+  var g = c.getContext('2d');
+  var rg = g.createRadialGradient(32, 32, 1, 32, 32, 31);
+  rg.addColorStop(0, 'rgba(255,196,120,0.95)');
+  rg.addColorStop(0.35, 'rgba(255,132,40,0.42)');
+  rg.addColorStop(1, 'rgba(255,110,20,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
 }
 
 function onResize() {
@@ -253,22 +391,35 @@ var FRAG = [
   'varying float vVis;',
   'varying vec3 vPos;',
   'uniform float uDim;',
+  'uniform vec3 uEye;',
   'void main(){',
   '  if (vVis < 0.5) discard;',
-  // Face normal from screen-space derivatives: the bead tent is faceted, so
-  // this IS the real surface normal, and it costs no vertex attribute.
   '  vec3 N = normalize(cross(dFdx(vPos), dFdy(vPos)));',
   '  if (!gl_FrontFacing) N = -N;',
-  '  float key  = max(dot(N, normalize(vec3( 0.42,-0.58, 0.70))), 0.0);',
-  '  float fill = max(dot(N, normalize(vec3(-0.62, 0.40, 0.22))), 0.0);',
-  '  float amb  = 0.30 + 0.20 * max(N.z, 0.0);',
-  '  vec3 c = vColor * (amb + 0.70 * key + 0.26 * fill);',
-  '  c += vColor * 0.16 * pow(1.0 - abs(N.z), 3.0);',
+  '  vec3 V = normalize(uEye - vPos);',
+  // Key stands in for the chamber LED (high, forward of the door); the fill
+  // comes from below because it stands in for bounce off the plate.
+  '  vec3 Lk = normalize(vec3( 0.32,-0.72, 0.62));',
+  '  vec3 Lf = normalize(vec3(-0.58, 0.34, 0.18));',
+  '  float key  = max(dot(N, Lk), 0.0);',
+  '  float fill = max(dot(N, Lf), 0.0);',
+  '  float amb  = 0.26 + 0.20 * max(N.z, 0.0);',
+  '  vec3 c = vColor * (amb + 0.66 * key + 0.24 * fill);',
+  // Plastic is not chalk: a tight specular lobe plus a Fresnel edge is what
+  // separates an extruded bead from a flat coloured ribbon. It is also the
+  // whole cost difference between the two quality levels -- two pow() calls
+  // per fragment over a few million triangles.
+  '#ifdef RICH',
+  '  float spec = pow(max(dot(reflect(-Lk, N), V), 0.0), 34.0);',
+  '  c += vec3(1.0, 0.94, 0.85) * spec * 0.40;',
+  '  float fres = pow(1.0 - max(dot(N, V), 0.0), 3.4);',
+  '  c += mix(vColor, vec3(1.0, 0.86, 0.66), 0.45) * fres * 0.28;',
+  '#endif',
   '  gl_FragColor = vec4(mix(c, vec3(0.055,0.06,0.072), uDim), 1.0);',
   '}'
 ].join('\n');
 
-function makeMaterial(dim) {
+function makeMaterial(dim, rich) {
   var cols = TYPE_COLOR.map(function (h) { return new THREE.Color(h); });
   return new THREE.ShaderMaterial({
     uniforms: {
@@ -276,9 +427,11 @@ function makeMaterial(dim) {
       uVis:   {value: new Array(12).fill(1)},
       uMode:  {value: 0},
       uSpd:   {value: new THREE.Vector2(15, 80)},
+      uEye:   {value: new THREE.Vector3()},
       uDim:   {value: dim}
     },
     vertexShader: VERT, fragmentShader: FRAG,
+    defines: rich ? {RICH: 1} : {},
     side: THREE.DoubleSide,
     extensions: {derivatives: true}
   });
@@ -404,18 +557,24 @@ function buildJob(raw) {
 function mountJob(job) {
   if (jobMesh) { scene.remove(jobMesh); scene.remove(ghostMesh); jobGeom.dispose(); }
   jobGeom = job.geom;
-  ghostMesh = new THREE.Mesh(jobGeom, makeMaterial(0.86));
+  ghostMesh = new THREE.Mesh(jobGeom, makeMaterial(0.86, richShading));
   ghostMesh.material.polygonOffset = true;
   ghostMesh.material.polygonOffsetFactor = 2;
   ghostMesh.material.polygonOffsetUnits = 2;
   ghostMesh.frustumCulled = false;
   ghostMesh.visible = false;
-  jobMesh = new THREE.Mesh(jobGeom, makeMaterial(0.0));
+  jobMesh = new THREE.Mesh(jobGeom, makeMaterial(0.0, richShading));
   jobMesh.frustumCulled = false;
   scene.add(ghostMesh); scene.add(jobMesh);
   nozzle.visible = true; gantry.visible = true;
   JOB = job;
   applyVisibility();
+  var bb = job.raw.bbox;
+  shadowPlane.geometry.dispose();
+  shadowPlane.geometry = new THREE.PlaneGeometry(
+    (bb[2] - bb[0]) * 1.5 + 30, (bb[3] - bb[1]) * 1.5 + 30);
+  shadowPlane.position.set((bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2, 0.12);
+  shadowPlane.visible = true;
   frameJob(job);
 }
 
@@ -424,11 +583,15 @@ function frameJob(job) {
   var w = Math.max(b[2] - b[0], b[3] - b[1], z * 1.2, 40);
   cam.tx = (b[0] + b[2]) / 2;
   cam.ty = (b[1] + b[3]) / 2;
-  cam.tz = z * 0.45;
-  cam.r = w * 2.0;
-  headScale = Math.max(0.3, Math.min(1.15, w / 150));
+  // Bed-drop keeps the action at the nozzle near z=0, so the target sits low
+  // and fixed. The radius has a floor: framing tightly on a small part cropped
+  // the enclosure out entirely and the machine stopped reading as a machine.
+  cam.tz = machineMotion ? 8 : z * 0.45;
+  cam.r = Math.max(w * 2.55, machineMotion ? 410 : 320);
+  headScale = Math.max(0.42, Math.min(1.0, w / 170));
   nozzle.scale.setScalar(headScale);
   gantry.scale.set(1, headScale, headScale);
+  gantry.visible = true;
   cam.theta = -0.72; cam.phi = 1.06;
 }
 
@@ -439,6 +602,8 @@ var SPEEDS = [
 ];
 var play = {on:false, t:0, speed:1000, seg:0, last:0, scrubbing:false};
 var visible = new Array(12).fill(true);
+var machineMotion = true;
+var richShading = true, autoQualityDone = false;
 var colorMode = 'feature';
 var layerFilCum = null;
 
@@ -456,10 +621,16 @@ function setSeg(seg) {
   play.seg = seg;
   jobGeom.setDrawRange(0, seg * 12);
   if (seg > 0) {
-    var i = (seg - 1) * 3;
-    nozzle.position.set(JOB.segEnd[i], JOB.segEnd[i + 1], JOB.segEnd[i + 2]);
+    var i = (seg - 1) * 3, zTop = JOB.segEnd[i + 2];
+    // Machine-accurate: the gantry is fixed and the BED descends, so the
+    // nozzle holds one height and everything printed sinks away from it.
+    var drop = machineMotion ? zTop : 0;
+    bedGroup.position.z = -drop;
+    jobMesh.position.z = -drop;
+    ghostMesh.position.z = -drop;
+    nozzle.position.set(JOB.segEnd[i], JOB.segEnd[i + 1], zTop - drop);
     gantry.position.y = JOB.segEnd[i + 1];
-    gantry.position.z = JOB.segEnd[i + 2] + 19 * headScale;
+    gantry.position.z = zTop - drop + 44 * headScale;
   }
 }
 
@@ -473,6 +644,19 @@ function tick(now) {
   play.last = now;
   if (JOB) { refreshReadout(); }
   updateCamera();
+  if (cornerPosts.length === 4) {
+    var near = 0, nd = Infinity;
+    for (var ci = 0; ci < 4; ci++) {
+      var d2 = cornerPosts[ci].position.distanceToSquared(camera.position);
+      cornerPosts[ci].visible = true;
+      if (d2 < nd) { nd = d2; near = ci; }
+    }
+    cornerPosts[near].visible = false;
+  }
+  if (jobMesh) {
+    jobMesh.material.uniforms.uEye.value.copy(camera.position);
+    ghostMesh.material.uniforms.uEye.value.copy(camera.position);
+  }
   renderer.render(scene, camera);
 }
 
@@ -638,6 +822,52 @@ function paintLegend() {
   });
 }
 
+function setQuality(rich) {
+  richShading = rich;
+  [[jobMesh, 0.0], [ghostMesh, 0.86]].forEach(function (pair) {
+    var m = pair[0];
+    if (!m) { return; }
+    var old = m.material;
+    m.material = makeMaterial(pair[1], rich);
+    m.material.uniforms.uVis.value = old.uniforms.uVis.value;
+    m.material.uniforms.uMode.value = old.uniforms.uMode.value;
+    m.material.uniforms.uSpd.value.copy(old.uniforms.uSpd.value);
+    m.material.polygonOffset = old.polygonOffset;
+    m.material.polygonOffsetFactor = old.polygonOffsetFactor;
+    m.material.polygonOffsetUnits = old.polygonOffsetUnits;
+    old.dispose();
+  });
+  var b = $('quality');
+  if (b) {
+    b.setAttribute('aria-pressed', String(rich));
+    b.textContent = rich ? 'Detail: high' : 'Detail: fast';
+  }
+}
+
+// One automatic step down, never up: a device that cannot hold a readable
+// frame rate on the heaviest plate should not be asked to render two pow()
+// calls per fragment for a highlight. Measured over real frames after a job
+// loads, and only ever done once so it cannot oscillate.
+function autoQuality() {
+  if (autoQualityDone || !richShading) { return; }
+  autoQualityDone = true;
+  var n = 0, t0 = performance.now();
+  (function sample() {
+    n++;
+    if (performance.now() - t0 < 1600) { requestAnimationFrame(sample); return; }
+    var fps = n / ((performance.now() - t0) / 1000);
+    if (fps < 22) {
+      setQuality(false);
+      var note = $('legnote');
+      if (note) {
+        note.innerHTML = '<b style="color:var(--warn)">Detail stepped down to keep '
+          + 'the frame rate readable (' + fps.toFixed(0) + ' fps measured).</b> '
+          + 'Put it back with Detail in the toolbar.<br>' + note.innerHTML;
+      }
+    }
+  })();
+}
+
 function setColorMode(mode) {
   colorMode = mode;
   Array.prototype.forEach.call($('modeswap').children, function (b) {
@@ -684,6 +914,7 @@ window.__JOB_LOADED = function (raw) {
     paintLegend(); paintSpeedPanel(); paintJobList(); paintPrinter();
     setColorMode(colorMode);
     play.t = 0; setSeg(0); setPlaying(true);
+    autoQuality();
     refreshReadout(true);
     loading.hidden = true;
   }); });
@@ -858,6 +1089,17 @@ function initUI() {
     b.addEventListener('click', function () {
       setColorMode(b.getAttribute('data-mode'));
     });
+  });
+
+  $('quality').addEventListener('click', function () {
+    setQuality($('quality').getAttribute('aria-pressed') !== 'true');
+  });
+
+  $('motion').addEventListener('click', function () {
+    machineMotion = $('motion').getAttribute('aria-pressed') !== 'true';
+    $('motion').setAttribute('aria-pressed', String(machineMotion));
+    $('motion').textContent = machineMotion ? 'Bed drops' : 'Part grows';
+    if (JOB) { frameJob(JOB); setSeg(play.seg); }
   });
 
   $('ghost').addEventListener('click', function () {

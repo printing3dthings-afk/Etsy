@@ -37,6 +37,8 @@ header .spacer{flex:1}
 aside{background:var(--panel);overflow-y:auto;overflow-x:hidden}
 #stage{position:relative;background:#08090b;min-height:240px}
 #stage canvas{display:block;width:100%;height:100%}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 78% 68% at 50% 44%,transparent 40%,rgba(0,0,0,.55) 100%)}
 footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
 
 .sect{border-bottom:1px solid var(--line)}
@@ -371,6 +373,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         <button data-view="front">Front</button>
         <button data-view="top">Top</button>
         <button id="ghost" aria-pressed="false">Ghost</button>
+        <button id="motion" aria-pressed="true" title="P1S gantry is fixed; the bed descends">Bed drops</button>
+        <button id="quality" aria-pressed="true" title="Specular highlight and Fresnel edge; step down if the frame rate suffers">Detail: high</button>
       </div>
     </div>
   </footer>

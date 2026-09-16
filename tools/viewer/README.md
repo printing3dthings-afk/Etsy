@@ -50,6 +50,47 @@ dark end still clear of the `#0d0e11` background. The same numbers appear in
 three places (the GLSL ramp, `speedColor()` for legend swatches, the CSS
 gradient) -- change one and change all three.
 
+## What the scene gets right about the machine
+
+**The gantry is fixed and the BED descends.** On a P1S the toolhead moves only
+in XY; the heatbed travels down its lead screws as the print grows. The first
+build animated the part rising, which is the wrong machine. `bedGroup` holds
+plate, grid, contact shadow and the printed part so one transform moves them
+exactly as the real bed does. The "Bed drops / Part grows" button switches it.
+
+Two geometry traps this exposed, both found by rendering and looking:
+
+* The enclosure has to span the **full bed travel**. Built to the obvious
+  height, the plate sank through the chamber floor and vanished 88mm into the
+  vase. The interior now runs from below the lowest bed position to above the
+  gantry -- so at layer 1 the bed sits near the top, which is where it really is.
+* The shell is **one inverted box** (`side: THREE.BackSide`), not six panels.
+  Six opaque panels put the near wall between the camera and the print; that
+  render came out solid black. BackSide culls the near wall and shows the
+  interior of the far ones, which is how you look into a real enclosure. The
+  nearest corner post is culled per frame for the same reason.
+
+Everything is generated -- PEI speckle, shell gradient, contact shadow, nozzle
+glow are all canvas textures, because the artifact CSP blocks image hosts.
+The enclosure is deliberately unbranded.
+
+## Performance
+
+3.07M triangles for the heaviest plate in **30 draw calls** -- one mesh, one
+`setDrawRange`, no per-frame rebuild.
+
+`--simplify` (default 0.02mm) drops points whose removal shifts the path less
+than a twentieth of a bead: 8-30% of points on real plates, with time, mass and
+speed data bit-identical afterwards. It will not merge across a speed change.
+
+**Detail: high / fast** switches the specular and Fresnel terms with a shader
+`#define`, and steps down once automatically if the first measured frame rate
+is under 22fps. Do not trust this container's own fps numbers: it renders
+through SwiftShader on the CPU, which charges perhaps ten times what a GPU
+does for per-fragment math, and repeated measurements in one page drift far
+enough that "fast" can measure slower than "high". Draw calls and triangle
+counts are deterministic and are what this repo benchmarks.
+
 ## This is not a simulator, and the difference matters
 
 Scott asked directly: "if it prints perfect in this it should print perfect in

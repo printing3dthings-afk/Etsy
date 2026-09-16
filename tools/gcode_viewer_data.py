@@ -237,6 +237,68 @@ def parse(gcode_path):
     }
 
 
+def simplify(raw, tol_mm=0.02):
+    """Drop points whose removal shifts the path less than `tol_mm`.
+
+    0.02mm is a twentieth of a 0.42mm bead -- below the 0.01mm quantization
+    grid's own visible effect, let alone anything a browser renders. It removes
+    8-30% of points on real plates.
+
+    HARD CONSTRAINT: a point is never dropped where the SPEED changes. Merging
+    two segments that ran at different feedrates would invent a speed for the
+    merged one and move a colour boundary, and the speed view exists precisely
+    to show where the slicer changed its mind. Geometry may be approximated;
+    the slicer's decisions may not.
+    """
+    if tol_mm <= 0:
+        return raw
+    pts, polys, speeds = raw["pts"], raw["polys"], raw["speeds"]
+    tol = tol_mm * 100
+    new_pts, new_polys, new_speeds = [], [], []
+    seg_at = 0
+    for pi in range(len(polys) // 3):
+        t, s0, n = polys[pi * 3:pi * 3 + 3]
+        keep = [0]
+        anchor = 0
+        for i in range(1, n - 1):
+            # segment i-1 ends at point i, segment i starts at it
+            if speeds[seg_at + i - 1] != speeds[seg_at + i]:
+                keep.append(i)
+                anchor = i
+                continue
+            ax, ay = pts[(s0 + anchor) * 2], pts[(s0 + anchor) * 2 + 1]
+            bx, by = pts[(s0 + i) * 2], pts[(s0 + i) * 2 + 1]
+            cx, cy = pts[(s0 + i + 1) * 2], pts[(s0 + i + 1) * 2 + 1]
+            L = math.hypot(cx - ax, cy - ay)
+            d = (abs((cx - ax) * (ay - by) - (ax - bx) * (cy - ay)) / L if L > 1e-9
+                 else math.hypot(bx - ax, by - ay))
+            if d > tol:
+                keep.append(i)
+                anchor = i
+        keep.append(n - 1)
+        start = len(new_pts) // 2
+        for i in keep:
+            new_pts.append(pts[(s0 + i) * 2])
+            new_pts.append(pts[(s0 + i) * 2 + 1])
+        # the merged segment inherits the speed of the run it replaces, which
+        # is unambiguous precisely because a speed change is never merged over
+        for k in range(len(keep) - 1):
+            new_speeds.append(speeds[seg_at + keep[k]])
+        new_polys.extend((t, start, len(keep)))
+        seg_at += n - 1
+    raw = dict(raw)
+    raw["pts"], raw["polys"], raw["speeds"] = new_pts, new_polys, new_speeds
+    _refit_layers(raw, polys)
+    return raw
+
+
+def _refit_layers(raw, old_polys):
+    """Polyline count per layer is unchanged by simplification -- only their
+    point counts shrink -- so layer records still index the same polylines."""
+    assert len(raw["polys"]) == len(old_polys), \
+        "simplification must not add or remove polylines; layer records index them"
+
+
 def _b64(values, fmt):
     return base64.b64encode(struct.pack(f"<{len(values)}{fmt}", *values)).decode()
 
@@ -254,8 +316,8 @@ def _modal_layer_height(layers):
     return max(counts.items(), key=lambda kv: (kv[1], kv[0]))[0]
 
 
-def build_job(gcode_path, name, notes=""):
-    raw = parse(gcode_path)
+def build_job(gcode_path, name, notes="", tol_mm=0.02):
+    raw = simplify(parse(gcode_path), tol_mm)
     layers = raw["layers"]
     kinematic = sum(l[3] for l in layers)
     slicer_total = raw["slicerSeconds"]
@@ -332,6 +394,9 @@ def main(argv=None):
                     help="STEM=Display Name -- repeatable")
     ap.add_argument("--note", action="append", default=[],
                     help="STEM=one line about what this job teaches -- repeatable")
+    ap.add_argument("--simplify", type=float, default=0.02, metavar="MM",
+                    help="drop points that shift the path less than this "
+                         "(default 0.02mm = 1/20 of a bead; 0 keeps every point)")
     a = ap.parse_args(argv)
 
     labels = dict(kv.split("=", 1) for kv in a.label)
@@ -343,7 +408,7 @@ def main(argv=None):
     for g in a.gcode:
         p = Path(g)
         stem = p.stem
-        job = build_job(p, labels.get(stem, stem), notes.get(stem, ""))
+        job = build_job(p, labels.get(stem, stem), notes.get(stem, ""), a.simplify)
         # Each job is its own script so the page loads one, not all of them.
         # Same-origin <script src> rather than fetch(): a script tag is the
         # one transport the artifact CSP is unambiguous about.
