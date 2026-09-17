@@ -88,25 +88,287 @@ var cam = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
 var view = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
 var spin = {theta: 0, phi: 0};
 var moveUntil = 0, lowRes = false, basePixelRatio = 1;
+var keyLight = null, envRT = null, floorMesh = null;
+var shadowDirty = true, shadowFrame = 0;
+
+// A flat box face samples the environment in exactly ONE direction, so it
+// renders as one uniform colour however good the material is -- which is why
+// the exterior stayed dead flat after the whole PBR pass. Real painted sheet
+// metal has orange-peel: microscopic undulation that breaks the reflection up
+// across the face. This is that, procedurally, at an amplitude low enough to
+// read as finish rather than as texture.
+var _panelNrm = null;
+function panelNormalMap() {
+  if (_panelNrm) { return _panelNrm; }
+  var N = 256, c = document.createElement('canvas');
+  c.width = c.height = N;
+  var g = c.getContext('2d'), img = g.createImageData(N, N);
+  // value noise, two octaves, turned into a tangent-space normal by finite
+  // differences -- cheaper and more controllable than hashing per pixel
+  var h = new Float32Array(N * N), i, x, y;
+  function rnd(ix, iy) {
+    var n = ix * 374761393 + iy * 668265263;
+    n = (n ^ (n >> 13)) * 1274126177;
+    return ((n ^ (n >> 16)) >>> 0) / 4294967295;
+  }
+  function smooth(fx, fy, step) {
+    var x0 = Math.floor(fx / step), y0 = Math.floor(fy / step);
+    var tx = fx / step - x0, ty = fy / step - y0;
+    tx = tx * tx * (3 - 2 * tx); ty = ty * ty * (3 - 2 * ty);
+    var a = rnd(x0, y0), b = rnd(x0 + 1, y0);
+    var cc = rnd(x0, y0 + 1), d = rnd(x0 + 1, y0 + 1);
+    return (a + (b - a) * tx) + ((cc + (d - cc) * tx) - (a + (b - a) * tx)) * ty;
+  }
+  for (y = 0; y < N; y++) {
+    for (x = 0; x < N; x++) {
+      h[y * N + x] = smooth(x, y, 16) * 0.7 + smooth(x, y, 5) * 0.3;
+    }
+  }
+  for (y = 0; y < N; y++) {
+    for (x = 0; x < N; x++) {
+      var l = h[y * N + ((x + N - 1) % N)], r = h[y * N + ((x + 1) % N)];
+      var u = h[((y + N - 1) % N) * N + x], d2 = h[((y + 1) % N) * N + x];
+      i = (y * N + x) * 4;
+      img.data[i]     = 128 + (l - r) * 120;
+      img.data[i + 1] = 128 + (u - d2) * 120;
+      img.data[i + 2] = 255;
+      img.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  _panelNrm = new THREE.CanvasTexture(c);
+  _panelNrm.wrapS = _panelNrm.wrapT = THREE.RepeatWrapping;
+  _panelNrm.repeat.set(9, 9);
+  return _panelNrm;
+}
+
+// A studio backdrop rather than flat black. The machine used to sit in a void,
+// which is the single clearest tell that you are looking at a render: real
+// objects are photographed in a space that falls off behind them. A big
+// inward-facing sphere with a vertical gradient is the cheapest honest version
+// of that, and it gives the metal something with structure to reflect.
+function buildBackdrop() {
+  var N = 8, c = document.createElement('canvas');
+  c.width = 4; c.height = 256;
+  var g = c.getContext('2d');
+  var grd = g.createLinearGradient(0, 0, 0, 256);
+  // First pass used stops from #05060a to #161b25 and was invisible: every one
+  // of them sat within a couple of levels of the 0x07080a clear colour it was
+  // meant to replace. A backdrop that cannot be distinguished from the void it
+  // replaces is not a backdrop.
+  grd.addColorStop(0.00, '#070910');
+  grd.addColorStop(0.40, '#141a25');
+  grd.addColorStop(0.68, '#2c3646');
+  grd.addColorStop(0.88, '#171d28');
+  grd.addColorStop(1.00, '#080a0f');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 4, 256);
+  var tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  var sky = new THREE.Mesh(
+    new THREE.SphereGeometry(2600, 32, 24),
+    new THREE.MeshBasicMaterial({map: tex, side: THREE.BackSide, fog: false}));
+  sky.rotation.x = Math.PI / 2;   // the scene is Z-up; the gradient is not
+  sky.name = 'backdrop';
+  scene.add(sky);
+  return N;
+}
+
+// ── materials ──────────────────────────────────────────────────────────────
+// Three r128 predates automatic colour management: a material colour is used
+// in the lighting maths exactly as given, and the renderer only converts
+// linear->sRGB on the way out. Every hex in this file was picked by eye in
+// sRGB, so each one has to be converted the other way on input or the whole
+// scene renders washed out and milky.
+function lin(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
+
+// Every colour in this scene already stood for one real material -- 0x6e7683
+// was always a steel rail, 0x101216 was always a rubber foot. Rather than
+// hand-annotate fifty call sites, the mapping lives here once, keyed by the
+// hex that was already there. Anything unlisted falls back to matte painted
+// plastic, which is what most of the machine actually is.
+//                       rough  metal
+var SURFACE = {
+  0x9aa2af: [0.22, 0.95],  // polished linear rail
+  0x6e7683: [0.26, 0.92],  // rail / rod
+  0x7b8493: [0.30, 0.88],  // door grip, brushed aluminium
+  0x666e7c: [0.34, 0.85],  // control knob
+  0x454b58: [0.32, 0.80],  // gantry extrusion, anodised
+  0x3a404b: [0.36, 0.78],  // gantry extrusion, darker face
+  0x3d4552: [0.40, 0.70],  // carriage plate
+  0x59616e: [0.35, 0.60],  // AMS window frame
+  0xc98b46: [0.28, 1.00],  // brass mark
+  0x101216: [0.90, 0.00],  // rubber foot
+  0x0c0e12: [0.85, 0.00],  // rubber / dark plastic
+  0x0a0c10: [0.80, 0.00],  // screen bezel
+  0x0b0d10: [0.25, 0.00],  // screen glass
+  0x26282e: [0.52, 0.18],  // painted steel body panel
+  0x2a2e35: [0.54, 0.16],  // AMS shell
+  0x2b2f36: [0.58, 0.12],  // spool holder
+  0x23262d: [0.60, 0.10],
+  0x22262e: [0.62, 0.10],
+  0x21252b: [0.62, 0.10],
+  0x1d2026: [0.50, 0.20],  // door frame
+  0x1b1e24: [0.66, 0.08],
+  0x191d25: [0.70, 0.06],
+  0x171a1f: [0.60, 0.10],  // trim
+  0x171a20: [0.68, 0.06],
+  0x15171c: [0.72, 0.05],
+  0x4a3a22: [0.55, 0.30]
+};
+
+function surface(hex, extra) {
+  var r = SURFACE[hex] || [0.62, 0.08];
+  // Painted sheet metal picks up far less of the room than a machined rail
+  // does. One flat envMapIntensity for everything is what made the first pass
+  // look like the whole printer had been dipped in chrome.
+  var o = {color: lin(hex), roughness: r[0], metalness: r[1],
+           envMapIntensity: 0.50 + 0.80 * r[1]};
+  // Only the painted panels: a machined rail is genuinely smooth, and giving
+  // it orange-peel would read as dirt.
+  if (r[1] < 0.5) {
+    o.normalMap = panelNormalMap();
+    o.normalScale = new THREE.Vector2(0.45, 0.45);
+  }
+  if (extra) { for (var k in extra) { o[k] = extra[k]; } }
+  return new THREE.MeshStandardMaterial(o);
+}
+
+// A colour texture is sRGB data; without this flag it is read as linear and
+// the PEI plate and shell liner come out visibly too bright.
+function srgbMap(tex) { tex.encoding = THREE.sRGBEncoding; return tex; }
+
+// Unlit sources -- the chamber LED and the lit logo. Emissive on a standard
+// material rather than MeshBasic so they still sit on the tone curve instead
+// of clipping to a flat white patch.
+function emitter(hex, strength) {
+  return new THREE.MeshStandardMaterial({
+    color: lin(0x000000), emissive: lin(hex),
+    emissiveIntensity: strength === undefined ? 1 : strength,
+    roughness: 1, metalness: 0
+  });
+}
+
+// The smoked front door. Real transmission needs a refraction pass three r128
+// does not have, so this is a physical material leaning on the environment
+// map for its reflection -- which is exactly what sells glass at this angle:
+// you read the highlight sliding across it, not what is behind it.
+function glassMaterial() {
+  return new THREE.MeshPhysicalMaterial({
+    color: lin(0x3f4a55), metalness: 0, roughness: 0.08,
+    transparent: true, opacity: 0.30, clearcoat: 1, clearcoatRoughness: 0.06,
+    envMapIntensity: 2.2, depthWrite: false, side: THREE.DoubleSide
+  });
+}
+
+// ── environment ────────────────────────────────────────────────────────────
+// The thing that actually makes metal look like metal. Without an environment
+// map a MeshStandardMaterial with metalness 0.9 has nothing to reflect and
+// renders nearly black -- which is the classic "I switched to PBR and it got
+// worse" failure. This builds a small studio by hand (overhead softbox, cool
+// fill from one side, warm bounce from below) and runs it through PMREM so
+// rough surfaces get a properly blurred version of it.
+function buildEnvironment() {
+  var pmrem = new THREE.PMREMGenerator(renderer);
+  var room = new THREE.Scene();
+  room.background = new THREE.Color(lin(0x0b0d12));
+
+  function panel(w, h, d, color, intensity, x, y, z, rx, ry) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+      new THREE.MeshBasicMaterial({color: lin(color)}));
+    m.material.color.multiplyScalar(intensity);
+    m.position.set(x, y, z);
+    if (rx) { m.rotation.x = rx; }
+    if (ry) { m.rotation.y = ry; }
+    room.add(m);
+    return m;
+  }
+
+  // First pass at these numbers had a 1.5-intensity cool fill and it turned
+  // the whole machine powder blue -- an environment map lights EVERYTHING, so
+  // a tint that looks like a tasteful accent in isolation becomes the colour
+  // of the product. Warm key, restrained cool, and a dark back wall so metal
+  // has something black to reflect: without a dark region in the environment,
+  // polished surfaces have no contrast and read as flat grey plastic.
+  panel(600, 10, 420, 0xfff2de, 2.2,    0,  360,   40, 0, 0);   // key softbox
+  panel(10, 460, 420, 0xa8c0e0, 0.45, -420,  60,    0, 0, 0);   // cool fill
+  panel(10, 460, 420, 0xffcfa0, 0.30,  420,  40,    0, 0, 0);   // warm kicker
+  panel(600, 10, 420, 0x5a6270, 0.18,   0, -300,    0, 0, 0);   // floor bounce
+  panel(600, 460, 10, 0x05070b, 1.0,    0,   40, -360, 0, 0);   // back wall
+
+  envRT = pmrem.fromScene(room, 0.5);
+  scene.environment = envRT.texture;
+  room.traverse(function (o) {
+    if (o.geometry) { o.geometry.dispose(); }
+    if (o.material) { o.material.dispose(); }
+  });
+  pmrem.dispose();
+}
 
 function initScene() {
   renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
   basePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(basePixelRatio);
   renderer.setClearColor(0x07080a, 1);
+
+  // Colour management, 2026-09-17. Everything below used to render in the
+  // renderer's default linear output with Lambert materials, which is why the
+  // whole machine read as one flat navy shape: no tone curve, so highlights
+  // clipped and midtones crushed together. sRGB output plus an ACES curve is
+  // the single biggest change here, and it is why every material colour now
+  // goes through lin() -- three r128 has no automatic colour management, so a
+  // hex authored in sRGB has to be converted to linear on the way in or the
+  // whole scene washes out.
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.95;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // Measured: leaving this on cost 4.4x the frame time (148ms -> 647ms median
+  // on this software rasteriser). The shadow pass re-renders the whole
+  // 200k-triangle toolpath EVERY frame, and between layer changes that pass
+  // produces a bit-identical map. Driven manually from tick() instead.
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
   stage.appendChild(renderer.domElement);
 
   // Deterministic render stats and named scene objects for the test harness.
   // Everything else stays inside the closure.
   window.__R = renderer;
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x07080a, 950, 2200);
+    // Matched to the backdrop's horizon band, not to the clear colour: the floor
+  // dissolves into fog at its edges, and when the two colours disagree that
+  // dissolve becomes a visible seam across the image.
+  scene.fog = new THREE.Fog(0x141a25, 700, 2400);
   camera = new THREE.PerspectiveCamera(38, 1, 1, 4000);
   camera.up.set(0, 0, 1);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.46));
-  var key = new THREE.DirectionalLight(0xfff0dd, 0.85);
+  // The environment map does most of the ambient work now, so the flat
+  // AmbientLight that used to carry it is gone -- leaving it in on top of an
+  // IBL is what makes a PBR scene look washed and plastic.
+  buildEnvironment();
+  buildBackdrop();
+  // Directional intensity has to win over the environment or the shadow it
+  // casts is invisible: an IBL contributes ambient that nothing occludes, so
+  // a scene lit mostly by the env map has shadows that darken almost nothing.
+  // Measured, not guessed: with the key at 1.9 the print alone rendered at
+  // value 0.82 before the rim and the chamber lamp were added on top, and the
+  // three together pushed it to 0.86 where ACES desaturates hard -- the vase
+  // came out pale peach instead of orange. Each light alone gave saturation
+  // 0.47-0.55; it was only their sum that washed out. Roughly half the total
+  // budget, keeping the same ratio between them.
+  var key = new THREE.DirectionalLight(0xfff0dd, 1.05);
   key.position.set(-260, -420, 520);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1536, 1536);
+  key.shadow.bias = -0.0006;
+  key.shadow.normalBias = 0.6;
+  var sc = key.shadow.camera;
+  sc.left = -420; sc.right = 420; sc.top = 420; sc.bottom = -420;
+  sc.near = 120; sc.far = 1700;
+  sc.updateProjectionMatrix();
   scene.add(key);
+  scene.add(key.target);
+  keyLight = key;
   var rim = new THREE.DirectionalLight(0x8fb4ff, 0.32);
   rim.position.set(430, 300, 140);
   scene.add(rim);
@@ -166,7 +428,7 @@ function buildChamber(bed) {
 
   function slab(w, d, h, color, x, y, z, normal) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
-      new THREE.MeshLambertMaterial({color: color}));
+      surface(color));
     m.position.set(x, y, z);
     chamber.add(m);
     if (normal) { extPanels.push({mesh: m, n: normal}); }
@@ -184,6 +446,10 @@ function buildChamber(bed) {
     cam.tx = ox; cam.ty = oy;
     cam.tz = (machineBounds.zBot + machineBounds.zOuter) / 2;
     cam.r = machineRadius();
+    applyShadows(chamber); applyShadows(bedGroup); applyShadows(gantry);
+    aimShadowCamera();
+    buildFloor();
+  shadowDirty = true;
     restoreMotionVisibility();
     syncDoorControl();
     return;
@@ -216,7 +482,7 @@ function buildChamber(bed) {
   // out of 255, which is a light that is not a light.
   var liner = new THREE.Mesh(
     new THREE.BoxGeometry(EXT.w - 2 * t, EXT.d - 2 * t, ch - 2 * t),
-    new THREE.MeshLambertMaterial({map: shellTexture(), side: THREE.BackSide}));
+    new THREE.MeshStandardMaterial({map: srgbMap(shellTexture()), side: THREE.BackSide, roughness: 0.82, metalness: 0.04, envMapIntensity: 0.35}));
   liner.position.set(ox, oy, cz);
   chamber.add(liner);
 
@@ -226,7 +492,7 @@ function buildChamber(bed) {
   // 3:1 letterbox -- the first pass drew it nearly square.
   slab(65, 2, 22, 0x0b0d10, x1 - 66, y0 - 0.6, zBot + 28, null);
   var knob = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 4, 24),
-    new THREE.MeshLambertMaterial({color: 0x666e7c}));
+    surface(0x666e7c));
   knob.rotation.x = Math.PI / 2;
   knob.position.set(x1 - 22, y0 - 1.5, zBot + 28);
   chamber.add(knob);
@@ -235,13 +501,13 @@ function buildChamber(bed) {
   [[x0 + 24, y0 + 24], [x1 - 24, y0 + 24], [x0 + 24, y1 - 24], [x1 - 24, y1 - 24]]
     .forEach(function (p) {
       var f = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 9, 16),
-        new THREE.MeshLambertMaterial({color: 0x101216}));
+        surface(0x101216));
       f.rotation.x = Math.PI / 2;
       f.position.set(p[0], p[1], zBot - 4);
       chamber.add(f);
     });
   var spool = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 62, 24),
-    new THREE.MeshLambertMaterial({color: 0x2b2f36}));
+    surface(0x2b2f36));
   spool.rotation.z = Math.PI / 2;
   spool.rotation.x = Math.PI / 2;
   spool.position.set(ox, y1 + 34, zBot + 96);
@@ -257,8 +523,7 @@ function buildChamber(bed) {
   doorGroup = new THREE.Group();
   var dw = dx1 - dx0, dh = dz1 - dz0;
   var glass = new THREE.Mesh(new THREE.BoxGeometry(dw, 3, dh),
-    new THREE.MeshBasicMaterial({color: 0x6f7f8c, transparent: true,
-      opacity: 0.17, depthWrite: false, side: THREE.DoubleSide}));
+    glassMaterial());
   glass.position.set(hingeLeft ? dw / 2 : -dw / 2, 0, 0);
   glass.userData.door = true;
   doorGroup.add(glass);
@@ -266,13 +531,13 @@ function buildChamber(bed) {
   [[dw, 7, 0, (dh - 7) / 2], [dw, 7, 0, -(dh - 7) / 2],
    [7, dh, -(dw - 7) / 2, 0], [7, dh, (dw - 7) / 2, 0]].forEach(function (f) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(f[0], 5, f[1]),
-      new THREE.MeshLambertMaterial({color: frameCol}));
+      surface(frameCol));
     m.position.set((hingeLeft ? dw / 2 : -dw / 2) + f[2], 0, f[3]);
     m.userData.door = true;
     doorGroup.add(m);
   });
   var grip = new THREE.Mesh(new THREE.BoxGeometry(9, 13, 74),
-    new THREE.MeshLambertMaterial({color: 0x7b8493}));
+    surface(0x7b8493));
   grip.position.set(hingeLeft ? dw - 16 : -dw + 16, -7, 0);
   grip.userData.door = true;
   doorGroup.add(grip);
@@ -286,6 +551,8 @@ function buildChamber(bed) {
   buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, true);
   buildAMS(PRINTERS[printerId].ams, ox, oy, y1, zTop);
   rebuildToolhead(true);
+  applyShadows(chamber); applyShadows(bedGroup); applyShadows(gantry);
+  applyShadows(amsGroup); applyShadows(doorGroup);
   restoreMotionVisibility();
   syncDoorControl();
 
@@ -298,6 +565,10 @@ function buildChamber(bed) {
   cam.tx = ox; cam.ty = oy;
   cam.tz = (machineBounds.zBot + machineBounds.zOuter) / 2;
   cam.r = machineRadius();
+  // After the real bounds, not before: the AMS on the lid is part of what has
+  // to fit inside the shadow frustum, and the floor sits on zBot.
+  aimShadowCamera();
+  buildFloor();
 }
 
 function machineRadius() {
@@ -323,11 +594,11 @@ function machineCamera(open) {
 function buildBed(X, Y, ox, oy) {
   bedGroup = new THREE.Group();
   plate = new THREE.Mesh(new THREE.BoxGeometry(X + 14, Y + 14, 7),
-    new THREE.MeshLambertMaterial({map: peiTexture()}));
+    new THREE.MeshStandardMaterial({map: srgbMap(peiTexture()), roughness: 0.58, metalness: 0.35, envMapIntensity: 0.8}));
   plate.position.set(ox, oy, -3.6);
   bedGroup.add(plate);
   var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 30, Y + 30, 10),
-    new THREE.MeshBasicMaterial({color: 0x191d25}));
+    surface(0x191d25));
   carrier.position.set(ox, oy, -12);
   bedGroup.add(carrier);
 
@@ -359,9 +630,9 @@ function buildBed(X, Y, ox, oy) {
 function buildGantry(W, ox, oy) {
   gantry = new THREE.Group();
   gantry.add(new THREE.Mesh(new THREE.BoxGeometry(W - 40, 9, 6.5),
-    new THREE.MeshLambertMaterial({color: 0x3a404b})));
+    surface(0x3a404b)));
   var railTop = new THREE.Mesh(new THREE.BoxGeometry(W - 40, 9, 1.3),
-    new THREE.MeshBasicMaterial({color: 0x454b58}));
+    surface(0x454b58));
   railTop.position.z = 3.8;
   gantry.add(railTop);
   gantry.position.set(ox, oy, 0);
@@ -386,7 +657,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
     yRails = new THREE.Group();
     [ox - X / 2 - 24, ox + X / 2 + 24].forEach(function (x) {
       var r = new THREE.Mesh(new THREE.BoxGeometry(11, Y + 60, 9),
-        new THREE.MeshLambertMaterial({color: DARK}));
+        surface(DARK));
       r.position.set(x, oy, 0);
       yRails.add(r);
     });
@@ -410,16 +681,16 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
 
   zPosts.forEach(function (p) {
     var screw = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, zHi - zLo, 12),
-      new THREE.MeshLambertMaterial({color: METAL}));
+      surface(METAL));
     screw.rotation.x = Math.PI / 2;
     screw.position.set(p[0], p[1], (zLo + zHi) / 2);
     chamber.add(screw);
     var post = new THREE.Mesh(new THREE.BoxGeometry(14, 14, zHi - zLo),
-      new THREE.MeshLambertMaterial({color: DARK}));
+      surface(DARK));
     post.position.set(p[0] + (p[0] > ox ? 20 : -20), p[1], (zLo + zHi) / 2);
     chamber.add(post);
     var pulley = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 9, 14),
-      new THREE.MeshLambertMaterial({color: 0x3d4552}));
+      surface(0x3d4552));
     pulley.rotation.x = Math.PI / 2;
     pulley.position.set(p[0], p[1], zLo - 6);
     chamber.add(pulley);
@@ -428,7 +699,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   // One motor, one belt, both under the base -- which is why all three screws
   // turn together and the bed cannot tilt out of tram on its own.
   var zMotor = new THREE.Mesh(new THREE.BoxGeometry(34, 34, 30),
-    new THREE.MeshLambertMaterial({color: 0x1b1e24}));
+    surface(0x1b1e24));
   zMotor.position.set(ox + 46, y1 - t - 30, zLo - 22);
   chamber.add(zMotor);
   var beltPath = new THREE.Mesh(
@@ -438,22 +709,22 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
       new THREE.Vector3(zPosts[1][0], zPosts[1][1], zLo - 6),
       new THREE.Vector3(zPosts[2][0], zPosts[2][1], zLo - 6),
       new THREE.Vector3(zPosts[0][0], zPosts[0][1], zLo - 6)], true), 30, 2.4, 6, true),
-    new THREE.MeshLambertMaterial({color: 0x15171c}));
+    surface(0x15171c));
   chamber.add(beltPath);
 
   // Three sliders, on the bed, descending with it -- the whole point of
   // drawing the stage at all is that this is the part that actually moves.
   var beam = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 - 46, 15, 11),
-    new THREE.MeshLambertMaterial({color: FRAME}));
+    surface(FRAME));
   beam.position.set(ox, y1 - t - 39, -14);
   bedGroup.add(beam);
   zPosts.forEach(function (p) {
     var slider = new THREE.Mesh(new THREE.BoxGeometry(24, 28, 19),
-      new THREE.MeshLambertMaterial({color: 0x3d4552}));
+      surface(0x3d4552));
     slider.position.set(p[0], p[1], -14);
     bedGroup.add(slider);
     var arm = new THREE.Mesh(new THREE.BoxGeometry(13, Math.abs(p[1] - oy), 9),
-      new THREE.MeshLambertMaterial({color: FRAME}));
+      surface(FRAME));
     arm.position.set(p[0], (oy + p[1]) / 2, -14);
     bedGroup.add(arm);
   });
@@ -466,12 +737,12 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   yRails = new THREE.Group();
   [x0 + t + 7, x1 - t - 7].forEach(function (x) {
     var r = new THREE.Mesh(new THREE.BoxGeometry(11, y1 - y0 - 2 * t - 16, 9),
-      new THREE.MeshLambertMaterial({color: DARK}));
+      surface(DARK));
     r.position.set(x, oy, 0);
     yRails.add(r);
     [-3.5, 3.5].forEach(function (dy) {
       var b = new THREE.Mesh(new THREE.BoxGeometry(2.5, y1 - y0 - 2 * t - 16, 5),
-        new THREE.MeshLambertMaterial({color: 0x15171c}));
+        surface(0x15171c));
       b.position.set(x + (x < ox ? 8 : -8), oy, dy + 6);
       yRails.add(b);
     });
@@ -491,26 +762,26 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   var ledLen = (y1 - y0) * 0.52;
   var ledY = y0 + t + ledLen / 2 + 18;
   var bar = new THREE.Mesh(new THREE.BoxGeometry(5, ledLen, 9),
-    new THREE.MeshBasicMaterial({color: 0xffe9c6}));
+    emitter(0xffe9c6, 2.6));
   bar.position.set(x0 + t + 9, ledY, zTop - 30);
   chamber.add(bar);
   var shell = new THREE.Mesh(new THREE.BoxGeometry(11, ledLen + 10, 14),
-    new THREE.MeshLambertMaterial({color: 0x2b2f36}));
+    surface(0x2b2f36));
   shell.position.set(x0 + t + 5, ledY, zTop - 30);
   chamber.add(shell);
   // Tight falloff on purpose. A 5V 0.3A strip pools light near itself and
   // leaves the far corners dim; the first pass's wide, bright lamp flattened
   // the whole chamber into even grey, which reads as a lightbox, not a P1S.
-  chamberLamp = new THREE.PointLight(0xffdcae, 3.0, 560, 1.5);
+  chamberLamp = new THREE.PointLight(0xffdcae, 1.55, 560, 1.5);
   chamberLamp.position.set(x0 + 58, ledY, zTop - 46);
   chamber.add(chamberLamp);
 
   var cam2 = new THREE.Mesh(new THREE.BoxGeometry(17, 15, 15),
-    new THREE.MeshLambertMaterial({color: 0x23262d}));
+    surface(0x23262d));
   cam2.position.set(x0 + t + 12, y0 + t + 12, zTop - 30);
   chamber.add(cam2);
   var lens = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 3, 12),
-    new THREE.MeshBasicMaterial({color: 0x0a0c10}));
+    surface(0x0a0c10));
   lens.rotation.x = Math.PI / 2;
   lens.position.set(x0 + t + 16, y0 + t + 16, zTop - 36);
   chamber.add(lens);
@@ -527,7 +798,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 
   // Built as panels, not a solid block: a closed box would hide the spools
   // behind its own lit top face no matter how transparent the lid above it is.
-  var wall = 8, shell = new THREE.MeshLambertMaterial({color: 0x2a2e35});
+  var wall = 8, shell = surface(0x2a2e35);
   function panel(w, d, h, x, y, z) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), shell);
     m.position.set(x, y, z);
@@ -550,7 +821,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
     // Spool size is the AMS's own published compatibility range -- 197-202 mm
     // across, 50-68 mm wide -- which is why they very nearly fill the box.
     var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 56, 28),
-      new THREE.MeshLambertMaterial({color: FILAMENT[i % FILAMENT.length]}));
+      surface(FILAMENT[i % FILAMENT.length], {roughness: 0.45, metalness: 0.0}));
     // Rotated onto X by the PARENT, so the mesh's own X rotation is free to be
     // the spool turning as filament is pulled off it.
     var hub = new THREE.Group();
@@ -560,7 +831,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
     amsGroup.add(hub);
     spools.push(fil);
     var core = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 60, 20),
-      new THREE.MeshLambertMaterial({color: 0x15171c}));
+      surface(0x15171c));
     core.rotation.z = Math.PI / 2;
     core.position.set(x, cy, cz - 2);
     amsGroup.add(core);
@@ -569,11 +840,10 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 
   // Smoked lid over the spools -- the reason you can see them at all.
   var lid = new THREE.Mesh(new THREE.BoxGeometry(spec.w - 22, spec.d - 22, 5),
-    new THREE.MeshLambertMaterial({color: 0x59616e, transparent: true,
-      opacity: 0.36, depthWrite: false}));
+    glassMaterial());
   lid.position.set(ox, cy, cz + spec.h / 2 - 3);
   amsGroup.add(lid);
-  var lz = cz + spec.h / 2 - 3, fm = new THREE.MeshLambertMaterial({color: 0x21252b});
+  var lz = cz + spec.h / 2 - 3, fm = surface(0x21252b);
   [[spec.w, 11, ox, cy - spec.d / 2 + 5.5], [spec.w, 11, ox, cy + spec.d / 2 - 5.5],
    [11, spec.d, ox - spec.w / 2 + 5.5, cy], [11, spec.d, ox + spec.w / 2 - 5.5, cy]]
     .forEach(function (f) {
@@ -588,7 +858,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
     new THREE.Vector3(ox, y1 + 54, cz - 74),
     new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
   var feed = new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
-    new THREE.MeshLambertMaterial({color: 0x171a20}));
+    surface(0x171a20));
   amsGroup.add(feed);
 
   amsGroup.userData.spools = spools;
@@ -614,7 +884,7 @@ function buildOpenFrame(prof, X, Y, Z, ox, oy, zBot, slinger) {
   }
   var baseW = f ? f[0] : X + 90, baseD = f ? f[1] : Y + 90;
   var base = new THREE.Mesh(new THREE.BoxGeometry(baseW, baseD, 46),
-    new THREE.MeshLambertMaterial({color: 0x23262d}));
+    surface(0x23262d));
   base.position.set(ox, oy, zBot + 23);
   chamber.add(base);
   // Build volume, drawn as the volume it is rather than as a box that pretends
@@ -632,6 +902,67 @@ function buildOpenFrame(prof, X, Y, Z, ox, oy, zBot, slinger) {
 // state it starts in before any job is mounted. If a job IS mounted the motion
 // system has to come back with it -- otherwise changing printers halfway
 // through a replay silently loses the gantry and the rails.
+// Shadows are what put the print ON the plate instead of floating above it.
+// Applied by traversal rather than at each call site because a mesh's role is
+// already decided by which group it landed in: the machine casts, the plate
+// and liner receive, and the smoked panels do neither -- a transparent mesh
+// writing into the shadow map paints a hard black rectangle across the bed.
+// The shadow camera defaults to looking at the world origin, which is not
+// where this machine is -- the bed sits at (ox, oy) and the body spans zBot to
+// zTop. Aiming and sizing the frustum at the real bounds is the difference
+// between a crisp contact shadow and a shadow map spent mostly on empty space.
+// A machine standing in pure black reads as a render of a model; the same
+// machine with a floor under it and its own shadow on that floor reads as an
+// object in a room. The plane is deliberately larger than the fog far distance
+// so its edges dissolve into the background instead of ending on a visible
+// horizon line.
+function buildFloor() {
+  if (!machineBounds) { return; }
+  if (floorMesh) { scene.remove(floorMesh); floorMesh.geometry.dispose(); }
+  floorMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(3200, 3200),
+    new THREE.MeshStandardMaterial({color: lin(0x212732), roughness: 0.66,
+      metalness: 0.0, envMapIntensity: 0.30}));
+  floorMesh.position.set(machineBounds.ox, machineBounds.oy,
+                         machineBounds.zBot - 13);
+  floorMesh.material.normalMap = panelNormalMap();
+  floorMesh.material.normalScale = new THREE.Vector2(0.6, 0.6);
+  floorMesh.receiveShadow = true;
+  floorMesh.name = 'floor';
+  scene.add(floorMesh);
+}
+
+function aimShadowCamera() {
+  if (!keyLight || !machineBounds) { return; }
+  var b = machineBounds;
+  var cz = (b.zBot + (b.zOuter || b.zTop)) / 2;
+  var span = Math.max(EXT.w, EXT.d, (b.zOuter || b.zTop) - b.zBot) * 0.62;
+  keyLight.target.position.set(b.ox, b.oy, b.zBot + (b.zTop - b.zBot) * 0.30);
+  keyLight.target.updateMatrixWorld();
+  // Steep on purpose. At a shallow angle the print throws its shadow directly
+  // away from the camera, behind its own body, so the bed reads as if nothing
+  // is standing on it. Chamber lighting is overhead anyway.
+  keyLight.position.set(b.ox - 190, b.oy - 250, cz + 780);
+  var sc = keyLight.shadow.camera;
+  sc.left = -span; sc.right = span; sc.top = span; sc.bottom = -span;
+  sc.near = 60; sc.far = 2200;
+  sc.updateProjectionMatrix();
+  keyLight.shadow.needsUpdate = true;
+}
+
+function applyShadows(root) {
+  if (!root) { return; }
+  root.traverse(function (o) {
+    if (!o.isMesh) { return; }
+    var m = o.material;
+    if (m && (m.transparent || m.emissive !== undefined && m.emissiveIntensity > 1.5)) {
+      o.castShadow = false; o.receiveShadow = false; return;
+    }
+    o.castShadow = true;
+    o.receiveShadow = true;
+  });
+}
+
 function restoreMotionVisibility() {
   if (!JOB) { return; }
   if (gantry) { gantry.visible = true; }
@@ -673,13 +1004,13 @@ function rebuildToolhead(detailed) {
 function buildSimpleHead() {
   var g = new THREE.Group();
   var body = new THREE.Mesh(new THREE.BoxGeometry(22, 18, 26),
-    new THREE.MeshLambertMaterial({color: 0x22262e}));
+    surface(0x22262e));
   body.position.z = 20;
   g.add(body);
   g.add(new THREE.Mesh(new THREE.BoxGeometry(10, 10, 6),
-    new THREE.MeshLambertMaterial({color: 0x4a3a22})).translateZ(4.6));
+    surface(0x4a3a22)).translateZ(4.6));
   var tip = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5, 16),
-    new THREE.MeshBasicMaterial({color: 0xc98b46}));
+    emitter(0xc98b46, 0.9));
   tip.rotation.x = Math.PI;
   tip.position.z = 1.4;
   g.add(tip);
@@ -696,7 +1027,7 @@ function buildToolhead() {
   var g = new THREE.Group();
   function part(w, d, h, color, z, y) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h),
-      new THREE.MeshLambertMaterial({color: color}));
+      surface(color));
     m.position.set(0, y || 0, z);
     g.add(m);
     return m;
@@ -716,12 +1047,12 @@ function buildToolhead() {
 
   // Part-cooling fan, in the front housing where the real one lives.
   var fan = new THREE.Mesh(new THREE.CylinderGeometry(8.6, 8.6, 2.4, 18),
-    new THREE.MeshLambertMaterial({color: 0x0c0e12}));
+    surface(0x0c0e12));
   fan.rotation.x = Math.PI / 2;
   fan.position.set(0, -16.4, 37);
   g.add(fan);
   var hub = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 3, 12),
-    new THREE.MeshLambertMaterial({color: 0x3a4049}));
+    surface(0x3a4049));
   hub.rotation.x = Math.PI / 2;
   hub.position.set(0, -17, 37);
   g.add(hub);
@@ -732,7 +1063,7 @@ function buildToolhead() {
 
   // PTFE pneumatic joint on top, where the AMS tube lands.
   var joint = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 5, 6, 14),
-    new THREE.MeshLambertMaterial({color: 0x6e7683}));
+    surface(0x6e7683));
   joint.rotation.x = Math.PI / 2;
   joint.position.set(0, 8, 57);
   g.add(joint);
@@ -743,13 +1074,13 @@ function buildToolhead() {
     part(15, 13, 1.4, 0x8e96a3, 13 + i * 2.5, 0);
   }
   var neck = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 4.4, 12),
-    new THREE.MeshLambertMaterial({color: 0x9aa2af}));
+    surface(0x9aa2af));
   neck.rotation.x = Math.PI / 2;
   neck.position.set(0, 0, 9.4);
   g.add(neck);
   part(11, 11, 5.4, 0x4a3a22, 4.6, 0);         // heat block, silicone-socked
   var tip = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5, 16),
-    new THREE.MeshBasicMaterial({color: 0xc98b46}));
+    emitter(0xc98b46, 0.9));
   tip.rotation.x = Math.PI;
   tip.position.set(0, 0, 1.4);
   g.add(tip);
@@ -1068,56 +1399,100 @@ var VERT = [
   '}'
 ].join('\n');
 
-var FRAG = [
-  'varying vec3 vColor;',
-  'varying float vVis;',
-  'varying vec3 vPos;',
+// The beads used to be a raw ShaderMaterial doing its own hand-rolled two-light
+// shading against a hardcoded light direction. That is why the print never
+// matched the machine around it and never cast a shadow: a raw shader sits
+// outside three's lighting, tone mapping and shadow pipeline entirely, so the
+// vase floated above a plate it was supposedly sitting on.
+//
+// It is a real MeshStandardMaterial now, with the per-vertex colour logic
+// injected into it. That one change buys, correctly and for free: a shadow
+// cast onto the plate, the same environment reflection every metal part uses,
+// and the ACES curve. flatShading is what makes a normal attribute
+// unnecessary -- three derives the normal from screen-space derivatives,
+// exactly what the old shader did by hand, and on a three-vertex bead tent
+// faceted IS the correct look.
+var JOB_PARS = [
+  'attribute float aType;',
+  'attribute float aSpeed;',
+  'attribute float aTool;',
+  'uniform vec3 uColor[13];',
+  'uniform float uVis[13];',
+  'uniform vec3 uTool[8];',
+  'uniform float uMode;',
+  'uniform vec2 uSpd;',
   'uniform float uDim;',
-  'uniform vec3 uEye;',
-  'void main(){',
-  '  if (vVis < 0.5) discard;',
-  '  vec3 N = normalize(cross(dFdx(vPos), dFdy(vPos)));',
-  '  if (!gl_FrontFacing) N = -N;',
-  '  vec3 V = normalize(uEye - vPos);',
-  // Key stands in for the chamber LED (high, forward of the door); the fill
-  // comes from below because it stands in for bounce off the plate.
-  '  vec3 Lk = normalize(vec3( 0.32,-0.72, 0.62));',
-  '  vec3 Lf = normalize(vec3(-0.58, 0.34, 0.18));',
-  '  float key  = max(dot(N, Lk), 0.0);',
-  '  float fill = max(dot(N, Lf), 0.0);',
-  '  float amb  = 0.26 + 0.20 * max(N.z, 0.0);',
-  '  vec3 c = vColor * (amb + 0.66 * key + 0.24 * fill);',
-  // Plastic is not chalk: a tight specular lobe plus a Fresnel edge is what
-  // separates an extruded bead from a flat coloured ribbon. It is also the
-  // whole cost difference between the two quality levels -- two pow() calls
-  // per fragment over a few million triangles.
-  '#ifdef RICH',
-  '  float spec = pow(max(dot(reflect(-Lk, N), V), 0.0), 34.0);',
-  '  c += vec3(1.0, 0.94, 0.85) * spec * 0.40;',
-  '  float fres = pow(1.0 - max(dot(N, V), 0.0), 3.4);',
-  '  c += mix(vColor, vec3(1.0, 0.86, 0.66), 0.45) * fres * 0.28;',
-  '#endif',
-  '  gl_FragColor = vec4(mix(c, vec3(0.055,0.06,0.072), uDim), 1.0);',
+  'varying vec3 vJobColor;',
+  'varying float vJobVis;',
+  'vec3 magma(float t){',
+  '  const vec3 c0=vec3(-0.002136,-0.000750,-0.005386);',
+  '  const vec3 c1=vec3(0.251661,0.677523,2.494027);',
+  '  const vec3 c2=vec3(8.353717,-3.577720,0.314468);',
+  '  const vec3 c3=vec3(-27.668733,14.264731,-13.649213);',
+  '  const vec3 c4=vec3(52.176140,-27.943606,12.944169);',
+  '  const vec3 c5=vec3(-50.768525,29.046583,4.234153);',
+  '  const vec3 c6=vec3(18.655705,-11.489774,-5.601962);',
+  '  return clamp(c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6))))),0.0,1.0);',
   '}'
 ].join('\n');
 
+var JOB_VERT = [
+  '  int jt = int(aType + 0.5);',
+  '  float jf = clamp((aSpeed - uSpd.x) / max(uSpd.y - uSpd.x, 1.0), 0.0, 1.0);',
+  '  vec3 jByFeature = uColor[jt];',
+  '  vec3 jBySpeed = magma(mix(0.92, 0.28, jf));',
+  '  vec3 jByFil = uTool[int(aTool + 0.5)];',
+  '  vJobColor = uMode < 0.5 ? jByFeature : (uMode < 1.5 ? jBySpeed : jByFil);',
+  '  vJobColor = mix(vJobColor, vec3(0.012, 0.013, 0.017), uDim);',
+  '  vJobVis = uVis[jt];'
+].join('\n');
+
 function makeMaterial(dim, rich) {
-  var cols = TYPE_COLOR.map(function (h) { return new THREE.Color(h); });
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uColor: {value: cols},
-      uVis:   {value: new Array(N_TYPE).fill(1)},
-      uTool:  {value: FILAMENT.map(function (h) { return new THREE.Color(h); })},
-      uMode:  {value: 0},
-      uSpd:   {value: new THREE.Vector2(15, 80)},
-      uEye:   {value: new THREE.Vector3()},
-      uDim:   {value: dim}
-    },
-    vertexShader: VERT, fragmentShader: FRAG,
-    defines: rich ? {RICH: 1} : {},
-    side: THREE.DoubleSide,
-    extensions: {derivatives: true}
-  });
+  var u = {
+    uColor: {value: TYPE_COLOR.map(function (h) { return lin(h); })},
+    uVis:   {value: new Array(N_TYPE).fill(1)},
+    uTool:  {value: FILAMENT.map(function (h) { return lin(h); })},
+    uMode:  {value: 0},
+    uSpd:   {value: new THREE.Vector2(15, 80)},
+    uDim:   {value: dim}
+  };
+  // Printed PLA is neither chalk nor gloss: a matte-satin dielectric. Rich
+  // shading buys a tighter lobe and a real environment reflection; the cheap
+  // level keeps the same material but barely samples the env map, which is
+  // where the per-fragment cost actually sits.
+  // The fast path is a different material CLASS, not the same one with the
+  // knobs turned down, and that is the whole point. three applies
+  // scene.environment to every standard material, and there is no per-material
+  // way to opt out of that sample in r128 -- so the only way to stop paying
+  // for image-based lighting on 200k triangles is to use a material that has
+  // never heard of it. Phong still gets the real lights, the shadow and the
+  // tone curve, so fast mode is dimmer in the reflections and identical
+  // everywhere else.
+  var m = rich
+    ? new THREE.MeshStandardMaterial({
+        color: 0xffffff, roughness: 0.66, metalness: 0.0,
+        flatShading: true, envMapIntensity: 0.28, side: THREE.DoubleSide})
+    : new THREE.MeshPhongMaterial({
+        color: 0xffffff, specular: lin(0x14161a), shininess: 16,
+        flatShading: true, side: THREE.DoubleSide});
+  m.uniforms = u;
+  m.onBeforeCompile = function (shader) {
+    Object.keys(u).forEach(function (k) { shader.uniforms[k] = u[k]; });
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\n' + JOB_PARS)
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n' + JOB_VERT);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\n' +
+               'varying vec3 vJobColor;\nvarying float vJobVis;')
+      .replace('#include <clipping_planes_fragment>',
+               '#include <clipping_planes_fragment>\n  if (vJobVis < 0.5) discard;')
+      .replace('#include <color_fragment>',
+               '#include <color_fragment>\n  diffuseColor.rgb *= vJobColor;');
+  };
+  // Without this three caches one compiled program per material type, and the
+  // ghost pass would silently reuse the solid pass's program.
+  m.customProgramCacheKey = function () { return 'job|' + dim + '|' + rich; };
+  return m;
 }
 
 // \u2500\u2500 geometry build \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -1251,14 +1626,24 @@ function mountJob(job) {
   ghostMesh.material.polygonOffset = true;
   ghostMesh.material.polygonOffsetFactor = 2;
   ghostMesh.material.polygonOffsetUnits = 2;
+  ghostMesh.scale.setScalar(0.01);
   ghostMesh.frustumCulled = false;
   ghostMesh.visible = false;
   jobMesh = new THREE.Mesh(jobGeom, makeMaterial(0.0, richShading));
+  jobMesh.scale.setScalar(0.01);
+  // Fast mode keeps the machine's shadows and drops the print's. Honest note:
+  // this measured as noise on the software rasteriser used for testing here
+  // (413ms vs 402ms median), because that renderer is fragment-bound and the
+  // shadow pass is not where its time goes. Kept because it is strictly less
+  // work for the cheap path to do, not because a speedup was demonstrated.
+  jobMesh.castShadow = richShading;
+  jobMesh.receiveShadow = true;
   jobMesh.frustumCulled = false;
   scene.add(ghostMesh); scene.add(jobMesh);
   nozzle.visible = true; gantry.visible = true;
   JOB = job;
   applyVisibility();
+  shadowDirty = true;
   var bb = job.raw.bbox;
   shadowPlane.geometry.dispose();
   shadowPlane.geometry = new THREE.PlaneGeometry(
@@ -1344,6 +1729,7 @@ function setSeg(seg) {
     }
     if (yRails) { yRails.position.z = gantry.position.z; }
   }
+  if (!play.on) { shadowDirty = true; }
   updateAMS(seg);
 }
 
@@ -1360,9 +1746,13 @@ function tick(now) {
   setResolution(now);
   updateDoor();
   updateCutaway();
-  if (jobMesh) {
-    jobMesh.material.uniforms.uEye.value.copy(camera.position);
-    ghostMesh.material.uniforms.uEye.value.copy(camera.position);
+  // A growing print changes the shadow every frame in principle, but at a
+  // layer every few frames the difference is well under a pixel. Explicit
+  // changes (new plate, scrub, door, printer) refresh it immediately.
+  shadowFrame++;
+  if (shadowDirty || (play.on && shadowFrame % (richShading ? 10 : 30) === 0)) {
+    renderer.shadowMap.needsUpdate = true;
+    shadowDirty = false;
   }
   renderer.render(scene, camera);
 }
@@ -1605,6 +1995,8 @@ function setQuality(rich) {
     m.material.polygonOffsetUnits = old.polygonOffsetUnits;
     old.dispose();
   });
+  if (jobMesh) { jobMesh.castShadow = rich; }
+  shadowDirty = true;
   var b = $('quality');
   if (b) {
     b.setAttribute('aria-pressed', String(rich));

@@ -77,6 +77,56 @@ instead of just failing. The steps *after* it (`upload-pages-artifact`,
 `deploy-pages`) have never run, so treat them as untested until a green run
 exists.
 
+## Rendering (overhauled 2026-09-17)
+
+Everything used to draw with `MeshLambertMaterial` under the renderer's
+default linear output. That is why the machine read as one flat navy shape and
+the print floated above a plate it was supposedly standing on.
+
+| | before | after |
+|---|---|---|
+| Output | linear, no tone curve | sRGB + ACES filmic, exposure 0.95 |
+| Materials | Lambert / Basic | `MeshStandardMaterial`, per-surface roughness + metalness |
+| Ambient | one flat `AmbientLight` | PMREM environment built from a procedural studio |
+| Shadows | none | PCF soft, 1536², manually scheduled |
+| The print | raw `ShaderMaterial`, own two-light maths | real PBR material, injected vertex colour |
+| Backdrop | flat black void | gradient backdrop, floor, cast shadow |
+
+Four things here were found by measuring, not by eye, and each is a trap worth
+knowing about:
+
+1. **three r128 has no automatic colour management.** A hex authored in sRGB
+   has to be converted to linear on input or the whole scene washes out. That
+   is what `lin()` is for, and why every material colour goes through it.
+2. **An environment map lights everything.** A cool fill that looks like a
+   tasteful accent in isolation turned the entire printer powder blue. It is
+   now restrained, and painted panels reflect far less of the room than
+   machined rails do.
+3. **The print washing out was never one light being too bright.** Measured
+   with each light isolated: every one alone gave the bead saturation
+   0.47–0.55, and it was only their sum, at value 0.86, that pushed ACES into
+   desaturating orange toward white. The fix was halving the total budget, not
+   retuning one lamp.
+4. **A flat box face samples the environment in exactly one direction**, so it
+   renders as one uniform colour however good the material is. The exterior
+   stayed dead flat through the whole PBR pass until the panels got a
+   procedural orange-peel normal map to break the reflection up.
+
+**Cost, measured, and not hidden.** On this container's software rasteriser
+(SwiftShader — CPU, so it penalises fragment work far harder than any real
+GPU) the same frame went 148ms → 517ms at high detail and 402ms at fast.
+Shadow-map updates are scheduled manually rather than every frame, which cut
+p90 from 1282ms to ~600ms; the rest is fragment shading. The existing
+one-way auto-downgrade still measures real frames after a job loads and steps
+to fast below 22fps, and it fired on its own during testing. Fast detail is a
+different material class (`MeshPhongMaterial`), not the same one turned down,
+because three applies `scene.environment` to every standard material and r128
+gives no per-material way to opt out of that sample.
+
+**None of this makes the replay more accurate.** The Limits tab says so
+directly: the lighting is an invented studio rig, the real P1S has one LED bar
+on the left beam, and a better-looking replay is not a better-informed one.
+
 ## Colour modes
 
 **Feature** uses the slicer's own `;TYPE:` tag. **Speed** uses the real `F`

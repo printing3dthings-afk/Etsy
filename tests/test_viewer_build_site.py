@@ -10,6 +10,7 @@
    viewport tag a phone lays the page out at 980px -- the exact fiction that
    made every local mobile measurement wrong earlier in this project.
 """
+import re
 import shutil
 import sys
 import tempfile
@@ -138,6 +139,63 @@ def test_the_limits_dot_can_actually_be_cleared():
     check(js.count("localStorage") >= 2 and js.count("catch (e)") >= 2,
           "localStorage use is not guarded -- a private window would throw and "
           "take the tab handler down with it")
+
+
+def test_every_material_colour_goes_through_the_srgb_conversion():
+    """three r128 has no automatic colour management.
+
+    A hex authored in sRGB and handed straight to a material is used as-is in
+    linear lighting maths, and the whole scene renders washed out and milky.
+    Every colour in app.js goes through lin() for that reason. A future raw
+    `{color: 0x...}` would not error, would not look obviously wrong in
+    isolation, and would quietly be the wrong brightness.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    raw = re.findall(r"new THREE\.Mesh\w*Material\(\{[^}]*?color:\s*(0x[0-9a-fA-F]+)", js)
+    # the backdrop and environment panels are authored in the canvas/CSS space
+    # and converted at their own call sites, so 0xffffff (pure white, identical
+    # in both spaces) is the only literal allowed through here
+    stray = [c for c in raw if c.lower() not in ("0xffffff",)]
+    check(not stray,
+          "material colours bypassing lin(): %s -- these render at the wrong "
+          "brightness with sRGB output" % stray)
+
+
+def test_renderer_keeps_the_colour_and_shadow_pipeline():
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    for needle, why in [
+        ("renderer.outputEncoding = THREE.sRGBEncoding",
+         "sRGB output gone -- the whole scene loses its tone response"),
+        ("THREE.ACESFilmicToneMapping", "ACES curve gone -- highlights clip flat"),
+        ("renderer.shadowMap.enabled = true", "shadows disabled"),
+        ("scene.environment", "no environment map -- metal renders near black"),
+    ]:
+        check(needle in js, why)
+
+
+def test_shadow_map_is_not_rebuilt_every_frame():
+    """The 4.4x frame-time regression, made impossible to reintroduce silently.
+
+    With autoUpdate left on, the shadow pass re-renders the whole
+    200k-triangle toolpath every frame and produces a bit-identical map
+    between layer changes. Measured at 148ms -> 647ms median. Nothing about
+    that failure is visible: the picture is correct, only slow.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("renderer.shadowMap.autoUpdate = false" in js,
+          "shadowMap.autoUpdate is not disabled -- the per-frame shadow "
+          "re-render is back")
+    check("shadowDirty" in js and "renderer.shadowMap.needsUpdate = true" in js,
+          "autoUpdate is off but nothing schedules an update -- shadows would "
+          "freeze at their first frame, which is worse than the regression")
+
+
+def test_the_page_still_says_the_lighting_is_invented():
+    """The better this renders, the easier it is to mistake for a photograph."""
+    html = (ROOT / "tools" / "viewer" / "virtual_p1s.html").read_text(encoding="utf-8")
+    check("studio rig" in html,
+          "the Limits tab no longer says the lighting is an invented studio "
+          "rig rather than this machine's actual chamber LED")
 
 
 def run() -> None:
