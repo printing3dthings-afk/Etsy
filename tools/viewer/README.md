@@ -9,7 +9,8 @@ static; everything it draws came out of the slicer.
 |---|---|
 | `virtual_p1s.html` | The page — layout, palette, reference panels. Publish this as the Artifact. |
 | `app.js` | Scene, bead geometry, playback, UI. Served next to the page. |
-| `jobs/index.js` + `jobs/<id>.js` | Generated payloads, one script per plate. Not committed — 10MB of derived data. |
+| `jobs/index.js` + `jobs/<id>.js` | Generated payloads, one script per plate. **Committed** (54MB) — the Pages workflow has to find them, and re-slicing 72 plates in CI would need PrusaSlicer and the better part of an hour. Regenerating them adds that much to history again, so do it when there is a reason, not by habit. |
+| `build_site.py` | Wraps the page into a standalone document and copies the payloads beside it. |
 
 ## Rebuilding the job payloads
 
@@ -23,6 +24,33 @@ python3 tools/gcode_viewer_data.py /tmp/*.gcode -d <viewer>/jobs \
 `gcode_viewer_data.py` writes `jobs/<stem>.js` per file plus `jobs/index.js`,
 which the page loads first. A job script is only fetched when its card is
 clicked, so adding a heavy plate does not slow the first paint.
+
+## Opening it somewhere other than an Artifact
+
+An Artifact link is private to whoever owns it, so it cannot be handed to
+someone else to look at. `build_site.py` turns the same page into plain static
+files that work anywhere:
+
+```bash
+python3 tools/viewer/build_site.py          # -> tools/viewer/site/
+cd tools/viewer/site && python3 -m http.server
+```
+
+That folder is the whole thing — one HTML file, one JS bundle, one script per
+plate. No server logic, no build tooling. Copy it to a USB stick and it still
+works.
+
+**This is a build, not a copy, and the difference matters.**
+`virtual_p1s.html` starts at `<title>` with no doctype, charset or viewport,
+because the Artifact host supplies all three. Serve that file raw and a phone
+lays it out at 980px -- the exact fiction that made every local mobile
+measurement wrong earlier in this project. Verified after building: a 390px
+phone reports a 390px layout, no horizontal scroll, all 72 plates.
+
+`.github/workflows/pages.yml` publishes it to GitHub Pages on every push that
+touches `tools/viewer/`, which gives one public URL that opens on a desktop, a
+phone, or anyone else's device. The repo is public, so this costs nothing --
+and it means the site is public too, same as the models already in the repo.
 
 ## Colour modes
 

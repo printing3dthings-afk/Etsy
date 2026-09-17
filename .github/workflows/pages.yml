@@ -1,0 +1,60 @@
+# Publish the Virtual P1S viewer as a real website.
+#
+# WHY: an Artifact link is private to its owner, so it cannot be handed to
+# someone else to look at. Scott needs one URL that opens on his desktop, opens
+# on his phone, and can be sent to another person to review. This repo is
+# public, so GitHub Pages gives exactly that for free.
+#
+# The site is BUILT, not copied: tools/viewer/virtual_p1s.html has no doctype,
+# charset or viewport because the Artifact host supplies them. Served raw, a
+# phone lays it out at 980px. build_site.py wraps it into a real document.
+name: Publish viewer to Pages
+
+on:
+  push:
+    branches: [claude/new-session-o245bl]
+    paths:
+      - 'tools/viewer/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; never cancel one midway and leave the site half-written.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Build the standalone site
+        run: python3 tools/viewer/build_site.py -o _site
+      - name: Fail if the plates did not come along
+        # A page that loads and then has nothing to draw is worse than a failed
+        # deploy, because it looks like it worked.
+        run: |
+          test -f _site/index.html
+          test -f _site/jobs/index.js
+          n=$(ls _site/jobs/*.js | wc -l)
+          echo "plate payloads: $n"
+          test "$n" -gt 10
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
