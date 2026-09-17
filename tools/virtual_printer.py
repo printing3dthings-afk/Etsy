@@ -50,6 +50,36 @@ P1S = {
 }
 
 
+# Multi-material, for a 3MF that already carries a per-part extruder (which is
+# what tools/assemble_3mf.py writes into Metadata/Slic3r_PE_model.config).
+# Two findings from getting a real 5-filament slice out of PrusaSlicer 2.7.2,
+# both non-obvious and both verified here on 2026-09-17:
+#   * The wipe tower REQUIRES relative E. Without it the slice refuses outright
+#     with "The Wipe Tower is currently only supported with the relative
+#     extruder addressing".
+#   * Priming must be OFF. With it on, the priming block emitted 304 lines of
+#     "G1 X-40263464.000" -- a garbage coordinate, not a real move. Turning it
+#     off removed every one of them.
+# The time estimate on an MMU slice is ALSO unreliable: it came back as
+# "-2147483648s". gcode_viewer_data._seconds rejects that rather than passing
+# it on, and the viewer falls back to its own measured sum.
+MMU = {
+    "single-extruder-multi-material": "1",
+    "single-extruder-multi-material-priming": "0",
+    "wipe-tower": "1", "wipe-tower-x": "180", "wipe-tower-y": "140",
+    "use-relative-e-distances": "1",
+}
+
+
+def mmu_options(n_extruders):
+    """Per-extruder settings PrusaSlicer wants as comma lists, n copies each."""
+    per = {"nozzle-diameter": "0.4", "filament-diameter": "1.75",
+           "temperature": "220", "first-layer-temperature": "220"}
+    opts = dict(MMU)
+    opts.update({k: ",".join([v] * n_extruders) for k, v in per.items()})
+    return opts
+
+
 class VirtualPrinterError(Exception):
     pass
 
@@ -66,8 +96,12 @@ def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800):
         raise VirtualPrinterError(f"mesh not found: {mesh_path}")
     gcode_path.parent.mkdir(parents=True, exist_ok=True)
     cmd = [exe, "--export-gcode"]
+    # `--key=value`, not `--key value`: PrusaSlicer's boolean switches
+    # (single-extruder-multi-material, wipe-tower) take no separate argument, so
+    # the spaced form made the slicer read the "1" as a second input file and
+    # fail with "No such file: 1". The = form is accepted for every option.
     for k, v in {**P1S, **(extra or {})}.items():
-        cmd += [f"--{k}", v]
+        cmd.append(f"--{k}={v}")
     if supports:
         cmd.append("--support-material")
     cmd += ["-o", str(gcode_path), str(mesh_path)]

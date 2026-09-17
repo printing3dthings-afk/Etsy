@@ -286,6 +286,27 @@ envelope: published footprint, bed, build volume, correct kinematics, nothing
 invented. A bed-slinger also moves the BED in Y and climbs the gantry in Z --
 replaying a CoreXY's motion on it is the same lie as the wrong case.
 
+**Multi-material slicing from the CLI, and what it costs (2026-09-17).**
+`tools/assemble_3mf.py` already writes a per-part extruder into
+`Metadata/Slic3r_PE_model.config`, which is what PrusaSlicer reads, so any
+multi-part 3MF here slices as a genuine multi-filament job via
+`virtual_printer.mmu_options(n)`. Two settings are not optional: the wipe
+tower REQUIRES relative E (the slice refuses outright without it), and priming
+must be OFF or the priming block emits hundreds of lines of
+`G1 X-40263464.000` -- a garbage coordinate, not a move. The MMU time estimate
+also comes back as `-2147483648s`; do not publish it.
+
+The number worth knowing before promising a customer a multi-colour print: the
+monogram keychain is **8.6 g in one filament and 33.4 g in five**, and
+**25.1 g of that -- three quarters -- is purge tower that goes in the bin**.
+Time roughly doubles, 57 min to 109 min. Multi-colour is not a free upgrade;
+price it as four times the material.
+
+**Do not trust the slicer's per-extruder filament footer.** On that same
+slice, `; filament used [mm]` summed to 6,314 mm against 11,200 mm actually
+extruded -- it leaves out the purge, and reported
+`filament used for wipe tower [g] = 0.00` besides. Measure from the moves.
+
 **A light that changes nothing is not a light.** A chamber lamp added as a
 real `PointLight` still did nothing measurable, because the biggest surface it
 had to light -- the interior liner -- was `MeshBasicMaterial`, which ignores

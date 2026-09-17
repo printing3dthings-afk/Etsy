@@ -214,6 +214,53 @@ def test_the_two_kinematics_are_actually_different():
           "a descending bed moves in Z")
 
 
+def test_ams_usage_comes_from_measured_per_layer_filament():
+    # The exact bug: attributing filament to a slot by segment-index fraction
+    # charged slot 1 with 24.4 g against its real 17.0 g, because the purge is a
+    # lot of filament laid over very few moves. Layer boundaries are measured by
+    # the exporter and are exact.
+    src = APP.read_text(encoding="utf-8")
+    check("filByToolLayer" in src, "the viewer must use the per-layer measurement")
+    usage = src[src.index("function amsUsage"):]
+    usage = usage[:usage.index("\n}\n")]
+    check("filToolCum" in usage,
+          "per-slot usage must accumulate the measured layer rows")
+    check("toolRuns" not in src,
+          "the segment-index approximation must be gone, not merely unused")
+
+
+def test_spool_shrinks_and_spins_on_the_right_axes():
+    # A cylinder's own axis is local Y, so the radius is x and z. Scaling y made
+    # the spool narrower instead of emptier, and spinning x tumbled it end over
+    # end. Both were wrong in the first pass and both are invisible in a still.
+    src = APP.read_text(encoding="utf-8")
+    check("sl.spool.scale.set(k, 1, k)" in src,
+          "the spool empties on its radius (x and z), not its width")
+    check("sl.spool.rotation.y" in src,
+          "the spool turns about its own axis, which is local y")
+
+
+def test_the_ams_is_not_conditional_on_the_plate_being_multi_colour():
+    # It feeds the nozzle on every job. A single-filament plate is one slot
+    # doing all the work, not a special case to skip.
+    src = APP.read_text(encoding="utf-8")
+    state = src[src.index("function buildAMSState"):]
+    state = state[:state.index("\n}\n")]
+    check("toolChanges" not in state and "> 1" not in state,
+          "buildAMSState must not gate itself on a multi-colour job")
+    check("Math.max(1, totals.length)" in state,
+          "a single-filament job still gets one slot")
+
+
+def test_wipe_tower_has_a_colour_and_an_explanation():
+    src = APP.read_text(encoding="utf-8")
+    check("'Wipe tower'" in src, "the purge block needs its own legend entry")
+    m = re.search(r"var N_TYPE = TYPE_COLOR\.length;", src)
+    check(m is not None, "the shader array size must follow the palette length")
+    check("uniform vec3 uColor[13];" in src,
+          "the shader colour array has to cover every type id")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

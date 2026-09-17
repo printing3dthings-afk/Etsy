@@ -208,6 +208,61 @@ toolhead and the AMS, all of them static boxes and cylinders.
 than a twentieth of a bead: 8-30% of points on real plates, with time, mass and
 speed data bit-identical afterwards. It will not merge across a speed change.
 
+### The AMS actually feeds the nozzle
+
+Scott: "make that function the way it should no matter single colour or multi
+colour." So none of it is conditional on the plate: the AMS feeds every job,
+and a single-filament print is one slot doing all the work.
+
+Per slot, live as the replay runs: how much that filament has used, whether it
+is the one currently feeding, and the spool turning as it is pulled off. The
+feed line takes the live slot's colour. A third colour mode, **Filament**,
+paints every bead in the colour of the slot it came from.
+
+**A real multi-colour plate, not a mock-up.** `tools/assemble_3mf.py` already
+writes a per-part extruder into `Metadata/Slic3r_PE_model.config`, which is
+exactly what PrusaSlicer reads, so the monogram keychain slices as a genuine
+five-filament job: 52 tool changes and a real wipe tower. Two non-obvious
+things that took getting there (both now in `virtual_printer.MMU`):
+
+* the wipe tower **requires relative E** -- without it the slice refuses;
+* priming must be **off**, or the priming block emits 304 lines of
+  `G1 X-40263464.000`, a garbage coordinate rather than a move.
+
+The same plate, one filament against five, is the whole lesson:
+
+| | 1 filament | 5 filaments |
+|---|---|---|
+| filament | 8.6 g | **33.4 g** |
+| of which purge | — | **25.1 g (75%)** |
+| time | 57 min | 109 min |
+| tool changes | 0 | 52 |
+
+Three quarters of the multi-colour plate is wiped into the purge tower and
+thrown away. In Filament mode you can see it: the tower is striped with every
+colour it cleaned out.
+
+It also needs **five** slots and one AMS holds four, which the panel says
+plainly rather than quietly drawing four and hoping.
+
+**Two measurement traps, both caught by checking rather than assuming.**
+PrusaSlicer's own per-extruder footer (`; filament used [mm]`) came to 6,314 mm
+against 11,200 mm actually extruded -- it leaves the purge out, and reported
+`filament used for wipe tower [g] = 0.00` as well. Every slot would have read
+44% light. The exporter measures per filament from the moves instead, which
+sums to the job total by construction. Then the viewer made the same class of
+mistake one level up: interpolating a slot's usage from the layer total by
+segment index charged slot 1 with 24.4 g against its real 17.0 g, because the
+purge is a lot of filament laid over very few moves. It reads measured
+per-layer rows now, so every layer boundary is exact.
+
+The spool shrinks on the right axis and turns the right way, which sounds
+trivial and was not: a cylinder's own axis is local Y, so scaling Y made the
+spool narrower instead of emptier and spinning X tumbled it end over end. What
+it shows is honest in a way a nicer animation would not be -- 17 g off a 1 kg
+spool visibly turns the reel and barely changes its diameter, because 1 kg of
+PLA is about 320 m.
+
 ### Smoothness while rotating
 
 Three changes, and the first one is the one that matters most:

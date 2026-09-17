@@ -6,7 +6,16 @@
 // \u2500\u2500 palette \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // Index order must match TYPES in tools/gcode_viewer_data.py.
 var TYPE_COLOR = ['#ff7a45','#ffc04d','#4fd2ff','#6a7285','#c9d64f','#9be36a',
-                  '#3affc8','#7b5cd6','#a98cf0','#5a6070','#d8d8d8','#d8d8d8'];
+                  '#3affc8','#7b5cd6','#a98cf0','#5a6070','#d8d8d8','#d8d8d8',
+                  '#b08968'];
+var N_TYPE = TYPE_COLOR.length;
+
+// One palette for both the spools in the AMS and the filament colour mode, so
+// the bead on the plate is the colour of the spool it came off. Illustrative,
+// not read from any machine -- the printer panel says so.
+var FILAMENT = ['#d9dbe0','#24272d','#8d939d','#c08a5a','#e0553d',
+                '#6fa8dc','#8bc34a','#f2c14e'];
+var MAX_FILAMENT = FILAMENT.length;
 var TYPE_HELP = {
   'External perimeter':'The outermost wall loop. The only extrusion a customer ever sees, and the one worth slowing down for.',
   'Perimeter':'Inner wall loops. Strength and a backing for the external wall.',
@@ -19,7 +28,8 @@ var TYPE_HELP = {
   'Support material interface':'The denser layer between support and part. Makes supports release cleanly instead of scarring the surface.',
   'Skirt/Brim':'The loop laid down before the part. Primes the nozzle and proves the first layer before anything that matters begins.',
   'Custom':'Start/end G-code the profile injects, not part geometry.',
-  'Other':'An untagged move.'
+  'Other':'An untagged move.',
+  'Wipe tower':'The purge block. On every filament change the nozzle wipes the old colour out into this tower \u2014 it is thrown away, and on a multi-colour print it is most of the filament you buy.'
 };
 
 // \u2500\u2500 printers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -534,21 +544,27 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   amsEdge.position.set(ox, cy, cz);
   amsGroup.add(amsEdge);
 
-  var SPOOL = [0xd9dbe0, 0x24272d, 0x8d939d, 0xc08a5a];
+  var spools = [], cores = [];
   for (var i = 0; i < spec.slots; i++) {
     var x = ox - (spec.slots - 1) * 46 + i * 92;
     // Spool size is the AMS's own published compatibility range -- 197-202 mm
     // across, 50-68 mm wide -- which is why they very nearly fill the box.
     var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 56, 28),
-      new THREE.MeshLambertMaterial({color: SPOOL[i % SPOOL.length]}));
-    fil.rotation.z = Math.PI / 2;
-    fil.position.set(x, cy, cz - 2);
-    amsGroup.add(fil);
+      new THREE.MeshLambertMaterial({color: FILAMENT[i % FILAMENT.length]}));
+    // Rotated onto X by the PARENT, so the mesh's own X rotation is free to be
+    // the spool turning as filament is pulled off it.
+    var hub = new THREE.Group();
+    hub.rotation.z = Math.PI / 2;
+    hub.position.set(x, cy, cz - 2);
+    hub.add(fil);
+    amsGroup.add(hub);
+    spools.push(fil);
     var core = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 60, 20),
       new THREE.MeshLambertMaterial({color: 0x15171c}));
     core.rotation.z = Math.PI / 2;
     core.position.set(x, cy, cz - 2);
     amsGroup.add(core);
+    cores.push(core);
   }
 
   // Smoked lid over the spools -- the reason you can see them at all.
@@ -571,9 +587,13 @@ function buildAMS(spec, ox, oy, y1, zTop) {
     new THREE.Vector3(ox, cy + spec.d / 2 - 4, cz - 40),
     new THREE.Vector3(ox, y1 + 54, cz - 74),
     new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
-  amsGroup.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
-    new THREE.MeshLambertMaterial({color: 0x171a20})));
+  var feed = new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
+    new THREE.MeshLambertMaterial({color: 0x171a20}));
+  amsGroup.add(feed);
 
+  amsGroup.userData.spools = spools;
+  amsGroup.userData.cores = cores;
+  amsGroup.userData.feed = feed;
   amsGroup.name = 'ams';
   scene.add(amsGroup);
 }
@@ -1011,9 +1031,11 @@ function setResolution(now) {
 var VERT = [
   'attribute float aType;',
   'attribute float aSpeed;',
-  'uniform vec3 uColor[12];',
-  'uniform float uVis[12];',
-  'uniform float uMode;',      // 0 = colour by feature, 1 = colour by speed
+  'attribute float aTool;',
+  'uniform vec3 uColor[13];',
+  'uniform float uVis[13];',
+  'uniform vec3 uTool[8];',
+  'uniform float uMode;',      // 0 = feature, 1 = speed, 2 = filament
   'uniform vec2 uSpd;',        // slowest / fastest mm/s in this job
   'varying vec3 vColor;',
   'varying float vVis;',
@@ -1035,7 +1057,10 @@ var VERT = [
   'void main(){',
   '  int t = int(aType + 0.5);',
   '  float f = clamp((aSpeed - uSpd.x) / max(uSpd.y - uSpd.x, 1.0), 0.0, 1.0);',
-  '  vColor = mix(uColor[t], magma(mix(0.92, 0.28, f)), uMode);',
+  '  vec3 byFeature = uColor[t];',
+  '  vec3 bySpeed = magma(mix(0.92, 0.28, f));',
+  '  vec3 byFilament = uTool[int(aTool + 0.5)];',
+  '  vColor = uMode < 0.5 ? byFeature : (uMode < 1.5 ? bySpeed : byFilament);',
   '  vVis = uVis[t];',
   '  vec3 p = position * 0.01;',
   '  vPos = p;',
@@ -1081,7 +1106,8 @@ function makeMaterial(dim, rich) {
   return new THREE.ShaderMaterial({
     uniforms: {
       uColor: {value: cols},
-      uVis:   {value: new Array(12).fill(1)},
+      uVis:   {value: new Array(N_TYPE).fill(1)},
+      uTool:  {value: FILAMENT.map(function (h) { return new THREE.Color(h); })},
       uMode:  {value: 0},
       uSpd:   {value: new THREE.Vector2(15, 80)},
       uEye:   {value: new THREE.Vector3()},
@@ -1107,6 +1133,7 @@ function buildJob(raw) {
   var pts = b64(raw.pts, Int16Array);
   var polys = b64(raw.polys, Int32Array);
   var spd = b64(raw.speeds, Uint8Array);
+  var polyTool = raw.polyTool ? b64(raw.polyTool, Uint8Array) : null;
   var layers = raw.layers;               // [z*100, polyStart, polyCount, sec, mm, h]
   var nPoly = polys.length / 3;
 
@@ -1117,11 +1144,13 @@ function buildJob(raw) {
   var vPos  = new Int16Array(nPt * 3 * 3);   // 3 verts across the bead tent
   var vType = new Uint8Array(nPt * 3);
   var vSpd  = new Uint8Array(nPt * 3);
+  var vTool = new Uint8Array(nPt * 3);
   var index = new Uint32Array(nSeg * 12);
   var segEnd = new Float32Array(nSeg * 3);
   var segLen = new Float32Array(nSeg);
   var segCum = new Float32Array(nSeg + 1);
   var segLayer = new Int32Array(nSeg);
+  var segTool = new Uint8Array(nSeg);
   var layerSeg = new Int32Array(layers.length + 1);
 
   var hw = (raw.beadWidth || 0.42) * 50;     // half width, in 0.01mm units
@@ -1135,6 +1164,7 @@ function buildJob(raw) {
     layerSeg[li] = si;
     for (var pi = L[1]; pi < L[1] + L[2]; pi++) {
       var t = polys[pi * 3], s = polys[pi * 3 + 1], n = polys[pi * 3 + 2];
+      var tool = polyTool ? polyTool[pi] : 0;
       var base = vi;
       for (i = 0; i < n; i++) {
         var x = pts[(s + i) * 2], y = pts[(s + i) * 2 + 1];
@@ -1164,6 +1194,7 @@ function buildJob(raw) {
         var sv = spd[Math.min(si + Math.max(i - 1, 0), spd.length - 1)];
         vType[vi] = t; vType[vi + 1] = t; vType[vi + 2] = t;
         vSpd[vi] = sv; vSpd[vi + 1] = sv; vSpd[vi + 2] = sv;
+        vTool[vi] = tool; vTool[vi + 1] = tool; vTool[vi + 2] = tool;
         vi += 3;
 
         if (i > 0) {
@@ -1178,6 +1209,7 @@ function buildJob(raw) {
           segEnd[si * 3] = x / 100; segEnd[si * 3 + 1] = y / 100;
           segEnd[si * 3 + 2] = ztop / 100;
           segLayer[si] = li;
+          segTool[si] = tool;
           si++;
         }
       }
@@ -1202,13 +1234,14 @@ function buildJob(raw) {
   g.setAttribute('position', new THREE.Int16BufferAttribute(vPos, 3));
   g.setAttribute('aType', new THREE.Uint8BufferAttribute(vType, 1));
   g.setAttribute('aSpeed', new THREE.Uint8BufferAttribute(vSpd, 1));
+  g.setAttribute('aTool', new THREE.Uint8BufferAttribute(vTool, 1));
   g.setIndex(new THREE.BufferAttribute(index, 1));
   g.boundingSphere = new THREE.Sphere(
     new THREE.Vector3(128, 128, 128), 400);   // set by hand: positions are raw int16
 
   return {raw:raw, geom:g, nSeg:si, segEnd:segEnd, segCum:segCum,
           segLayer:segLayer, layerSeg:layerSeg, total:cum,
-          segSpeed:spd, layers:layers};
+          segSpeed:spd, segTool:segTool, layers:layers};
 }
 
 function mountJob(job) {
@@ -1263,10 +1296,11 @@ var SPEEDS = [
   {v:1000, l:'1k\u00d7'}, {v:4000, l:'4k\u00d7'}, {v:15000, l:'15k\u00d7'}
 ];
 var play = {on:false, t:0, speed:1000, seg:0, last:0, scrubbing:false};
-var visible = new Array(12).fill(true);
+var visible = new Array(N_TYPE).fill(true);
 var machineMotion = true;
 var richShading = true, autoQualityDone = false;
 var colorMode = 'feature';
+var COLOR_MODE_ID = {feature: 0, speed: 1, filament: 2};
 var layerFilCum = null;
 
 function segAtTime(t) {
@@ -1310,6 +1344,7 @@ function setSeg(seg) {
     }
     if (yRails) { yRails.position.z = gantry.position.z; }
   }
+  updateAMS(seg);
 }
 
 function tick(now) {
@@ -1372,6 +1407,7 @@ function refreshReadout(force) {
     _lastFeat = fname;
     $('featnote').textContent = fname ? (TYPE_HELP[fname] || '') : 'Press play to start the job.';
   }
+  paintAMS();
   $('lnum').textContent = seg ? li + 1 : 0;
   var pct = JOB.total ? play.t / JOB.total : 0;
   if (!play.scrubbing) { $('scrub').value = Math.round(pct * 1000); }
@@ -1540,6 +1576,146 @@ function autoQuality() {
   })();
 }
 
+// ── the AMS, as a thing that works ──────────────────────────────────────────
+// It feeds the nozzle on every job, so none of this is conditional on the plate
+// being multi-colour: a single-filament print is simply one slot doing all the
+// work. What changes with a multi-colour plate is which slot is live and how
+// much goes into the purge.
+var amsSlots = [];          // [{tool, used_mm, total_mm, spool, core}]
+var amsActive = 0;
+
+// Cumulative filament per slot at every layer boundary, built once per job.
+// Exact at each boundary because the exporter measured it there; only the layer
+// currently being printed is estimated. Attributing by segment index instead --
+// the first attempt -- charged slot 1 with 24.4 g against its real 17.0 g,
+// because the purge is a lot of filament laid down over very few moves.
+var filToolCum = null;
+
+function buildFilamentCum(raw) {
+  var rows = raw.filByToolLayer || [];
+  var w = (raw.filamentByTool || [0]).length;
+  filToolCum = [];
+  var run = new Float64Array(w);
+  filToolCum.push(Float64Array.from(run));
+  for (var i = 0; i < rows.length; i++) {
+    for (var t = 0; t < w; t++) { run[t] += rows[i][t] || 0; }
+    filToolCum.push(Float64Array.from(run));
+  }
+}
+
+function amsUsage(seg) {
+  var used = new Float64Array(MAX_FILAMENT);
+  if (!JOB || !filToolCum || seg <= 0) { return used; }
+  var li = JOB.segLayer[seg - 1];
+  var a0 = JOB.layerSeg[li], a1 = JOB.layerSeg[li + 1];
+  var frac = (seg - a0) / Math.max(1, a1 - a0);
+  var row = JOB.raw.filByToolLayer[li] || [];
+  var base = filToolCum[li];
+  for (var t = 0; t < used.length && t < base.length; t++) {
+    used[t] = base[t] + (row[t] || 0) * frac;
+  }
+  return used;
+}
+
+function buildAMSState() {
+  amsSlots = [];
+  if (!JOB || !amsGroup) { return; }
+  var totals = JOB.raw.filamentByTool || [];
+  var n = Math.max(1, totals.length);
+  for (var i = 0; i < n && i < MAX_FILAMENT; i++) {
+    amsSlots.push({tool: i, used: 0, total: totals[i] || 0,
+                   spool: amsGroup.userData.spools[i] || null,
+                   core: amsGroup.userData.cores[i] || null});
+  }
+  // A spool the job never touches is not in the machine's way -- hide it, so
+  // the four-slot box shows the filaments this plate actually needs.
+  (amsGroup.userData.spools || []).forEach(function (m, i) {
+    var on = i < amsSlots.length;
+    if (m) { m.visible = on; }
+    if (amsGroup.userData.cores[i]) { amsGroup.userData.cores[i].visible = on; }
+  });
+  paintAMS();
+}
+
+// A spool of filament is a coil: the outside radius falls as it empties. 1kg of
+// PLA is about 320 m, which is what sets how little a 30g print visibly takes
+// off -- and that is worth seeing rather than being told.
+var SPOOL_FULL_MM = 320000, SPOOL_R_FULL = 99, SPOOL_R_CORE = 36;
+
+function updateAMS(seg) {
+  if (!amsSlots.length) { return; }
+  var used = amsUsage(seg);
+  amsActive = seg > 0 ? JOB.segTool[seg - 1] : 0;
+  for (var i = 0; i < amsSlots.length; i++) {
+    var sl = amsSlots[i];
+    sl.used = used[sl.tool];
+    if (sl.spool) {
+      // Area on the coil falls linearly with length, so the radius goes as a
+      // square root -- a spool does not shrink evenly as it empties.
+      var left = Math.max(0, 1 - sl.used / SPOOL_FULL_MM);
+      var r = Math.sqrt(SPOOL_R_CORE * SPOOL_R_CORE +
+                        left * (SPOOL_R_FULL * SPOOL_R_FULL - SPOOL_R_CORE * SPOOL_R_CORE));
+      // The cylinder's own axis is local Y, so the RADIUS is x and z and the
+      // width is y. Scaling y here would have made the spool narrower instead
+      // of emptier, and spinning x would have tumbled it end over end.
+      var k = r / SPOOL_R_FULL;
+      sl.spool.scale.set(k, 1, k);
+      // Rotation is real too: one turn per circumference of filament pulled.
+      sl.spool.rotation.y = -sl.used / (2 * Math.PI * r);
+    }
+  }
+  paintFeed();
+}
+
+// The feed line from the live slot to the toolhead, in that slot's colour. On a
+// single-colour job it simply never moves, which is exactly what the machine
+// does.
+function paintFeed() {
+  if (!amsGroup || !amsGroup.userData.feed) { return; }
+  var f = amsGroup.userData.feed;
+  var col = FILAMENT[amsActive % FILAMENT.length];
+  f.material.color.set(col);
+  (amsGroup.userData.spools || []).forEach(function (m, i) {
+    if (m) { m.material.emissive && m.material.emissive.setHex(i === amsActive ? 0x241a08 : 0x000000); }
+  });
+}
+
+function paintAMS() {
+  var host = $('amsslots');
+  if (!host) { return; }
+  var cap = (PRINTERS[printerId].ams || {}).slots || 0;
+  host.innerHTML = '';
+  amsSlots.forEach(function (sl, i) {
+    var row = el('div', 'amsrow');
+    row.setAttribute('data-active', String(i === amsActive));
+    row.innerHTML = '<span class="sw" style="background:' + FILAMENT[i % FILAMENT.length] +
+      '"></span><span class="lb">Slot ' + (i + 1) + '</span>' +
+      '<span class="bar"><i style="width:' +
+      (sl.total ? Math.min(100, sl.used / sl.total * 100).toFixed(1) : 0) + '%"></i></span>' +
+      '<span class="g">' + grams(sl.used).toFixed(1) + ' g</span>';
+    host.appendChild(row);
+  });
+  var note = $('amsnote');
+  if (!note) { return; }
+  if (amsSlots.length > cap && cap) {
+    note.innerHTML = '<span class="amsover">This plate needs ' + amsSlots.length +
+      ' filaments and one AMS holds ' + cap + '.</span> A second unit would have to be ' +
+      'chained to print it as sliced.';
+  } else if (amsSlots.length > 1) {
+    var purge = (JOB.raw.filamentByType || {})['Wipe tower'] || 0;
+    note.innerHTML = 'Every filament change wipes the old colour into the purge tower. ' +
+      '<b>' + grams(purge).toFixed(1) + ' g</b> of this plate is purge \u2014 ' +
+      (JOB.raw.toolChanges || 0) + ' changes.';
+  } else {
+    // The bar is progress through THIS plate's filament, which is what it
+    // measures -- saying "off a full spool" while showing plate progress would
+    // be two different numbers wearing the same label.
+    var spoolPct = amsSlots[0] ? amsSlots[0].total / SPOOL_FULL_MM * 100 : 0;
+    note.innerHTML = 'One filament, one slot \u2014 the bar is this plate\u2019s progress ' +
+      'through it. The whole job is <b>' + spoolPct.toFixed(1) + '%</b> of a 1 kg spool.';
+  }
+}
+
 function setDoor(open) {
   doorOpen = open;
   doorTarget = (doorGroup ? doorGroup.userData.sign : 1) * -1.92;   // ~110 degrees
@@ -1562,13 +1738,17 @@ function setColorMode(mode) {
   Array.prototype.forEach.call($('modeswap').children, function (b) {
     b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode));
   });
-  var speedy = mode === 'speed';
+  var speedy = mode === 'speed', fil = mode === 'filament';
   $('speedpanel').hidden = !speedy;
-  $('legend').hidden = speedy;
+  $('legend').hidden = speedy || fil;
   $('legnote').innerHTML = speedy
     ? 'Feedrate straight out of the G-code. Brightest is slowest \u2014 the outer '
       + 'wall and the top surface, the parts a buyer actually sees. The dark, fast '
       + 'paths are infill nobody will ever look at.'
+    : fil
+    ? 'Every bead in the colour of the slot it came off. A single-filament plate '
+      + 'is one colour throughout \u2014 that is not the viewer simplifying, it is '
+      + 'the machine pulling from one spool all the way down.'
     : 'Click a type to hide it. Every colour here is the slicer\'s own '
       + '<span class="mono">;TYPE:</span> tag \u2014 nothing is inferred from the shape.';
   applyVisibility();
@@ -1579,7 +1759,7 @@ function applyVisibility() {
     if (!m) { return; }
     var u = m.material.uniforms.uVis.value;
     for (var i = 0; i < 12; i++) { u[i] = visible[i] ? 1 : 0; }
-    m.material.uniforms.uMode.value = colorMode === 'speed' ? 1 : 0;
+    m.material.uniforms.uMode.value = COLOR_MODE_ID[colorMode] || 0;
     if (JOB) { m.material.uniforms.uSpd.value.set(JOB.raw.speedMin, JOB.raw.speedMax); }
   });
 }
@@ -1597,6 +1777,8 @@ window.__JOB_LOADED = function (raw) {
       layerFilCum[i + 1] = layerFilCum[i] + raw.layers[i][4];
     }
     mountJob(job);
+    buildFilamentCum(raw);
+    buildAMSState();
     $('ltot').textContent = '/ ' + raw.layers.length;
     _lastFeat = null;
     $('jobnote').textContent = raw.notes || '';

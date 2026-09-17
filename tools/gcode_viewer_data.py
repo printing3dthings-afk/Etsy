@@ -48,6 +48,9 @@ TYPES = [
     "Skirt/Brim",
     "Custom",
     "Other",
+    # Appended, never inserted: the index IS the payload's type id, so putting a
+    # new name anywhere but the end would silently repaint every archived job.
+    "Wipe tower",
 ]
 _TYPE_INDEX = {t: i for i, t in enumerate(TYPES)}
 _OTHER = _TYPE_INDEX["Other"]
@@ -56,14 +59,30 @@ _NUM = r"([-+]?[0-9]*\.?[0-9]+)"
 _G1 = re.compile(r"^G[01]\s")
 _AXIS = {a: re.compile(rf"{a}{_NUM}") for a in "XYZEF"}
 _EST_TIME = re.compile(r"estimated printing time \(normal mode\)\s*=\s*(.+)")
+_TOOL = re.compile(r"^T(\d+)\s*$")
 _DUR = re.compile(r"(\d+)\s*([dhms])")
 
 
+# A real plate does not run for two months. Anything past this is the slicer
+# having overflowed, not a long print.
+_MAX_PLAUSIBLE_SECONDS = 60 * 86400
+
+
 def _seconds(text):
-    """'6h 54m 56s' -> 24896.0. Returns None if nothing parses."""
+    """'6h 54m 56s' -> 24896.0. Returns None if nothing trustworthy parses.
+
+    Rejects a negative or absurd duration rather than passing it on. A real
+    multi-material slice here reported "estimated printing time (normal mode)
+    = -2147483648s", and because the duration regex only matches digits the
+    minus was silently dropped -- the caller then received 2147483648 seconds
+    as a confident figure and scaled every layer time to land on it.
+    """
+    text = text.strip()
     mult = {"d": 86400, "h": 3600, "m": 60, "s": 1}
     total = sum(int(n) * mult[u] for n, u in _DUR.findall(text))
-    return float(total) or None
+    if not total or text.startswith("-") or total > _MAX_PLAUSIBLE_SECONDS:
+        return None
+    return float(total)
 
 
 def _axis(line, a):
@@ -83,26 +102,47 @@ def parse(gcode_path):
     feed = 1800.0            # mm/min; PrusaSlicer always sets F before moving
     relative_e = False
     cur_type = _OTHER
+    cur_tool = 0
 
     pts = []                 # flat int16 x,y pairs
     polys = []               # flat int32 triples: type, startPoint, nPoints
     speeds = []              # uint8 mm/s, one per SEGMENT, in draw order
+    poly_tool = []           # uint8 extruder index, one per POLYLINE
     layers = []              # [z_hundredths, polyStart, polyCount, time_s, filament_mm]
 
     run = []                 # current polyline as [(x, y), ...]
     run_speed = []           # mm/s for the segment ENDING at each run point
     run_type = _OTHER
+    run_tool = 0
     layer_start_poly = 0
     layer_time = 0.0
     layer_filament = 0.0
     layer_z = None
     layer_h = None
     slicer_seconds = None
+    tool_changes = 0
+    # Measured from the moves, never from the footer. On a real multi-material
+    # slice PrusaSlicer's own "; filament used [mm]" per-extruder line came to
+    # 6314 mm against 11,200 mm actually extruded -- it leaves out the wipe
+    # tower and the tool-change purge, and reported "filament used for wipe
+    # tower [g] = 0.00" as well. Reporting its numbers as "filament per slot"
+    # would have under-stated every spool by 44%.
+    fil_by_tool = {}
+    fil_by_type = {}
+    # Per LAYER as well as per job. The viewer needs to say how much each slot
+    # has used at any point in the replay, and interpolating that from the
+    # layer total by segment index gets it badly wrong on a multi-colour plate:
+    # the purge is a large extrusion over very few segments, so index-fraction
+    # attributed 24.4 g to slot 1 against its real 17.0 g. Layer boundaries are
+    # exact; only the layer being printed right now is estimated.
+    layer_fil_tool = {}
+    fil_tool_layers = []
 
     def flush_run():
         nonlocal run, run_speed
         if len(run) >= 2:
             polys.extend((run_type, len(pts) // 2, len(run)))
+            poly_tool.append(run_tool)
             for px, py in run:
                 pts.append(int(round(px * 100)))
                 pts.append(int(round(py * 100)))
@@ -111,7 +151,7 @@ def parse(gcode_path):
         run_speed = []
 
     def flush_layer():
-        nonlocal layer_start_poly, layer_time, layer_filament, layer_h
+        nonlocal layer_start_poly, layer_time, layer_filament, layer_h, layer_fil_tool
         flush_run()
         n = len(polys) // 3 - layer_start_poly
         if n > 0:
@@ -121,10 +161,12 @@ def parse(gcode_path):
                 round(layer_time, 2), round(layer_filament, 2),
                 round(layer_h if layer_h is not None else 0.2, 3),
             ])
+            fil_tool_layers.append(dict(layer_fil_tool))
         layer_start_poly = len(polys) // 3
         layer_time = 0.0
         layer_filament = 0.0
         layer_h = None
+        layer_fil_tool = {}
 
     with open(gcode_path, "r", errors="replace") as fh:
         for line in fh:
@@ -164,6 +206,18 @@ def parse(gcode_path):
                     if m:
                         slicer_seconds = _seconds(m.group(1))
                 continue
+            m = _TOOL.match(line)
+            if m:
+                # A tool change ends the current path for the same reason a type
+                # change does: one polyline must never span two filaments, or the
+                # colour boundary lands in the wrong place.
+                nt = int(m.group(1))
+                if nt != cur_tool:
+                    flush_run()
+                    cur_tool = nt
+                    run_tool = nt
+                    tool_changes += 1
+                continue
             if line.startswith("M83"):
                 relative_e = True
                 continue
@@ -200,12 +254,17 @@ def parse(gcode_path):
 
             if de > 0 and dist > 0:
                 layer_filament += de
+                fil_by_tool[cur_tool] = fil_by_tool.get(cur_tool, 0.0) + de
+                fil_by_type[cur_type] = fil_by_type.get(cur_type, 0.0) + de
+                layer_fil_tool[cur_tool] = layer_fil_tool.get(cur_tool, 0.0) + de
                 if not run:
                     run_type = cur_type
+                    run_tool = cur_tool
                     run.append((px, py))
-                elif run_type != cur_type:
+                elif run_type != cur_type or run_tool != cur_tool:
                     flush_run()
                     run_type = cur_type
+                    run_tool = cur_tool
                     run.append((px, py))
                 run.append((x, y))
                 # Clamped, not scaled: a P1S profile tops out well under 255
@@ -226,11 +285,19 @@ def parse(gcode_path):
     ys = pts[1::2]
     assert len(speeds) == sum(polys[i + 2] - 1 for i in range(0, len(polys), 3)), \
         "speed array and segment count diverged -- the run/flush bookkeeping is wrong"
+    assert len(poly_tool) == len(polys) // 3, \
+        "tool array and polyline count diverged -- the run/flush bookkeeping is wrong"
 
     return {
         "pts": pts,
         "polys": polys,
         "speeds": speeds,
+        "polyTool": poly_tool,
+        "toolChanges": tool_changes,
+        "filamentByTool": [round(fil_by_tool.get(i, 0.0), 1)
+                           for i in range(max(fil_by_tool) + 1 if fil_by_tool else 1)],
+        "filamentByType": {TYPES[t]: round(v, 1) for t, v in sorted(fil_by_type.items())},
+        "filByToolLayer": fil_tool_layers,
         "layers": layers,
         "slicerSeconds": slicer_seconds,
         "bbox": [min(xs) / 100, min(ys) / 100, max(xs) / 100, max(ys) / 100],
@@ -326,7 +393,11 @@ def build_job(gcode_path, name, notes="", tol_mm=0.02):
     # ~5-10% short of the slicer's own figure. Rather than publish a number I
     # know is wrong, scale the per-layer distribution -- which IS accurate
     # relative to itself -- so the total lands on the slicer's estimate.
-    if slicer_total and kinematic > 0:
+    # `> 0`, not just truthy: a multi-material slice here reported
+    # "estimated printing time = -2147483648s" (a real PrusaSlicer overflow on
+    # an MMU job), and a negative scale factor would have turned every layer
+    # time negative and published it as fact.
+    if slicer_total and slicer_total > 0 and kinematic > 0:
         k = slicer_total / kinematic
         for l in layers:
             l[3] = round(l[3] * k, 2)
@@ -382,6 +453,18 @@ def build_job(gcode_path, name, notes="", tol_mm=0.02):
         "pts": _b64(raw["pts"], "h"),
         "polys": _b64(raw["polys"], "i"),
         "speeds": _b64(raw["speeds"], "B"),
+        # One extruder index per polyline. Present even on a single-colour job,
+        # where it is all zeros -- the AMS feeds the nozzle either way, and the
+        # viewer should not need a special case to show that.
+        "polyTool": _b64(raw["polyTool"], "B"),
+        "toolChanges": raw["toolChanges"],
+        "filamentByTool": raw["filamentByTool"],
+        "filamentByType": raw["filamentByType"],
+        # Flat rows, one per layer, nTools wide -- a list of dicts would more
+        # than double the payload for a job with hundreds of layers.
+        "filByToolLayer": [[round(row.get(t, 0.0), 2)
+                            for t in range(len(raw["filamentByTool"]))]
+                           for row in raw["filByToolLayer"]],
     }
 
 
@@ -425,6 +508,10 @@ def main(argv=None):
             "bbox": job["bbox"], "sizeMB": round(mb, 2),
             "speedMin": job["speedMin"], "speedMax": job["speedMax"],
             "needsSupport": "Support material" in job["segmentsByType"],
+            # In the index so the plate list can say "5 filaments" before the
+            # job itself is fetched -- the whole point of loading on demand.
+            "toolChanges": job["toolChanges"],
+            "filamentByTool": job["filamentByTool"],
         })
         print(f"{stem:28s} {len(job['layers']):4d} layers  "
               f"{segments:9,d} segments  {job['filamentG']:7.1f}g  "

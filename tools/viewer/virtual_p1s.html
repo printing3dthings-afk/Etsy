@@ -108,6 +108,20 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
 .leg[aria-pressed="false"] .lb{text-decoration:line-through}
 .legnote{font-size:11.5px;color:var(--dim);line-height:1.5;margin:9px 0 0}
 
+/* ── AMS slots ────────────────────────────────────────── */
+.amsrow{display:flex;align-items:center;gap:9px;padding:5px 6px;border-radius:2px;
+  border:1px solid transparent}
+.amsrow[data-active="true"]{border-color:var(--amber);background:#241a0f}
+.amsrow .sw{width:15px;height:15px;border-radius:50%;flex:none;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.5)}
+.amsrow .lb{font-family:var(--fm);font-size:11px;color:var(--dim);width:42px;flex:none}
+.amsrow .bar{flex:1;height:5px;border-radius:3px;background:var(--line-hi);overflow:hidden}
+.amsrow .bar i{display:block;height:100%;background:var(--amber);border-radius:3px}
+.amsrow .g{font-family:var(--fm);font-size:10.5px;color:var(--faint);width:46px;
+  text-align:right;font-variant-numeric:tabular-nums}
+.amsrow[data-active="true"] .g{color:var(--ink)}
+.amsover{font-family:var(--fm);font-size:11px;color:var(--bad);margin:7px 0 0}
+
 /* ── transport ────────────────────────────────────────── */
 .tbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .tbtn{width:38px;height:38px;border:1px solid var(--line-hi);border-radius:3px;
@@ -263,11 +277,19 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
       </div>
     </div>
     <div class="sect">
+      <h2>AMS</h2>
+      <div class="body">
+        <div id="amsslots"></div>
+        <p class="legnote" id="amsnote"></p>
+      </div>
+    </div>
+    <div class="sect">
       <h2>Colour by</h2>
       <div class="body">
         <div class="modeswap" id="modeswap" role="group" aria-label="Colour by">
           <button type="button" data-mode="feature" aria-pressed="true">Feature</button>
           <button type="button" data-mode="speed" aria-pressed="false">Speed</button>
+          <button type="button" data-mode="filament" aria-pressed="false">Filament</button>
         </div>
         <div id="speedpanel" hidden></div>
         <div id="legend"></div>
