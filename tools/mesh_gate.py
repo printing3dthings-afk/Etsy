@@ -125,13 +125,37 @@ def gate(path, expected_components=1, check_overhang=False,
     add("fits_build_volume", fits,
         f"{ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} mm vs P1S 256 x 256 x 256")
 
-    add("watertight", m.is_watertight,
-        "closed surface" if m.is_watertight else "open edges -- the slicer will guess at the holes")
+    # 2026-09-17: this used to be one `watertight` check whose failure message read
+    # "open edges -- the slicer will guess at the holes". That conflates two very
+    # different defects, and it was wrong on every real file it fired on. Sweeping
+    # all 147 meshes in openscad_models/ flagged seven; every one of them had ZERO
+    # boundary edges -- no holes at all -- and failed only because some edges are
+    # shared by four faces, which is what two closed solids touching flush looks
+    # like (a plaque sitting on a tombstone, text meeting its tile). All seven then
+    # sliced cleanly through the real slicer with sane filament figures. A hole is a
+    # defect; a flush contact is a modelling style slicers repair on import, so they
+    # are now separate checks and only the hole fails.
+    holes = len(trimesh.grouping.group_rows(m.edges_sorted, require_count=1))
+    add("no_holes", holes == 0,
+        "closed surface" if holes == 0
+        else f"{holes} boundary edges -- the slicer will guess at the holes")
+
+    nonmanifold = sum(len(g) for g in trimesh.grouping.group_rows(m.edges_sorted,
+                                                                 require_count=None)
+                      if len(g) > 2)
+    add("manifold_edges", True,
+        "every edge shared by exactly two faces" if nonmanifold == 0
+        else f"{nonmanifold} edges shared by more than two faces -- usually solids "
+             f"touching flush; slicers repair these, verify by slicing",
+        fatal=False)
 
     add("winding_consistent", m.is_winding_consistent,
         "normals agree" if m.is_winding_consistent else "mixed normals -- inside/outside is ambiguous")
 
-    vol = float(m.volume) if m.is_volume else 0.0
+    # Volume is meaningful for any closed surface, manifold or not. Gating it on
+    # trimesh's `is_volume` (which also demands manifold edges) reported 0.00 cm3
+    # for parts that are closed and perfectly printable.
+    vol = abs(float(m.volume)) if holes == 0 else 0.0
     add("positive_volume", vol > 0, f"{vol / 1000.0:.2f} cm3")
 
     n_comp = int(m.body_count)
