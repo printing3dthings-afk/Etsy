@@ -49,6 +49,12 @@ opened and drew 423,863 vertices, zero page errors. The one request that stays
 remote is the Google Fonts stylesheet; blocking it only falls the type back to
 the system stack.
 
+**The 54MB never lands on a phone at once.** First load is 737KB — the page,
+the viewer bundle, three.js, and the plate index. A plate's toolpath is only
+fetched when its card is tapped: 0.7MB for a median plate, 3.1MB for the
+heaviest, 6KB for a single label. That is the whole reason payloads are one
+script per plate instead of one bundle.
+
 **This is a build, not a copy, and the difference matters.**
 `virtual_p1s.html` starts at `<title>` with no doctype, charset or viewport,
 because the Artifact host supplies all three. Serve that file raw and a phone
