@@ -112,6 +112,34 @@ def test_build_refuses_to_ship_a_site_with_no_plates():
             shutil.move(str(stash), str(idx))
 
 
+def test_the_limits_dot_can_actually_be_cleared():
+    """Lives here because this is the viewer's only source-integrity test file.
+
+    The unread dot on the Limits tab is driven by a data-unread attribute in
+    the HTML and removed by a querySelector in app.js. Those two strings have
+    to agree, and nothing else checks that they do -- rename the tab's
+    data-pane value on one side only and the dot sticks forever, silently, on
+    the one tab that carries every caveat keeping this page honest. Neither
+    file errors; the cue just stops meaning anything.
+    """
+    viewer = ROOT / "tools" / "viewer"
+    html = (viewer / "virtual_p1s.html").read_text(encoding="utf-8")
+    js = (viewer / "app.js").read_text(encoding="utf-8")
+
+    check('data-pane="limits" data-unread="1"' in html,
+          "the Limits tab no longer carries the unread marker")
+    check('[data-unread="1"]::after' in html,
+          "nothing renders the unread dot -- the attribute would be invisible")
+    check('querySelector(\'[data-pane="limits"]\')' in js,
+          "app.js does not target the Limits tab by the selector the HTML uses "
+          "-- the dot would never clear")
+    check("removeAttribute('data-unread')" in js,
+          "app.js never removes the marker")
+    check(js.count("localStorage") >= 2 and js.count("catch (e)") >= 2,
+          "localStorage use is not guarded -- a private window would throw and "
+          "take the tab handler down with it")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

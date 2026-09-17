@@ -2087,6 +2087,22 @@ function initUI() {
     if (ghostMesh) { ghostMesh.visible = on; }
   });
 
+  // The Limits tab carries every caveat that keeps this page honest, and it is
+  // the one a first-time visitor is least likely to open. The dot marks it
+  // until they do. localStorage can throw (private windows, blocked site data)
+  // and the artifact host, GitHub Pages and a file:// folder are three
+  // different origins, so a read that fails just shows the dot again -- never
+  // breaks the tab.
+  var SEEN_LIMITS = 'vp1s.limits.seen';
+  try {
+    if (localStorage.getItem(SEEN_LIMITS)) { clearLimitsDot(); }
+  } catch (e) { /* no storage: the dot stays, which is the safe direction */ }
+
+  function clearLimitsDot() {
+    var t = document.querySelector('[data-pane="limits"]');
+    if (t) { t.removeAttribute('data-unread'); }
+  }
+
   Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'),
     function (b) {
       b.addEventListener('click', function () {
@@ -2096,6 +2112,10 @@ function initUI() {
             o.setAttribute('aria-selected', String(sel));
             $('pane-' + o.getAttribute('data-pane')).hidden = !sel;
           });
+        if (b.getAttribute('data-pane') === 'limits') {
+          clearLimitsDot();
+          try { localStorage.setItem(SEEN_LIMITS, '1'); } catch (e) { /* ignore */ }
+        }
       });
     });
 

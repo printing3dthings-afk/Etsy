@@ -205,6 +205,13 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
   letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:600}
 .tabs button[aria-selected="true"]{background:var(--rail);color:var(--amber);
   box-shadow:inset 0 -2px 0 var(--amber)}
+/* Everything this page is honest about -- PrusaSlicer's clock, no physics, no
+   thermal -- lives in the third tab, where someone handed this link lands
+   never having opened it. The dot says there is something here to read; it
+   goes away for good once they have. */
+.tabs button[data-unread="1"]::after{content:"";display:inline-block;width:5px;
+  height:5px;margin-left:5px;vertical-align:2px;border-radius:50%;
+  background:var(--amber)}
 .pane{padding:15px 16px 26px;font-size:12.8px;line-height:1.6}
 .pane h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
   margin:19px 0 8px;font-weight:600}
@@ -345,7 +352,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
     <div class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-pane="printer">Printer</button>
       <button role="tab" aria-selected="false" data-pane="material">Material</button>
-      <button role="tab" aria-selected="false" data-pane="limits">Limits</button>
+      <button role="tab" aria-selected="false" data-pane="limits" data-unread="1">Limits</button>
     </div>
     <div class="pane" id="pane-printer"></div>
     <div class="pane" id="pane-material" hidden></div>
