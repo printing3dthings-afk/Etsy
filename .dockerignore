@@ -72,6 +72,22 @@ __pycache__/
 !CLAUDE.md
 !.claude/skills/**/SKILL.md
 
+# Found 2026-09-17, and it is the same failure class as the three incidents
+# above, just pointed the other way: those rules swallowed files the server
+# needed, this one is 54MB of files the server has never read. The viewer's
+# plate payloads were committed so the Pages workflow could find them, and
+# `COPY . .` then started carrying every one of them into the Railway image.
+# Nothing under tools/api_server/ references tools/viewer at all -- checked by
+# grep, not assumed -- so this is pure build weight. The page and its bundles
+# stay out too; if Frank is ever given a route that serves the viewer, this
+# rule is the thing to revisit, deliberately.
+#
+# Not build-tested -- no Docker daemon in the authoring container. The form is
+# copied from `mobile_app/` and `.git/` above, which this file's own header
+# says are what keep 4GB out of the context, so the syntax is proven here even
+# though this particular line is not.
+tools/viewer/
+
 # Local DB (never ship into the image)
 **/hub_data/
 *.db
