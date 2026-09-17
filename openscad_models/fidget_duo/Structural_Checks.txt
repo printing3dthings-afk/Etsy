@@ -1,0 +1,33 @@
+Fidget_Duo/gecko.stl
+  ok    Non Manifold Edges: 0
+  ok    Bad Contiguous Edges: 0
+  ok    Intersect Face: 0
+  warn  Zero Faces: 524
+  warn  Zero Edges: 8
+  ok    Non-Flat Faces: 0
+  warn  Thin Faces: 7516
+  ok    Sharp Edge: 0
+  ok    Overhang Face: 0
+PASSED
+Fidget_Duo/mushroom_base.stl
+  ok    Non Manifold Edges: 0
+  ok    Bad Contiguous Edges: 0
+  ok    Intersect Face: 0
+  warn  Zero Faces: 48
+  warn  Zero Edges: 24
+  ok    Non-Flat Faces: 0
+  warn  Thin Faces: 314
+  ok    Sharp Edge: 0
+  ok    Overhang Face: 0
+PASSED
+Fidget_Duo/mushroom_cap.stl
+  ok    Non Manifold Edges: 0
+  ok    Bad Contiguous Edges: 0
+  ok    Intersect Face: 0
+  warn  Zero Faces: 63
+  warn  Zero Edges: 10
+  ok    Non-Flat Faces: 0
+  warn  Thin Faces: 1928
+  ok    Sharp Edge: 0
+  ok    Overhang Face: 0
+PASSED
