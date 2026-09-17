@@ -283,6 +283,19 @@ def parse(gcode_path):
 
     xs = pts[0::2]
     ys = pts[1::2]
+
+    # Positions ship as int16 hundredths of a millimetre, so anything past
+    # +-327.67mm cannot be represented. That is not a packing detail to paper
+    # over: a P1S bed is 256mm, so a toolpath out there is a model sitting off
+    # the plate. Two "assembly" 3MFs in this repo lay their parts out side by
+    # side for viewing -- one reaches X=819mm -- and the old failure for that
+    # was a bare struct.error naming no file.
+    lo, hi = min(min(xs), min(ys)), max(max(xs), max(ys))
+    if lo < -32768 or hi > 32767:
+        raise ValueError(
+            f"{gcode_path}: toolpath spans {lo / 100:.1f} to {hi / 100:.1f} mm, "
+            "which is off a 256mm bed. This is usually an assembly file that "
+            "lays its parts out for viewing rather than a plate you can print.")
     assert len(speeds) == sum(polys[i + 2] - 1 for i in range(0, len(polys), 3)), \
         "speed array and segment count diverged -- the run/flush bookkeeping is wrong"
     assert len(poly_tool) == len(polys) // 3, \
@@ -477,6 +490,17 @@ def main(argv=None):
                     help="STEM=Display Name -- repeatable")
     ap.add_argument("--note", action="append", default=[],
                     help="STEM=one line about what this job teaches -- repeatable")
+    ap.add_argument("--source", action="append", default=[],
+                    help="STEM=repo path of the file this was sliced from -- "
+                         "repeatable. Shown in the viewer so the plate on screen "
+                         "names the file you would actually print.")
+    ap.add_argument("--max-mb", type=float, default=0, metavar="MB",
+                    help="if a job's payload exceeds this, re-simplify it at a "
+                         "coarser tolerance until it fits, and record the "
+                         "tolerance actually used. 0 disables. The whole set has "
+                         "to fit one page, and the honest way to buy that is a "
+                         "coarser path on the heavy plates only -- not a quietly "
+                         "coarser one everywhere.")
     ap.add_argument("--simplify", type=float, default=0.02, metavar="MM",
                     help="drop points that shift the path less than this "
                          "(default 0.02mm = 1/20 of a bead; 0 keeps every point)")
@@ -484,6 +508,7 @@ def main(argv=None):
 
     labels = dict(kv.split("=", 1) for kv in a.label)
     notes = dict(kv.split("=", 1) for kv in a.note)
+    sources = dict(kv.split("=", 1) for kv in a.source)
     out = Path(a.outdir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -491,7 +516,14 @@ def main(argv=None):
     for g in a.gcode:
         p = Path(g)
         stem = p.stem
-        job = build_job(p, labels.get(stem, stem), notes.get(stem, ""), a.simplify)
+        tol = a.simplify
+        job = build_job(p, labels.get(stem, stem), notes.get(stem, ""), tol)
+        if a.max_mb:
+            while (len(json.dumps(job, separators=(",", ":"))) / 1024 / 1024 > a.max_mb
+                   and tol < 0.5):
+                tol = round(tol * 2, 4)
+                job = build_job(p, labels.get(stem, stem), notes.get(stem, ""), tol)
+        job["simplifyMm"] = tol
         # Each job is its own script so the page loads one, not all of them.
         # Same-origin <script src> rather than fetch(): a script tag is the
         # one transport the artifact CSP is unambiguous about.
@@ -512,6 +544,8 @@ def main(argv=None):
             # job itself is fetched -- the whole point of loading on demand.
             "toolChanges": job["toolChanges"],
             "filamentByTool": job["filamentByTool"],
+            "source": sources.get(stem, ""),
+            "simplifyMm": job["simplifyMm"],
         })
         print(f"{stem:28s} {len(job['layers']):4d} layers  "
               f"{segments:9,d} segments  {job['filamentG']:7.1f}g  "

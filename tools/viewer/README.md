@@ -208,6 +208,49 @@ toolhead and the AMS, all of them static boxes and cylinders.
 than a twentieth of a bead: 8-30% of points on real plates, with time, mass and
 speed data bit-identical afterwards. It will not merge across a speed change.
 
+### Every model in the repo is a plate
+
+Scott: "there are a whole lot more prints than just the eleven -- I need all of
+the stuff that is on GitHub, including what I've had OpenAI design." Right: the
+eleven were a hand-picked teaching set, while `openscad_models/` holds 147
+printable files. **72 plates now**, every one sliced through the real slicer.
+
+Choosing what counts as a plate took some care. 93 file stems reduce to 72 by
+dropping pieces that an assembly 3MF already contains -- read from each file's
+own `Slic3r_PE_model.config` volume names rather than guessed from filename
+prefixes, which is what a first pass did and it quietly dropped the Glow Stand
+**v2** as if it were a part of v1, plus both 1 oz sauce variants.
+
+**Three files turned out not to be plates at all**, and the slicer said so
+where a mesh check could not: `Crescent_Assembly.3mf` lays its parts out to
+X=502mm and `Soft_Frame_Assembly.3mf` to X=819mm, on a 256mm bed. They are
+viewing layouts, like Gobble's own `_VIEW_ONLY` file. Their individual parts
+are all here and all fit. The sundial looked like a fourth until the per-type
+extents showed only its *skirt* crossing the edge -- the part itself spans
+4.2-251.8mm and prints fine.
+
+That off-bed case used to surface as a bare `struct.error` from the int16
+packing with no filename attached. It now fails with the span and the likely
+cause, because "off the bed" is a real answer and a packing error is not.
+
+**Fitting 72 plates in one page.** The artifact ceiling is 64MB per version and
+the set came to 66.2MB at full fidelity. Rather than coarsen everything
+quietly, `--max-mb` re-simplifies only the plates that exceed a budget and
+records the tolerance it settled on; the viewer prints "path simplified to
+X mm to fit the page" under any plate that got it. Total: **53.6MB**. Seven of
+the heaviest cannot be thinned much further -- the rule that a point is never
+dropped across a speed change puts a floor under it.
+
+Each plate names the repo file it came from, so a plate on screen is something
+you can go and print rather than only watch. A filter box narrows 72 down by
+name or path.
+
+**One thing this broke and had to fix:** three curated notes quoted raw move
+counts, and simplification changes those. The notes now cite filament and
+time, which it cannot change -- and the mushroom lamp's real number is worse
+than the old one said: **79 g of its 227 g is support**, 35% of the filament,
+not "20% of its moves".
+
 ### Eleven plates, and you can find all eleven
 
 Scott opened it and could not see the rest of the prints. He was right, and

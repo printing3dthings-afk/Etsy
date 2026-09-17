@@ -1464,12 +1464,24 @@ function updatePlateMore() {
   }
 }
 
+// Seventy-odd plates is past the point where a list alone is browsable, so the
+// filter renders only what matches -- which also keeps the out-of-view count
+// honest, since it measures cards that exist rather than cards that are hidden.
+var plateFilter = '';
+
+function matchesFilter(j) {
+  if (!plateFilter) { return true; }
+  var hay = (j.name + ' ' + (j.source || '')).toLowerCase();
+  return plateFilter.split(/\s+/).every(function (w) { return hay.indexOf(w) >= 0; });
+}
+
 function paintJobList() {
   var host = $('jobs');
   host.innerHTML = '';
   host.removeAttribute('data-at');   // or a stale index survives a re-render
   var current = null;
-  INDEX.forEach(function (j, i) {
+  var shown = INDEX.filter(matchesFilter);
+  shown.forEach(function (j, i) {
     var b = el('button', 'job');
     b.type = 'button';
     b.setAttribute('aria-current', String(j.id === currentId));
@@ -1492,10 +1504,17 @@ function paintJobList() {
   if (current && current.scrollIntoView) {
     current.scrollIntoView({block: 'nearest'});
   }
-  // Says where you are in the list, so eleven plates behind a scrollbar read
-  // as eleven plates rather than as however many happen to fit.
+  if (!shown.length) {
+    host.innerHTML = '<p class="legnote">No plate matches that.</p>';
+  }
+  // Says where you are in the list, so seventy plates behind a scrollbar read
+  // as seventy plates rather than as however many happen to fit.
   var pc = $('platecount');
-  if (pc) { pc.textContent = (host.getAttribute('data-at') || '1') + ' / ' + INDEX.length; }
+  if (pc) {
+    pc.textContent = plateFilter
+      ? shown.length + ' of ' + INDEX.length
+      : (host.getAttribute('data-at') || '1') + ' / ' + INDEX.length;
+  }
   updatePlateMore();
   $('buildchip').textContent = INDEX.length + ' plates \u00b7 ' +
     INDEX.reduce(function (a, j) { return a + j.segments; }, 0).toLocaleString() +
@@ -1823,6 +1842,18 @@ window.__JOB_LOADED = function (raw) {
     $('ltot').textContent = '/ ' + raw.layers.length;
     _lastFeat = null;
     $('jobnote').textContent = raw.notes || '';
+    // Name the file this came off, so a plate on screen is something you can
+    // go and print rather than something you can only watch.
+    var meta = INDEX.filter(function (x) { return x.id === currentId; })[0] || {};
+    var src = meta.source ? 'openscad_models/' + meta.source : '';
+    // A plate whose path was thinned to fit the page has to say so. The default
+    // 0.02mm is a twentieth of a bead and invisible; anything coarser is a real
+    // approximation of the toolpath and not something to leave unstated.
+    if (meta.simplifyMm && meta.simplifyMm > 0.02) {
+      src += (src ? '  \u00b7  ' : '') + 'path simplified to ' +
+        meta.simplifyMm.toFixed(2) + ' mm to fit the page';
+    }
+    $('jobsource').textContent = src;
     paintLegend(); paintSpeedPanel(); paintJobList(); paintPrinter();
     setColorMode(colorMode);
     play.t = 0; setSeg(0); setPlaying(true);
@@ -1973,6 +2004,10 @@ function initUI() {
   // The hint has to follow the list, not just the render: scrolling it, or a
   // window resize changing how many cards fit, both change the answer.
   $('jobs').addEventListener('scroll', updatePlateMore, {passive: true});
+  $('platefilter').addEventListener('input', function (e) {
+    plateFilter = e.target.value.trim().toLowerCase();
+    paintJobList();
+  });
   window.addEventListener('resize', updatePlateMore);
   $('platemore').addEventListener('click', function () {
     var host = $('jobs');
