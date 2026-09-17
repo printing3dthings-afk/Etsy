@@ -12,9 +12,12 @@ exact fiction that made every local mobile measurement wrong until a wrapper
 was added for testing (see README, "Honest limits"). Anywhere that is NOT the
 artifact host needs the real document, so building it is a step, not a copy.
 
-The output is plain static files: HTML, one JS bundle, and one script per plate
-loaded on demand. No server, no build tooling, no network except the Google
-Fonts stylesheet and the three.js CDN the page already uses.
+The output is plain static files: HTML, two JS bundles, and one script per
+plate loaded on demand. No server and no build tooling. three.js is copied in
+from vendor/ and the <script src> is rewritten to point at it, so the folder
+renders with no network at all -- only the Google Fonts stylesheet stays
+remote, and type falls back cleanly without it. The Artifact copy keeps the
+CDN tag, which is why the rewrite happens here and not in the page itself.
 """
 import argparse
 import shutil
@@ -35,6 +38,8 @@ HEAD = (
 BODY_OPEN = '</head>\n<body>\n'
 TAIL = '\n</body>\n</html>\n'
 
+CDN_THREE = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+
 
 def build(out: Path) -> Path:
     page = (HERE / "virtual_p1s.html").read_text(encoding="utf-8")
@@ -44,10 +49,25 @@ def build(out: Path) -> Path:
     split = page.index("<div id=")
     head_part, body_part = page[:split], page[split:]
 
+    if CDN_THREE not in body_part:
+        raise SystemExit(
+            "the three.js <script src> in virtual_p1s.html is not %s any more, "
+            "so the offline rewrite silently did nothing. Update CDN_THREE."
+            % CDN_THREE)
+    body_part = body_part.replace(CDN_THREE, "three.min.js")
+
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(HEAD + head_part + BODY_OPEN + body_part + TAIL,
                                     encoding="utf-8")
     shutil.copy2(HERE / "app.js", out / "app.js")
+
+    three = HERE / "vendor" / "three.min.js"
+    if not three.exists():
+        raise SystemExit(
+            "missing %s -- the built site would silently fall back to the CDN "
+            "and stop working offline. Fetch it with:\n  curl -o %s %s"
+            % (three, three, CDN_THREE))
+    shutil.copy2(three, out / "three.min.js")
 
     jobs_src = HERE / "jobs"
     if not (jobs_src / "index.js").exists():

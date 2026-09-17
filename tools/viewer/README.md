@@ -36,9 +36,18 @@ python3 tools/viewer/build_site.py          # -> tools/viewer/site/
 cd tools/viewer/site && python3 -m http.server
 ```
 
-That folder is the whole thing — one HTML file, one JS bundle, one script per
-plate. No server logic, no build tooling. Copy it to a USB stick and it still
-works.
+That folder is the whole thing — one HTML file, two JS bundles (the viewer and
+a vendored copy of three.js), one script per plate. No server logic, no build
+tooling. Copy it to a USB stick and it still works.
+
+**Offline is a tested claim, not an assumption.** The page's own `<script src>`
+points at the three.js CDN, so the build rewrites it to the local copy and
+fails loudly if `vendor/three.min.js` is missing rather than shipping a folder
+that quietly needs the internet. Verified by loading the built site with every
+non-localhost request aborted: three.js r128 loaded, 72 plates listed, a plate
+opened and drew 423,863 vertices, zero page errors. The one request that stays
+remote is the Google Fonts stylesheet; blocking it only falls the type back to
+the system stack.
 
 **This is a build, not a copy, and the difference matters.**
 `virtual_p1s.html` starts at `<title>` with no doctype, charset or viewport,
@@ -51,6 +60,16 @@ phone reports a 390px layout, no horizontal scroll, all 72 plates.
 touches `tools/viewer/`, which gives one public URL that opens on a desktop, a
 phone, or anyone else's device. The repo is public, so this costs nothing --
 and it means the site is public too, same as the models already in the repo.
+
+**Pages needs one manual switch before that workflow can finish.** Settings ->
+Pages -> Build and deployment -> Source: **GitHub Actions**. The workflow asks
+for it automatically (`enablement: true`) but the workflow token is not allowed
+to grant it — the first run failed with "Resource not accessible by
+integration". Everything before that step passed, including the built site and
+the plate-count guard, and the workflow now prints that fix in its own log
+instead of just failing. The steps *after* it (`upload-pages-artifact`,
+`deploy-pages`) have never run, so treat them as untested until a green run
+exists.
 
 ## Colour modes
 
