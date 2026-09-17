@@ -93,6 +93,77 @@ def test_the_door_is_clickable_and_says_why():
           "tapping the door itself must still toggle it, not just the button")
 
 
+def test_z_axis_has_three_lead_screws():
+    # Bambu's own P1 introduction: "The Z-axis is comprised of three lead screws
+    # that are connected to a single stepper motor using a belt." The first pass
+    # drew two, which is a machine that does not exist.
+    src = APP.read_text(encoding="utf-8")
+    m = re.search(r"var zPosts = \[(.*?)\];", src, re.S)
+    check(m is not None, "the Z stage's post list went missing")
+    if m:
+        check(m.group(1).count("[") == 3,
+              "the P1S Z axis has three lead screws, found %d" % m.group(1).count("["))
+    check("zPosts.forEach" in src, "all three posts must be built from the one list")
+
+
+def test_chamber_led_is_on_the_left_beam():
+    # Bambu's P1 service guide reaches the LED and the chamber camera through
+    # the LEFT panel, both on the AP board, close enough that the LED "will get
+    # caught by the camera" -- so it is a bar down the left side, not a strip
+    # across the front, which is where the first pass put it.
+    src = APP.read_text(encoding="utf-8")
+    m = re.search(r"bar\.position\.set\(([^)]*)\)", src)
+    check(m is not None, "the LED bar went missing")
+    if m:
+        check(m.group(1).strip().startswith("x0 +"),
+              "the chamber LED sits on the left beam, got %r" % m.group(1))
+
+
+def test_the_chamber_lamp_can_actually_light_something():
+    # The real defect this reproduces: the interior liner is the largest surface
+    # in the chamber, and while it was MeshBasicMaterial the chamber lamp changed
+    # a rendered frame by 0.79 of a level out of 255 -- a light that was not a
+    # light. An unlit liner makes the lamp decorative again, silently.
+    src = APP.read_text(encoding="utf-8")
+    m = re.search(r"var liner = new THREE\.Mesh\((.*?)\);", src, re.S)
+    check(m is not None, "the chamber liner went missing")
+    if m:
+        check("MeshBasicMaterial" not in m.group(1),
+              "the liner must respond to light or the chamber LED does nothing")
+
+
+def test_toolhead_is_a_p1s_not_an_x1_carbon():
+    src = APP.read_text(encoding="utf-8")
+    head = src[src.index("function buildToolhead"):]
+    head = head[:head.index("\n}\n")]
+    check("lidar" not in head.lower(), "the P1S has no LiDAR -- that is the X1 Carbon")
+    for piece in ("rear housing", "middle housing", "front housing", "cutter"):
+        check(piece in head, "toolhead is missing its %s" % piece)
+
+
+def test_screen_is_the_real_2_7_inch_panel():
+    # 2.7-inch 192x64 is a 3:1 letterbox; the first pass drew it nearly square.
+    src = APP.read_text(encoding="utf-8")
+    m = re.search(r"slab\((\d+), 2, (\d+), 0x0b0d10", src)
+    check(m is not None, "the front screen went missing")
+    if m:
+        w, h = int(m.group(1)), int(m.group(2))
+        check(2.6 <= w / h <= 3.4, "screen aspect should be about 3:1, got %.1f" % (w / h))
+
+
+def test_camera_damping_is_time_based_not_per_frame():
+    # A flat per-frame damping factor means a device rendering at 9fps takes a
+    # second and a half to catch up with a finger that already stopped. Measured
+    # 9fps in the container's software renderer, so this is not hypothetical.
+    src = APP.read_text(encoding="utf-8")
+    check("Math.pow(1 - DAMP, frames)" in src,
+          "damping must be converted against the real frame time")
+    check("Math.pow(SPIN_DECAY, frames)" in src,
+          "fling decay must be converted against the real frame time")
+    check(re.search(r"view\[k\] \+= d \* DAMP", src) is None,
+          "the raw per-frame constant must never be applied directly")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

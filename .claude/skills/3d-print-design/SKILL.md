@@ -253,6 +253,36 @@ Two consequences that only showed up by rendering it:
 * Draw an enclosure as one INVERTED box (back-face only), never as six panels.
   Six opaque panels put the near wall between the camera and the part.
 
+**The rest of the machine, from Bambu's own service pages (checked 2026-09-17).**
+Recall was wrong about two of these, so go and read rather than remember:
+
+* The Z axis is **three** lead screws, not two, connected to a **single**
+  stepper through a belt that runs under the base, with the tensioner also
+  underneath and three Z sliders carrying the bed ("Introduction to P1
+  series"; the Z motor / Z timing belt / Z tensioner pages).
+* CoreXY here means **one independent belt per stepper**, both reaching the
+  print head.
+* The chamber LED is a 5V 0.3A bar on the **LEFT** beam, next to the chamber
+  camera -- both are reached through the left panel and wired to the same AP
+  board, and the guide warns the LED "will get caught by the camera" if you
+  slide it the wrong way. Not a strip across the front.
+* The toolhead is front / middle / rear housings with the part-cooling fan in
+  the **front** one (its connector is what you unplug), a filament cutter
+  lever, a PTFE pneumatic joint on top, and an all-in-one hotend -- nozzle
+  integrated into the heat block, joined to the heatsink by a thin metal tube.
+  **No LiDAR: that is the X1 Carbon.** The auxiliary part cooling fan is a
+  separate accessory on the left chamber wall, not stock.
+* The screen is 2.7-inch **192x64** -- a 3:1 letterbox, not a square.
+* Bambu does NOT publish where the three lead screws sit around the base, nor
+  any toolhead dimensions. Draw those, say they are drawn.
+
+**A light that changes nothing is not a light.** A chamber lamp added as a
+real `PointLight` still did nothing measurable, because the biggest surface it
+had to light -- the interior liner -- was `MeshBasicMaterial`, which ignores
+lights. Differencing a frame with the lamp on against one with it off gave
+0.79 of a level out of 255. Do that difference before claiming a light works;
+"I added a PointLight" is not evidence.
+
 ## The virtual printer is not a simulator (2026-09-15)
 
 Scott asked whether a clean replay in the P1S viewer means a clean print. It

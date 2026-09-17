@@ -126,16 +126,38 @@ Two geometry traps this exposed, both found by rendering and looking:
   interior of the far ones, which is how you look into a real enclosure. The
   nearest corner post is culled per frame for the same reason.
 
-**Inside: verified motion, schematic hardware, and the page says which.** Two
-rear lead screws, vertical rails, a bed carriage that descends with the bed
-(it lives inside `bedGroup`, which is the whole point of drawing it), the two
-Y rails the gantry beam travels on, and a chamber LED that is a real
-`PointLight` rather than a painted glow -- so opening the door reveals a lit
-interior. What is **verified** is the motion: fixed gantry, descending bed.
-The ironmongery around it is representative, because no primary source I could
-reach documents the P1S's internal Z layout, and a learner should not read a
-guess as a photograph. The printer panel carries that caveat on screen, next
-to the dimensions that are real.
+### Inside, from Bambu's own service documentation
+
+The first pass drew the interior as a plausible guess and labelled it a guess.
+Going and reading the manufacturer's service pages turned most of it into
+fact, and corrected two things that were simply wrong:
+
+| drawn | source |
+|---|---|
+| **Three** lead screws, not two, turned together by one stepper through a belt under the base, with a tensioner also underneath | "The Z-axis is comprised of three lead screws that are connected to a single stepper motor using a belt" (Introduction to P1 series); Z motor / Z timing belt / Z tensioner service pages |
+| Three Z sliders carrying the bed | "lock in 3 auxiliary screws to fix the 3 Z-axis sliders" (Z motor) |
+| CoreXY with an independent belt per stepper | "Every stepper motor has an independent belt connected to the print head" |
+| Chamber LED on the **left** beam, beside the chamber camera | P1 Camera and LED guide: both reached through the left panel, both on the AP board, and the LED "will get caught by the camera" if slid the wrong way |
+| Chamber camera at the front-left column | same guide: housing seats in a notch on the frame, flex cable tucked behind the front cover |
+| Toolhead as front / middle / rear housings, part-cooling fan in the front one, filament cutter lever, PTFE pneumatic joint on top, all-in-one hotend | Toolhead housing + hotend service pages; "the nozzle is integrated into the heat block and connected to the heatsink via a thin metal tube" |
+| A 2.7-inch 192x64 screen -- a 3:1 letterbox, not the near-square first pass | P1 sensors/electronics spec list |
+| No LiDAR | that is the X1 Carbon |
+
+Two things are still **drawn rather than documented**, and the printer panel
+says so on screen: where the three lead screws sit around the base, and the
+toolhead's exact proportions. Bambu publishes neither.
+
+**The chamber lamp has to actually light something.** It is a real
+`PointLight` at the LED's real position -- but the first version of it was
+decorative and I nearly shipped it claiming otherwise. Rendering one frame
+with the lamp on and one with it off and differencing them gave **0.79 of a
+level out of 255**: a light that was not a light. Cause: the interior liner is
+the largest surface in the chamber and it was `MeshBasicMaterial`, which
+ignores lights entirely. As Lambert, with the lamp at its real intensity, the
+lit left side of the chamber measures **31.1 mean against 23.9 unlit**, while
+the right side is unchanged at 25.4 -- a directional pool from the correct
+side, which is the whole point of putting it where the real one is.
+`tests/test_viewer_machine_profile.py` fails if the liner ever goes unlit again.
 
 The lamp is deliberately invisible to the print: the bead shader is unlit, so
 the light changes the machine around the part and never the part itself.
@@ -148,12 +170,37 @@ The enclosure is deliberately unbranded.
 
 3.07M triangles for the heaviest plate. The toolpath itself is **one draw
 call** -- one mesh, one `setDrawRange`, no per-frame rebuild. The machine
-around it costs the rest: 30 calls bare, 70 with the interior hardware and the
-AMS, all of them static boxes and cylinders.
+around it costs the rest: 30 calls bare, 88 with the full interior, the
+toolhead and the AMS, all of them static boxes and cylinders.
 
 `--simplify` (default 0.02mm) drops points whose removal shifts the path less
 than a twentieth of a bead: 8-30% of points on real plates, with time, mass and
 speed data bit-identical afterwards. It will not merge across a speed change.
+
+### Smoothness while rotating
+
+Three changes, and the first one is the one that matters most:
+
+* **The camera is damped, and the damping is time-based.** `cam` is the target
+  every caller writes to; `view` eases toward it and is what gets rendered. The
+  easing rate and the fling decay are expressed per sixtieth of a second and
+  converted against the real frame time -- never applied once per frame. That
+  distinction is the whole feature on a slow device: a flat 0.19-per-frame ease
+  on a phone rendering at 9fps takes a second and a half to catch up with a
+  finger that has already stopped, which is worse than no damping at all. This
+  container's software renderer measures **8-9fps**, so that case was real and
+  would otherwise have shipped broken.
+* **A flick keeps turning.** Released mid-drag, the view coasts and decays;
+  stop first and it holds. The fling is measured as a *velocity* -- angle over
+  the real gap between pointer events -- because the browser coalesces
+  pointermove while a frame is busy. Measured here: **377ms between the last
+  pointermove and pointerup** on a 2fps page, so the original fixed 90ms arming
+  window never opened at all. The window and the velocity both scale with the
+  observed event gap now.
+* **Fewer pixels while the view is moving.** Pixel ratio drops to 1 during a
+  drag, pinch, wheel or fling and snaps back the moment it settles. A phone
+  caps at 2, which is four times the fragments -- and a moving frame is the one
+  frame nobody is studying.
 
 **Detail: high / fast** switches the specular and Fresnel terms with a shader
 `#define`, and steps down once automatically if the first measured frame rate

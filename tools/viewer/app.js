@@ -65,11 +65,20 @@ var amsGroup, yRails, chamberLamp;
 var doorOpen = false, doorAngle = 0, doorTarget = 0;
 var viewMode = 'machine';   // 'machine' = solid exterior, 'chamber' = cutaway
 var jobMesh = null, ghostMesh = null, jobGeom = null;
+// `cam` is the TARGET the whole page writes to; `view` is what actually gets
+// rendered, easing toward it every frame. Two objects rather than one because
+// every existing caller -- frameJob, setDoor, the view buttons, the orbit
+// handler -- already sets cam directly, and damping them all at once is a
+// property of the renderer, not of any one of them.
 var cam = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
+var view = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
+var spin = {theta: 0, phi: 0};
+var moveUntil = 0, lowRes = false, basePixelRatio = 1;
 
 function initScene() {
   renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  basePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  renderer.setPixelRatio(basePixelRatio);
   renderer.setClearColor(0x07080a, 1);
   stage.appendChild(renderer.domElement);
 
@@ -94,7 +103,8 @@ function initScene() {
   nozzle.visible = false;
   scene.add(nozzle);
 
-  window.__VP = {scene: scene, camera: camera, cam: cam};
+  window.__VP = {scene: scene, camera: camera, cam: cam, view: view, spin: spin,
+                 basePixelRatio: function () { return basePixelRatio; }};
   onResize();
   window.addEventListener('resize', onResize);
   attachOrbit(renderer.domElement);
@@ -155,15 +165,21 @@ function buildChamber(bed) {
   slab(EXT.w, EXT.d, 10, TRIM, ox, oy, zTop - 9, new THREE.Vector3(0, 0, 1));
 
   // Interior liner: one inverted box so the inside is its own darker surface.
+  // LAMBERT, not Basic. It is by far the largest surface in the chamber, and
+  // as an unlit material it made the chamber lamp measurably pointless -- a
+  // frame with the lamp on differed from one with it off by 0.79 of a level
+  // out of 255, which is a light that is not a light.
   var liner = new THREE.Mesh(
     new THREE.BoxGeometry(EXT.w - 2 * t, EXT.d - 2 * t, ch - 2 * t),
-    new THREE.MeshBasicMaterial({map: shellTexture(), side: THREE.BackSide}));
+    new THREE.MeshLambertMaterial({map: shellTexture(), side: THREE.BackSide}));
   liner.position.set(ox, oy, cz);
   chamber.add(liner);
 
   // Screen and knob, bottom right of the front bezel -- the one detail that
-  // makes the front read as this machine rather than a generic box.
-  slab(62, 2, 34, 0x0b0d10, x1 - 66, y0 - 0.6, zBot + 28, null);
+  // makes the front read as this machine rather than a generic box. The P1S
+  // screen is a 2.7-inch 192x64 panel (Bambu's own P1 spec list), which is a
+  // 3:1 letterbox -- the first pass drew it nearly square.
+  slab(65, 2, 22, 0x0b0d10, x1 - 66, y0 - 0.6, zBot + 28, null);
   var knob = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 4, 24),
     new THREE.MeshLambertMaterial({color: 0x666e7c}));
   knob.rotation.x = Math.PI / 2;
@@ -313,63 +329,126 @@ function buildGantry(W, ox, oy) {
 // reach documents it, and the printer panel says so on screen rather than
 // letting a learner read this as a photograph.
 function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t) {
-  var METAL = 0x555c69, DARK = 0x21252c;
-  var sx = [x0 + 34, x1 - 34], sy = y1 - t - 24;
+  var METAL = 0x555c69, DARK = 0x21252c, FRAME = 0x2c313a;
 
-  sx.forEach(function (x) {
-    var lo = zBot + 14, hi = zTop - 92;
-    var screw = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, hi - lo, 14),
+  // Z stage. Bambu's own service docs are specific about this one: "The Z-axis
+  // is comprised of THREE lead screws connected to a single stepper motor using
+  // a belt" (wiki, Introduction to P1 series), the motor "on the bottom base of
+  // the printer" with "the Z belt around the driving pulley", a tensioner also
+  // on the bottom, and three Z-axis sliders carrying the bed (wiki, Z motor /
+  // Z timing belt / Z tensioner). All of that is drawn. What is NOT published
+  // anywhere I could reach is where the three sit around the base, so they are
+  // placed to leave the doorway clear and the panel says they are placed, not
+  // documented.
+  var zPosts = [[x0 + 34, y1 - t - 26], [x1 - 34, y1 - t - 26], [x1 - 34, y0 + t + 46]];
+  var zLo = zBot + 16, zHi = zTop - 92;
+
+  zPosts.forEach(function (p) {
+    var screw = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, zHi - zLo, 12),
       new THREE.MeshLambertMaterial({color: METAL}));
     screw.rotation.x = Math.PI / 2;
-    screw.position.set(x, sy, (lo + hi) / 2);
+    screw.position.set(p[0], p[1], (zLo + zHi) / 2);
     chamber.add(screw);
-    var rail = new THREE.Mesh(new THREE.BoxGeometry(13, 13, hi - lo),
+    var post = new THREE.Mesh(new THREE.BoxGeometry(14, 14, zHi - zLo),
       new THREE.MeshLambertMaterial({color: DARK}));
-    rail.position.set(x, sy - 26, (lo + hi) / 2);
-    chamber.add(rail);
+    post.position.set(p[0] + (p[0] > ox ? 20 : -20), p[1], (zLo + zHi) / 2);
+    chamber.add(post);
+    var pulley = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 9, 14),
+      new THREE.MeshLambertMaterial({color: 0x3d4552}));
+    pulley.rotation.x = Math.PI / 2;
+    pulley.position.set(p[0], p[1], zLo - 6);
+    chamber.add(pulley);
   });
 
-  // The carriage lives in bedGroup, so it descends with the bed it carries --
-  // the whole point of drawing it at all.
+  // One motor, one belt, both under the base -- which is why all three screws
+  // turn together and the bed cannot tilt out of tram on its own.
+  var zMotor = new THREE.Mesh(new THREE.BoxGeometry(34, 34, 30),
+    new THREE.MeshLambertMaterial({color: 0x1b1e24}));
+  zMotor.position.set(ox + 46, y1 - t - 30, zLo - 22);
+  chamber.add(zMotor);
+  var beltPath = new THREE.Mesh(
+    new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+      new THREE.Vector3(zPosts[0][0], zPosts[0][1], zLo - 6),
+      new THREE.Vector3(ox + 46, y1 - t - 30, zLo - 6),
+      new THREE.Vector3(zPosts[1][0], zPosts[1][1], zLo - 6),
+      new THREE.Vector3(zPosts[2][0], zPosts[2][1], zLo - 6),
+      new THREE.Vector3(zPosts[0][0], zPosts[0][1], zLo - 6)], true), 30, 2.4, 6, true),
+    new THREE.MeshLambertMaterial({color: 0x15171c}));
+  chamber.add(beltPath);
+
+  // Three sliders, on the bed, descending with it -- the whole point of
+  // drawing the stage at all is that this is the part that actually moves.
   var beam = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 - 46, 15, 11),
-    new THREE.MeshLambertMaterial({color: 0x2c313a}));
-  beam.position.set(ox, sy - 13, -14);
+    new THREE.MeshLambertMaterial({color: FRAME}));
+  beam.position.set(ox, y1 - t - 39, -14);
   bedGroup.add(beam);
-  sx.forEach(function (x) {
-    var nut = new THREE.Mesh(new THREE.BoxGeometry(24, 30, 19),
+  zPosts.forEach(function (p) {
+    var slider = new THREE.Mesh(new THREE.BoxGeometry(24, 28, 19),
       new THREE.MeshLambertMaterial({color: 0x3d4552}));
-    nut.position.set(x, sy - 8, -14);
-    bedGroup.add(nut);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(13, sy - oy, 9),
-      new THREE.MeshLambertMaterial({color: 0x2c313a}));
-    arm.position.set(x, (oy + sy) / 2, -14);
+    slider.position.set(p[0], p[1], -14);
+    bedGroup.add(slider);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(13, Math.abs(p[1] - oy), 9),
+      new THREE.MeshLambertMaterial({color: FRAME}));
+    arm.position.set(p[0], (oy + p[1]) / 2, -14);
     bedGroup.add(arm);
   });
 
-  // The two Y rails the CoreXY gantry beam travels on. They hold a fixed
-  // height, so they cannot live inside the gantry group -- setSeg keeps them
-  // level with it instead.
+  // The two Y rails the CoreXY gantry beam travels on, and the pair of belts --
+  // one per stepper, independent, which is what makes it CoreXY rather than
+  // cartesian (wiki: "Every stepper motor has an independent belt connected to
+  // the print head"). They hold a fixed height, so they cannot live inside the
+  // gantry group; setSeg keeps them level with it instead.
   yRails = new THREE.Group();
   [x0 + t + 7, x1 - t - 7].forEach(function (x) {
     var r = new THREE.Mesh(new THREE.BoxGeometry(11, y1 - y0 - 2 * t - 16, 9),
       new THREE.MeshLambertMaterial({color: DARK}));
     r.position.set(x, oy, 0);
     yRails.add(r);
+    [-3.5, 3.5].forEach(function (dy) {
+      var b = new THREE.Mesh(new THREE.BoxGeometry(2.5, y1 - y0 - 2 * t - 16, 5),
+        new THREE.MeshLambertMaterial({color: 0x15171c}));
+      b.position.set(x + (x < ox ? 8 : -8), oy, dy + 6);
+      yRails.add(b);
+    });
   });
   yRails.visible = false;
   yRails.name = 'yrails';
   scene.add(yRails);
 
-  // Chamber LED: a real light, not a painted-on glow, so opening the door
-  // actually reveals a lit interior. The bead shader is deliberately unlit,
-  // so this changes the machine around the print and never the print itself.
-  var bar = new THREE.Mesh(new THREE.BoxGeometry(EXT.w - 120, 7, 4),
+  // Chamber LED -- on the LEFT beam, not centred on the front where the first
+  // pass put it. Bambu's P1 service guide has the LED and the chamber camera
+  // both behind the left panel, wired to the same AP board, close enough that
+  // the LED "will get caught by the camera" if you slide it the wrong way; the
+  // camera seats into a notch on the front column with its flex cable tucked
+  // behind the front cover. So: light bar down the left beam, camera at the
+  // front-left corner beside it. It is a 5V 0.3A strip, which is why the real
+  // chamber is lit but not floodlit.
+  var ledLen = (y1 - y0) * 0.52;
+  var ledY = y0 + t + ledLen / 2 + 18;
+  var bar = new THREE.Mesh(new THREE.BoxGeometry(5, ledLen, 9),
     new THREE.MeshBasicMaterial({color: 0xffe9c6}));
-  bar.position.set(ox, y0 + t + 13, zTop - 26);
+  bar.position.set(x0 + t + 9, ledY, zTop - 30);
   chamber.add(bar);
-  chamberLamp = new THREE.PointLight(0xffdcae, 0.62, 470, 1.4);
-  chamberLamp.position.set(ox, y0 + 70, zTop - 44);
+  var shell = new THREE.Mesh(new THREE.BoxGeometry(11, ledLen + 10, 14),
+    new THREE.MeshLambertMaterial({color: 0x2b2f36}));
+  shell.position.set(x0 + t + 5, ledY, zTop - 30);
+  chamber.add(shell);
+  // Tight falloff on purpose. A 5V 0.3A strip pools light near itself and
+  // leaves the far corners dim; the first pass's wide, bright lamp flattened
+  // the whole chamber into even grey, which reads as a lightbox, not a P1S.
+  chamberLamp = new THREE.PointLight(0xffdcae, 3.0, 560, 1.5);
+  chamberLamp.position.set(x0 + 58, ledY, zTop - 46);
   chamber.add(chamberLamp);
+
+  var cam2 = new THREE.Mesh(new THREE.BoxGeometry(17, 15, 15),
+    new THREE.MeshLambertMaterial({color: 0x23262d}));
+  cam2.position.set(x0 + t + 12, y0 + t + 12, zTop - 30);
+  chamber.add(cam2);
+  var lens = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 3, 12),
+    new THREE.MeshBasicMaterial({color: 0x0a0c10}));
+  lens.rotation.x = Math.PI / 2;
+  lens.position.set(x0 + t + 16, y0 + t + 16, zTop - 36);
+  chamber.add(lens);
 }
 
 // The AMS, at its real size, sitting where one actually sits. The spools drawn
@@ -444,6 +523,15 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   scene.add(amsGroup);
 }
 
+// The P1S toolhead, built from Bambu's own service breakdown rather than a
+// generic hotend: a front housing assembly that carries the part-cooling fan
+// (its connector is what you unplug to remove it), a middle housing with the
+// filament cutter lever and its protruding blade, a rear housing over the
+// extruder, a PTFE pneumatic joint on top, and the all-in-one hotend -- nozzle
+// integrated into the heat block, joined to the heatsink by a thin metal tube.
+// There is no LiDAR here on purpose: that is the X1 Carbon, not this machine.
+// Bambu publishes no toolhead dimensions, so the proportions are read off the
+// assembly order and the part list, not measured.
 function buildToolhead() {
   var g = new THREE.Group();
   function part(w, d, h, color, z, y) {
@@ -453,24 +541,64 @@ function buildToolhead() {
     g.add(m);
     return m;
   }
-  part(26, 15, 15, 0x2d323c, 44);            // X-carriage on the gantry beam
-  var body = part(23, 20, 21, 0x1b1e25, 12, -4);
-  var edges = new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry),
+  // Heights stack from the nozzle up: the hotend hangs BELOW the housings,
+  // which is the whole shape of a real toolhead. Burying the heatsink inside
+  // the middle housing was the first pass's mistake and it showed immediately
+  // on screen -- a dark box with nothing under it.
+  part(26, 15, 15, 0x2d323c, 44, 9);           // X-carriage on the gantry beam
+  part(27, 19, 30, 0x1b1e25, 40, 11);          // rear housing over the extruder
+  var mid = part(25, 17, 26, 0x22262e, 38, 0);    // middle housing
+  var edges = new THREE.LineSegments(new THREE.EdgesGeometry(mid.geometry),
     new THREE.LineBasicMaterial({color: 0x4b5261}));
-  edges.position.set(0, -4, 12);
+  edges.position.set(0, 0, 38);
   g.add(edges);
-  part(19, 7, 11, 0x23262e, 5.5, -11);       // part-cooling duct
-  part(9, 9, 5, 0x4a3a22, 3.6);              // heater block
+  part(25, 8, 25, 0x15181e, 37, -12);          // front housing assembly
+
+  // Part-cooling fan, in the front housing where the real one lives.
+  var fan = new THREE.Mesh(new THREE.CylinderGeometry(8.6, 8.6, 2.4, 18),
+    new THREE.MeshLambertMaterial({color: 0x0c0e12}));
+  fan.rotation.x = Math.PI / 2;
+  fan.position.set(0, -16.4, 37);
+  g.add(fan);
+  var hub = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 3, 12),
+    new THREE.MeshLambertMaterial({color: 0x3a4049}));
+  hub.rotation.x = Math.PI / 2;
+  hub.position.set(0, -17, 37);
+  g.add(hub);
+
+  // Filament cutter lever, on the side of the middle housing.
+  var lever = part(5, 13, 3.4, 0x596270, 46, -2);
+  lever.position.x = 14;
+
+  // PTFE pneumatic joint on top, where the AMS tube lands.
+  var joint = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 5, 6, 14),
+    new THREE.MeshLambertMaterial({color: 0x6e7683}));
+  joint.rotation.x = Math.PI / 2;
+  joint.position.set(0, 8, 57);
+  g.add(joint);
+
+  // All-in-one hotend: finned heatsink, thin metal tube, integrated heat
+  // block and nozzle. This is the geometry the wiki describes in words.
+  for (var i = 0; i < 5; i++) {
+    part(15, 13, 1.4, 0x8e96a3, 13 + i * 2.5, 0);
+  }
+  var neck = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 4.4, 12),
+    new THREE.MeshLambertMaterial({color: 0x9aa2af}));
+  neck.rotation.x = Math.PI / 2;
+  neck.position.set(0, 0, 9.4);
+  g.add(neck);
+  part(11, 11, 5.4, 0x4a3a22, 4.6, 0);         // heat block, silicone-socked
   var tip = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5, 16),
     new THREE.MeshBasicMaterial({color: 0xc98b46}));
   tip.rotation.x = Math.PI;
-  tip.position.z = 1.2;
+  tip.position.set(0, 0, 1.4);
   g.add(tip);
+
   glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture(),
     transparent: true, depthWrite: false,
     blending: THREE.AdditiveBlending, opacity: 0.85}));
   glowSprite.scale.set(26, 26, 1);
-  glowSprite.position.z = 0.6;
+  glowSprite.position.set(0, 0, 0.6);
   g.add(glowSprite);
   return g;
 }
@@ -558,6 +686,7 @@ function pickDoor(clientX, clientY) {
 
 function attachOrbit(el) {
   var down = null, touches = {}, pinch = null, travel = 0, start = null;
+  var fling = null;
   el.style.touchAction = 'none';
   function pinchDist() {
     var k = Object.keys(touches);
@@ -575,12 +704,15 @@ function attachOrbit(el) {
     down = {x:e.clientX, y:e.clientY, pan:e.shiftKey || e.button === 2 || e.button === 1};
     start = {x:e.clientX, y:e.clientY};
     travel = 0;
+    spin.theta = spin.phi = 0;   // grabbing it stops a fling, like a real dial
+    fling = null;
   });
   el.addEventListener('pointermove', function (e) {
     if (touches[e.pointerId]) { touches[e.pointerId] = {x:e.clientX, y:e.clientY}; }
     if (pinch && Object.keys(touches).length === 2) {
       var d = pinchDist();
       if (d > 4) { cam.r = Math.max(40, Math.min(1600, pinch.r * pinch.d / d)); }
+      moveUntil = performance.now() + 150;
       return;
     }
     if (!down) { return; }
@@ -595,12 +727,31 @@ function attachOrbit(el) {
     } else {
       cam.theta -= dx * 0.006;
       cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, cam.phi - dy * 0.006));
+      // Record the angle covered AND how long it took. A flick has to be
+      // measured as a velocity, not as a per-event delta: the browser coalesces
+      // pointermove while a frame is busy, so on a slow device one event can
+      // carry half a second of finger travel.
+      var mnow = performance.now();
+      fling = {t: mnow, theta: -dx * 0.006, phi: -dy * 0.006,
+               dt: Math.max(mnow - (fling ? fling.t : mnow - 16), 8)};
     }
+    moveUntil = performance.now() + 150;
   });
   el.addEventListener('pointerup', function (e) {
     if (start && travel < 7 && !pinch && pickDoor(e.clientX, e.clientY)) {
       setDoor(!doorOpen);
+    } else if (fling && performance.now() - fling.t < Math.max(130, fling.dt * 1.6)) {
+      // Let go mid-drag and it keeps turning, decaying. Only a release that was
+      // still moving flings -- stopping first and then lifting holds. The
+      // window scales with the gap between moves for the same reason the
+      // velocity does: measured here, a 2fps page took 377ms to deliver
+      // pointerup after the last pointermove, so a fixed 90ms window (tuned on
+      // a fast machine) never opened at all on a slow one.
+      var perFrame = 16.67 / fling.dt;
+      spin.theta = fling.theta * perFrame * 0.88;
+      spin.phi = fling.phi * perFrame * 0.88;
     }
+    fling = null;
     start = null;
   });
   ['pointerup','pointercancel'].forEach(function (t) {
@@ -620,6 +771,7 @@ function attachOrbit(el) {
   el.addEventListener('wheel', function (e) {
     e.preventDefault();
     cam.r = Math.max(40, Math.min(1600, cam.r * (1 + Math.sign(e.deltaY) * 0.11)));
+    moveUntil = performance.now() + 150;
   }, {passive:false});
 }
 
@@ -655,13 +807,62 @@ function updateCutaway() {
   }
 }
 
-function updateCamera() {
-  var sp = Math.sin(cam.phi), cp = Math.cos(cam.phi);
+// A flick keeps spinning and a jump eases in. Both are feel, not frame rate,
+// and they are what "smoother when rotating" mostly means: raw pointer deltas
+// written straight into an angle look stepped no matter how fast the machine
+// draws them.
+// Both rates are per SIXTIETH OF A SECOND and converted against the real frame
+// time, never applied once per frame. That difference is the whole feature on a
+// slow device: a flat 0.19 per frame means a phone rendering at 9fps takes a
+// second and a half to catch up with a finger that has already stopped, which
+// is worse than no damping at all. Measured 9fps in this container's software
+// renderer, which is exactly the case that would have shipped broken.
+var DAMP = 0.19, SPIN_DECAY = 0.92;
+var _lastCam = 0;
+
+function updateCamera(now) {
+  var frames = _lastCam ? Math.min((now - _lastCam) / 16.67, 8) : 1;
+  _lastCam = now;
+  var damp = 1 - Math.pow(1 - DAMP, frames);
+  var decay = Math.pow(SPIN_DECAY, frames);
+
+  if (spin.theta || spin.phi) {
+    cam.theta += spin.theta * frames;
+    cam.phi = Math.max(0.05, Math.min(Math.PI - 0.05, cam.phi + spin.phi * frames));
+    spin.theta *= decay;
+    spin.phi *= decay;
+    if (Math.abs(spin.theta) < 0.00035 && Math.abs(spin.phi) < 0.00035) {
+      spin.theta = spin.phi = 0;
+    } else {
+      moveUntil = now + 90;
+    }
+  }
+  var settled = true;
+  ['theta', 'phi', 'r', 'tx', 'ty', 'tz'].forEach(function (k) {
+    var d = cam[k] - view[k];
+    if (Math.abs(d) < (k === 'r' ? 0.05 : 0.0004)) { view[k] = cam[k]; return; }
+    view[k] += d * damp;
+    settled = false;
+  });
+  if (!settled) { moveUntil = Math.max(moveUntil, now + 60); }
+
+  var sp = Math.sin(view.phi), cp = Math.cos(view.phi);
   camera.position.set(
-    cam.tx + cam.r * sp * Math.cos(cam.theta),
-    cam.ty + cam.r * sp * Math.sin(cam.theta),
-    cam.tz + cam.r * cp);
-  camera.lookAt(cam.tx, cam.ty, cam.tz);
+    view.tx + view.r * sp * Math.cos(view.theta),
+    view.ty + view.r * sp * Math.sin(view.theta),
+    view.tz + view.r * cp);
+  camera.lookAt(view.tx, view.ty, view.tz);
+}
+
+// While the view is actually moving, render fewer pixels. A phone caps out at
+// pixel ratio 2, which is four times the fragments of 1 -- and a moving frame
+// is the one frame nobody is studying. It snaps back the moment you let go.
+function setResolution(now) {
+  var moving = now < moveUntil;
+  if (moving === lowRes) { return; }
+  lowRes = moving;
+  renderer.setPixelRatio(moving ? Math.min(basePixelRatio, 1) : basePixelRatio);
+  onResize();
 }
 
 // \u2500\u2500 shader \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -965,7 +1166,8 @@ function tick(now) {
   }
   play.last = now;
   if (JOB) { refreshReadout(); }
-  updateCamera();
+  updateCamera(now);
+  setResolution(now);
   updateDoor();
   updateCutaway();
   if (jobMesh) {
@@ -1323,12 +1525,19 @@ function paintPrinter() {
     'row. It does <b>not</b> re-slice \u2014 every toolpath here came out of the P1S ' +
     'profile above. Re-slicing lives in <span class="mono">tools/virtual_printer.py' +
     '</span>.</div>' +
-    '<div class="caveat">Outside dimensions, build volume and AMS size are the ' +
-    'manufacturer\'s published figures. The <b>inside</b> is drawn schematically: ' +
-    'the fixed gantry and the descending bed are how the machine really moves, ' +
-    'but the lead screws, rails and carriage around them are representative \u2014 ' +
-    'no primary source documents the P1S\u2019s internal Z layout. The AMS spool ' +
-    'colours are illustrative; nothing here is reading your machine.</div>';
+    '<div class="caveat"><b>What is taken from Bambu\u2019s own documentation:</b> ' +
+    'outside dimensions, build volume, AMS size, the 2.7-inch 192\u00d764 screen, ' +
+    'the fixed gantry over a bed that descends, a Z axis of <b>three</b> lead ' +
+    'screws turned together by one stepper through a belt under the base, three ' +
+    'Z sliders carrying the bed, CoreXY with an independent belt per motor, the ' +
+    '5V chamber LED on the <b>left</b> beam beside the chamber camera, and a ' +
+    'toolhead of front/middle/rear housings with the part-cooling fan in the ' +
+    'front one, a filament cutter, and an all-in-one hotend. No LiDAR \u2014 that ' +
+    'is the X1 Carbon.<br><b>What is drawn rather than documented:</b> where the ' +
+    'three lead screws sit around the base, and the toolhead\u2019s exact ' +
+    'proportions \u2014 Bambu publishes neither, so these are placed to read ' +
+    'correctly, not measured. The AMS spool colours are illustrative; nothing ' +
+    'here is reading your machine.</div>';
   $('psel').addEventListener('change', function (e) {
     printerId = e.target.value;
     buildChamber(PRINTERS[printerId].bed);
