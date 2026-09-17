@@ -34,9 +34,13 @@ var PRINTERS = {
         // AMS HT (114 x 280 x 245) -- three different boxes, easy to conflate.
         ams: {slots: 4, w: 368, d: 283, h: 224, kg: 2.5},
         note:'The machine every job on this page was sliced for.'},
+  // Open frame, bed-slinger, no heated chamber (bed tops out at 80 \u00b0C), real
+  // footprint 544 x 529 x 505 mm. Verified 2026-09-17. Everything drawn for
+  // this machine comes from that line and nothing else -- see buildOpenFrame.
   a2l: {label:'Bambu Lab A2L', bed:[330,320,325], enclosed:false, nozzle:0.4,
         motion:'Bedslinger', chamber:'None (open frame)', plate:'\u2014',
-        note:'Larger format, AMS Lite and AMS 2 Pro compatible. Chamber redraws; the toolpath was still sliced for the P1S.'},
+        bedslinger:true, footprint:[544,529,505],
+        note:'Open frame, bed-slinger, no enclosure. Only its build volume, footprint and motion are modelled \u2014 and the toolpath was still sliced for the P1S.'},
   custom:{label:'Custom', bed:[256,256,256], enclosed:true, nozzle:0.4,
         motion:'\u2014', chamber:'\u2014', plate:'\u2014',
         note:'Enter a build volume to redraw the chamber. This is the hook for the rest of the market \u2014 it changes what is drawn, not how the file was sliced.'}
@@ -97,11 +101,9 @@ function initScene() {
   rim.position.set(430, 300, 140);
   scene.add(rim);
 
+  // buildChamber owns the toolhead now -- it has to, because which head gets
+  // built depends on which machine is selected.
   buildChamber(PRINTERS.p1s.bed);
-
-  nozzle = buildToolhead();
-  nozzle.visible = false;
-  scene.add(nozzle);
 
   window.__VP = {scene: scene, camera: camera, cam: cam, view: view, spin: spin,
                  basePixelRatio: function () { return basePixelRatio; }};
@@ -123,11 +125,28 @@ function buildChamber(bed) {
   [chamber, plate, grid, gantry, bedGroup, doorGroup, amsGroup, yRails].forEach(function (o) {
     if (o) { scene.remove(o); }
   });
+  doorGroup = null;
+  // Only the P1S is drawn as itself. Every other profile gets an honest
+  // envelope instead -- build volume, footprint, bed, gantry, correct
+  // kinematics, nothing invented. Before this, selecting the A2L drew a full
+  // enclosed case with a smoked glass door while the panel two inches to the
+  // right of it read "Enclosed: No / Chamber: None (open frame)". A viewer
+  // whose whole job is teaching how a machine works cannot contradict its own
+  // caption, and detailing a second machine is a research job per machine, not
+  // a reskin of this one.
+  var detailed = printerId === 'p1s';
   var X = bed[0], Y = bed[1], Z = bed[2];
   var ox = X / 2, oy = Y / 2;
-  // Vertical layout: bed at z=0 on layer 1, travelling down to -Z. Base
-  // electronics below that, gantry and top cover above.
-  var zBot = -(Z + 44), zTop = zBot + Math.max(EXT.h, Z + 200);
+  // Vertical layout follows the kinematics, because the two machines are
+  // upside down relative to each other. Descending bed: the plate starts at
+  // z=0 and travels down to -Z, so the case has to reach that far below.
+  // Bed-slinger: the plate never moves in Z, so the machine stands UP from
+  // just under it and the gantry is what climbs.
+  var slinger = !!PRINTERS[printerId].bedslinger;
+  var fp = PRINTERS[printerId].footprint;
+  var zBot = slinger ? -72 : -(Z + 44);
+  var zTop = slinger ? zBot + (fp ? fp[2] : Z + 200)
+                     : zBot + Math.max(EXT.h, Z + 200);
   var x0 = ox - EXT.w / 2, x1 = ox + EXT.w / 2;
   var y0 = oy - EXT.d / 2, y1 = oy + EXT.d / 2;
   var t = EXT.wall;
@@ -142,6 +161,22 @@ function buildChamber(bed) {
     chamber.add(m);
     if (normal) { extPanels.push({mesh: m, n: normal}); }
     return m;
+  }
+
+  if (!detailed) {
+    buildOpenFrame(PRINTERS[printerId], X, Y, Z, ox, oy, zBot, slinger);
+    scene.add(chamber);
+    buildBed(X, Y, ox, oy);
+    buildGantry(Math.max(X + 90, 260), ox, oy);
+    buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, false);
+    rebuildToolhead(false);
+    machineBounds = {zBot: zBot, zTop: zTop, ox: ox, oy: oy, zOuter: zTop};
+    cam.tx = ox; cam.ty = oy;
+    cam.tz = (machineBounds.zBot + machineBounds.zOuter) / 2;
+    cam.r = machineRadius();
+    restoreMotionVisibility();
+    syncDoorControl();
+    return;
   }
 
   var BODY = 0x26282e, TRIM = 0x171a1f;
@@ -238,8 +273,11 @@ function buildChamber(bed) {
 
   buildBed(X, Y, ox, oy);
   buildGantry(EXT.w, ox, oy);
-  buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t);
+  buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, true);
   buildAMS(PRINTERS[printerId].ams, ox, oy, y1, zTop);
+  rebuildToolhead(true);
+  restoreMotionVisibility();
+  syncDoorControl();
 
   // An AMS on the lid makes the machine half again as tall, so the framing has
   // to come from the real outer extent rather than a number tuned to a bare
@@ -304,6 +342,7 @@ function buildBed(X, Y, ox, oy) {
   shadowPlane.position.z = 0.12;
   shadowPlane.visible = false;
   bedGroup.add(shadowPlane);
+  bedGroup.name = 'bed';
   scene.add(bedGroup);
 }
 
@@ -328,8 +367,24 @@ function buildGantry(W, ox, oy) {
 // two rear lead screws and a carriage -- because no primary source I could
 // reach documents it, and the printer panel says so on screen rather than
 // letting a learner read this as a photograph.
-function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t) {
+function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   var METAL = 0x555c69, DARK = 0x21252c, FRAME = 0x2c313a;
+  if (!detailed) {
+    // An envelope has rails for the gantry to ride and nothing else. The Z
+    // stage below is the P1S's own, read off its service pages; drawing it
+    // around another machine would be inventing that machine's insides.
+    yRails = new THREE.Group();
+    [ox - X / 2 - 24, ox + X / 2 + 24].forEach(function (x) {
+      var r = new THREE.Mesh(new THREE.BoxGeometry(11, Y + 60, 9),
+        new THREE.MeshLambertMaterial({color: DARK}));
+      r.position.set(x, oy, 0);
+      yRails.add(r);
+    });
+    yRails.visible = false;
+    yRails.name = 'yrails';
+    scene.add(yRails);
+    return;
+  }
 
   // Z stage. Bambu's own service docs are specific about this one: "The Z-axis
   // is comprised of THREE lead screws connected to a single stepper motor using
@@ -523,6 +578,53 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   scene.add(amsGroup);
 }
 
+// An envelope, not a portrait: the machine's real outside footprint as an
+// edge outline, a base under the bed, and nothing else. Everything here is a
+// number the manufacturer publishes; no panels, no door, no chamber light, no
+// screen, because none of those are known for this machine at this level of
+// detail and a drawn guess would contradict the panel beside it.
+function buildOpenFrame(prof, X, Y, Z, ox, oy, zBot, slinger) {
+  var f = prof.footprint;
+  if (f) {
+    var box = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(f[0], f[1], f[2])),
+      new THREE.LineBasicMaterial({color: 0x39404d}));
+    box.position.set(ox, oy, zBot + f[2] / 2);
+    chamber.add(box);
+  }
+  var baseW = f ? f[0] : X + 90, baseD = f ? f[1] : Y + 90;
+  var base = new THREE.Mesh(new THREE.BoxGeometry(baseW, baseD, 46),
+    new THREE.MeshLambertMaterial({color: 0x23262d}));
+  base.position.set(ox, oy, zBot + 23);
+  chamber.add(base);
+  // Build volume, drawn as the volume it is rather than as a box that pretends
+  // to be a chamber. It sits where the machine can actually reach: up from the
+  // plate on a slinger, down from it on a descending bed.
+  var vol = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(X, Y, Z)),
+    new THREE.LineBasicMaterial({color: 0x2b3f52}));
+  vol.position.set(ox, oy, slinger ? Z / 2 : -Z / 2);
+  chamber.add(vol);
+}
+
+// A machine without a door must not offer to open one.
+// Switching machines mid-print rebuilds the gantry hidden, because that is the
+// state it starts in before any job is mounted. If a job IS mounted the motion
+// system has to come back with it -- otherwise changing printers halfway
+// through a replay silently loses the gantry and the rails.
+function restoreMotionVisibility() {
+  if (!JOB) { return; }
+  if (gantry) { gantry.visible = true; }
+  if (yRails) { yRails.visible = true; }
+}
+
+function syncDoorControl() {
+  var b = $('door');
+  if (!b) { return; }
+  b.hidden = !doorGroup;
+  if (!doorGroup && doorOpen) { setDoor(false); }
+}
+
 // The P1S toolhead, built from Bambu's own service breakdown rather than a
 // generic hotend: a front housing assembly that carries the part-cooling fan
 // (its connector is what you unplug to remove it), a middle housing with the
@@ -532,6 +634,44 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 // There is no LiDAR here on purpose: that is the X1 Carbon, not this machine.
 // Bambu publishes no toolhead dimensions, so the proportions are read off the
 // assembly order and the part list, not measured.
+// Swapping the head with the machine: the detailed one above is the P1S's own
+// and carrying it onto another profile would be the same contradiction the
+// enclosure was. Visibility survives the swap so changing machines mid-print
+// does not blank the nozzle.
+function rebuildToolhead(detailed) {
+  var wasVisible = nozzle ? nozzle.visible : false;
+  var scale = nozzle ? nozzle.scale.x : 1;
+  if (nozzle) { scene.remove(nozzle); }
+  nozzle = detailed ? buildToolhead() : buildSimpleHead();
+  nozzle.visible = wasVisible;
+  nozzle.scale.setScalar(scale);
+  scene.add(nozzle);
+}
+
+// Enough head to show where the nozzle is and nothing that claims to be a
+// specific machine's hardware.
+function buildSimpleHead() {
+  var g = new THREE.Group();
+  var body = new THREE.Mesh(new THREE.BoxGeometry(22, 18, 26),
+    new THREE.MeshLambertMaterial({color: 0x22262e}));
+  body.position.z = 20;
+  g.add(body);
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(10, 10, 6),
+    new THREE.MeshLambertMaterial({color: 0x4a3a22})).translateZ(4.6));
+  var tip = new THREE.Mesh(new THREE.ConeGeometry(2.4, 5, 16),
+    new THREE.MeshBasicMaterial({color: 0xc98b46}));
+  tip.rotation.x = Math.PI;
+  tip.position.z = 1.4;
+  g.add(tip);
+  glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture(),
+    transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, opacity: 0.85}));
+  glowSprite.scale.set(26, 26, 1);
+  glowSprite.position.z = 0.6;
+  g.add(glowSprite);
+  return g;
+}
+
 function buildToolhead() {
   var g = new THREE.Group();
   function part(w, d, h, color, z, y) {
@@ -1143,16 +1283,31 @@ function setSeg(seg) {
   play.seg = seg;
   jobGeom.setDrawRange(0, seg * 12);
   if (seg > 0) {
-    var i = (seg - 1) * 3, zTop = JOB.segEnd[i + 2];
-    // Machine-accurate: the gantry is fixed and the BED descends, so the
-    // nozzle holds one height and everything printed sinks away from it.
-    var drop = machineMotion ? zTop : 0;
-    bedGroup.position.z = -drop;
-    jobMesh.position.z = -drop;
-    ghostMesh.position.z = -drop;
-    nozzle.position.set(JOB.segEnd[i], JOB.segEnd[i + 1], zTop - drop);
-    gantry.position.y = JOB.segEnd[i + 1];
-    gantry.position.z = zTop - drop + 44 * headScale;
+    var i = (seg - 1) * 3;
+    var px = JOB.segEnd[i], py = JOB.segEnd[i + 1], zTop = JOB.segEnd[i + 2];
+    var oy = machineBounds ? machineBounds.oy : py;
+    if (PRINTERS[printerId].bedslinger) {
+      // A bed-slinger is the other machine entirely: the BED travels in Y and
+      // the gantry climbs in Z. Replaying a P1S's motion on it would be the
+      // same lie as drawing it with a door.
+      var slide = machineMotion ? py - oy : 0;
+      bedGroup.position.set(0, -slide, 0);
+      jobMesh.position.set(0, -slide, 0);
+      ghostMesh.position.set(0, -slide, 0);
+      nozzle.position.set(px, py - slide, zTop);
+      gantry.position.y = py - slide;
+      gantry.position.z = zTop + 44 * headScale;
+    } else {
+      // The P1S: the gantry is fixed and the BED descends, so the nozzle holds
+      // one height and everything printed sinks away from it.
+      var drop = machineMotion ? zTop : 0;
+      bedGroup.position.set(0, 0, -drop);
+      jobMesh.position.set(0, 0, -drop);
+      ghostMesh.position.set(0, 0, -drop);
+      nozzle.position.set(px, py, zTop - drop);
+      gantry.position.y = py;
+      gantry.position.z = zTop - drop + 44 * headScale;
+    }
     if (yRails) { yRails.position.z = gantry.position.z; }
   }
 }

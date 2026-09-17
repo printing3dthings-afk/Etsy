@@ -276,6 +276,16 @@ Recall was wrong about two of these, so go and read rather than remember:
 * Bambu does NOT publish where the three lead screws sit around the base, nor
   any toolhead dimensions. Draw those, say they are drawn.
 
+**Draw only the machine you have read about.** A viewer that renders one
+printer in detail will happily render a second one with the first one's body,
+and the caption beside it will say something different. Selecting an A2L --
+an open-frame bed-slinger -- drew a fully enclosed case with a glass door
+while the panel next to it read "Enclosed: No". Gate the detailed model to
+the machine whose documentation was actually read, and give every other one an
+envelope: published footprint, bed, build volume, correct kinematics, nothing
+invented. A bed-slinger also moves the BED in Y and climbs the gantry in Z --
+replaying a CoreXY's motion on it is the same lie as the wrong case.
+
 **A light that changes nothing is not a light.** A chamber lamp added as a
 real `PointLight` still did nothing measurable, because the biggest surface it
 had to light -- the interior liner -- was `MeshBasicMaterial`, which ignores

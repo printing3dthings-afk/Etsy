@@ -92,6 +92,37 @@ their colours are illustrative and the panel says so, because nothing here is
 reading a real machine. The AMS steps aside in chamber view: it is furniture
 on the lid, and in cutaway it would sit on top of the hole the cutaway opened.
 
+### One machine is drawn as itself; the rest get an honest envelope
+
+Selecting the A2L used to draw a fully enclosed case with a smoked glass door
+-- while the panel two inches to its right read **"Enclosed: No · Chamber:
+None (open frame)"**. The picture contradicted its own caption, on the same
+screen, in a page whose whole job is teaching how a machine works. That is the
+worst kind of defect this thing can have.
+
+The rule now: **only the P1S is drawn as itself**, because it is the only one
+whose service documentation has actually been read. Every other profile gets
+an envelope -- published footprint as an edge outline, the base, the bed, the
+build volume where the machine can really reach, the gantry, a generic head.
+No case, no door, no chamber light, no screen, no invented internals. The
+"Open door" button hides itself on a machine that has no door.
+
+The A2L's own facts, verified 2026-09-17: open frame, bed-slinger, no
+enclosure, bed capped at 80 degC, footprint **544 x 529 x 505 mm**. Those are
+the only things drawn for it.
+
+**And it moves like itself.** A bed-slinger travels the BED in Y and climbs
+the gantry in Z; the P1S holds the gantry and drops the bed. Measured on the
+same plate: P1S bed z goes -6 to -9 while the gantry holds 19; A2L bed y goes
+46 to 13 with bed z pinned at 0 while the gantry climbs 25 to 27 and the
+nozzle's Y stays at the bed centre. Two genuinely different machines, not a
+reskin. The vertical layout flips with them -- a descending bed needs the case
+to reach `-Z` below the plate, a slinger stands up from just under it.
+
+Detailing a second machine properly is a research job per machine, not a
+setting. That is the honest cost of the "more printers" goal, and the envelope
+is what keeps the page truthful until that work is done.
+
 Two view modes, because the two jobs conflict:
 
 * **View: machine** keeps the exterior solid, so the printer looks like a

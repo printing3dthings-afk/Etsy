@@ -164,6 +164,56 @@ def test_camera_damping_is_time_based_not_per_frame():
           "the raw per-frame constant must never be applied directly")
 
 
+def test_only_the_p1s_is_drawn_as_itself():
+    # The defect this reproduces: selecting the A2L drew a fully enclosed case
+    # with a smoked glass door, while the panel beside it read "Enclosed: No /
+    # Chamber: None (open frame)". A viewer that teaches how a machine works
+    # cannot contradict its own caption.
+    src = APP.read_text(encoding="utf-8")
+    check("var detailed = printerId === 'p1s'" in src,
+          "the detailed portrait must be gated to the one machine it was researched for")
+    check("buildOpenFrame" in src, "non-P1S profiles need the honest envelope")
+    frame = src[src.index("function buildOpenFrame"):]
+    frame = frame[:frame.index("\n}\n")]
+    for forbidden in ("doorGroup", "liner", "knob", "chamberLamp"):
+        check(forbidden not in frame,
+              "buildOpenFrame must not draw %s -- nothing is known about it "
+              "for another machine" % forbidden)
+
+
+def test_a_machine_without_a_door_does_not_offer_one():
+    src = APP.read_text(encoding="utf-8")
+    check("function syncDoorControl" in src, "the door control must follow the machine")
+    check("b.hidden = !doorGroup" in src,
+          "the Open door button has to disappear when there is no door")
+
+
+def test_a2l_is_an_open_frame_bedslinger_at_its_real_footprint():
+    body = _profile("a2l")
+    check("enclosed:false" in body.replace(" ", ""), "the A2L has no enclosure")
+    check("bedslinger:true" in body.replace(" ", ""), "the A2L is a bed-slinger")
+    m = re.search(r"footprint:\s*\[(\d+),\s*(\d+),\s*(\d+)\]", body)
+    check(m is not None, "the A2L needs its published footprint to draw an envelope")
+    if m:
+        check(tuple(int(g) for g in m.groups()) == (544, 529, 505),
+              "A2L footprint is 544 x 529 x 505 mm, got %r" % (m.groups(),))
+
+
+def test_the_two_kinematics_are_actually_different():
+    # A bed-slinger moves the BED in Y and climbs the gantry in Z; the P1S holds
+    # the gantry and drops the bed. Replaying one machine's motion on the other
+    # is the same class of lie as drawing it with the wrong case.
+    src = APP.read_text(encoding="utf-8")
+    seg = src[src.index("function setSeg"):]
+    seg = seg[:seg.index("\n}\n")]
+    check("PRINTERS[printerId].bedslinger" in seg,
+          "setSeg must branch on the machine's kinematics")
+    check("bedGroup.position.set(0, -slide, 0)" in seg,
+          "a bed-slinger moves its bed in Y")
+    check("bedGroup.position.set(0, 0, -drop)" in seg,
+          "a descending bed moves in Z")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
