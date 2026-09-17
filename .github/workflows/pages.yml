@@ -50,9 +50,27 @@ jobs:
           n=$(ls _site/jobs/*.js | wc -l)
           echo "plate payloads: $n"
           test "$n" -gt 10
-      - uses: actions/configure-pages@v5
+      # `enablement: true` asks GitHub to switch Pages on. The workflow token
+      # is usually not allowed to: the first run here failed with
+      # "Create Pages site failed. Error: Resource not accessible by
+      # integration". That is a one-time repo setting a human has to flip, so
+      # the failure explains itself rather than looking like a broken build.
+      - id: pages
+        uses: actions/configure-pages@v5
+        continue-on-error: true
         with:
           enablement: true
+      - name: Explain how to turn Pages on
+        if: steps.pages.outcome == 'failure'
+        run: |
+          echo "::error::GitHub Pages is not enabled for this repository, and"
+          echo "::error::the workflow token is not allowed to enable it."
+          echo "::error::Fix it once, by hand:"
+          echo "::error::  Settings -> Pages -> Build and deployment ->"
+          echo "::error::  Source: GitHub Actions"
+          echo "::error::Then re-run this workflow. Everything before this step"
+          echo "::error::already succeeded, including the built site."
+          exit 1
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
