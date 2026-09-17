@@ -261,6 +261,46 @@ def test_wipe_tower_has_a_colour_and_an_explanation():
           "the shader colour array has to cover every type id")
 
 
+HTML = ROOT / "tools" / "viewer" / "virtual_p1s.html"
+
+
+def test_the_plate_list_does_not_hide_plates_behind_a_fade():
+    # The exact report: "when I open it I can't see the rest of the prints".
+    # The list was a 236px box holding 702px of cards, its bottom faded out by a
+    # mask, inside a rail that also scrolled -- 3 plates of 11 reachable without
+    # discovering a nested scrollbar this browser draws as a 0px overlay.
+    css = HTML.read_text(encoding="utf-8")
+    jobs = css[css.index("#jobs{"):]
+    jobs = jobs[:jobs.index("}")]
+    check("max-height:236px" not in jobs,
+          "the plate list must not be capped at a fixed 236px, got %r" % jobs)
+    check("mask-image" not in jobs,
+          "a fade at the bottom tells the reader the list has ended when it has not")
+    check("vh" in jobs,
+          "the cap should follow the viewport, not a hard-coded pixel count")
+
+
+def test_the_plate_list_says_how_many_are_out_of_view():
+    # A scrollbar cannot carry this: the browser reports a 0px scrollbar gutter
+    # for this element, i.e. an overlay bar invisible until you already know to
+    # scroll. So the count is stated in words instead.
+    src = APP.read_text(encoding="utf-8")
+    html = HTML.read_text(encoding="utf-8")
+    check('id="platemore"' in html, "the out-of-view hint element went missing")
+    check('id="platecount"' in html, "the N / total counter went missing")
+    check("function platesOutOfView" in src,
+          "the hint must measure what is actually out of view, not guess")
+    check("more plate" in src, "the hint has to name how many are hidden")
+    check("updatePlateMore" in src and "addEventListener('scroll'" in src,
+          "the hint has to follow scrolling, not just the first render")
+
+
+def test_the_selected_plate_is_scrolled_into_view():
+    src = APP.read_text(encoding="utf-8")
+    check("current.scrollIntoView({block: 'nearest'})" in src,
+          "picking plate 11 of 11 must not leave it off the top of the list")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

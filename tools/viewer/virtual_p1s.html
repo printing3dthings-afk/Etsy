@@ -47,10 +47,32 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
 .sect .body{padding:0 16px 13px}
 
 /* ── job picker ───────────────────────────────────────── */
-#jobs{max-height:236px;overflow-y:auto;overscroll-behavior:contain;margin:-2px -4px 0;
-  padding:2px 4px 0;
-  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),rgba(0,0,0,.15));
-  mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),rgba(0,0,0,.15))}
+/* 2026-09-17: this was a 236px box holding 702px of cards, faded out at the
+   bottom by a mask, inside a rail that ALSO scrolled. Three plates of eleven
+   were reachable without discovering a nested scrollbar that had no visible
+   track and a gradient telling you the list had ended. Scott opened it and
+   could not find the rest of the prints, which is exactly what it looked like.
+   Now: taller, capped against the viewport rather than a fixed pixel count, a
+   scrollbar you can actually see, and a count in the heading. */
+#jobs{max-height:min(54vh,560px);overflow-y:auto;overscroll-behavior:contain;
+  margin:-2px -4px 0;padding:2px 4px 0;
+  scrollbar-width:thin;scrollbar-color:var(--line-hi) transparent}
+#jobs::-webkit-scrollbar{width:9px}
+#jobs::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px;
+  border:2px solid var(--panel)}
+#jobs::-webkit-scrollbar-thumb:hover{background:var(--faint)}
+#jobs::-webkit-scrollbar-track{background:transparent}
+#platecount{float:right;font-family:var(--fm);letter-spacing:.04em;color:var(--dim);
+  text-transform:none;font-size:10.5px}
+/* Said in words, because the scrollbar cannot be relied on to say it: this
+   browser reports a 0px scrollbar gutter, i.e. an overlay bar that is invisible
+   until you already know to scroll. */
+#platemore{display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin:2px 0 0;padding:6px 0;font-family:var(--fm);font-size:11px;
+  color:var(--amber-soft);background:var(--rail);border:1px solid var(--line);
+  border-radius:3px;letter-spacing:.03em}
+#platemore:hover{border-color:var(--amber)}
+#platemore[hidden]{display:none}
 #jobnote{font-size:12px;line-height:1.55;color:#b9b7b2;margin:9px 0 0}
 #featnote{font-size:11.5px;line-height:1.5;color:var(--dim);margin:8px 0 0;min-height:46px}
 .job{display:block;width:100%;text-align:left;border:1px solid var(--line);
@@ -65,6 +87,8 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
 .tagsup{color:var(--t-supi);border:1px solid #4a3a78;border-radius:2px;
   padding:0 4px;font-size:9.5px;letter-spacing:.06em}
 .taghv{color:var(--warn);border:1px solid #5a4a18;border-radius:2px;
+  padding:0 4px;font-size:9.5px;letter-spacing:.06em}
+.tagmc{color:var(--t-bri);border:1px solid #1f6b58;border-radius:2px;
   padding:0 4px;font-size:9.5px;letter-spacing:.06em}
 
 /* ── readouts ─────────────────────────────────────────── */
@@ -210,7 +234,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
   header{grid-area:h} #stage{grid-area:s} footer{grid-area:f}
   #left{grid-area:l} #right{grid-area:r}
   aside{max-height:none;overflow:visible}
-  #jobs{max-height:none;-webkit-mask-image:none;mask-image:none}
+  #jobs{max-height:none}
   #stage{min-height:340px}
   header{padding:8px 14px;gap:8px}
   header h1{font-size:15px}
@@ -254,9 +278,10 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
 
   <aside id="left">
     <div class="sect">
-      <h2>Plate</h2>
+      <h2>Plate<span id="platecount"></span></h2>
       <div class="body">
         <div id="jobs"></div>
+        <button type="button" id="platemore" hidden></button>
         <p id="jobnote"></p>
       </div>
     </div>

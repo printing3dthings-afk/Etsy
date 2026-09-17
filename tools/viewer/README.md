@@ -208,6 +208,27 @@ toolhead and the AMS, all of them static boxes and cylinders.
 than a twentieth of a bead: 8-30% of points on real plates, with time, mass and
 speed data bit-identical afterwards. It will not merge across a speed change.
 
+### Eleven plates, and you can find all eleven
+
+Scott opened it and could not see the rest of the prints. He was right, and
+the numbers are ugly: the plate list was a **236px box holding 702px of
+cards**, its bottom faded out by a CSS mask, sitting inside a rail that also
+scrolled. **Three of eleven** plates were reachable without discovering a
+nested scrollbar that this browser draws as a 0px-wide overlay -- invisible
+until you already know to scroll. The mask actively said the list had ended.
+
+Fixed by measuring rather than guessing at it: the cap now follows the
+viewport (`min(54vh,560px)`), the mask is gone, the heading carries a live
+**N / 11**, the selected plate scrolls itself into view, and a button under
+the list states in words how many are out of view and pages to them. Desktop
+went from 3 visible to 7-8; phone already showed all eleven, because the
+narrow layout drops the cap -- the breakage was desktop-only, which is worth
+saying since the phone is where most of this got tested.
+
+The scrollbar could not be trusted to carry the message: `offsetWidth -
+clientWidth` measured **0**, so styling it was not enough and the hint had to
+be text.
+
 ### The AMS actually feeds the nozzle
 
 Scott: "make that function the way it should no matter single colour or multi

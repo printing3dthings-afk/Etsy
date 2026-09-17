@@ -1438,14 +1438,45 @@ function el(tag, cls, html) {
 var INDEX = window.__PRINT_INDEX || [];
 var currentId = null;
 
+// How many cards are fully inside the list's own viewport. Measured rather than
+// assumed: the card height is not a constant the JS should be repeating.
+function platesOutOfView() {
+  var host = $('jobs');
+  if (!host) { return 0; }
+  var br = host.getBoundingClientRect(), n = 0;
+  var cards = host.getElementsByClassName('job');
+  for (var i = 0; i < cards.length; i++) {
+    var r = cards[i].getBoundingClientRect();
+    if (r.top < br.top - 1 || r.bottom > br.bottom + 1) { n++; }
+  }
+  return n;
+}
+
+function updatePlateMore() {
+  var btn = $('platemore'), host = $('jobs');
+  if (!btn || !host) { return; }
+  var hidden = platesOutOfView();
+  btn.hidden = hidden === 0;
+  if (hidden) {
+    var atEnd = host.scrollTop + host.clientHeight >= host.scrollHeight - 2;
+    btn.textContent = (atEnd ? '\u2191 ' : '\u2193 ') + hidden + ' more plate' +
+      (hidden === 1 ? '' : 's') + ' \u2014 scroll the list';
+  }
+}
+
 function paintJobList() {
   var host = $('jobs');
   host.innerHTML = '';
-  INDEX.forEach(function (j) {
+  host.removeAttribute('data-at');   // or a stale index survives a re-render
+  var current = null;
+  INDEX.forEach(function (j, i) {
     var b = el('button', 'job');
     b.type = 'button';
     b.setAttribute('aria-current', String(j.id === currentId));
+    if (j.id === currentId) { host.setAttribute('data-at', i + 1); current = b; }
     var tags = '';
+    if (j.toolChanges) { tags += ' <span class="tagmc">' + (j.filamentByTool || []).length
+      + ' FILAMENTS</span>'; }
     if (j.needsSupport) { tags += ' <span class="tagsup">SUPPORT</span>'; }
     if (j.segments > 400000) { tags += ' <span class="taghv">HEAVY</span>'; }
     b.innerHTML = '<span class="n">' + j.name + '</span>' + tags +
@@ -1456,6 +1487,16 @@ function paintJobList() {
     b.addEventListener('click', function () { loadJob(j.id); });
     host.appendChild(b);
   });
+  // Pick a plate near the bottom of eleven and the list must not leave it
+  // offscreen -- "which one am I on" should never need a scroll to answer.
+  if (current && current.scrollIntoView) {
+    current.scrollIntoView({block: 'nearest'});
+  }
+  // Says where you are in the list, so eleven plates behind a scrollbar read
+  // as eleven plates rather than as however many happen to fit.
+  var pc = $('platecount');
+  if (pc) { pc.textContent = (host.getAttribute('data-at') || '1') + ' / ' + INDEX.length; }
+  updatePlateMore();
   $('buildchip').textContent = INDEX.length + ' plates \u00b7 ' +
     INDEX.reduce(function (a, j) { return a + j.segments; }, 0).toLocaleString() +
     ' extrusion moves on file';
@@ -1929,6 +1970,16 @@ function paintMaterial() {
 
 // \u2500\u2500 wiring \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function initUI() {
+  // The hint has to follow the list, not just the render: scrolling it, or a
+  // window resize changing how many cards fit, both change the answer.
+  $('jobs').addEventListener('scroll', updatePlateMore, {passive: true});
+  window.addEventListener('resize', updatePlateMore);
+  $('platemore').addEventListener('click', function () {
+    var host = $('jobs');
+    var atEnd = host.scrollTop + host.clientHeight >= host.scrollHeight - 2;
+    host.scrollTo({top: atEnd ? 0 : host.scrollTop + host.clientHeight * 0.85,
+                   behavior: 'smooth'});
+  });
   SPEEDS.forEach(function (s) {
     var b = el('button', null, s.l);
     b.type = 'button';
