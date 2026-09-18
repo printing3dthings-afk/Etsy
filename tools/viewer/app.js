@@ -89,7 +89,7 @@ var view = {theta: -0.72, phi: 1.06, r: 430, tx: 0, ty: 0, tz: 90};
 var spin = {theta: 0, phi: 0};
 var moveUntil = 0, lowRes = false, basePixelRatio = 1;
 var keyLight = null, envRT = null, floorMesh = null;
-var shadowDirty = true, shadowFrame = 0;
+var shadowDirty = true, shadowFrame = 0, _tickLast = 0;
 
 // A flat box face samples the environment in exactly ONE direction, so it
 // renders as one uniform colour however good the material is -- which is why
@@ -1351,56 +1351,57 @@ function updateCamera(now) {
 // While the view is actually moving, render fewer pixels. A phone caps out at
 // pixel ratio 2, which is four times the fragments of 1 -- and a moving frame
 // is the one frame nobody is studying. It snaps back the moment you let go.
+// Dynamic resolution. The one-step quality downgrade below still exists and
+// still fires, but it is a single cliff measured once: it cannot help a device
+// that is fine on a small plate and drowning on a 3-million-move one, and it
+// cannot take advantage of a machine that has headroom to spare.
+//
+// This scales the render buffer continuously against real measured frame time.
+// It is the honest answer to "make it smooth on hardware you cannot test on":
+// resolution is the one thing that can be traded for frame rate on any device,
+// automatically, without changing what is drawn.
+// Floored at 0.7 rather than 0.62: measured, dropping to 0.62 raised visible
+// surface speckle from 1.40% to 2.24% of the part. Smooth is not worth that
+// much of sharp.
+var DPR_MIN = 0.7, DPR_STEP = 0.1;
+var FRAME_TARGET = 34;      // ms; ~30fps, the floor for reading a moving print
+var FRAME_GOOD = 21;        // ms; only scale back up with real headroom
+var dprScale = 1, _ft = [], _lastAdapt = 0;
+
+function adaptResolution(now, dt) {
+  if (dt > 0 && dt < 2000) { _ft.push(dt); }
+  if (_ft.length < 24 || now - _lastAdapt < 900) { return; }
+  _lastAdapt = now;
+  _ft.sort(function (a, b) { return a - b; });
+  var med = _ft[_ft.length >> 1];
+  _ft.length = 0;
+  var want = dprScale;
+  if (med > FRAME_TARGET) { want = Math.max(DPR_MIN, dprScale - DPR_STEP); }
+  else if (med < FRAME_GOOD) { want = Math.min(1, dprScale + DPR_STEP); }
+  if (Math.abs(want - dprScale) < 0.001) { return; }
+  dprScale = want;
+  applyPixelRatio();
+}
+
+function applyPixelRatio() {
+  var r = basePixelRatio * dprScale;
+  // While the camera is actually moving, cap harder still: a frame that is in
+  // motion is one nobody is reading detail off.
+  if (lowRes) { r = Math.min(r, 1); }
+  renderer.setPixelRatio(Math.max(0.5, r));
+  onResize();
+}
+
 function setResolution(now) {
   var moving = now < moveUntil;
   if (moving === lowRes) { return; }
   lowRes = moving;
-  renderer.setPixelRatio(moving ? Math.min(basePixelRatio, 1) : basePixelRatio);
-  onResize();
+  applyPixelRatio();
 }
 
 // \u2500\u2500 shader \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // Positions arrive as Int16 hundredths of a millimetre -- see the exporter's
 // note on why. uScale converts back; nothing else in the page sees raw units.
-var VERT = [
-  'attribute float aType;',
-  'attribute float aSpeed;',
-  'attribute float aTool;',
-  'uniform vec3 uColor[13];',
-  'uniform float uVis[13];',
-  'uniform vec3 uTool[8];',
-  'uniform float uMode;',      // 0 = feature, 1 = speed, 2 = filament
-  'uniform vec2 uSpd;',        // slowest / fastest mm/s in this job
-  'varying vec3 vColor;',
-  'varying float vVis;',
-  'varying vec3 vPos;',
-  // Magma, reversed, with the ends pulled in. Reversed so the BRIGHT end is
-  // slow -- the outer wall and top surface, the parts a customer actually
-  // sees. Ends clamped so the fast end lands on deep violet rather than black,
-  // which would make infill invisible against the chamber.
-  'vec3 magma(float t){',
-  '  const vec3 c0=vec3(-0.002136,-0.000750,-0.005386);',
-  '  const vec3 c1=vec3(0.251661,0.677523,2.494027);',
-  '  const vec3 c2=vec3(8.353717,-3.577720,0.314468);',
-  '  const vec3 c3=vec3(-27.668733,14.264731,-13.649213);',
-  '  const vec3 c4=vec3(52.176140,-27.943606,12.944169);',
-  '  const vec3 c5=vec3(-50.768525,29.046583,4.234153);',
-  '  const vec3 c6=vec3(18.655705,-11.489774,-5.601962);',
-  '  return clamp(c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6))))),0.0,1.0);',
-  '}',
-  'void main(){',
-  '  int t = int(aType + 0.5);',
-  '  float f = clamp((aSpeed - uSpd.x) / max(uSpd.y - uSpd.x, 1.0), 0.0, 1.0);',
-  '  vec3 byFeature = uColor[t];',
-  '  vec3 bySpeed = magma(mix(0.92, 0.28, f));',
-  '  vec3 byFilament = uTool[int(aTool + 0.5)];',
-  '  vColor = uMode < 0.5 ? byFeature : (uMode < 1.5 ? bySpeed : byFilament);',
-  '  vVis = uVis[t];',
-  '  vec3 p = position * 0.01;',
-  '  vPos = p;',
-  '  gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);',
-  '}'
-].join('\n');
 
 // The beads used to be a raw ShaderMaterial doing its own hand-rolled two-light
 // shading against a hardcoded light direction. That is why the print never
@@ -1411,10 +1412,9 @@ var VERT = [
 // It is a real MeshStandardMaterial now, with the per-vertex colour logic
 // injected into it. That one change buys, correctly and for free: a shadow
 // cast onto the plate, the same environment reflection every metal part uses,
-// and the ACES curve. flatShading is what makes a normal attribute
-// unnecessary -- three derives the normal from screen-space derivatives,
-// exactly what the old shader did by hand, and on a three-vertex bead tent
-// faceted IS the correct look.
+// and the ACES curve. The beads carry real per-vertex normals (see the
+// geometry builder) rather than deriving them per facet, which is what stopped
+// the part rendering as sandpaper.
 var JOB_PARS = [
   'attribute float aType;',
   'attribute float aSpeed;',
@@ -1482,10 +1482,10 @@ function makeMaterial(dim, rich) {
   var m = rich
     ? new THREE.MeshStandardMaterial({
         color: 0xffffff, roughness: 0.66, metalness: 0.0,
-        flatShading: true, envMapIntensity: 0.28, side: THREE.DoubleSide})
+        envMapIntensity: 0.28, side: THREE.DoubleSide})
     : new THREE.MeshPhongMaterial({
         color: 0xffffff, specular: lin(0x14161a), shininess: 16,
-        flatShading: true, side: THREE.DoubleSide});
+        side: THREE.DoubleSide});
   m.uniforms = u;
   m.onBeforeCompile = function (shader) {
     Object.keys(u).forEach(function (k) { shader.uniforms[k] = u[k]; });
@@ -1499,6 +1499,22 @@ function makeMaterial(dim, rich) {
                'uniform float uLayerH;')
       .replace('#include <clipping_planes_fragment>',
                '#include <clipping_planes_fragment>\n  if (vJobVis < 0.5) discard;')
+      // Winding-proof normals.
+      //
+      // three flips the normal for back-facing triangles on a double-sided
+      // material. That is correct when winding is consistent. Slicer polylines
+      // are NOT consistently oriented -- some loops run clockwise, some
+      // counter-clockwise -- so a correct outward normal gets flipped to point
+      // INTO the part on whichever loops happen to be wound the other way, and
+      // the surface renders black in patches. It is why supplying real normals
+      // first made the part darker rather than cleaner.
+      //
+      // Orienting to the viewer sidesteps winding entirely: the surface you
+      // are looking at is the one being lit, which for a closed shell is what
+      // the correct winding would have produced anyway.
+      .replace('#include <normal_fragment_begin>',
+               '#include <normal_fragment_begin>\n' +
+               '  if (dot(normal, vViewPosition) < 0.0) { normal = -normal; }')
       .replace('#include <color_fragment>',
                '#include <color_fragment>\n  diffuseColor.rgb *= vJobColor;\n' +
                // The layer seam. Each bead IS a separate tent with its own
@@ -1565,6 +1581,22 @@ function buildJob(raw) {
   for (k = 0; k < nPoly; k++) { nPt += polys[k * 3 + 2]; nSeg += polys[k * 3 + 2] - 1; }
 
   var vPos  = new Int16Array(nPt * 3 * 3);   // 3 verts across the bead tent
+  // Real normals, one byte per component.
+  //
+  // The beads used to have no normal attribute at all and shaded with
+  // flatShading, which derives a normal per triangle from screen-space
+  // derivatives. On a bead tent that is one flat facet per extrusion segment,
+  // and at any sane zoom those facets are far under a pixel -- so every pixel
+  // sampled a different facet's normal and the whole part rendered as dense
+  // sandpaper noise. Measured: it survived turning the layer banding off,
+  // survived closing the bead's floor, and only ever improved with resolution,
+  // which is the signature of sub-pixel shading noise rather than geometry.
+  //
+  // A tent has three genuinely different surfaces -- outer slope, ridge, inner
+  // slope -- and their normals are known exactly from the miter direction that
+  // built them. Writing them down makes the bead shade as the rounded extrusion
+  // it actually is instead of as a field of facets.
+  var vNrm  = new Int8Array(nPt * 3 * 3);
   var vType = new Uint8Array(nPt * 3);
   var vSpd  = new Uint8Array(nPt * 3);
   var vTool = new Uint8Array(nPt * 3);
@@ -1583,7 +1615,29 @@ function buildJob(raw) {
   for (var li = 0; li < layers.length; li++) {
     var L = layers[li];
     var ztop = L[0];
-    var zlow = ztop - Math.round((L[5] || 0.2) * 85);
+    // Exactly 100% of the layer height -- not 85%, and not 104%.
+    //
+    // The bead is a tent: two bottom corners at zlow, an apex at ztop. At 85%
+    // every layer stopped 15% short of the one below it, leaving a continuous
+    // horizontal slit around the whole part -- and through those slits you see
+    // the unlit inside of the far wall, which is exactly the dark speckle that
+    // covered every curved surface. Proved rather than guessed: rendering the
+    // part against a magenta clear colour showed the speckle stayed dark grey
+    // instead of turning magenta, i.e. gaps in the NEAR wall backed by the far
+    // one, not holes through the model.
+    //
+    // The gap was doing a job -- it was what made layer lines visible. That
+    // job now belongs to the shader's banding term, which is antialiased and
+    // works at every zoom, so the geometry can close.
+    //
+    // 104% was tried first, on the reasoning that a real bead squashes into
+    // the layer beneath. It made things worse in a different way: the overlap
+    // puts two near-parallel 45-degree faces a hair apart, which z-fights into
+    // dense speckle. Exact contact is the only value with neither failure --
+    // layer pitch is a whole number of the 0.01mm units positions are stored
+    // in, so 100% lands exactly and cannot round into either a slit or an
+    // overlap.
+    var zlow = ztop - Math.round((L[5] || 0.2) * 100);
     layerSeg[li] = si;
     for (var pi = L[1]; pi < L[1] + L[2]; pi++) {
       var t = polys[pi * 3], s = polys[pi * 3 + 1], n = polys[pi * 3 + 2];
@@ -1606,8 +1660,9 @@ function buildJob(raw) {
         if (m < 1e-4) { ax = 1; ay = 0; m = 1; }
         // 1/|sum| is the standard miter extension; clamp so a hairpin does not
         // fire a spike halfway across the plate.
+        var ux = ax / m, uy = ay / m;
         var sc = Math.min(2.4, 2 / m) * hw;
-        ax = ax / m * sc; ay = ay / m * sc;
+        ax = ux * sc; ay = uy * sc;
 
         vPos[vi * 3] = x + ax; vPos[vi * 3 + 1] = y + ay; vPos[vi * 3 + 2] = zlow;
         vPos[vi * 3 + 3] = x;  vPos[vi * 3 + 4] = y;      vPos[vi * 3 + 5] = ztop;
@@ -1615,6 +1670,18 @@ function buildJob(raw) {
         // A point is shared by two segments; take the one ENDING here so the
         // colour changes at the same place the slowdown starts.
         var sv = spd[Math.min(si + Math.max(i - 1, 0), spd.length - 1)];
+        // Horizontal on the shoulders, straight up on the ridge: across the
+        // outer face that interpolates from facing-out to facing-up, which is
+        // the quarter-round of a real extruded bead and averages to the 45
+        // degrees the face actually sits at. Tilting the shoulders up as well
+        // was tried and left the whole wall shading edge-on and dark.
+        vNrm[vi * 3]     = (ux * 127) | 0;
+        vNrm[vi * 3 + 1] = (uy * 127) | 0;
+        vNrm[vi * 3 + 2] = 0;
+        vNrm[vi * 3 + 3] = 0; vNrm[vi * 3 + 4] = 0; vNrm[vi * 3 + 5] = 127;
+        vNrm[vi * 3 + 6] = (-ux * 127) | 0;
+        vNrm[vi * 3 + 7] = (-uy * 127) | 0;
+        vNrm[vi * 3 + 8] = 0;
         vType[vi] = t; vType[vi + 1] = t; vType[vi + 2] = t;
         vSpd[vi] = sv; vSpd[vi + 1] = sv; vSpd[vi + 2] = sv;
         vTool[vi] = tool; vTool[vi + 1] = tool; vTool[vi + 2] = tool;
@@ -1655,6 +1722,7 @@ function buildJob(raw) {
 
   var g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Int16BufferAttribute(vPos, 3));
+  g.setAttribute('normal', new THREE.Int8BufferAttribute(vNrm, 3, true));
   g.setAttribute('aType', new THREE.Uint8BufferAttribute(vType, 1));
   g.setAttribute('aSpeed', new THREE.Uint8BufferAttribute(vSpd, 1));
   g.setAttribute('aTool', new THREE.Uint8BufferAttribute(vTool, 1));
@@ -1812,10 +1880,13 @@ function tick(now) {
     if (play.t >= JOB.total) { play.t = JOB.total; setPlaying(false); }
     setSeg(segAtTime(play.t));
   }
+  var _frameDt = _tickLast ? now - _tickLast : 0;
+  _tickLast = now;
   play.last = now;
   if (JOB) { refreshReadout(); }
   updateCamera(now);
   setResolution(now);
+  adaptResolution(now, _frameDt);
   updateDoor();
   updateCutaway();
   // A growing print changes the shadow every frame in principle, but at a
@@ -2379,7 +2450,10 @@ function applyVisibility() {
       u[i] = (real ? !REAL_HIDDEN[i] : visible[i]) ? 1 : 0;
     }
     m.material.uniforms.uSat.value = real ? 0 : DIAG_SAT;
-    m.material.uniforms.uLayerH.value = real ? layerPitchMm() : 0;
+    // Every mode, not just real: closing the bead removed the geometric
+    // groove that used to imply layers, and the diagnostic views would
+    // otherwise render as one smooth unbroken surface.
+    m.material.uniforms.uLayerH.value = layerPitchMm();
     var ov = m.material.uniforms.uOverride.value;
     if (real && filamentOverride) {
       var c = new THREE.Color(filamentOverride).convertSRGBToLinear();
