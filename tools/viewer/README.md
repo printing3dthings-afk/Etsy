@@ -127,6 +127,50 @@ gives no per-material way to opt out of that sample.
 directly: the lighting is an invented studio rig, the real P1S has one LED bar
 on the left beam, and a better-looking replay is not a better-informed one.
 
+## Studio stills (2026-09-18)
+
+The viewer's beads are a three-vertex open tent because it has to hold a frame
+rate on a phone. That is the right trade for watching a print happen and the
+wrong one for looking at the finished part: one bead per 0.2mm layer is about
+a pixel on screen, and the lighting swinging across a sub-pixel face is what
+makes the surface read as sandpaper. No shading fix helps, because the detail
+is finer than the sample grid. Offline there is no frame budget.
+
+    python3 tools/gcode_to_mesh.py tools/viewer/jobs/vase.js -o /tmp/vase.ply
+    python3 tools/blender_render.py /tmp/vase.ply -o still.png --lens 38
+    tools/render_plate_stills.sh          # both steps, every plate, resumable
+
+`gcode_to_mesh.py` sweeps a closed rounded-rectangle bead along every
+extrusion in a viewer payload and writes binary PLY. Built from the shipped
+payload rather than raw G-code for two reasons: those are committed for all 72
+plates, and it guarantees the still shows the same toolpath the viewer does.
+
+Measured: 538k vertices, 1.0M triangles, 18.8MB for the 600-layer vase; ~14s
+to build, ~155s to path-trace at 64 samples.
+
+Four bugs, each of which produced a file that opened fine and was wrong in a
+way only a render or a measurement showed. All four now have tests:
+
+1. Vertices are appended one block per cross-section corner, so `len(verts)`
+   counts blocks. Using it as a face base index orphaned 79% of the mesh and
+   turned a 120mm vase into a 22mm stub -- with a perfectly correct vertex
+   array.
+2. Sweep winding follows whichever way the slicer walked each loop, so the
+   whole mesh came out inside-out. Watertight, winding-consistent, negative
+   volume: nothing flagged it except the sign, and Cycles quietly shaded the
+   inside of every bead.
+3. A bead exactly one layer tall meets its neighbour on a hairline and renders
+   as separate ribbons. `--squish` (default 1.25) overlaps them the way real
+   extrusion does; overlapping solids cost a path tracer nothing.
+4. The mesh is built in plate coordinates, so a part mid-bed sits ~128mm off
+   origin and framed as a close-up of its own base. Centred now -- and
+   `blender_render`'s own `--lens` help says the 85mm default "crops anything
+   much taller than it is wide", which these plates are. 38mm fits them.
+
+The first version's profile also tapered to half width at the top, putting a
+groove half the bead deep between every layer; it is a superellipse now
+(`--squareness`, 2 is an ellipse, 4 a rounded rectangle).
+
 ## Real print mode (2026-09-18)
 
 A fourth mode beside Feature / Speed / Filament. It answers a different
