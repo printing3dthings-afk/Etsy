@@ -127,6 +127,47 @@ gives no per-material way to opt out of that sample.
 directly: the lighting is an invented studio rig, the real P1S has one LED bar
 on the left beam, and a better-looking replay is not a better-informed one.
 
+## Real print mode (2026-09-18)
+
+A fourth mode beside Feature / Speed / Filament. It answers a different
+question from the other three: not *what is the slicer doing* but *what would
+this look like sitting in the machine*.
+
+- **One filament colour.** AMS slot colours by default, so a multi-colour plate
+  is right without anyone choosing anything; a swatch row overrides it to
+  preview a plate in a colour you are about to load.
+- **Only what you could see.** Sparse infill and the skirt are hidden.
+  Everything else stays, including supports, which are real plastic on the
+  plate until you snap them off.
+- **Layer lines**, drawn at the plate's own measured layer pitch rather than an
+  assumed 0.2mm, and faded out analytically via `fwidth` at zoom levels where
+  the band period approaches a pixel. Without that fade, 300 layers across
+  400px sits right at Nyquist and aliases into surface noise.
+- **Three framings**: in machine (head running), head parked, part only.
+
+Four bugs found here, every one of which rendered a wrong picture with no
+error, and all four now have tests:
+
+1. `frameJob()` re-shows the gantry and Y rails as part of rescaling the head,
+   so any framing applied before it gets silently undone.
+2. `updateCutaway()` runs every frame and re-asserts AMS visibility, so it
+   undid the solo hiding one tick after it was applied.
+3. Hiding the inner perimeter left a one-bead shell. Beads are drawn as open
+   tents, so the gaps between them on a curved surface show the unlit far wall
+   as dark speckle. Keeping both walls is both better looking and more honest.
+4. The P1S drops the bed, which this viewer models by sinking the print -- so a
+   finished part sits a full part-height BELOW z=0. Framing it as 0..height put
+   it off the bottom of the screen, and leaving solo without re-framing left
+   the camera underneath the bed.
+
+**Diagnostic colours got their saturation back.** The PBR overhaul the day
+before left the feature colours visibly paler than their legend swatches,
+because tone mapping desaturates saturated colour as it brightens. That is
+correct for a photograph of a print and wrong for a key you read a legend
+against, so the diagnostic modes restore saturation after the tone curve,
+where the loss happens. Real print mode sets that to zero: it wants the
+photographic behaviour.
+
 ## Colour modes
 
 **Feature** uses the slicer's own `;TYPE:` tag. **Speed** uses the real `F`

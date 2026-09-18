@@ -198,6 +198,72 @@ def test_the_page_still_says_the_lighting_is_invented():
           "rig rather than this machine's actual chamber LED")
 
 
+def test_real_mode_hides_only_infill_and_skirt():
+    """The see-through-shell bug.
+
+    Hiding the inner perimeter and the solid infill looked reasonable -- the
+    outer wall is in front of them -- and produced dark speckle all over the
+    part, because beads are open tents and a one-bead shell has gaps you can
+    see the unlit far wall through. Both walls have to stay.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    m = re.search(r"var REAL_HIDDEN = \{([^}]*)\}", js)
+    check(m is not None, "REAL_HIDDEN is gone")
+    if m:
+        hidden = set(re.findall(r"(\d+)\s*:", m.group(1)))
+        check("1" not in hidden,
+              "real mode hides the inner perimeter again -- the shell goes "
+              "one bead thick and speckles")
+        check("4" not in hidden,
+              "real mode hides solid infill again -- top and bottom surfaces "
+              "lose their backing")
+        check(hidden == {"3", "9"},
+              "real mode hides %s; it should hide exactly internal infill (3) "
+              "and skirt (9)" % sorted(hidden))
+
+
+def test_solo_framing_survives_the_functions_that_fight_it():
+    """Three separate ordering bugs, all of which produced a wrong picture with
+    no error at all.
+
+    frameJob() re-shows the gantry and Y rails as part of rescaling the head,
+    so anything that calls it has to apply the framing afterwards.
+    updateCutaway() runs every frame and re-asserts AMS visibility, so it has
+    to know about solo or it undoes the hiding one tick later. And leaving solo
+    without re-framing leaves the camera under the bed, because a finished
+    print sits a part-height below z=0 once the bed has dropped.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+
+    m = re.search(r"function setRealFraming\(f\) \{(.*?)\n\}", js, re.S)
+    check(m is not None, "setRealFraming is gone")
+    if m:
+        body = m.group(1)
+        fs, ar = body.find("frameSolo"), body.find("applyRealMode")
+        check(fs != -1 and ar != -1 and fs < ar,
+              "setRealFraming must call frameSolo BEFORE applyRealMode -- "
+              "frameJob/frameSolo re-show the gantry")
+
+    m2 = re.search(r"function updateCutaway\(\) \{(.*?)\n\}", js, re.S)
+    check(m2 is not None and "realFraming" in m2.group(1),
+          "updateCutaway no longer consults the solo framing -- it will "
+          "re-show the AMS every frame")
+
+    m3 = re.search(r"function applyRealMode\(\) \{(.*?)\n\}", js, re.S)
+    check(m3 is not None and "_wasSolo" in m3.group(1) and "frameJob" in m3.group(1),
+          "applyRealMode no longer re-frames when leaving solo -- the camera "
+          "is left below the bed looking at its underside")
+
+
+def test_layer_banding_is_antialiased_and_measured():
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("fwidth(vZmm)" in js,
+          "layer banding lost its screen-space fade -- 0.2mm bands at ~1px "
+          "alias into surface noise")
+    check("function layerPitchMm" in js,
+          "layer pitch is no longer measured off the plate's own layers")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

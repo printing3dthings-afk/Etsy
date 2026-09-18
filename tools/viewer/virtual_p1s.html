@@ -126,6 +126,22 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
   margin-right:7px;vertical-align:-1px}
 #nowfeat .sw{width:11px;height:11px;border-radius:2px;flex:none}
 
+.rlabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 5px;font-weight:600}
+#realpanel .modeswap{margin-bottom:12px}
+#realpanel .modeswap button{font-size:11px;padding:7px 3px}
+#realswatch{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+#realswatch button{width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--line-hi);padding:0;font-size:8.5px;letter-spacing:.04em;
+  color:var(--dim);background:var(--rail)}
+#realswatch button[data-hex="auto"]{width:auto;border-radius:13px;padding:0 10px}
+#realswatch button[aria-pressed="true"]{border-color:var(--amber);
+  box-shadow:0 0 0 2px rgba(255,138,43,.28)}
+@media (max-width:1180px){
+  #realswatch button{width:40px;height:40px}
+  #realswatch button[data-hex="auto"]{width:auto;height:40px}
+  #realpanel .modeswap button{padding:13px 3px}
+}
 /* ── legend ───────────────────────────────────────────── */
 .leg{display:flex;align-items:center;gap:9px;width:100%;padding:4px 2px;
   border-radius:2px;text-align:left}
@@ -332,6 +348,20 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
           <button type="button" data-mode="feature" aria-pressed="true">Feature</button>
           <button type="button" data-mode="speed" aria-pressed="false">Speed</button>
           <button type="button" data-mode="filament" aria-pressed="false">Filament</button>
+          <button type="button" data-mode="real" aria-pressed="false">Real print</button>
+        </div>
+        <div id="realpanel" hidden>
+          <div class="rlabel">Show</div>
+          <div class="modeswap" id="realframing" role="group" aria-label="Framing">
+            <button type="button" data-framing="live" aria-pressed="true">In machine</button>
+            <button type="button" data-framing="static" aria-pressed="false">Head parked</button>
+            <button type="button" data-framing="solo" aria-pressed="false">Part only</button>
+          </div>
+          <div class="rlabel">Filament</div>
+          <div id="realswatch" role="group" aria-label="Filament colour">
+            <button type="button" data-hex="auto" aria-pressed="true"
+                    title="Use the AMS slot colours this plate actually prints from">AMS</button>
+          </div>
         </div>
         <div id="speedpanel" hidden></div>
         <div id="legend"></div>
@@ -390,6 +420,17 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         perimeters, overhang classification, bridges and support generation track
         closely. Speeds and time estimates will <b>not</b> match what your P1S
         shows. Treat the clock as a ratio between jobs, not a promise.</div>
+      <div class="caveat"><b>Real print mode hides things that are really
+        there.</b> Sparse infill and the skirt are switched off so you see the
+        part the way you would with the door open \u2014 they are still printed,
+        still filament, still time on the clock. Both wall loops and the solid
+        layers stay on, and supports stay on, because they are physically
+        standing on the plate until you snap them off. Layer lines are drawn at
+        the plate's own measured layer pitch and fade out at zoom levels where
+        a camera could not resolve them either. Some dark speckle across a
+        curved wall is a limitation of drawing beads as open ribbons rather
+        than solid tubes: you are seeing a real gap between two beads, not a
+        defect in the print.</div>
       <div class="caveat"><b>The lighting is a studio rig, not this machine's
         chamber.</b> Since 2026-09-17 the scene renders with physically based
         materials, an environment map and real shadows, which is a large step

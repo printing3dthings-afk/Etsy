@@ -1288,7 +1288,10 @@ function updateCutaway() {
   var c = machineBounds;
   // The AMS is furniture on the lid, not chamber content. In cutaway it would
   // simply sit on top of the hole the cutaway just opened.
-  if (amsGroup) { amsGroup.visible = !cut; }
+  // This runs every frame, so it is also the thing that would quietly undo
+  // the solo framing's hiding one tick after it was applied.
+  var solo = colorMode === 'real' && realFraming === 'solo';
+  if (amsGroup) { amsGroup.visible = !cut && !solo; }
   for (var i = 0; i < extPanels.length; i++) {
     var p = extPanels[i];
     if (!cut) { p.mesh.visible = true; continue; }
@@ -1422,6 +1425,9 @@ var JOB_PARS = [
   'uniform float uMode;',
   'uniform vec2 uSpd;',
   'uniform float uDim;',
+  'uniform vec3 uOverride;',   // filament colour chosen by hand; <0 = off
+  'uniform float uLayerH;',    // mm; 0 disables the layer banding
+  'varying float vZmm;',
   'varying vec3 vJobColor;',
   'varying float vJobVis;',
   'vec3 magma(float t){',
@@ -1443,8 +1449,10 @@ var JOB_VERT = [
   '  vec3 jBySpeed = magma(mix(0.92, 0.28, jf));',
   '  vec3 jByFil = uTool[int(aTool + 0.5)];',
   '  vJobColor = uMode < 0.5 ? jByFeature : (uMode < 1.5 ? jBySpeed : jByFil);',
+  '  if (uOverride.r >= 0.0) { vJobColor = uOverride; }',
   '  vJobColor = mix(vJobColor, vec3(0.012, 0.013, 0.017), uDim);',
-  '  vJobVis = uVis[jt];'
+  '  vJobVis = uVis[jt];',
+  '  vZmm = position.z * 0.01;'
 ].join('\n');
 
 function makeMaterial(dim, rich) {
@@ -1454,7 +1462,10 @@ function makeMaterial(dim, rich) {
     uTool:  {value: FILAMENT.map(function (h) { return lin(h); })},
     uMode:  {value: 0},
     uSpd:   {value: new THREE.Vector2(15, 80)},
-    uDim:   {value: dim}
+    uDim:   {value: dim},
+    uOverride: {value: new THREE.Vector3(-1, -1, -1)},
+    uSat:   {value: DIAG_SAT},
+    uLayerH: {value: 0}
   };
   // Printed PLA is neither chalk nor gloss: a matte-satin dielectric. Rich
   // shading buys a tighter lobe and a real environment reflection; the cheap
@@ -1483,11 +1494,48 @@ function makeMaterial(dim, rich) {
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n' + JOB_VERT);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', '#include <common>\n' +
-               'varying vec3 vJobColor;\nvarying float vJobVis;')
+               'varying vec3 vJobColor;\nvarying float vJobVis;\n' +
+               'varying float vZmm;\nuniform float uSat;\n' +
+               'uniform float uLayerH;')
       .replace('#include <clipping_planes_fragment>',
                '#include <clipping_planes_fragment>\n  if (vJobVis < 0.5) discard;')
       .replace('#include <color_fragment>',
-               '#include <color_fragment>\n  diffuseColor.rgb *= vJobColor;');
+               '#include <color_fragment>\n  diffuseColor.rgb *= vJobColor;\n' +
+               // The layer seam. Each bead IS a separate tent with its own
+               // normal, so the ridges are already geometrically there -- but
+               // at 0.2mm on a 60mm part they are far under a pixel at any
+               // sane zoom and average away to a smooth blob. This darkens the
+               // real seam height so the banding survives downsampling, the
+               // way it does in a photograph of the same part.
+               '  if (uLayerH > 0.0) {\n' +
+               // Faded out analytically as the band period approaches one
+               // pixel. 300 layers across 400px is 1.3px per layer -- right at
+               // Nyquist -- and without this the banding aliases into surface
+               // noise that reads as a bad render rather than as layer lines.
+               // fwidth gives the real on-screen period, so the lines simply
+               // stop being drawn at the zoom where a camera could not resolve
+               // them either.
+               '    float lp = fwidth(vZmm) / uLayerH;\n' +
+               '    float lf = 1.0 - smoothstep(0.30, 0.85, lp);\n' +
+               '    if (lf > 0.002) {\n' +
+               '      float lt = abs(fract(vZmm / uLayerH) - 0.5) * 2.0;\n' +
+               '      float lb = mix(1.05, 0.72, smoothstep(0.40, 1.0, lt));\n' +
+               '      diffuseColor.rgb *= mix(1.0, lb, lf);\n' +
+               '    }\n' +
+               '  }')
+      // Tone mapping desaturates saturated colour as it brightens, which is
+      // correct for a photograph of a print and wrong for a colour key you are
+      // meant to read a legend against: after the PBR pass the feature colours
+      // came out visibly paler than their swatches. Restored AFTER the curve,
+      // where the loss happens, and only in the diagnostic modes -- uSat is 0
+      // in real-print mode, which wants the photographic behaviour.
+      .replace('#include <tonemapping_fragment>',
+               '#include <tonemapping_fragment>\n' +
+               '  if (uSat > 0.001) {\n' +
+               '    float jl = dot(gl_FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));\n' +
+               '    gl_FragColor.rgb = clamp(mix(vec3(jl), gl_FragColor.rgb,\n' +
+               '                                 1.0 + uSat), 0.0, 1.0);\n' +
+               '  }');
   };
   // Without this three caches one compiled program per material type, and the
   // ghost pass would silently reuse the solid pass's program.
@@ -1685,7 +1733,31 @@ var visible = new Array(N_TYPE).fill(true);
 var machineMotion = true;
 var richShading = true, autoQualityDone = false;
 var colorMode = 'feature';
-var COLOR_MODE_ID = {feature: 0, speed: 1, filament: 2};
+// Real print reuses the filament colouring (id 2) -- the beads are already the
+// colour of the spool they came off, which is the whole point. What makes it
+// "real" is everything around that: what is hidden, how it is lit, and how
+// much of the machine is on screen.
+var COLOR_MODE_ID = {feature: 0, speed: 1, filament: 2, real: 2};
+
+// Measured against the legend swatches rather than picked by eye: see
+// tools/viewer/README.md. 0 in real-print mode, which wants the photographic
+// desaturation tone mapping gives it.
+var DIAG_SAT = 0.42;
+
+// Sparse infill and the skirt. Nothing else.
+//
+// The first version also hid the inner perimeter and the solid infill, on the
+// reasoning that the outer wall is in front of them. That was wrong in a way
+// only the render showed: beads are drawn as open tents, so a one-bead-thick
+// shell has gaps between adjacent beads on a curved surface, and through them
+// you see the unlit inside of the far wall as dark speckle across the part.
+// Keeping both walls backs those gaps, and it is the more honest answer
+// anyway -- they are genuinely printed. Supports stay for the same reason:
+// real plastic standing on the plate until you snap it off.
+var REAL_HIDDEN = {3: 1, 9: 1};
+
+var realFraming = 'live';   // live | static | solo
+var filamentOverride = null;
 var layerFilCum = null;
 
 function segAtTime(t) {
@@ -2190,9 +2262,21 @@ function setColorMode(mode) {
   Array.prototype.forEach.call($('modeswap').children, function (b) {
     b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode));
   });
+  var real = mode === 'real';
   var speedy = mode === 'speed', fil = mode === 'filament';
   $('speedpanel').hidden = !speedy;
-  $('legend').hidden = speedy || fil;
+  $('legend').hidden = speedy || fil || real;
+  $('realpanel').hidden = !real;
+  applyRealMode();
+  if (real) {
+    $('legnote').innerHTML = 'The part as it would actually look on the plate: '
+      + 'one filament colour, layer lines, and only the surfaces you could see '
+      + 'with the door open. Internal walls and infill are hidden because the '
+      + 'outer wall is in front of them, not because they are not printed. '
+      + '<b>The lighting is still an invented studio rig</b> \u2014 see Limits.';
+    applyVisibility();
+    return;
+  }
   $('legnote').innerHTML = speedy
     ? 'Feedrate straight out of the G-code. Brightest is slowest \u2014 the outer '
       + 'wall and the top surface, the parts a buyer actually sees. The dark, fast '
@@ -2206,11 +2290,103 @@ function setColorMode(mode) {
   applyVisibility();
 }
 
+// The three framings, from "watching the machine run" to "here is the part".
+// Live is the existing view untouched. Static stops the head so the part can
+// be looked at rather than followed. Solo removes the machine entirely, for
+// showing somebody the object rather than the process.
+// Measured off the plate rather than assumed to be 0.2: a job sliced at a
+// different layer height, or one with supports on its own pitch, would band at
+// the wrong spacing. Two consecutive real layer z values, in 0.01mm units.
+function layerPitchMm() {
+  if (!JOB || !JOB.layers || JOB.layers.length < 3) { return 0.2; }
+  var d = (JOB.layers[2][0] - JOB.layers[1][0]) / 100;
+  return (d > 0.01 && d < 2) ? d : 0.2;
+}
+
+var _wasSolo = false;
+
+function applyRealMode() {
+  var real = colorMode === 'real';
+  var solo = real && realFraming === 'solo';
+  var moving = !real || realFraming === 'live';
+
+  // Leaving solo has to put the camera back. frameSolo() targets the part,
+  // which after the bed-drop sits a full part-height below z=0 -- bring the
+  // machine back without re-framing and you are left underneath the bed
+  // looking at the dark underside of it, which is what happened. Ordered
+  // before the visibility block because frameJob() re-shows the gantry.
+  if (_wasSolo && !solo && JOB) { frameJob(JOB); }
+  _wasSolo = solo;
+
+  if (gantry) { gantry.visible = moving && !solo; }
+  if (nozzle) { nozzle.visible = moving && !solo; }
+  if (yRails) { yRails.visible = moving && !solo; }
+  [chamber, doorGroup, amsGroup, bedGroup, floorMesh].forEach(function (g) {
+    if (g) { g.visible = !solo; }
+  });
+  if (ghostMesh) { ghostMesh.visible = ghostMesh.visible && !real; }
+
+  Array.prototype.forEach.call(
+    document.querySelectorAll('#realframing button'), function (b) {
+      b.setAttribute('aria-pressed',
+        String(b.getAttribute('data-framing') === realFraming));
+    });
+  shadowDirty = true;
+}
+
+function setRealFraming(f) {
+  realFraming = f;
+  if (f === 'solo' && JOB) { frameSolo(JOB); }
+  applyRealMode();
+}
+
+// frameJob() frames the MACHINE -- it floors the radius so the enclosure keeps
+// reading as an enclosure, and parks the target low where the nozzle works.
+// With the machine gone both of those are wrong: the part ends up small and
+// half out of frame. This frames the part itself.
+function frameSolo(job) {
+  var b = job.raw.bbox;
+  var z = job.layers[job.layers.length - 1][0] / 100;
+  var w = Math.max(b[2] - b[0], b[3] - b[1], z, 20);
+  cam.tx = (b[0] + b[2]) / 2;
+  cam.ty = (b[1] + b[3]) / 2;
+  // The P1S drops the BED as it prints, which this viewer models by sinking
+  // the print instead -- so a finished part is sitting a full part-height
+  // BELOW z=0, not above it. Framing 0..z put the object off the bottom of
+  // the screen. Read the mesh's real offset rather than assuming either.
+  cam.tz = z * 0.5 + (jobMesh ? jobMesh.position.z : 0);
+  cam.r = w * 2.4;
+  cam.theta = -0.62;
+  cam.phi = 1.12;
+}
+
+function setFilamentOverride(hex) {
+  filamentOverride = hex;
+  Array.prototype.forEach.call(
+    document.querySelectorAll('#realswatch button'), function (b) {
+      b.setAttribute('aria-pressed',
+        String(b.getAttribute('data-hex') === (hex || 'auto')));
+    });
+  applyVisibility();
+}
+
 function applyVisibility() {
+  var real = colorMode === 'real';
   [jobMesh, ghostMesh].forEach(function (m) {
     if (!m) { return; }
     var u = m.material.uniforms.uVis.value;
-    for (var i = 0; i < 12; i++) { u[i] = visible[i] ? 1 : 0; }
+    for (var i = 0; i < 12; i++) {
+      u[i] = (real ? !REAL_HIDDEN[i] : visible[i]) ? 1 : 0;
+    }
+    m.material.uniforms.uSat.value = real ? 0 : DIAG_SAT;
+    m.material.uniforms.uLayerH.value = real ? layerPitchMm() : 0;
+    var ov = m.material.uniforms.uOverride.value;
+    if (real && filamentOverride) {
+      var c = new THREE.Color(filamentOverride).convertSRGBToLinear();
+      ov.set(c.r, c.g, c.b);
+    } else {
+      ov.set(-1, -1, -1);
+    }
     m.material.uniforms.uMode.value = COLOR_MODE_ID[colorMode] || 0;
     if (JOB) { m.material.uniforms.uSpd.value.set(JOB.raw.speedMin, JOB.raw.speedMax); }
   });
@@ -2453,6 +2629,30 @@ function initUI() {
     b.addEventListener('click', function () {
       setColorMode(b.getAttribute('data-mode'));
     });
+  });
+
+  Array.prototype.forEach.call($('realframing').children, function (b) {
+    b.addEventListener('click', function () {
+      setRealFraming(b.getAttribute('data-framing'));
+    });
+  });
+
+  // The swatch row is the real filament palette this shop prints in, so a
+  // preview is a colour Scott can actually load rather than an arbitrary hue.
+  // AMS stays first and stays the default: it is the only option that cannot
+  // be wrong about a multi-colour plate.
+  FILAMENT.forEach(function (hex) {
+    var b = el('button');
+    b.type = 'button';
+    b.setAttribute('data-hex', hex);
+    b.setAttribute('aria-pressed', 'false');
+    b.setAttribute('title', 'Preview this plate in ' + hex);
+    b.style.background = hex;
+    b.addEventListener('click', function () { setFilamentOverride(hex); });
+    $('realswatch').appendChild(b);
+  });
+  $('realswatch').firstChild.addEventListener('click', function () {
+    setFilamentOverride(null);
   });
 
   $('door').addEventListener('click', function () {
