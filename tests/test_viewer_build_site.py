@@ -759,7 +759,10 @@ def test_the_bead_has_a_flat_top_not_a_ridge():
     check(len(tops) == 2,
           "expected exactly two vertices at the layer top (the flat), found %d"
           % len(tops))
-    check("var kf = " in b and "2.6 * hw" in b,
+    # 2026-09-19: was "2.6 * hw". The divisor is the LAYER's own widest bead
+    # now (kfW), because the first layer is laid wider and gets a flatter top.
+    # Same rule, one more input.
+    check("var kf = " in b and "2.6 * kfW" in b,
           "the flat-top fraction is gone or no longer derived from the layer "
           "height")
     # and the shoulders must still be the full bead width, or the part gets thin
@@ -1349,6 +1352,117 @@ def test_the_plate_grain_is_a_real_size_in_millimetres():
         check(worst < 1.0,
               "the coarsest stipple feature is %.2fmm across at the tile "
               "scale; the real plate has no structure that large" % (worst * 2))
+
+
+def test_the_first_layer_is_laid_wider_than_the_rest():
+    """Bead width is not one number (2026-09-19).
+
+    The payload carries a single beadWidth and a per-layer HEIGHT, so every
+    extrusion on every plate was drawn 0.42mm wide regardless of what it is.
+    Bambu Studio's own defaults for a 0.4 nozzle: default line width 0.42mm,
+    initial layer 0.50-0.60mm, inner wall 0.45mm.
+
+    The first layer matters most -- it is 20-40% wider than the rest, squashed
+    into the plate, and it is the part anyone looking at the bed is looking at.
+
+    These are profile defaults, not per-move widths read back from the G-code;
+    getting those means re-exporting all 72 plates. The approximation is
+    strictly better than one constant and the code says which it is.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildJob\(raw\) \{.*?\n\}", js, re.S)
+    check(body is not None, "buildJob is gone")
+    if not body:
+        return
+    b = "\n".join(re.sub(r"//.*$", "", ln) for ln in body.group(0).split("\n"))
+    check("FIRST_LAYER_W" in b,
+          "the first layer is drawn at the same width as every other layer "
+          "again; Bambu lays it 0.50-0.60mm against a 0.42mm default")
+    m = re.search(r"FIRST_LAYER_W = ([0-9.]+) / ([0-9.]+)", b)
+    check(m is not None and float(m.group(1)) > float(m.group(2)),
+          "the first-layer width is no longer wider than the default bead")
+    check("WIDTH_BY_TYPE" in b,
+          "per-feature bead width is gone; inner and outer walls are not the "
+          "same width on a real machine")
+    # The width has to reach the geometry AND actually derive from the table.
+    # Checking only that the symbol hwT appears passes against "var hwT = hw;",
+    # which is the exact regression this guards. Caught by mutation, not by
+    # reading the assertion back.
+    assign = re.search(r"var hwT = ([^;]+);", b)
+    check(assign is not None, "the per-extrusion width is gone")
+    if assign:
+        check("FIRST_LAYER_W" in assign.group(1) and "WIDTH_BY_TYPE" in assign.group(1),
+              "the per-extrusion width no longer derives from the width "
+              "table: %r" % assign.group(1).strip())
+    check(re.search(r"\* hwT;", b),
+          "the per-extrusion width is computed but never used -- the bead is "
+          "still built from the single global half-width")
+    check(re.search(r"var kf = .*kfW", b),
+          "the flat-top fraction is still derived from the global width, so a "
+          "wider first layer gets the wrong top profile")
+
+
+def test_the_control_panel_is_on_the_top_bezel():
+    """Checked against Bambu's own P1S product photography, 2026-09-19.
+
+    The panel was at zBot + 28 -- the middle of the bezel BELOW the door,
+    down by the feet, and on the right. On a real P1S it is in the bezel
+    ABOVE the glass door, at the left, with the wordmark to its right.
+
+    The round control is a D-pad, not a knob: the P1S has no touchscreen, and
+    the screen itself is a 2.7-inch 192x64 letterbox.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    m = re.search(r"var panelZ = ([^;]+);", src)
+    check(m is not None,
+          "the control panel's height is no longer named; it used to be "
+          "buried at zBot + 28, at the bottom of the machine")
+    if m:
+        check("zTop" in m.group(1),
+              "the control panel is measured from the bottom of the machine "
+              "again (%s); on a P1S it sits in the top bezel" % m.group(1).strip())
+    # screen stays a 3:1 letterbox, not a square
+    sl = re.search(r"slab\(65, 2, 22, 0x0b0d10", src)
+    check(sl is not None,
+          "the screen is no longer a 65x22 letterbox; the P1S panel is "
+          "192x64, roughly 3:1")
+
+
+def test_the_machine_body_is_neutral_grey():
+    """Measured off Bambu's product photography, 2026-09-19.
+
+    Every sample across the real shell is exactly R=G=B: side panel
+    (27,27,27), lower panel (13,13,13), top bezel (83,83,83), base (31,31,31),
+    front face mean (38,38,38). The viewer's palette was uniformly
+    blue-shifted -- 0x1b1e24 is (27,30,36) -- and rendered at (21,24,35).
+
+    One level of cool is kept deliberately so the machine does not read as
+    flat charcoal in a dark UI. This fails if the old 9-15 level bias returns.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    # Scoped to the fifteen shell colours that were actually measured and
+    # remapped. A blanket "no dark hex may be blue" sweeps up smoked glass,
+    # the backdrop and UI accents that are legitimately cool and were never
+    # checked against a photograph -- it flagged 26 colours on first run, of
+    # which 11 were nothing to do with the machine shell.
+    WAS_BLUE = ["0x101216", "0x2b2f36", "0x191d25", "0x1b1e24", "0x15171c",
+                "0x23262d", "0x26292f", "0x1e2127", "0x171a20", "0x22262e",
+                "0x212732", "0x3d4552", "0x3b4048", "0x20242a", "0x2a2e35"]
+    back = [h for h in WAS_BLUE if h in src]
+    check(not back,
+          "machine shell colours are blue-shifted again; the real P1S measures "
+          "exactly R=G=B at every sample: %s" % back)
+    # and the neutral replacements really are neutral
+    for h in re.findall(r"surface\(0x([0-9a-f]{6})", src):
+        v = int(h, 16)
+        r, g, bl = (v >> 16) & 255, (v >> 8) & 255, v & 255
+        if max(r, g, bl) <= 90:
+            check(bl - r <= 2,
+                  "machine surface 0x%s is (%d,%d,%d) -- more than one level "
+                  "of blue bias on a shell that photographs neutral"
+                  % (h, r, g, bl))
 
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

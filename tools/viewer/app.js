@@ -271,7 +271,7 @@ function buildBackdrop() {
 function lin(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
 
 // Every colour in this scene already stood for one real material -- 0x6e7683
-// was always a steel rail, 0x101216 was always a rubber foot. Rather than
+// was always a steel rail, 0x121213 was always a rubber foot. Rather than
 // hand-annotate fifty call sites, the mapping lives here once, keyed by the
 // hex that was already there. Anything unlisted falls back to matte painted
 // plastic, which is what most of the machine actually is.
@@ -281,27 +281,27 @@ var SURFACE = {
   0x6e7683: [0.26, 0.92],  // rail / rod
   0x7b8493: [0.30, 0.88],  // door grip, brushed aluminium
   0x666e7c: [0.34, 0.85],  // control knob
-  0x454b58: [0.32, 0.80],  // gantry extrusion, anodised
-  0x3a404b: [0.36, 0.78],  // gantry extrusion, darker face
-  0x3d4552: [0.40, 0.70],  // carriage plate
+  0x4b4b4c: [0.32, 0.80],  // gantry extrusion, anodised
+  0x404041: [0.36, 0.78],  // gantry extrusion, darker face
+  0x444445: [0.40, 0.70],  // carriage plate
   0x59616e: [0.35, 0.60],  // AMS window frame
   0xc98b46: [0.28, 1.00],  // brass mark
-  0x101216: [0.90, 0.00],  // rubber foot
-  0x0c0e12: [0.85, 0.00],  // rubber / dark plastic
-  0x0a0c10: [0.80, 0.00],  // screen bezel
+  0x121213: [0.90, 0.00],  // rubber foot
+  0x0e0e0f: [0.85, 0.00],  // rubber / dark plastic
+  0x0c0c0d: [0.80, 0.00],  // screen bezel
   0x0b0d10: [0.25, 0.00],  // screen glass
   0x26282e: [0.52, 0.18],  // painted steel body panel
-  0x2a2e35: [0.54, 0.16],  // AMS shell
-  0x2b2f36: [0.58, 0.12],  // spool holder
-  0x23262d: [0.60, 0.10],
-  0x22262e: [0.62, 0.10],
+  0x2e2e2f: [0.54, 0.16],  // AMS shell
+  0x2f2f30: [0.58, 0.12],  // spool holder
+  0x262627: [0.60, 0.10],
+  0x262627: [0.62, 0.10],
   0x21252b: [0.62, 0.10],
   0x1d2026: [0.50, 0.20],  // door frame
-  0x1b1e24: [0.66, 0.08],
-  0x191d25: [0.70, 0.06],
+  0x1e1e1f: [0.66, 0.08],
+  0x1d1d1e: [0.70, 0.06],
   0x171a1f: [0.60, 0.10],  // trim
-  0x171a20: [0.68, 0.06],
-  0x15171c: [0.72, 0.05],
+  0x1a1a1b: [0.68, 0.06],
+  0x171718: [0.72, 0.05],
   0x4a3a22: [0.55, 0.30]
 };
 
@@ -566,7 +566,7 @@ function buildChamber(bed) {
   slab(x1 - dx1, t, dz1 - dz0, BODY, (dx1 + x1) / 2, y0 + t / 2, (dz0 + dz1) / 2, new THREE.Vector3(0, -1, 0));
 
   // Top cover, inset and lighter, the way the removable lid reads.
-  slab(EXT.w - 26, EXT.d - 26, 4, 0x3b4048, ox, oy, zTop - 2, new THREE.Vector3(0, 0, 1));
+  slab(EXT.w - 26, EXT.d - 26, 4, 0x404041, ox, oy, zTop - 2, new THREE.Vector3(0, 0, 1));
   slab(EXT.w, EXT.d, 10, TRIM, ox, oy, zTop - 9, new THREE.Vector3(0, 0, 1));
 
   // Interior liner: one inverted box so the inside is its own darker surface.
@@ -580,28 +580,41 @@ function buildChamber(bed) {
   liner.position.set(ox, oy, cz);
   chamber.add(liner);
 
-  // Screen and knob, bottom right of the front bezel -- the one detail that
-  // makes the front read as this machine rather than a generic box. The P1S
-  // screen is a 2.7-inch 192x64 panel (Bambu's own P1 spec list), which is a
-  // 3:1 letterbox -- the first pass drew it nearly square.
-  slab(65, 2, 22, 0x0b0d10, x1 - 66, y0 - 0.6, zBot + 28, null);
+  // Screen and knob -- TOP bezel, left side (corrected 2026-09-19).
+  //
+  // These were at zBot + 28, which is the middle of the bezel BELOW the door,
+  // near the machine's feet, and on the right. Checked against Bambu's own
+  // P1S product photography: the control panel sits in the bezel ABOVE the
+  // glass door, at the left, with the "Bambu Lab / P1S" wordmark to its right.
+  // The screen is a 2.7-inch 192x64 panel (Bambu's spec sheet) -- a 3:1
+  // letterbox, which is why it is 65 x 22 and not square -- and the round
+  // control beside it is a D-pad, not a knob: the P1S has no touchscreen.
+  var panelZ = zTop - 27;                      // middle of the 54mm top bezel
+  slab(65, 2, 22, 0x0b0d10, x0 + 78, y0 - 0.6, panelZ, null);
   var knob = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 4, 24),
     surface(0x666e7c));
   knob.rotation.x = Math.PI / 2;
-  knob.position.set(x1 - 22, y0 - 1.5, zBot + 28);
+  knob.position.set(x0 + 128, y0 - 1.5, panelZ);
   chamber.add(knob);
+  // The recessed dish the D-pad sits in, which is what makes it read as a pad
+  // rather than a dial at any distance.
+  var pad = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 2, 24),
+    surface(0x2e2e2f));
+  pad.rotation.x = Math.PI / 2;
+  pad.position.set(x0 + 128, y0 - 0.4, panelZ);
+  chamber.add(pad);
 
   // Feet and the rear spool holder
   [[x0 + 24, y0 + 24], [x1 - 24, y0 + 24], [x0 + 24, y1 - 24], [x1 - 24, y1 - 24]]
     .forEach(function (p) {
       var f = new THREE.Mesh(new THREE.CylinderGeometry(13, 13, 9, 16),
-        surface(0x101216));
+        surface(0x121213));
       f.rotation.x = Math.PI / 2;
       f.position.set(p[0], p[1], zBot - 4);
       chamber.add(f);
     });
   var spool = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 62, 24),
-    surface(0x2b2f36));
+    surface(0x2f2f30));
   spool.rotation.z = Math.PI / 2;
   spool.rotation.x = Math.PI / 2;
   spool.position.set(ox, y1 + 34, zBot + 96);
@@ -764,7 +777,7 @@ function buildBed(X, Y, ox, oy) {
   // rather than inside it.
   var body = new THREE.Mesh(
     new THREE.ExtrudeGeometry(shape, {depth: 2.0, bevelEnabled: false}),
-    surface(0x23262c, {roughness: 0.42, metalness: 0.72}));
+    surface(0x262627, {roughness: 0.42, metalness: 0.72}));
   // plateShape() is already in plate coordinates (0..X, 0..Y), so unlike the
   // centred box it replaced it takes no ox/oy offset -- applying one put the
   // plate a bed-width out in front of the machine.
@@ -815,7 +828,7 @@ function buildBed(X, Y, ox, oy) {
 
   // Heatbed under the flex plate -- what the magnets grab.
   var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 22, Y + 22, 9),
-    surface(0x191d25));
+    surface(0x1d1d1e));
   carrier.position.set(ox, oy, -6.6);
   bedGroup.add(carrier);
 
@@ -878,9 +891,9 @@ function buildPlateGrid(X, Y, spec) {
 function buildGantry(W, ox, oy) {
   gantry = new THREE.Group();
   gantry.add(new THREE.Mesh(new THREE.BoxGeometry(W - 40, 9, 6.5),
-    surface(0x3a404b)));
+    surface(0x404041)));
   var railTop = new THREE.Mesh(new THREE.BoxGeometry(W - 40, 9, 1.3),
-    surface(0x454b58));
+    surface(0x4b4b4c));
   railTop.position.z = 3.8;
   gantry.add(railTop);
   gantry.position.set(ox, oy, 0);
@@ -938,7 +951,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
     post.position.set(p[0] + (p[0] > ox ? 20 : -20), p[1], (zLo + zHi) / 2);
     chamber.add(post);
     var pulley = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 9, 14),
-      surface(0x3d4552));
+      surface(0x444445));
     pulley.rotation.x = Math.PI / 2;
     pulley.position.set(p[0], p[1], zLo - 6);
     chamber.add(pulley);
@@ -947,7 +960,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   // One motor, one belt, both under the base -- which is why all three screws
   // turn together and the bed cannot tilt out of tram on its own.
   var zMotor = new THREE.Mesh(new THREE.BoxGeometry(34, 34, 30),
-    surface(0x1b1e24));
+    surface(0x1e1e1f));
   zMotor.position.set(ox + 46, y1 - t - 30, zLo - 22);
   chamber.add(zMotor);
   var beltPath = new THREE.Mesh(
@@ -957,7 +970,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
       new THREE.Vector3(zPosts[1][0], zPosts[1][1], zLo - 6),
       new THREE.Vector3(zPosts[2][0], zPosts[2][1], zLo - 6),
       new THREE.Vector3(zPosts[0][0], zPosts[0][1], zLo - 6)], true), 30, 2.4, 6, true),
-    surface(0x15171c));
+    surface(0x171718));
   chamber.add(beltPath);
 
   // Three sliders, on the bed, descending with it -- the whole point of
@@ -968,7 +981,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   bedGroup.add(beam);
   zPosts.forEach(function (p) {
     var slider = new THREE.Mesh(new THREE.BoxGeometry(24, 28, 19),
-      surface(0x3d4552));
+      surface(0x444445));
     slider.position.set(p[0], p[1], -14);
     bedGroup.add(slider);
     var arm = new THREE.Mesh(new THREE.BoxGeometry(13, Math.abs(p[1] - oy), 9),
@@ -990,7 +1003,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
     yRails.add(r);
     [-3.5, 3.5].forEach(function (dy) {
       var b = new THREE.Mesh(new THREE.BoxGeometry(2.5, y1 - y0 - 2 * t - 16, 5),
-        surface(0x15171c));
+        surface(0x171718));
       b.position.set(x + (x < ox ? 8 : -8), oy, dy + 6);
       yRails.add(b);
     });
@@ -1014,7 +1027,7 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   bar.position.set(x0 + t + 9, ledY, zTop - 30);
   chamber.add(bar);
   var shell = new THREE.Mesh(new THREE.BoxGeometry(11, ledLen + 10, 14),
-    surface(0x2b2f36));
+    surface(0x2f2f30));
   shell.position.set(x0 + t + 5, ledY, zTop - 30);
   chamber.add(shell);
   // Tight falloff on purpose. A 5V 0.3A strip pools light near itself and
@@ -1025,11 +1038,11 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   chamber.add(chamberLamp);
 
   var cam2 = new THREE.Mesh(new THREE.BoxGeometry(17, 15, 15),
-    surface(0x23262d));
+    surface(0x262627));
   cam2.position.set(x0 + t + 12, y0 + t + 12, zTop - 30);
   chamber.add(cam2);
   var lens = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 3, 12),
-    surface(0x0a0c10));
+    surface(0x0c0c0d));
   lens.rotation.x = Math.PI / 2;
   lens.position.set(x0 + t + 16, y0 + t + 16, zTop - 36);
   chamber.add(lens);
@@ -1090,7 +1103,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   // ── body ──────────────────────────────────────────────────────────────────
   var base = new THREE.Mesh(
     new THREE.ExtrudeGeometry(roundedRect(spec.w, spec.d, r), {depth: 9, bevelEnabled: false}),
-    surface(0x1b1e24));
+    surface(0x1e1e1f));
   base.position.set(ox, cy, z0);
   amsGroup.add(base);
 
@@ -1110,7 +1123,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   bandShape.holes.push(roundedRect(spec.w - 26, spec.d - 26, 8));
   var band = new THREE.Mesh(
     new THREE.ExtrudeGeometry(bandShape, {depth: 13, bevelEnabled: false}),
-    surface(0x26292f));
+    surface(0x29292a));
   band.position.set(ox, cy, z0 + bodyH - 13);
   amsGroup.add(band);
 
@@ -1127,7 +1140,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   var domeZ = z0 + bodyH;
   var dome = new THREE.Mesh(
     new THREE.CylinderGeometry(domeR, domeR, spec.w, 48, 1, true, 0, Math.PI),
-    smoked(0.34, 0x20242a));
+    smoked(0.34, 0x242425));
   dome.rotation.z = Math.PI / 2;
   dome.position.set(ox, cy, domeZ);
   dome.renderOrder = 3;
@@ -1135,7 +1148,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   // End caps, so the dome reads as a closed box rather than an open tunnel.
   [-1, 1].forEach(function (s) {
     var cap = new THREE.Mesh(new THREE.CircleGeometry(domeR, 40, 0, Math.PI),
-      smoked(0.40, 0x20242a));
+      smoked(0.40, 0x242425));
     // CircleGeometry's half-disc bulges toward its own +Y. rotation.y alone
     // leaves that pointing at world +Y, which stands the cap up as a flat
     // sheet off the BACK of the dome instead of closing its end. The z turn
@@ -1150,7 +1163,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
   lipShape.holes.push(roundedRect(spec.w - 12, spec.d - 12, 8));
   var lip = new THREE.Mesh(
     new THREE.ExtrudeGeometry(lipShape, {depth: 5, bevelEnabled: false}),
-    surface(0x1e2127));
+    surface(0x212122));
   lip.position.set(ox, cy, domeZ - 2);
   amsGroup.add(lip);
 
@@ -1218,7 +1231,7 @@ function buildAMS(spec, ox, oy, y1, zTop) {
     new THREE.Vector3(ox, y1 + 54, z0 - 34),
     new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
   var feed = new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
-    surface(0x171a20));
+    surface(0x1a1a1b));
   amsGroup.add(feed);
 
   amsGroup.userData.spools = spools;
@@ -1271,7 +1284,7 @@ function buildOpenFrame(prof, X, Y, Z, ox, oy, zBot, slinger) {
   }
   var baseW = f ? f[0] : X + 90, baseD = f ? f[1] : Y + 90;
   var base = new THREE.Mesh(new THREE.BoxGeometry(baseW, baseD, 46),
-    surface(0x23262d));
+    surface(0x262627));
   base.position.set(ox, oy, zBot + 23);
   chamber.add(base);
   // Build volume, drawn as the volume it is rather than as a box that pretends
@@ -1308,7 +1321,7 @@ function buildFloor() {
   if (floorMesh) { scene.remove(floorMesh); floorMesh.geometry.dispose(); }
   floorMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(3200, 3200),
-    new THREE.MeshStandardMaterial({color: lin(0x212732), roughness: 0.66,
+    new THREE.MeshStandardMaterial({color: lin(0x272728), roughness: 0.66,
       metalness: 0.0, envMapIntensity: 0.30}));
   floorMesh.position.set(machineBounds.ox, machineBounds.oy,
                          machineBounds.zBot - 13);
@@ -1391,7 +1404,7 @@ function rebuildToolhead(detailed) {
 function buildSimpleHead() {
   var g = new THREE.Group();
   var body = new THREE.Mesh(new THREE.BoxGeometry(22, 18, 26),
-    surface(0x22262e));
+    surface(0x262627));
   body.position.z = 20;
   g.add(body);
   g.add(new THREE.Mesh(new THREE.BoxGeometry(10, 10, 6),
@@ -1425,7 +1438,7 @@ function buildToolhead() {
   // on screen -- a dark box with nothing under it.
   part(26, 15, 15, 0x2d323c, 44, 9);           // X-carriage on the gantry beam
   part(27, 19, 30, 0x1b1e25, 40, 11);          // rear housing over the extruder
-  var mid = part(25, 17, 26, 0x22262e, 38, 0);    // middle housing
+  var mid = part(25, 17, 26, 0x262627, 38, 0);    // middle housing
   var edges = new THREE.LineSegments(new THREE.EdgesGeometry(mid.geometry),
     new THREE.LineBasicMaterial({color: 0x4b5261}));
   edges.position.set(0, 0, 38);
@@ -1434,12 +1447,12 @@ function buildToolhead() {
 
   // Part-cooling fan, in the front housing where the real one lives.
   var fan = new THREE.Mesh(new THREE.CylinderGeometry(8.6, 8.6, 2.4, 18),
-    surface(0x0c0e12));
+    surface(0x0e0e0f));
   fan.rotation.x = Math.PI / 2;
   fan.position.set(0, -16.4, 37);
   g.add(fan);
   var hub = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 3, 12),
-    surface(0x3a4049));
+    surface(0x3f3f40));
   hub.rotation.x = Math.PI / 2;
   hub.position.set(0, -17, 37);
   g.add(hub);
@@ -2499,6 +2512,28 @@ function buildJob(raw) {
   var layerSeg = new Int32Array(layers.length + 1);
 
   var hw = (raw.beadWidth || 0.42) * 50;     // half width, in 0.01mm units
+
+  // Bead width is not one number (2026-09-19). The payload carries a single
+  // beadWidth and layer HEIGHT per layer, so every extrusion on every plate
+  // was drawn 0.42mm wide regardless of what it is. Bambu Studio's own
+  // defaults for a 0.4 nozzle do not work that way:
+  //
+  //   default line width   0.42 mm
+  //   initial layer        0.50-0.60 mm
+  //   inner wall           0.45 mm
+  //
+  // The first layer is the one that matters most here: it is 20-40% wider
+  // than the rest, it is squashed into the plate, and it is exactly the part
+  // of a print anyone looking at the bed is looking at.
+  //
+  // These are Bambu's published PROFILE defaults, not per-move widths read
+  // back from the G-code -- the payload does not carry those, and adding them
+  // means re-exporting all 72 plates. Scaling the one width by feature is a
+  // strictly better approximation than a single constant, costs nothing in
+  // memory, and is honest as long as it is labelled as profile-derived. Index
+  // order follows the slicer's own type list.
+  var WIDTH_BY_TYPE = {1: 0.45 / 0.42};      // Perimeter = inner wall
+  var FIRST_LAYER_W = 0.50 / 0.42;
   var vi = 0, ii = 0, si = 0;
   var nx = new Float32Array(2), px = new Float32Array(2);
 
@@ -2561,10 +2596,16 @@ function buildJob(raw) {
     //
     // Clamped so a very tall layer cannot collapse the top back to a ridge
     // and a very thin one cannot run the flat out past the bead's own edge.
-    var kf = Math.max(0.2, Math.min(0.85, 1 - lh / (2.6 * hw)));
+    // kf uses the LAYER's own widest bead, so a wider first layer gets the
+    // flatter top a squashed bead actually has rather than the 0.42 one.
+    var kfW = hw * (li === 0 ? FIRST_LAYER_W : 1);
+    var kf = Math.max(0.2, Math.min(0.85, 1 - lh / (2.6 * kfW)));
     layerSeg[li] = si;
     for (var pi = L[1]; pi < L[1] + L[2]; pi++) {
       var t = polys[pi * 3], s = polys[pi * 3 + 1], n = polys[pi * 3 + 2];
+      // Width for THIS extrusion: the first layer's squash wins over the
+      // per-feature width, because on layer zero everything is laid wide.
+      var hwT = hw * (li === 0 ? FIRST_LAYER_W : (WIDTH_BY_TYPE[t] || 1));
       var tool = polyTool ? polyTool[pi] : 0;
       var base = vi;
       for (i = 0; i < n; i++) {
@@ -2585,7 +2626,7 @@ function buildJob(raw) {
         // 1/|sum| is the standard miter extension; clamp so a hairpin does not
         // fire a spike halfway across the plate.
         var ux = ax / m, uy = ay / m;
-        var sc = Math.min(2.4, 2 / m) * hw;
+        var sc = Math.min(2.4, 2 / m) * hwT;
         ax = ux * sc; ay = uy * sc;
 
         // Flat half-width: for a rectangle with semicircular ends of radius

@@ -115,3 +115,92 @@ four errors, all of them the kind that sound plausible:
 
 Two things CLAUDE.md had right and are confirmed here: the 256 mm cube build
 volume, and 20,000 mm/s² acceleration (Bambu states it as 20 m/s²).
+
+---
+
+# How the P1S lays a layer
+
+Added 2026-09-19. Everything here is a **profile default from Bambu Studio for
+a 0.4 mm nozzle**, not a per-move value read back from G-code. That
+distinction matters: the G-code carries the truth, the profile carries the
+intent, and anything built on the numbers below should say which it is using.
+
+## Line width is not one number
+
+| Where | Width |
+|---|---|
+| Default line width | **0.42 mm** |
+| Initial (first) layer | **0.50–0.60 mm** |
+| Outer wall | 0.40 mm |
+| Inner wall | 0.45 mm |
+
+A 0.4 mm nozzle lays a **0.42 mm** bead by default, not 0.40 — the extrusion
+spreads as it is pressed into the layer below. The first layer is laid wider
+still and squashed harder, which is what makes it grip the plate; it is also
+the layer anyone looking at the bed is looking at, so drawing it at the same
+width as everything else is visibly wrong.
+
+## Layer height
+
+0.2 mm is the standard production layer for a 0.4 nozzle and the sensible
+default for a first print in almost any material. 0.08–0.12 mm is the fine
+range for visible detail; 0.28 mm is the practical ceiling for that nozzle.
+First layer height is 0.2 mm by default.
+
+## Speed, and why the headline numbers are not print speeds
+
+**500 mm/s toolhead speed and 20 m/s² acceleration are machine maxima**, not
+what a part prints at. Real defaults are far slower where surface quality is
+decided:
+
+- Outer wall around **60 mm/s** in Bambu Studio's own conservative default;
+  the aggressive X1C 0.20 Standard preset asks for 200 mm/s outer / 300 mm/s
+  inner before filament limits clamp it.
+- First layer **15–45 mm/s** depending on plate adhesion, and staying near
+  50 mm/s regardless of the rest of the profile is the usual advice —
+  adhesion matters more than time on layer one.
+
+The hard ceiling underneath all of it is the hot end: **32 mm³/s**. For a
+0.42 × 0.2 mm bead that is roughly 380 mm/s of linear travel before melt
+rate, not the motion system, becomes the limit.
+
+## What this changed in the viewer
+
+`buildJob` drew every extrusion on every plate at one width. It now scales
+that width by feature — inner wall 0.45/0.42, and the whole first layer
+0.50/0.42 — from the table above. The flat-top fraction of the bead is
+derived from the layer's own widest bead rather than the global constant, so
+a wider first layer gets the flatter top a squashed bead actually has.
+
+This is an approximation from profile defaults and is labelled as such in the
+code. The real fix is per-move widths in the payload, which means re-exporting
+all 72 plates through `gcode_viewer_data.py` — worth doing, not worth
+bundling into a change that also touched geometry.
+
+# The machine, checked against photographs
+
+Measured off Bambu's own P1S product photography, 1024 px, 2026-09-19.
+
+**The body is neutral.** Sampled across the shell: right side panel
+`(27,27,27)`, lower panel `(13,13,13)`, top bezel `(83,83,83)`, base plinth
+`(31,31,31)`, front face mean `(38,38,38)`. Every one is **exactly R=G=B**.
+The viewer's machine palette was uniformly blue-shifted — `0x1b1e24` is
+(27,30,36), `0x191d25` is (25,29,37) — and rendered at (21,24,35) against the
+real (38,38,38). Fifteen body colours were remapped to their own luminance
+grey, keeping one level of cool so the machine does not read as flat charcoal
+in a dark UI.
+
+**The control panel is at the top, on the left.** It sits in the bezel *above*
+the glass door, with the "Bambu Lab / P1S" wordmark to its right. The viewer
+had it at `zBot + 28` — the middle of the bezel *below* the door, near the
+feet, and on the right. The round control beside the screen is a **D-pad**,
+not a knob; the P1S has no touchscreen.
+
+Other details visible in the reference and worth having: a pill-shaped "Bambu
+Lab" door handle on the right edge of the glass, the Bambu logo and wordmark
+on the right side panel, a white label strip along the bed's front edge
+reading `WARNING HOT SURFACE | BUILD VOLUME 256 × 256 × 256mm`, and an LED
+light bar high on the inside left wall.
+
+**Not yet done, and named so it is not lost:** the door handle, the side-panel
+branding and the front wordmark are all still missing from the model.

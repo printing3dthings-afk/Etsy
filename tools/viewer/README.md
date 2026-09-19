@@ -1390,3 +1390,57 @@ The first version of the tiling guard searched the whole file for
 `wrapS = …RepeatWrapping`. That also matches the chamber panel texture near
 the top of `app.js`, so it passed with the plate's own line deleted. Only the
 mutation check surfaced it; it is scoped to `grainNormalMap` now.
+
+## Measured against the machine (2026-09-19)
+
+Reference photographs of a real P1S, Bambu's own product photography and
+their published Technical Specifications PDF, all fetched and measured rather
+than read about. Full findings in `data/knowledge_base/bambu_p1s_hardware.md`.
+
+**The body is neutral and this one was not.** Every sample across the real
+shell is exactly R=G=B — side panel (27,27,27), lower panel (13,13,13), top
+bezel (83,83,83), base (31,31,31), front face mean (38,38,38). The viewer's
+palette was uniformly blue-shifted: `0x1b1e24` is (27,30,36), `0x191d25` is
+(25,29,37), and the rendered front measured (21,24,35). Twenty-one machine
+surface colours were remapped to their own luminance grey, keeping one level
+of cool so the machine does not read as flat charcoal in a dark UI.
+
+**The control panel was at the bottom.** It sat at `zBot + 28` — the middle
+of the bezel *below* the door, down by the feet, and on the right. On a real
+P1S it is in the bezel *above* the glass door, at the left, with the wordmark
+to its right. Moved, and the round control is now drawn as the D-pad it is
+rather than a dial; the P1S has no touchscreen.
+
+**Bead width was one number for every extrusion on every plate.** The payload
+carries a single `beadWidth` and a per-layer *height*, so a first-layer bead
+and an inner wall were drawn identically. Bambu Studio's defaults for a 0.4
+nozzle are 0.42 mm default line width, **0.50–0.60 mm initial layer**, 0.45 mm
+inner wall. The first layer is the one that matters: 20–40% wider than the
+rest, squashed into the plate, and the exact part anyone looking at the bed is
+looking at. Width is now scaled per feature, and the bead's flat-top fraction
+derives from the layer's own widest bead rather than the global constant.
+
+That last one is an approximation from **profile defaults, not per-move widths
+read back from the G-code** — the payload does not carry those, and getting
+them means re-exporting all 72 plates through `gcode_viewer_data.py`. It is
+labelled as profile-derived in the code. Strictly better than one constant,
+and not the real answer.
+
+### Two tests that asserted more than had been measured
+
+The palette guard first ran as "no dark colour in the file may be blue" and
+flagged **26** — smoked glass, the backdrop, UI accents, none of which had
+been checked against a photograph. Scoped to the fifteen shell colours that
+were actually measured, plus a neutrality rule on `surface()` calls only,
+which then correctly found six more shell colours the first sweep had missed.
+
+The bead-width guard checked that the symbol `hwT` appeared in the geometry.
+That passes against `var hwT = hw;` — the exact regression it existed to
+catch. Only the mutation run surfaced it; it now checks the assignment
+derives from the width table.
+
+### Still missing from the machine, named so it is not lost
+
+The door handle, the side-panel Bambu branding, the front wordmark, the bed's
+front label strip, and the interior LED bar are all visible in the reference
+photographs and absent from the model.
