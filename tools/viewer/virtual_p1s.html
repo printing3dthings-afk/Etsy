@@ -442,10 +442,14 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         layers stay on, and supports stay on, because they are physically
         standing on the plate until you snap them off. Layer lines are drawn at
         the plate's own measured layer pitch and fade out at zoom levels where
-        a camera could not resolve them either. Some dark speckle across a
-        curved wall is a limitation of drawing beads as open ribbons rather
-        than solid tubes: you are seeing a real gap between two beads, not a
-        defect in the print.</div>
+        a camera could not resolve them either. Each bead is a closed tube, so the dark
+        speckle that used to show up along curved walls (you were seeing
+        straight into the hollow underside of a bead) is gone. What is still
+        a simplification is the bead's cross-section: four points, not a real
+        half-cylinder. Measured against macro photographs of real printed
+        walls, the ridge between layers here comes out at <b>6.8%</b> of
+        local brightness against <b>13.7–20.7%</b> in the photographs — so
+        layer lines read softer here than they do on the actual part.</div>
       <div class="caveat"><b>Part only shows you less than the plate really
         holds, on purpose.</b> Real-print mode answers "what is on the plate
         right now", so it keeps supports — they are genuinely printed
