@@ -1244,6 +1244,112 @@ def test_the_layer_bulge_is_continuous_across_the_boundary():
     check(m is not None and float(m.group(1)) > 0.0,
           "the layer bulge is switched off entirely")
 
+
+def test_the_plate_can_never_occlude_the_print_sitting_on_it():
+    """"Any plate hides the first few layers", reported 2026-09-19.
+
+    The plate face sits 0.045mm under the first layer and carried
+    polygonOffset -2/-2, which pulls it TOWARD the camera. Two depth units at
+    24-bit precision with near=1/far=4000 is roughly 0.02mm at 400mm of camera
+    distance and 0.076mm at 800mm, so past about 600mm the bias exceeded the
+    gap and the plate swallowed the first layer or two of every print.
+
+    Flipping the sign was worse and is the more interesting half: the offset
+    was never fighting the print, it was fighting the steel body underneath,
+    whose top sits FIVE MICRONS below the face (depth 2.0 extruded from
+    -2.05 tops out at -0.05). Pushing the face away handed the surface to the
+    body and the plate rendered as bare dark steel -- measured, the plate went
+    from #976a38 to #394156.
+
+    So the fix is real Z separation, not bias in either direction. This guards
+    both halves: no negative offset, and a body top far enough below the face
+    that no bias is needed.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    bed = re.search(r"function buildBed\(X, Y, ox, oy\) \{(.*?)\n\}", src, re.S)
+    check(bed is not None, "buildBed is gone")
+    if not bed:
+        return
+    b = bed.group(1)
+
+    neg = re.search(r"polygonOffsetFactor:\s*-", b)
+    check(neg is None,
+          "the plate face pulls itself toward the camera again; it sits under "
+          "the first layer and will hide it at any real camera distance")
+
+    body = re.search(r"body\.position\.set\(0, 0, (-[0-9.]+)\)", b)
+    face = re.search(r"plate\.position\.set\(0, 0, (-[0-9.]+)\)", b)
+    depth = re.search(r"depth:\s*([0-9.]+)", b)
+    check(body and face and depth,
+          "cannot find the plate body/face placement any more")
+    if not (body and face and depth):
+        return
+    body_top = float(body.group(1)) + float(depth.group(1))
+    face_z = float(face.group(1))
+    check(body_top < face_z - 0.15,
+          "the steel body's top (%.3f) is within %.3fmm of the plate face "
+          "(%.3f). That is below depth-buffer resolution, so the face will "
+          "z-fight it and something will reach for a polygon offset again"
+          % (body_top, face_z - body_top, face_z))
+    check(face_z < 0,
+          "the plate face is at or above z=0, so the first layer is inside it")
+
+
+def test_the_plate_grain_is_a_real_size_in_millimetres():
+    """"The plate is completely wrong texture", reported 2026-09-19.
+
+    The grain canvas covered the whole 256mm plate in 512px -- 2 px/mm. A real
+    textured-PEI grain is well under a millimetre, so at 2 px/mm it is one
+    pixel: not representable. The octaves had therefore been authored large
+    enough to survive, and the coarse one was a 15px radius, which over 256mm
+    is a 7.5mm radius. Fifteen-millimetre blobs on a surface whose real grain
+    is sub-millimetre.
+
+    Measured on Bambu's own product photograph of the plate (1010px across
+    256mm, 3.95 px/mm): the speckle is uniform and fine, sd 5.09 on mean
+    177.7 -- about 2.9% modulation, with no large-scale structure at all.
+
+    The normal map tiles at PLATE_TILE_MM now, so the same canvas is 16 px/mm
+    and a 0.5mm grain is 8px. The colour map stays 1:1 because the printed
+    markings have to land at real plate coordinates.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+
+    m = re.search(r"var PLATE_TILE_MM = ([0-9.]+)", src)
+    check(m is not None,
+          "the grain no longer tiles at a real millimetre size; it is being "
+          "stretched over the whole bed again at 2 px/mm")
+    px = re.search(r"var PLATE_PX = (\d+)", src)
+    if not (m and px):
+        return
+    per_mm = float(px.group(1)) / float(m.group(1))
+    check(per_mm >= 8,
+          "the grain canvas is %.1f px/mm; a sub-millimetre stipple needs at "
+          "least ~8 to survive mipmapping" % per_mm)
+
+    # Scoped to grainNormalMap on purpose: an unscoped search for
+    # "wrapS = ...RepeatWrapping" also matches the chamber panel texture at
+    # the top of the file, and passed even with the plate's own line deleted.
+    # Caught by mutation, which is the only way that false pass ever shows up.
+    gnm = re.search(r"function grainNormalMap\(grain, g\) \{(.*?)\n\}", src, re.S)
+    check(gnm is not None, "grainNormalMap is gone")
+    check(gnm and "RepeatWrapping" in gnm.group(1),
+          "the grain texture does not repeat, so tiling it does nothing")
+    check("repeat.set(X / PLATE_TILE_MM" in src,
+          "the grain repeat is no longer derived from the real plate size")
+
+    # every stipple octave must be sub-millimetre at the tile scale
+    g = re.search(r"stipple:\s*\{[^}]*octaves:\s*\[(.*?)\]\}", src)
+    check(g is not None, "the stipple grain is gone")
+    if g:
+        radii = [float(x) for x in re.findall(r"\[\s*([0-9.]+),", g.group(1))]
+        worst = max(radii) * float(px.group(1)) / 1024.0 / per_mm
+        check(worst < 1.0,
+              "the coarsest stipple feature is %.2fmm across at the tile "
+              "scale; the real plate has no structure that large" % (worst * 2))
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

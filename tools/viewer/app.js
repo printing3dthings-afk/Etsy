@@ -768,7 +768,18 @@ function buildBed(X, Y, ox, oy) {
   // plateShape() is already in plate coordinates (0..X, 0..Y), so unlike the
   // centred box it replaced it takes no ox/oy offset -- applying one put the
   // plate a bed-width out in front of the machine.
-  body.position.set(0, 0, -2.05);
+  // Top face at z = -0.30, not -0.05 (2026-09-19).
+  //
+  // depth:2.0 extruded from -2.05 puts this body's TOP at -0.05, five microns
+  // under the printed face at -0.045. That is far below depth-buffer
+  // resolution at any real camera distance, which is why the face carried a
+  // NEGATIVE polygon offset to win -- and that same offset then beat the
+  // print's first layer sitting on it, which is the bug this fixes.
+  //
+  // Separating them in Z by a quarter of a millimetre removes the conflict
+  // instead of biasing around it, so no offset is needed in either direction
+  // and nothing can occlude geometry resting on the plate.
+  body.position.set(0, 0, -2.30);
   bedGroup.add(body);
 
   // Printed face. Separate from the extrusion because it needs its own 1:1 UVs
@@ -778,8 +789,21 @@ function buildBed(X, Y, ox, oy) {
   var box = normalizeUV(faceGeo);
   var maps = plateSurface(spec, X, Y, box);
   var faceMat = {color: lin(spec.hex), roughness: spec.rough, metalness: spec.metal,
-    envMapIntensity: 0.7, polygonOffset: true,
-    polygonOffsetFactor: -2, polygonOffsetUnits: -2};
+    // No polygon offset at all any more (2026-09-19).
+    //
+    // It was -2/-2 -- pulling the face TOWARD the camera. The face sits
+    // 0.045mm under the first layer, and two depth units at 24-bit precision
+    // with near=1/far=4000 is roughly 0.02mm at 400mm of camera distance and
+    // 0.076mm at 800mm, so past about 600mm the bias exceeded the gap and the
+    // plate swallowed the first layer or two of every print. That is exactly
+    // "any plate hides the first few layers".
+    //
+    // Flipping the sign was worse: the offset was beating the steel body,
+    // whose top sits five microns under this face, so pushing away handed the
+    // surface to the body and the plate rendered as bare dark steel. The body
+    // has been moved down a quarter of a millimetre instead, which makes the
+    // bias unnecessary in both directions.
+    envMapIntensity: 0.7};
   if (maps) {
     faceMat.map = srgbMap(maps.color);
     faceMat.normalMap = maps.normal;
@@ -1528,12 +1552,33 @@ function _plateCtx(c) {
 //     specular sparkle and a matte black plate renders as television static.
 // Fine detail belongs in the COLOUR map, which mipmaps down to a slightly
 // varied tone instead of to noise.
+// One normal-map tile covers this many millimetres of plate.
+//
+// It used to cover the whole 256mm plate in a 512px canvas -- 2 px/mm -- and
+// that is the root of "the plate is completely wrong texture" (2026-09-19).
+// At 2 px/mm a 0.5mm grain is one pixel: physically unrepresentable. So the
+// octaves had been authored large enough to survive, and the coarse one was a
+// 15px radius, which over 256mm is a 7.5mm radius -- FIFTEEN MILLIMETRE blobs
+// on a surface whose real grain is under a millimetre.
+//
+// Measured on Bambu's own product photograph of the Textured PEI plate
+// (1010px across a 256mm plate, so 3.95 px/mm): the speckle is uniform and
+// fine, sd 5.09 on mean 177.7, i.e. about 2.9% luminance modulation with no
+// large-scale structure at all. The individual grain is below what that
+// photograph resolves, which is itself the point -- a real plate reads as a
+// fine sheen, never as blobs.
+//
+// 32mm per tile at 512px is 16 px/mm, so a 0.5mm grain is 8px across and
+// survives both mipmapping and a close camera.
+var PLATE_TILE_MM = 32;
+
+// Radii below are in TILE pixels: at 16 px/mm, radius 4 is a 0.5mm feature.
 var GRAIN = {
-  stipple: {bump: 0.70, octaves: [[30, 0.55, 19,  0, 0.34], [10, 0.65, 21, 78, 0.36], [2.0, 0.70, 24, 0, 0.42]]},
-  satin:   {bump: 0.10, octaves: [[36, 0.28,  4,  0, 0.22], [7, 0.32,  5, 14, 0.22], [1.5, 0.40,  7, 0, 0.26]]},
-  fine:    {bump: 0.08, octaves: [[38, 0.22,  3,  0, 0.18], [5, 0.38,  4, 12, 0.20], [1.1, 0.50,  6, 0, 0.24]]},
-  flat:    {bump: 0.06, octaves: [[40, 0.20,  3,  0, 0.16], [9, 0.26,  4,  8, 0.16], [1.8, 0.28,  5, 0, 0.18]]},
-  starry:  {bump: 0.26, octaves: [[32, 0.35,  9, 18, 0.25]], glitter: true}
+  stipple: {bump: 0.70, octaves: [[24, 0.50, 11,  0, 0.30], [8, 0.62, 13, 78, 0.32], [3.0, 0.70, 15, 34, 0.36]]},
+  satin:   {bump: 0.10, octaves: [[20, 0.26,  3,  0, 0.20], [6, 0.30,  4, 14, 0.20], [2.4, 0.38,  5, 7, 0.24]]},
+  fine:    {bump: 0.08, octaves: [[18, 0.20,  2,  0, 0.16], [5, 0.34,  3, 12, 0.18], [2.0, 0.46,  4, 6, 0.22]]},
+  flat:    {bump: 0.06, octaves: [[16, 0.18,  2,  0, 0.14], [7, 0.24,  3,  8, 0.14], [2.6, 0.26,  4, 4, 0.16]]},
+  starry:  {bump: 0.26, octaves: [[14, 0.32,  6, 18, 0.22]], glitter: true}
 };
 
 // The finish is decoration. A plate that falls back to flat colour is a worse
@@ -1552,6 +1597,10 @@ function buildPlateSurface(spec, X, Y, box) {
   var g = GRAIN[spec.grain] || GRAIN.satin;
   var ct = new THREE.CanvasTexture(plateColourMap(spec, g, X, Y, box));
   var nt = grainNormalMap(spec.grain, g);
+  // Every plate this viewer knows is the same 256mm bed, so one shared and
+  // memoised normal texture can carry the repeat for all of them.
+  nt.repeat.set(X / PLATE_TILE_MM, Y / PLATE_TILE_MM);
+  nt.needsUpdate = true;
   ct.anisotropy = _maxAniso;
   return {color: ct, normal: nt, bump: g.bump};
 }
@@ -1654,6 +1703,13 @@ function grainNormalMap(grain, g) {
   });
   var t = new THREE.CanvasTexture(heightToNormal(bmp, bg));
   t.anisotropy = _maxAniso;
+  // The tile repeats across the plate instead of being stretched over it.
+  // This is what makes a sub-millimetre grain representable at all: the same
+  // 512px canvas now covers PLATE_TILE_MM rather than the full 256mm bed, so
+  // the texel density goes from 2 px/mm to 16 px/mm. The colour map stays 1:1
+  // because the plate's printed markings have to land at real coordinates --
+  // only the grain tiles.
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
   _NORMAL_MAPS[grain] = t;
   return t;
 }

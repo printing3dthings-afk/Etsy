@@ -1327,3 +1327,66 @@ at every layer boundary — the opposite of a real wall, where beads meet in a
 smooth valley. It is a full-period sine now, continuous across the boundary by
 construction, with its strength exposed as `uLayerAmp` so it can be swept
 against a photograph instead of guessed.
+
+## The plate (2026-09-19, second pass)
+
+Two reports in one: *"The plate is completely wrong texture"* and *"any plate
+hides the first few layers so it looks wrong."* They turned out to be
+unrelated bugs that happened to show up in the same glance.
+
+### The grain was 20–30× too large, and could not have been otherwise
+
+The grain canvas covered the whole 256 mm plate in 512 px — **2 px/mm**. A
+real textured-PEI grain is well under a millimetre, so at that density it is
+*one pixel*: not representable. The octaves had therefore been authored large
+enough to survive, and the coarsest one had a 15 px radius — over 256 mm that
+is a 7.5 mm radius, i.e. **15 mm blobs** on a surface that has no structure
+above a millimetre.
+
+Measured on Bambu's own product photograph of the Textured PEI plate (1010 px
+across a 256 mm plate, 3.95 px/mm): the speckle is uniform and fine, **sd 5.09
+on a mean of 177.7 — about 2.9% luminance modulation, with no large-scale
+structure at all.** The individual grain sits below what a 4 px/mm photograph
+resolves, which is the useful part: a real plate reads as a fine sheen, never
+as blobs.
+
+The fix is structural rather than a re-tuning. The **normal map now tiles** at
+`PLATE_TILE_MM = 32`, so the same 512 px canvas is 16 px/mm and a 0.5 mm grain
+is 8 px — resolvable, and it mipmaps down to a smooth sheen when you pull
+back, which is what the real plate does. The colour map stays 1:1 over the
+plate because the printed markings have to land at real coordinates; only the
+grain repeats.
+
+The plate's colour was checked at the same time and was already right:
+measured off the product photo at `#cfb074` against the table's `#cca96b`.
+
+### The plate was winning a depth fight it should never have been in
+
+The plate face sits 0.045 mm under the first layer and carried
+`polygonOffsetFactor: -2, polygonOffsetUnits: -2` — pulling it **toward** the
+camera. Two depth units at 24-bit precision with `near=1, far=4000` is roughly
+0.02 mm at 400 mm of camera distance and 0.076 mm at 800 mm, so past about
+600 mm the bias exceeded the gap and the plate swallowed the first layer or
+two of every print.
+
+**Flipping the sign made it worse, and that is the more useful half.** The
+offset was never fighting the print — it was fighting the steel body beneath,
+whose top sits *five microns* below the face (`depth: 2.0` extruded from
+`-2.05` tops out at `-0.05`, not the 2 mm the placement looks like at a
+glance). Pushing the face away handed the surface to the body and the plate
+rendered as bare dark steel: measured, `#976a38` → `#394156`.
+
+So the body moved down to `-2.30`, giving a quarter-millimetre of real
+clearance, and the polygon offset is gone in both directions. Nothing biases,
+nothing z-fights, and geometry resting on the plate always wins. Measured
+after: `#976937`, and the first layer visibly sits on top.
+
+A test now guards the body/face separation arithmetically rather than guarding
+the offset value, because the offset was a symptom.
+
+### A test that passed for the wrong reason
+
+The first version of the tiling guard searched the whole file for
+`wrapS = …RepeatWrapping`. That also matches the chamber panel texture near
+the top of `app.js`, so it passed with the plate's own line deleted. Only the
+mutation check surfaced it; it is scoped to `grainNormalMap` now.

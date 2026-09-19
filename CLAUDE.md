@@ -56,6 +56,11 @@ Every product, every image, every price, every line of code must serve this miss
 
 The physical 3D printed products sold in the shop are printed on a **Bambu Lab P1S**.
 
+**Full, sourced spec sheet: `data/knowledge_base/bambu_p1s_hardware.md`** — every figure
+from Bambu's own P1S Technical Specifications PDF, read 2026-09-19, including the
+four places it contradicts the table below (nozzle material, display, CF filaments,
+camera frame rate).
+
 ### Core Specifications
 | Spec | Value |
 |---|---|
@@ -77,8 +82,8 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 - **Input shaping / vibration compensation** — eliminates ringing/ghosting at high speeds
 - **Self-cleaning tool head** — purges nozzle before print starts
 - **Textured + smooth PEI flex plate** — pops off build plate when cooled
-- **Built-in camera** — remote monitoring via Bambu Handy app
-- **2.8" monochrome LCD touchscreen**
+- **Chamber camera — 1280×720 at 0.5 fps**, explicitly a low-rate camera, timelapse supported. Remote monitoring via Bambu Handy. Two seconds per frame is the hardware limit, so nothing downstream (including `tools/relay/bambu_p1s_bridge.py`) can present this as live video.
+- **2.7-inch 192×64 display** — not a touchscreen. The P1S is driven by its button, the Handy app or Bambu Studio; the touchscreen is an X-series feature. (Bambu's own P1S tech-specs PDF, checked 2026-09-19.)
 - **Bambu Studio slicer** — proprietary but full-featured, updated regularly
 
 ### AMS — Automatic Material System
@@ -95,17 +100,17 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 | **Silk PLA** | Premium-look products — metallic/shiny finish | Eye-catching for display items; great for koozies |
 | **High-Speed PLA** | Production runs where speed matters | AMS compatible |
 | **PETG** | Functional/durable parts, outdoor-adjacent use | Better heat + impact resistance than PLA |
-| **PETG-CF** | Strong functional parts | Requires hardened steel nozzle |
+| **PETG-CF** | Strong functional parts | ⚠️ Bambu lists carbon/glass-fibre reinforced polymers as **not recommended** for the P1S (spec sheet, 2026-09-19). A hardened nozzle is necessary but not sufficient — the machine is not specified for them. |
 | **TPU** | Flexible products (koozies, grips, gaskets) | Flexible, bouncy, impact resistant |
 | **ABS** | Heat-resistant functional parts | Enclosure required — P1S handles natively |
 | **ASA** | Outdoor-safe, UV resistant | Enclosure required |
 | **PA / Nylon** | Engineering parts, high wear resistance | Needs drying; 80°C 12+ hrs |
-| **PA-CF / PLA-CF** | Strongest prints, stiff and light | Requires hardened steel nozzle |
+| **PA-CF / PLA-CF** | Strongest prints, stiff and light | ⚠️ Same as PETG-CF — **not recommended** on the P1S per Bambu's own spec sheet, hardened nozzle or not. |
 | **PC (Polycarbonate)** | Highest-strength functional parts | Max temp required |
 | **PVA** | Dissolvable support material | Pairs with PLA |
 
 ### Nozzle Types
-- **Stock brass 0.4mm** — PLA, PETG, TPU, Silk (standard materials only; CF filaments destroy brass fast)
+- **Stock stainless steel 0.4mm** — PLA, PETG, TPU, Silk. (Bambu's spec sheet says stainless steel, not brass — corrected 2026-09-19.) Optional 0.2 / 0.6 / 0.8 mm.
 - **Hardened steel 0.4mm** — Required for any carbon fiber or glass fiber filament
 - **0.2mm nozzle** — Ultra-fine detail; slow
 - **0.6mm / 0.8mm nozzle** — Faster production, less detail
