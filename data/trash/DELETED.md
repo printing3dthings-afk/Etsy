@@ -404,3 +404,14 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 
 <!-- /TRASH 20260919-002 -->
 
+<!-- TRASH id=20260919-003 date=2026-09-19 kind=snippet source="tools/viewer/app.js" reason="duplicate object-literal key: the greyscale remap collapsed 0x23262d and 0x22262e onto the same hex, so this row was shadowed by the next one and never applied" -->
+## 20260919-003 · 2026-09-19 · snippet · `tools/viewer/app.js`
+**Reason:** duplicate object-literal key: the greyscale remap collapsed 0x23262d and 0x22262e onto the same hex, so this row was shadowed by the next one and never applied  
+**Payload:** `data/trash/files/20260919-003__snippet.txt`
+
+```javascript
+  0x262627: [0.60, 0.10],
+```
+
+<!-- /TRASH 20260919-003 -->
+

@@ -1464,6 +1464,97 @@ def test_the_machine_body_is_neutral_grey():
                   "of blue bias on a shell that photographs neutral"
                   % (h, r, g, bl))
 
+def test_a_rebuilt_machine_does_not_reappear_in_part_only():
+    """Changing the plate or the printer put the whole machine back on screen
+    while the Part-only button still read "Part: on" (2026-09-19).
+
+    buildChamber() throws away and rebuilds chamber/bedGroup/gantry/yRails/
+    doorGroup/amsGroup/grid, and a freshly-built THREE.Group is visible. The
+    modes that hide the machine live in applyRealMode(), which is only called
+    when a mode CHANGES -- so nothing re-applied it after a rebuild.
+    restoreMotionVisibility(), called from buildChamber, even re-shows the
+    gantry unconditionally.
+
+    Measured in a real browser against the built site: visible top-level
+    groups went 1 -> 6 on a plate change and 1 -> 5 on a printer change, with
+    aria-pressed still "true" both times.
+
+    buildBed() already does this for the plate ruling (grid.visible =
+    colorMode !== 'real') one line after building it, which is exactly why
+    real mode survived a rebuild and part-only did not.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"\nfunction buildChamber\(bed\) \{(.*?)\n\}\n",
+                     js, re.S)
+    check(body is not None, "buildChamber() not found in app.js")
+    if not body:
+        return
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in body.group(1).split("\n"))
+    check("restoreModeAfterRebuild()" in src,
+          "buildChamber() rebuilds every machine group but never re-applies "
+          "the mode that hides them -- changing the plate while part-only is "
+          "on pops the machine back with the button still reading 'Part: on'")
+    # EVERY exit, not just the last one. The open-frame profiles return early
+    # from the middle of this function, and the first version of this fix
+    # landed only at the tail -- so switching to an A2L while part-only was on
+    # still put the machine back (1 -> 5 visible groups), and this assertion
+    # in its weaker "is it mentioned anywhere" form passed the whole time.
+    after_build = src.split("buildBed(", 1)[-1]
+    early = len(re.findall(r"\n\s*return;", after_build))
+    check(src.count("restoreModeAfterRebuild()") >= early + 1,
+          "buildChamber() has %d early return(s) after it starts building but "
+          "only %d restoreModeAfterRebuild() call(s) -- a path that rebuilds "
+          "the machine and returns without re-applying the mode re-shows it"
+          % (early, src.count("restoreModeAfterRebuild()")))
+    # and it has to run AFTER the rebuild, not before: restoreMotionVisibility()
+    # re-shows the gantry, and buildFloor() makes a fresh visible floor.
+    for later in ("restoreMotionVisibility()", "buildFloor()"):
+        if later in src and "restoreModeAfterRebuild()" in src:
+            check(src.index("restoreModeAfterRebuild()") > src.index(later),
+                  "restoreModeAfterRebuild() runs before %s in buildChamber(), "
+                  "so that call re-shows what it just hid" % later)
+    # The restore has to re-frame, not just re-hide. buildChamber sets cam.r
+    # from machineRadius() on its way through, so a restore that only fixes
+    # visibility leaves the machine hidden and the camera framed for a 389mm
+    # enclosure -- the part renders as a speck. Caught exactly this way: the
+    # first fix passed every visibility assertion and the screenshot showed a
+    # 12-pixel keychain in an empty scene.
+    helper = re.search(r"\nfunction restoreModeAfterRebuild\(\) \{(.*?)\n\}",
+                       js, re.S)
+    check(helper is not None, "restoreModeAfterRebuild() not found in app.js")
+    if helper:
+        h = helper.group(1)
+        check("frameSolo(" in h,
+              "restoreModeAfterRebuild() restores visibility but not framing; "
+              "buildChamber re-frames to the machine, so the part is left as "
+              "a speck in an empty scene")
+
+
+def test_no_surface_colour_is_declared_twice():
+    """SURFACE had two rows keyed 0x262627 (2026-09-19).
+
+    Neutralising the machine palette mapped 0x23262d and 0x22262e onto the
+    same grey, which turned two distinct rows into a repeated key. A repeated
+    key in a JS object literal is silently won by the last one, so the first
+    row had been dead from the moment the remap landed -- no error, no
+    warning, and nothing in the palette test noticed because every value in
+    it was still neutral.
+
+    The table's whole contract is that it maps one real material per hex.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    blk = re.search(r"var SURFACE = \{(.*?)\n\};", js, re.S)
+    check(blk is not None, "SURFACE table not found in app.js")
+    if not blk:
+        return
+    body = "\n".join(re.sub(r"//.*$", "", ln) for ln in blk.group(1).split("\n"))
+    keys = re.findall(r"(0x[0-9a-f]{6})\s*:", body)
+    dupes = sorted(set(k for k in keys if keys.count(k) > 1))
+    check(not dupes,
+          "SURFACE declares %s more than once; the later row silently wins "
+          "and the earlier one never applies" % dupes)
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

@@ -293,7 +293,10 @@ var SURFACE = {
   0x26282e: [0.52, 0.18],  // painted steel body panel
   0x2e2e2f: [0.54, 0.16],  // AMS shell
   0x2f2f30: [0.58, 0.12],  // spool holder
-  0x262627: [0.60, 0.10],
+  // One row, not two: neutralising the palette collapsed 0x23262d and
+  // 0x22262e onto the same grey, and a repeated key in an object literal
+  // is silently won by the last one -- the first row had been dead ever
+  // since. Kept at the value that was actually in effect (2026-09-19).
   0x262627: [0.62, 0.10],
   0x21252b: [0.62, 0.10],
   0x1d2026: [0.50, 0.20],  // door frame
@@ -543,9 +546,10 @@ function buildChamber(bed) {
     applyShadows(chamber); applyShadows(bedGroup); applyShadows(gantry);
     aimShadowCamera();
     buildFloor();
-  shadowDirty = true;
+    shadowDirty = true;
     restoreMotionVisibility();
     syncDoorControl();
+    restoreModeAfterRebuild();
     return;
   }
 
@@ -684,6 +688,29 @@ function buildChamber(bed) {
   // to fit inside the shadow frustum, and the floor sits on zBot.
   aimShadowCamera();
   buildFloor();
+
+  restoreModeAfterRebuild();
+}
+
+// buildChamber() hands back freshly-built groups, and a new THREE.Group is
+// visible -- so every mode that HIDES the machine has to be put back after a
+// rebuild, and buildChamber has two exits (the open-frame profiles return
+// early). Measured in a real browser before this existed: with part-only on,
+// visible top-level groups went 1 -> 6 on a plate change and 1 -> 5 on a
+// printer change, with the button still reading "Part: on".
+//
+// buildBed() already does exactly this for the plate ruling, one line after
+// building it (`grid.visible = colorMode !== 'real'`) -- which is precisely
+// why real-print mode survived a rebuild and the machine-hidden modes did not.
+//
+// The re-frame is the other half, and it is not optional: buildChamber sets
+// cam.r from machineRadius() on its way through, so restoring visibility
+// alone leaves the machine correctly hidden and the camera still framed for a
+// 389mm enclosure -- the part renders as a speck in the middle of an empty
+// scene. frameSolo() is what setPartOnly() itself uses.
+function restoreModeAfterRebuild() {
+  applyRealMode();
+  if (machineHidden() && JOB) { frameSolo(JOB); }
 }
 
 function machineRadius() {
@@ -1610,8 +1637,10 @@ function buildPlateSurface(spec, X, Y, box) {
   var g = GRAIN[spec.grain] || GRAIN.satin;
   var ct = new THREE.CanvasTexture(plateColourMap(spec, g, X, Y, box));
   var nt = grainNormalMap(spec.grain, g);
-  // Every plate this viewer knows is the same 256mm bed, so one shared and
-  // memoised normal texture can carry the repeat for all of them.
+  // The grain texture is memoised per finish and shared, so the repeat has to
+  // be set here on every build rather than once at creation: the profiles do
+  // NOT all share a bed (the A2L is 330 x 320), and only one plate is ever on
+  // screen, so the live plate's own size is what the shared tile must carry.
   nt.repeat.set(X / PLATE_TILE_MM, Y / PLATE_TILE_MM);
   nt.needsUpdate = true;
   ct.anisotropy = _maxAniso;
@@ -2367,10 +2396,21 @@ function makeMaterial(dim, rich) {
                // sawtooth put this render`s crest at 5-16% -- a bright line
                // at the layer boundary instead of a ridge below it.
                //
-               // 0.24 rather than 0.35 for the same reason. Measured
-               // peak-to-trough amplitude as a share of local mean: the
-               // reference photograph is 48.4%, this render was 69.4%, a
-               // factor of 1.43 too strong.
+               // Amplitude is uLayerAmp, and it is 1.5 -- well ABOVE the
+               // 0.35 this replaced, not below it (corrected 2026-09-19).
+               //
+               // This comment used to say 0.24, on a measurement that was
+               // wrong. Peak-to-trough as `p95 - p05` of the detrended
+               // profile called the render 1.43x too contrasty, so the
+               // amplitude was cut. Putting render and photograph side by
+               // side at matched scale showed the opposite: the render was
+               // FLATTER. p95-p05 was being set by a handful of near-black
+               // feature-boundary pixels, not by the ridges at all.
+               //
+               // Fourier amplitude AT the ridge frequency is the measurement
+               // that survives that -- real walls 13.7-20.7%, this render
+               // 3.40% before, 6.77% after. Still short of the photographs,
+               // which the README states rather than hides.
                '    float bulge = sin(6.28318 * (lyPos - 0.42));\n' +
                '    normal = normalize(normal + upV *\n' +
                '      (bulge * uLayerAmp * wall * lyFade));\n' +
