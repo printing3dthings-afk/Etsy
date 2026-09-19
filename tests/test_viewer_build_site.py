@@ -1555,6 +1555,28 @@ def test_no_surface_colour_is_declared_twice():
           "and the earlier one never applies" % dupes)
 
 
+def test_no_escape_sequence_is_shown_to_the_reader_as_text():
+    """The Limits pane rendered a literal "\\u2014" to the reader (2026-09-19).
+
+    A \\uXXXX escape is a JavaScript/Python string escape. HTML has no such
+    syntax, so in markup it is just six characters, and the page really did
+    read "with the door open \\u2014 they are still printed" on screen --
+    confirmed by reading textContent out of the live pane, not by eye.
+
+    It is the kind of thing that survives indefinitely because it looks like
+    an encoding artifact in a diff rather than a bug. HTML entities (&mdash;)
+    and real UTF-8 characters both work here; the escape never does.
+    """
+    html = (ROOT / "tools" / "viewer" / "virtual_p1s.html").read_text(encoding="utf-8")
+    # Only the markup -- inside <script> an escape is real syntax and correct.
+    markup = re.sub(r"<script\b.*?</script>", "", html, flags=re.S | re.I)
+    bad = re.findall(r"\\u[0-9a-fA-F]{4}", markup)
+    check(not bad,
+          "literal escape sequence(s) %s in the page markup -- HTML has no "
+          "\\uXXXX escape, so the reader sees those characters verbatim"
+          % sorted(set(bad)))
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
