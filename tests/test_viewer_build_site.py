@@ -325,8 +325,8 @@ def test_the_plate_normal_map_is_a_normal_map():
     check("function heightToNormal(" in js,
           "heightToNormal is gone -- something is feeding a raw height canvas "
           "into normalMap again")
-    m = re.search(r"var nt = new THREE\.CanvasTexture\(([^)]*)\)", js)
-    check(m is not None and "heightToNormal" in m.group(1),
+    m = re.search(r"new THREE\.CanvasTexture\(heightToNormal\(", js)
+    check(m is not None,
           "the normal texture is built straight from the height canvas")
 
 
@@ -437,6 +437,73 @@ def test_the_page_says_where_the_ams_was_drawn_from():
           "the Printer panel no longer says the AMS spool colours are "
           "illustrative -- it renders well enough now to be mistaken for a "
           "reading of the real machine")
+
+
+def test_the_height_readback_is_hinted():
+    """The seven-and-a-half-second stall, made impossible to reintroduce.
+
+    heightToNormal() draws a height field on a canvas and reads it straight
+    back with getImageData. Without willReadFrequently the canvas is
+    GPU-backed and that single read forces a full readback -- measured at
+    7,491 ms for ONE plate, inside initScene(), which runs before the plate
+    list, the panels or the replay. The page sat on its loading spinner for
+    the entire length of a phone screen recording and said nothing, because
+    nothing was broken; it was still working.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    reads = [m for m in re.finditer(r"\.getImageData\(", js)]
+    check(len(reads) == 1,
+          "%d canvas readbacks in app.js -- there is exactly one, in "
+          "heightToNormal, and it is hinted. A second one needs the same "
+          "hint and its own reason for existing." % len(reads))
+    if reads:
+        before = js[:reads[0].start()]
+        owner = re.findall(r"^function (\w+)\(", before, re.M)
+        check(owner and owner[-1] == "heightToNormal",
+              "the readback moved out of heightToNormal (now in %s)"
+              % (owner[-1] if owner else "?"))
+    maker = re.search(r"function grainNormalMap\(.*?\n\}", js, re.S)
+    # The literal call, not the word: the comment above it explains why the
+    # hint is there and matching that made this test pass with the hint gone.
+    hinted = maker is not None and re.search(
+        r"getContext\(\s*'2d'\s*,\s*\{\s*willReadFrequently:\s*true", maker.group(0))
+    check(bool(hinted),
+          "the canvas heightToNormal reads back is no longer created with "
+          "willReadFrequently -- that single read becomes a full GPU readback, "
+          "measured at 7,491 ms")
+
+
+def test_the_normal_map_is_built_once_per_grain():
+    """It depends on the grain, not the colour, and six plates share five."""
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("_NORMAL_MAPS" in js and "if (_NORMAL_MAPS[grain])" in js,
+          "the plate normal map is rebuilt on every plate switch again")
+
+
+def test_a_boot_failure_reaches_the_screen():
+    """A viewer that cannot say what went wrong is worse than one that
+    crashed visibly.
+
+    initScene() runs first, so anything it throws takes the plate list, the
+    panels and the replay with it -- leaving a spinner, three empty panels and
+    no explanation anywhere on the page.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("function bootFailed(" in js, "there is no boot error reporter")
+    m = re.search(r"try \{\s*initScene\(\); initUI\(\);.*?\} catch \(e\) \{\s*bootFailed\(e\);",
+                  js, re.S)
+    check(m is not None, "the boot sequence is not wrapped in a reporter")
+
+
+def test_plate_and_ams_failures_are_not_fatal():
+    """Both are decoration. Neither may take the viewer down."""
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("plate finish fell back to flat colour" in js,
+          "a failure building the plate finish is fatal again")
+    check("console.warn('AMS not drawn:'" in js,
+          "a failure building the AMS is fatal again")
+    check("if (maps) {" in js,
+          "buildBed still assumes plateSurface returned textures")
 
 
 def run() -> None:

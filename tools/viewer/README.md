@@ -369,6 +369,49 @@ neutral studio floor rather than a plate. A still is captioned *the finished
 part*: supports snapped off, print flexed off the plate. Putting it back on a
 gold plate would be a nicer picture of a different claim.
 
+## A 7.5-second stall, and why the page said nothing (2026-09-19)
+
+Reported from an iPhone as, with complete justification, "it isn't working":
+seven seconds of screen recording showing the loading spinner, an empty plate
+list, an empty Printer pane and no explanation anywhere.
+
+**Nothing was broken. It was still working.** `heightToNormal()` draws the
+plate's height field on a canvas and reads it straight back with
+`getImageData`. Without `willReadFrequently` on that context the canvas is
+GPU-backed and that single read forces a full readback — **measured at 7,491 ms
+for one plate**. It sits inside `initScene()`, which runs before `initUI()`,
+the panels and `paintJobList()`, so nothing at all reaches the screen until it
+finishes. With the hint: 15 ms.
+
+Three changes came out of it, and the first matters more than the fix:
+
+* **A boot failure now reaches the screen.** `initScene()` running first means
+  anything it throws takes the whole page with it and leaves a spinner. The
+  boot sequence is wrapped and prints the real message and stack line.
+* **The plate finish and the AMS are decoration and cannot be fatal.** Either
+  failing now degrades — flat plate colour, no AMS — instead of taking the
+  replay down. A phone webview hands back a null 2d context once its canvas
+  budget is spent, and the next line was a `fillStyle` assignment.
+* **The plate face texture is 512 px, not 1024.** Two texels per millimetre on
+  a 256 mm plate is finer than the grain it carries; 1024 bought nothing
+  visible and cost four times the canvas memory and four times the draw calls.
+  Canvas backing store measured across the page: 12.3 MB → 2.3 MB. The normal
+  map is also built once per *grain* rather than per plate, since it does not
+  depend on the colour — six plates share five grains.
+
+Two things to know if you touch this. Grain radii are authored against a 1024
+canvas and scale with `PLATE_PX`, because the grain is a size on the plate and
+not a count of texels. And `heightToNormal`'s `strength` is a per-texel slope,
+so it has to *fall* as resolution falls: a feature spans half as many texels on
+a 512 map, so the height difference between neighbours is already twice as
+large. Scaling it the other way made the textured plate four times too rough —
+gold turned into corrugated orange, measured as rgb(119,108,87) → rgb(99,74,44)
+at the plate centre.
+
+Colour and height are still drawn from the same sequence so a bright fleck is a
+raised fleck, but via a seeded PRNG rather than `Math.random()` in one shared
+pass — that is what lets the two be built separately and cached differently.
+
 ## The AMS (2026-09-19)
 
 Rebuilt from Bambu's own product photography of the 4-slot unit. The shape

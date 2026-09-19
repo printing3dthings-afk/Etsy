@@ -608,7 +608,15 @@ function buildChamber(bed) {
   buildBed(X, Y, ox, oy);
   buildGantry(EXT.w, ox, oy);
   buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, true);
-  buildAMS(PRINTERS[printerId].ams, ox, oy, y1, zTop);
+  // Decoration, not the point of the page. Wrapped because a throw in here
+  // reaches initScene and takes the whole viewer with it -- the plate list,
+  // the panels, the replay, everything -- to save a box of spools.
+  try {
+    buildAMS(PRINTERS[printerId].ams, ox, oy, y1, zTop);
+  } catch (e) {
+    amsGroup = null;
+    console.warn('AMS not drawn:', e);
+  }
   rebuildToolhead(true);
   applyShadows(chamber); applyShadows(bedGroup); applyShadows(gantry);
   applyShadows(amsGroup); applyShadows(doorGroup);
@@ -734,12 +742,15 @@ function buildBed(X, Y, ox, oy) {
   var faceGeo = new THREE.ShapeGeometry(shape, 24);
   var box = normalizeUV(faceGeo);
   var maps = plateSurface(spec, X, Y, box);
-  plate = new THREE.Mesh(faceGeo, new THREE.MeshStandardMaterial({
-    map: srgbMap(maps.color), normalMap: maps.normal,
-    normalScale: new THREE.Vector2(maps.bump, maps.bump),
-    roughness: spec.rough, metalness: spec.metal, envMapIntensity: 0.7,
-    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
-  }));
+  var faceMat = {color: lin(spec.hex), roughness: spec.rough, metalness: spec.metal,
+    envMapIntensity: 0.7, polygonOffset: true,
+    polygonOffsetFactor: -2, polygonOffsetUnits: -2};
+  if (maps) {
+    faceMat.map = srgbMap(maps.color);
+    faceMat.normalMap = maps.normal;
+    faceMat.normalScale = new THREE.Vector2(maps.bump, maps.bump);
+  }
+  plate = new THREE.Mesh(faceGeo, new THREE.MeshStandardMaterial(faceMat));
   plate.position.set(0, 0, -0.045);
   bedGroup.add(plate);
 
@@ -1435,12 +1446,27 @@ function shellTexture() {
 // sprayed powder -- it is the height variation that makes it read as grit
 // rather than as a gold sticker, and the same trick at a tenth the amplitude
 // is the difference between "smooth PEI" and "flat grey".
-var PLATE_PX = 1024;
+// 512, not 1024. A 256 mm plate at 512 px is two texels per millimetre, which
+// is finer than the grain it carries; 1024 bought nothing visible and cost
+// four times the canvas memory and four times the draw calls -- the fine
+// octave alone was 58,000 arc fills per plate build. Canvas backing store is
+// the scarcest thing in a phone webview, and this function allocates three of
+// them plus an ImageData in one go.
+var PLATE_PX = 512;
 
 function _plateCanvas() {
   var c = document.createElement('canvas');
   c.width = c.height = PLATE_PX;
   return c;
+}
+
+// A phone webview hands back null here once its canvas budget is spent, and
+// the very next line is a fillStyle assignment on it. Named, so the message
+// that reaches the screen says what actually ran out.
+function _plateCtx(c) {
+  var g = c.getContext('2d');
+  if (!g) { throw new Error('no 2d canvas context (canvas memory exhausted?)'); }
+  return g;
 }
 
 // Each plate's finish as three octaves of the same speckle: coarse mottle,
@@ -1475,31 +1501,67 @@ var GRAIN = {
   starry:  {bump: 0.26, octaves: [[32, 0.35,  9, 18, 0.25]], glitter: true}
 };
 
+// The finish is decoration. A plate that falls back to flat colour is a worse
+// picture; a plate that takes the whole page down with it is a broken page,
+// and on 2026-09-19 that is exactly what a phone got.
 function plateSurface(spec, X, Y, box) {
+  try {
+    return buildPlateSurface(spec, X, Y, box);
+  } catch (e) {
+    console.warn('plate finish fell back to flat colour:', e);
+    return null;
+  }
+}
+
+function buildPlateSurface(spec, X, Y, box) {
   var g = GRAIN[spec.grain] || GRAIN.satin;
-  var col = _plateCanvas(), cg = col.getContext('2d');
-  var bmp = _plateCanvas(), bg = bmp.getContext('2d');
+  var ct = new THREE.CanvasTexture(plateColourMap(spec, g, X, Y, box));
+  var nt = grainNormalMap(spec.grain, g);
+  ct.anisotropy = _maxAniso;
+  return {color: ct, normal: nt, bump: g.bump};
+}
+
+// Colour and height are drawn from the same seeded sequence, so a bright fleck
+// is a raised fleck -- which is what a sprayed powder coat is, and what keeps
+// the shading honest when the light moves. They used to share one pass and
+// Math.random() to get that; they are separate passes now because the height
+// field depends only on the GRAIN and can be built once for all six plates,
+// while the colour map depends on the plate's own hex and markings.
+function _rng(seed) {
+  var a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+var GRAIN_SEED = 0x5eed;
+
+// radius/count/jitter for one octave, at whatever PLATE_PX currently is.
+// Radii are authored against a 1024 canvas, because the grain is a size on the
+// plate rather than a count of texels.
+function _octave(o) {
+  var r = o[0] * PLATE_PX / 1024;
+  return {r: r, n: Math.round(PLATE_PX * PLATE_PX * o[1] / (Math.PI * r * r))};
+}
+
+function plateColourMap(spec, g, X, Y, box) {
+  var col = _plateCanvas(), cg = _plateCtx(col);
   var base = new THREE.Color(spec.hex);
   var br = base.r * 255, bgr = base.g * 255, bb = base.b * 255;
+  var rnd = _rng(GRAIN_SEED);
   cg.fillStyle = '#' + base.getHexString(); cg.fillRect(0, 0, PLATE_PX, PLATE_PX);
-  bg.fillStyle = '#808080'; bg.fillRect(0, 0, PLATE_PX, PLATE_PX);
 
-  // Colour and height are drawn from the same random draw, so a bright fleck
-  // is a raised fleck. That is what a sprayed powder coat is, and it is what
-  // keeps the shading honest when the light moves.
   g.octaves.forEach(function (o) {
-    var r = o[0], n = Math.round(PLATE_PX * PLATE_PX * o[1] / (Math.PI * r * r));
-    for (var i = 0; i < n; i++) {
-      var x = Math.random() * PLATE_PX, y = Math.random() * PLATE_PX;
-      var rr = r * (0.5 + Math.random());
-      var d = (Math.random() - 0.5) * 2;
+    var oc = _octave(o);
+    for (var i = 0; i < oc.n; i++) {
+      var x = rnd() * PLATE_PX, y = rnd() * PLATE_PX;
+      var rr = oc.r * (0.5 + rnd());
+      var d = (rnd() - 0.5) * 2;
       cg.fillStyle = 'rgba(' + _c(br + d * o[2]) + ',' + _c(bgr + d * o[2]) +
         ',' + _c(bb + d * o[2] * 0.9) + ',' + o[4] + ')';
       cg.beginPath(); cg.arc(x, y, rr, 0, 6.2832); cg.fill();
-      if (!o[3]) { continue; }
-      var h = _c(128 + d * o[3]);
-      bg.fillStyle = 'rgb(' + h + ',' + h + ',' + h + ')';
-      bg.beginPath(); bg.arc(x, y, rr, 0, 6.2832); bg.fill();
     }
   });
 
@@ -1511,21 +1573,54 @@ function plateSurface(spec, X, Y, box) {
     lg.addColorStop(0, 'rgba(10,26,34,0.75)');
     lg.addColorStop(1, 'rgba(6,8,12,0.75)');
     cg.fillStyle = lg; cg.fillRect(0, 0, PLATE_PX, PLATE_PX);
-    for (var k = 0; k < 5200; k++) {
-      var gx = Math.random() * PLATE_PX, gy = Math.random() * PLATE_PX;
-      var gr = 0.7 + Math.random() * 1.3;
-      cg.fillStyle = 'hsla(' + Math.floor(Math.random() * 360) + ',85%,' +
-        (28 + Math.random() * 26).toFixed(0) + '%,' + (0.5 + Math.random() * 0.5) + ')';
+    var gn = Math.round(5200 * PLATE_PX * PLATE_PX / 1048576);
+    for (var k = 0; k < gn; k++) {
+      var gx = rnd() * PLATE_PX, gy = rnd() * PLATE_PX;
+      var gr = (0.7 + rnd() * 1.3) * PLATE_PX / 1024;
+      cg.fillStyle = 'hsla(' + Math.floor(rnd() * 360) + ',85%,' +
+        (28 + rnd() * 26).toFixed(0) + '%,' + (0.5 + rnd() * 0.5) + ')';
       cg.beginPath(); cg.arc(gx, gy, gr, 0, 6.2832); cg.fill();
     }
   }
 
   plateMarkings(cg, spec, X, Y, box);
+  return col;
+}
 
-  var ct = new THREE.CanvasTexture(col);
-  var nt = new THREE.CanvasTexture(heightToNormal(bmp));
-  ct.anisotropy = nt.anisotropy = _maxAniso;
-  return {color: ct, normal: nt, bump: g.bump};
+// One per grain, for the life of the page. Six plates share five grains, and
+// switching plate used to rebuild this every time.
+var _NORMAL_MAPS = {};
+
+function grainNormalMap(grain, g) {
+  if (_NORMAL_MAPS[grain]) { return _NORMAL_MAPS[grain]; }
+  var bmp = _plateCanvas();
+  // willReadFrequently is not a micro-optimisation here. Without it the canvas
+  // is GPU-backed and the single getImageData below forces a full readback:
+  // measured at 7.5 SECONDS for one plate, which is the whole reason this page
+  // sat on its loading spinner for the entire length of a phone screen
+  // recording on 2026-09-19. With it, 15 ms.
+  var bg = bmp.getContext('2d', {willReadFrequently: true});
+  if (!bg) { throw new Error('no 2d canvas context (canvas memory exhausted?)'); }
+  var rnd = _rng(GRAIN_SEED);
+  bg.fillStyle = '#808080'; bg.fillRect(0, 0, PLATE_PX, PLATE_PX);
+  g.octaves.forEach(function (o) {
+    var oc = _octave(o);
+    for (var i = 0; i < oc.n; i++) {
+      // Same draws as the colour pass, same seed, so the two stay registered
+      // even though only some octaves carry height.
+      var x = rnd() * PLATE_PX, y = rnd() * PLATE_PX;
+      var rr = oc.r * (0.5 + rnd());
+      var d = (rnd() - 0.5) * 2;
+      if (!o[3]) { continue; }
+      var h = _c(128 + d * o[3]);
+      bg.fillStyle = 'rgb(' + h + ',' + h + ',' + h + ')';
+      bg.beginPath(); bg.arc(x, y, rr, 0, 6.2832); bg.fill();
+    }
+  });
+  var t = new THREE.CanvasTexture(heightToNormal(bmp, bg));
+  t.anisotropy = _maxAniso;
+  _NORMAL_MAPS[grain] = t;
+  return t;
 }
 
 function _c(v) { return Math.max(0, Math.min(255, Math.round(v))); }
@@ -1538,14 +1633,19 @@ function _c(v) { return Math.max(0, Math.min(255, Math.round(v))); }
 // Every plate rendered as light-grey blotches on black, which looked like a
 // colour bug and was not. This converts properly: central-difference the
 // height, build the real tangent normal, encode it back.
-function heightToNormal(canvas) {
+function heightToNormal(canvas, ctx) {
   var n = canvas.width;
-  var src = canvas.getContext('2d').getImageData(0, 0, n, n).data;
-  var out = document.createElement('canvas');
-  out.width = out.height = n;
-  var octx = out.getContext('2d');
-  var img = octx.createImageData(n, n), d = img.data;
-  var strength = 6;   // height units per texel -- the slope scale
+  var img = ctx.getImageData(0, 0, n, n);
+  var src = new Uint8ClampedArray(img.data);   // read from a copy, write in place
+  var d = img.data;
+  // Per-texel slope, so it has to fall as resolution falls, not rise. A
+  // feature spans half as many texels on a 512 map as on a 1024, so the
+  // height difference between neighbours is already twice as large; the
+  // constant has to halve to keep the same surface. Getting the sign of that
+  // wrong (scaling UP with 1024/n) made the textured plate four times too
+  // rough and turned it from gold into corrugated orange -- measured, the
+  // plate centre went from rgb(119,108,87) to rgb(99,74,44).
+  var strength = 6 * n / 1024;
   for (var y = 0; y < n; y++) {
     var yu = ((y - 1 + n) % n) * n, yd = ((y + 1) % n) * n, yc = y * n;
     for (var x = 0; x < n; x++) {
@@ -1560,8 +1660,8 @@ function heightToNormal(canvas) {
       d[i + 3] = 255;
     }
   }
-  octx.putImageData(img, 0, 0);
-  return out;
+  ctx.putImageData(img, 0, 0);
+  return canvas;
 }
 
 // Printed markings, placed in millimetres and converted once. Everything here
@@ -3371,6 +3471,24 @@ function initUI() {
 }
 
 // \u2500\u2500 boot \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// A throw anywhere in this sequence used to leave the page on its "slicing
+// data" spinner forever, with an empty plate list, an empty Printer pane and
+// nothing on screen saying why -- reported from an iPhone 2026-09-19 as, with
+// complete justification, "it isn't working". A viewer that cannot say what
+// went wrong is worse than one that crashed visibly, so it says.
+function bootFailed(e) {
+  var msg = (e && (e.message || e)) + '';
+  var at = (e && e.stack || '').split('\n')[1] || '';
+  loading.hidden = false;
+  loading.innerHTML =
+    '<div style="text-align:center;color:var(--bad);padding:0 24px;' +
+    'font-family:var(--fm);text-transform:none;letter-spacing:0;line-height:1.55">' +
+    '<b>This page failed to start.</b><br>' +
+    msg.replace(/[<>&]/g, ' ') + '<br>' +
+    '<span style="color:var(--faint);font-size:11px">' +
+    at.replace(/[<>&]/g, ' ').trim() + '</span></div>';
+}
+
 if (!window.THREE) {
   loading.innerHTML = '<div style="text-align:center;color:var(--bad);padding:0 24px">' +
     'three.js did not load. This page needs cdnjs reachable.</div>';
@@ -3378,7 +3496,12 @@ if (!window.THREE) {
   loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
     'No jobs found \u2014 jobs/index.js is missing.</div>';
 } else {
-  initScene(); initUI(); paintMaterial(); paintPrinter(); paintJobList();
-  loadJob(INDEX[0].id);
+  try {
+    initScene(); initUI(); paintMaterial(); paintPrinter(); paintJobList();
+    loadJob(INDEX[0].id);
+  } catch (e) {
+    bootFailed(e);
+    throw e;
+  }
 }
 })();
