@@ -792,6 +792,149 @@ def test_full_screen_takes_the_whole_tool_not_just_the_canvas():
           "refused request would leave it lying")
 
 
+
+def test_each_bead_squishes_into_the_layer_below():
+    """The second half of "missed areas after printing", found 2026-09-19.
+
+    A bead spanning exactly its own layer only touches its neighbour where the
+    wall is vertical. On the cable clip's sloped top, consecutive beads step
+    sideways and a wedge of nothing opens between them: measured straight-on at
+    7.4px per band, 20 of 426 rows rendered pure black (mean under 25/255
+    across a 300px span), while the vertical wall lower on the same part had no
+    dark rows at all. Extending the bead 18% into the layer below -- the real
+    squish of a 0.42mm extrusion into a 0.2mm gap -- took that to 4.
+
+    The clamp matters as much as the overlap: the first layer has nothing to
+    squish into, and without Math.max(0, ...) it sits behind the plate surface
+    and z-fights the bed.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildJob\(raw\) \{.*?\n\}", js, re.S)
+    check(body is not None, "buildJob is gone")
+    if not body:
+        return
+    b = "\n".join(re.sub(r"//.*$", "", ln) for ln in body.group(0).split("\n"))
+    m = re.search(r"var zlow = ([^;]+);", b)
+    check(m is not None, "the bead's floor is no longer computed as zlow")
+    if not m:
+        return
+    expr = m.group(1)
+    check("1.18" in expr,
+          "the bead no longer reaches below its own layer, so a sloped wall "
+          "opens a gap between every pair of layers again: %r" % expr)
+    check("Math.max(0," in expr.replace(" ", "").replace("Math.max(0,", "Math.max(0,"),
+          "the first layer is not clamped to the plate -- it will dip below "
+          "z=0 and z-fight the bed: %r" % expr)
+    # kf must be measured against the LAYER, not against the bead's new (taller)
+    # extent -- the 2.2% top-face figure above was measured with lh, and reading
+    # ztop-zlow here would silently widen the flat by 18% and re-smooth the top.
+    kf = re.search(r"var kf = ([^;]+);", b)
+    check(kf is not None and "ztop - zlow" not in kf.group(1),
+          "kf is measured against the bead's overlapped extent instead of the "
+          "layer height, which moves the top-face flat off its measured value")
+
+
+def test_a_still_frame_is_rendered_at_full_resolution():
+    """The harsh jagged layer lines, reported 2026-09-19.
+
+    adaptResolution trades pixels for frame rate, which is right while
+    something moves. But the loop renders every frame forever, so a device that
+    once measured slow stayed ratcheted down on a STILL frame too -- the only
+    frame anyone studies. Measured headless on the cable clip: an 884x426
+    canvas backed by a 618x298 buffer, upscaled by the browser.
+
+    Two halves, and the test guards both: settle to full resolution when
+    nothing has moved, and do NOT sample frame time while settled -- an
+    expensive still frame that ratchets dprScale down makes the next still
+    frame worse, a loop that ends at DPR_MIN and stays there.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+
+    ap = re.search(r"function applyPixelRatio\(\) \{(.*?)\n\}", src, re.S)
+    check(ap is not None, "applyPixelRatio is gone")
+    if ap:
+        check("hiRes ?" in ap.group(1) or "hiRes?" in ap.group(1),
+              "the still-frame pixel ratio no longer bypasses dprScale, so a "
+              "device that measured slow once renders every still frame low")
+
+    ad = re.search(r"function adaptResolution\(now, dt\) \{(.*?)\n\}", src, re.S)
+    check(ad is not None, "adaptResolution is gone")
+    if ad:
+        first = [ln.strip() for ln in ad.group(1).split("\n") if ln.strip()][:1]
+        check(first and first[0] == "if (hiRes) { return; }",
+              "adaptResolution samples frame time while settled -- the "
+              "expensive still frame ratchets dprScale down and the next still "
+              "frame is worse: %r" % (first,))
+
+    sr = re.search(r"function setResolution\(now\) \{(.*?)\n\}", src, re.S)
+    check(sr is not None, "setResolution is gone")
+    if sr:
+        check("SETTLE_MS" in sr.group(1),
+              "setResolution no longer waits out a settle window before going "
+              "to full resolution")
+        check("_ft.length = 0" in sr.group(1),
+              "the frame-time samples are not cleared on a resolution change, "
+              "so the next decision is made on a stale median from the other "
+              "resolution")
+
+
+def test_a_keyboard_scrub_does_not_stick_the_scrubbing_flag():
+    """Found 2026-09-19 while the settle pass above refused to fire.
+
+    The scrub's `input` handler sets play.scrubbing = true on every value
+    change, including an arrow key -- and an arrow key never produces a
+    pointerup. The flag stuck true for the rest of the session, which silently
+    froze playback (tick() skips advancing while scrubbing) and pinned the
+    render at low resolution. `change` fires on both a pointer release and a
+    keyboard commit.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    m = re.search(r"\[([^\]]*?)\]\.forEach\(function \(t\) \{\s*"
+                  r"sc\.addEventListener\(t, function \(\) \{ play\.scrubbing = false; \}\);",
+                  src, re.S)
+    check(m is not None, "nothing clears play.scrubbing any more")
+    if m:
+        check("'change'" in m.group(1),
+              "play.scrubbing is only cleared by pointer events, so an arrow "
+              "key leaves it stuck true forever: %r" % m.group(1))
+
+
+def test_the_layer_darkening_fades_out_sooner_than_the_rounding():
+    """Two fade curves, not one (2026-09-19).
+
+    lp is the layer period in pixels, inverted: lp 0.5 is two pixels per layer,
+    dead on Nyquist. Running the darkening and the normal bulge on one window
+    of 0.30..0.85 left a hard albedo stripe at 60% strength at 1.8px per layer,
+    which beats against the pixel grid into a diagonal crosshatch rather than
+    reading as layer lines.
+
+    They alias differently, so they get different windows. The darkening is a
+    pure high-frequency albedo signal and must go first; the bulge is modulated
+    by the lighting before it reaches the pixel, which costs it most of its
+    contrast, and it is the half that makes a wall look printed.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    fade = re.search(r"lyFade = 1\.0 - smoothstep\(([0-9.]+), ([0-9.]+), lp\)", src)
+    band = re.search(r"lyBand = 1\.0 - smoothstep\(([0-9.]+), ([0-9.]+), lp\)", src)
+    check(fade is not None, "the normal bulge's fade curve is gone")
+    check(band is not None,
+          "the darkening shares the bulge's fade curve again -- it is the one "
+          "that crosshatches, and it has to fade out first")
+    if not (fade and band):
+        return
+    check(float(band.group(2)) < float(fade.group(2)),
+          "the darkening now outlives the rounding (%s vs %s) -- backwards: a "
+          "flat stripe survives past the zoom where a camera could resolve it"
+          % (band.group(2), fade.group(2)))
+    check(float(fade.group(2)) <= 0.5,
+          "the rounding is carried past Nyquist (%s): below two pixels per "
+          "layer there is nothing honest left to draw" % fade.group(2))
+    check("mix(1.0, lb, lyBand)" in src,
+          "the darkening is not applied on its own curve any more")
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

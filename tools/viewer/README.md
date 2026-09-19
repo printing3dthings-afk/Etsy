@@ -985,3 +985,82 @@ vertex attribute and gives the facet shading the tent actually has.
 PrusaSlicer is not Bambu Studio — geometric decisions track closely, speeds
 and time estimates do not. Nothing thermal is modelled. See the **Limits**
 tab; keep it accurate if the pipeline changes.
+
+## Layer lines (2026-09-19)
+
+Scott, on a zoomed screenshot of the cable clip: *"These layer line need to be
+better."* Four separate things were wrong, and only one of them was the thing
+it looked like.
+
+**The bead's outer face jumped at every layer.** The four-point profile runs
+from full width at the layer floor to `kf * hw` at the top, so its normal
+sweeps horizontal to about 27 degrees up and then breaks discontinuously at
+the next layer. That hard break is the jagged stair-step in the screenshot. A
+real wall is stacked rounded beads meeting in a valley. Doing that in geometry
+needs six points across the bead instead of four -- 30 indices per segment
+against 18, on top of a change that had already cost 50% -- so it is done in
+the fragment shader instead, perturbing the normal along world up by the
+bead's real slope (a 0.42mm bead on a 0.2mm layer bulges about 0.03mm, which
+swings the tangent 17 degrees; tan 17 is 0.31, and 0.35 is what shipped).
+`normal` after `<normal_fragment_begin>` is in VIEW space, so world up is
+carried in through `viewMatrix` -- assuming it is `z` tilts the bulge toward
+the camera and the part shades like wet plastic when you orbit it.
+
+**One fade curve was doing two jobs.** `lp = fwidth(vZmm) / uLayerH` is the
+layer period in pixels, inverted: 0.5 is two pixels per layer, Nyquist. Both
+the darkening and the bulge faded on `smoothstep(0.30, 0.85, lp)`, which left
+the darkening at 60% strength at 1.8px per layer. A hard albedo stripe at that
+sampling rate does not read as layer lines -- it beats against the pixel grid
+into a diagonal crosshatch, measured on the clip as something closer to dirty
+canvas than to a print. They alias differently, so they now have different
+windows: the darkening is a pure high-frequency albedo signal and is gone by
+about 3.8px per layer; the bulge is modulated by the lighting before it
+reaches the pixel, which costs it most of its contrast, so it survives to
+about 2.2px and does the work.
+
+**Every bead was a loose hoop.** A bead spanning exactly its own layer only
+touches its neighbour where the wall is vertical. Anywhere it slopes -- every
+overhang, every curved flank -- consecutive beads step sideways and a wedge of
+nothing opens between them. Straight-on at the clip's sloped top, at 7.4px per
+band, 20 of 426 rows rendered pure black (mean under 25/255 across a 300px
+span) while the vertical wall lower on the same part had none. That is what
+"missed areas after printing" looks like. Real extrusion lays a 0.42mm bead
+into a 0.2mm gap and squashes into the layer beneath; the bead now reaches 18%
+below its own floor, clamped at z=0 for the first layer, which has nothing to
+squish into and would otherwise z-fight the bed. 20 black rows to 4, and no
+extra vertices. `kf` is deliberately still measured against the layer height
+rather than the bead's new taller extent, so the 2.2% top-face figure from the
+flat-top work is unchanged.
+
+**And the frame was being upscaled.** `adaptResolution` trades pixels for
+frame rate, which is right while something moves -- but the loop renders every
+frame forever, so a device that measured slow once stayed ratcheted down on a
+STILL frame too, the only frame anyone actually studies. Measured headless on
+the clip: an 884x426 canvas backed by a 618x298 buffer. There is now a settle
+pass -- once nothing has moved for 220ms, render at full resolution -- and
+`adaptResolution` does not sample frame time while settled, because an
+expensive still frame that ratchets `dprScale` down makes the next still frame
+worse, a loop that ends at `DPR_MIN` and stays there.
+
+### A bug the settle pass uncovered
+
+The settle refused to fire at all, which turned out to be nothing to do with
+resolution. The scrub's `input` handler sets `play.scrubbing = true` on every
+value change including an arrow key, and an arrow key never produces a
+`pointerup` -- the only thing that cleared it. So a keyboard scrub stuck the
+flag true for the rest of the session, which had already been silently
+freezing playback (`tick()` skips advancing while scrubbing) long before the
+settle pass existed. `change` fires on both a pointer release and a keyboard
+commit, and is now in the list.
+
+### What was tried and reverted
+
+Below Nyquist the bead's tent facets cannot be averaged by MSAA -- it
+antialiases edges, not shading inside a triangle -- so the obvious move is to
+fade the normal toward the flat wall normal, which is the correct average of a
+stack of beads seen from too far to resolve one. It made the render visibly
+worse and the change was dropped. The reason is specific to this profile: the
+four points face out, up-and-out, up-and-in, in, so removing the vertical
+component collapses them onto two *opposing* horizontal directions, and the
+double-sided flip then fights the result. Worth revisiting only alongside a
+cross-section whose facets all face outward.

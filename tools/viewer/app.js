@@ -1996,7 +1996,25 @@ var FRAME_TARGET = 34;      // ms; ~30fps, the floor for reading a moving print
 var FRAME_GOOD = 21;        // ms; only scale back up with real headroom
 var dprScale = 1, _ft = [], _lastAdapt = 0;
 
+// The settle pass (2026-09-19). Everything above trades pixels for frame rate,
+// and the trade is right while something is moving -- but the loop renders
+// every frame forever, so a device that once measured slow stayed ratcheted
+// down on a STILL frame too, which is the only frame anyone actually studies.
+//
+// Measured, headless, on the cable clip: the canvas backing store sat at
+// 618x298 behind an 884x426 element. The browser upscales that, and upscaling
+// a wall of 0.09mm layers is exactly the harsh, stippled, jagged layer lines
+// that get screenshotted and reported as bad geometry. The geometry was fine.
+//
+// So: once nothing has moved for a moment, render at full resolution. Frame
+// time is not sampled while settled -- an expensive still frame must not be
+// allowed to ratchet dprScale down and make the NEXT still frame worse, which
+// is a feedback loop that ends at DPR_MIN and stays there.
+var SETTLE_MS = 220;
+var stillSince = 0, hiRes = false;
+
 function adaptResolution(now, dt) {
+  if (hiRes) { return; }
   if (dt > 0 && dt < 2000) { _ft.push(dt); }
   if (_ft.length < 24 || now - _lastAdapt < 900) { return; }
   _lastAdapt = now;
@@ -2012,7 +2030,7 @@ function adaptResolution(now, dt) {
 }
 
 function applyPixelRatio() {
-  var r = basePixelRatio * dprScale;
+  var r = basePixelRatio * (hiRes ? 1 : dprScale);
   // While the camera is actually moving, cap harder still: a frame that is in
   // motion is one nobody is reading detail off.
   if (lowRes) { r = Math.min(r, 1); }
@@ -2021,10 +2039,20 @@ function applyPixelRatio() {
 }
 
 function setResolution(now) {
-  var moving = now < moveUntil;
-  if (moving === lowRes) { return; }
-  lowRes = moving;
-  applyPixelRatio();
+  var moving = now < moveUntil || play.on || play.scrubbing;
+  if (moving) { stillSince = 0; }
+  else if (!stillSince) { stillSince = now; }
+
+  var wantHi = !moving && now - stillSince >= SETTLE_MS;
+  if (moving !== lowRes || wantHi !== hiRes) {
+    lowRes = moving;
+    hiRes = wantHi;
+    // Frame times measured at one resolution say nothing about another, and a
+    // stale median is what drove the ratchet in the first place.
+    _ft.length = 0;
+    _lastAdapt = now;
+    applyPixelRatio();
+  }
 }
 
 // \u2500\u2500 shader \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -2142,7 +2170,38 @@ function makeMaterial(dim, rich) {
       // the correct winding would have produced anyway.
       .replace('#include <normal_fragment_begin>',
                '#include <normal_fragment_begin>\n' +
-               '  if (dot(normal, vViewPosition) < 0.0) { normal = -normal; }')
+               '  if (dot(normal, vViewPosition) < 0.0) { normal = -normal; }\n' +
+               // Round every layer, in the shader rather than in geometry.
+               //
+               // The bead's outer face runs from full width at the layer floor
+               // to the flat top's width at the layer ceiling, so its normal
+               // sweeps from horizontal to 27 degrees up and then JUMPS back
+               // at the next layer. That discontinuity is what a wall's layer
+               // lines looked like close up: hard, jagged, stair-stepped.
+               //
+               // A real wall is stacked rounded beads -- widest at mid-height,
+               // with a groove at each interface -- so the normal should sweep
+               // smoothly down-and-out, out, up-and-out across each layer and
+               // meet its neighbour in a valley. Doing that in geometry needs
+               // six points across the bead instead of four: 30 indices per
+               // segment against 18, on top of a change that already cost 50%.
+               // Perturbing the normal gets the same surface for about ten ALU
+               // ops a fragment and nothing at all in memory.
+               //
+               // 0.35 is the real slope: a 0.42mm bead on a 0.2mm layer bulges
+               // roughly 0.03mm, which swings the surface tangent about 17
+               // degrees, and tan(17 deg) is 0.31.
+               //
+               // `normal` here is VIEW space, so world up has to be carried in
+               // rather than assumed to be z -- getting that wrong tilts the
+               // bulge toward the camera and the whole part shades like wet
+               // plastic when you orbit it.
+               '  if (lyFade > 0.002) {\n' +
+               '    vec3 upV = normalize((viewMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz);\n' +
+               '    float wall = 1.0 - abs(dot(normal, upV));\n' +
+               '    normal = normalize(normal + upV *\n' +
+               '      ((lyPos - 0.5) * 2.0 * 0.35 * wall * lyFade));\n' +
+               '  }')
       .replace('#include <color_fragment>',
                '#include <color_fragment>\n  diffuseColor.rgb *= vJobColor;\n' +
                // The layer seam. Each bead IS a separate tent with its own
@@ -2151,20 +2210,42 @@ function makeMaterial(dim, rich) {
                // sane zoom and average away to a smooth blob. This darkens the
                // real seam height so the banding survives downsampling, the
                // way it does in a photograph of the same part.
+               // lyFade and lyPos are declared at function scope on purpose:
+               // <color_fragment> runs BEFORE <normal_fragment_begin> in the
+               // standard fragment shader, so the normal perturbation above
+               // reuses them rather than recomputing fwidth a second time.
+               '  float lyFade = 0.0, lyPos = 0.0;\n' +
                '  if (uLayerH > 0.0) {\n' +
-               // Faded out analytically as the band period approaches one
-               // pixel. 300 layers across 400px is 1.3px per layer -- right at
-               // Nyquist -- and without this the banding aliases into surface
-               // noise that reads as a bad render rather than as layer lines.
-               // fwidth gives the real on-screen period, so the lines simply
-               // stop being drawn at the zoom where a camera could not resolve
-               // them either.
+               // Two fade curves, not one, and the difference is the whole
+               // fix (2026-09-19). lp is the layer period measured in pixels
+               // (inverted): lp 0.5 is two pixels per layer, dead on Nyquist.
+               //
+               // Running both effects on one window of 0.30..0.85 left the
+               // darkening at 60% strength at 1.8px per layer, and a hard
+               // albedo stripe at that sampling rate does not read as layer
+               // lines -- it beats against the pixel grid into a diagonal
+               // crosshatch. Measured on the cable clip: the wall came out
+               // looking like dirty canvas, not like a print.
+               //
+               // So they get separate windows, because they alias differently.
+               // The darkening (lyBand) is a pure high-frequency albedo signal
+               // and is the worst offender: gone by ~3.8px per layer. The
+               // normal bulge (lyFade) is modulated by the lighting before it
+               // reaches the pixel, which costs it most of its contrast, so it
+               // can be carried down to ~2.2px per layer -- and it is the half
+               // that actually makes a wall look printed rather than striped.
                '    float lp = fwidth(vZmm) / uLayerH;\n' +
-               '    float lf = 1.0 - smoothstep(0.30, 0.85, lp);\n' +
-               '    if (lf > 0.002) {\n' +
-               '      float lt = abs(fract(vZmm / uLayerH) - 0.5) * 2.0;\n' +
-               '      float lb = mix(1.05, 0.72, smoothstep(0.40, 1.0, lt));\n' +
-               '      diffuseColor.rgb *= mix(1.0, lb, lf);\n' +
+               '    lyFade = 1.0 - smoothstep(0.18, 0.45, lp);\n' +
+               '    lyPos = fract(vZmm / uLayerH);\n' +
+               '    float lyBand = 1.0 - smoothstep(0.08, 0.26, lp);\n' +
+               '    if (lyBand > 0.002) {\n' +
+               // Softer than it was, twice over. The darkening used to do the
+               // whole job of making a layer readable; now the surface is
+               // genuinely rounded, so a big swing on top of real shading
+               // reads as soot in the grooves rather than as a printed wall.
+               '      float lt = abs(lyPos - 0.5) * 2.0;\n' +
+               '      float lb = mix(1.02, 0.88, smoothstep(0.40, 1.0, lt));\n' +
+               '      diffuseColor.rgb *= mix(1.0, lb, lyBand);\n' +
                '    }\n' +
                '  }')
       // Tone mapping desaturates saturated colour as it brightens, which is
@@ -2283,7 +2364,25 @@ function buildJob(raw) {
     // layer pitch is a whole number of the 0.01mm units positions are stored
     // in, so 100% lands exactly and cannot round into either a slit or an
     // overlap.
-    var zlow = ztop - Math.round((L[5] || 0.2) * 100);
+    var lh = Math.round((L[5] || 0.2) * 100);
+    // The bead reaches BELOW its own layer, and that is not a fudge (2026-09-19).
+    // A bead spanning exactly zlow..ztop only touches its neighbour where the
+    // two walls are vertically aligned. Anywhere the wall slopes -- every
+    // overhang, every curved flank -- consecutive beads step sideways and a
+    // wedge of nothing opens between them. Measured straight-on at the cable
+    // clip's sloped top: every single layer interface rendered pure black
+    // (mean below 25/255 across a 300px span) on a 7.4px band pitch, while the
+    // vertical wall lower on the same part had no dark rows at all. That is
+    // what "missed areas after printing" looks like.
+    //
+    // Real extrusion does not leave that wedge: the nozzle lays a bead 0.42mm
+    // wide into a 0.2mm gap, so it squashes and bonds into the layer beneath.
+    // 18% is that squish. It costs no vertices, it is hidden under the bead
+    // above wherever the wall IS vertical, and it is the whole reason a
+    // printed part is one solid object rather than a stack of loose hoops.
+    // ...except on the first layer, which has nothing to squish into. Letting
+    // it dip below z=0 puts it behind the plate surface and z-fights the bed.
+    var zlow = Math.max(0, ztop - Math.round(lh * 1.18));
     // Flat fraction of the bead's top, from this layer's own height.
     //
     // A single free extrusion is a rectangle with semicircular ends, which
@@ -2299,7 +2398,7 @@ function buildJob(raw) {
     //
     // Clamped so a very tall layer cannot collapse the top back to a ridge
     // and a very thin one cannot run the flat out past the bead's own edge.
-    var kf = Math.max(0.2, Math.min(0.85, 1 - (ztop - zlow) / (2.6 * hw)));
+    var kf = Math.max(0.2, Math.min(0.85, 1 - lh / (2.6 * hw)));
     layerSeg[li] = si;
     for (var pi = L[1]; pi < L[1] + L[2]; pi++) {
       var t = polys[pi * 3], s = polys[pi * 3 + 1], n = polys[pi * 3 + 2];
@@ -3444,7 +3543,14 @@ function initUI() {
 
   var sc = $('scrub');
   sc.addEventListener('pointerdown', function () { play.scrubbing = true; });
-  ['pointerup','pointercancel','blur'].forEach(function (t) {
+  // 'change' is in here for the keyboard (2026-09-19). The input handler below
+  // sets scrubbing on every value change including an arrow key, and an arrow
+  // key never produces a pointerup -- so a keyboard scrub left the flag stuck
+  // true, which silently froze playback (tick() skips advancing while
+  // scrubbing) and, once the settle pass existed, pinned the render at low
+  // resolution for the rest of the session. 'change' fires on both a pointer
+  // release and a keyboard commit.
+  ['pointerup','pointercancel','blur','change'].forEach(function (t) {
     sc.addEventListener(t, function () { play.scrubbing = false; });
   });
   sc.addEventListener('input', function () {
