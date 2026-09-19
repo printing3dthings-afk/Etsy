@@ -1175,6 +1175,75 @@ def test_the_sheen_does_not_wash_the_colour_out():
           "sheen is off entirely -- the surface is back to an isotropic "
           "highlight and stops reading as extruded")
 
+
+def test_real_print_mode_is_exposed_like_a_photograph():
+    """Why layer lines did not read, measured 2026-09-19.
+
+    Real macro photographs of white/silver FDM walls (Simplify3D's own
+    print-quality reference set) sit at mean luminance 63-117 out of 255. This
+    viewer rendered the same kind of surface at 195. At that exposure the
+    surface is already in the top fifth of the range, so there is no headroom
+    for a bright ridge crest and the layer modulation compresses to nothing.
+
+    Ridge amplitude at the layer frequency, as a share of local mean:
+
+        exposure 1.00   mean 195   ridge 3.83%
+        exposure 0.65   mean 179   ridge 5.32%
+        exposure 0.45   mean 162   ridge 6.87%
+        real prints                ridge 13.7-20.7%
+
+    Nine times the normal-perturbation strength moved that from 3.36% to
+    4.78%. Halving exposure nearly doubled it. The lever was never the layer
+    model, which is why this guard is on exposure and not on the shader.
+
+    Diagnostic modes stay bright on purpose -- they are a colour key read
+    against a legend, not a photograph.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    m = re.search(r"toneMappingExposure = real \? ([0-9.]+) : ([0-9.]+)", src)
+    check(m is not None,
+          "real-print mode no longer drops the exposure; a white part renders "
+          "at mean luminance ~195 where real photographs sit at 63-117, and "
+          "the layer ridges have no headroom to show in")
+    if not m:
+        return
+    real_e, diag_e = float(m.group(1)), float(m.group(2))
+    check(real_e < diag_e,
+          "real mode is not darker than the diagnostic modes (%s vs %s)"
+          % (m.group(1), m.group(2)))
+    check(real_e <= 0.6,
+          "real-mode exposure is back up to %s; measured, anything above ~0.6 "
+          "puts the surface where ridge contrast compresses away" % m.group(1))
+
+
+def test_the_layer_bulge_is_continuous_across_the_boundary():
+    """The bulge was a sawtooth.
+
+    (lyPos - 0.5) * 2.0 runs +1 at the top of one layer and jumps straight to
+    -1 at the bottom of the next. That discontinuity draws a hard line at
+    every single layer boundary, which is the opposite of a real wall, where
+    beads meet in a smooth valley. A sine is continuous across the boundary by
+    construction.
+
+    The strength is a uniform so it can be swept against a reference
+    photograph rather than guessed -- that sweep is what established exposure,
+    not amplitude, as the real lever.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    check("sin(6.28318" in src,
+          "the layer bulge is not a full-period sine any more; if it is back "
+          "to a sawtooth it draws a hard step at every layer boundary")
+    check("(lyPos - 0.5) * 2.0" not in src,
+          "the sawtooth bulge is back")
+    check("uLayerAmp" in src,
+          "the bulge strength is hardcoded again, so it cannot be swept "
+          "against a reference photograph")
+    m = re.search(r"uLayerAmp:\s*\{value:\s*([0-9.]+)\}", src)
+    check(m is not None and float(m.group(1)) > 0.0,
+          "the layer bulge is switched off entirely")
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

@@ -2138,7 +2138,8 @@ function makeMaterial(dim, rich) {
     //
     // A real highlight on satin PLA brightens the colour; it does not
     // neutralise it. 0.35 keeps the directional band and stops doing that.
-    uSheen: {value: 0.35}
+    uSheen: {value: 0.35},
+    uLayerAmp: {value: 1.5}
   };
   // Printed PLA is neither chalk nor gloss: a matte-satin dielectric. Rich
   // shading buys a tighter lobe and a real environment reflection; the cheap
@@ -2170,7 +2171,7 @@ function makeMaterial(dim, rich) {
                'varying vec3 vJobColor;\nvarying float vJobVis;\n' +
                'varying float vZmm;\nuniform float uSat;\n' +
                'uniform float uLayerH;\nuniform vec3 uKeyW;\n' +
-               'uniform float uSheen;')
+               'uniform float uSheen;\nuniform float uLayerAmp;')
       .replace('#include <lights_fragment_end>',
                '#include <lights_fragment_end>\n' +
                // Anisotropic sheen -- the thing that actually makes a surface
@@ -2278,8 +2279,32 @@ function makeMaterial(dim, rich) {
                '  if (lyFade > 0.002) {\n' +
                '    vec3 upV = normalize((viewMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz);\n' +
                '    float wall = 1.0 - abs(dot(normal, upV));\n' +
+               // A sine, and the phase and the amplitude are both measured
+               // against real prints rather than chosen (2026-09-19).
+               //
+               // This was (lyPos - 0.5) * 2.0, which is a SAWTOOTH: it runs
+               // +1 at the top of one layer and jumps straight to -1 at the
+               // bottom of the next. That discontinuity is a hard line at
+               // every single layer boundary, which is the opposite of what a
+               // real wall does -- real beads meet in a smooth valley. A sine
+               // is continuous across the boundary by construction.
+               //
+               // The 0.42 offset puts the crest at 67% of the layer height.
+               // Measured off Simplify3D`s own macro reference photograph of
+               // a printed wall (print-quality troubleshooting, "lines on the
+               // side of print"), by rotating to the ridge angle, detrending
+               // the lighting gradient and averaging the period: the crest
+               // sits at 67% of the layer and the trough at about 17%. The
+               // sawtooth put this render`s crest at 5-16% -- a bright line
+               // at the layer boundary instead of a ridge below it.
+               //
+               // 0.24 rather than 0.35 for the same reason. Measured
+               // peak-to-trough amplitude as a share of local mean: the
+               // reference photograph is 48.4%, this render was 69.4%, a
+               // factor of 1.43 too strong.
+               '    float bulge = sin(6.28318 * (lyPos - 0.42));\n' +
                '    normal = normalize(normal + upV *\n' +
-               '      ((lyPos - 0.5) * 2.0 * 0.35 * wall * lyFade));\n' +
+               '      (bulge * uLayerAmp * wall * lyFade));\n' +
                '  }')
       .replace('#include <color_fragment>',
                '#include <color_fragment>\n  diffuseColor.rgb *= vJobColor;\n' +
@@ -2322,8 +2347,11 @@ function makeMaterial(dim, rich) {
                // whole job of making a layer readable; now the surface is
                // genuinely rounded, so a big swing on top of real shading
                // reads as soot in the grooves rather than as a printed wall.
-               '      float lt = abs(lyPos - 0.5) * 2.0;\n' +
-               '      float lb = mix(1.02, 0.88, smoothstep(0.40, 1.0, lt));\n' +
+               // Phase-locked to the same sine, so the darkening sits in the
+               // trough the rounding creates instead of at the layer boundary
+               // where the old abs(lyPos - 0.5) put it.
+               '      float lt = sin(6.28318 * (lyPos - 0.42));\n' +
+               '      float lb = mix(1.01, 0.93, clamp(-lt, 0.0, 1.0));\n' +
                '      diffuseColor.rgb *= mix(1.0, lb, lyBand);\n' +
                '    }\n' +
                '  }')
@@ -3345,6 +3373,32 @@ function syncStill() {
 function applyRealMode() {
   var real = colorMode === 'real';
   var solo = machineHidden();
+
+  // Exposure, measured against real photographs of printed parts
+  // (2026-09-19). This is the single biggest reason layer lines did not read,
+  // and it is not a shader problem at all.
+  //
+  // Real macro photographs of white/silver FDM walls (Simplify3D's own
+  // print-quality reference set) sit at mean luminance 63-117 out of 255.
+  // This viewer rendered the same kind of surface at 195. At that exposure
+  // the surface is already in the top fifth of the range, so there is no
+  // headroom left for a bright ridge crest and the layer modulation is
+  // compressed to nothing. Measured ridge amplitude at the layer frequency,
+  // as a share of local mean:
+  //
+  //   exposure 1.00  mean 195   ridge 3.83%
+  //   exposure 0.65  mean 179   ridge 5.32%
+  //   exposure 0.45  mean 162   ridge 6.87%   (real prints: 13.7-20.7%)
+  //
+  // Nine times the normal-perturbation strength moved that figure from 3.36%
+  // to 4.78%. Halving the exposure nearly doubled it. The lever was never the
+  // layer model.
+  //
+  // Applied to real-print mode only: that mode's whole claim is "this is what
+  // the object looks like", so exposing it like a photograph of the object is
+  // the correct answer. The diagnostic modes are a colour key you read a
+  // legend against and stay bright on purpose.
+  if (renderer) { renderer.toneMappingExposure = real ? 0.52 : 0.95; }
   var moving = !partOnly && (!real || realFraming === 'live');
 
   // Leaving solo has to put the camera back. frameSolo() targets the part,

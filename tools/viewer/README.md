@@ -1240,3 +1240,90 @@ measures clean here, so if it still reads wrong the next step is not another
 shader guess: it is a photograph of a real print to measure against, since
 every source consulted so far has been text describing an appearance rather
 than the appearance itself.
+
+## Measured against real photographs (2026-09-19)
+
+*"Keep comparing your work to images found on the internet across multiple
+reference print sites."* — Scott, having no finished print to photograph.
+
+This turned out to be possible in a way the previous round assumed it was not.
+`WebSearch`/`WebFetch` return text, but an image can be fetched with `curl` and
+then **looked at** with the `Read` tool, and — more useful — the *same* pixel
+measurement can be run on a reference photograph and on a render. That is the
+durable result of this round; the numbers below all come from it.
+
+Sources: Simplify3D's print-quality reference set (macro photographs of real
+FDM walls: "lines on the side of print", "vibrations and ringing",
+"over-extrusion"). Fetched for measurement only — nothing is republished, and
+no reference image is in the built site. Wikimedia Commons was tried first and
+rate-limited the shared proxy IP (HTTP 429).
+
+### Two bad metrics, caught before they set direction
+
+**First**, "58.4% of the wall is dark" — the object mask was `luma > 18` and the
+backdrop is navy at luma ≈ 30, so it was measuring the sky. The giveaway was
+already in the numbers: those pixels averaged RGB (17.8, 26.6, 41.8) at
+saturation 0.58. Blue, and saturated; plastic in shadow is dark *orange*.
+
+**Second**, and worse because it nearly produced a wrong fix: measuring ridge
+strength as `p95 − p05` of the detrended profile said the render was **1.45×
+too contrasty**, so the layer amplitude was reduced. Putting render and
+photograph side by side at matched period immediately showed the opposite —
+the render was visibly *flatter*. The statistic was being driven by a handful
+of near-black feature-boundary lines, not by the periodic ridge signal at all.
+
+Replacing it with the Fourier amplitude **at the ridge frequency** — which
+ignores outliers by construction — reversed the conclusion:
+
+| surface | ridge amplitude |
+|---|---|
+| Real, magnified inset | 13.7% |
+| Real, fine wall | 20.7% |
+| Real, fine wall (2) | 14.4% |
+| Real, **over-extruded** (layers merged) | 3.7% |
+| This viewer, before | **3.4%** |
+
+The render matched the reference where layer lines have almost disappeared.
+Crest *position* was also compared at first and then dropped: it is measured
+from an arbitrary crop origin in both images, so "67% vs 5%" compared nothing.
+
+### The lever was exposure, not the layer model
+
+Sweeping the bulge strength as a uniform, then sweeping exposure with it:
+
+| exposure | bulge | mean luminance | ridge amplitude |
+|---|---|---|---|
+| 1.00 | 1.0 | 195 | 3.83% |
+| 0.65 | 1.0 | 179 | 5.32% |
+| 0.65 | 2.2 | 175 | 6.57% |
+| 0.45 | 1.0 | 162 | 6.87% |
+| 0.45 | 2.2 | 157 | 8.24% |
+| *real photographs* | | *63–117* | *13.7–20.7%* |
+
+**Nine times** the bulge strength moved ridge amplitude 3.36% → 4.78%.
+**Halving** the exposure nearly doubled it. The render was sitting at mean
+luminance 195 where real photographs of white and silver prints sit at 63–117
+— already in the top fifth of the range, with no headroom left for a bright
+crest, so the modulation compressed to nothing.
+
+Real-print mode now renders at exposure 0.52 instead of 0.95. It is the mode
+whose whole claim is "this is what the object looks like", so exposing it like
+a photograph of the object is the right answer; the diagnostic modes are a
+colour key read against a legend and stay bright.
+
+Result on the same wall, same camera: ridge amplitude **3.40% → 6.77%**, mean
+luminance 197 → 168. **That is twice as good and still about half of the
+13.7–20.7% the photographs show**, which is worth stating rather than
+rounding up. ACES is compressive, so exposure alone has diminishing returns
+from here; closing the rest of the gap most likely needs the bead
+cross-section to carry real curvature rather than three flat facets.
+
+### The bulge was a sawtooth
+
+Separately, and worth fixing on its own merits: the normal perturbation was
+`(lyPos - 0.5) * 2.0`, which runs +1 at the top of one layer and jumps
+straight to −1 at the bottom of the next. That discontinuity draws a hard step
+at every layer boundary — the opposite of a real wall, where beads meet in a
+smooth valley. It is a full-period sine now, continuous across the boundary by
+construction, with its strength exposed as `uLayerAmp` so it can be swept
+against a photograph instead of guessed.
