@@ -2994,6 +2994,41 @@ function setPlaying(on) {
 }
 
 // \u2500\u2500 readout \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Layer navigation (2026-09-19). Scrubbing is a time slider -- it lands
+// wherever the drag lands, and "layer 287 of 604" was not reachable except by
+// nudging the handle and reading the number back. The arrow keys already did
+// this exactly right; this is that same code, lifted out so the +/- buttons
+// and the type-a-number box cannot drift from it.
+//
+// A layer is a RANGE of segments, so the last segment of the target layer is
+// what shows that layer complete. play.t has to move with it or the next tick
+// of the clock would snap the replay back to where the time cursor still was.
+function currentLayer() {
+  if (!JOB) { return 0; }
+  return play.seg > 0 ? JOB.segLayer[play.seg - 1] : 0;
+}
+
+function gotoLayer(target) {
+  if (!JOB) { return; }
+  var t = Math.max(0, Math.min(JOB.layers.length - 1, target));
+  var seg = Math.max(0, JOB.layerSeg[t + 1] - 1);
+  play.t = JOB.segCum[seg];
+  setSeg(seg);
+  refreshReadout(true);
+  setPlaying(false);
+  syncLayerJump();
+}
+
+// The number box shows where you are, not what you last typed -- otherwise it
+// disagrees with the readout the moment the print plays on.
+function syncLayerJump() {
+  var f = $('layerjump');
+  if (!f || !JOB) { return; }
+  if (document.activeElement === f) { return; }   // never fight a live edit
+  f.max = JOB.layers.length;
+  f.value = currentLayer() + 1;
+}
+
 var lastPaint = 0, _lastFeat = null;
 function hms(s) {
   s = Math.max(0, Math.round(s));
@@ -3027,6 +3062,7 @@ function refreshReadout(force) {
   }
   paintAMS();
   $('lnum').textContent = seg ? li + 1 : 0;
+  syncLayerJump();
   var pct = JOB.total ? play.t / JOB.total : 0;
   if (!play.scrubbing) { $('scrub').value = Math.round(pct * 1000); }
   $('scrub').style.setProperty('--pct', (pct * 100).toFixed(1) + '%');
@@ -3087,10 +3123,91 @@ function updatePlateMore() {
 // honest, since it measures cards that exist rather than cards that are hidden.
 var plateFilter = '';
 
+// Sort, quick-filter and saved plates (2026-09-19). Seventy-two plates is past
+// the point where a single flat list is browsable -- the text filter alone
+// only helps if you already know the name of the thing you are looking for.
+//
+// All three are pure list operations over INDEX, which already carries every
+// field they need; none of them touch the replay or cost an API call.
+var plateSort = 'featured';
+var plateQuick = 'all';
+
+// Saved plates live in this browser and nowhere else. localStorage can throw
+// outright (Safari private mode, blocked site data), and a viewer that cannot
+// remember a star is still a working viewer -- so every access is wrapped and
+// failure degrades to "nothing is saved" rather than taking the page down.
+var FAV_KEY = 'vp1s.saved';
+var favourites = (function () {
+  try {
+    return JSON.parse(localStorage.getItem(FAV_KEY) || '[]') || [];
+  } catch (e) { return []; }
+})();
+
+function isFavourite(id) { return favourites.indexOf(id) >= 0; }
+
+function toggleFavourite(id) {
+  var i = favourites.indexOf(id);
+  if (i >= 0) { favourites.splice(i, 1); } else { favourites.push(id); }
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favourites)); } catch (e) {}
+  announce(isFavourite(id) ? 'Saved this plate' : 'Removed from saved');
+  paintJobList();
+}
+
+var QUICK = {
+  all:        function () { return true; },
+  support:    function (j) { return !!j.needsSupport; },
+  clean:      function (j) { return !j.needsSupport; },
+  multi:      function (j) { return !!j.toolChanges; },
+  quick:      function (j) { return (j.totalSeconds || 0) < 7200; },
+  favourites: function (j) { return isFavourite(j.id); }
+};
+
+// Descending for the "how big is this job" measures, because the question
+// behind picking that sort is almost always "what is the big one".
+var SORTS = {
+  featured: null,
+  name:   function (a, b) { return a.name.localeCompare(b.name); },
+  time:   function (a, b) { return (b.totalSeconds || 0) - (a.totalSeconds || 0); },
+  weight: function (a, b) { return (b.filamentG || 0) - (a.filamentG || 0); },
+  height: function (a, b) { return (b.maxZ || 0) - (a.maxZ || 0); },
+  layers: function (a, b) { return (b.layers || 0) - (a.layers || 0); }
+};
+
 function matchesFilter(j) {
+  if (!(QUICK[plateQuick] || QUICK.all)(j)) { return false; }
   if (!plateFilter) { return true; }
   var hay = (j.name + ' ' + (j.source || '')).toLowerCase();
   return plateFilter.split(/\s+/).every(function (w) { return hay.indexOf(w) >= 0; });
+}
+
+// Screen readers get no signal at all from a list silently re-rendering under
+// a filter, so the one thing that changed is said out loud.
+function announce(msg) {
+  var a = $('announcer');
+  if (a) { a.textContent = msg; }
+}
+
+function visiblePlates() {
+  var shown = INDEX.filter(matchesFilter);
+  var cmp = SORTS[plateSort];
+  // A copy, not INDEX itself -- sorting in place would make 'featured'
+  // unrecoverable, since it IS the file's own order.
+  return cmp ? shown.slice().sort(cmp) : shown;
+}
+
+// What the current filter actually selected, in the units someone choosing a
+// plate to run cares about: how many, and how long the queue is. Sums the
+// SHOWN set rather than the whole library, so it answers a question about what
+// is on screen.
+function paintLibrarySummary(shown) {
+  var box = $('librarysummary');
+  if (!box) { return; }
+  if (!shown.length) { box.innerHTML = ''; return; }
+  var secs = shown.reduce(function (a, j) { return a + (j.totalSeconds || 0); }, 0);
+  var grams = shown.reduce(function (a, j) { return a + (j.filamentG || 0); }, 0);
+  box.innerHTML = '<span><b>' + shown.length + '</b> plate' +
+    (shown.length === 1 ? '' : 's') + '</span>' +
+    '<span><b>' + hms(secs) + '</b> \u00b7 <b>' + grams.toFixed(0) + '</b> g</span>';
 }
 
 function paintJobList() {
@@ -3098,8 +3215,11 @@ function paintJobList() {
   host.innerHTML = '';
   host.removeAttribute('data-at');   // or a stale index survives a re-render
   var current = null;
-  var shown = INDEX.filter(matchesFilter);
+  var shown = visiblePlates();
   shown.forEach(function (j, i) {
+    // The card and its save star are siblings inside a wrapper: a <button>
+    // nested in a <button> is invalid HTML and the inner one never fires.
+    var wrap = el('div', 'jobwrap');
     var b = el('button', 'job');
     b.type = 'button';
     b.setAttribute('aria-current', String(j.id === currentId));
@@ -3109,13 +3229,35 @@ function paintJobList() {
       + ' FILAMENTS</span>'; }
     if (j.needsSupport) { tags += ' <span class="tagsup">SUPPORT</span>'; }
     if (j.segments > 400000) { tags += ' <span class="taghv">HEAVY</span>'; }
-    b.innerHTML = '<span class="n">' + j.name + '</span>' + tags +
-      '<span class="m"><span><b>' + j.layers + '</b> layers</span>' +
+    // The still is the render of this exact plate finished -- the same image
+    // the viewport shows at the end of a replay -- so the thumbnail is the
+    // real product, not a generic icon. Plates without one get the drawn
+    // placeholder instead of a broken-image glyph.
+    b.innerHTML =
+      '<img class="thumb" alt="" loading="lazy" src="' + stillUrl(j.id) + '"' +
+      ' onerror="this.removeAttribute(\'src\');this.classList.add(\'missing\')">' +
+      '<span class="copy"><span class="topline"><span class="n">' + j.name +
+      '</span>' + tags + '</span>' +
+      '<span class="m"><span class="time"><b>' + hms(j.totalSeconds || 0) + '</b></span>' +
+      '<span><b>' + j.layers + '</b> layers</span>' +
       '<span><b>' + j.maxZ.toFixed(0) + '</b> mm</span>' +
-      '<span><b>' + (j.segments / 1000).toFixed(0) + 'k</b> moves</span>' +
-      '<span><b>' + j.filamentG.toFixed(0) + '</b> g</span></span>';
+      '<span><b>' + j.filamentG.toFixed(0) + '</b> g</span></span></span>';
     b.addEventListener('click', function () { loadJob(j.id); });
-    host.appendChild(b);
+    wrap.appendChild(b);
+
+    var fav = el('button', 'jobfav');
+    fav.type = 'button';
+    var on = isFavourite(j.id);
+    fav.setAttribute('aria-pressed', String(on));
+    fav.setAttribute('aria-label', (on ? 'Unsave ' : 'Save ') + j.name);
+    fav.setAttribute('title', on ? 'Remove from saved' : 'Save this plate');
+    fav.textContent = on ? '\u2605' : '\u2606';
+    fav.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleFavourite(j.id);
+    });
+    wrap.appendChild(fav);
+    host.appendChild(wrap);
   });
   // Pick a plate near the bottom of eleven and the list must not leave it
   // offscreen -- "which one am I on" should never need a scroll to answer.
@@ -3123,8 +3265,11 @@ function paintJobList() {
     current.scrollIntoView({block: 'nearest'});
   }
   if (!shown.length) {
-    host.innerHTML = '<p class="legnote">No plate matches that.</p>';
+    host.innerHTML = '<p class="legnote">' + (plateQuick === 'favourites'
+      ? 'No saved plates yet \u2014 tap the star on any card.'
+      : 'No plate matches that.') + '</p>';
   }
+  paintLibrarySummary(shown);
   // Says where you are in the list, so seventy plates behind a scrollbar read
   // as seventy plates rather than as however many happen to fit.
   var pc = $('platecount');
@@ -3713,6 +3858,9 @@ window.__JOB_LOADED = function (raw) {
     autoQuality();
     refreshReadout(true);
     loading.hidden = true;
+    // A layer asked for by the URL can only be applied now: until this point
+    // JOB.layerSeg does not exist, so the index would have nothing to mean.
+    applyPendingLayer();
   }); });
 };
 
@@ -4071,21 +4219,173 @@ function initUI() {
       });
     });
 
+  // -- workspace shell controls --------------------------------------------
+  $('toggleleft').addEventListener('click', function () {
+    railHidden.left = !railHidden.left;
+    applyRails();
+    announce(railHidden.left ? 'Plate library hidden' : 'Plate library shown');
+  });
+  $('toggleright').addEventListener('click', function () {
+    railHidden.right = !railHidden.right;
+    applyRails();
+    announce(railHidden.right ? 'Printer details hidden' : 'Printer details shown');
+  });
+  $('shareview').addEventListener('click', copyViewLink);
+  $('showhelp').addEventListener('click', openHelp);
+  $('closehelp').addEventListener('click', closeHelp);
+  applyRails();
+
+  // -- plate library ---------------------------------------------------------
+  $('platesort').addEventListener('change', function (e) {
+    plateSort = e.target.value;
+    paintJobList();
+  });
+  Array.prototype.forEach.call($('platefilters').children, function (b) {
+    b.addEventListener('click', function () {
+      plateQuick = b.getAttribute('data-filter');
+      Array.prototype.forEach.call($('platefilters').children, function (o) {
+        o.setAttribute('aria-pressed',
+          String(o.getAttribute('data-filter') === plateQuick));
+      });
+      paintJobList();
+      announce(visiblePlates().length + ' plates shown');
+    });
+  });
+
+  // -- layer navigation ------------------------------------------------------
+  $('prevlayer').addEventListener('click', function () {
+    gotoLayer(currentLayer() - 1);
+  });
+  $('nextlayer').addEventListener('click', function () {
+    gotoLayer(currentLayer() + 1);
+  });
+  // 'change' not 'input': typing "12" to reach layer 120 would otherwise jump
+  // the replay to layer 1 on the first keystroke and fight the rest.
+  $('layerjump').addEventListener('change', function (e) {
+    var n = parseInt(e.target.value, 10);
+    if (n > 0) { gotoLayer(n - 1); } else { syncLayerJump(); }
+  });
+
   document.addEventListener('keydown', function (e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') { return; }
+    if (e.key === 'Escape') { closeHelp(); return; }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT'
+        || e.target.tagName === 'TEXTAREA') { return; }
+    // '/' focuses the plate search, the convention every list-with-a-filter
+    // uses; '?' opens the shortcut list that says so.
+    if (e.key === '/') {
+      e.preventDefault();
+      railHidden.left = false; applyRails();
+      var f = $('platefilter');
+      if (f) { f.focus(); f.select(); }
+      return;
+    }
+    if (e.key === '?') { e.preventDefault(); openHelp(); return; }
     if (e.code === 'Space') { e.preventDefault(); if (JOB) { setPlaying(!play.on); } }
     if (!JOB) { return; }
+    if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      if (currentId) { toggleFavourite(currentId); }
+      return;
+    }
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       e.preventDefault();
-      var li = play.seg > 0 ? JOB.segLayer[play.seg - 1] : 0;
-      var t = Math.max(0, Math.min(JOB.layers.length - 1, li + (e.key === 'ArrowRight' ? 1 : -1)));
-      var s = JOB.layerSeg[t + 1] - 1;
-      play.t = JOB.segCum[Math.max(0, s)];
-      setSeg(s); refreshReadout(true); setPlaying(false);
+      gotoLayer(currentLayer() + (e.key === 'ArrowRight' ? 1 : -1));
     }
   });
 }
 
+// -- workspace shell -------------------------------------------------------
+// Collapsing a rail is a laptop affordance: at 1280px the two rails are 608 of
+// 1280 horizontal pixels, and when you are actually watching a print the
+// viewport is the only part that matters. It re-shapes the grid rather than
+// hiding a column, or the space is not given back.
+//
+// Deliberately NOT persisted. A collapsed rail is a momentary "let me look at
+// this" state, and restoring it on a later visit means the plate list is
+// missing on open with no explanation.
+var railHidden = {left: false, right: false};
+
+function applyRails() {
+  var app = document.getElementById('app');
+  app.classList.toggle('left-collapsed', railHidden.left);
+  app.classList.toggle('right-collapsed', railHidden.right);
+  var l = $('toggleleft'), r = $('toggleright');
+  if (l) { l.setAttribute('aria-pressed', String(!railHidden.left)); }
+  if (r) { r.setAttribute('aria-pressed', String(!railHidden.right)); }
+  // The canvas is sized from its container, which just changed -- but this
+  // also runs once from initUI(), which is BEFORE initScene() builds the
+  // renderer. Calling onResize() there threw on renderer.setSize and took the
+  // whole boot down with it (empty plate list, stuck spinner), which is the
+  // same class of failure the boot block's try/catch exists to report.
+  if (renderer) { onResize(); }
+}
+
+// A link to the exact plate and layer on screen. The hash is read on boot, so
+// this is how you hand someone "look at layer 287 of the fairy house" instead
+// of "open it and scrub to about a third".
+function viewLink() {
+  var base = location.href.split('#')[0];
+  if (!currentId) { return base; }
+  return base + '#' + encodeURIComponent(currentId) + ',' + (currentLayer() + 1);
+}
+
+function copyViewLink() {
+  var url = viewLink(), btn = $('shareview');
+  var label = btn ? btn.lastChild : null;
+  var say = function (ok) {
+    if (label && label.nodeType === 3) {
+      label.textContent = ok ? 'Copied' : 'Copy failed';
+      setTimeout(function () { label.textContent = 'Copy view'; }, 1600);
+    }
+    announce(ok ? 'Link to this plate and layer copied'
+                : 'Could not copy the link');
+  };
+  // navigator.clipboard is absent on an http:// origin and can reject when the
+  // document is not focused, so the failure is reported rather than swallowed
+  // by an uncaught promise.
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function () { say(true); },
+                                            function () { say(false); });
+  } else {
+    say(false);
+  }
+}
+
+// loadJob() is asynchronous -- the payload has to arrive before a layer index
+// means anything -- so a layer asked for by the URL waits here and is applied
+// once the job is really built.
+var pendingLayer = null;
+
+function applyPendingLayer() {
+  if (pendingLayer == null || !JOB) { return; }
+  var n = pendingLayer;
+  pendingLayer = null;
+  gotoLayer(n);
+}
+
+// #plateid,layer
+function applyViewHash() {
+  var h = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+  if (!h) { return false; }
+  var bits = h.split(','), id = bits[0];
+  if (!INDEX.some(function (j) { return j.id === id; })) { return false; }
+  var n = parseInt(bits[1], 10);
+  if (n > 0) { pendingLayer = n - 1; }
+  loadJob(id);
+  return true;
+}
+
+function openHelp() {
+  var d = $('helpdialog');
+  if (!d) { return; }
+  if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); }
+}
+
+function closeHelp() {
+  var d = $('helpdialog');
+  if (!d) { return; }
+  if (d.close) { d.close(); } else { d.removeAttribute('open'); }
+}
 // \u2500\u2500 boot \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // A throw anywhere in this sequence used to leave the page on its "slicing
 // data" spinner forever, with an empty plate list, an empty Printer pane and
@@ -4136,7 +4436,9 @@ if (!window.THREE) {
   requestAnimationFrame(function () { requestAnimationFrame(function () {
     try {
       initScene();
-      loadJob(INDEX[0].id);
+      // A shared link decides which plate opens; INDEX[0] is only the default
+      // for someone arriving with no hash.
+      if (!applyViewHash()) { loadJob(INDEX[0].id); }
     } catch (e) { bootFailed(e); throw e; }
   }); });
 }

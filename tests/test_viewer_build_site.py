@@ -1577,6 +1577,102 @@ def test_no_escape_sequence_is_shown_to_the_reader_as_text():
           % sorted(set(bad)))
 
 
+def test_the_quick_filters_wrap_instead_of_scrolling_out_of_sight():
+    """Three separate drafts put the filter pills in a horizontal scroller with
+    `scrollbar-width:none` (2026-09-19).
+
+    Measured in a browser at the real 288px rail width: 356px of pills in a
+    256px box, so two of six sat off the right edge with nothing on screen
+    saying they existed. That is the same defect as the plate list nobody could
+    scroll, which the comment at the top of virtual_p1s.html already records.
+
+    A second row is free. Hiding a control is not.
+    """
+    html = (ROOT / "tools" / "viewer" / "virtual_p1s.html").read_text(encoding="utf-8")
+    rule = re.search(r"\.plate-filters\{([^}]*)\}", html)
+    check(rule is not None, ".plate-filters rule not found")
+    if rule:
+        body = rule.group(1)
+        check("flex-wrap:wrap" in body,
+              ".plate-filters does not wrap, so a pill that does not fit is "
+              "simply not visible: %r" % body)
+        check("overflow-x:auto" not in body,
+              ".plate-filters scrolls sideways again -- with the scrollbar "
+              "hidden that is a control nobody can find")
+
+
+def test_applying_the_rail_layout_cannot_run_before_the_renderer_exists():
+    """applyRails() took the whole boot down (2026-09-19).
+
+    It calls onResize() because collapsing a rail changes the canvas's
+    container -- but it also runs once from initUI(), which is BEFORE
+    initScene() builds the renderer. The result was
+    "Cannot read properties of undefined (reading 'setSize')", caught by the
+    boot try/catch, so the page sat on its spinner with an empty plate list.
+
+    Found by loading the built page, not by reading the diff.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    fn = re.search(r"\nfunction applyRails\(\) \{(.*?)\n\}", js, re.S)
+    check(fn is not None, "applyRails() not found in app.js")
+    if fn:
+        body = "\n".join(re.sub(r"//.*$", "", ln) for ln in fn.group(1).split("\n"))
+        if "onResize()" in body:
+            check("if (renderer)" in body,
+                  "applyRails() calls onResize() unguarded; it runs from "
+                  "initUI() before the renderer exists and throws")
+
+
+def test_the_save_star_is_not_a_button_inside_a_button():
+    """A <button> nested in a <button> is invalid HTML and never fires.
+
+    The plate card is itself a button, so the save star has to be a sibling in
+    a wrapper rather than a child of the card.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    fn = re.search(r"\nfunction paintJobList\(\) \{(.*?)\n\}", js, re.S)
+    check(fn is not None, "paintJobList() not found")
+    if fn:
+        body = fn.group(1)
+        check("jobwrap" in body,
+              "the save star is not wrapped alongside the card button")
+        check("b.appendChild(fav)" not in body and "b.append(fav)" not in body,
+              "the save star is appended INTO the card button -- a button "
+              "inside a button does not fire")
+
+
+def test_sorting_the_plate_list_does_not_destroy_the_file_order():
+    """'Featured' IS the order the index file ships in, so sorting in place
+    would make it unrecoverable for the rest of the session -- picking
+    Featured again would just re-show whatever the last sort left behind.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    fn = re.search(r"\nfunction visiblePlates\(\) \{(.*?)\n\}", js, re.S)
+    check(fn is not None, "visiblePlates() not found")
+    if fn:
+        body = fn.group(1)
+        check(".slice()" in body or "concat()" in body,
+              "visiblePlates() sorts without copying first, which reorders "
+              "INDEX itself and loses the file's own 'featured' order")
+
+
+def test_saved_plates_survive_storage_being_unavailable():
+    """localStorage throws outright in Safari private mode and wherever site
+    data is blocked. A viewer that cannot remember a star is still a working
+    viewer, so every access is wrapped and failure means "nothing is saved"
+    rather than a dead page.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    for call in ("localStorage.getItem(FAV_KEY", "localStorage.setItem(FAV_KEY"):
+        i = js.find(call)
+        check(i > 0, "%s not found" % call)
+        if i > 0:
+            window = js[max(0, i - 300):i + 200]
+            check("try {" in window,
+                  "%s is not inside a try/catch; blocked site data would take "
+                  "the page down" % call)
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
