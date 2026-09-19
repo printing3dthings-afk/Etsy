@@ -1064,3 +1064,97 @@ four points face out, up-and-out, up-and-in, in, so removing the vertical
 component collapses them onto two *opposing* horizontal directions, and the
 double-sided flip then fights the result. Worth revisiting only alongside a
 cross-section whose facets all face outward.
+
+## Part only, and the sheen (2026-09-19)
+
+Scott, on a screenshot of the fairy house roof at layer 537: *"Layer lines need
+to look like real prints... I need a fourth view option. It needs to get rid of
+everything except the printed object so I can free view the whole thing
+including how the bottom prints."*
+
+### Most of what he was looking at was not the print
+
+Reproduced the shot first. The roof rendered as a chaotic criss-cross of short
+white dashes that looks nothing like a printed surface — and the reason is not
+shading. Counted by extrusion move on that plate:
+
+| feature | moves | share |
+|---|---|---|
+| Support material | 35,483 | 34.4% |
+| Support material interface | 10,187 | 9.9% |
+
+`REAL_HIDDEN` only ever hid sparse infill and the skirt, deliberately: real-print
+mode answers *"what is on the plate right now"*, and supports are genuinely
+printed plastic standing there until you snap them off. That is the right answer
+to that question and the wrong answer to the one Scott was actually asking, which
+is what the finished object looks like in your hand. On the fairy house the
+difference is 44.3% of the plate.
+
+So part-only is a different hide list (`PART_HIDDEN`): supports, support
+interface, skirt and sparse infill all off. It works in any colour mode on
+purpose — inspecting the underside with the feature colours on is how you tell a
+brim bead from a first-layer perimeter.
+
+### Hiding the machine also hid the light
+
+The first render came out dark slate blue and read as a different material
+entirely. `chamberLamp` is a **child of the chamber group** — it has to be, it
+moves with the enclosure — so switching the chamber off removed a 1.55-intensity
+point light that was doing most of the illumination, leaving a 1.05 key, a 0.32
+rim and a dark environment map.
+
+Part-only therefore carries its own two-light rig rather than being the machine
+scene with the machine invisible. One of those lights points **up** at the part,
+which no real P1S has and which is the entire point of the mode: every light in
+the real rig points down or across, so a first layer viewed from underneath
+renders near black and you cannot read a single bead on it. The Limits pane says
+all of this now, because a view that shows less than the plate holds has to say
+so.
+
+### The AMS came back one tick later
+
+Listing the visible scene in part-only turned up a 371 mm AMS unit still in
+frame. `updateCutaway()` recomputed the machine-visibility condition itself,
+every frame, and did not know about part-only — so it re-showed the AMS one tick
+after `setPartOnly()` hid it.
+
+Its own comment warned about exactly that: *"This runs every frame, so it is also
+the thing that would quietly undo the solo framing's hiding one tick after it was
+applied."* The comment was right and the trap still caught the next mode added,
+because the condition was inlined in three places. It is one function now,
+`machineHidden()`. A pre-existing test guarded this bug class by requiring the
+literal string `realFraming` inside `updateCutaway` — the right thing asked the
+wrong way, since spelling the condition out locally *is* the bug. It now requires
+the call instead.
+
+### The sheen
+
+The layer geometry was already right after the flat-top and squish work; what was
+missing is that **a printed surface reflects directionally**. An extruded bead is
+a half-cylinder lying on its side and a wall is a stack of them running parallel,
+so the highlight is not a round spot — it is a band running along the beads that
+slides as you move. This is measured, not stylistic: [AnisoTag](https://arxiv.org/pdf/2301.10599)
+encodes readable data on printed surfaces using nothing but reflection
+anisotropy, [LumosX (CHI 2025)](https://dl.acm.org/doi/10.1145/3706598.3714124)
+controls it through raster angle and layer height, and the plain-language version
+— ["light bounces off edges and grooves in different directions... horizontal
+ridges that catch light at different angles"](https://www.unionfab.com/blog/2025/10/3d-printing-layer-lines)
+— is the same effect.
+
+Implemented as a Kajiya-Kay lobe (the hair/brushed-metal shape) in
+`<lights_fragment_end>`, about a dozen ALU ops. The bead tangent comes free: a
+bead runs horizontally, perpendicular to its own outward normal, so
+`cross(worldUp, N)` **is** the extrusion direction — no third vertex attribute on
+a mesh already carrying 800k triangles. Exponent 28 is a satin band rather than a
+chrome glint, because PLA is a matte-satin dielectric. Gated on a wall factor,
+since the cross product degenerates where the normal is vertical and a top
+surface has its own raster direction this cannot know.
+
+### Known, real, and not done
+
+Every FDM print has a **Z seam** — the vertical scar where each perimeter loop
+starts and ends — and on most prints it is the single most visible surface
+feature. It does not need faking: the loop start points are already in the
+toolpath this page replays. Drawing it means a small bead bulge at each loop
+start, which is a geometry change, and it is worth doing next rather than
+bundling into a change already touching shading, visibility and lighting.

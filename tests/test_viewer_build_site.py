@@ -266,9 +266,15 @@ def test_solo_framing_survives_the_functions_that_fight_it():
               "frameJob/frameSolo re-show the gantry")
 
     m2 = re.search(r"function updateCutaway\(\) \{(.*?)\n\}", js, re.S)
-    check(m2 is not None and "realFraming" in m2.group(1),
-          "updateCutaway no longer consults the solo framing -- it will "
-          "re-show the AMS every frame")
+    # 2026-09-19: this used to require the literal string "realFraming" here.
+    # It asked for the right thing in the wrong way -- the condition was
+    # inlined in three places and updateCutaway's copy did not know about
+    # part-only, so the AMS came back one tick after being hidden. It is one
+    # predicate now, and the guard is that updateCutaway consults it rather
+    # than that it spells the condition out itself.
+    check(m2 is not None and "machineHidden()" in m2.group(1),
+          "updateCutaway no longer consults machineHidden() -- it runs every "
+          "frame and will re-show the AMS one tick after it is hidden")
 
     m3 = re.search(r"function applyRealMode\(\) \{(.*?)\n\}", js, re.S)
     check(m3 is not None and "_wasSolo" in m3.group(1) and "frameJob" in m3.group(1),
@@ -934,6 +940,144 @@ def test_the_layer_darkening_fades_out_sooner_than_the_rounding():
           "layer there is nothing honest left to draw" % fade.group(2))
     check("mix(1.0, lb, lyBand)" in src,
           "the darkening is not applied on its own curve any more")
+
+
+def test_part_only_hides_the_supports_not_just_the_machine():
+    """The fourth view, asked for 2026-09-19.
+
+    Real-print mode keeps supports on purpose -- they are printed plastic
+    standing on the plate until you snap them off. Part-only answers a
+    different question and must hide them, and the difference is not marginal:
+    measured on the fairy house by extrusion move count, support material
+    (34.4%) plus support interface (9.9%) is 44.3% of the whole plate. Looking
+    at its roof with them on, nearly half of what is on screen is scaffolding,
+    which is what "doesn't look like a real print" turned out to mean.
+
+    Indices are into the slicer's own type list, which the payloads carry:
+    3 internal infill, 7 support material, 8 support interface, 9 skirt/brim.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    m = re.search(r"var PART_HIDDEN = \{([^}]*)\}", src)
+    check(m is not None, "PART_HIDDEN is gone -- part-only no longer hides "
+                         "anything the plate does not keep")
+    if not m:
+        return
+    hidden = set(re.findall(r"(\d+)\s*:", m.group(1)))
+    for idx, what in (("3", "sparse infill"), ("7", "support material"),
+                      ("8", "support interface"), ("9", "the skirt")):
+        check(idx in hidden,
+              "part-only no longer hides %s (type %s), so it is not showing "
+              "the finished object any more" % (what, idx))
+    # and real-print mode must NOT have quietly inherited this
+    r = re.search(r"var REAL_HIDDEN = \{([^}]*)\}", src)
+    check(r is not None and "7" not in set(re.findall(r"(\d+)\s*:", r.group(1))),
+          "real-print mode now hides supports too -- that mode answers 'what "
+          "is on the plate right now' and supports genuinely are")
+
+
+def test_only_one_thing_decides_whether_the_machine_is_on_screen():
+    """The AMS leak, found 2026-09-19 by listing the visible scene.
+
+    updateCutaway() recomputed `solo` itself, every frame, and did not know
+    about part-only -- so a 371mm AMS unit re-appeared one tick after
+    setPartOnly() hid it, in the one view whose entire job is to show nothing
+    but the part. The function's own comment warned about that exact trap and
+    the trap still caught the next mode added.
+
+    So there is one predicate now. This fails if a second copy of the
+    condition reappears anywhere outside it.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+
+    check("function machineHidden()" in src,
+          "machineHidden() is gone; the machine-visibility condition has been "
+          "inlined again")
+    body = re.search(r"function machineHidden\(\) \{(.*?)\n\}", src, re.S)
+    check(body is not None and "partOnly" in body.group(1),
+          "machineHidden() no longer accounts for part-only")
+
+    # every other occurrence of the raw condition is a re-inlining, except the
+    # still, which is deliberately real-mode-only and says so.
+    raw = [ln.strip() for ln in src.split("\n")
+           if "realFraming === 'solo'" in ln and "function machineHidden" not in ln]
+    own = body.group(1).strip() if body else ""
+    stray = [ln for ln in raw
+             if ln != own and "machineHidden" not in ln and "stillOk" not in ln
+             and "!partOnly" not in ln and "setRealFraming" not in ln
+             and "f === 'solo'" not in ln]
+    check(not stray,
+          "the machine-visibility condition is inlined again outside "
+          "machineHidden(), which is how the AMS leaked back in: %r" % (stray,))
+
+
+def test_part_only_brings_its_own_light():
+    """Hiding the machine hides the chamber lamp with it.
+
+    chamberLamp is a CHILD of the chamber group -- it has to be, it moves with
+    the enclosure -- so switching the chamber off removes a 1.55-intensity
+    point light that was doing most of the illumination. The first render of
+    part-only came out dark slate blue and read as a different material
+    entirely, lit by nothing but a 1.05 key, a 0.32 rim and a dark env map.
+
+    The light from BELOW is the point of the mode rather than a nicety: every
+    light in the real rig points down or across, so a first layer viewed from
+    underneath renders near black.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    body = re.search(r"function setPartOnly\(on\) \{(.*?)\n\}", src, re.S)
+    check(body is not None, "setPartOnly is gone")
+    if not body:
+        return
+    b = body.group(1)
+    check("partRig" in b, "part-only no longer builds its own lighting, so it "
+                          "inherits a scene whose main lamp it just switched off")
+    lights = re.findall(r"new THREE\.DirectionalLight\([^)]*\)", b)
+    check(len(lights) >= 2,
+          "part-only is down to %d light(s); it needs a fill for the body and "
+          "one from below for the first layer" % len(lights))
+    below = re.findall(r"\.position\.set\([^)]*,\s*-(\d+)\)", b)
+    check(any(int(v) > 100 for v in below),
+          "nothing in the part-only rig is below the part any more -- the "
+          "underside is the one surface this view exists to show")
+    check("chamberLamp" not in b,
+          "setPartOnly is reaching into the chamber's own lamp instead of "
+          "carrying its own rig; that lamp belongs to the enclosure")
+
+
+def test_the_sheen_runs_along_the_bead_not_across_it():
+    """Anisotropic reflection, added 2026-09-19.
+
+    An extruded bead is a half-cylinder lying on its side and a wall is a
+    stack of them running parallel, so the surface reflects directionally --
+    the highlight is a band along the beads, not a round spot. That is a
+    measured property of FDM parts (AnisoTag, arXiv 2301.10599, encodes data
+    on printed surfaces using reflection anisotropy alone), not a stylisation.
+
+    The tangent is taken as cross(worldUp, normal), which is free: a bead runs
+    horizontally, perpendicular to its own outward normal. Taking it from a
+    vertex attribute instead would put a third attribute on a mesh already
+    carrying 800k triangles, so if this stops being a cross product that is a
+    real memory regression worth failing on.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    check("lights_fragment_end" in src,
+          "the anisotropic lobe is gone -- the surface is back to an isotropic "
+          "highlight, which is what makes a print read as a smooth object with "
+          "stripes painted on it")
+    check("cross(upS, normal)" in src,
+          "the bead tangent is no longer derived from the normal; if it now "
+          "comes from a vertex attribute that is a third attribute on an 800k "
+          "triangle mesh")
+    check(re.search(r"sl \* sv - tdl \* tdv", src) is not None,
+          "the Kajiya-Kay lobe has been replaced by something else; a standard "
+          "isotropic pow(dot(N,H)) highlight is exactly what this replaced")
+    check("uSheen" in src and "wallA" in src,
+          "the sheen is no longer gated on the wall factor, so it fires where "
+          "the cross product degenerates (a vertical normal)")
 
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

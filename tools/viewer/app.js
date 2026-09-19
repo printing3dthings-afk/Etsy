@@ -1918,8 +1918,7 @@ function updateCutaway() {
   // simply sit on top of the hole the cutaway just opened.
   // This runs every frame, so it is also the thing that would quietly undo
   // the solo framing's hiding one tick after it was applied.
-  var solo = colorMode === 'real' && realFraming === 'solo';
-  if (amsGroup) { amsGroup.visible = !cut && !solo; }
+  if (amsGroup) { amsGroup.visible = !cut && !machineHidden(); }
   for (var i = 0; i < extPanels.length; i++) {
     var p = extPanels[i];
     if (!cut) { p.mesh.visible = true; continue; }
@@ -2121,7 +2120,12 @@ function makeMaterial(dim, rich) {
     uDim:   {value: dim},
     uOverride: {value: new THREE.Vector3(-1, -1, -1)},
     uSat:   {value: DIAG_SAT},
-    uLayerH: {value: 0}
+    uLayerH: {value: 0},
+    // World-space direction toward the key light. Transformed into view space
+    // in the shader rather than updated per frame from JS, so orbiting costs
+    // nothing and this only needs touching if the rig itself moves.
+    uKeyW:  {value: new THREE.Vector3(-0.38, -0.61, 0.70)},
+    uSheen: {value: 0.85}
   };
   // Printed PLA is neither chalk nor gloss: a matte-satin dielectric. Rich
   // shading buys a tighter lobe and a real environment reflection; the cheap
@@ -2152,7 +2156,54 @@ function makeMaterial(dim, rich) {
       .replace('#include <common>', '#include <common>\n' +
                'varying vec3 vJobColor;\nvarying float vJobVis;\n' +
                'varying float vZmm;\nuniform float uSat;\n' +
-               'uniform float uLayerH;')
+               'uniform float uLayerH;\nuniform vec3 uKeyW;\n' +
+               'uniform float uSheen;')
+      .replace('#include <lights_fragment_end>',
+               '#include <lights_fragment_end>\n' +
+               // Anisotropic sheen -- the thing that actually makes a surface
+               // read as PRINTED rather than as a smooth object with stripes
+               // drawn on it (2026-09-19).
+               //
+               // An extruded bead is a half-cylinder lying on its side, and a
+               // wall is a stack of them running parallel. That microstructure
+               // is directional, so the surface reflects directionally: the
+               // highlight is not a round spot, it is a BAND running along the
+               // beads, and it slides along them as you move. This is a real,
+               // measured property of FDM parts, not a stylisation -- the
+               // AnisoTag work (arXiv 2301.10599) encodes data on printed
+               // surfaces using nothing but reflection anisotropy, and LumosX
+               // (CHI 2025) controls it through raster angle and layer height.
+               //
+               // Kajiya-Kay, the hair/brushed-metal lobe, is exactly this
+               // shape and costs about a dozen ALU ops. The bead tangent comes
+               // free: a bead runs horizontally, perpendicular to its own
+               // outward normal, so cross(worldUp, N) IS the extrusion
+               // direction -- no extra vertex attribute, no extra memory on a
+               // mesh that is already 800k triangles.
+               //
+               // Gated on `wall` because the cross product degenerates where
+               // the normal is vertical, and a top surface has its own raster
+               // direction this cannot know anyway.
+               '  {\n' +
+               '    vec3 upS = normalize((viewMatrix * vec4(0.0, 0.0, 1.0, 0.0)).xyz);\n' +
+               '    vec3 Ls = normalize((viewMatrix * vec4(uKeyW, 0.0)).xyz);\n' +
+               '    vec3 Vs = normalize(vViewPosition);\n' +
+               '    vec3 Tx = cross(upS, normal);\n' +
+               '    float tl = length(Tx);\n' +
+               '    float wallA = smoothstep(0.10, 0.45, tl);\n' +
+               '    if (wallA > 0.002) {\n' +
+               '      vec3 T = Tx / max(tl, 1e-4);\n' +
+               '      float tdl = dot(T, Ls), tdv = dot(T, Vs);\n' +
+               '      float sl = sqrt(max(0.0, 1.0 - tdl * tdl));\n' +
+               '      float sv = sqrt(max(0.0, 1.0 - tdv * tdv));\n' +
+               '      float kk = max(0.0, sl * sv - tdl * tdv);\n' +
+               // 28 is a satin band, not a chrome glint: PLA is a matte-satin
+               // dielectric and a tight exponent reads as wet plastic.
+               '      float lobe = pow(kk, 28.0) * wallA * uSheen;\n' +
+               '      lobe *= max(0.0, dot(normal, Ls));\n' +
+               '      reflectedLight.directSpecular += vec3(lobe) * 0.55;\n' +
+               '    }\n' +
+               '  }')
       .replace('#include <clipping_planes_fragment>',
                '#include <clipping_planes_fragment>\n  if (vJobVis < 0.5) discard;')
       // Winding-proof normals.
@@ -2606,7 +2657,41 @@ var DIAG_SAT = 0.42;
 // real plastic standing on the plate until you snap it off.
 var REAL_HIDDEN = {3: 1, 9: 1};
 
+// Part-only view (2026-09-19). Real-print mode answers "what is on the plate
+// right now", so it keeps supports -- they are genuinely printed plastic
+// standing there until you snap them off. This answers a different question:
+// what does the FINISHED object look like in your hand.
+//
+// That distinction is not cosmetic. Measured on the fairy house, by extrusion
+// move count: support material 34.4% plus support interface 9.9% is 44.3% of
+// the whole plate. Looking at its roof in real-print mode, nearly half of what
+// is on screen is scaffolding, and it reads as a chaotic criss-cross mess that
+// looks nothing like a print -- which is exactly the screenshot that started
+// this. So supports, their interface, the skirt and sparse infill all go, and
+// what is left is the object.
+var PART_HIDDEN = {3: 1, 7: 1, 8: 1, 9: 1};
+
+var partOnly = false;
+var partRig = null;
+
 var realFraming = 'live';   // live | static | solo
+
+// The one answer to "is the machine on screen", because there used to be
+// three copies of it and one of them ran every frame. updateCutaway()'s copy
+// recomputed it WITHOUT partOnly and quietly re-showed the AMS one tick after
+// setPartOnly() had hidden it -- a 371mm unit floating next to the part, in a
+// view whose entire job is to show nothing but the part. Its own comment
+// warned about exactly that trap ("the thing that would quietly undo the solo
+// framing's hiding one tick after it was applied") and the trap still caught
+// the next person to add a mode. One function; add a mode here and every
+// caller follows.
+//
+// Part-only works in every colour mode on purpose: inspecting the underside
+// with the feature colours on is how you tell a brim bead from a first-layer
+// perimeter.
+function machineHidden() {
+  return partOnly || (colorMode === 'real' && realFraming === 'solo');
+}
 var filamentOverride = null;
 var layerFilCum = null;
 
@@ -3192,8 +3277,10 @@ function printIsComplete() {
 function syncStill() {
   var el = $('still'), note = $('stillnote');
   if (!el) { return; }
-  var want = colorMode === 'real' && realFraming === 'solo'
+  var want = !partOnly && colorMode === 'real' && realFraming === 'solo'
              && printIsComplete() && stillOk[currentId] === true;
+  // (not machineHidden(): the still is a real-print-mode still, and part-only
+  // must show the live mesh so you can actually orbit it)
   if (want === stillShown) { return; }
   stillShown = want;
   if (want) { el.src = stillUrl(currentId); }
@@ -3205,8 +3292,8 @@ function syncStill() {
 
 function applyRealMode() {
   var real = colorMode === 'real';
-  var solo = real && realFraming === 'solo';
-  var moving = !real || realFraming === 'live';
+  var solo = machineHidden();
+  var moving = !partOnly && (!real || realFraming === 'live');
 
   // Leaving solo has to put the camera back. frameSolo() targets the part,
   // which after the bed-drop sits a full part-height below z=0 -- bring the
@@ -3241,6 +3328,52 @@ function setRealFraming(f) {
   realFraming = f;
   if (f === 'solo' && JOB) { frameSolo(JOB); }
   applyRealMode();
+}
+
+function setPartOnly(on) {
+  partOnly = on;
+  var b = $('partview');
+  if (b) {
+    b.setAttribute('aria-pressed', String(on));
+    b.textContent = on ? 'Part: on' : 'Part only';
+  }
+  // Part-only needs its own lighting, and finding that out was the whole
+  // lesson here. Hiding the machine is not just hiding geometry: chamberLamp
+  // is a CHILD of the chamber group (it has to be -- it moves with the
+  // enclosure), so switching the chamber off switches off a 1.55-intensity
+  // point light that was doing most of the work. The first render of this
+  // view came out a dark slate blue and read as a different material
+  // entirely, because all that was left was a 1.05 key, a 0.32 rim and the
+  // env map's own dark backdrop.
+  //
+  // So this is a small studio rig rather than the machine scene with the
+  // machine invisible. Two lights, roughly replacing what the chamber lamp
+  // contributed, added once and toggled -- the key and rim are left alone so
+  // that coming back out of this view restores exactly the lighting you left.
+  //
+  // The under light is the point of the mode, not a nicety: every light in
+  // the real rig points down or across, so the first layer seen from below
+  // renders near black and you cannot read a single bead on it. Like the rest
+  // of the rig it is invented, which the Limits pane already says in general
+  // -- and inventing a lamp under the part is the honest way to inspect a
+  // surface no chamber light reaches either.
+  if (on && !partRig && window.THREE) {
+    partRig = new THREE.Group();
+    var under = new THREE.DirectionalLight(0xdfe6f2, 0.60);
+    under.position.set(120, 180, -600);
+    partRig.add(under);
+    var front = new THREE.DirectionalLight(0xfff4e6, 0.85);
+    front.position.set(280, -360, 180);
+    partRig.add(front);
+    scene.add(partRig);
+  }
+  if (partRig) { partRig.visible = on; }
+
+  if (on && JOB) { frameSolo(JOB); }
+  else if (JOB) { frameJob(JOB); }
+  applyRealMode();
+  applyVisibility();
+  shadowDirty = true;
 }
 
 // frameJob() frames the MACHINE -- it floors the radius so the enclosure keeps
@@ -3279,7 +3412,8 @@ function applyVisibility() {
     if (!m) { return; }
     var u = m.material.uniforms.uVis.value;
     for (var i = 0; i < 12; i++) {
-      u[i] = (real ? !REAL_HIDDEN[i] : visible[i]) ? 1 : 0;
+      u[i] = (partOnly ? !PART_HIDDEN[i]
+              : real ? !REAL_HIDDEN[i] : visible[i]) ? 1 : 0;
     }
     m.material.uniforms.uSat.value = real ? 0 : DIAG_SAT;
     // Every mode, not just real: closing the bead removed the geometric
@@ -3650,6 +3784,10 @@ function initUI() {
     $('motion').setAttribute('aria-pressed', String(machineMotion));
     $('motion').textContent = machineMotion ? 'Bed drops' : 'Part grows';
     if (JOB) { frameJob(JOB); setSeg(play.seg); }
+  });
+
+  $('partview').addEventListener('click', function () {
+    setPartOnly($('partview').getAttribute('aria-pressed') !== 'true');
   });
 
   $('ghost').addEventListener('click', function () {

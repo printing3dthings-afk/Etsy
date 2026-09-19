@@ -446,7 +446,19 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         curved wall is a limitation of drawing beads as open ribbons rather
         than solid tubes: you are seeing a real gap between two beads, not a
         defect in the print.</div>
-      <div class="caveat"><b>The lighting is a studio rig, not this machine's
+      <div class="caveat"><b>Part only shows you less than the plate really
+        holds, on purpose.</b> Real-print mode answers "what is on the plate
+        right now", so it keeps supports — they are genuinely printed
+        plastic standing there until you snap them off. Part only answers a
+        different question: what the finished object looks like in your hand.
+        So supports, their interface, the skirt and sparse infill are all
+        switched off. That is not a small edit on some plates: on the fairy
+        house, support material plus its interface is <b>44.3%</b> of every
+        extrusion move on the plate. It is also lit by its own two-light rig
+        rather than the chamber, because hiding the enclosure hides the
+        chamber lamp with it — including a light from <i>below</i>, which
+        no real P1S has, so that the first layer is readable at all.</div>
+            <div class="caveat"><b>The lighting is a studio rig, not this machine's
         chamber.</b> Since 2026-09-17 the scene renders with physically based
         materials, an environment map and real shadows, which is a large step
         up in how it looks and no step at all in what it knows. The key light,
@@ -503,6 +515,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         <button data-view="iso">Iso</button>
         <button data-view="front">Front</button>
         <button data-view="top">Top</button>
+        <button id="partview" aria-pressed="false"
+          title="Just the finished object — machine, plate and supports off, orbit under it">Part only</button>
         <button id="door" aria-pressed="false" title="Swing the chamber door open">Open door</button>
         <button id="viewmode" aria-pressed="true" title="Solid exterior, or cut away to watch the print">View: machine</button>
         <button id="ghost" aria-pressed="false">Ghost</button>
