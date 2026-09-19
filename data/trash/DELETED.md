@@ -6,375 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260806-001 date=2026-08-06 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed 7 CSS theme blocks (Dark Purple, Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid), keeping Studio Warm, Day Mode, Ocean Teal, Midnight Kawaii, Sunwashed." -->
-## 20260806-001 · 2026-08-06 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed 7 CSS theme blocks (Dark Purple, Warm Charcoal, Sakura, Matcha, Mermaid Bright, Clubroom Gold, Spring Vivid), keeping Studio Warm, Day Mode, Ocean Teal, Midnight Kawaii, Sunwashed.  
-**Payload:** `data/trash/files/20260806-001__snippet.txt`
-
-```python
-html.theme-purple{
-  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--panel3:#291a3e;--border:#221537;
-  --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
-  --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-charcoal{
-  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--panel3:#332c22;--border:#2e281d;
-  --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
-  --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
-}
-html.theme-sakura{
-  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--panel3:#35192b;--border:#311826;
-  --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
-  --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-matcha{
-  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--panel3:#223424;--border:#1e2e21;
-  --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
-  --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-mermaid{
-  --bg:#f0fbfa;--panel:#ffffff;--panel2:#dff6f3;--panel3:#ffffff;--border:#bfe8e2;
-  --cyan:#007d73;--cyan2:#005850;--gold:#7a45e0;--gold2:#5b2fb0;
-  --text:#0b3b38;--muted:#3a736c;--green:#12814d;--red:#d6362b;--amber:#a46400;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-clubroom{
-  --bg:#fffdf5;--panel:#ffffff;--panel2:#f5ebd0;--panel3:#ffffff;--border:#e8d9a8;
-  --cyan:#2d6cdf;--cyan2:#1e4fa8;--gold:#916c08;--gold2:#6b4f05;
-  --text:#1c1608;--muted:#6b5a2e;--green:#1a8548;--red:#d53a3a;--amber:#916c08;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-html.theme-springvivid{
-  --bg:#fbf7ff;--panel:#ffffff;--panel2:#f0e6fb;--panel3:#ffffff;--border:#dcc7f5;
-  --cyan:#c4157f;--cyan2:#8e0e5c;--gold:#bc4f1b;--gold2:#8a3a13;
-  --text:#241541;--muted:#6b5490;--green:#18804f;--red:#d0342a;--amber:#bc4f1b;
-  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
-  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
-}
-```
-
-<!-- /TRASH 20260806-001 -->
-<!-- TRASH id=20260806-002 date=2026-08-06 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed the corresponding 7 _UI_THEMES swatch entries (same removal as the CSS blocks)." -->
-## 20260806-002 · 2026-08-06 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Settings audit 2026-08-06: color theme reduction 12->5 per Scott request -- removed the corresponding 7 _UI_THEMES swatch entries (same removal as the CSS blocks).  
-**Payload:** `data/trash/files/20260806-002__snippet.txt`
-
-```python
-  {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
-  {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
-  {name:'sakura',  label:'Sakura',        bg:'#140a10', accent:'#f4a7b9'},
-  {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
-  {name:'sunwashed',   label:'Sunwashed',     bg:'#fff8f0', accent:'#ba4e36'},
-  {name:'mermaid',     label:'Mermaid Bright',bg:'#f0fbfa', accent:'#007d73'},
-  {name:'clubroom',    label:'Clubroom Gold', bg:'#fffdf5', accent:'#916c08'},
-  {name:'springvivid', label:'Spring Vivid',  bg:'#fbf7ff', accent:'#c4157f'},
-```
-
-<!-- /TRASH 20260806-002 -->
-<!-- TRASH id=20260806-003 date=2026-08-06 kind=snippet source="tools/post_scheduled_coloring.py" reason="Broken: PACKS[pack] is a plain theme list not a {themes,style} dict, and generate_pack() does not exist in generate_coloring_pages.py -- TypeError crashed every scheduled run since this script was written. Replaced with the real per-theme loop main() actually uses." -->
-## 20260806-003 · 2026-08-06 · snippet · `tools/post_scheduled_coloring.py`
-**Reason:** Broken: PACKS[pack] is a plain theme list not a {themes,style} dict, and generate_pack() does not exist in generate_coloring_pages.py -- TypeError crashed every scheduled run since this script was written. Replaced with the real per-theme loop main() actually uses.  
-**Payload:** `data/trash/files/20260806-003__snippet.txt`
-
-```python
-    # Generate full page set
-    themes = gcp.PACKS[pack]["themes"]
-    style_dna = gcp.PACKS[pack]["style"]
-    generated_files = gcp.generate_pack(pack, themes, style_dna=style_dna)
-```
-
-<!-- /TRASH 20260806-003 -->
-<!-- TRASH id=20260806-004 date=2026-08-06 kind=file source="tools/desktop/backend.spec" reason="Desktop app moved to a thin-client architecture (2026-08-06, Option A) -- BrowserWindow loads the live Railway deployment directly instead of a locally spawned backend, so there is no backend executable left to build a PyInstaller spec for." -->
-## 20260806-004 · 2026-08-06 · file · `tools/desktop/backend.spec`
-**Reason:** Desktop app moved to a thin-client architecture (2026-08-06, Option A) -- BrowserWindow loads the live Railway deployment directly instead of a locally spawned backend, so there is no backend executable left to build a PyInstaller spec for.  
-**Payload:** `data/trash/files/20260806-004__backend.spec`
-
-```
-# -*- mode: python ; coding: utf-8 -*-
-"""
-PyInstaller spec for Frank's backend (tools/api_server/main.py), bundled as a
-standalone executable for the desktop app (desktop/ Electron shell spawns this as a
-child process). No pre-installed Python required on the end-user machine.
-
-Build (must run ON the target OS -- PyInstaller does not cross-compile):
-  python -m PyInstaller tools/desktop/backend.spec --distpath dist/desktop-backend
-
-Why onedir, not onefile: main.py resolves sys.path.insert(0, ROOT / "tools") at import
-time and imports sibling modules (daily_brief, trash, etc.) as bare names -- that only
-works if tools/ exists as real files on disk next to the executable, which onedir mode
-gives for free (the datas entry below copies the whole tools/ tree into the bundle).
-onefile mode self-extracts to a temp dir per launch, which would also work but adds
-startup latency and an extra temp-cleanup failure mode for no benefit here.
-
-main.py itself has a matching frozen-detection branch (search `getattr(sys, "frozen"`)
-that computes ROOT as the directory containing the frozen executable instead of walking
-up from __file__, since __file__ for a frozen entry script doesn't sit 3 directories
-under the repo root the way it does when run from source.
-"""
-from pathlib import Path
-
-REPO_ROOT = Path(SPECPATH).resolve().parent.parent  # tools/desktop -> tools -> repo root
-MAIN_PY = REPO_ROOT / "tools" / "api_server" / "main.py"
-
-a = Analysis(
-    [str(MAIN_PY)],
-    pathex=[str(REPO_ROOT), str(REPO_ROOT / "tools"), str(REPO_ROOT / "tools" / "api_server")],
-    binaries=[],
-    datas=[
-        # The whole tools/ tree (incl. tools/api_server/static/'s ~34MB vendor JS) as
-        # real files on disk -- see the onedir rationale above. Harmless if this also
-        # duplicates main.py's own source alongside the compiled entry script.
-        (str(REPO_ROOT / "tools"), "tools"),
-        # Read-mostly reference docs the CEO agent reads at runtime (business_standards.md,
-        # ops_runbook.md, etc.) -- NOT the rest of data/ (staged_photos, digital_products,
-        # backups, trash are large/gitignored/user-specific and don't belong in an installer).
-        (str(REPO_ROOT / "data" / "knowledge_base"), "data/knowledge_base"),
-        (str(REPO_ROOT / "data" / "dp_listing_map.json"), "data"),
-    ],
-    hiddenimports=[],
-    hookspath=[],
-    hooksconfig={},
-    runtime_hooks=[],
-    excludes=[],
-    noarchive=False,
-)
-
-pyz = PYZ(a.pure)
-
-exe = EXE(
-    pyz,
-    a.scripts,
-    [],
-    exclude_binaries=True,
-    name="frank-backend",
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,
-    console=True,  # keep a console window for now -- makes startup errors visible
-                   # during bring-up; Electron can hide it later once this is proven stable
-    disable_windowed_traceback=False,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=False,
-    name="frank-backend",
-)
-```
-
-<!-- /TRASH 20260806-004 -->
-<!-- TRASH id=20260806-005 date=2026-08-06 kind=file source="tools/desktop/build_backend.py" reason="Same thin-client architecture change as backend.spec -- this script built the now-unused local backend executable via PyInstaller." -->
-## 20260806-005 · 2026-08-06 · file · `tools/desktop/build_backend.py`
-**Reason:** Same thin-client architecture change as backend.spec -- this script built the now-unused local backend executable via PyInstaller.  
-**Payload:** `data/trash/files/20260806-005__build_backend.py`
-
-```
-#!/usr/bin/env python3
-"""
-Builds the standalone Frank backend executable for the desktop app, using
-tools/desktop/backend.spec. Must run ON the target OS -- PyInstaller does not
-cross-compile a Windows .exe from Linux/Mac or vice versa. In practice this means:
-  - Local runs (this script) only ever produce a binary for the OS you ran it on.
-  - The real Windows .exe / Mac .app come from .github/workflows/build-desktop.yml's
-    matrix build on windows-latest / macos-latest GitHub-hosted runners.
-
-Run:  python tools/desktop/build_backend.py
-Output: dist/desktop-backend/frank-backend/ (a directory -- onedir mode, see the
-        spec's docstring for why onedir instead of onefile).
-"""
-import subprocess
-import sys
-from pathlib import Path
-
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-SPEC = REPO_ROOT / "tools" / "desktop" / "backend.spec"
-DIST = REPO_ROOT / "dist" / "desktop-backend"
-BUILD = REPO_ROOT / "build" / "desktop-backend"
-
-
-def main() -> int:
-    cmd = [
-        sys.executable, "-m", "PyInstaller",
-        str(SPEC),
-        "--distpath", str(DIST),
-        "--workpath", str(BUILD),
-        "--noconfirm",
-    ]
-    print("Running:", " ".join(cmd))
-    result = subprocess.run(cmd, cwd=str(REPO_ROOT))
-    if result.returncode != 0:
-        return result.returncode
-    out_dir = DIST / "frank-backend"
-    print(f"\nBuilt: {out_dir}")
-    print(f"Run it directly to test: {out_dir / 'frank-backend'}")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
-```
-
-<!-- /TRASH 20260806-005 -->
-<!-- TRASH id=20260814-001 date=2026-08-14 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced the flat 5-theme system (default/light/ocean/kawaii/sunwashed) with a 2-axis 3-palette x 2-mode (dark/light) system (Studio Warm / Transformative Teal / Clubroom Contrast), per Scott (2026-08-14): change the color scheme, add a dark/light setting, 3 schemes x light+dark = 6 total. Archived before removal per the standing recycle-bin rule." -->
-## 20260814-001 · 2026-08-14 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Replaced the flat 5-theme system (default/light/ocean/kawaii/sunwashed) with a 2-axis 3-palette x 2-mode (dark/light) system (Studio Warm / Transformative Teal / Clubroom Contrast), per Scott (2026-08-14): change the color scheme, add a dark/light setting, 3 schemes x light+dark = 6 total. Archived before removal per the standing recycle-bin rule.  
-**Payload:** `data/trash/files/20260814-001__snippet.txt`
-
-```python
-  /* Studio Warm — dark warm-plum surfaces, coral + gold accents (pulls the coral
-     from the existing Sakura theme's palette and the gold already used site-wide
-     for primary CTAs). --cyan/--cyan2 keep their legacy names for the ~300 existing
-     usages across this file but now hold coral/blush values, not cyan — they were
-     always "the accent hue," never literally required to be cyan. --panel3 is a new
-     4th elevation level (toasts/dropdowns/overlays sit on this, one step lighter
-     than --panel2) — dark-mode surfaces need at least 4 steps to read as depth
-     without relying on box-shadow, which barely shows on dark backgrounds. */
-  /* Brightened 2026-07-15 (Scott: "seems a little dark throughout") -- every
-     surface step lifted ~4-6% lighter and --muted brightened for readability,
-     verified against tools/color_contrast_check.py's WCAG math before shipping:
-     text-on-bg 14.36:1 and muted-on-bg 7.12:1, both still comfortably above the
-     4.5:1 AA floor (muted actually IMPROVED from 5.77:1 -- it was brightened more
-     than the background was). */
-     it here, the ambient shadow is a secondary cue. Overridden per-theme below
-     only where a theme's surface treatment needs it (light theme gets a real
-     drop shadow since it renders well on white). */
-/* ── Color themes — full bg + panel + accent swap. Fonts/radius above are
-   structural (declared once on :root) and apply under every theme unchanged;
-   only surface/accent colors vary per theme, including each theme's own
-   --panel3 elevation step. Card-shadow tokens likewise only need a per-theme
-   override for the light theme (below); every dark-surfaced theme reuses the
-   :root treatment since they all share the same "shadow barely shows" constraint. ── */
-html.theme-light{
-  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#d0d9e2;
-  --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
-  --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
-html.theme-ocean{
-  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#16312c;
-  --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
-  --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-kawaii{
-  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#241a42;
-  --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
-  --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-/* 2026-07-18: bright/light-surfaced theme (Scott: "brighter colors but make sure
-   text is readable") -- every text/muted/accent value below is verified against
-   its actual bg AND panel2 (the more saturated surface a card can sit on) with
-   tools/color_contrast_check.py's real WCAG math, same discipline as the
-   2026-07-15 brightening pass above; nothing here is eyeballed. Reuses the light
-   theme's card-shadow (real drop shadow reads correctly on a light surface,
-   unlike the dark themes' inset-highlight trick above). Originally shipped
-   alongside 3 siblings (Mermaid Bright, Clubroom Gold, Spring Vivid); those were
-   cut in the 2026-08-06 12->5 theme reduction -- this one survived as the kept
-   warm-light alternative to Day Mode. */
-html.theme-sunwashed{
-  --bg:#fff8f0;--panel:#ffffff;--panel2:#ffeee0;--panel3:#ffffff;--border:#f0d5b8;
-  --cyan:#ba4e36;--cyan2:#8f3a28;--gold:#a46400;--gold2:#7a4b00;
-  --text:#3a2418;--muted:#82644d;--green:#19824a;--red:#d6362b;--amber:#a46400;
-```
-
-<!-- /TRASH 20260814-001 -->
-<!-- TRASH id=20260815-001 date=2026-08-15 kind=file source="tests/test_view_transitions.py" reason="Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior." -->
-## 20260815-001 · 2026-08-15 · file · `tests/test_view_transitions.py`
-**Reason:** Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior.  
-**Payload:** `data/trash/files/20260815-001__test_view_transitions.py`
-
-```
-"""
-Test for the 2026-08-14 native View Transitions wiring on showScreen() --
-the foundation item from the second visual-research pass (the one flagged
-as "highest-leverage" since every navigation in the app funnels through this
-one function: phoneOpenScreen(), phoneTab()'s ask/create branches, every bare
-onclick="showScreen(...)" in the header/sidebar/nav, and search-result routing
-all call it, directly or indirectly).
-
-showScreen() was split into a plain _showScreenInner(name, viaViewTransition)
-(the actual DOM mutation, unchanged in substance from before this pass) and a
-thin showScreen(name) wrapper that runs it inside document.startViewTransition()
-when the browser supports the API and the user hasn't asked for reduced motion,
-falling straight through to the old direct-mutation behavior otherwise.
-
-Verified end-to-end in real headless Chrome (chromium-1194) before shipping,
-not just asserted structurally here:
-  - a real user click on a .nav-item fires exactly one startViewTransition()
-    call and lands on the correct screen, repeatably across multiple navs
-  - with prefers-reduced-motion: reduce emulated, startViewTransition() is
-    never called at all and navigation still works via the plain fallback
-  - no page-level JS errors either way
-That live-browser check isn't re-runnable from this harness (no Node/browser
-dependency in the standard test suite), so this file locks in the structural
-contract instead: the split exists, the feature-detect + reduced-motion gate
-is real, and the double-motion guard (skip the CSS screen-in keyframe on the
-VT path only, since the native crossfade already animates that swap) doesn't
-leak into the non-VT fallback path.
-
-Run: python tests/test_view_transitions.py
-"""
-import re
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-HUD_PATH = ROOT / "tools" / "api_server" / "frank_hud_mockup.py"
-
-_failures: list[str] = []
-
-
-def check(cond: bool, msg: str) -> None:
-    if not cond:
-        _failures.append(msg)
-
-
-def _source() -> str:
-    return HUD_PATH.read_text(encoding="utf-8")
-
-
-def test_show_screen_inner_holds_the_real_dom_mutation():
-    source = _source()
-    m = re.search(r"function _showScreenInner\(name, viaViewTransition\)\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could not find function _showScreenInner(name, viaViewTransition)"
-    body = m.group(1)
-    for expected in (
-        "document.body.classList.remove('phone-home-open')",
-        "document.querySelectorAll('.nav-item')",
-        "document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))",
-        "_activeScreen = name",
-        "_fireScreenLoaders(name)",
-    ):
-        check(expected in body, f"_showScreenInner is missing expected DOM-mutation logic: {expected!r}")
-
-
-def test_show_screen_wraps_inner_in_a_feature_detected_reduced_motion_gated_transition():
-    source = _source()
-    m = re.search(r"function showScreen\(name\)\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could not find function showScreen(name)"
-    body = m.group(1)
-    check("typeof document.startViewTransition === 'function'" in body,
-          "must feature-detect startViewTransition rather than assuming support (Safari/Firefox lack it)")
-    check("!_reducedMotion" in body,
-          "must also gate on _reducedMotion -- a forced whole-page crossfade is exactly the kind of "
-          "motion prefers-reduced-motion asks to skip")
-    check("document.startViewTransition(() => _showScreenInner(name, true))" in body,
-          "the VT path should mark the call as viaViewTransition so the double-motion guard can engage")
-    check("_showScreenInner(name, false)" in body,
-          "the fallback path must still call the real mutation logic directly for unsupported browsers")
-
-
-def test_double_motion_guard_is_scoped_to_the_view_transition_path_only():
-    source = _source()
-    m = re.search(r"function _showScreenInner\(name, viaViewTransition\)\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could 
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260815-001 -->
 <!-- TRASH id=20260904-001 date=2026-09-04 kind=snippet source="tools/detail_probe.py" reason="Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for." -->
 ## 20260904-001 · 2026-09-04 · snippet · `tools/detail_probe.py`
 **Reason:** Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for.  
@@ -468,3 +99,308 @@ def ring_texture(m, slices=140, smooth=9):
 ```
 
 <!-- /TRASH 20260904-001 -->
+<!-- TRASH id=20260905-001 date=2026-09-05 kind=snippet source="tests/test_kb_skill_docs.py" reason="Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide." -->
+## 20260905-001 · 2026-09-05 · snippet · `tests/test_kb_skill_docs.py`
+**Reason:** Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide.  
+**Payload:** `data/trash/files/20260905-001__snippet.txt`
+
+```python
+def test_suite_never_writes_to_the_real_runbook():
+    """No test may append to the git-tracked ops_runbook.md.
+
+    Found 2026-09-05: test_health_check_reap and test_health_check_broadened
+    exercise the escalation paths on purpose, and _append_ops_runbook_entry()
+    writes to _OPS_RUNBOOK_PATH -- which is _volume_or_local(...), so with no
+    volume mounted it falls back to the real data/knowledge_base copy. A suite
+    run put eight fabricated incidents (TESTCRASH, TESTHUNG, a /tmp/... volume)
+    into the document Frank reads as ground truth when Scott asks why something
+    broke. Any test that can reach that writer must repoint _OPS_RUNBOOK_PATH
+    at a tempfile first.
+    """
+    # Reaching the writer means calling something that appends, directly or via
+    # the health loop. A bare "_escalate" substring was too loose on the first
+    # pass -- it matched a test NAMED test_escalates_..., which writes nothing.
+    reaches = ("_append_ops_runbook_entry(", "server._escalate", "_health_check_iteration(")
+    # Two valid isolations: repoint the path, or mock the writer outright.
+    # Matched against CODE only. The first version of this check searched the
+    # raw file text, so the explanatory comment naming _OPS_RUNBOOK_PATH was
+    # enough to satisfy it -- deleting the actual assignment left the guard
+    # silently green. Verified by deleting it and watching this fail.
+    isolates = (_re.compile(r"^\s*server\._OPS_RUNBOOK_PATH\s*=", _re.M),
+                _re.compile(r'patch\.object\(\s*server\s*,\s*"_append_ops_runbook_entry"'))
+    for path in sorted((ROOT / "tests").glob("test_*.py")):
+        if path.name == Path(__file__).name:
+            continue  # this file names the patterns it searches for
+        src = path.read_text()
+        if not any(r in src for r in reaches):
+            continue
+        code = "\n".join(ln for ln in src.splitlines()
+                         if not ln.lstrip().startswith("#"))
+        check(any(pat.search(code) for pat in isolates),
+              f"{path.name} can reach the ops_runbook writer but neither repoints "
+              "server._OPS_RUNBOOK_PATH at a tempfile nor mocks "
+              "_append_ops_runbook_entry — it will append test fixtures to the "
+              "real git-tracked doc Frank reads as ground truth")
+```
+
+<!-- /TRASH 20260905-001 -->
+<!-- TRASH id=20260909-001 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_all.3mf" reason="OpenSCAD's 3MF export MERGES every body into one object with no materials (verified: 1 object, 1 item, 0 basematerials, 20,065 fused triangles). This file looked like the print-ready deliverable and could not have filaments assigned at all. Superseded by monogram_keychain_J.3mf from tools/assemble_3mf.py." -->
+## 20260909-001 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_all.3mf`
+**Reason:** OpenSCAD's 3MF export MERGES every body into one object with no materials (verified: 1 object, 1 item, 0 basematerials, 20,065 fused triangles). This file looked like the print-ready deliverable and could not have filaments assigned at all. Superseded by monogram_keychain_J.3mf from tools/assemble_3mf.py.  
+**Payload:** `data/trash/files/20260909-001__monogram_keychain_J_all.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-001 -->
+<!-- TRASH id=20260909-002 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_ring.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
+## 20260909-002 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_ring.3mf`
+**Reason:** superseded by the assembled monogram_keychain_J.3mf  
+**Payload:** `data/trash/files/20260909-002__monogram_keychain_J_ring.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-002 -->
+<!-- TRASH id=20260909-003 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_rotor.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
+## 20260909-003 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_rotor.3mf`
+**Reason:** superseded by the assembled monogram_keychain_J.3mf  
+**Payload:** `data/trash/files/20260909-003__monogram_keychain_J_rotor.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-003 -->
+<!-- TRASH id=20260909-004 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_letter.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
+## 20260909-004 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_letter.3mf`
+**Reason:** superseded by the assembled monogram_keychain_J.3mf  
+**Payload:** `data/trash/files/20260909-004__monogram_keychain_J_letter.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260909-004 -->
+<!-- TRASH id=20260909-005 date=2026-09-09 kind=file source="openscad_models/bayonet_jar.scad" reason="superseded by v2: lid seated on rim, internal lock collar, ramped lock channel, OBC mark" -->
+## 20260909-005 · 2026-09-09 · file · `openscad_models/bayonet_jar.scad`
+**Reason:** superseded by v2: lid seated on rim, internal lock collar, ramped lock channel, OBC mark  
+**Payload:** `data/trash/files/20260909-005__bayonet_jar.scad`
+
+```
+include <BOSL2/std.scad>
+
+// ============================================================
+// Bayonet twist-lock storage jar -- a genuinely new mechanism class for
+// this shop (rotational push-then-twist lock, not a hinge or a screw
+// thread; threading.scad/gears.scad aren't vendored in this BOSL2 copy,
+// so this deliberately doesn't need them). Base + lid, shown assembled
+// and LOCKED (unlike the cable clip's hinge, a correctly-designed
+// bayonet lock has zero real overlap in its closed/locked pose by
+// construction -- the pin only ever occupies carved-out slot space,
+// never solid wall material -- so there's no "must export open" concern
+// here the way there was for the clip's interference-fit latch).
+// ============================================================
+
+base_r   = 25;
+base_h   = 45;
+wall     = 2.4;
+floor    = 3;
+
+n_pins     = 3;
+pin_r      = 2.0;
+slot_clear = 0.5;
+slot_r     = pin_r + slot_clear;   // radius of the tube-shaped slot cutter
+
+travel_v      = 8;    // vertical entry length (push distance before twisting)
+lock_angle    = 25;   // degrees of horizontal travel to reach the locked position
+slot_top_z    = base_h;              // vertical entry starts at the base's own rim
+slot_bottom_z = base_h - travel_v;   // horizontal lock channel height, and the
+                                      // pin's real height once locked
+
+// ---- Base: hollow body with 3 bayonet slots cut through the neck wall ----
+
+module one_slot() {
+    // Vertical entry: a plain radial box, thin tangentially (2*slot_r),
+    // spanning the full wall thickness with margin so it's a clean
+    // through-cut, from the rim down to where the lock channel begins.
+    translate([base_r - wall - 1, -slot_r, slot_bottom_z])
+        cube([wall + 2, 2 * slot_r, travel_v + slot_r + 1]);
+    // Horizontal lock channel: a tube swept around the cylinder's own
+    // curvature via rotate_extrude(angle=...) -- follows the true radius
+    // exactly, no straight-line approximation of a curved wall.
+    //
+    // Cut angle_margin degrees PAST lock_angle -- the locked pin sits with
+    // its CENTER exactly at lock_angle, so a cut stopping exactly there
+    // leaves half the pin's own angular footprint overshooting into
+    // uncut wall. angle_margin must clear atan(pin_r/base_r) (~4.6 deg
+    // here) with real margin, not sit flush against it -- confirmed by a
+    // direct intersection() render coming back non-empty at exactly this
+    // boundary before the margin was added.
+    angle_margin = 8;
+    translate([0, 0, slot_bottom_z])
+        rotate_extrude(angle = lock_angle + angle_margin, $fn = 90)
+            translate([base_r, 0])
+                circle(r = slot_r, $fn = 16);
+}
+
+module all_slots() {
+    for (i = [0 : n_pins - 1])
+        rotate([0, 0, i * 360 / n_pins])
+            one_slot();
+}
+
+logo_depth = 0.6;
+logo_size  = 1.8;   // tightened from 2.2 (49.1% of diameter) to target ~40%
+                     // ratio for this string+font -- still verified below
+                     // before treating it as final, not assumed correct
+module brand_mark() {
+    translate([0, -6, -0.5])
+        linear_extrude(height = logo_depth + 0.5)
+            mirror([0, 1, 0])
+                text("OnBrandCraftz", size = logo_size, font = "Dancing Script:style=Bold",
+                     halign = "center", valign = "center");
+}
+
+module base_body() {
+    difference() {
+        cylinder(r = base_r, h = base_h, $fn = 96);
+        translate([0, 0, floor])
+            cylinder(r = base_r - wall, h = base_h, $fn = 96);
+        all_slots();
+        brand_mark();
+    }
+}
+
+// ---- Lid: a cup with 3 inward pins, shown in the LOCKED position ----
+// (pins offset by lock_angle from each slot's entry, at world z =
+// slot_bottom_z -- the exact height and angle where a pin sits once
+// pushed down and twisted shut).
+
+lid_skirt_r_in = base_r + 0.4;   // sliding clearance over the base's outer wall
+lid_wall       = 2.4;
+lid_skirt_h    = 20;
+lid_cap_h      = 6;
+lid_ski
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260909-005 -->
+<!-- TRASH id=20260919-001 date=2026-09-19 kind=snippet source="tools/viewer/app.js" reason="Replaced by plateSurface(): the bed is now a real Bambu flex plate with a per-plate procedural finish and 1:1 markings, not one tiling grey noise map." -->
+## 20260919-001 · 2026-09-19 · snippet · `tools/viewer/app.js`
+**Reason:** Replaced by plateSurface(): the bed is now a real Bambu flex plate with a per-plate procedural finish and 1:1 markings, not one tiling grey noise map.  
+**Payload:** `data/trash/files/20260919-001__snippet.txt`
+
+```javascript
+function peiTexture() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 256;
+  var g = c.getContext('2d');
+  g.fillStyle = '#343943'; g.fillRect(0, 0, 256, 256);
+  var img = g.getImageData(0, 0, 256, 256), d = img.data;
+  for (var i = 0; i < d.length; i += 4) {
+    var n = (Math.random() - 0.5) * 54;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n * 0.9;
+  }
+  g.putImageData(img, 0, 0);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(9, 9);
+  return tex;
+}
+```
+
+<!-- /TRASH 20260919-001 -->
+
+<!-- TRASH id=20260919-002 date=2026-09-19 kind=snippet source="tools/viewer/app.js" reason="Rebuilt from Bambu product photography: the AMS has a smoked half-cylinder DOME over the spool row, not a flat lid, and real reel/feeder hardware. The flat-lidded version read as an empty tray from above." -->
+## 20260919-002 · 2026-09-19 · snippet · `tools/viewer/app.js`
+**Reason:** Rebuilt from Bambu product photography: the AMS has a smoked half-cylinder DOME over the spool row, not a flat lid, and real reel/feeder hardware. The flat-lidded version read as an empty tray from above.  
+**Payload:** `data/trash/files/20260919-002__snippet.txt`
+
+```javascript
+// The AMS, at its real size, sitting where one actually sits. The spools drawn
+// inside are illustrative -- nothing here reads the machine, so they are four
+// plausible colours and the panel says as much rather than implying a feed.
+function buildAMS(spec, ox, oy, y1, zTop) {
+  amsGroup = null;
+  if (!spec) { return; }
+  amsGroup = new THREE.Group();
+  var cy = y1 - spec.d / 2 - 6, cz = zTop + 4 + spec.h / 2;
+
+  // Built as panels, not a solid block: a closed box would hide the spools
+  // behind its own lit top face no matter how transparent the lid above it is.
+  var wall = 8, shell = surface(0x2a2e35);
+  function panel(w, d, h, x, y, z) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), shell);
+    m.position.set(x, y, z);
+    amsGroup.add(m);
+  }
+  panel(spec.w, spec.d, wall, ox, cy, cz - spec.h / 2 + wall / 2);
+  panel(wall, spec.d, spec.h, ox - spec.w / 2 + wall / 2, cy, cz);
+  panel(wall, spec.d, spec.h, ox + spec.w / 2 - wall / 2, cy, cz);
+  panel(spec.w, wall, spec.h, ox, cy + spec.d / 2 - wall / 2, cz);
+  panel(spec.w, wall, spec.h, ox, cy - spec.d / 2 + wall / 2, cz);
+  var amsEdge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(spec.w, spec.d, spec.h)),
+    new THREE.LineBasicMaterial({color: 0x4a515e}));
+  amsEdge.position.set(ox, cy, cz);
+  amsGroup.add(amsEdge);
+
+  var spools = [], cores = [];
+  for (var i = 0; i < spec.slots; i++) {
+    var x = ox - (spec.slots - 1) * 46 + i * 92;
+    // Spool size is the AMS's own published compatibility range -- 197-202 mm
+    // across, 50-68 mm wide -- which is why they very nearly fill the box.
+    var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 56, 28),
+      surface(FILAMENT[i % FILAMENT.length], {roughness: 0.45, metalness: 0.0}));
+    // Rotated onto X by the PARENT, so the mesh's own X rotation is free to be
+    // the spool turning as filament is pulled off it.
+    var hub = new THREE.Group();
+    hub.rotation.z = Math.PI / 2;
+    hub.position.set(x, cy, cz - 2);
+    hub.add(fil);
+    amsGroup.add(hub);
+    spools.push(fil);
+    var core = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 60, 20),
+      surface(0x15171c));
+    core.rotation.z = Math.PI / 2;
+    core.position.set(x, cy, cz - 2);
+    amsGroup.add(core);
+    cores.push(core);
+  }
+
+  // Smoked lid over the spools -- the reason you can see them at all.
+  var lid = new THREE.Mesh(new THREE.BoxGeometry(spec.w - 22, spec.d - 22, 5),
+    glassMaterial());
+  lid.position.set(ox, cy, cz + spec.h / 2 - 3);
+  amsGroup.add(lid);
+  var lz = cz + spec.h / 2 - 3, fm = surface(0x21252b);
+  [[spec.w, 11, ox, cy - spec.d / 2 + 5.5], [spec.w, 11, ox, cy + spec.d / 2 - 5.5],
+   [11, spec.d, ox - spec.w / 2 + 5.5, cy], [11, spec.d, ox + spec.w / 2 - 5.5, cy]]
+    .forEach(function (f) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(f[0], f[1], 7), fm);
+      m.position.set(f[2], f[3], lz);
+      amsGroup.add(m);
+    });
+
+  // PTFE bundle looping out of the back and into the top of the machine.
+  var curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(ox, cy + spec.d / 2 - 4, cz - 40),
+    new THREE.Vector3(ox, y1 + 54, cz - 74),
+    new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
+  var feed = new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
+    surface(0x171a20));
+  amsGroup.add(feed);
+
+  amsGroup.userData.spools = spools;
+  amsGroup.userData.cores = cores;
+  amsGroup.userData.feed = feed;
+  amsGroup.name = 'ams';
+  scene.add(amsGroup);
+}
+```
+
+<!-- /TRASH 20260919-002 -->
+

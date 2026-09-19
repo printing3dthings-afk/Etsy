@@ -1,4 +1,0 @@
-    # Generate full page set
-    themes = gcp.PACKS[pack]["themes"]
-    style_dna = gcp.PACKS[pack]["style"]
-    generated_files = gcp.generate_pack(pack, themes, style_dna=style_dna)

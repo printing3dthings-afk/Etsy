@@ -56,6 +56,11 @@ Every product, every image, every price, every line of code must serve this miss
 
 The physical 3D printed products sold in the shop are printed on a **Bambu Lab P1S**.
 
+**Full, sourced spec sheet: `data/knowledge_base/bambu_p1s_hardware.md`** — every figure
+from Bambu's own P1S Technical Specifications PDF, read 2026-09-19, including the
+four places it contradicts the table below (nozzle material, display, CF filaments,
+camera frame rate).
+
 ### Core Specifications
 | Spec | Value |
 |---|---|
@@ -77,8 +82,8 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 - **Input shaping / vibration compensation** — eliminates ringing/ghosting at high speeds
 - **Self-cleaning tool head** — purges nozzle before print starts
 - **Textured + smooth PEI flex plate** — pops off build plate when cooled
-- **Built-in camera** — remote monitoring via Bambu Handy app
-- **2.8" monochrome LCD touchscreen**
+- **Chamber camera — 1280×720 at 0.5 fps**, explicitly a low-rate camera, timelapse supported. Remote monitoring via Bambu Handy. Two seconds per frame is the hardware limit, so nothing downstream (including `tools/relay/bambu_p1s_bridge.py`) can present this as live video.
+- **2.7-inch 192×64 display** — not a touchscreen. The P1S is driven by its button, the Handy app or Bambu Studio; the touchscreen is an X-series feature. (Bambu's own P1S tech-specs PDF, checked 2026-09-19.)
 - **Bambu Studio slicer** — proprietary but full-featured, updated regularly
 
 ### AMS — Automatic Material System
@@ -95,17 +100,17 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 | **Silk PLA** | Premium-look products — metallic/shiny finish | Eye-catching for display items; great for koozies |
 | **High-Speed PLA** | Production runs where speed matters | AMS compatible |
 | **PETG** | Functional/durable parts, outdoor-adjacent use | Better heat + impact resistance than PLA |
-| **PETG-CF** | Strong functional parts | Requires hardened steel nozzle |
+| **PETG-CF** | Strong functional parts | ⚠️ Bambu lists carbon/glass-fibre reinforced polymers as **not recommended** for the P1S (spec sheet, 2026-09-19). A hardened nozzle is necessary but not sufficient — the machine is not specified for them. |
 | **TPU** | Flexible products (koozies, grips, gaskets) | Flexible, bouncy, impact resistant |
 | **ABS** | Heat-resistant functional parts | Enclosure required — P1S handles natively |
 | **ASA** | Outdoor-safe, UV resistant | Enclosure required |
 | **PA / Nylon** | Engineering parts, high wear resistance | Needs drying; 80°C 12+ hrs |
-| **PA-CF / PLA-CF** | Strongest prints, stiff and light | Requires hardened steel nozzle |
+| **PA-CF / PLA-CF** | Strongest prints, stiff and light | ⚠️ Same as PETG-CF — **not recommended** on the P1S per Bambu's own spec sheet, hardened nozzle or not. |
 | **PC (Polycarbonate)** | Highest-strength functional parts | Max temp required |
 | **PVA** | Dissolvable support material | Pairs with PLA |
 
 ### Nozzle Types
-- **Stock brass 0.4mm** — PLA, PETG, TPU, Silk (standard materials only; CF filaments destroy brass fast)
+- **Stock stainless steel 0.4mm** — PLA, PETG, TPU, Silk. (Bambu's spec sheet says stainless steel, not brass — corrected 2026-09-19.) Optional 0.2 / 0.6 / 0.8 mm.
 - **Hardened steel 0.4mm** — Required for any carbon fiber or glass fiber filament
 - **0.2mm nozzle** — Ultra-fine detail; slow
 - **0.6mm / 0.8mm nozzle** — Faster production, less detail
@@ -221,6 +226,80 @@ still `EtsyAPIClient`/`api_key.py`). Point questions like "what fields
 does `getListingImages` return" or "what scope does `createDraftListing`
 need" at it instead of trusting training-data memory or re-reading old
 CLAUDE.md notes that may have drifted from the real, current spec.
+
+**Tool suggestions evaluated and declined (2026-09-11).** Three arrived from
+TikTok in one day, so the reasoning is recorded once rather than re-derived:
+
+- **Anthropic's `/feature-dev` plugin** — legitimate (Anthropic Verified, 256k
+  installs), wrong fit. Its `code-explorer` is the built-in `Explore` agent
+  `.claude/rules/subagents.md` already endorses; its `code-reviewer` duplicates
+  three reviewers this repo already declares; its `code-architect` ("multiple
+  implementation approaches with clear trade-offs") is the opposite of the
+  delivery rule, which asks for a recommendation, not a survey. The real gap
+  was that two of our own reviewers were never invoked — closed by
+  `/review` instead.
+- **Firecrawl MCP** — declined. Overlaps four things already here: `WebFetch`,
+  `curl` through the agent proxy (which works when `WebFetch` gets a 403 —
+  confirmed live on `docs.blender.org`), Playwright + Chromium pre-installed at
+  `/opt/pw-browsers` for JS-heavy pages, and the `defuddle` skill for clean
+  markdown. What it uniquely adds is **bulk crawling with anti-bot bypass**,
+  and in this shop that points straight at scraping Etsy listings at volume —
+  an account risk, not a feature: see "Suspension Triggers" below on Etsy
+  revoking API access from AutoDS/ShineOn/CJDropshipping, and on one violation
+  dragging the shop quality score across *every* listing. Real competitive
+  research has been done without it (the 2026-08-10 title-length correction
+  came from seven live Etsy searches via WebSearch).
+- **Context7** — was already connected; the suggestion was to add what we had.
+  Verified live 2026-09-11 against FastAPI: current, source-cited docs, no key
+  needed. Keep as is; add the free key only if 429s actually appear.
+
+The pattern worth keeping: before adding a tool, check what the environment
+already does. The premise behind most of these pitches ("Claude has no web, no
+browser, no current docs") is false for this setup.
+
+**A 21-item "context limits" checklist, checked 2026-09-19** (Scott, from
+TikTok; a lead-magnet post — "comment LIMITS for the full 20-fix checklist").
+Checked item by item against what is actually configured here rather than
+adopted wholesale. Most of it was already true, three items are wrong for this
+repo specifically, and the one real gap was something the list never mentions.
+
+Already in place, nothing to do: CLAUDE.md split into nested files
+(`.claude/rules/`, five files), skills over CLAUDE.md (37 of them), subagents
+already pinned to `model: sonnet` in all three agent frontmatters, and
+grep-before-read / read-with-offsets / edit-diffs-not-rewrite / plan-mode,
+which are harness defaults and this session's actual practice.
+
+Not applicable: deny reading `node_modules` (this repo has none, anywhere),
+`--max-turns` for headless (nothing here runs headless), status-line context
+and `ccusage` (Scott's local terminal, not the remote container), Opus plan
+(billing).
+
+**Declined, because they are wrong for this repo and not in general:**
+- **"Cap bash output."** This shop's entire debugging discipline is measuring
+  rather than asserting — the 2026-09-19 layer-line work was driven by row
+  means, dark-pixel counts, autocorrelation lags and a sha256 comparison, all
+  of them bash output. Capping it would have hidden every one of those numbers
+  and left four real defects diagnosed by eye.
+- **"Stop max effort everywhere."** `.claude/rules/subagents.md` already argues
+  the opposite case for this shop in detail: throughput is not the constraint,
+  being right is, and the one number worth optimising is how many wrong things
+  reach a customer.
+- **"Shrink the auto-compact window."** A smaller window compacts more often
+  and loses more context per task. This repo's failures are context-loss
+  failures (a mutation-checked test written against a comment instead of the
+  code, twice), not context-cost failures.
+
+**The real gap it did surface, indirectly:** `.claude/hooks/cost-tracker.js`
+(written 2026-08-27) and the `cost-tracking` skill that reads its output are a
+complete matched pair, and the hook was never referenced from
+`.claude/settings.json` — so the log it writes never existed and the skill had
+been unusable since the day it was installed. Same failure mode
+`subagents.md` already records for the two review agents nothing invoked. Now
+wired as a `Stop` hook. **Its `estimated_cost_usd` column is not trustworthy
+and must not be quoted to anyone:** pipe-tested against a real transcript it
+reported $6,471 for one session, from 3.3 billion cache-read tokens counted
+once per turn, against published API rates that do not apply on a subscription
+plan. The token counts are real; the dollar figure is decoration.
 
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
@@ -3763,12 +3842,33 @@ When any API call returns 401 and the refresh endpoint also returns 401:
 - **Any bulk edit touching more than 10 listings** — confirm scope before running
 - **Custom order requests** — pricing and feasibility require Scott's judgment
 - **Re-authorization (OAuth)** — requires Scott to complete browser flow every 90 days
-- **Starting a NEW 3D print design** — Scott's direct instruction, 2026-08-28: "Before you
-  start building another print, I want to know what it's going to be." Pitch the concept
-  (what it is, who buys it, rough size/proportions, how it prints, why it's worth making)
-  and get a yes BEFORE writing any `.scad`. This is about the *concept*, not the execution —
-  iterating on an already-approved design needs no new approval. See the matching standing
-  rule in `.claude/skills/3d-print-design/SKILL.md`.
+- **Starting a NEW 3D print design** — Scott, 2026-08-28: "Before you start building
+  another print, I want to know what it's going to be," and **extended 2026-09-13**
+  after a direct critique that the models being produced were not at a sellable
+  standard: functional-part thinking, a primitive with a pattern applied, judged by
+  whether it printed rather than whether it sells.
+
+  **These are retail products competing in a grid of thumbnails.** The bar Scott set:
+  the silhouette has to read at thumbnail size, and the form needs at least one
+  deliberate design decision beyond a primitive with a pattern on it. The ribbed vase
+  and the faceted lamp already in the shop are the reference level of intent.
+
+  **The process, every new product, in this order:**
+  1. Present **4–5 genuinely different formal approaches** — different *forms*, not
+     variations on one idea — one sentence each. No code yet.
+  2. Scott picks one.
+  3. Only then write the `.scad`.
+  4. Run `tools/product_gate.py` — it FAILS the build, it does not advise.
+  5. Render three views (`tools/blender_render.py --views`) and show him before
+     anything is called done.
+
+  **Printability is a hard constraint, not a tradeoff.** Minimum wall 1.2mm, no
+  unsupported overhang past 45°, flat base with a real footprint, no floating
+  geometry, watertight and manifold. **If a form cannot meet these, discard the
+  form — never thin the walls to rescue it.**
+
+  Iterating on an already-approved design needs no new approval. See the matching
+  standing rule in `.claude/skills/3d-print-design/SKILL.md`.
 
 ### Hard Stops — Never Do Without Explicit Permission
 

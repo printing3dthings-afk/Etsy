@@ -1,0 +1,81 @@
+// The AMS, at its real size, sitting where one actually sits. The spools drawn
+// inside are illustrative -- nothing here reads the machine, so they are four
+// plausible colours and the panel says as much rather than implying a feed.
+function buildAMS(spec, ox, oy, y1, zTop) {
+  amsGroup = null;
+  if (!spec) { return; }
+  amsGroup = new THREE.Group();
+  var cy = y1 - spec.d / 2 - 6, cz = zTop + 4 + spec.h / 2;
+
+  // Built as panels, not a solid block: a closed box would hide the spools
+  // behind its own lit top face no matter how transparent the lid above it is.
+  var wall = 8, shell = surface(0x2a2e35);
+  function panel(w, d, h, x, y, z) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), shell);
+    m.position.set(x, y, z);
+    amsGroup.add(m);
+  }
+  panel(spec.w, spec.d, wall, ox, cy, cz - spec.h / 2 + wall / 2);
+  panel(wall, spec.d, spec.h, ox - spec.w / 2 + wall / 2, cy, cz);
+  panel(wall, spec.d, spec.h, ox + spec.w / 2 - wall / 2, cy, cz);
+  panel(spec.w, wall, spec.h, ox, cy + spec.d / 2 - wall / 2, cz);
+  panel(spec.w, wall, spec.h, ox, cy - spec.d / 2 + wall / 2, cz);
+  var amsEdge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(spec.w, spec.d, spec.h)),
+    new THREE.LineBasicMaterial({color: 0x4a515e}));
+  amsEdge.position.set(ox, cy, cz);
+  amsGroup.add(amsEdge);
+
+  var spools = [], cores = [];
+  for (var i = 0; i < spec.slots; i++) {
+    var x = ox - (spec.slots - 1) * 46 + i * 92;
+    // Spool size is the AMS's own published compatibility range -- 197-202 mm
+    // across, 50-68 mm wide -- which is why they very nearly fill the box.
+    var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 56, 28),
+      surface(FILAMENT[i % FILAMENT.length], {roughness: 0.45, metalness: 0.0}));
+    // Rotated onto X by the PARENT, so the mesh's own X rotation is free to be
+    // the spool turning as filament is pulled off it.
+    var hub = new THREE.Group();
+    hub.rotation.z = Math.PI / 2;
+    hub.position.set(x, cy, cz - 2);
+    hub.add(fil);
+    amsGroup.add(hub);
+    spools.push(fil);
+    var core = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 60, 20),
+      surface(0x15171c));
+    core.rotation.z = Math.PI / 2;
+    core.position.set(x, cy, cz - 2);
+    amsGroup.add(core);
+    cores.push(core);
+  }
+
+  // Smoked lid over the spools -- the reason you can see them at all.
+  var lid = new THREE.Mesh(new THREE.BoxGeometry(spec.w - 22, spec.d - 22, 5),
+    glassMaterial());
+  lid.position.set(ox, cy, cz + spec.h / 2 - 3);
+  amsGroup.add(lid);
+  var lz = cz + spec.h / 2 - 3, fm = surface(0x21252b);
+  [[spec.w, 11, ox, cy - spec.d / 2 + 5.5], [spec.w, 11, ox, cy + spec.d / 2 - 5.5],
+   [11, spec.d, ox - spec.w / 2 + 5.5, cy], [11, spec.d, ox + spec.w / 2 - 5.5, cy]]
+    .forEach(function (f) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(f[0], f[1], 7), fm);
+      m.position.set(f[2], f[3], lz);
+      amsGroup.add(m);
+    });
+
+  // PTFE bundle looping out of the back and into the top of the machine.
+  var curve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(ox, cy + spec.d / 2 - 4, cz - 40),
+    new THREE.Vector3(ox, y1 + 54, cz - 74),
+    new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
+  var feed = new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
+    surface(0x171a20));
+  amsGroup.add(feed);
+
+  amsGroup.userData.spools = spools;
+  amsGroup.userData.cores = cores;
+  amsGroup.userData.feed = feed;
+  amsGroup.name = 'ams';
+  scene.add(amsGroup);
+}
+

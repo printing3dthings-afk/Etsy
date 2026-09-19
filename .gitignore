@@ -125,3 +125,17 @@ data/browser_screenshots/
 
 # graphify generated codebase-graph output + AST cache (regenerate with `graphify update .`)
 graphify-out/
+
+# Render-cache sidecars (tools/openscad_render.py, tools/blender_render.py).
+# Purely local build state -- keyed on source+include contents+params, so a
+# committed one from another machine would be noise at best.
+*.rendercache
+
+# Built by tools/viewer/build_site.py; the inputs are committed, the output is not.
+tools/viewer/site/
+
+# Path-traced plate stills: the full-resolution PNGs are ~2.5MB each and 72 of
+# them would put 180MB in git for files the site never serves. build_site.py
+# downscales them to JPEG at publish time; the JPEGs are what ships.
+data/plate_stills/*.png
+data/plate_stills/*.rendercache

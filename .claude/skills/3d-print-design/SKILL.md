@@ -5,6 +5,14 @@ description: "Real technique for designing genuinely printable 3D models in Open
 
 # 3D Print Design — OpenSCAD, For Real Printable Models
 
+**Before doing anything in Blender** — a hollow shell, a scattered surface
+pattern, an organic form, any Boolean — read
+`.claude/skills/3d-print-design/BLENDER_REFERENCE.md`. Every claim in it was
+run in this container, and it contains two documented Blender features that
+do **not** work (`Remesh → Remove Disconnected`; welded curve-bevel caps),
+the Solidify mode whose output fails `mesh_gate` outright, and the Boolean
+cutter defects that corrupt a mesh silently.
+
 **Before starting a genuinely new class of model** (first real mechanical
 part, first print-in-place joint, first time a design might need Blender),
 also read `.claude/skills/3d-print-design/ENGINEERING_REFERENCE.md` — a
@@ -13,6 +21,97 @@ modules, real FDM tolerance numbers, organic-surface tools beyond what's
 used below, the OpenSCAD-vs-Blender tool-choice verdict). This file stays
 what it's always been: a log of real bugs found while building this shop's
 actual models, not a textbook.
+
+## THE VIRTUAL P1S — run the real slicer, stop inferring (2026-09-13)
+
+`tools/virtual_printer.py` slices with PrusaSlicer 2.7.2 on a P1S profile and
+reads the slicer's own decisions back out of the G-code. **Prefer it over the
+geometry checks whenever the question is "will this print well".**
+
+Why: `mesh_gate` and `product_gate` approximate a slicer with ray casts and face
+normals, and every one of those approximations has been wrong here at least
+once — an overhang scan that flagged base fillets, a thickness check that
+measured engraved grooves. This asks the slicer instead. "Does it need
+supports" stops being an inference and becomes a fact.
+
+**Scott's confirmed machine (2026-09-13):** stock 0.4mm brass nozzle, one AMS
+with 4 slots, textured PEI plate, stock 0.20mm Standard. He also has tuned
+profiles of his own — ask for them before any claim about time or finish.
+
+Validated on three models:
+
+| model | slicer's verdict |
+|---|---|
+| tapered 2mm vessel | clean — no supports, 0 overhang perimeters, full height |
+| mushroom (wide cap, narrow stem) | **62,142 support moves, 5,723 overhang perimeters** |
+| `sauce_tray` | clean — 60 layers, full 12mm, 78.8g |
+
+**Layer-line rendering works.** Parse the G-code's extrusion moves, draw each as
+a 0.42 × 0.2mm bead, render the result: 168,768 segments on a simple vessel,
+and the render shows real layer banding and the skirt ring on the plate. That
+is what the part will actually look like, not a smooth CAD surface.
+
+**Two honest limits — state them, never imply otherwise:**
+1. PrusaSlicer is not Bambu Studio. Same engine lineage (Bambu Studio and Orca
+   are both PrusaSlicer forks) so the *geometric* decisions track closely.
+   Speeds and time estimates will not match Bambu's.
+2. **It models nothing thermal.** Warping, bed adhesion, stringing, layer
+   delamination, heat creep — all invisible. A part can pass every check here
+   and still fail on the plate for a reason this cannot see.
+
+**Correction, same day:** this section first read that `sauce_tray` slicing
+clean meant "whatever went wrong with it is invisible to a slicer." Wrong.
+Scott: *"The bad sauce bowl print was the old version. The file has been
+fixed."* The clean verdict is simply correct — it is reporting on the fixed
+file. Before treating a clean result as a blind spot, check whether the part
+was actually fixed; a sim agreeing with reality is the normal case, not a
+suspicious one.
+
+## THE BAR FOR A RETAIL PRODUCT (Scott, 2026-09-13) — read before designing
+
+Scott's critique, verbatim in substance: the models being produced **are not at a
+sellable standard**. They were functional-part thinking — a primitive with a
+pattern applied, validated by whether it printed rather than whether it sells.
+
+These are retail products competing against other listings **in a grid of
+thumbnails**. Two requirements follow:
+
+- **The silhouette has to read at thumbnail size.** Not the surface texture, not
+  the detail — the outline, at 200px, against a dozen competitors.
+- **The form needs at least one deliberate design decision** beyond a primitive
+  with a pattern on it. The ribbed vase and the faceted lamp already in the shop
+  are the reference level of intent.
+
+**Process, every new product:** present **4–5 genuinely different formal
+approaches** — different forms, not variations on one idea — one sentence each,
+*before writing any code*. Scott picks. Then build.
+
+**Printability is a hard constraint, not a tradeoff:** wall ≥1.2mm, no
+unsupported overhang past 45°, flat base with a real footprint, no floating
+geometry, watertight and manifold. **If a form cannot meet those, discard the
+form — do not thin the walls to rescue it.**
+
+`tools/product_gate.py` asserts all of it and FAILS, unlike `mesh_gate`/
+`print_check`, which report and leave the judgment to a person.
+
+**Its overhang verdict comes from the real slicer, not from geometry** — and
+the reason is a caught mistake worth keeping. The first version ray-cast its
+own answer and failed all four sauce parts on unsupported spans of 13–19mm.
+`virtual_printer.py` slices the same four and reports every one clean: no
+supports, no overhang perimeters, full height. They are printed, sold parts, so
+the geometry check was simply wrong. Raising the span limit until they passed
+would have been fitting the threshold to the answer. Delegating to the engine
+that actually makes the decision is the fix, and the geometric version is now
+only a fallback for when `prusa-slicer` is missing. Then
+`tools/blender_render.py --views` for the three views Scott reviews before
+anything is called done.
+
+Validated on purpose-built shapes rather than on the existing catalogue, which
+would have meant tuning thresholds until old parts passed: a tapered 2mm-wall
+vessel passes every check with a steepest downward face of 7°, and a mushroom
+(wide cap on a narrow stem) fails on overhang span 50.6mm, a 4.3% footprint,
+and wall. **Existing models in `openscad_models/` mostly do NOT pass this gate.
+That is the point of the critique, not a bug in the gate.**
 
 ## Why this exists (2026-08-21)
 
@@ -107,6 +206,23 @@ rule this shop already applies to AI photos and Etsy mutations.**
   geometry gets authored, and this never substitutes for the AI-photo
   pipeline CLAUDE.md requires for actual Etsy listings. It also has no
   3MF importer in this container (confirmed live) — feed it STL/OBJ/PLY.
+- **`tools/mesh_gate.py` is the pass/fail check before a mesh ships.**
+  `python3 tools/mesh_gate.py model.stl --overhang` (add `-c N` for a
+  print-in-place assembly whose N separate bodies are intentional). It
+  returns a non-zero exit code on: outside the P1S 256mm build volume, not
+  watertight, inconsistent winding, non-positive volume, an unexpected body
+  count, or degenerate faces. These are the same trimesh checks that had
+  been retyped by hand for every model in this tree — having one committed
+  thing with an exit code is the point, and a wrong body count is exactly
+  the signal that a cutter broke through a wall it should not have.
+  **Overhang is reported, never failed on, and that is deliberate:** the
+  first version of this failed all three verified, already-sliced models at
+  once, and every face it flagged on the sauce tray was the 0.7mm-deep
+  ceiling of the engraved maker's mark on the underside — a bridge that
+  short prints on any FDM machine. Angle alone cannot tell that from a real
+  unsupported span, so the tool prints the flagged area and its z range and
+  you make the call.
+
 - **Real vendored fonts are available to `text()` for engraved branding.**
   This repo's existing font sets (`fonts/`, `assets/fonts/` — already used
   for cover art/listing images) are auto-registered with fontconfig the
@@ -120,6 +236,116 @@ rule this shop already applies to AI photos and Etsy mutations.**
   live before this was wired up automatically), so if engraved text isn't
   showing up, check `fc-list | grep -i '<family>'` before assuming the
   boolean/positioning is wrong.
+
+## P1S kinematics, for anything that animates a print (2026-09-16)
+
+**The gantry is fixed; the BED descends.** The toolhead moves only in XY and
+the heatbed travels down its lead screws as the print grows. At layer 1 the
+bed sits near the TOP of the chamber. Anything that animates a print growing
+upward with a rising nozzle is modelling a bedslinger, not this machine.
+
+Two consequences that only showed up by rendering it:
+
+* An enclosure drawn to the obvious height is too short. The bed travels the
+  full build height downward, so the interior must reach from below the lowest
+  bed position to above the gantry -- otherwise the plate sinks through the
+  floor and disappears partway through a tall print.
+* Draw an enclosure as one INVERTED box (back-face only), never as six panels.
+  Six opaque panels put the near wall between the camera and the part.
+
+**The rest of the machine, from Bambu's own service pages (checked 2026-09-17).**
+Recall was wrong about two of these, so go and read rather than remember:
+
+* The Z axis is **three** lead screws, not two, connected to a **single**
+  stepper through a belt that runs under the base, with the tensioner also
+  underneath and three Z sliders carrying the bed ("Introduction to P1
+  series"; the Z motor / Z timing belt / Z tensioner pages).
+* CoreXY here means **one independent belt per stepper**, both reaching the
+  print head.
+* The chamber LED is a 5V 0.3A bar on the **LEFT** beam, next to the chamber
+  camera -- both are reached through the left panel and wired to the same AP
+  board, and the guide warns the LED "will get caught by the camera" if you
+  slide it the wrong way. Not a strip across the front.
+* The toolhead is front / middle / rear housings with the part-cooling fan in
+  the **front** one (its connector is what you unplug), a filament cutter
+  lever, a PTFE pneumatic joint on top, and an all-in-one hotend -- nozzle
+  integrated into the heat block, joined to the heatsink by a thin metal tube.
+  **No LiDAR: that is the X1 Carbon.** The auxiliary part cooling fan is a
+  separate accessory on the left chamber wall, not stock.
+* The screen is 2.7-inch **192x64** -- a 3:1 letterbox, not a square.
+* Bambu does NOT publish where the three lead screws sit around the base, nor
+  any toolhead dimensions. Draw those, say they are drawn.
+
+**Draw only the machine you have read about.** A viewer that renders one
+printer in detail will happily render a second one with the first one's body,
+and the caption beside it will say something different. Selecting an A2L --
+an open-frame bed-slinger -- drew a fully enclosed case with a glass door
+while the panel next to it read "Enclosed: No". Gate the detailed model to
+the machine whose documentation was actually read, and give every other one an
+envelope: published footprint, bed, build volume, correct kinematics, nothing
+invented. A bed-slinger also moves the BED in Y and climbs the gantry in Z --
+replaying a CoreXY's motion on it is the same lie as the wrong case.
+
+**Multi-material slicing from the CLI, and what it costs (2026-09-17).**
+`tools/assemble_3mf.py` already writes a per-part extruder into
+`Metadata/Slic3r_PE_model.config`, which is what PrusaSlicer reads, so any
+multi-part 3MF here slices as a genuine multi-filament job via
+`virtual_printer.mmu_options(n)`. Two settings are not optional: the wipe
+tower REQUIRES relative E (the slice refuses outright without it), and priming
+must be OFF or the priming block emits hundreds of lines of
+`G1 X-40263464.000` -- a garbage coordinate, not a move. The MMU time estimate
+also comes back as `-2147483648s`; do not publish it.
+
+The number worth knowing before promising a customer a multi-colour print: the
+monogram keychain is **8.6 g in one filament and 33.4 g in five**, and
+**25.1 g of that -- three quarters -- is purge tower that goes in the bin**.
+Time roughly doubles, 57 min to 109 min. Multi-colour is not a free upgrade;
+price it as four times the material.
+
+**Do not trust the slicer's per-extruder filament footer.** On that same
+slice, `; filament used [mm]` summed to 6,314 mm against 11,200 mm actually
+extruded -- it leaves out the purge, and reported
+`filament used for wipe tower [g] = 0.00` besides. Measure from the moves.
+
+**A light that changes nothing is not a light.** A chamber lamp added as a
+real `PointLight` still did nothing measurable, because the biggest surface it
+had to light -- the interior liner -- was `MeshBasicMaterial`, which ignores
+lights. Differencing a frame with the lamp on against one with it off gave
+0.79 of a level out of 255. Do that difference before claiming a light works;
+"I added a PointLight" is not evidence.
+
+## The virtual printer is not a simulator (2026-09-15)
+
+Scott asked whether a clean replay in the P1S viewer means a clean print. It
+does not, and the distinction is worth holding onto because it is easy to
+drift the other way as the tooling gets better.
+
+`virtual_printer.py` runs a real slicer, so everything it reports about
+DECISIONS is fact: supports, bridges, overhang classification, feature types,
+speeds, layer count, filament length. The viewer draws those instructions
+exactly. **Neither models any physics.** No gravity, no melt behaviour, no
+thermal contraction, no bed adhesion, no layer bonding, no moisture. Warping,
+a curled corner the nozzle then hits, delamination and stringing are all
+invisible. A part can pass `product_gate.py`, replay perfectly, and still fail
+on the plate.
+
+`tools/print_risk.py` measures five signals that correlate with known failure
+modes (longest genuinely unsupported span, layers under the cooling threshold,
+first-layer area, aspect ratio, overhang length). Two rules on it:
+
+1. **Its thresholds are guesses until real prints are logged against them**
+   (`--record`, `--calibration`). The calibration report refuses to claim any
+   signal separates good from bad with fewer than 3 examples on each side.
+2. **It never fails the gate.** Advisories only. Failing a real product on an
+   uncalibrated threshold is the same threshold-fitting mistake that made the
+   geometric overhang check fail four verified, selling sauce parts.
+
+Measure the right thing, too. "Longest bridge move" on the sauce tray is
+107.9mm; the longest genuinely unsupported run inside that move is 5.6mm,
+because a straight extrusion passes over ground already printed. The 5.6mm
+sits at z=0.8mm, the ceiling of the engraved maker's mark -- the same place an
+earlier overhang investigation independently landed. Reporting the move length
+would have condemned a clean part.
 
 ## Bambu P1S constraints — design within these, don't guess
 
@@ -1985,6 +2211,88 @@ full notes): a pleated folding fan with a print-in-place hinge and a
 snowflake motif, and a ribbed 3-compartment desk caddy. Pitch from real
 candidates like these before reaching for something new.
 
+## Standing rule — a model with multiple parts ships as ONE print-ready file (2026-09-09)
+
+Scott's instruction, after being handed a monogram keychain as three separate
+3MFs to load and align himself:
+
+> *"the keychain and all other files that have multiple parts that go together
+> need to be assembled in one file so it is ready to print. the exception would
+> be like a container with a lid. those need to stay separate parts but same
+> plate if possible."*
+
+Two cases, and the deliverable is a single `.3mf` either way:
+
+| what it is | how it ships |
+|---|---|
+| parts that assemble into one object — colour bodies, a flush inlay, a raised monogram, a print-in-place rotor inside its frame | **one object, N parts.** Every part keeps its own coordinates, so it opens already aligned and a filament is assigned per part. |
+
+### A `<components>` assembly is NOT how you do this, and it looks like it is
+
+The obvious construction — one `<object>` built from `<component>` references —
+produces a file that opens, slices, and is wrong. **PrusaSlicer flattens it into
+N separate objects.** Verified 2026-09-09 by round-tripping the 5-part dumpling
+clicker back out: `objects: 5, components: 0, items: 5`. The slicer offered five
+loose objects to arrange instead of one object with five colourable parts, and
+the flush face — which is invisible until its parts get different filaments —
+could not be coloured at all. Scott caught it: *"the dumpling doesnt have its
+face."*
+
+A real multi-part object is **ONE mesh whose parts are declared as triangle
+ranges** in `Metadata/Slic3r_PE_model.config`, which is exactly how PrusaSlicer
+writes one itself:
+
+```xml
+<object id="1" instances_count="1">
+  <volume firstid="0" lastid="41507">
+    <metadata type="volume" key="name" value="bao"/>
+    <metadata type="volume" key="volume_type" value="ModelPart"/>
+```
+
+`tools/assemble_3mf.py` writes that, plus Bambu/Orca's own
+`Metadata/model_settings.config` with a per-part extruder, so the model opens
+with colours already assigned rather than all one filament.
+| things that separate in use — a container and its lid, a clicker's bun and its basket | **N separate objects, one plate**, laid out with a real gap so they arrive arranged rather than stacked on the origin. A plate entry may itself be multi-part. |
+
+### OpenSCAD cannot produce either of these, and it fails silently
+
+**`openscad -o out.3mf` MERGES every body into a single object with no
+materials.** Verified 2026-09-09 on a real export: one `<object>`, one `<item>`,
+zero `<basematerials>`, 20,065 triangles fused into one mesh. The file opens
+fine, slices fine, and there is no way to assign a second filament to anything
+in it — the colour split is simply gone. It looked like the print-ready
+deliverable and was the opposite of one.
+
+Use **`tools/assemble_3mf.py`**, which writes the 3MF directly:
+
+```bash
+# parts that assemble into one object
+python3 tools/assemble_3mf.py out.3mf ring.stl:#2B2F38 rotor.stl:#F2F0E9 letter.stl:#E0553D
+
+# a container and its lid -- "+" starts a new object, and a group can be multi-part
+python3 tools/assemble_3mf.py --plate out.3mf base.stl:#2B2F38 \
+    + lid_body.stl:#2B2F38 lid_script.stl:#D4A96A
+```
+
+Per-part STLs stay in the tree — they are the source the assembler consumes and
+what `mesh_gate.py` checks. What ships to Scott, and what a customer downloads,
+is the single assembled `.3mf`.
+
+### Verify the assembly, never assume it
+
+A 3MF that merged silently still slices. Check the parts survived:
+
+Counting meshes is NOT the check — a correct file has one mesh per object, with
+the parts inside it. Round-trip it through a real slicer and read the parts back:
+
+```bash
+prusa-slicer --load tools/p1s_slice_profile.ini --export-3mf -o /tmp/rt.3mf out.3mf
+# then read Metadata/Slic3r_PE_model.config: one <volume> per colourable part
+```
+
+and slice it for real before calling it done — `prusa-slicer --load
+tools/p1s_slice_profile.ini -g` accepts a 3MF directly.
+
 ## Standing rule — one home for every STL, and hand it to Scott (2026-08-28)
 
 **`openscad_models/` in this repo is the single canonical home for every
@@ -2103,6 +2411,28 @@ Checklist before calling any product done:
       the real re-measured value was 27.91mm — two DIFFERENT smaller
       sizes then agreed with each other exactly, confirming the original
       widely-scaled measurement was the unreliable one, not the physics).
+      **Overall width is NOT the printability check, and passing it
+      proves nothing about whether the mark can actually print**
+      (2026-09-06, found by measurement after this rule had already
+      shipped four models). The rule above sizes the mark against the
+      available flat run and is silent on how thick each individual
+      stroke ends up — so "OnBrandCraftz" in Caveat Bold passed the width
+      check on the sauce tray and bowl while its letter strokes measured
+      **0.48-1.08 extrusions** (0.42mm on the 0.4mm profile). Under one
+      extrusion the slicer emits nothing at all: three of four models
+      carried a mark that would have come out blank, and every check then
+      in place said they were fine. Measure the strokes, not the word:
+      rasterise the cutter's cross-section, distance-transform it, and
+      read the thinnest stroke off the ridge (local maxima of the
+      transform). Require **at least 2 extrusions** on the thinnest
+      stroke. The fix that worked was shortening the text, not shrinking
+      the size — "OBC" is 2.089 mm per size unit against
+      "OnBrandCraftz"'s 7.157, so at the same footprint every stroke gets
+      3.43x thicker (2.56-3.77 extrusions, comfortably printable).
+      **Derive `mark_size` from each model's own pad**, never inherit it
+      from a sibling: the 1oz tray reused the 2oz's value and landed at
+      50.8% of its smaller pad instead of the intended ~40%.
+
       This generalizes beyond just the maker's mark: **any parametric
       feature sized by a formula or a fixed constant should be verified
       against the model's own real dimensions after rendering, not
@@ -3996,7 +4326,20 @@ Sliced at 0.2mm / 3 walls / 15% gyroid, PLA at $20/kg:
 Filament is nearly free; **printer time is the entire cost**. A 24-hour part
 caps the shop at one unit per day and cannot carry a sellable margin. Check the
 sliced time BEFORE committing to a physical product, not after — and treat
-roughly 4 hours per sellable unit as the ceiling worth designing toward.
+roughly 4 hours per sellable unit as the number to design toward.
+
+**4 hours is a goal, not a hard stop — corrected 2026-09-10 by Scott:** *"The 4
+hour was for other products when I started. That's still the goal but not a hard
+stop limit."* It was set against the commodity end of the catalogue, where it
+still bites hard: a storage bin at 4h00 is a real problem, because nobody pays a
+premium for a bin (see `label_bin.scad`, where the wall alone was 34.6 of its
+53.4 cm³). It does not transfer unchanged to a display piece. The haunted manor
+lantern is 7h 10m and that is fine at lamp pricing.
+
+So the rule to actually apply is: **always slice and always report the time
+plainly, before the design is committed** — never bury it, never discover it
+afterwards. Then judge it against what the piece sells for, not against a single
+number. What is NOT acceptable is a long print nobody decided on.
 
 ---
 
@@ -5179,3 +5522,1642 @@ form. Recurring, directly reusable:
   pitch, read off a real reference mesh.
 
 Both need `trimesh` + `shapely` (already present). Neither costs an API call.
+
+---
+
+## Technique 53 — A flush colour inlay can pass every geometry check and still print in one colour (2026-09-05)
+
+Technique 39's flush-inlay method has two mandatory tests: the parts must
+not overlap (`intersection(partA, partB)` empty) and must leave no gap
+(`gross - all parts` empty). The dumpling clicker's four-colour face passed
+both, every mesh watertight, every component count right — and **none of
+that says the colours will actually appear.**
+
+The slicer decides that, not the geometry. On each layer it has to lay a
+bead of the inlay's filament, and a bead is one extrusion wide (0.42mm on
+the 0.4mm profile). Where the inlay's region on a layer is narrower than
+that, there is nothing it can print, so it merges the region into the body
+and **the colour silently disappears** — no warning, no error, just a plain
+bun coming off a four-filament print.
+
+`tools/inlay_probe.py` measures it: slice the part at real layer heights and
+report each layer's region as `2*area/perimeter`, the width of the
+equivalent strip an extrusion has to fit inside.
+
+### Read `frac_thin`, never `min_width`
+
+The minimum layer width of any curved inlay is always near zero. Its
+topmost and bottommost layers are slivers **by geometry** — that is what a
+sphere or a lens does when you slice it. It is not a defect and it cannot
+be designed away. Chasing `min_width` up is how you break a design that was
+already fine.
+
+The number that matters is the **fraction of layers** below one extrusion,
+and the share of the part's volume sitting in them:
+
+| part | layers | thin | `frac_thin` | `vol_thin` | median width |
+|---|---|---|---|---|---|
+| eyes + smile | 112 | 6 | 5.4% | **0.2%** | 1.032mm |
+| blush | 44 | 0 | 0% | 0% | 1.788mm |
+| highlight | 30 | 2 | 6.7% | **0.4%** | 0.987mm |
+
+Under ~5% of layers and a `vol_thin` near zero is fine. All six thin eye
+layers were confirmed to be cap slivers — four in the eye's own top band,
+two on the smile — with **zero** in the highlight's z-range, i.e. none
+caused by one inlay crowding another.
+
+### The regression that produced this rule
+
+The highlight looked marginal by eye at r=1.15, so it was grown to r=1.38
+"to make it print better." That made things worse two ways at once:
+
+1. A bigger sphere has a **taller** cap band, so it gained sliver layers of
+   its own — the opposite of the intent.
+2. It closed to **0.24mm** of the eye's outline. That leaves a ring of eye
+   colour under one extrusion wide, which the slicer drops — reading as a
+   white notch bitten out of the edge of the black eye.
+
+**A highlight is bounded by the ring of colour it sits inside, not by its
+own printability.** Fixed by repositioning instead of resizing: r=1.18 at a
+3.3° offset from the eye's centre rather than 5.0°, which moves it inboard
+and keeps a full ring of eye around it. `inlay_probe.py --near` reports the
+closest approach between every pair of parts for exactly this check; a pair
+that legitimately shares a boundary reports 0.0 and is not a failure.
+
+### Measure a cross socket at the arm TIP, not across the flat
+
+Separate bug found in the same pass, in a comment rather than in geometry.
+The dumpling clicker's socket post was documented as having a "0.69mm wall
+at the cross arm tips." That is the wall across the cross's **flat**
+(`post_r - span/2`). The thin spot is the arm tip **corner**, at radius
+`sqrt((span/2)^2 + (arm/2)^2)` — for a 4.22 × 1.29 socket that is 2.206mm,
+so the real wall is **0.594mm**, confirmed by sectioning the exported mesh.
+
+Left as-is rather than "fixed": a real FDM-optimised MX keycap with ~9.8k
+downloads measures **0.628mm** the same way, so 0.594 is within 6% of a
+proven print and is still 1.4 extrusions wide. Worth knowing for the next
+socket — and worth noting the reference's cross bore is **asymmetric**
+(4.16 × 4.04 against Cherry's 4.10 nominal) because it prints on-end, so
+one axis gets elephant-foot compensation and the other does not. A socket
+whose axis is vertical has the whole cross in-layer and should stay
+symmetric; do not copy an on-end model's asymmetry into an upright one.
+
+### Two traps that cost time, recorded so they don't again
+
+- **`openscad` without `OPENSCADPATH` fails almost silently.** It prints
+  `WARNING: Can't open include file 'BOSL2/std.scad'` and then *keeps
+  going*, ignoring every BOSL2 module, and writes a plausible-looking STL
+  that is wrong. Three parts were overwritten with garbage this way before
+  the size drop (8.0MB → 0.3MB) gave it away. Always render via
+  `tools/openscad_render.py`, or set
+  `OPENSCADPATH=assets/openscad_libs` explicitly.
+- **PrusaSlicer centres the part on the bed.** Checking generated G-code for
+  extrusion near a feature at the model's origin finds nothing, because the
+  part is now at X 100.0, Y 99.6. Re-run the check against the part's actual
+  bed position before concluding a feature produces no toolpath.
+
+### Tool shipped
+
+`tools/inlay_probe.py` — per-layer region width for every part of a
+multi-colour split, plus `--near` for closest approach between parts. Needs
+`trimesh` + `shapely`; no API call. **Run it on every flush-inlay model
+before export** — Technique 39's two tests prove the split is *correct*,
+this one proves it is *printable*.
+
+## Technique 54 — A shallow upward surface terraces, and no slicer setting fixes it (2026-09-08, first real printed part)
+
+Scott printed the sauce bowl. The mark was legible, the underside was flat and
+clean across 212mm, the cavities were smooth, no supports. The **entire top
+face** came off the plate ringed with concentric terraces. `mesh_gate.py` had
+passed it on every check: watertight, one body, in the envelope, no overhang.
+Nothing in this skill or that tool looked at whether a surface was shallow
+enough to stair-step. This is the technique that closes that.
+
+### The one number
+
+A surface of gradient `g = |∇f|` steps sideways by `layer_h / g` every layer.
+That step width is the whole story:
+
+| terrace width | what you see |
+|---|---|
+| `< 1 extrusion` (0.42mm) | nothing — it blends |
+| 1–4 extrusions | a visible ring |
+| `>> that` | a shelf |
+
+The bowl's top face was a paraboloid rising **5.50mm over 95mm of radius**.
+Its *steepest* slope anywhere was **6.6°** → a 1.73mm terrace, 4 beads wide. At
+the axis the slope is zero, so the first terrace was **18.12mm** — a 36.2mm
+flat disc in the middle, then 26 more rings tightening outward. Measured ring
+radii 18.1 / 25.6 / 31.4 / 36.2 / 40.5mm matched the photograph exactly.
+
+### Why you cannot slice your way out of it
+
+- **Ironing** smooths *within* a terrace. It cannot fill a vertical step.
+- **Adaptive layer height** helps where the slope is already high and does
+  nothing at a stationary point. A dome's slope → 0 at its apex, so halving the
+  layer height just produces more, finer rings in the middle.
+- Hiding a 0.2mm step needs gradient ≥ 0.48 (26°). That bowl face would only
+  have reached it at r = 391mm. It stopped at 95mm.
+
+**So the rule is: flat, or steep. Never gently curved on an upward face.**
+A truly flat face is *one top surface with no steps at all* — it is the good
+outcome, not a compromise. Aim for it deliberately.
+
+### The same math governs a filleted floor — this is what "lines in the bottom" is
+
+A tangent fillet is horizontal where it meets the floor, so its **first** layer
+steps by `sqrt(2*R*layer - layer²)` all at once:
+
+| floor treatment | first step | beads |
+|---|---|---|
+| tangent fillet R=5 | 1.40mm | 3.3 |
+| tangent fillet R=3 | 1.08mm | 2.6 |
+| tangent fillet R=1.5 | 0.75mm | 1.8 |
+| **45° chamfer** | **0.20mm** | **0.5** |
+
+A fillet small enough to hide the step (R ≤ 0.54mm) is not a rounded floor any
+more. **Use a flat floor plus a constant-angle chamfer.** A 45° run steps
+exactly one layer height — the floor of what FDM can do — and the flat disc
+irons smooth. The tapered wall above it (gradient 0.276) steps 0.055mm and was
+already invisible, which is why the print's *walls* looked fine and only the
+floors ringed.
+
+### Two things that bite when you flatten a top face
+
+1. **A cavity lid ending flush with the new top plane is coplanar with it**, and
+   CGAL leaves zero-area slivers where each mouth circle crosses y=0. Carry the
+   cutter ~1mm into the air above the face. Caught by the degenerate-face check.
+2. **Changing a body's height changes its flare angle.** Flattening took the
+   bowl from 25mm to 22.15mm, so the same 8mm of radius change happened over
+   less height and `flare_ease = 1.5` pushed the steepest flare from 25.6° to
+   **40.1°** — exactly Technique 35's ceiling for a buyer-visible surface, with
+   zero margin. Re-measure overhang after *any* height change; it is a function
+   of height, not a free style knob.
+
+### It is checked now
+
+`tools/mesh_gate.py` reports `terracing`: upward-facing area whose slope is too
+shallow to hide a layer step, plus the worst terrace width. The band is bounded
+at both ends — under one bead is invisible, and a "terrace" wider than 50mm
+means the surface is effectively flat, which is the target. Calibrated against
+this shop's whole model tree: it puts the two dished sauce products at the top
+(86 and 65 cm²) and scores the vase, sundial and box lids at exactly zero.
+
+It is **reported, not fatal** — an organic model can carry real shallow area on
+purpose. But a number that large on a flat-ish product face means it will ring.
+
+---
+
+## Technique 55 — A captive mechanism needs a SEAT and a CEILING, not just a slot (2026-09-09, second real printed part)
+
+Scott printed the bayonet jar and reported: *"The bottom part where the lid
+locks is pretty flimsy... The lid rattles when locked."* Both were real, both
+had passed every gate in this skill, and neither was a tolerance problem —
+which is what they look like, and what "tighten the tolerances" would fix
+only cosmetically. Two separate structural mistakes.
+
+### 55a — A slot cut into a wall thinner than the slot is a SEVERANCE
+
+The lock channel was a swept tube of radius 2.5 centred on the outer radius
+(25). It therefore spanned **r 22.5 .. 27.5**. The wall spanned **22.6 .. 25**.
+
+    channel inner 22.50  <  wall inner 22.60   ->  nothing behind it
+
+The neck was cut clean through over 3 × 33° of its circumference. What was
+left holding the rim on was three thin webs. It *looked* fine in preview,
+rendered as one watertight body, and passed the mesh gate — a through-cut is
+not a topology error, it is a hole, and a hole is perfectly manifold.
+
+**The check no gate performs, and you must do by hand for every slot, groove,
+channel, keyway or counterbore cut into a curved wall:**
+
+    material_behind = (feature_inner_radius) - (bore_radius)
+    require >= 1.2 mm  (about 3 extrusions)
+
+Do it in arithmetic before rendering. A swept tube of radius `r` centred on
+radius `R` reaches inward to `R - r`, and that number is almost never the one
+you were thinking about when you chose `r`.
+
+Tightening clearance does **not** save you. Dropping this jar's clearance from
+0.50 to 0.25 moved the channel inner from 22.50 to 22.75 — a whole 0.15mm of
+material behind it. Still a through-cut in every meaningful sense.
+
+**The fix is an internal collar**, not a thicker wall everywhere (which wastes
+material and print time over the whole height for a defect confined to 12mm):
+
+- Thicken the bore inward across the lock zone only, to whatever radius gives
+  the 1.2mm.
+- **The collar's underside is a downward-facing annular ledge — a 90° overhang
+  printing into open air.** Taper it: make the radial step equal the vertical
+  step and it is 45° from vertical, self-supporting, and disappears from the
+  overhang report entirely. (Confirmed: the overhang breakdown after the fix
+  showed 0.00 cm² anywhere in the collar's z-band.)
+- Cut the entry slot only as deep as the channel actually needs. The obvious
+  move — extending it inward "to be safe" — slots the collar three times and
+  undoes the whole repair.
+
+The collar is also the *right* fix rather than a patch: an uncut 360° hoop at
+the neck is exactly the hoop stiffness a bayonet neck wants, and it is
+stiffer than the original wall ever was.
+
+### 55b — "It rattles" is an axial-constraint bug, not a clearance bug
+
+The lid hung on three spheres in oversized channels with its cap underside
+**7mm above the jar rim**. Nothing touched anything. No clearance number
+fixes that, because the parts were never in contact to begin with.
+
+A captive mechanism needs **two** surfaces, and they are usually different
+features:
+
+1. **A seat** — a real face-to-face contact that stops the part in one
+   direction. Here: the lid cap underside landing flat on the jar rim. Derive
+   the dimension that produces it (`lid_skirt_h = base_h - lid_skirt_bottom_z`)
+   — do not type a plausible-looking number, which is exactly how 20 got in
+   where 13 belonged.
+2. **A ceiling** — something stopping the part in the opposite direction.
+   Here: the lock channel's upper surface bearing on the pin.
+
+**The subtle half, and the one I got wrong on the first attempt:** placing the
+pin on the channel's *centreline* in the locked pose feels correct and is not.
+It leaves exactly `clearance` of free lift — the part still rattles, just
+less, and you will have "fixed" it while changing nothing a hand can feel.
+Place the pin against the **ceiling**:
+
+    pin_z_locked = channel_z_at_lock + clearance
+
+Then verify by tabulating the gap through the whole motion, not just at the
+end pose:
+
+    0 deg: ceiling 39.250  pin top 38.900  gap +0.350
+   25 deg: ceiling 38.900  pin top 38.900  gap +0.000   <- captured, zero lift
+
+and separately confirm the channel **floor** never rises to the pin's
+underside, or the mechanism levers the lid back off its own seat at some
+intermediate angle — a failure that is invisible in the locked pose alone.
+
+**Prefer tangency to interference.** Tangent contact removes 100% of the
+*designed* play while keeping the assembly exportable as non-overlapping
+bodies and the lid turnable by hand. A real 0.1mm interference across stiff
+PLA at three points risks a lid that will not turn, or a sheared pin, and buys
+nothing the ramp below does not already buy.
+
+### 55c — Ramp the capture so the motion tightens it
+
+A constant-height channel captures the part only at the instant it arrives. A
+channel that descends over the lock travel *draws* the part onto its seat the
+whole way in, which is what gives a bayonet its screw-like, positive feel.
+0.35mm over 25° here: 0.25 of it absorbs the pin's own vertical slop, the rest
+closes the last of the gap.
+
+Build the ramp as a **chain of hulled pairs of the pin itself** along the
+helix — `hull()` of two spheres, ~16 segments. This is exactly the pin's swept
+envelope, so clearance is uniform everywhere *including at the ends*, which
+`rotate_extrude` cannot do (it is constant-z, so it cannot ramp at all) and
+which a union of per-angle extrudes reaches by timing out (Technique 5). Chord
+error at r=25 over 2° segments is 0.005mm.
+
+While you are there: end the channel just past the locked pin's own angular
+footprint, `atan(pin_r/R)`, plus ~1.5° of margin. The original left 8° of free
+over-rotation past the lock — the part arrives and then keeps going, which
+reads as looseness even once the axial play is gone.
+
+### 55d — Export the pose the fit needs; ship the pose the printer needs
+
+The lid must be *modelled* assembled (skirt down, cap up) — that is the only
+pose in which the fit can be reasoned about or the interference checked. It
+must be *printed* cap-down. Exporting the modelling pose asked the slicer to
+begin a 20 cm² disc in mid-air:
+
+    lid, as modelled : 20.11 cm2 past 55 deg
+    lid, flipped     :  0.09 cm2 past 55 deg
+
+Same geometry, same gate, 200× difference. **A mesh gate reports on the mesh
+you hand it, and orientation is part of the mesh.** Put the flip in the export
+branch of the .scad so the exported part is print-ready standalone and the
+assembled preview stays honest.
+
+### The check that would have caught all of this
+
+Before rendering any mechanism, write out the arithmetic:
+
+- every slot: `feature_inner_radius - bore_radius >= 1.2`
+- every captive part: name the seat face and the ceiling face, by feature
+- the locked pose: `ceiling - part_top == 0`, and `floor < part_bottom` at
+  **every** angle, not just the last one
+- every exported part: is this the orientation it prints in?
+
+None of these are visible in a render, and none are caught by watertightness,
+winding, volume, body count, terracing or overhang. They are arithmetic, and
+they are the difference between a mechanism and a part that merely looks like
+one.
+
+---
+
+## Technique 56 — A ramped undercut grips better AND prints better; and when words fail, build the drawing surface (2026-09-09)
+
+Two lessons from getting a drawer pull wrong four times in a row. The
+second one is the more expensive of the two.
+
+### 56a — "An undercut IS an overhang" is false as usually stated
+
+I asserted this twice, in a file and in a message, as a reason a pull's
+roof had to stay flat:
+
+> An undercut IS an overhang — ramping it to be self-supporting is
+> exactly what removes the hook.
+
+That is true only of a *flat* undercut. Ramp the roof back instead and you
+keep the hook and lose the overhang, because the two are answering
+different questions:
+
+- **What makes a hook** is that the void gets TALLER as it goes deeper, so
+  a fingertip can enter under a lip and curl up behind it.
+- **What makes an overhang** is how fast material appears going UP a layer
+  at a time.
+
+A roof rising at 45° from the mouth satisfies the first and not the
+second. Measured on the real part:
+
+| pocket roof | grip | 90° overhang | total flagged |
+|---|---|---|---|
+| flat, 5mm deep | press on a ceiling | **5.0 mm wide** | 2.71 cm² |
+| ramped back 45° | fingertip hooks up into it | **1.5 mm wide** | **0.75 cm²** |
+
+Same pocket, same depth, better grip, 72% less overhang. Every earlier
+round had treated grip and printability as a trade to be balanced; they
+were never actually opposed, and the belief that they were is what stopped
+the right answer being found for four rounds.
+
+**Keep a small flat at the mouth.** Running the ramp all the way to the
+face tapers the lip to a knife edge exactly where a finger loads it —
+fragile, and it prints badly. 1.5mm of flat underside (3.6 extrusions)
+before the ramp starts fixes it for nothing.
+
+**Depth is bounded by more than the visible wall.** The pocket here is
+5mm into a 6.5mm face plate, which sounds impossible until you notice the
+drawer body's own front wall sits directly behind it: 8.18mm of real
+material, 3.16mm still left behind the pocket. Measure what is actually
+behind a feature (`mesh.contains` down a line through it) rather than
+reading one wall thickness off the source.
+
+### 56b — After the third failed round, stop describing and build the pad
+
+The sequence, honestly: a 3mm ramped band; then a protruding ledge; then a
+deeper pocket; then a second slot with a bar. Each was built, verified,
+gated and shipped. Each was wrong. The failure was never geometry — every
+one of those passed every check in this file — it was that "a slotted area
+under here for your fingers to grip" does not resolve to a shape, and
+neither did my questions, my labelled zone diagrams, or my rendered
+option sets.
+
+What resolved it in one round was **an artifact with the real model
+rendered as a drawable background**, storing strokes as coordinates:
+
+- Render the actual STL (not a schematic — this was itself a wrong turn;
+  a hand-drawn diagram of the face got rejected because it was not the
+  part) at a few angles, embed as data URIs.
+- Include a **cross-section board**. Front views answer *where*; only the
+  section answers *how deep and what shape*, which is the question a
+  verbal description almost never carries.
+- Store **vector strokes in real units**, never a canvas PNG: a 256 KiB
+  document cap makes rasters risky, and strokes read back as numbers you
+  can measure. His wedge measured 46.3° off the saved coordinates, which
+  is what let it be rebuilt at exactly 45° with confidence.
+- Colour the pens by *intent* — cut / add / note — so the markup is
+  self-describing.
+
+**The signal to build one:** a third round of iteration on the same
+feature where each attempt is technically sound and still rejected. That
+is not a modelling problem, it is a shared-reference problem, and more
+renders of more options do not fix it. It cost maybe twenty minutes and
+ended a thing that had already burned four build-verify-ship cycles.
+
+**A related own-goal worth avoiding:** a section drawing was captioned
+"face on the left" while the code plotted the face on the RIGHT. The
+geometry was right, the label was backwards, and it went out twice. When
+a drawing has a handedness, verify the caption against the transform, not
+against intent.
+
+## Technique 57 — The modelled gap is not the printed gap: beads eat over half of it (2026-09-09, third real printed part)
+
+The monogram keychain's spinner came off the plate **fused solid** — could not
+be freed with pliers. The mesh was measured afterwards and the rotor/frame gap
+was a uniform **0.400mm at every height**, exactly as designed. The model was
+not wrong, which is the whole point of this entry: the number in the source is
+not the number on the plate.
+
+### What the slicer actually leaves
+
+Slice it and rasterise the real extrusion moves, dilated by half a bead
+(`gcode_probe.py`'s own raster — reuse it, do not write a second one; a
+one-pixel dilation fragments every layer into dozens of false islands and the
+"two largest" are then meaningless):
+
+| | modelled gap | **real air between deposited beads** |
+|---|---|---|
+| fused part, first layer | 0.400 | **0.170 mm** |
+| fused part, mid-height | 0.400 | 0.175 mm |
+
+**A 0.42mm bead lands centred so its outer edge sits on the nominal surface, so
+two facing walls consume well over half of the gap between them.** 0.400mm
+modelled → 0.170mm of actual air. That sits close enough to the ~0.08–0.10mm
+fusion threshold that any first-layer squish closes it outright, and a weld
+around 94mm of circumference is exactly the kind that will not come apart.
+
+**So when a print-in-place clearance is quoted anywhere — including in this
+file — ask whether it is a modelled number or a measured one.** 0.4mm is the
+figure everyone repeats. It is a modelled figure. Design to the air you will
+actually get.
+
+### Relieve where it welds; do not just widen everything
+
+Widening the whole interface is the lazy fix and it costs real function: on a
+V-capture, clearance and axial rattle are the same knob (play ≈ clearance /
+sin(V half-angle) — here 0.45/sin 22° ≈ 1.2mm of vertical slop). A
+print-in-place gap does not weld along its whole height. It welds where the
+process attacks it:
+
+- **the first layer**, where squish spreads the beads of *both* bodies, and
+- **any top surface beside the gap**, where ironing drags melt across it.
+
+Chamfering the moving part's outer edges by 0.6mm and flaring the housing's
+bore to match opened those two places to 1.209mm and 1.020mm while leaving the
+load-bearing V at 0.234mm — margin exactly where the failure lives, tightness
+exactly where the mechanism lives.
+
+**Turn ironing off on any print-in-place part**, and never brim one: a brim
+bridges the two bodies at the bed by design.
+
+### Two honesty notes from this one
+
+**The slicer was not the culprit and checking that is cheap.** Old and new both
+came out as **two separate islands on every layer** — nothing merged in
+software. Establishing that took one `--scan` and moved the search from "the
+geometry or the slicer" to "the process", which is where it actually was.
+
+**A diagnostic is only worth offering if its outcomes differ.** Scott was asked
+to twist the fused part with pliers, on the claim that breaking free would mean
+a bed weld and not breaking would mean a V weld. It does not discriminate at
+all — a bed ring welded over 94mm resists pliers just as well as a welded V.
+Before proposing a test, check that its two outcomes actually lead somewhere
+different; otherwise it costs the other person effort and returns nothing.
+
+## Technique 58 — Three transforms that render, gate and slice while being wrong; and a slicer profile that was lying (2026-09-10, wall charging shelf)
+
+The shelf is a wall-mounted phone shelf: a back plate, a deck, two hex-lattice
+brackets, a front lip. Nothing about it is exotic. It still produced three
+separate defects that passed **every** automated check — watertight, single
+component, no degenerate faces, sliceable — and were only caught by measuring
+the geometry directly. All three are transform/boolean traps, not design
+mistakes, which is exactly why they slip through.
+
+### 1. `rotate([0,90,0])` sends a profile's x to world MINUS z
+
+Rotating about +Y by 90° maps `(x,y,z) → (z, y, -x)`. Extruding a 2D profile
+drawn as `(depth, height)` through it therefore puts depth on **negative** z.
+The shelf's side panels and front lip came out mirrored into negative depth —
+bounds `z -65..65` instead of `0..65`. It was watertight, one component, and
+sliced without complaint, because the mirrored halves still met the back plate
+at the z=0 plane and CGAL happily unioned them.
+
+`rotate([0,-90,0])` is the one that maps local x to world **+z** (and local z
+to world −x, so shift the translate accordingly).
+
+**The check that catches it is the bounding box, and it costs nothing.** After
+any render, compare `mesh.bounds` against the dimensions you intended, per
+axis, before looking at anything else. `mesh_gate` prints the box on its first
+line for exactly this reason — read it, don't skim past it to the PASS/FAIL.
+
+### 2. A `hull()` flush with a peak's base leaves the flat roof you built the peak to avoid
+
+A horizontal hole in a vertical wall needs a peaked roof, not a flat bridge.
+The obvious construction is `union(rounded_rect, triangle_on_top)` — and
+whichever shape is *wider at the join* leaves a horizontal ledge there. Here
+the rounded rect was full-width right up to the triangle's base, so the union's
+outline ran vertically up, stepped horizontally inward 2mm, and only then went
+45°: a flat roof plus two zero-area faces where the coincident edges
+tessellated.
+
+Neither nudging the join up nor down fixes it; one of the two shapes is always
+wider. **If the outline is convex — and a slot with a peaked end is — build it
+as ONE `hull()`** of the parts (two corner circles plus the peak triangle).
+The hull is exactly the intended shape, with tangent-straight sides, a sharp
+apex, and no coincident edges anywhere.
+
+Related, same build: a side panel's front edge landing *exactly* on the deck's
+own bottom-front edge produced two collinear zero-area faces. Giving the panel
+a 2mm return past the deck removed them and reads better. **Coincident
+boundaries between two unioned solids are a degenerate-face generator.** Give
+them a real overlap or a real offset; never make them flush.
+
+### 3. `linear_extrude(scale=)` ramps over the whole extrude height
+
+Asking for a 0.6mm 45° lead-in on a lattice hole with
+`linear_extrude(cham + 1, scale = grow)` delivered **0.22mm** inside a 2.52mm
+plate — because `scale` interpolates linearly from 1 to `grow` across the
+*entire* extrusion, and most of that extrusion stuck out past the plate where
+it did nothing.
+
+Use a per-cell `hull()` between the plain profile and an `offset(r = cham)` one
+at the right two heights instead. It gives exactly 45° and exactly the depth
+asked for. (`scale=` is still safe *inside* a per-cell loop where each cell has
+been translated to its own origin — scaling an already-assembled union of cells
+fans them outward from the model origin instead of growing each in place.)
+
+### A bounded hex lattice: place whole cells, don't clip an infinite field
+
+Technique 46 says a bracket gusset is a hex lattice inside a solid perimeter
+frame. The obvious way to build one — intersect an infinite hex field with the
+region — is wrong in a way no gate reports: a cell clipped by the boundary
+leaves a **tapering needle** of material beside its neighbour. Measured here at
+1.26–1.68mm wide, i.e. 3–4 extrusions, so they print perfectly. They just look
+like a modelling error, on the face of a part whose whole point is being seen.
+
+Test each cell's six real vertices against the outline and place only cells
+that fit whole. In OpenSCAD that is a ray-crossing `pip()` plus a
+point-to-segment distance, ~30 lines, and it subsumes the frame: require every
+vertex to be at least `border` from every edge and the solid frame is simply
+whatever is left over — no separate inset shape to keep in sync. Where the
+region narrows past one cell it goes solid on its own, which is where the
+material belongs anyway.
+
+**Sizing the cell: the stretch is set by the real 55° limit, not by 45°.** A
+lattice cut *across* the build axis has a roof; a regular pointy-up hexagon
+puts its top two edges at **60° from vertical**, just past what the P1S holds.
+Stretching the cell by `k` along the build axis brings them to
+`atan(1.732 / k)`. Reaching for 45° means `k = 1.73` and a visibly squashed
+2.2:1 cell; targeting the actual limit with margin gives `k = 1.5`, a measured
+**49.1°**, and a 1.7:1 cell that still reads as a honeycomb. A lattice cut
+*along* the build axis is a plain vertical hole and needs no stretch at all —
+so a part with both gets two different cells, and that is correct, not sloppy.
+
+Give the openings a 0.6mm 45° lead-in on whichever face something rests
+against. A raw through-cut hex field is fifty sharp edges.
+
+### Check a render's own orientation before reading anything off it
+
+Three orientation mistakes in one session, and only the first was in a model:
+`rotate([0,90,0])` sending a profile's depth to negative z; a review render
+rotated -90 deg about X instead of +90, which put the whole part upside down;
+and an earlier mirror call on a monogram that went the wrong way.
+
+The render one is the nastiest, because a wrong render does not fail anything
+— it just quietly answers a different question, and then a real defect gets
+reported against a model that is fine. That happened here: the mark was called
+upside down off a back view that was itself upside down.
+
+**Two habits fix the whole class.** First, put a known asymmetric landmark in
+view and confirm it before judging anything else — this part has the
+receptacle openings above and the honeycomb below, so "honeycomb at the top"
+is instantly wrong. Second, for anything where left/right or up/down is the
+actual question (a maker's mark, text, a keyhole's drop direction), do not
+judge it from a shaded render at all: **sample the geometry and print it as a
+character map**, rows from high Y down and columns from low X up, which is
+exactly what a viewer on the +Z side with +Y up sees. Letterforms are
+unambiguous in a character map and nearly unreadable as a 0.6mm engraving
+under flat lighting.
+
+Useful check while doing it: "OBC" is almost invariant under a vertical flip
+(O and C are symmetric, B nearly so), so a 180 deg rotation shows up as the
+letters running C-B-O rather than as obviously upside-down glyphs. Read the
+ORDER, not the shapes.
+
+### The slicer profile had three speed keys nobody had ever set
+
+The day before, `perimeter_speed` was found running the *internal* walls at the
+50 mm/s meant for the outer one. Re-checking the same file while this shelf
+sliced at 5h 20m found three more keys that were **never set at all**, so
+PrusaSlicer's own stock defaults ran them:
+
+| key | stock default | set to |
+|---|---|---|
+| `solid_infill_speed` | 20 mm/s | 200 |
+| `top_solid_infill_speed` | 15 mm/s | 80 |
+| `small_perimeter_speed` | 15 mm/s | 50 |
+
+Solid infill alone was **37%** of the print. `small_perimeter_speed` matters
+far more than it sounds on any latticed or thin-walled part: every hex cell is
+a "small" loop, and over 39,000 perimeter moves had dropped to 15 mm/s.
+
+Result: **5h 20m → 3h 22m on filament identical to the gram**, and the label
+bin family dropped 35–40% across all four sizes. Nothing visible got faster —
+`small_perimeter_speed` is pinned to the same 50 the outer wall already uses,
+so the "outer wall 50 mm/s or lower" production rule still holds everywhere a
+customer looks.
+
+**Two things to carry forward.** First: an *unset* key in a slicer config is
+not a neutral default, it is whoever-wrote-the-slicer's default from a decade
+ago, and it will not announce itself. When a print time looks wrong, dump the
+real feedrates out of the g-code per `;TYPE:` section before touching the
+model — that is a 20-line script and it names the culprit directly, where
+staring at the geometry does not. Second: **identical filament weight before
+and after is the proof that a speed change and nothing else happened.** Quote
+it whenever a profile changes; without it, a "faster" profile could just be
+extruding less.
+
+---
+
+## Technique 59 — On a LIT object, light beats relief; and how to make a slicer name your defect for you (2026-09-10, haunted manor lantern)
+
+Three findings from adding Halloween detail to a lantern. All three generalise
+past that one model.
+
+### 1. Relief on a lit object is a losing bet — spend the detail on light
+
+Technique 52 already says relief below ~4% of the body dimension is invisible.
+A lantern is a harder case than that, and in a direction worth stating
+separately: **its whole promise is that it glows, so anything that does not
+participate in the light is competing with the thing people bought.**
+
+A 22 mm bat standing 2.2 mm proud on a 76 mm clapboard wall is 2.9% and reads
+as a scribble — same tone as the wall, one shadow's worth of cue, and a shelf
+lamp will not even give it that. The same 16 mm bat cut *clean through* a wall
+reads unlit (it is a hole) and reads lit (it is a bat-shaped glow). Same
+manufacturing class, none of the ambiguity.
+
+So on any lit product, rank detail like this:
+1. **Through-cuts.** They work in both states and cost nothing but the cut.
+2. **Real 3D objects with their own silhouette** — but they must stand on
+   something. A pumpkin on a wall is a boss; a pumpkin on a step is an object.
+   Grow the step off the build plate and there is no underside anywhere.
+3. **Relief**, last, and only above ~4%.
+
+And the trap that is easy to ship: a face cut *into* a boss that sits on a
+solid wall is a **blind pocket**. It looks carved in a render and prints dark.
+If a feature is supposed to glow, its cut has to run all the way through the
+shell wall into the cavity — measure it end to end (outside the boss → inside
+the cavity) rather than trusting that "I subtracted a face."
+
+### 2. Two triangles meeting at one point is a non-manifold 2D union
+
+A carved grin drawn as four apex-up teeth on a common baseline, at a pitch of
+exactly twice the half-base, puts each tooth's corner on its neighbour's corner
+— one shared point, no shared edge. OpenSCAD extrudes it happily and CGAL then
+says:
+
+```
+ERROR: The given mesh is not closed! Unable to convert to CGAL_Nef_Polyhedron.
+```
+
+once per instance. **The STL still exported and still gated watertight.** That
+error line is the only place it surfaces, so a build that pipes render output
+through `| tail` or greps only for `Volumes:` will never see it. Grep renders
+for `ERROR` explicitly.
+
+Fix: overlap neighbours by a real amount (0.15 mm was enough). The general rule
+— *never let two 2D shapes touch at exactly one point* — applies to any
+tiled/repeated cut: teeth, scallops, chevrons, tread patterns.
+
+### 3. Bisect the slicer's stability warning; it is a real localiser
+
+PrusaSlicer's "Detected print stability issues" names a *class* but not a
+*place*. Slicing partial models finds the place fast, and the two messages mean
+genuinely different things:
+
+- **Floating bridge anchors** — a bridge exists, but its ends land on something
+  that is itself unsupported. Cause here: a flat 8.3 mm mouth ceiling whose two
+  ends sat on the pumpkin dome's own leaning surface. Fix: remove the flat
+  ceiling entirely by cutting the opening as overlapping apex-up teeth, so the
+  top boundary is a zigzag at 64° from horizontal and no layer bridges at all.
+- **Collapsing overhang** — material with too little under it.
+
+The bisect is just repeated `difference()` truncations, one feature at a time:
+
+| model | warning |
+|---|---|
+| outer solid form only | clean |
+| solid − cavity (bare shell) | clean |
+| solid − cavity − openings | **Collapsing overhang** |
+| same, transom bars disabled | clean |
+
+Four renders, and the answer is a named feature rather than a hunch. Then
+**measure the real span before acting on it**: those transoms are 1.68 mm bars
+whose mullion splits each into two 4.66 mm bridges — a span a P1S does without
+comment. Making it strictly self-supporting needs a ceiling rising at 35° over
+the half-light, which is 1.63 mm of rise inside a 1.68 mm bar: impossible
+without a chunky 3.3 mm transom on a 20.8 mm window. **Accepting a flagged
+feature is a legitimate outcome, but only after it has a name and a number.**
+
+### 4. Fence a decorative feature against the geometry, not by eye
+
+The first bat sat at z = 63 and its wingtips merged into the lancet head at
+60.8 — it read as a fault, not a bat. The placement rule that works is to write
+down the neighbours' real extents first (lower window apex 60.8, upper sill 82)
+and centre in the gap. A decorative cut near an existing opening needs the same
+clearance arithmetic a structural one does; "looks about right" in a render at
+one camera angle is how the chimney ended up through a window in the first
+place.
+
+### Rendering PNGs in this container
+
+`render_openscad_model`'s 120 s timeout is too short for a model like this
+(~90 s CGAL per view). Direct CLI works, but a PNG needs a display *and* a
+software rasteriser, and without them OpenSCAD exits 0 having written a
+zero-byte file:
+
+```bash
+export OPENSCADPATH="$REPO/openscad_models:$REPO/assets/openscad_libs"
+export LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe
+xvfb-run -a openscad -o out.png --render \
+  --camera=0,0,82,90,0,180,470 --projection=p --colorscheme=Tomorrow in.scad
+```
+
+Without `--render` you get the F5 preview, which paints cut surfaces orange and
+is useless for judging a difference-heavy model. The 7-argument `--camera` is
+`tx,ty,tz,rx,ry,rz,dist`; `rx=90` looks horizontally and **`rz=0` shows the −Y
+face** — check which elevation you are actually looking at before concluding a
+feature is missing.
+
+---
+
+## Technique 60 — You cannot reason about a bridge span from your own geometry; and four ways a mesh gates watertight while being wrong (2026-09-10, haunted manor porch)
+
+Adding a covered front porch to the manor lantern produced five separate
+defects, none of which threw an error and four of which passed `watertight`.
+All five generalise.
+
+### 1. The slicer picks the bridging direction, not you
+
+A porch ceiling 42 mm wide and 21 mm deep, anchored on the house wall along its
+whole back edge and on two corner columns. The obvious reading is that it
+bridges front-to-back — wall to beam, about 15 mm. It does not. PrusaSlicer
+chose to bridge **across the width: 41.1 mm.**
+
+Adding two more columns took it to **16.1 mm**. A frieze board along the wall,
+which by the front-to-back reading should have been the whole fix, did almost
+nothing on its own.
+
+The rule: **measure the bridge out of the g-code, do not derive it from the
+model.** A twenty-line scan of `;TYPE:Bridge infill` moves gives the real
+number and its z, and it is the only number worth acting on:
+
+```python
+if line.startswith(";TYPE:"): typ = line[6:].strip()
+...
+if "E" in m and float(m["E"]) > 0 and typ == "Bridge infill":
+    spans.append((math.hypot(nx-x, ny-y), z, x, y, nx, ny))
+```
+
+Printing the endpoints in **model** coordinates (subtract the bed offset) is
+what turns "41 mm somewhere" into "across the porch, at the beam soffit".
+
+### 2. A long bridging *move* is usually a line ALONG a ledge
+
+The longest single bridging move in this print is 74.1 mm. It is not a 74 mm
+void — it is a line following the top clapboard groove around the body. The
+test that separates the two is down-facing **area** in that layer band:
+
+```
+z 80.0-82.2 down-facing area: 315.5 mm2   ≈ perimeter x 0.94mm groove depth
+```
+
+A real 74 mm span would be orders of magnitude larger. Run this before
+redesigning anything: most alarming bridge numbers on a textured model are this.
+
+Where a ledge *is* worth removing, flare it instead of stepping it. A cornice
+1.5 mm wider than the beam under it gave a 90° lip and a 42.6 mm line along it;
+the same 1.5 mm spread over 3 mm of rise is 26.6° from vertical and the ledge
+is gone.
+
+### 3. Coincident faces: not just solid-to-solid, but part-to-part
+
+Already known: two unioned boxes sharing a face exactly produce degenerate
+faces. What this build added is how easy it is to do **by construction**. Two
+knee braces extruded at exactly `post_s` and centred on their post put their
+side faces on the post's faces *and on each other's*, and stopped exactly on
+the beam soffit plane. That is 12 zero-area facets from three coincidences
+nobody typed deliberately.
+
+Make every landing part **strictly smaller** than what it lands on, and run it
+**past** the plane it meets: `brace_t = 3.6` against `post_s = 4.4`, and
+`beam_z0 + 0.5` rather than `beam_z0`.
+
+### 4. A tangency between a skinned surface and a prism costs one facet, and moves
+
+The 13th facet was somewhere else entirely: a ring of the skinned main roof
+landed at z = 112.95 with its rounded corner passing within microns of the
+tower's. One zero-area facet, from a corner-to-corner tangency that only
+appeared because the eave had moved.
+
+There is no clean geometric fix — the roof shrinks past the tower at *some*
+height whatever you do. **Move a parameter half a millimetre.** Changing `eave`
+from 4 to 4.5 shifts every ring z and the coincidence goes away. Record why, or
+the next person will "tidy" it back.
+
+### 5. A hanging tooth is fine; a hanging tooth with its top cut off is not
+
+Technique 59 established that cutting a grin as overlapping apex-up triangles
+leaves material teeth hanging at 26° from vertical, which prints. The trap
+underneath it: with an **even** tooth count there is a material wedge on the
+centreline — exactly where the nose is cut — and the nose lops its top off. The
+tooth becomes a free-floating body inside the mouth, plus a matching loose
+sliver in the wall the cut passes through. Watertight, rendered, and only
+`component_count` caught it.
+
+Two rules: **odd count**, so the centreline is a hole; and put the feature above
+it clear of the *tallest* tooth apex by a real margin (1.26 mm here, three
+extrusions), not just clear of the one below it.
+
+### 6. Correct scale can defeat the thing you scaled it for
+
+A porch railing scaled correctly to this house stands ~11 mm above the deck.
+The jack-o'-lanterns are 11 mm tall. The railing hid both of them completely
+from straight on — the only view a listing thumbnail gets.
+
+When a decorative element is deliberately oversized (these lanterns are about
+1.2 m at the house's own scale), everything around it has to be checked against
+the **oversized** thing, not against realism. The fix was to delete the railing,
+which is a real and common detail on a low porch. Deleting the correct element
+to keep the deliberately-wrong one visible is the right call when the wrong one
+is the product.
+
+### 7. Cut relief on a boss is blind unless it reaches the cavity
+
+Restating from the same build because it is the cheapest thing to get wrong: a
+face cut into a boss standing on a solid wall is a pocket. It renders as
+carving and prints dark. Extrude the cut **one-directionally** from outside the
+boss to inside the cavity and check both ends numerically — and one-directional
+matters: centring the same cut drove it straight through a porch column
+standing behind the lantern.
+
+---
+
+## Technique 61 — Cutting a fine crease into a body of revolution, and five silent failures on the way (2026-09-10, jack-o'-lantern ribs)
+
+Scott, on a pumpkin built as eight lobes swelling 2.2 mm out of a smaller core:
+*"the outer ridges need to be very small. Almost thin lines or small inward
+ridges made in modeling."* He was right — additive lobes at that depth read as
+a gourd carved out of balloons. What a fine rib actually wants is a **cut**,
+0.3–0.4 mm deep and about one extrusion wide.
+
+### The method: intersect a profile SHELL with slabs through the axis
+
+The obvious approach — subtract vertical cylinders at some radius — does not
+work. A straight cylinder bites deep at the equator and misses the shoulders
+entirely, because the surface it is cutting is not a cylinder.
+
+What works for any body of revolution:
+
+```openscad
+difference() {
+    rotate_extrude() polygon(prof());
+    intersection() {
+        difference() {                       // a shell of the body's OWN profile
+            rotate_extrude() intersection() {
+                offset(r = 0.4) polygon(prof());          // oversized, see (4)
+                translate([0,-1]) square([R + 2, top + 3]);
+            }
+            rotate_extrude() union() {
+                offset(r = -rib_d) polygon(prof());
+                square([rib_d + 0.3, top]);               // plug the axis, see (2)
+            }
+        }
+        for (i = [0 : n/2 - 1]) rotate([0, 0, phase + i*360/n]) rib_slab();
+    }
+}
+```
+
+The shell makes the cut follow the surface at **constant depth**; the slabs
+select which meridians get one. Each slab through the axis gives two opposite
+creases, so `n/2` slabs give `n` ribs. Slab width is an absolute number, so the
+creases stay thin lines instead of widening at the equator — which is the whole
+point.
+
+Taper each slab to a hairline at both ends (a `hull()` of a narrow box and a
+full-width one). A crease that starts with a step looks wrong and, as below,
+also grazes.
+
+### Five failures, none of which raised an error
+
+1. **A profile apex clamped to `r = 0.001` instead of landing on the axis.**
+   Done to avoid a zero radius. It leaves a full-height near-axis edge for
+   `rotate_extrude` to sweep, and it cannot close the result: *"The given mesh
+   is not closed"*, with **0.02 cm³ of a 1.35 cm³ part surviving**. A profile
+   touching x = 0 is the normal case — it is how a semicircle becomes a sphere.
+   Never clamp the pole.
+2. **`offset(r = -d)` shrinks a closed profile away from the AXIS too**, not
+   just from the surface. The inner solid comes out with a `d`-radius bore down
+   its middle, and since every slab passes through the axis, the rib cut
+   hollows that bore into a **sealed void running the height of the part** —
+   `Volumes: 3` and a negative-volume body. Union a square along the axis into
+   the offset shape.
+3. **Anything that must survive the cut has to be unioned after it.** Near the
+   apex of a body of revolution the entire cross-section is shell, so slabs
+   crossing at the axis cut a star clean through the top. A stem unioned before
+   the cut is severed and becomes its own body.
+4. **Building the cutter at the profile exactly makes its outer surface the
+   body's own surface** — coincident faces between a solid and its subtrahend,
+   the same trap as a brace landing flush on a post. It shows up as zero-area
+   facets and micro-volume inverted bodies at the crease ends. Oversize the
+   cutter (0.4 mm here); only the part that reaches inside cuts anything.
+5. **The last one was floating-point luck.** With no rib phase, the taper ends
+   at 210° and 240° produced two zero-area facets **on one instance only** —
+   identical geometry was clean at the mirrored position and clean again in
+   isolation at the origin. 15° of phase clears it. Instance-dependent defects
+   are the tell: if the same module is clean at one translation and dirty at
+   another, stop looking for a modelling error and move a number.
+
+**Test the part in isolation.** Every one of these was found in seconds by
+rendering `pumpkin_body();` alone (5–30 s) instead of the whole model (2.5 min).
+Swapping the file's last line for the single module under test is the cheapest
+debugging loop available here.
+
+### Choosing the profile: a superellipse, not an ellipsoid
+
+`r(z) = R · (1 − |(z−zc)/cz|^p)^(1/p)`. At **p = 2** (a plain ellipsoid) two
+things go wrong at once for a squat form: it is too narrow near the top — a
+carved face's eyes broke through the silhouette — and the base flare, where a
+flat base plane cuts it, reaches **62.7° from vertical**, past the 55° limit.
+
+**p = 2.5** gives a full-shouldered, flat-topped gourd whose steepest base
+flare is 49.3°, on a footprint two-thirds of the equator diameter. The general
+lever: raising `p` fattens the shoulders *and* stands the base flare up, so it
+fixes silhouette and printability together.
+
+## Technique 62 — Text on a face is mirrored half the time, and you cannot tell from the render that would show you (2026-09-11, tombstone)
+
+A personalized gravestone: an inscription cut into the front of the stone, a
+maker's mark cut into the back, and a separate plaque whose letters stand
+proud. Three strings on two opposite faces. **Two of the three were mirrored,
+and the file carried a confident comment explaining why they were not.**
+
+### 1. The comment was reasoning, and the reasoning was wrong
+
+The file said, of `rotate([90,0,0])` on a +Y face: *"maps local +Z to world -Y,
+so the extrude runs INTO the front face, and local +Y to world +Z so the text
+stands upright ... no mirror on a front face."* Every clause of that is true.
+The conclusion does not follow, because it never asks which side of the text
+plane the reader is standing on.
+
+Text drawn in the XY plane and extruded to +Z is readable **from the side the
+extrusion travels toward**. `rotate([90,0,0])` sends local +Z to world **−Y**,
+so the string's readable side faces the BACK of the stone. Cutting with it
+leaves an incised inscription that is mirrored to anyone standing in front.
+
+The corrected pairing, for a part whose faces are at ±Y:
+
+| face | rotation | extrude runs | translate must |
+|---|---|---|---|
+| **front (+Y)** | `rotate([90,0,180])` | toward **+Y** | start *inside* at `face_y − depth` and run outward |
+| **back (−Y)** | `rotate([90,0,0])` | toward **−Y** | start inside at `−face_y + depth` and run outward |
+
+They are the opposite of what "the extrude must run into the face" suggests,
+and note the consequence in column four: the correct rotation makes the cutter
+run **out** through the face, so the translate subtracts the depth instead of
+adding clearance in front of it. Getting the rotation right and leaving the old
+translate gives you a cutter floating in the air outside the part.
+
+### 2. The check that settles it takes one render, and it is not a render of the part
+
+Rendering the finished stone head-on and looking for mirrored letters **does not
+work** — confirmed here, not assumed. A 1.2mm engraving viewed straight down its
+own axis under OpenSCAD's flat lighting produced an image with **three colours
+in it**: background, front face, and the stone's silhouette. The recess walls
+are the only thing that shades, and head-on they are edge-on. The defect is
+invisible in precisely the view that should show it.
+
+**Render the CUTTER on its own, as a positive solid, from where the reader
+stands.** A glyph solid is a silhouette; a mirror is unmissable. Use a
+deliberately asymmetric string — `R7` is ideal, `OBC` works, and anything
+palindromic or symmetric (`OXO`, `WOW`, `1881`) proves nothing.
+
+```bash
+# the module, extracted from the real file so the real transform is tested
+head -n -3 model.scad > /tmp/probe.scad
+echo 'inscription();' >> /tmp/probe.scad          # or back_mark(), plate_letters()
+xvfb-run -a openscad -o probe.png --camera=0,220,44,0,0,44 \
+         --projection=o /tmp/probe.scad           # eye on the +Y side, looking at it
+```
+
+`head -n -3` to strip the file's own top-level dispatch and append a single
+module call is the cheap way to probe any internal module without adding a
+debug flag to the real source.
+
+### 3. Fixing the handedness silently fixed a boolean artifact I had spent an hour bisecting
+
+The plaque had been emitting 2 zero-area facets for *some* names and not
+others. Exhaustive bisection had proved every piece clean alone, every pair
+clean, and only the three-way chain degenerate — the conclusion was "CGAL
+triangulating a chained boolean, nothing to do." Changing the letter
+extrusion's **start and direction** for the handedness fix cleared it, on every
+name, with no other change.
+
+The lesson is not that bisection was wrong; it correctly showed no single piece
+was at fault. It is that *"this artifact is inherent"* is a conclusion worth
+holding loosely while any other geometry in the same region is still moving.
+
+### 4. Locate degenerate faces by coordinate before bisecting modules
+
+The stone then produced 10 zero-area facets on one text set. A module-level
+bisection would have been six 90-second renders. Reading the coordinates took
+one second and named the cause outright:
+
+```python
+m = trimesh.load(path); a = m.area_faces
+for i in np.where(a <= 1e-12)[0]:
+    v = m.vertices[m.faces[i]]
+    print(a[i], v.mean(axis=0), v.max(axis=0) - v.min(axis=0))
+```
+
+All ten sat at `y = 6.00` exactly (the front face plane) and **one single z**,
+with extent purely in x, spanning exactly the width of the bottom text row.
+Every letter in a row shares a baseline, which puts 42 collinear vertices in a
+straight line through one large planar face, and CGAL's constrained
+triangulation resolves that run with slivers.
+
+**Do the coordinate dump first, every time.** A degenerate face's centroid and
+extent tell you which plane, which feature, and which axis — which is usually
+the whole answer.
+
+That one was then deliberately *not* fixed, and the reason matters for any
+personalized product: the string is whatever the customer types, so a number
+nudged until CGAL is happy with `REST WELL` says nothing about the next name.
+It was verified inert instead — watertight, one body, Euler 2, volume right to
+0.1%, and sliced by PrusaSlicer with zero warnings and zero repairs — and
+written down in the printing notes. A luck-dependent fix on a parametric
+product is worse than a documented artifact, because it looks solved.
+
+### 5. A detail that "fades out" by shrinking must not fade into tangency
+
+The stone's crack was a hull-chain of shrinking spheres whose centres sat
+0.7mm **proud** of the face, so the cut depth was `r − 0.7`. Across the chain
+that ran 0.45 → 0.32 → 0.19 → **0.06** → **−0.07** mm. The last link does not
+cut at all and the one before it grazes the surface by 60 microns.
+
+Both ends of that are defects. 0.45mm is two layers — at arm's length it is not
+a shallow crack, it is nothing. And a 0.06mm graze is not a shallow cut, it is a
+**surface tangency**, the exact generator of zero-area facets this same file had
+already been bitten by twice elsewhere. Fade a detail by a factor of two, not to
+zero: every link now cuts 1.1 → 0.55mm, and the shallowest is still well clear
+of the surface it is cutting.
+
+The same pass caught the crack running down *through* the inscription panel, on
+a file that already fenced its pits away from that exact region. When you add a
+second decorative cutter, apply the first one's fence to it.
+
+### 6. A guard clause that can never fire is worse than no guard clause
+
+The pit scatter read `if (abs(px) > pl_w/2 + 4 || abs(pz - pl_z) > pl_h/2 + 4)`
+— "keep a pit off the panel unless it clears sideways." The first half can
+never be true: the panel is 58 wide inside a 72 stone, so the side margin is
+7mm total, and the pit centres were already held 7mm off the edge. It reads
+live, it is dead, and it makes the real constraint (vertical only) look like
+one of two options. Delete the branch and say in one line why there is no
+sideways case, so the next person does not re-add it.
+
+## Technique 63 — Why modelled weathering reads as cheese, and the sealed void that comes with fixing it (2026-09-11, tombstone)
+
+A gravestone's weathering *is* the product, so it was modelled rather than
+implied: 10 edge chips, 28 face pits, a hull-chained crack. It gated clean,
+sliced clean, and Scott's first look at it was **"it looks like a cheese style
+cut out."** He was right, and the reason generalises to any surface this shop
+distresses — a fairy-house wall, a rock-textured planter, a faux-stone base.
+
+### 0. Go and look up how the material actually breaks — it is a two-minute search and it settles the geometry
+
+Two rebuilds happened here. The first made the scars irregular and still hulled
+**spheres**, so every rim stayed a smooth curve and the second round of feedback
+was *"still too rounded."* What ended the guessing was reading two sources:
+
+[Rock & Gem](https://www.rockngem.com/conchoidal-fracture-lucky-break/) on
+conchoidal fracture — *"Unlike the **jagged breaks of common granite**, a
+conchoidal break produces a surface that catches light in a series of
+shimmering, curved arcs."* Granite does not break in smooth curves at all;
+curved scars were modelling obsidian.
+
+The [ICOMOS-ISCS Illustrated Glossary on Stone Deterioration
+Patterns](https://iscs.icomos.org/wp-content/uploads/2022/06/Monuments_and_Sites_15_ISCS_Glossary_Stone.pdf)
+— the standard conservation reference — gives the geometry outright:
+fragmentation leaves the substrate sound *"on both sides of the **detachment
+plane**"*; splintering is *"detachment of **sharp, slender** pieces"* (Fr.
+*"aux arêtes vives"*); chipping is *"breaking off of pieces… **from the edges**
+of a block"*; scaling detaches *"**parallel to the stone surface**"* with
+thickness *"negligeable compared to its surface dimension"*; and **rounding**
+is *"preferential erosion of **originally angular** stone"* — a separate,
+later pattern, not the default.
+
+That is a complete spec: **flat floor, straight-edged rim, angular by default.**
+The PDF does not extract cleanly through a fetch tool — pull it down and run
+`pdftotext -layout`, then grep the pattern names.
+
+### 1. One sphere can only ever cut one shape
+
+A sphere pushed into a flat face cuts a **circular rim** around an **evenly
+curved bowl**. That is the only scar it can make, at any radius. Thirty-eight
+of them, each seated to bite the same fraction of its own radius, is a wheel of
+cheese: the regularity is the tell, not the size. Scattering them harder,
+adding more, or varying the radius does not help, because none of those change
+the one shape.
+
+**The primitive has to be irregular AND planar, and the placement barely
+matters.** Hulling spheres of different radii gets you irregular but still
+curved. What matches the sources above is the convex hull of a point cloud held
+near **two parallel planes** — hulling tiny cubes is how you take the convex
+hull of a point set in OpenSCAD:
+
+```openscad
+sp_n = 7;
+module spall(sd, R, e = 1, f = 1) {        // e stretches in plane, f flattens
+    ax = rands(-R, R, sp_n, sd);           // into the face: f << 1 is a scale
+    az = rands(-R, R, sp_n, sd + 101);
+    bx = rands(-R, R, sp_n, sd + 211);
+    bz = rands(-R, R, sp_n, sd + 307);
+    jy = rands(-0.12*R, 0.12*R, 2*sp_n, sd + 401);
+    scale([e, f, 1])
+        hull() {
+            for (i = [0:sp_n-1]) translate([ax[i], -R + jy[i],        az[i]]) cube(0.05, center=true);
+            for (i = [0:sp_n-1]) translate([bx[i],  R + jy[sp_n+i],   bz[i]]) cube(0.05, center=true);
+        }
+}
+```
+
+Planar floor, planar side facets meeting it at hard angles, no curved surface
+anywhere. 0.05mm of cube is slop too small to round an edge. Two more things
+worth knowing:
+
+- **It is FASTER than hulling spheres** — 8 vertices per point instead of ~100
+  at `$fa=2/$fs=0.4`. A full carved render went 6m11s → 2m48s with about the
+  same scar count.
+- The two-plane cloud is what forces the flat floor. A single uniform cloud
+  hulls to a chunky blob whose bottom is just another random facet.
+
+### 2. Randomise four things separately, not one "size"
+
+| | |
+|---|---|
+| `R` | how big the scar is |
+| `d` | how deep it bites — **independent of** `R` |
+| `e` | in-plane stretch, so nothing is round in plan |
+| `f` | flattening into the face: a chunk taken out vs. worn-away surface |
+
+Tying depth to radius is what made the first version look stamped — every scar
+became the same event at five sizes. A broad shallow flake and a small deep
+gouge are different events on a real object, and you need both.
+
+### 3. Clusters, not a Poisson scatter
+
+A third of the scars carry one or two smaller satellites overlapping them. Real
+spalling is not isolated dots — one flake takes its neighbours with it, and the
+compound scar that leaves, with a floor at two or three levels, was the single
+biggest visual jump of the whole rebuild.
+
+### 4. The scars are the events; the grain is the surface they happened to
+
+This was the piece that actually removed the plastic read. Between the discrete
+scars the face was still glass-smooth, and **under real light that one fact
+reads as plastic no matter how good the chips are.** A second layer of ~50
+hard-flattened (`f ≈ 0.4`) broad scallops, 0.4–0.9mm deep, fixed it.
+
+Two numbers matter: **0.4mm is the floor** (two layers at 0.2mm — anything
+shallower is under a layer, so the slicer does not cut it and it costs render
+and print time to produce nothing), and on this part the whole rebuild cost
+**~6 minutes of print time and 0.2g**. Modelled surface is real geometry, not a
+texture map, so it is not free — it is just cheap.
+
+Note the review that caught it: the flat OpenSCAD preview showed the chips
+fine. It took a lit Blender render to show that the space *between* them was
+wrong. Surface quality is the one thing the unlit preview cannot judge.
+
+### 5. Placement: zones beat a scatter-plus-fence
+
+A uniform scatter over a face with a keep-out region (an inscription panel,
+here 42 tall in the middle of a 106 stone) loses half its candidates to the
+fence, and the survivors cluster wherever the fence is loosest — the first
+attempt put nearly everything in the crown and left the bottom two thirds bare,
+which reads as "the top weathered and the rest is new". Three explicit zones,
+each sized to the room it actually has, fixed it in one pass. The zone that
+mattered most was the 7mm-wide *flanks* beside the panel: they are the only
+scars level with the inscription, and without them the middle of the object is
+a blank rectangle with a plaque on it.
+
+Zones also removed a guess: with a fence you must inflate it by how far a
+cluster's satellites reach, which nobody knows exactly.
+
+### 6. THE TRAP: a cutter whose centre sinks below the face gets swallowed whole
+
+Seating a scar at `face + R·f − d` bites `d` deep — but when `d` exceeds the
+cutter's own half-depth the **centre** goes under the surface, and a small
+enough cutter then sits entirely inside the solid. That is not a shallow scar,
+it is a sealed void.
+
+It gates **watertight**. It gates **one body**. `component_count` does not see
+it, because a cavity's inner shell is connected to nothing — the only thing
+that reports it is OpenSCAD's own CGAL summary line saying `Volumes: 4` instead
+of the expected 2.
+
+It bit twice in one session, both times on *small* cutters where the arithmetic
+is tightest: the hard-flattened grain layer (`f ≈ 0.3` makes `R·f` small) and
+cluster satellites (radius a fraction of the parent's, depth drawn from a fixed
+range). The fix is one clamp, applied in the scar module so nothing can bypass
+it:
+
+```openscad
+function bite(R, f, d) = min(d, 0.8 * R * f);
+```
+
+That keeps the centre outside the face **by construction**, at every size,
+rather than by a parameter range that happens to work today. A scar that wanted
+to be deeper than its cutter is wide was never going to look like what it was
+asking for anyway.
+
+**`Volumes: N` on the render output is a real gate and it is free.** Grep for it
+on every render; watertight-plus-one-body does not cover the same ground.
+
+### 6b. A second sealed-void cousin: a satellite that only GRAZES its parent
+
+Faceted cutters fill their bounding box where spheres did not, which makes
+near-miss contacts much more likely. Cluster satellites placed within ±1.15·R
+with radii from 0.38·R could meet their parent along a sliver, and where that
+happened at the model's own silhouette it left a rind of stone **0.30 × 0.12 ×
+0.41mm standing free** — 0.0015 mm³, smaller than one extrusion bead in every
+dimension, and a separate body as far as `component_count` is concerned.
+
+Two things about how it was found are the transferable part:
+
+- **Locate the stray body before touching anything.** `mesh.split()`, sorted by
+  volume, prints the offender's volume and bounding box in one second. Here it
+  named the exact spot (`x≈27.4`, right on the outline) which is what made the
+  next step obvious.
+- **Re-seeding twice and getting a byte-identical stray is proof a seed is not
+  the cause.** That is the cheap experiment that stops seed roulette. One render
+  per cutter group then isolated it outright: edge chips, grain and flanks were
+  each clean alone; the clusters were not.
+
+The fix is structural, not a seed: satellites now sit within ±0.85·R with radii
+from 0.45·R, so the overlap is **at least 0.6·R by construction**. Tighter
+clusters read better anyway — a cluster should look like one event that took its
+neighbours with it, not three dots that happen to touch.
+
+### 7. Distress everything, or the join shows
+
+Two sub-surfaces got left crisp and both read as a different material glued on:
+the **back** of the stone (fixed in an earlier pass) and the **socle**. A moulded
+base under a chewed-up top reads as two objects, and the base is the part that
+would actually sit in dirt. Same for the separately-printed plaque, whose own
+pitting was still spheres after the stone's had been rebuilt — a surface the
+customer sees next to the upgraded one is the most obvious place for the old
+treatment to survive.
+
+One exception worth keeping: **nothing is cut in the bed-contact region**
+(here, below z = 4.5). That is first-layer adhesion and the ground line; a scar
+there costs something real and gains no appearance.
+
+## Technique 64 — Four process failures from one session, including deleting five modules and not noticing across two renders (2026-09-11, tombstone)
+
+Techniques 62 and 63 record what went wrong with the *geometry*. These four
+went wrong with the *work*, and they cost more time than any of the geometry
+bugs did. None of them are exotic; all four are things to check for by habit.
+
+### 1. Never replace a span of source between two searched markers
+
+Restructuring a section, the edit was a Python splice:
+
+```python
+start = s.index("// ====...\n// WEATHERING.")
+end   = s.index("// ====...\nmodule stone()")     # 80 lines further than intended
+open(p,"w").write(s[:start] + new + s[end:])
+```
+
+The end marker was the next `// ====` divider *after* the one intended, so the
+splice silently deleted five modules that lived in between —
+`inscription_2d`, `inscription_cut`, `inscription`, `plate_pocket` and
+`back_mark`. Everything the model says to the customer, gone in one assignment.
+
+An `.index()` pair is not an edit, it is a guess about file structure that
+happens to be executable. Either:
+
+- **splice by line number**, after printing the span you are about to remove
+  (`grep -n '^module \|^// ===='` first, then `sed -n 'A,Bp'` to *look at* it), or
+- assert the span's size: `assert 100 < end - start < 200`, or
+- use Edit with an exact `old_string` and let it fail.
+
+The `git checkout HEAD -- <file>` that recovered it only worked because the
+file had been committed twenty minutes earlier. Commit before restructuring.
+
+### 2. A deleted module is a WARNING, and a bare `openscad` call will hand you the wrong mesh at exit 0
+
+This is the mechanism that let #1 survive. Confirmed directly:
+
+```
+$ openscad -o out.stl script_calling_a_missing_module.scad
+WARNING: Ignoring unknown module 'does_not_exist' ...     # stderr
+$ echo $?
+0
+$ stat -c%s out.stl
+1503                                                       # a real, valid, WRONG mesh
+```
+
+An undefined module inside a `difference()` is a cutter that silently does
+nothing. The mesh is watertight, one body, zero degenerate faces, and slices
+perfectly — `mesh_gate` cannot see the problem, because nothing is wrong with
+the geometry that *is* there.
+
+**The galling part: this repo already solved this.** `tools/openscad_render.py`
+greps for `Ignoring unknown module` / `Can't open include file`, raises, and
+**deletes the mesh it just wrote** — and its docstring cites the 2026-09-10
+wall shelf that rendered and sliced with a third of its volume missing. The
+failure here was routing around it: a two-line scratchpad `osc.sh` wrapper
+(`exec openscad -o "$2" "${@:3}" "$1"`) was faster to type, and it has no guard.
+
+`python3 tools/openscad_render.py model.scad -o out.stl -D 'part="plate"'`
+handles `-D` overrides and the BOSL2 path fine — verified on the real model.
+**Use it. A hand-rolled wrapper re-opens every hole the real one was built to
+close.** If you must shell out directly, the bare minimum is
+`2>&1 | grep -E "WARNING|ERROR|Volumes"` — never `| tail -1`, which is exactly
+what threw the warnings away here.
+
+### 3. "I rendered it and looked at it" only verifies what you were looking for
+
+Two PNGs were rendered and examined after #1 happened. Both were studied
+closely — for weathering, which was the task. Neither look registered that the
+inscription panel, the plaque and the maker's mark had all vanished from the
+model, because that was not the question being asked of the image.
+
+A render answers the question you bring to it. When a change is scoped to one
+feature, **look once at the whole object with no question in mind**, or compare
+against the previous render rather than inspecting the new one alone. The
+give-away here was in the frame the entire time.
+
+### 4. A committed mesh can drift from the source that made it
+
+`haunted_manor.stl` in the tree was three geometry commits stale: the `.scad`
+had been edited and committed three more times, and the `.stl` beside it was
+still the version from before those changes. Found by accident while looking at
+directory listings, not by any check.
+
+Committed artifacts are not self-validating. Whenever a `.scad` is committed,
+**re-export its meshes in the same commit** — and when picking up a model after
+a break, compare `git log -1 -- model.scad` against `git log -1 -- model.stl`
+before trusting the mesh on disk. It takes one command:
+
+```bash
+for f in openscad_models/*.scad; do
+  m="${f%.scad}.stl"; [ -f "$m" ] || continue
+  a=$(git log -1 --format=%ct -- "$f"); b=$(git log -1 --format=%ct -- "$m")
+  [ "$a" -gt "$b" ] && echo "STALE: $m is older than $f"
+done
+```
+
+**It flags more than it should, and the triage is the point.** Run across the
+whole tree it named three models besides the manor, and two were fine:
+
+- `wall_charge_shelf` — source refactored to pull shared helpers into an
+  included library, mesh never re-exported. Re-rendered and compared:
+  **identical to four decimal places** (60.398 cm³, same bounds, one body), so
+  the refactor was geometry-neutral. "Almost certainly unchanged" was not a
+  state to ship in — a refactor that moves code behind an `include` is
+  *precisely* the change that can silently drop geometry (see #2) — but the
+  check is one render, not a re-export of everything it flags.
+- `mochi_fox_organizer` — mesh is the finished v2, source moved on to a v3 that
+  was paused mid-design. Deliberate, and **already documented in the .scad's own
+  header**: *"The committed mochi_fox_organizer.stl in this same directory is
+  the LAST FULLY VERIFIED STATE (v2…)"*. That is the right way to leave an
+  intentional mismatch — a note at the top of the source, where whoever reaches
+  for the mesh will be reading anyway.
+
+So the rule is not "re-export everything the timestamp check flags". It is:
+the check costs one command, every hit gets two minutes of triage, and a hit
+that is *meant* to be there earns a header note so it stops costing two minutes
+every time.
+
+## Technique 65 — The BOSL2 subsystems this shop had been hand-rolling for a year (2026-09-11, after a library audit)
+
+Scott asked whether I had researched these tools to an industry standard. The
+audit said no: **35 of BOSL2's 1,057 definitions in use, 3.3%**, several of
+those base OpenSCAD. Reading the library turned up three subsystems that each
+map onto a bug class already logged in this file, and one of them contradicts
+advice I had given as fact. Every claim below was run, gated and rendered.
+
+### 1. `join_prism()` — concave fillets where a limb meets a body
+
+`hull()` is a **convex** hull, so every limb on every model here swells OUTWARD
+where it meets its parent. I told Scott that only Blender could produce the
+inward fillet a sculpted creature has. That is wrong:
+
+> `join_prism()` — *"Join an arbitrary prism to a plane, **sphere**, cylinder or
+> another arbitrary prism **with a fillet**… continuous curvature rounding."*
+
+**THE IDIOM IS NOT OBVIOUS AND `attach()` IS THE WRONG TOOL FOR IT.** The base
+object is centred on the ORIGIN and the prism axis is **+Z by default**, rooted
+where that axis meets the base. So you aim a limb by rotating the whole call:
+
+```openscad
+module limb(dir, prof_d, len, fil, base_r, sc=1)
+    rot(from=UP, to=dir)
+        join_prism(circle(d=prof_d), base="sphere", base_r=base_r,
+                   length=len, fillet=fil, scale=sc, n=8);
+
+sphere(r=R);
+limb([0.6,0.5,-0.6], 13, 26, 5, R);     // a leg, filleted into the body
+```
+
+Wrapping it in `attach()` instead applies the placement **twice** — the first
+fox attempt came out 123mm wide (should be 110) with **four loose bodies**,
+because each prism was positioned against its base and then moved again.
+
+`prism_connector()` is the friendlier interface when connecting two *described*
+objects; `join_prism` is right when one end just needs a length and a direction.
+
+**Cost:** fillet solving is slow. Nine of them plus a tagged diff took well past
+`openscad_render.py`'s 120s default, which is why that wrapper now has
+`--timeout`. Budget minutes, not seconds.
+
+### 2. `attach()` takes an ARBITRARY DIRECTION VECTOR
+
+> *"You can generally use an arbitrary vector to get an anchor positioned
+> anywhere on the curved [surface]."*
+
+`attach([0.46, 0.80, 0.30], BOT)` lands a child on the parent's real surface at
+that direction, **oriented to the surface normal**. Nothing is estimated.
+
+Read that against what `mochi_fox_organizer.scad` records: **three failed
+attempts to place one eye recess**, because a hull-chain's surface cannot be
+predicted from its control points — `y_face=33` tore out through the side,
+`y_face=24` carved a hidden internal bubble that never reached open air, and the
+fix was exporting the mesh and querying its real surface by hand. Every
+"I estimated where the surface was" failure in this file — that eye, the manor
+windows sliced by the tower, the tombstone recess — is an attachment problem
+solved by a library that was already vendored.
+
+### 3. `diff()` + `tag("remove")` — cutting a child out of its parent
+
+The library introduces this itself as addressing
+
+> *"differences between a parent and child object, something that is
+> **impossible with the native `difference()` module**."*
+
+Which is exactly the shape of the problem above: you want the eye positioned
+**relative to the head** and subtracted **from** it, and plain `difference()`
+cannot express both at once.
+
+```openscad
+diff("cut")
+sphere(r=head_r) {
+    tag("cut") attach([0.46,0.80,0.30], BOT, overlap=1.8) cyl(d=11, h=3, rounding=1.4);
+}
+```
+
+**A trap worth the warning:** a `difference()` with only ONE child silently
+subtracts nothing. My first attempt wrapped the whole model in `difference() {
+union() { ... } }` with the cutters attached *inside* the union — so they were
+added rather than removed. **It gated watertight, one body, zero degenerate
+faces, and PASSED.** Only the render showed the eyes were bumps. A clean gate
+is not a correct model; that is the third time this file has had to say so.
+
+### 4. Still unused, and each maps to something already hand-rolled here
+
+| file | defs | what it replaces |
+|---|---|---|
+| `skin.scad`'s `texture()` | — | named procedural textures (dots, dimples, cones, bricks, diamonds) with a `roughness=` param, for sweeps/revolutions/VNF arrays — the tombstone's weathering is ~100 hand-placed boolean cutters |
+| `vnf.scad` + `beziers.scad` | 97 | arbitrary polyhedra and bezier **surfaces**, against this repo's own claim that double curvature is out of reach of CSG |
+| `masks.scad` | 48 | roundover/cove/teardrop/ogee edge profiling, hand-rolled every time |
+| `geometry.scad` | 95 | line/plane/circle intersections computed by hand in half these models |
+| `distributors.scad` | 43 | every hand-written `for` loop over a grid or path |
+| `partitions.scad` | 22 | splitting anything over the 256mm bed |
+
+**The rule:** before concluding a tool cannot do something, read its library
+index. "CSG cannot express X" was asserted three times in this project's docs
+and was wrong at least once. Reading a file list takes two minutes; acting on a
+false limit costs a session.
+
+
+---
+
+## Technique 66 — `mesh_gate` has two blind spots, and both were already open on shipped models (2026-09-11, Blender capability audit)
+
+Scott asked whether I was using everything Blender can do for print design.
+Answering that honestly meant auditing rather than asserting, and the audit
+found something more useful than the answer to the question.
+
+**Blender ships an official 3D-print checker and this repo had never enabled
+it.** `object_print3d_utils` — the "3D-Print Toolbox" add-on, bundled with
+every Blender install, present in this container the whole time — exposes
+`print3d_check_all()`: non-manifold edges, bad contiguous edges,
+**self-intersection**, **wall thickness**, zero-area faces/edges, sharp edges,
+overhang. `tools/mesh_gate.py` (trimesh) covers build volume, watertightness,
+winding, volume sign, body count, degenerate faces. **Two checks are in the
+first list and not the second, and they are the two that matter most:**
+
+| check | mesh_gate | print3d |
+|---|---|---|
+| watertight / winding / volume / bodies | ✅ | partial |
+| build volume | ✅ | ✅ (not its job) |
+| **self-intersection** | ❌ | ✅ |
+| **wall thickness** | ❌ | ✅ |
+
+**Self-intersection is invisible to every test `mesh_gate` makes.** A surface
+that passes through itself is still closed, still consistently wound, still
+has positive volume, still counts as one body. It gates PASSED. The slicer is
+then left to guess which side is inside.
+
+Run across four shipped models:
+
+| model | Intersect Face | Thin Faces (<1.2mm) | Zero Faces |
+|---|---|---|---|
+| `sleeping_fox` | 0 | 0 | 24 |
+| `tombstone_plaque` | 0 | 5,264 | 105 |
+| **`tombstone_stone`** | **11** | 3,572 | 77 |
+| **`mochi_fox_organizer`** | **38** | 9,032 | 2,148 |
+
+All four PASS `mesh_gate`. All four sliced without complaint in PrusaSlicer.
+**So this is not "those parts are broken" — it is "nothing was looking."**
+That distinction is the whole finding; do not let a future session inflate it
+into a defect claim it cannot support.
+
+**Where they actually are, because "11 faces" alone means nothing.** Located
+by reading `report.info()`'s payload indices back to `polygon.center`:
+
+- All 11 tombstone faces are 0.0035–0.33 mm² triangles sitting at `y≈±6.0` —
+  *exactly* the front/back face planes (`st_t=12`) — or at the flank/back
+  corner, plus two at the crown. Every one is a weathering cutter grazing the
+  face plane at a tangent, nicking it instead of cutting cleanly through.
+- The fox's 38 total **6.08 mm² across a 241 cm³ model**, max single face
+  0.87 mm².
+
+Every one is smaller than the footprint of a single 0.42mm extrusion bead, at
+a 0.2mm layer height. That is why the slicer never noticed, and why the prints
+came out fine. It is *also* why they must not be dismissed: a grazing tangent
+is the same failure mode that produced the free-floating 0.0015 mm³ rind in
+Technique 63 — sometimes it nicks, sometimes it detaches, and which one you
+get is a seed away.
+
+**The tool:** `tools/print_check.py`.
+
+```
+python3 tools/print_check.py model.stl [--thickness 1.2] [--overhang 45] [--strict]
+```
+
+Exits non-zero on **Non Manifold Edges, Bad Contiguous Edges, Intersect Face**.
+Everything else — thin/zero/sharp/overhang — is *reported and never failed on*,
+the same treatment `mesh_gate` already gives overhang and for the identical
+reason: carved lettering, fine relief and sharp detail all legitimately measure
+"thin" (the tombstone's 3,572 thin faces are its inscription), so the number
+needs a person, not an exit code. `--strict` opts into failing on thin walls
+for a part where you know there is no fine detail.
+
+**Three Blender-API traps this hit, all already-known ones biting again:**
+1. A freshly imported mesh is **multi-user data** — operators refuse on it.
+   `o.data = o.data.copy()` first. (Same trap as `modifier_apply` in the fox
+   work.)
+2. The importer does not leave the object active *and* selected. Deselect all,
+   `select_set(True)`, set `view_layer.objects.active` — all three.
+3. `report.info()` returns `(text, (kind, indices))`. The counts are parsed out
+   of the *text* (`"Intersect Face: 11"`); the indices in the payload are what
+   let you locate them. Only reading the text throws away the useful half.
+
+**STL output is BINARY, not OpenSCAD's default ASCII.** `openscad_render.py`
+passes `--export-format binstl` for every `fmt="stl"`. Identical geometry to
+float32 and ~73% smaller — measured across all 62 real models in
+`openscad_models/`: 296MB of ASCII became 81MB of binary, with every one
+verified to keep its exact triangle count, body count, watertightness, and
+volume to within 1e-6 relative. `drapery_vase` alone went 48.1MB → 12.5MB at
+261,248 triangles either way. Every slicer reads binary STL; ASCII only ever
+cost disk and git history. Do not "fix" this back to ASCII for readability — a
+mesh is not read by eye.
+
+**Wall thickness: measure it with `mesh_gate.py --thickness`, and do NOT trust
+`print_check`'s thin-face number.** Blender's 3D-Print Toolbox casts from each
+face along the inverted normal to the first hit, so on anything engraved it
+measures the GROOVE and reports that as the wall. Proven 2026-09-13: it claims
+11,216 mm2 of sub-nozzle surface on `sundial.stl`, a plate that is 6mm thick;
+ray casting straight through gives min 1.35mm, median 6.00mm, and zero sample
+points under 1.2mm. Face count is the wrong metric at every threshold — 56 of
+64 models flag even at one nozzle width, because a tapering edge always has
+faces below any number.
+
+`--thickness` casts a grid along all three axes, measures each solid SPAN (so a
+hollow shell reports its wall, not its outside dimension), and discards grazing
+hits beyond 60° off head-on (which is what made raw `min` read 0.00 on parts
+that are demonstrably thick). It is **reported, never failed on** by default,
+because it still cannot tell an intentional thin inlay from an accidental thin
+wall — `snap_box_lid_script` is 8.32% below a bead and is correct, being a
+script inlay backed by the lid body. `--strict-thickness` fails at >0.1% for a
+part you know has no intentional thin detail.
+
+**Before any boolean, gate the CUTTER too:** `python3 tools/mesh_gate.py
+cutter.stl --cutter-for target.stl`. It fails on the cutter defects that
+silently produce a wrong result — open, flipped, degenerate, missing the
+target, or enclosing it — and flags an instanced/scattered cutter with the
+`use_self=True` advisory. See BLENDER_REFERENCE.md section 2 for the measured
+failure behind each check.
+
+**Run both gates on anything new.** `mesh_gate` is the hard structural gate;
+`print_check` is the one that sees through the surface. Neither is a superset
+of the other, and a model that passes only one has not been checked.
+
+**`print_check` shipped with a false PASS in it, found the same day by the
+review it prompted.** Its `bad` flag was only ever set from keys *present* in
+the report, so a report that lost them — an empty or partial `report.info()`,
+or a future addon whose message format differs — printed **PASSED and exited
+0** for a mesh nothing had actually checked. Reproduced before fixing, not
+theorised. Two consequences worth carrying to any other gate written here:
+
+- **A gate must assert that the checks it gates on actually ran.** Absent is
+  not the same as zero. `check()` now refuses to return unless every one of
+  `FAIL_KEYS` is present, and a missing key is a tool error, never a pass.
+- **Keep "the check failed" and "the mesh failed" on different exit codes.**
+  An unhandled exception exits 1 — the same code as a real defect — so any
+  script gating on the exit status reads a crash as a finding. `print_check`
+  now uses **2 = could not check, 1 = mesh failed, 0 = passed**, verified
+  against a missing file, an unsupported extension, a clean mesh and a
+  defective one.

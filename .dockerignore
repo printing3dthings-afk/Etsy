@@ -54,6 +54,40 @@ __pycache__/
 *.md
 !data/knowledge_base/*.md
 
+# Found 2026-09-05, and it is the THIRD time this file's blanket rules have
+# swallowed a doc the server actively tries to read at runtime (see the two
+# 2026-07-09 incidents documented above).
+#
+# `*.md` matches root-level markdown only -- a single `*` does not cross `/`,
+# which is why `**/*.go`-style patterns exist -- so CLAUDE.md has been excluded
+# from every image ever built here. main.py's `_resolve_kb_doc` special-cases
+# "CLAUDE.md" and Frank's own system prompt tells it to read that file for the
+# full 3D printer specs, quality-gate rules, product catalog and autonomy
+# boundaries. In the container that call can only ever have 404'd.
+#
+# The `.claude/skills/**` line is belt-and-braces: by the same root-only rule
+# those nested SKILL.md files should already survive `*.md`, but this file's
+# own history says do not bet a runtime read path on a subtle glob semantic.
+# Both are a few hundred KB against the ~4GB this file exists to carve down.
+!CLAUDE.md
+!.claude/skills/**/SKILL.md
+
+# Found 2026-09-17, and it is the same failure class as the three incidents
+# above, just pointed the other way: those rules swallowed files the server
+# needed, this one is 54MB of files the server has never read. The viewer's
+# plate payloads were committed so the Pages workflow could find them, and
+# `COPY . .` then started carrying every one of them into the Railway image.
+# Nothing under tools/api_server/ references tools/viewer at all -- checked by
+# grep, not assumed -- so this is pure build weight. The page and its bundles
+# stay out too; if Frank is ever given a route that serves the viewer, this
+# rule is the thing to revisit, deliberately.
+#
+# Not build-tested -- no Docker daemon in the authoring container. The form is
+# copied from `mobile_app/` and `.git/` above, which this file's own header
+# says are what keep 4GB out of the context, so the syntax is proven here even
+# though this particular line is not.
+tools/viewer/
+
 # Local DB (never ship into the image)
 **/hub_data/
 *.db
