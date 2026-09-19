@@ -201,6 +201,12 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
 .viewbtns button:hover{color:var(--amber)}
 
 /* ── overlays ─────────────────────────────────────────── */
+#still{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  background:var(--void);z-index:2}
+#still[hidden]{display:none}
+#stillnote{position:absolute;right:14px;bottom:12px;z-index:3;font-family:var(--fm);
+  font-size:10.5px;color:var(--faint);letter-spacing:.03em;pointer-events:none}
+#stillnote[hidden]{display:none}
 #hint .narrow{display:none}
 @media (max-width:1180px){#hint .wide{display:none}#hint .narrow{display:inline}}
 #hint{position:absolute;left:14px;bottom:12px;font-family:var(--fm);font-size:10.5px;
@@ -374,6 +380,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
   </aside>
 
   <div id="stage">
+    <img id="still" alt="" hidden>
+    <div id="stillnote" hidden>Path-traced still of the finished part</div>
     <div id="loading">Slicing data<div class="barwrap"><div class="bar"></div></div></div>
     <div id="hint"><span class="wide">drag orbit · wheel to zoom · shift-drag pan</span><span class="narrow">drag to orbit · pinch to zoom</span></div>
   </div>

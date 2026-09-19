@@ -127,6 +127,43 @@ gives no per-material way to opt out of that sample.
 directly: the lighting is an invented studio rig, the real P1S has one LED bar
 on the left beam, and a better-looking replay is not a better-informed one.
 
+## Stills in the viewer (2026-09-19)
+
+Part-only framing now shows the path-traced still when one exists for the
+plate, and stays live when it does not. Nothing about it is required: a plate
+with no still, or a site built without any, simply behaves as before.
+
+**The still is of the FINISHED part, so it is only ever shown at the end of
+the print.** Scrub back to layer 50 and the live view returns. Showing a
+photograph of a completed object over a half-built one is exactly the class of
+thing this shop's first rule forbids, and there is a test that fails if the
+condition is dropped.
+
+Supports are excluded from stills and kept in the live view, which sounds
+inconsistent and is not: live, you are watching the machine build, and the
+scaffolding really is standing on the plate; a finished part has had it
+snapped off. Without this the axolotl plate -- more support polyline than part
+-- rendered as an unrecognisable spire.
+
+Pipeline, and where each piece lives:
+
+    tools/render_plate_stills.sh    mesh + render every plate (resumable)
+    tools/webify_stills.py          PNG -> the committed 900px JPEGs
+    tools/viewer/build_site.py      copies those into the site
+
+The full renders are ~2.5MB PNGs and stay out of git; the JPEGs are ~20KB each
+because the frame is mostly flat backdrop, so all 72 come to about 1.5MB. That
+is what makes this fit at all: the artifact was already 54MB against a 64MB
+ceiling, and the 18MB these were estimated at would have busted it.
+
+**Two bugs in `blender_render.py` fell out of driving it at volume.** Its
+`--version` probe had a 15s timeout and a cold start here measures 13.3s, so
+under any load it tripped -- and killed a 72-plate batch on its first plate.
+And camera distance was a flat `size * 2.6` regardless of focal length, which
+tangled lens with framing: 85mm cropped a tall part, and the wide lens you
+reached for to fit it left the subject a speck. Distance scales with lens now,
+so the lens sets perspective and framing stays constant.
+
 ## Studio stills (2026-09-18)
 
 The viewer's beads are a three-vertex open tent because it has to hold a frame

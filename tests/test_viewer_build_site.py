@@ -264,6 +264,34 @@ def test_layer_banding_is_antialiased_and_measured():
           "layer pitch is no longer measured off the plate's own layers")
 
 
+def test_the_still_is_never_shown_mid_print():
+    """The still is a photograph of the FINISHED part.
+
+    Showing it while the scrub sits at layer 50 would be a picture of
+    something the machine has not built yet -- the exact class of thing
+    CLAUDE.md's first rule forbids. Verified live too (scrub back from the
+    end and the live view returns), but the condition is guarded here so it
+    cannot be quietly dropped.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    m = re.search(r"function syncStill\(\) \{(.*?)\n\}", js, re.S)
+    check(m is not None, "syncStill is gone")
+    if m:
+        body = m.group(1)
+        check("printIsComplete()" in body,
+              "syncStill no longer requires the print to be complete -- the "
+              "still could be shown over an unfinished print")
+        check("realFraming === 'solo'" in body,
+              "the still is no longer restricted to part-only framing")
+        check("stillOk[currentId] === true" in body,
+              "the still is shown without confirming the image actually loaded")
+
+    m2 = re.search(r"function printIsComplete\(\) \{(.*?)\n\}", js, re.S)
+    check(m2 is not None and "play.seg" in m2.group(1) and "nSeg" in m2.group(1),
+          "printIsComplete no longer compares the played segment against the "
+          "job's total")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

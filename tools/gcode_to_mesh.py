@@ -39,6 +39,14 @@ import numpy as np
 # not see on the finished part. Everything else is real surface.
 DEFAULT_HIDDEN = {3, 9}
 
+# A still is captioned "the finished part", and a finished part has had its
+# supports snapped off and binned. The viewer's live real-print mode keeps them
+# on purpose -- there you are watching the machine build, and the scaffolding is
+# genuinely standing on the plate. Here it is not. Without this the axolotl,
+# whose plate is more support polyline than part (2528 of them, more than any
+# other feature type), rendered as an unrecognisable spire.
+SUPPORT_TYPES = {7, 8}
+
 # Flat top and bottom so stacked layers meet over a real contact band, bulged
 # sides so the bead reads as extruded rather than as a brick. u is across the
 # bead (+-half width), v is vertical (+-half layer height).
@@ -230,6 +238,10 @@ def main():
     ap.add_argument("--all-types", action="store_true",
                     help="include sparse infill and skirt too (default: hide them, "
                          "matching the viewer's real-print mode)")
+    ap.add_argument("--keep-supports", action="store_true",
+                    help="keep support material and its interface. Off by "
+                         "default: a still shows the finished part, and a "
+                         "finished part has had its supports removed.")
     a = ap.parse_args()
 
     src = Path(a.source)
@@ -237,7 +249,9 @@ def main():
         if src.is_dir() else [src]
     if not jobs:
         raise SystemExit("no job payloads found in %s" % src)
-    hidden = set() if a.all_types else DEFAULT_HIDDEN
+    hidden = set() if a.all_types else set(DEFAULT_HIDDEN)
+    if not a.keep_supports:
+        hidden |= SUPPORT_TYPES
 
     for job in jobs:
         payload = load_payload(job)

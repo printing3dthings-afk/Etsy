@@ -24,6 +24,7 @@ import shutil
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+ROOT_REPO = HERE.parent.parent
 
 # Matches what the Artifact host injects, so the page renders identically
 # whether it is served from claude.ai, GitHub Pages, or a folder on a laptop.
@@ -79,9 +80,24 @@ def build(out: Path) -> Path:
         shutil.rmtree(jobs_out)
     shutil.copytree(jobs_src, jobs_out)
 
+    # Path-traced stills. Already downscaled and committed as JPEG by
+    # tools/webify_stills.py, so this is a copy rather than a conversion --
+    # which is what lets a fresh CI checkout (no local PNGs) still build a
+    # site with stills in it.
+    stills_src = ROOT_REPO / "data" / "plate_stills"
+    n_still = 0
+    if stills_src.is_dir():
+        jpgs = sorted(stills_src.glob("*.jpg"))
+        if jpgs:
+            stills_out = out / "stills"
+            stills_out.mkdir(parents=True, exist_ok=True)
+            for j in jpgs:
+                shutil.copy2(j, stills_out / j.name)
+            n_still = len(jpgs)
+
     n = len(list(jobs_out.glob("*.js"))) - 1        # index.js is not a plate
     mb = sum(f.stat().st_size for f in out.rglob("*")) / 1024 / 1024
-    print("built %s -- %d plates, %.1f MB" % (out, n, mb))
+    print("built %s -- %d plates, %d stills, %.1f MB" % (out, n, n_still, mb))
     return out
 
 

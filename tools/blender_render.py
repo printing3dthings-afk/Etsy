@@ -139,7 +139,14 @@ fmat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.
 fmat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.85
 floor.data.materials.append(fmat)
 
-dist = size * 2.6
+# Distance scales with focal length, so the lens sets PERSPECTIVE and the
+# distance sets FRAMING -- they used to be tangled. dist was a flat size*2.6
+# whatever the lens, which made the two fight: 85mm cropped a tall part, and
+# the wide lens you reached for to fit it then left the subject a speck in a
+# sea of floor (a 123mm axolotl filled under half the frame). Anchored at
+# 50mm, so the old distance is recovered at a normal lens and every other
+# focal length reframes to match instead of rescaling the subject.
+dist = size * 2.6 * (lens / 50.0)
 cam_x = dist * math.cos(el) * math.sin(az)
 cam_y = -dist * math.cos(el) * math.cos(az)
 cam_z = dist * math.sin(el) + size * 0.15
@@ -149,10 +156,6 @@ target = mathutils.Vector((0, 0, size * 0.28))
 direction = target - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 bpy.context.scene.camera = cam
-# 85mm is a flattering product-shot lens and it CROPS A TALL PART -- the
-# framing is dist = size*2.6 off the largest dimension, which does not
-# account for how much of the silhouette a long axis fills at that focal
-# length. Every render of a 118mm-tall model in this session lost its top.
 cam.data.lens = lens
 
 def add_area(name, loc, energy, sz, target):
@@ -205,7 +208,12 @@ def check_blender_available() -> tuple[bool, str]:
             f"(~25MB + deps via apt), not a pip package."
         )
     try:
-        result = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=15)
+        # 90s, not 15. Every render calls this first, and on a loaded box a
+        # cold `blender --version` genuinely took longer than 15 -- which
+        # aborted a 72-plate batch on its first plate, for a probe whose only
+        # job is to print a version string.
+        result = subprocess.run([exe, "--version"], capture_output=True,
+                                text=True, timeout=90)
         version = (result.stdout or result.stderr or "").splitlines()[0].strip()
         return True, version or "blender (version unknown)"
     except Exception as exc:  # noqa: BLE001
@@ -380,8 +388,9 @@ def _cli() -> None:
     ap.add_argument("--samples", type=int, default=96)
     ap.add_argument("--resolution", type=int, default=1200)
     ap.add_argument("--lens", type=float, default=85.0,
-                    help="Camera focal length in mm. Lower to fit a tall part -- the "
-                         "default 85 crops anything much taller than it is wide.")
+                    help="Camera focal length in mm. Sets perspective only; "
+                         "framing scales with it, so a part fills the frame the "
+                         "same at any focal length.")
     ap.add_argument("--views", action="store_true",
                     help="Render three views (front, three-quarter, top) instead of one, "
                          "written as <output>_front.png etc.")

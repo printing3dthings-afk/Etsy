@@ -1760,6 +1760,8 @@ function mountJob(job) {
   JOB = job;
   applyVisibility();
   shadowDirty = true;
+  probeStill(currentId);
+  syncStill();
   var bb = job.raw.bbox;
   shadowPlane.geometry.dispose();
   shadowPlane.geometry = new THREE.PlaneGeometry(
@@ -1870,6 +1872,7 @@ function setSeg(seg) {
     if (yRails) { yRails.position.z = gantry.position.z; }
   }
   if (!play.on) { shadowDirty = true; }
+  syncStill();
   updateAMS(seg);
 }
 
@@ -2376,6 +2379,49 @@ function layerPitchMm() {
 
 var _wasSolo = false;
 
+// ── path-traced stills ─────────────────────────────────────────────────────
+// The realtime view draws each bead as an open tent because it has to hold a
+// frame rate; offline there is no frame budget, so the same toolpath can be
+// swept as a closed solid and path-traced (tools/gcode_to_mesh.py ->
+// tools/blender_render.py). Part-only framing is the one view with nothing
+// moving in it, which makes it the one view a photograph can stand in for.
+//
+// THE STILL IS OF THE FINISHED PART. Showing it while the scrub sits at layer
+// 50 would be a picture of something the machine has not built yet, so it is
+// only ever shown at the end of the print -- scrub back and the live view
+// returns. A plate with no still just stays live; nothing here is required.
+var stillOk = {};       // id -> true/false once probed
+var stillShown = false;
+
+function stillUrl(id) { return 'stills/' + id + '.jpg'; }
+
+function probeStill(id) {
+  if (stillOk[id] !== undefined) { return; }
+  stillOk[id] = null;                       // in flight
+  var img = new Image();
+  img.onload = function () { stillOk[id] = true; syncStill(); };
+  img.onerror = function () { stillOk[id] = false; };
+  img.src = stillUrl(id);
+}
+
+function printIsComplete() {
+  return !!(JOB && play.seg >= JOB.nSeg - 1);
+}
+
+function syncStill() {
+  var el = $('still'), note = $('stillnote');
+  if (!el) { return; }
+  var want = colorMode === 'real' && realFraming === 'solo'
+             && printIsComplete() && stillOk[currentId] === true;
+  if (want === stillShown) { return; }
+  stillShown = want;
+  if (want) { el.src = stillUrl(currentId); }
+  el.hidden = !want;
+  note.hidden = !want;
+  var hint = $('hint');
+  if (hint) { hint.style.visibility = want ? 'hidden' : ''; }
+}
+
 function applyRealMode() {
   var real = colorMode === 'real';
   var solo = real && realFraming === 'solo';
@@ -2388,6 +2434,7 @@ function applyRealMode() {
   // before the visibility block because frameJob() re-shows the gantry.
   if (_wasSolo && !solo && JOB) { frameJob(JOB); }
   _wasSolo = solo;
+  syncStill();
 
   if (gantry) { gantry.visible = moving && !solo; }
   if (nozzle) { nozzle.visible = moving && !solo; }
