@@ -20,6 +20,7 @@ remote, and type falls back cleanly without it. The Artifact copy keeps the
 CDN tag, which is why the rewrite happens here and not in the page itself.
 """
 import argparse
+import hashlib
 import shutil
 from pathlib import Path
 
@@ -57,10 +58,26 @@ def build(out: Path) -> Path:
             % CDN_THREE)
     body_part = body_part.replace(CDN_THREE, "three.min.js")
 
+    # Cache-bust app.js on its content. The published path has to stay "app.js"
+    # so an update replaces the file rather than accumulating copies, but a
+    # webview that cached the old bytes will keep serving them across app
+    # restarts -- which is exactly what happened on 2026-09-19: a fix shipped,
+    # the phone was quit and reopened, and the phone was still running the
+    # previous build. A changed query string is a different cache key.
+    app_src = HERE / "app.js"
+    app_hash = hashlib.sha1(app_src.read_bytes()).hexdigest()[:10]
+    if '<script src="app.js">' not in body_part:
+        raise SystemExit(
+            "the app.js <script src> in virtual_p1s.html is not "
+            '<script src="app.js"> any more, so the cache-busting rewrite '
+            "silently did nothing and a stale copy can outlive a fix.")
+    body_part = body_part.replace('<script src="app.js">',
+                                  '<script src="app.js?v=%s">' % app_hash)
+
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(HEAD + head_part + BODY_OPEN + body_part + TAIL,
                                     encoding="utf-8")
-    shutil.copy2(HERE / "app.js", out / "app.js")
+    shutil.copy2(app_src, out / "app.js")
 
     three = HERE / "vendor" / "three.min.js"
     if not three.exists():

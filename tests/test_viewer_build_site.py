@@ -29,6 +29,17 @@ def check(cond: bool, msg: str) -> None:
         _failures.append(msg)
 
 
+def _boot_code(js: str) -> str:
+    """The boot block with its comments stripped.
+
+    Twice now a test here has matched the prose explaining a rule rather than
+    the code obeying it -- the comment above the boot says initScene() used to
+    run FIRST, which is exactly the string an ordering check looks for.
+    """
+    block = js[js.index("} else {", js.index("No jobs found")):]
+    return "\n".join(re.sub(r"//.*$", "", ln) for ln in block.split("\n"))
+
+
 def _build(tmp: Path) -> Path:
     out = tmp / "site"
     build_site.build(out)
@@ -490,9 +501,10 @@ def test_a_boot_failure_reaches_the_screen():
     """
     js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
     check("function bootFailed(" in js, "there is no boot error reporter")
-    m = re.search(r"try \{\s*initScene\(\); initUI\(\);.*?\} catch \(e\) \{\s*bootFailed\(e\);",
-                  js, re.S)
-    check(m is not None, "the boot sequence is not wrapped in a reporter")
+    boot = _boot_code(js)
+    check(boot.count("catch (e) { bootFailed(e); throw e; }") == 2,
+          "both halves of the boot -- the UI paint and the scene build -- "
+          "have to report, or a failure in either one is a silent spinner")
 
 
 def test_plate_and_ams_failures_are_not_fatal():
@@ -504,6 +516,81 @@ def test_plate_and_ams_failures_are_not_fatal():
           "a failure building the AMS is fatal again")
     check("if (maps) {" in js,
           "buildBed still assumes plateSurface returned textures")
+
+
+def test_app_js_is_cache_busted_on_its_content():
+    """A fix that never reaches the device is not a fix.
+
+    The published path stays "app.js" so an update replaces the file, but a
+    webview that cached the old bytes keeps serving them across app restarts.
+    On 2026-09-19 a fix shipped, the phone was quit and reopened, and the
+    phone was still running the previous build. The query string is the only
+    thing that changes the cache key.
+    """
+    with tempfile.TemporaryDirectory() as td:
+        out = _build(Path(td))
+        html = (out / "index.html").read_text(encoding="utf-8")
+        m = re.search(r'<script src="app\.js\?v=([0-9a-f]{10})">', html)
+        check(m is not None, "app.js is loaded without a content version")
+        if m:
+            import hashlib
+            want = hashlib.sha1((ROOT / "tools" / "viewer" / "app.js").read_bytes()
+                                ).hexdigest()[:10]
+            check(m.group(1) == want,
+                  "the version is not app.js's own content hash, so editing "
+                  "app.js would not change it")
+        check((out / "app.js").exists(),
+              "the query string must not change the file's published path")
+
+
+def test_a_renamed_app_script_tag_fails_the_build():
+    """Same trap as the three.js rewrite: a str.replace that no longer matches
+    is a silent no-op, and the symptom is a stale page months later."""
+    src = (ROOT / "tools" / "viewer" / "virtual_p1s.html").read_text(encoding="utf-8")
+    with tempfile.TemporaryDirectory() as td:
+        broken = Path(td) / "virtual_p1s.html"
+        broken.write_text(src.replace('<script src="app.js">',
+                                      '<script defer src="app.js">'),
+                          encoding="utf-8")
+        original = build_site.HERE
+        try:
+            build_site.HERE = Path(td)
+            (Path(td) / "vendor").mkdir()
+            shutil.copy2(original / "vendor" / "three.min.js",
+                         Path(td) / "vendor" / "three.min.js")
+            shutil.copy2(original / "app.js", Path(td) / "app.js")
+            raised = False
+            try:
+                build_site.build(Path(td) / "site")
+            except SystemExit:
+                raised = True
+            check(raised, "a renamed app.js script tag builds silently, which "
+                          "ships a page that can never be updated on a device "
+                          "that cached it")
+        finally:
+            build_site.HERE = original
+
+
+def test_the_ui_paints_before_the_scene_is_built():
+    """initScene() is the expensive one and it used to run first.
+
+    A slow or failing scene left the plate list, the panels and the transport
+    blank behind a spinner -- the page looked dead when it was only busy.
+    Measured under a 6x CPU throttle: the plate list appeared at 14,106 ms
+    before this and 540 ms after.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    boot = _boot_code(js)
+    ui = boot.index("initUI()")
+    scene = boot.index("initScene()")
+    check(ui < scene, "initScene runs before the UI is painted again")
+    check("function bootStage(" in js and js.count("bootStage(") >= 3,
+          "the loading overlay no longer names its stage, so a screenshot of "
+          "a stall cannot say where it stalled")
+    check("function buildChamber(bed) {\n  // Reachable from the machine and plate"
+          in js or "if (!scene) { return; }" in js,
+          "nothing guards the frame in which the pickers are live but the "
+          "scene does not exist yet")
 
 
 def run() -> None:

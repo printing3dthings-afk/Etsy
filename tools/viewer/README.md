@@ -369,6 +369,27 @@ neutral studio floor rather than a plate. A still is captioned *the finished
 part*: supports snapped off, print flexed off the plate. Putting it back on a
 gold plate would be a nicer picture of a different claim.
 
+## A fix that never reached the phone (2026-09-19)
+
+The stall below was fixed and shipped, the app was quit and reopened, and the
+phone ran the previous build anyway. `build_site.py` emitted
+`<script src="app.js">` with no version, so a webview that had cached those
+bytes kept serving them across restarts. The published path still has to be
+`app.js` — an update has to replace the file, not accumulate copies — so the
+build now appends the file's own content hash as a query string,
+`app.js?v=83d35dfd1c`, which is a different cache key for the same path. A
+renamed script tag fails the build rather than silently no-opping, the same
+guard the three.js rewrite already had.
+
+**The boot also paints in two stages now.** `initScene()` is by far the most
+expensive thing on the page and it ran *first*, so a slow scene left the plate
+list, the panels and the transport blank behind a spinner — the page looked
+dead when it was only busy. The UI paints first and the scene is built on the
+next frame. Measured under a 6x CPU throttle: the plate list appeared at
+**14,106 ms before this and 540 ms after**. The overlay names its stage
+(`Starting` / `Building the machine` / `Loading <plate>` / `Building <plate>`)
+so a screenshot of a stall says where it stalled.
+
 ## A 7.5-second stall, and why the page said nothing (2026-09-19)
 
 Reported from an iPhone as, with complete justification, "it isn't working":

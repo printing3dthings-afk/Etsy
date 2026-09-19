@@ -453,6 +453,9 @@ function initScene() {
 var EXT = {w: 389, d: 389, h: 458, wall: 6};
 
 function buildChamber(bed) {
+  // Reachable from the machine and plate pickers, which are live a frame
+  // before the scene exists now.
+  if (!scene) { return; }
   [chamber, plate, grid, gantry, bedGroup, doorGroup, amsGroup, yRails].forEach(function (o) {
     if (o) { scene.remove(o); }
   });
@@ -3107,10 +3110,12 @@ function applyVisibility() {
 
 // \u2500\u2500 job loading \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 window.__JOB_LOADED = function (raw) {
+  if (!scene) { return; }
   // Geometry build is synchronous and can take a second on the heaviest plate.
   // Yield first so the loading overlay actually paints before the main thread
   // locks -- otherwise the page looks frozen rather than busy.
   requestAnimationFrame(function () { requestAnimationFrame(function () {
+    bootStage('Building ' + (raw.name || 'the plate'));
     var job = buildJob(raw);
     _polys = b64(raw.polys, Int32Array);
     layerFilCum = new Float64Array(raw.layers.length + 1);
@@ -3476,6 +3481,13 @@ function initUI() {
 // nothing on screen saying why -- reported from an iPhone 2026-09-19 as, with
 // complete justification, "it isn't working". A viewer that cannot say what
 // went wrong is worse than one that crashed visibly, so it says.
+// The overlay's own text node, so a long stage cannot be mistaken for a hang.
+function bootStage(label) {
+  if (loading.firstChild && loading.firstChild.nodeType === 3) {
+    loading.firstChild.textContent = label;
+  }
+}
+
 function bootFailed(e) {
   var msg = (e && (e.message || e)) + '';
   var at = (e && e.stack || '').split('\n')[1] || '';
@@ -3496,12 +3508,23 @@ if (!window.THREE) {
   loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
     'No jobs found \u2014 jobs/index.js is missing.</div>';
 } else {
+  // Order matters, and it used to be wrong. initScene() is by far the most
+  // expensive thing on this page and it ran FIRST, so a slow or failing scene
+  // left the entire page -- plate list, panels, transport, everything --
+  // blank behind a spinner with nothing to read. Painted first, the page is
+  // visibly alive within a frame and the spinner is plainly about the 3D view
+  // alone. The stage label means a screenshot of a stall says where it stalled.
   try {
-    initScene(); initUI(); paintMaterial(); paintPrinter(); paintJobList();
-    loadJob(INDEX[0].id);
-  } catch (e) {
-    bootFailed(e);
-    throw e;
-  }
+    initUI(); paintMaterial(); paintPrinter(); paintJobList();
+  } catch (e) { bootFailed(e); throw e; }
+  bootStage('Building the machine');
+  // Yielding here is what lets that first paint actually happen: initScene()
+  // holds the main thread from the first line to the last.
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    try {
+      initScene();
+      loadJob(INDEX[0].id);
+    } catch (e) { bootFailed(e); throw e; }
+  }); });
 }
 })();
