@@ -75,11 +75,16 @@ def build(out: Path) -> Path:
     # never been requested cannot be served from a cache, and an external file
     # is what demonstrably executes here.
     app_src = HERE / "app.js"
-    # Over the whole page source, not just app.js: a change confined to
-    # build_site.py or the HTML still produces a different page, and a version
-    # stamp that does not move when the page does is worse than none.
+    # Over everything that decides what the built page IS -- including this
+    # file. Hashing only app.js and the HTML was a real defect in the one tool
+    # meant to end the guessing: the inlined build and the hashed-filename
+    # build that replaced it differed ONLY in build_site.py, so both stamped
+    # the same b9dd3ff2a2 and a photograph of the header could not say which
+    # one was on screen.
     app_hash = hashlib.sha1(
-        app_src.read_bytes() + (HERE / "virtual_p1s.html").read_bytes()
+        app_src.read_bytes()
+        + (HERE / "virtual_p1s.html").read_bytes()
+        + Path(__file__).read_bytes()
     ).hexdigest()[:10]
     app_name = "app.%s.js" % app_hash
     if '<script src="app.js"></script>' not in body_part:

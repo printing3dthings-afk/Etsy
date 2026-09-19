@@ -3,6 +3,17 @@
 (function () {
 'use strict';
 
+// Proof of life, first statement, before anything that could throw. The static
+// build stamp in the HTML says WHICH build arrived; this says the script also
+// ran. Without it the two states that look identical from a photograph of a
+// screen -- "page updated, script never executed" and "page did not update" --
+// cannot be told apart, which is what happened on 2026-09-19 and cost three
+// round trips. Plain DOM, no helpers: those are defined further down.
+try {
+  var _chip = document.getElementById('buildchip');
+  if (_chip) { _chip.textContent += ' \u00b7 running'; }
+} catch (e) { /* a missing chip must never be what stops the page */ }
+
 // \u2500\u2500 palette \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // Index order must match TYPES in tools/gcode_viewer_data.py.
 var TYPE_COLOR = ['#ff7a45','#ffc04d','#4fd2ff','#6a7285','#c9d64f','#9be36a',
@@ -2642,7 +2653,7 @@ function paintJobList() {
       : (host.getAttribute('data-at') || '1') + ' / ' + INDEX.length;
   }
   updatePlateMore();
-  $('buildchip').textContent = INDEX.length + ' plates \u00b7 ' +
+  $('platechip').textContent = INDEX.length + ' plates \u00b7 ' +
     INDEX.reduce(function (a, j) { return a + j.segments; }, 0).toLocaleString() +
     ' extrusion moves on file';
 }

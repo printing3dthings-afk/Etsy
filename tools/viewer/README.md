@@ -388,6 +388,23 @@ removed from the published artifact too (`"app.<old>.js": null` in the publish
 `files` map) — otherwise it is a file the host would still serve and nothing
 would ever refresh.
 
+**The build stamp had two defects of its own**, both found the hard way and
+both now guarded by tests:
+
+* it hashed `app.js` and the HTML but **not `build_site.py`** — so the inlined
+  build and the hashed-filename build that replaced it, which differed only in
+  `build_site.py`, both stamped `b9dd3ff2a2`, and a photograph of the header
+  could not say which one was on screen;
+* `paintJobList()` **overwrote** it with the plate counts the moment the app
+  ran, destroying the version exactly when it was still wanted. The counts have
+  their own `#platechip` now, and nothing in app.js may touch `#buildchip`.
+
+The chip also now proves the script *ran*: app.js appends ` · running` to it as
+its first statement, before anything that could throw. Two states look
+identical in a photograph of a screen — "the page updated but the script never
+executed" and "the page did not update" — and telling them apart is what cost
+three round trips.
+
 **The thing that finally made this diagnosable** was a *static* build stamp.
 The header chip used to be filled by `paintJobList()`, which is precisely the
 function that does not run when something is wrong — so on the one occasion

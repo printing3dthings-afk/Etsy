@@ -32,7 +32,13 @@ header h1{font-size:17px;font-weight:700;letter-spacing:.055em;text-transform:up
 header h1 em{font-style:normal;color:var(--amber)}
 header .sub{color:var(--dim);font-size:12.5px}
 header .spacer{flex:1}
-#buildchip{font-family:var(--fm);font-size:11px;color:var(--faint);letter-spacing:.04em}
+#buildchip,#platechip{font-family:var(--fm);font-size:11px;color:var(--faint);
+  letter-spacing:.04em}
+/* The build stamp is written by build_site.py into the HTML and nothing in
+   app.js may overwrite it -- it is the only thing that identifies which
+   build is on screen when the page is broken. The plate counts get their
+   own span for exactly that reason. */
+#buildchip{color:var(--faint);opacity:.85}
 
 aside{background:var(--panel);overflow-y:auto;overflow-x:hidden}
 #stage{position:relative;background:#08090b;min-height:240px}
@@ -309,6 +315,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
     <h1>Virtual <em>P1S</em> Chamber</h1>
     <span class="sub">Real sliced G-code, replayed move by move</span>
     <span class="spacer"></span>
+    <span id="platechip"></span>
     <span id="buildchip"></span>
   </header>
 

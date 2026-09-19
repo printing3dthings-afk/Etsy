@@ -29,6 +29,16 @@ def check(cond: bool, msg: str) -> None:
         _failures.append(msg)
 
 
+def _page_hash() -> str:
+    """Everything that decides what the built page is, including the builder."""
+    import hashlib
+    viewer = ROOT / "tools" / "viewer"
+    return hashlib.sha1(
+        (viewer / "app.js").read_bytes()
+        + (viewer / "virtual_p1s.html").read_bytes()
+        + (viewer / "build_site.py").read_bytes()).hexdigest()[:10]
+
+
 def _boot_code(js: str) -> str:
     """The boot block with its comments stripped.
 
@@ -534,9 +544,7 @@ def test_the_app_is_an_external_script_at_a_content_hashed_name():
     demonstrably executes here.
     """
     viewer = ROOT / "tools" / "viewer"
-    import hashlib
-    want = hashlib.sha1((viewer / "app.js").read_bytes()
-                        + (viewer / "virtual_p1s.html").read_bytes()).hexdigest()[:10]
+    want = _page_hash()
     with tempfile.TemporaryDirectory() as td:
         out = _build(Path(td))
         # A previous build's bundle, standing in for the real case: the output
@@ -615,6 +623,47 @@ def test_the_ui_paints_before_the_scene_is_built():
           in js or "if (!scene) { return; }" in js,
           "nothing guards the frame in which the pickers are live but the "
           "scene does not exist yet")
+
+
+def test_the_build_stamp_identifies_the_built_page_and_survives_the_app():
+    """The one tool meant to end the guessing, and it had two defects.
+
+    It hashed app.js and the HTML but not build_site.py -- so the inlined
+    build and the hashed-filename build that replaced it, which differed
+    ONLY in build_site.py, both stamped b9dd3ff2a2 and a photograph of the
+    header could not say which one was on screen.
+
+    And paintJobList() overwrote the chip with the plate counts the moment
+    the app ran, destroying the version exactly when it was still wanted.
+    The counts have their own span now.
+    """
+    viewer = ROOT / "tools" / "viewer"
+    want = _page_hash()
+    with tempfile.TemporaryDirectory() as td:
+        html = (_build(Path(td)) / "index.html").read_text(encoding="utf-8")
+    check('id="buildchip">build %s<' % want in html,
+          "the build stamp does not cover everything that decides what the "
+          "built page is -- two different pages can carry the same stamp")
+
+    js = (viewer / "app.js").read_text(encoding="utf-8")
+    check("$('buildchip')" not in js,
+          "app.js writes to the build chip -- it is the only thing that says "
+          "which build is on screen when the page is broken, so nothing in "
+          "the app may overwrite it")
+    check("$('platechip')" in js, "the plate counts lost their own span")
+
+
+def test_the_app_announces_that_it_ran():
+    """Two states look identical in a photo of a screen: 'the page updated but
+    the script never executed' and 'the page did not update'. Telling them
+    apart cost three round trips. The chip says which."""
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    head = js[:js.index("var TYPE_COLOR")]
+    check("getElementById('buildchip')" in head and "running" in head,
+          "the proof-of-life stamp is gone from the top of app.js")
+    check("try {" in head and "catch" in head,
+          "the proof-of-life stamp is not guarded -- a missing chip must "
+          "never be the thing that stops the page")
 
 
 def run() -> None:
