@@ -372,6 +372,73 @@ def test_every_plate_in_the_table_can_actually_be_drawn():
         check(used <= have, "plates with no grain profile: %s" % (used - have))
 
 
+def test_the_ams_spool_keeps_the_axis_updateAMS_assumes():
+    """updateAMS() scales x/z for the falling coil radius and spins y.
+
+    Both only mean what they are supposed to mean if the coil is a plain
+    CylinderGeometry (axis = local Y) under a parent turned onto X. Rebuild it
+    as anything else and the spool silently gets NARROWER as it empties
+    instead of thinner, and tumbles end over end instead of turning.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildAMS\(.*?\n\}", js, re.S)
+    check(body is not None, "buildAMS is gone")
+    if body:
+        b = body.group(0)
+        check("hub.rotation.z = Math.PI / 2" in b,
+              "the spool parent no longer lays the coil along X")
+        m = re.search(r"var fil = new THREE\.(\w+)", b)
+        check(m is not None and m.group(1) == "Mesh", "the coil is not a Mesh")
+        check("new THREE.CylinderGeometry(99, 99, 54" in b,
+              "the coil is no longer a Y-axis cylinder -- updateAMS's scale "
+              "and spin stop meaning radius and rotation")
+    check("sl.spool.scale.set(k, 1, k)" in js,
+          "updateAMS no longer scales the coil radius on x/z")
+
+
+def test_the_ams_reel_hides_as_one_piece():
+    """Three pairs of empty discs hanging in the dome reads as a fault.
+
+    Hiding a slot has to take its flanges with it, not just the coil and the
+    core -- which is what happened the first time the flanges were split out
+    into their own meshes so they would stop shrinking with the filament.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("amsGroup.userData.reels = reels" in js,
+          "the flanges are not registered, so nothing can hide them with "
+          "their slot")
+    check("userData.reels || [])[i] || []).forEach" in js,
+          "buildAMSState hides the coil and core but leaves the flanges")
+
+
+def test_the_ams_has_its_dome():
+    """The shape that makes an AMS recognisable.
+
+    A half-cylinder along the spool row, so the arch follows the spool circles.
+    It was a flat-lidded box, which from above read as an empty tray.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildAMS\(.*?\n\}", js, re.S)
+    if body:
+        b = body.group(0)
+        check("0, Math.PI)" in b and "dome.rotation.z = Math.PI / 2" in b,
+              "the dome is no longer a half-cylinder lying along the spool row")
+        check("cap.rotation.set(0, Math.PI / 2, Math.PI / 2)" in b,
+              "the dome end caps lost the z turn -- rotation.y alone stands "
+              "them up as flat sheets off the back instead of closing the arch")
+        check("bandShape.holes.push" in b and "lipShape.holes.push" in b,
+              "the body's top band is a filled plate again -- it caps the box "
+              "and hides the bottom half of every spool")
+
+
+def test_the_page_says_where_the_ams_was_drawn_from():
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("product " in js and "spool colours are illustrative" in js,
+          "the Printer panel no longer says the AMS spool colours are "
+          "illustrative -- it renders well enough now to be mistaken for a "
+          "reading of the real machine")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

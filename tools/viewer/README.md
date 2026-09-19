@@ -369,6 +369,40 @@ neutral studio floor rather than a plate. A still is captioned *the finished
 part*: supports snapped off, print flexed off the plate. Putting it back on a
 gold plate would be a nicer picture of a different claim.
 
+## The AMS (2026-09-19)
+
+Rebuilt from Bambu's own product photography of the 4-slot unit. The shape
+that makes it recognisable is the **dome**: a half-cylinder of smoked plastic
+whose axis runs along the spool row, so its arch follows the spool circles and
+the top half of every reel shows through it. It was a flat-lidded box before,
+which from above read as an empty tray with one spool in it.
+
+Proportions are arithmetic off the published 368 x 283 x 224 mm rather than a
+guess: the dome radius is half the depth (141.5), so the body below it is the
+remaining 82.5 — which is exactly the split the photographs show. Spools are
+the AMS's own published compatibility range, 197–202 mm across and 50–68 wide,
+which is why four of them very nearly fill the box. Each slot also gets its
+drive roller and gear block, visible through the smoked front the way they are
+on the real unit.
+
+Deliberately unbranded, same as the machine — the real front band carries a
+Bambu Lab wordmark and that is not mine to reproduce.
+
+Three things had to hold while rebuilding it:
+
+* **The coil has to stay a Y-axis cylinder under an X-turned parent**, because
+  `updateAMS()` scales its x/z for the falling radius and spins its y. Rebuild
+  it any other way and the spool silently gets narrower as it empties instead
+  of thinner, and tumbles end over end instead of turning.
+* **The flanges are the reel, not the filament**, so they do not shrink with
+  the coil — and they have to hide with their slot, or hiding an unused slot
+  leaves three pairs of empty discs hanging in the dome.
+* **`rotation.y` alone does not orient a half-disc end cap.** `CircleGeometry`
+  bulges toward its own +Y, which after that one turn points at world +Y — so
+  the caps stood up as flat sheets off the back of the dome instead of closing
+  its ends. The z turn (composed first, three.js does XYZ as Rx·Ry·Rz) swings
+  the bulge to +Z so it follows the arch.
+
 ## The machine itself
 
 Built to the real outside dimensions, **389 x 389 x 458 mm** around the 256mm

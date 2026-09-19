@@ -965,75 +965,187 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   chamber.add(lens);
 }
 
-// The AMS, at its real size, sitting where one actually sits. The spools drawn
-// inside are illustrative -- nothing here reads the machine, so they are four
-// plausible colours and the panel says as much rather than implying a feed.
+// The AMS, at its real size, sitting where one actually sits.
+//
+// Drawn from Bambu's own product photography of the 4-slot AMS (2026-09-19).
+// The shape that makes it recognisable is the DOME: a half-cylinder of smoked
+// plastic whose axis runs along the spool row, so its arch follows the spool
+// circles exactly and the top half of every spool shows through it. It was a
+// flat-lidded box here before, which from above read as an empty tray with one
+// spool in it.
+//
+// Proportions come off the published 368 x 283 x 224 mm. The dome radius is
+// half the depth (141.5), so the opaque body below it is the remaining 82.5 --
+// which is the split the photographs show, and it is arithmetic rather than a
+// guess. Spool size is the AMS's own published compatibility range, 197-202 mm
+// across and 50-68 wide, which is why four of them very nearly fill the box.
+//
+// Deliberately unbranded, same as the machine: the real unit wears a Bambu Lab
+// wordmark across the front band and that is not mine to reproduce.
+//
+// What is illustrative and says so on the panel: the filament colours, and the
+// fact that anything is loaded at all. Nothing here reads the machine.
 function buildAMS(spec, ox, oy, y1, zTop) {
   amsGroup = null;
   if (!spec) { return; }
   amsGroup = new THREE.Group();
-  var cy = y1 - spec.d / 2 - 6, cz = zTop + 4 + spec.h / 2;
+  var cy = y1 - spec.d / 2 - 6;
+  var z0 = zTop + 4;                       // the AMS sits on the machine lid
+  var domeR = spec.d / 2;
+  var bodyH = Math.max(40, spec.h - domeR);
+  var wall = 7, r = 14;
 
-  // Built as panels, not a solid block: a closed box would hide the spools
-  // behind its own lit top face no matter how transparent the lid above it is.
-  var wall = 8, shell = surface(0x2a2e35);
-  function panel(w, d, h, x, y, z) {
-    var m = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), shell);
-    m.position.set(x, y, z);
-    amsGroup.add(m);
+  // Smoked shell. depthWrite off so four spools behind two layers of it still
+  // sort correctly; renderOrder puts every transparent panel after the solid
+  // hardware inside, which is the only ordering that reads right.
+  function smoked(op, tint) {
+    var m = new THREE.MeshPhysicalMaterial({
+      color: lin(tint || 0x1a1d22), metalness: 0, roughness: 0.22,
+      transparent: true, opacity: op, clearcoat: 0.6, clearcoatRoughness: 0.18,
+      envMapIntensity: 0.85, depthWrite: false, side: THREE.DoubleSide
+    });
+    return m;
   }
-  panel(spec.w, spec.d, wall, ox, cy, cz - spec.h / 2 + wall / 2);
-  panel(wall, spec.d, spec.h, ox - spec.w / 2 + wall / 2, cy, cz);
-  panel(wall, spec.d, spec.h, ox + spec.w / 2 - wall / 2, cy, cz);
-  panel(spec.w, wall, spec.h, ox, cy + spec.d / 2 - wall / 2, cz);
-  panel(spec.w, wall, spec.h, ox, cy - spec.d / 2 + wall / 2, cz);
-  var amsEdge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(spec.w, spec.d, spec.h)),
-    new THREE.LineBasicMaterial({color: 0x4a515e}));
-  amsEdge.position.set(ox, cy, cz);
-  amsGroup.add(amsEdge);
 
-  var spools = [], cores = [];
+  function roundedRect(w, d, rad) {
+    var s = new THREE.Shape(), x = w / 2, y = d / 2;
+    s.moveTo(-x + rad, -y);
+    s.lineTo(x - rad, -y); s.quadraticCurveTo(x, -y, x, -y + rad);
+    s.lineTo(x, y - rad);  s.quadraticCurveTo(x, y, x - rad, y);
+    s.lineTo(-x + rad, y); s.quadraticCurveTo(-x, y, -x, y - rad);
+    s.lineTo(-x, -y + rad); s.quadraticCurveTo(-x, -y, -x + rad, -y);
+    return s;
+  }
+
+  // ── body ──────────────────────────────────────────────────────────────────
+  var base = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(roundedRect(spec.w, spec.d, r), {depth: 9, bevelEnabled: false}),
+    surface(0x1b1e24));
+  base.position.set(ox, cy, z0);
+  amsGroup.add(base);
+
+  var shell = roundedRect(spec.w, spec.d, r);
+  shell.holes.push(roundedRect(spec.w - wall * 2, spec.d - wall * 2, Math.max(2, r - wall)));
+  var walls = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(shell, {depth: bodyH, bevelEnabled: false}), smoked(0.50));
+  walls.position.set(ox, cy, z0);
+  walls.renderOrder = 2;
+  amsGroup.add(walls);
+
+  // The opaque band around the top of the body, where the wordmark would be.
+  // A FRAME, not a plate: filled, it caps the body and hides the bottom half
+  // of every spool behind what looks like a closed lid -- which is the same
+  // mistake the flat-lidded version made, just one level down.
+  var bandShape = roundedRect(spec.w + 3, spec.d + 3, r);
+  bandShape.holes.push(roundedRect(spec.w - 26, spec.d - 26, 8));
+  var band = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(bandShape, {depth: 13, bevelEnabled: false}),
+    surface(0x26292f));
+  band.position.set(ox, cy, z0 + bodyH - 13);
+  amsGroup.add(band);
+
+  // The one piece of trim worth having: the round latch button, front centre.
+  var latch = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 4, 20),
+    surface(0xcfd3d9, {roughness: 0.45, metalness: 0.1}));
+  latch.rotation.x = Math.PI / 2;
+  latch.position.set(ox, cy - spec.d / 2 - 1, z0 + bodyH - 6);
+  amsGroup.add(latch);
+
+  // ── dome ──────────────────────────────────────────────────────────────────
+  // Half a cylinder lying along the spool row. thetaStart/-Length cut the top
+  // half only; the flat underside is the body's opening, not a surface.
+  var domeZ = z0 + bodyH;
+  var dome = new THREE.Mesh(
+    new THREE.CylinderGeometry(domeR, domeR, spec.w, 48, 1, true, 0, Math.PI),
+    smoked(0.34, 0x20242a));
+  dome.rotation.z = Math.PI / 2;
+  dome.position.set(ox, cy, domeZ);
+  dome.renderOrder = 3;
+  amsGroup.add(dome);
+  // End caps, so the dome reads as a closed box rather than an open tunnel.
+  [-1, 1].forEach(function (s) {
+    var cap = new THREE.Mesh(new THREE.CircleGeometry(domeR, 40, 0, Math.PI),
+      smoked(0.40, 0x20242a));
+    // CircleGeometry's half-disc bulges toward its own +Y. rotation.y alone
+    // leaves that pointing at world +Y, which stands the cap up as a flat
+    // sheet off the BACK of the dome instead of closing its end. The z turn
+    // (applied first, three.js composes XYZ as Rx*Ry*Rz) swings the bulge to
+    // world +Z so it follows the arch.
+    cap.rotation.set(0, Math.PI / 2, Math.PI / 2);
+    cap.position.set(ox + s * spec.w / 2, cy, domeZ);
+    cap.renderOrder = 3;
+    amsGroup.add(cap);
+  });
+  var lipShape = roundedRect(spec.w + 2, spec.d + 2, r);
+  lipShape.holes.push(roundedRect(spec.w - 12, spec.d - 12, 8));
+  var lip = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(lipShape, {depth: 5, bevelEnabled: false}),
+    surface(0x1e2127));
+  lip.position.set(ox, cy, domeZ - 2);
+  amsGroup.add(lip);
+
+  // ── spools and the hardware under them ────────────────────────────────────
+  var pitch = (spec.w - wall * 4) / spec.slots;
+  var sz = domeZ + 16;                     // spool axis, just above the body lip
+  var spools = [], cores = [], reels = [];
   for (var i = 0; i < spec.slots; i++) {
-    var x = ox - (spec.slots - 1) * 46 + i * 92;
-    // Spool size is the AMS's own published compatibility range -- 197-202 mm
-    // across, 50-68 mm wide -- which is why they very nearly fill the box.
-    var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 56, 28),
-      surface(FILAMENT[i % FILAMENT.length], {roughness: 0.45, metalness: 0.0}));
-    // Rotated onto X by the PARENT, so the mesh's own X rotation is free to be
-    // the spool turning as filament is pulled off it.
+    var x = ox + (i - (spec.slots - 1) / 2) * pitch;
+    var flanges = [];
+
+    // Rotated onto X by the PARENT, so the wound coil's own Y rotation stays
+    // free to be the spool turning as filament is pulled off it. updateAMS()
+    // scales this mesh's x/z for the falling coil radius and spins its y --
+    // both of those depend on the axis being local Y, so it has to stay a
+    // plain CylinderGeometry under a z-rotated parent.
     var hub = new THREE.Group();
     hub.rotation.z = Math.PI / 2;
-    hub.position.set(x, cy, cz - 2);
+    hub.position.set(x, cy, sz);
+
+    var fil = new THREE.Mesh(new THREE.CylinderGeometry(99, 99, 54, 40, 1, true),
+      surface(FILAMENT[i % FILAMENT.length], {roughness: 0.52, metalness: 0.0,
+        map: srgbMap(windingTexture()), side: THREE.DoubleSide}));
     hub.add(fil);
     amsGroup.add(hub);
     spools.push(fil);
-    var core = new THREE.Mesh(new THREE.CylinderGeometry(34, 34, 60, 20),
-      surface(0x15171c));
+
+    // The flanges do NOT shrink with the coil -- they are the spool, not the
+    // filament, and watching them collapse was the giveaway that the old one
+    // was drawing a solid cylinder of plastic rather than a reel.
+    [-1, 1].forEach(function (s) {
+      var fl = new THREE.Mesh(new THREE.CylinderGeometry(101, 101, 2.6, 40),
+        smoked(0.46, 0x767d8a));
+      fl.rotation.z = Math.PI / 2;
+      fl.position.set(x + s * 29, cy, sz);
+      fl.renderOrder = 1;
+      amsGroup.add(fl);
+      flanges.push(fl);
+    });
+
+    var core = new THREE.Mesh(new THREE.CylinderGeometry(35, 35, 58, 24),
+      surface(0xc8ccd2, {roughness: 0.6, metalness: 0.05}));
     core.rotation.z = Math.PI / 2;
-    core.position.set(x, cy, cz - 2);
+    core.position.set(x, cy, sz);
     amsGroup.add(core);
     cores.push(core);
-  }
 
-  // Smoked lid over the spools -- the reason you can see them at all.
-  var lid = new THREE.Mesh(new THREE.BoxGeometry(spec.w - 22, spec.d - 22, 5),
-    glassMaterial());
-  lid.position.set(ox, cy, cz + spec.h / 2 - 3);
-  amsGroup.add(lid);
-  var lz = cz + spec.h / 2 - 3, fm = surface(0x21252b);
-  [[spec.w, 11, ox, cy - spec.d / 2 + 5.5], [spec.w, 11, ox, cy + spec.d / 2 - 5.5],
-   [11, spec.d, ox - spec.w / 2 + 5.5, cy], [11, spec.d, ox + spec.w / 2 - 5.5, cy]]
-    .forEach(function (f) {
-      var m = new THREE.Mesh(new THREE.BoxGeometry(f[0], f[1], 7), fm);
-      m.position.set(f[2], f[3], lz);
-      amsGroup.add(m);
-    });
+    // Feeder hardware, visible through the smoked front: the drive roller and
+    // the brass-toned gear block above it, one per slot.
+    var roller = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 40, 20),
+      surface(0x6f757e, {roughness: 0.5, metalness: 0.25}));
+    roller.rotation.x = Math.PI / 2;
+    roller.position.set(x, cy - spec.d / 2 + 34, z0 + 26);
+    amsGroup.add(roller);
+    var gearbox = new THREE.Mesh(new THREE.BoxGeometry(26, 20, 16),
+      surface(0x9c7a3e, {roughness: 0.45, metalness: 0.55}));
+    gearbox.position.set(x, cy - spec.d / 2 + 30, z0 + 40);
+    amsGroup.add(gearbox);
+    reels.push(flanges);
+  }
 
   // PTFE bundle looping out of the back and into the top of the machine.
   var curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(ox, cy + spec.d / 2 - 4, cz - 40),
-    new THREE.Vector3(ox, y1 + 54, cz - 74),
+    new THREE.Vector3(ox, cy + spec.d / 2 - 4, z0 + 30),
+    new THREE.Vector3(ox, y1 + 54, z0 - 34),
     new THREE.Vector3(ox, y1 - 26, zTop + 3)]);
   var feed = new THREE.Mesh(new THREE.TubeGeometry(curve, 22, 7, 10, false),
     surface(0x171a20));
@@ -1041,9 +1153,36 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 
   amsGroup.userData.spools = spools;
   amsGroup.userData.cores = cores;
+  // The flanges are part of the reel, so they come and go with it. Leaving
+  // them behind when a slot is hidden left three empty pairs of discs hanging
+  // in the dome, which reads as a fault rather than as an empty slot.
+  amsGroup.userData.reels = reels;
   amsGroup.userData.feed = feed;
   amsGroup.name = 'ams';
   scene.add(amsGroup);
+}
+
+// Wound filament, not a painted drum. Fine stripes running across the coil,
+// which wrap around the cylinder into the winding you actually see on a spool
+// edge-on. Cheap enough to build per spool and the single thing that stops
+// four coloured cylinders reading as four coloured cylinders.
+function windingTexture() {
+  var c = document.createElement('canvas');
+  // 32 wraps across a 54 mm coil is a 1.7 mm pitch, which is 1.75 mm filament
+  // laid side by side -- the real thing. The first pass used 128, a 0.4 mm
+  // pitch, and it mipmapped straight back to flat paint.
+  c.width = 8; c.height = 32;
+  var g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 8, 32);
+  for (var i = 0; i < 32; i++) {
+    g.fillStyle = 'rgba(0,0,0,' + (0.13 + Math.random() * 0.14).toFixed(3) + ')';
+    g.fillRect(0, i, 8, 0.6);
+  }
+  var t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(1, 1);
+  t.anisotropy = _maxAniso;
+  return t;
 }
 
 // An envelope, not a portrait: the machine's real outside footprint as an
@@ -2579,6 +2718,7 @@ function buildAMSState() {
     var on = i < amsSlots.length;
     if (m) { m.visible = on; }
     if (amsGroup.userData.cores[i]) { amsGroup.userData.cores[i].visible = on; }
+    ((amsGroup.userData.reels || [])[i] || []).forEach(function (f) { f.visible = on; });
   });
   paintAMS();
 }
@@ -3008,7 +3148,11 @@ function paintPrinter() {
     'is the X1 Carbon.<br><b>What is drawn rather than documented:</b> where the ' +
     'three lead screws sit around the base, and the toolhead\u2019s exact ' +
     'proportions \u2014 Bambu publishes neither, so these are placed to read ' +
-    'correctly, not measured. The AMS spool colours are illustrative; nothing ' +
+    'correctly, not measured. The AMS is drawn from Bambu\u2019s own product ' +
+    'photography of the 4-slot unit \u2014 the smoked dome over the spool row, ' +
+    'the drive roller and gear block per slot \u2014 with its proportions taken ' +
+    'from the published 368 \u00d7 283 \u00d7 224 mm and the 197\u2013202 mm spool ' +
+    'compatibility range. Its spool colours are illustrative; nothing ' +
     'here is reading your machine.</div>';
   $('platesel').addEventListener('change', function (e) {
     plateId = e.target.value;
