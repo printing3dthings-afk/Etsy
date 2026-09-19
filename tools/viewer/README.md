@@ -504,6 +504,69 @@ Colour and height are still drawn from the same sequence so a bright fleck is a
 raised fleck, but via a seeded PRNG rather than `Math.random()` in one shared
 pass — that is what lets the two be built separately and cached differently.
 
+## The bead has a flat top (2026-09-19)
+
+Reported as "the real print images are showing some missed areas after
+printing", and narrowed to the top and bottom faces. It is not a hole and it
+is not a missing layer — it is the bead's cross-section.
+
+The bead was a **tent**: two shoulders at the layer floor, an apex at the
+layer top. That makes the top of every extrusion a zero-width *ridge*, and the
+shoulder normals exactly horizontal. Seen from above, half of every bead's
+visible area shades from lit at the ridge to black at the shoulder, so a solid
+top face renders as corduroy with what look like gaps in it.
+
+A real extrusion is squashed between the nozzle and the layer below: a
+rectangle with semicircular ends, flat across most of its width and rounded
+only at the edges. The section is now four points across — shoulder, top
+corner, top corner, shoulder — three bands instead of two.
+
+**The flat's width is derived, not tuned.** A single free extrusion has its
+flat at `hw - h/2`. Neighbours in a solid layer are not free: they are laid
+down molten against each other and *fuse*, so the groove between two of them
+is much shallower than the intersection of two separate stadium profiles. The
+divisor 2.6 is that fusion, and the picture chose it — measured on the label
+tile's top face, the share of pixels dark enough to read as a gap rather than
+a tool mark:
+
+| profile | gap pixels | min luminance |
+|---|---|---|
+| ridge (old) | 15.0% | 62 |
+| stadium (`/2`) | 5.6% | 81 |
+| **fused (`/2.6`)** | **2.2%** | 82 |
+| smoother (`/3.2`) | 0.9% | 84 |
+
+`/3.2` scores better and looks worse — the top stops reading as printed at
+all, which is the opposite failure. This is a case where the metric had to be
+overruled by looking.
+
+**It costs geometry, and that is the trade taken deliberately.** Scott's call
+was iPad first, quality wins ties. Measured on the vase, identical scene:
+
+| | triangles | median frame | p90 |
+|---|---|---|---|
+| ridge | 517,716 | 1417 ms | 2129 ms |
+| flat top | 774,936 | 2033 ms | 4150 ms |
+
++50% triangles for +43% frame time — on a **software rasteriser**, where
+triangle count is the whole cost. A real GPU does not care about 775k
+triangles; its cost is fill rate and shader work, neither of which changed.
+Treat those numbers as the shape of the trade, not as what an iPad does.
+
+Two things any future change here has to keep, both guarded by tests:
+`setDrawRange` steps by the same 18 indices per segment the index writer
+emits (they disagree silently and only part way through a replay), and the
+shoulders stay at the full half-width or the part gets thin.
+
+## Full screen (2026-09-19)
+
+`#app` goes fullscreen, not the canvas. The transport and the plate list are
+what make this a tool rather than a picture, so they come along. The button
+hides itself where `requestFullscreen` does not exist rather than sitting
+there doing nothing, uses the `webkit` prefix as well (Safari is the browser
+this is for), and its label follows the `fullscreenchange` **event** rather
+than the call — a refused request must not leave the button lying.
+
 ## The AMS (2026-09-19)
 
 Rebuilt from Bambu's own product photography of the 4-slot unit. The shape

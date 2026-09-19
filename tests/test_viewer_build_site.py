@@ -722,6 +722,76 @@ def test_the_build_refuses_to_ship_without_three_js():
               "three.min.js is %d bytes -- that is not the library" % size)
 
 
+def test_the_bead_has_a_flat_top_not_a_ridge():
+    """The "missed areas after printing" defect, reported 2026-09-19.
+
+    The bead's cross-section was a tent: two shoulders at the layer floor, an
+    apex at the layer top. That makes the top of every extrusion a zero-width
+    RIDGE, and the shoulder normals exactly horizontal -- so seen from above,
+    half of every bead shades from lit at the ridge to black at the shoulder
+    and a solid top face renders as corduroy with gaps in it.
+
+    Measured on the label tile's top face, the share of pixels dark enough to
+    read as a gap rather than a tool mark: 15.0% with the ridge, 5.6% with a
+    stadium profile, 2.2% with the fused profile that shipped.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildJob\(raw\) \{.*?\n\}", js, re.S)
+    check(body is not None, "buildJob is gone")
+    if not body:
+        return
+    b = body.group(0)
+    check("BEAD_PTS = 4" in b,
+          "the bead is not four points across any more -- three is the tent "
+          "whose ridge caused the defect")
+    check("BEAD_IDX = 18" in b, "the bead is not three bands any more")
+    # two vertices sitting at ztop is what makes the top flat rather than a point
+    tops = re.findall(r"vPos\[vi \* 3 \+ \d+\] *= ztop;", b)
+    check(len(tops) == 2,
+          "expected exactly two vertices at the layer top (the flat), found %d"
+          % len(tops))
+    check("var kf = " in b and "2.6 * hw" in b,
+          "the flat-top fraction is gone or no longer derived from the layer "
+          "height")
+    # and the shoulders must still be the full bead width, or the part gets thin
+    check("vPos[vi * 3]      = x + ax;" in b and "vPos[vi * 3 + 9]  = x - ax;" in b,
+          "the bead's shoulders are no longer at the full half-width")
+
+
+def test_the_draw_range_matches_the_bead():
+    """Playback reveals the print by index count.
+
+    setDrawRange(0, seg * N) and the index writer have to agree on N or the
+    replay shows the wrong amount of print -- silently, and only part way
+    through, which is the worst way to find out.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    m = re.search(r"setDrawRange\(0, seg \* (\d+)\)", js)
+    check(m is not None, "the draw range no longer scales with the segment count")
+    if m:
+        check(m.group(1) == "18",
+              "draw range steps by %s indices per segment but the bead writes "
+              "18" % m.group(1))
+
+
+def test_full_screen_takes_the_whole_tool_not_just_the_canvas():
+    """A bare canvas is a picture; the transport and the plate list are what
+    make it a tool, so #app is what goes fullscreen."""
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    html = (ROOT / "tools" / "viewer" / "virtual_p1s.html").read_text(encoding="utf-8")
+    check('id="fullscreen"' in html, "there is no full screen button")
+    check("getElementById('app')" in js and "requestFullscreen" in js,
+          "full screen no longer targets the whole app grid")
+    check("webkitRequestFullscreen" in js,
+          "no webkit fallback -- Safari is the browser this is for")
+    check("fsBtn.hidden = true" in js,
+          "a browser without the Fullscreen API would be left with a button "
+          "that does nothing")
+    check("fullscreenchange" in js,
+          "the button's label follows the call rather than the event, so a "
+          "refused request would leave it lying")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

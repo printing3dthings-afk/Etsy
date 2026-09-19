@@ -2208,7 +2208,25 @@ function buildJob(raw) {
   var nPt = 0, nSeg = 0, i, k;
   for (k = 0; k < nPoly; k++) { nPt += polys[k * 3 + 2]; nSeg += polys[k * 3 + 2] - 1; }
 
-  var vPos  = new Int16Array(nPt * 3 * 3);   // 3 verts across the bead tent
+  // ── the bead's cross-section ────────────────────────────────────────────
+  // FOUR points across, not three, and the reason is the whole of the defect
+  // Scott reported on 2026-09-19 as "missed areas after printing": flat tops
+  // rendered as a dense stripe pattern, every other stripe almost black.
+  //
+  // The old section was a tent -- two shoulders at zlow, an apex at ztop -- so
+  // the top of every extrusion was a zero-width RIDGE and the shoulder normals
+  // were exactly horizontal. Seen from above, that means half of every bead's
+  // visible area shades from lit at the ridge to black at the shoulder, and a
+  // solid top surface reads as corduroy with gaps in it.
+  //
+  // A real extrusion is squashed between the nozzle and the layer below: a
+  // rectangle with semicircular ends. Its top is FLAT across most of the width
+  // and rounded only at the edges. Measured against the payloads, solid-infill
+  // lines sit 0.15-0.39 mm apart under a 0.42 mm bead, so neighbours genuinely
+  // overlap -- with a flat top the visible surface is continuous and every
+  // part of it faces up.
+  var BEAD_PTS = 4, BEAD_IDX = 18;
+  var vPos  = new Int16Array(nPt * BEAD_PTS * 3);
   // Real normals, one byte per component.
   //
   // The beads used to have no normal attribute at all and shaded with
@@ -2224,11 +2242,11 @@ function buildJob(raw) {
   // slope -- and their normals are known exactly from the miter direction that
   // built them. Writing them down makes the bead shade as the rounded extrusion
   // it actually is instead of as a field of facets.
-  var vNrm  = new Int8Array(nPt * 3 * 3);
-  var vType = new Uint8Array(nPt * 3);
-  var vSpd  = new Uint8Array(nPt * 3);
-  var vTool = new Uint8Array(nPt * 3);
-  var index = new Uint32Array(nSeg * 12);
+  var vNrm  = new Int8Array(nPt * BEAD_PTS * 3);
+  var vType = new Uint8Array(nPt * BEAD_PTS);
+  var vSpd  = new Uint8Array(nPt * BEAD_PTS);
+  var vTool = new Uint8Array(nPt * BEAD_PTS);
+  var index = new Uint32Array(nSeg * BEAD_IDX);
   var segEnd = new Float32Array(nSeg * 3);
   var segLen = new Float32Array(nSeg);
   var segCum = new Float32Array(nSeg + 1);
@@ -2266,6 +2284,22 @@ function buildJob(raw) {
     // in, so 100% lands exactly and cannot round into either a slit or an
     // overlap.
     var zlow = ztop - Math.round((L[5] || 0.2) * 100);
+    // Flat fraction of the bead's top, from this layer's own height.
+    //
+    // A single free extrusion is a rectangle with semicircular ends, which
+    // puts the flat at hw - h/2 -- the `/ 2` version of this line. Neighbours
+    // in a solid layer are not free: they are laid down molten against each
+    // other and FUSE, so the groove between two of them is much shallower
+    // than the intersection of two separate stadium profiles would be. 2.6 is
+    // that fusion, and it is the value the picture chose: measured on the
+    // label tile's top face, the fraction of pixels dark enough to read as a
+    // gap rather than a tool mark went 15.0% (old ridge) -> 5.6% (stadium)
+    // -> 2.2% here. Going further (3.2, 0.9%) smooths the top until the part
+    // stops looking printed at all, which is the opposite failure.
+    //
+    // Clamped so a very tall layer cannot collapse the top back to a ridge
+    // and a very thin one cannot run the flat out past the bead's own edge.
+    var kf = Math.max(0.2, Math.min(0.85, 1 - (ztop - zlow) / (2.6 * hw)));
     layerSeg[li] = si;
     for (var pi = L[1]; pi < L[1] + L[2]; pi++) {
       var t = polys[pi * 3], s = polys[pi * 3 + 1], n = polys[pi * 3 + 2];
@@ -2292,9 +2326,16 @@ function buildJob(raw) {
         var sc = Math.min(2.4, 2 / m) * hw;
         ax = ux * sc; ay = uy * sc;
 
-        vPos[vi * 3] = x + ax; vPos[vi * 3 + 1] = y + ay; vPos[vi * 3 + 2] = zlow;
-        vPos[vi * 3 + 3] = x;  vPos[vi * 3 + 4] = y;      vPos[vi * 3 + 5] = ztop;
-        vPos[vi * 3 + 6] = x - ax; vPos[vi * 3 + 7] = y - ay; vPos[vi * 3 + 8] = zlow;
+        // Flat half-width: for a rectangle with semicircular ends of radius
+        // h/2, the flat part runs to hw - h/2. Derived from the layer height
+        // rather than tuned, so a 0.1mm layer gets a flatter bead and a layer
+        // as tall as it is wide degenerates back toward a ridge, which is
+        // exactly what a real extrusion does.
+        var fx = ax * kf, fy = ay * kf;
+        vPos[vi * 3]      = x + ax; vPos[vi * 3 + 1]  = y + ay; vPos[vi * 3 + 2]  = zlow;
+        vPos[vi * 3 + 3]  = x + fx; vPos[vi * 3 + 4]  = y + fy; vPos[vi * 3 + 5]  = ztop;
+        vPos[vi * 3 + 6]  = x - fx; vPos[vi * 3 + 7]  = y - fy; vPos[vi * 3 + 8]  = ztop;
+        vPos[vi * 3 + 9]  = x - ax; vPos[vi * 3 + 10] = y - ay; vPos[vi * 3 + 11] = zlow;
         // A point is shared by two segments; take the one ENDING here so the
         // colour changes at the same place the slowdown starts.
         var sv = spd[Math.min(si + Math.max(i - 1, 0), spd.length - 1)];
@@ -2303,24 +2344,36 @@ function buildJob(raw) {
         // the quarter-round of a real extruded bead and averages to the 45
         // degrees the face actually sits at. Tilting the shoulders up as well
         // was tried and left the whole wall shading edge-on and dark.
-        vNrm[vi * 3]     = (ux * 127) | 0;
-        vNrm[vi * 3 + 1] = (uy * 127) | 0;
-        vNrm[vi * 3 + 2] = 0;
-        vNrm[vi * 3 + 3] = 0; vNrm[vi * 3 + 4] = 0; vNrm[vi * 3 + 5] = 127;
-        vNrm[vi * 3 + 6] = (-ux * 127) | 0;
-        vNrm[vi * 3 + 7] = (-uy * 127) | 0;
-        vNrm[vi * 3 + 8] = 0;
-        vType[vi] = t; vType[vi + 1] = t; vType[vi + 2] = t;
-        vSpd[vi] = sv; vSpd[vi + 1] = sv; vSpd[vi + 2] = sv;
-        vTool[vi] = tool; vTool[vi + 1] = tool; vTool[vi + 2] = tool;
-        vi += 3;
+        // Horizontal on the shoulders; nearly straight up at the top corners,
+        // tilted out just enough (27 degrees) that the flat top reads as the
+        // gently domed thing a bead actually is rather than as a flat ribbon.
+        // Interpolation across the top passes through straight-up at its
+        // middle, which is where a stadium section's normal genuinely points.
+        vNrm[vi * 3]      = (ux * 127) | 0;
+        vNrm[vi * 3 + 1]  = (uy * 127) | 0;
+        vNrm[vi * 3 + 2]  = 0;
+        vNrm[vi * 3 + 3]  = (ux * 57) | 0;
+        vNrm[vi * 3 + 4]  = (uy * 57) | 0;
+        vNrm[vi * 3 + 5]  = 113;
+        vNrm[vi * 3 + 6]  = (-ux * 57) | 0;
+        vNrm[vi * 3 + 7]  = (-uy * 57) | 0;
+        vNrm[vi * 3 + 8]  = 113;
+        vNrm[vi * 3 + 9]  = (-ux * 127) | 0;
+        vNrm[vi * 3 + 10] = (-uy * 127) | 0;
+        vNrm[vi * 3 + 11] = 0;
+        for (var bv = 0; bv < BEAD_PTS; bv++) {
+          vType[vi + bv] = t; vSpd[vi + bv] = sv; vTool[vi + bv] = tool;
+        }
+        vi += BEAD_PTS;
 
         if (i > 0) {
-          var a = base + (i - 1) * 3, b = base + i * 3;
-          index[ii++] = a;     index[ii++] = b;     index[ii++] = a + 1;
-          index[ii++] = a + 1; index[ii++] = b;     index[ii++] = b + 1;
-          index[ii++] = a + 1; index[ii++] = b + 1; index[ii++] = a + 2;
-          index[ii++] = a + 2; index[ii++] = b + 1; index[ii++] = b + 2;
+          // Three bands now: outer round, flat top, inner round. Same winding
+          // as the two-band version it replaces.
+          var a = base + (i - 1) * BEAD_PTS, b = base + i * BEAD_PTS;
+          for (var bb = 0; bb < 3; bb++) {
+            index[ii++] = a + bb;     index[ii++] = b + bb;     index[ii++] = a + bb + 1;
+            index[ii++] = a + bb + 1; index[ii++] = b + bb;     index[ii++] = b + bb + 1;
+          }
           var lx = (x - pts[(s + i - 1) * 2]) / 100;
           var ly = (y - pts[(s + i - 1) * 2 + 1]) / 100;
           segLen[si] = Math.hypot(lx, ly);
@@ -2470,7 +2523,7 @@ function segAtTime(t) {
 function setSeg(seg) {
   seg = Math.max(0, Math.min(JOB.nSeg, seg));
   play.seg = seg;
-  jobGeom.setDrawRange(0, seg * 12);
+  jobGeom.setDrawRange(0, seg * 18);   // BEAD_IDX in buildJob
   if (seg > 0) {
     var i = (seg - 1) * 3;
     var px = JOB.segEnd[i], py = JOB.segEnd[i + 1], zTop = JOB.segEnd[i + 2];
@@ -3448,6 +3501,39 @@ function initUI() {
   $('viewmode').addEventListener('click', function () {
     setViewMode(viewMode === 'machine' ? 'chamber' : 'machine');
   });
+
+  // Full screen. The whole #app grid goes, not just the canvas, because the
+  // transport and the plate list are what you need reachable while you are
+  // looking at a print -- a bare canvas would be a picture, not a tool.
+  //
+  // iOS Safari has no Element.requestFullscreen; iPad Safari 16.4+ does.
+  // Where it genuinely does not exist the button hides itself rather than
+  // sitting there doing nothing, and the rails-collapse below still works.
+  var fsBtn = $('fullscreen');
+  var fsEl = document.getElementById('app');
+  var fsReq = fsEl.requestFullscreen || fsEl.webkitRequestFullscreen;
+  var fsExit = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!fsReq) {
+    fsBtn.hidden = true;
+  } else {
+    fsBtn.addEventListener('click', function () {
+      var on = document.fullscreenElement || document.webkitFullscreenElement;
+      // Both are promise-returning in some engines and not in others, so the
+      // button state follows the fullscreenchange EVENT rather than the call
+      // -- a refused request must not leave the label lying.
+      if (on) { fsExit.call(document); } else { fsReq.call(fsEl); }
+    });
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (ev) {
+      document.addEventListener(ev, function () {
+        var on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        fsBtn.setAttribute('aria-pressed', String(on));
+        fsBtn.textContent = on ? 'Exit full screen' : 'Full screen';
+        // The grid is sized against the viewport; entering fullscreen changes
+        // it without firing a resize on every engine.
+        onResize();
+      });
+    });
+  }
 
   $('quality').addEventListener('click', function () {
     setQuality($('quality').getAttribute('aria-pressed') !== 'true');
