@@ -371,36 +371,31 @@ gold plate would be a nicer picture of a different claim.
 
 ## A fix that never reached the phone (2026-09-19)
 
-**Second attempt, and the one that stands.** The query-string cache-bust below
-was shipped and the phone came back running the previous build *again* — 20
-seconds of spinner, empty plate list, and a header chip with nothing in it.
-Two explanations fit that equally well from the outside (the webview kept the
-cached file, or the host did not serve `app.js?v=...` at all) and neither is
-worth guessing at, so the ambiguity is removed rather than resolved:
+Three attempts, two of them wrong, both wrong on real hardware rather than in
+theory. Written out because the failure mode each time was *silent* and the
+symptom was identical: a spinner, an empty plate list, and no way to tell from
+the outside which build was even running.
 
-* **`app.js` is inlined into the page.** There is no separately-cacheable,
-  separately-missable file any more. `three.min.js` stays external on purpose:
-  600 KB that genuinely never changes is exactly what you want a cache to keep.
-* **The build stamp is in the HTML, not painted by app.js.** The header chip
-  used to be filled by `paintJobList()` — which is precisely the function that
-  does not run when something is wrong. On the one occasion the version
-  mattered, the page could not say what it was. It now reads `build <hash>`
-  from the moment the HTML arrives, hashed over app.js **and**
-  virtual_p1s.html so a change confined to either one still moves it.
+| attempt | what happened |
+|---|---|
+| `<script src="app.js">` | The phone kept the cached file across a force-quit. A shipped fix simply never ran, three times over. |
+| `<script src="app.js?v=<hash>">` | Untestable — the **page** was cached too, so we never learned whether the query worked. |
+| inlined into the page | The script is served intact (verified by reading the published HTML back) and **does not execute**. The host does not run inline script in a multi-file artifact. |
+| `<script src="app.<hash>.js">` | Works. A URL that has never been requested cannot come from a cache, and an external file is what demonstrably executes here. |
 
-A renamed `<script src="app.js">` fails the build rather than silently
-no-opping, same as the three.js rewrite: here the no-op would ship a page with
-no application in it at all.
+Every earlier hashed bundle is deleted from the build output, and has to be
+removed from the published artifact too (`"app.<old>.js": null` in the publish
+`files` map) — otherwise it is a file the host would still serve and nothing
+would ever refresh.
 
-
-
-The stall below was fixed and shipped, the app was quit and reopened, and the
-phone ran the previous build anyway. `build_site.py` emitted
-`<script src="app.js">` with no version, so a webview that had cached those
-bytes kept serving them across restarts. The first fix appended the file's own
-content hash as a query string, `app.js?v=<hash>` — a different cache key for
-the same published path. **It did not work either**, which is why the script
-is inlined now; see above.
+**The thing that finally made this diagnosable** was a *static* build stamp.
+The header chip used to be filled by `paintJobList()`, which is precisely the
+function that does not run when something is wrong — so on the one occasion
+the version mattered, the page could not say what it was. It now reads
+`build <hash>` from the moment the HTML arrives, hashed over app.js **and**
+virtual_p1s.html so a change confined to either one still moves it. One
+screenshot of the header settled in seconds what three rounds of guessing had
+not.
 
 **The boot also paints in two stages now.** `initScene()` is by far the most
 expensive thing on the page and it ran *first*, so a slow scene left the plate

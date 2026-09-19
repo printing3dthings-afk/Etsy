@@ -518,44 +518,52 @@ def test_plate_and_ams_failures_are_not_fatal():
           "buildBed still assumes plateSurface returned textures")
 
 
-def test_the_app_is_inlined_and_the_page_says_which_build_it_is():
-    """A fix that never reaches the device is not a fix.
+def test_the_app_is_an_external_script_at_a_content_hashed_name():
+    """Three approaches, two of which failed on real hardware (2026-09-19).
 
-    A query-string cache-bust (app.js?v=<hash>) was tried first and the phone
-    still came back running the previous build. Whether the webview kept the
-    cached file or the host declined to serve the query, the outcome is the
-    same and neither is diagnosable from the outside -- so the script is
-    inlined and there is no separately-cacheable file to be stale.
+    ``app.js``          a phone kept the cached file across a force-quit, so a
+                        shipped fix never ran.
+    ``app.js?v=hash``   untestable -- the page was cached too, so we never
+                        learned whether the query worked.
+    inlined in the page the script is served intact (verified by reading the
+                        published HTML back) and does not execute. The host
+                        does not run inline script in a multi-file artifact.
 
-    The version stamp is in the HTML rather than painted by app.js, because
-    the function that used to paint it (paintJobList) is exactly the one that
-    does not run when something is wrong. On the one occasion the version
-    mattered, the page could not say what it was.
+    A new filename is the one option with no ambiguity: a URL that has never
+    been requested cannot come from a cache, and an external file is what
+    demonstrably executes here.
     """
+    viewer = ROOT / "tools" / "viewer"
+    import hashlib
+    want = hashlib.sha1((viewer / "app.js").read_bytes()
+                        + (viewer / "virtual_p1s.html").read_bytes()).hexdigest()[:10]
     with tempfile.TemporaryDirectory() as td:
         out = _build(Path(td))
+        # A previous build's bundle, standing in for the real case: the output
+        # folder is reused and every stale copy is a file the host would still
+        # serve and nothing would ever refresh.
+        (out / "app.deadbeef00.js").write_text("// stale", encoding="utf-8")
+        out = _build(Path(td))
         html = (out / "index.html").read_text(encoding="utf-8")
-    check('<script src="app.js"' not in html,
-          "app.js is a separate request again -- it can be cached "
-          "independently of the page and outlive a fix")
-    check("function initScene()" in html,
-          "app.js is not inlined into the page")
+        names = sorted(p.name for p in out.glob("app*.js"))
+    check('<script src="app.%s.js"></script>' % want in html,
+          "the app script is not loaded from a content-hashed filename")
+    check(names == ["app.%s.js" % want],
+          "expected exactly one app bundle in the build, got %s -- every "
+          "earlier copy is a file the host would still serve and nothing "
+          "would ever refresh" % names)
+    check("function initScene" not in html,
+          "the app is inlined into the page again -- the host does not "
+          "execute inline script in a multi-file artifact, so the page would "
+          "render and do nothing at all")
     m = re.search(r'id="buildchip">build ([0-9a-f]{10})<', html)
-    check(m is not None,
-          "the page no longer carries a static build stamp, so a screenshot "
-          "of a broken page cannot say which build it is")
-    if m:
-        import hashlib
-        viewer = ROOT / "tools" / "viewer"
-        want = hashlib.sha1((viewer / "app.js").read_bytes()
-                            + (viewer / "virtual_p1s.html").read_bytes()
-                            ).hexdigest()[:10]
-        check(m.group(1) == want,
-              "the build stamp is not the page source's own hash, so it can "
-              "fail to move when the page does")
+    check(m is not None and m.group(1) == want,
+          "the page no longer carries a static build stamp matching the page "
+          "source, so a screenshot of a broken page cannot say which build "
+          "it is -- and that chip is how we finally learned a fix had landed")
     check("three.min.js" in html,
-          "three.js should stay external -- 600 KB that genuinely never "
-          "changes is exactly what you want a cache to keep")
+          "three.js should stay external and unhashed -- 600 KB that genuinely "
+          "never changes is exactly what you want a cache to keep")
 
 
 def test_a_renamed_app_script_tag_fails_the_build():

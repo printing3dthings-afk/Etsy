@@ -58,33 +58,37 @@ def build(out: Path) -> Path:
             % CDN_THREE)
     body_part = body_part.replace(CDN_THREE, "three.min.js")
 
-    # app.js is INLINED, not linked. A query-string cache-bust was tried
-    # first and the page still came back running the previous build on a
-    # phone -- whether the webview kept the cached file or the host did not
-    # serve the query, the outcome was the same and neither is worth guessing
-    # at from the outside. Inlined, the script cannot be separately cached or
-    # separately missing: there is one file, and the artifact serves it fresh
-    # per version. three.min.js stays external on purpose -- it is 600 KB that
-    # genuinely never changes, so caching it is the behaviour you want.
+    # app.js is an EXTERNAL script at a filename that changes with its
+    # content. Two other approaches were tried on real hardware first and both
+    # failed, on 2026-09-19, in ways worth recording so nobody repeats them:
+    #
+    #   <script src="app.js">        a phone kept the cached file across a
+    #                                force-quit, so a shipped fix never ran;
+    #   <script src="app.js?v=hash"> untestable -- the PAGE was cached too, so
+    #                                we never learned whether the query worked;
+    #   inlined into the page        the script is served intact (verified by
+    #                                reading the published HTML back) and does
+    #                                not execute. The host does not run inline
+    #                                script in a multi-file artifact.
+    #
+    # A new FILENAME is the one option with no ambiguity in it: a URL that has
+    # never been requested cannot be served from a cache, and an external file
+    # is what demonstrably executes here.
     app_src = HERE / "app.js"
-    app_js = app_src.read_text(encoding="utf-8")
-    if "</script" in app_js.lower():
-        raise SystemExit(
-            "app.js contains a </script sequence, which would terminate the "
-            "inline block early and truncate the page. Escape it as <\\/script.")
     # Over the whole page source, not just app.js: a change confined to
     # build_site.py or the HTML still produces a different page, and a version
     # stamp that does not move when the page does is worse than none.
     app_hash = hashlib.sha1(
         app_src.read_bytes() + (HERE / "virtual_p1s.html").read_bytes()
     ).hexdigest()[:10]
+    app_name = "app.%s.js" % app_hash
     if '<script src="app.js"></script>' not in body_part:
         raise SystemExit(
             "the app.js <script src> in virtual_p1s.html is not "
-            '<script src="app.js"></script> any more, so the inline rewrite '
-            "silently did nothing and the page would load nothing at all.")
+            '<script src="app.js"></script> any more, so the rewrite silently '
+            "did nothing and the page would load no application at all.")
     body_part = body_part.replace('<script src="app.js"></script>',
-                                  "<script>\n" + app_js + "\n</script>")
+                                  '<script src="%s"></script>' % app_name)
 
     # Stamp the build into the page itself, not into something app.js paints.
     # The header chip used to be filled by paintJobList(), which is exactly
@@ -100,11 +104,14 @@ def build(out: Path) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(HEAD + head_part + BODY_OPEN + body_part + TAIL,
                                     encoding="utf-8")
-    # An app.js left here from an earlier build is a file the host would still
-    # serve and nothing would ever refresh.
-    stale = out / "app.js"
-    if stale.exists():
-        stale.unlink()
+    shutil.copy2(app_src, out / app_name)
+    # Every earlier hashed copy is a file the host would still serve and
+    # nothing would ever refresh. The publish has to remove them too --
+    # see the note at the top of this file.
+    for old in out.glob("app*.js"):
+        if old.name != app_name:
+            old.unlink()
+
 
     three = HERE / "vendor" / "three.min.js"
     if not three.exists():
