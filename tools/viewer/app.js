@@ -56,6 +56,59 @@ var PRINTERS = {
         note:'Enter a build volume to redraw the chamber. This is the hook for the rest of the market \u2014 it changes what is drawn, not how the file was sliced.'}
 };
 
+// ── build plates ─────────────────────────────────────────────────────────────
+// The real Bambu Lab 256 x 256 plates, one entry per plate Bambu currently
+// sells for this machine. Nothing here is styled from memory:
+//   * the five plate types, what each is made of, and which filaments need
+//     glue on which, are Bambu's own wiki -- wiki.bambulab.com/en/filament-acc/
+//     acc/plates, read 2026-09-19;
+//   * every `hex` is the MEDIAN COLOUR sampled out of Bambu's own product
+//     photography on that page (build_plates.png, textured_plate.jpg,
+//     dual.png), not picked by eye. The textured plate really is gold; the
+//     smooth PEI really is mid grey and the dual plate's smooth face is much
+//     darker than the standalone smooth plate, which is why they differ here.
+// `grain` picks the procedural surface in plateTexture(); roughness/metalness
+// are the finish the wiki describes ("textured", "smooth and matte", "nearly
+// glossy") expressed for the standard material.
+var PLATES = {
+  textured: {
+    label: 'Textured PEI', hex: 0xcca96b, grain: 'stipple', ink: 0xf0e6d2,
+    rough: 0.86, metal: 0.18, bar: 'PLA/ABS/PETG',
+    face: 'Textured — the part’s underside comes off with the plate’s grain in it.',
+    note: 'PEI powder sprayed on both faces of a stainless sheet. The plate the P1S ships with, and the one every job here was sliced for. Adhesion without glue for most filaments; PC/PA/ABS/ASA may want a glue stick. Self-releases once the bed is back under 35 °C.'
+  },
+  smooth: {
+    label: 'Smooth PEI', hex: 0x464646, grain: 'satin', ink: 0xd8dade,
+    rough: 0.52, metal: 0.22, bar: 'PLA',
+    face: 'Smooth matte — a flat, level underside.',
+    note: 'A PEI sheet bonded to 0.5 mm spring steel with heat-resistant 3M adhesive. For parts that need a genuinely flat bottom. Only PLA goes on bare — everything else needs glue, or the PEI sheet tears when the part releases.'
+  },
+  dual: {
+    label: 'Dual-Texture PEI', hex: 0x24262a, grain: 'satin', ink: 0xd8dade,
+    rough: 0.48, metal: 0.24, bar: 'PLA',
+    face: 'Smooth side up — flip it for the textured gold face.',
+    note: 'One plate, two surfaces: textured PEI on one face, smooth PEI on the other. Shown smooth side up. Same rules as each single-surface plate depending on which way it goes in.'
+  },
+  engineering: {
+    label: 'Engineering Plate', hex: 0x2b2c2e, grain: 'fine', ink: 0xe2e4e8,
+    rough: 0.34, metal: 0.30, bar: 'ABS/ASA/PC/PA',
+    face: 'Fine even texture — a nearly glossy underside.',
+    note: 'A corrosion-resistant reinforced coating aimed at ABS, ASA, PC and PA. Bambu’s all-rounder when you are not sure. Glue is required before printing on it with any filament, not just the hard ones.'
+  },
+  supertack: {
+    label: 'Cool Plate SuperTack', hex: 0x232325, grain: 'flat', ink: 0xe2e4e8,
+    rough: 0.66, metal: 0.10, bar: 'PLA/PETG',
+    face: 'Flat matte.',
+    note: 'Spring steel coated in SuperTack. Grips hard even at low bed temperatures, which is the point — PLA and PETG without heating the bed much. Bambu quotes under 20% adhesion loss after 300 prints.'
+  },
+  starry: {
+    label: '3D Effect Sheet (Starry)', hex: 0x1a2425, grain: 'starry', ink: 0xdfe6e8,
+    rough: 0.44, metal: 0.26, bar: '',
+    face: 'Decorative — the glitter pattern transfers into the part’s first layer.',
+    note: 'Not a plate type so much as a finish: a textured effect sheet whose pattern is pressed into the bottom surface of the print. Here to show what the plate choice does to the part, which is the whole reason the finish column exists.'
+  }
+};
+
 // Starting points only. Scott's own tuned profiles override every one of these.
 var MATERIALS = [
   {n:'PLA', rho:1.24,     noz:'190\u2013230', bed:'35\u201360',  dry:'45 \u00b0C / 6\u20138 h',  plate:'Smooth PEI', use:'Decorative, sharpest detail, lowest failure rate'},
@@ -73,6 +126,9 @@ var stage = $('stage'), loading = $('loading');
 
 // \u2500\u2500 three.js scene \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 var renderer, scene, camera, chamber, plate, grid, nozzle, gantry;
+var _maxAniso = 1;
+// P1S bed_exclude_area, front-left corner -- Bambu's own machine profile.
+var EXCLUDE_W = 18, EXCLUDE_D = 28;
 var bedGroup, shadowPlane, glowSprite, headScale = 1;
 var doorGroup, extPanels = [], machineBounds = null;
 var amsGroup, yRails, chamberLamp;
@@ -310,6 +366,9 @@ function initScene() {
   basePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
   renderer.setPixelRatio(basePixelRatio);
   renderer.setClearColor(0x07080a, 1);
+  // The plate face is a 1:1 texture seen at a glancing angle across 256 mm;
+  // without anisotropic filtering its grain smears into bands halfway back.
+  _maxAniso = renderer.capabilities.getMaxAnisotropy();
 
   // Colour management, 2026-09-17. Everything below used to render in the
   // renderer's default linear output with Lambert materials, which is why the
@@ -591,30 +650,110 @@ function machineCamera(open) {
   }
 }
 
+// ── build plate ────────────────────────────────────────────
+// A real Bambu flex plate, not a grey square: the silhouette Bambu's own plates
+// have (rounded corners, the slotted locating tab at the back, the printed bar
+// and two angled notches along the front), the surface finish of whichever
+// plate is selected, and the printable area drawn on it.
+//
+// The locating tab is the alignment story in hardware. The plate does not get
+// positioned by eye -- its rear slot drops over the heatbed's pins, which is
+// what makes the machine's 0,0 (the FRONT-LEFT corner of the printable square,
+// per Bambu's own printable_area in the P1S profile) land in the same physical
+// place every time you pull a print off and put the plate back.
+var PLATE_TAB_W = 78, PLATE_TAB_D = 11;   // rear locating tab
+var PLATE_BAR_W = 205, PLATE_BAR_D = 7;   // front printed bar
+var PLATE_STEEL = 1;                      // steel overhangs the printable square
+
+function plateShape(X, Y) {
+  var s = new THREE.Shape();
+  var x0 = -PLATE_STEEL, x1 = X + PLATE_STEEL;
+  var y0 = -PLATE_STEEL, y1 = Y + PLATE_STEEL;
+  var r = 9, cx = X / 2;
+  s.moveTo(x0 + r, y0);
+  // front edge, interrupted by the printed bar
+  s.lineTo(cx - PLATE_BAR_W / 2, y0);
+  s.lineTo(cx - PLATE_BAR_W / 2 + 4, y0 - PLATE_BAR_D);
+  s.lineTo(cx + PLATE_BAR_W / 2 - 4, y0 - PLATE_BAR_D);
+  s.lineTo(cx + PLATE_BAR_W / 2, y0);
+  s.lineTo(x1 - r, y0);
+  s.quadraticCurveTo(x1, y0, x1, y0 + r);
+  s.lineTo(x1, y1 - r);
+  s.quadraticCurveTo(x1, y1, x1 - r, y1);
+  // back edge, interrupted by the locating tab
+  s.lineTo(cx + PLATE_TAB_W / 2, y1);
+  s.lineTo(cx + PLATE_TAB_W / 2 - 7, y1 + PLATE_TAB_D);
+  s.lineTo(cx - PLATE_TAB_W / 2 + 7, y1 + PLATE_TAB_D);
+  s.lineTo(cx - PLATE_TAB_W / 2, y1);
+  s.lineTo(x0 + r, y1);
+  s.quadraticCurveTo(x0, y1, x0, y1 - r);
+  s.lineTo(x0, y0 + r);
+  s.quadraticCurveTo(x0, y0, x0 + r, y0);
+  // The slot in the locating tab -- a real hole, so it reads as one from the
+  // side rather than as a painted line.
+  var h = new THREE.Path();
+  var sw = 56, sh = 3.4, sy = y1 + 4;
+  h.moveTo(cx - sw / 2, sy); h.lineTo(cx + sw / 2, sy);
+  h.lineTo(cx + sw / 2, sy + sh); h.lineTo(cx - sw / 2, sy + sh);
+  s.holes.push(h);
+  return s;
+}
+
+// UVs straight off ExtrudeGeometry/ShapeGeometry are world x,y in millimetres,
+// so a 1:1 plate-face texture needs them remapped across the shape's own box.
+function normalizeUV(geo) {
+  geo.computeBoundingBox();
+  var b = geo.boundingBox, uv = geo.attributes.uv;
+  var w = b.max.x - b.min.x, h = b.max.y - b.min.y;
+  for (var i = 0; i < uv.count; i++) {
+    uv.setXY(i, (uv.getX(i) - b.min.x) / w, (uv.getY(i) - b.min.y) / h);
+  }
+  uv.needsUpdate = true;
+  return [b.min.x, b.min.y, w, h];
+}
+
 function buildBed(X, Y, ox, oy) {
   bedGroup = new THREE.Group();
-  plate = new THREE.Mesh(new THREE.BoxGeometry(X + 14, Y + 14, 7),
-    new THREE.MeshStandardMaterial({map: srgbMap(peiTexture()), roughness: 0.58, metalness: 0.35, envMapIntensity: 0.8}));
-  plate.position.set(ox, oy, -3.6);
+  var spec = PLATES[plateId] || PLATES.textured;
+  var shape = plateShape(X, Y);
+
+  // Steel body. Top face sits a hair below z=0 so the first layer lands on it
+  // rather than inside it.
+  var body = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(shape, {depth: 2.0, bevelEnabled: false}),
+    surface(0x23262c, {roughness: 0.42, metalness: 0.72}));
+  // plateShape() is already in plate coordinates (0..X, 0..Y), so unlike the
+  // centred box it replaced it takes no ox/oy offset -- applying one put the
+  // plate a bed-width out in front of the machine.
+  body.position.set(0, 0, -2.05);
+  bedGroup.add(body);
+
+  // Printed face. Separate from the extrusion because it needs its own 1:1 UVs
+  // and because the markings have to land at real plate coordinates, not on a
+  // tiling texture.
+  var faceGeo = new THREE.ShapeGeometry(shape, 24);
+  var box = normalizeUV(faceGeo);
+  var maps = plateSurface(spec, X, Y, box);
+  plate = new THREE.Mesh(faceGeo, new THREE.MeshStandardMaterial({
+    map: srgbMap(maps.color), normalMap: maps.normal,
+    normalScale: new THREE.Vector2(maps.bump, maps.bump),
+    roughness: spec.rough, metalness: spec.metal, envMapIntensity: 0.7,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+  }));
+  plate.position.set(0, 0, -0.045);
   bedGroup.add(plate);
-  var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 30, Y + 30, 10),
+
+  // Heatbed under the flex plate -- what the magnets grab.
+  var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 22, Y + 22, 9),
     surface(0x191d25));
-  carrier.position.set(ox, oy, -12);
+  carrier.position.set(ox, oy, -6.6);
   bedGroup.add(carrier);
 
-  grid = new THREE.Group();
-  var gp = [];
-  for (var i = 0; i <= X; i += 32) { gp.push(i, 0, 0.06, i, Y, 0.06); }
-  for (var k = 0; k <= Y; k += 32) { gp.push(0, k, 0.06, X, k, 0.06); }
-  var gg = new THREE.BufferGeometry();
-  gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
-  grid.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({
-    color: 0x5b6475, transparent: true, opacity: 0.7})));
-  var edge = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.PlaneGeometry(X, Y)),
-    new THREE.LineBasicMaterial({color: 0x99a3b5}));
-  edge.position.set(X / 2, Y / 2, 0.08);
-  grid.add(edge);
+  buildPlateGrid(X, Y, spec);
+  // Switching plate or machine rebuilds this group, and the rebuild has to
+  // land in whatever mode is already running -- otherwise picking a plate in
+  // real-print mode paints the guides back on.
+  grid.visible = colorMode !== 'real';
   bedGroup.add(grid);
 
   shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
@@ -625,6 +764,45 @@ function buildBed(X, Y, ox, oy) {
   bedGroup.add(shadowPlane);
   bedGroup.name = 'bed';
   scene.add(bedGroup);
+}
+
+// The printable square, its 32 mm ruling, and the corner the P1S reserves.
+// Lines are drawn in the plate's own ink colour so they stay legible on gold
+// and on black without a second palette.
+function buildPlateGrid(X, Y, spec) {
+  grid = new THREE.Group();
+  var gp = [];
+  for (var i = 32; i < X; i += 32) { gp.push(i, 0, 0.06, i, Y, 0.06); }
+  for (var k = 32; k < Y; k += 32) { gp.push(0, k, 0.06, X, k, 0.06); }
+  var gg = new THREE.BufferGeometry();
+  gg.setAttribute('position', new THREE.Float32BufferAttribute(gp, 3));
+  grid.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({
+    color: lin(spec.ink), transparent: true, opacity: 0.22})));
+
+  var edge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.PlaneGeometry(X, Y)),
+    new THREE.LineBasicMaterial({color: lin(spec.ink),
+      transparent: true, opacity: 0.5}));
+  edge.position.set(X / 2, Y / 2, 0.08);
+  grid.add(edge);
+
+  // bed_exclude_area from Bambu's own P1S profile: an 18 x 28 mm rectangle at
+  // the front-left corner, where the toolhead parks and wipes. Nothing is
+  // allowed to print here, and the first thing you notice arranging a wide
+  // part is that this corner is why it will not fit flush.
+  if (X >= 60 && Y >= 60) {
+    var ex = new THREE.Mesh(new THREE.PlaneGeometry(EXCLUDE_W, EXCLUDE_D),
+      new THREE.MeshBasicMaterial({color: lin(0xff5a3c), transparent: true,
+        opacity: 0.30, depthWrite: false}));
+    ex.position.set(EXCLUDE_W / 2, EXCLUDE_D / 2, 0.07);
+    grid.add(ex);
+    var exl = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.PlaneGeometry(EXCLUDE_W, EXCLUDE_D)),
+      new THREE.LineBasicMaterial({color: lin(0xff7a55),
+        transparent: true, opacity: 0.85}));
+    exl.position.set(EXCLUDE_W / 2, EXCLUDE_D / 2, 0.09);
+    grid.add(exl);
+  }
 }
 
 function buildGantry(W, ox, oy) {
@@ -1108,21 +1286,191 @@ function shellTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-function peiTexture() {
+// ── plate surfaces ───────────────────────────────────────────────────────────
+// One canvas per plate covering the whole sheet 1:1, so the grain, the side
+// text and the front bar all land at real plate coordinates. A tiling noise
+// texture cannot do the markings, and a decal plane for the markings would
+// need its own draw call and its own z-fight to manage; one canvas is both.
+//
+// The companion normal map matters more than the colour does. Textured PEI is
+// sprayed powder -- it is the height variation that makes it read as grit
+// rather than as a gold sticker, and the same trick at a tenth the amplitude
+// is the difference between "smooth PEI" and "flat grey".
+var PLATE_PX = 1024;
+
+function _plateCanvas() {
   var c = document.createElement('canvas');
-  c.width = c.height = 256;
-  var g = c.getContext('2d');
-  g.fillStyle = '#343943'; g.fillRect(0, 0, 256, 256);
-  var img = g.getImageData(0, 0, 256, 256), d = img.data;
-  for (var i = 0; i < d.length; i += 4) {
-    var n = (Math.random() - 0.5) * 54;
-    d[i] += n; d[i + 1] += n; d[i + 2] += n * 0.9;
+  c.width = c.height = PLATE_PX;
+  return c;
+}
+
+// Each plate's finish as three octaves of the same speckle: coarse mottle,
+// mid grain, fine grit. One octave is not enough and the reason is mipmapping
+// -- a 1024px face texture on a 256mm plate is well under one texel per screen
+// pixel at any normal zoom, so a single fine octave averages itself away into
+// flat paint everywhere except the few rows nearest the camera. That was the
+// first version's actual failure: grain at the front of the plate, bare gold
+// at the back, with nothing wrong in the texture itself.
+//
+//   octaves: [radius px, coverage, colour swing, height swing, alpha]
+//   bump:    normalScale for the companion height map
+//
+// ONLY THE MIDDLE OCTAVE CARRIES HEIGHT, and that is the whole lesson here.
+// Both neighbours were tried and both are wrong for a reason worth writing
+// down:
+//   * the coarse octave as relief gives 30px-wide smooth bumps whose normals
+//     swing the environment reflection across half a centimetre of plate at a
+//     time -- every plate came out mottled in big light-grey blobs that had
+//     nothing to do with its colour map;
+//   * the fine octave as relief is worse, and it is the same geometric
+//     aliasing the bead mesh hit: 2px features in a 1024px texture shown at
+//     ~240px on screen are sub-pixel, so their normals alias into hard white
+//     specular sparkle and a matte black plate renders as television static.
+// Fine detail belongs in the COLOUR map, which mipmaps down to a slightly
+// varied tone instead of to noise.
+var GRAIN = {
+  stipple: {bump: 0.70, octaves: [[30, 0.55, 19,  0, 0.34], [10, 0.65, 21, 78, 0.36], [2.0, 0.70, 24, 0, 0.42]]},
+  satin:   {bump: 0.10, octaves: [[36, 0.28,  4,  0, 0.22], [7, 0.32,  5, 14, 0.22], [1.5, 0.40,  7, 0, 0.26]]},
+  fine:    {bump: 0.08, octaves: [[38, 0.22,  3,  0, 0.18], [5, 0.38,  4, 12, 0.20], [1.1, 0.50,  6, 0, 0.24]]},
+  flat:    {bump: 0.06, octaves: [[40, 0.20,  3,  0, 0.16], [9, 0.26,  4,  8, 0.16], [1.8, 0.28,  5, 0, 0.18]]},
+  starry:  {bump: 0.26, octaves: [[32, 0.35,  9, 18, 0.25]], glitter: true}
+};
+
+function plateSurface(spec, X, Y, box) {
+  var g = GRAIN[spec.grain] || GRAIN.satin;
+  var col = _plateCanvas(), cg = col.getContext('2d');
+  var bmp = _plateCanvas(), bg = bmp.getContext('2d');
+  var base = new THREE.Color(spec.hex);
+  var br = base.r * 255, bgr = base.g * 255, bb = base.b * 255;
+  cg.fillStyle = '#' + base.getHexString(); cg.fillRect(0, 0, PLATE_PX, PLATE_PX);
+  bg.fillStyle = '#808080'; bg.fillRect(0, 0, PLATE_PX, PLATE_PX);
+
+  // Colour and height are drawn from the same random draw, so a bright fleck
+  // is a raised fleck. That is what a sprayed powder coat is, and it is what
+  // keeps the shading honest when the light moves.
+  g.octaves.forEach(function (o) {
+    var r = o[0], n = Math.round(PLATE_PX * PLATE_PX * o[1] / (Math.PI * r * r));
+    for (var i = 0; i < n; i++) {
+      var x = Math.random() * PLATE_PX, y = Math.random() * PLATE_PX;
+      var rr = r * (0.5 + Math.random());
+      var d = (Math.random() - 0.5) * 2;
+      cg.fillStyle = 'rgba(' + _c(br + d * o[2]) + ',' + _c(bgr + d * o[2]) +
+        ',' + _c(bb + d * o[2] * 0.9) + ',' + o[4] + ')';
+      cg.beginPath(); cg.arc(x, y, rr, 0, 6.2832); cg.fill();
+      if (!o[3]) { continue; }
+      var h = _c(128 + d * o[3]);
+      bg.fillStyle = 'rgb(' + h + ',' + h + ',' + h + ')';
+      bg.beginPath(); bg.arc(x, y, rr, 0, 6.2832); bg.fill();
+    }
+  });
+
+  // The effect sheet's glitter. Sparse, small and saturated on purpose -- the
+  // first pass used big bright flecks at high density and ACES clipped every
+  // one of them to white, so a decorative plate rendered as television static.
+  if (g.glitter) {
+    var lg = cg.createLinearGradient(0, 0, PLATE_PX * 0.4, PLATE_PX);
+    lg.addColorStop(0, 'rgba(10,26,34,0.75)');
+    lg.addColorStop(1, 'rgba(6,8,12,0.75)');
+    cg.fillStyle = lg; cg.fillRect(0, 0, PLATE_PX, PLATE_PX);
+    for (var k = 0; k < 5200; k++) {
+      var gx = Math.random() * PLATE_PX, gy = Math.random() * PLATE_PX;
+      var gr = 0.7 + Math.random() * 1.3;
+      cg.fillStyle = 'hsla(' + Math.floor(Math.random() * 360) + ',85%,' +
+        (28 + Math.random() * 26).toFixed(0) + '%,' + (0.5 + Math.random() * 0.5) + ')';
+      cg.beginPath(); cg.arc(gx, gy, gr, 0, 6.2832); cg.fill();
+    }
   }
-  g.putImageData(img, 0, 0);
-  var tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(9, 9);
-  return tex;
+
+  plateMarkings(cg, spec, X, Y, box);
+
+  var ct = new THREE.CanvasTexture(col);
+  var nt = new THREE.CanvasTexture(heightToNormal(bmp));
+  ct.anisotropy = nt.anisotropy = _maxAniso;
+  return {color: ct, normal: nt, bump: g.bump};
+}
+
+function _c(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+
+// A greyscale height field is NOT a normal map, and handing one straight to
+// `normalMap` is the single worst-looking bug this viewer has had. The shader
+// reads rgb*2-1 as a tangent-space vector, so a flat grey field decodes to
+// (0,0,0) -- a degenerate normal -- and every slightly-lighter blob decodes to
+// a steeply tilted facet that catches a hard specular off the environment.
+// Every plate rendered as light-grey blotches on black, which looked like a
+// colour bug and was not. This converts properly: central-difference the
+// height, build the real tangent normal, encode it back.
+function heightToNormal(canvas) {
+  var n = canvas.width;
+  var src = canvas.getContext('2d').getImageData(0, 0, n, n).data;
+  var out = document.createElement('canvas');
+  out.width = out.height = n;
+  var octx = out.getContext('2d');
+  var img = octx.createImageData(n, n), d = img.data;
+  var strength = 6;   // height units per texel -- the slope scale
+  for (var y = 0; y < n; y++) {
+    var yu = ((y - 1 + n) % n) * n, yd = ((y + 1) % n) * n, yc = y * n;
+    for (var x = 0; x < n; x++) {
+      var xl = (x - 1 + n) % n, xr = (x + 1) % n;
+      var dx = (src[(yc + xr) * 4] - src[(yc + xl) * 4]) / 255 * strength;
+      var dy = (src[(yd + x) * 4] - src[(yu + x) * 4]) / 255 * strength;
+      var len = Math.sqrt(dx * dx + dy * dy + 1);
+      var i = (yc + x) * 4;
+      d[i]     = Math.round((-dx / len * 0.5 + 0.5) * 255);
+      d[i + 1] = Math.round((-dy / len * 0.5 + 0.5) * 255);
+      d[i + 2] = Math.round((1 / len * 0.5 + 0.5) * 255);
+      d[i + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  return out;
+}
+
+// Printed markings, placed in millimetres and converted once. Everything here
+// is on Bambu's own plates: the product name up the left edge, the filament /
+// HOT SURFACE bar across the front tab, and the pair of angled notches at the
+// bar's right end.
+function plateMarkings(g, spec, X, Y, box) {
+  var ox = box[0], oy = box[1], w = box[2], h = box[3];
+  // plate mm -> canvas px. Canvas y runs down, plate y runs back.
+  function px(mx) { return (mx - ox) / w * PLATE_PX; }
+  function py(my) { return PLATE_PX - (my - oy) / h * PLATE_PX; }
+  var mm = PLATE_PX / w;
+  var ink = '#' + new THREE.Color(spec.ink).getHexString();
+
+  g.save();
+  g.globalAlpha = 0.55;
+  g.fillStyle = ink;
+  g.translate(px(9), py(Y * 0.34));
+  g.rotate(-Math.PI / 2);
+  g.font = (5.2 * mm).toFixed(1) + 'px system-ui, sans-serif';
+  g.textBaseline = 'middle';
+  g.fillText('Bambu ' + spec.label, 0, 0);
+  g.restore();
+
+  if (spec.bar) {
+    g.save();
+    g.globalAlpha = 0.6;
+    g.fillStyle = ink;
+    g.font = (4.4 * mm).toFixed(1) + 'px system-ui, sans-serif';
+    g.textBaseline = 'middle';
+    var by = py(-3.4);
+    g.fillText(spec.bar, px(X / 2 - PLATE_BAR_W / 2 + 22), by);
+    g.textAlign = 'right';
+    g.fillText('HOT SURFACE', px(X / 2 + PLATE_BAR_W / 2 - 34), by);
+    g.strokeStyle = ink; g.lineWidth = Math.max(1, 0.4 * mm);
+    g.globalAlpha = 0.35;
+    g.strokeRect(px(X / 2 - PLATE_BAR_W / 2 + 8), py(-0.8),
+      (PLATE_BAR_W - 16) * mm, 5.4 * mm);
+    // the two angled cut-outs at the bar's right end
+    g.globalAlpha = 0.5;
+    for (var k = 0; k < 2; k++) {
+      var bx = px(X / 2 + PLATE_BAR_W / 2 - 26 + k * 11);
+      g.beginPath();
+      g.moveTo(bx, py(-5.6)); g.lineTo(bx + 7 * mm, py(-5.6));
+      g.lineTo(bx, py(-0.9)); g.closePath(); g.fill();
+    }
+    g.restore();
+  }
 }
 
 function blobTexture() {
@@ -2436,6 +2784,10 @@ function applyRealMode() {
   _wasSolo = solo;
   syncStill();
 
+  // The printable-area ruling and the reserved-corner marker are annotation.
+  // Real-print mode is "what this looks like in the machine", and no plate has
+  // an orange rectangle painted on it -- so the plate stays, the guides go.
+  if (grid) { grid.visible = !real; }
   if (gantry) { gantry.visible = moving && !solo; }
   if (nozzle) { nozzle.visible = moving && !solo; }
   if (yRails) { yRails.visible = moving && !solo; }
@@ -2570,7 +2922,7 @@ function loadJob(id) {
 }
 
 // \u2500\u2500 reference panes \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-var printerId = 'p1s', materialId = 'PLA';
+var printerId = 'p1s', materialId = 'PLA', plateId = 'textured';
 
 function paintPrinter() {
   var p = PRINTERS[printerId];
@@ -2591,9 +2943,31 @@ function paintPrinter() {
   // screen; the second is reference for a filament nothing here was sliced in.
   // Collapsing them into one would quietly imply the slice used the selected
   // material's numbers, which it did not.
+  var plateOpts = Object.keys(PLATES).map(function (k) {
+    return '<option value="' + k + '"' + (k === plateId ? ' selected' : '') +
+      '>' + PLATES[k].label + '</option>';
+  }).join('');
+  var pl = PLATES[plateId];
   $('pane-printer').innerHTML =
     '<h3>Machine</h3><select id="psel" aria-label="Printer">' + opts + '</select>' +
     '<p style="margin-top:9px">' + p.note + '</p>' + custom +
+    '<h3>Build plate</h3>' +
+    '<select id="platesel" aria-label="Build plate">' + plateOpts + '</select>' +
+    '<p style="margin-top:9px">' + pl.note + '</p>' +
+    '<table class="kv">' +
+    row('Surface', pl.face) +
+    row('Size', '256 \u00d7 256 mm \u2014 X2D, P2S, P1 series, X1 series, A1') +
+    row('Printable area', '0\u2013256 mm in X and Y, origin at the front-left corner') +
+    row('Reserved', EXCLUDE_W + ' \u00d7 ' + EXCLUDE_D + ' mm front-left corner (shown in orange)') +
+    '</table>' +
+    '<div class="caveat"><b>How a print gets aligned on it.</b> The plate is ' +
+    'not positioned by eye \u2014 the slot in its rear tab drops over the ' +
+    'heatbed\u2019s locating pins, so the machine\u2019s 0,0 lands in the same ' +
+    'physical place every time. The slicer then arranges the part inside that ' +
+    'square: centred on 128, 128 for a single object, and clear of the reserved ' +
+    'corner. <span class="mono">tools/plate_audit.py</span> checks every plate ' +
+    'on this page against exactly those two numbers, read out of Bambu\u2019s own ' +
+    'P1S machine profile.</div>' +
     '<h3>What sliced this toolpath</h3><table class="kv">' +
     row('Build volume', p.bed[0] + ' \u00d7 ' + p.bed[1] + ' \u00d7 ' + p.bed[2] + ' mm') +
     row('Motion', p.motion) + row('Chamber', p.chamber) +
@@ -2636,6 +3010,11 @@ function paintPrinter() {
     'proportions \u2014 Bambu publishes neither, so these are placed to read ' +
     'correctly, not measured. The AMS spool colours are illustrative; nothing ' +
     'here is reading your machine.</div>';
+  $('platesel').addEventListener('change', function (e) {
+    plateId = e.target.value;
+    buildChamber(PRINTERS[printerId].bed);
+    paintPrinter();
+  });
   $('psel').addEventListener('change', function (e) {
     printerId = e.target.value;
     buildChamber(PRINTERS[printerId].bed);

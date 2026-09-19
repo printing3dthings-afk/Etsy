@@ -292,6 +292,86 @@ def test_the_still_is_never_shown_mid_print():
           "job's total")
 
 
+def test_the_plate_is_not_offset_twice():
+    """The bug that put the build plate a bed-width outside the machine.
+
+    buildBed() used to place a CENTRED box, so it took the (X/2, Y/2) offset
+    its caller hands it. plateShape() is authored in plate coordinates -- 0..X,
+    0..Y, the same space the toolpath is in -- so applying that offset again
+    slides the plate a whole bed clear of the chamber. Nothing errors; the
+    plate simply renders out in the room.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildBed\(X, Y, ox, oy\) \{(.*?)\n\}", js, re.S)
+    check(body is not None, "buildBed is gone")
+    if body:
+        for name in ("body", "plate"):
+            m = re.search(name + r"\.position\.set\(([^,]+),", body.group(1))
+            check(m is not None and m.group(1).strip() == "0",
+                  "%s.position takes an x offset -- plateShape() is already in "
+                  "plate coordinates, so this draws the plate off the machine"
+                  % name)
+
+
+def test_the_plate_normal_map_is_a_normal_map():
+    """A height field handed to `normalMap` is not a subtle mistake.
+
+    The shader reads rgb*2-1 as a tangent-space vector. Flat grey decodes to
+    (0,0,0) -- degenerate -- and every slightly-lighter blob decodes to a
+    steeply tilted facet that catches a hard specular. Every plate rendered as
+    light-grey blotches on black, which reads as a colour bug and is not one.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("function heightToNormal(" in js,
+          "heightToNormal is gone -- something is feeding a raw height canvas "
+          "into normalMap again")
+    m = re.search(r"var nt = new THREE\.CanvasTexture\(([^)]*)\)", js)
+    check(m is not None and "heightToNormal" in m.group(1),
+          "the normal texture is built straight from the height canvas")
+
+
+def test_plate_guides_are_annotation_and_say_so():
+    """Real-print mode is 'what this looks like in the machine'.
+
+    No Bambu plate has an orange reserved-corner rectangle or a 32 mm ruling
+    painted on it, so the guides have to go when the guides would be a lie.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("grid.visible = !real" in js,
+          "the printable-area guides are no longer hidden in real-print mode")
+    check("grid.visible = colorMode !== 'real'" in js,
+          "rebuilding the bed (switching plate or machine) would paint the "
+          "guides back on in real-print mode")
+
+
+def test_plate_numbers_match_bambus_own_p1s_profile():
+    """256 x 256 printable, 18 x 28 mm reserved at the front-left corner.
+
+    Both read out of Bambu's shipped machine profiles, not from memory. The
+    viewer and tools/plate_audit.py have to agree on them -- a viewer drawing
+    one reserved corner while the audit checks another is worse than neither.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    check("var EXCLUDE_W = 18, EXCLUDE_D = 28;" in js,
+          "the viewer's reserved corner is no longer 18 x 28 mm")
+    audit = (ROOT / "tools" / "plate_audit.py").read_text(encoding="utf-8")
+    check("EXCLUDE = (0.0, 0.0, 18.0, 28.0)" in audit,
+          "plate_audit's reserved corner drifted from the viewer's")
+    check("BED = 256.0" in audit, "plate_audit's plate is no longer 256 mm")
+
+
+def test_every_plate_in_the_table_can_actually_be_drawn():
+    """A plate whose grain has no entry renders as the fallback silently."""
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    table = re.search(r"var PLATES = \{(.*?)\n\};", js, re.S)
+    grains = re.search(r"var GRAIN = \{(.*?)\n\};", js, re.S)
+    check(table is not None and grains is not None, "PLATES or GRAIN is gone")
+    if table and grains:
+        used = set(re.findall(r"grain: '(\w+)'", table.group(1)))
+        have = set(re.findall(r"^\s*(\w+):\s*\{", grains.group(1), re.M))
+        check(used <= have, "plates with no grain profile: %s" % (used - have))
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

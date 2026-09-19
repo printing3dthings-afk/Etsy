@@ -6,160 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260814-001 date=2026-08-14 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced the flat 5-theme system (default/light/ocean/kawaii/sunwashed) with a 2-axis 3-palette x 2-mode (dark/light) system (Studio Warm / Transformative Teal / Clubroom Contrast), per Scott (2026-08-14): change the color scheme, add a dark/light setting, 3 schemes x light+dark = 6 total. Archived before removal per the standing recycle-bin rule." -->
-## 20260814-001 · 2026-08-14 · snippet · `tools/api_server/frank_hud_mockup.py`
-**Reason:** Replaced the flat 5-theme system (default/light/ocean/kawaii/sunwashed) with a 2-axis 3-palette x 2-mode (dark/light) system (Studio Warm / Transformative Teal / Clubroom Contrast), per Scott (2026-08-14): change the color scheme, add a dark/light setting, 3 schemes x light+dark = 6 total. Archived before removal per the standing recycle-bin rule.  
-**Payload:** `data/trash/files/20260814-001__snippet.txt`
-
-```python
-  /* Studio Warm — dark warm-plum surfaces, coral + gold accents (pulls the coral
-     from the existing Sakura theme's palette and the gold already used site-wide
-     for primary CTAs). --cyan/--cyan2 keep their legacy names for the ~300 existing
-     usages across this file but now hold coral/blush values, not cyan — they were
-     always "the accent hue," never literally required to be cyan. --panel3 is a new
-     4th elevation level (toasts/dropdowns/overlays sit on this, one step lighter
-     than --panel2) — dark-mode surfaces need at least 4 steps to read as depth
-     without relying on box-shadow, which barely shows on dark backgrounds. */
-  /* Brightened 2026-07-15 (Scott: "seems a little dark throughout") -- every
-     surface step lifted ~4-6% lighter and --muted brightened for readability,
-     verified against tools/color_contrast_check.py's WCAG math before shipping:
-     text-on-bg 14.36:1 and muted-on-bg 7.12:1, both still comfortably above the
-     4.5:1 AA floor (muted actually IMPROVED from 5.77:1 -- it was brightened more
-     than the background was). */
-     it here, the ambient shadow is a secondary cue. Overridden per-theme below
-     only where a theme's surface treatment needs it (light theme gets a real
-     drop shadow since it renders well on white). */
-/* ── Color themes — full bg + panel + accent swap. Fonts/radius above are
-   structural (declared once on :root) and apply under every theme unchanged;
-   only surface/accent colors vary per theme, including each theme's own
-   --panel3 elevation step. Card-shadow tokens likewise only need a per-theme
-   override for the light theme (below); every dark-surfaced theme reuses the
-   :root treatment since they all share the same "shadow barely shows" constraint. ── */
-html.theme-light{
-  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#d0d9e2;
-  --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
-  --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
-html.theme-ocean{
-  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#16312c;
-  --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
-  --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-html.theme-kawaii{
-  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#241a42;
-  --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
-  --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
-}
-/* 2026-07-18: bright/light-surfaced theme (Scott: "brighter colors but make sure
-   text is readable") -- every text/muted/accent value below is verified against
-   its actual bg AND panel2 (the more saturated surface a card can sit on) with
-   tools/color_contrast_check.py's real WCAG math, same discipline as the
-   2026-07-15 brightening pass above; nothing here is eyeballed. Reuses the light
-   theme's card-shadow (real drop shadow reads correctly on a light surface,
-   unlike the dark themes' inset-highlight trick above). Originally shipped
-   alongside 3 siblings (Mermaid Bright, Clubroom Gold, Spring Vivid); those were
-   cut in the 2026-08-06 12->5 theme reduction -- this one survived as the kept
-   warm-light alternative to Day Mode. */
-html.theme-sunwashed{
-  --bg:#fff8f0;--panel:#ffffff;--panel2:#ffeee0;--panel3:#ffffff;--border:#f0d5b8;
-  --cyan:#ba4e36;--cyan2:#8f3a28;--gold:#a46400;--gold2:#7a4b00;
-  --text:#3a2418;--muted:#82644d;--green:#19824a;--red:#d6362b;--amber:#a46400;
-```
-
-<!-- /TRASH 20260814-001 -->
-<!-- TRASH id=20260815-001 date=2026-08-15 kind=file source="tests/test_view_transitions.py" reason="Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior." -->
-## 20260815-001 · 2026-08-15 · file · `tests/test_view_transitions.py`
-**Reason:** Reverted the document.startViewTransition() wrap on showScreen() (2026-08-15): the callback is not guaranteed synchronous, confirmed via bisection to break real navigation state (settings nav, tour spotlighting, tab-bar/ticker sync, phone tab switching) across the app -- caught by tools/playwright_smoke.py real-browser CI check, which had been silently blocking every Railway deploy on this branch. This test locked in the now-reverted behavior.  
-**Payload:** `data/trash/files/20260815-001__test_view_transitions.py`
-
-```
-"""
-Test for the 2026-08-14 native View Transitions wiring on showScreen() --
-the foundation item from the second visual-research pass (the one flagged
-as "highest-leverage" since every navigation in the app funnels through this
-one function: phoneOpenScreen(), phoneTab()'s ask/create branches, every bare
-onclick="showScreen(...)" in the header/sidebar/nav, and search-result routing
-all call it, directly or indirectly).
-
-showScreen() was split into a plain _showScreenInner(name, viaViewTransition)
-(the actual DOM mutation, unchanged in substance from before this pass) and a
-thin showScreen(name) wrapper that runs it inside document.startViewTransition()
-when the browser supports the API and the user hasn't asked for reduced motion,
-falling straight through to the old direct-mutation behavior otherwise.
-
-Verified end-to-end in real headless Chrome (chromium-1194) before shipping,
-not just asserted structurally here:
-  - a real user click on a .nav-item fires exactly one startViewTransition()
-    call and lands on the correct screen, repeatably across multiple navs
-  - with prefers-reduced-motion: reduce emulated, startViewTransition() is
-    never called at all and navigation still works via the plain fallback
-  - no page-level JS errors either way
-That live-browser check isn't re-runnable from this harness (no Node/browser
-dependency in the standard test suite), so this file locks in the structural
-contract instead: the split exists, the feature-detect + reduced-motion gate
-is real, and the double-motion guard (skip the CSS screen-in keyframe on the
-VT path only, since the native crossfade already animates that swap) doesn't
-leak into the non-VT fallback path.
-
-Run: python tests/test_view_transitions.py
-"""
-import re
-import sys
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-HUD_PATH = ROOT / "tools" / "api_server" / "frank_hud_mockup.py"
-
-_failures: list[str] = []
-
-
-def check(cond: bool, msg: str) -> None:
-    if not cond:
-        _failures.append(msg)
-
-
-def _source() -> str:
-    return HUD_PATH.read_text(encoding="utf-8")
-
-
-def test_show_screen_inner_holds_the_real_dom_mutation():
-    source = _source()
-    m = re.search(r"function _showScreenInner\(name, viaViewTransition\)\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could not find function _showScreenInner(name, viaViewTransition)"
-    body = m.group(1)
-    for expected in (
-        "document.body.classList.remove('phone-home-open')",
-        "document.querySelectorAll('.nav-item')",
-        "document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))",
-        "_activeScreen = name",
-        "_fireScreenLoaders(name)",
-    ):
-        check(expected in body, f"_showScreenInner is missing expected DOM-mutation logic: {expected!r}")
-
-
-def test_show_screen_wraps_inner_in_a_feature_detected_reduced_motion_gated_transition():
-    source = _source()
-    m = re.search(r"function showScreen\(name\)\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could not find function showScreen(name)"
-    body = m.group(1)
-    check("typeof document.startViewTransition === 'function'" in body,
-          "must feature-detect startViewTransition rather than assuming support (Safari/Firefox lack it)")
-    check("!_reducedMotion" in body,
-          "must also gate on _reducedMotion -- a forced whole-page crossfade is exactly the kind of "
-          "motion prefers-reduced-motion asks to skip")
-    check("document.startViewTransition(() => _showScreenInner(name, true))" in body,
-          "the VT path should mark the call as viaViewTransition so the double-motion guard can engage")
-    check("_showScreenInner(name, false)" in body,
-          "the fallback path must still call the real mutation logic directly for unsupported browsers")
-
-
-def test_double_motion_guard_is_scoped_to_the_view_transition_path_only():
-    source = _source()
-    m = re.search(r"function _showScreenInner\(name, viaViewTransition\)\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could 
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260815-001 -->
 <!-- TRASH id=20260904-001 date=2026-09-04 kind=snippet source="tools/detail_probe.py" reason="Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for." -->
 ## 20260904-001 · 2026-09-04 · snippet · `tools/detail_probe.py`
 **Reason:** Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for.  
@@ -308,7 +154,6 @@ def test_suite_never_writes_to_the_real_runbook():
 ```
 
 <!-- /TRASH 20260909-001 -->
-
 <!-- TRASH id=20260909-002 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_ring.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
 ## 20260909-002 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_ring.3mf`
 **Reason:** superseded by the assembled monogram_keychain_J.3mf  
@@ -319,7 +164,6 @@ def test_suite_never_writes_to_the_real_runbook():
 ```
 
 <!-- /TRASH 20260909-002 -->
-
 <!-- TRASH id=20260909-003 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_rotor.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
 ## 20260909-003 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_rotor.3mf`
 **Reason:** superseded by the assembled monogram_keychain_J.3mf  
@@ -330,7 +174,6 @@ def test_suite_never_writes_to_the_real_runbook():
 ```
 
 <!-- /TRASH 20260909-003 -->
-
 <!-- TRASH id=20260909-004 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_letter.3mf" reason="superseded by the assembled monogram_keychain_J.3mf" -->
 ## 20260909-004 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_letter.3mf`
 **Reason:** superseded by the assembled monogram_keychain_J.3mf  
@@ -341,7 +184,6 @@ def test_suite_never_writes_to_the_real_runbook():
 ```
 
 <!-- /TRASH 20260909-004 -->
-
 <!-- TRASH id=20260909-005 date=2026-09-09 kind=file source="openscad_models/bayonet_jar.scad" reason="superseded by v2: lid seated on rim, internal lock collar, ramped lock channel, OBC mark" -->
 ## 20260909-005 · 2026-09-09 · file · `openscad_models/bayonet_jar.scad`
 **Reason:** superseded by v2: lid seated on rim, internal lock collar, ramped lock channel, OBC mark  
@@ -446,4 +288,28 @@ lid_ski
 ```
 
 <!-- /TRASH 20260909-005 -->
+<!-- TRASH id=20260919-001 date=2026-09-19 kind=snippet source="tools/viewer/app.js" reason="Replaced by plateSurface(): the bed is now a real Bambu flex plate with a per-plate procedural finish and 1:1 markings, not one tiling grey noise map." -->
+## 20260919-001 · 2026-09-19 · snippet · `tools/viewer/app.js`
+**Reason:** Replaced by plateSurface(): the bed is now a real Bambu flex plate with a per-plate procedural finish and 1:1 markings, not one tiling grey noise map.  
+**Payload:** `data/trash/files/20260919-001__snippet.txt`
 
+```javascript
+function peiTexture() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 256;
+  var g = c.getContext('2d');
+  g.fillStyle = '#343943'; g.fillRect(0, 0, 256, 256);
+  var img = g.getImageData(0, 0, 256, 256), d = img.data;
+  for (var i = 0; i < d.length; i += 4) {
+    var n = (Math.random() - 0.5) * 54;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n * 0.9;
+  }
+  g.putImageData(img, 0, 0);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(9, 9);
+  return tex;
+}
+```
+
+<!-- /TRASH 20260919-001 -->

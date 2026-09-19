@@ -11,6 +11,7 @@ static; everything it draws came out of the slicer.
 | `app.js` | Scene, bead geometry, playback, UI. Served next to the page. |
 | `jobs/index.js` + `jobs/<id>.js` | Generated payloads, one script per plate. **Committed** (54MB) — the Pages workflow has to find them, and re-slicing 72 plates in CI would need PrusaSlicer and the better part of an hour. Regenerating them adds that much to history again, so do it when there is a reason, not by habit. |
 | `build_site.py` | Wraps the page into a standalone document and copies the payloads beside it. |
+| `../plate_audit.py` | Checks every plate against the P1S's real printable area. Exits non-zero on one that could not print. |
 
 ## Rebuilding the job payloads
 
@@ -274,6 +275,99 @@ the chamber; the clamped range runs luminance 221 -> 46, monotonic, with the
 dark end still clear of the `#0d0e11` background. The same numbers appear in
 three places (the GLSL ramp, `speedColor()` for legend swatches, the CSS
 gradient) -- change one and change all three.
+
+## Build plates, and how a print gets aligned on one (2026-09-19)
+
+The bed used to be a grey square with a grid on it. It is now the actual
+plate, and which plate is a control in the Printer panel.
+
+**The numbers are Bambu's, read out of Bambu's own shipped slicer profiles,
+not from memory:**
+
+| | | from |
+|---|---|---|
+| Printable area | `0x0, 256x0, 256x256, 0x256` | `resources/profiles/BBL/machine/fdm_bbl_3dp_001_common.json` |
+| Reserved corner | `0x0, 18x0, 18x28, 0x28` | `resources/profiles/BBL/machine/Bambu Lab P1S 0.4 nozzle.json` |
+
+So: origin at the **front-left corner** of the plate, the full 256 x 256 mm
+usable, and an **18 x 28 mm rectangle in that front-left corner reserved** —
+where the toolhead parks and wipes. The common profile reserves a bigger
+L-shaped region and the P1S overrides it with the smaller rectangle, so the
+override is the one that counts. Both are drawn on the plate (the reserved
+corner in orange) and both are what `tools/plate_audit.py` checks.
+
+Alignment is two things stacked. In hardware, the plate is not positioned by
+eye: the slot in its rear tab drops over the heatbed's locating pins, which is
+what makes 0,0 land in the same physical place every time you flex a print off
+and put the plate back. In the slicer, the part is then arranged inside that
+square — centred on 128, 128 for a single object, clear of the reserved corner,
+with the wipe tower (if any) placed beside it and the group centred rather than
+the part.
+
+### Auditing it
+
+```
+python3 tools/plate_audit.py            # all 72
+python3 tools/plate_audit.py sundial    # one
+```
+
+**Result: all 72 plates print as arranged.** Every part inside 0..256 both
+ways, none in the reserved corner, every single-object plate centred within
+1.1 mm. Two warnings worth knowing: `sundial` (247.6 mm wide) and `mushroom`
+(244.8 mm) leave too little margin for a skirt, so their skirts run a couple of
+millimetres off the plate edge — print those two with the skirt off.
+
+Getting that answer took two corrections, both of which are the reason this is
+a tool and not a glance at `jobs/index.js`:
+
+* **The index bbox is the wrong number.** It includes the skirt and the wipe
+  tower. Checking it flags 29 of 72 plates, and nearly every one is a false
+  alarm — `keychain_mc` looks 43 mm off-centre because it is a multi-colour
+  plate and its wipe tower sits out at x 178–242, exactly where a wipe tower
+  belongs.
+* **Centring has to be measured on the part outline, not on every extrusion.**
+  Support material only grows on the overhanging side, so part-plus-supports
+  sits 1–3 mm off the outline's middle on two dozen correctly arranged plates.
+
+### The plates themselves
+
+Six entries, each one a plate Bambu actually sells for this machine. The wiki
+(`wiki.bambulab.com/en/filament-acc/acc/plates`, read 2026-09-19) supplies what
+each is made of and which filaments need glue; **every base colour is the
+median sampled out of Bambu's own product photography on that page**, not
+picked by eye. Textured PEI really is gold. Smooth PEI really is mid grey, and
+the dual plate's smooth face is much darker than the standalone smooth plate,
+which is why they differ here rather than sharing a colour.
+
+Each plate's finish is three octaves of speckle — coarse mottle, mid grain,
+fine grit — plus a companion height map converted to a real tangent-space
+normal map. Three things had to be got right and all three were wrong first:
+
+1. **One octave is not enough**, because a 1024px face texture on a 256 mm
+   plate is under one texel per screen pixel at any normal zoom. A single fine
+   octave mipmaps away into flat paint everywhere except the rows nearest the
+   camera — grain at the front of the plate, bare gold at the back.
+2. **Only the middle octave carries height.** Coarse relief gives 30px bumps
+   whose normals swing the environment reflection across half a centimetre at a
+   time, and every plate came out blotched in light grey. Fine relief is worse
+   and is the same geometric aliasing the bead mesh hit: sub-pixel normals
+   alias into hard specular, and a matte black plate renders as television
+   static.
+3. **A height field is not a normal map.** Handing the greyscale height canvas
+   straight to `normalMap` decodes flat grey to `(0,0,0)` — a degenerate
+   normal — and every lighter blob to a steeply tilted facet. `heightToNormal()`
+   central-differences the height and builds the real tangent normal. This was
+   the single worst-looking bug the viewer has had, and it reads as a colour
+   bug, which is why it took three passes to find.
+
+The printable-area ruling and the orange reserved corner are **annotation, and
+they disappear in real-print mode** — no plate has them painted on it, and real
+mode is "what this looks like in the machine".
+
+The offline stills (`tools/render_plate_stills.sh`) deliberately keep their
+neutral studio floor rather than a plate. A still is captioned *the finished
+part*: supports snapped off, print flexed off the plate. Putting it back on a
+gold plate would be a nicer picture of a different claim.
 
 ## The machine itself
 
