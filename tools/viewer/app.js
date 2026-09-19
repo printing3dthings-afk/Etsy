@@ -2125,7 +2125,20 @@ function makeMaterial(dim, rich) {
     // in the shader rather than updated per frame from JS, so orbiting costs
     // nothing and this only needs touching if the rig itself moves.
     uKeyW:  {value: new THREE.Vector3(-0.38, -0.61, 0.70)},
-    uSheen: {value: 0.85}
+    // 0.35, measured, not picked. At the 0.85 this shipped with, the
+    // anisotropic lobe was washing saturated feature colours to neutral grey
+    // in hard bands -- the same failure the tone-mapping notes above describe
+    // ("the vase came out pale peach instead of orange"), just from specular
+    // instead of ACES. On the mushroom cap at layer 295, the share of the cap
+    // that rendered as bright DESATURATED grey (sat < 0.18, luma > 110):
+    //
+    //   sheen 0.85 -> 4.21%   mean saturation 0.839
+    //   sheen 0.35 -> 1.12%   mean saturation 0.875
+    //   sheen 0    -> 0.00%   mean saturation 0.913
+    //
+    // A real highlight on satin PLA brightens the colour; it does not
+    // neutralise it. 0.35 keeps the directional band and stops doing that.
+    uSheen: {value: 0.35}
   };
   // Printed PLA is neither chalk nor gloss: a matte-satin dielectric. Rich
   // shading buys a tighter lobe and a real environment reflection; the cheap
@@ -2221,6 +2234,21 @@ function makeMaterial(dim, rich) {
       // the correct winding would have produced anyway.
       .replace('#include <normal_fragment_begin>',
                '#include <normal_fragment_begin>\n' +
+               // The new floor quad spans point 3 to point 0, whose normals
+               // are (-u,0) and (+u,0) -- exact opposites. Interpolated across
+               // the quad they cancel, so vNormal's length falls to zero at
+               // mid-span and normalize() there amplifies whatever numerical
+               // noise is left into a random direction. That is a black speckle
+               // stripe down the middle of every bead's underside.
+               //
+               // Giving the floor its own vertices with real downward normals
+               // would cost 2 more points per bead -- +50% on the vertex
+               // buffers, which is where the memory actually is. Detecting the
+               // degenerate span costs one length() and is exactly right: a
+               // bead's floor faces down, so that is what to substitute.
+               '  if (length(vNormal) < 0.38) {\n' +
+               '    normal = normalize((viewMatrix * vec4(0.0, 0.0, -1.0, 0.0)).xyz);\n' +
+               '  }\n' +
                '  if (dot(normal, vViewPosition) < 0.0) { normal = -normal; }\n' +
                // Round every layer, in the shader rather than in geometry.
                //
@@ -2357,7 +2385,7 @@ function buildJob(raw) {
   // lines sit 0.15-0.39 mm apart under a 0.42 mm bead, so neighbours genuinely
   // overlap -- with a flat top the visible surface is continuous and every
   // part of it faces up.
-  var BEAD_PTS = 4, BEAD_IDX = 18;
+  var BEAD_PTS = 4, BEAD_IDX = 24;
   var vPos  = new Int16Array(nPt * BEAD_PTS * 3);
   // Real normals, one byte per component.
   //
@@ -2524,6 +2552,30 @@ function buildJob(raw) {
             index[ii++] = a + bb;     index[ii++] = b + bb;     index[ii++] = a + bb + 1;
             index[ii++] = a + bb + 1; index[ii++] = b + bb;     index[ii++] = b + bb + 1;
           }
+          // The floor, closing point 3 back to point 0 (2026-09-19).
+          //
+          // Without it the bead is an open TROUGH -- an outer face, a top, an
+          // inner face, and nothing underneath. Three consequences, all of
+          // them things that have been reported as "the layer lines look
+          // wrong":
+          //
+          //   1. On a stepped surface -- every dome, every sloped flank --
+          //      the bead above sits back from the one below, exposing the
+          //      missing floor of the upper bead. You see straight into its
+          //      hollow, unlit inside, and it reads as a dark gap between
+          //      every pair of layers. This is the mushroom cap screenshot.
+          //   2. Looking at the part from underneath, the whole first layer
+          //      is hollow: the part-only underside view was showing the
+          //      INSIDE of those beads, not their bottom.
+          //   3. It is what the README's long-standing "beads are drawn as
+          //      open ribbons rather than solid tubes" caveat was describing.
+          //
+          // Closing it costs no vertices at all -- the four points already
+          // exist, this is one more quad between two of them -- so the price
+          // is 6 more indices per segment (18 -> 24) and nothing in the
+          // vertex buffers, which is where the real memory is.
+          index[ii++] = a + 3; index[ii++] = b + 3; index[ii++] = a;
+          index[ii++] = a;     index[ii++] = b + 3; index[ii++] = b;
           var lx = (x - pts[(s + i - 1) * 2]) / 100;
           var ly = (y - pts[(s + i - 1) * 2 + 1]) / 100;
           segLen[si] = Math.hypot(lx, ly);
@@ -2707,7 +2759,7 @@ function segAtTime(t) {
 function setSeg(seg) {
   seg = Math.max(0, Math.min(JOB.nSeg, seg));
   play.seg = seg;
-  jobGeom.setDrawRange(0, seg * 18);   // BEAD_IDX in buildJob
+  jobGeom.setDrawRange(0, seg * 24);   // BEAD_IDX in buildJob
   if (seg > 0) {
     var i = (seg - 1) * 3;
     var px = JOB.segEnd[i], py = JOB.segEnd[i + 1], zTop = JOB.segEnd[i + 2];

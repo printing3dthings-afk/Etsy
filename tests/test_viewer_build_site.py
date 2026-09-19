@@ -750,7 +750,10 @@ def test_the_bead_has_a_flat_top_not_a_ridge():
     check("BEAD_PTS = 4" in b,
           "the bead is not four points across any more -- three is the tent "
           "whose ridge caused the defect")
-    check("BEAD_IDX = 18" in b, "the bead is not three bands any more")
+    # 2026-09-19: was BEAD_IDX = 18 (three bands, an open trough). The bead is
+    # a closed tube now -- see test_the_bead_is_a_closed_tube for why. What
+    # this test is really about is the flat TOP, which is unchanged.
+    check("BEAD_IDX = 24" in b, "the bead is not four bands any more")
     # two vertices sitting at ztop is what makes the top flat rather than a point
     tops = re.findall(r"vPos\[vi \* 3 \+ \d+\] *= ztop;", b)
     check(len(tops) == 2,
@@ -775,7 +778,7 @@ def test_the_draw_range_matches_the_bead():
     m = re.search(r"setDrawRange\(0, seg \* (\d+)\)", js)
     check(m is not None, "the draw range no longer scales with the segment count")
     if m:
-        check(m.group(1) == "18",
+        check(m.group(1) == "24",
               "draw range steps by %s indices per segment but the bead writes "
               "18" % m.group(1))
 
@@ -1078,6 +1081,99 @@ def test_the_sheen_runs_along_the_bead_not_across_it():
     check("uSheen" in src and "wallA" in src,
           "the sheen is no longer gated on the wall factor, so it fires where "
           "the cross product degenerates (a vertical normal)")
+
+
+def test_the_bead_is_a_closed_tube():
+    """The hollow bead, found 2026-09-19 on the third report about layer lines.
+
+    The cross-section had three bands -- point 0 to 1 to 2 to 3 -- and never
+    joined 3 back to 0. So every bead was an open TROUGH with no floor, and
+    looking at the part from underneath showed the INSIDE of the first layer
+    rather than its bottom. That made the part-only underside view, shipped
+    the same day, structurally wrong.
+
+    Measured A/B on the pumpkin's underside, same camera, open vs closed:
+    mean luma 95.2 -> 115.0 and standard deviation 14.4 -> 29.4, with 19.6% of
+    pixels changed. The contrast doubling is the point: flat mush became real
+    bead structure.
+
+    It costs no vertices -- the four points already exist -- so the price is
+    six more indices per segment and nothing at all in the vertex buffers,
+    which is where the memory actually is. Verified: 501,812 vertices before
+    and after; triangles 669,906 -> 893,208.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    body = re.search(r"function buildJob\(raw\) \{.*?\n\}", js, re.S)
+    check(body is not None, "buildJob is gone")
+    if not body:
+        return
+    b = "\n".join(re.sub(r"//.*$", "", ln) for ln in body.group(0).split("\n"))
+    check("BEAD_IDX = 24" in b,
+          "the bead is back to fewer than four bands -- it is an open trough "
+          "again and the underside shows the inside of the first layer")
+    check(re.search(r"index\[ii\+\+\] = a \+ 3;\s*index\[ii\+\+\] = b \+ 3;\s*index\[ii\+\+\] = a;", b),
+          "the floor quad joining point 3 back to point 0 is gone")
+    check("BEAD_PTS = 4" in b,
+          "closing the bead must not have cost extra vertices; four points "
+          "is the whole reason this was cheap")
+    # the draw range walks the same stride or the reveal desyncs from the mesh
+    dr = re.search(r"setDrawRange\(0, seg \* (\d+)\)", js)
+    check(dr is not None and dr.group(1) == "24",
+          "setDrawRange still strides by the old index count, so the print "
+          "reveals the wrong number of segments: %r" % (dr and dr.group(1),))
+
+
+def test_the_degenerate_floor_normal_is_caught():
+    """The floor quad spans two exactly opposite normals.
+
+    Point 3's normal is (-u, 0) and point 0's is (+u, 0), so interpolated
+    across the new floor they cancel and vNormal's length reaches zero at
+    mid-span. normalize() there amplifies numerical noise into a random
+    direction -- a black speckle stripe down the middle of every bead's
+    underside, in the one view built to inspect undersides.
+
+    Giving the floor its own vertices would fix it at +50% on the vertex
+    buffers. Detecting the degenerate span costs one length().
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    check("length(vNormal)" in src,
+          "nothing guards the floor's degenerate normal any more; the bead "
+          "underside will speckle where the two opposite normals cancel")
+    check(re.search(r"vec4\(0\.0, 0\.0, -1\.0, 0\.0\)", src) is not None,
+          "the degenerate floor normal is no longer replaced with a downward "
+          "one -- a bead's floor faces down, that is the whole substitution")
+
+
+def test_the_sheen_does_not_wash_the_colour_out():
+    """Measured, not picked (2026-09-19).
+
+    The anisotropic lobe shipped at 0.85 and was neutralising saturated
+    feature colours into hard grey bands -- the same failure the tone-mapping
+    notes describe, from specular instead of ACES. Share of the mushroom cap
+    at layer 295 rendering as bright desaturated grey (sat < 0.18, luma > 110):
+
+        0.85 -> 4.21%   mean saturation 0.839
+        0.35 -> 1.12%   mean saturation 0.875
+        0    -> 0.00%   mean saturation 0.913
+
+    A highlight on satin PLA brightens the colour, it does not neutralise it.
+    This fails if the value is raised back into the range that did.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    src = "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
+    m = re.search(r"uSheen:\s*\{value:\s*([0-9.]+)\}", src)
+    check(m is not None, "the sheen strength uniform is gone")
+    if not m:
+        return
+    v = float(m.group(1))
+    check(v <= 0.5,
+          "sheen is back up to %s; at 0.85 it washed 4.21%% of the cap to "
+          "neutral grey. Re-measure the desaturated share before raising it"
+          % m.group(1))
+    check(v > 0.0,
+          "sheen is off entirely -- the surface is back to an isotropic "
+          "highlight and stops reading as extruded")
 
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

@@ -1158,3 +1158,85 @@ feature. It does not need faking: the loop start points are already in the
 toolpath this page replays. Drawing it means a small bead bulge at each loop
 start, which is a geometry change, and it is worth doing next rather than
 bundling into a change already touching shading, visibility and lighting.
+
+## The bead was hollow (2026-09-19)
+
+Third report on the same subject, this one on the mushroom cap mid-print:
+*"Line still need the improvement to look like it would in real life
+printing."*
+
+### The bead had no floor
+
+The cross-section wrote four points and connected three bands — 0→1, 1→2,
+2→3 — and never joined 3 back to 0. Every bead was an open **trough**. This is
+what the long-standing caveat in the Limits pane, *"beads are drawn as open
+ribbons rather than solid tubes"*, was actually describing, and it had been
+true since the beads were first drawn.
+
+Closing it costs **no vertices** — the four points already exist, this is one
+more quad between two of them — so the whole price is six more indices per
+segment. Verified on the pumpkin: 501,812 vertices before and after, triangles
+669,906 → 893,208.
+
+Measured A/B, identical camera, open vs closed:
+
+| view | mean luma | std dev | pixels changed |
+|---|---|---|---|
+| underside | 95.2 → **115.0** | 14.4 → **29.4** | 19.6% |
+| outer wall | 145.8 → 145.9 | 23.4 → 23.3 | 0.66% |
+
+**The underside is transformed and the outer wall is untouched**, and that is
+worth stating plainly rather than claiming a general win. The part-only
+underside view shipped earlier the same day was structurally wrong — it was
+showing the *inside* of the first layer's beads, not their bottom — and this
+fixes that. It is not what the mushroom-cap screenshot was about.
+
+The floor quad spans two exactly opposite normals, `(-u, 0)` and `(+u, 0)`, so
+they cancel at mid-span and `normalize()` amplifies the remaining noise into a
+random direction — a black speckle stripe down the middle of every bead's
+underside, in the one view built to look at undersides. Giving the floor its
+own vertices would fix it at +50% on the vertex buffers; detecting the
+degenerate span costs one `length()` and substitutes straight down, which is
+what a bead's floor actually faces.
+
+### A measurement that was measuring the background
+
+The first pass at this reported "58.4% of the wall is dark" and nearly sent
+the whole investigation somewhere useless. The object mask was `luma > 18`,
+and the backdrop is dark **navy** at luma ≈ 30 — so most of the "dark pixels
+inside the object" were the sky around it. The giveaway was in the numbers
+already taken: the mean colour of those dark pixels was RGB (17.8, 26.6, 41.8)
+at saturation 0.58. Blue, and saturated. Plastic in shadow is dark *orange*.
+
+With a correct mask (`R > B + 12`) the pumpkin wall is **0.05%** dark either
+way. There is no gap problem on that surface. Check what a mask is actually
+selecting before believing a number that large.
+
+### The sheen was washing the colour out
+
+Reproducing the real screenshot — mushroom cap, layer 295, close — showed hard
+grey-white streaks that were not in the earlier reports, and they arrived in
+the same build that added the anisotropic lobe. Share of the cap rendering as
+bright *desaturated* grey (saturation < 0.18, luma > 110), measured by changing
+the uniform at runtime on one page load so nothing else could differ:
+
+| sheen | grey-white | mean saturation |
+|---|---|---|
+| 0.85 (as shipped) | 4.21% | 0.839 |
+| **0.35** | **1.12%** | **0.875** |
+| 0 (off) | 0.00% | 0.913 |
+
+This is the same failure the tone-mapping notes above describe — *"the vase
+came out pale peach instead of orange"* — arriving through specular instead of
+through ACES. A highlight on satin PLA brightens the colour; it does not
+neutralise it. 0.35 keeps the directional band and stops doing that.
+
+### What is still not explained
+
+The grey streaks remaining on that cap in feature mode are **internal infill**
+(`#6a7285`) seen through the outer wall, which is correct behaviour for a mode
+that hides nothing — Part only hides it. Beyond that, the outer wall of a dome
+measures clean here, so if it still reads wrong the next step is not another
+shader guess: it is a photograph of a real print to measure against, since
+every source consulted so far has been text describing an appearance rather
+than the appearance itself.
