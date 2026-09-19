@@ -666,6 +666,62 @@ def test_the_app_announces_that_it_ran():
           "never be the thing that stops the page")
 
 
+def test_nothing_touches_THREE_before_the_guard_that_checks_for_it():
+    """The friendly "three.js did not load" message was unreachable.
+
+    `var _ray = new THREE.Raycaster()` sat at top level, so when three.js was
+    missing the page threw a bare ReferenceError there -- before the boot
+    block's `if (!window.THREE)` ever ran. The artifact was served without
+    three.min.js for an entire evening and the only symptom anyone could see
+    was a stuck spinner.
+    """
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    # The whole file lives inside one IIFE, so its statements sit at brace
+    # depth 1, not 0. Counting from 0 made the first version of this test pass
+    # with the bug put straight back in -- caught by mutation, not by reading.
+    lines = js.split("\n")
+    start = next(i for i, l in enumerate(lines) if l.startswith("(function ()"))
+    depth, bad = 0, []
+    for n, line in enumerate(lines[start + 1:], start + 2):
+        if line.strip().startswith("//"):
+            depth += line.count("{") - line.count("}")
+            continue
+        # Char by char, because depth has to be measured AT the use site: a
+        # one-line `function lin(h) { return new THREE.Color(h); }` opens and
+        # closes on the same line and is not top-level code.
+        for i, ch in enumerate(line):
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+            elif depth == 0 and line.startswith("new THREE.", i):
+                bad.append("%d: %s" % (n, line.strip()[:70]))
+    check(not bad,
+          "THREE is used at top level, so the guard that reports it missing "
+          "can never run: %s" % bad)
+
+
+def test_any_uncaught_error_reaches_the_screen():
+    """The boot block's try/catch cannot see a top-level throw."""
+    js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
+    head = js[:js.index("var TYPE_COLOR")]
+    check("addEventListener('error'" in head,
+          "no global error handler at the top of app.js -- a throw before the "
+          "boot block leaves the page on its spinner saying nothing")
+
+
+def test_the_build_refuses_to_ship_without_three_js():
+    """It is the one dependency the page cannot start without."""
+    viewer = ROOT / "tools" / "viewer"
+    with tempfile.TemporaryDirectory() as td:
+        out = _build(Path(td))
+        check((out / "three.min.js").exists(),
+              "the build does not place three.min.js beside the page")
+        size = (out / "three.min.js").stat().st_size
+        check(size > 100_000,
+              "three.min.js is %d bytes -- that is not the library" % size)
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

@@ -369,6 +369,44 @@ neutral studio floor rather than a plate. A still is captioned *the finished
 part*: supports snapped off, print flexed off the plate. Putting it back on a
 gold plate would be a nicer picture of a different claim.
 
+## The actual bug: three.min.js was never published (2026-09-19)
+
+After four rounds of cache theories, the page finally said what was wrong —
+and it was none of them. **The artifact had no `three.min.js` in it.** The
+`<script src="three.min.js">` 404'd, `window.THREE` was undefined, and the
+page died.
+
+It could not say so, for a reason worth keeping:
+
+```js
+var _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();   // top level
+...
+if (!window.THREE) { loading.innerHTML = 'three.js did not load...' }
+```
+
+The friendly message at the bottom of the file was **unreachable**. A
+top-level `new THREE.Raycaster()` threw a bare `ReferenceError` long before
+the guard ran, and the boot block's own try/catch could not see it either —
+it only wraps the boot calls, and this threw while the file was still being
+evaluated. So every symptom was a stuck spinner with no text, which is
+exactly what four different causes look like.
+
+Three fixes, all tested by mutation:
+
+* `_ray`/`_ndc` are built on first use, so the guard is reachable. A test
+  walks app.js character by character and fails on *any* `new THREE.` at
+  top level. (Its first version counted brace depth from 0 and so put the
+  bug straight back in undetected — the whole file is inside one IIFE. Its
+  second version flagged a one-line function body. Mutation caught both.)
+* A global `error` handler is registered as the second statement in the
+  file and paints any uncaught throw — from anywhere, including top-level
+  evaluation — onto the loading overlay with its message and source line.
+* The build fails if `three.min.js` is not placed beside the page.
+
+**Publishing lesson:** a multi-file artifact keeps files you leave out of a
+`files` map, which makes it easy to assume a file is there. It was not.
+Check the published listing against the build output, not against memory.
+
 ## A fix that never reached the phone (2026-09-19)
 
 Three attempts, two of them wrong, both wrong on real hardware rather than in

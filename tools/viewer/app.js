@@ -14,6 +14,27 @@ try {
   if (_chip) { _chip.textContent += ' \u00b7 running'; }
 } catch (e) { /* a missing chip must never be what stops the page */ }
 
+// Everything uncaught, from anywhere, including top-level statements that run
+// before the boot block. The boot block's own try/catch cannot see those, and
+// a throw there leaves the page on its spinner saying nothing -- which is how
+// a missing three.min.js presented for an entire evening.
+window.addEventListener('error', function (ev) {
+  try {
+    var box = document.getElementById('loading');
+    if (!box || box.getAttribute('data-failed')) { return; }
+    box.setAttribute('data-failed', '1');
+    box.hidden = false;
+    var msg = (ev.message || (ev.error && ev.error.message) || ev.error || '') + '';
+    var where = (ev.filename || '').split('/').pop() + ':' + (ev.lineno || '?');
+    box.innerHTML =
+      '<div style="text-align:center;color:#ff6b5e;padding:0 24px;' +
+      'font-family:ui-monospace,monospace;text-transform:none;letter-spacing:0;' +
+      'line-height:1.55;font-size:12px"><b>This page failed to start.</b><br>' +
+      msg.replace(/[<>&]/g, ' ') + '<br><span style="color:#5f646f">' +
+      where.replace(/[<>&]/g, ' ') + '</span></div>';
+  } catch (e2) { /* nothing left to report with */ }
+});
+
 // \u2500\u2500 palette \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // Index order must match TYPES in tools/gcode_viewer_data.py.
 var TYPE_COLOR = ['#ff7a45','#ffc04d','#4fd2ff','#6a7285','#c9d64f','#9be36a',
@@ -1762,8 +1783,14 @@ function onResize() {
 // A door you can see is a door you expect to be able to touch. A tap is an
 // orbit drag that never moved, so the threshold is in pixels, not timing --
 // on a phone a "tap" always carries a few pixels of finger travel.
-var _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
+// Built on first use, NOT at load. As top-level statements these ran before
+// the `if (!window.THREE)` guard at the bottom of this file, so when three.js
+// was missing the page threw a bare ReferenceError here and the message that
+// exists to say exactly that could never fire. The artifact was served without
+// three.min.js for a whole evening and reported only as a stuck spinner.
+var _ray = null, _ndc = null;
 function pickDoor(clientX, clientY) {
+  if (!_ray) { _ray = new THREE.Raycaster(); _ndc = new THREE.Vector2(); }
   if (!doorGroup || !doorGroup.visible) { return false; }
   var r = renderer.domElement.getBoundingClientRect();
   _ndc.set((clientX - r.left) / r.width * 2 - 1,
@@ -3514,7 +3541,9 @@ function bootFailed(e) {
 
 if (!window.THREE) {
   loading.innerHTML = '<div style="text-align:center;color:var(--bad);padding:0 24px">' +
-    'three.js did not load. This page needs cdnjs reachable.</div>';
+    'three.js did not load.<br><span style="color:var(--faint);font-size:11px">' +
+    'The built page serves it as three.min.js beside this file; the source ' +
+    'page loads it from cdnjs.</span></div>';
 } else if (!INDEX.length) {
   loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
     'No jobs found \u2014 jobs/index.js is missing.</div>';
