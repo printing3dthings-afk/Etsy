@@ -252,6 +252,50 @@ The pattern worth keeping: before adding a tool, check what the environment
 already does. The premise behind most of these pitches ("Claude has no web, no
 browser, no current docs") is false for this setup.
 
+**A 21-item "context limits" checklist, checked 2026-09-19** (Scott, from
+TikTok; a lead-magnet post — "comment LIMITS for the full 20-fix checklist").
+Checked item by item against what is actually configured here rather than
+adopted wholesale. Most of it was already true, three items are wrong for this
+repo specifically, and the one real gap was something the list never mentions.
+
+Already in place, nothing to do: CLAUDE.md split into nested files
+(`.claude/rules/`, five files), skills over CLAUDE.md (37 of them), subagents
+already pinned to `model: sonnet` in all three agent frontmatters, and
+grep-before-read / read-with-offsets / edit-diffs-not-rewrite / plan-mode,
+which are harness defaults and this session's actual practice.
+
+Not applicable: deny reading `node_modules` (this repo has none, anywhere),
+`--max-turns` for headless (nothing here runs headless), status-line context
+and `ccusage` (Scott's local terminal, not the remote container), Opus plan
+(billing).
+
+**Declined, because they are wrong for this repo and not in general:**
+- **"Cap bash output."** This shop's entire debugging discipline is measuring
+  rather than asserting — the 2026-09-19 layer-line work was driven by row
+  means, dark-pixel counts, autocorrelation lags and a sha256 comparison, all
+  of them bash output. Capping it would have hidden every one of those numbers
+  and left four real defects diagnosed by eye.
+- **"Stop max effort everywhere."** `.claude/rules/subagents.md` already argues
+  the opposite case for this shop in detail: throughput is not the constraint,
+  being right is, and the one number worth optimising is how many wrong things
+  reach a customer.
+- **"Shrink the auto-compact window."** A smaller window compacts more often
+  and loses more context per task. This repo's failures are context-loss
+  failures (a mutation-checked test written against a comment instead of the
+  code, twice), not context-cost failures.
+
+**The real gap it did surface, indirectly:** `.claude/hooks/cost-tracker.js`
+(written 2026-08-27) and the `cost-tracking` skill that reads its output are a
+complete matched pair, and the hook was never referenced from
+`.claude/settings.json` — so the log it writes never existed and the skill had
+been unusable since the day it was installed. Same failure mode
+`subagents.md` already records for the two review agents nothing invoked. Now
+wired as a `Stop` hook. **Its `estimated_cost_usd` column is not trustworthy
+and must not be quoted to anyone:** pipe-tested against a real transcript it
+reported $6,471 for one session, from 3.3 billion cache-read tokens counted
+once per turn, against published API rates that do not apply on a subscription
+plan. The token counts are real; the dollar figure is decoration.
+
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)

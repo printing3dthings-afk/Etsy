@@ -11,5 +11,18 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
     "claude-code-setup@claude-plugins-official": true
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/cost-tracker.js\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }
