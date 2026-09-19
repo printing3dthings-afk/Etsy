@@ -58,26 +58,53 @@ def build(out: Path) -> Path:
             % CDN_THREE)
     body_part = body_part.replace(CDN_THREE, "three.min.js")
 
-    # Cache-bust app.js on its content. The published path has to stay "app.js"
-    # so an update replaces the file rather than accumulating copies, but a
-    # webview that cached the old bytes will keep serving them across app
-    # restarts -- which is exactly what happened on 2026-09-19: a fix shipped,
-    # the phone was quit and reopened, and the phone was still running the
-    # previous build. A changed query string is a different cache key.
+    # app.js is INLINED, not linked. A query-string cache-bust was tried
+    # first and the page still came back running the previous build on a
+    # phone -- whether the webview kept the cached file or the host did not
+    # serve the query, the outcome was the same and neither is worth guessing
+    # at from the outside. Inlined, the script cannot be separately cached or
+    # separately missing: there is one file, and the artifact serves it fresh
+    # per version. three.min.js stays external on purpose -- it is 600 KB that
+    # genuinely never changes, so caching it is the behaviour you want.
     app_src = HERE / "app.js"
-    app_hash = hashlib.sha1(app_src.read_bytes()).hexdigest()[:10]
-    if '<script src="app.js">' not in body_part:
+    app_js = app_src.read_text(encoding="utf-8")
+    if "</script" in app_js.lower():
+        raise SystemExit(
+            "app.js contains a </script sequence, which would terminate the "
+            "inline block early and truncate the page. Escape it as <\\/script.")
+    # Over the whole page source, not just app.js: a change confined to
+    # build_site.py or the HTML still produces a different page, and a version
+    # stamp that does not move when the page does is worse than none.
+    app_hash = hashlib.sha1(
+        app_src.read_bytes() + (HERE / "virtual_p1s.html").read_bytes()
+    ).hexdigest()[:10]
+    if '<script src="app.js"></script>' not in body_part:
         raise SystemExit(
             "the app.js <script src> in virtual_p1s.html is not "
-            '<script src="app.js"> any more, so the cache-busting rewrite '
-            "silently did nothing and a stale copy can outlive a fix.")
-    body_part = body_part.replace('<script src="app.js">',
-                                  '<script src="app.js?v=%s">' % app_hash)
+            '<script src="app.js"></script> any more, so the inline rewrite '
+            "silently did nothing and the page would load nothing at all.")
+    body_part = body_part.replace('<script src="app.js"></script>',
+                                  "<script>\n" + app_js + "\n</script>")
+
+    # Stamp the build into the page itself, not into something app.js paints.
+    # The header chip used to be filled by paintJobList(), which is exactly
+    # the function that does not run when something is wrong -- so on the one
+    # occasion the version mattered, the page could not say what it was.
+    if '<span id="buildchip"></span>' not in head_part + body_part:
+        raise SystemExit("the build chip is gone; a screenshot of a broken "
+                         "page could no longer say which build it is.")
+    body_part = body_part.replace(
+        '<span id="buildchip"></span>',
+        '<span id="buildchip">build %s</span>' % app_hash)
 
     out.mkdir(parents=True, exist_ok=True)
     (out / "index.html").write_text(HEAD + head_part + BODY_OPEN + body_part + TAIL,
                                     encoding="utf-8")
-    shutil.copy2(app_src, out / "app.js")
+    # An app.js left here from an earlier build is a file the host would still
+    # serve and nothing would ever refresh.
+    stale = out / "app.js"
+    if stale.exists():
+        stale.unlink()
 
     three = HERE / "vendor" / "three.min.js"
     if not three.exists():

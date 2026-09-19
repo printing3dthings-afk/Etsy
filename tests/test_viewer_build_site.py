@@ -518,55 +518,71 @@ def test_plate_and_ams_failures_are_not_fatal():
           "buildBed still assumes plateSurface returned textures")
 
 
-def test_app_js_is_cache_busted_on_its_content():
+def test_the_app_is_inlined_and_the_page_says_which_build_it_is():
     """A fix that never reaches the device is not a fix.
 
-    The published path stays "app.js" so an update replaces the file, but a
-    webview that cached the old bytes keeps serving them across app restarts.
-    On 2026-09-19 a fix shipped, the phone was quit and reopened, and the
-    phone was still running the previous build. The query string is the only
-    thing that changes the cache key.
+    A query-string cache-bust (app.js?v=<hash>) was tried first and the phone
+    still came back running the previous build. Whether the webview kept the
+    cached file or the host declined to serve the query, the outcome is the
+    same and neither is diagnosable from the outside -- so the script is
+    inlined and there is no separately-cacheable file to be stale.
+
+    The version stamp is in the HTML rather than painted by app.js, because
+    the function that used to paint it (paintJobList) is exactly the one that
+    does not run when something is wrong. On the one occasion the version
+    mattered, the page could not say what it was.
     """
     with tempfile.TemporaryDirectory() as td:
         out = _build(Path(td))
         html = (out / "index.html").read_text(encoding="utf-8")
-        m = re.search(r'<script src="app\.js\?v=([0-9a-f]{10})">', html)
-        check(m is not None, "app.js is loaded without a content version")
-        if m:
-            import hashlib
-            want = hashlib.sha1((ROOT / "tools" / "viewer" / "app.js").read_bytes()
-                                ).hexdigest()[:10]
-            check(m.group(1) == want,
-                  "the version is not app.js's own content hash, so editing "
-                  "app.js would not change it")
-        check((out / "app.js").exists(),
-              "the query string must not change the file's published path")
+    check('<script src="app.js"' not in html,
+          "app.js is a separate request again -- it can be cached "
+          "independently of the page and outlive a fix")
+    check("function initScene()" in html,
+          "app.js is not inlined into the page")
+    m = re.search(r'id="buildchip">build ([0-9a-f]{10})<', html)
+    check(m is not None,
+          "the page no longer carries a static build stamp, so a screenshot "
+          "of a broken page cannot say which build it is")
+    if m:
+        import hashlib
+        viewer = ROOT / "tools" / "viewer"
+        want = hashlib.sha1((viewer / "app.js").read_bytes()
+                            + (viewer / "virtual_p1s.html").read_bytes()
+                            ).hexdigest()[:10]
+        check(m.group(1) == want,
+              "the build stamp is not the page source's own hash, so it can "
+              "fail to move when the page does")
+    check("three.min.js" in html,
+          "three.js should stay external -- 600 KB that genuinely never "
+          "changes is exactly what you want a cache to keep")
 
 
 def test_a_renamed_app_script_tag_fails_the_build():
     """Same trap as the three.js rewrite: a str.replace that no longer matches
-    is a silent no-op, and the symptom is a stale page months later."""
-    src = (ROOT / "tools" / "viewer" / "virtual_p1s.html").read_text(encoding="utf-8")
+    is a silent no-op. Here it would ship a page with no application at all."""
+    viewer = ROOT / "tools" / "viewer"
+    src = (viewer / "virtual_p1s.html").read_text(encoding="utf-8")
     with tempfile.TemporaryDirectory() as td:
-        broken = Path(td) / "virtual_p1s.html"
-        broken.write_text(src.replace('<script src="app.js">',
-                                      '<script defer src="app.js">'),
-                          encoding="utf-8")
+        tmp = Path(td)
+        (tmp / "virtual_p1s.html").write_text(
+            src.replace('<script src="app.js"></script>',
+                        '<script defer src="app.js"></script>'), encoding="utf-8")
+        (tmp / "vendor").mkdir()
+        shutil.copy2(viewer / "vendor" / "three.min.js", tmp / "vendor" / "three.min.js")
+        shutil.copy2(viewer / "app.js", tmp / "app.js")
+        (tmp / "jobs").mkdir()
+        shutil.copy2(viewer / "jobs" / "index.js", tmp / "jobs" / "index.js")
         original = build_site.HERE
         try:
-            build_site.HERE = Path(td)
-            (Path(td) / "vendor").mkdir()
-            shutil.copy2(original / "vendor" / "three.min.js",
-                         Path(td) / "vendor" / "three.min.js")
-            shutil.copy2(original / "app.js", Path(td) / "app.js")
+            build_site.HERE = tmp
             raised = False
             try:
-                build_site.build(Path(td) / "site")
+                build_site.build(tmp / "site")
             except SystemExit:
                 raised = True
-            check(raised, "a renamed app.js script tag builds silently, which "
-                          "ships a page that can never be updated on a device "
-                          "that cached it")
+            check(raised, "a renamed app.js script tag builds silently, and "
+                          "the page it ships has no application in it")
         finally:
             build_site.HERE = original
 
