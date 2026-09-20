@@ -7161,3 +7161,52 @@ theorised. Two consequences worth carrying to any other gate written here:
   now uses **2 = could not check, 1 = mesh failed, 0 = passed**, verified
   against a missing file, an unsupported extension, a clean mesh and a
   defective one.
+
+## Technique 67 — Five techniques in this file were describing the same three pieces of physics, and one of them says to stop batching structural prints (2026-09-20)
+
+Scott asked for the physics behind the process rather than more worked
+examples. The research went into `data/knowledge_base/3d_printing_expertise.md`
+Parts 3 and 4 — **read those before reasoning about why something failed**;
+this entry records only what changed about writing `.scad` here.
+
+The finding worth recording is that several techniques above, logged months
+apart as unrelated bugs, are the same mechanism seen from different angles:
+
+| Already logged | The mechanism (expertise doc) |
+|---|---|
+| T57 — the modelled gap is not the printed gap, beads eat over half of it | §4.1 — a print-in-place clearance is the *only* thing holding the assembly apart, so it is verified by slicing, never by mesh component count |
+| T60 — you cannot reason about a bridge span from your own geometry | §3.5 — a bridge is a strand pulled taut between two **anchors**; the anchor geometry decides it, and the model does not make the anchor obvious |
+| The setup section's rule that `mesh_gate` reports overhang and never fails on it | §3.5 — the recurring false positive, the 0.7 mm maker's-mark ceiling, is a sub-millimetre bridge between fully anchored walls, an order of magnitude inside the no-sag span |
+| T54 — a shallow upward surface terraces and no slicer setting fixes it | §3.2 — layer-wise construction; the stair is the process, not a defect to tune out |
+| T53 / T63 — a flush inlay prints in one colour; a sealed void | §4.3 — enclosed geometry is additive's signature capability *and* its own failure class |
+
+None of that changes code. Three things do:
+
+1. **Layers must run parallel to a flexure's bend axis.** Any living hinge,
+   clip, catch or snap this shop models is asking extruded strands to carry
+   the bend. Run the layers across the axis instead and the load falls on the
+   interlayer weld, which is 20–60% of in-plane strength and cracks in a cycle
+   or two. This is a *modelling* decision — it fixes the part's print
+   orientation, so the flat face that will sit on the plate has to be chosen
+   while writing the `.scad`, not after. Thickness 0.18–0.38 mm for a thin
+   repeatedly-bent hinge, 0.5–1.2 mm for a stiffer one, length ≥ 2–3× the
+   thickness. PLA only if the strain stays near 10% of yield.
+2. **Do not put a PLA/TPU interface in tension.** Bambu's own TDS gives
+   TPU-for-AMS about half the Z adhesion of everything else in their lineup,
+   and dissimilar polymers bond poorly regardless. Model a mechanical capture
+   — dovetail, through-hole, interlocking beam — and let geometry carry the
+   load rather than adhesion.
+3. **Batching copies weakens each one in Z.** Six parts on a plate means each
+   layer's cycle is six times longer, so every interface cools further before
+   the next lands, and the weld is correspondingly worse. Decorative pieces do
+   not care. Anything with a load path does, so say so when advising Scott on
+   how to print a structural part — this is not a setting he can tune away.
+
+**And the standing form question this adds to step 1.** Scott's process
+requires 4–5 genuinely different formal approaches before any code. Part 4 of
+the expertise doc is the vocabulary for making them genuinely different:
+print-in-place articulation, compliant flexures, captive geometry with no
+mould-release path, TPMS/auxetic walls, vase mode, multi-material variable
+stiffness. A form that a mould could also have produced is not wrong — it is
+just not using the one advantage this process has, and `product_gate.py` will
+never notice, because every check it runs asks whether the thing prints.

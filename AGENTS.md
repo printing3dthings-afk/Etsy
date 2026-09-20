@@ -73,7 +73,7 @@ No pytest. Every test is a standalone runnable script with its own
 exactly rather than introducing a second style.
 
 ```bash
-python3 tests/run_all.py -j 4      # full suite: 190 files, ~4-5 min on 4 cores
+python3 tests/run_all.py -j 4      # full suite: 190 files, 4-10 min on 4 cores (load-dependent)
 python3 tests/test_<name>.py       # one file
 ```
 
