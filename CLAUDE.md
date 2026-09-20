@@ -3877,7 +3877,11 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      variations on one idea — one sentence each. No code yet.
   2. Scott picks one.
   3. Only then write the `.scad`.
-  4. Run `tools/product_gate.py` — it FAILS the build, it does not advise.
+  4. Run `tools/product_gate.py` — its eight printability checks FAIL the
+     build, they do not advise. It additionally *reports* surface rugosity
+     against a 157-mesh corpus (advisory only, wired 2026-09-20); the
+     silhouette half of the bar below is still a human call — see the
+     design skill's Technique 68 for the metric that was tried and rejected.
   5. Render three views (`tools/blender_render.py --views`) and show him before
      anything is called done.
 

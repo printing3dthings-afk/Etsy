@@ -94,6 +94,14 @@ form — do not thin the walls to rescue it.**
 `tools/product_gate.py` asserts all of it and FAILS, unlike `mesh_gate`/
 `print_check`, which report and leave the judgment to a person.
 
+**It also prints two ADVISORIES that never fail**: `print_risk.py`'s
+uncalibrated signals, and (wired 2026-09-20) `detail_probe.py`'s surface
+rugosity with its percentile against the 157-mesh corpus. Texture is a retail
+judgement, not a printability constraint — a rugosity floor would correctly
+fail a cable clip. See Technique 68 for why it had been wired to nothing, and
+for the thumbnail-silhouette metric that was tried for the other half of
+Scott's retail bar and rejected.
+
 **Its overhang verdict comes from the real slicer, not from geometry** — and
 the reason is a caught mistake worth keeping. The first version ray-cast its
 own answer and failed all four sauce parts on unsupported spans of 13–19mm.
@@ -7210,3 +7218,80 @@ mould-release path, TPMS/auxetic walls, vase mode, multi-material variable
 stiffness. A form that a mould could also have produced is not wrong — it is
 just not using the one advantage this process has, and `product_gate.py` will
 never notice, because every check it runs asks whether the thing prints.
+
+## Technique 68 — Silhouette complexity is not recognisability: a sixth metric that failed, and the one that was already built and wired to nothing (2026-09-20)
+
+Scott's retail bar (CLAUDE.md, 2026-09-13) has two halves: **"the silhouette
+has to read at thumbnail size, and the form needs at least one deliberate
+design decision beyond a primitive with a pattern on it."** An audit of what
+actually enforces that found neither half covered — every one of
+`product_gate.py`'s eight checks asks whether the thing prints — and found
+something worse about the second half.
+
+### `detail_probe.py` had been wired to nothing for sixteen days
+
+It shipped 2026-09-04 with the full 157-mesh benchmark in Technique 52. Nothing
+called it: not `product_gate.py`, not a test, not a command. Its real finding —
+that this shop's best model sits at the corpus **median** and none reaches its
+**p75** — lived only in this file, and never reached the moment a model is
+actually judged.
+
+That is the **fourth** instance of this repo's documented failure class, after
+the two review agents nothing invoked, the cost-tracker hook never referenced
+from `settings.json`, and the `hallmark` skill whose `slop-test` CLI was never
+installed (still missing, along with `obsidian` and `whisper`, as of this
+audit). The pattern is consistent enough to be worth naming: **building the
+measurement is the easy half; wiring it into the decision is the half that
+gets skipped.**
+
+Now an advisory in `product_gate.py`, reporting rugosity plus its percentile
+against the real corpus. **Advisory, never a failure** — a rugosity floor would
+correctly fail `cable_clip`, and a cable clip is a legitimate product. Texture
+is a retail judgement about a decorative piece, not a printability constraint.
+Verified against Technique 52's published numbers: `mochi_fox_organizer` 1.086,
+`fairy_house` 1.062, `spiral_fluted_vase` 1.004, `ribbed_organizer` 1.000, and
+a flat plate correctly refuses to report a number at all. A test now asserts
+the gate and this file cannot drift apart on the same corpus.
+
+### The sixth failed metric: thumbnail silhouette rugosity
+
+The obvious way to measure the *first* half of Scott's bar: rasterise the
+mesh's outline at 200 px across 12 view directions, then take
+perimeter ÷ convex-hull perimeter of the binary mask — the same form-blind
+ratio that made contour rugosity work, applied to the outline at the scale
+that actually matters.
+
+It does not separate the right things:
+
+| model | median silhouette rugosity | what it actually is |
+|---|---|---|
+| `mochi_fox_organizer` | 1.274 | distinctive ✅ |
+| `cable_clip` | **1.239** | a functional clip |
+| `fairy_house` | 1.176 | distinctive ✅ |
+| `ball_socket_joint_test` | **1.170** | a literal joint test part |
+| `axolotl` | 1.161 | distinctive ✅ |
+| `label_bin_L` | 1.037 | a box |
+| `ribbed_organizer` | 1.000 | a box ✅ |
+
+A print-in-place cable clip and a two-sphere joint test both outscore the
+axolotl. Area-based variants (mask ÷ hull fill) reorder the list without
+fixing it.
+
+**Why, stated as the general lesson:** the metric measures *outline
+complexity*. An axolotl has a simple, rounded, low-complexity outline and is
+recognisable instantly; a functional clip has a jagged, high-complexity outline
+and is not a distinctive retail form. **Recognisability is semantic, not
+geometric**, so no purely geometric proxy is going to carry it — which is
+exactly why the four attempts in Technique 52 and the cut banding metric all
+failed too, each one measuring something real that was not the thing asked for.
+
+Not shipped, deliberately. Shipping a sixth metric that lies would cost more
+than having no metric.
+
+**Where the answer probably is, for whoever picks this up:** a vision model
+reading a 200 px render, which is infrastructure this shop already runs —
+`listing_photo_pipeline.py` already uses one to verify a generated photo
+against its source file, character by character. That is the tool that judges
+semantics. It costs an API call per check, so per
+`.claude/rules/automation-workflow.md` it earns a gate only after its manual
+verdicts have been right across several real models — not before.

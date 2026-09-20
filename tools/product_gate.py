@@ -16,6 +16,10 @@ every check here FAILS the build.
   5 no UNSUPPORTED overhang past 45 degrees
   6 flat base, and the centre of mass lands inside it
 
+Plus an ADVISORY surface-texture reading (detail_probe.py's rugosity, against
+the 157-mesh reference corpus). Advisory, never a failure -- see
+_texture_advisory() for why a texture floor would be wrong here.
+
 WHAT MAKES 5 DIFFERENT FROM mesh_gate's ADVISORY SCAN. That one excludes faces
 resting on the plate and flags everything else steep, so a base fillet reads
 the same as a mushroom flare. It isn't: going down the outside of a base
@@ -119,6 +123,56 @@ def _base_report(m, plate_eps=0.05):
     return area, inside, reach, d
 
 
+# Gated reference corpus from SKILL.md Technique 52: 157 real MakerWorld meshes,
+# flat plates excluded. Kept here as data rather than re-derived, so the gate and
+# the write-up can never quote different numbers for the same corpus.
+_RUGOSITY_CORPUS = [(1.002, 25), (1.061, 50), (1.235, 75), (1.477, 90)]
+
+
+def _texture_advisory(m):
+    """Surface texture, reported against the real corpus -- NEVER a failure.
+
+    Wired in 2026-09-20. detail_probe.py has existed since 2026-09-04 with a
+    full 157-mesh benchmark and was called by nothing: not this gate, not a
+    test, not a command. That is the fourth instance of this repo's documented
+    "declared but never invoked" failure (two review agents, the cost-tracker
+    hook, the hallmark skill's missing CLI), and the reason the benchmark's
+    real finding -- that our best model sits at the corpus median and none
+    reaches its p75 -- never reached the moment a model is judged.
+
+    It stays advisory because a rugosity floor would correctly fail a cable
+    clip, and a cable clip is a legitimate product. Texture is a retail
+    judgement about a decorative piece, not a printability constraint, so it
+    reports a number and a percentile and leaves the call to a person.
+    """
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from detail_probe import detail_metrics
+        r = detail_metrics(m)
+    except Exception as exc:
+        return {"error": f"texture probe unavailable: {str(exc)[:80]}"}
+    if "rugosity_na" in r:
+        return {"rugosity": None, "note": r["rugosity_na"]}
+    rug = r.get("rugosity")
+    if rug is None:
+        return {"rugosity": None, "note": "too few usable cross-sections to measure"}
+    pct = None
+    for value, p in _RUGOSITY_CORPUS:
+        if rug >= value:
+            pct = p
+    # T52's limit 1: the metric sees VERTICAL relief only. ribbed_organizer
+    # carries six real 1.5mm corrugations and scores exactly 1.000 because
+    # they run horizontally. Saying "no relief" here would be untrue, so the
+    # band says what was actually measured.
+    band = ("no vertical relief" if rug < 1.005 else
+            "light relief" if rug < 1.15 else
+            "genuinely textured" if rug < 1.5 else "heavily textured")
+    return {"rugosity": round(float(rug), 3), "corpus_percentile_at_least": pct,
+            "band": band,
+            "note": "corpus (n=157, plates excluded): p25 1.002, median 1.061, "
+                    "p75 1.235, p90 1.477 -- see SKILL.md Technique 52"}
+
+
 def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
          bridge_max=10.0):
     m = trimesh.load(path, force="mesh")
@@ -186,6 +240,8 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
             f"unsupported span {span:.1f}mm (limit {bridge_max:.0f}mm), steepest "
             f"downward face {worst:.0f}deg")
 
+    advisories.append({"texture": _texture_advisory(m)})
+
     barea, inside, reach, d = _base_report(m)
     foot = barea / max(ext[0] * ext[1], 1e-9)
     add("flat_base", barea > 0 and foot >= min_base_frac,
@@ -198,6 +254,43 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
     failed = [c for c in checks if not c["pass"]]
     return {"file": str(path), "passed": not failed, "checks": checks,
             "advisories": advisories}
+
+
+def _print_report(path, res):
+    """Human-readable report. Extracted from _cli() 2026-09-20 so the
+    heterogeneous advisory list can be regression-tested -- appending the
+    texture advisory next to a print_risk advisory crashed this printer on
+    KeyError the first time, and inline code in _cli() could not be run
+    from a test without a real mesh and a real slice."""
+    print(path)
+    for c in res["checks"]:
+        print(f"  {'ok  ' if c['pass'] else 'FAIL'}  {c['check']}: {c['detail']}")
+    for adv in res.get("advisories", []):
+        # The advisory list holds two shapes now (risk signals, texture).
+        # Branch on the key rather than assuming -- appending the texture
+        # dict to this list crashed the printer on a KeyError first try.
+        if "texture" in adv:
+            t = adv["texture"]
+            if t.get("rugosity") is None:
+                print(f"  note  texture: not measurable -- "
+                      f"{t.get('note') or t.get('error')}")
+            else:
+                pc = t["corpus_percentile_at_least"]
+                where = f"at or above the corpus p{pc}" if pc else "below the corpus p25"
+                print(f"  note  texture (advisory, never fails the gate): "
+                      f"rugosity {t['rugosity']} -- {t['band']}, {where}")
+            continue
+        if "error" in adv:
+            print(f"  note  risk: {adv['error']}")
+            continue
+        at = f" at z={adv['unsupported_span_at_z']}mm" if adv.get("unsupported_span_at_z") else ""
+        print(f"  note  risk (uncalibrated, never fails the gate): "
+              f"{adv['unsupported_span_mm']}mm widest unsupported span{at}; "
+              f"{adv['short_layers']} layer(s) under the "
+              f"{adv['slowdown_threshold_s']}s cooling threshold; "
+              f"{adv['first_layer_area_mm2']}mm2 on the plate; "
+              f"aspect {adv['aspect_ratio']}")
+    print("PRODUCT GATE PASSED" if res["passed"] else "PRODUCT GATE FAILED")
 
 
 def _cli():
@@ -221,21 +314,7 @@ def _cli():
     if a.json:
         print(json.dumps(res, indent=2))
     else:
-        print(a.mesh)
-        for c in res["checks"]:
-            print(f"  {'ok  ' if c['pass'] else 'FAIL'}  {c['check']}: {c['detail']}")
-        for adv in res.get("advisories", []):
-            if "error" in adv:
-                print(f"  note  risk: {adv['error']}")
-                continue
-            at = f" at z={adv['unsupported_span_at_z']}mm" if adv.get("unsupported_span_at_z") else ""
-            print(f"  note  risk (uncalibrated, never fails the gate): "
-                  f"{adv['unsupported_span_mm']}mm widest unsupported span{at}; "
-                  f"{adv['short_layers']} layer(s) under the "
-                  f"{adv['slowdown_threshold_s']}s cooling threshold; "
-                  f"{adv['first_layer_area_mm2']}mm2 on the plate; "
-                  f"aspect {adv['aspect_ratio']}")
-        print("PRODUCT GATE PASSED" if res["passed"] else "PRODUCT GATE FAILED")
+        _print_report(a.mesh, res)
     raise SystemExit(0 if res["passed"] else 1)
 
 
