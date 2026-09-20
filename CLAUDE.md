@@ -295,7 +295,11 @@ complete matched pair, and the hook was never referenced from
 `.claude/settings.json` — so the log it writes never existed and the skill had
 been unusable since the day it was installed. Same failure mode
 `subagents.md` already records for the two review agents nothing invoked. Now
-wired as a `Stop` hook. **Its `estimated_cost_usd` column is not trustworthy
+wired as a `Stop` hook — and **confirmed firing, 2026-09-20**:
+`~/.claude/metrics/costs.jsonl` holds 20 real rows across 2 sessions spanning
+2026-09-19 09:38 to 2026-09-20 14:09, each with timestamp, session id, model
+and the four token counts. The skill is usable for the first time since it was
+written. **Its `estimated_cost_usd` column is not trustworthy
 and must not be quoted to anyone:** pipe-tested against a real transcript it
 reported $6,471 for one session, from 3.3 billion cache-read tokens counted
 once per turn, against published API rates that do not apply on a subscription
@@ -318,7 +322,22 @@ Redirect URI registered: `http://localhost:3003/callback`
 Scopes: shops_r, shops_w, listings_r, listings_w, listings_d, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
 
 ## Google Calendar OAuth Status
-**Not yet authorized.** `GOOGLE_CALENDAR_CLIENT_ID`/`GOOGLE_CALENDAR_CLIENT_SECRET` need to be set in `.env`
+**Still not authorized FOR FRANK — but a session can reach the calendar now (2026-09-20).**
+
+Two different things, and conflating them wastes a build: this session's Claude
+Code has a Google Calendar MCP connector, verified live against
+`printing3dthings@outlook.com` (America/Indiana/Indianapolis), with read+write
+on events. That is *session-level* access — it lets Claude read, create and
+search Scott's events while working. It gives **Frank** nothing: Frank is a
+separate Python process on Railway and cannot see a connector that lives in a
+Claude Code session.
+
+So everything below is still required for the Calendar tab, the alert-bell
+reminders, the daily todo/deadline push and the `create_calendar_event` agent
+tool. What changed is only that calendar work no longer has to wait on it when
+Claude is the one doing the work.
+
+**Not yet authorized (for Frank).** `GOOGLE_CALENDAR_CLIENT_ID`/`GOOGLE_CALENDAR_CLIENT_SECRET` need to be set in `.env`
 (from console.cloud.google.com — enable the Calendar API, configure the OAuth consent screen, create a
 Desktop-app OAuth client), then run `python tools/google_calendar_oauth.py` to authorize. Once connected,
 Scott's Google Calendar events appear in Frank's Calendar tab and as same-day/next-day reminders in the
@@ -3890,6 +3909,21 @@ price tables — fixed the same day, see `_PRODUCT_TAXONOMY_BY_CATEGORY` /
 authorization to route around friction like that going forward, without
 re-asking each time — and an explicit line on the one thing that stays gated
 even so.
+
+**Railway MCP vs. the GraphQL API — which to reach for (2026-09-20).** A
+Railway MCP connector is available to Claude Code sessions, verified live
+(authenticated as `printing3dthings-afk`, project **calm-light**, services
+`Etsy` and `frank-relay`, environment `production`). Prefer it for
+**operations**: logs, deployments, service metrics, HTTP error rates, staged
+changes, redeploys, and listing what variables exist.
+
+It does **not** replace the GraphQL path for reading a credential's VALUE.
+Checked directly against the `Etsy` service: the response carries
+`valuesRedacted: true` and returns `variableNames` only — 26 names, no
+values — because a connected OAuth app is scoped to names. So the MCP will
+tell you `OPENAI_API_KEY` is set; it will not tell you what it is. When a task
+genuinely needs the value, the GraphQL route below with a real token is still
+the way.
 
 **Fetching live credentials directly, when needed for a legitimate task:**
 Railway's GraphQL API (`https://backboard.railway.app/graphql/v2`, project
