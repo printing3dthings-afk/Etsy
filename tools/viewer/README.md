@@ -1150,7 +1150,7 @@ chrome glint, because PLA is a matte-satin dielectric. Gated on a wall factor,
 since the cross product degenerates where the normal is vertical and a top
 surface has its own raster direction this cannot know.
 
-### Known, real, and not done
+### Known, real, and not done — DONE 2026-09-22, see "The Z seam" below
 
 Every FDM print has a **Z seam** — the vertical scar where each perimeter loop
 starts and ends — and on most prints it is the single most visible surface
@@ -1158,6 +1158,9 @@ feature. It does not need faking: the loop start points are already in the
 toolpath this page replays. Drawing it means a small bead bulge at each loop
 start, which is a geometry change, and it is worth doing next rather than
 bundling into a change already touching shading, visibility and lighting.
+
+Shipped as a toggleable **overlay** rather than a bead bulge — same data, no
+change to the geometry in the hot path.
 
 ## The bead was hollow (2026-09-19)
 
@@ -1444,3 +1447,90 @@ derives from the width table.
 The door handle, the side-panel Bambu branding, the front wordmark, the bed's
 front label strip, and the interior LED bar are all visible in the reference
 photographs and absent from the model.
+
+
+## The Z seam (2026-09-22)
+
+**View options → Z seams.** A marker at the start of every closed external
+perimeter loop, which is exactly where the nozzle stops and starts and
+therefore exactly where the scar is. Nothing is modelled or inferred: the loop
+starts are already in the payload this page replays.
+
+Internal perimeters are deliberately excluded. Their seam is buried under the
+wall outside it and a customer never sees it, so drawing it would bury the one
+that matters in noise.
+
+The overlay is a child of the print mesh, so it inherits the 0.01mm→mm scale
+and the bed-drop offset for free, and it uses the same `setDrawRange` trick the
+beads do — it reveals in step with playback instead of appearing whole.
+
+### What the readout says, and why it is worded so carefully
+
+Under the plate notes: how far the seam column wanders from one layer to the
+next, median and p90, plus the percentage of seams that start a new column.
+
+**The obvious way to compute that is wrong, and it was wrong here first.**
+Taking the largest loop on each layer and measuring how far its start moves
+reports 160mm of "seam wander" on the six-well sauce tray, 93mm on the mushroom
+lamp and 80mm on the flexi seahorse — every one of them a multi-part plate
+where the largest loop is simply a *different object* on different layers. The
+number was measuring plate layout.
+
+Matching each seam to the nearest seam on the layer below needs no island
+tracking and fixes it exactly. Measured across all 54 plates before it shipped:
+
+| plate | naive | nearest-neighbour |
+|---|---|---|
+| Sauce Tray (6-well) | 160 mm | **0.20 mm** |
+| Mushroom Lamp | 93 mm | **0.24 mm** |
+| Flexi Seahorse | 80 mm | **2.77 mm** |
+
+And it still separates real behaviour. Boxy parts — Label Bin, Drawer Module,
+Kumiko Organizer, Ribbed Organizer, Soft Frame Housing — stack their seam to
+**0.00 mm**: one dead-straight scar you can rotate to the back before slicing.
+Curved decorative parts run 0.06–0.34 mm, still a single clean line. The
+organic ones scatter: Sundial 3.3 mm, Flexi Seahorse 2.8 mm, Axolotl 2.3 mm.
+
+A seam with no neighbour within 8mm is **not** folded into the average. It is
+counted separately and reported as its own number, because it is genuinely
+ambiguous between "a new island started here" and "the seam jumped across the
+part", and averaging those together would state a defect rate nobody measured.
+
+### The overlay drew nothing, and every piece of state said it was working
+
+Worth recording because the symptom was so quiet. The first version offset the
+marker 1.15× the bead half-width outward and rendered **zero pixels**, while a
+probe reported 426 points, full draw range, `visible: true`, correctly
+parented, correct 0.01 scale, and an outward direction verified correct on 59
+of 59 loops by signed area.
+
+Two wrong theories came first, both recorded because they were plausible:
+
+1. **Depth precision.** The camera runs near=1/far=4000, so a third of a
+   millimetre looked like it might sit inside one depth quantum. It does not —
+   a micro-scene reported a **24-bit** depth buffer, and confirmed directly
+   that a marker 2mm in front of a wall draws (154 px) while one 2mm behind it
+   does not (0 px). Occlusion was never broken.
+2. **A constant bias in NDC.** This is the wrong primitive. NDC z is violently
+   non-linear at near=1/far=4000, so a fixed 0.0016 of it spans roughly 50mm at
+   this viewing distance: the markers punched clean through the machine's own
+   side panel and drew a cyan line across the *outside* of the printer.
+
+The real cause is that a bead's outer edge is **miter-extended** —
+`sc = min(2.4, 2/m) × halfWidth` — so it reaches 2.4× the half-width at a sharp
+corner, and a loop start is very often exactly a sharp corner. The marker was
+inside the bead it was marking. The offset is now 2.5×, which clears it in
+every case, plus a 1.5mm lift toward the camera in **view space** (the same
+distance everywhere, unlike an NDC bias) to handle the coplanar case.
+
+Verified in a real browser on the shipped build: turning the overlay on adds
+126 cyan pixels inside the canvas, at exactly `rgb(53, 224, 255)`.
+
+### One more thing measured wrong on the way
+
+Three separate times a pixel count pointed the wrong way, and each was caught
+only by looking at the actual image: a diff that was really the View-options
+menu opening, a "138 on / 138 off" that was counting UI chrome outside the
+canvas entirely, and a "zero seams" on the drapery vase that was its seam
+column correctly facing away from the camera. **Crop to the canvas rect the
+page reports, and look at the picture.**

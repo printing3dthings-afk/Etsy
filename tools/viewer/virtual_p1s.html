@@ -80,6 +80,8 @@ footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
 #platemore:hover{border-color:var(--amber)}
 #platemore[hidden]{display:none}
 #jobnote{font-size:12px;line-height:1.55;color:#b9b7b2;margin:9px 0 0}
+#seamnote{font-size:12px;line-height:1.55;color:#8fb6c2;margin:7px 0 0}
+#seamnote:empty{display:none}
 #jobsource{font-family:var(--fm);font-size:10.5px;color:var(--faint);margin:7px 0 0;
   word-break:break-all}
 #platefilter{width:100%;margin:0 0 8px;padding:7px 9px;background:var(--rail);
@@ -466,6 +468,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         <div id="jobs"></div>
         <button type="button" id="platemore" hidden></button>
         <p id="jobnote"></p>
+        <p id="seamnote"></p>
         <p id="jobsource"></p>
       </div>
     </div>
@@ -669,6 +672,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         <button id="door" aria-pressed="false" title="Swing the chamber door open">Open door</button>
         <button id="viewmode" aria-pressed="true" title="Solid exterior, or cut away to watch the print">View: machine</button>
         <button id="ghost" aria-pressed="false">Ghost</button>
+        <button id="seams" aria-pressed="false"
+          title="Mark where each outer wall loop starts and ends — the vertical scar on the finished part">Z seams</button>
         <button id="motion" aria-pressed="true" title="P1S gantry is fixed; the bed descends">Bed drops</button>
         <button id="quality" aria-pressed="true" title="Specular highlight and Fresnel edge; step down if the frame rate suffers">Detail: high</button>
         <button id="fullscreen" aria-pressed="false" title="Fill the screen">Full screen</button>

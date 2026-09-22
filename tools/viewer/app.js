@@ -2551,6 +2551,19 @@ function buildJob(raw) {
   var segTool = new Uint8Array(nSeg);
   var layerSeg = new Int32Array(layers.length + 1);
 
+  // ── Z seam (2026-09-20) ────────────────────────────────────────────────
+  // Every closed perimeter loop starts and ends at one point, and that point
+  // is the vertical scar down the side of the finished part -- on most prints
+  // the single most visible surface feature there is. It needs no modelling:
+  // the loop start is already in the toolpath this page replays, so these
+  // markers are read straight out of the payload, not inferred.
+  //
+  // External perimeter only. An internal perimeter's seam is buried under the
+  // wall outside it and a customer never sees it, so drawing it would bury the
+  // one that matters in noise.
+  var extType = raw.types ? raw.types.indexOf('External perimeter') : -1;
+  var seamXYZ = [], seamSeg = [], seamLayer = [];
+
   var hw = (raw.beadWidth || 0.42) * 50;     // half width, in 0.01mm units
 
   // Bead width is not one number (2026-09-19). The payload carries a single
@@ -2648,6 +2661,7 @@ function buildJob(raw) {
       var hwT = hw * (li === 0 ? FIRST_LAYER_W : (WIDTH_BY_TYPE[t] || 1));
       var tool = polyTool ? polyTool[pi] : 0;
       var base = vi;
+      if (t === extType && n >= 8) { collectSeam(s, n, hwT, li, si, ztop, lh); }
       for (i = 0; i < n; i++) {
         var x = pts[(s + i) * 2], y = pts[(s + i) * 2 + 1];
         // Miter normal: average the incoming and outgoing segment normals so
@@ -2755,6 +2769,40 @@ function buildJob(raw) {
   }
   layerSeg[layers.length] = si;
 
+  // Defined here rather than at module scope because it closes over this job's
+  // own pts/seam arrays. Hoisted, so the call site above reaches it.
+  function collectSeam(s, n, hwT, li, segAt, ztop, lh) {
+    var x0 = pts[s * 2], y0 = pts[s * 2 + 1];
+    var x1 = pts[(s + n - 1) * 2], y1 = pts[(s + n - 1) * 2 + 1];
+    // 0.05mm: the payload quantises XY to 0.01mm, so an exactly-closed loop
+    // can still differ by a unit or two after rounding.
+    if (Math.abs(x0 - x1) > 5 || Math.abs(y0 - y1) > 5) { return; }
+    // Which way is OUT. A marker left on the wall z-fights the bead it sits
+    // on, so it has to stand proud -- and "proud" means outward, which means
+    // knowing the loop's winding. Signed area gives it exactly; guessing from
+    // the bounding box does not, because a concave loop's first edge can face
+    // either way.
+    var area2 = 0;
+    for (var q = 0; q < n - 1; q++) {
+      var ax0 = pts[(s + q) * 2], ay0 = pts[(s + q) * 2 + 1];
+      var ax1 = pts[(s + q + 1) * 2], ay1 = pts[(s + q + 1) * 2 + 1];
+      area2 += ax0 * ay1 - ax1 * ay0;
+    }
+    var dx = pts[(s + 1) * 2] - x0, dy = pts[(s + 1) * 2 + 1] - y0;
+    var dl = Math.hypot(dx, dy) || 1;
+    var sgn = area2 >= 0 ? 1 : -1;
+    var ox = sgn * (dy / dl), oy = sgn * (-dx / dl);
+    // 2.5x clears the bead's OWN outer edge in every case: that edge is
+    // miter-extended by min(2.4, 2/m) half-widths, so it reaches 2.4x at a
+    // sharp corner -- and a loop start is very often a sharp corner. 1.15x
+    // left the marker inside the bead it was marking and the overlay drew
+    // nothing at all; see mountSeams() for how long that took to find.
+    var out = hwT * 2.5;
+    seamXYZ.push(x0 + ox * out, y0 + oy * out, ztop - Math.round(lh * 0.5));
+    seamSeg.push(segAt);
+    seamLayer.push(li);
+  }
+
   // Time: each layer's own duration, distributed inside it by extruded length.
   var cum = 0;
   for (li = 0; li < layers.length; li++) {
@@ -2780,7 +2828,168 @@ function buildJob(raw) {
 
   return {raw:raw, geom:g, nSeg:si, segEnd:segEnd, segCum:segCum,
           segLayer:segLayer, layerSeg:layerSeg, total:cum,
-          segSpeed:spd, segTool:segTool, layers:layers};
+          segSpeed:spd, segTool:segTool, layers:layers,
+          seamXYZ:new Float32Array(seamXYZ), seamSeg:new Int32Array(seamSeg),
+          seamStats:seamStats(seamXYZ, seamLayer, layers.length)};
+}
+
+// How steady is the seam column, in millimetres of layer-to-layer wander?
+//
+// THE OBVIOUS VERSION OF THIS IS WRONG, and it was wrong here first. Taking
+// the largest loop per layer and measuring how far its start moves reports
+// 160mm of "seam wander" on the six-well sauce tray, 93mm on the mushroom
+// lamp, 80mm on the flexi seahorse -- all of which are multi-part plates
+// where the largest loop is simply a DIFFERENT OBJECT on different layers.
+// The number was measuring plate layout.
+//
+// Matching each seam to the nearest seam on the layer below instead needs no
+// island tracking and fixes it exactly: the same six-well tray reads 0.20mm,
+// the lamp 0.24mm, the seahorse 2.77mm. Measured across all 54 plates before
+// this shipped.
+//
+// SEARCH_MM is the radius inside which two seams count as the same column.
+// A seam with no neighbour inside it is NOT folded into the average -- it is
+// counted separately and reported as its own number, because it is genuinely
+// ambiguous between "a new island started here" and "the seam jumped right
+// across the part", and averaging those into a millimetre figure would state
+// a defect rate that was never measured.
+function seamStats(xyz, layer, nLayers) {
+  var SEARCH_MM = 8.0, i, j;
+  if (!xyz.length) { return null; }
+  var byLayer = [];
+  for (i = 0; i < nLayers; i++) { byLayer.push([]); }
+  for (i = 0; i < layer.length; i++) {
+    byLayer[layer[i]].push([xyz[i * 3] / 100, xyz[i * 3 + 1] / 100]);
+  }
+  var jumps = [], unmatched = 0, total = 0;
+  for (i = 1; i < nLayers; i++) {
+    var a = byLayer[i], b = byLayer[i - 1];
+    if (!a.length || !b.length) { continue; }
+    for (j = 0; j < a.length; j++) {
+      total++;
+      var best = Infinity;
+      for (var k = 0; k < b.length; k++) {
+        var dx = a[j][0] - b[k][0], dy = a[j][1] - b[k][1];
+        var dd = Math.sqrt(dx * dx + dy * dy);
+        if (dd < best) { best = dd; }
+      }
+      if (best <= SEARCH_MM) { jumps.push(best); } else { unmatched++; }
+    }
+  }
+  if (jumps.length < 30) { return null; }
+  jumps.sort(function (x, y) { return x - y; });
+  return {count: xyz.length / 3,
+          median: jumps[jumps.length >> 1],
+          p90: jumps[Math.min(jumps.length - 1, Math.floor(jumps.length * 0.9))],
+          hopPct: 100 * unmatched / Math.max(total, 1)};
+}
+
+var seamsOn = false;
+var seamMesh = null;
+
+// The markers are a CHILD of jobMesh on purpose. jobMesh already carries the
+// 0.01mm -> mm scale and, on a P1S, the bed-drop offset that sinks the print
+// away from a fixed nozzle every layer. Parenting inherits both for free; a
+// sibling in world space would need each of them mirrored by hand and would
+// drift the moment either changed.
+// Says what was measured and nothing more. "No seam column measured" is a real
+// answer for a plate with too few closed outer loops to compare -- stating a
+// millimetre figure from a handful of samples would be inventing precision.
+function renderSeamNote() {
+  var el = $('seamnote');
+  if (!el) { return; }
+  var s = JOB && JOB.seamStats;
+  if (!s) { el.textContent = ''; return; }
+  var steady = s.p90 < 0.35;
+  el.textContent =
+    'Z seam: ' + s.count + ' outer-wall loop starts. Layer to layer the column '
+    + 'wanders ' + s.median.toFixed(2) + ' mm typical, ' + s.p90.toFixed(2)
+    + ' mm at p90 \u2014 ' + (steady ? 'one clean scar you can rotate to the back'
+                                     : 'a broken scar; painting the seam would help')
+    + '. ' + s.hopPct.toFixed(0) + '% start a new column (a fresh island, or a '
+    + 'jump right across the part \u2014 this does not distinguish them).';
+}
+
+function mountSeams(job) {
+  if (seamMesh) {
+    if (seamMesh.parent) { seamMesh.parent.remove(seamMesh); }
+    seamMesh.geometry.dispose(); seamMesh.material.dispose(); seamMesh = null;
+  }
+  if (!job.seamXYZ || !job.seamXYZ.length) { return; }
+  var g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(job.seamXYZ, 3));
+  // Set by hand for the same reason the bead geometry's is: positions are in
+  // raw 0.01mm units, so a computed sphere would be two orders of magnitude
+  // out and frustum culling would drop the whole overlay.
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(12800, 12800, 12800), 40000);
+  // A PointsMaterial cannot do this job, and the reason is worth keeping.
+  //
+  // POINTS take no polygonOffset -- GL only offsets polygons -- so a marker
+  // sitting on the wall it marks has to clear that wall geometrically. The
+  // first attempt offset it 1.15x the bead half-width outward and drew ZERO
+  // pixels while every piece of state said it was working: 426 points, full
+  // draw range, visible, correctly parented, correctly scaled, and the outward
+  // direction verified correct on 59 of 59 loops.
+  //
+  // The cause was not depth precision, which was the first theory and was
+  // wrong -- this context reports a 24-bit depth buffer, and a micro-scene
+  // confirmed a marker 2mm in front of a wall draws (154px) while one 2mm
+  // behind it does not (0px). The cause is that the bead's own outer edge is
+  // MITER-EXTENDED: sc = min(2.4, 2/m) * halfWidth, so at a corner it reaches
+  // 2.4x the half-width, and a loop start is very often exactly a corner. The
+  // marker was inside the bead it was marking.
+  //
+  // Lifting 1.5mm toward the camera in VIEW space handles the rest. An NDC
+  // bias was tried first and is the wrong primitive: NDC z is violently
+  // non-linear with near=1/far=4000, so a constant 0.0016 of it spans roughly
+  // 50mm at this viewing distance and the markers punched clean through the
+  // machine's own side panel, drawing a cyan line across the outside of the
+  // printer. A view-space lift is the same distance everywhere.
+  //
+  // Depth TESTING stays on, which is the point -- a seam on the far side of
+  // the part is a scar you cannot see from here, and drawing it through the
+  // wall would show twice as many seams as the print has.
+  seamMesh = new THREE.Points(g, new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: {value: new THREE.Color(0x35e0ff)},
+      uSize:  {value: 4.2 * (renderer ? renderer.getPixelRatio() : 1)},
+      uLift:  {value: 1.5}          // millimetres toward the camera, view space
+    },
+    vertexShader:
+      'uniform float uSize;\nuniform float uLift;\n' +
+      'void main() {\n' +
+      '  vec4 mv = modelViewMatrix * vec4(position, 1.0);\n' +
+      '  mv.xyz += normalize(-mv.xyz) * uLift;\n' +
+      '  gl_Position = projectionMatrix * mv;\n' +
+      '  gl_PointSize = uSize;\n' +
+      '}',
+    fragmentShader:
+      'uniform vec3 uColor;\n' +
+      'void main() {\n' +
+      // Round marker. A bare gl_PointCoord square reads as a pixel artifact.
+      '  vec2 d = gl_PointCoord - vec2(0.5);\n' +
+      '  if (dot(d, d) > 0.25) { discard; }\n' +
+      // Written straight out, unencoded and untone-mapped on purpose: ACES
+      // filmic pulled the marker down to a muted teal (90,112,122 measured).
+      // An overlay is not part of the photograph.
+      '  gl_FragColor = vec4(uColor, 1.0);\n' +
+      '}'
+  }));
+  seamMesh.frustumCulled = false;
+  seamMesh.renderOrder = 3;
+  seamMesh.visible = seamsOn;
+  jobMesh.add(seamMesh);
+  syncSeamRange();
+}
+
+// Seams are collected in toolpath order, so their segment indices are already
+// ascending and the same draw-range trick the beads use works unchanged --
+// the overlay reveals itself in step with playback instead of appearing whole.
+function syncSeamRange() {
+  if (!seamMesh || !JOB || !JOB.seamSeg) { return; }
+  var s = JOB.seamSeg, lo = 0, hi = s.length, seg = play.seg;
+  while (lo < hi) { var m = (lo + hi) >> 1; if (s[m] < seg) { lo = m + 1; } else { hi = m; } }
+  seamMesh.geometry.setDrawRange(0, lo);
 }
 
 function mountJob(job) {
@@ -2806,6 +3015,7 @@ function mountJob(job) {
   scene.add(ghostMesh); scene.add(jobMesh);
   nozzle.visible = true; gantry.visible = true;
   JOB = job;
+  mountSeams(job);
   applyVisibility();
   shadowDirty = true;
   probeStill(currentId);
@@ -2925,6 +3135,7 @@ function setSeg(seg) {
   seg = Math.max(0, Math.min(JOB.nSeg, seg));
   play.seg = seg;
   jobGeom.setDrawRange(0, seg * 24);   // BEAD_IDX in buildJob
+  syncSeamRange();
   if (seg > 0) {
     var i = (seg - 1) * 3;
     var px = JOB.segEnd[i], py = JOB.segEnd[i + 1], zTop = JOB.segEnd[i + 2];
@@ -3840,6 +4051,7 @@ window.__JOB_LOADED = function (raw) {
     $('ltot').textContent = '/ ' + raw.layers.length;
     _lastFeat = null;
     $('jobnote').textContent = raw.notes || '';
+    renderSeamNote();
     // Name the file this came off, so a plate on screen is something you can
     // go and print rather than something you can only watch.
     var meta = INDEX.filter(function (x) { return x.id === currentId; })[0] || {};
@@ -4185,6 +4397,13 @@ function initUI() {
     var on = $('ghost').getAttribute('aria-pressed') !== 'true';
     $('ghost').setAttribute('aria-pressed', String(on));
     if (ghostMesh) { ghostMesh.visible = on; }
+  });
+
+  $('seams').addEventListener('click', function () {
+    seamsOn = $('seams').getAttribute('aria-pressed') !== 'true';
+    $('seams').setAttribute('aria-pressed', String(seamsOn));
+    if (seamMesh) { seamMesh.visible = seamsOn; }
+    announce(seamsOn ? 'Z seam markers on' : 'Z seam markers off');
   });
 
   // The Limits tab carries every caveat that keeps this page honest, and it is
