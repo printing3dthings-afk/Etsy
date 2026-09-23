@@ -1711,8 +1711,9 @@ function buildToolhead() {
   // light grey plastic, "Bambu Lab" on the front above the round fan, with a
   // dark grey band along the bottom. Every earlier pass drew it near-black
   // with a blue cast, which is simply not the machine. The proportions are
-  // still drawn, not measured -- see headScale for why it is narrower than
-  // the real ~60 mm head.
+  // still drawn, not measured, and it is deliberately narrower than the real
+  // ~60 mm head (see headScale) so a small print is not hidden under it.
+  // Scott chose small over true size on 2026-09-23 -- keep it this way.
   var SHELL = 0xd2d2d1, SHELL_LOW = 0x2e2e2f, BAND = 7;
   part(26, 15, 15, SHELL_LOW, 44, 9);          // X-carriage on the gantry beam
   part(27, 19, 30, SHELL, 40, 11);             // rear housing over the extruder

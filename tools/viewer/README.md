@@ -1658,5 +1658,5 @@ his. The stock handle's values are kept in a comment beside the P1S profile's
 
 **The toolhead is drawn at about half its real width** (~25 mm against a real
 ~60 mm), and `headScale` shrinks it further on small plates. That is a
-readability trade-off, so a small print is not hidden under the head. Whether
-to draw it true to size is Scott's call.
+readability trade-off, so a small print is not hidden under the head. **Scott
+chose to keep it small (2026-09-23)** -- do not "correct" it to true size.
