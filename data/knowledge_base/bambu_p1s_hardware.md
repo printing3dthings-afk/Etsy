@@ -213,4 +213,27 @@ panel alone (store part FAS005). Full table: `tools/viewer/README.md`, "The
 machine's markings".
 
 Not fixed and worth knowing: the real control panel is a raised pill-shaped
-housing standing proud of the bezel; the model draws a flat slab.
+housing standing proud of the bezel; the model draws a flat slab. **Fixed the
+same day**, see below.
+
+**Checked against Scott's own P1S (2026-09-23).** Scott photographed his
+printer from the front and from inside the chamber. Measured at 0.282 mm/px
+(the 389 mm case spans 1380 px in the straight-on shot):
+
+- Case corners are rounded, radius **~25 mm**. The door bezels are **64 mm top
+  and 31 mm bottom**.
+- The control panel is a raised housing, **~146 x 42 mm**, whose top edge sits
+  **~10 mm above the lid**.
+- **Z lead screws:** one at each **front corner**, just outboard of the bed,
+  with a chrome guide rod beside each. The third is at the **back centre**, in
+  its own slot in the back wall. This answers the one Z-stage question Bambu's
+  service docs leave open.
+- **Toolhead:** light grey housings with "Bambu Lab" and a round fan on the
+  front, and a dark grey lower band. The real head is ~60 mm wide.
+- The heatbed around the plate is pale grey.
+- Scott's door handle is a printed orange replacement reading "Scott's
+  Printer" (~75 x 21 mm), not the stock silver pill.
+
+The photos themselves are not kept (one shows a reflection of Scott). The
+full table, and what the photos show that is still not modelled, is in
+`tools/viewer/README.md`, "Checked against Scott's own P1S".

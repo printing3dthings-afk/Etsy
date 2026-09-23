@@ -75,6 +75,12 @@ var PRINTERS = {
         // checked 2026-09-16). Not the AMS 2 Pro (372 x 280 x 226) and not the
         // AMS HT (114 x 280 x 245) -- three different boxes, easy to conflate.
         ams: {slots: 4, w: 368, d: 283, h: 224, kg: 2.5},
+        // Scott's own printed door handle (photographed 2026-09-23). The stock
+        // one is a silver pill, ~56 x 18 mm, "Bambu Lab" in dark ink:
+        //   {text: 'Bambu Lab', hex: 0xc4c4c4, ink: '#2a2a2a', w: 56, h: 18,
+        //    rough: 0.34, metal: 0.55}
+        handle: {text: 'Scott\u2019s Printer', hex: 0xdb543d, ink: '#1e1e1e',
+                 w: 75, h: 21, rough: 0.62, metal: 0},
         note:'The machine every job on this page was sliced for.'},
   // Open frame, bed-slinger, no heated chamber (bed tops out at 80 \u00b0C), real
   // footprint 544 x 529 x 505 mm. Verified 2026-09-17. Everything drawn for
@@ -603,22 +609,66 @@ function buildChamber(bed) {
   var BODY = 0x26282e, TRIM = 0x171a1f;
   var cz = (zBot + zTop) / 2, ch = zTop - zBot;
 
-  slab(t, EXT.d, ch, BODY, x0 + t / 2, oy, cz, new THREE.Vector3(-1, 0, 0));
-  slab(t, EXT.d, ch, BODY, x1 - t / 2, oy, cz, new THREE.Vector3(1, 0, 0));
-  slab(EXT.w, t, ch, BODY, ox, y1 - t / 2, cz, new THREE.Vector3(0, 1, 0));
-  slab(EXT.w, EXT.d, t, TRIM, ox, oy, zBot + t / 2, new THREE.Vector3(0, 0, -1));
+  // Rounded vertical corners (2026-09-23, from Scott's own photos of his P1S).
+  // The case was four square boxes. Straight-on, the real front's flat face is
+  // ~340 mm wide inside a 389 mm silhouette, and from the 3/4 views the corners
+  // are a smooth bullnose with the door running right up to where the curve
+  // starts -- no flat stile. (389 - 340) / 2 puts the radius at ~25 mm.
+  var CR = 25;
+  // A rounded footprint for the horizontal panels, so the lid and base do not
+  // stick out past the corners as square tabs.
+  function roundRect(w, d, r) {
+    var s = new THREE.Shape(), ax = ox - w / 2, bx = ox + w / 2,
+        ay = oy - d / 2, by = oy + d / 2;
+    s.moveTo(ax + r, ay);
+    s.lineTo(bx - r, ay); s.absarc(bx - r, ay + r, r, -Math.PI / 2, 0, false);
+    s.lineTo(bx, by - r); s.absarc(bx - r, by - r, r, 0, Math.PI / 2, false);
+    s.lineTo(ax + r, by); s.absarc(ax + r, by - r, r, Math.PI / 2, Math.PI, false);
+    s.lineTo(ax, ay + r); s.absarc(ax + r, ay + r, r, Math.PI, Math.PI * 1.5, false);
+    return s;
+  }
+  // Extruded shapes carry world-unit UVs, which would tile the painted
+  // orange-peel normal map once per millimetre, so the curved pieces go
+  // without it. At this scale the difference is below what reads on screen.
+  function extruded(shape, h, color, z, normal) {
+    var m = new THREE.Mesh(new THREE.ExtrudeGeometry(shape,
+      {depth: h, bevelEnabled: false, curveSegments: 12}),
+      surface(color, {normalMap: null}));
+    m.position.z = z;
+    chamber.add(m);
+    if (normal) { extPanels.push({mesh: m, n: normal}); }
+    return m;
+  }
 
-  // Front face: bezel below and above the door opening, narrow side stiles.
-  var dz0 = zBot + 56, dz1 = zTop - 54;              // door opening in Z
-  var dx0 = x0 + 9, dx1 = x1 - 9;                    // door opening in X
-  slab(EXT.w, t, dz0 - zBot, BODY, ox, y0 + t / 2, (zBot + dz0) / 2, new THREE.Vector3(0, -1, 0));
-  slab(EXT.w, t, zTop - dz1, BODY, ox, y0 + t / 2, (dz1 + zTop) / 2, new THREE.Vector3(0, -1, 0));
-  slab(dx0 - x0, t, dz1 - dz0, BODY, (x0 + dx0) / 2, y0 + t / 2, (dz0 + dz1) / 2, new THREE.Vector3(0, -1, 0));
-  slab(x1 - dx1, t, dz1 - dz0, BODY, (dx1 + x1) / 2, y0 + t / 2, (dz0 + dz1) / 2, new THREE.Vector3(0, -1, 0));
+  slab(t, EXT.d - 2 * CR, ch, BODY, x0 + t / 2, oy, cz, new THREE.Vector3(-1, 0, 0));
+  slab(t, EXT.d - 2 * CR, ch, BODY, x1 - t / 2, oy, cz, new THREE.Vector3(1, 0, 0));
+  slab(EXT.w - 2 * CR, t, ch, BODY, ox, y1 - t / 2, cz, new THREE.Vector3(0, 1, 0));
+  extruded(roundRect(EXT.w, EXT.d, CR), t, TRIM, zBot, new THREE.Vector3(0, 0, -1));
+  // The four quarter-round corners. Each joins the cutaway list with its own
+  // diagonal normal, so "View: chamber" still opens whichever side faces you.
+  [[x0 + CR, y0 + CR, Math.PI], [x1 - CR, y0 + CR, Math.PI * 1.5],
+   [x1 - CR, y1 - CR, 0], [x0 + CR, y1 - CR, Math.PI / 2]].forEach(function (c) {
+    var s = new THREE.Shape();
+    s.absarc(c[0], c[1], CR, c[2], c[2] + Math.PI / 2, false);
+    s.absarc(c[0], c[1], CR - t, c[2] + Math.PI / 2, c[2], true);
+    var mid = c[2] + Math.PI / 4;
+    extruded(s, ch, BODY, zBot, new THREE.Vector3(Math.cos(mid), Math.sin(mid), 0));
+  });
+
+  // Front face: a bezel above and below the door, and nothing at the sides --
+  // the door runs to the corners. Bezels corrected 2026-09-23 from 54 over / 56
+  // under to 64 / 31. Bambu's straight-on product photo splits the height as
+  // 64 + 360 + 31 = 455 against the published 458, and Scott's own front shot
+  // puts the top bezel at 62 mm or more (it is taken from below, which can only
+  // shorten it). The door opening goes from 371 x 348 to 339 x 363 mm.
+  var dz0 = zBot + 31, dz1 = zTop - 64;              // door opening in Z
+  var dx0 = x0 + CR, dx1 = x1 - CR;                  // door opening in X
+  slab(EXT.w - 2 * CR, t, dz0 - zBot, BODY, ox, y0 + t / 2, (zBot + dz0) / 2, new THREE.Vector3(0, -1, 0));
+  slab(EXT.w - 2 * CR, t, zTop - dz1, BODY, ox, y0 + t / 2, (dz1 + zTop) / 2, new THREE.Vector3(0, -1, 0));
 
   // Top cover, inset and lighter, the way the removable lid reads.
-  slab(EXT.w - 26, EXT.d - 26, 4, 0x404041, ox, oy, zTop - 2, new THREE.Vector3(0, 0, 1));
-  slab(EXT.w, EXT.d, 10, TRIM, ox, oy, zTop - 9, new THREE.Vector3(0, 0, 1));
+  extruded(roundRect(EXT.w - 26, EXT.d - 26, CR - 13), 4, 0x404041, zTop - 4, new THREE.Vector3(0, 0, 1));
+  extruded(roundRect(EXT.w, EXT.d, CR), 10, TRIM, zTop - 14, new THREE.Vector3(0, 0, 1));
 
   // Interior liner: one inverted box so the inside is its own darker surface.
   // LAMBERT, not Basic. It is by far the largest surface in the chamber, and
@@ -640,32 +690,72 @@ function buildChamber(bed) {
   // The screen is a 2.7-inch 192x64 panel (Bambu's spec sheet) -- a 3:1
   // letterbox, which is why it is 65 x 22 and not square -- and the round
   // control beside it is a D-pad, not a knob: the P1S has no touchscreen.
-  var panelZ = zTop - 27;                      // middle of the 54mm top bezel
-  slab(65, 2, 22, 0x0b0d10, x0 + 78, y0 - 0.6, panelZ, null);
-  var knob = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 4, 24),
-    surface(0x666e7c));
-  knob.rotation.x = Math.PI / 2;
-  knob.position.set(x0 + 128, y0 - 1.5, panelZ);
-  chamber.add(knob);
+  //
+  // And it is a HOUSING, not a panel in the bezel (2026-09-23, Scott's photos).
+  // It was drawn as a screen and a dial lying flat on the front face. The real
+  // unit is a rounded box ~146 x 42 mm face-on, standing proud of the front,
+  // with its top ~10 mm ABOVE the machine's top edge -- it sits over that edge
+  // rather than inside the bezel. Its left end lines up with the door's left
+  // edge. Inside it, left to right: the screen behind a larger dark glass, the
+  // D-pad at 113 mm, and two small round buttons (pause, back) stacked at
+  // 138 mm. Depth is judged from the 3/4 views, not measured: ~18 mm.
+  var PANEL_W = 146, PANEL_H = 42, PANEL_D = 18, pcr = 8;
+  var panelX0 = dx0 + 3;
+  var panelZ = zTop + 10 - PANEL_H / 2;        // top edge 10 mm above the lid
+  var ps = new THREE.Shape();
+  ps.moveTo(pcr, 0); ps.lineTo(PANEL_W - pcr, 0);
+  ps.absarc(PANEL_W - pcr, pcr, pcr, -Math.PI / 2, 0, false);
+  ps.lineTo(PANEL_W, PANEL_H - pcr);
+  ps.absarc(PANEL_W - pcr, PANEL_H - pcr, pcr, 0, Math.PI / 2, false);
+  ps.lineTo(pcr, PANEL_H);
+  ps.absarc(pcr, PANEL_H - pcr, pcr, Math.PI / 2, Math.PI, false);
+  ps.lineTo(0, pcr);
+  ps.absarc(pcr, pcr, pcr, Math.PI, Math.PI * 1.5, false);
+  var housing = new THREE.Mesh(new THREE.ExtrudeGeometry(ps,
+    {depth: PANEL_D, bevelEnabled: true, bevelThickness: 1.5, bevelSize: 1.5,
+     bevelSegments: 2, curveSegments: 10}),
+    surface(0x2b2b2c, {normalMap: null}));
+  // Shape in XY, extruded along +Z; about X that puts the extrusion out of the
+  // front (-Y) with the shape's Y as world up.
+  housing.rotation.x = Math.PI / 2;
+  housing.position.set(panelX0, y0, panelZ - PANEL_H / 2);
+  chamber.add(housing);
+  var face = y0 - PANEL_D - 1.5;
+  slab(88, 1, 32, 0x0a0a0b, panelX0 + 45, face - 0.4, panelZ, null);   // dark glass
+  slab(65, 2, 22, 0x0b0d10, panelX0 + 45, face - 1.1, panelZ, null);   // the screen
   // The recessed dish the D-pad sits in, which is what makes it read as a pad
-  // rather than a dial at any distance.
-  var pad = new THREE.Mesh(new THREE.CylinderGeometry(15, 15, 2, 24),
-    surface(0x2e2e2f));
+  // rather than a dial at any distance, and the pad itself.
+  var pad = new THREE.Mesh(new THREE.CylinderGeometry(16, 16, 1.2, 28),
+    surface(0x1c1c1d));
   pad.rotation.x = Math.PI / 2;
-  pad.position.set(x0 + 128, y0 - 0.4, panelZ);
+  pad.position.set(panelX0 + 113, face - 0.5, panelZ);
   chamber.add(pad);
+  var knob = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 2.4, 24),
+    surface(0x3a3a3b));
+  knob.rotation.x = Math.PI / 2;
+  knob.position.set(panelX0 + 113, face - 1.4, panelZ);
+  chamber.add(knob);
+  [12, -12].forEach(function (dz) {
+    var b = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 2, 18),
+      surface(0x1c1c1d));
+    b.rotation.x = Math.PI / 2;
+    b.position.set(panelX0 + 138, face - 0.9, panelZ + dz);
+    chamber.add(b);
+  });
 
   // Front wordmark. At the FAR RIGHT of the top bezel, not tucked against the
-  // control panel as the written note implied: in Bambu's product photo its
-  // right edge sits about 10mm in from the front-right corner, in the upper
-  // half of the bezel, ~60 x 12 mm over two lines, light grey (tone 220 on a
-  // bezel of 85). Their logo mark sits to its left and is left out -- see
+  // control panel as the written note implied: ~60 x 12 mm over two lines,
+  // light grey (tone 220 on a bezel of 85). Their logo mark sits to its left and is left out -- see
   // machineLabel().
   var front = faceLabel(machineLabel(
     [{text: 'Bambu Lab', size: 0.86}, {text: 'P1S', size: 0.86}],
     60, 12, {ink: '#cfcfcf', align: 'left', rough: 0.5}),
     new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1));
-  front.position.set(x1 - 12 - 30, y0 - 0.8, zTop - 24);
+  // Position corrected 2026-09-23 from Scott's straight-on front shot, which
+  // beats the 3/4 product photo it was first placed from: the right end sits
+  // ~16 mm in from where the corner's curve begins, and the text block's
+  // centre ~15 mm below the top edge.
+  front.position.set(x1 - CR - 16 - 30, y0 - 0.8, zTop - 15);
   chamber.add(front);
 
   // Side-panel wordmark. Measured off Bambu's own spare-part photo of the right
@@ -730,7 +820,17 @@ function buildChamber(bed) {
   // "Bambu Lab" printed on it in dark ink, about mid-height on the glass's
   // free edge and straddling it. The blue-grey had also slipped past the
   // neutrality guard, which only checks dark shell colours.
-  var PILL_W = 56, PILL_H = 18, PILL_D = 7, pr = PILL_H / 2;
+  //
+  // Scott's machine does not wear the stock handle any more: he replaced it
+  // with his own printed one, "Scott's Printer", orange, and this viewer draws
+  // HIS machine (the AMS on the lid is his too). Measured off his straight-on
+  // front shot, 2026-09-23: ~75 x 21 mm, centred exactly ON the glass's free
+  // edge -- half of it past the door, over the corner -- 45.5% of the way down
+  // the opening, which agrees with Bambu's own photo of the stock one (46%).
+  // Colour sampled off the pill's face, median #db543d. The stock handle's
+  // numbers stay in the profile comment so the swap is one field, not a hunt.
+  var HANDLE = PRINTERS[printerId].handle;
+  var PILL_W = HANDLE.w, PILL_H = HANDLE.h, PILL_D = 7, pr = PILL_H / 2;
   var pill = new THREE.Shape();
   pill.moveTo(-PILL_W / 2 + pr, -pr);
   pill.lineTo(PILL_W / 2 - pr, -pr);
@@ -740,19 +840,17 @@ function buildChamber(bed) {
   var handle = new THREE.Mesh(
     new THREE.ExtrudeGeometry(pill, {depth: PILL_D, bevelEnabled: true,
       bevelThickness: 1.2, bevelSize: 1.2, bevelSegments: 3, curveSegments: 16}),
-    surface(0xc4c4c4, {roughness: 0.34, metalness: 0.55}));
+    surface(HANDLE.hex, {roughness: HANDLE.rough, metalness: HANDLE.metal}));
   // Shape is in XY and extrudes along +Z; turning it about X points the
   // extrusion out of the door (-Y) with the shape's Y as world up.
   handle.rotation.x = Math.PI / 2;
-  // Its outer end runs ~6mm past the glass edge, onto the stile -- the
-  // straddle the photograph shows.
-  var hx = hingeLeft ? dw + 6 - PILL_W / 2 : -dw - 6 + PILL_W / 2;
-  var hz = 7;   // centre ~48% down the opening, i.e. a hair above the middle
+  var hx = hingeLeft ? dw : -dw;                // centred ON the free edge
+  var hz = dh * (0.5 - 0.455);                    // 45.5% down the opening
   handle.position.set(hx, -2.5, hz);
   handle.userData.door = true;
   doorGroup.add(handle);
-  var handleText = faceLabel(machineLabel([{text: 'Bambu Lab', size: 0.62}],
-    PILL_W - PILL_H, PILL_H, {ink: '#2a2a2a', rough: 0.45}),
+  var handleText = faceLabel(machineLabel([{text: HANDLE.text, size: 0.62}],
+    PILL_W - PILL_H * 0.6, PILL_H, {ink: HANDLE.ink, rough: 0.45}),
     new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1));
   handleText.position.set(hx, -2.5 - PILL_D - 1.2 - 0.4, hz);
   handleText.userData.door = true;
@@ -958,9 +1056,13 @@ function buildBed(X, Y, ox, oy) {
   plate.position.set(0, 0, -0.045);
   bedGroup.add(plate);
 
-  // Heatbed under the flex plate -- what the magnets grab.
+  // Heatbed under the flex plate -- what the magnets grab. Light grey on the
+  // P1S: Scott's interior photos (2026-09-23) show a pale perimeter around the
+  // plate, not the near-black this used to be. Other profiles keep the
+  // neutral dark envelope; nobody has photographed theirs for us.
   var carrier = new THREE.Mesh(new THREE.BoxGeometry(X + 22, Y + 22, 9),
-    surface(0x1d1d1e));
+    printerId === 'p1s' ? surface(0xb0b0af, {roughness: 0.6, metalness: 0.15})
+                        : surface(0x1d1d1e));
   carrier.position.set(ox, oy, -6.6);
   bedGroup.add(carrier);
 
@@ -1083,60 +1185,79 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
   // a belt" (wiki, Introduction to P1 series), the motor "on the bottom base of
   // the printer" with "the Z belt around the driving pulley", a tensioner also
   // on the bottom, and three Z-axis sliders carrying the bed (wiki, Z motor /
-  // Z timing belt / Z tensioner). All of that is drawn. What is NOT published
-  // anywhere I could reach is where the three sit around the base, so they are
-  // placed to leave the doorway clear and the panel says they are placed, not
-  // documented.
-  var zPosts = [[x0 + 34, y1 - t - 26], [x1 - 34, y1 - t - 26], [x1 - 34, y0 + t + 46]];
+  // Z timing belt / Z tensioner).
+  //
+  // WHERE they sit is not published, and until 2026-09-23 this drew two at the
+  // back and one at the front-right, placed to leave the doorway clear. Scott's
+  // own photos of his P1S settled it: one at each FRONT corner, outboard of the
+  // bed's front corners with a chrome guide rod just inboard of the screw, and
+  // one at the REAR CENTRE, standing in its own slot in the back wall about
+  // halfway across. The motor's position under the base is still not visible
+  // in any photo, so it stays placed rather than measured.
+  var zPosts = [[x0 + t + 26, oy - Y / 2 + 10], [x1 - t - 26, oy - Y / 2 + 10],
+                [ox + 4, y1 - t - 9]];
   var zLo = zBot + 16, zHi = zTop - 92;
+  var carrierBox = [ox - X / 2 - 11, ox + X / 2 + 11, oy - Y / 2 - 11, oy + Y / 2 + 11];
 
-  zPosts.forEach(function (p) {
+  zPosts.forEach(function (p, i) {
     var screw = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, zHi - zLo, 12),
       surface(METAL));
     screw.rotation.x = Math.PI / 2;
     screw.position.set(p[0], p[1], (zLo + zHi) / 2);
     chamber.add(screw);
-    var post = new THREE.Mesh(new THREE.BoxGeometry(14, 14, zHi - zLo),
-      surface(DARK));
-    post.position.set(p[0] + (p[0] > ox ? 20 : -20), p[1], (zLo + zHi) / 2);
-    chamber.add(post);
     var pulley = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 9, 14),
       surface(0x444445));
     pulley.rotation.x = Math.PI / 2;
     pulley.position.set(p[0], p[1], zLo - 6);
     chamber.add(pulley);
+    if (i < 2) {
+      var rod = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, zHi - zLo, 14),
+        surface(0xd6d8db, {roughness: 0.18, metalness: 1}));
+      rod.rotation.x = Math.PI / 2;
+      rod.position.set(p[0] + (p[0] < ox ? 13 : -13), p[1], (zLo + zHi) / 2);
+      chamber.add(rod);
+    } else {
+      // The slot the rear screw stands in: a dark recess in the back wall's
+      // inner face, drawn as a strip just proud of it.
+      var slot = new THREE.Mesh(new THREE.BoxGeometry(30, 0.6, zHi - zLo),
+        surface(0x0c0c0d));
+      slot.position.set(p[0], y1 - t - 0.3, (zLo + zHi) / 2);
+      chamber.add(slot);
+    }
   });
 
   // One motor, one belt, both under the base -- which is why all three screws
   // turn together and the bed cannot tilt out of tram on its own.
+  var motorXY = [x0 + t + 60, oy + Y / 4];
   var zMotor = new THREE.Mesh(new THREE.BoxGeometry(34, 34, 30),
     surface(0x1e1e1f));
-  zMotor.position.set(ox + 46, y1 - t - 30, zLo - 22);
+  zMotor.position.set(motorXY[0], motorXY[1], zLo - 22);
   chamber.add(zMotor);
   var beltPath = new THREE.Mesh(
     new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
       new THREE.Vector3(zPosts[0][0], zPosts[0][1], zLo - 6),
-      new THREE.Vector3(ox + 46, y1 - t - 30, zLo - 6),
-      new THREE.Vector3(zPosts[1][0], zPosts[1][1], zLo - 6),
+      new THREE.Vector3(motorXY[0], motorXY[1], zLo - 6),
       new THREE.Vector3(zPosts[2][0], zPosts[2][1], zLo - 6),
+      new THREE.Vector3(zPosts[1][0], zPosts[1][1], zLo - 6),
       new THREE.Vector3(zPosts[0][0], zPosts[0][1], zLo - 6)], true), 30, 2.4, 6, true),
     surface(0x171718));
   chamber.add(beltPath);
 
   // Three sliders, on the bed, descending with it -- the whole point of
   // drawing the stage at all is that this is the part that actually moves.
-  var beam = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 - 46, 15, 11),
-    surface(FRAME));
-  beam.position.set(ox, y1 - t - 39, -14);
-  bedGroup.add(beam);
-  zPosts.forEach(function (p) {
-    var slider = new THREE.Mesh(new THREE.BoxGeometry(24, 28, 19),
+  // Each reaches in to the nearest edge of the heatbed, so a front corner
+  // slider arms sideways and the rear one arms forward.
+  zPosts.forEach(function (p, i) {
+    var slider = new THREE.Mesh(new THREE.BoxGeometry(i < 2 ? 30 : 24, i < 2 ? 22 : 16, 19),
       surface(0x444445));
-    slider.position.set(p[0], p[1], -14);
+    slider.position.set(i < 2 ? p[0] + (p[0] < ox ? 6 : -6) : p[0], p[1], -14);
     bedGroup.add(slider);
-    var arm = new THREE.Mesh(new THREE.BoxGeometry(13, Math.abs(p[1] - oy), 9),
-      surface(FRAME));
-    arm.position.set(p[0], (oy + p[1]) / 2, -14);
+    var ex = Math.max(carrierBox[0], Math.min(carrierBox[1], p[0]));
+    var ey = Math.max(carrierBox[2], Math.min(carrierBox[3], p[1]));
+    var len = Math.hypot(ex - p[0], ey - p[1]);
+    var arm = new THREE.Mesh(new THREE.BoxGeometry(len, 13, 9), surface(FRAME));
+    arm.position.set((ex + p[0]) / 2, (ey + p[1]) / 2, -14);
+    arm.rotation.z = Math.atan2(ey - p[1], ex - p[0]);
     bedGroup.add(arm);
   });
 
@@ -1586,29 +1707,48 @@ function buildToolhead() {
   // which is the whole shape of a real toolhead. Burying the heatsink inside
   // the middle housing was the first pass's mistake and it showed immediately
   // on screen -- a dark box with nothing under it.
-  part(26, 15, 15, 0x2d323c, 44, 9);           // X-carriage on the gantry beam
-  part(27, 19, 30, 0x1b1e25, 40, 11);          // rear housing over the extruder
-  var mid = part(25, 17, 26, 0x262627, 38, 0);    // middle housing
+  // Colours from Scott's own interior photos (2026-09-23): the housings are
+  // light grey plastic, "Bambu Lab" on the front above the round fan, with a
+  // dark grey band along the bottom. Every earlier pass drew it near-black
+  // with a blue cast, which is simply not the machine. The proportions are
+  // still drawn, not measured -- see headScale for why it is narrower than
+  // the real ~60 mm head.
+  var SHELL = 0xd2d2d1, SHELL_LOW = 0x2e2e2f, BAND = 7;
+  part(26, 15, 15, SHELL_LOW, 44, 9);          // X-carriage on the gantry beam
+  part(27, 19, 30, SHELL, 40, 11);             // rear housing over the extruder
+  var mid = part(25, 17, 26, SHELL, 38, 0);    // middle housing
   var edges = new THREE.LineSegments(new THREE.EdgesGeometry(mid.geometry),
-    new THREE.LineBasicMaterial({color: 0x4b5261}));
+    new THREE.LineBasicMaterial({color: 0xa4a4a3}));
   edges.position.set(0, 0, 38);
   g.add(edges);
-  part(25, 8, 25, 0x15181e, 37, -12);          // front housing assembly
+  part(25, 8, 25, SHELL, 37, -12);             // front housing assembly
+  // The dark lower band, a hair proud of both housings so it wins the depth
+  // test cleanly instead of z-fighting the light shell it wraps.
+  part(25.3, 17.3, BAND, SHELL_LOW, 25 + BAND / 2, 0);
+  part(25.3, 8.3, BAND, SHELL_LOW, 24.5 + BAND / 2, -12);
+  var brand = faceLabel(machineLabel([{text: 'Bambu Lab', size: 0.9}],
+    20, 3.6, {ink: '#3a3a3a', rough: 0.5}),
+    new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1));
+  brand.position.set(0, -16.3, 47.5);
+  g.add(brand);
 
-  // Part-cooling fan, in the front housing where the real one lives.
+  // Part-cooling fan, in the front housing where the real one lives. A
+  // cylinder's own axis is Y, which in this Z-up scene already points out of
+  // the front face -- so NO rotation. It used to carry the rotation.x the
+  // vertical parts need, which laid the fan flat as a horizontal disc; that
+  // was invisible on a near-black housing and showed as a black slot the
+  // moment the housing went light grey to match Scott's photos (2026-09-23).
   var fan = new THREE.Mesh(new THREE.CylinderGeometry(8.6, 8.6, 2.4, 18),
     surface(0x0e0e0f));
-  fan.rotation.x = Math.PI / 2;
   fan.position.set(0, -16.4, 37);
   g.add(fan);
   var hub = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 3, 12),
     surface(0x3f3f40));
-  hub.rotation.x = Math.PI / 2;
   hub.position.set(0, -17, 37);
   g.add(hub);
 
   // Filament cutter lever, on the side of the middle housing.
-  var lever = part(5, 13, 3.4, 0x596270, 46, -2);
+  var lever = part(5, 13, 3.4, 0x5a5a5b, 46, -2);
   lever.position.x = 14;
 
   // PTFE pneumatic joint on top, where the AMS tube lands.
@@ -4300,10 +4440,15 @@ function paintPrinter() {
     '5V chamber LED on the <b>left</b> beam beside the chamber camera, and a ' +
     'toolhead of front/middle/rear housings with the part-cooling fan in the ' +
     'front one, a filament cutter, and an all-in-one hotend. No LiDAR \u2014 that ' +
-    'is the X1 Carbon.<br><b>What is drawn rather than documented:</b> where the ' +
-    'three lead screws sit around the base, and the toolhead\u2019s exact ' +
-    'proportions \u2014 Bambu publishes neither, so these are placed to read ' +
-    'correctly, not measured. The AMS is drawn from Bambu\u2019s own product ' +
+    'is the X1 Carbon.<br><b>What is checked against a real P1S</b> (Scott\u2019s ' +
+    'own, photographed): the rounded corners, the 64 mm and 31 mm door bezels, ' +
+    'the control panel standing above the lid, the lead screws at the two front ' +
+    'corners and the back centre, the light grey toolhead over a dark band, and ' +
+    'the pale heatbed. The door handle is Scott\u2019s own orange one.<br>' +
+    '<b>What is drawn rather than documented:</b> the toolhead\u2019s exact ' +
+    'proportions, and where the Z motor sits under the base \u2014 neither is ' +
+    'published or visible in a photo. The toolhead is also drawn narrower than ' +
+    'the real ~60 mm so a small print is not hidden under it. The AMS is drawn from Bambu\u2019s own product ' +
     'photography of the 4-slot unit \u2014 the smoked dome over the spool row, ' +
     'the drive roller and gear block per slot \u2014 with its proportions taken ' +
     'from the published 368 \u00d7 283 \u00d7 224 mm and the 197\u2013202 mm spool ' +

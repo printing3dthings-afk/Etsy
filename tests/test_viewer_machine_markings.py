@@ -32,33 +32,43 @@ def _src():
     return "\n".join(re.sub(r"//.*$", "", ln) for ln in js.split("\n"))
 
 
+def _p1s_handle(src):
+    m = re.search(r"handle: \{text: '([^']*)', hex: 0x([0-9a-f]{6}), ink: '#[0-9a-f]{6}',"
+                  r"\s*w: (\d+), h: (\d+)", src)
+    return m
+
+
 def test_the_handle_is_a_horizontal_pill_not_the_old_vertical_bar():
-    # The grip was BoxGeometry(9, 13, 74) -- 74mm tall and 9 wide -- in
-    # blue-grey. Bambu's photo shows a horizontal pill ~56 x 18 mm.
+    # The grip was BoxGeometry(9, 13, 74) -- 74mm tall and 9 wide. Every real
+    # P1S handle is a horizontal pill; Scott's measures ~75 x 21 mm.
     src = _src()
     check("BoxGeometry(9, 13, 74)" not in src,
           "the vertical 9 x 74 mm grip is back; the real handle is horizontal")
-    w = re.search(r"PILL_W = (\d+)", src)
-    h = re.search(r"PILL_H = (\d+)", src)
-    check(w and h, "could not find the handle's dimensions")
-    if w and h:
-        check(int(w.group(1)) > 2 * int(h.group(1)),
-              "handle must be clearly wider than tall, got %s x %s"
-              % (w.group(1), h.group(1)))
+    check("var PILL_W = HANDLE.w, PILL_H = HANDLE.h" in src,
+          "the handle's size must come from the machine profile, not be typed inline")
+    m = _p1s_handle(src)
+    check(m is not None, "could not find the handle's dimensions in the P1S profile")
+    if m:
+        w, h = int(m.group(3)), int(m.group(4))
+        check(w > 2 * h, "handle must be clearly wider than tall, got %s x %s" % (w, h))
 
 
-def test_the_handle_is_neutral_silver():
+def test_the_handle_is_scotts_orange_one_not_the_blue_grey_bar():
     # 0x7b8493 is (123,132,147): 24 levels of blue on a part that photographs
-    # neutral. It slipped past the shell guard, which only checks dark colours.
+    # neutral. Scott's own P1S carries an orange replacement handle reading
+    # "Scott's Printer" (his photos, 2026-09-23), so that is what the P1S
+    # profile draws -- and the material reads the profile, so the two cannot
+    # drift apart.
     src = _src()
     check("0x7b8493" not in src, "the blue-grey handle colour is back")
-    m = re.search(r"surface\(0x([0-9a-f]{6}), \{roughness: 0\.34", src)
-    check(m is not None, "could not find the handle material")
+    check("surface(HANDLE.hex," in src, "the handle material must read the profile colour")
+    m = _p1s_handle(src)
     if m:
-        v = int(m.group(1), 16)
+        check("Scott" in m.group(1), "the P1S handle text is not Scott's, got %r" % m.group(1))
+        v = int(m.group(2), 16)
         r, g, b = (v >> 16) & 255, (v >> 8) & 255, v & 255
-        check(max(r, g, b) - min(r, g, b) <= 2,
-              "handle colour %s is not neutral" % m.group(1))
+        check(r > g + 80 and r > b + 80,
+              "handle colour %s is not the orange Scott photographed" % m.group(2))
 
 
 def test_no_logo_artwork_is_reproduced():
@@ -115,8 +125,8 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("VIEWER MACHINE MARKINGS TESTS OK — the handle is the real horizontal "
-          "silver pill, labels cannot mirror, no logo art is reproduced, the side "
+    print("VIEWER MACHINE MARKINGS TESTS OK — the handle is Scott's horizontal "
+          "orange pill from the profile, labels cannot mirror, no logo art is reproduced, the side "
           "mark stays tone-on-tone and the bed strip stays P1S-only.")
 
 

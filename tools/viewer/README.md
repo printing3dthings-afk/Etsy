@@ -728,9 +728,11 @@ fact, and corrected two things that were simply wrong:
 | A 2.7-inch 192x64 screen -- a 3:1 letterbox, not the near-square first pass | P1 sensors/electronics spec list |
 | No LiDAR | that is the X1 Carbon |
 
-Two things are still **drawn rather than documented**, and the printer panel
-says so on screen: where the three lead screws sit around the base, and the
-toolhead's exact proportions. Bambu publishes neither.
+Two things were still **drawn rather than documented** here: where the three
+lead screws sit around the base, and the toolhead's exact proportions. Bambu
+publishes neither. The first was settled on 2026-09-23 by Scott's own photos
+of his P1S -- see "Checked against Scott's own P1S" at the end. The toolhead's
+proportions are still drawn, and the printer panel says so on screen.
 
 **The chamber lamp has to actually light something.** It is a real
 `PointLight` at the LED's real position -- but the first version of it was
@@ -1593,4 +1595,68 @@ and its exact height (two readings of the same photo gave 46% and 51% down the
 opening; it sits at 48%). And one real difference the photos show that is **not
 fixed here**: the control panel on a real P1S is a raised pill-shaped housing
 that stands proud of the bezel and slightly over its top edge. The model draws
-it as a flat slab and a separate D-pad.
+it as a flat slab and a separate D-pad. **Fixed the same day** from Scott's
+photos, together with the handle's height -- see below.
+
+## Checked against Scott's own P1S (2026-09-23)
+
+Scott sent ten photos of his printer: a straight-on front, three-quarter
+views, and the chamber from inside with the door open. That is better
+evidence than anything used before, because it is the machine itself rather
+than a product render or a service page. **The photos are not in the repo.**
+One shows his reflection in the glass, so the measurements below are recorded
+as text instead.
+
+Scale comes from the straight-on shot: the case is 389 mm wide and spans
+1380 px, so 0.282 mm/px. The photos arrived at 1932 x 2576 px but were viewed
+at 1500 x 2000, so every coordinate taken from the view was multiplied by
+1.288 before scaling.
+
+| what | measured | was |
+|---|---|---|
+| Case corners | rounded, **~25 mm** radius (outer 1380 px, flat face ~1205 px) | square |
+| Door opening | between the corner curves, `x0 + CR` to `x1 - CR` | edge to edge |
+| Door bezels | **64 mm** top, **31 mm** bottom (64 + 360 + 31 = 455 of 458) | thinner, and the top one too short for the panel |
+| Control panel | a raised housing **146 x 42 x 18 mm**, top edge **~10 mm above the lid**, left edge in line with the door's; screen at the left, D-pad at 113 mm, two buttons at 138 mm | a flat slab on the bezel |
+| Front wordmark | right end ~16 mm in from where the corner curve starts, centre ~15 mm below the top | 10 mm from the corner |
+| Lead screws | one at each **front corner**, outboard of the bed with a chrome guide rod just inboard; one at the **back centre** (~51% across), in its own slot in the back wall | two at the back, one at the front-right, placed to keep the doorway clear |
+| Toolhead | **light grey** housings, "Bambu Lab" on the front above a **round** fan, a dark grey band along the bottom | near-black with a blue cast; the fan lay flat (below) |
+| Heatbed | pale grey around the plate | near-black |
+| Door handle | Scott's own printed one: orange `#db543d`, **~75 x 21 mm**, reading "Scott's Printer", 45.5% down the opening (Bambu's photo gave 46%, so the two agree) | the stock silver pill |
+
+**The handle is Scott's, on purpose.** It is his machine, and the viewer is
+his. The stock handle's values are kept in a comment beside the P1S profile's
+`handle` entry, so putting the silver one back is one line.
+
+**Two bugs turned up by looking at the render, not by the tests.**
+
+- **The fan had always been lying flat.** A `CylinderGeometry` has its axis on
+  Y, and in this Z-up scene Y already runs front to back, so a fan facing out
+  of the front needs *no* rotation. It carried the `rotation.x` that the
+  vertical parts (screws, neck) need, which laid it down as a horizontal disc.
+  On the old near-black housing that was invisible. On the light housing it
+  showed as a black slot, and the close-up render caught it.
+- **`slab is not defined`.** The rear screw's back-wall slot first called
+  `slab()`, which is nested inside `buildChamber`, from `buildInterior`. Every
+  source test passed. The page threw at boot, and only rendering it showed
+  that. `test_viewer_scotts_p1s.py` now fails any nested helper called from
+  outside the function that defines it, which is exactly this bug.
+
+**Still not modelled, from the same photos** (noted, not guessed at):
+
+- the drag chain and the white PTFE tube to the toolhead;
+- the auxiliary fan on the left wall (a large grilled housing with an S-shaped
+  duct);
+- the rectangular cover with a round button on the back wall, back-right;
+- the lit U-shaped rim around the ceiling. How it is lit isn't visible, so it
+  isn't drawn;
+- the rounding along the top edges of the case, since only the vertical
+  corners are rounded;
+- the real heatbed strip's layout: a large "256x256x256mm³" and a QR code;
+- where the Z motor sits under the base. It's not visible in any photo, so it
+  is still placed.
+
+**The toolhead is drawn at about half its real width** (~25 mm against a real
+~60 mm), and `headScale` shrinks it further on small plates. That is a
+readability trade-off, so a small print is not hidden under the head. Whether
+to draw it true to size is Scott's call.
