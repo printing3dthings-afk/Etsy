@@ -202,5 +202,15 @@ on the right side panel, a white label strip along the bed's front edge
 reading `WARNING HOT SURFACE | BUILD VOLUME 256 × 256 × 256mm`, and an LED
 light bar high on the inside left wall.
 
-**Not yet done, and named so it is not lost:** the door handle, the side-panel
-branding and the front wordmark are all still missing from the model.
+**Done 2026-09-23**, measured rather than placed -- the door handle, both
+wordmarks and the heatbed strip are in the viewer. Two corrections to the
+paragraph above came from looking at the photographs instead of these notes:
+the handle is a **horizontal** pill (~56 x 18 mm, silver, neutral), and the
+front wordmark sits at the **far right** of the top bezel, not beside the
+control panel. The side wordmark is **tone-on-tone** (46 on a matte field of
+67), centred, 52-55% down -- measured off Bambu's spare-part photo of the right
+panel alone (store part FAS005). Full table: `tools/viewer/README.md`, "The
+machine's markings".
+
+Not fixed and worth knowing: the real control panel is a raised pill-shaped
+housing standing proud of the bezel; the model draws a flat slab.

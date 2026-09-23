@@ -611,8 +611,11 @@ computed from the real outer extent rather than a tuned constant, because an
 AMS on the lid makes the stack half again as tall and a fixed radius left it
 hanging off the top of the frame.
 
-**Deliberately unbranded.** The proportions are the machine's; the logo is not
-mine to reproduce, so there isn't one.
+**No logo artwork** (still true; refined 2026-09-23). The proportions are the
+machine's; Bambu's logo mark and logotype are not mine to reproduce, and they
+are not drawn. The machine's *name* is, in plain `system-ui`, at the measured
+positions -- the same way the build plate has always carried 'Bambu Textured
+PEI' as text. See "The machine's markings" below.
 
 **The door is a real hinge**, not a fade: a Group pivoted on one vertical edge
 and rotated ~110 degrees. Which edge is a **profile setting** (`hingeLeft`),
@@ -1442,11 +1445,13 @@ That passes against `var hwT = hw;` — the exact regression it existed to
 catch. Only the mutation run surfaced it; it now checks the assignment
 derives from the width table.
 
-### Still missing from the machine, named so it is not lost
+### Still missing from the machine -- DONE 2026-09-23
 
-The door handle, the side-panel Bambu branding, the front wordmark, the bed's
-front label strip, and the interior LED bar are all visible in the reference
-photographs and absent from the model.
+The door handle, the side-panel branding, the front wordmark and the bed's
+front label strip are now drawn; see "The machine's markings". The interior LED
+bar was **already in the model** when this note was written -- a fixture and a
+light on the left beam, pinned by `test_chamber_led_is_on_the_left_beam` -- so
+that part of the note was stale.
 
 
 ## The Z seam (2026-09-22)
@@ -1534,3 +1539,58 @@ menu opening, a "138 on / 138 off" that was counting UI chrome outside the
 canvas entirely, and a "zero seams" on the drapery vase that was its seam
 column correctly facing away from the camera. **Crop to the canvas rect the
 page reports, and look at the picture.**
+
+
+## The machine's markings (2026-09-23)
+
+Four markings, measured off two of Bambu's own photographs rather than placed
+by eye: the main P1S product photo (`P1S-compressed.jpg`, 2400 px, 3/4 view) and
+the **spare-part photo of the right side panel** (store part `FAS005`, 1600 px).
+The spare part is the useful one: it is the panel alone, square-on, so positions
+read straight off it. Its aspect is 0.857 against this model's 389/458 = 0.849,
+which is the check that it maps across without distortion.
+
+| marking | measured | was |
+|---|---|---|
+| Door handle | **horizontal** pill ~56 x 18 mm, light satin silver (tone 196, neutral), dark "Bambu Lab", ~mid-height, straddling the glass's free edge | a **vertical** 9 x 74 mm bar in blue-grey `0x7b8493` |
+| Front wordmark | "Bambu Lab / P1S", ~60 x 12 mm, light (220 on a bezel of 85), at the **far right** of the top bezel ~10 mm from the corner | absent |
+| Side wordmark | horizontally centred, **52-55% down**, 31% of the panel's width, **tone-on-tone** (46 on a matte field of 67) | absent |
+| Heatbed strip | light band along the bed's front edge: WARNING! HOT SURFACE! / BUILD VOLUME / 256x256x256 mm | absent |
+
+Two corrections to the written notes came out of looking at the photos rather
+than the notes about them:
+
+- **The handle is horizontal.** Every text description said "pill-shaped", and
+  the model's vertical bar was a reasonable reading of that. The photograph
+  shows it lying on its side.
+- **The front wordmark is not beside the control panel.** "The wordmark to its
+  right" is true, but it is at the other end of the bezel.
+
+**The side mark is deliberately dark.** On the real panel the lettering is a
+darker gloss on matte black; it reads by its sheen from some angles and nearly
+disappears from others. Drawn in a light ink it would be the most visible thing
+on that side, and that would be a false picture of the machine.
+
+**The handle also settles the hinge side.** No source *states* which side the
+P1S door hinges on, which is why `hingeLeft` has always been a profile setting.
+But the photo puts the handle on the glass's right edge, and a handle goes on
+the free edge. `hingeLeft: true` is now evidence-backed rather than a guess.
+
+**Labels are oriented from an explicit basis** (`faceLabel`: normal = text
+direction x up), never Euler angles. Text on a face comes out mirrored half the
+time otherwise -- 3d-print-design Technique 62 -- and a basis cannot be
+mirrored by construction. All four were checked in a render reading the right
+way round: front, right side, and a zoomed bed front.
+
+The heatbed strip is P1S-only, like every other detail drawn from the P1S's own
+documentation; other profiles stay honest envelopes. Its build volume is written
+from the profile, not typed. The warning triangle is left off because headless
+`system-ui` draws U+26A0 as a missing-glyph box.
+
+Still drawn rather than measured, and worth knowing: the handle's position along
+the edge (the 3/4 view foreshortens it, so it is placed to straddle by ~6 mm)
+and its exact height (two readings of the same photo gave 46% and 51% down the
+opening; it sits at 48%). And one real difference the photos show that is **not
+fixed here**: the control panel on a real P1S is a raised pill-shaped housing
+that stands proud of the bezel and slightly over its top edge. The model draws
+it as a flat slab and a separate D-pad.

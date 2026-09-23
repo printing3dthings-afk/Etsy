@@ -279,7 +279,6 @@ function lin(hex) { return new THREE.Color(hex).convertSRGBToLinear(); }
 var SURFACE = {
   0x9aa2af: [0.22, 0.95],  // polished linear rail
   0x6e7683: [0.26, 0.92],  // rail / rod
-  0x7b8493: [0.30, 0.88],  // door grip, brushed aluminium
   0x666e7c: [0.34, 0.85],  // control knob
   0x4b4b4c: [0.32, 0.80],  // gantry extrusion, anodised
   0x404041: [0.36, 0.78],  // gantry extrusion, darker face
@@ -338,6 +337,54 @@ function emitter(hex, strength) {
     emissiveIntensity: strength === undefined ? 1 : strength,
     roughness: 1, metalness: 0
   });
+}
+
+// Printed on the machine itself -- the front wordmark, the door handle, the
+// side panel and the heatbed's warning strip (2026-09-23). Positions and tones
+// were measured off Bambu's own product photography; see the README section
+// "The machine's markings" for the numbers.
+//
+// Always plain system-ui: never Bambu's logotype and never the logo mark. That
+// is the line this file has held since the first pass ("the logo is not mine
+// to reproduce"). The NAME is a fact about the machine, set the same way the
+// build plate's 'Bambu Textured PEI' already is; the artwork is theirs.
+function machineLabel(lines, wMm, hMm, o) {
+  var PX = 10, c = document.createElement('canvas');
+  c.width = Math.ceil(wMm * PX); c.height = Math.ceil(hMm * PX);
+  var g = c.getContext('2d');
+  if (o.bg) { g.fillStyle = o.bg; g.fillRect(0, 0, c.width, c.height); }
+  g.fillStyle = o.ink;
+  g.textBaseline = 'middle';
+  g.textAlign = o.align || 'center';
+  var x = o.align === 'left' ? 0 : o.align === 'right' ? c.width : c.width / 2;
+  var rowH = c.height / lines.length;
+  lines.forEach(function (ln, i) {
+    var size = rowH * (ln.size || 0.8), wt = ln.weight || 600;
+    g.font = wt + ' ' + size.toFixed(1) + 'px system-ui, sans-serif';
+    // Shrink to fit rather than run off the edge of the thing it is printed on.
+    var w = g.measureText(ln.text).width;
+    if (w > c.width) {
+      size *= c.width / w;
+      g.font = wt + ' ' + size.toFixed(1) + 'px system-ui, sans-serif';
+    }
+    g.fillText(ln.text, x, rowH * (i + 0.5));
+  });
+  var tex = srgbMap(new THREE.CanvasTexture(c));
+  tex.anisotropy = _maxAniso;
+  return new THREE.Mesh(new THREE.PlaneGeometry(wMm, hMm),
+    new THREE.MeshStandardMaterial({map: tex, transparent: !o.bg,
+      roughness: o.rough === undefined ? 0.6 : o.rough, metalness: o.metal || 0,
+      envMapIntensity: 0.5}));
+}
+
+// Point a label so its text runs along textDir with `up` up. An explicit basis
+// rather than Euler angles, on purpose: text on a face comes out mirrored half
+// the time (3d-print-design Technique 62), and a basis whose normal is
+// textDir x up cannot be mirrored by construction.
+function faceLabel(m, textDir, up) {
+  var n = new THREE.Vector3().crossVectors(textDir, up);
+  m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(textDir, up, n));
+  return m;
 }
 
 // The smoked front door. Real transmission needs a refraction pass three r128
@@ -608,6 +655,34 @@ function buildChamber(bed) {
   pad.position.set(x0 + 128, y0 - 0.4, panelZ);
   chamber.add(pad);
 
+  // Front wordmark. At the FAR RIGHT of the top bezel, not tucked against the
+  // control panel as the written note implied: in Bambu's product photo its
+  // right edge sits about 10mm in from the front-right corner, in the upper
+  // half of the bezel, ~60 x 12 mm over two lines, light grey (tone 220 on a
+  // bezel of 85). Their logo mark sits to its left and is left out -- see
+  // machineLabel().
+  var front = faceLabel(machineLabel(
+    [{text: 'Bambu Lab', size: 0.86}, {text: 'P1S', size: 0.86}],
+    60, 12, {ink: '#cfcfcf', align: 'left', rough: 0.5}),
+    new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1));
+  front.position.set(x1 - 12 - 30, y0 - 0.8, zTop - 24);
+  chamber.add(front);
+
+  // Side-panel wordmark. Measured off Bambu's own spare-part photo of the right
+  // panel (store part FAS005), which is the panel alone, square-on: its aspect
+  // is 0.857 against this model's 389/458 = 0.849, so it maps straight across.
+  // Horizontally centred, 52-55% of the way down, 31% of the panel's width.
+  // TONE-ON-TONE: the lettering measures 46 on a matte field of 67 -- a darker
+  // gloss, not a print. Drawn bright it would misrepresent the machine; drawn
+  // like this it reads by its sheen from some angles and nearly vanishes from
+  // others, which is exactly what the real one does. The large logo mark above
+  // it on the real panel is left out.
+  var side = faceLabel(machineLabel([{text: 'Bambu Lab', size: 0.9}],
+    122, 15, {ink: '#19191a', rough: 0.22, metal: 0.1}),
+    new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1));
+  side.position.set(x1 + 0.8, oy, zTop - 0.535 * (zTop - zBot));
+  chamber.add(side);
+
   // Feet and the rear spool holder
   [[x0 + 24, y0 + 24], [x1 - 24, y0 + 24], [x0 + 24, y1 - 24], [x1 - 24, y1 - 24]]
     .forEach(function (p) {
@@ -628,8 +703,10 @@ function buildChamber(bed) {
   // ── the door ─────────────────────────────────────────────────────────────
   // Hinged at one vertical edge and swung by a real rotation, so "open the
   // door" is the machine's own motion rather than a fade. Which edge is a
-  // PROFILE SETTING, not a baked assumption: no primary source I could reach
-  // stated the P1S hinge side, so it is exposed rather than guessed at.
+  // PROFILE SETTING, not a baked assumption. No primary source STATES the P1S
+  // hinge side, but Bambu's product photo shows the handle on the glass's
+  // RIGHT edge (checked 2026-09-23), and a handle goes on the free edge -- so
+  // hingeLeft is now evidence-backed rather than a coin toss.
   var hingeLeft = PRINTERS[printerId].hingeLeft !== false;
   doorGroup = new THREE.Group();
   var dw = dx1 - dx0, dh = dz1 - dz0;
@@ -647,11 +724,39 @@ function buildChamber(bed) {
     m.userData.door = true;
     doorGroup.add(m);
   });
-  var grip = new THREE.Mesh(new THREE.BoxGeometry(9, 13, 74),
-    surface(0x7b8493));
-  grip.position.set(hingeLeft ? dw - 16 : -dw + 16, -7, 0);
-  grip.userData.door = true;
-  doorGroup.add(grip);
+  // The handle (corrected 2026-09-23). This was a VERTICAL 9 x 74 mm bar in
+  // blue-grey 0x7b8493 -- wrong on both counts. Bambu's product photo shows a
+  // HORIZONTAL pill, ~56 x 18 mm, light satin silver (tone 196, neutral), with
+  // "Bambu Lab" printed on it in dark ink, about mid-height on the glass's
+  // free edge and straddling it. The blue-grey had also slipped past the
+  // neutrality guard, which only checks dark shell colours.
+  var PILL_W = 56, PILL_H = 18, PILL_D = 7, pr = PILL_H / 2;
+  var pill = new THREE.Shape();
+  pill.moveTo(-PILL_W / 2 + pr, -pr);
+  pill.lineTo(PILL_W / 2 - pr, -pr);
+  pill.absarc(PILL_W / 2 - pr, 0, pr, -Math.PI / 2, Math.PI / 2, false);
+  pill.lineTo(-PILL_W / 2 + pr, pr);
+  pill.absarc(-PILL_W / 2 + pr, 0, pr, Math.PI / 2, Math.PI * 1.5, false);
+  var handle = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(pill, {depth: PILL_D, bevelEnabled: true,
+      bevelThickness: 1.2, bevelSize: 1.2, bevelSegments: 3, curveSegments: 16}),
+    surface(0xc4c4c4, {roughness: 0.34, metalness: 0.55}));
+  // Shape is in XY and extrudes along +Z; turning it about X points the
+  // extrusion out of the door (-Y) with the shape's Y as world up.
+  handle.rotation.x = Math.PI / 2;
+  // Its outer end runs ~6mm past the glass edge, onto the stile -- the
+  // straddle the photograph shows.
+  var hx = hingeLeft ? dw + 6 - PILL_W / 2 : -dw - 6 + PILL_W / 2;
+  var hz = 7;   // centre ~48% down the opening, i.e. a hair above the middle
+  handle.position.set(hx, -2.5, hz);
+  handle.userData.door = true;
+  doorGroup.add(handle);
+  var handleText = faceLabel(machineLabel([{text: 'Bambu Lab', size: 0.62}],
+    PILL_W - PILL_H, PILL_H, {ink: '#2a2a2a', rough: 0.45}),
+    new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1));
+  handleText.position.set(hx, -2.5 - PILL_D - 1.2 - 0.4, hz);
+  handleText.userData.door = true;
+  doorGroup.add(handleText);
   doorGroup.position.set(hingeLeft ? dx0 : dx1, y0 + 1, (dz0 + dz1) / 2);
   doorGroup.userData.sign = hingeLeft ? 1 : -1;
   doorGroup.name = 'door';
@@ -858,6 +963,24 @@ function buildBed(X, Y, ox, oy) {
     surface(0x1d1d1e));
   carrier.position.set(ox, oy, -6.6);
   bedGroup.add(carrier);
+
+  // The heatbed's front-edge strip, P1S only. Bambu's product photo shows a
+  // light band along the bed's front edge reading "WARNING! HOT SURFACE!",
+  // "BUILD VOLUME" and "256x256x256mm". Every other profile is drawn as an
+  // honest envelope with no invented detail, so it gets none of this. The
+  // volume is written from the profile rather than typed, so it cannot drift
+  // from the number the rest of the page uses. The warning triangle is left
+  // off: headless system-ui renders U+26A0 as a missing-glyph box.
+  if (printerId === 'p1s') {
+    var vol = PRINTERS[printerId].bed;
+    var strip = faceLabel(machineLabel(
+      [{text: 'WARNING! HOT SURFACE!     |     BUILD VOLUME   ' +
+               vol.join(' \u00d7 ') + ' mm\u00b3', size: 0.62}],
+      X + 22 - 8, 7, {ink: '#1f1f1f', bg: '#b4b4b4', rough: 0.4, metal: 0.3}),
+      new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1));
+    strip.position.set(ox, oy - (Y + 22) / 2 - 0.6, -6.6);
+    bedGroup.add(strip);
+  }
 
   buildPlateGrid(X, Y, spec);
   // Switching plate or machine rebuilds this group, and the rebuild has to

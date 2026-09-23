@@ -415,3 +415,14 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 
 <!-- /TRASH 20260919-003 -->
 
+<!-- TRASH id=20260923-001 date=2026-09-23 kind=snippet source="tools/viewer/app.js" reason="Dead SURFACE entry: the vertical blue-grey door grip it styled was replaced by the measured horizontal silver pill handle (2026-09-23)." -->
+## 20260923-001 · 2026-09-23 · snippet · `tools/viewer/app.js`
+**Reason:** Dead SURFACE entry: the vertical blue-grey door grip it styled was replaced by the measured horizontal silver pill handle (2026-09-23).  
+**Payload:** `data/trash/files/20260923-001__snippet.txt`
+
+```javascript
+  0x7b8493: [0.30, 0.88],  // door grip, brushed aluminium
+```
+
+<!-- /TRASH 20260923-001 -->
+
