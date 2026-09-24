@@ -7364,3 +7364,50 @@ tray's p1 fell from 3.48 to 0.04. Both directions are pinned in
 `tests/test_mesh_gate_wall_parity.py`. Across all 64 committed STLs the fix
 changed exactly two verdicts, both from fail to pass, and both of those
 failures were air.
+
+## Technique 70 — Four traps from the second Haunted Town building (2026-09-24, post office)
+
+The post office (`haunted_post_office.scad`) reused every proven part of the
+bakery and still failed its first gate run in four new ways. Each one is
+general.
+
+1. **A vertical shaft must never punch up through a sloping ceiling.** The
+   turret's hollow ran open into the room and up through the room's 50°
+   ceiling. Wherever the ceiling now began at the shaft's edge, its first
+   layer had nothing under it and nothing in front of it. That drew 20,483
+   support moves: a single 49.9° face is fine, but a 49.9° face that
+   *starts in mid-air* is not.
+   - Fix: keep the shaft's wall solid where it faces the room, so the
+     ceiling runs into a wall as it does at every other wall.
+   - Let the light through a pointed arch cut low in that wall.
+   - Build it by subtracting the turret's envelope from the room cavity and
+     filling that region back in as wall.
+2. **Flush-inlay letters must sit inside the board's sheared underside at the
+   board's FACE, not at its back.** A relief whose underside rises 1.2 per
+   1 out loses 2.5 mm of height at the front of a 2.08 mm-deep board. The
+   bottom line of a two-line sign hung 0.85 mm below it, and every letter's
+   flat bottom drew a support column. Size the board so the lowest glyph
+   clears `bottom + SH * (fr_t - d0)`.
+3. **A tilted edge must not cross a clapboard step line (`plinth_h + k *
+   sid_p`).** Where a crooked sign's top edge crossed the step at 66.5, the
+   step's edge and the board's edge met and left zero-area faces. Moving the
+   sign 0.3 mm only moved the crossing. What fixed it was placing the board
+   so its whole tilted top and bottom lie between two step lines.
+4. **Keep window bars off faces at 45° to the axes.** `mesh_gate`'s rays run
+   along x, y and z, and hits at 45° still count as head-on (cos 45 = 0.71
+   > 0.5). A ray clipping the corner of a 45°-rotated bar reads as a sliver
+   anywhere from 0 to full depth. Windows on the turret's three diagonal
+   faces took the 1st-percentile wall to 0.52 mm, from bars that are really
+   1.24 × 1.68 mm.
+   - It is a measurement limit, not thin material.
+   - Until the gate measures along each face's own normal, put
+     detailed frames on axis-aligned faces.
+   - Octagon diagonals get plain clapboard, which measures fine because it
+     is a thick wall, not a small bar.
+
+Also re-confirmed from the bakery:
+- a 58° flare under an octagonal eave printed clean;
+- a finial tip under ~1.2 mm across does not print, so end spikes at
+  r ≥ 0.6;
+- solids of ONE part should touch face to face rather than overlap by 0.2.
+  The overlap cut into an inlay and left four-way edges.

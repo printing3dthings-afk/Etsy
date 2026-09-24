@@ -340,7 +340,7 @@ module spire_shingles() {
 module finial() {
     // a plain spike: every face of a cone narrowing upward faces up
     translate([tx + lean[0], ty + lean[1], zb + hs - 4])
-        cylinder(r1 = 1.4, r2 = 0.2, h = 9, $fn = 16);
+        cylinder(r1 = 1.4, r2 = 0.6, h = 9, $fn = 16);      // a 0.2 tip did not print
 }
 module turret_cap() {
     hull() { t_slab(t_ap + sid_d, Ht, Ht + 0.01); t_slab(t_apc, Ht + t_eh - 0.01, Ht + t_eh); }
@@ -363,6 +363,21 @@ module turret_hollow() {
 // Everything the turret occupies, as one solid: what the main roof must stay
 // out of, and what the roof zone must not take from the turret's walls.
 module turret_env() { t_slab(t_ap + sid_d, -2, Ht + 0.01); turret_cap(); }
+// The room stops at the turret, whose wall stays WHOLE where it faces into the
+// house. With the turret's hollow open to the room, it punched up through the
+// room's sloping ceiling, and wherever the ceiling began at the hollow's edge
+// its first layer had nothing under it or in front of it: 20,483 support
+// moves. Against a solid wall the ceiling starts the way it does at every
+// other wall. The light gets in through turret_arch().
+module room() { difference() { cavity(); t_slab(t_ap + sid_d, -3, 300); } }
+// Where the room would have run inside the turret, the turret is solid wall.
+module room_fill() { intersection() { t_slab(t_ap + sid_d, 0, Ht); cavity(); } }
+// A tall pointed arch through the turret's wall where it faces into the house
+// (face 9, 135 deg): the tealight's way into the turret. Hidden from outside.
+module turret_arch() {
+    // 7 wide in an 11.5 mm face, so the turret keeps real posts at its corners
+    face_tf(9, 0, -1) translate([0, 0, -4]) linear_extrude(6) polygon(lancet_pts(3.5, 36));
+}
 
 // ---- openings ------------------------------------------------------------------
 // d = 5.6a puts the apex tangent at 58 deg from horizontal. The manor's
@@ -391,16 +406,20 @@ WINDOWS = [
     // chimney the left end's back
     [2,   6, 16, "L", 5, 9],  [2,   6, 52, "L", 5, 9],  [2,  2, 90, "L", 3.5, 3],
     [3, -12, 16, "L", 5, 9],  [3, -12, 52, "L", 5, 9],  [3, -4, 90, "L", 3.5, 3],
-    // turret: five outward faces low and middle, the three front ones high
-    for (f = [11, 4, 5, 6, 7], z = [20, 56]) [f, 0, z, "L", 3, 7],
-    for (f = [4, 5, 6]) [f, 0, 90, "L", 2.8, 5],
+    // Turret: the front and right faces only, three storeys. On the diagonal
+    // faces every bar sits at 45 deg to the gate's measuring rays, which read
+    // each bar's corner as a sliver: 0.52 mm 1st-percentile wall, from bars
+    // that are 1.24 x 1.68 mm. The diagonals keep plain clapboard.
+    for (f = [4, 6]) each [[f, 0, 20, "L", 3, 7], [f, 0, 56, "L", 3, 7], [f, 0, 90, "L", 2.8, 5]],
 ];
 
 module win_outline(w) { polygon(lancet_pts(w[4], w[5])); }
-// A mullion and a CHEVRON transom at 50 deg, never a flat bar.
+// A mullion and a CHEVRON transom at 50 deg, never a flat bar. The turret's
+// narrow lancets (a < 4) keep the mullion only: their chevron ran down into
+// the corner of sill and jamb and left non-manifold edges there.
 module win_bars(w) {
     translate([-mull/2, -1]) square([mull, lancet_top(w[4], w[5]) + 2]);
-    for (s = [-1, 1]) translate([0, w[5] * 0.62]) rotate(s < 0 ? -130 : -50)
+    if (w[4] >= 4) for (s = [-1, 1]) translate([0, w[5] * 0.62]) rotate(s < 0 ? -130 : -50)
         translate([0, -mull/2]) square([2 * w[4], mull]);
 }
 module win_muntins(w, g) { intersection() { offset(r = g) win_outline(w); win_bars(w); } }
@@ -491,13 +510,15 @@ module mail_slot() {
 }
 
 // Parcels stacked by the wall, on the plate: no shelf, no support. Each box
-// sits inside the footprint of the one below and is sunk 0.2 into it, and
-// each is tied with string -- a flush inlay in the trim colour, 1.0 wide.
+// sits inside the footprint of the one below, face to face -- they are one
+// part, so they merge. Sunk 0.2 into each other, the top box cut into the
+// middle one's string and left four-way edges. Each is tied with string -- a
+// flush inlay in the trim colour, 1.0 wide.
 //   [width, height, depth out, twist deg]
 PARCELS = [[10, 8, 9, 0], [8, 6, 7, 7], [5.5, 4.5, 5, -9]];
 pc_u = 19;
 pc_str = 1.0;
-function pc_z(i) = i == 0 ? 0 : pc_z(i - 1) + PARCELS[i - 1][1] - 0.2;
+function pc_z(i) = i == 0 ? 0 : pc_z(i - 1) + PARCELS[i - 1][1];
 module parcel_box(i) {
     q = PARCELS[i];
     face_tf(1, pc_u, pc_z(i)) translate([0, 0, PARCELS[0][2] / 2 - 0.4]) rotate([0, q[3], 0])
@@ -511,7 +532,9 @@ module parcels_string() {
     for (i = [0 : len(PARCELS) - 1]) let (q = PARCELS[i])
         parcel_box(i) difference() {
             intersection() {
-                cube([q[0], q[1], q[2]]);
+                // not on the back face, which is buried in the wall: wrapped
+                // round it, the string left zero-area faces there
+                translate([0, 0, 1.0]) cube([q[0], q[1], q[2] - 1.0]);
                 union() {
                     translate([q[0]/2 - pc_str/2, -1, -1]) cube([pc_str, q[1] + 2, q[2] + 2]);
                     translate([-1, -1, q[2]/2 - pc_str/2]) cube([q[0] + 2, q[1] + 2, pc_str]);
@@ -522,7 +545,12 @@ module parcels_string() {
 }
 
 // ---- sign --------------------------------------------------------------------------
-sg_u = 5;   sg_z = 58;    sg_w = 30;  sg_h = 15;
+// 17 tall: the board's underside is sheared, so at its face it has lost 2.5
+// mm; at 15 the OFFICE line hung 0.85 below it and drew support columns.
+// Placed so neither tilted edge crosses a clapboard step line (8 + 4.5k):
+// the top runs 67.75..69.85 and the bottom 50.75..52.85. Where an edge
+// crossed a step, the step's edge met the board's and left zero-area faces.
+sg_u = 5;   sg_z = 60.3;  sg_w = 30;  sg_h = 17;
 sg_tilt = 4;                // hung crooked, left end low
 module sign_board() {
     face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt])
@@ -533,7 +561,7 @@ module sign_board() {
 // an underside; inlaid, the colour does the work and the face stays flat.
 module sign_letters() {
     face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t - 0.8])
-        linear_extrude(0.8) for (l = [["POST", 3.4], ["OFFICE", -3.4]])
+        linear_extrude(0.8) for (l = [["POST", 3.6], ["OFFICE", -3.0]])
             translate([0, l[1]]) text(l[0], size = 4.8, font = "Montserrat:style=Black",
                                       halign = "center", valign = "center", spacing = 1.04);
 }
@@ -599,6 +627,7 @@ module body_solid() {
     core_roof();
     step();
     battens();
+    room_fill();
     // Where the main roof runs into the turret, that roof becomes turret wall.
     // Cut back to the turret's outer face instead, the roof left open slots in
     // every clapboard notch along the join.
@@ -640,7 +669,7 @@ module roof_part() {
 module body_part() {
     difference() {
         body_solid();
-        cavity(); turret_hollow();
+        room(); turret_hollow(); turret_arch();
         difference() { zone(); turret_env(); }
         turret_cap();
         openings(); frame_holes(); chimney(); trim_raw(); accent_raw(); brand_mark();
