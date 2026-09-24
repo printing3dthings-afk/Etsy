@@ -31,11 +31,14 @@
 //     deg from vertical, and steps back in on an upward-facing ledge;
 //   - shingle courses are ADDED, not cut: each course's butt is a vertical
 //     face and its top slopes gently up, so nothing faces down;
-//   - every raised relief (frames, sign, letters, battens) is SHEARED so its
-//     underside rises 1.2 mm for each 1 mm it stands out -- 40 deg;
-//   - lancets are drawn steeper (d = 3.3a) so the apex lands at 50 deg;
+//   - every raised relief has a SHEARED underside that rises 1.2 mm for each
+//     1 mm it stands out -- 40 deg -- and a flat top (see relief_up);
+//   - lancets are drawn steeper (d = 5.6a) so the apex lands at 58 deg;
 //   - the round window's opening is a teardrop inside a round crust, so its
-//     crown is two 50 deg lines rather than a flat arc.
+//     crown is two 58 deg lines rather than a flat arc;
+//   - where two overhanging faces meet at an outside corner they must BOTH be
+//     58 deg or steeper: measured on the gate's slicer, a corner of two 50 deg
+//     faces drew 54,002 support moves and one of two 58 deg faces drew none.
 //
 // TEALIGHT. The inside is 80.6 x 52.6 mm clear from the plate up to 78 mm,
 // and the open base is the same size, so a 38 mm LED tealight (the biggest
@@ -70,8 +73,7 @@ SH       = 1.2;             // shear of every raised relief: 1.2 up per 1 out,
 // ---- roof ----------------------------------------------------------------
 e        = 5;               // eave projection
 er       = e / tan(40);     // ...carried on a flare 40 deg from vertical
-f        = 4;               // fascia height, matched to the slab's vertical
-                            // thickness so the rake's eave end lines up
+f        = 4;               // fascia height
 b        = D/2 + sid_d;
 be       = b + e;           // eave edge, half-depth
 zf       = H + er + f;      // top of the fascia, where the slope starts
@@ -127,6 +129,37 @@ module face_tf(face, u, z) {
 }
 // In face coordinates: lift everything by SH per mm it stands out.
 module shear_up() multmatrix([[1, 0, 0, 0], [0, 1, SH, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) children();
+// A raised relief of `outer` (with `hole` taken out), from depth d0 to d1 out
+// of the wall: its UNDERSIDE sheared, its top flat. Shearing the whole relief
+// leaned its top forward into a 40 deg knife edge along every frame, sign and
+// letter, and the gate's wall check measured those edges as sub-bead
+// material. The intersection keeps the higher of the two bottoms and the
+// lower of the two tops.
+//   - The flat piece is the outline SWEPT DOWN, and 0.2 wider each side, so
+//     only its upper edge is ever used. Unswept, the crust's crimp bumps kept
+//     their flat undersides down both sides of the disc, and the two pieces'
+//     side faces coincided on every frame (110 zero-area faces, and support
+//     columns from the plate to the crust).
+//   - The hole's CEILING rises with depth like every other underside; its
+//     floor stays flat. With the hole cut from the flat piece only, each
+//     lancet's tip closed straight across and drew a support column; sheared
+//     from d0 = -0.4 its floor dropped half a millimetre inside the wall and
+//     left slivers against the inner muntins' feet. So the sheared hole is
+//     lifted to meet the flat one at d0 and only ever rises from there.
+module relief_hole(d0, a, b) {
+    translate([0, 0, a]) linear_extrude(b - a) children();
+    shear_up() translate([0, 0, a]) linear_extrude(b - a) translate([0, -SH * d0]) children();
+}
+module relief_up(d0, d1) {
+    difference() {
+        intersection() {
+            translate([0, 0, d0]) linear_extrude(d1 - d0)
+                minkowski() { children(0); translate([-0.2, -60]) square([0.4, 60]); }
+            shear_up() translate([0, 0, d0]) linear_extrude(d1 - d0) children(0);
+        }
+        if ($children > 1) relief_hole(d0, d0 - 0.1, d1 + 0.1) children(1);
+    }
+}
 
 // ---- walls: reversed-sawtooth clapboard ------------------------------------
 // One skin up the whole wall. Each course starts at plan(0), ramps out to
@@ -146,22 +179,22 @@ module siding_wall() {
 }
 
 // ---- roof sections -------------------------------------------------------
-// ROOF = ONE SLAB + A CORE UNDER IT. The slab runs the full length, rake and
-// all, and is the only thing whose top is the roof surface; the core (gable
+// ROOF = ONE SLAB + A CORE UNDER IT. The slab runs the full length and is
+// the only thing whose top is the roof surface; the core (gable
 // triangles and eave flare) stops INSIDE it. A full-height main roof
 // overlapping a separate rake slab put two identical top surfaces on each
 // other and left 19 zero-area faces along both gables.
 // Every section here is counter-clockwise in (y, z), which is what skin()
 // needs to face its surfaces outward.
-// The flare stops 0.01 short of the fascia face. 0.2 short left a 0.24 mm
+// The flare stops 0.08 short of the fascia face. 0.2 short left a 0.24 mm
 // ledge the slicer printed as an overhang along both eaves; 0.05 past it left
 // a knife lip the wall check measured as sub-bead; exactly on it, its edge lay
-// in the fascia's plane and gave 152 zero-area faces. 0.01 leaves a 0.13 mm
-// step, under the slicer's 0.185 mm per-layer allowance.
+// in the fascia's plane and gave 152 zero-area faces; 0.01 short still gave
+// 144. 0.08 leaves a 0.13 mm step, under the slicer's 0.185 mm allowance.
 function core_prof(x) = [for (p = [
-        [-b, H - 1], [b, H - 1], [b, H], [be - 0.01, flare_z(be - 0.01)],
+        [-b, H - 1], [b, H - 1], [b, H], [be - 0.08, flare_z(be - 0.08)],
         [be - 1, top_z(x, be - 1) - tv(x)/2], [0, Rz(x) - tv(x)/2],
-        [-(be - 1), top_z(x, be - 1) - tv(x)/2], [-(be - 0.01), flare_z(be - 0.01)],
+        [-(be - 1), top_z(x, be - 1) - tv(x)/2], [-(be - 0.08), flare_z(be - 0.08)],
         [-b, H]]) [x, p[0], p[1]]];
 // The slab's underside is drawn 0.3 mm BELOW the zone line so the zone clips
 // it; drawn on the line, the two surfaces were coincident.
@@ -323,30 +356,36 @@ fr_t = sid_d + 0.84;        // frame face, 0.84 proud of the siding
 // face and the frame's face were one polygon, and every muntin crossing it
 // left non-manifold edges; a lip inside the opening fixed that but was a
 // 0.3 mm fin.
-module win_frame(w) { difference() { offset(r = fr_w + 0.3) win_outline(w); offset(r = 0.3) win_outline(w); } }
-
-// The shop window's frame is a pie crust: a disc crimped round its edge.
-crust_r = 15.5;
-module crust_2d(w) {
-    difference() {
-        translate([0, w[4]]) union() {
-            circle(r = crust_r, $fn = 96);
-            for (i = [0 : 17]) rotate(i * 20) translate([crust_r, 0]) circle(r = 1.3, $fn = 20);
-        }
-        offset(r = 0.3) win_outline(w);
+// The frame's bottom bar runs 2.6 mm deeper than its sides -- a proper sill.
+// Its underside is sheared, so at the frame's face the bar has lost 2.5 mm of
+// height; a 1.7 mm bar shrank to a knife edge there.
+fr_sill = 2.6;
+module win_frame_outer(w) {
+    union() {
+        offset(r = fr_w + 0.3) win_outline(w);
+        translate([-w[4] - fr_w - 0.3, -fr_w - 0.3 - fr_sill]) square([2 * (w[4] + fr_w + 0.3), fr_w + fr_sill + 1]);
     }
 }
 
+// The shop window's frame is a pie crust: a disc crimped round its edge.
+crust_r = 15.5;
+module crust_outer(w) {
+    translate([0, w[4]]) union() {
+        circle(r = crust_r, $fn = 96);
+        for (i = [0 : 17]) rotate(i * 20) translate([crust_r, 0]) circle(r = 1.3, $fn = 20);
+    }
+}
+
+// Inside every frame's hole the clapboard is cut back to 0.2 into the wall.
+// Left standing, the siding above each lancet's tip was walled in by the
+// frame and the mullion and came out as three loose 0.05 mm3 slivers.
+module frame_holes() {
+    for (w = WINDOWS) face_tf(w[0], w[1], w[2])
+        relief_hole(-0.4, -0.2, fr_t + 1.84) offset(r = 0.3) win_outline(w);
+}
 module openings() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2])
         translate([0, 0, -wall - 2]) linear_extrude(wall + sid_d + 4) win_outline(w);
-    // In front of the crust's back plane the wall is cut away along the
-    // crust's own SHEARED hole (0.1 inside the crust, so the faces never
-    // coincide). Cut only to the unsheared teardrop, the crust uncovered a
-    // crescent of wall in front while covering it behind, and the spokes cut
-    // two chips of it free -- loose 2.95 mm3 bodies of wall colour.
-    let (w = WINDOWS[0]) face_tf(w[0], w[1], w[2]) shear_up() translate([0, 0, -0.4])
-        linear_extrude(fr_t + 0.84 + 3) offset(r = 0.4) win_outline(w);
     face_tf(1, door_x, plinth_h)
         translate([0, 0, -wall - 2]) linear_extrude(wall + sid_d + 4)
             polygon(lancet_pts(door_a, door_h));
@@ -396,12 +435,11 @@ module crate() {
 module pie() {
     // sunk 0.3 into the crate so the two parts overlap rather than touch
     face_tf(1, cr_u, cr_h - 0.3) translate([0, 0, 6.4]) rotate([-90, 0, 0]) {
-        // the pan widens as it rises (27 deg) to exactly the crust's width,
-        // so the crimped rim leaves no ledge underneath it
+        // the pan widens as it rises (27 deg) into a plain rim, so there is no
+        // ledge under it. A crimped rim of 0.75 mm bumps was measured as
+        // sub-bead material and is too small to print as bumps anyway.
         cylinder(r1 = 4.8, r2 = 5.95, h = 2.2, $fn = 48);
-        translate([0, 0, 2.2]) linear_extrude(1.1)
-            union() { circle(r = 5.2, $fn = 48);
-                      for (i = [0 : 13]) rotate(i * 360/14) translate([5.2, 0]) circle(r = 0.75, $fn = 16); }
+        translate([0, 0, 2.2]) cylinder(r = 5.95, h = 1.1, $fn = 48);
         translate([0, 0, 3.3]) scale([1, 1, 0.32]) sphere(r = 5.0, $fn = 48);
         // lattice strips following the dome, 0.5 mm proud of it
         intersection() {
@@ -416,13 +454,16 @@ module pie() {
 sg_u = 4;   sg_z = 51;    sg_w = 38;  sg_h = 9;
 sg_tilt = -3;               // hung crooked, right end low
 module sign_board() {
-    face_tf(1, sg_u, sg_z) shear_up() rotate([0, 0, sg_tilt])
-        translate([-sg_w/2, -sg_h/2, -0.4]) cube([sg_w, sg_h, fr_t + 0.4]);
+    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt])
+        relief_up(-0.4, fr_t) translate([-sg_w/2, -sg_h/2]) square([sg_w, sg_h]);
 }
+// The letters are a FLUSH inlay in the board's face, in the accent colour --
+// no relief. Raised 1 mm, every horizontal stroke was a sub-bead slab with
+// an underside; inlaid, the colour does the work and the face stays flat.
 module sign_letters() {
-    face_tf(1, sg_u, sg_z) shear_up() rotate([0, 0, sg_tilt]) translate([0, 0, fr_t - 0.3])
-        linear_extrude(1.15) text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
-                                  halign = "center", valign = "center", spacing = 1.06);
+    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t - 0.8])
+        linear_extrude(0.8) text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
+                                 halign = "center", valign = "center", spacing = 1.06);
 }
 
 // ---- trim that is not a window ------------------------------------------------------
@@ -452,8 +493,8 @@ module battens() {
             // Clear of the gable windows and, on the right, the chimney. In
             // this frame local x is +y on the right gable and -y on the left.
             for (w = WINDOWS) if (w[0] == face)
-                translate([(face == 2 ? w[1] : -w[1]) - w[4] - 3.5, w[2] - (H - 0.2) - 3.5, -5])
-                    cube([2 * w[4] + 7, lancet_top(w[4], w[5]) + 7, 10]);
+                translate([(face == 2 ? w[1] : -w[1]) - w[4] - 3.5, w[2] - (H - 0.2) - 3.5 - fr_sill - 2, -5])
+                    cube([2 * w[4] + 7, lancet_top(w[4], w[5]) + 9 + fr_sill, 10]);
             if (face == 2) translate([ch_y - ch_w/2 - 1.5, -5, -5]) cube([ch_w + 3, 100, 10]);
         }
 }
@@ -479,13 +520,14 @@ module body_solid() {
 }
 module trim_raw() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2]) {
-        if (w[3] == "L") shear_up() translate([0, 0, -0.4]) linear_extrude(fr_t + 0.4) win_frame(w);
+        if (w[3] == "L") relief_up(-0.4, fr_t) { win_frame_outer(w); offset(r = 0.3) win_outline(w); }
         // Muntins in two depths. Where they meet the FRAME they run 0.6 past
-        // the opening, into it -- a real overlap -- and are sheared with it.
+        // the opening, into it -- a real overlap. They are NOT sheared: a
+        // mullion is vertical and every other bar is 50 deg or steeper.
         // Inside the wall they stop 0.25 SHORT of it: every way of making a
         // bar end meet the wall (flush, or notched in) left T-junctions and
         // zero-area faces round the round windows.
-        shear_up() translate([0, 0, -0.4])
+        translate([0, 0, -0.4])
             linear_extrude(sid_d + 0.4 + (w[3] == "S" ? 0.84 : 0)) win_muntins(w, 0.6);
         // Their back stops 0.2 INSIDE the wall's inner face. Run 0.2 past it
         // into the hollow, every bar's foot hung in the air inside the house
@@ -503,8 +545,8 @@ module trim_raw() {
     sign_board();
 }
 module accent_raw() {
-    face_tf(1, WINDOWS[0][1], WINDOWS[0][2]) shear_up() translate([0, 0, -0.4])
-        linear_extrude(fr_t + 0.4 + 0.84) crust_2d(WINDOWS[0]);
+    face_tf(1, WINDOWS[0][1], WINDOWS[0][2])
+        relief_up(-0.4, fr_t + 0.84) { crust_outer(WINDOWS[0]); offset(r = 0.3) win_outline(WINDOWS[0]); }
     pie();
     sign_letters();
 }
@@ -529,7 +571,7 @@ module roof_part() {
 module body_part() {
     difference() {
         body_solid();
-        cavity(); zone(); openings(); chimney(); trim_raw(); accent_raw(); brand_mark();
+        cavity(); zone(); openings(); frame_holes(); chimney(); trim_raw(); accent_raw(); brand_mark();
     }
 }
 

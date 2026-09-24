@@ -210,7 +210,17 @@ def wall_thickness(path, samples=64, nozzle=0.42):
     (consecutive entry/exit pairs), so a hollow shell reports its wall rather
     than its outside dimension.
     """
-    m = _load(path)
+    sp = _wall_spans(_load(path), samples)
+    if not sp.size:
+        return {"error": "no ray hit the mesh"}
+    return {"samples": int(sp.size), "min": float(sp.min()),
+            "p1": float(np.percentile(sp, 1)), "median": float(np.median(sp)),
+            "frac_below_nozzle": float((sp < nozzle).mean()),
+            "frac_below_2x": float((sp < 2 * nozzle).mean()), "nozzle": nozzle}
+
+
+def _wall_spans(m, samples=64):
+    """Every solid span along a grid of axis-aligned rays, as an array."""
     spans = []
     for axis in range(3):
         u, v = [a for a in range(3) if a != axis]
@@ -225,32 +235,53 @@ def wall_thickness(path, samples=64, nozzle=0.42):
         loc, ray_idx, tri_idx = m.ray.intersects_location(origins, dirs, multiple_hits=True)
         if len(loc) == 0:
             continue
-        # Drop GRAZING hits. A ray that clips a corner tangentially records a
-        # span of ~0 and is not a thin wall -- it is why raw `min` came back as
-        # 0.00 on models measured thick by every other method. Keep only hits
-        # within 60 degrees of head-on, where the span is a real thickness.
         incidence = np.abs(m.face_normals[tri_idx][:, axis])
-        keep = incidence > 0.5
-        loc, ray_idx = loc[keep], ray_idx[keep]
-        if len(loc) == 0:
-            continue
+        # EVERY hit decides what is inside; only head-on hits bound a span
+        # that gets REPORTED (2026-09-24).
+        #
+        # This used to drop every hit more than 60 degrees off head-on before
+        # pairing them, to stop tangential grazes recording ~0 spans. But a ray
+        # that genuinely CROSSES a steep face -- a lancet's crown, a 70 deg
+        # chamfer -- then lost one hit, the in/out pairing slipped by one for
+        # the rest of that ray, and every air gap after it was reported as a
+        # wall. Measured on haunted_bakery: 149 of the 351 spans it called
+        # thinner than 1.2 mm had their midpoint outside the solid.
+        # Keeping every hit AND reporting every span was tried first and is
+        # wrong the other way: corner clips came back as real 0.03 mm spans and
+        # the sauce tray's p1 fell from 3.48 to 0.04. So the grazing filter
+        # stays, applied to the span instead of the hit.
         order = np.argsort(ray_idx, kind="stable")
-        loc, ray_idx = loc[order], ray_idx[order]
+        loc, ray_idx, inc = loc[order], ray_idx[order], incidence[order]
         start = 0
+        odd = []
         for i in range(1, len(ray_idx) + 1):
             if i == len(ray_idx) or ray_idx[i] != ray_idx[start]:
-                t = np.sort(loc[start:i, axis])
-                # pair them: (in,out)(in,out)... a lone trailing hit is a graze
-                for a, b in zip(t[0::2], t[1::2]):
-                    spans.append(float(b - a))
+                o = np.argsort(loc[start:i, axis])
+                t, c = loc[start:i, axis][o], inc[start:i][o]
+                # a crossing on a shared edge is reported once per triangle;
+                # keep one hit, as head-on as the best of them
+                new = np.concatenate([[True], np.diff(t) > 1e-6])
+                grp = np.cumsum(new) - 1
+                t = t[new]
+                c = np.array([c[grp == g].max() for g in range(len(t))])
+                if len(t) % 2 == 0:
+                    for k in range(0, len(t), 2):
+                        if c[k] > 0.5 and c[k + 1] > 0.5:
+                            spans.append(float(t[k + 1] - t[k]))
+                else:
+                    odd.append((ray_idx[start], t, c))
                 start = i
-    if not spans:
-        return {"error": "no ray hit the mesh"}
-    sp = np.array(spans)
-    return {"samples": int(sp.size), "min": float(sp.min()),
-            "p1": float(np.percentile(sp, 1)), "median": float(np.median(sp)),
-            "frac_below_nozzle": float((sp < nozzle).mean()),
-            "frac_below_2x": float((sp < 2 * nozzle).mean()), "nozzle": nozzle}
+        if odd:
+            mids, lens = [], []
+            for r, t, c in odd:
+                for k in range(len(t) - 1):
+                    if c[k] > 0.5 and c[k + 1] > 0.5:
+                        p = origins[r].copy(); p[axis] = (t[k] + t[k + 1]) / 2
+                        mids.append(p); lens.append(t[k + 1] - t[k])
+            if mids:
+                inside = m.contains(np.array(mids))
+                spans.extend(float(s) for s, k in zip(lens, inside) if k)
+    return np.array(spans)
 
 
 def gate_cutter(cutter_path, target_path, expect_multi_body=None):

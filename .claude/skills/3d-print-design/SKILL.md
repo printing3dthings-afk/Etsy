@@ -7295,3 +7295,72 @@ against its source file, character by character. That is the tool that judges
 semantics. It costs an API call per check, so per
 `.claude/rules/automation-workflow.md` it earns a gate only after its manual
 verdicts have been right across several real models — not before.
+
+## Technique 69 — What the gate's slicer actually supports, measured, and a wall check that was counting air (2026-09-24, haunted bakery)
+
+The haunted bakery (`haunted_bakery.scad`) is the first model here built to
+pass `product_gate`'s **zero support moves AND zero overhang perimeters**
+with a steep roof, deep eaves, raised trim and pointed windows. The "55°"
+and "45°" rules of thumb above turned out not to predict the slicer. What
+follows was measured on test pieces with the gate's own slicer
+(PrusaSlicer via `tools/virtual_printer.py`, support threshold 45).
+
+| test piece | result |
+|---|---|
+| single flat face at 50° from horizontal | clean |
+| single face at 40° | supported |
+| **convex corner** where two 50° faces meet | supported (54,002 moves) |
+| convex corner of two 55° faces | supported (46,966) |
+| convex corner of two 58° faces | clean |
+| inner ridge that **sags** 9 mm toward the middle | supported (12,789) |
+| the same ridge level | clean |
+
+Rules that come out of it:
+- **A corner is steeper than its faces.** Where two sloped faces meet, the
+  edge between them runs at a shallower angle than either face. Design
+  corners at 58° or steeper: lancet tips (`d = 5.6a`), teardrop crowns,
+  eave-flare corners.
+- **A sagging roof sags outside only.** The ceiling inside a hollow roof
+  has to be level. A sagging ceiling closes from the middle outwards, and
+  the tip that closes last is an overhang.
+- **No rake overhang on a steep roof.** Past the gable, the roof's
+  underside rises inward at about 50° while the rake grows outward. No rake
+  angle rescued it; the roof ends flush with the gable face.
+- **Raised relief: shear the underside, keep the top flat**
+  (`relief_up()` in the bakery). If the whole relief is sheared, its top
+  leans forward into a 40° knife edge that the wall check measures as
+  below one bead. Three details matter:
+  - The flat piece is the outline swept *down*, 0.2 wider each side. If it
+    isn't, crimp bumps keep flat undersides and the two pieces' side faces
+    coincide, which gave 110 zero-area faces.
+  - A hole's ceiling must rise with depth. A flat-cut hole's tip closes
+    straight across and draws a support column.
+  - A hole's floor must stay flat. A sheared floor drops inside the wall
+    and leaves slivers.
+- **No horizontal groove or sill shelf on a visible wall.** Every one has
+  a ceiling. The bakery's pie sits on a crate that stands on the plate,
+  not on a sill.
+- **Before running the full-model slicer, run a calibrated layer scan.**
+  Section every 0.2 mm, and flag `layer − previous_layer.buffer(0.185)`
+  wherever that area is above 1e-4 mm². It finds each overhang in seconds.
+  The slicer's own support-column positions only tell you which 5 mm cell
+  to look in.
+
+**`mesh_gate.wall_thickness` was counting air as wall.** It dropped every
+ray hit more than 60° off head-on, *then* paired the remaining hits in/out.
+A ray that genuinely crossed a steep face therefore lost one hit, and every
+span after that on the same ray swapped inside for outside.
+- On the bakery, 149 of the 351 spans it called thinner than 1.2 mm were
+  air.
+- On the shipped `haunted_manor` it was 114 of 208; on
+  `monogram_keychain_J_all`, 450 of 609. Both failed the 1.2 mm floor on
+  air alone.
+
+The fix keeps every hit to decide what is inside, and applies the grazing
+filter per span: a span is reported only when both of its ends are head-on.
+The obvious fix (keep every hit and report every span) is wrong the other
+way: corner clips then come back as real 0.03 mm spans, and the sauce
+tray's p1 fell from 3.48 to 0.04. Both directions are pinned in
+`tests/test_mesh_gate_wall_parity.py`. Across all 64 committed STLs the fix
+changed exactly two verdicts, both from fail to pass, and both of those
+failures were air.
