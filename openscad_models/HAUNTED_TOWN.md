@@ -38,7 +38,7 @@ What those references do that our first haunted manor did not:
 
 | # | building | identity feature | status |
 |---|---|---|---|
-| 6 | **Bakery** | big round shop window with pie-slice muntins, a pie cooling on the sill, crooked chimney | **building first** — `haunted_bakery.scad` |
+| 6 | **Bakery** | round pie-crust shop window cut into slices, a pie cooling on a crate by the door, crooked BAKERY sign, crooked chimney | **built 2026-09-24, awaiting Scott's review** — `haunted_bakery.3mf`, notes in `HAUNTED_BAKERY_PRINTING.md` |
 | 1 | Post Office | tilted "POST OFFICE" hanging sign, mail slot, parcels leaning on the porch. Plain lettering only — no USPS eagle or logo (their trademark) | saved |
 | 2 | Chapel | thin bell tower cracked and tipped sideways, one tall pointed window over the door | saved |
 | 3 | General Store | false-front facade taller than the building, crooked "MERCANTILE" board, barrels on the porch | saved |

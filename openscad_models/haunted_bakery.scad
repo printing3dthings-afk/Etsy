@@ -379,9 +379,12 @@ module crust_outer(w) {
 // Inside every frame's hole the clapboard is cut back to 0.2 into the wall.
 // Left standing, the siding above each lancet's tip was walled in by the
 // frame and the mullion and came out as three loose 0.05 mm3 slivers.
+// 0.1 wider than the hole, reaching into the frame: cut exactly to the hole,
+// its edge met the clapboard's where the round window is widest and left 32
+// non-manifold edges.
 module frame_holes() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2])
-        relief_hole(-0.4, -0.2, fr_t + 1.84) offset(r = 0.3) win_outline(w);
+        relief_hole(-0.4, -0.2, fr_t + 1.84) offset(r = 0.4) win_outline(w);
 }
 module openings() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2])
@@ -527,8 +530,10 @@ module trim_raw() {
         // Inside the wall they stop 0.25 SHORT of it: every way of making a
         // bar end meet the wall (flush, or notched in) left T-junctions and
         // zero-area faces round the round windows.
-        translate([0, 0, -0.4])
-            linear_extrude(sid_d + 0.4 + (w[3] == "S" ? 0.84 : 0)) win_muntins(w, 0.6);
+        // The shop window's spokes start 0.2 deeper than the crust: level
+        // with its back they shared a plane and left zero-area faces.
+        translate([0, 0, w[3] == "S" ? -0.6 : -0.4])
+            linear_extrude(sid_d + 0.4 + (w[3] == "S" ? 0.84 + 0.2 : 0)) win_muntins(w, 0.6);
         // Their back stops 0.2 INSIDE the wall's inner face. Run 0.2 past it
         // into the hollow, every bar's foot hung in the air inside the house
         // and the slicer stood a support column under each one.
