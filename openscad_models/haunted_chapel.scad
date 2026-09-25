@@ -179,14 +179,16 @@ module gable_band(y0, y1, lo, hi) {
 }
 module gable_keep() {
     for (s = [-1, 1]) mirror([0, s < 0 ? 1 : 0, 0])
-        xz(Dh - wall, Dh + 5) polygon([[-xe, -5], [xe, -5], [xe, z_out(xe) + cp_hi], [0, z_out(0) + cp_hi], [-xe, z_out(xe) + cp_hi]]);
+        xz(Dh - wall, Dh + 5) polygon([[-xe, -5], [xe, -5], [xe, z_out(xe) + 1], [0, z_out(0) + 1], [-xe, z_out(xe) + 1]]);
 }
 // The gables carried out over the eaves: the parapet's end, a plain block
 // whose underside is the soffit plane.
 module kneelers() {
     for (s = [-1, 1], m = [0, 1]) mirror([0, s < 0 ? 1 : 0, 0]) mirror([m, 0, 0])
+        // topped INSIDE the coping: topped level with it, the coping cut left
+        // a zero-thickness sheet on each kneeler
         xz(Dh - wall, Dh + bd) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xe, z_ceil(xe)],
-                                        [xe, z_out(xe) + cp_hi], [Wh - 0.3, z_out(Wh - 0.3) + cp_hi]]);
+                                        [xe, z_out(xe) + 1], [Wh - 0.3, z_out(Wh - 0.3) + 1]]);
 }
 module nave_walls() {
     intersection() {
@@ -304,11 +306,13 @@ module step() { nf(1, 0, 0) translate([-st_w/2, 0, 0]) cube([st_w, plinth_h, st_
 // small diamonds whose own edges are 62 deg, so the groove never has a flatter
 // ceiling. It tapers out at both ends.
 module crack(f, u0, u1, z0, seed) {
-    n = 15;
-    r = rands(0, 1, n + 1, seed);
+    // 18 steps of at most 1.19 across; teeth 2.8-4.2 tall on a line falling
+    // 0.5 a step, so the shallowest stretch rises 2.3 in 1.19 (62.6 deg)
+    n = 18;
+    r = rands(0, 1, 2 * n + 2, seed);
     ws = [for (i = [0 : n - 1]) (u1 - u0) / n * (0.7 + 0.6 * r[i])];
     us = concat([u0], accum(ws, 0, u0));
-    zs = [for (i = [0 : n]) z0 + (i % 2 == 0 ? 0 : 1) * 1.4 * tan(68) - i * 0.18];
+    zs = [for (i = [0 : n]) z0 - i * 0.5 + (i % 2 == 0 ? 0 : 2.8 + 1.4 * r[n + i])];
     module dia(i) let (h = 0.45 * min(1, 0.35 + 0.65 * min(i, n - i) / 3))
         translate([us[i], zs[i]]) polygon([[-h, 0], [0, h * tan(62)], [h, 0], [0, -h * tan(62)]]);
     tf(f, t_mid(f), 0) translate([0, 0, -0.4]) linear_extrude(3)
@@ -316,8 +320,8 @@ module crack(f, u0, u1, z0, seed) {
 }
 module cracks() {
     tip() {
-        crack(1, 9.5, -7, z_c - 4.5, 11);
-        crack(3, -9, 6, z_c - 2.5, 23);
+        crack(1, 9.5, -7, z_c - 1.5, 11);
+        crack(3, -9, 6, z_c - 1.5, 23);
     }
 }
 
@@ -346,7 +350,9 @@ module slab() xz(-y_r, y_r) polygon([[-xe, z_ceil(xe)], [0, z_ceil(0)], [xe, z_c
                                      [xe, z_out(xe)], [0, z_out(0)], [-xe, z_out(xe)]]);
 // Slate courses, ADDED like the bakery's shingles: each butt is a vertical
 // face 1.0 proud of the slab, each top slopes up to 0.05 under the next butt.
-sh_c = 2.4;                 // course, measured horizontally
+// 2.35, not 2.4: at 2.4 a course butt fell exactly on the tower's stone
+// face (x = -11.2) and left a sliver face in the roof and the coping.
+sh_c = 2.35;                // course, measured horizontally
 function sh_d(k) = min(k * sh_c, xe - 0.6);
 module slates() {
     nk = ceil((xe - 0.6) / sh_c);
