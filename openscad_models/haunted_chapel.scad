@@ -430,12 +430,22 @@ module ridge_cap() {
 }
 // Proud of the stone across the gable, but only where the gable's face is
 // straight (|x| <= Wh - 1): run on to the corner, its lowest end hung over the
-// rounded corner stones. Past that, only as deep as the kneeler.
+// rounded corner stones. Past that, only as deep as the kneeler. The proud
+// part's underside rises 58 deg outward from plan(0), like every relief here:
+// flat on the 62 deg line, its lowest end still hung 0.9 over the stone
+// valleys at each corner and drew a support column there.
+module gable_poly(lo, hi) polygon([[-xe, z_out(xe) + lo], [0, z_out(0) + lo], [xe, z_out(xe) + lo],
+                                   [xe, z_out(xe) + hi], [0, z_out(0) + hi], [-xe, z_out(xe) + hi]]);
 module coping() {
     difference() {
-        union() {
-            intersection() { gable_band(Dh - wall, Dh + bd + 0.1, cp_lo, cp_hi); translate([-Wh + 1, -100, 0]) cube([W - 2, 200, 300]); }
-            gable_band(Dh - wall, Dh - 0.05, cp_lo, cp_hi);
+        for (s = [-1, 1]) mirror([0, s < 0 ? 1 : 0, 0]) {
+            xz(Dh - wall, Dh - 0.05) gable_poly(cp_lo, cp_hi);
+            intersection() {
+                xz(Dh - 0.1, Dh + bd + 0.1) gable_poly(cp_lo, cp_hi);
+                multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, tan(58), 1, -tan(58) * Dh], [0, 0, 0, 1]])
+                    xz(Dh - 1, Dh + 3) gable_poly(cp_lo, cp_hi + 10);
+                translate([-Wh + 1, -100, 0]) cube([W - 2, 200, 300]);
+            }
         }
         tower_outer();
     }
