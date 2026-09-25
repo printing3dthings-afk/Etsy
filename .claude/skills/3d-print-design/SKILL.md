@@ -7456,3 +7456,39 @@ separate part. Each needed its own rule.
   - Keep each corner's coping underside (through the fillet, 0.48 mm tall)
     off every brick valley line. Where one spanned a valley, the two touched
     along a line and left a loose zero-volume shell.
+
+## Technique 72 — A leaning false front and diamond windows (2026-09-25, general store)
+
+The third Haunted Town building leans its whole false front 2.5° forward and
+3° sideways with one `multmatrix` shear. It also has raised diamond window
+frames. The gate passed, but three traps cost a rebuild each.
+
+- **A lean breaks every exact coincidence.** The door leaf, the doorway and
+  the door frame were all built from the same `door_pts()` polygon, so
+  unsheared they met exactly. Under the lean's shear, points that were
+  equal became equal only to ~1e-15. CGAL then kept them as separate
+  vertices a hair apart and produced non-manifold edges at the door's
+  apex. The fix is deliberate laps and insets, not tighter tolerance:
+  - cut the frame's hole 0.3 mm INSIDE the doorway (`offset(delta=-0.3)`),
+    so frame and wall overlap instead of meeting on a line;
+  - inset the leaf's pointed head 0.2 mm from the doorway.
+
+  Any part placed on a sheared face should be built to overlap or clear its
+  neighbours by ≥ 0.2 mm, never to touch them.
+- **Relief shear eats a diamond frame's arms.** A raised frame has a sheared
+  underside and a flat top (`relief_up`). On a 62° diamond arm, that shear
+  removes SH·(frame_t − d0) ≈ 2.9 mm of arm height at the face. It hits the
+  lower arms on their outer edge and the upper arms on the hole's ceiling.
+  At 1.7 mm wide (the width that works on round and gable windows), the
+  lower arms measured a 1st-percentile wall of 0.68 mm. Widening only the
+  lower arms made a step with degenerate faces and left the upper arms thin.
+  A uniform 3.2 mm frame, `offset(r=fr_wd+0.3)`, fixed both (p1 1.24 mm). So
+  **size a raised frame's width from the shear loss on its steepest arm**,
+  not from how it looks.
+- **Battens over a window end in a V.** Strips stopped at a window keepout
+  need a sheared bottom (a flat batten end is a ceiling). Over a diamond,
+  that reads as a V notch. It is visible and acceptable; don't square it.
+- **A one-piece 50° shed roof is the price of no lid.** It prints without a
+  ceiling, but a steep shed reads as a lean-to from the side. A low shed
+  would need a lift-off lid like the post office's. Tell Scott this rather
+  than hide it.

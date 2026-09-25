@@ -168,6 +168,13 @@ module win_bars(w) {
 module win_muntins(w, g) { intersection() { offset(r = g) win_outline(w); win_bars(w); } }
 fr_w = 1.7;
 fr_t = bd + 0.84;
+// Diamond frames are 3.2 wide, not the bakery's 1.7. A relief's underside --
+// and its hole's ceiling -- is sheared back 2.9 mm at its face, and a 62 deg
+// arm 1.7 wide is only 3.6 mm tall: every arm, above and below, was left
+// about 0.7 mm thick at the front and the gate measured it as sub-bead round
+// every window. At 3.2 an arm is 6.8 tall and keeps 3.9.
+fr_wd = 3.2;
+module win_frame_outer(w) { offset(r = fr_wd + 0.3) win_outline(w); }
 module frame_holes() {
     for (w = WINDOWS) on_face(w[0], w[1], w[2])
         relief_hole(-0.4, -0.2, fr_t + 1.84) offset(r = 0.4) win_outline(w);
@@ -188,11 +195,23 @@ door_a = 8;
 door_h = 22;
 module door_leaf() {
     on_face(1, door_x, plinth_h) translate([0, 0, -wall]) difference() {
+        // The leaf's HEAD sits 0.2 inside the doorway's (the frame laps over
+        // the gap); below the spring it fills the doorway and stands on the
+        // threshold. Cut to the doorway itself, the two heads met at one tip
+        // on the wall's inner face and, sheared by the lean, left 16
+        // non-manifold edges there.
         linear_extrude(wall - 0.2) difference() {
-            polygon(door_pts(door_a, door_h));
+            union() {
+                intersection() { polygon(door_pts(door_a, door_h)); translate([-20, -1]) square([40, door_h + 1]); }
+                offset(delta = -0.2) polygon(door_pts(door_a, door_h));
+            }
             for (s = [-1, 1]) translate([s * 4, 21]) polygon(diamond_pts(1.8));
         }
-        translate([-0.3, -1, wall - 0.9]) cube([0.6, 100, 1]);
+        // the split between the leaves stops below the head, in a 62 deg
+        // point: run into the head's own point, it met the frame and both
+        // leaves on one edge
+        translate([0, 0, wall - 0.9]) linear_extrude(1)
+            polygon([[-0.3, -1], [-0.3, door_h + 5], [0, door_h + 5 + 0.3 * tan(d_ang)], [0.3, door_h + 5], [0.3, -1]]);
     }
 }
 module door_frame() {
@@ -200,7 +219,11 @@ module door_frame() {
         difference() {
             intersection() { offset(r = fr_w) polygon(door_pts(door_a, door_h));
                              translate([-30, 0]) square([60, 100]); }
-            translate([0, -1]) polygon(door_pts(door_a, door_h + 1));
+            // 0.3 INSIDE the doorway, lapping the leaf. Cut exactly to the
+            // doorway, its head lay on the leaf's own head edges; under the
+            // lean's shear the two no longer met exactly and left
+            // non-manifold edges.
+            translate([0, -1]) offset(delta = -0.3) polygon(door_pts(door_a, door_h + 1));
         }
 }
 st_w = 22;  st_d = 8;
@@ -232,8 +255,8 @@ module front_cap() {
 function wall_span(f) = f == 1 ? [fx0 + 3, fx1 - 3] : f == 0 ? [-Wh + 5, Wh - 5]
                       : f == 2 ? [-Dh + 3, Dh - 7] : [-Dh + 7, Dh - 3];   // clear of the corner boards
 function keepouts(f) = concat(
-    [for (w = WINDOWS) if (w[0] == f) let (h = w[3] + fr_w + 0.3 + 1.5)
-        [loc_u(f, w[1]) - h, loc_u(f, w[1]) + h, w[2] - fr_w - 0.3 - 2, w[2] + diamond_h(w[3]) + fr_w + 0.3 + 1.5]],
+    [for (w = WINDOWS) if (w[0] == f) let (h = w[3] + fr_wd + 0.3 + 1.5)
+        [loc_u(f, w[1]) - h, loc_u(f, w[1]) + h, w[2] - fr_wd - 0.3 - 2, w[2] + diamond_h(w[3]) + fr_wd + 0.3 + 1.5]],
     f == 1 ? [[door_x - door_a - fr_w - 1.5, door_x + door_a + fr_w + 1.5, 0, plinth_h + door_h + door_a * tan(d_ang) + fr_w + 1.5],
               [sg_u - sg_w/2 - 3, sg_u + sg_w/2 + 3, sg_z - sg_h/2 - 4, sg_z + sg_h/2 + 4]] : []);
 module battens(f) {
@@ -340,7 +363,7 @@ module body_solid() {
 }
 module trim_raw() {
     for (w = WINDOWS) on_face(w[0], w[1], w[2]) {
-        relief_up(-0.4, fr_t) { offset(r = fr_w + 0.3) win_outline(w); offset(r = 0.3) win_outline(w); }
+        relief_up(-0.4, fr_t) { win_frame_outer(w); offset(r = 0.3) win_outline(w); }
         translate([0, 0, -0.4]) linear_extrude(bd + 0.4) win_muntins(w, 0.6);
     }
     door_frame();
