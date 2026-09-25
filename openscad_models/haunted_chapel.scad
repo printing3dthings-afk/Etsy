@@ -167,7 +167,9 @@ module wall_joints(cx, cy, hx, hy, f, ztop, seed0, boxes) {
 }
 
 // ---- nave regions ----------------------------------------------------------------------
-module below_ceil() xz(-60, 60) polygon([[-60, -5], [60, -5], [60, z_ceil(60)], [0, z_ceil(0)], [-60, z_ceil(-60)]]);
+// x held to +-40: at +-60 the ceiling line falls below the polygon's floor
+// and the outline crosses itself -- CGAL then drops the whole shape.
+module below_ceil() xz(-60, 60) polygon([[-40, -5], [40, -5], [40, z_ceil(40)], [0, z_ceil(0)], [-40, z_ceil(-40)]]);
 module above_ceil_to(dz) xz(-60, 60) polygon([[-xe, z_ceil(xe)], [0, z_ceil(0)], [xe, z_ceil(xe)],
                                              [xe, z_out(xe) + dz], [0, z_out(0) + dz], [-xe, z_out(xe) + dz]]);
 module gable_band(y0, y1, lo, hi) {
@@ -405,7 +407,7 @@ module joints() {
         // not where the tower stands in the nave, below the roof's top
         intersection() {
             translate([-Wh - bd - 2.2, -Dh - bd - 2.2, -10]) cube([W + 2 * bd + 4.4, D + 2 * bd + 4.4, 300]);
-            xz(-60, 60) polygon([[-60, -20], [60, -20], [60, z_out(60) + cp_hi + 1], [0, z_out(0) + cp_hi + 1], [-60, z_out(-60) + cp_hi + 1]]);
+            xz(-60, 60) polygon([[-40, -20], [40, -20], [40, z_out(40) + cp_hi + 1], [0, z_out(0) + cp_hi + 1], [-40, z_out(-40) + cp_hi + 1]]);
         }
     }
 }
