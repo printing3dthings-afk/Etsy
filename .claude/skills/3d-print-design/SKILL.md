@@ -7411,3 +7411,48 @@ Also re-confirmed from the bakery:
   r ≥ 0.6;
 - solids of ONE part should touch face to face rather than overlap by 0.2.
   The overlap cut into an inlay and left four-way edges.
+
+## Technique 71 — Brick, a sagging parapet and a lift-off flat roof (2026-09-25, one-story post office)
+
+The redesigned post office (`haunted_post_office.scad`) is the first model
+here with a textured masonry wall, a sagging top edge and a roof printed as a
+separate part. Each needed its own rule.
+
+- **A flat roof on a hollow building is a separate print.** It is a flat
+  ceiling otherwise.
+  - Print the lid underside-down, with any chimney standing on its top.
+  - It rests on a CORBEL round the inside of the walls: a flat seat with a
+    55° underside.
+  - End the corbel in a short vertical face (1.5 mm). Run the slope to the
+    top and the ring ends in a knife edge the wall check reads as sub-bead
+    all round the room.
+- **Brick as V-courses.** Each course ramps out at 58°, runs flat, then
+  chamfers back in at 45° to meet the next course at plan(0). There is no
+  horizontal step anywhere (clapboard's 0.02 mm step-back is what a tilted
+  sign edge caught on). Vertical joints:
+  - **A joint runs a whole course or not at all.** One stopped part-way up
+    a course has a flat ceiling.
+  - **Floor the joints just BEHIND plan(0).** Floored 0.1 mm in front,
+    every joint met the course's sloped underside along the same
+    horizontal line. CGAL then triangulated each course face through a row
+    of collinear points: 22 zero-area faces.
+  - Leave out the bottom course's joints, whose floor would sit flush with
+    the plinth.
+  - Leave joints out wholesale inside a 1.5 mm margin round every frame.
+    Over a window that reads as a brick lintel.
+- **A sagging top edge: hulls of thin vertical sticks between stations.**
+  Every piece is convex, so no winding can be wrong. Share the corner
+  heights so all four walls meet level.
+- **The coping cut, per wall, in two halves.**
+  - INSIDE: flat, only as deep as the wall, clipped to the ROUNDED plan.
+    Six deep, it reached into the next wall and sealed joint pockets shut.
+    Clipped to a square, it left a flat coping underside in the corner
+    fillets over air: 5,049 support moves.
+  - OUTSIDE: rising 58°, starting 0.3 mm behind the face, so it also shapes
+    the corner fillets.
+  - Make the coping 0.1 mm fuller than the brick. Flush, the brick's
+    5-segment corner and the coping's finer arc cross, and specks of brick
+    poke through.
+  - Keep each corner's coping underside (through the fillet, 0.48 mm tall)
+    off every brick valley line. Where one spanned a valley, the two touched
+    along a line and left a loose zero-volume shell.

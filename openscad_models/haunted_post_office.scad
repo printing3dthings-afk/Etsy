@@ -58,13 +58,16 @@ plinth_o = bd + 0.84;       // plinth face, 0.84 proud of the brick
 
 // ---- parapet and lid ---------------------------------------------------------
 z_s  = 58;                  // the lid's seat
-cb   = 2.5;                 // the seat's corbel reaches 2.5 in from the wall...
-cb_h = cb * tan(55);        // ...on a 55 deg underside
+cb   = 2.5;                 // the seat's corbel reaches 2.5 in from the wall, on a 55 deg underside
 tr   = 2.52;                // lid thickness (6 extrusions)
 // The parapet's top sags between the corners and is not level: the front
 // left corner has slumped. Corner heights FL, FR, BR, BL; sag per face
 // (back, front, right, left) at mid-wall.
-PC   = [68.5, 71, 70.5, 70];
+// Each corner's coping underside, where it slopes through the corner fillet
+// (its top line - c_h, less up to 0.48), must not span a brick valley
+// (8 + 2.6k): where it did, at BR = 70.5, the two touched along a line and
+// left a loose zero-volume shell.
+PC   = [68.5, 71, 70.9, 70];
 SAG  = [3, 4, 2.5, 2.5];
 c_h  = 2.4;                 // coping depth
 
@@ -119,6 +122,12 @@ module brick_skin() {
 // tall or it is left out: one stopped part-way up a course would have a flat
 // ceiling. Joints are left out wholesale near corners, frames, the door, the
 // sign and the parcels, so no sliver of brick is ever left beside a frame.
+// The floor sits 0.05 BEHIND plan(0), so a joint cuts through a course's whole
+// depth and its only edges land on the course lines. Floored 0.1 in front of
+// plan(0), every joint met the course's sloped underside along the same
+// horizontal line, and CGAL triangulated each course face through that row of
+// collinear points: 22 zero-area faces. No joints in the bottom course, whose
+// floor would lie flush with the plinth's top.
 function wall_L(f) = f < 2 ? Wh : Dh;
 function clear_of(f, u, z0, z1, boxes) =
     len([for (b = boxes) if (b[0] == f && u + bj/2 > b[1] && u - bj/2 < b[2] && z1 > b[3] && z0 < b[4]) 1]) == 0;
@@ -126,9 +135,9 @@ module brick_joints() {
     n = ceil((z_top - plinth_h) / bp);
     ko = keepouts();
     for (f = [0 : 3]) face_tf(f, 0, 0)
-        for (k = [0 : n - 1]) let (z0 = plinth_h + k * bp, L = wall_L(f) - 2.5, s = (k % 2) * bl / 2)
+        for (k = [1 : n - 1]) let (z0 = plinth_h + k * bp, L = wall_L(f) - 2.5, s = (k % 2) * bl / 2)
             for (u = [-L + s : bl : L]) if (clear_of(f, u, z0, z0 + bp, ko))
-                translate([u - bj/2, z0, 0.1]) cube([bj, bp, 2]);
+                translate([u - bj/2, z0, -0.05]) cube([bj, bp, 2.1]);
 }
 
 // ---- parapet top ----------------------------------------------------------------
@@ -152,33 +161,54 @@ module sky() {
 // Coping: a cream band on the parapet's top, c_h deep, following the sag. Its
 // underside rises 58 deg across the brick's depth, so wherever it crosses a
 // course's valley it has no ledge to hang.
+// The coping's underside, cut in two halves per wall.
+//   - INSIDE the wall (n from -wall-0.3 to 0): flat, at the top line less
+//     c_h, where it sits on brick. Clipped to the ROUNDED plan, and only as
+//     deep as the wall itself. Six deep, one wall's cut ran into the next and
+//     sealed joint pockets shut; clipped to a square it left the coping a flat
+//     underside in the corner fillets, over air: 5,049 support moves.
+//   - OUTSIDE (n from -0.3 out): rising 58 deg. Starting 0.3 behind the face,
+//     it also shapes the corner fillets, where the coping's underside is then
+//     the slope and never flat.
 module coping_cut() {
+    intersection() {
+        for (f = [0 : 3]) let (st = wall_st(f)) for (i = [0 : len(st) - 2])
+            hull() for (u = [st[i], st[i + 1]], n = [-wall - 0.3, 0]) vstick(f, u, n, -1, pz(f, u) - c_h);
+        translate([0, 0, -2]) linear_extrude(200) plan2d(0);
+    }
     for (f = [0 : 3]) let (st = wall_st(f)) for (i = [0 : len(st) - 2]) {
-        hull() for (u = [st[i], st[i + 1]], n = [-6, 0]) vstick(f, u, n, -1, pz(f, u) - c_h);
         hull() for (u = [st[i], st[i + 1]]) {
-            vstick(f, u, 0, -1, pz(f, u) - c_h);
+            vstick(f, u, -0.3, -1, pz(f, u) - c_h - 0.3 * tan(58));
             vstick(f, u, 3, -1, pz(f, u) - c_h + 3 * tan(58));
         }
     }
 }
 module coping() {
     difference() {
-        translate([0, 0, 58]) linear_extrude(z_top + 2 - 58) difference() { plan2d(bd); plan2d(-wall); }
+        // 0.1 fuller than the brick: flush, the brick's 5-segment corner and
+        // the coping's finer arc crossed, and specks of brick poked through
+        translate([0, 0, 58]) linear_extrude(z_top + 2 - 58) difference() { plan2d(bd + 0.1); plan2d(-wall); }
         coping_cut();
         sky();
     }
 }
 
 // ---- the lid's seat, and the lid ------------------------------------------------------
-// A ring corbelled out of the walls: flat on top for the lid, 55 deg under.
+// A ring corbelled out of the walls: flat on top for the lid, 55 deg under,
+// and a 1.5 mm vertical face at its inner edge. Run the slope all the way to
+// the top and the ring ends in a knife edge, which the gate's wall check
+// measured as sub-bead all round the room.
+cb_v = 1.5;
 module corbel() {
     s = 0.5;
+    z_foot = z_s - cb_v - (cb + 0.3) * tan(55);
     difference() {
         // starts 0.3 below the slope's foot, inside the plug below it: started
         // lower, the ring kept a flat underside there
-        translate([0, 0, z_s - cb_h - 0.3]) linear_extrude(cb_h + 0.3) plan2d(-wall + 0.3);
-        skin([sq_pts(-wall + 0.3 + s, z_s - cb_h - s * tan(55)),
-              sq_pts(-wall - cb - s, z_s + s * tan(55))], slices = 0);
+        translate([0, 0, z_foot - 0.3]) linear_extrude(z_s - z_foot + 0.3) plan2d(-wall + 0.3);
+        skin([sq_pts(-wall + 0.3 + s, z_foot - s * tan(55)),
+              sq_pts(-wall - cb - s, z_s - cb_v + s * tan(55))], slices = 0);
+        translate([0, 0, z_s - cb_v - 1]) linear_extrude(cb_v + 2) plan2d(-wall - cb);
     }
 }
 module room() {
