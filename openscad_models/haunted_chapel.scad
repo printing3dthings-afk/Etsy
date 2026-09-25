@@ -187,7 +187,7 @@ module kneelers() {
     for (s = [-1, 1], m = [0, 1]) mirror([0, s < 0 ? 1 : 0, 0]) mirror([m, 0, 0])
         // topped INSIDE the coping: topped level with it, the coping cut left
         // a zero-thickness sheet on each kneeler
-        xz(Dh - wall, Dh + bd) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xe, z_ceil(xe)],
+        xz(Dh - wall, Dh + bd) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xf, z_ceil(xf)], [xe, fl_xe],
                                         [xe, z_out(xe) + 1], [Wh - 0.3, z_out(Wh - 0.3) + 1]]);
 }
 // THE EAVE FLARE. The soffit is the ceiling plane carried outward, so it
@@ -393,7 +393,12 @@ module cross_plumb() {
 }
 
 // ---- roof ---------------------------------------------------------------------------------------
-module slab() xz(-y_r, y_r) polygon([[-xe, z_ceil(xe)], [0, z_ceil(0)], [xe, z_ceil(xe)],
+// Past the flare's tip the slab's underside carries on up the flare's 52 deg
+// line to the fascia, instead of following the soffit plane down: stopped
+// 0.08 short with the soffit still falling, the slab's corner hung 0.15 below
+// the flare's tip and every eave drew a wall of support.
+fl_xe = z_ceil(xf) + (xe - xf) * tan(fl_ang);
+module slab() xz(-y_r, y_r) polygon([[-xe, fl_xe], [-xf, z_ceil(xf)], [0, z_ceil(0)], [xf, z_ceil(xf)], [xe, fl_xe],
                                      [xe, z_out(xe)], [0, z_out(0)], [-xe, z_out(xe)]]);
 // Slate courses, ADDED like the bakery's shingles: each butt is a vertical
 // face 1.0 proud of the slab, each top slopes up to 0.05 under the next butt.
@@ -407,8 +412,10 @@ module slates() {
         xz(-y_r, y_r) polygon([[x0, z_out(x0) - 1.0], [x0, z_out(x0) + 1.0], [x1, z_out(x1) + 0.05], [x1, z_out(x1) - 1.0]]);
 }
 module ridge_cap() {
-    xz(-y_r, y_r) polygon([[2.4, z_out(2.4) - 1.0], [2.4, z_out(2.4) + 1.4], [0, z_out(0) + 2.4],
-                           [-2.4, z_out(2.4) + 1.4], [-2.4, z_out(2.4) - 1.0]]);
+    // flat-topped: brought to a point, the cap's apex read as sub-bead
+    // material all along the ridge
+    xz(-y_r, y_r) polygon([[2.4, z_out(2.4) - 1.0], [2.4, z_out(2.4) + 1.4], [0.7, z_out(0) + 2.4],
+                           [-0.7, z_out(0) + 2.4], [-2.4, z_out(2.4) + 1.4], [-2.4, z_out(2.4) - 1.0]]);
 }
 module coping() {
     difference() {
@@ -451,7 +458,9 @@ function nave_boxes(f) = concat(
 function tower_boxes(f) = concat(
     [for (o = TOPEN) if (o[0] == f) let (lu = loc(f, o[1], t_mid(f)))
         [lu - o[3] - 1.5, lu + o[3] + 1.5, o[2] - 1.5, o[2] + lancet_top(o[3], o[4], t_ang) + 1.5]],
-    [for (zb = BANDS) [-50, 50, zb - 1, zb + 4]]);
+    [for (zb = BANDS) [-50, 50, zb - 1, zb + 4]],
+    // no joints across the cracks
+    f == 1 ? [[-1.5, 8, 72, 91]] : f == 3 ? [[-10, 0, 72, 91]] : []);
 module joints() {
     difference() {
         for (f = [0 : 3]) wall_joints(0, 0, Wh, Dh, f, f < 2 ? z_out(0) + cp_hi : H + 2, 100 * f, nave_boxes(f));
