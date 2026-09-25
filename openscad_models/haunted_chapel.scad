@@ -232,7 +232,12 @@ sp_cut = 31;                // the spire is cut flat here for the cross
 // The spire's base is 0.3 wider than the tower's plan(0) and sits on the
 // string course's top: flush with plan(0), its edges fell exactly on the
 // walls' top edges and left four-way edges round the whole base.
-module spire() tipM() intersection() { spire_plumb(-0.3); translate([-100, -100, 0]) cube([200, 200, z_tt + sp_cut]); }
+// It also starts 0.5 below the walls' top, so it fills the corners over the
+// rounded wall corners: sat on the top, it sealed four tiny voids there.
+module spire() tipM() intersection() {
+    translate([0, 0, -0.5]) spire_plumb(-0.3);
+    translate([-100, -100, 0]) cube([200, 200, z_tt + sp_cut]);
+}
 module tower_room() {
     tip() translate([tx0 + wall, ty0 + wall, -2]) cube([2 * (th - wall), 2 * (th - wall), z_tt + 2]);
     tipM() spire_plumb(wall);
@@ -423,12 +428,13 @@ module ridge_cap() {
     xz(-y_r, y_r) polygon([[2.4, z_out(2.4) - 1.0], [2.4, z_out(2.4) + 1.4], [0.7, z_out(0) + 2.4],
                            [-0.7, z_out(0) + 2.4], [-2.4, z_out(2.4) + 1.4], [-2.4, z_out(2.4) - 1.0]]);
 }
-// Proud of the stone across the gable, but only as deep as the kneeler past
-// the corners, where there is no stone under it.
+// Proud of the stone across the gable, but only where the gable's face is
+// straight (|x| <= Wh - 1): run on to the corner, its lowest end hung over the
+// rounded corner stones. Past that, only as deep as the kneeler.
 module coping() {
     difference() {
         union() {
-            intersection() { gable_band(Dh - wall, Dh + bd + 0.1, cp_lo, cp_hi); translate([-Wh - bd, -100, 0]) cube([W + 2 * bd, 200, 300]); }
+            intersection() { gable_band(Dh - wall, Dh + bd + 0.1, cp_lo, cp_hi); translate([-Wh + 1, -100, 0]) cube([W - 2, 200, 300]); }
             gable_band(Dh - wall, Dh - 0.05, cp_lo, cp_hi);
         }
         tower_outer();
