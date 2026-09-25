@@ -187,7 +187,7 @@ module kneelers() {
     for (s = [-1, 1], m = [0, 1]) mirror([0, s < 0 ? 1 : 0, 0]) mirror([m, 0, 0])
         // topped INSIDE the coping: topped level with it, the coping cut left
         // a zero-thickness sheet on each kneeler
-        xz(Dh - wall, Dh + bd) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xf, z_ceil(xf)], [xe, fl_xe],
+        xz(Dh - wall, Dh - 0.05) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xf, z_ceil(xf)], [xe, fl_xe],
                                         [xe, z_out(xe) + 1], [Wh - 0.3, z_out(Wh - 0.3) + 1]]);
 }
 // THE EAVE FLARE. The soffit is the ceiling plane carried outward, so it
@@ -201,7 +201,10 @@ fl_ang = 52;
 xf  = xe - 0.08;
 zf0 = z_ceil(xf) - (xf - Wh) * tan(fl_ang);     // the flare's foot at plan(0)
 module eave_flare() {
-    for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh - bd, Dh + bd)
+    // Only as long as the walls' plan(0): run on over the stone relief at
+    // the gable ends, its foot hung past each rounded corner and drew
+    // columns at all four.
+    for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh + 0.05, Dh - 0.05)
         polygon([[Wh - 1, zf0 - tan(fl_ang)], [xf, z_ceil(xf)], [Wh - 1, z_ceil(Wh - 1)]]);
 }
 module nave_walls() {
@@ -226,7 +229,10 @@ module spire_plumb(g = 0) {
     translate([tcx, tcy, z_tt]) rotate([0, 0, 45]) cylinder(r1 = (th - g) * sqrt(2), r2 = 0, h = (th - g) * hs / th, $fn = 4);
 }
 sp_cut = 31;                // the spire is cut flat here for the cross
-module spire() tipM() intersection() { spire_plumb(); translate([-100, -100, 0]) cube([200, 200, z_tt + sp_cut]); }
+// The spire's base is 0.3 wider than the tower's plan(0) and sits on the
+// string course's top: flush with plan(0), its edges fell exactly on the
+// walls' top edges and left four-way edges round the whole base.
+module spire() tipM() intersection() { spire_plumb(-0.3); translate([-100, -100, 0]) cube([200, 200, z_tt + sp_cut]); }
 module tower_room() {
     tip() translate([tx0 + wall, ty0 + wall, -2]) cube([2 * (th - wall), 2 * (th - wall), z_tt + 2]);
     tipM() spire_plumb(wall);
@@ -417,9 +423,14 @@ module ridge_cap() {
     xz(-y_r, y_r) polygon([[2.4, z_out(2.4) - 1.0], [2.4, z_out(2.4) + 1.4], [0.7, z_out(0) + 2.4],
                            [-0.7, z_out(0) + 2.4], [-2.4, z_out(2.4) + 1.4], [-2.4, z_out(2.4) - 1.0]]);
 }
+// Proud of the stone across the gable, but only as deep as the kneeler past
+// the corners, where there is no stone under it.
 module coping() {
     difference() {
-        gable_band(Dh - wall, Dh + bd + 0.1, cp_lo, cp_hi);
+        union() {
+            intersection() { gable_band(Dh - wall, Dh + bd + 0.1, cp_lo, cp_hi); translate([-Wh - bd, -100, 0]) cube([W + 2 * bd, 200, 300]); }
+            gable_band(Dh - wall, Dh - 0.05, cp_lo, cp_hi);
+        }
         tower_outer();
     }
 }
