@@ -71,7 +71,7 @@ tp    = tan(r_ang);
 x_in  = Wh - wall;
 tr    = 2.52;               // slab, normal to the slope (6 extrusions)
 tv    = tr / cos(r_ang);    // ...measured vertically
-e     = 4;
+e     = 2;
 xe    = Wh + bd + e;        // eave edge
 function z_ceil(x) = H + (x_in - abs(x)) * tp;
 function z_out(x)  = z_ceil(x) + tv;
@@ -190,12 +190,27 @@ module kneelers() {
         xz(Dh - wall, Dh + bd) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xe, z_ceil(xe)],
                                         [xe, z_out(xe) + 1], [Wh - 0.3, z_out(Wh - 0.3) + 1]]);
 }
+// THE EAVE FLARE. The soffit is the ceiling plane carried outward, so it
+// FALLS toward the eave's edge, and the slab's lowest layers start there as
+// islands: 44,654 support moves along both eaves on the first build. The
+// flare fills under the soffit from the wall out, its underside rising 52 deg
+// outward, and stops 0.08 short of the fascia (the bakery's measured margin:
+// a 0.15 step, under the slicer's 0.185 allowance). It also carries the
+// kneelers. e is 2, not 4: at 4 the flare's foot came down over the windows.
+fl_ang = 52;
+xf  = xe - 0.08;
+zf0 = z_ceil(xf) - (xf - Wh) * tan(fl_ang);     // the flare's foot at plan(0)
+module eave_flare() {
+    for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh - bd, Dh + bd)
+        polygon([[Wh - 1, zf0 - tan(fl_ang)], [xf, z_ceil(xf)], [Wh - 1, z_ceil(Wh - 1)]]);
+}
 module nave_walls() {
     intersection() {
         stone_skin(0, 0, W, D, z_out(0) + cp_hi + 1);
         union() { below_ceil(); gable_keep(); }
     }
     kneelers();
+    eave_flare();
 }
 module nave_room() {
     intersection() {
@@ -217,7 +232,28 @@ module tower_room() {
     tipM() spire_plumb(wall);
 }
 module tower_outer() { tower_walls(); spire(); }
-module room() { nave_room(); tower_room(); }
+// THE TOWER'S INNER WALLS, carried to the ground. Where the tower stands in
+// the nave its right wall used to start on the ceiling plane, which falls
+// toward the tower's shaft: its lowest layer was a 14.6 mm strip over air at
+// the shaft's edge. Both inner walls now run down to the plate, each pierced
+// by a tall pointed arch so the tower stays open to the nave and the belfry
+// still lights. Both stay outside a 46 mm circle round the nave's centre.
+module screen() {
+    intersection() {
+        union() {
+            translate([tx1 - wall, -y_r - 0.1, -1]) cube([wall, ty1 + y_r + 0.1, 200]);
+            translate([-x_in - 0.1, ty1 - wall, -1]) cube([tx1 + x_in + 0.1, wall, 200]);
+        }
+        below_ceil();
+    }
+}
+//   [face, u, a, straight height] -- from the plate, 58 deg heads
+ARCHES = [[2, -27.8, 5.5, 50], [0, -20, 4.5, 44]];
+module arches() {
+    for (r = ARCHES) tf(r[0], r[1], -1)
+        translate([0, 0, -wall - 2]) linear_extrude(wall + 4) polygon(lancet_pts(r[2], r[3] + 1));
+}
+module room() { difference() { nave_room(); screen(); } tower_room(); }
 
 // ---- openings ----------------------------------------------------------------------------
 // A LANCET: straight sides, then an arc of radius 2a curving in until it is
@@ -240,9 +276,9 @@ fr_t = bd + 0.44;           // frame face, 0.44 proud of the stone
 //   [face, u, z, a, straight height, tracery]   tracery 1 = mullion, 2 = Y
 WINDOWS = [
     [1,   0, 45, 4.5, 20, 2],                    // the tall window over the door
-    [0, -10, 14, 3.2, 12, 1],  [0, 10, 14, 3.2, 12, 1],  [0, 0, 52, 2.6, 10, 1],
-    [2, -22, 14, 3.2, 12, 1],  [2,  0, 14, 3.2, 12, 1],  [2, 22, 14, 3.2, 12, 1],
-    [3,   0, 14, 3.2, 12, 1],  [3, 22, 14, 3.2, 12, 1],
+    [0, -10, 13, 3.2, 12, 1],  [0, 10, 13, 3.2, 12, 1],  [0, 0, 52, 2.6, 10, 1],
+    [2, -22, 12.5, 3.2, 12, 1],  [2,  0, 12.5, 3.2, 12, 1],  [2, 22, 12.5, 3.2, 12, 1],
+    [3,   0, 12.5, 3.2, 12, 1],  [3, 22, 12.5, 3.2, 12, 1],
 ];
 module win_outline(w) { polygon(lancet_pts(w[3], w[4])); }
 module win_bars(w) {
@@ -259,7 +295,7 @@ module frame_holes() {
 //   [face, u, z, a, straight height] -- plain openings, no frames
 TOPEN = [
     [1, tcx, 26, 1.8, 7],  [1, tcx, 60, 1.8, 7],
-    [3, tcy, 40, 1.8, 7],  [3, tcy, 66, 1.8, 7],
+    [3, tcy, 36, 1.8, 7],  [3, tcy, 60, 1.8, 7],
     for (f = [0 : 3]) [f, t_mid(f), 98, 3.0, 7],  // the belfry
 ];
 module tower_openings_plumb() {
@@ -271,6 +307,7 @@ module openings() {
         translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) win_outline(w);
     nf(1, 0, plinth_h) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) polygon(lancet_pts(door_a, door_h));
     tip() tower_openings_plumb();
+    arches();
 }
 
 // ---- door, step --------------------------------------------------------------------------
@@ -305,35 +342,45 @@ module step() { nf(1, 0, 0) translate([-st_w/2, 0, 0]) cube([st_w, plinth_h, st_
 // Every stretch of it is 62 deg or steeper: it is a chain of hulls between
 // small diamonds whose own edges are 62 deg, so the groove never has a flatter
 // ceiling. It tapers out at both ends.
-module crack(f, u0, u1, z0, seed) {
-    // 18 steps of at most 1.19 across; teeth 2.8-4.2 tall on a line falling
-    // 0.5 a step, so the shallowest stretch rises 2.3 in 1.19 (62.6 deg)
-    n = 18;
-    r = rands(0, 1, 2 * n + 2, seed);
-    ws = [for (i = [0 : n - 1]) (u1 - u0) / n * (0.7 + 0.6 * r[i])];
+module crack(f, u0, z0, dir, seed) {
+    // A settlement crack running DOWN from the tip. It must fall the whole
+    // way: a zig-zag that rises again leaves a downward point of stone above
+    // each trough, and that point's first layer is an island -- the first
+    // build's zig-zag cracks drew support columns under every tooth. Seven
+    // steps, alternately 64 and 72 deg, tapering at both ends.
+    n = 7;
+    r = rands(0, 1, n + 1, seed);
+    ws = [for (i = [0 : n - 1]) dir * (0.7 + 0.6 * r[i])];
     us = concat([u0], accum(ws, 0, u0));
-    zs = [for (i = [0 : n]) z0 - i * 0.5 + (i % 2 == 0 ? 0 : 2.8 + 1.4 * r[n + i])];
-    module dia(i) let (h = 0.45 * min(1, 0.35 + 0.65 * min(i, n - i) / 3))
+    dz = [for (i = [0 : n - 1]) abs(ws[i]) * tan(i % 2 == 0 ? 64 : 72)];
+    zs = concat([z0], accum([for (d = dz) -d], 0, z0));
+    module dia(i) let (h = 0.45 * min(1, 0.4 + 0.6 * min(i, n - i) / 2))
         translate([us[i], zs[i]]) polygon([[-h, 0], [0, h * tan(62)], [h, 0], [0, -h * tan(62)]]);
     tf(f, t_mid(f), 0) translate([0, 0, -0.4]) linear_extrude(3)
         for (i = [0 : n - 1]) hull() { dia(i); dia(i + 1); }
 }
 module cracks() {
     tip() {
-        crack(1, 9.5, -7, z_c - 1.5, 11);
-        crack(3, -9, 6, z_c - 1.5, 23);
+        crack(1, 6.5, z_c + 3, -1, 11);
+        crack(3, -1.5, z_c + 3, -1, 23);
     }
 }
 
 // ---- string courses, spire, cross ------------------------------------------------------------
-// Two cream bands round the tower, 3 tall, sheared at 2.2. Each face's band
-// runs past both corners by its own depth, so at a corner two 65.6 deg
-// undersides meet in a keel.
+// Two cream bands round the tower, 3 tall, sheared at 2.2, MITRED at the
+// corners, where the two 65.6 deg undersides meet in a keel. Run past the
+// corner instead, each band's inner strip hung in the air beyond the next
+// face with an underside only 0.88 above its foot, and drew support columns
+// at all eight corners.
 bfr_t = bd + 0.84;
 BANDS = [91, z_tt - 3];
 module bands_plumb() {
-    for (zb = BANDS, f = [0 : 3]) tf(f, t_mid(f), zb)
-        relief_up(-0.4, bfr_t, SHb) translate([-(th + bfr_t), 0]) square([2 * (th + bfr_t), 3]);
+    for (zb = BANDS, f = [0 : 3]) intersection() {
+        tf(f, t_mid(f), zb)
+            relief_up(-0.4, bfr_t, SHb) translate([-(th + bfr_t), 0]) square([2 * (th + bfr_t), 3]);
+        translate([tcx, tcy, 0]) rotate([0, 0, [90, -90, 0, 180][f]]) linear_extrude(300)
+            polygon([[0, 0], [60, 60], [60, -60]]);
+    }
 }
 // A cross on the cut top of the spire: a square post, and arms whose
 // undersides rise 66 deg from the post -- 60 after the tip.
@@ -398,6 +445,8 @@ function frame_box(f, w) = let (lu = loc(f, w[1], 0), h = w[3] + fr_w + 0.3 + 1.
     [lu - h, lu + h, w[2] - fr_w - 2, w[2] + lancet_top(w[3], w[4]) + fr_w + 1.5];
 function nave_boxes(f) = concat(
     [for (w = WINDOWS) if (w[0] == f) frame_box(f, w)],
+    // a joint reaching into the flare would cut it a flat-roofed slot
+    f >= 2 ? [[-100, 100, zf0, 300]] : [],
     f == 1 ? [[-door_a - 1.7 - 1.5, door_a + 1.7 + 1.5, 0, plinth_h + lancet_top(door_a, door_h) + 1.7 + 1.5]] : []);
 function tower_boxes(f) = concat(
     [for (o = TOPEN) if (o[0] == f) let (lu = loc(f, o[1], t_mid(f)))
