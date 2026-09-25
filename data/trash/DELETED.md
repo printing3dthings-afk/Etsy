@@ -426,3 +426,943 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 
 <!-- /TRASH 20260923-001 -->
 
+<!-- TRASH id=20260925-001 date=2026-09-25 kind=file source="openscad_models/haunted_post_office.scad" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-001 · 2026-09-25 · file · `openscad_models/haunted_post_office.scad`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-001__haunted_post_office.scad`
+
+```
+// Haunted Post Office lantern -- building #1 of the Haunted Town series
+// (openscad_models/HAUNTED_TOWN.md), built on the bakery's proven parts
+// (haunted_bakery.scad): same walls, roof, window frames, relief and every
+// gate-tuned margin, so read that file for WHY each of those looks the way it
+// does. A hollow shell lit from inside by a battery LED tealight: open base,
+// true through-cut windows.
+//
+// THE POST OFFICE'S OWN FEATURES: an octagonal corner TURRET under a tall,
+// leaning witch-hat spire; a crooked POST OFFICE sign; parcels tied with
+// string stacked by the wall; a brass mail slot in the door.
+//
+// WHY OCTAGONAL. Every face of an octagon is flat, so the bakery's planar
+// frames, muntins and clapboard carry onto the turret unchanged. On a round
+// tower each of those would have had to be rebuilt on a curve.
+//
+// WHY THE SIGN IS ON THE WALL. A sign hanging from a bracket has a free bottom
+// edge, which is an overhang no angle rescues. It is hung crooked instead.
+//
+// COLOUR PARTS. Render one at a time with -D part="...":
+//   body    walls, plinth, turret walls, gables and battens, eave flare, step
+//   roof    roof slab, shingles, ridge cap, chimney, turret spire and its eave
+//   trim    window and door frames, muntins, door, corner boards, sign board,
+//           the parcels' string
+//   accent  the parcels, the sign's letters, the mail slot
+// Every part is built DISJOINT from the others. The part="chk_*" renders are
+// each pairwise intersection and must come out empty.
+//
+// TEALIGHT. The main room is 72.6 x 50.6 mm clear from the plate to the
+// ceiling, and the base is open: a 38 mm LED tealight drops in with room to
+// spare. The turret's hollow opens into it, so the turret glows too.
+
+include <BOSL2/std.scad>
+include <lattice_lib.scad>
+
+$fa = 2;  $fs = 0.4;
+
+part = "preview";
+
+// ---- body ----------------------------------------------------------------
+W        = 76;              // along X, the front's width
+D        = 54;              // along Y, front (-Y) to back
+wall     = 1.68;            // 4 x 0.42
+sid_d    = 0.84;            // clapboard stands 2 extrusions proud of plan(0)
+corner_r = 1;
+H        = 78;              // top of the side walls, where the eave flare begins
+plinth_h = 8;               // shared by every building in the town
+plinth_o = sid_d + 0.84;    // plinth face, 0.84 proud of the siding
+sid_p    = 4.5;             // clapboard course
+sid_r    = sid_d * tan(58); // height of each board's outward ramp: 58 deg from
+                            // horizontal. 50 was enough for the ramp alone, but
+                            // where a ramp crosses a window's crown the two meet
+                            // at a corner, and corners need 58 (see the roof note below).
+
+SH       = 1.2;             // shear of every raised relief: 1.2 up per 1 out,
+                            // so its underside sits 40 deg from vertical
+
+// ---- roof ----------------------------------------------------------------
+e        = 5;               // eave projection
+er       = e / tan(40);     // ...carried on a flare 40 deg from vertical
+f        = 4;               // fascia height
+b        = D/2 + sid_d;
+be       = b + e;           // eave edge, half-depth
+zf       = H + er + f;      // top of the fascia, where the slope starts
+tr       = 2.52;            // slab thickness, normal to the slope (6 extr.)
+// NO RAKE OVERHANG, and that is a measured decision. Past a gable the roof's
+// underside rises inward at ~50 deg while the rake has to grow outward, and at
+// the corner where those meet the outline moves diagonally -- root 2 faster
+// than either face. Measured on the gate's own slicer: two 50 deg faces
+// meeting at a corner drew 54,002 support moves, 55 deg drew 46,966, and only
+// 58 deg or steeper came out clean. No rake angle rescues a 50 deg roof, so
+// the roof stops 0.3 mm short of each gable face (distinct surfaces, never
+// coplanar) and the gable's top edge shows as a small reveal.
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260925-001 -->
+
+<!-- TRASH id=20260925-002 date=2026-09-25 kind=file source="openscad_models/haunted_post_office.3mf" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-002 · 2026-09-25 · file · `openscad_models/haunted_post_office.3mf`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-002__haunted_post_office.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260925-002 -->
+
+<!-- TRASH id=20260925-003 date=2026-09-25 kind=file source="openscad_models/HAUNTED_POST_OFFICE_PRINTING.md" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-003 · 2026-09-25 · file · `openscad_models/HAUNTED_POST_OFFICE_PRINTING.md`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-003__HAUNTED_POST_OFFICE_PRINTING.md`
+
+```
+# Haunted Post Office — printing notes
+
+Building #1 of the Haunted Town series (`HAUNTED_TOWN.md`). It is a hollow
+lantern with an open base, lit from inside by a battery LED tealight. It has
+an octagonal corner turret under a tall witch-hat spire, which leans out
+3.5 mm. 110.7 × 81.5 × 160.1 mm including the chimney, the turret and the
+parcels.
+
+**Print this:** `haunted_post_office.3mf`. It is one object with four parts,
+already aligned. Assign a filament to each part.
+
+| part | what it is | colour in the file |
+|---|---|---|
+| body | walls, plinth, turret walls, gables and battens, eave flare, step | slate teal `#50666B` |
+| roof | roof slab, shingles, ridge cap, chimney, and the turret's spire with its eave and finial | slate `#2B2F38` |
+| trim | window and door frames, muntins, door, corner boards, sign board, the parcels' string | cream `#EFE6D2` |
+| accent | the parcels, the POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
+
+The per-part `.stl` files are what the assembler consumes and what the gates
+check. They are not the deliverable.
+
+## No supports, and none of the settings below are optional
+
+- **Supports OFF.** Verified: the gate's slicer reports **0 support moves
+  and 0 overhang perimeters**.
+- **Print it standing up, the way it is in the file.**
+- 0.2 mm layers.
+
+## Cost — sliced, not estimated
+
+| version | time | filament | colour changes |
+|---|---|---|---|
+| **single colour** (e.g. for Jessee to paint) | **13 h 56 m** | **~128 g** | 0 |
+| **four colour, AMS** | not reliable here | ~136 g model **+ purge** | **1,285** |
+
+The purge is the real cost of the colour version, the same as the bakery's:
+- **255 g** of purge and wipe tower at PrusaSlicer's 140 mm³ per change;
+- about **560 g** at the 350 mm³ Bambu default, in flush alone.
+
+Bambu Studio sets its own flush for each colour pair, so slice it there for
+the real number before pricing. The four-extruder time estimate overflowed
+here, so no four-colour time is quoted. It is longer than the bakery
+(11 h 52 m) mainly because of the spire.
+
+A listing must say which version the buyer gets: printed in colour, or
+single colour and hand-painted by Jessee.
+
+## The tealight
+
+Measured on the exported mesh: the largest clear circle about the room's
+centre is **50.6 mm across at every height from the table to past 90 mm**.
+The series rule is ≥ 46 mm across and ≥ 60 mm of headroom. Any common LED
+tealight fits (36–38 mm across, 32–45 mm tall). The base is open, and the
+house lifts off to reach the switch.
+
+The turret glows too. A tall pointed arch (7 × 47 mm), cut through the
+turret's wall where it faces into the room, lets the light in. It can't be
+seen from outside.
+
+## Verified before shipping — on the real exported meshes
+
+- `product_gate` **PASSED** on the union:
+  - watertight, one body;
+  - 1st-percentile wall 1.48 mm against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height 160.0 mm of 160.09 modelled (the finial tip);
+  - 13.43 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts:
+  - watertight, consistent winding;
+  - **0 zero-area faces**;
+  - every edge shared by exactly two faces.
+- The roof is two pieces (the main roof and the spire), the trim is 24 and
+  the accent is 12. Each piece was checked for real surface contact with
+  the part it sits on, sampled by area. The spire shares 226 mm² with the
+  turret wall, and the parcels' string shares 314 mm² with the parcels.
+- **The parts are disjoint.** All six pairwise intersections render EMPTY.
+- The union mesh (used only for the gate) carries 113 zero-area faces,
+  every one at z = 84.2 along the eave weld, the same as the bakery. None
+  of the four parts that ship has any.
+- The 3MF round-trips through the slicer with all four extruders addressed.
+- **OBC maker's mark:** engraved 0.8 mm deep under the step, the same mark
+  as the bakery, with strokes ≥ 1.0 mm.
+- **POST OFFICE letters:** size 4.8, a flush inlay. Eroding them by one
+ 
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260925-003 -->
+
+<!-- TRASH id=20260925-004 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_body.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-004 · 2026-09-25 · file · `openscad_models/haunted_post_office_body.stl`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-004__haunted_post_office_body.stl`
+
+```
+solid OpenSCAD_Model
+  facet normal 0 1 -0
+    outer loop
+      vertex 39.68 -5.16 79.816
+      vertex 38.84 -5.16 116.689
+      vertex 39.68 -5.16 116.689
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 38.84 -5.16 116.689
+      vertex 39.68 -5.16 79.816
+      vertex 38.84 -5.16 78.808
+    endloop
+  endfacet
+  facet normal 1 -0 0
+    outer loop
+      vertex 39.68 -6.84 114.705
+      vertex 39.68 -5.16 79.816
+      vertex 39.68 -5.16 116.689
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 -5.16 79.816
+      vertex 39.68 -6.84 114.705
+      vertex 39.68 -6.84 79.816
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 38.84 -6.84 114.705
+      vertex 39.68 -6.84 79.816
+      vertex 39.68 -6.84 114.705
+    endloop
+  endfacet
+  facet normal -0 -1 0
+    outer loop
+      vertex 39.68 -6.84 79.816
+      vertex 38.84 -6.84 114.705
+      vertex 38.84 -6.84 78.808
+    endloop
+  endfacet
+  facet normal 0.768221 0 -0.640184
+    outer loop
+      vertex 39.68 -6.84 79.816
+      vertex 38.84 -5.16 78.808
+      vertex 39.68 -5.16 79.816
+    endloop
+  endfacet
+  facet normal 0.768221 0 -0.640184
+    outer loop
+      vertex 38.84 -5.16 78.808
+      vertex 39.68 -6.84 79.816
+      vertex 38.84 -6.84 78.808
+    endloop
+  endfacet
+  facet normal 0 1 -0
+    outer loop
+      vertex 39.68 0.839999 110.741
+      vertex 38.84 0.839999 121.793
+      vertex 39.68 0.839999 121.793
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 38.84 0.839999 121.793
+      vertex 39.68 0.839999 110.741
+      vertex 38.84 0.839999 109.733
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 -0.839999 121.793
+      vertex 39.68 0.839999 121.793
+      vertex 39.68 0 122.785
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 0.839999 121.793
+      vertex 39.68 -0.839999 121.793
+      vertex 39.68 0.839999 110.741
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 0.839999 110.741
+      vertex 39.68 -0.839999 121.793
+      vertex 39.68 -0.839999 110.741
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 38.84 -0.839999 121.793
+      vertex 39.68 -0.839999 110.741
+      vertex 39.68 -0.839999 121.793
+    endloop
+  endfacet
+  facet normal -0 -1 0
+    outer loop
+      vertex 39.68 -0.839999 110.741
+      vertex 38.84 -0.839999 121.793
+      vertex 38.84 -0.839999 109.733
+    endloop
+  endfacet
+  facet normal 0 1 -0
+    outer loop
+      vertex 39.68 6.84 110.741
+      vertex 38.84 6.84 114.705
+      vertex 39.68 6.84 114.705
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 38.84 6.84 114.705
+      vertex 39.68 6.84 110.741
+      vertex 38.84 6.84 109.733
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 5.16 110.741
+      vertex 39.68 6.84 114.705
+      vertex 39.68 5.16 116.689
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 6.84 114.705
+      vertex 39.68 5.16 110.741
+      vertex 39.68 6.84 110.741
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 38.84 5.16 116.689
+      vertex 39.68 5.16 110.741
+      vertex 39.68 5.16 116.689
+    endloop
+  endfacet
+  facet normal -0 -1 0
+    outer loop
+      vertex 39.68 5.16 110.741
+      vertex 38.84 5.16 116.689
+      vertex 38.84 5.16 109.733
+    endloop
+  endfacet
+  facet normal 0 1 -0
+    outer loop
+      vertex 39.68 12.84 83.9802
+      vertex 38.84 12.84 107.616
+      vertex 39.68 12.84 107.616
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 38.84 12.84 107.616
+      vertex 39.68 12.84 83.9802
+      vertex 38.84 12.84 82.9722
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 11.16 83.9802
+      vertex 39.68 12.84 107.616
+      vertex 39.68 11.16 109.601
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 39.68 12.84 107.616
+      vertex 39.68 11.16 83.9802
+      ve
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260925-004 -->
+
+<!-- TRASH id=20260925-005 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_roof.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-005 · 2026-09-25 · file · `openscad_models/haunted_post_office_roof.stl`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-005__haunted_post_office_roof.stl`
+
+```
+solid OpenSCAD_Model
+  facet normal 0 1 -0
+    outer loop
+      vertex 38.54 32.84 83.9888
+      vertex 38.18 32.84 88.9588
+      vertex 38.54 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 38.18 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 36.52 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 36.52 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 34.86 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 34.86 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 33.2 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 33.2 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 31.54 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 31.54 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 29.88 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 29.88 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 28.22 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 28.22 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 26.56 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 26.56 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 24.9 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 24.9 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 23.24 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 23.24 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 21.58 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 21.58 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 19.92 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 19.92 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 18.26 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 18.26 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 16.6 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 16.6 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 14.94 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 14.94 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 13.28 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 13.28 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 11.62 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 11.62 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 9.96 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 9.96 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 8.3 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 8.3 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 6.64 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 6.64 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 4.98 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 4.98 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 3.32 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 3.32 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex 1.66 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 1.66 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+      vertex -1.66 32.84 88.9588
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex -38.54 32.84 83.9888
+      vertex -1.66 32.84 88.9588
+      vertex 38.54 32.84 83.9888
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      verte
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260925-005 -->
+
+<!-- TRASH id=20260925-006 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_trim.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-006 · 2026-09-25 · file · `openscad_models/haunted_post_office_trim.stl`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-006__haunted_post_office_trim.stl`
+
+```
+solid OpenSCAD_Model
+  facet normal 0.138989 0 0.990294
+    outer loop
+      vertex -23.3248 -27.0586 75.6606
+      vertex -23.3647 -28.6142 75.6662
+      vertex -23.3248 -28.6675 75.6606
+    endloop
+  endfacet
+  facet normal 0.155421 -0.000430288 0.987848
+    outer loop
+      vertex -23.3248 -27.0586 75.6606
+      vertex -23.3685 -28.6093 75.6668
+      vertex -23.3647 -28.6142 75.6662
+    endloop
+  endfacet
+  facet normal 0.141072 -1.54381e-05 0.989999
+    outer loop
+      vertex -23.713 -28.1774 75.7159
+      vertex -23.3248 -27.0586 75.6606
+      vertex -23.5248 -27.0238 75.6891
+    endloop
+  endfacet
+  facet normal 0.140979 -0 0.990013
+    outer loop
+      vertex -23.713 -28.1774 75.7159
+      vertex -23.5248 -27.0238 75.6891
+      vertex -23.713 -27.0238 75.7159
+    endloop
+  endfacet
+  facet normal 0.141078 -1.74877e-05 0.989998
+    outer loop
+      vertex -23.3248 -27.0586 75.6606
+      vertex -23.713 -28.1774 75.7159
+      vertex -23.3685 -28.6093 75.6668
+    endloop
+  endfacet
+  facet normal -0.949665 0 0.313266
+    outer loop
+      vertex -29.0867 -28.68 67.9829
+      vertex -29.1121 -27.5433 67.9059
+      vertex -29.1121 -28.68 67.9059
+    endloop
+  endfacet
+  facet normal -0.949665 0 0.313266
+    outer loop
+      vertex -29.1121 -27.5433 67.9059
+      vertex -29.0867 -28.68 67.9829
+      vertex -29.0867 -27.5386 67.9829
+    endloop
+  endfacet
+  facet normal 0.937232 -0 0.348706
+    outer loop
+      vertex -19.3136 -28.68 69.1171
+      vertex -19.2883 -27.4739 69.0491
+      vertex -19.3136 -27.4706 69.1171
+    endloop
+  endfacet
+  facet normal 0.937232 0 0.348706
+    outer loop
+      vertex -19.2883 -27.4739 69.0491
+      vertex -19.3136 -28.68 69.1171
+      vertex -19.2883 -28.68 69.0491
+    endloop
+  endfacet
+  facet normal -0.924585 0 0.380977
+    outer loop
+      vertex -28.2861 -28.68 70.1326
+      vertex -28.3114 -27.424 70.0712
+      vertex -28.3114 -28.68 70.0712
+    endloop
+  endfacet
+  facet normal -0.924585 0 0.380977
+    outer loop
+      vertex -28.3114 -27.424 70.0712
+      vertex -28.2861 -28.68 70.1326
+      vertex -28.2861 -27.4215 70.1326
+    endloop
+  endfacet
+  facet normal -0.981584 6.72681e-05 0.191031
+    outer loop
+      vertex -29.9132 -28.68 65.0142
+      vertex -30.0882 -27.8567 64.1147
+      vertex -30.1187 -27.912 63.958
+    endloop
+  endfacet
+  facet normal -0.981602 -6.60316e-05 0.190938
+    outer loop
+      vertex -29.9132 -28.68 65.0142
+      vertex -30.1187 -27.912 63.958
+      vertex -30.2431 -28.68 63.3182
+    endloop
+  endfacet
+  facet normal -0.981596 0 0.190972
+    outer loop
+      vertex -30.0882 -27.8567 64.1147
+      vertex -29.9132 -28.68 65.0142
+      vertex -29.9132 -27.8567 65.0142
+    endloop
+  endfacet
+  facet normal 0.892774 -0 0.450506
+    outer loop
+      vertex -20.8895 -28.68 72.6518
+      vertex -20.7145 -27.3303 72.305
+      vertex -20.8895 -27.3303 72.6518
+    endloop
+  endfacet
+  facet normal 0.892279 0.000315423 0.451484
+    outer loop
+      vertex -20.7145 -27.3303 72.305
+      vertex -20.8895 -28.68 72.6518
+      vertex -20.6892 -27.3318 72.255
+    endloop
+  endfacet
+  facet normal 0.892763 -3.82556e-05 0.450526
+    outer loop
+      vertex -20.5145 -28.68 71.9087
+      vertex -20.6892 -27.3318 72.255
+      vertex -20.8895 -28.68 72.6518
+    endloop
+  endfacet
+  facet normal 0.892823 0 0.450408
+    outer loop
+      vertex -20.6892 -27.3318 72.255
+      vertex -20.5145 -28.68 71.9087
+      vertex -20.5145 -27.3538 71.9087
+    endloop
+  endfacet
+  facet normal 0.854839 -0 0.518893
+    outer loop
+      vertex -22.0903 -28.68 74.7555
+      vertex -21.9153 -27.2746 74.4672
+      vertex -22.0903 -27.2746 74.7555
+    endloop
+  endfacet
+  facet normal 0.854399 0.000203446 0.519618
+    outer loop
+      vertex -21.9153 -27.2746 74.4672
+      vertex -22.0903 -28.68 74.7555
+      vertex -21.89 -27.2756 74.4256
+    endloop
+  endfacet
+  facet normal 0.854845 -3.23558e-05 0.518884
+    outer loop
+      vertex -21.7153 -28.68 74.1377
+      vertex -21.89 -27.2756 74.4256
+     
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260925-006 -->
+
+<!-- TRASH id=20260925-007 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_accent.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
+## 20260925-007 · 2026-09-25 · file · `openscad_models/haunted_post_office_accent.stl`
+**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
+**Payload:** `data/trash/files/20260925-007__haunted_post_office_accent.stl`
+
+```
+solid OpenSCAD_Model
+  facet normal -1 0 0
+    outer loop
+      vertex 14 -35.6 0
+      vertex 14 -31.6 8
+      vertex 14 -31.6 0
+    endloop
+  endfacet
+  facet normal -1 -0 0
+    outer loop
+      vertex 14 -31.6 8
+      vertex 14 -35.6 0
+      vertex 14 -35.6 8
+    endloop
+  endfacet
+  facet normal -1 0 0
+    outer loop
+      vertex 14 -30.6 0
+      vertex 14 -26.6 8
+      vertex 14 -26.6 0
+    endloop
+  endfacet
+  facet normal -1 -0 0
+    outer loop
+      vertex 14 -26.6 8
+      vertex 14 -30.6 0
+      vertex 14 -30.6 8
+    endloop
+  endfacet
+  facet normal 1 -0 0
+    outer loop
+      vertex 24 -35.6 8
+      vertex 24 -31.6 0
+      vertex 24 -31.6 8
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 24 -31.6 0
+      vertex 24 -35.6 8
+      vertex 24 -35.6 0
+    endloop
+  endfacet
+  facet normal 1 -0 0
+    outer loop
+      vertex 24 -30.6 8
+      vertex 24 -26.6 0
+      vertex 24 -26.6 8
+    endloop
+  endfacet
+  facet normal 1 0 0
+    outer loop
+      vertex 24 -26.6 0
+      vertex 24 -30.6 8
+      vertex 24 -30.6 0
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 14 -35.6 0
+      vertex 18.5 -35.6 8
+      vertex 14 -35.6 8
+    endloop
+  endfacet
+  facet normal 0 -1 -0
+    outer loop
+      vertex 18.5 -35.6 8
+      vertex 14 -35.6 0
+      vertex 18.5 -35.6 0
+    endloop
+  endfacet
+  facet normal 0 -1 0
+    outer loop
+      vertex 19.5 -35.6 0
+      vertex 24 -35.6 8
+      vertex 19.5 -35.6 8
+    endloop
+  endfacet
+  facet normal 0 -1 -0
+    outer loop
+      vertex 24 -35.6 8
+      vertex 19.5 -35.6 0
+      vertex 24 -35.6 0
+    endloop
+  endfacet
+  facet normal 0 1 -0
+    outer loop
+      vertex 24 -26.6 0
+      vertex 14 -26.6 8
+      vertex 24 -26.6 8
+    endloop
+  endfacet
+  facet normal 0 1 0
+    outer loop
+      vertex 14 -26.6 8
+      vertex 24 -26.6 0
+      vertex 14 -26.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 14 -35.6 0
+      vertex 18.5 -31.6 0
+      vertex 18.5 -35.6 0
+    endloop
+  endfacet
+  facet normal -0 0 -1
+    outer loop
+      vertex 18.5 -31.6 0
+      vertex 14 -35.6 0
+      vertex 14 -31.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 19.5 -35.6 0
+      vertex 24 -31.6 0
+      vertex 24 -35.6 0
+    endloop
+  endfacet
+  facet normal -0 0 -1
+    outer loop
+      vertex 24 -31.6 0
+      vertex 19.5 -35.6 0
+      vertex 19.5 -31.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 18.5 -30.6 0
+      vertex 14 -30.6 0
+      vertex 18.5 -27.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 19.5 -27.6 0
+      vertex 24 -30.6 0
+      vertex 19.5 -30.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 24 -30.6 0
+      vertex 19.5 -27.6 0
+      vertex 24 -26.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 18.5 -27.6 0
+      vertex 24 -26.6 0
+      vertex 19.5 -27.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 18.5 -27.6 0
+      vertex 14 -26.6 0
+      vertex 24 -26.6 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 14 -26.6 0
+      vertex 18.5 -27.6 0
+      vertex 14 -30.6 0
+    endloop
+  endfacet
+  facet normal -0 0 1
+    outer loop
+      vertex 15.4564 -35.0614 8
+      vertex 18.5 -35.6 8
+      vertex 18.5 -34.6877 8
+    endloop
+  endfacet
+  facet normal -0 0 1
+    outer loop
+      vertex 14 -31.6 8
+      vertex 15.4564 -35.0614 8
+      vertex 15.0314 -31.6 8
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 15.4564 -35.0614 8
+      vertex 14 -35.6 8
+      vertex 18.5 -35.6 8
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 14 -35.6 8
+      vertex 15.4564 -35.0614 8
+      vertex 14 -31.6 8
+    endloop
+  endfacet
+  facet normal 0 0 1
+    outer loop
+      vertex 24 -31.6 8
+      vertex 23.3967 -34.0864 8
+      vertex 24 -35.6 8
+    endloop
+  endfacet
+  facet normal 0 -0 1
+    outer loop
+      vertex 23.39
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260925-007 -->
+
