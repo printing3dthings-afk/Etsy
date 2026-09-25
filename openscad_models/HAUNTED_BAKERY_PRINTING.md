@@ -31,11 +31,11 @@ check. They are not the deliverable.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **11 h 52 m** | **~111 g** | 0 |
-| **four colour, AMS** | not reliable here (see below) | ~120 g model **+ purge** | **1,351** |
+| **single colour** (e.g. for Jessee to paint) | **11 h 27 m** | **~110 g** | 0 |
+| **four colour, AMS** | not reliable here (see below) | ~120 g model **+ purge** | **1,293** |
 
 The four-colour slice uses all four filaments (selected 574, 409, 268 and 101
-times). There are 1,351 tool changes because the trim and the walls
+times). There are 1,293 tool changes because the trim and the walls
 share almost every layer from the plinth to the roof.
 
 **The purge is the real cost of the colour version.** With PrusaSlicer's
@@ -44,7 +44,7 @@ default that `LABEL_BIN_PRINTING.md` uses, the flush alone is about **590 g**,
 which is five times the house itself. Bambu Studio computes its own flush
 volume for each colour pair, so slice it there for the real number. The
 slicer's time estimate overflowed on the four-extruder slice, so no
-four-colour time is quoted. Each of the 1,351 changes costs time on the P1S
+four-colour time is quoted. Each of the 1,293 changes costs time on the P1S
 as well.
 
 **Recommendation:** treat the single-colour print as the everyday product,
@@ -65,7 +65,9 @@ house lifts off to switch it.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm against the 1.2 mm floor;
+  - 1st-percentile wall 1.24 mm against the 1.2 mm floor. That is a pass,
+    with less margin than the lancet version had (1.48): the round
+    windows' frames are the thinnest spans;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (148.8 mm);
   - 12.66 cm² of bed contact (17.3% of the footprint);
@@ -102,10 +104,22 @@ numbers.
 - **The inside ridge is level; only the outside sags.** A sagging inside
   ridge drew 12,789 support moves.
 - **Corners are 58° or steeper.** Two 50° faces meeting at a corner still
-  need support. This is why the lancets are drawn slim and the shop window
-  is a teardrop inside the round crust.
+  need support. This is why every window is round with its crown replaced
+  by two 58° lines, and the door's head is the same.
 - **The pie sits on a crate standing on the ground.** A sill shelf would
   have had a ceiling.
 - **Every raised frame, the crust and the sign have a sheared underside and
   a flat top.**
 - **The BAKERY letters are flush, not raised.**
+
+## Revised 2026-09-25 for the town's variety plan
+
+Scott asked that no two buildings share a wall texture, a window shape or a
+roof shape. Pointed lancets now belong to the chapel. So every bakery window
+is **round with a pointed crown**, the shape of its shop window, cut into six
+slices by three spokes (the bakery's pies). The door has straight sides under
+the same crown. Everything else is unchanged. Re-gated on the new build:
+- product_gate passed;
+- all four parts clean;
+- all six overlaps empty;
+- tealight clear circle 52.6 mm.

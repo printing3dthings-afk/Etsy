@@ -61,7 +61,7 @@ Confirmed by Scott 2026-09-25.
 
 | # | building | identity feature | status |
 |---|---|---|---|
-| 6 | **Bakery** | round pie-crust shop window cut into slices, a pie cooling on a crate by the door, crooked BAKERY sign, crooked chimney | built 2026-09-24 (`haunted_bakery.3mf`); **to be revised** to the variety table — its lancets become round-crowned windows |
+| 6 | **Bakery** | round pie-crust shop window cut into slices, a pie cooling on a crate by the door, crooked BAKERY sign, crooked chimney | **revised 2026-09-25, awaiting Scott's review** — windows now round with a pointed crown, per the variety plan; `haunted_bakery.3mf`, notes in `HAUNTED_BAKERY_PRINTING.md` |
 | 1 | **Post Office** | ONE story, brick, sagging parapet, flat lift-off roof with a leaning chimney, crooked POST OFFICE sign, parcels, mail slot. Plain lettering only — no USPS eagle or logo (their trademark) | **built 2026-09-25, awaiting Scott's review** — `haunted_post_office.3mf`, notes in `HAUNTED_POST_OFFICE_PRINTING.md`. The two-story turret version (2026-09-24) is archived in `data/trash/` |
 | 2 | Chapel | thin bell tower cracked and tipped sideways, one tall pointed window over the door | saved |
 | 3 | General Store | false-front facade taller than the building, crooked "MERCANTILE" board, barrels on the porch | saved |

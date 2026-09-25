@@ -33,9 +33,8 @@
 //     face and its top slopes gently up, so nothing faces down;
 //   - every raised relief has a SHEARED underside that rises 1.2 mm for each
 //     1 mm it stands out -- 40 deg -- and a flat top (see relief_up);
-//   - lancets are drawn steeper (d = 5.6a) so the apex lands at 58 deg;
-//   - the round window's opening is a teardrop inside a round crust, so its
-//     crown is two 58 deg lines rather than a flat arc;
+//   - every window is round with its crown replaced by two 58 deg lines (a
+//     round crown is flat at the top), and the door's head is the same;
 //   - where two overhanging faces meet at an outside corner they must BOTH be
 //     58 deg or steeper: measured on the gate's slicer, a corner of two 50 deg
 //     faces drew 54,002 support moves and one of two 58 deg faces drew none.
@@ -284,71 +283,47 @@ module chimney() {
 }
 
 // ---- openings ------------------------------------------------------------------
-// d = 5.6a puts the apex tangent at 58 deg from horizontal. The manor's
-// d = 1.8a landed at 40 deg, which a 45 deg threshold catches outright; 50
-// deg (d = 3.3a) was enough for the arch alone but not where a clapboard
-// ramp crosses it and the two form a corner.
-function lancet_pts(a, hgt, n = 24) =
-    let (d = a * 5.6, R = d + a)
-    concat([[-a, 0], [-a, hgt]],
-           [for (i = [1 : n - 1]) let (x = -a + 2*a*i/n)
-                [x, hgt + sqrt(max(R*R - pow(abs(x) + d, 2), 0))]],
-           [[a, hgt], [a, 0]]);
-function lancet_top(a, hgt) = hgt + a * sqrt(pow(6.6, 2) - pow(5.6, 2));
 // A circle whose crown is replaced by its two 58 deg tangents -- a teardrop.
 // The tangents leave the circle at 32 and 148 deg and meet r/sin(32) above
 // its centre.
 function drop_pts(r, n = 64) = concat(
     [for (i = [0 : n]) let (t = 148 + 244 * i / n) [r * cos(t), r + r * sin(t)]],
     [[0, r + r / sin(32)]]);
+function drop_top(r) = r + r / sin(32);
+// The door: straight sides under the same crown -- a half circle whose top
+// is replaced by its two 58 deg tangents.
+function round_head_pts(a, hgt, n = 16) = concat(
+    [[-a, 0], [-a, hgt]],
+    [for (i = [1 : n]) let (t = 180 - 32 * i / n) [a * cos(t), hgt + a * sin(t)]],
+    [[0, hgt + a / sin(32)]],
+    [for (i = [0 : n - 1]) let (t = 32 - 32 * i / n) [a * cos(t), hgt + a * sin(t)]],
+    [[a, hgt], [a, 0]]);
 mull = 1.68;
 
 // Every window is described once, in this table, and every part that needs
 // it -- the cut in the wall, the frame, the muntins -- reads the same row.
-//   [face, u, z, kind, size...]
-//   kind "L" lancet [a, hgt]; kind "S" the shop window, a teardrop [r]
+//   [face, u, z, kind, r]
+//   Every window is ROUND WITH A POINTED CROWN (the town's variety plan,
+//   2026-09-25: pointed lancets belong to the chapel now). kind "S" is the
+//   shop window in its pie-crust frame; kind "R" the rest, in plain frames.
 WINDOWS = [
     [1,   4, 19, "S", 7],
-    [1, -30, 54, "L", 4.5, 4], [1, 30, 54, "L", 4.5, 4],
-    [0, -20, 16, "L", 5.5, 9], [0, 20, 16, "L", 5.5, 9],
-    [0, -20, 54, "L", 4.5, 4], [0, 20, 54, "L", 4.5, 4],
-    [3,   0, 16, "L", 5.5, 9], [3, 0, 54, "L", 5.5, 9], [3, 0, 90, "L", 3.5, 3],
+    [1, -30, 54, "R", 4.5], [1, 30, 54, "R", 4.5],   // 4.5: at 5 the frame met the sign
+    [0, -20, 16, "R", 6.5], [0, 20, 16, "R", 6.5],
+    [0, -20, 54, "R", 5],   [0, 20, 54, "R", 5],
+    [3,   0, 16, "R", 6.5], [3, 0, 54, "R", 6], [3, 0, 90, "R", 3.5],
     // right gable: kept to the front half, the chimney owns y 11..24
-    [2, -13, 16, "L", 5, 9],   [2, -13, 52, "L", 5, 9], [2, -8, 90, "L", 3.5, 3],
+    [2, -13, 16, "R", 6],   [2, -13, 52, "R", 6], [2, -8, 90, "R", 3.5],
 ];
 
-module win_outline(w) {
-    if (w[3] == "L") polygon(lancet_pts(w[4], w[5]));
-    else polygon(drop_pts(w[4]));
-}
-// Lancets: a mullion and a CHEVRON transom at 50 deg, never a flat bar. The
-// shop window: three bars through its centre at 90, 55 and 125 deg, which
-// cut it into six slices; every bar's underside is at least 55 deg.
+module win_outline(w) { polygon(drop_pts(w[4])); }
+// Every window: three bars through its centre at 90, 55 and 125 deg, which
+// cut it into six slices -- the bakery's pies; every bar's underside is at
+// least 55 deg.
 module win_bars(w) {
-    if (w[3] == "L") {
-        translate([-mull/2, -1]) square([mull, lancet_top(w[4], w[5]) + 2]);
-        for (s = [-1, 1]) translate([0, w[5] * 0.62]) rotate(s < 0 ? -130 : -50)
-            translate([0, -mull/2]) square([2 * w[4], mull]);
-    } else {
-        translate([0, w[4]]) for (a = [90, 55, 125]) rotate(a) square([6 * w[4], mull], center = true);
-    }
+    translate([0, w[4]]) for (a = [90, 55, 125]) rotate(a) square([6 * w[4], mull], center = true);
 }
 module win_muntins(w, g) { intersection() { offset(r = g) win_outline(w); win_bars(w); } }
-// Inside the wall the bars stop 0.25 short of the opening -- but only ABOVE
-// the spring line. Below it they run 0.3 INTO the sill and jambs, because a
-// bar whose foot stops short of the sill hovers 0.25 mm over it, and the
-// slicer printed every one of those feet as an overhang perimeter.
-module win_muntins_inner(w) {
-    split = w[3] == "L" ? w[5] : w[4];
-    intersection() {
-        win_bars(w);
-        union() {
-            offset(r = -0.25) win_outline(w);
-            intersection() { offset(r = 0.3) win_outline(w); translate([-50, -5]) square([100, split + 5]); }
-        }
-    }
-}
-
 fr_w = 1.7;
 fr_t = sid_d + 0.84;        // frame face, 0.84 proud of the siding
 // The frame starts 0.3 OUTSIDE the opening, leaving a hairline of wall
@@ -391,25 +366,25 @@ module openings() {
         translate([0, 0, -wall - 2]) linear_extrude(wall + sid_d + 4) win_outline(w);
     face_tf(1, door_x, plinth_h)
         translate([0, 0, -wall - 2]) linear_extrude(wall + sid_d + 4)
-            polygon(lancet_pts(door_a, door_h));
+            polygon(round_head_pts(door_a, door_h));
 }
 
 // ---- door, step, crate ----------------------------------------------------------
 door_x = -24;
 door_a = 6.5;
-door_h = 15;
+door_h = 25;                // straight sides; the crown adds a / sin(32)
 module door_leaf() {
-    // Set back from the siding so it reads as a recess, with a small lancet
+    // Set back from the siding so it reads as a recess, with a small round
     // light so the door glows as well. It stops 0.2 short of the frame's back
     // plane so the two never meet on a bare edge inside one part.
     face_tf(1, door_x, plinth_h) translate([0, 0, -wall]) linear_extrude(wall - 0.2)
         difference() {
-            polygon(lancet_pts(door_a, door_h));
-            translate([0, 14]) polygon(lancet_pts(2.4, 1.5));
+            polygon(round_head_pts(door_a, door_h));
+            translate([0, 22]) polygon(drop_pts(2.2));
         }
 }
 // Unsheared on purpose: the door frame's feet stand on the plinth, and its
-// only downward face is the doorway's own lancet.
+// only downward face is the doorway's own crown.
 module door_frame() {
     // Clip to the threshold FIRST, then take out a doorway that runs 1 mm
     // below it. Cutting the frame's foot off with a square whose top edge sat
@@ -417,9 +392,9 @@ module door_frame() {
     // refused the whole trim part: "The given mesh is not closed".
     face_tf(1, door_x, plinth_h) translate([0, 0, -0.4]) linear_extrude(fr_t + 0.4)
         difference() {
-            intersection() { offset(r = fr_w) polygon(lancet_pts(door_a, door_h));
+            intersection() { offset(r = fr_w) polygon(round_head_pts(door_a, door_h));
                              translate([-20, 0]) square([40, 100]); }
-            translate([0, -1]) polygon(lancet_pts(door_a, door_h + 1));
+            translate([0, -1]) polygon(round_head_pts(door_a, door_h + 1));
         }
 }
 st_w = 22;  st_d = 9;
@@ -497,7 +472,7 @@ module battens() {
             // this frame local x is +y on the right gable and -y on the left.
             for (w = WINDOWS) if (w[0] == face)
                 translate([(face == 2 ? w[1] : -w[1]) - w[4] - 3.5, w[2] - (H - 0.2) - 3.5 - fr_sill - 2, -5])
-                    cube([2 * w[4] + 7, lancet_top(w[4], w[5]) + 9 + fr_sill, 10]);
+                    cube([2 * w[4] + 7, drop_top(w[4]) + 9 + fr_sill, 10]);
             if (face == 2) translate([ch_y - ch_w/2 - 1.5, -5, -5]) cube([ch_w + 3, 100, 10]);
         }
 }
@@ -523,7 +498,7 @@ module body_solid() {
 }
 module trim_raw() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2]) {
-        if (w[3] == "L") relief_up(-0.4, fr_t) { win_frame_outer(w); offset(r = 0.3) win_outline(w); }
+        if (w[3] == "R") relief_up(-0.4, fr_t) { win_frame_outer(w); offset(r = 0.3) win_outline(w); }
         // Muntins in two depths. Where they meet the FRAME they run 0.6 past
         // the opening, into it -- a real overlap. They are NOT sheared: a
         // mullion is vertical and every other bar is 50 deg or steeper.
@@ -534,14 +509,9 @@ module trim_raw() {
         // with its back they shared a plane and left zero-area faces.
         translate([0, 0, w[3] == "S" ? -0.6 : -0.4])
             linear_extrude(sid_d + 0.4 + (w[3] == "S" ? 0.84 + 0.2 : 0)) win_muntins(w, 0.6);
-        // Their back stops 0.2 INSIDE the wall's inner face. Run 0.2 past it
-        // into the hollow, every bar's foot hung in the air inside the house
-        // and the slicer stood a support column under each one.
-        // Lancets only. The shop window's spokes are anchored by their outer
-        // 2 mm in the crust and the wall; let into its CURVED sill as well,
-        // they left 32 non-manifold edges where the parts meet.
-        if (w[3] == "L")
-            translate([0, 0, -wall + 0.2]) linear_extrude(wall - 0.6 + 0.01) win_muntins_inner(w);
+        // No second depth inside the wall: spokes anchor in the frame and
+        // the wall. Let into a round window's CURVED sill as well, the shop
+        // window's spokes left 32 non-manifold edges where the parts meet.
     }
     door_frame();
     door_leaf();
