@@ -7544,3 +7544,40 @@ to zero. Each trap below was measured on the gate's slicer.
   The tower's stone ramps are 66°, its opening heads 65° and its band shear
   2.2 (65.6°), so each is still ≥ 58° after a 7° tip. At 10° the ramps would
   fall to 58.1°.
+
+## Technique 74 — Small figures on scenery (2026-09-26, cemetery)
+
+The graveyard hill passed every check but supports on its first build: 2,058
+moves. Almost all of them came from small figures standing on things.
+
+- **A hull of cubes has a flat bottom wherever a cube sticks out.** The
+  skeleton hand's finger roots and thumb were cubes at the palm's edge. Each
+  bottom poked out of the palm as a 0.1–0.4 mm flat ledge, and the slicer
+  supported every one. The palm's foot was also wider than the forearm's end.
+  Size the host so each child's lowest face lies inside it. Work out the
+  host's width at the child's BOTTOM height, not at its centre.
+- **Check a hull's underside numerically, not by eye.** `scipy.spatial.
+  ConvexHull` over the hull's points, then the smallest angle of any
+  downward face. The crow went from a guessed shape to 55.1° (body) and 55.8°
+  (tail) by moving three points. Its keel must lie wholly inside the branch
+  top it stands on.
+- **A pumpkin on a slope sinks by the LOWEST ground under its foot.** Sunk by
+  the ground at its centre, the foot stood proud on the downhill side.
+- **Lettering has two failure modes; check both.** Open each word by one bead
+  (offset −0.42 then +0.42): the area kept must be ~100%, or a stroke is too
+  thin. Close it by one bead: the piece count must not drop, or two letters
+  merge. BRB at 4.4 mm merged 3 → 1 at normal spacing. It held at letter
+  spacing 1.12.
+- **Measure each word before sizing its stone.** BOO!, NEXT and OOPS came out
+  wider than their stones and were silently clipped by the inlay's
+  intersection.
+- **Cut an inlay from the PLACED solid.** Inlays were first cut in local
+  coordinates and then rotated into place. The inlay's face then came out a
+  rounding error off the host's surface: 1,504 non-manifold edges on three
+  pumpkins, and more round every epitaph. Intersect the placed host with the
+  placed cutter instead (`intersection() { place() host(); place() cutter(); }`).
+- **Glyph curves plus rotation give sliver faces.** Default tessellation left
+  three zero-area faces in BOO! and OOPS. Text at `$fn = 16` came out clean.
+- **Clip anything planted near a rim to above the plate.** A tipped headstone
+  near the edge poked 0.14 mm under z = 0. That crashed `product_gate` with a
+  bare formatting error, not a clear message.

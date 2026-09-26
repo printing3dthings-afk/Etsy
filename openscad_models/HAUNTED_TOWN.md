@@ -68,5 +68,11 @@ Confirmed by Scott 2026-09-25.
 | 4 | Schoolhouse | bell cupola on the ridge, sagging porch roof, oversized stopped clock | saved |
 | 5 | Undertaker | narrow and tall between gables, a coffin standing upright against the porch post | saved |
 
+## Scenery
+
+| piece | what it is | status |
+|---|---|---|
+| **Cemetery** | a graveyard hill: seven headstones in six shapes with short joke epitaphs (RIP, BOO, BRB, NEXT, OOPS), a dead tree with a crow, three jack-o'-lanterns, a skeleton hand out of a grave, an open grave with a shovel. Solid ground, not a lantern | **built 2026-09-26, awaiting Scott's review** — `haunted_cemetery.3mf`, notes in `HAUNTED_CEMETERY_PRINTING.md` |
+
 The bakery's measured dimensions become the template for the rest once Scott
 has printed it and is happy with it.
