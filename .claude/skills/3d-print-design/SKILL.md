@@ -7581,3 +7581,58 @@ moves. Almost all of them came from small figures standing on things.
 - **Clip anything planted near a rim to above the plate.** A tipped headstone
   near the edge poked 0.14 mm under z = 0. That crashed `product_gate` with a
   bare formatting error, not a clear message.
+
+## Technique 75 — A detail pass on scenery: bark, iron, twigs and a crow (2026-09-26, cemetery)
+
+Scott asked for "better detail" on the graveyard hill: carved headstones,
+textured ground, sculpted props, a broken iron fence. Each addition passed on
+its own, but together they failed the gate twice, once on supports and once
+on the wall check. What it took:
+
+- **A twisted, lobed trunk hides nothing between its lobes.** The limbs first
+  started at the old offsets from the axis, and each one's flat bottom disc
+  poked out between two bark lobes. The slicer propped every limb on a
+  column. Start each first segment ON the trunk's axis, low enough that its
+  whole section lies inside the trunk's smallest (between-lobe) radius.
+- **`sphere()` has a flat polygon bottom, not a pole.** Used as a crow's head
+  or a knot on a branch, its bottom facet is a small ledge.
+- **Hull arithmetic does not predict the slicer on small figures.** A 1.5x
+  crow checked at 59° on every downward face with `scipy.spatial.ConvexHull`
+  still drew 81 support lines. The proven 1.25x crow drew none. Slice the
+  figure alone, on the exact thing it stands on (cut the scene above the
+  ground and drop it to z = 0), and believe that.
+- **Changing what a figure stands on is a new figure.** Squaring the stub the
+  crow stands on (3.0 across, was a 2.9 octagon) brought 360 support lines:
+  the crow is turned 200°, and its rotated belly overhung the square's
+  corners just above the cut. At 3.8 across, sliced alone, it draws none.
+- **The chord-based wall check reads round rods thin.** `mesh_gate`'s axis
+  rays cut a round rod near its edge in short chords, and both ends are
+  head-on enough to count. Limbs 1.8 mm across still made 30 of 97 sub-bead
+  spans. Square sections set square to the axes give every axis-aligned ray
+  the rod's full width. That, blunt finials and a turned shovel took the
+  count from 97 to 47 of 6,424 (the rule is < 1%).
+- **Points are sub-bead walls by definition.** The fence's spear finials
+  narrowed to a point: every one of their last millimetres was a sub-bead
+  chord (16 spans). Blunt arrowheads, flaring 22° from vertical to a
+  picket-wide flat top, still read as spears.
+- **An object turned 30° to the axes reads thin at its ends.** The shovel's
+  grip ends and blade edge met the axis rays at a slant. Facing the front, it
+  also reads as a spade rather than a stick.
+- **A fence prints like a row of windows.** Rails with flat undersides
+  between pickets are bridges. Make each rail's underside a row of 58°
+  gables between the pickets. Leaning a panel steepens them:
+  `arccos(cos 58° · cos lean)`. A sagging gate needs steeper gables (64°) so
+  they stay ≥ 58° after the sag.
+- **Clip the whole fence to above the plate.** The gate's sagging free end
+  reached 0.6 mm under z = 0.
+- **Measure lettering on the whole inlay raster, not per word by offset.**
+  Rasterise each stone's inlay at 0.02 mm, open it and close it with a 0.42 mm
+  disc, and also take the smallest distance-transform gap between pieces.
+  The earlier per-word offset pass said every word held at 1.12 spacing. The
+  raster found NEXT's X and T 0.26 apart. At 3.7 mm and 1.3 spacing the gap
+  is 0.92, the same as the other stones.
+- **Lying objects sink to the minimum ground under them; standing ones sink
+  below it.** Bones and pavers sit on the lowest ground under their
+  footprint. Pavers are tilted to the local slope so they show an even 0.4.
+  A headstone's base is topped 1.1 above the HIGHEST ground under it, so
+  its uphill side is never buried, and the stone is set 2 mm into the base.
