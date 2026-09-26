@@ -311,26 +311,27 @@ module roots() {
         }
 }
 // branches: [from, to, r_from, r_to]; hulls of two horizontal octagons, each
-// leaning <= 38 deg from vertical, tips >= 1.3 across. The first segment of
+// leaning <= 38 deg from vertical, every limb >= 1.8 across: at 1.2-1.4
+// the thin rods' short chords were a third of the gate's sub-bead spans. The first segment of
 // each limb starts ON the trunk's axis, low enough that its disc lies inside
 // the twisted trunk even between the bark's lobes: started at the old offsets,
 // the discs' flat undersides poked out between the lobes and the slicer
 // propped every limb on a column.
 TREE = [
-    [[0, 0, 12],      [-6, 1, 26],      1.5, 1.15],             // left
-    [[-6, 1, 26],     [-10, 0, 33],     1.15, 0.8],
-    [[-10, 0, 33],    [-12, 1, 37],     0.8, 0.7],
-    [[-6, 1, 26],     [-7.8, 3.6, 31],  0.9, 0.7],
-    [[-6, 1, 26],     [-4, -1.5, 31.5], 0.8, 0.7],
-    [[0, 0, 17],      [5, -1, 30],      1.3, 1.1],              // right
-    [[5, -1, 30],     [8, 0, 38],       1.1, 0.8],
-    [[8, 0, 38],      [10, -1, 41.5],   0.8, 0.7],
-    [[5, -1, 30],     [7.8, -2.4, 35],  0.9, 0.7],
-    [[5, -1, 30],     [3.5, -3.5, 35],  0.8, 0.7],
-    [[0, 0, 17],      [-1, 4, 31],      1.2, 0.9],              // back
-    [[-1, 4, 31],     [1, 6, 39],       0.9, 0.7],
-    [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.7, 0.7],
-    [[0, 0, 8],       [5, -1.5, 17],    1.7, 1.7],              // the sawn-off stub
+    [[0, 0, 12],      [-6, 1, 26], 1.5, 1.15],             // left
+    [[-6, 1, 26],     [-10, 0, 33], 1.15, 0.9],
+    [[-10, 0, 33],    [-12, 1, 37], 0.95, 0.9],
+    [[-6, 1, 26],     [-7.8, 3.6, 31], 0.95, 0.9],
+    [[-6, 1, 26],     [-4, -1.5, 31.5], 0.95, 0.9],
+    [[0, 0, 17],      [5, -1, 30], 1.3, 1.1],              // right
+    [[5, -1, 30],     [8, 0, 38], 1.1, 0.9],
+    [[8, 0, 38],      [10, -1, 41.5], 0.95, 0.9],
+    [[5, -1, 30],     [7.8, -2.4, 35], 0.95, 0.9],
+    [[5, -1, 30],     [3.5, -3.5, 35], 0.95, 0.9],
+    [[0, 0, 17],      [-1, 4, 31], 1.2, 0.9],              // back
+    [[-1, 4, 31],     [1, 6, 39], 0.95, 0.9],
+    [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.95, 0.9],
+    [[0, 0, 8],       [5, -1.5, 17], 1.7, 1.7],              // the sawn-off stub
 ];
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
@@ -505,7 +506,7 @@ module pk_faces() {
         place_pk(p) pumpkin_body(p[2], lt);
     }
 }
-// stem: two tapering segments, the upper bent 28 deg; tendril: a 0.9-wide
+// stem: two tapering segments, the upper bent 28 deg; tendril: a 1.3-wide
 // ridge spiralling out from the stem along the top, vertical-sided and
 // buried 2 into the pumpkin
 module pk_stems() {
@@ -517,7 +518,7 @@ module pk_stems() {
         let (pts = [for (i = [0 : 10]) let (t = 40 + 26 * i, rr = 1.6 + 0.12 * i)
                     [rr * cos(t), rr * sin(t), pk_top(p[2], rr, t)]])
             for (i = [0 : len(pts) - 2]) hull() for (q = [pts[i], pts[i + 1]])
-                translate([q[0], q[1], q[2] - 2]) cylinder(d = 0.9, h = 2.6, $fn = 8);
+                translate([q[0], q[1], q[2] - 2]) cylinder(d = 1.3, h = 2.6, $fn = 8);
     }
 }
 
