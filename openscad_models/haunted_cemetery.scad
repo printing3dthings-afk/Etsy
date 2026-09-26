@@ -175,16 +175,20 @@ module epitaphs()    { for (s = STONES) intersection() { place_stone(s) stone_bo
 // small squares, 1.3 across, never more than 35 deg off vertical.
 hand_at = [2, -15.5];
 module bone(p0, p1, s = 1.3) hull() { translate(p0) cube(s, center = true); translate(p1) cube(s, center = true); }
+// The palm flares 21 deg and is wide enough at every height to hold the
+// finger roots and the thumb's inside it: on the first build their cube
+// bottoms stuck out of the palm as flat ledges. Each fingertip curls forward
+// 26 deg off vertical.
 module hand() {
     translate([hand_at[0], hand_at[1], hz(hand_at[0], hand_at[1]) - 2.5]) rotate([0, 0, -10]) {
         bone([0, 0, 0], [0.4, 0, 6.5], 1.8);                    // forearm
-        hull() { translate([0.4, 0, 6.5]) cube([2.2, 1.6, 0.1], center = true);
-                 translate([0.4, 0, 9.4]) cube([4.4, 1.5, 0.1], center = true); }   // palm, flaring 20 deg
-        for (f = [[-1.6, -14], [-0.5, -4], [0.6, 5], [1.7, 15]]) let (a = f[1], b = [f[0] + 0.4, 0, 9.4],
-                c = b + [sin(a) * 3.2, 0, cos(a) * 3.2], d = c + [sin(a) * 1.4, -1.1, 1.6]) {
-            bone(b, c); bone(c, d);                              // two joints, the tip curling forward
+        hull() { translate([0.4, 0, 6.5]) cube([2.4, 1.6, 0.1], center = true);
+                 translate([0.4, 0, 9.6]) cube([5.8, 1.6, 0.1], center = true); }   // palm
+        for (f = [[-1.65, -14], [-0.55, -4], [0.55, 5], [1.65, 15]]) let (a = f[1], b = [f[0] + 0.4, 0, 9.3],
+                c = b + [sin(a) * 3.0, 0, cos(a) * 3.0], d = c + [sin(a) * 1.0, -0.8, 1.7]) {
+            bone(b, c); bone(c, d);
         }
-        bone([-1.5, 0, 7.4], [-3.4, -0.4, 9.8]);                 // thumb, 38 deg out
+        bone([-0.6, 0, 8.3], [-2.6, -0.3, 11.0]);               // thumb, 36 deg out
     }
 }
 
@@ -210,22 +214,22 @@ TREE = [
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
 // The crow: one hull for body and head, one for the tail, facing +x on its
-// keel. Hull vertices checked in order along the underside: keel to breast
-// 54 deg, breast to chin 55, chin to beak 54 (the beak is raised -- a cawing
-// crow -- because a level one would be a ledge), keel to rump 54, rump to
-// tail 54.
+// keel. The keel sits wholly inside the stub's cut top (it overhung it on
+// the first build, a flat ledge the slicer supported), and the underside of
+// each hull was checked numerically: body 55.1 deg at worst, tail 55.8. The
+// beak is raised -- a cawing crow -- because a level one would be a ledge.
 module crow() {
     scale(1.25) {
         hull() {
-            translate([-1.2, -0.7, 0]) cube([2.5, 1.4, 0.05]);
-            translate([-2.2, -1.3, 1.4]) cube([4.5, 2.6, 0.05]);
-            translate([-1.8, -1.0, 2.6]) cube([3.8, 2.0, 0.05]);
-            translate([2.4, 0, 3.4]) sphere(r = 1.1, $fn = 12);
-            translate([4.5, 0, 4.5]) cube([0.5, 0.5, 0.5], center = true);
+            translate([-1.0, -0.55, 0]) cube([2.1, 1.1, 0.05]);
+            translate([-2.2, -1.3, 1.8]) cube([4.5, 2.6, 0.05]);
+            translate([-1.8, -1.0, 3.0]) cube([3.8, 2.0, 0.05]);
+            translate([2.4, 0, 3.9]) sphere(r = 1.1, $fn = 12);
+            translate([4.3, 0, 5.2]) cube([0.5, 0.5, 0.5], center = true);
         }
         hull() {
-            translate([-2.2, -0.9, 1.4]) cube([1, 1.8, 1.2]);
-            translate([-4.1, -0.5, 3.9]) cube([0.6, 1.0, 0.6]);
+            translate([-2.1, -0.9, 2.0]) cube([0.9, 1.8, 1.0]);
+            translate([-3.9, -0.5, 4.3]) cube([0.6, 1.0, 0.6]);
         }
     }
 }
@@ -241,7 +245,8 @@ module tree() {
 // draw in at 57 deg to a foot sunk 1.2 into the ground; above it they round
 // over to the stem. Faces are flush slate inlays, 0.8 deep.
 //   [x, y, r, turn]
-PUMPKINS = [[-40, -24, 5.5, -20], [-6, -27, 6.2, 5], [40, 8, 5.0, 35]];
+// P1 moved in from (-40, -24): there it hung over the base's rim.
+PUMPKINS = [[-44, -1, 5.5, -20], [-6, -27, 6.2, 5], [40, 8, 5.0, 35]];
 function pk_r(r0, z, h) = let (ze = r0 * 0.45 * tan(57))
     z <= ze ? r0 * 0.55 + z / tan(57) : r0 * sqrt(max(0.02, 1 - pow((z - ze) / (h - ze), 2)));
 function pk_ring(r0, z, h, g = 0) = [for (j = [0 : 47]) let (t = 360 * j / 48, r = pk_r(r0, z, h) * (1 + 0.07 * cos(8 * t)) - g)
@@ -258,7 +263,10 @@ module pk_face_2d(r0) {
     polygon([for (p = [[-3.6, 2.6], [-2.4, 1.6], [-1.5, 2.3], [-0.5, 1.4], [0.5, 2.3], [1.5, 1.4],
                        [2.4, 2.3], [3.6, 2.6], [2.6, 0.4], [1.2, 0.9], [0, 0.2], [-1.2, 0.9], [-2.6, 0.4]]) p * k]);
 }
-module place_pk(p) translate([p[0], p[1], hz(p[0], p[1]) - 1.2]) rotate([0, 0, p[3]]) children();
+// Sunk 0.8 below the LOWEST ground under the foot: sunk by the centre's
+// height, the foot stood proud on the downhill side of a slope.
+function pk_ground(p) = let (r = p[2] * 0.6) min([for (t = [0 : 45 : 315]) hz(p[0] + r * cos(t), p[1] + r * sin(t))]);
+module place_pk(p) translate([p[0], p[1], pk_ground(p) - 0.8]) rotate([0, 0, p[3]]) children();
 module pumpkins() { for (p = PUMPKINS) place_pk(p) pumpkin_body(p[2]); }
 module pk_faces() {
     // cut from the placed pumpkin, for the same reason as the epitaphs
@@ -281,8 +289,10 @@ module pk_stems() {
 shovel_at = [37, -12];
 module shovel() {
     translate([shovel_at[0], shovel_at[1], hz(shovel_at[0], shovel_at[1]) - 3.5]) rotate([0, 0, 30]) rotate([-18, 0, 0]) {
-        translate([-2.3, -0.6, 0]) cube([4.6, 1.2, 5.5]);                   // blade, mostly buried
-        xz(-0.6, 0.6) polygon([[-2.3, 5.5], [2.3, 5.5], [0.75, 5.5 + 1.55 * tan(58)], [-0.75, 5.5 + 1.55 * tan(58)]]);
+        // blade and shoulders as thick as the shaft: at 1.2 the shaft's foot
+        // overhung them by 0.15 each side
+        translate([-2.3, -0.75, 0]) cube([4.6, 1.5, 5.5]);                  // blade, mostly buried
+        xz(-0.75, 0.75) polygon([[-2.3, 5.5], [2.3, 5.5], [0.75, 5.5 + 1.55 * tan(58)], [-0.75, 5.5 + 1.55 * tan(58)]]);
         translate([-0.75, -0.75, 7]) cube([1.5, 1.5, 12]);                  // shaft
         xz(-0.75, 0.75) polygon([[-0.75, 19 - 2.25 * tan(58)], [0.75, 19 - 2.25 * tan(58)],
                                  [3, 19], [3, 20.4], [-3, 20.4], [-3, 19]]);
