@@ -175,20 +175,22 @@ module epitaphs()    { for (s = STONES) intersection() { place_stone(s) stone_bo
 // small squares, 1.3 across, never more than 35 deg off vertical.
 hand_at = [2, -15.5];
 module bone(p0, p1, s = 1.3) hull() { translate(p0) cube(s, center = true); translate(p1) cube(s, center = true); }
-// The palm flares 21 deg and is wide enough at every height to hold the
+// The palm flares 34 deg and is wide enough at every height to hold the
 // finger roots and the thumb's inside it: on the first build their cube
 // bottoms stuck out of the palm as flat ledges. Each fingertip curls forward
 // 26 deg off vertical.
 module hand() {
     translate([hand_at[0], hand_at[1], hz(hand_at[0], hand_at[1]) - 2.5]) rotate([0, 0, -10]) {
         bone([0, 0, 0], [0.4, 0, 6.5], 1.8);                    // forearm
-        hull() { translate([0.4, 0, 6.5]) cube([2.4, 1.6, 0.1], center = true);
+        // the palm's foot is narrower than the forearm's end (at 2.4 it
+        // overhung it by 0.3 each side), flaring 34 deg to the knuckles
+        hull() { translate([0.4, 0, 6.5]) cube([1.6, 1.6, 0.1], center = true);
                  translate([0.4, 0, 9.6]) cube([5.8, 1.6, 0.1], center = true); }   // palm
-        for (f = [[-1.65, -14], [-0.55, -4], [0.55, 5], [1.65, 15]]) let (a = f[1], b = [f[0] + 0.4, 0, 9.3],
+        for (f = [[-1.65, -14], [-0.55, -4], [0.55, 5], [1.65, 15]]) let (a = f[1], b = [f[0] + 0.4, 0, 9.4],
                 c = b + [sin(a) * 3.0, 0, cos(a) * 3.0], d = c + [sin(a) * 1.0, -0.8, 1.7]) {
             bone(b, c); bone(c, d);
         }
-        bone([-0.6, 0, 8.3], [-2.6, -0.3, 11.0]);               // thumb, 36 deg out
+        bone([-0.5, 0, 8.3], [-2.5, -0.3, 11.0]);               // thumb, 36 deg out
     }
 }
 
