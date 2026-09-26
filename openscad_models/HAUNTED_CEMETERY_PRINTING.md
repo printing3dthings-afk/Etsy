@@ -94,11 +94,13 @@ which version the buyer gets.
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight;
-  - body and trim: **0 zero-area faces**, every edge shared by exactly two
-    faces;
+  - body: **0 zero-area faces**, every edge shared by exactly two faces;
+  - trim: 0 zero-area faces, but 28 edges shared by more than two faces,
+    where pieces of it touch flush;
   - roof and accent: **1 zero-area face each**, a sliver of no area. The
-    roof has edges shared by more than two faces where the carvings' lining
-    touches itself; the slicer handles both, and the hill slices with 0
+    roof also has 498 edges shared by more than two faces, where the
+    carvings' lining touches itself and the fence and pebbles touch flush.
+  - Slicers repair flush contacts on import, and the hill slices with 0
     supports.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
 - **Every piece touches the model**, sampled by area. The smallest shares

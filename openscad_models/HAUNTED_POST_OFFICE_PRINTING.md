@@ -17,7 +17,13 @@ the house (three colour parts) and its roof lid (one colour).
 |---|---|---|---|
 | house | body | brick walls, plinth, step, the lid's seat inside the parapet | brick `#7A3E33` |
 | house | trim | parapet coping, window and door frames, muntins, door, sign board, the parcels' string | cream `#EFE6D2` |
-| house | accent | the parcels, the POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
+| house | accent | the parcels, the lining of the carved POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
+
+**The POST OFFICE letters are carved into the sign board**, 0.6 mm deep,
+and lined with kraft below that (changed 2026-09-26: they used to be a flush
+inlay, which does not show at all on a one-colour print). On a single-colour
+print the sign reads as an engraving; in colour it is kraft letters sunk into
+cream.
 | lid | lid | flat roof, leaning chimney, stove pipe | slate `#2B2F38` |
 
 ## Settings that are not optional
@@ -71,10 +77,15 @@ Measured on the exported mesh:
   - 0 supports;
   - 100% flat on the plate.
 - `mesh_gate` on all four parts:
-  - watertight;
-  - **0 zero-area faces**;
-  - every edge shared by exactly two faces.
-  - The house as a whole also has 0 zero-area faces.
+  - all four are closed, watertight surfaces;
+  - body and lid: **0 zero-area faces**, every edge shared by exactly two
+    faces;
+  - trim and accent: **27 and 20 zero-area faces**, all inside the carved
+    sign (51 to 55 mm up), where the lining meets the board. They are
+    slivers of no area, and the slicer handles them: sliced, the house
+    prints the same as before, with 0 supports.
+  - The house as a whole has 0 zero-area faces and every edge shared by
+    exactly two faces.
 - **The house parts are disjoint.** All three pairwise intersections are
   EMPTY. The lid touches the house only at its seat (zero volume).
 - Every trim and accent piece shares real surface with the part it sits on.
@@ -82,5 +93,8 @@ Measured on the exported mesh:
   window frame about 250 mm², and the parcel string sits in the parcels.
 - **OBC maker's mark:** engraved 0.8 mm deep under the step, strokes
   ≥ 1.0 mm.
-- **POST OFFICE letters:** size 4.4, one line, a flush inlay. Eroding them by
-  one bead loses no letter.
+- **POST OFFICE letters:** size 4.4, one line, carved 0.6 mm into the board
+  and lined with kraft to 1.1 mm. The carve's ceilings climb at 58° in
+  0.2 mm steps, so the letters print with no supports: sliced with the
+  letters and without, the support count is the same (0). Eroding the
+  letters by one bead loses no letter.

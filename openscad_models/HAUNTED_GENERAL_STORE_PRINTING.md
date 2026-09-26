@@ -20,7 +20,13 @@ already aligned. Assign a filament to each part.
 | body | walls, plinth, the leaning false front, battens | sage `#5E6B57` |
 | roof | shed roof slab, tin ribs, stove pipe, barrel hoops | slate `#2B2F38` |
 | trim | diamond window frames and bars, door frame and door, back corner boards, the sign board, the cap on the front | cream `#EFE6D2` |
-| accent | the barrels, the props and their feet, the MERCANTILE letters | kraft `#D4A96A` |
+| accent | the barrels, the props and their feet, the lining of the carved MERCANTILE letters | kraft `#D4A96A` |
+
+**The MERCANTILE letters are carved into the sign board**, 0.6 mm deep, and
+lined with kraft below that (changed 2026-09-26: they used to be a flush
+inlay, which does not show at all on a one-colour print). On a single-colour
+print the sign reads as an engraving; in colour it is kraft letters sunk into
+cream.
 
 ## Settings that are not optional
 
@@ -34,7 +40,7 @@ already aligned. Assign a filament to each part.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 42 m** | **~78 g** | 0 |
+| **single colour** (e.g. for Jessee to paint) | **9 h 41 m** | **~78 g** | 0 |
 | **four colour, AMS** | not reliable here | ~78 g model **+ purge** | **1,317** |
 
 The four-colour print makes about as many changes as the bakery (1,293).
@@ -64,9 +70,12 @@ the light.
   - 11.76 cm² of bed contact (17.5% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
-  - watertight;
-  - **0 zero-area faces**;
-  - every edge shared by exactly two faces.
+  - all four are closed, watertight surfaces;
+  - body and roof: **0 zero-area faces**, every edge shared by exactly two
+    faces;
+  - trim and accent: **24 and 23 zero-area faces**, in the carved sign,
+    where the lining meets the board. They are slivers of no area, and the
+    slicer handles them: the store slices with 0 supports.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
 - The roof part is 5 pieces, the trim 15 and the accent 13. Each piece was
   checked for real surface contact with the part it sits on, sampled by
@@ -75,7 +84,12 @@ the light.
   extruders addressed.
 - **OBC maker's mark:** engraved 0.8 mm deep under the step, read from below; the same
   size-5 Montserrat Black mark as the other buildings, strokes ≥ 2 extrusions.
-- **MERCANTILE letters:** size 5.2, a flush inlay in the tilted board.
+- **MERCANTILE letters:** size 5.2, letter spacing 1.06, 51.5 mm wide on
+  the 56 mm board. Carved 0.6 mm into the tilted board and lined with kraft
+  to 1.1 mm. The carve's ceilings climb at 61° (58° plus the front's lean)
+  in 0.2 mm steps, so the letters print with no supports. At spacing 1.04
+  the carve left one knife edge in the union and failed the watertight
+  gate; 1.06 closed it.
 
 ## Design notes
 

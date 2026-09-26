@@ -7637,7 +7637,7 @@ on the wall check. What it took:
   A headstone's base is topped 1.1 above the HIGHEST ground under it, so
   its uphill side is never buried, and the stone is set 2 mm into the base.
 
-## Technique 76 — Lettering that shows in one colour: carve it, then line it (2026-09-27, Haunted Town)
+## Technique 76 — Lettering that shows in one colour: carve it, then line it (2026-09-26, Haunted Town)
 
 Scott, looking at the village: "It doesn't look like the letters are going to
 print on any of the designs." Every sign (BAKERY, POST OFFICE, MERCANTILE)
@@ -7674,12 +7674,24 @@ had no letters at all, and nothing for Jessee to paint to either.
   lining and the same placed cut. Placing the lining as one already-cut solid
   put it a rounding error off the host's hole: 33 sheets and slivers in the
   cemetery's union.
-- **Expect a few leftovers and verify by slicing.** Every variant tried (an
-  offset round trip, three or four climb steps, three or four slabs, a
-  full-outline first 0.05 mm) cleaned one sign and dirtied another. The
-  construction above left the bakery sign and the RIP stone fully clean, and
-  a handful of zero-area slivers or touching edges on others. Slicers repair
-  those on import; say so in the notes rather than claiming zero.
+- **Expect a few leftovers in the parts, and verify the union by the gate.**
+  Isolated, every stone and sign came out clean. In the full buildings the
+  trim and accent meshes still carry 1 to 27 zero-area slivers each, all in
+  the carvings where the lining meets its host, while every union was
+  watertight and sliced with 0 supports. Say so in the notes rather than
+  claiming zero.
+- **The step must match the layer height.** On the general store, a 0.19 mm
+  climb step (to dodge a knife edge) put 8,920 support moves under the
+  MERCANTILE letters, against 0 at 0.2 mm. The ceilings are the same shape;
+  only 0.2 mm steps land on 0.2 mm layers.
+- **A knife edge in the union moves when you nudge the sign; change the
+  letter spacing instead.** The store's union failed watertight with one
+  edge shared by four faces, at the face where a lining band pinched to
+  zero width. Moving the sign 0.05–0.1 mm, tilting it 0.2°, a lining 0.02 mm
+  proud (22 bad edges), six slabs (354) and opening the first slab to the
+  whole letter (4) all left some. Spacing 1.04 → 1.06 closed it: watertight,
+  0 supports. Each union takes about 2.5 minutes, so try variants in
+  parallel.
 - **Check a font is registered before believing a text render.** In a fresh
   container Montserrat was missing and `text()` rendered nothing, silently.
   `openscad_render._ensure_fonts_registered()` fixes it.
