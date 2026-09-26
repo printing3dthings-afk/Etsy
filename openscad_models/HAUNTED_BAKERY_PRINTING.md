@@ -12,7 +12,13 @@ aligned. Assign a filament to each part.
 | body | walls, plinth, gables and battens, eave flare, step | plum `#5B4A5E` |
 | roof | roof slab, shingles, ridge cap, chimney | slate `#2B2F38` |
 | trim | window and door frames, muntins, door, corner boards, sign board, crate | cream `#EFE6D2` |
-| accent | the pie-crust frame round the shop window, the pie, the sign's letters | crust `#D4A96A` |
+| accent | the pie-crust frame round the shop window, the pie, the lining of the sign's carved letters | crust `#D4A96A` |
+
+**The BAKERY letters are carved into the sign board**, 0.6 mm deep, and
+lined with crust colour below that (changed 2026-09-26: they used to be a
+flush inlay, which does not show at all on a one-colour print). On a
+single-colour print the sign reads as an engraving; in colour it is crust
+letters sunk into cream.
 
 The per-part `.stl` files are what the assembler consumes and what the gates
 check. They are not the deliverable.
@@ -31,20 +37,20 @@ check. They are not the deliverable.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **11 h 27 m** | **~110 g** | 0 |
+| **single colour** (e.g. for Jessee to paint) | **11 h 35 m** | **~110 g** | 0 |
 | **four colour, AMS** | not reliable here (see below) | ~120 g model **+ purge** | **1,293** |
 
-The four-colour slice uses all four filaments (selected 574, 409, 268 and 101
+The four-colour slice uses all four filaments (selected 545, 409, 239 and 101
 times). There are 1,293 tool changes because the trim and the walls
 share almost every layer from the plinth to the roof.
 
 **The purge is the real cost of the colour version.** With PrusaSlicer's
-140 mm³ flush it came to 269 g of purge and wipe tower. At the 350 mm³ Bambu
+140 mm³ flush it came to about 265 g of purge and wipe tower. At the 350 mm³ Bambu
 default that `LABEL_BIN_PRINTING.md` uses, the flush alone is about **590 g**,
 which is five times the house itself. Bambu Studio computes its own flush
 volume for each colour pair, so slice it there for the real number. The
-slicer's time estimate overflowed on the four-extruder slice, so no
-four-colour time is quoted. Each of the 1,293 changes costs time on the P1S
+slicer's four-extruder time estimate overflowed on an earlier slice of this
+house, so no four-colour time is quoted from it. Each of the 1,293 changes costs time on the P1S
 as well.
 
 **Recommendation:** treat the single-colour print as the everyday product,
@@ -74,21 +80,27 @@ house lifts off to switch it.
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight, consistent winding;
-  - **0 zero-area faces**;
-  - every edge shared by exactly two faces.
+  - body and roof: **0 zero-area faces**, every edge shared by exactly two
+    faces;
+  - trim and accent: **12 and 15 zero-area faces**, all in the carved sign,
+    where the lining meets the board. They are slivers of no area, and the
+    slicer handles them: the house slices with 0 supports and 0 overhang
+    perimeters.
 - The trim part is 20 separate pieces and the accent part is 8. Each one was
   checked for real surface contact with the part it sits on, sampled by
   area. The sign board shares 489 mm² with the wall, the crate 206 mm², the
   pie 89 mm², and every frame about half its surface.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
 - The union mesh (used only for the gate) carries 108 zero-area faces where
-  CGAL welds the roof to the eave. None of the four parts that ship has any.
+  CGAL welds the roof to the eave.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
 - **OBC maker's mark:** engraved 0.8 mm deep under the step, read from
   below. Strokes are ≥ 1.0 mm (two extrusions is 0.84).
-- **The sign's letters:** a flush inlay in the accent colour, strokes
-  ≥ 0.84 mm.
+- **The sign's letters:** carved 0.6 mm into the board and lined with crust
+  colour to 1.1 mm, strokes ≥ 0.84 mm. The carve's ceilings climb at 58° in
+  0.2 mm steps, so the letters need no supports: sliced with the letters and
+  without, the support count is the same (0).
 
 ## What was changed to make it print without supports
 
@@ -110,7 +122,8 @@ numbers.
   have had a ceiling.
 - **Every raised frame, the crust and the sign have a sheared underside and
   a flat top.**
-- **The BAKERY letters are flush, not raised.**
+- **The BAKERY letters are carved, not raised**, with stepped 58° ceilings
+  (Technique 76).
 
 ## Revised 2026-09-25 for the town's variety plan
 

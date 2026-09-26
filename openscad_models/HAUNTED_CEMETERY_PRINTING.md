@@ -48,13 +48,16 @@ already aligned.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the hill, the grave mounds, the dirt pile, the grass, the pumpkins' stems | moss `#4A5140` |
-| roof | the tree and crow, the fence and gate, the stepping stones and pebbles, the epitaphs, motifs and cracks, the pumpkins' faces, the skull's eyes | slate `#2B2F38` |
+| roof | the tree and crow, the fence and gate, the stepping stones and pebbles, the lining of every carving on the stones (epitaphs, motifs, cracks), the pumpkins' faces, the skull's eyes | slate `#2B2F38` |
 | trim | the seven headstones and their bases, BOO's kerb, the skeleton hand, the bones, the skull | cream `#EFE6D2` |
 | accent | the three pumpkins, the shovel | kraft `#D4A96A` |
 
-The epitaphs, motifs, cracks and the pumpkins' faces are **flush inlays**:
-dark slate set level into the cream stone and the kraft pumpkins, not raised
-and not cut in. So on a single-colour print they do not show at all; Jessee
+**The epitaphs, motifs and cracks are carved into the stones**, 0.6 mm
+deep, and lined with slate below that (changed 2026-09-26: they used to be
+flush inlays, which do not show at all on a one-colour print). On a
+single-colour print they read as engravings; in colour they are dark
+carvings in cream stone. The pumpkins' faces and the skull's eyes are still
+flush slate inlays, so on a single-colour print those do not show; Jessee
 would paint them.
 
 ## Settings that are not optional
@@ -91,15 +94,23 @@ which version the buyer gets.
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight;
-  - **0 zero-area faces**;
-  - every edge shared by exactly two faces.
+  - body and trim: **0 zero-area faces**, every edge shared by exactly two
+    faces;
+  - roof and accent: **1 zero-area face each**, a sliver of no area. The
+    roof has edges shared by more than two faces where the carvings' lining
+    touches itself; the slicer handles both, and the hill slices with 0
+    supports.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
 - **Every piece touches the model**, sampled by area. The smallest shares
   are the skeleton hand (13% of its surface, about 28 mm²) and the shovel
   (15%, 32 mm²).
-- **The inlays are printable**, measured on a 0.02 mm raster of each stone's
-  whole inlay:
-  - every slate stroke keeps ≥ 98% of its area under a one-bead (0.42 mm)
+- **The carvings print without supports.** Their ceilings climb in 0.2 mm
+  steps at 64° plus each stone's own forward lean; at 58° the leaning BRB
+  stone still drew supports. Each stone was sliced alone, pinned to the
+  plate, with its carvings and without: the support count is the same (0).
+- **The carvings are legible**, measured on a 0.02 mm raster of each stone's
+  whole carving:
+  - every carved stroke keeps ≥ 98% of its area under a one-bead (0.42 mm)
     opening;
   - no two pieces merge under a one-bead closing. The closest pair is 0.64 mm
     apart.
