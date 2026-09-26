@@ -47,6 +47,12 @@ DEFAULT_HIDDEN = {3, 9}
 # other feature type), rendered as an unrecognisable spire.
 SUPPORT_TYPES = {7, 8}
 
+# The wipe tower and the slicer's own prime line ("Custom") are not the part
+# either (2026-09-26): on the four-colour haunted village plates they rendered
+# as a block as big as the building beside it, under a caption saying "the
+# finished part". Both go in the bin, like supports, and are always dropped.
+PURGE_TYPES = {10, 12}
+
 # Flat top and bottom so stacked layers meet over a real contact band, bulged
 # sides so the bead reads as extruded rather than as a brick. u is across the
 # bead (+-half width), v is vertical (+-half layer height).
@@ -252,6 +258,8 @@ def main():
     hidden = set() if a.all_types else set(DEFAULT_HIDDEN)
     if not a.keep_supports:
         hidden |= SUPPORT_TYPES
+    if not a.all_types:
+        hidden |= PURGE_TYPES
 
     for job in jobs:
         payload = load_payload(job)

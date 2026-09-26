@@ -101,6 +101,16 @@ def test_layers_fuse_instead_of_stacking_with_daylight_between():
           "squish is not making the bead taller than the layer pitch")
 
 
+def test_purge_types_are_the_wipe_tower_and_the_prime_line():
+    # 2026-09-26: the haunted village stills showed each building beside a
+    # purge tower as big as itself, captioned "the finished part". The ids
+    # must name those two types, or the fix hides something real instead.
+    import gcode_viewer_data as gvd
+    names = {gvd.TYPES[i] for i in g2m.PURGE_TYPES}
+    check(names == {"Wipe tower", "Custom"},
+          "PURGE_TYPES should be the wipe tower and the prime line, got %r" % names)
+
+
 def test_hidden_types_are_actually_dropped():
     """And filtering everything fails loudly rather than writing an empty file
     that only looks wrong once somebody opens it."""
