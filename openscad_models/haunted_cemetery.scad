@@ -355,7 +355,9 @@ module tree() {
         trunk();
         roots();
         for (s = TREE) hull() { oct(s[0], s[2]); oct(s[1], s[3]); }
-        translate(stub_top) rotate([0, 0, 200]) crow();
+        // keel sunk 0.3 into the stub: set on its top, the two flat faces lay
+        // 0.01 apart and CGAL left two zero-area faces between them
+        translate(stub_top - [0, 0, 0.3]) rotate([0, 0, 200]) crow();
     }
 }
 
@@ -405,7 +407,12 @@ module post(x, h = 11.5, snapped = false) {
 }
 // lean > 0 tips a panel's top inward (+y), < 0 outward
 FENCE_POSTS = [[-27, false], [-13, false], [-5, false], [5, false], [16, true], [27, false]];
-module fence() {
+// Clipped 0.6 above the plate: the gate's sagging free end reached 0.62 below it.
+module fence() intersection() {
+    fence_raw();
+    translate([-200, -200, 0.6]) cube([400, 400, 200]);
+}
+module fence_raw() {
     for (p = FENCE_POSTS) post(p[0], p[0] == -13 || p[0] == -5 ? 13.5 : 11.5, p[1]);
     panel(-26.1, -13.9, 5);
     panel(-4.1, 4.1, 0);
