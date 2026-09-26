@@ -7492,3 +7492,55 @@ frames. The gate passed, but three traps cost a rebuild each.
   ceiling, but a steep shed reads as a lean-to from the side. A low shed
   would need a lift-off lid like the post office's. Tell Scott this rather
   than hide it.
+
+## Technique 73 — A steep gable, coped parapets and a tipped tower (2026-09-26, chapel)
+
+The fourth Haunted Town building took the first build's 44,654 support moves
+to zero. Each trap below was measured on the gate's slicer.
+
+- **A soffit that is the ceiling plane falls toward the eave's edge.** The
+  slab's lowest layers start at the tip, in air: 44,654 moves along both
+  eaves. The fix is a flare under the eave, rising 52° outward from the wall.
+  The slab's underside past the flare's tip must continue up the SAME 52°
+  line to the fascia. Stopping the flare 0.08 short (the bakery's margin)
+  left the slab corner 0.15 below the tip on a falling soffit, and every eave
+  still drew a support wall. Keep the eave short (2 mm here); a longer one
+  brings the flare's foot down over the windows.
+- **A wall that starts on a falling ceiling hangs over its own low edge.**
+  Where the tower overlaps the nave, its inner wall began on the ceiling plane,
+  which falls toward the tower's hollow. Its lowest layer was a 14.6 mm strip
+  over air. Carry such walls to the plate, and pierce them with pointed arches
+  if light has to pass.
+- **A zig-zag engraving has islands.** Every trough of a zig-zag groove leaves
+  a downward point of material above it, and that point's first layer has
+  nothing under it. It does not matter how steep each stretch is. An engraved
+  line must only ever fall, e.g. a crack as steep steps (64°/72°), never
+  rising again.
+- **Relief bands wrapped round a corner must mitre.** Run each face's band
+  past the corner and its inner strip hangs beyond the next face with an
+  underside only 0.88 above its foot: columns at all eight corners. Clip each
+  band to its quadrant wedge. The two sheared undersides then meet in a keel.
+- **A proud cap over V-course stone needs its own sheared underside.** Flat on
+  the 62° gable line, the coping's lowest end still hung 0.9 over the stone
+  valleys at each corner. Shear its proud part up 58° from plan(0), like
+  `relief_up`, and stop it where the plan's corners start to round.
+- **A self-crossing 2D region makes CGAL drop the whole shape.** It reports
+  only "mesh is not closed". `below_ceil()` drawn to ±60 put the ceiling line
+  under the polygon's floor. Keep such outlines inside the range where they
+  cannot cross.
+- **Coincidences to design out:**
+  - a slate course butt that fell exactly on the tower's stone face (course
+    spacing 2.4 × 9 = 21.6);
+  - a spire base flush with the walls' top edge;
+  - two walls ended flush at one vertical line;
+  - a kneeler topped level with the coping it sits under.
+
+  Each gave sliver faces, four-way edges or zero-thickness sheets. Move one
+  side by 0.3 or bury it.
+- **A part stood on a cut tip is a stub.** The cross had 3 mm² of contact
+  150 mm up. Socket it into a solid tip instead: subtract it from the roof,
+  not the roof from it. 28.6 mm² of contact.
+- **Two shears in one model: design the tipped part's angles for the tip.**
+  The tower's stone ramps are 66°, its opening heads 65° and its band shear
+  2.2 (65.6°), so each is still ≥ 58° after a 7° tip. At 10° the ramps would
+  fall to 58.1°.

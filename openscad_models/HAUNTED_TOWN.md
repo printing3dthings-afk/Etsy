@@ -63,7 +63,7 @@ Confirmed by Scott 2026-09-25.
 |---|---|---|---|
 | 6 | **Bakery** | round pie-crust shop window cut into slices, a pie cooling on a crate by the door, crooked BAKERY sign, crooked chimney | **revised 2026-09-25, awaiting Scott's review** — windows now round with a pointed crown, per the variety plan; `haunted_bakery.3mf`, notes in `HAUNTED_BAKERY_PRINTING.md` |
 | 1 | **Post Office** | ONE story, brick, sagging parapet, flat lift-off roof with a leaning chimney, crooked POST OFFICE sign, parcels, mail slot. Plain lettering only — no USPS eagle or logo (their trademark) | **built 2026-09-25, awaiting Scott's review** — `haunted_post_office.3mf`, notes in `HAUNTED_POST_OFFICE_PRINTING.md`. The two-story turret version (2026-09-24) is archived in `data/trash/` |
-| 2 | Chapel | thin bell tower cracked and tipped sideways, one tall pointed window over the door | saved |
+| 2 | **Chapel** | stone, a bell tower on the front-left corner cracked above the roofline and tipped 7° away from the nave, one tall pointed window with Y tracery over the door, coped gables, two headstones by the step | **built 2026-09-26, awaiting Scott's review** — `haunted_chapel.3mf`, notes in `HAUNTED_CHAPEL_PRINTING.md` |
 | 3 | **General Store** | false-front facade taller than the building, leaning forward on two timber props, crooked "MERCANTILE" board, barrels by the door, crooked stove pipe on a tin shed roof | **built 2026-09-25, awaiting Scott's review** — `haunted_general_store.3mf`, notes in `HAUNTED_GENERAL_STORE_PRINTING.md` |
 | 4 | Schoolhouse | bell cupola on the ridge, sagging porch roof, oversized stopped clock | saved |
 | 5 | Undertaker | narrow and tall between gables, a coffin standing upright against the porch post | saved |
