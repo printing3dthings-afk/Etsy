@@ -254,8 +254,10 @@ module screen() {
         union() {
             // stopped short of their shared corner, which is left open to
             // the nave: with it, the corner stood 22.5 mm from the plan's
-            // centre and a 46 mm circle no longer fit
-            translate([tx1 - wall, -y_r - 0.1, -1]) cube([wall, ty1 - wall + y_r + 0.1, 200]);
+            // centre and a 46 mm circle no longer fit. The right one runs 0.3
+            // past the back one's face: ended flush, the two met on one
+            // vertical line and left four-way edges down it.
+            translate([tx1 - wall, -y_r - 0.1, -1]) cube([wall, ty1 - wall + 0.3 + y_r + 0.1, 200]);
             translate([-x_in - 0.1, ty1 - wall, -1]) cube([tx1 - wall + x_in + 0.1, wall, 200]);
         }
         below_ceil();
