@@ -461,7 +461,9 @@ module pavers() {
         translate([p[0], p[1], hz(p[0], p[1]) + 0.4]) rotate([atan(s[1]), -atan(s[0]), 0]) rotate([0, 0, p[2]])
             translate([0, 0, -1.4]) linear_extrude(1.4) offset(r = 0.6) square([2.4, 1.6], center = true);
 }
-PEBBLES = [[-31, -27, 1.5], [44, -4, 1.3], [-44, 12, 1.6], [-2, 30, 1.4], [-26, 24, 1.2], [18, 28, 1.5]];
+// (2026-09-26) A sixth pebble at (-26, 24) sat on ground rising 6 mm across
+// its 3 mm width, so it was wholly buried: an invisible slate void in the hill.
+PEBBLES = [[-31, -27, 1.5], [44, -4, 1.3], [-44, 12, 1.6], [-2, 30, 1.4], [18, 28, 1.5]];
 module pebbles() {
     for (p = PEBBLES) translate([p[0], p[1], gr([p[0], p[1]], 2.6 * p[2], 2 * p[2], 0, "min")])
         scale([1.3, 1, 0.6]) sphere(r = p[2], $fn = 20);
@@ -471,7 +473,9 @@ module pebbles() {
 // Four stubby blades each, leaning out from the centre, 1.6 at the root and
 // 1.4 at the tip, square to the axes: at 0.55 tips they were a third of every
 // sub-bead span on the model, and the gate's 1st-percentile wall fell to 0.63.
-TUFTS = [[-28, -3], [12, 4], [-46, -12], [44, -14], [-14, -27], [34, -24], [8, 30], [-32, 26], [26, 28], [46, 12], [-4, 22], [18, -24]];
+// (2026-09-26) One at (-14, -27) splayed into BOO's kerb and left a
+// 0.12 mm3 sliver of moss inside it.
+TUFTS = [[-28, -3], [12, 4], [-46, -12], [44, -14], [34, -24], [8, 30], [-32, 26], [26, 28], [46, 12], [-4, 22], [18, -24]];
 // Five splayed blades of uneven height, square to the axes (2026-09-26): four
 // short ones bunched together read as little boxes in the renders.
 module tufts() {
