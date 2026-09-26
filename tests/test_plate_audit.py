@@ -150,7 +150,7 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("PLATE AUDIT TESTS OK -- all 72 plates fit the P1S printable area, "
+    print("PLATE AUDIT TESTS OK -- every plate fits the P1S printable area, "
           "and the audit measures the part rather than its skirt or its "
           "supports.")
 

@@ -121,12 +121,13 @@ def parse(gcode_path):
     layer_h = None
     slicer_seconds = None
     tool_changes = 0
-    # Measured from the moves, never from the footer. On a real multi-material
-    # slice PrusaSlicer's own "; filament used [mm]" per-extruder line came to
-    # 6314 mm against 11,200 mm actually extruded -- it leaves out the wipe
-    # tower and the tool-change purge, and reported "filament used for wipe
-    # tower [g] = 0.00" as well. Reporting its numbers as "filament per slot"
-    # would have under-stated every spool by 44%.
+    # Measured from the moves, never from the footer. The reason first given
+    # here was wrong (corrected 2026-09-26): an earlier slice's footer looked
+    # 44% short of "11,200 mm actually extruded", but that 11,200 counted only
+    # forward moves, so every reload after a tool-change unload was counted
+    # as new filament. Counted net, the moves match the footer to within 2% on
+    # four real four-filament plates. They are still measured here, since the
+    # per-layer split has to come from the moves anyway.
     fil_by_tool = {}
     fil_by_type = {}
     # Per LAYER as well as per job. The viewer needs to say how much each slot
@@ -252,11 +253,19 @@ def parse(gcode_path):
             if dist > 0 and feed > 0:
                 layer_time += dist / (feed / 60.0)
 
-            if de > 0 and dist > 0:
+            # Filament is counted NET, every E move of either sign (2026-09-26).
+            # Counting only forward moves that travel counted each filament
+            # reload after a tool-change unload as fresh filament: the haunted
+            # cemetery's wipe tower came to 76.5 m against 31.7 m net, and the
+            # plate to 273 g against the slicer's 143 g. Net per tool matches
+            # the slicer's own per-extruder footer to within 2%.
+            if de:
                 layer_filament += de
                 fil_by_tool[cur_tool] = fil_by_tool.get(cur_tool, 0.0) + de
                 fil_by_type[cur_type] = fil_by_type.get(cur_type, 0.0) + de
                 layer_fil_tool[cur_tool] = layer_fil_tool.get(cur_tool, 0.0) + de
+
+            if de > 0 and dist > 0:
                 if not run:
                     run_type = cur_type
                     run_tool = cur_tool
