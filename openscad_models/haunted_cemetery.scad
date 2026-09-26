@@ -100,15 +100,17 @@ module pit() translate([pit_c[0] - pit_s[0]/2, pit_c[1] - pit_s[1]/2, pit_floor]
 st_t = 3.0;
 lt   = 0.8;                 // inlay depth
 bev  = 0.3;                 // bevel step
-//   [x, y, style, width, height above base, text, text size, text z, motif, motif z, turn, lean fwd, tip side]
-// Widths are set by the words, measured with 1.12 letter spacing, inside the
-// bevel. Every stroke survives a one-bead opening and every gap between
-// letters survives a one-bead closing (offset pass on each word).
+//   [x, y, style, width, height above base, text, text size, text z, motif, motif z, turn, lean fwd, tip side, (letter spacing)]
+// Widths are set by the words, inside the bevel. Every stroke survives a
+// one-bead opening and every gap between pieces survives a one-bead closing:
+// re-measured 2026-09-26 on a 0.02 mm raster of each stone's whole inlay, the
+// gaps are 0.64-0.92 mm. The earlier offset pass per word had missed NEXT's
+// X-T pair at 0.26, hence its own spacing and a wider tablet.
 STONES = [
     [-38, -14, "round",  14, 16, "RIP",  4.6, 6.0,  "skull",     11.8,  10,  6, -4],
     [-17, -12, "gothic", 20, 23, "BOO",  4.4, 5.8,  "bat",       11.6,  -8, -5,  5],
     [  5,  -6, "broken", 17, 14, "BRB",  4.4, 5.6,  "",           0,     4,  8,  3],
-    [ 27,  -3, "tablet", 19, 17, "NEXT", 3.9, 6.4,  "hourglass", 11.8,  -6,  3, -3],
+    [ 27,  -3, "tablet", 20.5, 17, "NEXT", 3.7, 6.4, "hourglass", 11.8,  -6,  3, -3, 1.3],
     [ 28,  19, "round",  20, 16, "OOPS", 3.8, 5.6,  "",           0,    14,  9,  8],
     [-34,   8, "cross",  12, 20, "",     0,   0,    "",           0,    -4, -6,  0],
     [  4,  16, "obelisk", 7, 19, "",     0,   0,    "",           0,     8,  0,  0],
@@ -203,10 +205,12 @@ module hourglass_2d() {
     translate([-2.2, 5.1]) square([4.4, 0.9]);
     polygon([[-1.6, 0.9], [1.6, 0.9], [0.45, 3.0], [1.6, 5.1], [-1.6, 5.1], [-0.45, 3.0]]);
 }
+// An optional 14th field sets a stone's letter spacing (2026-09-26): at 1.12,
+// NEXT's X and T stood 0.26 apart and would fuse under one bead.
 module stone_inlay_2d(s) {
     if (s[5] != "")
         translate([0, s[7]]) text(s[5], size = s[6], font = "Montserrat:style=Black",
-                                  halign = "center", valign = "center", spacing = 1.12, $fn = 16);
+                                  halign = "center", valign = "center", spacing = is_undef(s[13]) ? 1.12 : s[13], $fn = 16);
     translate([0, s[9]]) {
         if (s[8] == "skull")     translate([0, -2.4]) skull_2d();
         if (s[8] == "bat")       translate([0, -1.4]) bat_2d();
