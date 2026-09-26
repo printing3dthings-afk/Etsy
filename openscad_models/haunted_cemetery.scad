@@ -310,7 +310,7 @@ module roots() {
             translate([far[0], far[1], gz - 3]) cylinder(r = 0.6, h = 2.3, $fn = 8);
         }
 }
-// branches: [from, to, r_from, r_to]; hulls of two horizontal octagons, each
+// branches: [from, to, r_from, r_to]; hulls of two horizontal squares, each
 // leaning <= 38 deg from vertical, every limb >= 1.8 across: at 1.2-1.4
 // the thin rods' short chords were a third of the gate's sub-bead spans. The first segment of
 // each limb starts ON the trunk's axis, low enough that its disc lies inside
@@ -331,7 +331,7 @@ TREE = [
     [[0, 0, 17],      [-1, 4, 31], 1.15, 0.9],              // back
     [[-1, 4, 31],     [1, 6, 39], 0.95, 0.9],
     [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.95, 0.9],
-    [[0, 0, 8],       [5, -1.5, 17], 1.45, 1.5],              // the sawn-off stub
+    [[0, 0, 8],       [5, -1.5, 17], 1.45, 1.9],              // the sawn-off stub
 ];
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
@@ -341,6 +341,9 @@ module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
 // axis-aligned ray its full width. Each first segment's square is small
 // enough that its corners stay inside the twisted trunk between the lobes.
 module sq(p, r) translate(p) cube([2 * r, 2 * r, 0.01], center = true);
+// The stub's cut top is 3.8 square (2026-09-26): at 3.0 the crow's rotated
+// belly overhung its corners just above the cut, and the slicer propped it
+// on 360 support lines; sliced alone at 3.8 it draws none.
 // The crow: one hull for body, head and the folded wings' tips, one for the
 // tail, facing +x on its keel, which lies wholly inside the stub's cut top.
 // This is the 1.25x box-bodied crow that passed the gate, with the wing tips
@@ -401,8 +404,11 @@ module panel_2d(L, ang = 58) {
             polygon([[c - a, s_lo + ha + 1.0], [c + a, s_lo + ha + 1.0], [c + a, s_hi], [c, s_hi + ha], [c - a, s_hi]]);
         }
     }
+    // Finials are blunt arrowheads with flat tops (2026-09-26): sharp spear
+    // points put 16 sub-bead spans in the gate's wall check, every one in
+    // their last millimetre. The barbs flare out at 22 deg from vertical.
     for (i = [0 : n]) translate([u0 + pk_s * i - pk_w / 2, top - 0.1])
-        polygon([[0, 0], [pk_w, 0], [pk_w, 1.4], [pk_w / 2, 2.7], [0, 1.4]]);
+        polygon([[0, 0], [pk_w, 0], [pk_w + 0.4, 1.0], [pk_w, 2.4], [0, 2.4], [-0.4, 1.0]]);
 }
 // a panel from world x0 to x1 along the fence, leaned `lean` deg outward
 module panel(x0, x1, lean = 0, ang = 58) {
@@ -530,10 +536,12 @@ module pk_stems() {
 
 // ---- shovel ------------------------------------------------------------------------------------
 // Stuck in the dirt pile, leaning back 18 deg, the spade's blade showing
-// above the dirt. Its point's edges rise 54 deg; the T-grip's undersides 58.
+// above the dirt and facing the front. Its point's edges rise 54 deg; the
+// T-grip's undersides 58. Turned 30 deg, its grip ends and blade edge met the
+// gate's axis rays at a slant and read as sub-bead walls (2026-09-26).
 shovel_at = [37, -12];
 module shovel() {
-    translate([shovel_at[0], shovel_at[1], hz(shovel_at[0], shovel_at[1]) - 2.2]) rotate([0, 0, 30]) rotate([-18, 0, 0]) {
+    translate([shovel_at[0], shovel_at[1], hz(shovel_at[0], shovel_at[1]) - 2.2]) rotate([-18, 0, 0]) {
         xz(-0.75, 0.75) polygon([[-2.4, 1.6], [-1.2, 0], [1.2, 0], [2.4, 1.6], [2.4, 6.5], [-2.4, 6.5]]);
         xz(-0.75, 0.75) polygon([[-2.4, 6.5], [2.4, 6.5], [0.75, 6.5 + 1.65 * tan(58)], [-0.75, 6.5 + 1.65 * tan(58)]]);
         translate([-0.75, -0.75, 8]) cube([1.5, 1.5, 12]);
