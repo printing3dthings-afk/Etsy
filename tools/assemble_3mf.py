@@ -49,7 +49,8 @@ def _volume_meta(name: str, extruder: int) -> str:
             f'<metadata type="volume" key="extruder" value="{extruder}"/>')
 
 
-def _object_xml(obj_id: int, meshes: list, names: list) -> tuple[str, str, str]:
+def _object_xml(obj_id: int, meshes: list, names: list,
+                extruders: list) -> tuple[str, str, str]:
     """One <object> holding every part, plus the two config flavours that name
     the parts as VOLUMES.
 
@@ -76,8 +77,8 @@ def _object_xml(obj_id: int, meshes: list, names: list) -> tuple[str, str, str]:
            f'<mesh><vertices>{v}</vertices><triangles>{t}</triangles></mesh></object>')
 
     vols = "".join(
-        f'<volume firstid="{lo}" lastid="{hi}">{_volume_meta(n, i + 1)}</volume>'
-        for i, (n, (lo, hi)) in enumerate(zip(names, ranges)))
+        f'<volume firstid="{lo}" lastid="{hi}">{_volume_meta(n, e)}</volume>'
+        for n, e, (lo, hi) in zip(names, extruders, ranges))
     slic3r = (f'<object id="{obj_id}" instances_count="1">'
               f'<metadata type="object" key="name" value="{names[0]}"/>{vols}</object>')
 
@@ -87,11 +88,11 @@ def _object_xml(obj_id: int, meshes: list, names: list) -> tuple[str, str, str]:
     parts = "".join(
         f'<part id="{i+1}" subtype="normal_part">'
         f'<metadata key="name" value="{n}"/>'
-        f'<metadata key="extruder" value="{i+1}"/></part>'
-        for i, n in enumerate(names))
+        f'<metadata key="extruder" value="{e}"/></part>'
+        for i, (n, e) in enumerate(zip(names, extruders)))
     bambu = (f'<object id="{obj_id}">'
              f'<metadata key="name" value="{names[0]}"/>'
-             f'<metadata key="extruder" value="1"/>{parts}</object>')
+             f'<metadata key="extruder" value="{extruders[0]}"/>{parts}</object>')
     return obj, slic3r, bambu
 
 
@@ -129,10 +130,19 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
         names.append(flat_names[k:k + len(g)])
         k += len(g)
 
+    # One filament slot per distinct colour across the WHOLE plate (2026-09-26).
+    # Numbering restarted at 1 for every object, so the second object on a
+    # plate always landed on slot 1: the haunted post office's slate lid came
+    # out in the brick of the house, and the bayonet jar's orange lid in the
+    # base's blue. Same colour, same slot; a box and its lid in one colour
+    # share one.
+    slot = {}
+    extruders = [[slot.setdefault(c.upper(), len(slot) + 1) for _, c in g] for g in groups]
+
     objs, slic3rs, bambus, items = [], [], [], ""
     x = 0.0
-    for gi, (ms, ns) in enumerate(zip(loaded, names)):
-        o, sl, bm = _object_xml(gi + 1, ms, ns)
+    for gi, (ms, ns, ex) in enumerate(zip(loaded, names, extruders)):
+        o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
         objs.append(o); slic3rs.append(sl); bambus.append(bm)
         if mode == "assembly":
             items += f'<item objectid="{gi+1}"/>'
@@ -165,6 +175,7 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
               else f"{len(groups)} separate objects on one plate ({n_parts} parts total)")
     return {"file": str(out_path), "mode": mode, "layout": layout,
             "parts": flat_names, "colours": colours,
+            "extruders": [e for ex in extruders for e in ex],
             "triangles": int(sum(len(m.faces) for ms in loaded for m in ms))}
 
 
@@ -201,8 +212,8 @@ def main() -> None:
 
     r = assemble(Path(a.out), groups, "plate" if a.plate else "assembly", a.gap)
     print(f'{r["file"]}  --  {r["layout"]}')
-    for n, c in zip(r["parts"], r["colours"]):
-        print(f'   {n:28s} {c}')
+    for n, c, e in zip(r["parts"], r["colours"], r["extruders"]):
+        print(f'   {n:28s} {c}  slot {e}')
     print(f'   {r["triangles"]} triangles')
 
 

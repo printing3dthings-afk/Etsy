@@ -52,7 +52,10 @@ the base is open too.
 | **house in three colours + lid** | not reliable here | ~61 g model + purge |
 
 The colour house makes **446 colour changes**, far fewer than the bakery's
-1,351. Purge is 89 g at PrusaSlicer's 140 mm³ flush, and about 194 g at the
+1,351. Printed together with the lid on one plate, as the file lays them out,
+it is **619 changes**: the slate lid shares its first 35 mm of layers with the
+house. (Until 2026-09-26 the file put the lid on the brick slot, so a colour
+print gave a brick roof. It is now on its own slate slot, number 4.) Purge is 89 g at PrusaSlicer's 140 mm³ flush, and about 194 g at the
 350 mm³ Bambu default. Slice it in Bambu Studio for the real number before
 pricing. A listing must say which version the buyer gets.
 

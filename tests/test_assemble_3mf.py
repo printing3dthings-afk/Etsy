@@ -127,6 +127,38 @@ def test_a_plate_entry_may_itself_be_multipart():
         check(len(c[0]) == 2, f"the bun must keep its 2 parts, got {c[0]}")
 
 
+def _extruders(path):
+    import re
+    with zipfile.ZipFile(path) as z:
+        cfg = z.read("Metadata/Slic3r_PE_model.config").decode()
+    return [re.findall(r'key="extruder" value="(\d+)"', body)
+            for _, body in re.findall(r'<object id="(\d+)"[^>]*>(.*?)</object>', cfg, re.S)]
+
+
+def test_a_second_object_gets_its_own_filament_slot():
+    """2026-09-26: slots restarted at 1 for every object, so the haunted post
+    office's slate lid printed in the house's brick, and the bayonet jar's
+    orange lid in the base's blue. The lid's colour must get its own slot, and
+    a repeated colour must reuse the slot it already has."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        house = [(_cube("body", 20, td), "#7A3E33"), (_cube("trim", 4, td), "#EFE6D2"),
+                 (_cube("accent", 3, td), "#D4A96A")]
+        lid = [(_cube("lid", 18, td), "#2B2F38")]
+        out = Path(td) / "po.3mf"
+        assemble_3mf.assemble(out, [house, lid], "plate")
+        ex = _extruders(out)
+        check(ex == [["1", "2", "3"], ["4"]],
+              f"house slots 1-3 and the slate lid slot 4 expected, got {ex}")
+        box = [(_cube("base", 20, td), "#2B2F38")]
+        lid2 = [(_cube("lid_body", 18, td), "#2b2f38"), (_cube("script", 4, td), "#D4A96A")]
+        out2 = Path(td) / "box.3mf"
+        assemble_3mf.assemble(out2, [box, lid2], "plate")
+        ex2 = _extruders(out2)
+        check(ex2 == [["1"], ["1", "2"]],
+              f"a box and lid in one colour must share slot 1, got {ex2}")
+
+
 def test_the_shipped_files_really_kept_their_parts():
     """The whole point. A merged 3MF slices fine and is silently useless."""
     # monogram_keychain_J went 4 -> 5 parts in 74c6837, which added the `mark`
