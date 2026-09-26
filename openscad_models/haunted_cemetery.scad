@@ -151,10 +151,20 @@ module stone_text(s) {
     if (s[5] != "") {
         H0 = st_total(s) - s[4];
         translate([0, -st_t/2 + lt, H0 + s[7]]) rotate([90, 0, 0]) linear_extrude(lt + 0.01)
-            text(s[5], size = s[6], font = "Montserrat:style=Black", halign = "center", valign = "center");
+            // $fn 16: at the default the glyph curves' short segments came out
+            // of the rotated boolean as zero-area slivers in BOO!'s point and
+            // OOPS's S
+            text(s[5], size = s[6], font = "Montserrat:style=Black", halign = "center", valign = "center", $fn = 16);
     }
 }
-module stones()      { for (s = STONES) place_stone(s) stone_body(s); }
+// Clipped 0.6 above the plate: RIP, near the rim and tipped, poked a corner
+// 0.14 below it.
+module stones() {
+    intersection() {
+        for (s = STONES) place_stone(s) stone_body(s);
+        translate([-200, -200, 0.6]) cube([400, 400, 200]);
+    }
+}
 // Each inlay is cut from the PLACED stone, not placed after cutting: placed
 // afterwards, its face against the stone came out of CGAL a rounding error off
 // the stone's own face and left non-manifold edges round every word.
