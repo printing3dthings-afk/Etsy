@@ -318,23 +318,29 @@ module roots() {
 // the discs' flat undersides poked out between the lobes and the slicer
 // propped every limb on a column.
 TREE = [
-    [[0, 0, 12],      [-6, 1, 26], 1.5, 1.15],             // left
+    [[0, 0, 12],      [-6, 1, 26], 1.3, 1.15],             // left
     [[-6, 1, 26],     [-10, 0, 33], 1.15, 0.9],
     [[-10, 0, 33],    [-12, 1, 37], 0.95, 0.9],
     [[-6, 1, 26],     [-7.8, 3.6, 31], 0.95, 0.9],
     [[-6, 1, 26],     [-4, -1.5, 31.5], 0.95, 0.9],
-    [[0, 0, 17],      [5, -1, 30], 1.3, 1.1],              // right
+    [[0, 0, 17],      [5, -1, 30], 1.15, 1.1],              // right
     [[5, -1, 30],     [8, 0, 38], 1.1, 0.9],
     [[8, 0, 38],      [10, -1, 41.5], 0.95, 0.9],
     [[5, -1, 30],     [7.8, -2.4, 35], 0.95, 0.9],
     [[5, -1, 30],     [3.5, -3.5, 35], 0.95, 0.9],
-    [[0, 0, 17],      [-1, 4, 31], 1.2, 0.9],              // back
+    [[0, 0, 17],      [-1, 4, 31], 1.15, 0.9],              // back
     [[-1, 4, 31],     [1, 6, 39], 0.95, 0.9],
     [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.95, 0.9],
-    [[0, 0, 8],       [5, -1.5, 17], 1.7, 1.7],              // the sawn-off stub
+    [[0, 0, 8],       [5, -1.5, 17], 1.45, 1.5],              // the sawn-off stub
 ];
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
+// Limbs are SQUARE in section, square to the axes, r = half the side. Round
+// limbs 1.8 across still left 30 of the gate's 97 sub-bead spans: its rays
+// cut round rods in short chords near their edges. A square rod gives every
+// axis-aligned ray its full width. Each first segment's square is small
+// enough that its corners stay inside the twisted trunk between the lobes.
+module sq(p, r) translate(p) cube([2 * r, 2 * r, 0.01], center = true);
 // The crow: one hull for body, head and the folded wings' tips, one for the
 // tail, facing +x on its keel, which lies wholly inside the stub's cut top.
 // This is the 1.25x box-bodied crow that passed the gate, with the wing tips
@@ -363,7 +369,7 @@ module tree() {
     translate([tree_at[0], tree_at[1], tree_z()]) {
         trunk();
         roots();
-        for (s = TREE) hull() { oct(s[0], s[2]); oct(s[1], s[3]); }
+        for (s = TREE) hull() { sq(s[0], s[2]); sq(s[1], s[3]); }
         // keel sunk 0.3 into the stub: set on its top, the two flat faces lay
         // 0.01 apart and CGAL left two zero-area faces between them
         translate(stub_top - [0, 0, 0.3]) rotate([0, 0, 200]) crow();
