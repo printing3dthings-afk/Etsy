@@ -155,7 +155,10 @@ module stone_text(s) {
     }
 }
 module stones()      { for (s = STONES) place_stone(s) stone_body(s); }
-module epitaphs()    { for (s = STONES) place_stone(s) intersection() { stone_body(s); stone_text(s); } }
+// Each inlay is cut from the PLACED stone, not placed after cutting: placed
+// afterwards, its face against the stone came out of CGAL a rounding error off
+// the stone's own face and left non-manifold edges round every word.
+module epitaphs()    { for (s = STONES) intersection() { place_stone(s) stone_body(s); place_stone(s) stone_text(s); } }
 
 // ---- skeleton hand -------------------------------------------------------------------------
 // Out of the mound in front of BRB, reaching up. Every bone is a hull of two
@@ -248,12 +251,13 @@ module pk_face_2d(r0) {
 module place_pk(p) translate([p[0], p[1], hz(p[0], p[1]) - 1.2]) rotate([0, 0, p[3]]) children();
 module pumpkins() { for (p = PUMPKINS) place_pk(p) pumpkin_body(p[2]); }
 module pk_faces() {
-    for (p = PUMPKINS) place_pk(p) difference() {
+    // cut from the placed pumpkin, for the same reason as the epitaphs
+    for (p = PUMPKINS) difference() {
         intersection() {
-            pumpkin_body(p[2]);
-            translate([0, 0, 0.8]) rotate([90, 0, 0]) linear_extrude(20) pk_face_2d(p[2]);
+            place_pk(p) pumpkin_body(p[2]);
+            place_pk(p) translate([0, 0, 0.8]) rotate([90, 0, 0]) linear_extrude(20) pk_face_2d(p[2]);
         }
-        pumpkin_body(p[2], lt);
+        place_pk(p) pumpkin_body(p[2], lt);
     }
 }
 module pk_stems() {
