@@ -1366,3 +1366,67 @@ solid OpenSCAD_Model
 
 <!-- /TRASH 20260925-007 -->
 
+<!-- TRASH id=20260926-001 date=2026-09-26 kind=snippet source="openscad_models/haunted_bakery.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
+## 20260926-001 · 2026-09-26 · snippet · `openscad_models/haunted_bakery.scad`
+**Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
+**Payload:** `data/trash/files/20260926-001__snippet.txt`
+
+```
+// The letters are a FLUSH inlay in the board's face, in the accent colour --
+// no relief. Raised 1 mm, every horizontal stroke was a sub-bead slab with
+// an underside; inlaid, the colour does the work and the face stays flat.
+module sign_letters() {
+    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t - 0.8])
+        linear_extrude(0.8) text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
+                                 halign = "center", valign = "center", spacing = 1.06);
+}
+```
+
+<!-- /TRASH 20260926-001 -->
+
+<!-- TRASH id=20260926-002 date=2026-09-26 kind=snippet source="openscad_models/haunted_post_office.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
+## 20260926-002 · 2026-09-26 · snippet · `openscad_models/haunted_post_office.scad`
+**Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
+**Payload:** `data/trash/files/20260926-002__snippet.txt`
+
+```
+module sign_letters() {
+    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
+        linear_extrude(0.8) text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
+                                 halign = "center", valign = "center", spacing = 1.04);
+}
+```
+
+<!-- /TRASH 20260926-002 -->
+
+<!-- TRASH id=20260926-003 date=2026-09-26 kind=snippet source="openscad_models/haunted_general_store.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
+## 20260926-003 · 2026-09-26 · snippet · `openscad_models/haunted_general_store.scad`
+**Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
+**Payload:** `data/trash/files/20260926-003__snippet.txt`
+
+```
+module sign_letters() {
+    on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
+        linear_extrude(0.8) text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
+                                 halign = "center", valign = "center", spacing = 1.04);
+}
+```
+
+<!-- /TRASH 20260926-003 -->
+
+<!-- TRASH id=20260926-004 date=2026-09-26 kind=snippet source="openscad_models/haunted_cemetery.scad" reason="Epitaphs were a flush colour-only inlay; replaced by carved, slate-lined lettering" -->
+## 20260926-004 · 2026-09-26 · snippet · `openscad_models/haunted_cemetery.scad`
+**Reason:** Epitaphs were a flush colour-only inlay; replaced by carved, slate-lined lettering  
+**Payload:** `data/trash/files/20260926-004__snippet.txt`
+
+```
+module stone_inlays() {
+    for (s = STONES) intersection() {
+        place_stone(s) stone_body(s);
+        place_stone(s) translate([0, -st_t/2 + lt, 0]) rotate([90, 0, 0]) linear_extrude(lt + 0.01) stone_inlay_2d(s);
+    }
+}
+```
+
+<!-- /TRASH 20260926-004 -->
+

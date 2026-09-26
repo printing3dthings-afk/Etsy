@@ -16,8 +16,9 @@
 //   body    the hill, grave mounds, dirt pile, grass tufts, the pumpkins'
 //           stems and tendrils
 //   roof    (slate) the tree and crow, the fence and gate, stepping stones,
-//           pebbles, and every flush inlay: epitaphs, carved motifs, cracks,
-//           the pumpkins' faces, the skull's eyes
+//           pebbles, the lining of every carving on the stones (epitaphs,
+//           motifs, cracks), and the flush inlays of the pumpkins' faces and
+//           the skull's eyes
 //   trim    (bone) the headstones and their bases, the grave's kerb, the
 //           skeleton hand, the bones and the skull
 //   accent  the pumpkins, the shovel
@@ -98,7 +99,8 @@ module pit() translate([pit_c[0] - pit_s[0]/2, pit_c[1] - pit_s[1]/2, pit_floor]
 // steps only ever face up. Chips are cut by removing everything above a line,
 // which leaves an upward face.
 st_t = 3.0;
-lt   = 0.8;                 // inlay depth
+lt   = 1.1;                 // depth of the slate lining behind the face
+lt_open = 0.6;              // depth of the carving itself
 bev  = 0.3;                 // bevel step
 //   [x, y, style, width, height above base, text, text size, text z, motif, motif z, turn, lean fwd, tip side, (letter spacing)]
 // Widths are set by the words, inside the bevel. Every stroke survives a
@@ -184,7 +186,7 @@ module stone_body(s) {
         for (k = [1 : 3]) xz(-st_t/2 + (3 - k) * bev, -st_t/2 + (4 - k) * bev + 0.01) stone_face_2d(s, k * bev);
     }
 }
-// ---- carved motifs, flush slate inlays -----------------------------------------------------
+// ---- carved motifs, lined with slate --------------------------------------------------------
 // Every slate stroke and every island of stone left inside one is >= 0.84.
 module skull_2d() {
     difference() {
@@ -221,10 +223,30 @@ module stone_inlay_2d(s) {
 // Every inlay is cut from the PLACED stone, not placed after cutting: placed
 // afterwards, its face against the stone came out of CGAL a rounding error off
 // the stone's own face and left non-manifold edges round every word.
+//
+// Carved, then lined (2026-09-27). As a flush inlay the lettering was colour
+// alone: a one-colour print, or a slicer that put every part on one filament,
+// lost every word. Now each word, motif and crack is cut lt_open into the
+// stone and the slate part lines the cut, so a one-colour print shows an
+// engraving and a four-colour one shows dark letters. The cut's ceilings rise
+// outward at 58 deg plus the stone's forward lean (a stone tipped forward
+// tilts its ceilings down): a straight-cut 0.6 recess drew 1,528 support
+// moves on a test block, the sheared one none.
+function lt_k(s) = tan(58 + max(0, s[11]));
+module stone_prism(s, d) translate([0, -st_t/2 + d, 0]) rotate([90, 0, 0]) linear_extrude(d + 0.01) stone_inlay_2d(s);
+module stone_carve(s) intersection() {
+    stone_prism(s, lt_open);
+    // at depth t behind the face, the letter is lowered by lt_k * t
+    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, -lt_k(s), 1, -lt_k(s) * st_t / 2], [0, 0, 0, 1]]) stone_prism(s, lt_open);
+}
+module stone_carves() { for (s = STONES) place_stone(s) stone_carve(s); }
 module stone_inlays() {
-    for (s = STONES) intersection() {
-        place_stone(s) stone_body(s);
-        place_stone(s) translate([0, -st_t/2 + lt, 0]) rotate([90, 0, 0]) linear_extrude(lt + 0.01) stone_inlay_2d(s);
+    for (s = STONES) difference() {
+        intersection() {
+            place_stone(s) stone_body(s);
+            place_stone(s) stone_prism(s, lt);
+        }
+        place_stone(s) stone_carve(s);
     }
 }
 // Clipped 0.6 above the plate: RIP, near the rim and tipped, once poked a
@@ -572,7 +594,7 @@ module roof_raw()   { tree(); fence(); pavers(); pebbles(); stone_inlays(); pk_f
 module trim_raw()   { stones(); kerb(); hand(); for (b = BONES) ground_bone(b); place_skull() skull_dome(); }
 module accent_raw() { pumpkins(); shovel(); }
 module roof_part()   { roof_raw(); }
-module trim_part()   { difference() { trim_raw(); roof_raw(); } }
+module trim_part()   { difference() { trim_raw(); roof_raw(); stone_carves(); } }
 module accent_part() { difference() { accent_raw(); roof_raw(); trim_raw(); } }
 module body_part() {
     difference() {

@@ -367,11 +367,22 @@ module sign_board() {
     face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt])
         relief_up(-0.4, fr_t) translate([-sg_w/2, -sg_h/2]) square([sg_w, sg_h]);
 }
-module sign_letters() {
-    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
-        linear_extrude(0.8) text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
-                                 halign = "center", valign = "center", spacing = 1.04);
+// The letters are CARVED 0.6 into the board and lined with the accent part
+// (2026-09-27). As a flush inlay they were colour alone: a one-colour print,
+// or a slicer that put every part on one filament, lost the sign entirely.
+// The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
+// recess drew 1,528 support moves on a test block, the sheared one none.
+lt_open = 0.6;  lt_depth = 1.1;  lt_k = tan(58);
+module sign_text() text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.04);
+module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
+module sign_prism(d) translate([0, 0, -d]) linear_extrude(d + 0.01) sign_text();
+module sign_carve() sign_at() intersection() {
+    sign_prism(lt_open);
+    // at depth t behind the face the letters are lowered by lt_k * t
+    multmatrix([[1, 0, 0, 0], [0, 1, lt_k, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) sign_prism(lt_open);
 }
+module sign_letters() difference() { sign_at() sign_prism(lt_depth); sign_carve(); }
 
 // Brick joints stay out of these: [face, u0, u1, z0, z1], a frame's outline
 // plus 1.5 all round.
@@ -415,7 +426,7 @@ module accent_raw() {
     mail_slot();
 }
 module accent_part() { accent_raw(); }
-module trim_part()   { difference() { trim_raw(); accent_raw(); } }
+module trim_part()   { difference() { trim_raw(); accent_raw(); sign_carve(); } }
 module body_part() {
     difference() {
         body_solid();

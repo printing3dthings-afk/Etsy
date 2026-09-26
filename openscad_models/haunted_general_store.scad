@@ -238,11 +238,22 @@ module sign_board() {
     on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt])
         relief_up(-0.4, fr_t) translate([-sg_w/2, -sg_h/2]) square([sg_w, sg_h]);
 }
-module sign_letters() {
-    on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
-        linear_extrude(0.8) text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
-                                 halign = "center", valign = "center", spacing = 1.04);
+// The letters are CARVED 0.6 into the board and lined with the accent part
+// (2026-09-27). As a flush inlay they were colour alone: a one-colour print,
+// or a slicer that put every part on one filament, lost the sign entirely.
+// The cut's ceilings rise outward at 61 deg, 58 plus the front's forward lean, -- a straight-cut 0.6
+// recess drew 1,528 support moves on a test block, the sheared one none.
+lt_open = 0.6;  lt_depth = 1.1;  lt_k = tan(61);
+module sign_text() text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.04);
+module sign_at() on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
+module sign_prism(d) translate([0, 0, -d]) linear_extrude(d + 0.01) sign_text();
+module sign_carve() sign_at() intersection() {
+    sign_prism(lt_open);
+    // at depth t behind the face the letters are lowered by lt_k * t
+    multmatrix([[1, 0, 0, 0], [0, 1, lt_k, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) sign_prism(lt_open);
 }
+module sign_letters() difference() { sign_at() sign_prism(lt_depth); sign_carve(); }
 // The false front's cap: a band 3 tall across its top, sheared under.
 module front_cap() {
     on_face(1, (fx0 + fx1) / 2, Hf - 3)
@@ -386,7 +397,7 @@ module roof_raw() {
 }
 module roof_part()   { roof_raw(); }
 module accent_part() { difference() { accent_raw(); roof_raw(); } }
-module trim_part()   { difference() { trim_raw(); accent_raw(); roof_raw(); } }
+module trim_part()   { difference() { trim_raw(); accent_raw(); sign_carve(); roof_raw(); } }
 module body_part() {
     difference() {
         body_solid();
