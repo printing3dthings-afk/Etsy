@@ -853,24 +853,28 @@ The same plate, one filament against five, is the whole lesson:
 
 | | 1 filament | 5 filaments |
 |---|---|---|
-| filament | 8.6 g | **33.4 g** |
-| of which purge | — | **25.1 g (75%)** |
+| filament | 8.6 g | **18.4 g** |
+| of which purge | — | **10.0 g (54%)** |
 | time | 57 min | 109 min |
 | tool changes | 0 | 52 |
 
-Three quarters of the multi-colour plate is wiped into the purge tower and
-thrown away. In Filament mode you can see it: the tower is striped with every
+More than half of the multi-colour plate is wiped into the purge tower and
+thrown away. (Corrected 2026-09-26: this read 33.4 g and 25.1 g, three
+quarters, until the exporter's filament count was found to be double-counting;
+see below.) In Filament mode you can see it: the tower is striped with every
 colour it cleaned out.
 
 It also needs **five** slots and one AMS holds four, which the panel says
 plainly rather than quietly drawing four and hoping.
 
-**Two measurement traps, both caught by checking rather than assuming.**
-PrusaSlicer's own per-extruder footer (`; filament used [mm]`) came to 6,314 mm
-against 11,200 mm actually extruded -- it leaves the purge out, and reported
-`filament used for wipe tower [g] = 0.00` as well. Every slot would have read
-44% light. The exporter measures per filament from the moves instead, which
-sums to the job total by construction. Then the viewer made the same class of
+**Two measurement traps, and the first one was ours.** This section used to
+say PrusaSlicer's per-extruder footer (`; filament used [mm]`) was 44% light:
+6,314 mm against 11,200 mm "actually extruded". Wrong (corrected 2026-09-26).
+The 11,200 counted only forward moves, so every reload after a tool-change
+unload was counted as new filament. Counted net, the moves come to 6,167 mm,
+and the footer is right to within 2% on five multi-filament plates checked.
+The exporter still measures from the moves, now net, because the per-layer
+split has to come from them. Then the viewer made the same class of
 mistake one level up: interpolating a slot's usage from the layer total by
 segment index charged slot 1 with 24.4 g against its real 17.0 g, because the
 purge is a lot of filament laid over very few moves. It reads measured

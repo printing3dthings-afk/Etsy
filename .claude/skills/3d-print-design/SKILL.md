@@ -305,15 +305,20 @@ must be OFF or the priming block emits hundreds of lines of
 also comes back as `-2147483648s`; do not publish it.
 
 The number worth knowing before promising a customer a multi-colour print: the
-monogram keychain is **8.6 g in one filament and 33.4 g in five**, and
-**25.1 g of that -- three quarters -- is purge tower that goes in the bin**.
+monogram keychain is **8.6 g in one filament and 18.4 g in five**, and
+**10.0 g of that -- over half -- is purge tower that goes in the bin**.
 Time roughly doubles, 57 min to 109 min. Multi-colour is not a free upgrade;
-price it as four times the material.
+price it as about twice the material. (Corrected 2026-09-26: this said 33.4 g
+and "four times", from an exporter that counted every tool-change reload as
+new filament.)
 
-**Do not trust the slicer's per-extruder filament footer.** On that same
-slice, `; filament used [mm]` summed to 6,314 mm against 11,200 mm actually
-extruded -- it leaves out the purge, and reported
-`filament used for wipe tower [g] = 0.00` besides. Measure from the moves.
+**The slicer's per-extruder filament footer is right; count moves net.** This
+used to say the footer (6,314 mm) left out the purge, against 11,200 mm
+"actually extruded". That 11,200 counted only forward moves, so each reload
+after a tool-change unload was counted again. Net, the moves agree with the
+footer to within 2% (checked 2026-09-26 on the keychain and the four haunted
+village plates). If you sum extrusion from G-code, sum every E move, negative
+ones included.
 
 **A light that changes nothing is not a light.** A chamber lamp added as a
 real `PointLight` still did nothing measurable, because the biggest surface it
