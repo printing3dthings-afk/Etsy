@@ -7636,3 +7636,41 @@ on the wall check. What it took:
   footprint. Pavers are tilted to the local slope so they show an even 0.4.
   A headstone's base is topped 1.1 above the HIGHEST ground under it, so
   its uphill side is never buried, and the stone is set 2 mm into the base.
+
+## Technique 76 — Lettering that shows in one colour: carve it, then line it (2026-09-27, Haunted Town)
+
+Scott, looking at the village: "It doesn't look like the letters are going to
+print on any of the designs." Every sign (BAKERY, POST OFFICE, MERCANTILE)
+and every epitaph was a **flush inlay**: a colour part set level into the
+face. In a four-colour slice they did print; the slate lines were plotted
+from the G-code and read cleanly. But colour was the only thing marking them.
+A one-colour print, or a slicer that dropped every part onto one filament,
+had no letters at all, and nothing for Jessee to paint to either.
+
+- **Carve the outline, then line the carving with the colour part.** Cut
+  each glyph 0.6 mm into the face and make the colour part fill the rest of a
+  1.1 mm-deep prism behind it. One colour: an engraving. Four colours: dark
+  letters in a carved recess.
+- **The cut's ceilings must rise outward at ≥ 58°.** Measured on a
+  28 × 3 × 24 test block with BOO at 4.4 mm, sliced with supports on: a
+  straight 0.6 mm recess drew 1,528 support moves, raised letters with
+  sheared undersides about 460, and a recess with 58° ceilings 0. On a face
+  that leans forward, add the lean to the 58°.
+- **A shifted copy is not a climb.** Cutting a point when the point k·t above
+  it is inside the glyph seals pockets behind the face wherever a glyph has
+  a gap above a stroke: E's arms, an hourglass's waist. The cemetery came out
+  with four sealed voids. Cut a point only if the whole climb from it to k·t
+  above stays inside the glyph. In 2D, that is `intersection_for` over
+  shifts of 0, h/8, …, h.
+- **Build the cut as stacked 2D slabs, not sheared 3D copies.** Five
+  sheared prisms intersected share their vertical sides in one plane and
+  left 54 zero-area faces on the test block. Four slabs 0.15 deep, each
+  extruding the 2D climb set at its deepest point, left none, and the
+  0.15 mm steps in the ceilings still sliced with 0 supports.
+- **Cut the host with one plain prism.** Subtracting the carve and the lining
+  separately left edges where they touch at a point. The lining itself keeps
+  such pinch edges where the cut's outline meets the glyph's; the mesh gate
+  notes them and the union is clean.
+- **Check a font is registered before believing a text render.** In a fresh
+  container Montserrat was missing and `text()` rendered nothing, silently.
+  `openscad_render._ensure_fonts_registered()` fixes it.
