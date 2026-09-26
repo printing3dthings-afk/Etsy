@@ -311,22 +311,26 @@ module roots() {
         }
 }
 // branches: [from, to, r_from, r_to]; hulls of two horizontal octagons, each
-// leaning <= 38 deg from vertical, tips >= 1.2 across
+// leaning <= 38 deg from vertical, tips >= 1.3 across. The first segment of
+// each limb starts ON the trunk's axis, low enough that its disc lies inside
+// the twisted trunk even between the bark's lobes: started at the old offsets,
+// the discs' flat undersides poked out between the lobes and the slicer
+// propped every limb on a column.
 TREE = [
-    [[-0.4, 0.4, 15], [-6, 1, 26],      1.6, 1.15],             // left
+    [[0, 0, 12],      [-6, 1, 26],      1.5, 1.15],             // left
     [[-6, 1, 26],     [-10, 0, 33],     1.15, 0.8],
     [[-10, 0, 33],    [-12, 1, 37],     0.8, 0.7],
     [[-6, 1, 26],     [-7.8, 3.6, 31],  0.9, 0.7],
     [[-6, 1, 26],     [-4, -1.5, 31.5], 0.8, 0.7],
-    [[0.5, 0, 20],    [5, -1, 30],      1.5, 1.1],              // right
+    [[0, 0, 17],      [5, -1, 30],      1.3, 1.1],              // right
     [[5, -1, 30],     [8, 0, 38],       1.1, 0.8],
     [[8, 0, 38],      [10, -1, 41.5],   0.8, 0.7],
     [[5, -1, 30],     [7.8, -2.4, 35],  0.9, 0.7],
     [[5, -1, 30],     [3.5, -3.5, 35],  0.8, 0.7],
-    [[0.5, 0, 20],    [-1, 4, 31],      1.3, 0.9],              // back
+    [[0, 0, 17],      [-1, 4, 31],      1.2, 0.9],              // back
     [[-1, 4, 31],     [1, 6, 39],       0.9, 0.7],
     [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.7, 0.7],
-    [[0.6, 0.2, 11],  [5, -1.5, 17],    1.9, 1.7],              // the sawn-off stub
+    [[0, 0, 8],       [5, -1.5, 17],    1.7, 1.7],              // the sawn-off stub
 ];
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
@@ -448,16 +452,16 @@ module pebbles() {
 }
 
 // ---- grass tufts ----------------------------------------------------------------------------------
-// Five blades each, leaning out from the centre, 1.5 at the root and 1.25 at
-// the tip: at 0.55 tips they were a third of every sub-bead span on the
-// model, and the gate's 1st-percentile wall fell to 0.63.
+// Four stubby blades each, leaning out from the centre, 1.6 at the root and
+// 1.4 at the tip, square to the axes: at 0.55 tips they were a third of every
+// sub-bead span on the model, and the gate's 1st-percentile wall fell to 0.63.
 TUFTS = [[-28, -3], [12, 4], [-46, -12], [44, -14], [-14, -27], [34, -24], [8, 30], [-32, 26], [26, 28], [46, 12], [-4, 22], [18, -24]];
 module tufts() {
     for (t = TUFTS) let (z = gr(t, 3, 3, 0, "min"), zt = gr(t, 3, 3, 0, "max"))
-        translate([t[0], t[1], 0]) for (i = [0 : 4]) let (a = 72 * i + 13 * t[0])
+        translate([t[0], t[1], 0]) for (i = [0 : 3]) let (a = 90 * i + 13 * t[0])
             hull() {
-                translate([0.3 * cos(a), 0.3 * sin(a), z - 1]) cube([1.5, 1.5, 0.01], center = true);
-                translate([1.3 * cos(a), 1.3 * sin(a), zt + 2.4]) rotate([0, 0, 45]) cube([1.25, 1.25, 0.01], center = true);
+                translate([0.3 * cos(a), 0.3 * sin(a), z - 1]) cube([1.6, 1.6, 0.01], center = true);
+                translate([1.2 * cos(a), 1.2 * sin(a), zt + 2.2]) cube([1.4, 1.4, 0.01], center = true);
             }
 }
 
