@@ -7683,3 +7683,26 @@ had no letters at all, and nothing for Jessee to paint to either.
 - **Check a font is registered before believing a text render.** In a fresh
   container Montserrat was missing and `text()` rendered nothing, silently.
   `openscad_render._ensure_fonts_registered()` fixes it.
+
+- **Test a part pinned at its real height, not dropped to the bed.** A lone
+  headstone sliced by itself showed no supports in its letters; the same
+  stone in the scene drew hundreds. The slicer drops a lone part to z = 0,
+  which moves every layer boundary against the stepped ceilings. Add a 1 mm
+  cube at z = 0 beside it to keep its height, and compare against the same
+  part uncarved, pinned the same way: only supports above the plain part's
+  own count belong to the carving.
+- **Stepped ceilings need a steeper angle than smooth ones.** 58° ceilings
+  cleared the upright shop signs but not the headstones: BRB, leaning 8°
+  forward, drew 293 support moves in its letters at 58° plus its lean, even
+  with 0.075 mm steps. At 64° plus the lean, no stone drew any beyond its
+  plain foot. Finer steps alone do not help: the total ledge area stays the
+  same.
+- **Nest the slabs.** Sample the climb at a fixed step (0.2 mm) for every
+  slab, not at h/4 of each slab's own h; then every deeper slab lies inside
+  the one in front of it, so no cut can close over a pocket. Sampled per
+  slab, BOO's bat kept four sealed voids. Eight slabs, nested, came out with
+  every edge shared by exactly two faces and no zero-area faces on all five
+  stones and all three signs.
+- **Watch for a silent empty include.** A test file whose `include` path did
+  not resolve rendered only its 1 mm pin, and sliced to "0 supports". Check
+  a test mesh's bounds before believing its slice.
