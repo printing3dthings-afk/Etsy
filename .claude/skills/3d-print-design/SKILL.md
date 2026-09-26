@@ -7661,16 +7661,25 @@ had no letters at all, and nothing for Jessee to paint to either.
   a gap above a stroke: E's arms, an hourglass's waist. The cemetery came out
   with four sealed voids. Cut a point only if the whole climb from it to k·t
   above stays inside the glyph. In 2D, that is `intersection_for` over
-  shifts of 0, h/8, …, h.
+  shifts of 0, h/4, …, h. Eight steps put collinear vertices along the
+  curves and left zero-area faces; four stay finer than any gap in these
+  glyphs.
 - **Build the cut as stacked 2D slabs, not sheared 3D copies.** Five
   sheared prisms intersected share their vertical sides in one plane and
   left 54 zero-area faces on the test block. Four slabs 0.15 deep, each
   extruding the 2D climb set at its deepest point, left none, and the
   0.15 mm steps in the ceilings still sliced with 0 supports.
-- **Cut the host with one plain prism.** Subtracting the carve and the lining
-  separately left edges where they touch at a point. The lining itself keeps
-  such pinch edges where the cut's outline meets the glyph's; the mesh gate
-  notes them and the union is clean.
+- **Cut the lining and the host's hole from the same placed cutters.** The
+  lining is (placed host ∩ placed prism) − placed cut, and the host loses the
+  lining and the same placed cut. Placing the lining as one already-cut solid
+  put it a rounding error off the host's hole: 33 sheets and slivers in the
+  cemetery's union.
+- **Expect a few leftovers and verify by slicing.** Every variant tried (an
+  offset round trip, three or four climb steps, three or four slabs, a
+  full-outline first 0.05 mm) cleaned one sign and dirtied another. The
+  construction above left the bakery sign and the RIP stone fully clean, and
+  a handful of zero-area slivers or touching edges on others. Slicers repair
+  those on import; say so in the notes rather than claiming zero.
 - **Check a font is registered before believing a text render.** In a fresh
   container Montserrat was missing and `text()` rendered nothing, silently.
   `openscad_render._ensure_fonts_registered()` fixes it.
