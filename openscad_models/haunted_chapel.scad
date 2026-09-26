@@ -240,7 +240,10 @@ module spire() tipM() intersection() {
 }
 module tower_room() {
     tip() translate([tx0 + wall, ty0 + wall, -2]) cube([2 * (th - wall), 2 * (th - wall), z_tt + 2]);
-    tipM() spire_plumb(wall);
+    // The hollow stops 26 up (70 deg sides), leaving the spire's tip solid
+    // for the cross's socket.
+    tipM() translate([tcx, tcy, z_tt]) rotate([0, 0, 45])
+        cylinder(r1 = (th - wall) * sqrt(2), r2 = 0, h = 26, $fn = 4);
 }
 module tower_outer() { tower_walls(); spire(); }
 // THE TOWER'S INNER WALLS, carried to the ground. Where the tower stands in
@@ -402,7 +405,9 @@ module bands_plumb() {
 // undersides rise 66 deg from the post -- 60 after the tip.
 module cross_plumb() {
     translate([tcx, tcy, z_tt + sp_cut]) {
-        translate([-0.9, -0.9, 0]) cube([1.8, 1.8, 12]);
+        // the post runs 3.5 down into a socket in the spire's solid tip:
+        // stood on the cut top alone it had 3 mm2 of contact 150 mm up
+        translate([-0.9, -0.9, -3.5]) cube([1.8, 1.8, 15.5]);
         xz(-0.9, 0.9) polygon([[0.9, 2.9], [3.3, 2.9 + 2.4 * tan(66)], [3.3, 9.5], [-3.3, 9.5],
                                 [-3.3, 2.9 + 2.4 * tan(66)], [-0.9, 2.9]]);
     }
@@ -542,9 +547,9 @@ module roof_raw() {
     }
     difference() { spire(); room(); }
 }
-module roof_part()   { roof_raw(); }
-module accent_part() { difference() { accent_raw(); roof_raw(); } }
-module trim_part()   { difference() { trim_raw(); accent_raw(); roof_raw(); } }
+module roof_part()   { difference() { roof_raw(); tipM() cross_plumb(); } }
+module accent_part() { difference() { accent_raw(); roof_part(); } }
+module trim_part()   { difference() { trim_raw(); accent_raw(); roof_part(); } }
 module body_part() {
     difference() {
         body_solid();
