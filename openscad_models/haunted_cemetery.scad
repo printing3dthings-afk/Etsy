@@ -472,12 +472,14 @@ module pebbles() {
 // 1.4 at the tip, square to the axes: at 0.55 tips they were a third of every
 // sub-bead span on the model, and the gate's 1st-percentile wall fell to 0.63.
 TUFTS = [[-28, -3], [12, 4], [-46, -12], [44, -14], [-14, -27], [34, -24], [8, 30], [-32, 26], [26, 28], [46, 12], [-4, 22], [18, -24]];
+// Five splayed blades of uneven height, square to the axes (2026-09-26): four
+// short ones bunched together read as little boxes in the renders.
 module tufts() {
     for (t = TUFTS) let (z = gr(t, 3, 3, 0, "min"), zt = gr(t, 3, 3, 0, "max"))
-        translate([t[0], t[1], 0]) for (i = [0 : 3]) let (a = 90 * i + 13 * t[0])
+        translate([t[0], t[1], 0]) for (i = [0 : 4]) let (a = 72 * i + 13 * t[0], h = 3.0 + 0.5 * ((i * 3 + t[0]) % 3))
             hull() {
                 translate([0.3 * cos(a), 0.3 * sin(a), z - 1]) cube([1.6, 1.6, 0.01], center = true);
-                translate([1.2 * cos(a), 1.2 * sin(a), zt + 2.2]) cube([1.4, 1.4, 0.01], center = true);
+                translate([1.9 * cos(a), 1.9 * sin(a), zt + h]) cube([1.3, 1.3, 0.01], center = true);
             }
 }
 
