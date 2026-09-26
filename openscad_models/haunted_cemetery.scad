@@ -239,17 +239,26 @@ module stone_slab(t0, t1) translate([0, -st_t/2 + t1, 0]) rotate([90, 0, 0]) lin
 module stone_prism(s, d) stone_slab(-0.01, d) stone_inlay_2d(s);
 // 2D: the part of the glyphs whose whole climb of h above it stays inside
 // them, so a cut ceiling never closes over a pocket (the hourglass's waist).
-module stone_climb(s, h) intersection_for(j = [0 : 8]) translate([0, -j * h / 8]) stone_inlay_2d(s);
+// Four steps, not eight: eight put collinear vertices along the curves and
+// left zero-area faces; the steps stay finer than any gap in a glyph.
+module stone_climb(s, h) intersection_for(j = [0 : 4]) translate([0, -j * h / 4]) stone_inlay_2d(s);
 // The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
 // slabs rather than sheared copies of one prism: the copies' sides lay in
 // shared planes and left zero-area faces.
 module stone_carve(s) for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
     stone_slab(i == 0 ? -0.01 : t0, t1) stone_climb(s, lt_k(s) * t1);
-module stone_holes() { for (s = STONES) place_stone(s) stone_prism(s, lt); }
+// The lining and the stone's hole are cut from the SAME placed cutters, so
+// their faces are one computation. Placed as one already-cut solid, the
+// lining came out a rounding error off the stone's hole and left 33 sheets
+// and slivers in the union.
+module stone_carves() { for (s = STONES) place_stone(s) stone_carve(s); }
 module stone_inlays() {
-    for (s = STONES) intersection() {
-        place_stone(s) stone_body(s);
-        place_stone(s) difference() { stone_prism(s, lt); stone_carve(s); }
+    for (s = STONES) difference() {
+        intersection() {
+            place_stone(s) stone_body(s);
+            place_stone(s) stone_prism(s, lt);
+        }
+        place_stone(s) stone_carve(s);
     }
 }
 // Clipped 0.6 above the plate: RIP, near the rim and tipped, once poked a
@@ -597,7 +606,7 @@ module roof_raw()   { tree(); fence(); pavers(); pebbles(); stone_inlays(); pk_f
 module trim_raw()   { stones(); kerb(); hand(); for (b = BONES) ground_bone(b); place_skull() skull_dome(); }
 module accent_raw() { pumpkins(); shovel(); }
 module roof_part()   { roof_raw(); }
-module trim_part()   { difference() { trim_raw(); roof_raw(); stone_holes(); } }
+module trim_part()   { difference() { trim_raw(); roof_raw(); stone_carves(); } }
 module accent_part() { difference() { accent_raw(); roof_raw(); trim_raw(); } }
 module body_part() {
     difference() {

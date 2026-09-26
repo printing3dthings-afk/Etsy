@@ -378,16 +378,21 @@ module sign_text() text("POST OFFICE", size = 4.4, font = "Montserrat:style=Blac
 module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
 // 2D: the part of the letters whose whole climb of h above it stays inside
 // them, so a cut ceiling never closes over a pocket (between E's arms).
-module sign_climb(h) intersection_for(j = [0 : 8]) translate([0, -j * h / 8]) sign_text();
+// Four steps, not eight: eight put collinear vertices along the curves and
+// left zero-area faces; the steps stay finer than any gap in a glyph.
+module sign_climb(h) intersection_for(j = [0 : 4]) translate([0, -j * h / 4]) sign_text();
 // The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
 // slabs rather than sheared copies of one prism: the copies' sides lay in
 // shared planes and left zero-area faces.
 module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
     translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
-module sign_hole() sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth + 0.01) sign_text();
-module sign_letters() sign_at() difference() {
-    translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
-    sign_carve_local();
+// The letters and the board's hole are cut from the SAME placed cutter, so
+// their faces are one computation (placed as one already-cut solid, the
+// cemetery's linings came out a rounding error off their holes).
+module sign_carve() sign_at() sign_carve_local();
+module sign_letters() difference() {
+    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
+    sign_carve();
 }
 
 // Brick joints stay out of these: [face, u0, u1, z0, z1], a frame's outline
@@ -432,7 +437,7 @@ module accent_raw() {
     mail_slot();
 }
 module accent_part() { accent_raw(); }
-module trim_part()   { difference() { trim_raw(); accent_raw(); sign_hole(); } }
+module trim_part()   { difference() { trim_raw(); accent_raw(); sign_carve(); } }
 module body_part() {
     difference() {
         body_solid();
