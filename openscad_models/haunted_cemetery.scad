@@ -86,12 +86,16 @@ module pit() translate([pit_c[0] - pit_s[0]/2, pit_c[1] - pit_s[1]/2, pit_floor]
 st_t = 3.0;
 lt   = 0.8;                 // lettering inlay depth
 //   [x, y, style, width, height above ground, text, text size, text z, turn, lean fwd, tip side]
+// Widths are set by the words, measured with 1.12 letter spacing: the first
+// build's BOO!, NEXT and OOPS were wider than their stones and were clipped.
+// Every stroke survives a one-bead opening and every gap between letters
+// survives a one-bead closing (checked with an offset pass on each word).
 STONES = [
     [-38, -14, "round",  14, 17, "RIP",  4.6, 9.5,  10,  6, -4],
-    [-18, -12, "gothic", 15, 20, "BOO!", 4.2, 9.5,  -8, -5,  5],
-    [  2,  -7, "broken", 15, 15, "BRB",  4.4, 7.5,   4,  8,  3],
-    [ 24,  -3, "tablet", 15, 18, "NEXT", 3.9, 10,   -6,  3, -3],
-    [ 28,  19, "round",  14, 15, "OOPS", 3.9, 8,    14,  9,  8],
+    [-18, -12, "gothic", 20, 24, "BOO",  4.4, 7,    -8, -5,  5],
+    [  2,  -7, "broken", 16, 15, "BRB",  4.4, 7,     4,  8,  3],
+    [ 24,  -3, "tablet", 18, 18, "NEXT", 3.9, 10,   -6,  3, -3],
+    [ 28,  19, "round",  20, 17, "OOPS", 3.8, 7,    14,  9,  8],
     [-34,   8, "cross",  12, 21, "",     0,   0,    -4, -6,  0],
     [  4,  16, "obelisk", 7, 20, "",     0,   0,     8,  0,  4],
 ];
@@ -154,7 +158,7 @@ module stone_text(s) {
             // $fn 16: at the default the glyph curves' short segments came out
             // of the rotated boolean as zero-area slivers in BOO!'s point and
             // OOPS's S
-            text(s[5], size = s[6], font = "Montserrat:style=Black", halign = "center", valign = "center", $fn = 16);
+            text(s[5], size = s[6], font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.12, $fn = 16);
     }
 }
 // Clipped 0.6 above the plate: RIP, near the rim and tipped, poked a corner
