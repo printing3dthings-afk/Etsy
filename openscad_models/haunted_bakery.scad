@@ -436,7 +436,7 @@ module sign_board() {
         relief_up(-0.4, fr_t) translate([-sg_w/2, -sg_h/2]) square([sg_w, sg_h]);
 }
 // The letters are CARVED 0.6 into the board and lined with the accent part
-// (2026-09-27). As a flush inlay they were colour alone: a one-colour print,
+// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
 // or a slicer that put every part on one filament, lost the sign entirely.
 // The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
 // recess drew 1,528 support moves on a test block, the sheared one none.

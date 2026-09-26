@@ -239,13 +239,18 @@ module sign_board() {
         relief_up(-0.4, fr_t) translate([-sg_w/2, -sg_h/2]) square([sg_w, sg_h]);
 }
 // The letters are CARVED 0.6 into the board and lined with the accent part
-// (2026-09-27). As a flush inlay they were colour alone: a one-colour print,
+// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
 // or a slicer that put every part on one filament, lost the sign entirely.
 // The cut's ceilings rise outward at 61 deg, 58 plus the front's forward lean, -- a straight-cut 0.6
 // recess drew 1,528 support moves on a test block, the sheared one none.
 lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(61);  lt_n = 8;
+// Spacing 1.06, not 1.04 (2026-09-26): at 1.04 the carve's stepped ceilings
+// left a knife edge where CGAL joined the lining to the board, and the union
+// failed the watertight gate. Nudging the sign, the step (0.19 drew supports
+// under every letter: only 0.2 steps sit on the layers) or a proud lining all
+// just moved it; 1.06 closed it, and MERCANTILE is 51.5 of the board's 56 mm.
 module sign_text() text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
-                        halign = "center", valign = "center", spacing = 1.04);
+                        halign = "center", valign = "center", spacing = 1.06);
 module sign_at() on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
 // 2D: the part of the letters whose whole climb of h above it stays inside
 // them, sampled every lt_step. The same steps for every slab, so each deeper

@@ -224,7 +224,7 @@ module stone_inlay_2d(s) {
 // afterwards, its face against the stone came out of CGAL a rounding error off
 // the stone's own face and left non-manifold edges round every word.
 //
-// Carved, then lined (2026-09-27). As a flush inlay the lettering was colour
+// Carved, then lined (2026-09-26). As a flush inlay the lettering was colour
 // alone: a one-colour print, or a slicer that put every part on one filament,
 // lost every word. Now each word, motif and crack is cut lt_open into the
 // stone and the slate part lines the cut, so a one-colour print shows an
@@ -232,7 +232,7 @@ module stone_inlay_2d(s) {
 // outward at 58 deg plus the stone's forward lean (a stone tipped forward
 // tilts its ceilings down): a straight-cut 0.6 recess drew 1,528 support
 // moves on a test block, the sheared one none.
-// 64 deg, not 58 (2026-09-27): at 58 plus BRB's 8 deg forward lean, the
+// 64 deg, not 58 (2026-09-26): at 58 plus BRB's 8 deg forward lean, the
 // stepped ceilings still drew 293 support moves in BRB's letters; at 64 no
 // stone draws any beyond its own plain foot. The slabs are 0.075 deep.
 function lt_k(s) = tan(64 + max(0, s[11]));
