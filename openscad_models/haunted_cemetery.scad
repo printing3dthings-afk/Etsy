@@ -334,28 +334,27 @@ TREE = [
 ];
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
-// The crow, 1.5x: one hull for body, head and the folded wings' tips, one for
-// the tail. Its keel lies wholly inside the stub's cut top. The body's
-// layers are ellipses, not boxes: a box's corners made diagonal facets
-// flatter than its sides. Undersides checked numerically (scipy ConvexHull)
-// against the 58 deg a convex corner of two overhangs needs: body 59.1, tail
-// 59.0. At 54-55 the slicer propped the crow on a column from the ground.
-// The beak and the raised tail point up -- a cawing crow -- because level
-// ones would be ledges.
-module ell(cx, a, b, z) translate([cx, 0, z]) scale([a, b, 1]) cylinder(r = 1, h = 0.05, $fn = 24);
+// The crow: one hull for body, head and the folded wings' tips, one for the
+// tail, facing +x on its keel, which lies wholly inside the stub's cut top.
+// This is the 1.25x box-bodied crow that passed the gate, with the wing tips
+// added. A 1.5x crow with elliptical layers, checked at 59 deg underside by
+// scipy, still drew 81 support lines when sliced alone on the same stub;
+// this one draws none, sliced the same way. Trust the slicer, not the hull
+// arithmetic. The beak is raised -- a cawing crow -- because a level one
+// would be a ledge.
 module crow() {
-    scale(1.5) {
+    scale(1.25) {
         hull() {
-            ell(0.05, 0.85, 0.45, 0);
-            ell(0.05, 2.25, 1.3, 2.3);
-            ell(0.1, 1.9, 1.0, 3.3);
-            for (s = [-1, 1]) translate([-3.1, s * 0.9, 4.4]) cube(0.2, center = true);   // wing tips
-            translate([2.4, 0, 4.4]) sphere(r = 1.0, $fn = 12);
-            translate([4.1, 0, 6.2]) cube([0.5, 0.5, 0.5], center = true);
+            translate([-1.0, -0.55, 0]) cube([2.1, 1.1, 0.05]);
+            translate([-2.2, -1.3, 1.8]) cube([4.5, 2.6, 0.05]);
+            translate([-1.8, -1.0, 3.0]) cube([3.8, 2.0, 0.05]);
+            for (s = [-1, 1]) translate([-3.1, s * 0.9, 4.3]) cube(0.2, center = true);   // wing tips
+            translate([2.4, 0, 3.9]) sphere(r = 1.1, $fn = 12);
+            translate([4.3, 0, 5.2]) cube([0.5, 0.5, 0.5], center = true);
         }
         hull() {
-            translate([-2.1, -0.9, 2.5]) cube([0.9, 1.8, 1.0]);
-            translate([-3.9, -0.5, 5.5]) cube([0.6, 1.0, 0.6]);
+            translate([-2.1, -0.9, 2.0]) cube([0.9, 1.8, 1.0]);
+            translate([-3.9, -0.5, 4.3]) cube([0.6, 1.0, 0.6]);
         }
     }
 }
