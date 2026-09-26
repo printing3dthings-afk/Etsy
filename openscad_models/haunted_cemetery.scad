@@ -233,20 +233,23 @@ module stone_inlay_2d(s) {
 // tilts its ceilings down): a straight-cut 0.6 recess drew 1,528 support
 // moves on a test block, the sheared one none.
 function lt_k(s) = tan(58 + max(0, s[11]));
-module stone_prism(s, d) translate([0, -st_t/2 + d, 0]) rotate([90, 0, 0]) linear_extrude(d + 0.01) stone_inlay_2d(s);
-module stone_carve(s) intersection() {
-    stone_prism(s, lt_open);
-    // at depth t behind the face, the letter is lowered by lt_k * t
-    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, -lt_k(s), 1, -lt_k(s) * st_t / 2], [0, 0, 0, 1]]) stone_prism(s, lt_open);
-}
-module stone_carves() { for (s = STONES) place_stone(s) stone_carve(s); }
+lt_n = 4;
+// a slab of the stone's face from depth t0 to t1 behind it
+module stone_slab(t0, t1) translate([0, -st_t/2 + t1, 0]) rotate([90, 0, 0]) linear_extrude(t1 - t0) children();
+module stone_prism(s, d) stone_slab(-0.01, d) stone_inlay_2d(s);
+// 2D: the part of the glyphs whose whole climb of h above it stays inside
+// them, so a cut ceiling never closes over a pocket (the hourglass's waist).
+module stone_climb(s, h) intersection_for(j = [0 : 8]) translate([0, -j * h / 8]) stone_inlay_2d(s);
+// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
+// slabs rather than sheared copies of one prism: the copies' sides lay in
+// shared planes and left zero-area faces.
+module stone_carve(s) for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
+    stone_slab(i == 0 ? -0.01 : t0, t1) stone_climb(s, lt_k(s) * t1);
+module stone_holes() { for (s = STONES) place_stone(s) stone_prism(s, lt); }
 module stone_inlays() {
-    for (s = STONES) difference() {
-        intersection() {
-            place_stone(s) stone_body(s);
-            place_stone(s) stone_prism(s, lt);
-        }
-        place_stone(s) stone_carve(s);
+    for (s = STONES) intersection() {
+        place_stone(s) stone_body(s);
+        place_stone(s) difference() { stone_prism(s, lt); stone_carve(s); }
     }
 }
 // Clipped 0.6 above the plate: RIP, near the rim and tipped, once poked a
@@ -594,7 +597,7 @@ module roof_raw()   { tree(); fence(); pavers(); pebbles(); stone_inlays(); pk_f
 module trim_raw()   { stones(); kerb(); hand(); for (b = BONES) ground_bone(b); place_skull() skull_dome(); }
 module accent_raw() { pumpkins(); shovel(); }
 module roof_part()   { roof_raw(); }
-module trim_part()   { difference() { trim_raw(); roof_raw(); stone_carves(); } }
+module trim_part()   { difference() { trim_raw(); roof_raw(); stone_holes(); } }
 module accent_part() { difference() { accent_raw(); roof_raw(); trim_raw(); } }
 module body_part() {
     difference() {
