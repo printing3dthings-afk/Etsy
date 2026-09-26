@@ -440,15 +440,14 @@ module sign_board() {
 // or a slicer that put every part on one filament, lost the sign entirely.
 // The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
 // recess drew 1,528 support moves on a test block, the sheared one none.
-lt_open = 0.6;  lt_depth = 1.1;  lt_k = tan(58);  lt_n = 4;
+lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
 module sign_text() text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
                         halign = "center", valign = "center", spacing = 1.06);
 module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
 // 2D: the part of the letters whose whole climb of h above it stays inside
-// them, so a cut ceiling never closes over a pocket (between E's arms).
-// Four steps, not eight: eight put collinear vertices along the curves and
-// left zero-area faces; the steps stay finer than any gap in a glyph.
-module sign_climb(h) intersection_for(j = [0 : 4]) translate([0, -j * h / 4]) sign_text();
+// them, sampled every lt_step. The same steps for every slab, so each deeper
+// slab lies inside the one in front of it and no cut can close over a pocket.
+module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
 // The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
 // slabs rather than sheared copies of one prism: the copies' sides lay in
 // shared planes and left zero-area faces.

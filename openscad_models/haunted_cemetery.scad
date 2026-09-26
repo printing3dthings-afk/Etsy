@@ -232,16 +232,20 @@ module stone_inlay_2d(s) {
 // outward at 58 deg plus the stone's forward lean (a stone tipped forward
 // tilts its ceilings down): a straight-cut 0.6 recess drew 1,528 support
 // moves on a test block, the sheared one none.
-function lt_k(s) = tan(58 + max(0, s[11]));
-lt_n = 4;
+// 64 deg, not 58 (2026-09-27): at 58 plus BRB's 8 deg forward lean, the
+// stepped ceilings still drew 293 support moves in BRB's letters; at 64 no
+// stone draws any beyond its own plain foot. The slabs are 0.075 deep.
+function lt_k(s) = tan(64 + max(0, s[11]));
+lt_n = 8;
 // a slab of the stone's face from depth t0 to t1 behind it
 module stone_slab(t0, t1) translate([0, -st_t/2 + t1, 0]) rotate([90, 0, 0]) linear_extrude(t1 - t0) children();
 module stone_prism(s, d) stone_slab(-0.01, d) stone_inlay_2d(s);
 // 2D: the part of the glyphs whose whole climb of h above it stays inside
-// them, so a cut ceiling never closes over a pocket (the hourglass's waist).
-// Four steps, not eight: eight put collinear vertices along the curves and
-// left zero-area faces; the steps stay finer than any gap in a glyph.
-module stone_climb(s, h) intersection_for(j = [0 : 4]) translate([0, -j * h / 4]) stone_inlay_2d(s);
+// them, sampled every lt_step. The same steps for every slab, so each deeper
+// slab lies inside the one in front of it and no cut can close over a pocket:
+// a climb sampled at h/4 per slab left four sealed voids in BOO's bat.
+lt_step = 0.2;
+module stone_climb(s, h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) stone_inlay_2d(s);
 // The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
 // slabs rather than sheared copies of one prism: the copies' sides lay in
 // shared planes and left zero-area faces.
