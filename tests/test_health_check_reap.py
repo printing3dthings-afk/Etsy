@@ -38,6 +38,19 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
 import main as server  # noqa: E402
 import db  # noqa: E402
 
+
+# _append_ops_runbook_entry() writes to server._OPS_RUNBOOK_PATH, which is
+# _volume_or_local(...) -- on a deploy that is the mounted volume, but with no
+# volume it falls back to the git-tracked data/knowledge_base/ops_runbook.md.
+# This suite exercises the escalation paths on purpose, so without this it
+# appends its own fixtures (TESTCRASH, TESTHUNG, /tmp/... "volumes") straight
+# into the real doc Frank reads as ground truth when Scott asks why something
+# broke. Caught 2026-09-05 by a stop-hook flagging the diff. Per
+# .claude/rules/testing.md: never point a test at the real data/ tree.
+_tmp_runbook = tempfile.NamedTemporaryFile(
+    prefix="frank_healthreap_runbook_", suffix=".md", delete=False)
+_tmp_runbook.close()
+server._OPS_RUNBOOK_PATH = Path(_tmp_runbook.name)
 _failures: list[str] = []
 
 

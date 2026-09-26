@@ -44,6 +44,8 @@ Standalone: python3 tools/blender_render.py --check
 from __future__ import annotations
 
 import shutil
+import hashlib
+import json
 import subprocess
 import sys
 import tempfile
@@ -54,59 +56,80 @@ BLENDER_APT_PACKAGE = "blender"
 _SCENE_SCRIPT = r'''
 import bpy, sys, math, mathutils
 
+import json
+
 argv = sys.argv[sys.argv.index("--")+1:]
-stl_path, out_path, r, g, b, az_deg, el_deg, samples, res = argv
-r, g, b = float(r), float(g), float(b)
+parts_json, out_path, az_deg, el_deg, samples, res, lens = argv
+# [[path, [r,g,b]], ...] -- one entry is the ordinary single-colour case.
+parts = json.loads(parts_json)
 az, el = math.radians(float(az_deg)), math.radians(float(el_deg))
 samples = int(samples)
 res = int(res)
+lens = float(lens)
 
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
 for m in list(bpy.data.meshes):
     bpy.data.meshes.remove(m)
 
-ext = stl_path.lower().rsplit(".", 1)[-1]
-if ext == "stl":
-    bpy.ops.wm.stl_import(filepath=stl_path)
-elif ext == "obj":
-    bpy.ops.wm.obj_import(filepath=stl_path)
-elif ext == "ply":
-    bpy.ops.wm.ply_import(filepath=stl_path)
-else:
-    raise SystemExit(f"unsupported mesh extension for Blender import: {ext}")
+def _import(path):
+    before = {o.name for o in bpy.context.scene.objects}
+    ext = path.lower().rsplit(".", 1)[-1]
+    if ext == "stl":
+        bpy.ops.wm.stl_import(filepath=path)
+    elif ext == "obj":
+        bpy.ops.wm.obj_import(filepath=path)
+    elif ext == "ply":
+        bpy.ops.wm.ply_import(filepath=path)
+    else:
+        raise SystemExit(f"unsupported mesh extension for Blender import: {ext}")
+    fresh = [o for o in bpy.context.scene.objects
+             if o.name not in before and o.type == 'MESH']
+    if not fresh:
+        raise SystemExit(f"import produced no mesh objects from {path}")
+    # One FILE is one colour region, so its own sub-objects get joined; separate
+    # files never are, which is the whole point of the multi-part path.
+    for o in fresh:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = fresh[0]
+    if len(fresh) > 1:
+        bpy.ops.object.join()
+    return bpy.context.view_layer.objects.active
 
-objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
-if not objs:
-    raise SystemExit("import produced no mesh objects -- check the input file")
-for o in objs:
-    o.select_set(True)
-bpy.context.view_layer.objects.active = objs[0]
-if len(objs) > 1:
-    bpy.ops.object.join()
-obj = bpy.context.view_layer.objects.active
-obj.name = "part"
+built = []
+for idx, (path, rgb) in enumerate(parts):
+    bpy.ops.object.select_all(action='DESELECT')
+    o = _import(path)
+    o.name = f"part{idx}"
+    mat = bpy.data.materials.new(f"filament{idx}")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (float(rgb[0]), float(rgb[1]), float(rgb[2]), 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.35
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 0.5
+    o.data.materials.clear()
+    o.data.materials.append(mat)
+    built.append(o)
 
+# Frame the parts TOGETHER and shift them all by the same offset. Centring each
+# one on its own bounding box would slide the pieces out of register with each
+# other -- they are one object cut into colour regions, not separate models.
 bpy.context.view_layer.update()
-bb = [obj.matrix_world @ mathutils.Vector(c) for c in obj.bound_box]
-xs = [v.x for v in bb]; ys = [v.y for v in bb]; zs = [v.z for v in bb]
+xs = []; ys = []; zs = []
+for o in built:
+    for c in o.bound_box:
+        v = o.matrix_world @ mathutils.Vector(c)
+        xs.append(v.x); ys.append(v.y); zs.append(v.z)
 cx = (min(xs) + max(xs)) / 2
 cy = (min(ys) + max(ys)) / 2
 size = max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs), 1.0)
 minz = min(zs)
-obj.location.x -= cx
-obj.location.y -= cy
-obj.location.z -= minz
-
-mat = bpy.data.materials.new("review_material")
-mat.use_nodes = True
-bsdf = mat.node_tree.nodes["Principled BSDF"]
-bsdf.inputs["Base Color"].default_value = (r, g, b, 1.0)
-bsdf.inputs["Roughness"].default_value = 0.35
-if "Specular IOR Level" in bsdf.inputs:
-    bsdf.inputs["Specular IOR Level"].default_value = 0.5
-obj.data.materials.clear()
-obj.data.materials.append(mat)
+for o in built:
+    o.location.x -= cx
+    o.location.y -= cy
+    o.location.z -= minz
+obj = built[0]
 
 bpy.ops.mesh.primitive_plane_add(size=size * 6, location=(0, 0, 0))
 floor = bpy.context.active_object
@@ -116,7 +139,14 @@ fmat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.
 fmat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.85
 floor.data.materials.append(fmat)
 
-dist = size * 2.6
+# Distance scales with focal length, so the lens sets PERSPECTIVE and the
+# distance sets FRAMING -- they used to be tangled. dist was a flat size*2.6
+# whatever the lens, which made the two fight: 85mm cropped a tall part, and
+# the wide lens you reached for to fit it then left the subject a speck in a
+# sea of floor (a 123mm axolotl filled under half the frame). Anchored at
+# 50mm, so the old distance is recovered at a normal lens and every other
+# focal length reframes to match instead of rescaling the subject.
+dist = size * 2.6 * (lens / 50.0)
 cam_x = dist * math.cos(el) * math.sin(az)
 cam_y = -dist * math.cos(el) * math.cos(az)
 cam_z = dist * math.sin(el) + size * 0.15
@@ -126,7 +156,7 @@ target = mathutils.Vector((0, 0, size * 0.28))
 direction = target - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 bpy.context.scene.camera = cam
-cam.data.lens = 85
+cam.data.lens = lens
 
 def add_area(name, loc, energy, sz, target):
     bpy.ops.object.light_add(type='AREA', location=loc)
@@ -178,22 +208,52 @@ def check_blender_available() -> tuple[bool, str]:
             f"(~25MB + deps via apt), not a pip package."
         )
     try:
-        result = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=15)
+        # 90s, not 15. Every render calls this first, and on a loaded box a
+        # cold `blender --version` genuinely took longer than 15 -- which
+        # aborted a 72-plate batch on its first plate, for a probe whose only
+        # job is to print a version string.
+        result = subprocess.run([exe, "--version"], capture_output=True,
+                                text=True, timeout=90)
         version = (result.stdout or result.stderr or "").splitlines()[0].strip()
         return True, version or "blender (version unknown)"
     except Exception as exc:  # noqa: BLE001
         return False, f"blender found at {exe} but --version failed: {exc}"
 
 
+# --- render cache -----------------------------------------------------------
+# A Cycles review render is 50-90s at the defaults and nothing skipped an
+# unchanged one -- several were burned this session re-rendering the same mesh
+# at a camera angle that was only wrong once. Keys on the real CONTENT of every
+# mesh (not mtime, which a re-export bumps even when the geometry is identical)
+# plus every parameter that changes a pixel.
+_CACHE_SUFFIX = ".rendercache"
+
+
+def _render_key(parts, color, azimuth, elevation, samples, resolution, lens) -> str | None:
+    h = hashlib.sha256()
+    try:
+        for path, col in parts:
+            pth = Path(path)
+            h.update(str(pth.name).encode())
+            h.update(pth.read_bytes())
+            h.update(repr(tuple(col) if col is not None else None).encode())
+    except OSError:
+        return None
+    h.update(repr((tuple(color), azimuth, elevation, samples, resolution, lens)).encode())
+    return h.hexdigest()
+
+
 def render_review(
-    mesh_path: Path,
+    mesh_path: Path | list | tuple,
     output_path: Path,
     color: tuple[float, float, float] = (0.8, 0.8, 0.82),
     azimuth: float = 35.0,
     elevation: float = 28.0,
     samples: int = 96,
     resolution: int = 1200,
+    lens: float = 85.0,
     timeout: int = 300,
+    use_cache: bool = True,
 ) -> Path:
     """Render a studio-lit three-quarter product photo of mesh_path (STL/
     OBJ/PLY) to output_path (PNG). Three-point area lighting, a matte
@@ -212,15 +272,26 @@ def render_review(
     binary missing, unsupported mesh extension, empty/missing mesh, a
     timeout, or a zero-byte output.
     """
-    mesh_path = Path(mesh_path)
-    if not mesh_path.exists():
-        raise BlenderRenderError(f"mesh file not found: {mesh_path}")
-    if mesh_path.suffix.lower() not in (".stl", ".obj", ".ply"):
-        raise BlenderRenderError(
-            f"unsupported mesh extension {mesh_path.suffix!r} -- this container's Blender "
-            f"has no bundled 3MF importer (confirmed live); use .stl/.obj/.ply. For a 3MF "
-            f"deliverable, render that separately via openscad_render.py's fmt='3mf'."
-        )
+    # mesh_path is either one mesh (the original single-colour call) or a list
+    # of (path, (r,g,b)) pairs -- one per filament. Added 2026-09-11: this shop
+    # sells genuinely multi-colour prints (the whole SS-series pipeline is about
+    # which region gets which AMS slot) and a review renderer that can only show
+    # one colour cannot answer "what does this look like printed".
+    if isinstance(mesh_path, (list, tuple)):
+        parts = [(Path(p), tuple(c)) for p, c in mesh_path]
+        if not parts:
+            raise BlenderRenderError("no parts given -- pass at least one (path, rgb) pair")
+    else:
+        parts = [(Path(mesh_path), tuple(color))]
+    for mp, _ in parts:
+        if not mp.exists():
+            raise BlenderRenderError(f"mesh file not found: {mp}")
+        if mp.suffix.lower() not in (".stl", ".obj", ".ply"):
+            raise BlenderRenderError(
+                f"unsupported mesh extension {mp.suffix!r} -- this container's Blender "
+                f"has no bundled 3MF importer (confirmed live); use .stl/.obj/.ply. For a 3MF "
+                f"deliverable, render that separately via openscad_render.py's fmt='3mf'."
+            )
 
     available, info = check_blender_available()
     if not available:
@@ -230,16 +301,28 @@ def render_review(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    key = _render_key(parts, color, azimuth, elevation, samples, resolution, lens) if use_cache else None
+    meta_path = output_path.with_suffix(output_path.suffix + _CACHE_SUFFIX)
+    if key:
+        try:
+            if (output_path.exists() and output_path.stat().st_size > 0
+                    and json.loads(meta_path.read_text()).get("key") == key):
+                return output_path
+        except (OSError, ValueError):
+            pass
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as f:
         f.write(_SCENE_SCRIPT)
         script_path = Path(f.name)
 
     try:
+        import json as _json
+        spec = _json.dumps([[str(mp), [float(c[0]), float(c[1]), float(c[2])]]
+                            for mp, c in parts])
         cmd = [
             exe, "-b", "--python", str(script_path), "--",
-            str(mesh_path), str(output_path),
-            str(color[0]), str(color[1]), str(color[2]),
-            str(azimuth), str(elevation), str(samples), str(resolution),
+            spec, str(output_path),
+            str(azimuth), str(elevation), str(samples), str(resolution), str(lens),
         ]
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
@@ -257,35 +340,101 @@ def render_review(
             raise BlenderRenderError(
                 f"blender exited 0 but produced no/empty output at {output_path}"
             )
+        # Only after every success check above, so a hit can never stand in for
+        # a render that failed or produced nothing.
+        if key:
+            try:
+                meta_path.write_text(json.dumps({"key": key}))
+            except OSError:
+                pass
         return output_path
     finally:
         script_path.unlink(missing_ok=True)
+
+
+def render_views(mesh_path, out_prefix, color=(0.8, 0.8, 0.82), samples=96,
+                 resolution=900, lens=85.0, use_cache=True):
+    """Three views of one model: front, three-quarter, top-down.
+
+    Scott, 2026-09-13: "Render three PNG views after every generation so I can
+    see the result before printing." One angle hides things -- the session that
+    produced this had a tombstone reviewed from the back and a fox whose tail
+    scalloping only showed in profile.
+    """
+    out_prefix = Path(out_prefix)
+    spec = (("front", 180.0, 5.0), ("three_quarter", 215.0, 25.0), ("top", 180.0, 78.0))
+    made = []
+    for name, az, el in spec:
+        out = out_prefix.with_name(f"{out_prefix.stem}_{name}.png")
+        render_review(mesh_path, out, color=color, azimuth=az, elevation=el,
+                      samples=samples, resolution=resolution, lens=lens,
+                      use_cache=use_cache)
+        made.append(out)
+    return made
 
 
 def _cli() -> None:
     import argparse
     ap = argparse.ArgumentParser(description="Render a studio-lit review photo of a mesh file via headless Blender.")
     ap.add_argument("mesh_file", nargs="?", help="Path to a .stl/.obj/.ply mesh")
+    ap.add_argument("--part", action="append", default=[], metavar="PATH:R,G,B",
+                    help="A colour region: mesh path, then its filament colour. "
+                         "Repeat once per filament. Parts keep their own "
+                         "coordinates so they stay in register.")
     ap.add_argument("-o", "--output", help="Output PNG path")
     ap.add_argument("--color", default="0.8,0.8,0.82", help="R,G,B 0-1 material color, e.g. 0.75,0.55,0.85")
     ap.add_argument("--azimuth", type=float, default=35.0)
     ap.add_argument("--elevation", type=float, default=28.0)
     ap.add_argument("--samples", type=int, default=96)
     ap.add_argument("--resolution", type=int, default=1200)
+    ap.add_argument("--lens", type=float, default=85.0,
+                    help="Camera focal length in mm. Sets perspective only; "
+                         "framing scales with it, so a part fills the frame the "
+                         "same at any focal length.")
+    ap.add_argument("--views", action="store_true",
+                    help="Render three views (front, three-quarter, top) instead of one, "
+                         "written as <output>_front.png etc.")
+    ap.add_argument("--no-cache", action="store_true",
+                    help="Re-render even if an identical previous render is cached. The key "
+                         "covers every mesh's real content plus colour, angle, samples, "
+                         "resolution and lens, so any real change already misses it.")
     ap.add_argument("--check", action="store_true", help="Just check whether blender is installed")
     args = ap.parse_args()
 
-    if args.check or not args.mesh_file:
+    if args.check or not (args.mesh_file or args.part):
         available, info = check_blender_available()
         print(f"{'available' if available else 'NOT available'}: {info}")
         raise SystemExit(0 if available else 1)
 
-    output = Path(args.output or Path(args.mesh_file).with_suffix(".review.png"))
+    if args.part:
+        parts = []
+        for spec in args.part:
+            # rsplit, not split: a Windows-style path can contain a colon, the
+            # colour never can.
+            path, _, rgb = spec.rpartition(":")
+            if not path or rgb.count(",") != 2:
+                print(f"ERROR: --part wants PATH:R,G,B, got {spec!r}", file=sys.stderr)
+                raise SystemExit(2)
+            parts.append((path, tuple(float(x) for x in rgb.split(","))))
+        target = parts
+        first = Path(parts[0][0])
+    else:
+        target = Path(args.mesh_file)
+        first = target
+    output = Path(args.output or first.with_suffix(".review.png"))
     color = tuple(float(x) for x in args.color.split(","))
     try:
-        render_review(Path(args.mesh_file), output, color=color,
+        if args.views:
+            made = render_views(target, output, color=color, samples=args.samples,
+                                resolution=args.resolution, lens=args.lens,
+                                use_cache=not args.no_cache)
+            for f in made:
+                print(f"rendered -> {f}")
+            raise SystemExit(0)
+        render_review(target, output, color=color,
                        azimuth=args.azimuth, elevation=args.elevation,
-                       samples=args.samples, resolution=args.resolution)
+                       samples=args.samples, resolution=args.resolution,
+                       lens=args.lens, use_cache=not args.no_cache)
     except BlenderRenderError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)

@@ -1,0 +1,703 @@
+<title>Virtual P1S Chamber</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --void:#0d0e11; --panel:#15171c; --rail:#1c1f26; --line:#2b2f39; --line-hi:#3a404d;
+  --ink:#e9e7e2; --dim:#8d919c; --faint:#5f646f;
+  --amber:#ff8a2b; --amber-soft:#ffb35c; --amber-dim:#7a4515;
+  --good:#7ee07a; --warn:#ffc04d; --bad:#ff6b5e;
+  --t-ext:#ff7a45; --t-per:#ffc04d; --t-over:#4fd2ff; --t-inf:#6a7285;
+  --t-sol:#c9d64f; --t-top:#9be36a; --t-bri:#3affc8; --t-sup:#7b5cd6;
+  --t-supi:#a98cf0; --t-skirt:#5a6070; --t-other:#d8d8d8;
+  --fd:"Chakra Petch",Impact,sans-serif;
+  --fb:"IBM Plex Sans",system-ui,sans-serif;
+  --fm:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--void);color:var(--ink);font-family:var(--fb);font-size:14px;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3{font-family:var(--fd);margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--amber-soft)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.mono{font-family:var(--fm);font-variant-numeric:tabular-nums}
+
+/* ── shell ─────────────────────────────────────────────── */
+#app{display:grid;grid-template-columns:288px minmax(0,1fr) 320px;
+  grid-template-rows:auto minmax(0,1fr) auto;height:100vh;height:100dvh;gap:1px;background:var(--line)}
+header{grid-column:1/-1;background:var(--panel);padding:10px 18px;display:flex;
+  align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{font-size:17px;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+header h1 em{font-style:normal;color:var(--amber)}
+header .sub{color:var(--dim);font-size:12.5px}
+header .spacer{flex:1}
+#buildchip,#platechip{font-family:var(--fm);font-size:11px;color:var(--faint);
+  letter-spacing:.04em}
+/* The build stamp is written by build_site.py into the HTML and nothing in
+   app.js may overwrite it -- it is the only thing that identifies which
+   build is on screen when the page is broken. The plate counts get their
+   own span for exactly that reason. */
+#buildchip{color:var(--faint);opacity:.85}
+
+aside{background:var(--panel);overflow-y:auto;overflow-x:hidden}
+#stage{position:relative;background:#08090b;min-height:240px}
+#stage canvas{display:block;width:100%;height:100%}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 78% 68% at 50% 44%,transparent 40%,rgba(0,0,0,.55) 100%)}
+footer{grid-column:1/-1;background:var(--panel);padding:10px 16px 12px}
+
+.sect{border-bottom:1px solid var(--line)}
+.sect>h2{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--faint);padding:11px 16px 7px}
+.sect .body{padding:0 16px 13px}
+
+/* ── job picker ───────────────────────────────────────── */
+/* 2026-09-17: this was a 236px box holding 702px of cards, faded out at the
+   bottom by a mask, inside a rail that ALSO scrolled. Three plates of eleven
+   were reachable without discovering a nested scrollbar that had no visible
+   track and a gradient telling you the list had ended. Scott opened it and
+   could not find the rest of the prints, which is exactly what it looked like.
+   Now: taller, capped against the viewport rather than a fixed pixel count, a
+   scrollbar you can actually see, and a count in the heading. */
+#jobs{max-height:min(54vh,560px);overflow-y:auto;overscroll-behavior:contain;
+  margin:-2px -4px 0;padding:2px 4px 0;
+  scrollbar-width:thin;scrollbar-color:var(--line-hi) transparent}
+#jobs::-webkit-scrollbar{width:9px}
+#jobs::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:5px;
+  border:2px solid var(--panel)}
+#jobs::-webkit-scrollbar-thumb:hover{background:var(--faint)}
+#jobs::-webkit-scrollbar-track{background:transparent}
+#platecount{float:right;font-family:var(--fm);letter-spacing:.04em;color:var(--dim);
+  text-transform:none;font-size:10.5px}
+/* Said in words, because the scrollbar cannot be relied on to say it: this
+   browser reports a 0px scrollbar gutter, i.e. an overlay bar that is invisible
+   until you already know to scroll. */
+#platemore{display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin:2px 0 0;padding:6px 0;font-family:var(--fm);font-size:11px;
+  color:var(--amber-soft);background:var(--rail);border:1px solid var(--line);
+  border-radius:3px;letter-spacing:.03em}
+#platemore:hover{border-color:var(--amber)}
+#platemore[hidden]{display:none}
+#jobnote{font-size:12px;line-height:1.55;color:#b9b7b2;margin:9px 0 0}
+#seamnote{font-size:12px;line-height:1.55;color:#8fb6c2;margin:7px 0 0}
+#seamnote:empty{display:none}
+#jobsource{font-family:var(--fm);font-size:10.5px;color:var(--faint);margin:7px 0 0;
+  word-break:break-all}
+#platefilter{width:100%;margin:0 0 8px;padding:7px 9px;background:var(--rail);
+  border:1px solid var(--line);border-radius:3px;color:var(--ink);
+  font-family:var(--fm);font-size:11.5px}
+#platefilter::placeholder{color:var(--faint)}
+#platefilter:focus{border-color:var(--amber);outline:none}
+#featnote{font-size:11.5px;line-height:1.5;color:var(--dim);margin:8px 0 0;min-height:46px}
+.job{display:grid;grid-template-columns:60px minmax(0,1fr);gap:10px;align-items:center;
+  width:100%;text-align:left;border:1px solid var(--line);
+  border-radius:4px;padding:7px 36px 7px 7px;background:var(--rail);
+  transition:border-color .12s,background .12s}
+.job:hover{border-color:var(--line-hi)}
+.job[aria-current="true"]{border-color:var(--amber);background:#241a0f;
+  box-shadow:inset 3px 0 0 var(--amber)}
+.job .n{font-family:var(--fd);font-weight:600;font-size:14.5px;letter-spacing:.02em}
+.job .m{font-family:var(--fm);font-size:10.5px;color:var(--dim);margin-top:3px;
+  font-variant-numeric:tabular-nums;display:flex;gap:9px;flex-wrap:wrap}
+.job .m b{color:var(--ink);font-weight:500}
+.tagsup{color:var(--t-supi);border:1px solid #4a3a78;border-radius:2px;
+  padding:0 4px;font-size:9.5px;letter-spacing:.06em}
+.taghv{color:var(--warn);border:1px solid #5a4a18;border-radius:2px;
+  padding:0 4px;font-size:9.5px;letter-spacing:.06em}
+.tagmc{color:var(--t-bri);border:1px solid #1f6b58;border-radius:2px;
+  padding:0 4px;font-size:9.5px;letter-spacing:.06em}
+
+/* ── readouts ─────────────────────────────────────────── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line)}
+.cell{background:var(--rail);padding:7px 10px}
+.cell .k{font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+.cell .v{font-family:var(--fd);font-size:19px;font-weight:600;margin-top:1px;
+  font-variant-numeric:tabular-nums;line-height:1.15}
+.cell .v small{font-family:var(--fm);font-size:11px;font-weight:400;color:var(--dim)}
+#nowfeat{font-family:var(--fm);font-size:12px;padding:8px 10px;margin-top:1px;
+  background:var(--rail);border:1px solid var(--line);display:flex;align-items:center;gap:8px}
+#r-seg{margin-left:auto;color:var(--faint);font-size:10.5px;font-variant-numeric:tabular-nums}
+.modeswap{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);
+  margin-bottom:11px}
+.modeswap button{flex:1;padding:6px 4px;background:var(--rail);font-size:11.5px;
+  letter-spacing:.03em}
+.modeswap button[aria-pressed="true"]{background:var(--amber);color:#160c02;font-weight:600}
+#speedpanel .ramp{height:11px;border-radius:2px;margin:2px 0 5px;
+  background:linear-gradient(90deg,#fbdb97,#ff996a,#ef6160,#c63d71,#912684,#5b1880)}
+#speedpanel .ends{display:flex;justify-content:space-between;font-family:var(--fm);
+  font-size:10.5px;color:var(--dim);margin-bottom:11px;font-variant-numeric:tabular-nums}
+#speedpanel table{width:100%;border-collapse:collapse;font-size:11.5px}
+#speedpanel td{padding:3px 0;border-bottom:1px solid var(--line)}
+#speedpanel td:last-child{text-align:right;font-family:var(--fm);font-size:11px;
+  font-variant-numeric:tabular-nums}
+#speedpanel .sw{display:inline-block;width:9px;height:9px;border-radius:2px;
+  margin-right:7px;vertical-align:-1px}
+#nowfeat .sw{width:11px;height:11px;border-radius:2px;flex:none}
+
+.rlabel{font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 5px;font-weight:600}
+#realpanel .modeswap{margin-bottom:12px}
+#realpanel .modeswap button{font-size:11px;padding:7px 3px}
+#realswatch{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+#realswatch button{width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--line-hi);padding:0;font-size:8.5px;letter-spacing:.04em;
+  color:var(--dim);background:var(--rail)}
+#realswatch button[data-hex="auto"]{width:auto;border-radius:13px;padding:0 10px}
+#realswatch button[aria-pressed="true"]{border-color:var(--amber);
+  box-shadow:0 0 0 2px rgba(255,138,43,.28)}
+@media (max-width:1180px){
+  #realswatch button{width:40px;height:40px}
+  #realswatch button[data-hex="auto"]{width:auto;height:40px}
+  #realpanel .modeswap button{padding:13px 3px}
+}
+/* ── legend ───────────────────────────────────────────── */
+.leg{display:flex;align-items:center;gap:9px;width:100%;padding:4px 2px;
+  border-radius:2px;text-align:left}
+.leg:hover{background:var(--rail)}
+.leg .sw{width:13px;height:13px;border-radius:2px;flex:none;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45)}
+.leg .lb{flex:1;font-size:12.5px}
+.leg .ct{font-family:var(--fm);font-size:10.5px;color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.leg[aria-pressed="false"]{opacity:.32}
+.leg[aria-pressed="false"] .lb{text-decoration:line-through}
+.legnote{font-size:11.5px;color:var(--dim);line-height:1.5;margin:9px 0 0}
+
+/* ── AMS slots ────────────────────────────────────────── */
+.amsrow{display:flex;align-items:center;gap:9px;padding:5px 6px;border-radius:2px;
+  border:1px solid transparent}
+.amsrow[data-active="true"]{border-color:var(--amber);background:#241a0f}
+.amsrow .sw{width:15px;height:15px;border-radius:50%;flex:none;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.5)}
+.amsrow .lb{font-family:var(--fm);font-size:11px;color:var(--dim);width:42px;flex:none}
+.amsrow .bar{flex:1;height:5px;border-radius:3px;background:var(--line-hi);overflow:hidden}
+.amsrow .bar i{display:block;height:100%;background:var(--amber);border-radius:3px}
+.amsrow .g{font-family:var(--fm);font-size:10.5px;color:var(--faint);width:46px;
+  text-align:right;font-variant-numeric:tabular-nums}
+.amsrow[data-active="true"] .g{color:var(--ink)}
+.amsover{font-family:var(--fm);font-size:11px;color:var(--bad);margin:7px 0 0}
+
+/* ── transport ────────────────────────────────────────── */
+.tbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tbtn{width:38px;height:38px;border:1px solid var(--line-hi);border-radius:3px;
+  display:grid;place-items:center;background:var(--rail)}
+.tbtn:hover{border-color:var(--amber);color:var(--amber)}
+.tbtn.primary{background:var(--amber);color:#160c02;border-color:var(--amber)}
+.tbtn.primary:hover{background:var(--amber-soft);color:#160c02}
+.tbtn svg{width:15px;height:15px;fill:currentColor}
+.scrub{flex:1;min-width:220px;display:flex;align-items:center;gap:11px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;
+  background:none;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;
+  background:linear-gradient(90deg,var(--amber) var(--pct,0%),var(--line-hi) var(--pct,0%))}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line-hi)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--amber)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+  border-radius:50%;background:var(--ink);margin-top:-5px;border:2px solid var(--void)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
+  background:var(--ink);border:2px solid var(--void)}
+.tlabel{font-family:var(--fm);font-size:11.5px;color:var(--dim);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.tlabel b{color:var(--ink);font-weight:500}
+.speeds{display:flex;gap:1px;background:var(--line);border:1px solid var(--line)}
+.speeds button{padding:6px 9px;background:var(--rail);font-family:var(--fm);font-size:11px}
+.speeds button[aria-pressed="true"]{background:var(--amber);color:#160c02}
+.viewbtns{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);
+  flex-wrap:wrap;min-width:0}
+.speeds{flex-wrap:wrap;min-width:0}
+.viewbtns button{padding:6px 10px;background:var(--rail);font-size:11.5px}
+.viewbtns button:hover{color:var(--amber)}
+
+/* ── overlays ─────────────────────────────────────────── */
+#still{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  background:var(--void);z-index:2}
+#still[hidden]{display:none}
+#stillnote{position:absolute;right:14px;bottom:12px;z-index:3;font-family:var(--fm);
+  font-size:10.5px;color:var(--faint);letter-spacing:.03em;pointer-events:none}
+#stillnote[hidden]{display:none}
+#hint .narrow{display:none}
+@media (max-width:1180px){#hint .wide{display:none}#hint .narrow{display:inline}}
+#hint{position:absolute;left:14px;bottom:12px;font-family:var(--fm);font-size:10.5px;
+  color:var(--faint);pointer-events:none;letter-spacing:.03em}
+#loading{position:absolute;inset:0;display:grid;place-items:center;
+  background:rgba(8,9,11,.9);font-family:var(--fd);letter-spacing:.1em;
+  text-transform:uppercase;font-size:13px;color:var(--amber);z-index:3}
+#loading .barwrap{width:190px;height:2px;background:var(--line-hi);margin-top:12px}
+#loading .bar{height:2px;background:var(--amber);width:30%;
+  animation:sweep 1.1s ease-in-out infinite}
+#loading[hidden]{display:none}
+@keyframes sweep{0%{margin-left:0}50%{margin-left:70%}100%{margin-left:0}}
+@media (prefers-reduced-motion:reduce){#loading .bar{animation:none;width:100%}}
+
+/* ── reference panels ─────────────────────────────────── */
+.tabs{display:flex;gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:10px 4px;background:var(--panel);font-size:11px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.tabs button[aria-selected="true"]{background:var(--rail);color:var(--amber);
+  box-shadow:inset 0 -2px 0 var(--amber)}
+/* Everything this page is honest about -- PrusaSlicer's clock, no physics, no
+   thermal -- lives in the third tab, where someone handed this link lands
+   never having opened it. The dot says there is something here to read; it
+   goes away for good once they have. */
+.tabs button[data-unread="1"]::after{content:"";display:inline-block;width:5px;
+  height:5px;margin-left:5px;vertical-align:2px;border-radius:50%;
+  background:var(--amber)}
+.pane{padding:15px 16px 26px;font-size:12.8px;line-height:1.6}
+.pane h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);
+  margin:19px 0 8px;font-weight:600}
+.pane h3:first-child{margin-top:0}
+.pane p{margin:0 0 10px;color:#c6c4bf}
+.kv{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:11.5px}
+.kv td{padding:4px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.kv td:first-child{color:var(--dim);padding-right:10px}
+.kv td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.mat{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:11px}
+.mat th{text-align:left;color:var(--faint);font-weight:500;padding:4px 6px 4px 0;
+  border-bottom:1px solid var(--line-hi);font-size:10px;letter-spacing:.06em;
+  text-transform:uppercase}
+.mat td{padding:4px 6px 4px 0;border-bottom:1px solid var(--line);
+  font-variant-numeric:tabular-nums}
+.mat tr[data-sel="1"] td{color:var(--amber-soft)}
+.mat tbody tr{cursor:pointer}
+.mat tbody tr:hover td{background:var(--rail)}
+.caveat{border-left:2px solid var(--amber-dim);padding:2px 0 2px 11px;margin:12px 0;
+  color:var(--dim);font-size:12px;line-height:1.55}
+.caveat b{color:var(--amber-soft);font-weight:600}
+select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi);
+  color:var(--ink);font-family:var(--fm);font-size:11.5px;padding:5px 7px;border-radius:2px;
+  width:100%}
+.frow{display:grid;grid-template-columns:1fr 88px;align-items:center;gap:8px;margin-bottom:7px}
+.frow label{font-size:11.5px;color:var(--dim)}
+
+/* ── workspace shell (2026-09-19) ────────────────────────────── */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;
+  margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;border:0!important}
+.header-actions{display:flex;align-items:center;gap:6px}
+.shellbtn{display:flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid var(--line-hi);
+  border-radius:3px;background:var(--rail);font-family:var(--fm);font-size:10.5px;color:var(--dim)}
+.shellbtn:hover{border-color:var(--amber);color:var(--ink)}
+.shellbtn[aria-pressed="true"]{border-color:var(--amber);color:var(--amber-soft);background:#241a0f}
+.shellbtn svg{width:13px;height:13px;fill:currentColor}
+/* Collapsing a rail has to re-shape the GRID, not just hide the column, or the
+   viewport keeps the 288px it was never using. */
+#app.left-collapsed{grid-template-columns:minmax(0,1fr) 320px}
+#app.left-collapsed #left{display:none}
+#app.right-collapsed{grid-template-columns:288px minmax(0,1fr)}
+#app.right-collapsed #right{display:none}
+#app.left-collapsed.right-collapsed{grid-template-columns:minmax(0,1fr)}
+
+/* ── plate library ──────────────────────────────────── */
+.plate-tools{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:6px;margin-bottom:7px}
+#platesort{padding:7px 6px;font-size:10.5px}
+/* WRAPS, deliberately -- it does not scroll sideways. A horizontal strip with
+   scrollbar-width:none hid two of six filters at 288px (measured: 356px of
+   pills in a 256px box) with nothing on screen saying they existed. That is
+   the same defect as the plate list that could not be scrolled, and the fix
+   is the same: show everything, take the second row. */
+.plate-filters{display:flex;flex-wrap:wrap;gap:5px;padding:0 0 8px}
+.plate-filters button{padding:5px 8px;border:1px solid var(--line);border-radius:999px;
+  background:var(--rail);font-family:var(--fm);font-size:9.5px;color:var(--dim);white-space:nowrap}
+.plate-filters button:hover{border-color:var(--line-hi);color:var(--ink)}
+.plate-filters button[aria-pressed="true"]{border-color:var(--amber);background:#241a0f;color:var(--amber-soft)}
+.library-summary{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin:0 0 8px;font-family:var(--fm);font-size:10px;color:var(--faint)}
+.library-summary b{color:var(--ink);font-weight:500}
+/* The card is a button; the save star cannot live inside it (a button inside a
+   button is invalid and unclickable), so they are siblings in a wrapper. */
+.jobwrap{position:relative;margin-bottom:7px}
+.jobfav{position:absolute;right:7px;top:7px;width:27px;height:27px;border:1px solid var(--line-hi);
+  border-radius:50%;background:rgba(21,23,28,.94);color:var(--faint);font-size:15px;line-height:1}
+.jobfav:hover{border-color:var(--amber);color:var(--amber-soft)}
+.jobfav[aria-pressed="true"]{border-color:var(--amber);background:#33200f;color:var(--amber-soft)}
+.job .thumb{width:60px;height:60px;border-radius:3px;object-fit:cover;background:#0b0c0f;
+  border:1px solid var(--line);align-self:center}
+/* A plate with no still gets a drawn placeholder rather than a broken image. */
+.job .thumb.missing{background:radial-gradient(circle at 50% 42%,#4a3320 0 12%,#211b17 13% 34%,#0b0c0f 35% 100%)}
+.job .copy{min-width:0}
+.job .topline{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
+.job .time{color:var(--amber-soft)}
+
+/* ── layer nav ────────────────────────────────────── */
+.layernav{display:flex;align-items:center;gap:1px;border:1px solid var(--line);background:var(--line)}
+.layernav button{width:31px;height:30px;background:var(--rail);font-family:var(--fm);color:var(--dim)}
+.layernav button:hover{color:var(--amber);background:#241a0f}
+.layernav label{display:flex;align-items:center;gap:5px;padding:0 7px;background:var(--rail);
+  height:30px;font-family:var(--fm);font-size:9.5px;color:var(--faint);text-transform:uppercase}
+.layernav input[type=number]{width:58px;padding:3px 5px;text-align:right}
+
+/* ── view menu ────────────────────────────────────── */
+.viewbtns button[aria-pressed="true"]{background:#241a0f;color:var(--amber-soft)}
+.viewmenu{position:relative}
+.viewmenu summary{list-style:none;padding:7px 10px;border:1px solid var(--line-hi);border-radius:3px;
+  background:var(--rail);font-size:11.5px;cursor:pointer;color:var(--dim)}
+.viewmenu summary::-webkit-details-marker{display:none}
+.viewmenu summary::after{content:' +';color:var(--amber-soft)}
+.viewmenu[open] summary::after{content:' −'}
+.viewmenu .viewbtns{position:absolute;right:0;bottom:calc(100% + 8px);z-index:8;width:420px;
+  padding:6px;background:var(--panel);border:1px solid var(--line-hi);border-radius:4px;
+  box-shadow:0 14px 34px rgba(0,0,0,.48)}
+
+/* ── help ─────────────────────────────────────────── */
+.helpdialog{width:min(520px,calc(100vw - 28px));max-height:calc(100vh - 28px);padding:0;
+  border:1px solid var(--line-hi);border-radius:5px;background:var(--panel);color:var(--ink);
+  box-shadow:0 24px 80px rgba(0,0,0,.72)}
+.helpdialog::backdrop{background:rgba(0,0,0,.72)}
+.helphead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+  border-bottom:1px solid var(--line);background:var(--rail)}
+.helphead h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+.helpclose{width:34px;height:34px;border:1px solid var(--line-hi);border-radius:50%;
+  font-size:20px;color:var(--dim)}
+.helpbody{padding:16px}
+.shortcutgrid{display:grid;grid-template-columns:auto 1fr;gap:1px;background:var(--line);
+  border:1px solid var(--line)}
+.shortcutgrid dt,.shortcutgrid dd{margin:0;padding:8px 10px;background:var(--panel)}
+.shortcutgrid dt{font-family:var(--fm);color:var(--amber-soft);white-space:nowrap}
+.shortcutgrid dd{color:var(--dim)}
+.helpbody p{margin:13px 0 0;color:var(--dim);font-size:12px;line-height:1.5}
+
+@media (max-width:1180px){
+  /* Source order puts both rails before the viewport; on a phone the print
+     itself has to come first, so the narrow layout re-places by area. */
+  #app{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"h" "s" "f" "l" "r";
+    grid-template-rows:auto 56vh auto auto auto;height:auto}
+  header{grid-area:h} #stage{grid-area:s} footer{grid-area:f}
+  #left{grid-area:l} #right{grid-area:r}
+  aside{max-height:none;overflow:visible}
+  #jobs{max-height:none}
+  #stage{min-height:340px}
+  header{padding:8px 14px;gap:8px}
+  header h1{font-size:15px}
+  /* The subtitle is explanatory, not operational; on a phone it costs
+     ~50px of the 3D viewport for nothing. */
+  header .sub{display:none}
+  #buildchip{font-size:10px}
+  .scrub{order:5;flex-basis:100%;min-width:0}
+
+  /* The transport is the only control you use continuously, and the page is
+     ~2700px tall on a phone -- letting it scroll away means scrolling back up
+     to pause. Pinned, with the last rail padded so nothing hides under it. */
+  footer{position:sticky;bottom:0;z-index:6;
+    box-shadow:0 -10px 22px rgba(0,0,0,.5)}
+  #right{padding-bottom:72px}
+
+  /* Thumb-sized targets. Measured at 22-29px before this; 44 is the floor. */
+  .leg{min-height:44px;padding:4px 6px}
+  .modeswap button{padding:13px 4px}
+  .speeds button,.viewbtns button{padding:13px 11px;font-size:11px}
+  .viewbtns,.speeds{flex:1 1 100%}
+  /* The new controls, sized for a thumb. The view menu drops out of its
+     popover and becomes an inline block, because a 420px popover anchored to
+     the bottom of a phone viewport has nowhere to go. */
+  .viewmenu{flex:1 1 100%}
+  .viewmenu summary{padding:13px 11px;text-align:center}
+  .viewmenu .viewbtns{position:static;width:auto;margin-top:5px;box-shadow:none}
+  .header-actions{width:100%;order:5}
+  .shellbtn{flex:1;justify-content:center;min-height:40px}
+  .layernav{flex:1 1 100%}
+  .layernav button{flex:1;height:44px}
+  .layernav label{flex:2;justify-content:center;height:44px}
+  .plate-tools{grid-template-columns:minmax(0,1fr) 112px}
+  .jobfav{width:40px;height:40px;font-size:19px}
+  .job{padding-right:50px}
+  /* Collapsing a rail is a desktop affordance: at this width the rails are
+     stacked sections of one scrolling page, and hiding one just removes
+     content with no space reclaimed. The buttons stay for Copy view / Help. */
+  #app.left-collapsed,#app.right-collapsed,#app.left-collapsed.right-collapsed{
+    grid-template-columns:minmax(0,1fr)}
+  #app.left-collapsed #left,#app.right-collapsed #right{display:block}
+  .tbtn{width:46px;height:46px}
+  .tabs button{padding:15px 4px}
+  select,input[type=number]{padding:12px 9px}
+  input[type=range]{height:44px}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px}
+  .mat td{padding:9px 6px 9px 0}
+  .kv td{padding:7px 0}
+  #hint{font-size:10px}
+}
+</style>
+
+<div id="app">
+  <header>
+    <h1>Virtual <em>P1S</em> Chamber</h1>
+    <span class="sub">Real sliced G-code, replayed move by move</span>
+    <span class="spacer"></span>
+    <span id="platechip"></span>
+    <span id="buildchip"></span>
+    <div class="header-actions" aria-label="Workspace layout">
+      <button type="button" class="shellbtn" id="toggleleft" aria-pressed="true" title="Show or hide the plate library">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14v12H1V2zm2 2v8h3V4H3zm5 0v8h5V4H8z"/></svg>Library</button>
+      <button type="button" class="shellbtn" id="toggleright" aria-pressed="true" title="Show or hide printer information">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14v12H1V2zm2 2v8h5V4H3zm7 0v8h3V4h-3z"/></svg>Details</button>
+      <button type="button" class="shellbtn" id="shareview" title="Copy a link to this exact plate and layer">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3h7v7h-2V6.4l-6.3 6.3-1.4-1.4L9.6 5H6V3zM2 5h3v2H4v5h5v-1h2v3H2V5z"/></svg>Copy view</button>
+      <button type="button" class="shellbtn" id="showhelp" title="Keyboard shortcuts and help">
+        <span aria-hidden="true">?</span>Help</button>
+    </div>
+  </header>
+
+  <aside id="left">
+    <div class="sect">
+      <h2>Plate<span id="platecount"></span></h2>
+      <div class="body">
+        <div class="plate-tools">
+          <input id="platefilter" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Filter plates" aria-label="Filter plates">
+          <select id="platesort" aria-label="Sort plates">
+            <option value="featured">Featured</option>
+            <option value="name">Name</option>
+            <option value="time">Print time</option>
+            <option value="weight">Filament</option>
+            <option value="height">Height</option>
+            <option value="layers">Layers</option>
+          </select>
+        </div>
+        <div class="plate-filters" id="platefilters" role="group" aria-label="Quick plate filters">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="support" aria-pressed="false">Support</button>
+          <button type="button" data-filter="clean" aria-pressed="false">No support</button>
+          <button type="button" data-filter="multi" aria-pressed="false">Multicolour</button>
+          <button type="button" data-filter="quick" aria-pressed="false">Under 2 h</button>
+          <button type="button" data-filter="favourites" aria-pressed="false">★ Saved</button>
+        </div>
+        <div class="library-summary" id="librarysummary"></div>
+        <div id="jobs"></div>
+        <button type="button" id="platemore" hidden></button>
+        <p id="jobnote"></p>
+        <p id="seamnote"></p>
+        <p id="jobsource"></p>
+      </div>
+    </div>
+    <div class="sect">
+      <h2>Readout</h2>
+      <div class="body">
+        <div class="grid2">
+          <div class="cell"><div class="k">Layer</div><div class="v" id="r-layer">—</div></div>
+          <div class="cell"><div class="k">Height</div><div class="v" id="r-z">—</div></div>
+          <div class="cell"><div class="k">Elapsed</div><div class="v" id="r-el">—</div></div>
+          <div class="cell"><div class="k">Remaining</div><div class="v" id="r-rem">—</div></div>
+          <div class="cell"><div class="k">Filament</div><div class="v" id="r-fil">—</div></div>
+          <div class="cell"><div class="k">Speed</div><div class="v" id="r-spd">—</div></div>
+        </div>
+        <div id="nowfeat"><span class="sw" style="background:var(--faint)"></span>
+          <span id="r-feat">idle</span><span id="r-seg" class="mono"></span></div>
+        <p id="featnote"></p>
+      </div>
+    </div>
+    <div class="sect">
+      <h2>AMS</h2>
+      <div class="body">
+        <div id="amsslots"></div>
+        <p class="legnote" id="amsnote"></p>
+      </div>
+    </div>
+    <div class="sect">
+      <h2>Colour by</h2>
+      <div class="body">
+        <div class="modeswap" id="modeswap" role="group" aria-label="Colour by">
+          <button type="button" data-mode="feature" aria-pressed="true">Feature</button>
+          <button type="button" data-mode="speed" aria-pressed="false">Speed</button>
+          <button type="button" data-mode="filament" aria-pressed="false">Filament</button>
+          <button type="button" data-mode="real" aria-pressed="false">Real print</button>
+        </div>
+        <div id="realpanel" hidden>
+          <div class="rlabel">Show</div>
+          <div class="modeswap" id="realframing" role="group" aria-label="Framing">
+            <button type="button" data-framing="live" aria-pressed="true">In machine</button>
+            <button type="button" data-framing="static" aria-pressed="false">Head parked</button>
+            <button type="button" data-framing="solo" aria-pressed="false">Part only</button>
+          </div>
+          <div class="rlabel">Filament</div>
+          <div id="realswatch" role="group" aria-label="Filament colour">
+            <button type="button" data-hex="auto" aria-pressed="true"
+                    title="Use the AMS slot colours this plate actually prints from">AMS</button>
+          </div>
+        </div>
+        <div id="speedpanel" hidden></div>
+        <div id="legend"></div>
+        <p class="legnote" id="legnote">Click a type to hide it. Every colour here is the
+          slicer's own <span class="mono">;TYPE:</span> tag — nothing is inferred
+          from the shape.</p>
+      </div>
+    </div>
+
+  </aside>
+
+  <div id="stage">
+    <img id="still" alt="" hidden>
+    <div id="stillnote" hidden>Path-traced still of the finished part</div>
+    <div id="loading">Slicing data<div class="barwrap"><div class="bar"></div></div></div>
+    <div id="hint"><span class="wide">drag orbit · wheel to zoom · shift-drag pan</span><span class="narrow">drag to orbit · pinch to zoom</span></div>
+  </div>
+
+  <aside id="right">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-pane="printer">Printer</button>
+      <button role="tab" aria-selected="false" data-pane="material">Material</button>
+      <button role="tab" aria-selected="false" data-pane="limits" data-unread="1">Limits</button>
+    </div>
+    <div class="pane" id="pane-printer"></div>
+    <div class="pane" id="pane-material" hidden></div>
+    <div class="pane" id="pane-limits" hidden>
+      <h3>What this is</h3>
+      <p>Every path on screen came out of a real slicer, run against the real STL
+        in this shop's <span class="mono">openscad_models/</span> tree. Nothing
+        here is a drawing of a print — it is the print instructions, drawn.</p>
+      <h3>A clean replay here is NOT a clean print</h3>
+      <div class="caveat"><b>Nothing on this page is physics.</b> No gravity, no
+        molten plastic, no heat, no cooling, no bed adhesion, no layer bonding,
+        no moisture. The Material tab changes text on this screen and nothing
+        about the toolpath — the same G-code prints in PLA or PETG. A part can
+        replay perfectly here and still fail on the plate, and the failures this
+        cannot see (warping, a curled corner the nozzle then hits, delamination,
+        stringing) are the ones that actually ruin prints.</div>
+      <div class="caveat">Predicting warping for real means thermo-mechanical
+        FEA — a different class of tool entirely. What <b>is</b> honest to do is
+        measure signals from the real file that correlate with known failures:
+        the longest genuinely unsupported span, layers too quick to cool, the
+        area gripping the plate, the tall-and-narrow ratio. That is
+        <span class="mono">tools/print_risk.py</span>, and it reports numbers,
+        not verdicts — its thresholds stay guesses until real prints are logged
+        against them with <span class="mono">--record</span>.</div>
+      <div class="caveat"><b>Worked example of why a number needs care.</b> The
+        longest bridge MOVE on the sauce tray is 107.9 mm, which sounds
+        unprintable. The longest genuinely unsupported run inside that move is
+        <b>5.6 mm</b> — the rest passes over ground already printed. It sits at
+        z=0.8 mm: the ceiling of the engraved maker's mark on the underside.
+        The scary number was the wrong measurement.</div>
+
+      <h3>What it is not</h3>
+      <div class="caveat"><b>This is PrusaSlicer, not Bambu Studio.</b> They share
+        an engine lineage — Bambu Studio and Orca are both PrusaSlicer forks — so
+        perimeters, overhang classification, bridges and support generation track
+        closely. Speeds and time estimates will <b>not</b> match what your P1S
+        shows. Treat the clock as a ratio between jobs, not a promise.</div>
+      <div class="caveat"><b>Real print mode hides things that are really
+        there.</b> Sparse infill and the skirt are switched off so you see the
+        part the way you would with the door open — they are still printed,
+        still filament, still time on the clock. Both wall loops and the solid
+        layers stay on, and supports stay on, because they are physically
+        standing on the plate until you snap them off. Layer lines are drawn at
+        the plate's own measured layer pitch and fade out at zoom levels where
+        a camera could not resolve them either. Each bead is a closed tube, so the dark
+        speckle that used to show up along curved walls (you were seeing
+        straight into the hollow underside of a bead) is gone. What is still
+        a simplification is the bead's cross-section: four points, not a real
+        half-cylinder. Measured against macro photographs of real printed
+        walls, the ridge between layers here comes out at <b>6.8%</b> of
+        local brightness against <b>13.7–20.7%</b> in the photographs — so
+        layer lines read softer here than they do on the actual part.</div>
+      <div class="caveat"><b>Part only shows you less than the plate really
+        holds, on purpose.</b> Real-print mode answers "what is on the plate
+        right now", so it keeps supports — they are genuinely printed
+        plastic standing there until you snap them off. Part only answers a
+        different question: what the finished object looks like in your hand.
+        So supports, their interface, the skirt and sparse infill are all
+        switched off. That is not a small edit on some plates: on the fairy
+        house, support material plus its interface is <b>44.3%</b> of every
+        extrusion move on the plate. It is also lit by its own two-light rig
+        rather than the chamber, because hiding the enclosure hides the
+        chamber lamp with it — including a light from <i>below</i>, which
+        no real P1S has, so that the first layer is readable at all.</div>
+            <div class="caveat"><b>The lighting is a studio rig, not this machine's
+        chamber.</b> Since 2026-09-17 the scene renders with physically based
+        materials, an environment map and real shadows, which is a large step
+        up in how it looks and no step at all in what it knows. The key light,
+        the softbox behind it and the floor are invented to make the shape
+        readable; the P1S's actual LED is one bar on the left beam. A prettier
+        replay is not a more accurate one, and the closer this gets to looking
+        photographic the more worth saying that is.</div>
+      <div class="caveat"><b>Nothing thermal is modelled.</b> Warping, bed
+        adhesion, stringing, layer delamination and heat creep are invisible here.
+        A part can replay perfectly and still fail on the plate for a reason this
+        cannot see.</div>
+      <div class="caveat"><b>Travel moves are not drawn.</b> They are roughly half
+        the move count and none of them lay plastic, so they are dropped from the
+        payload. The nozzle marker jumps between paths the way the real head does,
+        but the flight path is not shown.</div>
+      <div class="caveat"><b>A layer count is layer changes, not height divided
+        by layer height.</b> On any plate with supports the two differ, because
+        the slicer gives support material its own layer heights and injects
+        extra layer changes between the object's. Measured: this pumpkin at
+        0.20 mm is 469 uniform layers with supports off and 604 with them on,
+        same 93.8 mm part. The number shown is the real count of layer changes
+        the printer performs.</div>
+      <div class="caveat"><b>Coordinates are rounded to 0.01 mm.</b> That is a
+        fortieth of a 0.42 mm bead — below anything this view can resolve — and it
+        is what makes an 830,000-move plate fit in a web page.</div>
+      <h3>Profile used</h3>
+      <p>Stock 0.4 mm brass nozzle, 0.20 mm layers, 2 perimeters, 15% grid infill,
+        supports on at a 45° threshold, PLA at 220 °C on a 55 °C textured PEI
+        plate. That is the stock Standard profile, not Scott's tuned ones — swap
+        those in at <span class="mono">tools/virtual_printer.py</span> and
+        re-export to replay them here.</p>
+      <h3>Rebuilding this</h3>
+      <p><span class="mono">tools/virtual_printer.py</span> slices a model.
+        <span class="mono">tools/gcode_viewer_data.py</span> turns that G-code into
+        the payload this page replays. Adding a job is two commands, not a code
+        change.</p>
+    </div>
+  </aside>
+
+  <footer>
+    <div class="tbar">
+      <button class="tbtn primary" id="play" title="Play / pause (space)" aria-label="Play or pause print">
+        <svg id="playicon" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg></button>
+      <button class="tbtn" id="restart" title="Back to layer 1" aria-label="Restart from layer 1">
+        <svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L5.5 8z"/></svg></button>
+      <div class="scrub">
+        <span class="tlabel">L<b id="lnum">0</b></span>
+        <input type="range" id="scrub" min="0" max="1000" value="0" step="1"
+          aria-label="Print progress">
+        <span class="tlabel" id="ltot">/ 0</span>
+      </div>
+      <div class="layernav" aria-label="Layer navigation">
+        <button type="button" id="prevlayer" title="Previous layer" aria-label="Previous layer">−</button>
+        <label for="layerjump">Layer <input type="number" id="layerjump" min="1" value="1" step="1"></label>
+        <button type="button" id="nextlayer" title="Next layer" aria-label="Next layer">+</button>
+      </div>
+      <div class="speeds" id="speeds" role="group" aria-label="Playback speed"></div>
+      <details class="viewmenu">
+        <summary>View options</summary>
+        <div class="viewbtns">
+        <button data-view="iso">Iso</button>
+        <button data-view="front">Front</button>
+        <button data-view="top">Top</button>
+        <button id="partview" aria-pressed="false"
+          title="Just the finished object — machine, plate and supports off, orbit under it">Part only</button>
+        <button id="door" aria-pressed="false" title="Swing the chamber door open">Open door</button>
+        <button id="viewmode" aria-pressed="true" title="Solid exterior, or cut away to watch the print">View: machine</button>
+        <button id="ghost" aria-pressed="false">Ghost</button>
+        <button id="seams" aria-pressed="false"
+          title="Mark where each outer wall loop starts and ends — the vertical scar on the finished part">Z seams</button>
+        <button id="motion" aria-pressed="true" title="P1S gantry is fixed; the bed descends">Bed drops</button>
+        <button id="quality" aria-pressed="true" title="Specular highlight and Fresnel edge; step down if the frame rate suffers">Detail: high</button>
+        <button id="fullscreen" aria-pressed="false" title="Fill the screen">Full screen</button>
+        </div>
+      </details>
+    </div>
+  </footer>
+</div>
+
+<div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<dialog id="helpdialog" class="helpdialog" aria-labelledby="helptitle">
+  <div class="helphead"><h2 id="helptitle">Viewer shortcuts</h2>
+    <button type="button" class="helpclose" id="closehelp" aria-label="Close help">×</button></div>
+  <div class="helpbody"><dl class="shortcutgrid">
+    <dt>Space</dt><dd>Play or pause the print</dd>
+    <dt>← / →</dt><dd>Step one layer back or forward</dd>
+    <dt>/</dt><dd>Jump to the plate search box</dd>
+    <dt>F</dt><dd>Save or unsave the current plate</dd>
+    <dt>?</dt><dd>Open this list</dd>
+    <dt>Esc</dt><dd>Close this list</dd>
+  </dl><p>Shortcuts are ignored while you are typing in a field. Saved plates are
+  remembered in this browser only — nothing leaves the page.</p></div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="jobs/index.js"></script>
+<script src="app.js"></script>
