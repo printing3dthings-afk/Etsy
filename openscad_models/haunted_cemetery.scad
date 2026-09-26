@@ -315,38 +315,43 @@ module roots() {
 TREE = [
     [[-0.4, 0.4, 15], [-6, 1, 26],      1.6, 1.15],             // left
     [[-6, 1, 26],     [-10, 0, 33],     1.15, 0.8],
-    [[-10, 0, 33],    [-12, 1, 37],     0.8, 0.6],
+    [[-10, 0, 33],    [-12, 1, 37],     0.8, 0.7],
     [[-6, 1, 26],     [-7.8, 3.6, 31],  0.9, 0.7],
-    [[-6, 1, 26],     [-4, -1.5, 31.5], 0.8, 0.6],
+    [[-6, 1, 26],     [-4, -1.5, 31.5], 0.8, 0.7],
     [[0.5, 0, 20],    [5, -1, 30],      1.5, 1.1],              // right
     [[5, -1, 30],     [8, 0, 38],       1.1, 0.8],
-    [[8, 0, 38],      [10, -1, 41.5],   0.8, 0.6],
+    [[8, 0, 38],      [10, -1, 41.5],   0.8, 0.7],
     [[5, -1, 30],     [7.8, -2.4, 35],  0.9, 0.7],
-    [[5, -1, 30],     [3.5, -3.5, 35],  0.8, 0.6],
+    [[5, -1, 30],     [3.5, -3.5, 35],  0.8, 0.7],
     [[0.5, 0, 20],    [-1, 4, 31],      1.3, 0.9],              // back
     [[-1, 4, 31],     [1, 6, 39],       0.9, 0.7],
-    [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.7, 0.6],
+    [[1, 6, 39],      [-0.2, 7.6, 42.5], 0.7, 0.7],
     [[0.6, 0.2, 11],  [5, -1.5, 17],    1.9, 1.7],              // the sawn-off stub
 ];
 stub_top = [5, -1.5, 17];
 module oct(p, r) translate(p) cylinder(r = r, h = 0.01, $fn = 10);
 // The crow, 1.5x: one hull for body, head and the folded wings' tips, one for
-// the tail. Its keel lies wholly inside the stub's cut top. Undersides checked
-// numerically (scipy ConvexHull): body 54.1 deg at worst, tail 54.2. The beak is
-// raised -- a cawing crow -- because a level one would be a ledge.
+// the tail. Its keel lies wholly inside the stub's cut top. The body's
+// layers are ellipses, not boxes: a box's corners made diagonal facets
+// flatter than its sides. Undersides checked numerically (scipy ConvexHull)
+// against the 58 deg a convex corner of two overhangs needs: body 59.1, tail
+// 59.0. At 54-55 the slicer propped the crow on a column from the ground.
+// The beak and the raised tail point up -- a cawing crow -- because level
+// ones would be ledges.
+module ell(cx, a, b, z) translate([cx, 0, z]) scale([a, b, 1]) cylinder(r = 1, h = 0.05, $fn = 24);
 module crow() {
     scale(1.5) {
         hull() {
-            translate([-0.8, -0.45, 0]) cube([1.7, 0.9, 0.05]);
-            translate([-2.2, -1.3, 2.0]) cube([4.5, 2.6, 0.05]);
-            translate([-1.8, -1.0, 3.1]) cube([3.8, 2.0, 0.05]);
-            for (s = [-1, 1]) translate([-3.2, s * 0.9, 3.6]) cube(0.2, center = true);   // wing tips
-            translate([2.4, 0, 4.0]) sphere(r = 1.1, $fn = 12);
-            translate([4.3, 0, 5.3]) cube([0.5, 0.5, 0.5], center = true);
+            ell(0.05, 0.85, 0.45, 0);
+            ell(0.05, 2.25, 1.3, 2.3);
+            ell(0.1, 1.9, 1.0, 3.3);
+            for (s = [-1, 1]) translate([-3.1, s * 0.9, 4.4]) cube(0.2, center = true);   // wing tips
+            translate([2.4, 0, 4.4]) sphere(r = 1.0, $fn = 12);
+            translate([4.1, 0, 6.2]) cube([0.5, 0.5, 0.5], center = true);
         }
         hull() {
-            translate([-2.1, -0.9, 2.2]) cube([0.9, 1.8, 1.0]);
-            translate([-3.9, -0.5, 4.7]) cube([0.6, 1.0, 0.6]);
+            translate([-2.1, -0.9, 2.5]) cube([0.9, 1.8, 1.0]);
+            translate([-3.9, -0.5, 5.5]) cube([0.6, 1.0, 0.6]);
         }
     }
 }
@@ -443,14 +448,16 @@ module pebbles() {
 }
 
 // ---- grass tufts ----------------------------------------------------------------------------------
-// Five blades each, leaning 15 deg out from the centre, 1.0 at the root.
+// Five blades each, leaning out from the centre, 1.5 at the root and 1.25 at
+// the tip: at 0.55 tips they were a third of every sub-bead span on the
+// model, and the gate's 1st-percentile wall fell to 0.63.
 TUFTS = [[-28, -3], [12, 4], [-46, -12], [44, -14], [-14, -27], [34, -24], [8, 30], [-32, 26], [26, 28], [46, 12], [-4, 22], [18, -24]];
 module tufts() {
     for (t = TUFTS) let (z = gr(t, 3, 3, 0, "min"), zt = gr(t, 3, 3, 0, "max"))
         translate([t[0], t[1], 0]) for (i = [0 : 4]) let (a = 72 * i + 13 * t[0])
             hull() {
-                translate([0.3 * cos(a), 0.3 * sin(a), z - 1]) cube([1.0, 1.0, 0.01], center = true);
-                translate([1.2 * cos(a), 1.2 * sin(a), zt + 2.4]) cube([0.55, 0.55, 0.01], center = true);
+                translate([0.3 * cos(a), 0.3 * sin(a), z - 1]) cube([1.5, 1.5, 0.01], center = true);
+                translate([1.3 * cos(a), 1.3 * sin(a), zt + 2.4]) rotate([0, 0, 45]) cube([1.25, 1.25, 0.01], center = true);
             }
 }
 
