@@ -93,10 +93,16 @@ def load_payload(path: Path) -> dict:
 
 def build(payload: dict, sides: int = 8, hidden=None,
           squish: float = 1.25, widen: float = 1.04,
-          squareness: float = 4.0):
+          squareness: float = 4.0, tool=None, centre=None):
+    """tool: build only that extruder's beads (0-based), for one mesh per
+    filament. centre: the XY to put at the origin; pass the same one to every
+    filament's build, or each is centred on its own bounds and the colours
+    come out of register."""
     hidden = DEFAULT_HIDDEN if hidden is None else hidden
     pts = _decode(payload["pts"], np.int16).reshape(-1, 2).astype(np.float64) / 100.0
     polys = _decode(payload["polys"], np.int32).reshape(-1, 3)
+    poly_tool = (_decode(payload["polyTool"], np.uint8)
+                 if tool is not None else None)
     layers = payload["layers"]
     hw = float(payload.get("beadWidth", 0.42)) / 2.0 * widen
 
@@ -124,6 +130,8 @@ def build(payload: dict, sides: int = 8, hidden=None,
         for pi in range(L[1], L[1] + L[2]):
             ptype, start, n = int(polys[pi][0]), int(polys[pi][1]), int(polys[pi][2])
             if ptype in hidden or n < 2:
+                continue
+            if poly_tool is not None and poly_tool[pi] != tool:
                 continue
             p = pts[start:start + n]
             # Miter normal per point: average the incoming and outgoing segment
@@ -189,8 +197,10 @@ def build(payload: dict, sides: int = 8, hidden=None,
     # an object that far out framed as an extreme close-up of its own base --
     # which is why the first renders looked like woven cord: they were a 40mm
     # crop of a 120mm vase, not a bad surface.
-    V[:, 0] -= (V[:, 0].min() + V[:, 0].max()) / 2.0
-    V[:, 1] -= (V[:, 1].min() + V[:, 1].max()) / 2.0
+    if centre is None:
+        centre = ((V[:, 0].min() + V[:, 0].max()) / 2.0, (V[:, 1].min() + V[:, 1].max()) / 2.0)
+    V[:, 0] -= centre[0]
+    V[:, 1] -= centre[1]
 
     a, b, c = V[F[:, 0]], V[F[:, 1]], V[F[:, 2]]
     signed = float(np.einsum('ij,ij->i', a, np.cross(b, c)).sum()) / 6.0
