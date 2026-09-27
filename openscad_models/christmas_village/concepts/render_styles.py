@@ -26,7 +26,7 @@ PALETTE = {
     "gingerbread": {"body": "#A8662F", "roof": "#4B2A1C", "trim": "#F7F1E6", "accent": "#C62F3A"},
     "nordic":      {"body": "#EDE8DE", "roof": "#2E3035", "trim": "#A52A24", "accent": "#D6A83E"},
     "chalet":      {"body": "#8A5A34", "roof": "#3A2E28", "trim": "#F2EFE8", "accent": "#B3312F"},
-    "kawaii":      {"body": "#F4B6C6", "roof": "#9FD8C8", "trim": "#FBF8F4", "accent": "#F4D06F"},
+    "kawaii":      {"body": "#EE9FBA", "roof": "#7FCDB8", "trim": "#FBF8F4", "accent": "#F4D06F"},
 }
 # The Nordic house is white, so its snow is the body colour and its red is
 # the trim.
