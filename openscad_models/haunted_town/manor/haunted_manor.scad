@@ -31,7 +31,7 @@
 // and the relief costs nothing structural.
 
 include <BOSL2/std.scad>
-include <lattice_lib.scad>
+include <../../lattice_lib.scad>   // shared, lives in openscad_models/
 
 $fa = 2;  $fs = 0.4;
 

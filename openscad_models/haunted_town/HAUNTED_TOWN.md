@@ -12,16 +12,18 @@ Everything for the series lives here, one folder per piece (Scott,
 | `post_office/` | `haunted_post_office.3mf` (house and lift-off roof on one plate) | `.scad`, part `.stl`s including the lid, printing notes, `images/` |
 | `general_store/` | `haunted_general_store.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
 | `cemetery/` | `haunted_cemetery.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
+| `manor/` | `haunted_manor.3mf` (one piece, one colour) | `.scad`, `.stl`, printing notes, `images/` |
 
 `images/` holds renders of the current model: `*_colour_*` in the four
 filament colours, `*_grey_*` in one neutral colour so the relief reads. Each
 comes as front, three-quarter and top views. They are renders, not photos
 of a print; `chapel/photos/` holds real photos.
 
-The `.scad` files for the chapel, bakery and post office include
+The `.scad` files for the chapel, bakery, post office and manor include
 `../../lattice_lib.scad`, the shared library one level up in
-`openscad_models/`. The Haunted Manor came before the town and is not part
-of it; it stays in `openscad_models/`.
+`openscad_models/`. The manor is the town's first building (Scott,
+2026-09-27: "Manor is part of the town"); it came before the shared rules
+below and is one colour, not four.
 
 Agreed with Scott 2026-09-23. One style language across every building so they
 stand together on a shelf as one street. The quality bar is two painted
@@ -97,6 +99,7 @@ Confirmed by Scott 2026-09-25.
 | 3 | **General Store** | false-front facade taller than the building, leaning forward on two timber props, crooked "MERCANTILE" board, barrels by the door, crooked stove pipe on a tin shed roof | **built 2026-09-25, awaiting Scott's review** — `general_store/haunted_general_store.3mf`, notes in `general_store/HAUNTED_GENERAL_STORE_PRINTING.md` |
 | 4 | Schoolhouse | bell cupola on the ridge, sagging porch roof, oversized stopped clock | saved |
 | 5 | Undertaker | narrow and tall between gables, a coffin standing upright against the porch post | saved |
+| — | **Manor** | the first building: a tall Victorian house with a turret, gothic windows, a spiderweb rose window over the door, bats cut through the walls, carved jack-o'-lanterns | **built before the series rules** — `manor/haunted_manor.3mf`, notes in `manor/HAUNTED_MANOR_PRINTING.md`. One colour; its window bars are part of the wall, not separate trim |
 
 ## Scenery
 
