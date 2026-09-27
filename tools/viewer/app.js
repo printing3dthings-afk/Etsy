@@ -914,6 +914,11 @@ function buildChamber(bed) {
 function restoreModeAfterRebuild() {
   applyRealMode();
   if (machineHidden() && JOB) { frameSolo(JOB); }
+  // The new bed, gantry, toolhead and AMS are built at rest (2026-09-27). The
+  // slots still pointed at the old unit's spools, so the readout drove meshes
+  // no longer in the scene while the new one showed every spool full, and a
+  // paused print left the head and bed parked until the next frame of play.
+  if (JOB) { buildAMSState(); setSeg(play.seg); }
 }
 
 function machineRadius() {
@@ -3360,7 +3365,11 @@ var REAL_HIDDEN = {3: 1, 9: 1};
 // looks nothing like a print -- which is exactly the screenshot that started
 // this. So supports, their interface, the skirt and sparse infill all go, and
 // what is left is the object.
-var PART_HIDDEN = {3: 1, 7: 1, 8: 1, 9: 1};
+// The purge tower (12) and the slicer's prime line (10) go too
+// (2026-09-27): they are binned exactly like supports, and on a four-colour
+// plate the tower is as big as the part beside it. The path-traced stills
+// drop them for the same reason (tools/gcode_to_mesh.py PURGE_TYPES).
+var PART_HIDDEN = {3: 1, 7: 1, 8: 1, 9: 1, 10: 1, 12: 1};
 
 var partOnly = false;
 var partRig = null;
@@ -3386,13 +3395,18 @@ function machineHidden() {
 var filamentOverride = null;
 var layerFilCum = null;
 
+// How many segments are COMPLETE at time t -- the count setSeg() takes.
+// segCum[k] is when segment k STARTS, so segment k is done once t reaches
+// segCum[k + 1]: count the ends at or before t (2026-09-27). The search used to
+// run over the starts and subtract one, which is the same number mid-print but
+// tops out at nSeg - 1, so the last bead of every plate was never drawn.
 function segAtTime(t) {
-  var lo = 0, hi = JOB.nSeg, c = JOB.segCum;
+  var lo = 1, hi = JOB.nSeg + 1, c = JOB.segCum;
   while (lo < hi) {
     var mid = (lo + hi) >> 1;
     if (c[mid] <= t) { lo = mid + 1; } else { hi = mid; }
   }
-  return Math.max(0, lo - 1);
+  return lo - 1;
 }
 
 function setSeg(seg) {
@@ -3486,7 +3500,10 @@ function currentLayer() {
 function gotoLayer(target) {
   if (!JOB) { return; }
   var t = Math.max(0, Math.min(JOB.layers.length - 1, target));
-  var seg = Math.max(0, JOB.layerSeg[t + 1] - 1);
+  // setSeg() takes a COUNT, so a finished layer t is layerSeg[t + 1] segments,
+  // and it is finished at the time the next one starts (2026-09-27). This took
+  // one off the count and stopped a move short of the layer it named.
+  var seg = JOB.layerSeg[t + 1];
   play.t = JOB.segCum[seg];
   setSeg(seg);
   refreshReadout(true);
@@ -3835,14 +3852,16 @@ function setQuality(rich) {
     if (!m) { return; }
     var old = m.material;
     m.material = makeMaterial(pair[1], rich);
-    m.material.uniforms.uVis.value = old.uniforms.uVis.value;
-    m.material.uniforms.uMode.value = old.uniforms.uMode.value;
-    m.material.uniforms.uSpd.value.copy(old.uniforms.uSpd.value);
     m.material.polygonOffset = old.polygonOffset;
     m.material.polygonOffsetFactor = old.polygonOffsetFactor;
     m.material.polygonOffsetUnits = old.polygonOffsetUnits;
     old.dispose();
   });
+  // Every appearance uniform comes back from the state it is kept in, not by
+  // copying a hand-picked few off the old material (2026-09-27): the copy left
+  // out the filament override, the layer shading and the saturation, so a
+  // quality change turned layer lines off and real-print mode garish.
+  applyVisibility();
   if (jobMesh) { jobMesh.castShadow = rich; }
   shadowDirty = true;
   var b = $('quality');
@@ -3919,7 +3938,8 @@ function amsUsage(seg) {
 
 function buildAMSState() {
   amsSlots = [];
-  if (!JOB || !amsGroup) { return; }
+  // A machine with no AMS still clears the previous machine's rows.
+  if (!JOB || !amsGroup) { paintAMS(); return; }
   var totals = JOB.raw.filamentByTool || [];
   var n = Math.max(1, totals.length);
   for (var i = 0; i < n && i < MAX_FILAMENT; i++) {
@@ -3998,6 +4018,13 @@ function paintAMS() {
   });
   var note = $('amsnote');
   if (!note) { return; }
+  if (!amsSlots.length) {
+    // No AMS on the machine picked. Say so, rather than fall through to
+    // "one filament, one slot" and a 0% spool that describe nothing.
+    note.textContent = JOB ? 'This machine has no AMS drawn, so filament is not ' +
+      'tracked by slot here.' : '';
+    return;
+  }
   if (amsSlots.length > cap && cap) {
     note.innerHTML = '<span class="amsover">This plate needs ' + amsSlots.length +
       ' filaments and one AMS holds ' + cap + '.</span> A second unit would have to be ' +
@@ -4274,7 +4301,9 @@ function applyVisibility() {
   [jobMesh, ghostMesh].forEach(function (m) {
     if (!m) { return; }
     var u = m.material.uniforms.uVis.value;
-    for (var i = 0; i < 12; i++) {
+    // Every type, not a count (2026-09-27): a literal 12 left the wipe tower,
+    // the 13th, permanently on -- its legend button toggled nothing.
+    for (var i = 0; i < N_TYPE; i++) {
       u[i] = (partOnly ? !PART_HIDDEN[i]
               : real ? !REAL_HIDDEN[i] : visible[i]) ? 1 : 0;
     }
@@ -4298,10 +4327,18 @@ function applyVisibility() {
 // \u2500\u2500 job loading \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 window.__JOB_LOADED = function (raw) {
   if (!scene) { return; }
+  // A payload is only mounted if it is still the plate asked for (2026-09-27).
+  // Click A then B and A's script can land last: it used to mount A under B's
+  // name and source line. The script tag says which plate it is; checked again
+  // after the two frames below, since a click can land in between.
+  var cs = document.currentScript;
+  var forId = cs && cs.getAttribute('data-job');
+  if (forId && forId !== currentId) { return; }
   // Geometry build is synchronous and can take a second on the heaviest plate.
   // Yield first so the loading overlay actually paints before the main thread
   // locks -- otherwise the page looks frozen rather than busy.
   requestAnimationFrame(function () { requestAnimationFrame(function () {
+    if (forId && forId !== currentId) { return; }
     bootStage('Building ' + (raw.name || 'the plate'));
     var job = buildJob(raw);
     _polys = b64(raw.polys, Int32Array);
@@ -4349,6 +4386,7 @@ function loadJob(id) {
   paintJobList();
   setPlaying(false);
   var s = document.createElement('script');
+  s.setAttribute('data-job', id);
   s.src = 'jobs/' + id + '.js';
   s.onerror = function () {
     loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
