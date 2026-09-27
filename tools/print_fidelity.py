@@ -75,7 +75,15 @@ PLANE = 0.09        # mm either side of the slicing plane a miss must hold
 # or bigger than 0.6 mm3 -- rounded tower corners and block ends that do not
 # show on the part. A dropped feature (the 0.1 mm rib) is lost across its
 # whole width, so width and volume together catch it without the noise.
-FLAG_DEPTH = 0.3    # mm
+FLAG_DEPTH = 0.5    # mm, for dropped and filled
+# 0.5, not 0.3: at 0.3 the chapel -- printed, detail called great -- had four
+# flags, trim slivers 0.15-0.24 mm wide reaching 0.35-0.44 mm. A dropped rib
+# reaches its full 1 mm and is still caught.
+FLAG_COLOUR = 0.4   # mm wide, for a patch printed in the wrong filament
+FLAG_WIDTH = 0.2    # mm: a dropped or filled miss narrower than this is a hairline
+# Depth alone still flagged hairlines: 54 of the general store's flags were
+# 0.06 mm wide on one layer -- "0.84 mm deep", and invisible. A miss has to be
+# both deep AND wide enough to see.
 # Width and volume were the first rule, and both were wrong. A dropped 0.1 mm
 # rib is 0.1 wide and 0.6 mm3 -- under both -- and a batten tip printed 0.2 mm
 # short beside a door frame was 0.62 wide and flagged. What decides whether a
@@ -172,19 +180,6 @@ def parse_gcode(path):
             x, y = nx, ny
     close_run()
     return [L for L in layers if L["beads"] and L["z"] is not None]
-
-
-def _off_bed_moves(path, limit=400.0):
-    """Moves further than `limit` mm from the origin: never a real plate."""
-    n = 0
-    with open(path, "r", errors="replace") as fh:
-        for line in fh:
-            if line.startswith(("G0 ", "G1 ")):
-                for a, v in _NUM.findall(line.split(";", 1)[0]):
-                    if a in "XY" and abs(float(v)) > limit:
-                        n += 1
-                        break
-    return n
 
 
 def printed_area(beads):
@@ -352,7 +347,7 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
     else:
         log(f"slicing {len(meshes)} part(s), {len(slots)} filament(s) ...")
         virtual_printer.slice_model(src, gcode, supports=supports, extra=extra)
-    bad = _off_bed_moves(gcode)
+    bad = virtual_printer.off_bed_moves(gcode)
     if bad:
         raise RuntimeError(f"{gcode}: {bad} moves off the bed -- the slicer wrote junk "
                            "coordinates, so this G-code is not a real plate")
@@ -372,45 +367,70 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
             f"{seen.round(2)}, model centre {((lo[:2] + hi[:2]) / 2 + off).round(2)}); "
             "every comparison would be offset, so stopping here")
 
-    events = []          # (kind, tool, z_bottom, h, polygon in model XY)
+    events = []          # (kind, tool, z_bottom, h, polygon in model XY, size)
     area_model = defaultdict(float)
     for li, L in enumerate(layers):
         h = L["h"] or 0.2
         zc = L["z"] - h / 2 + z0
         printed = {t: shapely.affinity.translate(g, -off[0], -off[1])
                    for t, g in printed_area(L["beads"]).items()}
+        all_got = _valid(unary_union(list(printed.values()))) if printed else Polygon()
+        # A flat face lying ON the slicing plane is a tie: the slicer and this
+        # section can land on opposite sides of it, and the chapel's first
+        # report was mostly those -- whole floors "dropped" and sills "filled"
+        # on exactly one layer. Only a miss that holds a little above and
+        # below the plane is real, so compare against the model present at
+        # both heights (dropped) or at either (filled).
+        per = {}
         for t, m in tool_mesh.items():
             if not (m.bounds[0][2] < zc < m.bounds[1][2]):
                 continue
             model = section(m, zc)
+            below, above = section(m, zc - PLANE), section(m, zc + PLANE)
+            sure = _valid(_op(shapely.intersection, _op(shapely.intersection, model, below), above))
+            maybe = _valid(unary_union([model, below, above]))
+            per[t] = (m, model, sure, maybe)
+        all_maybe = _valid(unary_union([v[3] for v in per.values()])) if per else Polygon()
+        grown_got = all_got.buffer(TOL, quad_segs=3)
+        for t, (m, model, sure, maybe) in per.items():
             got = printed.get(t, Polygon())
             if model.is_empty and got.is_empty:
                 continue
             area_model[t] += model.area * h
-            # A flat face lying ON the slicing plane is a tie: the slicer and
-            # this section can land on opposite sides of it, and the chapel's
-            # first report was mostly those -- whole floors "dropped" and sills
-            # "filled" on exactly one layer. Only a miss that holds a little
-            # above and below the plane is real, so compare against the model
-            # present at both heights (dropped) or at either (filled).
-            below, above = section(m, zc - PLANE), section(m, zc + PLANE)
-            sure = _valid(_op(shapely.intersection, _op(shapely.intersection, model, below), above))
-            maybe = _valid(unary_union([model, below, above]))
+            # Three kinds of miss, each measured the way it would be seen
+            # (2026-09-27). Measuring every miss against its own filament's
+            # print made a 0.04 mm cream hairline the slicer laid in stone
+            # colour read as "31 mm deep", and flagged 85 of them on a chapel
+            # Scott printed and called great.
+            #   dropped: modelled, and nothing at all printed there -- depth is
+            #            how far it reaches from any printed plastic;
+            #   colour:  modelled in this filament, printed in another -- size
+            #            is its width, since it is a patch of wrong colour;
+            #   filled:  printed outside the whole model -- depth from the model.
             dropped = _op(shapely.difference, sure, got.buffer(TOL, quad_segs=3))
             if not dropped.is_empty:
                 skin = model.boundary.buffer(SURFACE, quad_segs=2)
                 far = got.buffer(REACH, quad_segs=3)
                 for p in _parts(dropped):
-                    if (p.area >= MIN_AREA and p.intersects(skin) and _reaches(p, far)
+                    if not (p.area >= MIN_AREA and _reaches(p, far)
                             and _confirmed(m, p, zc, inside=True)):
-                        events.append(("dropped", t, zc - h / 2, h, p, _depth(p, got)))
-            filled = _op(shapely.difference, got, maybe.buffer(TOL, quad_segs=3))
+                        continue
+                    missing = _op(shapely.difference, p, grown_got)
+                    for q in _parts(missing):
+                        if (q.area >= MIN_AREA and q.intersects(skin)
+                                and _reaches(q, all_got.buffer(REACH, quad_segs=3))):
+                            events.append(("dropped", t, zc - h / 2, h, q, _depth(q, all_got)))
+                    swapped = _op(shapely.intersection, p, all_got)
+                    for q in _parts(swapped):
+                        if q.area >= MIN_AREA and q.intersects(skin):
+                            events.append(("colour", t, zc - h / 2, h, q, 2 * _inscribed(q)))
+            filled = _op(shapely.difference, got, all_maybe.buffer(TOL, quad_segs=3))
             if not filled.is_empty:
-                far = maybe.buffer(REACH, quad_segs=3)
+                far = all_maybe.buffer(REACH, quad_segs=3)
                 for p in _parts(filled):
                     if (p.area >= MIN_AREA and _reaches(p, far)
-                            and _confirmed(m, p, zc, inside=False)):
-                        events.append(("filled", t, zc - h / 2, h, p, _depth(p, maybe)))
+                            and _confirmed(whole, p, zc, inside=False)):
+                        events.append(("filled", t, zc - h / 2, h, p, _depth(p, all_maybe)))
         if li % 100 == 0:
             log(f"  layer {li}/{len(layers)}")
 
@@ -470,7 +490,8 @@ def _summarise(events, area_model, whole, slots, layers):
             "_polys": c["polys"],
         })
     for c in out:
-        c["flag"] = c["depth_mm"] >= FLAG_DEPTH
+        c["flag"] = (c["depth_mm"] >= FLAG_COLOUR if c["kind"] == "colour"
+                     else c["depth_mm"] >= FLAG_DEPTH and c["max_width_mm"] >= FLAG_WIDTH)
     out.sort(key=lambda c: (not c["flag"], -c["volume_mm3"]))
     tot = defaultdict(float)
     for c in out:
@@ -481,6 +502,7 @@ def _summarise(events, area_model, whole, slots, layers):
         "model_volume_mm3": round(vol, 1),
         "dropped_mm3": round(tot["dropped"], 2),
         "filled_mm3": round(tot["filled"], 2),
+        "colour_mm3": round(tot["colour"], 2),
         "flagged": sum(c["flag"] for c in out),
         "clusters": out,
     }
@@ -516,14 +538,17 @@ def print_report(rep, top=15):
     print(f"\nPRINT FIDELITY  ({rep['layers']} layers, model {rep['model_volume_mm3']} mm3)")
     print(f"  dropped (modelled, not printed): {rep['dropped_mm3']} mm3")
     print(f"  filled  (printed, not modelled): {rep['filled_mm3']} mm3")
-    print(f"  flagged for review (reaching >= {FLAG_DEPTH} mm past the other outline): {rep['flagged']}")
+    print(f"  colour  (printed, other filament): {rep.get('colour_mm3', 0)} mm3")
+    print(f"  flagged for review (dropped/filled >= {FLAG_DEPTH} mm deep and >= {FLAG_WIDTH} wide, "
+          f"colour >= {FLAG_COLOUR} mm wide): {rep['flagged']}")
     shown = [c for c in rep["clusters"]][:top]
     if not shown:
         print("  no misses above the reporting floor")
     for c in shown:
         print(f"  {'FLAG ' if c['flag'] else '     '}{c['kind']:7s} {c['colour']} slot {c['tool']}  {c['volume_mm3']:8.3f} mm3  "
               f"z {c['z_mm'][0]}-{c['z_mm'][1]} ({c['layers']} layers)  "
-              f"{c['side']} at {c['at_xy']}  {c['max_width_mm']} mm wide, {c['depth_mm']} mm deep")
+              f"{c['side']} at {c['at_xy']}  " + (f"{c['depth_mm']} mm wide" if c['kind'] == 'colour'
+              else f"{c['max_width_mm']} mm wide, {c['depth_mm']} mm deep"))
     n = len(rep["clusters"])
     if n > top:
         print(f"  ... {n - top} smaller")

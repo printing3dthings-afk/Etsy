@@ -40,6 +40,11 @@ STEP = 0.4          # mm between cutting planes
 MAX_DIM = 4.0       # mm: an island longer than this across is a strip, not a bar
 MAX_AREA = 8.0      # mm2: bigger than this is not slender at any length
 FLAG_SLENDER = 4.0  # length / sqrt(area) at or above which a member is flagged
+# HIGH is where things actually broke. The one real data point: on the chapel
+# as printed, the front window's bar that snapped scored 17.5 and the side
+# windows' bars that survived 12.4. Between those, 15. One break is thin
+# evidence; move this when a print says otherwise.
+HIGH_SLENDER = 15.0
 MIN_LENGTH = 3.0    # mm: shorter runs are nubs and tips
 
 
@@ -128,6 +133,8 @@ def check(paths, step=STEP, log=print):
         log(f"  {axis}: {sum(1 for f in found if f['axis'] == axis)} slender run(s)")
     for f in found:
         f["flag"] = f["slenderness"] >= FLAG_SLENDER
+        f["risk"] = ("high" if f["slenderness"] >= HIGH_SLENDER
+                     else "watch" if f["flag"] else "")
     found.sort(key=lambda f: -f["slenderness"])
     return found
 
@@ -139,9 +146,11 @@ def main(argv=None):
     a = ap.parse_args(argv)
     found = check(a.parts, a.step)
     flagged = [f for f in found if f["flag"]]
-    print(f"\nFRAGILITY  {len(flagged)} flagged (slenderness >= {FLAG_SLENDER}), {len(found)} slender runs")
+    high = [f for f in found if f["risk"] == "high"]
+    print(f"\nFRAGILITY  {len(high)} high (slenderness >= {HIGH_SLENDER}, where the chapel's bar "
+          f"snapped), {len(flagged) - len(high)} watch (>= {FLAG_SLENDER}), {len(found)} slender runs")
     for f in found[:25]:
-        print(f"  {'FLAG ' if f['flag'] else '     '}along {f['axis']}  {f['length_mm']:5.1f} mm long  "
+        print(f"  {f['risk'].upper():6s}along {f['axis']}  {f['length_mm']:5.1f} mm long  "
               f"~{f['section_mm2']} mm2 (thinnest {f['thinnest_mm2']})  slenderness {f['slenderness']}  at {f['at']}")
     return found
 

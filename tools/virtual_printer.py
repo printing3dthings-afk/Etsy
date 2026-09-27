@@ -105,12 +105,40 @@ def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800):
     if supports:
         cmd.append("--support-material")
     cmd += ["-o", str(gcode_path), str(mesh_path)]
-    r = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=timeout)
-    if not gcode_path.exists() or gcode_path.stat().st_size == 0:
-        raise VirtualPrinterError(
-            f"slicing produced nothing (exit {r.returncode}):\n"
-            + ((r.stderr or r.stdout or "").strip()[-1500:]))
-    return gcode_path
+    # Re-slice on junk (2026-09-27). On multi-filament plates PrusaSlicer 2.7
+    # intermittently writes coordinates like X-877672384 into the wipe-tower
+    # tool changes: the same 3MF with the same options gave 4,153 junk moves in
+    # one run and none in the next, and the cemetery 58 then none three times
+    # running. A printer handed that file would try to travel 877 km, so a
+    # junk slice is never returned -- it is retried, then refused.
+    for attempt in range(3):
+        r = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=timeout)
+        if not gcode_path.exists() or gcode_path.stat().st_size == 0:
+            raise VirtualPrinterError(
+                f"slicing produced nothing (exit {r.returncode}):\n"
+                + ((r.stderr or r.stdout or "").strip()[-1500:]))
+        junk = off_bed_moves(gcode_path)
+        if not junk:
+            return gcode_path
+    raise VirtualPrinterError(
+        f"{gcode_path}: the slicer wrote {junk} off-bed moves on 3 attempts running; "
+        "this G-code is not a real plate")
+
+
+_XY = re.compile(r"([XY])([-+]?\d*\.?\d+)")
+
+
+def off_bed_moves(path, limit=400.0):
+    """Moves further than `limit` mm from the origin: never a real plate."""
+    n = 0
+    with open(path, "r", errors="replace") as fh:
+        for line in fh:
+            if line.startswith(("G0 ", "G1 ")):
+                for _, v in _XY.findall(line.split(";", 1)[0]):
+                    if abs(float(v)) > limit:
+                        n += 1
+                        break
+    return n
 
 
 def analyse(gcode_path, model_height=None):
