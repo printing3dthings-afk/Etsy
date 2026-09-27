@@ -3892,8 +3892,22 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      against a 157-mesh corpus (advisory only, wired 2026-09-20); the
      silhouette half of the bar below is still a human call — see the
      design skill's Technique 68 for the metric that was tried and rejected.
+  4b. Run `tools/print_fidelity.py` with every colour part (Scott, 2026-09-27:
+     "make sure the images that are produced can be recreated in a print ...
+     keep the quality and visual detail in the top of the priority list").
+     It slices the parts as the P1S would and compares each layer's real
+     beads with the model: detail DROPPED (too thin to extrude) and detail
+     FILLED (closed over, or a colour printing into another's part). Every
+     FLAG is fixed in the .scad or explained to Scott. Calibrated on the
+     chapel he printed, which has none.
+  4c. Run `tools/fragility.py` on all parts together. It finds slender members
+     that print fine and snap in the hand -- the class of the chapel's first
+     window bars, which it flags on the as-printed chapel and passes once
+     glazed. Every FLAG is thickened, joined to something, or explained.
   5. Render three views (`tools/blender_render.py --views`, plus `--front=+y` if the model's front faces +Y) and show him before
-     anything is called done.
+     anything is called done. For anything whose detail matters, also show
+     the as-printed still (`tools/as_printed.py` on the fidelity slice): it is
+     rendered from the toolpath, so it is an image the printer can make.
 
   **Printability is a hard constraint, not a tradeoff.** Minimum wall 1.2mm, no
   unsupported overhang past 45°, flat base with a real footprint, no floating

@@ -7778,3 +7778,66 @@ it — gate, walls, slicer — and three things were still wrong on the plate.
   reprinted. Its 66° arm
   undersides — needed to print without support — still give it a braced
   silhouette. That is a limit of printing a cross upright, not a fix to make.
+
+## Technique 78 — Check that the print keeps the detail the render shows, and that it survives the hand (2026-09-27)
+
+Scott: "make sure the images that are produced can be recreated in a print
+... keep the quality and visual detail in the top of the priority list." A
+render shows the MODEL. Two tools now check the gap between model and part,
+and both run on every model before it is shown (CLAUDE.md, steps 4b and 4c).
+
+**`tools/print_fidelity.py --part body.stl:#hex ...`** slices every colour
+part as the P1S would (one filament each), rebuilds each layer's printed area
+from the real beads at their own `;WIDTH:`, and compares it filament by
+filament with the model. DROPPED is modelled but not printed; FILLED is
+printed where that colour has no model. A miss is FLAGGED when it reaches
+0.3 mm or more past the other outline — depth, not width or volume, is what
+makes a miss visible. `--zoom X,Y,Z` draws model against toolpath at any spot:
+confirm every flag that way before acting on it.
+
+Limits measured on a calibration block (PrusaSlicer 2.7, Arachne walls — the
+same wall generator as Bambu Studio's production setting):
+
+| feature | result |
+|---|---|
+| raised rib ≤ 0.1 mm wide | dropped |
+| raised rib 0.15 mm and up | prints, as one narrow bead |
+| isolated dot/pin ≤ 0.5 mm across | dropped; 0.7 mm loses layers; 1.0 prints |
+| engraved line 0.2–0.6 mm on a top face | stays open |
+| engraved groove 0.2 mm in a wall | stays open — perimeters wrap into it |
+
+So the printer's limit is finer than the old rule of thumb (two extrusions).
+The two-extrusion rule still stands for anything that must be STRONG (ridges
+between engraved letters, Technique 77) — a 0.15 mm rib prints, but it is one
+bead and breaks like one.
+
+Baseline: the chapel Scott printed and called great on detail has no flags
+(157 misses, all under 0.3 mm deep — tower corners and block ends).
+
+**`tools/fragility.py parts...`** cuts the model across X, Y and Z every
+0.4 mm. A bar crossing a plane is a small island of its own; a wall is a strip
+joined to everything. Islands repeating plane after plane are a slender
+member; slenderness = length / √(section area), flagged at 4. On the chapel as
+printed it flags exactly the nine window bars that snapped (12–17.5), and on
+the glazed chapel none. It also flags, correctly, the tower's inside corner:
+an L post standing clear of the nave for ~15 mm — it held, being an L.
+
+**The checker was wrong four times before it was right**, each time in a way
+that hid real misses or invented false ones — worth knowing before trusting
+any geometric check:
+- an opening filter meant to remove hairline slivers deleted every miss under
+  0.1 mm wide, i.e. exactly the features that fail;
+- aligning print to model by their outer bounds shifted the model toward a
+  thin rib that printed short, so a whole plain wall read as missing — pin
+  the slicer's placement (`--center`) instead;
+- trimesh's Path2D drops one of several loops that touch at a corner (the
+  post office's parcel top), and GEOS `build_area` drops a thin rib fused to
+  a wall on some layers — neither alone is safe; the section is the union of
+  both, and every miss is confirmed with `mesh.contains`;
+- a flat face lying on the slicing plane is a tie, not a miss: count only
+  misses that hold 0.09 mm above and below the plane.
+
+**`tools/as_printed.py sliced.gcode --colour ...`** renders the toolpath
+itself, one mesh per filament in its colour, from the G-code at 0.02 mm (the
+viewer payloads are simplified to 0.64 mm for the web and lose lettering).
+That still is an image the printer can make.

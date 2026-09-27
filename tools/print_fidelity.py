@@ -75,8 +75,12 @@ PLANE = 0.09        # mm either side of the slicing plane a miss must hold
 # or bigger than 0.6 mm3 -- rounded tower corners and block ends that do not
 # show on the part. A dropped feature (the 0.1 mm rib) is lost across its
 # whole width, so width and volume together catch it without the noise.
-FLAG_WIDTH = 0.5    # mm
-FLAG_VOLUME = 1.0   # mm3
+FLAG_DEPTH = 0.3    # mm
+# Width and volume were the first rule, and both were wrong. A dropped 0.1 mm
+# rib is 0.1 wide and 0.6 mm3 -- under both -- and a batten tip printed 0.2 mm
+# short beside a door frame was 0.62 wide and flagged. What decides whether a
+# miss is visible is its DEPTH: how far it reaches from the other outline. The
+# dropped rib is missing its whole 1 mm; the batten is 0.2 short.
 # REACH, not an opening, separates noise from detail (2026-09-27). The first
 # version opened every miss by 0.05 mm to remove the hairline slivers left
 # along an outline -- and so deleted every feature under 0.1 mm wide, which is
@@ -170,6 +174,19 @@ def parse_gcode(path):
     return [L for L in layers if L["beads"] and L["z"] is not None]
 
 
+def _off_bed_moves(path, limit=400.0):
+    """Moves further than `limit` mm from the origin: never a real plate."""
+    n = 0
+    with open(path, "r", errors="replace") as fh:
+        for line in fh:
+            if line.startswith(("G0 ", "G1 ")):
+                for a, v in _NUM.findall(line.split(";", 1)[0]):
+                    if a in "XY" and abs(float(v)) > limit:
+                        n += 1
+                        break
+    return n
+
+
 def printed_area(beads):
     """{tool: Polygon} of everything that tool laid down on one layer."""
     per_tool = defaultdict(list)
@@ -235,13 +252,36 @@ def _confirmed(mesh, p, z, inside, n=5):
     return (got.sum() if inside else (~got).sum()) * 2 > len(pts)
 
 
+def _op(fn, a, b):
+    """A boolean op that cannot throw on bad topology. On the chapel, bakery
+    and cemetery GEOS raised "side location conflict" / "unable to assign
+    free hole" even after both inputs were repaired; the retries escalate
+    from repair, to snap-rounding (GEOS's guaranteed-robust mode), to
+    rebuilding both inputs from a zero-width buffer."""
+    try:
+        return fn(a, b)
+    except shapely.errors.GEOSException:
+        pass
+    a, b = _valid(a), _valid(b)
+    for attempt in (lambda: fn(a, b), lambda: fn(a, b, grid_size=0.001),
+                    lambda: fn(a.buffer(0), b.buffer(0), grid_size=0.002)):
+        try:
+            return attempt()
+        except shapely.errors.GEOSException:
+            continue
+    raise
+
+
 def _valid(g):
     """Snap to 1 micron and repair. The bakery's clapboard produced a section
     GEOS refused to difference ("TopologyException: side location conflict");
     a micron grid is a four-hundredth of a bead and removes it."""
     if g.is_empty:
         return g
-    return shapely.make_valid(shapely.set_precision(g, 0.001))
+    try:
+        return shapely.make_valid(shapely.set_precision(g, 0.001))
+    except shapely.errors.GEOSException:
+        return shapely.make_valid(g).buffer(0)
 
 
 def _parts(g):
@@ -250,14 +290,25 @@ def _parts(g):
     return list(g.geoms) if hasattr(g, "geoms") else [g]
 
 
+def _depth(p, ref):
+    """How far p reaches from ref: the largest distance from any point of p
+    to ref. ref empty means nothing of that colour is there at all."""
+    if ref.is_empty:
+        return max(math.sqrt(p.area), 1.0)
+    ring = shapely.segmentize(p.exterior, 0.05)
+    pts = shapely.points(np.asarray(ring.coords))
+    pts = np.append(pts, p.representative_point())
+    return float(np.max(shapely.distance(ref, pts)))
+
+
 def _reaches(p, far):
     """True when part of p lies outside `far` -- the other outline grown by REACH."""
-    rest = p.difference(far)
+    rest = _op(shapely.difference, p, far)
     return not rest.is_empty and rest.area > 1e-5
 
 
 # ── the comparison ────────────────────────────────────────────────────────
-def compare(parts, workdir, supports=True, log=print):
+def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=False):
     """parts: [(path, '#hex')]. Returns the report dict."""
     workdir = Path(workdir)
     meshes = [(_load(p), c.upper()) for p, c in parts]
@@ -278,10 +329,13 @@ def compare(parts, workdir, supports=True, log=print):
         src = workdir / "fidelity_src.3mf"
         assemble_3mf.assemble(src, [[(Path(p), c) for p, c in parts]], "assembly")
         extra = virtual_printer.mmu_options(len(slots))
-        # With a wipe tower, PrusaSlicer refuses to slice supports unless they
-        # print from whichever filament is already loaded (0 = "current").
-        extra.update({"support-material-extruder": "0",
-                      "support-material-interface-extruder": "0"})
+        # No supports on a multi-filament slice (2026-09-27). With a wipe
+        # tower PrusaSlicer 2.7 only accepts supports printed from the loaded
+        # filament, and in that mode it wrote X11851687936 into every tool
+        # change: 22,593 junk moves on the chapel, none with supports off.
+        # The Haunted Town is designed support-free, so nothing is lost; a
+        # multi-colour model that needs support has to be checked per part.
+        supports = False
     else:
         src = Path(parts[0][0])
         extra = None
@@ -291,8 +345,17 @@ def compare(parts, workdir, supports=True, log=print):
     # prints short, the whole model shifts toward it and every wall on that
     # side reads as a miss (2026-09-27, on the calibration block).
     extra = dict(extra or {}, center=f"{BED_CENTRE[0]},{BED_CENTRE[1]}")
-    log(f"slicing {len(meshes)} part(s), {len(slots)} filament(s) ...")
-    virtual_printer.slice_model(src, gcode, supports=supports, extra=extra)
+    if layer_height:
+        extra["layer-height"] = str(layer_height)
+    if reuse and gcode.exists():
+        log(f"reusing {gcode}")
+    else:
+        log(f"slicing {len(meshes)} part(s), {len(slots)} filament(s) ...")
+        virtual_printer.slice_model(src, gcode, supports=supports, extra=extra)
+    bad = _off_bed_moves(gcode)
+    if bad:
+        raise RuntimeError(f"{gcode}: {bad} moves off the bed -- the slicer wrote junk "
+                           "coordinates, so this G-code is not a real plate")
     layers = parse_gcode(gcode)
     log(f"{len(layers)} layers parsed")
 
@@ -331,23 +394,23 @@ def compare(parts, workdir, supports=True, log=print):
             # above and below the plane is real, so compare against the model
             # present at both heights (dropped) or at either (filled).
             below, above = section(m, zc - PLANE), section(m, zc + PLANE)
-            sure = _valid(model.intersection(below).intersection(above))
+            sure = _valid(_op(shapely.intersection, _op(shapely.intersection, model, below), above))
             maybe = _valid(unary_union([model, below, above]))
-            dropped = sure.difference(got.buffer(TOL, quad_segs=3))
+            dropped = _op(shapely.difference, sure, got.buffer(TOL, quad_segs=3))
             if not dropped.is_empty:
                 skin = model.boundary.buffer(SURFACE, quad_segs=2)
                 far = got.buffer(REACH, quad_segs=3)
                 for p in _parts(dropped):
                     if (p.area >= MIN_AREA and p.intersects(skin) and _reaches(p, far)
                             and _confirmed(m, p, zc, inside=True)):
-                        events.append(("dropped", t, zc - h / 2, h, p))
-            filled = got.difference(maybe.buffer(TOL, quad_segs=3))
+                        events.append(("dropped", t, zc - h / 2, h, p, _depth(p, got)))
+            filled = _op(shapely.difference, got, maybe.buffer(TOL, quad_segs=3))
             if not filled.is_empty:
                 far = maybe.buffer(REACH, quad_segs=3)
                 for p in _parts(filled):
                     if (p.area >= MIN_AREA and _reaches(p, far)
                             and _confirmed(m, p, zc, inside=False)):
-                        events.append(("filled", t, zc - h / 2, h, p))
+                        events.append(("filled", t, zc - h / 2, h, p, _depth(p, maybe)))
         if li % 100 == 0:
             log(f"  layer {li}/{len(layers)}")
 
@@ -368,7 +431,7 @@ def _summarise(events, area_model, whole, slots, layers):
     colour_of = {v: k for k, v in slots.items()}
     clusters = []
     open_ = {}   # (kind, tool) -> list of clusters touched on the last layer
-    for kind, t, zb, h, p in sorted(events, key=lambda e: e[2]):
+    for kind, t, zb, h, p, depth in sorted(events, key=lambda e: e[2]):
         key = (kind, t)
         joined = None
         for c in open_.get(key, []):
@@ -378,7 +441,7 @@ def _summarise(events, area_model, whole, slots, layers):
         if joined is None:
             joined = {"kind": kind, "tool": t, "z0": zb, "z1": zb, "vol": 0.0,
                       "cx": 0.0, "cy": 0.0, "w": 0.0, "last": p, "layers": 0,
-                      "width": 0.0, "polys": []}
+                      "width": 0.0, "depth": 0.0, "polys": []}
             clusters.append(joined)
             open_.setdefault(key, []).append(joined)
         a = p.area
@@ -391,6 +454,7 @@ def _summarise(events, area_model, whole, slots, layers):
         joined["layers"] += 1
         # Widest point of the miss: twice the largest inscribed radius.
         joined["width"] = max(joined["width"], 2 * _inscribed(p))
+        joined["depth"] = max(joined["depth"], depth)
         joined["polys"].append((zb, h, p))
     out = []
     for c in clusters:
@@ -402,10 +466,11 @@ def _summarise(events, area_model, whole, slots, layers):
             "at_xy": [round(cx, 1), round(cy, 1)],
             "side": _where((cx, cy), whole.bounds),
             "max_width_mm": round(c["width"], 2),
+            "depth_mm": round(c["depth"], 2),
             "_polys": c["polys"],
         })
     for c in out:
-        c["flag"] = c["max_width_mm"] >= FLAG_WIDTH or c["volume_mm3"] >= FLAG_VOLUME
+        c["flag"] = c["depth_mm"] >= FLAG_DEPTH
     out.sort(key=lambda c: (not c["flag"], -c["volume_mm3"]))
     tot = defaultdict(float)
     for c in out:
@@ -451,17 +516,53 @@ def print_report(rep, top=15):
     print(f"\nPRINT FIDELITY  ({rep['layers']} layers, model {rep['model_volume_mm3']} mm3)")
     print(f"  dropped (modelled, not printed): {rep['dropped_mm3']} mm3")
     print(f"  filled  (printed, not modelled): {rep['filled_mm3']} mm3")
-    print(f"  flagged for review (>= {FLAG_WIDTH} mm wide or >= {FLAG_VOLUME} mm3): {rep['flagged']}")
+    print(f"  flagged for review (reaching >= {FLAG_DEPTH} mm past the other outline): {rep['flagged']}")
     shown = [c for c in rep["clusters"]][:top]
     if not shown:
         print("  no misses above the reporting floor")
     for c in shown:
         print(f"  {'FLAG ' if c['flag'] else '     '}{c['kind']:7s} {c['colour']} slot {c['tool']}  {c['volume_mm3']:8.3f} mm3  "
               f"z {c['z_mm'][0]}-{c['z_mm'][1]} ({c['layers']} layers)  "
-              f"{c['side']} at {c['at_xy']}  up to {c['max_width_mm']} mm wide")
+              f"{c['side']} at {c['at_xy']}  {c['max_width_mm']} mm wide, {c['depth_mm']} mm deep")
     n = len(rep["clusters"])
     if n > top:
         print(f"  ... {n - top} smaller")
+
+
+def layer_view(parts, gcode, x, y, z, out, size=16.0, px_per_mm=50):
+    """Draw one layer around (x, y, z): the model's section per filament,
+    shaded, with the real beads over it at their own widths. The way every
+    finding in this file was confirmed before it was believed."""
+    from PIL import Image, ImageDraw
+    meshes = [(_load(p), c.upper()) for p, c in parts]
+    slots = {}
+    for _, c in meshes:
+        slots.setdefault(c, len(slots))
+    whole = trimesh.util.concatenate([m for m, _ in meshes])
+    lo, hi = whole.bounds
+    off = (BED_CENTRE[0] - (lo[0] + hi[0]) / 2, BED_CENTRE[1] - (lo[1] + hi[1]) / 2)
+    layers = parse_gcode(gcode)
+    lay = min(layers, key=lambda L: abs(L["z"] - (L["h"] or 0.2) / 2 + lo[2] - z))
+    zc = lay["z"] - (lay["h"] or 0.2) / 2 + lo[2]
+    n = int(size * px_per_mm)
+    im = Image.new("RGB", (n, n), "white")
+    d = ImageDraw.Draw(im)
+    tr = lambda px, py: ((px - x + size / 2) * px_per_mm, n - (py - y + size / 2) * px_per_mm)
+    rgb = lambda c: tuple(int(c[i:i + 2], 16) for i in (1, 3, 5))
+    for m, c in meshes:
+        for g in _parts(section(m, zc)):
+            d.polygon([tr(*q) for q in g.exterior.coords],
+                      fill=tuple(v // 2 + 127 for v in rgb(c)), outline=(0, 0, 0))
+            for hole in g.interiors:
+                d.polygon([tr(*q) for q in hole.coords], fill="white", outline=(0, 0, 0))
+    colour_of = {v: k for k, v in slots.items()}
+    for (t, w), runs in lay["beads"].items():
+        col = rgb(colour_of.get(t, "#FF0000"))
+        for r in runs:
+            d.line([tr(px - off[0], py - off[1]) for px, py in r], fill=col,
+                   width=max(1, int(w * px_per_mm * 0.6)))
+    im.save(out)
+    return zc
 
 
 def main(argv=None):
@@ -470,9 +571,16 @@ def main(argv=None):
     ap.add_argument("--part", action="append", default=[], metavar="PATH:#HEX",
                     help="a colour part; repeat once per part")
     ap.add_argument("--no-supports", action="store_true")
+    ap.add_argument("--layer-height", type=float,
+                    help="slice at this layer height instead of 0.20 (e.g. 0.12 fine)")
     ap.add_argument("--json", help="write the report here")
     ap.add_argument("--overlay", help="render the model with misses marked (PNG)")
     ap.add_argument("--keep", help="directory for the G-code and miss meshes")
+    ap.add_argument("--zoom", metavar="X,Y,Z",
+                    help="draw model vs toolpath around this model point (needs --keep with a slice)")
+    ap.add_argument("--zoom-out", help="PNG for --zoom")
+    ap.add_argument("--reuse-gcode", action="store_true",
+                    help="use the G-code already in --keep instead of slicing again")
     a = ap.parse_args(argv)
     parts = []
     for spec in a.part:
@@ -485,7 +593,13 @@ def main(argv=None):
 
     work = Path(a.keep) if a.keep else Path(tempfile.mkdtemp(prefix="fidelity_"))
     work.mkdir(parents=True, exist_ok=True)
-    rep, _ = compare(parts, work, supports=not a.no_supports)
+    if a.zoom:
+        x, y, z = (float(v) for v in a.zoom.split(","))
+        zc = layer_view(parts, work / "fidelity.gcode", x, y, z, a.zoom_out or "zoom.png")
+        print(f"layer at z={zc:.2f} drawn to {a.zoom_out or 'zoom.png'}")
+        return None
+    rep, _ = compare(parts, work, supports=not a.no_supports, layer_height=a.layer_height,
+                     reuse=a.reuse_gcode)
     print_report(rep)
     if a.json:
         clean = dict(rep, clusters=[{k: v for k, v in c.items() if k != "_polys"}

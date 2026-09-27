@@ -82,6 +82,12 @@ def test_thin_ribs_and_small_dots_are_reported_and_printable_ones_are_not():
             check(got == 0.0, f"a {d} mm dot prints; {got:.3f} mm3 reported dropped")
     # The main walls print true. A shifted alignment made the whole front read
     # as tens of mm3 dropped.
+    # A whole dropped rib is a miss you can see; it must be flagged, not just listed.
+    for w, x in RIB_X.items():
+        if w <= 0.1:
+            flagged = [c for c in rep["clusters"] if c["flag"] and abs(c["at_xy"][0] - x) < 2
+                       and c["kind"] == "dropped"]
+            check(flagged, f"the dropped {w} mm rib is missing its whole 1 mm depth and must be flagged")
     walls = sum(c["volume_mm3"] for c in rep["clusters"]
                 if abs(c["at_xy"][1] - 0) < 0.3 and all(abs(c["at_xy"][0] - x) > 2 for x in RIB_X.values()))
     check(walls < 0.1, f"the plain front wall must not read as a miss; got {walls:.3f} mm3")
