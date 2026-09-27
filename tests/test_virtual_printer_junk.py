@@ -9,6 +9,7 @@ tries. A stand-in slicer that writes junk a set number of times proves both.
 import os
 import sys
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,6 +43,9 @@ def _with_fake(junk_runs):
     cnt = _fake_slicer(td, junk_runs)
     old = os.environ["PATH"]
     os.environ["PATH"] = f"{td}:{old}"
+    # Pinned: with Bambu Studio installed, slice_model would prefer it and
+    # never run the fake PrusaSlicer on PATH.
+    os.environ["VIRTUAL_PRINTER_SLICER"] = "prusa"
     try:
         try:
             vp.slice_model(td / "m.stl", td / "o.gcode")
@@ -50,7 +54,30 @@ def _with_fake(junk_runs):
             err = e
     finally:
         os.environ["PATH"] = old
+        os.environ.pop("VIRTUAL_PRINTER_SLICER", None)
     return int(cnt.read_text()), td / "o.gcode", err
+
+
+def test_the_bambu_path_is_guarded_the_same_way():
+    """The retry-and-refuse sits in slice_model, not in either slicer's runner,
+    so Bambu Studio output gets it too."""
+    import bambu_slicer
+    td = Path(tempfile.mkdtemp(prefix="vp_junk_bambu_"))
+    (td / "m.stl").write_text("solid x\nendsolid x\n")
+    calls = []
+
+    def fake(model, gcode, **kw):
+        calls.append(1)
+        Path(gcode).write_text("G1 X-877672384.000 Y164.5\n" if len(calls) < 3 else "G1 X10 Y10\n")
+
+    os.environ["VIRTUAL_PRINTER_SLICER"] = "bambu"
+    try:
+        with patch.object(bambu_slicer, "slice_model", fake):
+            vp.slice_model(td / "m.stl", td / "o.gcode")
+    finally:
+        os.environ.pop("VIRTUAL_PRINTER_SLICER", None)
+    check(len(calls) == 3, f"two junk Bambu slices then a clean one: expected 3 runs, got {len(calls)}")
+    check(vp.off_bed_moves(td / "o.gcode") == 0, "the returned Bambu G-code must be clean")
 
 
 def test_a_junk_slice_is_retried_until_clean():

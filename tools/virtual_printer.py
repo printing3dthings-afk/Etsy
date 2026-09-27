@@ -19,16 +19,21 @@ profiles of his own -- ask for them before claiming a time or quality number
 matters.
 
 HONEST LIMITS -- say these out loud rather than implying the sim is the printer:
-  * This is PrusaSlicer, not Bambu Studio. They share an engine lineage
-    (Bambu Studio and Orca are both PrusaSlicer forks), so the geometric
-    decisions -- perimeters, overhang classification, bridges, supports -- track
-    closely. Speeds and time estimates will NOT match Bambu's.
+  * Since 2026-09-27 the slicer is Bambu Studio itself (tools/bambu_slicer.py)
+    with Bambu's STOCK P1S presets, when it is installed; PrusaSlicer 2.7 is the
+    fallback, and its speeds and times do not match Bambu's. Stock is not
+    Scott's tuned profile -- until he exports his preset bundle, a number that
+    depends on tuning (time, seam, wall generator) is Bambu's default, not his.
+    Stock 0.20mm Standard uses the CLASSIC wall generator, not Arachne, so thin
+    features print differently from the PrusaSlicer slices these checks were
+    first calibrated on.
   * It models nothing thermal. Warping, bed adhesion, stringing, layer
     delamination and heat creep are invisible to it. A part can pass everything
     here and still fail on the plate for a reason this cannot see.
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
 import subprocess
@@ -84,17 +89,92 @@ class VirtualPrinterError(Exception):
     pass
 
 
-def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800):
-    exe = shutil.which("prusa-slicer") or shutil.which("prusa-slicer-console")
-    if not exe:
-        raise VirtualPrinterError(
-            "prusa-slicer is not installed (apt-get install -y prusa-slicer). "
-            "It is the slicing engine this stands on -- without it there is "
-            "nothing to read.")
+def active_slicer():
+    """"bambu" or "prusa": what slice_model will run. VIRTUAL_PRINTER_SLICER
+    pins one; otherwise Bambu Studio when it is installed, PrusaSlicer if not."""
+    want = os.environ.get("VIRTUAL_PRINTER_SLICER", "auto").lower()
+    if want in ("bambu", "prusa"):
+        return want
+    import bambu_slicer
+    return "bambu" if bambu_slicer.available() else "prusa"
+
+
+# PrusaSlicer option names the callers pass that Bambu Studio's stock presets
+# already cover (P1S geometry, the MMU wipe-tower workarounds) and so are not
+# forwarded. Anything else in `extra` must be translated below or refused --
+# silently dropping a setting would slice something other than what was asked.
+_BAMBU_COVERED = set(P1S) | set(MMU) | {"nozzle-diameter", "filament-diameter",
+                                         "temperature", "first-layer-temperature"}
+
+
+def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800,
+                colours=None):
+    """Slice to gcode_path in PrusaSlicer's comment dialect, whichever slicer
+    runs. `colours`: one hex per filament slot (Bambu only; the slicer needs
+    distinct filaments, nothing reads the colours back)."""
     mesh_path, gcode_path = Path(mesh_path), Path(gcode_path)
     if not mesh_path.exists():
         raise VirtualPrinterError(f"mesh not found: {mesh_path}")
     gcode_path.parent.mkdir(parents=True, exist_ok=True)
+    if active_slicer() == "bambu":
+        run = _bambu_runner(mesh_path, gcode_path, supports, extra, timeout, colours)
+    else:
+        run = _prusa_runner(mesh_path, gcode_path, supports, extra, timeout)
+    # Re-slice on junk (2026-09-27). On multi-filament plates PrusaSlicer 2.7
+    # intermittently writes coordinates like X-877672384 into the wipe-tower
+    # tool changes: the same 3MF with the same options gave 4,153 junk moves in
+    # one run and none in the next, and the cemetery 58 then none three times
+    # running. A printer handed that file would try to travel 877 km, so a
+    # junk slice is never returned -- it is retried, then refused. Kept for
+    # Bambu Studio too: nothing has shown it does this, nothing has shown it
+    # cannot.
+    for attempt in range(3):
+        gcode_path.unlink(missing_ok=True)
+        run()
+        if not gcode_path.exists() or gcode_path.stat().st_size == 0:
+            raise VirtualPrinterError(f"slicing produced nothing for {mesh_path}")
+        junk = off_bed_moves(gcode_path)
+        if not junk:
+            return gcode_path
+    raise VirtualPrinterError(
+        f"{gcode_path}: the slicer wrote {junk} off-bed moves on 3 attempts running; "
+        "this G-code is not a real plate")
+
+
+def _bambu_runner(mesh_path, gcode_path, supports, extra, timeout, colours):
+    import bambu_slicer
+    extra = dict(extra or {})
+    layer_height = extra.pop("layer-height", None)
+    centre = extra.pop("center", None)
+    # Bambu Studio has no --center; it places a lone model at the middle of
+    # the plate, which is exactly the one centre the callers ask for.
+    if centre and centre.replace(" ", "") not in ("128,128", "128.0,128.0"):
+        raise VirtualPrinterError(
+            f"Bambu Studio slices centred on the plate (128,128); centre={centre} "
+            "cannot be honoured")
+    unknown = sorted(k for k in extra if k not in _BAMBU_COVERED)
+    if unknown:
+        raise VirtualPrinterError(
+            f"no Bambu Studio equivalent wired up for {unknown}; set "
+            "VIRTUAL_PRINTER_SLICER=prusa to slice with these")
+
+    def run():
+        try:
+            bambu_slicer.slice_model(mesh_path, gcode_path, supports=supports,
+                                     layer_height=layer_height, colours=colours,
+                                     timeout=timeout)
+        except bambu_slicer.BambuSlicerError as exc:
+            raise VirtualPrinterError(str(exc)) from exc
+    return run
+
+
+def _prusa_runner(mesh_path, gcode_path, supports, extra, timeout):
+    exe = shutil.which("prusa-slicer") or shutil.which("prusa-slicer-console")
+    if not exe:
+        raise VirtualPrinterError(
+            "no slicer installed: tools/install_bambu_studio.sh for Bambu Studio "
+            "(preferred), or apt-get install -y prusa-slicer. Without one there is "
+            "nothing to read.")
     cmd = [exe, "--export-gcode"]
     # `--key=value`, not `--key value`: PrusaSlicer's boolean switches
     # (single-extruder-multi-material, wipe-tower) take no separate argument, so
@@ -105,24 +185,26 @@ def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800):
     if supports:
         cmd.append("--support-material")
     cmd += ["-o", str(gcode_path), str(mesh_path)]
-    # Re-slice on junk (2026-09-27). On multi-filament plates PrusaSlicer 2.7
-    # intermittently writes coordinates like X-877672384 into the wipe-tower
-    # tool changes: the same 3MF with the same options gave 4,153 junk moves in
-    # one run and none in the next, and the cemetery 58 then none three times
-    # running. A printer handed that file would try to travel 877 km, so a
-    # junk slice is never returned -- it is retried, then refused.
-    for attempt in range(3):
-        r = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=timeout)
+
+    def run():
+        r = subprocess.run(cmd, capture_output=True, text=True, errors="replace",
+                           timeout=timeout)
         if not gcode_path.exists() or gcode_path.stat().st_size == 0:
             raise VirtualPrinterError(
                 f"slicing produced nothing (exit {r.returncode}):\n"
                 + ((r.stderr or r.stdout or "").strip()[-1500:]))
-        junk = off_bed_moves(gcode_path)
-        if not junk:
-            return gcode_path
-    raise VirtualPrinterError(
-        f"{gcode_path}: the slicer wrote {junk} off-bed moves on 3 attempts running; "
-        "this G-code is not a real plate")
+    return run
+
+
+def slicer_of(gcode_path):
+    """Which slicer wrote a G-code file, from its own header."""
+    with open(gcode_path, "r", errors="replace") as fh:
+        head = "".join(next(fh, "") for _ in range(5))
+    if "BambuStudio" in head:
+        return "bambu"
+    if "PrusaSlicer" in head:
+        return "prusa"
+    return "unknown"
 
 
 _XY = re.compile(r"([XY])([-+]?\d*\.?\d+)")
@@ -149,21 +231,38 @@ def analyse(gcode_path, model_height=None):
     filament_mm = 0.0
     cur = None
     x = y = z = e = 0.0
+    rel = False
     for ln in open(gcode_path, errors="replace"):
         if ln.startswith(";TYPE:"):
             cur = ln[6:].strip(); continue
         if ln.startswith(";LAYER_CHANGE"):
             layers += 1; continue
+        # Relative E (2026-09-27). Bambu Studio always writes M83, and so does
+        # PrusaSlicer's wipe-tower mode; reading those E values as absolute
+        # counted only the pushes that happened to exceed the one before.
+        if ln.startswith("M83"):
+            rel = True; continue
+        if ln.startswith("M82"):
+            rel = False; continue
+        if ln.startswith("G92"):
+            m = re.search(r"E([-\d.]+)", ln)
+            if m:
+                e = float(m.group(1))
+            continue
         if not ln.startswith(("G1", "G0")):
             continue
-        d = dict(re.findall(r"([XYZEF])([-\d.]+)", ln))
+        d = dict(re.findall(r"([XYZEF])([-\d.]+)", ln.split(";", 1)[0]))
         nz = float(d.get("Z", z))
-        ne = float(d["E"]) if "E" in d else e
-        if "E" in d and ne > e:
-            filament_mm += ne - e
+        de = 0.0
+        if "E" in d:
+            de = float(d["E"]) if rel else float(d["E"]) - e
+            if not rel:
+                e = float(d["E"])
+        if de > 0:
+            filament_mm += de
             types[cur or "?"] += 1
             max_z = max(max_z, nz)
-        x, y, z, e = float(d.get("X", x)), float(d.get("Y", y)), nz, ne
+        x, y, z = float(d.get("X", x)), float(d.get("Y", y)), nz
     vol_mm3 = filament_mm * 3.14159 * (1.75 / 2) ** 2
     out = {
         "layers": layers, "printed_height_mm": round(max_z, 2),

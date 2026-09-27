@@ -16,8 +16,10 @@ themselves. Scott's rule (2026-09-09): parts that go together ship as ONE file,
 ready to print; a container and its lid stay separate parts but on one plate.
 
 The two modes are exactly those two rules:
-  assembly  one <object> built from <components>, so a slicer shows one object
-            with N parts and a filament can be set per part.
+  assembly  one object with N parts, so a filament can be set per part.
+            Written as one mesh with triangle ranges (--layout prusa, the
+            default: what PrusaSlicer reads) or as <components> (--layout
+            bambu: the only form Bambu Studio builds parts from).
   plate     N independent <item>s laid out side by side with a gap, so a slicer
             shows N objects already arranged on one plate.
 """
@@ -82,9 +84,11 @@ def _object_xml(obj_id: int, meshes: list, names: list,
     slic3r = (f'<object id="{obj_id}" instances_count="1">'
               f'<metadata type="object" key="name" value="{names[0]}"/>{vols}</object>')
 
-    # Bambu Studio / OrcaSlicer read their own file. Parts are indexed 1..N and
-    # carry the extruder directly, which is what makes the model open already
-    # coloured instead of all one filament.
+    # Bambu Studio / OrcaSlicer read model_settings.config, but NOT from this
+    # layout: their importer builds parts only from <components>, so this
+    # opens there as one part on filament 1 (verified in the Bambu Studio
+    # 02.08.02.61 CLI, 2026-09-27; the GUI shares the importer). Use
+    # layout="bambu" for a file meant for Bambu Studio.
     parts = "".join(
         f'<part id="{i+1}" subtype="normal_part">'
         f'<metadata key="name" value="{n}"/>'
@@ -96,10 +100,49 @@ def _object_xml(obj_id: int, meshes: list, names: list,
     return obj, slic3r, bambu
 
 
+def _mesh_xml(obj_id: int, m) -> str:
+    v = "".join(f'<vertex x="{x:.5f}" y="{y:.5f}" z="{z:.5f}"/>' for x, y, z in m.vertices)
+    t = "".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in m.faces)
+    return (f'<object id="{obj_id}" type="model">'
+            f'<mesh><vertices>{v}</vertices><triangles>{t}</triangles></mesh></object>')
+
+
+def _bambu_object_xml(first_id: int, meshes: list, names: list,
+                      extruders: list) -> tuple[str, int, str, int]:
+    """The layout Bambu Studio can read parts from: one mesh object per part
+    and a parent object of <components>.
+
+    Bambu Studio builds parts ONLY from components -- its importer never calls
+    the triangle-range path (bbs_3mf.cpp, _generate_volumes has no caller as of
+    v02.08.02.61). Handed the single-mesh layout above, the chapel sliced as
+    ONE part on filament 1; in this layout, four parts on four filaments
+    (2026-09-27, tools/bambu_slicer.py). PrusaSlicer reads this layout as N
+    separate objects instead (see _object_xml), which is why both exist.
+    Returns (object xml, parent id, model_settings xml, next free id)."""
+    objs, comps, parts = [], [], []
+    for i, (m, n, e) in enumerate(zip(meshes, names, extruders)):
+        oid = first_id + i
+        objs.append(_mesh_xml(oid, m))
+        comps.append(f'<component objectid="{oid}"/>')
+        parts.append(f'<part id="{oid}" subtype="normal_part">'
+                     f'<metadata key="name" value="{n}"/>'
+                     f'<metadata key="extruder" value="{e}"/></part>')
+    parent = first_id + len(meshes)
+    objs.append(f'<object id="{parent}" type="model"><components>{"".join(comps)}'
+                f'</components></object>')
+    cfg = (f'<object id="{parent}"><metadata key="name" value="{names[0]}"/>'
+           f'<metadata key="extruder" value="{extruders[0]}"/>{"".join(parts)}</object>')
+    return "".join(objs), parent, cfg, parent + 1
+
+
 def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
-             mode: str = "assembly", gap: float = 6.0) -> dict:
+             mode: str = "assembly", gap: float = 6.0, layout: str = "prusa") -> dict:
     """groups: each inner list is one printed object, made of one or more
-    colour parts. In assembly mode there is exactly one group."""
+    colour parts. In assembly mode there is exactly one group.
+    layout: "prusa" (one mesh, parts as triangle ranges) or "bambu" (parts as
+    components) -- each slicer reads parts from only one of them."""
+    if layout not in ("prusa", "bambu"):
+        raise ValueError(f"layout must be prusa or bambu, not {layout!r}")
     loaded = []
     for g in groups:
         ms = []
@@ -141,16 +184,22 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
 
     objs, slic3rs, bambus, items = [], [], [], ""
     x = 0.0
+    next_id = 1
     for gi, (ms, ns, ex) in enumerate(zip(loaded, names, extruders)):
-        o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
-        objs.append(o); slic3rs.append(sl); bambus.append(bm)
+        if layout == "bambu":
+            o, item_id, bm, next_id = _bambu_object_xml(next_id, ms, ns, ex)
+        else:
+            o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
+            item_id = gi + 1
+            slic3rs.append(sl)
+        objs.append(o); bambus.append(bm)
         if mode == "assembly":
-            items += f'<item objectid="{gi+1}"/>'
+            items += f'<item objectid="{item_id}"/>'
         else:
             w = float(max(m.bounds[1][0] for m in ms) - min(m.bounds[0][0] for m in ms))
             if items:
                 x += gap + w / 2.0
-            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
+            items += (f'<item objectid="{item_id}" transform="1 0 0 0 1 0 0 0 1 '
                       f'{x:.4f} 0 0"/>')
             x += w / 2.0
 
@@ -164,16 +213,18 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
         z.writestr("[Content_Types].xml", _CONTENT_TYPES)
         z.writestr("_rels/.rels", _RELS)
         z.writestr("3D/3dmodel.model", model)
-        z.writestr("Metadata/Slic3r_PE_model.config",
-                   '<?xml version="1.0" encoding="UTF-8"?>\n<config>'
-                   + "".join(slic3rs) + "</config>")
+        if slic3rs:
+            z.writestr("Metadata/Slic3r_PE_model.config",
+                       '<?xml version="1.0" encoding="UTF-8"?>\n<config>'
+                       + "".join(slic3rs) + "</config>")
         z.writestr("Metadata/model_settings.config",
                    '<?xml version="1.0" encoding="UTF-8"?>\n<config>'
                    + "".join(bambus) + "</config>")
     n_parts = sum(len(g) for g in groups)
-    layout = (f"one object, {n_parts} parts" if mode == "assembly"
+    layout_text = (f"one object, {n_parts} parts" if mode == "assembly"
               else f"{len(groups)} separate objects on one plate ({n_parts} parts total)")
-    return {"file": str(out_path), "mode": mode, "layout": layout,
+    return {"file": str(out_path), "mode": mode, "layout": layout_text,
+            "slicer_layout": layout,
             "parts": flat_names, "colours": colours,
             "extruders": [e for ex in extruders for e in ex],
             "triangles": int(sum(len(m.faces) for ms in loaded for m in ms))}
@@ -188,6 +239,8 @@ def main() -> None:
                     help="separate objects on one plate (a container and its lid) "
                          "instead of one assembled object")
     ap.add_argument("--gap", type=float, default=6.0)
+    ap.add_argument("--layout", choices=("prusa", "bambu"), default="prusa",
+                    help="which slicer's part layout to write (see the module docstring)")
     a = ap.parse_args()
 
     palette = ["#2B2F38", "#F2F0E9", "#E0553D", "#7BA7C2", "#8BA888", "#D4A96A"]
@@ -210,7 +263,7 @@ def main() -> None:
               'ONE object need no separator', file=sys.stderr)
         sys.exit(1)
 
-    r = assemble(Path(a.out), groups, "plate" if a.plate else "assembly", a.gap)
+    r = assemble(Path(a.out), groups, "plate" if a.plate else "assembly", a.gap, a.layout)
     print(f'{r["file"]}  --  {r["layout"]}')
     for n, c, e in zip(r["parts"], r["colours"], r["extruders"]):
         print(f'   {n:28s} {c}  slot {e}')

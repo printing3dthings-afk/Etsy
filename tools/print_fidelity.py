@@ -31,8 +31,9 @@ slicer cut it:
 Both are reported as clusters followed across layers, with where they sit on
 the model and how big they are, so a miss can be found and fixed in the .scad.
 
-Honest limits: this is PrusaSlicer's toolpath (Bambu Studio is a fork; the
-geometry decisions track closely, see virtual_printer.py), a bead is modelled
+Honest limits: this is Bambu Studio's toolpath with its STOCK P1S presets when
+Bambu Studio is installed, PrusaSlicer's otherwise (the report says which; see
+virtual_printer.py for how they differ), a bead is modelled
 as a round-capped strip of its nominal width, and nothing thermal is modelled
 -- a detail that is in the toolpath can still sag, string or blob.
 """
@@ -323,10 +324,12 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
     whole = trimesh.util.concatenate([m for m, _ in meshes])
 
     gcode = workdir / "fidelity.gcode"
+    slicer = virtual_printer.active_slicer()
     if len(slots) > 1:
         import assemble_3mf
         src = workdir / "fidelity_src.3mf"
-        assemble_3mf.assemble(src, [[(Path(p), c) for p, c in parts]], "assembly")
+        assemble_3mf.assemble(src, [[(Path(p), c) for p, c in parts]], "assembly",
+                              layout=slicer)
         extra = virtual_printer.mmu_options(len(slots))
         # No supports on a multi-filament slice (2026-09-27). With a wipe
         # tower PrusaSlicer 2.7 only accepts supports printed from the loaded
@@ -334,6 +337,8 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
         # change: 22,593 junk moves on the chapel, none with supports off.
         # The Haunted Town is designed support-free, so nothing is lost; a
         # multi-colour model that needs support has to be checked per part.
+        # Kept off on Bambu Studio too, so both slicers are asked the same
+        # question.
         supports = False
     else:
         src = Path(parts[0][0])
@@ -349,8 +354,9 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
     if reuse and gcode.exists():
         log(f"reusing {gcode}")
     else:
-        log(f"slicing {len(meshes)} part(s), {len(slots)} filament(s) ...")
-        virtual_printer.slice_model(src, gcode, supports=supports, extra=extra)
+        log(f"slicing {len(meshes)} part(s), {len(slots)} filament(s) with {slicer} ...")
+        virtual_printer.slice_model(src, gcode, supports=supports, extra=extra,
+                                    colours=list(slots))
     bad = virtual_printer.off_bed_moves(gcode)
     if bad:
         raise RuntimeError(f"{gcode}: {bad} moves off the bed -- the slicer wrote junk "
@@ -438,7 +444,9 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
         if li % 100 == 0:
             log(f"  layer {li}/{len(layers)}")
 
-    return _summarise(events, area_model, whole, slots, layers), events
+    rep = _summarise(events, area_model, whole, slots, layers)
+    rep["slicer"] = virtual_printer.slicer_of(gcode)
+    return rep, events
 
 
 def _where(c, bounds):
@@ -539,7 +547,8 @@ def misses_mesh(clusters, kind, grow=0.12, min_vol=0.0):
 
 
 def print_report(rep, top=15):
-    print(f"\nPRINT FIDELITY  ({rep['layers']} layers, model {rep['model_volume_mm3']} mm3)")
+    print(f"\nPRINT FIDELITY  ({rep['layers']} layers, model {rep['model_volume_mm3']} mm3, "
+          f"sliced by {rep.get('slicer', '?')})")
     print(f"  dropped (modelled, not printed): {rep['dropped_mm3']} mm3")
     print(f"  filled  (printed, not modelled): {rep['filled_mm3']} mm3")
     print(f"  colour  (printed, other filament): {rep.get('colour_mm3', 0)} mm3")
