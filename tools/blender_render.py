@@ -352,8 +352,17 @@ def render_review(
         script_path.unlink(missing_ok=True)
 
 
+# Azimuth of the camera for each view, by which way the model's FRONT faces.
+# Azimuth 0 puts the camera on -Y (see render_review), so a -Y front is seen
+# from 0 and a +Y front from 180.
+VIEW_SPEC = {
+    "-y": (("front", 0.0, 5.0), ("three_quarter", 35.0, 25.0), ("top", 0.0, 78.0)),
+    "+y": (("front", 180.0, 5.0), ("three_quarter", 215.0, 25.0), ("top", 180.0, 78.0)),
+}
+
+
 def render_views(mesh_path, out_prefix, color=(0.8, 0.8, 0.82), samples=96,
-                 resolution=900, lens=85.0, use_cache=True):
+                 resolution=900, lens=85.0, use_cache=True, front="-y"):
     """Three views of one model: front, three-quarter, top-down.
 
     Scott, 2026-09-13: "Render three PNG views after every generation so I can
@@ -361,8 +370,15 @@ def render_views(mesh_path, out_prefix, color=(0.8, 0.8, 0.82), samples=96,
     produced this had a tombstone reviewed from the back and a fox whose tail
     scalloping only showed in profile.
     """
+    # `front` names the side the model's front faces (2026-09-27). This was a
+    # fixed azimuth of 180, set for a tombstone whose front faced +Y; every
+    # model facing -Y -- the whole Haunted Town -- was then rendered from
+    # BEHIND in its "front" and "three-quarter" views, and the chapel's door,
+    # the shops' signs and their carved lettering never appeared.
     out_prefix = Path(out_prefix)
-    spec = (("front", 180.0, 5.0), ("three_quarter", 215.0, 25.0), ("top", 180.0, 78.0))
+    if front not in VIEW_SPEC:
+        raise BlenderRenderError(f"front must be one of {sorted(VIEW_SPEC)}, got {front!r}")
+    spec = VIEW_SPEC[front]
     made = []
     for name, az, el in spec:
         out = out_prefix.with_name(f"{out_prefix.stem}_{name}.png")
@@ -394,6 +410,9 @@ def _cli() -> None:
     ap.add_argument("--views", action="store_true",
                     help="Render three views (front, three-quarter, top) instead of one, "
                          "written as <output>_front.png etc.")
+    ap.add_argument("--front", choices=sorted(VIEW_SPEC), default="-y",
+                    help="which side the model's front faces, for --views (default -y). "
+                         "Write it --front=-y: a bare -y is read as a new flag")
     ap.add_argument("--no-cache", action="store_true",
                     help="Re-render even if an identical previous render is cached. The key "
                          "covers every mesh's real content plus colour, angle, samples, "
@@ -427,7 +446,7 @@ def _cli() -> None:
         if args.views:
             made = render_views(target, output, color=color, samples=args.samples,
                                 resolution=args.resolution, lens=args.lens,
-                                use_cache=not args.no_cache)
+                                use_cache=not args.no_cache, front=args.front)
             for f in made:
                 print(f"rendered -> {f}")
             raise SystemExit(0)

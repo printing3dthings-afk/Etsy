@@ -112,7 +112,10 @@ would have been fitting the threshold to the answer. Delegating to the engine
 that actually makes the decision is the fix, and the geometric version is now
 only a fallback for when `prusa-slicer` is missing. Then
 `tools/blender_render.py --views` for the three views Scott reviews before
-anything is called done.
+anything is called done. Pass `--front=+y` for a model whose front faces +Y;
+the default is -y. Until 2026-09-27 the views assumed +Y, and every Haunted
+Town render (fronts on -Y) showed the building from behind. Write it with
+`=`: a bare `--front -y` is read as a new flag and the render fails.
 
 Validated on purpose-built shapes rather than on the existing catalogue, which
 would have meant tuning thresholds until old parts passed: a tapered 2mm-wall

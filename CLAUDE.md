@@ -3892,7 +3892,7 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      against a 157-mesh corpus (advisory only, wired 2026-09-20); the
      silhouette half of the bar below is still a human call — see the
      design skill's Technique 68 for the metric that was tried and rejected.
-  5. Render three views (`tools/blender_render.py --views`) and show him before
+  5. Render three views (`tools/blender_render.py --views`, plus `--front=+y` if the model's front faces +Y) and show him before
      anything is called done.
 
   **Printability is a hard constraint, not a tradeoff.** Minimum wall 1.2mm, no
