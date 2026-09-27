@@ -72,6 +72,7 @@ def main(argv=None):
     ap.add_argument("--views", action="store_true", help="front, three-quarter and top")
     ap.add_argument("--front", default="-y", choices=["-y", "+y"])
     ap.add_argument("--samples", type=int, default=64)
+    ap.add_argument("--timeout", type=int, default=900, help="seconds per view")
     ap.add_argument("--keep", help="keep the PLY meshes here")
     a = ap.parse_args(argv)
     work = Path(a.keep) if a.keep else Path(tempfile.mkdtemp(prefix="as_printed_"))
@@ -82,7 +83,8 @@ def main(argv=None):
         col = a.colour[t] if t < len(a.colour) else "#9A9A9A"
         args += ["--part", f"{f}:{_rgb(col)}"]
     cmd = [sys.executable, str(Path(__file__).parent / "blender_render.py"), *args,
-           "-o", a.output, "--samples", str(a.samples), "--no-cache"]
+           "-o", a.output, "--samples", str(a.samples), "--no-cache",
+           "--timeout", str(a.timeout)]
     if a.views:
         cmd += ["--views", f"--front={a.front}"]
     subprocess.run(cmd, check=True)

@@ -67,7 +67,11 @@ NOT_PART = {"Support material", "Support material interface", "Skirt/Brim",
 TOL = 0.06          # mm of slack at every outline
 REACH = 0.12        # mm a miss must extend past the other outline to count
 MIN_AREA = 0.004    # mm^2 per layer below which a region is not reported
-SURFACE = 0.3       # mm: a DROPPED region must come this close to the outline
+SURFACE = 0.1       # mm: a DROPPED region must come this close to the outline
+# 0.1, not 0.3 (2026-09-27): a sparse-infill gap on the manor sat 0.30 mm
+# inside its outline, behind the perimeters, and was flagged as 2 mm3 of lost
+# surface. A real surface miss -- a dropped rib, a dot, a tip -- runs to the
+# outline itself; interior gaps start behind the perimeters, 0.8 mm in.
 BED_CENTRE = (128.0, 128.0)
 PLANE = 0.09        # mm either side of the slicing plane a miss must hold
 # What a miss has to be to need a look. Calibrated on the chapel Scott printed

@@ -15,9 +15,12 @@ Everything for the series lives here, one folder per piece (Scott,
 | `manor/` | `haunted_manor.3mf` (one piece, one colour) | `.scad`, `.stl`, printing notes, `images/` |
 
 `images/` holds renders of the current model: `*_colour_*` in the four
-filament colours, `*_grey_*` in one neutral colour so the relief reads. Each
-comes as front, three-quarter and top views. They are renders, not photos
-of a print; `chapel/photos/` holds real photos.
+filament colours, `*_grey_*` in one neutral colour so the relief reads, and
+`*_as_printed_*` rendered from the sliced toolpath itself, so they show what
+the printer makes rather than what the model says (the post office's is the
+house alone: its lift-off roof is a separate object). Each comes as front,
+three-quarter and top views. They are renders, not photos of a print;
+`chapel/photos/` holds real photos.
 
 The `.scad` files for the chapel, bakery, post office and manor include
 `../../lattice_lib.scad`, the shared library one level up in
@@ -109,3 +112,25 @@ Confirmed by Scott 2026-09-25.
 
 The bakery's measured dimensions become the template for the rest once Scott
 has printed it and is happy with it.
+
+## Print checks (2026-09-27)
+
+Every building run through `tools/print_fidelity.py` (does the slice keep the
+detail the model shows?) and `tools/fragility.py` (is anything slender enough
+to snap in the hand?). Both were calibrated on the chapel Scott printed: it
+has no fidelity flags, and the fragility check flags exactly the nine window
+bars that snapped on that print, and none once they were glazed.
+
+| building | detail lost (flags) | fragile members |
+|---|---|---|
+| Chapel | none | none high; the tower's inside corner post is "watch" (an L, it held) |
+| Post Office | none | none |
+| Bakery | 2: the knife-edge tips of the sagging ridge at each gable | none |
+| General Store | 1: a 0.6 mm batten stub beside the door frame, 1.8 mm tall | **2 high: the timber props**, 2.6 mm square and ~97 mm long, slenderness 31 against 17.5 for the bar that snapped. Fix proposed to Scott |
+| Cemetery | 3: the top layer of two spear-point pickets and one finial | 7 watch: tapering branch, shovel and picket tips |
+| Manor | none | 16 watch: window bars 13 mm long, ~2 × 2 mm, slenderness 6.4 |
+
+Every fidelity flag above was drawn with `--zoom` and is a point or sliver
+thinner than one bead. The prints carry essentially all of the modelled
+detail.
+

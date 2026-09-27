@@ -362,7 +362,7 @@ VIEW_SPEC = {
 
 
 def render_views(mesh_path, out_prefix, color=(0.8, 0.8, 0.82), samples=96,
-                 resolution=900, lens=85.0, use_cache=True, front="-y"):
+                 resolution=900, lens=85.0, use_cache=True, front="-y", timeout=300):
     """Three views of one model: front, three-quarter, top-down.
 
     Scott, 2026-09-13: "Render three PNG views after every generation so I can
@@ -384,7 +384,7 @@ def render_views(mesh_path, out_prefix, color=(0.8, 0.8, 0.82), samples=96,
         out = out_prefix.with_name(f"{out_prefix.stem}_{name}.png")
         render_review(mesh_path, out, color=color, azimuth=az, elevation=el,
                       samples=samples, resolution=resolution, lens=lens,
-                      use_cache=use_cache)
+                      use_cache=use_cache, timeout=timeout)
         made.append(out)
     return made
 
@@ -417,6 +417,9 @@ def _cli() -> None:
                     help="Re-render even if an identical previous render is cached. The key "
                          "covers every mesh's real content plus colour, angle, samples, "
                          "resolution and lens, so any real change already misses it.")
+    ap.add_argument("--timeout", type=int, default=300,
+                    help="seconds allowed per view (default 300). A dense toolpath mesh -- "
+                         "the cemetery's solid ground, as printed -- needs more.")
     ap.add_argument("--check", action="store_true", help="Just check whether blender is installed")
     args = ap.parse_args()
 
@@ -446,14 +449,15 @@ def _cli() -> None:
         if args.views:
             made = render_views(target, output, color=color, samples=args.samples,
                                 resolution=args.resolution, lens=args.lens,
-                                use_cache=not args.no_cache, front=args.front)
+                                use_cache=not args.no_cache, front=args.front,
+                                timeout=args.timeout)
             for f in made:
                 print(f"rendered -> {f}")
             raise SystemExit(0)
         render_review(target, output, color=color,
                        azimuth=args.azimuth, elevation=args.elevation,
                        samples=args.samples, resolution=args.resolution,
-                       lens=args.lens, use_cache=not args.no_cache)
+                       lens=args.lens, use_cache=not args.no_cache, timeout=args.timeout)
     except BlenderRenderError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
