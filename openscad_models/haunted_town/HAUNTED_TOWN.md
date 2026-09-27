@@ -1,5 +1,28 @@
 # Haunted Town — a collectible lantern series
 
+## What's in this folder
+
+Everything for the series lives here, one folder per piece (Scott,
+2026-09-27: "whole project folders").
+
+| folder | print this | also in it |
+|---|---|---|
+| `chapel/` | `haunted_chapel.3mf` | `.scad` source, the four part `.stl`s, printing notes, `images/`, `photos/` of the first print |
+| `bakery/` | `haunted_bakery.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
+| `post_office/` | `haunted_post_office.3mf` (house and lift-off roof on one plate) | `.scad`, part `.stl`s including the lid, printing notes, `images/` |
+| `general_store/` | `haunted_general_store.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
+| `cemetery/` | `haunted_cemetery.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
+
+`images/` holds renders of the current model: `*_colour_*` in the four
+filament colours, `*_grey_*` in one neutral colour so the relief reads. Each
+comes as front, three-quarter and top views. They are renders, not photos
+of a print; `chapel/photos/` holds real photos.
+
+The `.scad` files for the chapel, bakery and post office include
+`../../lattice_lib.scad`, the shared library one level up in
+`openscad_models/`. The Haunted Manor came before the town and is not part
+of it; it stays in `openscad_models/`.
+
 Agreed with Scott 2026-09-23. One style language across every building so they
 stand together on a shelf as one street. The quality bar is two painted
 haunted houses Scott showed as reference — **someone else's designs, painted
@@ -68,10 +91,10 @@ Confirmed by Scott 2026-09-25.
 
 | # | building | identity feature | status |
 |---|---|---|---|
-| 6 | **Bakery** | round pie-crust shop window cut into slices, a pie cooling on a crate by the door, crooked BAKERY sign, crooked chimney | **revised 2026-09-25, awaiting Scott's review** — windows now round with a pointed crown, per the variety plan; `haunted_bakery.3mf`, notes in `HAUNTED_BAKERY_PRINTING.md` |
-| 1 | **Post Office** | ONE story, brick, sagging parapet, flat lift-off roof with a leaning chimney, crooked POST OFFICE sign, parcels, mail slot. Plain lettering only — no USPS eagle or logo (their trademark) | **built 2026-09-25, awaiting Scott's review** — `haunted_post_office.3mf`, notes in `HAUNTED_POST_OFFICE_PRINTING.md`. The two-story turret version (2026-09-24) is archived in `data/trash/` |
-| 2 | **Chapel** | stone, a bell tower on the front-left corner cracked above the roofline and tipped 7° away from the nave, one tall pointed window with Y tracery over the door, coped gables, two headstones by the step | **built 2026-09-26, awaiting Scott's review** — `haunted_chapel.3mf`, notes in `HAUNTED_CHAPEL_PRINTING.md` |
-| 3 | **General Store** | false-front facade taller than the building, leaning forward on two timber props, crooked "MERCANTILE" board, barrels by the door, crooked stove pipe on a tin shed roof | **built 2026-09-25, awaiting Scott's review** — `haunted_general_store.3mf`, notes in `HAUNTED_GENERAL_STORE_PRINTING.md` |
+| 6 | **Bakery** | round pie-crust shop window cut into slices, a pie cooling on a crate by the door, crooked BAKERY sign, crooked chimney | **revised 2026-09-25, awaiting Scott's review** — windows now round with a pointed crown, per the variety plan; `bakery/haunted_bakery.3mf`, notes in `bakery/HAUNTED_BAKERY_PRINTING.md` |
+| 1 | **Post Office** | ONE story, brick, sagging parapet, flat lift-off roof with a leaning chimney, crooked POST OFFICE sign, parcels, mail slot. Plain lettering only — no USPS eagle or logo (their trademark) | **built 2026-09-25, awaiting Scott's review** — `post_office/haunted_post_office.3mf`, notes in `post_office/HAUNTED_POST_OFFICE_PRINTING.md`. The two-story turret version (2026-09-24) is archived in `data/trash/` |
+| 2 | **Chapel** | stone, a bell tower on the front-left corner cracked above the roofline and tipped 7° away from the nave, one tall pointed window with Y tracery over the door, coped gables, two headstones by the step | **built 2026-09-26, awaiting Scott's review** — `chapel/haunted_chapel.3mf`, notes in `chapel/HAUNTED_CHAPEL_PRINTING.md` |
+| 3 | **General Store** | false-front facade taller than the building, leaning forward on two timber props, crooked "MERCANTILE" board, barrels by the door, crooked stove pipe on a tin shed roof | **built 2026-09-25, awaiting Scott's review** — `general_store/haunted_general_store.3mf`, notes in `general_store/HAUNTED_GENERAL_STORE_PRINTING.md` |
 | 4 | Schoolhouse | bell cupola on the ridge, sagging porch roof, oversized stopped clock | saved |
 | 5 | Undertaker | narrow and tall between gables, a coffin standing upright against the porch post | saved |
 
@@ -79,7 +102,7 @@ Confirmed by Scott 2026-09-25.
 
 | piece | what it is | status |
 |---|---|---|
-| **Cemetery** | a graveyard hill: seven headstones in six shapes with short joke epitaphs (RIP, BOO, BRB, NEXT, OOPS), a dead tree with a crow, three jack-o'-lanterns, a skeleton hand out of a grave, an open grave with a shovel; detail pass adds carved motifs and cracks, stepped bases, a broken iron fence and gate, a twisted-bark tree, bones, a skull, stepping stones, pebbles and grass. Solid ground, not a lantern | **built 2026-09-26, detail pass the same day; awaiting Scott's review** — `haunted_cemetery.3mf`, notes in `HAUNTED_CEMETERY_PRINTING.md` |
+| **Cemetery** | a graveyard hill: seven headstones in six shapes with short joke epitaphs (RIP, BOO, BRB, NEXT, OOPS), a dead tree with a crow, three jack-o'-lanterns, a skeleton hand out of a grave, an open grave with a shovel; detail pass adds carved motifs and cracks, stepped bases, a broken iron fence and gate, a twisted-bark tree, bones, a skull, stepping stones, pebbles and grass. Solid ground, not a lantern | **built 2026-09-26, detail pass the same day; awaiting Scott's review** — `cemetery/haunted_cemetery.3mf`, notes in `cemetery/HAUNTED_CEMETERY_PRINTING.md` |
 
 The bakery's measured dimensions become the template for the rest once Scott
 has printed it and is happy with it.

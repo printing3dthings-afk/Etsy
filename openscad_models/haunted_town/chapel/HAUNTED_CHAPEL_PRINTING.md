@@ -1,6 +1,6 @@
 # Haunted Chapel — printing notes
 
-Building #2 of the Haunted Town series (`HAUNTED_TOWN.md`). A stone chapel
+Building #2 of the Haunted Town series (`../HAUNTED_TOWN.md`). A stone chapel
 with pointed lancet windows and a steep slate gable roof. Its gable walls rise
 through the roof as coped parapets. A square bell tower stands on the
 front-left corner; just above the roofline it has **cracked and tipped 7°

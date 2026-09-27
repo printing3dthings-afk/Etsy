@@ -305,6 +305,16 @@ reported $6,471 for one session, from 3.3 billion cache-read tokens counted
 once per turn, against published API rates that do not apply on a subscription
 plan. The token counts are real; the dollar figure is decoration.
 
+## Project folders (Scott, 2026-09-27)
+
+Keep every file that belongs to one product family in one folder: sources,
+outputs, printing or listing notes, generated images and real photos. "I
+need whole project folders." For 3D models that is a folder inside
+`openscad_models/` (example: `openscad_models/haunted_town/`, one subfolder
+per piece); the 3d-print-design skill has the layout. Commit generated
+images there too: anything left only in a session's scratchpad is lost when
+the container goes.
+
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)

@@ -2310,10 +2310,20 @@ tools/p1s_slice_profile.ini -g` accepts a 3MF directly.
 
 **`openscad_models/` in this repo is the single canonical home for every
 `.scad` and its exported `.stl`.** Do not scatter finished models into
-scratch directories, per-product folders, or Frank's volume as their
-primary location. One folder, committed, so the whole set can be pulled
-or browsed at
+scratch directories or Frank's volume as their primary location. One tree,
+committed, so the whole set can be pulled or browsed at
 `github.com/printing3dthings-afk/etsy/tree/main/openscad_models`.
+
+**A product family gets its own project folder inside it** (Scott,
+2026-09-27: "I need whole project folders"). Everything that belongs to the
+family goes in that folder: the `.scad` source, part `.stl`s, the `.3mf` to
+print, printing notes, `images/` (renders of the current model), and
+`photos/` of real prints. Multi-piece families get one subfolder per piece
+(`openscad_models/haunted_town/chapel/` ...). Renders made for a review go
+into `images/` and get committed, not left in the scratchpad: the Haunted
+Town's earlier review renders were lost with their containers. A shared
+library stays one level up and is included by relative path
+(`include <../../lattice_lib.scad>`).
 
 **Sessions run in an ephemeral cloud container, not on Scott's machine.**
 There is no desktop here, no `~/Desktop`, and nothing written to local

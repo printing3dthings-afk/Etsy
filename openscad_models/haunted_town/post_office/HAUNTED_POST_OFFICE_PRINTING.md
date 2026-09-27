@@ -1,6 +1,6 @@
 # Haunted Post Office — printing notes
 
-Building #1 of the Haunted Town series (`HAUNTED_TOWN.md`). It is one story:
+Building #1 of the Haunted Town series (`../HAUNTED_TOWN.md`). It is one story:
 brick walls, a sagging parapet capped in cream, and a **flat roof that lifts
 off**, with a leaning chimney and a crooked stove pipe on it. It is a hollow
 lantern with an open base, lit from inside by a battery LED tealight.

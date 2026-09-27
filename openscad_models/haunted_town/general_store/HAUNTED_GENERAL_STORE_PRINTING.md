@@ -1,6 +1,6 @@
 # Haunted General Store — printing notes
 
-Building #3 of the Haunted Town series (`HAUNTED_TOWN.md`). A board-and-batten
+Building #3 of the Haunted Town series (`../HAUNTED_TOWN.md`). A board-and-batten
 store behind a tall false front that leans forward and to one side. The front
 is propped up by two raking timbers and carries a crooked MERCANTILE board.
 Two barrels stand on the ground beside the door. Behind the front is a steep

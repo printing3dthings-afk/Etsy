@@ -32,7 +32,7 @@
 // at the edge of a 46 mm circle round the centre.
 
 include <BOSL2/std.scad>
-include <lattice_lib.scad>
+include <../../lattice_lib.scad>   // shared, lives in openscad_models/
 
 $fa = 2;  $fs = 0.4;
 

@@ -28,7 +28,7 @@
 // at 58 mm; a 38 x 45 mm LED tealight drops in with room to spare.
 
 include <BOSL2/std.scad>
-include <lattice_lib.scad>
+include <../../lattice_lib.scad>   // shared, lives in openscad_models/
 
 $fa = 2;  $fs = 0.4;
 

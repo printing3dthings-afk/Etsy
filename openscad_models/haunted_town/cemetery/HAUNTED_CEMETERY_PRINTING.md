@@ -1,6 +1,6 @@
 # Haunted Cemetery — printing notes
 
-Scenery for the Haunted Town series (`HAUNTED_TOWN.md`). It is a graveyard
+Scenery for the Haunted Town series (`../HAUNTED_TOWN.md`). It is a graveyard
 hill: a lumpy mound on an oval base, 104 × 76 mm and 66.6 mm tall to the tip
 of the tree.
 

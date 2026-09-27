@@ -45,7 +45,7 @@
 // side. The switch is under the light, so the house lifts off to switch it.
 
 include <BOSL2/std.scad>
-include <lattice_lib.scad>
+include <../../lattice_lib.scad>   // shared, lives in openscad_models/
 
 $fa = 2;  $fs = 0.4;
 

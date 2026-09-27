@@ -1,6 +1,6 @@
 # Haunted Bakery — printing notes
 
-Building #6 of the Haunted Town series (`HAUNTED_TOWN.md`). It is a hollow
+Building #6 of the Haunted Town series (`../HAUNTED_TOWN.md`). It is a hollow
 lantern with an open base, lit from inside by a battery LED tealight.
 98.7 × 74.3 × 148.8 mm including the chimney, the step and the crate.
 
@@ -52,7 +52,7 @@ share almost every layer from the plinth to the roof.
 
 **The purge is the real cost of the colour version.** With PrusaSlicer's
 140 mm³ flush it came to about 265 g of purge and wipe tower. At the 350 mm³ Bambu
-default that `LABEL_BIN_PRINTING.md` uses, the flush alone is about **590 g**,
+default that `../../LABEL_BIN_PRINTING.md` uses, the flush alone is about **590 g**,
 which is five times the house itself. Bambu Studio computes its own flush
 volume for each colour pair, so slice it there for the real number. The
 slicer's four-extruder time estimate overflowed on an earlier slice of this
