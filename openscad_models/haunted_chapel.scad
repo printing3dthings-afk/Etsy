@@ -407,9 +407,13 @@ module cross_plumb() {
     translate([tcx, tcy, z_tt + sp_cut]) {
         // the post runs 3.5 down into a socket in the spire's solid tip:
         // stood on the cut top alone it had 3 mm2 of contact 150 mm up
-        translate([-0.9, -0.9, -3.5]) cube([1.8, 1.8, 15.5]);
-        xz(-0.9, 0.9) polygon([[0.9, 2.9], [3.3, 2.9 + 2.4 * tan(66)], [3.3, 9.5], [-3.3, 9.5],
-                                [-3.3, 2.9 + 2.4 * tan(66)], [-0.9, 2.9]]);
+        // 2.4 square, arms 2.0 thick at the tips (2026-09-27). At 1.8 with
+        // 1.2 mm tips it printed as a lump on Scott's first print, and read as
+        // a funnel on a stick even when clean: the arms' 66 deg undersides
+        // left almost no horizontal bar.
+        translate([-1.2, -1.2, -3.5]) cube([2.4, 2.4, 16.5]);
+        xz(-1.2, 1.2) polygon([[1.2, 2.9], [3.6, 2.9 + 2.4 * tan(66)], [3.6, 10.3], [-3.6, 10.3],
+                                [-3.6, 2.9 + 2.4 * tan(66)], [-1.2, 2.9]]);
     }
 }
 
@@ -479,9 +483,15 @@ module headstones() {
 
 // ---- mark ------------------------------------------------------------------------------------------
 module brand_mark() {
+    // Read from below with the front toward you (2026-09-27). The letters were
+    // flipped top-to-bottom, which O, B and C nearly survive, so it went
+    // unnoticed until Scott's chapel read "ƆBO" under his hand: they need
+    // flipping left-to-right. Spacing 1.16 at size 4.6: at 1.0 the plastic
+    // left between letters was 0.39-0.46 mm, under one bead, so the slicer
+    // dropped it and the letters ran together. Now 1.1-1.3 mm, 16.2 mm wide.
     translate([0, -Dh - st_d / 2, -0.5]) linear_extrude(1.3)
-        mirror([0, 1, 0]) text("OBC", size = 5.0, font = "Montserrat:style=Black",
-                               halign = "center", valign = "center");
+        mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black",
+                               halign = "center", valign = "center", spacing = 1.16);
 }
 
 // ---- joints ------------------------------------------------------------------------------------------
@@ -531,6 +541,14 @@ module trim_raw() {
     for (w = WINDOWS) nf(w[0], w[1], w[2]) {
         relief_up(-0.4, fr_t) { offset(r = fr_w) win_outline(w); offset(r = 0.3) win_outline(w); }
         translate([0, 0, -0.4]) linear_extrude(bd + 0.4) win_muntins(w, 0.6);
+        // A pane behind every window (2026-09-27): from the wall's inner face
+        // to where the frame's recess starts, set 0.6 into the reveal all round. On Scott's first
+        // chapel print the tallest windows' bars, each a lone ~1.7 x 1.2 mm
+        // post standing free for 10-20 mm, had snapped. The bars now stand on
+        // the pane, and the tealight glows through it. 1.48 thick: over the 1.2
+        // mm wall floor, and ending at the recess -- ended 0.2 short, at the
+        // bars' back, it left a loose 0.2 mm ring of wall round every light.
+        translate([0, 0, -wall]) linear_extrude(wall - 0.2) offset(r = 0.6) win_outline(w);
     }
     door_frame();
     tip() bands_plumb();

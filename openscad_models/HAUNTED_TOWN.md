@@ -22,7 +22,10 @@ What those references do that our first haunted manor did not:
 - **Printed in AMS colour**: walls / roof / trim / accent as separate parts in
   ONE 3MF (`tools/assemble_3mf.py`). Jessee's hand-painted weathering is an
   optional premium version — a listing must say which one the buyer gets.
-- **Hollow lantern, open base, true through-cut windows.**
+- **Hollow lantern, open base, true through-cut windows, glazed.** Every
+  framed window has a 1.48 mm pane in the back of the opening, and its bars
+  stand on the pane (2026-09-27). A bar left standing free in the opening
+  snapped on the first chapel print. The tealight glows through the panes.
 - **Fits a battery LED tealight.** Clear space inside must take a 38 mm
   diameter × 45 mm tall light with margin: the base opening and the interior
   are designed to a **≥ 46 mm circle and ≥ 50 mm of headroom** (60 until
@@ -34,7 +37,11 @@ What those references do that our first haunted manor did not:
 - **Same street**: identical plinth height (8 mm) and ground-floor door height
   on every building so a row lines up.
 - **One identity feature per building**, big enough to read in a thumbnail.
-- **OBC maker's mark** engraved in the plinth, strokes ≥ 2 extrusions.
+- **OBC maker's mark** engraved under the step, strokes ≥ 2 extrusions:
+  Montserrat Black, size 4.6, letter spacing 1.16, flipped LEFT-TO-RIGHT
+  (`mirror([1, 0, 0])`) so it reads OBC with the building turned over, front
+  toward you. A top-to-bottom flip looks almost right on O, B and C and
+  shipped backwards on every building until 2026-09-27.
 
 ## Variety — no two buildings alike (Scott, 2026-09-25)
 

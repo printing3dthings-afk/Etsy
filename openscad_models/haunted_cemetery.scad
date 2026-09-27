@@ -600,9 +600,15 @@ module shovel() {
 
 // ---- mark ------------------------------------------------------------------------------------
 module brand_mark() {
+    // Read from below with the front toward you (2026-09-27). The letters were
+    // flipped top-to-bottom, which O, B and C nearly survive, so it went
+    // unnoticed until Scott's chapel read "ƆBO" under his hand: they need
+    // flipping left-to-right. Spacing 1.16 at size 4.6: at 1.0 the plastic
+    // left between letters was 0.39-0.46 mm, under one bead, so the slicer
+    // dropped it and the letters ran together. Now 1.1-1.3 mm, 16.2 mm wide.
     translate([0, 0, -0.5]) linear_extrude(1.3)
-        mirror([0, 1, 0]) text("OBC", size = 5.0, font = "Montserrat:style=Black",
-                               halign = "center", valign = "center");
+        mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black",
+                               halign = "center", valign = "center", spacing = 1.16);
 }
 
 // ---- parts -----------------------------------------------------------------------------------

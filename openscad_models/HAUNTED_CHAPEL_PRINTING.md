@@ -9,7 +9,7 @@ headstones lean against the plinth by the door.
 
 Like the others, it is a hollow lantern with an open base, lit from inside by
 a battery LED tealight. The tower is hollow and open to the nave, so light
-also comes out of the belfry. It measures 70.2 × 83.6 × 162.0 mm, cross
+also comes out of the belfry. It measures 70.2 × 83.6 × 163.0 mm, cross
 included.
 
 Built 2026-09-25/26 to Scott's variety plan: stone walls, pointed lancets and
@@ -24,7 +24,12 @@ already aligned. Assign a filament to each part.
 |---|---|---|
 | body | stone walls, tower, plinth, step, the ledge under the eaves | stone grey `#77716B` |
 | roof | roof slab, slate courses, ridge cap, spire | slate `#2B2F38` |
-| trim | gable coping, window frames and tracery, door frame, the tower's two bands, the headstones | cream `#EFE6D2` |
+| trim | gable coping, window frames, tracery and panes, door frame, the tower's two bands, the headstones | cream `#EFE6D2` |
+
+**Every framed window is glazed** (added 2026-09-27). A 1.48 mm pane fills the
+back of each opening, set into the wall all round, and the window's bars stand
+on it. The tealight glows through the panes, like frosted glass. The tower's
+small slit windows, the belfry and the door stay open.
 | accent | the door, the cross | kraft `#D4A96A` |
 
 ## Settings that are not optional
@@ -39,10 +44,10 @@ already aligned. Assign a filament to each part.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 59 m** | **~86 g** | 0 |
-| **four colour, AMS** | not reliable here | ~88 g model **+ purge** | **1,017** |
+| **single colour** (e.g. for Jessee to paint) | **9 h 46 m** | **~88 g** | 0 |
+| **four colour, AMS** | not reliable here | ~90 g model **+ purge** | **1,016** |
 
-The four-colour slice changes colour 1,017 times, fewer than the bakery
+The four-colour slice changes colour 1,016 times, fewer than the bakery
 (1,293) or the general store (1,317). The walls and the cream frames share
 fewer layers here. With PrusaSlicer's 140 mm³ flush the wipe tower is
 **212 g**, more than twice the chapel itself. Slice it in Bambu Studio for
@@ -63,11 +68,11 @@ so the chapel lifts off to switch the light.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.20 mm, median 2.92 mm, against the 1.2 mm floor.
-    That is exactly at the floor, with no margin;
+  - 1st-percentile wall 1.48 mm, median 2.92 mm, against the 1.2 mm floor
+    (1.20 before the panes, which took the thinnest spots off the floor);
   - 0 supports, 0 overhang perimeters;
-  - printed height equals modelled height (162.0 mm);
-  - 10.34 cm² of bed contact (17.6% of the footprint);
+  - printed height equals modelled height (163.0 mm);
+  - 10.42 cm² of bed contact (17.8% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight;
@@ -75,16 +80,18 @@ so the chapel lifts off to switch the light.
   - every edge shared by exactly two faces.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
 - Every trim and accent piece touches the part it sits on, sampled by area:
-  - each nave window frame, about 195 mm²;
-  - the big front window, 284 mm²;
+  - each nave window's frame and pane, 256–271 mm²;
+  - the big front window, 367 mm²;
   - the tower bands, 626 and 646 mm²;
   - the headstones, 57 and 50 mm²;
   - the door, 89 mm²;
-  - **the cross, 28.6 mm²**. Its post is set 3.5 mm into a socket in the
-    spire's solid tip; standing on the spire's cut top alone, it had 3 mm².
+  - **the cross, 39.8 mm²**. Its 2.4 mm post is set 3.5 mm into a socket in
+    the spire's solid tip; standing on the spire's cut top alone, it had 3 mm².
 - The 3MF slices with all four parts and all four extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step, the same size-5
-  Montserrat Black mark as the other buildings.
+- **OBC maker's mark:** engraved 0.8 mm deep under the step, the same
+  Montserrat Black mark as the other buildings: size 4.6, letter spacing
+  1.16, 16.2 mm wide. It reads OBC when you turn the chapel over with the
+  front toward you; checked on the sliced first layer.
 
 ## Design notes: what it took to print without supports
 
@@ -118,5 +125,30 @@ the detail.
 - **The stone reads partly as stacked courses.** It has irregular block
   lengths and quoins at the corners. The printable V-shaped courses still
   give it a banded look from a distance.
-- **The walls sit exactly at the 1.2 mm wall floor** at the 1st percentile.
-  That passes, with no margin.
+- **The cross still has braced arms.** It is thicker now and prints
+  cleanly, but to print without supports its arms keep 66° undersides, so
+  from close up it reads as a cross on brackets rather than a crisp one.
+- **The panes block the view inside.** Every framed window now glows
+  rather than showing the room; the tower's slit windows and belfry are the
+  only open ones.
+
+## What the first print showed (2026-09-27)
+
+Scott printed the chapel in white and photographed it. Each fix below is in
+this file's current version.
+
+- **The tallest windows lost their tracery.** The front window's centre bar
+  and Y, and the back gable's centre bar, were gone: each printed as a lone
+  post about 1.7 × 1.2 mm standing free for 10–20 mm, and snapped. The side
+  windows' shorter bars survived. **Every framed window now has a pane.**
+- **The cross printed as a lump.** It is now a 2.4 mm post with arms 2.0 mm
+  thick at the tips, and 1 mm taller.
+- **The OBC mark read backwards** ("ƆBO") and its letters ran together: the
+  plastic between them was 0.39–0.46 mm, under one extrusion. It is now the
+  right way round, with 1.1–1.3 mm between letters. The same fix went into
+  every Haunted Town building.
+- **Not the model:** stringing across the openings (dry the PLA: 45 °C for
+  6–8 h), a line across the roof slope near the front gable's top, and a
+  small split in the bottom rim where the tower meets the nave. A mark on the
+  right headstone is a scratch or a stuck string: the headstones are plain.
+

@@ -7723,3 +7723,45 @@ had no letters at all, and nothing for Jessee to paint to either.
 - **Watch for a silent empty include.** A test file whose `include` path did
   not resolve rendered only its 1 mm pin, and sliced to "0 supports". Check
   a test mesh's bounds before believing its slice.
+
+## Technique 77 — What the first real print showed: glaze the windows, flip the mark the right way (2026-09-27, Haunted Town)
+
+Scott printed the chapel and photographed it. Every model check had passed
+it — gate, walls, slicer — and three things were still wrong on the plate.
+
+- **A bar standing free in a window opening snaps.** The chapel's tall
+  windows had a centre bar (and a Y) about 1.7 × 1.2 mm standing alone for
+  10–20 mm. The slicer prints it — plot the layers and there it is, a lone
+  island — so no check fails. On the plate it was gone, with a curled strand
+  where the Y had tried to print onto nothing. The side windows' 12 mm bars
+  survived. `min_wall` measures thickness, not slenderness; nothing here
+  measures a post's height against its width. **Fix: a pane.** Fill the back
+  of each opening, from the wall's inner face to where the frame's recess
+  starts, set 0.6 into the reveal all round; the bars stand on it.
+  - Make it thick enough to pass the gate: 1.48 mm here, not the 0.6 that
+    was first proposed — the 1.2 mm wall floor applies to a pane as to any
+    wall, and 0.6 is one and a half extrusions.
+  - End it exactly where the frame's recess begins. Ended 0.2 short, at the
+    bars' back, it left a loose 0.2 mm ring of wall round every light: 20
+    separate bodies in the chapel's wall part. Count the part's bodies, not
+    just the union's.
+  - It raised every building's 1st-percentile wall (chapel 1.20 → 1.48,
+    bakery and store 1.24 → 1.44).
+- **A maker's mark read from below must be flipped LEFT-TO-RIGHT.** Every
+  Haunted Town mark used `mirror([0, 1, 0])`, a top-to-bottom flip. O, B and
+  C look almost the same flipped that way, so a top view of the section read
+  "OBC" and nothing caught it. Turned over with the front toward you it read
+  "ƆBO". Use `mirror([1, 0, 0])`, and check by drawing the first-layer
+  section as seen from below: x mirrored, front at the bottom.
+- **The plastic between engraved letters must be at least two extrusions
+  wide.** At size 5 and default spacing the ridge between letters was
+  0.39–0.46 mm — under one bead — so the slicer dropped it and the letters
+  printed as one blob. Spacing 1.16 at size 4.6 gives 1.1–1.3 mm and fits a
+  20 mm step with margin. Widening the grooves does not help: they were
+  already 1.5–1.65 mm, and a wider groove only narrows the ridges. First-layer
+  squish widens the plastic, not the grooves.
+- **A thin cross reads as a lump at 160 mm.** A 1.8 mm post with 1.2 mm arm
+  tips printed as a blob. It is now 2.4 mm with 2.0 mm tips, not yet
+  reprinted. Its 66° arm
+  undersides — needed to print without support — still give it a braced
+  silhouette. That is a limit of printing a cross upright, not a fix to make.

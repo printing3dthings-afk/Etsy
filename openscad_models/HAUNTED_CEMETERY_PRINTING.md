@@ -118,8 +118,10 @@ which version the buyer gets.
     apart.
   - NEXT has its own letter spacing (1.3) and a wider tablet: at the common
     1.12, its X and T stood 0.26 mm apart and would have fused.
-- **OBC maker's mark:** engraved 0.8 mm deep in the underside, the same
-  size-5 Montserrat Black mark as the buildings.
+- **OBC maker's mark:** engraved 0.8 mm deep in the underside, under the middle of the hill: Montserrat
+  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+  turn the hill over with the front toward you (fixed 2026-09-27: it read
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
 
 ## What the detail pass took
 

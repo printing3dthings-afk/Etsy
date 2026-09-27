@@ -11,7 +11,13 @@ aligned. Assign a filament to each part.
 |---|---|---|
 | body | walls, plinth, gables and battens, eave flare, step | plum `#5B4A5E` |
 | roof | roof slab, shingles, ridge cap, chimney | slate `#2B2F38` |
-| trim | window and door frames, muntins, door, corner boards, sign board, crate | cream `#EFE6D2` |
+| trim | window and door frames, muntins, window panes, door, corner boards, sign board, crate | cream `#EFE6D2` |
+
+**Every window is glazed** (added 2026-09-27). A 1.48 mm pane fills the back
+of each opening, set into the wall all round, and the window's bars stand on
+it. The tealight glows through the panes, like frosted glass. On the first
+chapel print the tallest windows' free-standing bars snapped; the pane is
+what carries them now. The door stays open.
 | accent | the pie-crust frame round the shop window, the pie, the lining of the sign's carved letters | crust `#D4A96A` |
 
 **The BAKERY letters are carved into the sign board**, 0.6 mm deep, and
@@ -37,7 +43,7 @@ check. They are not the deliverable.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **11 h 35 m** | **~110 g** | 0 |
+| **single colour** (e.g. for Jessee to paint) | **11 h 28 m** | **~113 g** | 0 |
 | **four colour, AMS** | not reliable here (see below) | ~120 g model **+ purge** | **1,293** |
 
 The four-colour slice uses all four filaments (selected 545, 409, 239 and 101
@@ -71,9 +77,8 @@ house lifts off to switch it.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.24 mm against the 1.2 mm floor. That is a pass,
-    with less margin than the lancet version had (1.48): the round
-    windows' frames are the thinnest spans;
+  - 1st-percentile wall 1.44 mm against the 1.2 mm floor (1.24 before the
+    panes; the round windows' frames were the thinnest spans);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (148.8 mm);
   - 12.66 cm² of bed contact (17.3% of the footprint);
@@ -95,8 +100,10 @@ house lifts off to switch it.
   CGAL welds the roof to the eave.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step, read from
-  below. Strokes are ≥ 1.0 mm (two extrusions is 0.84).
+- **OBC maker's mark:** engraved 0.8 mm deep under the step: Montserrat
+  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+  turn the building over with the front toward you (fixed 2026-09-27: it read
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
 - **The sign's letters:** carved 0.6 mm into the board and lined with crust
   colour to 1.1 mm, strokes ≥ 0.84 mm. The carve's ceilings climb at 58° in
   0.2 mm steps, so the letters need no supports: sliced with the letters and

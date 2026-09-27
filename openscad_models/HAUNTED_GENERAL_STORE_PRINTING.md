@@ -19,7 +19,13 @@ already aligned. Assign a filament to each part.
 |---|---|---|
 | body | walls, plinth, the leaning false front, battens | sage `#5E6B57` |
 | roof | shed roof slab, tin ribs, stove pipe, barrel hoops | slate `#2B2F38` |
-| trim | diamond window frames and bars, door frame and door, back corner boards, the sign board, the cap on the front | cream `#EFE6D2` |
+| trim | diamond window frames, bars and panes, door frame and door, back corner boards, the sign board, the cap on the front | cream `#EFE6D2` |
+
+**Every window is glazed** (added 2026-09-27). A 1.48 mm pane fills the back
+of each opening, set into the wall all round, and the window's bars stand on
+it. The tealight glows through the panes, like frosted glass. On the first
+chapel print the tallest windows' free-standing bars snapped; the pane is
+what carries them now. The door stays open.
 | accent | the barrels, the props and their feet, the lining of the carved MERCANTILE letters | kraft `#D4A96A` |
 
 **The MERCANTILE letters are carved into the sign board**, 0.6 mm deep, and
@@ -40,8 +46,8 @@ cream.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 41 m** | **~78 g** | 0 |
-| **four colour, AMS** | not reliable here | ~78 g model **+ purge** | **1,317** |
+| **single colour** (e.g. for Jessee to paint) | **9 h 38 m** | **~80 g** | 0 |
+| **four colour, AMS** | not reliable here | ~80 g model **+ purge** | **1,317** |
 
 The four-colour print makes about as many changes as the bakery (1,293).
 Trim and walls share almost every layer from the plinth to the top of the
@@ -64,7 +70,8 @@ the light.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.24 mm, median 2.60 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.44 mm, median 2.60 mm, against the 1.2 mm floor
+    (1.24 before the panes);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (124.0 mm);
   - 11.76 cm² of bed contact (17.5% of the footprint);
@@ -82,8 +89,10 @@ the light.
   area. Every prop foot stands on its own pad on the plate.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step, read from below; the same
-  size-5 Montserrat Black mark as the other buildings, strokes ≥ 2 extrusions.
+- **OBC maker's mark:** engraved 0.8 mm deep under the step: Montserrat
+  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+  turn the building over with the front toward you (fixed 2026-09-27: it read
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
 - **MERCANTILE letters:** size 5.2, letter spacing 1.06, 51.5 mm wide on
   the 56 mm board. Carved 0.6 mm into the tilted board and lined with kraft
   to 1.1 mm. The carve's ceilings climb at 61° (58° plus the front's lean)

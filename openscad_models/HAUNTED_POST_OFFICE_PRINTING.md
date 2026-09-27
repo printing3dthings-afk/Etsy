@@ -16,7 +16,13 @@ the house (three colour parts) and its roof lid (one colour).
 | object | part | what it is | colour in the file |
 |---|---|---|---|
 | house | body | brick walls, plinth, step, the lid's seat inside the parapet | brick `#7A3E33` |
-| house | trim | parapet coping, window and door frames, muntins, door, sign board, the parcels' string | cream `#EFE6D2` |
+| house | trim | parapet coping, window and door frames, muntins, window panes, door, sign board, the parcels' string | cream `#EFE6D2` |
+
+**Every window is glazed** (added 2026-09-27). A 1.48 mm pane fills the back
+of each opening, set into the wall all round, and the window's bars stand on
+it. The tealight glows through the panes, like frosted glass. On the first
+chapel print the tallest windows' free-standing bars snapped; the pane is
+what carries them now. The door stays open.
 | house | accent | the parcels, the lining of the carved POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
 
 **The POST OFFICE letters are carved into the sign board**, 0.6 mm deep,
@@ -46,10 +52,10 @@ the base is open too.
 
 | | time | filament |
 |---|---|---|
-| house, single colour | 5 h 34 m | 48 g |
+| house, single colour | 5 h 32 m | 50 g |
 | lid | 1 h 36 m | 12 g |
-| **single colour, both** (e.g. for Jessee to paint) | **7 h 10 m** | **~60 g** |
-| **house in three colours + lid** | not reliable here | ~61 g model + purge |
+| **single colour, both** (e.g. for Jessee to paint) | **7 h 08 m** | **~62 g** |
+| **house in three colours + lid** | not reliable here | ~63 g model + purge |
 
 The colour house makes **446 colour changes**, far fewer than the bakery's
 1,351. Printed together with the lid on one plate, as the file lays them out,
@@ -94,8 +100,10 @@ Measured on the exported mesh:
 - Every trim and accent piece shares real surface with the part it sits on.
   The sign board shares 641 mm² with the wall, the coping 611 mm², each
   window frame about 250 mm², and the parcel string sits in the parcels.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step, strokes
-  ≥ 1.0 mm.
+- **OBC maker's mark:** engraved 0.8 mm deep under the step: Montserrat
+  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+  turn the building over with the front toward you (fixed 2026-09-27: it read
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
 - **POST OFFICE letters:** size 4.4, one line, carved 0.6 mm into the board
   and lined with kraft to 1.1 mm. The carve's ceilings climb at 58° in
   0.2 mm steps, so the letters print with no supports: sliced with the
