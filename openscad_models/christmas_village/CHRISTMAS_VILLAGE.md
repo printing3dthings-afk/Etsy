@@ -16,6 +16,27 @@ each its own folder here (`victorian/`, `gingerbread/`) with one subfolder per
 building, the same layout as `haunted_town/`. The building lineup for each is
 proposed to Scott before any `.scad` is written.
 
+## The two villages (agreed with Scott 2026-09-28: "I like them all")
+
+Six buildings each, one big identity feature per building, and no two in a
+village sharing walls, windows and roof shape. Built to the Haunted Town rules
+the chapel proved on the printer: four colours in one 3MF, glazed windows with
+the bars on the panes, room for a 38 mm LED tealight, and the same 8 mm base
+height so a village lines up as a street.
+
+| # | Dickens Victorian (brick, slate, white, evergreen) | Gingerbread (gingerbread, chocolate, icing, candy red) |
+|---|---|---|
+| 1 | **Brick cottage**: the style study, made printable | **Gingerbread cottage**: the style study, made printable |
+| 2 | **Toy shop**: bay shop window, hanging sign | **Candy cane chapel**: red and white striped steeple |
+| 3 | **Church**: tall spire, round rose window | **Sweet shop**: round lollipop window and sign |
+| 4 | **Coaching inn**: two storeys, arched carriage gateway, lantern | **Cocoa cafe**: a tower shaped like a hot-cocoa mug |
+| 5 | **Townhouse**: tall and narrow, front steps, dormer | **Santa's workshop**: peppermint chimney, gumdrops on the ridge |
+| 6 | **Clock tower**: a big white clock face | **Cookie clock tower**: a frosted-cookie clock face |
+
+The two cottages come first: the design already exists, and they test each
+style's hardest details on the printer (the Victorian's pierced bargeboard and
+icicles, the Gingerbread's icing drips and dots).
+
 ## The five styles
 
 Same cottage in every one: a 64 × 58 mm gable-front house, 50 mm to the
