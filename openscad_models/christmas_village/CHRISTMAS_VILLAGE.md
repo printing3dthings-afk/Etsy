@@ -10,8 +10,11 @@ with the 5 different styles").
 |---|---|
 | `concepts/` | the style study: `christmas_cottage_styles.scad` (one cottage, five styles), `render_styles.py` (exports every piece and renders each style in its colours), `meshes/` (the exported pieces), `images/` (front, three-quarter and top render per style, plus `styles_lineup.png`) |
 
-Each real building will get its own folder here once a style is chosen, the
-same layout as `haunted_town/`.
+**Chosen 2026-09-28 (Scott): "I want a village in both the first two styles.
+One village each."** Two villages, **Dickens Victorian** and **Gingerbread**,
+each its own folder here (`victorian/`, `gingerbread/`) with one subfolder per
+building, the same layout as `haunted_town/`. The building lineup for each is
+proposed to Scott before any `.scad` is written.
 
 ## The five styles
 
