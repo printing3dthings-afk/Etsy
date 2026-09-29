@@ -214,7 +214,9 @@ module door_leaf() {
     nf(1, 0, plinth_h) difference() {
         translate([0, 0, -wall + 0.15]) linear_extrude(wall + 0.05)
             translate([0, -0.3]) offset(delta = 0.2) polygon(arch_pts(door_a, door_h + 0.3));
-        translate([-0.5, -1, -0.3]) cube([1, door_h + door_a + 1, 1]);
+        // run out through the crown: stopped under it, the groove's end was a
+        // flat ceiling 0.5 deep that drew support from the snow up
+        translate([-0.5, -1, -0.3]) cube([1, door_h + door_a + 4, 1]);
         for (zg = [5.2, 10.4, 15.6]) hull() {
             translate([-door_a - 1, zg - 0.6, 0.2]) cube([2 * door_a + 2, 1.2, 0.2]);
             translate([-door_a - 1, zg - 0.01, -0.3]) cube([2 * door_a + 2, 0.02, 0.7]);
