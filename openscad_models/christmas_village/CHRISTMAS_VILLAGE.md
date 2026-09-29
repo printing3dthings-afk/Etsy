@@ -8,6 +8,8 @@ with the 5 different styles").
 
 | folder | what it is |
 |---|---|
+| `victorian/cottage/` | **Victorian cottage, printable.** `victorian_cottage.3mf`, the `.scad`, part `.stl`s, `build.sh` (exports the parts; `./build.sh chk` renders the six overlap checks), printing notes, `images/` |
+| `gingerbread/cottage/` | **Gingerbread cottage, printable.** Same layout as the Victorian |
 | `concepts/` | the style study: `christmas_cottage_styles.scad` (one cottage, five styles), `render_styles.py` (exports every piece and renders each style in its colours), `meshes/` (the exported pieces), `images/` (front, three-quarter and top render per style, plus `styles_lineup.png`) |
 
 **Chosen 2026-09-28 (Scott): "I want a village in both the first two styles.

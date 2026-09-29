@@ -7841,3 +7841,57 @@ any geometric check:
 itself, one mesh per filament in its colour, from the G-code at 0.02 mm (the
 viewer payloads are simplified to 0.64 mm for the web and lose lettering).
 That still is an image the printer can make.
+
+## Technique 79 — Seven traps from the first two Christmas cottages (2026-09-28)
+
+Both cottages (`openscad_models/christmas_village/{victorian,gingerbread}/cottage/`)
+reuse the chapel's machinery, and both started out needing thousands of
+support moves and failing the mesh checks. Each fix below was found on the
+gate's own slicer or in `mesh_gate`, not by reading the source.
+
+1. **A sheared copy only slopes a STRAIGHT underside.** The chapel's coping
+   gets its underside by `intersection() { board; sheared(board); }`. Give the
+   board a scalloped or dripping edge and it fails: each scallop's sheared
+   copy rises into the plain band above it, and where the two overlap the
+   band's own underside stays FLAT. That flat strip between scallops was
+   29,000 support moves on the Victorian. Build it like `relief_up`: the
+   unsheared term is the shape run down to the table
+   (`minkowski() { shape; translate([-0.01, -60]) square([0.02, 60]); }`),
+   so only the sheared copy has an underside.
+2. **Two parts ending on "the same" plane don't.** `xz(y0, y1)` computes one
+   end as `y1 - (y1 - y0)`, so a slab ending at `y_r` and a coping starting at
+   `Dh - wall` differ by a rounding error. Between them you get
+   zero-thickness sheets, hundreds of non-manifold edges, and sometimes a
+   union that is not watertight. The fix every time: **overlap, never abut.**
+   The slab runs 0.4 under the coping, the snow runs 0.4 past the slab, the
+   eave flare runs 0.2 past the kneelers and 0.3 up into slab and kneelers,
+   and the coping runs 0.3 in past the wall's inner face. Whichever part has
+   priority cuts the other exactly, and no two planes are left to disagree.
+3. **An outline that touches itself at one point extrudes to a surface
+   that is not closed, and CGAL drops the whole object.** The only sign is an
+   `ERROR: The given mesh is not closed!` line in the log; the render still
+   "succeeds". Seen twice: `rotate_extrude` of a union of circles cut at the
+   axis (the gingerbread's corner beads), and four peppermint wedges meeting
+   at their tip. Draw a bead column's profile as ONE outline touching the
+   axis only at its two ends, and join wedges with a small disc at the
+   centre. **Grep every build log for `not closed`.**
+4. **A sheared relief's front edge is `width - 1.2 × (depth + 0.4)` tall.**
+   Frames 2.2 wide and 1.44 deep left the window heads' front edges 0.04 mm
+   tall: a knife edge, and the wall check's 1st percentile fell to 0.63 mm.
+   Keep that number ≥ 0.4: frames 2.6 wide, 0.6 proud of the brick.
+5. **A round-arched door's leaf must fill the arch.** The chapel's leaf
+   stops 0.2 short of its lancet head, which is steep. A round arch's crown
+   is flat, and over that gap it is an overhang the width of the door. Fill
+   the arch and go 0.2 past it into the wall. Stop the leaf's back 0.15 short
+   of the room, not flush with it. Run any groove in the leaf out through the
+   crown: a groove that stops under it leaves a flat ceiling.
+6. **A relief standing on another relief's face hangs.** The bows set on
+   the garland's face, and started from there, sat over air where the
+   garland's own sheared underside falls away behind them. Raise every
+   relief from the wall plane and let the priority order cut it.
+7. **Anything that reaches below the ceiling hangs in the room.** The
+   gumdrops' anchoring cones went 3 mm down through the roof into the
+   lantern. Cut every roof ornament with `below_ceil()`.
+
+Both then passed `product_gate` (0 supports, watertight, p1 wall ≥ 1.4 mm)
+with every part clean in `mesh_gate`.
