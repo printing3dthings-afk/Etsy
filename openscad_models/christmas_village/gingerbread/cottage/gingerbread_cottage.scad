@@ -330,16 +330,19 @@ module icing_roof() {
                            [for (i = [60 : -1 : 0]) let (y = -Dh + 2 * Dh * i / 60) [-ic_edge(-y), y]]));
     }
 }
-// GUMDROPS: a dome on a steep cone (77 deg) carried down into the roof, so
-// every visible face looks up.
+// GUMDROPS: a dome on a cone carried down into the roof, so every visible
+// face looks up.
 GD = [-20, -10, 0, 10, 20];
 // Cut off at the ceiling: the cones' feet reached 3 mm down into the room
 // and hung there, and drew support from the table up the middle of the house.
 module gumdrops() difference() {
+    // A 2.8 dome, its top 1.1 lower than the first ones (a 2.3 ball, which
+    // stood out of the roof as tall pink bullets). The foot's rim must stay
+    // under the roof, which falls 1.6 mm per mm each side of the ridge: a 5.4
+    // foot 3 mm down stood clear of both slopes and hung.
     for (y = GD) hull() {
-        translate([0, y, z_out(0) + 4.0]) sphere(r = 2.3, $fn = 32);
-        // r 4.6, not 5: at 5 the neighbours' cones met tangent under the ridge
-        translate([0, y, z_out(0) - 8]) cylinder(r = 4.6, h = 0.01, $fn = 32);
+        translate([0, y, z_out(0) + 2.4]) sphere(r = 2.8, $fn = 32);
+        translate([0, y, z_out(0) - 1.6 * 4.2 - 0.5]) cylinder(r = 4.2, h = 0.01, $fn = 32);
     }
     below_ceil();
 }
