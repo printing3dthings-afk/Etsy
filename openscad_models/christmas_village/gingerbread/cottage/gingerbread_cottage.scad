@@ -174,7 +174,9 @@ module door_leaf() intersection() {
     }
     rshell(r_in + 0.15, Rw + 1.2);
 }
-module door_frame() sclip(Rw, fr_t) srelief(Rw, 0, plinth_h, door_a + fr_w + bead_r + 0.6) relief_up(-0.4, fr_t) {
+// the door's strips are set a quarter off its centre line: with one strip's
+// edge on it, the cuts met the leaf's crown point along edges, non-manifold
+module door_frame() sclip(Rw, fr_t) srelief(Rw, 0, plinth_h, door_a + fr_w + bead_r + 0.85) relief_up(-0.4, fr_t) {
     union() {
         intersection() { offset(r = fr_w) polygon(arch_pts(door_a, door_h)); translate([-30, -0.5]) square([60, 100]); }
         intersection() { beads(arch_path(door_a, door_h, fr_w - 0.1, bead_sp, false)); translate([-30, 0.6]) square([60, 100]); }
@@ -182,7 +184,7 @@ module door_frame() sclip(Rw, fr_t) srelief(Rw, 0, plinth_h, door_a + fr_w + bea
     translate([0, -1]) offset(delta = -0.3) polygon(arch_pts(door_a, door_h + 1));
 }
 module door_opening() splace(Rw, 0, plinth_h) translate([0, 0, -wall - 2]) linear_extrude(wall + 6) polygon(arch_pts(door_a, door_h));
-module door_hole() srelief(Rw, 0, plinth_h, door_a + 0.6) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) polygon(arch_pts(door_a, door_h));
+module door_hole() srelief(Rw, 0, plinth_h, door_a + 0.85) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) polygon(arch_pts(door_a, door_h));
 
 // ---- candy canes either side of the door, crooks turned in over it -----------------------------------
 cane_s = 10.8;  cane_w = 2.6;  cane_h = 18.5;  cane_R = 3;
@@ -224,7 +226,9 @@ module gumdrops() difference() {
 module room() sweep() polygon([[0, -2], [r_in, -2], [r_in, Hc], [0, z_ceil(0)]]);
 
 // ---- the snow base ---------------------------------------------------------------------------------------
-module base2d() circle(r = Rw + 6.5, $fn = FN);
+// 8.5 out: at 6.5 its rounded edge began at 30.7, under the peppermints
+// (out to 32.4), and each hung over it and drew support from the table
+module base2d() circle(r = Rw + 8.5, $fn = FN);
 module base_slab() {
     linear_extrude(plinth_h - 1.8) base2d();
     for (i = [1 : 6]) let (a0 = 15 * (i - 1), a1 = 15 * i)
