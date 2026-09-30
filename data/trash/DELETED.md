@@ -1430,3 +1430,105 @@ module stone_inlays() {
 
 <!-- /TRASH 20260926-004 -->
 
+<!-- TRASH id=20260930-001 date=2026-09-30 kind=file source="openscad_models/christmas_village/victorian/shop_house/victorian_shop_house.scad" reason="Replaced by the rounded shop-house (Scott, 2026-09-30: not squared). This is the finished, gated square version (commit 16df111)." -->
+## 20260930-001 · 2026-09-30 · file · `openscad_models/christmas_village/victorian/shop_house/victorian_shop_house.scad`
+**Reason:** Replaced by the rounded shop-house (Scott, 2026-09-30: not squared). This is the finished, gated square version (commit 16df111).  
+**Payload:** `data/trash/files/20260930-001__victorian_shop_house.scad`
+
+```
+// Victorian Shop-House -- the Dickens Victorian village's first building with
+// "more shape" (Scott, 2026-09-30, picked from four shapes against his
+// reference photos in ../../references/). A two-storey shop: a brick shop floor
+// with a bay window and a panelled door; above it a white plaster storey with
+// dark timbers that JUTS OUT over the street on brackets; a steep front gable
+// with a scalloped bargeboard and a finial; a tall stepped chimney stack. On a
+// snow base.
+//
+// A hollow lantern lit by a battery LED tealight: open base, every window
+// glazed with a 1.48 mm pane that its bars stand on.
+//
+// The machinery is the first Victorian cottage's (../cottage/victorian_cottage
+// .scad), itself the chapel's; every trap it met is written up in
+// .claude/skills/3d-print-design/SKILL.md Technique 79 and applied here from
+// the start: parts overlap and are cut by priority, never abut; reliefs rise
+// from the wall plane; nothing reaches below a ceiling.
+//
+// COLOUR PARTS, ONE PRINT (victorian_shop_house.3mf), priority roof > accent >
+// trim > body:
+//   body    brick shop floor, the bay's stall riser, the chimney, the step
+//   roof    slate roof, and the "timber": the jetty's beam, cove and
+//           brackets, the upper storey's framing, window frames and lattice,
+//           the door
+//   trim    snow base and drifts, the upper storey's plaster walls, soffits,
+//           kneelers, bargeboards and finials, snow on the roof, every pane,
+//           the shop floor's window and door frames
+//   accent  evergreen: the bay window's frame and bars, the wreath, the
+//           window boxes
+//
+// FRAMES. The shop floor is the brick box, centred on the origin. The upper
+// storey and roof are the cottage's roof machinery in their own frame, moved
+// forward by the jetty: upper() puts a child there.
+
+include <BOSL2/std.scad>
+include <../../../lattice_lib.scad>   // rrect_pts
+
+$fa = 4;  $fs = 0.4;
+part = "all";
+
+// ---- the shop floor --------------------------------------------------------------
+W        = 56;              // across the front, both storeys
+Wh       = W/2;
+Dg       = 50;              // shop floor depth
+Dgh      = Dg/2;
+wall     = 1.68;
+corner_r = 1;
+plinth_h = 8;
+H1       = 38;              // top of the shop floor; the jetty starts here
+SH       = 1.2;
+
+// ---- brick -----------------------------------------------------------------------
+bd    = 0.6;
+bp    = 2.6;
+br    = bd * tan(58);
+bj    = 0.6;
+bl    = 7;
+function zc(k) = plinth_h + 0.4 + k * bp;
+function nc(zt) = ceil((zt - plinth_h - 0.4) / bp);
+
+// ---- the upper storey and roof -------------------------------------------------------
+J     = 4;                  // the jetty: the upper storey stands this far out in front
+Du    = Dgh + J/2;          // its half-depth ...
+yc    = -J/2;               // ... about this centre
+H     = 70;                 // its eave (the side windows' heads clear the eave's flare)
+r_ang = 58;
+tp    = tan(r_ang);
+x_in  = Wh - wall;
+tr    = 2.52;
+tv    = tr / cos(r_ang);
+e     = 2;
+xe    = Wh + e;             // plaster: no brick face
+function z_ceil(x) = H + (x_in - abs(x)) * tp;
+function z_out(x)  = z_ceil(x) + tv;
+y_r   = Du - wall;
+y_rr  = y_r + 0.4;
+cp_lo = -0.2;  cp_hi = 2.6;
+module upper() translate([0, yc, 0]) children();
+
+// ---- placement -------------------------------------------------------------------------
+//   face 0 = back (+Y), 1 = front (-Y), 2 = right (+X), 3 = left (-X)
+module ftf(cy, hy, face, u, z) {
+    r = [180, 0, 90, -90][face];
+    p = face == 0 ? [u, cy + hy, z] : face == 1 ? [u, cy - hy, z]
+      : face == 2 ? [Wh, u, z] : [-Wh, u, z];
+    translate(p) rotate([0, 0, r]) rotate([90, 0, 0]) children();
+}
+module nf(face, u, z) ftf(0, Dgh, face, u, z) children();      // shop floor
+module uf(face, u, z) ftf(yc, Du, face, u, z) children();      // upper storey
+function loc(f, u) = (f == 0 || f == 3) ? -u : u;
+
+module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], [0
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260930-001 -->
+
