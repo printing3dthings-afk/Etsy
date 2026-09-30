@@ -358,8 +358,10 @@ module lancet() dmf(lw_z) {
         union() { offset(r = lf_w) lw_outline(); translate([-LW[0] - lf_w - 0.6, -2.6]) square([2 * (LW[0] + lf_w + 0.6), 3.4]); }
         offset(r = 0.3) lw_outline();
     }
-    relief_up(-0.4, bd) intersection() { offset(r = 0.6) lw_outline(); lw_bars(); }
 }
+// the bar goes in with the glass: made with the frame, the opening cut it away
+// all but the 0.6 mm stub above the head, which the slicer propped from the snow
+module lancet_bar() dmf(lw_z) relief_up(-0.4, bd) intersection() { offset(r = 0.6) lw_outline(); lw_bars(); }
 module lw_opening() dmf(lw_z) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) lw_outline();
 module lw_hole() dmf(lw_z) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) lw_outline();
 module lw_glass() dmf(lw_z) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) lw_outline();
@@ -483,7 +485,7 @@ module trim_raw() {
         brand_mark();
     }
     // the glass goes back in after the rooms and openings are cut
-    difference() { union() { sw_glass(); dmw() lw_glass(); } main_room(); }
+    difference() { union() { sw_glass(); dmw() { lw_glass(); lancet_bar(); } } main_room(); }
 }
 module roof_part()   roof_raw();
 module accent_part() { difference() { accent_raw(); roof_raw(); } }
