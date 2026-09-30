@@ -382,8 +382,15 @@ WINS = [
 function in_turret(W) = W[1] == rt;
 module wplace(W) cplace(W[0], W[1], W[2], W[3]) children();
 module in_lean(W) if (in_turret(W)) lean() children(); else children();
-module win_frames(turret) for (W = WINS) if (in_turret(W) == turret) let (w = [W[4], W[5]])
+// trimmed to the true curve at the frame's front: each 1 mm strip's flat front
+// stands 0.008 mm proud of its neighbour's where they overlap, and every joint
+// left a step the wall check reads as a wall that thin (the flat back is exempt:
+// a 5000 mm circle faceted 512 times would cut the frame, not trim it)
+module win_frames(turret) for (W = WINS) if (in_turret(W) == turret) let (w = [W[4], W[5]]) intersection() {
     cyl_relief(W[0], W[1], W[2], W[3], frame_U(w)) relief_up(-0.4, fr_t) { frame2d(w); offset(r = 0.3) win_outline(w); }
+    if (W[1] < 1000) translate([W[0][0], W[0][1], 0]) cylinder(r = W[1] + fr_t, h = 200, $fn = FN);
+    else translate([-500, -500, 0]) cube(1000);
+}
 // glass flush with the face, bars on it, both clipped to the round face
 module win_glass(turret) for (W = WINS) if (in_turret(W) == turret) let (w = [W[4], W[5]]) {
     intersection() {
