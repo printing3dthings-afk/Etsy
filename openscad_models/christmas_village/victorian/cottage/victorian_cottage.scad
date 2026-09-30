@@ -267,11 +267,8 @@ module dm_room() intersection() {
 // the eave's tip, below the gable's own roof
 // out past the eave's tip (Rw + 3.5): stopped at the gable's face, it left the
 // cone's eave running across the gable's foot and hid the lancet
-// from the gable's back face: from 1 mm behind it, the cut left a 1 mm slot in
-// the cone whose edge only the gable's snow closed, and with the snow set back
-// the union had three edges on it
 module gable_cut() dmw() intersection() {
-    translate([dm_x0, dm_c - dm_w, 30]) cube([Rw + 6 - dm_x0, 2 * dm_w, 60]);
+    translate([dm_x0 - 1, dm_c - dm_w, 30]) cube([Rw + 6 - dm_x0 + 1, 2 * dm_w, 60]);
     dm_below(tv, Rw + 7);
 }
 module dm_walls() difference() {
@@ -329,13 +326,16 @@ module dm_finial() translate([dm_x + dm_e - 1.3, dm_c, dz_out(dm_c) - 2.6]) {
 }
 module dm_snow() difference() {
     intersection() {
-        // from 0.3 in front of the slab's back face, inside the cone's slate: level
-        // with it, the two back faces met flush and left edges on the trim
-        yz(dm_x0 + 0.3, dm_x + dm_e) polygon([[dm_c - 5.5, dz_out(dm_c - 5.5) - 1.0], [dm_c, dz_out(dm_c) - 1.0], [dm_c + 5.5, dz_out(dm_c + 5.5) - 1.0],
+        // from the cone's cut, 1 mm behind the slab's back face: it closes the
+        // top of the slot the cut leaves there with its 55 deg underside. Level
+        // with the slab's back face, the two met flush and left edges on the trim;
+        // 0.3 in front, and both the slab's back face and the gable's cut in the
+        // cone moved, the union kept three edges and two zero-volume slivers
+        yz(dm_x0 - 1, dm_x + dm_e) polygon([[dm_c - 5.5, dz_out(dm_c - 5.5) - 1.0], [dm_c, dz_out(dm_c) - 1.0], [dm_c + 5.5, dz_out(dm_c + 5.5) - 1.0],
             [dm_c + 5.5, dz_out(dm_c + 5.5) + 1.8], [dm_c + 1.5, dz_out(dm_c + 1.5) + 2.8], [dm_c - 1.5, dz_out(dm_c + 1.5) + 2.8], [dm_c - 5.5, dz_out(dm_c - 5.5) + 1.8]]);
         translate([0, 0, 30]) linear_extrude(60) polygon(concat(
-            [for (i = [0 : 30]) let (x = dm_x0 + (dm_x + dm_e - 1.8 - dm_x0) * i / 30) [x, dm_c + 3.6 + 0.8 * sin(x * 47)]],
-            [for (i = [30 : -1 : 0]) let (x = dm_x0 + (dm_x + dm_e - 1.8 - dm_x0) * i / 30) [x, dm_c - 3.6 - 0.8 * sin(x * 53 + 40)]]));
+            [for (i = [0 : 30]) let (x = dm_x0 - 1 + (dm_x + dm_e - 0.8 - dm_x0) * i / 30) [x, dm_c + 3.6 + 0.8 * sin(x * 47)]],
+            [for (i = [30 : -1 : 0]) let (x = dm_x0 - 1 + (dm_x + dm_e - 0.8 - dm_x0) * i / 30) [x, dm_c - 3.6 - 0.8 * sin(x * 53 + 40)]]));
     }
     below_ceil();
 }
