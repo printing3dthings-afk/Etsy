@@ -80,7 +80,9 @@ module R_choc(R, kv0) polygon([[0, -10], [kv0, -10], [kv0, R_fl(R, kv0) + sb], [
 module R_curl(R, kv0) polygon(concat(R_curve(R, kv0, R[5], 24), [[R[5], R_tipb(R)], [kv0, R_fl(R, kv0)]]));
 module R_room(R) polygon([[0, -2], [R[1], -2], [R[1], R[0]], [0, R_zc(R, 0)]]);
 module R_below(R) polygon([[0, -5], [R[1] + 20, -5], [R[1] + 20, R_zc(R, R[1] + 20)], [0, R_zc(R, 0)]]);
-module R_wall(R, r_out, z0) polygon([[R[1] - 0.3, z0], [r_out, z0], [r_out, R_zc(R, r_out)], [R[1] - 0.3, R_zc(R, R[1] - 0.3)]]);
+// its top runs 0.6 up into the roof: drawn to the ceiling line it met the slab
+// face to face, and the union was non-manifold in a ring round every eave
+module R_wall(R, r_out, z0) polygon([[R[1] - 0.3, z0], [r_out, z0], [r_out, R_zc(R, r_out) + 0.6], [R[1] - 0.3, R_zc(R, R[1] - 0.3) + 0.6]]);
 
 RM = [H, y_in, tp, tv, Dh - 6, Dh + 6, 20, Dh + 4];
 kv0 = Dh - 0.8;             // the eave's foot, inside the wall
