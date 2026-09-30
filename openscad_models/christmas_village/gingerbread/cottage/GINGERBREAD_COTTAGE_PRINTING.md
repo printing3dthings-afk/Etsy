@@ -1,10 +1,5 @@
 # Gingerbread Cottage — printing notes
 
-> **DRAFT (2026-09-30).** The model passes `product_gate`. The overlap,
-> fidelity and fragility checks have not been re-run since the gumdrops were
-> reshaped, and the numbers marked `GATE_*` below are not filled in yet. The
-> colour renders in `images/` show the earlier, taller gumdrops.
-
 Building #1 of the Gingerbread Christmas village
 (`../../CHRISTMAS_VILLAGE.md`). The cottage from the style study, rebuilt to
 print:
@@ -19,7 +14,7 @@ print:
 - two peppermint candies lying on the snow base.
 
 It is a hollow lantern with an open base, lit from inside by a battery LED
-tealight. It measures 79.0 × 78.0 × GATE_H mm, snow base and gumdrops included.
+tealight. It measures 79.0 × 78.0 × 110.5 mm, snow base and gumdrops included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
@@ -53,8 +48,8 @@ and the window bars stand on the pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **GATE_TIME** | **GATE_CM3 cm³, about GATE_G g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about GATE_G g of model **+ purge** |
+| **single colour** | **6 h 54 m** | **52.5 cm³, about 65 g of PLA** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 65 g of model **+ purge** |
 
 ## The tealight
 
@@ -65,7 +60,26 @@ Measured on the exported model:
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_RESULTS
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.48 mm, median 3.35 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 21.96 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts:
+  - closed;
+  - every edge shared by exactly two faces;
+  - 0 zero-area faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 25.4 mm³ of 70,102 mm³ not printed, and **0 flags**. The largest
+  misses are one-layer slivers, under 0.4 mm deep, where the chocolate tiles
+  meet the eaves.
+- `fragility`: nothing slender at all. 0 high, 0 watch, 0 slender runs.
+- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
+  base. It is the same mark as the Victorian cottage, mirrored so it reads OBC
+  with the cottage turned over, front toward you.
 
 ## What it took to print without supports
 
@@ -90,5 +104,9 @@ scallops. Three more were its own:
   bottom edges look softer than their tops.
 - **The scallop tiles read as rows of small bumps** from a distance rather
   than crisp scallops. Each tile's rounded edge stands 1.3 mm out.
+- **The gumdrops read as teardrops from the side.** Each one needs a foot
+  running down both slopes of the ridge, under the roof, so nothing overhangs.
+  Seen along the ridge they are round; from the side they look taller than a
+  real gumdrop. A flatter one would hang off the slopes and need support.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.
