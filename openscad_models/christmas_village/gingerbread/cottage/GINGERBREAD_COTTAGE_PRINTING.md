@@ -74,8 +74,8 @@ Measured on the exported model:
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
   layer): 25.4 mm³ of 70,102 mm³ not printed, and **0 flags**. The largest
-  misses are one-layer slivers, under 0.4 mm deep, where the chocolate tiles
-  meet the eaves.
+  misses are one-layer slivers, under 0.4 mm deep, along one row of the
+  chocolate tiles on the right slope.
 - `fragility`: nothing slender at all. 0 high, 0 watch, 0 slender runs.
 - **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
   base. It is the same mark as the Victorian cottage, mirrored so it reads OBC
