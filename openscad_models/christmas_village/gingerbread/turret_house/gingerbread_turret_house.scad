@@ -256,7 +256,9 @@ module icing_roof() intersection() {
 GD = [-8, 0, 8];
 module gumdrops() difference() {
     for (x = GD) hull() {
-        translate([x, 0, zs(0) + 2.4]) sphere(r = 2.8, $fn = 32);
+        // 1.2 over the ridge: at 2.4, above the roof falling away each side,
+        // they stood up as tall pink bullets (the first cottage's trouble)
+        translate([x, 0, zs(0) + 1.2]) sphere(r = 2.9, $fn = 32);
         translate([x, 0, zs(0) - 1.6 * 4.2 - 0.5]) cylinder(r = 4.2, h = 0.01, $fn = 32);
     }
     below_ceil();

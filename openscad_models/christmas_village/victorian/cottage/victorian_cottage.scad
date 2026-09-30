@@ -270,7 +270,10 @@ module dm_walls() difference() {
     intersection() { translate([dm_x0, dm_c - dm_w, 30]) cube([dm_x - dm_x0, 2 * dm_w, 60]); dm_below(0.4); }
     below_ceil();
 }
-dm_E = dm_w + dm_e;
+// the gable's roof stops flush with its walls at the sides: overhanging them
+// by dm_e, its eaves' front corners stood past the flat front over the drum
+// curving away below them, and the slicer propped each from the snow
+dm_E = dm_w + 0.02;
 module dm_front_cut(up = 60, x0 = dm_x) intersection() {
     children();
     multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [SH, 0, 1, -SH * x0], [0, 0, 0, 1]])
