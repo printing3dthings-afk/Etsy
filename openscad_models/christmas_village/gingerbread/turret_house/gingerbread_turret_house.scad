@@ -201,8 +201,16 @@ module porch_walls() intersection() {
     translate([-50, -100, 0]) cube([100, 100 - Dh + 0.4, 100]);
 }
 // the pointed arch through the porch's front, between the columns
-module porch_arch() translate([PC[0], 0, 0]) xz(-Dh - rp - 2, -Dh - 1.5)
+// Its springing is bevelled at 55 deg out to the capitals' reach (x_cap): the
+// round capitals carry the wall only from 4.5 mm out, and once the sliver
+// beside each column was cleared the wall between there and the arch's edge
+// hung flat over the gap, 711 support moves.
+x_cap = 5.6;
+module porch_arch() translate([PC[0], 0, 0]) xz(-Dh - rp - 2, -Dh - 1.5) {
     polygon([[-ar_a, plinth_h - 1], [ar_a, plinth_h - 1], [ar_a, spring], [0, spring + ar_a * tp], [-ar_a, spring]]);
+    for (s = [-1, 1]) polygon([[s * (ar_a - 0.01), spring - 1], [s * x_cap, spring - 1], [s * x_cap, spring],
+                              [s * (ar_a - 0.01), spring + (x_cap - ar_a) * tan(55)]]);
+}
 // below the spring the columns stand free
 // ...and the wall between them goes too: cut only by the arch and the rings
 // round the shafts, it left a 1 mm2 sliver 10 mm tall beside each column
