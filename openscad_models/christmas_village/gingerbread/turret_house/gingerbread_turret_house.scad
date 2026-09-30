@@ -204,7 +204,12 @@ module porch_walls() intersection() {
 module porch_arch() translate([PC[0], 0, 0]) xz(-Dh - rp - 2, -Dh - 1.5)
     polygon([[-ar_a, plinth_h - 1], [ar_a, plinth_h - 1], [ar_a, spring], [0, spring + ar_a * tp], [-ar_a, spring]]);
 // below the spring the columns stand free
-module col_clear() for (c = COL) translate([c[0], c[1], plinth_h]) cylinder(r = cap_r, h = spring - plinth_h, $fn = 48);
+// ...and the wall between them goes too: cut only by the arch and the rings
+// round the shafts, it left a 1 mm2 sliver 10 mm tall beside each column
+module col_clear() {
+    for (c = COL) translate([c[0], c[1], plinth_h]) cylinder(r = cap_r, h = spring - plinth_h, $fn = 48);
+    translate([-COL[1][0], PC[1] - rp - 2, plinth_h]) cube([2 * COL[1][0], rp - 1, spring - plinth_h]);
+}
 
 // ---- the roofs ------------------------------------------------------------------------------------
 // MAIN: chocolate and icing eave from the one profile, swept round
