@@ -18,6 +18,23 @@ each its own folder here (`victorian/`, `gingerbread/`) with one subfolder per
 building, the same layout as `haunted_town/`. The building lineup for each is
 proposed to Scott before any `.scad` is written.
 
+## More shape (Scott, 2026-09-30)
+
+After the first two cottages: *"Try these but as more shape to them. Like
+more engineering like the reference photos"* (`references/`). The cottages
+were single boxes; the references are several masses with roofs at several
+heights. Scott picked, from four shapes each:
+
+- **Victorian: a two-storey shop-house.** The upper storey juts out over the
+  lower one on brackets, a bay shop window on the front, a tall stepped
+  chimney stack.
+- **Gingerbread: a whimsical turret house.** A crooked turret under a curling
+  candy-cane spire, swooping icing-edged roofs at three heights, a porch on
+  peppermint-stick columns.
+
+The first cottages stay in `victorian/cottage/` and `gingerbread/cottage/`
+as built and checked; the new ones get their own folders.
+
 ## The two villages (agreed with Scott 2026-09-28: "I like them all")
 
 Six buildings each, one big identity feature per building, and no two in a
