@@ -415,9 +415,9 @@ module dm_walls() difference() {
     dm_main_below();
 }
 dm_E = dm_w + dm_e;
-module dm_front_cut(up = 60) intersection() {
+module dm_front_cut(up = 60, x0 = dm_x) intersection() {
     children();
-    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [SH, 0, 1, -SH * dm_x], [0, 0, 0, 1]])
+    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [SH, 0, 1, -SH * x0], [0, 0, 0, 1]])
         minkowski() { children(); cylinder(r = 0.01, h = up, $fn = 4); }
 }
 dm_yf = dm_E - 0.08;
@@ -458,7 +458,9 @@ module board2d() let (n = 220, Y = [for (i = [0 : n]) dm_c - dm_w + 2 * dm_w * i
     polygon(concat([for (y = Y) [y, bs_low(y)]],
         [[dm_c + dm_w, dz_ceil(dm_c + dm_w) + dm_up], [dm_c, dz_ceil(dm_c) + dm_up], [dm_c - dm_w, dz_ceil(dm_c - dm_w) + dm_up]]));
 module dm_board() difference() {
-    dm_front_cut() yz(dm_x - 0.3, dm_x + dm_e + 0.2) board2d();
+    // hinged 0.15 inside the face: hinged on it, the scallops' lowest points met
+    // the face along edges and left the union non-manifold there
+    dm_front_cut(x0 = dm_x - 0.15) yz(dm_x - 0.3, dm_x + dm_e + 0.2) board2d();
     dm_room();
 }
 module dm_finial() translate([dm_x + dm_e - 1.3, dm_c, dz_out(dm_c) - 2.6]) {
