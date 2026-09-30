@@ -93,7 +93,9 @@ sb = 1.8;
 function R_curve(R, v0, v1, n) = [for (i = [0 : n]) let (v = v0 + (v1 - v0) * i / n) [v, R_top(R, v)]];
 module R_full(R, kv0) polygon(concat([[0, R_zc(R, 0)], [kv0, R_zc(R, kv0)], [kv0, R_fl(R, kv0)], [R[5], R_tipb(R)]],
     R_curve(R, R[5], 0, 60)));
-module R_choc(R, kv0) polygon([[0, -10], [kv0, -10], [kv0, R_fl(R, kv0) + sb], [R[7], R_fl(R, R[7]) + sb], [R[7], 300], [0, 300]]);
+// its corner 0.01 inside the eave's foot: on it, the two outlines shared the
+// foot's edge and left a zero-width ring the roof part carried (236 edges)
+module R_choc(R, kv0) polygon([[0, -10], [kv0 - 0.01, -10], [kv0 - 0.01, R_fl(R, kv0) + sb], [R[7], R_fl(R, R[7]) + sb], [R[7], 300], [0, 300]]);
 module R_curl(R, kv0) polygon(concat(R_curve(R, kv0, R[5], 24), [[R[5], R_tipb(R)], [kv0, R_fl(R, kv0)]]));
 module R_below(R) polygon([[0, -5], [R[1] + 20, -5], [R[1] + 20, R_zc(R, R[1] + 20)], [0, R_zc(R, 0)]]);
 
@@ -175,7 +177,10 @@ module box2d(w) {
     for (i = [0 : 5]) let (x = -bw + 1.2 + i * (2 * bw - 2.4) / 5)
         translate([x, -sill + 0.7]) polygon([[-1.1, 0], [1.1, 0], [0, 1.9]]);
 }
-module window_boxes() sclip(Rw, bd + 1.4) for (w = [SW[0], SW[1]]) srelief(Rw, w[0], w[1], w[2] + fr_w + 1.4) relief_up(-0.4, bd + 1.4) box2d(w);
+// laid in strips over 7.5 either side, so both of the box's ends (6.8) sit
+// 0.3 from a strip's edge: over 7.8, an end fell in the 0.15 two strips share,
+// and the two strips' ends met at slightly different angles
+module window_boxes() sclip(Rw, bd + 1.4) for (w = [SW[0], SW[1]]) srelief(Rw, w[0], w[1], w[2] + fr_w + 1.1) relief_up(-0.4, bd + 1.4) box2d(w);
 
 // ---- icicles under the eave, clear of the gable -----------------------------------------------------
 module drip2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate([0, -len + w/2 - 0.2]) circle(r = w/2 - 0.2); }
@@ -321,7 +326,9 @@ module dm_finial() translate([dm_x + dm_e - 1.3, dm_c, dz_out(dm_c) - 2.6]) {
 }
 module dm_snow() difference() {
     intersection() {
-        yz(dm_x0, dm_x + dm_e) polygon([[dm_c - 5.5, dz_out(dm_c - 5.5) - 1.0], [dm_c, dz_out(dm_c) - 1.0], [dm_c + 5.5, dz_out(dm_c + 5.5) - 1.0],
+        // from 0.3 in front of the slab's back face, inside the cone's slate: level
+        // with it, the two back faces met flush and left edges on the trim
+        yz(dm_x0 + 0.3, dm_x + dm_e) polygon([[dm_c - 5.5, dz_out(dm_c - 5.5) - 1.0], [dm_c, dz_out(dm_c) - 1.0], [dm_c + 5.5, dz_out(dm_c + 5.5) - 1.0],
             [dm_c + 5.5, dz_out(dm_c + 5.5) + 1.8], [dm_c + 1.5, dz_out(dm_c + 1.5) + 2.8], [dm_c - 1.5, dz_out(dm_c + 1.5) + 2.8], [dm_c - 5.5, dz_out(dm_c - 5.5) + 1.8]]);
         translate([0, 0, 30]) linear_extrude(60) polygon(concat(
             [for (i = [0 : 30]) let (x = dm_x0 + (dm_x + dm_e - 1.8 - dm_x0) * i / 30) [x, dm_c + 3.6 + 0.8 * sin(x * 47)]],
