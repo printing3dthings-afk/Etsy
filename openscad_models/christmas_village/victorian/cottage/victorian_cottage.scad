@@ -245,7 +245,7 @@ module dmf(z) translate([dm_x, dm_c, z]) rotate([0, 0, 90]) rotate([90, 0, 0]) c
 // 12 either side, past the gable's 9: at the shop-house's 20, this low gable's
 // slopes fell below the outline's own floor at 30, it crossed itself, and CGAL
 // dropped everything built from it as "not closed"
-module dm_below(dz) yz(dm_x0 - 1, dm_x + dm_e + 1)
+module dm_below(dz, x1 = dm_x + dm_e + 1) yz(dm_x0 - 1, x1)
     polygon([[dm_c - 12, 30], [dm_c + 12, 30], [dm_c + 12, dz_ceil(dm_c + 12) + dz], [dm_c, dz_ceil(dm_c) + dz], [dm_c - 12, dz_ceil(dm_c - 12) + dz]]);
 // its inside, narrower and steeper than its roof (the shop-house's dormer,
 // 51.7 deg groins): at 70 deg the groins with the cone's 58 deg ceiling rise
@@ -260,9 +260,11 @@ module dm_room() intersection() {
 }
 // everything of the cone in the gable's way: from inside the gable out past
 // the eave's tip, below the gable's own roof
+// out past the eave's tip (Rw + 3.5): stopped at the gable's face, it left the
+// cone's eave running across the gable's foot and hid the lancet
 module gable_cut() dmw() intersection() {
     translate([dm_x0 - 1, dm_c - dm_w, 30]) cube([Rw + 6 - dm_x0 + 1, 2 * dm_w, 60]);
-    dm_below(tv);
+    dm_below(tv, Rw + 7);
 }
 module dm_walls() difference() {
     intersection() { translate([dm_x0, dm_c - dm_w, 30]) cube([dm_x - dm_x0, 2 * dm_w, 60]); dm_below(0.4); }
