@@ -76,7 +76,9 @@ function R_curve(R, v0, v1, n) = [for (i = [0 : n]) let (v = v0 + (v1 - v0) * i 
 // half profiles, v >= 0: the whole roof, what of it is chocolate, the icing eave
 module R_full(R, kv0) polygon(concat([[0, R_zc(R, 0)], [kv0, R_zc(R, kv0)], [kv0, R_fl(R, kv0)], [R[5], R_tipb(R)]],
     R_curve(R, R[5], 0, 60)));
-module R_choc(R, kv0) polygon([[0, -10], [kv0, -10], [kv0, R_fl(R, kv0) + sb], [R[7], R_fl(R, R[7]) + sb], [R[7], 300], [0, 300]]);
+// its corner 0.01 inside the eave's foot: on it, the two outlines shared the
+// foot's edge and left a zero-width ring round each roof (759 edges)
+module R_choc(R, kv0) polygon([[0, -10], [kv0 - 0.01, -10], [kv0 - 0.01, R_fl(R, kv0) + sb], [R[7], R_fl(R, R[7]) + sb], [R[7], 300], [0, 300]]);
 module R_curl(R, kv0) polygon(concat(R_curve(R, kv0, R[5], 24), [[R[5], R_tipb(R)], [kv0, R_fl(R, kv0)]]));
 module R_room(R) polygon([[0, -2], [R[1], -2], [R[1], R[0]], [0, R_zc(R, 0)]]);
 module R_below(R) polygon([[0, -5], [R[1] + 20, -5], [R[1] + 20, R_zc(R, R[1] + 20)], [0, R_zc(R, 0)]]);
@@ -425,8 +427,10 @@ module win_glass(turret) for (W = WINS) if (in_turret(W) == turret) let (w = [W[
 }
 module win_openings(turret) for (W = WINS) if (in_turret(W) == turret)
     wplace(W) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) win_outline([W[4], W[5]]);
-module win_frame_holes(turret) for (W = WINS) if (in_turret(W) == turret)
-    wplace(W) relief_hole(-0.4, -0.4, fr_t + 2.4) offset(r = 0.4) win_outline([W[4], W[5]]);
+// in strips round the face like the frames: cut flat, on the turret's 10.5 mm
+// curve the hole's faces crossed the frames' strips and left edges in the wall
+module win_frame_holes(turret) for (W = WINS) if (in_turret(W) == turret) let (w = [W[4], W[5]])
+    cyl_relief(W[0], W[1], W[2], W[3], frame_U(w)) relief_hole(-0.4, -0.4, fr_t + 2.4) offset(r = 0.4) win_outline(w);
 
 // THE DOOR: a chocolate bar (the cottage's), on the house's face inside the porch
 door_a = 3.2;
@@ -518,8 +522,11 @@ module trim_raw() {
     difference() { win_glass(false); main_room(); }
     difference() { lean() win_glass(true); turret_room(); }
 }
-module roof_part()   roof_raw();
-module accent_part() { difference() { accent_raw(); roof_raw(); } }
+// the roof makes room for the gumdrops rather than cutting them: cut by the
+// roof, each one took the seam where the sweep's straight meets its round end
+// (x = 9) and carried over a hundred edges from it
+module roof_part()   difference() { roof_raw(); gumdrops(); }
+module accent_part() { difference() { accent_raw(); roof_part(); } }
 module trim_part()   { difference() { trim_raw(); accent_raw(); roof_raw(); } }
 module body_part() {
     difference() {
