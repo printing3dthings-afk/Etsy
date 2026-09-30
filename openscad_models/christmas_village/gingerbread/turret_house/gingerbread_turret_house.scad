@@ -201,16 +201,8 @@ module porch_walls() intersection() {
     translate([-50, -100, 0]) cube([100, 100 - Dh + 0.4, 100]);
 }
 // the pointed arch through the porch's front, between the columns
-// Its springing is bevelled at 55 deg out to the capitals' reach (x_cap): the
-// round capitals carry the wall only from 4.5 mm out, and once the sliver
-// beside each column was cleared the wall between there and the arch's edge
-// hung flat over the gap, 711 support moves.
-x_cap = 5.6;
-module porch_arch() translate([PC[0], 0, 0]) xz(-Dh - rp - 2, -Dh - 1.5) {
+module porch_arch() translate([PC[0], 0, 0]) xz(-Dh - rp - 2, -Dh - 1.5)
     polygon([[-ar_a, plinth_h - 1], [ar_a, plinth_h - 1], [ar_a, spring], [0, spring + ar_a * tp], [-ar_a, spring]]);
-    for (s = [-1, 1]) polygon([[s * (ar_a - 0.01), spring - 1], [s * x_cap, spring - 1], [s * x_cap, spring],
-                              [s * (ar_a - 0.01), spring + (x_cap - ar_a) * tan(55)]]);
-}
 // below the spring the columns stand free
 // ...and the wall between them goes too: cut only by the arch and the rings
 // round the shafts, it left a 1 mm2 sliver 10 mm tall beside each column
@@ -350,11 +342,23 @@ module stripe_slabs(c, z0, z1, pitch, t, tilt) for (z = [z0 : pitch : z1])
 // ---- the porch columns ----------------------------------------------------------------------
 // Peppermint sticks: white shafts with red stripes, each flaring at the top
 // into a round capital the porch wall stands on.
-module column(c) {
+// THE IMPOST. The round capital carries the porch wall only from 4.5 mm out,
+// so each capital also flares, at 49.6 deg or steeper, under the wall out to
+// 0.3 mm past the arch's edge: the arch springs from it. Without it the wall
+// beside the arch stood on a 1 mm2 sliver of itself, 10 mm tall, and with the
+// sliver cleared it hung flat.
+module column(c) let (sx = sign(c[0]), x0 = sx * (ar_a - 0.3)) {
     translate([c[0], c[1], plinth_h - 0.5]) cylinder(r = col_r, h = spring - 2.4 - plinth_h + 0.5, $fn = 40);
     hull() {
         translate([c[0], c[1], spring - 2.4]) cylinder(r = col_r, h = 0.01, $fn = 40);
         translate([c[0], c[1], spring - 0.01]) cylinder(r = cap_r, h = 0.61, $fn = 48);
+    }
+    hull() {
+        translate([c[0], c[1], spring - 3.2]) cylinder(r = col_r, h = 0.01, $fn = 40);
+        translate([0, 0, spring - 0.01]) linear_extrude(0.61) intersection() {
+            translate([PC[0], PC[1]]) difference() { circle(r = rp, $fn = FN); circle(r = rpi - 0.2, $fn = FN); }
+            translate([min(x0, c[0]), PC[1] - rp - 1]) square([abs(c[0] - x0), rp]);
+        }
     }
 }
 module column_stripes(c) intersection() {
