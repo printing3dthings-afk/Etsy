@@ -445,11 +445,18 @@ module dm_slates() difference() {
 // THE BARGEBOARD: the verge board, its lower edge scalloped. Its ends stop at
 // the walls' faces, where they stand on them.
 bs_r = 1.1;
-module board2d() {
-    polygon([[dm_c - dm_w, dz_ceil(dm_c - dm_w) - 2.2 + bs_r], [dm_c, dz_ceil(dm_c) - 2.2 + bs_r], [dm_c + dm_w, dz_ceil(dm_c + dm_w) - 2.2 + bs_r],
-             [dm_c + dm_w, dz_ceil(dm_c + dm_w) + dm_up], [dm_c, dz_ceil(dm_c) + dm_up], [dm_c - dm_w, dz_ceil(dm_c - dm_w) + dm_up]]);
-    for (i = [-4 : 4]) let (y = dm_c + i * 1.3 * dm_w / 4 * 0.75) translate([y, dz_ceil(y) - 2.2 + bs_r]) circle(r = bs_r, $fn = 24);
-}
+// Drawn as ONE lower edge, the lowest of the scallops at each point along it.
+// As circles on a straight edge, each scallop's underside hung over the one
+// below it on the slope, and the front cut only undercuts the lowest surface
+// in a column: the upper scallops' bottoms stayed flat, and the slicer propped
+// the board from the roof.
+bs_y = [for (i = [-4 : 4]) dm_c + i * 1.3 * dm_w / 4 * 0.75];
+function bs_cz(y) = dz_ceil(y) - 2.2 + bs_r;
+function bs_low(y) = min(concat([bs_cz(y)],
+    [for (c = bs_y) if (abs(y - c) < bs_r) bs_cz(c) - sqrt(bs_r * bs_r - (y - c) * (y - c))]));
+module board2d() let (n = 220, Y = [for (i = [0 : n]) dm_c - dm_w + 2 * dm_w * i / n])
+    polygon(concat([for (y = Y) [y, bs_low(y)]],
+        [[dm_c + dm_w, dz_ceil(dm_c + dm_w) + dm_up], [dm_c, dz_ceil(dm_c) + dm_up], [dm_c - dm_w, dz_ceil(dm_c - dm_w) + dm_up]]));
 module dm_board() difference() {
     dm_front_cut() yz(dm_x - 0.3, dm_x + dm_e + 0.2) board2d();
     dm_room();
