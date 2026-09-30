@@ -267,8 +267,11 @@ module dm_room() intersection() {
 // the eave's tip, below the gable's own roof
 // out past the eave's tip (Rw + 3.5): stopped at the gable's face, it left the
 // cone's eave running across the gable's foot and hid the lancet
+// from the gable's back face: from 1 mm behind it, the cut left a 1 mm slot in
+// the cone whose edge only the gable's snow closed, and with the snow set back
+// the union had three edges on it
 module gable_cut() dmw() intersection() {
-    translate([dm_x0 - 1, dm_c - dm_w, 30]) cube([Rw + 6 - dm_x0 + 1, 2 * dm_w, 60]);
+    translate([dm_x0, dm_c - dm_w, 30]) cube([Rw + 6 - dm_x0, 2 * dm_w, 60]);
     dm_below(tv, Rw + 7);
 }
 module dm_walls() difference() {
