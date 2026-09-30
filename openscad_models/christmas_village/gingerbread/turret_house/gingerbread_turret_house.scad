@@ -164,7 +164,23 @@ module psweep() translate([PC[0], PC[1], 0]) rotate([0, 0, 172]) rotate_extrude(
 module below_ceil() sweep() R_below(RM);
 module main_room() sweep() R_room(RM);
 module turret_room() lean() translate([tx, ty, 0]) rotate_extrude($fn = FN) R_room(RC);
-module room() { main_room(); turret_room(); }
+// THE PARTITION. Where the turret's wall runs through the main room, the room
+// took it away up to the main ceiling, and the ceiling along the ring rises to
+// a round, flat-topped hump (55.5 mm): the wall's underside was an arch 8 mm
+// across with a level crown, and the slicer propped it from the floor. The
+// wall is kept below the ceiling now, down to a pointed doorway whose sides
+// fall 0.235 mm per degree of ring (52 deg on the outer face, 58 inside)
+// from 54.5 mm on the line to the house's centre to the house wall.
+pt_a = 54.5;
+pt_k = 0.235;
+module turret_partition() let (r0 = rti - 0.5, r1 = rt + 0.2, n = 180, top = 120,
+        P = [for (i = [0 : n]) let (th = -45 + i, zb = pt_a - pt_k * abs(th - 45))
+                 each [[r0 * cos(th), r0 * sin(th), zb], [r1 * cos(th), r1 * sin(th), zb],
+                       [r1 * cos(th), r1 * sin(th), top], [r0 * cos(th), r0 * sin(th), top]]])
+    lean() translate([tx, ty, 0]) polyhedron(P, concat(
+        [for (i = [0 : n - 1], j = [0 : 3]) [4 * i + (j + 1) % 4, 4 * (i + 1) + (j + 1) % 4, 4 * (i + 1) + j, 4 * i + j]],
+        [[3, 2, 1, 0], [4 * n, 4 * n + 1, 4 * n + 2, 4 * n + 3]]));
+module room() { difference() { main_room(); turret_partition(); } turret_room(); }
 // the porch's inside, open at the front through the arch; it stops short of
 // the house wall, where the door's frame stands, and clear of the columns
 module porch_room() difference() {
@@ -430,7 +446,9 @@ module base() {
         linear_extrude(plinth_h + 10) offset(delta = -2.4) base2d();
     }
 }
-module brand_mark() translate([0, -Dh - rp - 3.5, -0.5]) linear_extrude(1.3)
+// in the solid band between the room's opening and the porch's lobe: at the
+// lobe's foot (-Dh - rp - 3.5) the letters broke out through its curved edge
+module brand_mark() translate([0, -Dh - 7.5, -0.5]) linear_extrude(1.3)
     mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
 // ---- parts ----------------------------------------------------------------------------------------------

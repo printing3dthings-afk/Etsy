@@ -84,6 +84,11 @@ module srelief(R, s, z, U, du = 1.0) for (i = [0 : ceil(2 * U / du) - 1]) let (u
         children();
         translate([u - 0.15, -60, -10]) cube([du + 0.3, 150, 20]);
     }
+// ...and trimmed to the true curve at the relief's front, d out from the wall
+// line. Each strip's flat front stands 0.008 mm proud of its neighbour's where
+// they overlap: every joint left a step, and the wall check read each one as a
+// wall a hundredth of a millimetre thick.
+module sclip(R, d) intersection() { children(); linear_extrude(300) stadium(R + d); }
 
 // ---- relief (the cottage's) --------------------------------------------------------------
 module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) children();
@@ -197,14 +202,16 @@ module bracket(s) nplace(Rg, s) rotate([90, 0, 0]) linear_extrude(2.4, center = 
 tb_t = 0.8;                 // timbers stand this far off the plaster
 uf_w = 2.2;
 hd   = SH * (tb_t + 0.4);   // frames drawn this much deeper at head and foot (Technique 80.3)
-module upper_walls() sweep() polygon([[Ru - wall - 0.3, H1], [Ru, H1], [Ru, R_zc(RV, Ru)], [Ru - wall - 0.3, R_zc(RV, Ru - wall - 0.3)]]);
+// its top runs 0.6 up into the roof: drawn to the ceiling line, it met the
+// slab face to face and left slivers where the sweep's straights meet its ends
+module upper_walls() sweep() polygon([[Ru - wall - 0.3, H1], [Ru, H1], [Ru, R_zc(RV, Ru) + 0.6], [Ru - wall - 0.3, R_zc(RV, Ru - wall - 0.3) + 0.6]]);
 // the sill beam: a ring whose underside rises at 50 deg as it comes out
 module sill_beam() sweep() polygon([[Ru - 0.4, H1], [Ru + tb_t, H1 + SH * (tb_t + 0.4)], [Ru + tb_t, H1 + 2.4], [Ru - 0.4, H1 + 2.4]]);
 // POSTS and BRACES, placed round the outline clear of the windows
 POSTS = [sper(Ru) - 1.5, 15.5, 27, 50, 61, 84, 96, 120, 132, 157, 169, 190];
 BRACES = [[15.5, 27], [50, 61], [84, 96], [120, 132], [157, 169], [190, sper(Ru) - 1.5]];
-module posts() for (s = POSTS) splace(Ru, s, 0) relief_flat(-0.4, tb_t) translate([-1.2, H1]) square([2.4, zfu + 0.5 - H1]);
-module braces() for (b = BRACES) let (m = (b[0] + b[1]) / 2, h = (b[1] - b[0]) / 2)
+module posts() sclip(Ru, tb_t) for (s = POSTS) splace(Ru, s, 0) relief_flat(-0.4, tb_t) translate([-1.2, H1]) square([2.4, zfu + 0.5 - H1]);
+module braces() sclip(Ru, tb_t) for (b = BRACES) let (m = (b[0] + b[1]) / 2, h = (b[1] - b[0]) / 2)
     srelief(Ru, m, 0, h + 1.5) relief_flat(-0.4, tb_t) hull() {
         translate([-h + 1.3, H1 + 2.2]) square([1.8, 0.1], center = true);
         translate([h - 1.3, zfu - 1.5]) square([1.8, 0.1], center = true);
@@ -219,9 +226,11 @@ module lattice() {
     for (i = [-5 : 5], s = [-1, 1]) translate([i * 4.2, 0]) rotate(s * 38) translate([-0.5, -30]) square([1.0, 60]);
     translate([-0.9, -3]) square([1.8, 40]);
 }
-module uw_frames() for (w = UW) srelief(Ru, w[0], w[1], w[2] + uf_w + 0.6) {
-    relief_up(-0.4, tb_t) { offset(r = uf_w) translate([0, -hd]) polygon(rect_pts(w[2], w[3] + 2 * hd)); offset(r = 0.3) polygon(rect_pts(w[2], w[3])); }
-    relief_up(-0.4, 0.4) intersection() { offset(r = 0.6) polygon(rect_pts(w[2], w[3])); lattice(); }
+module uw_frames() {
+    sclip(Ru, tb_t) for (w = UW) srelief(Ru, w[0], w[1], w[2] + uf_w + 0.6)
+        relief_up(-0.4, tb_t) { offset(r = uf_w) translate([0, -hd]) polygon(rect_pts(w[2], w[3] + 2 * hd)); offset(r = 0.3) polygon(rect_pts(w[2], w[3])); }
+    sclip(Ru, 0.4) for (w = UW) srelief(Ru, w[0], w[1], w[2] + uf_w + 0.6)
+        relief_up(-0.4, 0.4) intersection() { offset(r = 0.6) polygon(rect_pts(w[2], w[3])); lattice(); }
 }
 module uw_openings() for (w = UW) splace(Ru, w[0], w[1]) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) polygon(rect_pts(w[2], w[3]));
 module uw_glass() intersection() {
@@ -235,7 +244,7 @@ module box2d(a) {
     for (i = [0 : 4]) let (x = -bw + 1.3 + i * (2 * bw - 2.6) / 4)
         translate([x, -0.4]) polygon([[-1.1, 0], [1.1, 0], [0, 1.9]]);
 }
-module window_box() let (w = UW[0]) splace(Ru, w[0], w[1]) relief_up(-0.4, tb_t + 1.2) box2d(w[2]);   // its foot 0.6 above the jetty
+module window_box() let (w = UW[0]) sclip(Ru, tb_t + 1.2) srelief(Ru, w[0], w[1], w[2] + uf_w + 1.4) relief_up(-0.4, tb_t + 1.2) box2d(w[2]);   // its foot 0.6 above the jetty
 
 // ---- the shop floor's windows and door ---------------------------------------------------------------
 function seg_pts(a, hgt, n = 16) =
@@ -249,19 +258,25 @@ sill = 3.3;
 SW = [[s_left(235, Rg), 14, 4.2, 10], [s_right(45, Rg), 14, 4.2, 10], [s_back(0, Rg), 14, 4.2, 10], [s_left(145, Rg), 14, 4.2, 10]];
 module sw_outline(w) polygon(seg_pts(w[2], w[3]));
 module sw_bars(w) { translate([-0.84, -3]) square([1.68, 40]); translate([-20, w[3] * 0.55]) square([40, 2.2]); }
-module sw_frames() for (w = SW) srelief(Rg, w[0], w[1], w[2] + fr_w + 1.2) {
-    relief_up(-0.4, fr_t) {
-        union() {
-            offset(r = fr_w) sw_outline(w);
-            translate([-w[2] - fr_w - 0.8, -sill]) square([2 * (w[2] + fr_w + 0.8), sill + 1]);
+module sw_frames() {
+    sclip(Rg, fr_t) for (w = SW) srelief(Rg, w[0], w[1], w[2] + fr_w + 1.2)
+        relief_up(-0.4, fr_t) {
+            union() {
+                offset(r = fr_w) sw_outline(w);
+                translate([-w[2] - fr_w - 0.8, -sill]) square([2 * (w[2] + fr_w + 0.8), sill + 1]);
+            }
+            offset(r = 0.3) sw_outline(w);
         }
-        offset(r = 0.3) sw_outline(w);
-    }
-    relief_up(-0.4, fr_t + 0.5) translate([0, seg_top(w[2], w[3]) - 1.2]) polygon([[-1.3, 0], [1.3, 0], [1.8, fr_w + 1.8], [-1.8, fr_w + 1.8]]);
-    relief_up(-0.4, bd) intersection() { offset(r = 0.6) sw_outline(w); sw_bars(w); }
+    sclip(Rg, fr_t + 0.5) for (w = SW) srelief(Rg, w[0], w[1], 2.4)
+        relief_up(-0.4, fr_t + 0.5) translate([0, seg_top(w[2], w[3]) - 1.2]) polygon([[-1.3, 0], [1.3, 0], [1.8, fr_w + 1.8], [-1.8, fr_w + 1.8]]);
+    sclip(Rg, bd) for (w = SW) srelief(Rg, w[0], w[1], w[2] + 1.2)
+        relief_up(-0.4, bd) intersection() { offset(r = 0.6) sw_outline(w); sw_bars(w); }
 }
 module sw_openings() for (w = SW) splace(Rg, w[0], w[1]) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) sw_outline(w);
-module sw_holes() for (w = SW) splace(Rg, w[0], w[1]) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) sw_outline(w);
+// The holes are laid round the wall in strips like the frames. Cut flat, their
+// back stood 0.46 mm proud of the curved face at the window's sides, and left
+// slivers of wall at the arch's springing hanging over the glass.
+module sw_holes() for (w = SW) srelief(Rg, w[0], w[1], w[2] + 0.6) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) sw_outline(w);
 module sw_glass() intersection() {
     for (w = SW) splace(Rg, w[0], w[1]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) sw_outline(w);
     linear_extrude(200) stadium(Rg - 0.2);
@@ -285,18 +300,18 @@ module door_leaf() intersection() {
     }
     rshell(Rg - wall + 0.15, Rg + 0.2);
 }
-module door_frame() srelief(Rg, s_d, plinth_h, dr_a + 2.4) relief_up(-0.4, fr_t) {
+module door_frame() sclip(Rg, fr_t) srelief(Rg, s_d, plinth_h, dr_a + 2.4) relief_up(-0.4, fr_t) {
     translate([-dr_a - 1.8, -0.5]) square([2 * dr_a + 3.6, dr_h + 0.6 + dr_f + 1.8 + 0.5 + SH * (fr_t + 0.4)]);
     translate([-dr_a + 0.3, -1]) square([2 * dr_a - 0.6, dr_h + 0.6 + dr_f + 0.7]);
 }
-module transom() srelief(Rg, s_d, plinth_h + dr_h, dr_a + 0.6) relief_up(-0.4, fr_t) translate([-dr_a, 0]) square([2 * dr_a, 0.8]);
+module transom() sclip(Rg, fr_t) srelief(Rg, s_d, plinth_h + dr_h, dr_a + 0.6) relief_up(-0.4, fr_t) translate([-dr_a, 0]) square([2 * dr_a, 0.8]);
 module fanlight() intersection() {
     splace(Rg, s_d, plinth_h + dr_h) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) translate([-dr_a - 0.6, 0]) square([2 * dr_a + 1.2, 0.6 + dr_f + 0.6]);
     linear_extrude(200) stadium(Rg - 0.2);
 }
 module door_opening() splace(Rg, s_d, plinth_h) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) door_outline();
-module door_hole() splace(Rg, s_d, plinth_h) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) door_outline();
-module wreath() srelief(Rg, s_d, plinth_h + 9.5, 3.8) relief_up(-0.4, bd + 0.6) difference() { circle(r = 3.0, $fn = 40); circle(r = 1.6, $fn = 32); }
+module door_hole() srelief(Rg, s_d, plinth_h, dr_a + 0.6) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) door_outline();
+module wreath() sclip(Rg, bd + 0.6) srelief(Rg, s_d, plinth_h + 9.5, 3.8) relief_up(-0.4, bd + 0.6) difference() { circle(r = 3.0, $fn = 40); circle(r = 1.6, $fn = 32); }
 // a curved step in front of the door
 module step() intersection() {
     translate([EC[1][0], EC[1][1], plinth_h - 0.5]) difference() { cylinder(r = Rg + 3.0, h = 1.9, $fn = FN); translate([0, 0, -1]) cylinder(r = Rg - 0.5, h = 4, $fn = FN); }
@@ -369,7 +384,7 @@ dm_c  = 0;
 dm_w  = 5.5;
 dm_in = dm_w - wall;
 dm_x  = 22;
-dm_x0 = 1;
+dm_x0 = 0.3;               // its ridge dives into the main roof at 0.93: at 1 it stopped 0.07 short
 dm_e  = 1;
 DMW   = [2.6, 79.5, 8];     // window: half-width, sill, height
 dm_fw = 2.0;
@@ -379,9 +394,17 @@ function dz_out(y)  = dz_ceil(y) + tv;
 module dmf(z) translate([dm_x, dm_c, z]) rotate([0, 0, 90]) rotate([90, 0, 0]) children();
 module dm_below(dz) yz(dm_x0 - 1, dm_x + dm_e + 1)
     polygon([[dm_c - 20, 60], [dm_c + 20, 60], [dm_c + 20, dz_ceil(dm_c + 20) + dz], [dm_c, dz_ceil(dm_c) + dz], [dm_c - 20, dz_ceil(dm_c - 20) + dz]]);
+// THE DORMER'S INSIDE is narrower and steeper than its roof. Pitched like the
+// roof, its ridge crossed the main room's ceiling in two groin lines rising
+// only 45.3 deg, and the slicer propped them from the floor. At 70 deg the
+// groins rise 51.7 deg; 2.9 wide it still clears the window (2.6), and the
+// slab over its ridge keeps 1.42 mm.
+dmr_in = 2.9;
+dmr_ze = 94.2;
+function dzr(y) = dmr_ze + (dmr_in - abs(y - dm_c)) * tan(70);
 module dm_room() intersection() {
-    translate([dm_x0 - 1, dm_c - dm_in, 60]) cube([dm_x - wall - dm_x0 + 1, 2 * dm_in, 60]);
-    dm_below(0);
+    translate([dm_x0 - 1, dm_c - dmr_in, 60]) cube([dm_x - wall - dm_x0 + 1, 2 * dmr_in, 60]);
+    yz(dm_x0 - 1, dm_x + dm_e + 1) polygon([[dm_c - dmr_in, 60], [dm_c + dmr_in, 60], [dm_c + dmr_in, dmr_ze], [dm_c, dzr(dm_c)], [dm_c - dmr_in, dmr_ze]]);
 }
 module dm_env() intersection() {
     translate([dm_x0 - 1, dm_c - dm_w, 60]) cube([dm_x - dm_x0 + 1, 2 * dm_w, 60]);
@@ -475,7 +498,9 @@ module base() {
         linear_extrude(plinth_h + 10) offset(delta = -2.4) base2d();
     }
 }
-module brand_mark() translate([0, -Ru - 3.4, -0.5]) linear_extrude(1.3)
+// centred in the band between the bow's opening (-26.3) and the base's edge
+// (-34.5): at -Ru - 3.4 its letters came within 0.8 mm of the edge
+module brand_mark() translate([0, -Ru - 2.4, -0.5]) linear_extrude(1.3)
     mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
 // ---- brick joints ------------------------------------------------------------------------------------------
