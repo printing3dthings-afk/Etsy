@@ -1,3 +1,4 @@
 logs/
 *.rendercache
 *_union.stl
+*_chk_*.stl
