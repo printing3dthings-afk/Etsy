@@ -445,22 +445,22 @@ module body_raw() {
     dmw() dm_walls();
     chimney();
     step();
-    wreath_bow();
-    garland_bows();
+    dmw() { wreath_bow(); garland_bows(); }
 }
 module roof_raw() {
     difference() { roof_slate(); room(); chimney_col(); gable_cut(); }
     difference() { slates(); room(); chimney_col(); gable_cut(); }
-    door_leaf();
     dmw() {
+        door_leaf();
         difference() { union() { dm_slab(); dm_slates(); } dm_room(); }
         dm_board();
         dm_finial();
     }
 }
+// the flat front's pieces are placed in the gable's frame, so they go through
+// dmw() like the gable: without it they stood in the right-hand wall
 module accent_raw() {
-    wreath();
-    garland();
+    dmw() { wreath(); garland(); }
     window_boxes();
 }
 module trim_raw() {
