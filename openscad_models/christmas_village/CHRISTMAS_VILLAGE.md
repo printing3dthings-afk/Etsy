@@ -61,6 +61,24 @@ round gingerbread drum under a chocolate dome**, icing piped round its rim,
 gumdrops round the eave and one on top. The Haunted Town stays
 square for now (see `../haunted_town/HAUNTED_TOWN.md`).
 
+**Round and square together (Scott, 2026-09-30, after seeing the round
+cottages: "I like those. I want to incorporate round and square together on
+some buildings. I want the Christmas village to look stunning. Do all
+different shapes and stories of the buildings. Keep what you have now then
+let's keep moving").** The round cottages, shop-house and turret house stay
+as built. From building #2 on, a building may join round and square masses: a
+square block with a round tower, a round drum with a square wing. The
+buildings also differ in height: one, two and three storeys, towers and
+steeples. Every building still gets the soft snow base and rounded edges, and
+no two in a village share a plan or a storey count where it can be avoided.
+
+Picked the same day, from four forms each: the **toy shop** is a two-storey
+square shop with a big bay toy window, and a three-storey round tower on its
+front corner under a tall slate cone, with the door in the tower. The **candy
+cane chapel** is a one-storey square gingerbread nave under a steep
+icing-edged gable, with a round tower at its front striped red and white in a
+spiral up the tower and its spire, the spire's tip curled like a cane.
+
 ## The two villages (agreed with Scott 2026-09-28: "I like them all")
 
 Six buildings each, one big identity feature per building, and no two in a
