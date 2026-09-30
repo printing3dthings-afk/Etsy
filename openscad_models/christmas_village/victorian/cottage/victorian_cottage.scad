@@ -342,7 +342,10 @@ function lancet_top(a, hgt, ang = 58) =
     let (R = 2 * a, t1 = 90 - ang) hgt + R * sin(t1) + (a - R + R * cos(t1)) * tan(ang);
 function arch_pts(a, hgt, n = 24) = concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = 180 * i / n) [a * cos(q), hgt + a * sin(q)]]);
 mull = 1.68;
-LW  = [2.4, 6];             // the lancet: half-width, straight height
+// the lancet: half-width, straight height. At [2.4, 6] its head rose into the
+// bargeboard's scallops, which (the roof part winning) hung inside the head in
+// front of the glass and drew a column of support from the snow
+LW  = [2.0, 5];
 lw_z = 36.5;                // its sill
 lf_w = 1.8;
 module lw_outline() polygon(lancet_pts(LW[0], LW[1]));
