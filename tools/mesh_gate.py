@@ -250,38 +250,86 @@ def _wall_spans(m, samples=64):
         # wrong the other way: corner clips came back as real 0.03 mm spans and
         # the sauce tray's p1 fell from 3.48 to 0.04. So the grazing filter
         # stays, applied to the span instead of the hit.
+        normals = m.face_normals[tri_idx]
         order = np.argsort(ray_idx, kind="stable")
-        loc, ray_idx, inc = loc[order], ray_idx[order], incidence[order]
+        loc, ray_idx, inc, normals = loc[order], ray_idx[order], incidence[order], normals[order]
         start = 0
         odd = []
+        pairs = []          # (span, entry point, entry normal, exit point, exit normal)
         for i in range(1, len(ray_idx) + 1):
             if i == len(ray_idx) or ray_idx[i] != ray_idx[start]:
                 o = np.argsort(loc[start:i, axis])
-                t, c = loc[start:i, axis][o], inc[start:i][o]
+                t, c, n = loc[start:i, axis][o], inc[start:i][o], normals[start:i][o]
                 # a crossing on a shared edge is reported once per triangle;
                 # keep one hit, as head-on as the best of them
                 new = np.concatenate([[True], np.diff(t) > 1e-6])
                 grp = np.cumsum(new) - 1
                 t = t[new]
-                c = np.array([c[grp == g].max() for g in range(len(t))])
+                best = [np.flatnonzero(grp == g)[np.argmax(c[grp == g])] for g in range(len(t))]
+                c, n = c[best], n[best]
                 if len(t) % 2 == 0:
                     for k in range(0, len(t), 2):
                         if c[k] > 0.5 and c[k + 1] > 0.5:
-                            spans.append(float(t[k + 1] - t[k]))
+                            pairs.append(_pair(origins[ray_idx[start]], axis, t[k], t[k + 1], n[k], n[k + 1]))
                 else:
-                    odd.append((ray_idx[start], t, c))
+                    odd.append((ray_idx[start], t, c, n))
                 start = i
         if odd:
-            mids, lens = [], []
-            for r, t, c in odd:
+            cand = []
+            for r, t, c, n in odd:
                 for k in range(len(t) - 1):
                     if c[k] > 0.5 and c[k + 1] > 0.5:
-                        p = origins[r].copy(); p[axis] = (t[k] + t[k + 1]) / 2
-                        mids.append(p); lens.append(t[k + 1] - t[k])
-            if mids:
-                inside = m.contains(np.array(mids))
-                spans.extend(float(s) for s, k in zip(lens, inside) if k)
+                        cand.append(_pair(origins[r], axis, t[k], t[k + 1], n[k], n[k + 1]))
+            if cand:
+                inside = m.contains(np.array([(a[1] + a[3]) / 2 for a in cand]))
+                pairs.extend(a for a, k in zip(cand, inside) if k)
+        spans.extend(_true_thickness(m, pairs))
     return np.array(spans)
+
+
+def _pair(origin, axis, t0, t1, n0, n1):
+    p0 = origin.copy(); p0[axis] = t0
+    p1 = origin.copy(); p1[axis] = t1
+    return (float(t1 - t0), p0, n0, p1, n1)
+
+
+def _true_thickness(m, pairs):
+    """A span's length, unless its two faces are not roughly opposed.
+
+    CORNER CLIPS ON TURNED FACES (2026-09-30). The incidence filter above keeps
+    a hit within 60 deg of head-on, which on a building of square boxes throws
+    out every corner clip, since one face of any corner lies along the ray. On
+    the round shop-house every frame, post and sill stands at some angle to the
+    axes, so a ray clipping one near its corner meets two faces each 45 deg off
+    head-on, keeps both, and records a chord that goes to zero at the apex: 226
+    of the 279 spans it called thinner than 1.2 mm were such clips of 90 deg
+    corners on frames 1.2 mm proud and 2.6 mm wide.
+
+    Dropping them would let a genuinely thin feature through if it too is
+    turned: a 0.5 mm post at 45 deg is hit ONLY across adjacent faces. So a span
+    whose faces are more than 60 deg from opposed is re-measured instead, along
+    each face's inward normal, and the thinner of the two is what it reports.
+    That is the thickness of the material behind the face, which for a clipped
+    corner of a big frame is its width and for the thin post is 0.5 mm. A thin
+    wall or a knife edge sharper than 60 deg keeps its chord."""
+    out, redo = [], []
+    for span, p0, n0, p1, n1 in pairs:
+        if np.dot(n0, n1) < -0.5:
+            out.append(span)
+        else:
+            redo.append((p0, n0, p1, n1))
+    if redo:
+        eps = 1e-4
+        starts = np.array([p - eps * n for p0, n0, p1, n1 in redo for p, n in ((p0, n0), (p1, n1))])
+        dirs = np.array([-n for p0, n0, p1, n1 in redo for n in (n0, n1)])
+        loc, ri, _ = m.ray.intersects_location(starts, dirs, multiple_hits=False)
+        depth = np.full(len(starts), np.inf)
+        depth[ri] = np.linalg.norm(loc - starts[ri], axis=1) + eps
+        for k in range(len(redo)):
+            d = min(depth[2 * k], depth[2 * k + 1])
+            if np.isfinite(d):
+                out.append(float(d))
+    return out
 
 
 def gate_cutter(cutter_path, target_path, expect_multi_body=None):

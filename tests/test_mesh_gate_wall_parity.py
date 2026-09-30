@@ -86,6 +86,34 @@ def test_corner_clips_are_still_not_walls():
     check(r.get("p1", 0) > 3.0, f"sauce_tray p1 {r.get('p1')}, expected ~3.48 -- grazes counted as walls")
 
 
+def _turned_bar_on_a_block(w, d, h, angle):
+    """A w x d bar, h tall, turned `angle` deg about z, standing on a 30 mm block."""
+    block = trimesh.creation.box(extents=[30, 30, 6])
+    bar = trimesh.creation.box(extents=[w, d, h])
+    bar.apply_transform(trimesh.transformations.rotation_matrix(np.radians(angle), [0, 0, 1]))
+    bar.apply_translation([0, 0, 3 + h / 2 - 0.01])
+    return trimesh.boolean.union([block, bar], engine="manifold")
+
+
+def test_a_turned_frames_corners_are_not_walls():
+    # The round shop-house (2026-09-30): frames 2.6 mm wide and 1.2 mm proud
+    # stand at every angle to the axes, and rays clipping their 90 deg corners
+    # read 0.0-0.3 mm. None of the bar's real material is thinner than 2.6.
+    sp = mesh_gate._wall_spans(_turned_bar_on_a_block(2.6, 8, 20, 35), samples=96)
+    check(sp.size > 0, "no spans measured on the turned bar")
+    check(sp.min() > 2.0, f"a 2.6 mm bar turned 35 deg measured {sp.min():.3f} mm -- corner clips counted as walls")
+
+
+def test_a_thin_turned_post_is_still_caught():
+    # ...and the fix must not hide a genuinely thin feature that happens to be
+    # turned: a 0.5 mm post at 45 deg is only ever hit across adjacent faces.
+    sp = mesh_gate._wall_spans(_turned_bar_on_a_block(0.5, 0.5, 20, 45), samples=128)
+    thin = sp[sp < 1.0]
+    check(len(thin) > 0, "a 0.5 mm post turned 45 deg was never measured below 1 mm")
+    if len(thin):
+        check(abs(np.median(thin) - 0.5) < 0.05, f"the 0.5 mm post measured {np.median(thin):.3f} mm")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
@@ -99,8 +127,8 @@ def run() -> None:
             print(" -", f)
         sys.exit(1)
     print("MESH GATE WALL PARITY TESTS OK — an air gap behind a steep face is never "
-          "counted as a wall, corner clips still are not, and a plain shell still "
-          "measures its real thickness.")
+          "counted as a wall, corner clips (square or turned) still are not, a thin "
+          "turned post still is, and a plain shell still measures its real thickness.")
 
 
 if __name__ == "__main__":
