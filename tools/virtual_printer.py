@@ -149,22 +149,40 @@ def analyse(gcode_path, model_height=None):
     filament_mm = 0.0
     cur = None
     x = y = z = e = 0.0
+    # 2026-09-30: filament was the sum of every rise in E, which ignored the
+    # G92 E0 resets and counted each unretract again: 117 g for a model the
+    # slicer itself put at 58.9 cm3 (73 g). E now only counts past its high
+    # mark since the last reset, and the slicer's own total wins when present.
+    e_high = 0.0
+    slicer_cm3 = None
     for ln in open(gcode_path, errors="replace"):
         if ln.startswith(";TYPE:"):
             cur = ln[6:].strip(); continue
         if ln.startswith(";LAYER_CHANGE"):
             layers += 1; continue
+        if ln.startswith("; filament used [cm3]"):
+            slicer_cm3 = float(ln.split("=")[1]); continue
+        if ln.startswith("G92"):
+            m = re.search(r"E([-\d.]+)", ln)
+            if m:
+                # a reset usually follows a retraction: carry it, so the
+                # unretract after the reset is not counted as new filament
+                owed = e_high - e
+                e = float(m.group(1)); e_high = e + owed
+            continue
         if not ln.startswith(("G1", "G0")):
             continue
         d = dict(re.findall(r"([XYZEF])([-\d.]+)", ln))
         nz = float(d.get("Z", z))
         ne = float(d["E"]) if "E" in d else e
         if "E" in d and ne > e:
-            filament_mm += ne - e
+            if ne > e_high:
+                filament_mm += ne - max(e, e_high)
+                e_high = ne
             types[cur or "?"] += 1
             max_z = max(max_z, nz)
         x, y, z, e = float(d.get("X", x)), float(d.get("Y", y)), nz, ne
-    vol_mm3 = filament_mm * 3.14159 * (1.75 / 2) ** 2
+    vol_mm3 = slicer_cm3 * 1000 if slicer_cm3 is not None else filament_mm * 3.14159 * (1.75 / 2) ** 2
     out = {
         "layers": layers, "printed_height_mm": round(max_z, 2),
         "filament_mm": round(filament_mm, 1),
