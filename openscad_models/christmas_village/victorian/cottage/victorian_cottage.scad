@@ -242,8 +242,11 @@ dm_ze = H;                  // its eave: the cone's
 function dz_ceil(y) = dm_ze + (dm_in - abs(y - dm_c)) * tp;
 function dz_out(y)  = dz_ceil(y) + tv;
 module dmf(z) translate([dm_x, dm_c, z]) rotate([0, 0, 90]) rotate([90, 0, 0]) children();
+// 12 either side, past the gable's 9: at the shop-house's 20, this low gable's
+// slopes fell below the outline's own floor at 30, it crossed itself, and CGAL
+// dropped everything built from it as "not closed"
 module dm_below(dz) yz(dm_x0 - 1, dm_x + dm_e + 1)
-    polygon([[dm_c - 20, 30], [dm_c + 20, 30], [dm_c + 20, dz_ceil(dm_c + 20) + dz], [dm_c, dz_ceil(dm_c) + dz], [dm_c - 20, dz_ceil(dm_c - 20) + dz]]);
+    polygon([[dm_c - 12, 30], [dm_c + 12, 30], [dm_c + 12, dz_ceil(dm_c + 12) + dz], [dm_c, dz_ceil(dm_c) + dz], [dm_c - 12, dz_ceil(dm_c - 12) + dz]]);
 // its inside, narrower and steeper than its roof (the shop-house's dormer,
 // 51.7 deg groins): at 70 deg the groins with the cone's 58 deg ceiling rise
 // 54 deg; 3.2 wide it clears the lancet (2.4), and the slab over its ridge

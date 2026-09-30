@@ -208,14 +208,14 @@ DR = [for (i = [0 : 29]) let (s = d_s + i * (sper(Rw) - 2 * d_s) / 29) [s, 1.8 +
 module drips() sclip(Rw, fr_t) for (d = DR) srelief(Rw, d[0], z_flare(Rw) + 1, 2.2) relief_up(-0.4, fr_t) drip2d(d[1], d[2]);
 
 // ---- gumdrops: round the dome and one on top ----------------------------------------------------------
-// a dome on a cone carried down into the chocolate, its foot 5.5 under the
+// a dome on a cone carried down into the chocolate, its foot 4 under the
 // surface so its rim stays buried on the downhill side
-gd_v = 17;
+gd_v = 12;                  // up where the dome is 29 deg: at 17 (41 deg) they stood up as pink bullets
 GD = concat([for (k = [0 : 7]) let (a = 22.5 + 45 * k) [gd_v * cos(a), gd_v * sin(a)]], [[0, 0]]);
 module gumdrops() difference() {
     for (p = GD) let (z = z_dome(norm(p))) hull() {
-        translate([p[0], p[1], z + 2.2]) sphere(r = 2.6, $fn = 32);
-        translate([p[0], p[1], z - 5.5]) cylinder(r = 3.8, h = 0.01, $fn = 32);
+        translate([p[0], p[1], z + 1.2]) sphere(r = 2.8, $fn = 32);
+        translate([p[0], p[1], z - 4.0]) cylinder(r = 3.6, h = 0.01, $fn = 32);
     }
     below_ceil();
 }
