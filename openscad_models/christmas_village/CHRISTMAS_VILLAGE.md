@@ -10,8 +10,8 @@ with the 5 different styles").
 |---|---|
 | `victorian/cottage/` | **Victorian cottage, printable.** `victorian_cottage.3mf`, the `.scad`, part `.stl`s, `build.sh` (exports the parts; `./build.sh chk` renders the six overlap checks), printing notes, `images/` |
 | `gingerbread/cottage/` | **Gingerbread cottage, printable.** Same layout as the Victorian |
-| `victorian/shop_house/` | **Victorian shop-house, printable.** The "more shape" Victorian (below): jettied timber-framed upper storey, bay window, dormer, tall chimney. Same layout |
-| `gingerbread/turret_house/` | **Gingerbread turret house, in progress.** The "more shape" Gingerbread (below): roofs that swoop out into icing at three heights, a leaning round turret with a bell cone and candy-cane spire, a porch on peppermint-stick columns |
+| `victorian/shop_house/` | **Victorian shop-house, being reworked round.** The "more shape" Victorian (below), redrawn on a stadium plan: round brick shop floor with a bow window, jettied timber upper storey, round slate roof with a dormer, tall chimney. The square version passed every check and is archived in `data/trash/` and at commit 16df111 |
+| `gingerbread/turret_house/` | **Gingerbread turret house, being reworked round.** The "more shape" Gingerbread (below), on a stadium plan: roofs that swoop out into icing at three heights, a leaning round turret with a bell cone and candy-cane spire, a porch on peppermint-stick columns |
 | `references/` | Scott's reference photos for "more shape", and what they teach |
 | `concepts/` | the style study: `christmas_cottage_styles.scad` (one cottage, five styles), `render_styles.py` (exports every piece and renders each style in its colours), `meshes/` (the exported pieces), `images/` (front, three-quarter and top render per style, plus `styles_lineup.png`) |
 
@@ -37,6 +37,15 @@ heights. Scott picked, from four shapes each:
 
 The first cottages stay in `victorian/cottage/` and `gingerbread/cottage/`
 as built and checked; the new ones get their own folders.
+
+**Then: "Make them not do squared if possible"** (Scott, 2026-09-30). Asked
+what should stop being square, he picked all three: the buildings' boxy
+shape, the sharp edges, and the base. Both buildings were redrawn with no
+square corners: stadium (two half-circles joined by straights) and round
+plans, roofs swept round the whole plan instead of gabled boxes, and soft
+blob bases with rounded top edges in place of rectangular slabs. Windows,
+doors and timbers follow the curved walls in short tangent strips, so a
+raised frame hugs the curve instead of standing off it.
 
 ## The two villages (agreed with Scott 2026-09-28: "I like them all")
 
