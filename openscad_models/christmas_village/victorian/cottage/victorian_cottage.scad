@@ -1,87 +1,70 @@
-// Victorian Cottage -- building #1 of the Dickens Victorian Christmas village
-// (openscad_models/christmas_village/CHRISTMAS_VILLAGE.md). The cottage from
-// the style study, rebuilt to print: brick walls with white quoins, a steep
-// slate gable under snow, a pierced white bargeboard with a finial on both
-// gables, segmental-arched sash windows with keystones, gothic lancets in the
-// gables, a round-arched black door with a wreath and a garland, window boxes,
-// icicles under the eaves, a chimney with two pots, on a snow base.
+// Victorian Cottage -- building #1 of the Dickens Victorian village, redrawn
+// round (Scott, 2026-09-30: "Christmas village keeps a rounder shape ... Yes
+// redo the cottages round too", and picked this layout from four). The square
+// cottage, gated and finished, is in the recycle bin (data/trash,
+// 20260930-002) and at commit a8eea51.
+//
+// A round brick drum under a cone of slate. Across its front the drum is cut
+// flat, 16 mm wide, and that flat face rises into a gable with a scalloped
+// bargeboard and a finial: the door, its wreath and the garland are on it, and
+// a lancet window in the gable. Segmental sash windows with keystones round
+// the drum, evergreen boxes under the two at the front, icicles under the
+// eave, snow on the crown, a chimney at the back. On a soft blob of snow.
 //
 // A hollow lantern lit by a battery LED tealight: open base, every window
-// glazed with a 1.48 mm pane that its bars stand on (the chapel's first print,
-// 2026-09-27: free-standing bars snap).
+// glazed, its bars standing on the pane.
 //
-// The machinery -- V-course walls, sheared reliefs, the eave flare, kneelers,
-// the coping over the gables, frames and panes -- is the Haunted Town chapel's
-// (haunted_town/chapel/haunted_chapel.scad), proven on Scott's printer, and
-// its WHY comments are there. What is new here is commented here.
+// The machinery is the round shop-house's (victorian/shop_house): the same
+// roof profile, relief, strip placement round the wall and the fixes recorded
+// there, which apply here unchanged.
 //
-// COLOUR PARTS, ONE PRINT (victorian_cottage.3mf):
-//   body    brick walls, chimney and pots, the kneelers, the bows
-//   roof    slate slab and courses, the front door
-//   trim    snow base and drifts, quoins, bargeboards and finials, window and
-//           door frames, sills, keystones, panes and bars, the eave soffit and
-//           icicles, the snow on the roof
+// COLOUR PARTS, ONE PRINT (victorian_cottage.3mf), priority
+// roof > accent > trim > body:
+//   body    brick: the drum, the gable, the chimney, the wreath's and the
+//           garland's red bows, the step
+//   roof    slate: the roof and the gable's, the bargeboard and finial, the door
+//   trim    white: snow base, the eave's soffit, snow on the roofs, icicles,
+//           every pane, the window and door frames, keystones and bars
 //   accent  evergreen: the wreath, the garland, the window boxes
-// Every part is built DISJOINT from the others. The part="chk_*" renders are
-// each pairwise intersection and must come out empty.
-//
-// TEALIGHT. 60.6 x 54.6 mm clear inside from the table to the 52 mm eave; the
-// 58 deg ceiling is 60 mm up at the edge of a 46 mm circle round the centre.
 
 include <BOSL2/std.scad>
-include <../../../lattice_lib.scad>   // rrect_pts; lives in openscad_models/
 
 $fa = 4;  $fs = 0.4;
 part = "all";
+FN = 128;
 
-// ---- walls ---------------------------------------------------------------------
-W        = 64;              // along X, the front gable's width
-D        = 58;              // along Y, front (-Y) to back
-wall     = 1.68;            // 4 x 0.42
-corner_r = 1;
-plinth_h = 8;               // the snow base; the walls stand on it
-Wh = W/2;  Dh = D/2;
-SH       = 1.2;             // relief shear (see relief_up)
+// ---- the plan: a circle, cut flat across the front --------------------------------------
+Rw       = 27;              // the brick's face (50.6 clear inside)
+wall     = 1.68;
+plinth_h = 8;
+SH       = 1.2;
+fl_ang   = 52;
+fw       = 8;               // the flat front's half-width
+yf       = sqrt(Rw * Rw - fw * fw);     // its face, 25.79 in front of the centre
+L0       = 0;               // the shop-house's stadium, with no straights
+EC       = [[0, 0], [0, 0]];
 
-// ---- brick -----------------------------------------------------------------------
-// The post office's brick: V courses ramping out at 58 deg, flat, chamfered
-// back in at 45; stretcher bond.
-bd    = 0.6;                // brick face, proud of plan(0)
-bp    = 2.6;                // course height
-br    = bd * tan(58);
-bj    = 0.6;                // joint width
-bl    = 7;                  // brick length, joint to joint
-// The first groove sits 0.4 above the snow: exactly on the base's top it left
-// a zero-thickness sheet of brick along the front wall where the two met.
-function zc(k) = plinth_h + 0.4 + k * bp;
-function nc(zt) = ceil((zt - plinth_h - 0.4) / bp);
+module sweep() rotate_extrude($fn = FN) children();
+module stadium(r) circle(r = r, $fn = FN);
+module xz(y0, y1) translate([0, y1, 0]) rotate([90, 0, 0]) linear_extrude(y1 - y0) children();
+module yz(x0, x1) translate([x0, 0, 0]) rotate([90, 0, 90]) linear_extrude(x1 - x0) children();
+// the half-space behind the flat front, pulled in by d
+module behind(d = 0) translate([-100, -yf + d, -10]) cube([200, 200, 300]);
 
-// ---- roof --------------------------------------------------------------------------
-// A 58 deg gable: the chapel's roof at the post office's steepest safe angle.
-// Its inside is the lantern's ceiling.
-H     = 52;
-r_ang = 58;
-tp    = tan(r_ang);
-x_in  = Wh - wall;
-tr    = 2.52;
-tv    = tr / cos(r_ang);
-e     = 2;
-xe    = Wh + bd + e;
-function z_ceil(x) = H + (x_in - abs(x)) * tp;
-function z_out(x)  = z_ceil(x) + tv;
-y_r   = Dh - wall;
-cp_lo = -0.2;  cp_hi = 2.6;
+// ALONG THE OUTLINE (the shop-house's, with L0 = 0): s is the distance round
+// the circle of radius R from the front, anticlockwise seen from above.
+function sper(R) = 2 * L0 + 2 * PI * R;
+function spos(R, s) = let (P = sper(R), t = s - floor(s / P) * P, a = -90 + t / R * 180 / PI) [R * cos(a), R * sin(a), a];
+function s_at(a, R) = let (t = (a + 90) / 180 * PI * R) t - floor(t / sper(R)) * sper(R);
+module splace(R, s, z) let (p = spos(R, s)) translate([p[0], p[1], z]) rotate([0, 0, p[2] + 90]) rotate([90, 0, 0]) children();
+module srelief(R, s, z, U, du = 1.0) for (i = [0 : ceil(2 * U / du) - 1]) let (u = -U + i * du, uc = u + du / 2)
+    splace(R, s + uc, z) translate([-uc, 0, 0]) intersection() {
+        children();
+        translate([u - 0.15, -60, -10]) cube([du + 0.3, 150, 20]);
+    }
+module sclip(R, d) intersection() { children(); linear_extrude(300) stadium(R + d); }
 
-// ---- placement ---------------------------------------------------------------------
-//   face 0 = back (+Y), 1 = front (-Y), 2 = right (+X), 3 = left (-X)
-module nf(face, u, z) {
-    r = [180, 0, 90, -90][face];
-    p = face == 0 ? [u, Dh, z] : face == 1 ? [u, -Dh, z]
-      : face == 2 ? [Wh, u, z] : [-Wh, u, z];
-    translate(p) rotate([0, 0, r]) rotate([90, 0, 0]) children();
-}
-function loc(f, u) = (f == 0 || f == 3) ? -u : u;
-
+// ---- relief (the cottage's) --------------------------------------------------------------
 module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) children();
 module relief_hole(d0, a, b, sh = SH) {
     translate([0, 0, a]) linear_extrude(b - a) children();
@@ -98,112 +81,249 @@ module relief_up(d0, d1, sh = SH) {
     }
 }
 
-module xz(y0, y1) translate([0, y1, 0]) rotate([90, 0, 0]) linear_extrude(y1 - y0) children();
+// ---- the roof: one profile (the shop-house's) --------------------------------------------------
+function R_zc(R, v) = R[0] + (R[1] - abs(v)) * R[2];
+function R_zs(R, v) = R_zc(R, v) + R[3];
+function R_kc(R) = (R[2] - tan(R[6])) / (2 * (R[5] - R[4]));
+function R_top(R, v) = abs(v) <= R[4] ? R_zs(R, v)
+    : let (u = abs(v) - R[4]) R_zs(R, R[4]) - (R[2] * u - R_kc(R) * u * u);
+function R_tipb(R) = R_top(R, R[5]) - 1.2;
+function R_fl(R, v) = R_tipb(R) - (R[5] - abs(v)) * tan(fl_ang);
+sb = 1.8;
+function R_curve(R, v0, v1, n) = [for (i = [0 : n]) let (v = v0 + (v1 - v0) * i / n) [v, R_top(R, v)]];
+module R_full(R, kv0) polygon(concat([[0, R_zc(R, 0)], [kv0, R_zc(R, kv0)], [kv0, R_fl(R, kv0)], [R[5], R_tipb(R)]],
+    R_curve(R, R[5], 0, 60)));
+module R_choc(R, kv0) polygon([[0, -10], [kv0, -10], [kv0, R_fl(R, kv0) + sb], [R[7], R_fl(R, R[7]) + sb], [R[7], 300], [0, 300]]);
+module R_curl(R, kv0) polygon(concat(R_curve(R, kv0, R[5], 24), [[R[5], R_tipb(R)], [kv0, R_fl(R, kv0)]]));
+module R_below(R) polygon([[0, -5], [R[1] + 20, -5], [R[1] + 20, R_zc(R, R[1] + 20)], [0, R_zc(R, 0)]]);
 
-// ---- brick walls ---------------------------------------------------------------------
-function rpts(w, d, g, z) = [for (p = rrect_pts(w + 2*g, d + 2*g, corner_r + g, 5)) [p[0], p[1], z]];
-module brick_skin(ztop) {
-    n = nc(ztop);
-    skin(concat(
-        [rpts(W, D, 0, plinth_h - 0.5)],
-        [for (k = [0 : n - 1], j = [0 : 2])
-            let (z0 = zc(k), z1 = zc(k + 1), z = [z0, z0 + br, z1 - bd][j], g = [0, bd, bd][j])
-            if (z < ztop + 1) rpts(W, D, g, z)],
-        [rpts(W, D, 0, ztop + 2)]), slices = 0);
-}
+H   = 44;                   // the cone's eave line, at the wall's inside
+tp  = tan(58);              // the square cottage's pitch
+tv  = 2.52 / cos(58);
+RV  = [H, Rw - wall, tp, tv, Rw - 3, Rw + 3.5, 35, Rw + 3.5];
+kv0 = Rw - 0.8;
+zfu = R_fl(RV, Rw);         // where the soffit meets the brick
+function zs(v) = R_zs(RV, v);
 
-// QUOINS. White corner stones, two courses tall, alternating long and short
-// up each corner, and interlocking: where the front shows a long stone the
-// side shows a short one. They are the brick skin itself, recoloured: each is
-// the skin inside a box cut exactly on course lines, so a quoin's edges are
-// the course grooves and it needs no underside of its own.
-q_long = 6.2;  q_short = 3.6;
-// Each quoin's top and bottom cut 0.2 up the course's ramp, not on the
-// groove line: there the box's face ran through the skin's own ring of
-// vertices and left zero-area faces round every corner.
-q_off  = 0.5;
-nq     = 6;                 // pairs of courses: up to zc(12) = 39.2
-function q_len(j, gable) = (j % 2 == 0) == gable ? q_long : q_short;
-module quoin_boxes() {
-    for (j = [0 : nq - 1], sx = [-1, 1], sy = [-1, 1]) let (z0 = zc(2 * j), z1 = zc(2 * j + 2)) {
-        // on the gable faces (front, back)
-        translate([sx > 0 ? Wh - q_len(j, true) : -Wh - 3, sy > 0 ? Dh - 0.5 : -Dh - 3, z0 + q_off])
-            cube([q_len(j, true) + 3, 3.5, z1 - z0]);
-        // on the side faces
-        translate([sx > 0 ? Wh - 0.5 : -Wh - 3, sy > 0 ? Dh - q_len(j, false) : -Dh - 3, z0 + q_off])
-            cube([3.5, q_len(j, false) + 3, z1 - z0]);
-    }
-}
-module quoins() intersection() { brick_skin(zc(2 * nq) + 2); quoin_boxes(); }
+// ---- rooms -------------------------------------------------------------------------------------
+module room2d() polygon([[0, -2], [Rw - wall, -2], [Rw - wall, H], [0, R_zc(RV, 0)]]);
+module main_room() intersection() { sweep() room2d(); behind(wall); }
+module below_ceil() sweep() R_below(RV);
 
-// Vertical joints, stretcher bond, a whole course tall and floored 0.05
-// behind plan(0) (the post office's measured rule). None within the quoins'
-// reach of a corner.
-function clear_of(u, z0, z1, boxes) =
-    len([for (b = boxes) if (u + bj/2 > b[0] && u - bj/2 < b[1] && z1 > b[2] && z0 < b[3]) 1]) == 0;
-module wall_joints(f, ztop, boxes) {
-    L = (f < 2 ? Wh : Dh) - q_long - 1;
-    nf(f, 0, 0)
-        for (k = [1 : nc(ztop) - 1]) let (z0 = zc(k), z1 = zc(k + 1), s = (k % 2) * bl / 2)
-            // and none reaching up under a bargeboard, whose foot would
-            // bridge the slot
-            for (u = [-L + s : bl : L]) if (clear_of(u, z0, z1, boxes) && (f >= 2 || z1 < z_out(abs(u) + 1) - bb_h - 1.5))
-                translate([u - bj/2, z0, -0.05]) cube([bj, z1 - z0, 2.1]);
+// ---- the brick -----------------------------------------------------------------------------------
+bd = 0.6;  bp = 2.6;  br = bd * tan(58);  bj = 0.6;  bl = 7;
+function zc(k) = plinth_h + 0.4 + k * bp;
+z_wt = R_zc(RV, Rw) + 0.6;  // the wall's top at its face, 0.6 up into the roof
+nb = ceil((z_wt + 30 - plinth_h - 0.4) / bp);
+// the wall's section: each course bulges bd out of the face, under a 58 deg
+// chamfer and over a 45 deg one; ztop caps it
+function brick_prof(ztop) = concat([[Rw - wall - 0.3, plinth_h - 0.5], [Rw, plinth_h - 0.5]],
+    [for (k = [0 : nb - 1], j = [0 : 2]) let (z0 = zc(k), z1 = zc(k + 1), z = [z0, z0 + br, z1 - bd][j], g = [0, bd, bd][j])
+        if (z < ztop - 0.5) [Rw + g, z]],
+    [[Rw, ztop], [Rw - wall - 0.3, ztop]]);
+// the drum, its top 0.6 up into the roof, stopped at the flat front
+module drum() intersection() {
+    sweep() polygon(concat([for (p = brick_prof(z_wt)) if (p[1] < z_wt - 0.01) p],
+                           [[Rw, z_wt], [Rw - wall - 0.3, R_zc(RV, Rw - wall - 0.3) + 0.6]]));
+    behind();
 }
-
-// ---- nave regions (the chapel's) --------------------------------------------------------
-module below_ceil() xz(-60, 60) polygon([[-40, -5], [40, -5], [40, z_ceil(40)], [0, z_ceil(0)], [-40, z_ceil(-40)]]);
-module gable_keep() {
-    for (s = [-1, 1]) mirror([0, s < 0 ? 1 : 0, 0])
-        xz(Dh - wall, Dh + 5) polygon([[-xe, -5], [xe, -5], [xe, z_out(xe) + 1], [0, z_out(0) + 1], [-xe, z_out(xe) + 1]]);
-}
-fl_ang = 52;
-xf  = xe - 0.08;
-zf0 = z_ceil(xf) - (xf - Wh) * tan(fl_ang);
-fl_xe = z_ceil(xf) + (xe - xf) * tan(fl_ang);
-module kneelers() {
-    for (s = [-1, 1], m = [0, 1]) mirror([0, s < 0 ? 1 : 0, 0]) mirror([m, 0, 0])
-        xz(Dh - wall, Dh - 0.05) polygon([[Wh - 0.3, z_ceil(Wh - 0.3)], [xf, z_ceil(xf)], [xe, fl_xe],
-                                        [xe, z_out(xe) + 1], [Wh - 0.3, z_out(Wh - 0.3) + 1]]);
-}
-// The eave flare carries the eaves, as on the chapel. Here it is WHITE: it
-// reads as the snow-covered soffit, and the icicles hang from its foot.
-// It runs 0.2 past the kneelers' outer faces: ending on the same plane as
-// the (brick) kneeler, the two faces differed by a rounding error and left a
-// sliver along the eave; stopped short of it, the kneeler's corner hung over
-// the eave with nothing under it and drew support from the table.
-module eave_flare() {
-    for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh - 0.15, Dh + 0.15)
-        // topped 0.3 above the ceiling line, into the slab and the kneelers,
-        // which it cuts or which cut it: drawn on the kneelers' own bottom
-        // line, the two planes differed by a rounding error and left a sheet
-        // along each eave
-        polygon([[Wh - 1, zf0 - tan(fl_ang)], [xf, z_ceil(xf)], [xf, z_ceil(xf) + 0.3], [Wh - 1, z_ceil(Wh - 1) + 0.3]]);
-}
-module walls_solid() {
-    intersection() {
-        brick_skin(z_out(0) + cp_hi + 1);
-        union() { below_ceil(); gable_keep(); }
-    }
-    kneelers();
-}
-module room() {
-    intersection() {
-        translate([-x_in, -y_r, -2]) cube([2 * x_in, 2 * y_r, 200]);
-        below_ceil();
-    }
+// the flat front: the same courses on a plane, run up into the gable
+module front_wall() intersection() {
+    yz(-fw - 1, fw + 1) translate([Rw - yf, 0]) mirror([1, 0]) polygon(brick_prof(80));
+    translate([0, 0, -1]) cylinder(r = Rw + bd, h = 100, $fn = FN);
+    union() { translate([0, 0, 0.6]) below_ceil(); dmw() dm_below(0.4); }
 }
 
-// ---- openings ------------------------------------------------------------------------------
-// SEGMENTAL ARCH: straight sides under a shallow arc rising 0.35 of the half
-// width. Its flat crown is safe only because nothing hangs from it: the pane
-// fills the opening behind, and the frame's inner edge is sheared like every
-// relief here.
+// ---- windows round the drum --------------------------------------------------------------------
 function seg_pts(a, hgt, n = 16) =
     let (s = 0.35 * a, R = (a * a + s * s) / (2 * s), zc0 = hgt + s - R, t = asin(a / R))
     concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = t - 2 * t * i / n) [R * sin(q), zc0 + R * cos(q)]]);
 function seg_top(a, hgt) = hgt + 0.35 * a;
-// the chapel's lancet
+function rect_pts(a, hgt) = [[-a, 0], [a, 0], [a, hgt], [-a, hgt]];
+fr_w = 2.6;
+fr_t = bd + 0.6;
+sill = 3.3;
+// [s, z, a, h]: two at the front either side of the flat, two at the back
+// either side of the chimney
+SW = [[s_at(-55, Rw), 16, 4.6, 12], [s_at(235, Rw), 16, 4.6, 12], [s_at(40, Rw), 16, 4.6, 12], [s_at(140, Rw), 16, 4.6, 12]];
+module sw_outline(w) polygon(seg_pts(w[2], w[3]));
+module sw_bars(w) { translate([-0.84, -3]) square([1.68, 40]); translate([-20, w[3] * 0.55]) square([40, 2.2]); }
+module sw_frames() {
+    sclip(Rw, fr_t) for (w = SW) srelief(Rw, w[0], w[1], w[2] + fr_w + 1.2)
+        relief_up(-0.4, fr_t) {
+            union() {
+                offset(r = fr_w) sw_outline(w);
+                translate([-w[2] - fr_w - 0.8, -sill]) square([2 * (w[2] + fr_w + 0.8), sill + 1]);
+            }
+            offset(r = 0.3) sw_outline(w);
+        }
+    sclip(Rw, fr_t + 0.5) for (w = SW) srelief(Rw, w[0], w[1], 2.4)
+        relief_up(-0.4, fr_t + 0.5) translate([0, seg_top(w[2], w[3]) - 1.2]) polygon([[-1.3, 0], [1.3, 0], [1.8, fr_w + 1.8], [-1.8, fr_w + 1.8]]);
+    sclip(Rw, bd) for (w = SW) srelief(Rw, w[0], w[1], w[2] + 1.2)
+        relief_up(-0.4, bd) intersection() { offset(r = 0.6) sw_outline(w); sw_bars(w); }
+}
+module sw_openings() for (w = SW) splace(Rw, w[0], w[1]) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) sw_outline(w);
+module sw_holes() for (w = SW) srelief(Rw, w[0], w[1], w[2] + 0.6) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) sw_outline(w);
+module sw_glass() intersection() {
+    for (w = SW) splace(Rw, w[0], w[1]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) sw_outline(w);
+    linear_extrude(200) stadium(Rw - 0.2);
+}
+// evergreen boxes under the two front windows, hung below the sill
+module box2d(w) {
+    bw = w[2] + fr_w + 0.4;
+    translate([-bw, -sill - 4.4]) square([2 * bw, 4.4 + 0.9]);
+    for (i = [0 : 5]) let (x = -bw + 1.2 + i * (2 * bw - 2.4) / 5)
+        translate([x, -sill + 0.7]) polygon([[-1.1, 0], [1.1, 0], [0, 1.9]]);
+}
+module window_boxes() sclip(Rw, bd + 1.4) for (w = [SW[0], SW[1]]) srelief(Rw, w[0], w[1], w[2] + fr_w + 1.4) relief_up(-0.4, bd + 1.4) box2d(w);
+
+// ---- icicles under the eave, clear of the gable -----------------------------------------------------
+module drip2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate([0, -len + w/2 - 0.2]) circle(r = w/2 - 0.2); }
+function rnd(i, s) = rands(0, 1, 1, s + i)[0];
+g_s = fw + 4;               // the gable's reach round the outline, either side of the front
+IC = [for (i = [0 : 39]) let (s = g_s + i * (sper(Rw) - 2 * g_s) / 39) [s, 1.4 + 1.8 * rnd(i, 70), 1.8 + 0.4 * rnd(i, 110)]];
+module icicles() for (d = IC) splace(Rw, d[0], zfu + 1) relief_up(-0.4, 1.2) drip2d(d[1], d[2]);
+
+// ---- the roof ------------------------------------------------------------------------------------------
+module roof_slate() intersection() { sweep() R_full(RV, kv0); sweep() R_choc(RV, kv0); }
+module soffit() sweep() R_curl(RV, kv0);
+sh_c = 2.35;
+module course_band(R, x0e, x1) polygon([[x0e, R_top(R, x0e) - 1.0], [x0e, R_top(R, x0e) + 1.0], [x1, R_top(R, x1) + 0.05], [x1, R_top(R, x1) - 1.0]]);
+module slates() {
+    ve = RV[5];
+    nk = ceil((ve - 0.6) / sh_c);
+    for (k = [0 : nk - 1]) let (x0 = ve - k * sh_c, x1 = max(ve - (k + 1) * sh_c - 0.5, 0.6))
+        if (x0 > x1 + 0.3) sweep() course_band(RV, x0, x1);
+    sweep() polygon([[0, zs(0) - 1.0], [1.2, zs(1.2) - 1.0], [1.2, zs(1.2) + 1.0], [0, zs(0) + 1.4]]);
+}
+// SNOW on the crown, its edge cut straight down in waves
+function wave(t) = 2.2 * sin(t * 1.7) + 1.3 * sin(t * 4.1 + 60);
+module snow_roof() intersection() {
+    sweep() polygon([[0, zs(0) - 1.0], [RV[4], zs(RV[4]) - 1.0], [RV[4], zs(RV[4]) + 2.0], [3, zs(3) + 2.0], [0, zs(0) + 2.4]]);
+    translate([0, 0, 40]) linear_extrude(100) polygon([for (i = [0 : 199]) let (a = 360 * i / 200) (11 + wave(i * 3.3)) * [cos(a), sin(a)]]);
+}
+
+// ---- the chimney, at the back --------------------------------------------------------------------------
+ch0 = [-4, 4, 12, 20];
+ch1 = [-2.8, 2.8, 13, 19];
+ch_w = 80;
+ch_top = 90;
+module chimney() difference() {
+    union() {
+        translate([ch0[0], ch0[2], 40]) cube([ch0[1] - ch0[0], ch0[3] - ch0[2], ch_w - 40]);
+        hull() {
+            translate([ch0[0], ch0[2], ch_w - 0.01]) cube([ch0[1] - ch0[0], ch0[3] - ch0[2], 0.01]);
+            translate([ch1[0], ch1[2], ch_w + 1.2 * tan(60)]) cube([ch1[1] - ch1[0], ch1[3] - ch1[2], 0.01]);
+        }
+        translate([ch1[0], ch1[2], ch_w]) cube([ch1[1] - ch1[0], ch1[3] - ch1[2], ch_top - ch_w]);
+        hull() {
+            translate([ch1[0], ch1[2], ch_top - 1.3]) cube([ch1[1] - ch1[0], ch1[3] - ch1[2], 0.01]);
+            translate([ch1[0] - 0.8, ch1[2] - 0.8, ch_top]) cube([ch1[1] - ch1[0] + 1.6, ch1[3] - ch1[2] + 1.6, 1.6]);
+        }
+        for (x = [ch1[0] + 1.3, ch1[1] - 1.3]) translate([x, (ch1[2] + ch1[3]) / 2, ch_top + 1.4]) cylinder(d = 2.4, h = 4.0, $fn = 32);
+    }
+    below_ceil();
+    for (x = [ch1[0] + 1.3, ch1[1] - 1.3]) translate([x, (ch1[2] + ch1[3]) / 2, ch_top + 3.4]) cylinder(d = 0.8, h = 5, $fn = 20);
+}
+module chimney_col() translate([ch0[0], ch0[2], 40]) cube([ch0[1] - ch0[0], ch0[3] - ch0[2], 80]);
+
+// ---- the gable (the shop-house's dormer, moved out to the flat front) ----------------------------------------
+// Built in its own frame -- x out from the centre toward the front, y across --
+// and turned into place by dmw(): x runs to -y. Its face is the flat front.
+// The cone's ceiling is the same in any frame, so below_ceil() serves here.
+module dmw() rotate([0, 0, -90]) children();
+dm_c  = 0;
+dm_w  = fw;
+dm_in = dm_w - wall;
+dm_x  = yf;
+dm_x0 = 17;                 // its ridge dives into the cone at 19: well inside
+dm_e  = 1;
+dm_ze = H;                  // its eave: the cone's
+function dz_ceil(y) = dm_ze + (dm_in - abs(y - dm_c)) * tp;
+function dz_out(y)  = dz_ceil(y) + tv;
+module dmf(z) translate([dm_x, dm_c, z]) rotate([0, 0, 90]) rotate([90, 0, 0]) children();
+module dm_below(dz) yz(dm_x0 - 1, dm_x + dm_e + 1)
+    polygon([[dm_c - 20, 30], [dm_c + 20, 30], [dm_c + 20, dz_ceil(dm_c + 20) + dz], [dm_c, dz_ceil(dm_c) + dz], [dm_c - 20, dz_ceil(dm_c - 20) + dz]]);
+// its inside, narrower and steeper than its roof (the shop-house's dormer,
+// 51.7 deg groins): at 70 deg the groins with the cone's 58 deg ceiling rise
+// 54 deg; 3.2 wide it clears the lancet (2.4), and the slab over its ridge
+// keeps 1.5 mm
+dmr_in = 3.2;
+dmr_ze = 47.2;
+function dzr(y) = dmr_ze + (dmr_in - abs(y - dm_c)) * tan(70);
+module dm_room() intersection() {
+    translate([dm_x0 - 1, dm_c - dmr_in, 30]) cube([dm_x - wall - dm_x0 + 1, 2 * dmr_in, 60]);
+    yz(dm_x0 - 1, dm_x + dm_e + 1) polygon([[dm_c - dmr_in, 30], [dm_c + dmr_in, 30], [dm_c + dmr_in, dmr_ze], [dm_c, dzr(dm_c)], [dm_c - dmr_in, dmr_ze]]);
+}
+// everything of the cone in the gable's way: from inside the gable out past
+// the eave's tip, below the gable's own roof
+module gable_cut() dmw() intersection() {
+    translate([dm_x0 - 1, dm_c - dm_w, 30]) cube([Rw + 6 - dm_x0 + 1, 2 * dm_w, 60]);
+    dm_below(tv);
+}
+module dm_walls() difference() {
+    intersection() { translate([dm_x0, dm_c - dm_w, 30]) cube([dm_x - dm_x0, 2 * dm_w, 60]); dm_below(0.4); }
+    below_ceil();
+}
+dm_E = dm_w + dm_e;
+module dm_front_cut(up = 60, x0 = dm_x) intersection() {
+    children();
+    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [SH, 0, 1, -SH * x0], [0, 0, 0, 1]])
+        minkowski() { children(); cylinder(r = 0.01, h = up, $fn = 4); }
+}
+dm_yf = dm_E - 0.08;
+dm_tip = dz_ceil(dm_c + dm_yf) + (dm_E - dm_yf) * tan(fl_ang);
+module dm_slab() difference() {
+    dm_front_cut() yz(dm_x0, dm_x + dm_e) polygon([[dm_c - dm_E, dm_tip], [dm_c - dm_yf, dz_ceil(dm_c - dm_yf)], [dm_c, dz_ceil(dm_c)],
+        [dm_c + dm_yf, dz_ceil(dm_c + dm_yf)], [dm_c + dm_E, dm_tip], [dm_c + dm_E, dz_out(dm_c + dm_E)], [dm_c, dz_out(dm_c)], [dm_c - dm_E, dz_out(dm_c - dm_E)]]);
+    below_ceil();
+}
+dm_up = 0.3 + SH * (dm_e + 0.2) + 0.2;
+module dm_flare() difference() {
+    dm_front_cut() for (m = [0, 1]) translate([0, dm_c, 0]) mirror([0, m, 0]) yz(dm_x0, dm_x + dm_e)
+        polygon([[dm_w - 0.3, dz_ceil(dm_c + dm_yf) - (dm_yf - dm_w + 0.3) * tan(fl_ang)], [dm_yf, dz_ceil(dm_c + dm_yf)],
+                 [dm_yf, dz_ceil(dm_c + dm_yf) + dm_up], [dm_w - 0.3, dz_ceil(dm_c + dm_w - 0.3) + dm_up]]);
+    below_ceil();
+}
+function sh_d(k, X) = min(k * sh_c, X - 0.6);
+module dm_slates() difference() {
+    nk = ceil((dm_E - 0.6) / sh_c);
+    for (s = [-1, 1], k = [0 : nk - 1]) let (y0 = s * (dm_E - sh_d(k, dm_E)), y1 = s * (dm_E - min(sh_d(k + 1, dm_E) + 0.5, dm_E - 0.6)))
+        yz(dm_x0, dm_x + dm_e) translate([dm_c, 0])
+            polygon([[y0, dz_out(dm_c + y0) - 1.0], [y0, dz_out(dm_c + y0) + 1.0], [y1, dz_out(dm_c + y1) + 0.05], [y1, dz_out(dm_c + y1) - 1.0]]);
+    below_ceil();
+}
+// THE BARGEBOARD, drawn as one lower edge, the lowest of its scallops at each
+// point (the shop-house's: as circles each hung over the next one down)
+bs_r = 1.1;
+bs_y = [for (i = [-6 : 6]) dm_c + i * 1.26];
+function bs_cz(y) = dz_ceil(y) - 2.2 + bs_r;
+function bs_low(y) = min(concat([bs_cz(y)],
+    [for (c = bs_y) if (abs(y - c) < bs_r) bs_cz(c) - sqrt(bs_r * bs_r - (y - c) * (y - c))]));
+module board2d() let (n = 320, Y = [for (i = [0 : n]) dm_c - dm_w + 2 * dm_w * i / n])
+    polygon(concat([for (y = Y) [y, bs_low(y)]],
+        [[dm_c + dm_w, dz_ceil(dm_c + dm_w) + dm_up], [dm_c, dz_ceil(dm_c) + dm_up], [dm_c - dm_w, dz_ceil(dm_c - dm_w) + dm_up]]));
+module dm_board() difference() {
+    dm_front_cut(x0 = dm_x - 0.15) yz(dm_x - 0.3, dm_x + dm_e + 0.2) board2d();
+    dm_room();
+}
+module dm_finial() translate([dm_x + dm_e - 1.3, dm_c, dz_out(dm_c) - 2.6]) {
+    translate([-1.1, -1.1, 0]) cube([2.2, 2.2, 6.4]);
+    translate([0, 0, 6.4]) rotate([0, 0, 45]) cylinder(r1 = 1.1 * sqrt(2), r2 = 0, h = 1.1 * tan(60) * 1.2, $fn = 4);
+}
+module dm_snow() difference() {
+    intersection() {
+        yz(dm_x0, dm_x + dm_e) polygon([[dm_c - 5.5, dz_out(dm_c - 5.5) - 1.0], [dm_c, dz_out(dm_c) - 1.0], [dm_c + 5.5, dz_out(dm_c + 5.5) - 1.0],
+            [dm_c + 5.5, dz_out(dm_c + 5.5) + 1.8], [dm_c + 1.5, dz_out(dm_c + 1.5) + 2.8], [dm_c - 1.5, dz_out(dm_c + 1.5) + 2.8], [dm_c - 5.5, dz_out(dm_c - 5.5) + 1.8]]);
+        translate([0, 0, 30]) linear_extrude(60) polygon(concat(
+            [for (i = [0 : 30]) let (x = dm_x0 + (dm_x + dm_e - 1.8 - dm_x0) * i / 30) [x, dm_c + 3.6 + 0.8 * sin(x * 47)]],
+            [for (i = [30 : -1 : 0]) let (x = dm_x0 + (dm_x + dm_e - 1.8 - dm_x0) * i / 30) [x, dm_c - 3.6 - 0.8 * sin(x * 53 + 40)]]));
+    }
+    below_ceil();
+}
+
+// ---- on the flat front: the lancet, the door, the wreath and the garland --------------------------------------
+// the chapel's lancet, for the gable
 function lancet_pts(a, hgt, ang = 58, n = 12) =
     let (R = 2 * a, t1 = 90 - ang, xt = a - R + R * cos(t1), zt = hgt + R * sin(t1), ap = zt + xt * tan(ang))
     concat([[-a, 0], [a, 0]],
@@ -213,319 +333,146 @@ function lancet_pts(a, hgt, ang = 58, n = 12) =
 function lancet_top(a, hgt, ang = 58) =
     let (R = 2 * a, t1 = 90 - ang) hgt + R * sin(t1) + (a - R + R * cos(t1)) * tan(ang);
 function arch_pts(a, hgt, n = 24) = concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = 180 * i / n) [a * cos(q), hgt + a * sin(q)]]);
-
 mull = 1.68;
-// Frames 2.6 wide standing 0.6 off the brick: at 2.2 and 0.84, the shear
-// rose 2.2 across the frame's depth and left the heads' front edges 0.04 mm
-// tall -- a knife edge the wall check read as sub-bead all round every head.
-fr_w = 2.6;
-fr_t = bd + 0.6;            // frame face, 0.6 proud of the brick
-sill = 3.4;                 // the sill runs this far below the opening
-//   [face, u, z, a, straight height, kind]   kind: "seg" sash window, "lancet" gothic gable window
-WINDOWS = [
-    [1, -17, 18, 5.2, 13, "seg"],  [1, 17, 18, 5.2, 13, "seg"],  [1, 0, 60.4, 4.0, 11, "lancet"],
-    [0,   0, 18, 5.2, 13, "seg"],  [0, 0, 60.4, 4.0, 11, "lancet"],
-    [2, -12, 18, 5.2, 13, "seg"],  [2, 12, 18, 5.2, 13, "seg"],
-    [3, -12, 18, 5.2, 13, "seg"],  [3, 12, 18, 5.2, 13, "seg"],
-];
-function is_seg(w) = w[5] == "seg";
-function w_top(w) = is_seg(w) ? seg_top(w[3], w[4]) : lancet_top(w[3], w[4]);
-module win_outline(w) { polygon(is_seg(w) ? seg_pts(w[3], w[4]) : lancet_pts(w[3], w[4])); }
-// A sash window: mullion and a meeting rail. The rail is a flat bar only
-// where it is on the pane; its underside is sheared like the frames.
-// A lancet: mullion forking at the spring into a Y at 62 deg.
-module win_bars(w) {
-    translate([-mull/2, -3]) square([mull, is_seg(w) ? 40 : w[4] + mull + 3]);
-    if (is_seg(w)) translate([-20, w[4] * 0.55]) square([40, 2.2]);
-    else for (s = [-1, 1]) translate([0, w[4]]) rotate(s < 0 ? 180 - 62 : 62)
-        translate([0, -mull/2]) square([3 * w[3], mull]);
+LW  = [2.4, 6];             // the lancet: half-width, straight height
+lw_z = 36.5;                // its sill
+lf_w = 1.8;
+module lw_outline() polygon(lancet_pts(LW[0], LW[1]));
+module lw_bars() {
+    translate([-mull/2, -3]) square([mull, LW[1] + mull + 3]);
+    for (s = [-1, 1]) translate([0, LW[1]]) rotate(s < 0 ? 180 - 62 : 62) translate([0, -mull/2]) square([3 * LW[0], mull]);
 }
-module win_muntins(w, g) { intersection() { offset(r = g) win_outline(w); win_bars(w); } }
-module frame_outer(w) {
-    offset(r = fr_w) win_outline(w);
-    if (is_seg(w)) translate([-w[3] - fr_w - 0.8, -sill]) square([2 * (w[3] + fr_w + 0.8), sill + 1]);
+module lancet() dmf(lw_z) {
+    relief_up(-0.4, fr_t) {
+        union() { offset(r = lf_w) lw_outline(); translate([-LW[0] - lf_w - 0.6, -2.6]) square([2 * (LW[0] + lf_w + 0.6), 3.4]); }
+        offset(r = 0.3) lw_outline();
+    }
+    relief_up(-0.4, bd) intersection() { offset(r = 0.6) lw_outline(); lw_bars(); }
 }
-module keystone(w) {
-    translate([0, seg_top(w[3], w[4]) - 1.2])
-        polygon([[-1.3, 0], [1.3, 0], [1.9, fr_w + 2.6], [-1.9, fr_w + 2.6]]);
-}
-module frame_holes() {
-    for (w = WINDOWS) nf(w[0], w[1], w[2])
-        relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(w);
-    nf(1, 0, plinth_h) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) polygon(arch_pts(door_a, door_h));
-}
+module lw_opening() dmf(lw_z) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) lw_outline();
+module lw_hole() dmf(lw_z) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) lw_outline();
+module lw_glass() dmf(lw_z) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) lw_outline();
 
-door_a = 6.5;
-door_h = 18;
-module openings() {
-    for (w = WINDOWS) nf(w[0], w[1], w[2])
-        translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) win_outline(w);
-    nf(1, 0, plinth_h) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) polygon(arch_pts(door_a, door_h));
-}
-
-// ---- door ------------------------------------------------------------------------------------
-// A black door: the slate filament. Two tall panels, their heads pointed at
-// 60 deg so no recess has a flat ceiling.
+// THE DOOR: round-arched, black (the slate filament), two panels with pointed
+// heads so no recess has a flat ceiling
+door_a = 4.2;
+door_h = 13;
 module panel2d(x0, x1, z0, z1) polygon([[x0, z0], [x1, z0], [x1, z1], [(x0 + x1)/2, z1 + (x1 - x0)/2 * tan(60)], [x0, z1]]);
-module door_leaf() {
-    // 1.73 thick, standing 0.2 proud of the plan: at 1.48, the panels left
-    // 1.08 mm of door, under the 1.2 floor. Its back stops 0.15 short of the
-    // room: flush with it, its corners fell on the line where the snow base
-    // meets the wall inside and left zero-area faces along it.
-    nf(1, 0, plinth_h) translate([0, 0, -wall + 0.15]) difference() {
-        linear_extrude(wall + 0.05) union() {
-            // sunk 0.3 into the snow: standing on it, its foot met the base's
-            // top along the room's edge and left zero-area faces. It fills the
-            // whole arch and 0.2 past it into the wall: the chapel's leaf
-            // stopped 0.2 short of a lancet's head, but a round arch's crown is
-            // flat, and over that gap it was an overhang the width of the door;
-            // cut exactly to the arch, its edges and the wall's met in slivers.
-            translate([0, -0.3]) offset(delta = 0.2) polygon(arch_pts(door_a, door_h + 0.3));
-        }
-        translate([0, 0, wall - 0.35]) linear_extrude(1) {
-            panel2d(-4.6, -1.0, 1.8, 6.2);  panel2d(1.0, 4.6, 1.8, 6.2);
-        }
-    }
+module door_leaf() dmf(plinth_h) translate([0, 0, -wall + 0.15]) difference() {
+    linear_extrude(wall + 0.05) translate([0, -0.3]) offset(delta = 0.2) polygon(arch_pts(door_a, door_h + 0.3));
+    translate([0, 0, wall - 0.35]) linear_extrude(1) { panel2d(-3.1, -0.7, 1.6, 5.6); panel2d(0.7, 3.1, 1.6, 5.6); }
 }
-module door_frame() {
-    nf(1, 0, plinth_h) relief_up(-0.4, fr_t) {
-        intersection() { offset(r = 1.8) polygon(arch_pts(door_a, door_h)); translate([-30, -0.5]) square([60, 100]); }
-        translate([0, -1]) offset(delta = -0.3) polygon(arch_pts(door_a, door_h + 1));
-    }
+module door_frame() dmf(plinth_h) relief_up(-0.4, fr_t) {
+    intersection() { offset(r = 1.8) polygon(arch_pts(door_a, door_h)); translate([-30, -0.5]) square([60, 100]); }
+    translate([0, -1]) offset(delta = -0.3) polygon(arch_pts(door_a, door_h + 1));
 }
-// The wreath hangs on the door above the panels: a ring, standing 1.4 off the
-// leaf, and a red bow (the brick filament) at its foot.
+module door_opening() dmf(plinth_h) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) polygon(arch_pts(door_a, door_h));
+module door_hole() dmf(plinth_h) relief_hole(-0.4, -0.25, fr_t + 2.4) offset(r = 0.4) polygon(arch_pts(door_a, door_h));
+// the wreath on the leaf above the panels, and its red bow (the brick) at its
+// foot, raised from the leaf rather than the wreath's face
 wr_z = plinth_h + door_h - 1;
-module wreath() nf(1, 0, wr_z) relief_up(-0.4, bd + 0.6) { circle(r = 4.3); circle(r = 2.3); }
+module wreath() dmf(wr_z) relief_up(-0.4, bd + 0.6) { circle(r = 3.2); circle(r = 1.7); }
 module bow2d() {
     polygon([[0, 0], [-2.6, 1.3], [-2.6, -1.3]]);  polygon([[0, 0], [2.6, 1.3], [2.6, -1.3]]);
     circle(r = 0.9);
     polygon([[-0.4, 0], [-1.4, -2.2], [-0.5, -2.2], [0.1, -0.6]]);
     polygon([[0.4, 0], [1.4, -2.2], [0.5, -2.2], [-0.1, -0.6]]);
 }
-// on the leaf, not on the wreath: stood off the wreath's face, the tails
-// below the ring had only air behind them
-module wreath_bow() nf(1, 0, wr_z - 4.3) relief_up(-0.4, bd + 1.0) bow2d();
-
-// ---- the garland over the door -----------------------------------------------------------------
-// A swag dipping 3 mm between two bows, on the brick between the door's arch
-// and the gable window.
-gz = plinth_h + door_h + door_a + 8;
-g_half = 12;
-function g_y(x) = -3 * (1 - pow(x / g_half, 2));
+module wreath_bow() dmf(wr_z - 3.2) relief_up(-0.4, bd + 1.0) scale(0.8) bow2d();
+// the garland: a swag between two bows, over the door's arch
+gz = plinth_h + door_h + door_a + 5.2;
+g_half = 5.4;
+function g_y(x) = -2.2 * (1 - pow(x / g_half, 2));
 module garland2d() {
-    polygon(concat([for (i = [0 : 24]) let (x = -g_half + 2 * g_half * i / 24) [x, g_y(x) + 1.6]],
-                   [for (i = [24 : -1 : 0]) let (x = -g_half + 2 * g_half * i / 24) [x, g_y(x) - 1.6]]));
-    for (s = [-1, 1]) translate([s * g_half, 0]) circle(r = 2.4);
+    polygon(concat([for (i = [0 : 24]) let (x = -g_half + 2 * g_half * i / 24) [x, g_y(x) + 1.4]],
+                   [for (i = [24 : -1 : 0]) let (x = -g_half + 2 * g_half * i / 24) [x, g_y(x) - 1.4]]));
+    for (s = [-1, 1]) translate([s * g_half, 0]) circle(r = 2.0);
 }
-module garland() nf(1, 0, gz) relief_up(-0.4, bd + 1.0) garland2d();
-// Raised from the wall like every relief, not stood on the garland's face:
-// the garland's own sheared underside falls away behind them, and stood on it
-// the bows hung over air and drew a column of support from the snow up.
-module garland_bows() for (s = [-1, 1]) nf(1, s * g_half, gz + 0.4) relief_up(-0.4, bd + 1.6) scale(0.8) bow2d();
+module garland() dmf(gz) relief_up(-0.4, bd + 1.0) garland2d();
+module garland_bows() for (s = [-1, 1]) dmf(gz + 0.4) translate([s * g_half, 0]) relief_up(-0.4, bd + 1.6) scale(0.65) bow2d();
+// a step in front of the door
+module step() translate([0, -yf - 1.4, plinth_h - 0.5]) hull() for (s = [-1, 1]) translate([s * 4.6, 0, 0]) cylinder(r = 1.8, h = 1.9, $fn = 40);
 
-// ---- window boxes -------------------------------------------------------------------------------
-// Under the two front windows: an evergreen box with sprigs standing up along
-// its top, hung below the sill.
-module box2d(w) {
-    bw = w[3] + fr_w + 0.4;
-    // 0.9 up behind the sill, the sprigs standing in front of it: stopped at
-    // the sill's foot, the sill's sheared underside left a chip of brick
-    // loose between every pair of sprigs
-    translate([-bw, -sill - 4.4]) square([2 * bw, 4.4 + 0.9]);
-    for (i = [0 : 5]) let (x = -bw + 1.2 + i * (2 * bw - 2.4) / 5)
-        translate([x, -sill + 0.7]) polygon([[-1.1, 0], [1.1, 0], [0, 1.9]]);
-}
-module window_boxes() for (w = WINDOWS) if (w[0] == 1 && is_seg(w)) nf(w[0], w[1], w[2]) relief_up(-0.4, bd + 1.4) box2d(w);
+// ---- rooms, all together ---------------------------------------------------------------------------------
+module room() { main_room(); dmw() dm_room(); }
 
-// ---- icicles ---------------------------------------------------------------------------------------
-// Hung from the eave soffit's foot on both side walls: raised on the brick,
-// sheared underneath like every relief, tips rounded to 0.5 mm so they print.
-IC = [for (i = [0 : 16]) let (r = rands(0, 1, 2, 40 + i)) [-Dh + 2.4 + i * (D - 4.8) / 16, 2.8 + 2.6 * r[0], 1.8 + 0.6 * r[1]]];
-module icicle2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate([0, -len + 0.5]) circle(r = 0.5); }
-module icicles() for (f = [2, 3], c = IC) nf(f, c[0], zf0 + 1) relief_up(-0.4, bd + 0.8) icicle2d(c[1], c[2]);
-
-// ---- bargeboards -------------------------------------------------------------------------------------
-// The chapel's coping over each gable, grown into a Victorian bargeboard: a
-// board down the rake on the gable face, its hem a row of scallops, and a
-// finial at the peak. The proud part's underside rises 58 deg outward (the
-// chapel's coping shear), and so do the scallops' bottoms. It was pierced
-// with diamonds as well; their sheared edges left slivers of board 0.4 mm
-// thick above every hole, and they went.
-bb_h  = 6.2;                // board depth below the roof's top line, vertically
-bb_t  = 1.3;                // board face, proud of the brick
-sc_r  = 1.9;
-sc_ds = 4.3;                // scallop spacing along the slope
-module gable_poly(lo, hi) polygon([[-xe, z_out(xe) + lo], [0, z_out(0) + lo], [xe, z_out(xe) + lo],
-                                   [xe, z_out(xe) + hi], [0, z_out(0) + hi], [-xe, z_out(xe) + hi]]);
-function sc_pts() = [for (i = [1 : 20]) let (s = i * sc_ds, x = s * cos(r_ang)) if (x < Wh - 2.6) x];
-module board2d(ext) {
-    X = Wh - 1;
-    // topped 0.3 under the coping's cap: level with it, the board's end met
-    // the cap's top edge and left zero-area faces
-    T = cp_hi - 0.3 + ext;
-    polygon([[-X, z_out(X) + T], [0, z_out(0) + T], [X, z_out(X) + T],
-             [X, z_out(X) - bb_h + sc_r], [0, z_out(0) - bb_h + sc_r], [-X, z_out(X) - bb_h + sc_r]]);
-    for (x = concat([0], sc_pts(), [for (x = sc_pts()) -x])) translate([x, z_out(x) - bb_h + sc_r]) circle(r = sc_r);
+// ---- the snow base: a soft blob with a rounded edge --------------------------------------------------------
+module base2d() offset(r = 6.5, $fn = 48) circle(r = Rw, $fn = FN);
+module base_slab() {
+    linear_extrude(plinth_h - 1.8) base2d();
+    for (i = [1 : 6]) let (a0 = 15 * (i - 1), a1 = 15 * i)
+        translate([0, 0, plinth_h - 1.8 + 1.8 * sin(a0)]) linear_extrude(1.8 * (sin(a1) - sin(a0)) + 0.01)
+            offset(delta = -1.8 * (1 - cos(a1))) base2d();
 }
-module bargeboards() {
-    for (s = [-1, 1]) mirror([0, s < 0 ? 1 : 0, 0]) {
-        // 0.3 in past the wall's inner face, over the roof (which cuts it)
-        // and into the snow: ended on the wall's own face, the two planes
-        // differed by a rounding error and the brick left slivers along it
-        xz(Dh - wall - 0.3, Dh - 0.05) gable_poly(cp_lo, cp_hi);
-        // The chapel's coping intersected the board with a sheared copy of
-        // itself. With scallops that fails: the sheared copy of a scallop
-        // rises into the unsheared band above it, and their overlap has the
-        // band's FLAT underside (a 0.66 mm notch, 29,000 support moves). So
-        // the unsheared term is the board run down to the table, as relief_up
-        // does: only the sheared copy has an underside.
-        intersection() {
-            xz(Dh - 0.1, Dh + bd + bb_t) minkowski() { board2d(0); translate([-0.01, -60]) square([0.02, 60]); }
-            multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, tan(58), 1, -tan(58) * Dh], [0, 0, 0, 1]])
-                xz(Dh - 1, Dh + 4) board2d(10);
-        }
-    }
-}
-// Finial: a square post standing on each gable's peak, pointed at 60 deg.
-fin_z = z_out(0) + cp_hi;
-module finials() {
-    // footed 2.8 down: at 1.4 the post's corners stood over the coping's
-    // slopes, which fall 2.1 in the post's half-width
-    for (s = [-1, 1]) translate([0, s * (Dh - 0.2), fin_z - 2.8]) {
-        translate([-1.3, -1.3, 0]) cube([2.6, 2.6, 7.8]);
-        translate([0, 0, 7.8]) rotate([0, 0, 45]) cylinder(r1 = 1.3 * sqrt(2), r2 = 0, h = 1.3 * tan(60) * 1.2, $fn = 4);
-    }
-}
-
-// ---- roof -----------------------------------------------------------------------------------------------
-// The slab and slates run 0.4 into the gables' copings, under them: ended on
-// the coping's face, the snow between them was cut to zero-thickness sheets
-// where the two planes differed by a rounding error.
-y_rr = y_r + 0.4;
-module slab() xz(-y_rr, y_rr) polygon([[-xe, fl_xe], [-xf, z_ceil(xf)], [0, z_ceil(0)], [xf, z_ceil(xf)], [xe, fl_xe],
-                                     [xe, z_out(xe)], [0, z_out(0)], [-xe, z_out(xe)]]);
-sh_c = 2.35;
-function sh_d(k) = min(k * sh_c, xe - 0.6);
-module slates() {
-    nk = ceil((xe - 0.6) / sh_c);
-    for (s = [-1, 1], k = [0 : nk - 1]) let (x0 = s * (xe - sh_d(k)), x1 = s * (xe - min(sh_d(k + 1) + 0.5, xe - 0.6)))
-        xz(-y_rr, y_rr) polygon([[x0, z_out(x0) - 1.0], [x0, z_out(x0) + 1.0], [x1, z_out(x1) + 0.05], [x1, z_out(x1) - 1.0]]);
-    xz(-y_rr, y_rr) polygon([[1.2, z_out(1.2) - 1.0], [1.2, z_out(1.2) + 1.0], [0, z_out(0) + 1.4], [-1.2, z_out(1.2) + 1.0], [-1.2, z_out(1.2) - 1.0]]);
-}
-// SNOW on the upper roof, down to a wavy line about 40% of the way to the
-// eaves: a blanket 1 mm over the slate butts, thickest at the ridge. Its
-// lower edge is vertical -- cut straight down -- so nothing about it hangs.
-sn_x = 13.5;
-function sn_edge(y) = sn_x + 2.2 * sin(y * 17) + 1.3 * sin(y * 41 + 60);
-module snow_roof() {
-    intersection() {
-        // past the slab's end, inside the coping: ended with the slab, the two
-        // cut planes differed by a rounding error and left sheets
-        xz(-y_rr - 0.4, y_rr + 0.4) polygon([[-xe, z_out(xe) - 1.0], [0, z_out(0) - 1.0], [xe, z_out(xe) - 1.0],
-                               [xe, z_out(xe) + 2.0], [3, z_out(3) + 2.0], [0, z_out(0) + 2.4], [-3, z_out(3) + 2.0], [-xe, z_out(xe) + 2.0]]);
-        translate([0, 0, 40]) linear_extrude(100)
-            polygon(concat([for (i = [0 : 40]) let (y = -Dh + 2 * Dh * i / 40) [sn_edge(y), y]],
-                           [for (i = [40 : -1 : 0]) let (y = -Dh + 2 * Dh * i / 40) [-sn_edge(-y), y]]));
-    }
-}
-
-// ---- chimney --------------------------------------------------------------------------------------------
-// Back left, rising from the slope. It starts at the ceiling plane, which
-// prints like the rest of the roof's underside.
-ch = [-19.5, -10, 8, 15];   // x0, x1, y0, y1
-ch_top = 96;
-module chimney() {
-    difference() {
-        union() {
-            translate([ch[0], ch[2], 40]) cube([ch[1] - ch[0], ch[3] - ch[2], ch_top - 40]);
-            // the cap: out 0.8 on a 58 deg underside, then 1.6 straight
-            hull() {
-                translate([ch[0], ch[2], ch_top - 1.3]) cube([ch[1] - ch[0], ch[3] - ch[2], 0.01]);
-                translate([ch[0] - 0.8, ch[2] - 0.8, ch_top]) cube([ch[1] - ch[0] + 1.6, ch[3] - ch[2] + 1.6, 1.6]);
-            }
-            for (x = [ch[0] + 2.4, ch[1] - 2.4]) translate([x, (ch[2] + ch[3]) / 2, ch_top + 1.6 - 0.2])
-                cylinder(d = 3.4, h = 4.6, $fn = 32);
-        }
-        below_ceil();
-        for (x = [ch[0] + 2.4, ch[1] - 2.4]) translate([x, (ch[2] + ch[3]) / 2, ch_top + 4]) cylinder(d = 1.8, h = 5, $fn = 24);
-    }
-}
-module chimney_col() translate([ch[0], ch[2], 40]) cube([ch[1] - ch[0], ch[3] - ch[2], 80]);
-
-// ---- snow base ------------------------------------------------------------------------------------------
-// The 8 mm street plinth, as snow: a rounded apron, deepest in front of the
-// door, with drifts banked against the walls.
-module base2d() {
-    offset(r = 2.5) offset(delta = -2.5) union() {
-        translate([-Wh - 4.5, -Dh - 12]) square([W + 9, D + 16.5]);
-        for (p = [[-Wh - 3, -Dh - 8, 4.5], [Wh + 3.5, -Dh - 2, 4], [Wh + 3, Dh - 6, 4.5], [-Wh - 3, Dh - 2, 3.5],
-                  [-14, Dh + 3.5, 4], [18, Dh + 3.5, 3.5], [-Wh - 3.5, 4, 3.5], [Wh + 3.5, 12, 3.5]])
-            translate([p[0], p[1]]) circle(r = p[2]);
-    }
-}
-DRIFTS = [[-Wh - 1, -Dh + 7, 7, 4, 3.2], [Wh + 1, Dh - 10, 8, 4, 3.6], [-8, Dh + 1, 7, 3.5, 2.8],
-          [Wh + 1, -Dh + 1, 5, 4, 2.6], [-Wh - 1, Dh - 4, 5, 3.5, 2.4]];
+DRIFTS = [[(Rw + 1) * cos(-20), (Rw + 1) * sin(-20), 7, 4, 3.2], [(Rw + 1) * cos(100), (Rw + 1) * sin(100), 7, 3.5, 2.8],
+          [(Rw + 1) * cos(190), (Rw + 1) * sin(190), 5, 3.5, 2.4]];
 module base() {
-    linear_extrude(plinth_h) base2d();
-    // kept inside the base's outline: run past its edge, a drift's side hung
-    // over the table and drew support from the bed up
+    base_slab();
     intersection() {
-        for (d = DRIFTS) translate([d[0], d[1], plinth_h - 0.01]) intersection() {
-            scale([d[2], d[3], d[4]]) sphere(r = 1, $fn = 32);
+        for (d = DRIFTS) translate([d[0], d[1], plinth_h - 0.5]) intersection() {
+            scale([d[2], d[3], d[4] + 0.5]) sphere(r = 1, $fn = 32);
             translate([-50, -50, 0]) cube(100);
         }
-        linear_extrude(plinth_h + 10) offset(delta = -0.6) base2d();
+        linear_extrude(plinth_h + 10) offset(delta = -2.4) base2d();
     }
 }
+// centred in the band between the room's opening (-24.1) and the base's edge (-33.5)
+module brand_mark() translate([0, -28.8, -0.5]) linear_extrude(1.3)
+    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
-// ---- mark -----------------------------------------------------------------------------------------------
-module brand_mark() {
-    translate([0, -Dh - 6.2, -0.5]) linear_extrude(1.3)
-        mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black",
-                               halign = "center", valign = "center", spacing = 1.16);
+// ---- brick joints ------------------------------------------------------------------------------------------
+// vertical mortar joints, staggered by course, round the drum; none near an
+// opening or on the flat front
+function box_s(s0, s1, z0, z1) = [s0, s1, z0, z1];
+OPEN = concat(
+    [box_s(-100, g_s, 0, 200), box_s(sper(Rw) - g_s, sper(Rw) + 100, 0, 200)],
+    [for (w = SW) box_s(w[0] - w[2] - fr_w - 3, w[0] + w[2] + fr_w + 3, w[1] - sill - 6, w[1] + seg_top(w[2], w[3]) + fr_w + 4)]);
+function clear_at(s, z0, z1) = len([for (b = OPEN) if (s + bj > b[0] && s - bj < b[1] && z1 > b[2] && z0 < b[3]) 1]) == 0;
+nj = floor(sper(Rw) / bl);
+module joints() for (k = [1 : nb - 1]) let (z0 = zc(k), z1 = zc(k + 1)) if (z1 < zfu - 0.5)
+    for (j = [0 : nj - 1]) let (s = (j + (k % 2) / 2) * sper(Rw) / nj) if (clear_at(s, z0, z1))
+        splace(Rw, s, z0) translate([-bj / 2, 0, -0.05]) cube([bj, z1 - z0, 2.1]);
+
+// ---- parts ------------------------------------------------------------------------------------------------
+module body_raw() {
+    drum();
+    front_wall();
+    dmw() dm_walls();
+    chimney();
+    step();
+    wreath_bow();
+    garland_bows();
 }
-
-// ---- joints ---------------------------------------------------------------------------------------------
-function frame_box(f, w) = let (lu = loc(f, w[1]), h = w[3] + fr_w + 2.5)
-    [lu - h, lu + h, w[2] - sill - 5, w[2] + w_top(w) + fr_w + 4];
-function face_boxes(f) = concat(
-    [for (w = WINDOWS) if (w[0] == f) frame_box(f, w)],
-    f >= 2 ? [[-100, 100, zf0 - 6, 300]] : [],
-    f == 1 ? [[-door_a - 3.5, door_a + 3.5, 0, plinth_h + door_h + door_a + 3.5],
-              [-g_half - 3, g_half + 3, gz - 5, gz + 4]] : []);
-module joints() {
-    for (f = [0 : 3]) wall_joints(f, f < 2 ? z_out(0) + cp_hi : H + 2, face_boxes(f));
-}
-
-// ---- parts ----------------------------------------------------------------------------------------------
-module body_raw() { walls_solid(); chimney(); wreath_bow(); garland_bows(); }
 module roof_raw() {
-    difference() { union() { slab(); slates(); } room(); chimney_col(); }
+    difference() { roof_slate(); room(); chimney_col(); gable_cut(); }
+    difference() { slates(); room(); chimney_col(); gable_cut(); }
     door_leaf();
+    dmw() {
+        difference() { union() { dm_slab(); dm_slates(); } dm_room(); }
+        dm_board();
+        dm_finial();
+    }
 }
-module accent_raw() { wreath(); garland(); window_boxes(); }
+module accent_raw() {
+    wreath();
+    garland();
+    window_boxes();
+}
 module trim_raw() {
     difference() {
         union() {
             base();
-            quoins();
-            eave_flare();
+            difference() { union() { soffit(); snow_roof(); } chimney_col(); gable_cut(); }
             icicles();
-            bargeboards();
-            finials();
-            difference() { snow_roof(); chimney_col(); }
-            for (w = WINDOWS) nf(w[0], w[1], w[2]) {
-                relief_up(-0.4, fr_t) { frame_outer(w); offset(r = 0.3) win_outline(w); }
-                if (is_seg(w)) relief_up(-0.4, fr_t + 0.5) keystone(w);
-                relief_up(-0.4, bd) win_muntins(w, 0.6);
-                translate([0, 0, -wall]) linear_extrude(wall - 0.2) offset(r = 0.6) win_outline(w);
-            }
-            door_frame();
+            dmw() { dm_flare(); dm_snow(); lancet(); door_frame(); }
+            sw_frames();
         }
         room();
+        dmw() lw_opening();
         brand_mark();
     }
+    // the glass goes back in after the rooms and openings are cut
+    difference() { union() { sw_glass(); dmw() lw_glass(); } main_room(); }
 }
 module roof_part()   roof_raw();
 module accent_part() { difference() { accent_raw(); roof_raw(); } }
@@ -533,7 +480,9 @@ module trim_part()   { difference() { trim_raw(); accent_raw(); roof_raw(); } }
 module body_part() {
     difference() {
         body_raw();
-        room(); openings(); frame_holes(); joints(); trim_raw(); accent_raw(); roof_raw();
+        room(); sw_openings(); sw_holes(); joints();
+        dmw() { door_opening(); door_hole(); lw_opening(); lw_hole(); }
+        trim_raw(); accent_raw(); roof_raw();
     }
 }
 

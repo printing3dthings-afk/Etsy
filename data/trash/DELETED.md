@@ -1532,3 +1532,205 @@ module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], 
 
 <!-- /TRASH 20260930-001 -->
 
+<!-- TRASH id=20260930-002 date=2026-09-30 kind=file source="openscad_models/christmas_village/victorian/cottage/victorian_cottage.scad" reason="Square Victorian cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (drum + front gable). Also at git commit a8eea51." -->
+## 20260930-002 · 2026-09-30 · file · `openscad_models/christmas_village/victorian/cottage/victorian_cottage.scad`
+**Reason:** Square Victorian cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (drum + front gable). Also at git commit a8eea51.  
+**Payload:** `data/trash/files/20260930-002__victorian_cottage.scad`
+
+```
+// Victorian Cottage -- building #1 of the Dickens Victorian Christmas village
+// (openscad_models/christmas_village/CHRISTMAS_VILLAGE.md). The cottage from
+// the style study, rebuilt to print: brick walls with white quoins, a steep
+// slate gable under snow, a pierced white bargeboard with a finial on both
+// gables, segmental-arched sash windows with keystones, gothic lancets in the
+// gables, a round-arched black door with a wreath and a garland, window boxes,
+// icicles under the eaves, a chimney with two pots, on a snow base.
+//
+// A hollow lantern lit by a battery LED tealight: open base, every window
+// glazed with a 1.48 mm pane that its bars stand on (the chapel's first print,
+// 2026-09-27: free-standing bars snap).
+//
+// The machinery -- V-course walls, sheared reliefs, the eave flare, kneelers,
+// the coping over the gables, frames and panes -- is the Haunted Town chapel's
+// (haunted_town/chapel/haunted_chapel.scad), proven on Scott's printer, and
+// its WHY comments are there. What is new here is commented here.
+//
+// COLOUR PARTS, ONE PRINT (victorian_cottage.3mf):
+//   body    brick walls, chimney and pots, the kneelers, the bows
+//   roof    slate slab and courses, the front door
+//   trim    snow base and drifts, quoins, bargeboards and finials, window and
+//           door frames, sills, keystones, panes and bars, the eave soffit and
+//           icicles, the snow on the roof
+//   accent  evergreen: the wreath, the garland, the window boxes
+// Every part is built DISJOINT from the others. The part="chk_*" renders are
+// each pairwise intersection and must come out empty.
+//
+// TEALIGHT. 60.6 x 54.6 mm clear inside from the table to the 52 mm eave; the
+// 58 deg ceiling is 60 mm up at the edge of a 46 mm circle round the centre.
+
+include <BOSL2/std.scad>
+include <../../../lattice_lib.scad>   // rrect_pts; lives in openscad_models/
+
+$fa = 4;  $fs = 0.4;
+part = "all";
+
+// ---- walls ---------------------------------------------------------------------
+W        = 64;              // along X, the front gable's width
+D        = 58;              // along Y, front (-Y) to back
+wall     = 1.68;            // 4 x 0.42
+corner_r = 1;
+plinth_h = 8;               // the snow base; the walls stand on it
+Wh = W/2;  Dh = D/2;
+SH       = 1.2;             // relief shear (see relief_up)
+
+// ---- brick -----------------------------------------------------------------------
+// The post office's brick: V courses ramping out at 58 deg, flat, chamfered
+// back in at 45; stretcher bond.
+bd    = 0.6;                // brick face, proud of plan(0)
+bp    = 2.6;                // course height
+br    = bd * tan(58);
+bj    = 0.6;                // joint width
+bl    = 7;                  // brick length, joint to joint
+// The first groove sits 0.4 above the snow: exactly on the base's top it left
+// a zero-thickness sheet of brick along the front wall where the two met.
+function zc(k) = plinth_h + 0.4 + k * bp;
+function nc(zt) = ceil((zt - plinth_h - 0.4) / bp);
+
+// ---- roof --------------------------------------------------------------------------
+// A 58 deg gable: the chapel's roof at the post office's steepest safe angle.
+// Its inside is the lantern's ceiling.
+H     = 52;
+r_ang = 58;
+tp    = tan(r_ang);
+x_in  = Wh - wall;
+tr    = 2.52;
+tv    = tr / cos(r_ang);
+e     = 2;
+xe    = Wh + bd + e;
+function z_ceil(x) = H + (x_in - abs(x)) * tp;
+function z_out(x)  = z_ceil(x) + tv;
+y_r   = Dh - wall;
+cp_lo = -0.2;  cp_hi = 2.6;
+
+// ---- placement ---------------------------------------------------------------------
+//   face 0 = back (+Y), 1 = front (-Y), 2 = right (+X), 3 = left (-X)
+module nf(face, u, z) {
+    r = [180, 0, 90, -90][face];
+    p = face == 0 ? [u, Dh, z] : face == 1 ? [u, -Dh, z]
+      : face == 2 ? [Wh, u, z] : [-Wh, u, z];
+    translate(p) rotate([0, 0, r]) rotate([90, 0, 0]) children();
+}
+function loc(f, u) = (f == 0 || f == 3) ? -u : u;
+
+module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], [0,
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260930-002 -->
+
+<!-- TRASH id=20260930-003 date=2026-09-30 kind=file source="openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad" reason="Square gingerbread cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (cupcake drum + dome). Also at git commit 7de06df." -->
+## 20260930-003 · 2026-09-30 · file · `openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad`
+**Reason:** Square gingerbread cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (cupcake drum + dome). Also at git commit 7de06df.  
+**Payload:** `data/trash/files/20260930-003__gingerbread_cottage.scad`
+
+```
+// Gingerbread Cottage -- building #1 of the Gingerbread Christmas village
+// (openscad_models/christmas_village/CHRISTMAS_VILLAGE.md). The cottage from
+// the style study, rebuilt to print: smooth gingerbread walls with piped
+// icing beads down every corner and round every window and the door, a steep
+// roof of chocolate scallop tiles, icing on the ridge and dripping off the
+// eaves and rakes, gumdrops along the ridge, a chocolate-bar door between two
+// candy canes, a peppermint round window in each gable, peppermint candies on
+// the snow.
+//
+// A hollow lantern lit by a battery LED tealight: open base, every window
+// glazed with a 1.48 mm pane that its bars stand on.
+//
+// Same frame as the Victorian cottage (victorian/cottage/victorian_cottage.scad)
+// and so the chapel's machinery; its WHY comments are in those two files. What
+// is new is commented here.
+//
+// COLOUR PARTS, ONE PRINT (gingerbread_cottage.3mf):
+//   body    gingerbread walls, the kneelers
+//   roof    chocolate slab and scallop tiles, the chocolate-bar door
+//   trim    icing: snow base, corner beads, window and door frames and their
+//           beads, panes and bars, eave soffit and drips, rake bands and
+//           drips, icing on the roof, the candy canes' white, the
+//           peppermints' white
+//   accent  candy red: gumdrops, cane stripes, peppermint stripes
+// Every part is built DISJOINT from the others (part="chk_*").
+//
+// TEALIGHT. 60.6 x 54.6 mm clear inside from the table to the 52 mm eave.
+
+include <BOSL2/std.scad>
+
+$fa = 4;  $fs = 0.4;
+part = "all";
+
+// ---- walls ---------------------------------------------------------------------
+W        = 64;
+D        = 58;
+wall     = 1.68;
+corner_r = 2.5;             // softer than brick: a baked edge
+plinth_h = 8;
+Wh = W/2;  Dh = D/2;
+SH       = 1.2;
+bd       = 0;               // the walls are smooth: no brick face
+
+// ---- roof --------------------------------------------------------------------------
+H     = 52;
+r_ang = 58;
+tp    = tan(r_ang);
+x_in  = Wh - wall;
+tr    = 2.52;
+tv    = tr / cos(r_ang);
+e     = 2;
+xe    = Wh + bd + e;
+function z_ceil(x) = H + (x_in - abs(x)) * tp;
+function z_out(x)  = z_ceil(x) + tv;
+y_r   = Dh - wall;
+cp_lo = -0.2;  cp_hi = 2.2;
+
+// ---- placement ---------------------------------------------------------------------
+module nf(face, u, z) {
+    r = [180, 0, 90, -90][face];
+    p = face == 0 ? [u, Dh, z] : face == 1 ? [u, -Dh, z]
+      : face == 2 ? [Wh, u, z] : [-Wh, u, z];
+    translate(p) rotate([0, 0, r]) rotate([90, 0, 0]) children();
+}
+function loc(f, u) = (f == 0 || f == 3) ? -u : u;
+
+module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) children();
+module relief_hole(d0, a, b, sh = SH) {
+    translate([0, 0, a]) linear_extrude(b - a) children();
+    shear_up(sh) translate([0, 0, a]) linear_extrude(b - a) translate([0, -sh * d0]) children();
+}
+module relief_up(d0, d1, sh = SH) {
+    difference() {
+        intersection() {
+            translate([0, 0, d0]) linear_extrude(d1 - d0)
+                minkowski() { children(0); translate([-0.2, -60]) square([0.4, 60]); }
+            shear_up(sh) translate([0, 0, d0]) linear_extrude(d1 - d0) children(0);
+        }
+        if ($children > 1) relief_hole(d0, d0 - 0.1, d1 + 0.1, sh) children(1);
+    }
+}
+module xz(y0, y1) translate([0, y1, 0]) rotate([90, 0, 0]) linear_extrude(y1 - y0) children();
+
+// ---- nave regions -------------------------------------------------------------------------
+module below_ceil() xz(-60, 60) polygon([[-40, -5], [40, -5], [40, z_ceil(40)], [0, z_ceil(0)], [-40, z_ceil(-40)]]);
+module gable_keep() {
+    for (s = [-1, 1]) mirror([0, s < 0 ? 1 : 0, 0])
+        xz(Dh - wall, Dh + 5) polygon([[-xe, -5], [xe, -5], [xe, z_out(xe) + 1], [0, z_out(0) + 1], [-xe, z_out(xe) + 1]]);
+}
+fl_ang = 52;
+xf  = xe - 0.08;
+zf0 = z_ceil(xf) - (xf - Wh) * tan(fl_ang);
+fl_xe = z_ceil(xf) + (xe - xf) * tan(fl_ang);
+module kneelers() {
+    for (s = [-1, 1], m = [0, 1]
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260930-003 -->
+

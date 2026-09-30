@@ -53,7 +53,12 @@ layout."** Every Christmas building from here on is round: stadium, round
 or combined round plans, swept roofs, soft blob bases, no square corners. What
 makes each building its own is its layout: the plan, the masses and where the
 roofs step, per the lineup below. The two cottages were built square before
-this, and they are the ones left to redraw round. The Haunted Town stays
+this, and are being redrawn round (Scott: "Yes redo the cottages round too").
+Picked from four layouts each: the Victorian cottage becomes **a round brick
+drum under a cone of slate, with a small curved gable over the door** carrying
+the bargeboard and finial; the Gingerbread cottage becomes **a cupcake: a
+round gingerbread drum under a chocolate dome**, icing piped round its rim,
+gumdrops round the eave and one on top. The Haunted Town stays
 square for now (see `../haunted_town/HAUNTED_TOWN.md`).
 
 ## The two villages (agreed with Scott 2026-09-28: "I like them all")
