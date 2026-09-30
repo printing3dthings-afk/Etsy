@@ -1,5 +1,9 @@
 # Haunted Town — a collectible lantern series
 
+**Square stays (Scott, 2026-09-30):** the Christmas village went round, and
+"The Halloween keep square for now." The Haunted Town keeps its square
+plans and gables.
+
 ## What's in this folder
 
 Everything for the series lives here, one folder per piece (Scott,

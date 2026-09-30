@@ -47,6 +47,15 @@ blob bases with rounded top edges in place of rectangular slabs. Windows,
 doors and timbers follow the curved walls in short tangent strips, so a
 raised frame hugs the curve instead of standing off it.
 
+**Round is the series look (Scott, 2026-09-30): "Christmas village keeps a
+rounder shape. I still want them all similar but different in building
+layout."** Every Christmas building from here on is round: stadium, round
+or combined round plans, swept roofs, soft blob bases, no square corners. What
+makes each building its own is its layout: the plan, the masses and where the
+roofs step, per the lineup below. The two cottages were built square before
+this, and they are the ones left to redraw round. The Haunted Town stays
+square for now (see `../haunted_town/HAUNTED_TOWN.md`).
+
 ## The two villages (agreed with Scott 2026-09-28: "I like them all")
 
 Six buildings each, one big identity feature per building, and no two in a
