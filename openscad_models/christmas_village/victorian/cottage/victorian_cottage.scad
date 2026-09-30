@@ -346,10 +346,10 @@ LW  = [2.4, 6];             // the lancet: half-width, straight height
 lw_z = 36.5;                // its sill
 lf_w = 1.8;
 module lw_outline() polygon(lancet_pts(LW[0], LW[1]));
-module lw_bars() {
-    translate([-mull/2, -3]) square([mull, LW[1] + mull + 3]);
-    for (s = [-1, 1]) translate([0, LW[1]]) rotate(s < 0 ? 180 - 62 : 62) translate([0, -mull/2]) square([3 * LW[0], mull]);
-}
+// one upright bar to the point: the chapel's Y, forking at the spring, left
+// three pockets under a head this small (4.8 wide), and the slicer stood a
+// column of support from the snow to the lancet's head (2,000 moves)
+module lw_bars() translate([-mull/2, -3]) square([mull, 40]);
 module lancet() dmf(lw_z) {
     relief_up(-0.4, fr_t) {
         union() { offset(r = lf_w) lw_outline(); translate([-LW[0] - lf_w - 0.6, -2.6]) square([2 * (LW[0] + lf_w + 0.6), 3.4]); }
