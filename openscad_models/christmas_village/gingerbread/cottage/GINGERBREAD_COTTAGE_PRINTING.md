@@ -117,6 +117,9 @@ early. Bambu's own LED tealight (37.2 × 36.6 mm) fits with 10 mm to spare. A
 - **The tealight headroom is short of the series rule**, above.
 - **The dome is solid chocolate.** No light comes through the top, and it is
   most of the filament (the roof part is 55 cm³ of the model's 93).
+- **The layer seam shows on the smooth dome.** The as-printed render has it
+  as a vertical line up the front of the chocolate. In Bambu Studio, paint the
+  seam onto the back of the dome before slicing.
 - **Raised icing has sloped undersides.** That is how it prints without
   supports. From below, the drips and window rings read as wedges.
 - **It has not been printed yet.** Everything above was measured on the
