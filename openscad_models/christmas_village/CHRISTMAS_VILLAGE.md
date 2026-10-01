@@ -81,6 +81,21 @@ cane chapel** is a one-storey square gingerbread nave under a steep
 icing-edged gable, with a round tower at its front striped red and white in a
 spiral up the tower and its spire, the spire's tip curled like a cane.
 
+**Next pair, picked 2026-10-01** from four forms each, after Scott saw the
+finished toy shop and chapel. The **Victorian church** is a long brick nave
+with a round rose window in its front gable, a square bell tower on one front
+corner rising to a tall slate spire (the tallest building in the village), and
+a half-round apse at the back. The **Gingerbread sweet shop** is a layer-cake
+tower: three round frosted tiers stacked smaller and smaller, with drips and
+windows in each and a cherry on top, beside a small square shop front with a
+lollipop sign. Three storeys.
+
+**Tealight headroom on the round cottages, decided 2026-10-01:** the Victorian
+cottage, cupcake cottage and turret house stay as built, 46 mm tealight short
+of 50 mm of headroom (41.6–47.2 mm). Their notes recommend a 38 mm tealight,
+which fits with 48.9–54 mm of room. The toy shop (58.2 mm) and the chapel
+(50.6 mm) meet the rule.
+
 ## The two villages (agreed with Scott 2026-09-28: "I like them all")
 
 Six buildings each, one big identity feature per building, and no two in a
