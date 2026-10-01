@@ -60,7 +60,7 @@ stand on the pane. The upper floor's casements are inlaid in the plaster.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **8 h 42 m** | **69.3 cm³, about 86 g of PLA** |
+| **single colour** | **8 h 43 m** | **69.3 cm³, about 86 g of PLA** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 86 g of model **+ purge** |
 
 ## The tealight

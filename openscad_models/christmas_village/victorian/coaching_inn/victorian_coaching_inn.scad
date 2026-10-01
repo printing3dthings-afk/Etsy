@@ -316,12 +316,14 @@ module bow2d() {
 module wreath_bow() nfl(3, dr_u, wr_z + 2.8) relief_up(-0.2, 0.2 + bd + 1.2) bow2d();
 module step() nfl(3, dr_u, plinth_h - 0.5) translate([-dr_a - 2.6, 0, -0.2]) cube([2 * dr_a + 5.2, 1.9, 3.2]);
 // the sign: a brick-red board on the plaster, INN inlaid white and flush
-sg_z = 35.2;  sg_w = 12;  sg_h = 7.6;
+// 13.6 wide, the most between the windows' frames, the letters 1.0 apart with a
+// margin: at 12, INN ran to the board's edges and at an angle read "NN"
+sg_z = 35.2;  sg_w = 13.6;  sg_h = 7.6;
 module sign_board() nf(3, dr_u, sg_z) relief_up(-0.4, 1.0) translate([-sg_w / 2, 0]) offset(r = 1.0) offset(delta = -1.0) square([sg_w, sg_h]);
 module sign_text() intersection() {
     sign_board();
     nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
-        text("INN", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.15);
+        text("INN", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
 }
 // a small wreath in each front upper window, on its bars
 module window_wreaths() for (w = UPW) if (w[0] == 3) nf(3, w[1], w[2] + w[4] * 0.5) relief_up(-0.4, 0.9)
