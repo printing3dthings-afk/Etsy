@@ -23,7 +23,7 @@ on its front corner**:
 
 It is a hollow lantern with an open base, lit from inside by a battery LED
 tealight. The tower opens into the shop through a pointed doorway, so one
-light fills both. It measures DIMS mm, snow base and finial included.
+light fills both. It measures 81.1 × 75.1 × 125.8 mm, snow base and finial included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
@@ -54,12 +54,20 @@ pane. The tealight glows through the panes and the bay's glass.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **COST_T** | **COST_F** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | COST_G of model **+ purge** |
+| **single colour** | **8 h 21 m** | **60.7 cm³, about 75 g of PLA** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 75 g of model **+ purge** |
 
 ## The tealight
 
-TEALIGHT_BLOCK
+Measured on the exported model:
+
+- the base is open under the shop, and the tower opens into it;
+- a 46.6 mm circle round the shop's centre is clear from the table to
+  58.2 mm;
+- a 38 mm tealight has room to 64.2 mm.
+
+**This meets the series rule** (at least 46 mm across and 50 mm of
+headroom): the square shop has two full storeys of wall under its gable.
 
 ## Verified before shipping — on the real exported meshes
 
@@ -92,7 +100,6 @@ model:
 
 ## Honest weak points
 
-- TEALIGHT_WEAK
 - **Raised details have sloped undersides.** That is how they print without
   supports. Frames, keystones, the string course, window boxes and the bay's
   fascia read as wedges from below.
