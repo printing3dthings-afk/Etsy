@@ -156,8 +156,10 @@ module cclip(r, d) intersection() { children(); cylinder(r = r + d, h = 300, $fn
 CW = concat(
     [for (th = [22.5, 67.5, 112.5, 157.5, 202.5, 337.5]) [0, th, 15, 3.4, 9, "arch"]],
     [for (th = [0, 45, 90, 135, 180, 225, 315]) [0, th, 34, 3.4, 8, "arch"]],
-    [for (th = [30, 90, 150, 210, 270, 330]) [1, th, 66, 2.8, 4, "arch"]],
-    [for (th = [45, 135, 225, 315]) [2, th, 89.5, 2.2, 0, "round"]]);
+    // the upper tiers' frames start just inside the frosting: 0.2 and 0.6 above
+    // it, each frame's foot was a shelf over a one-layer gap the slicer propped
+    [for (th = [30, 90, 150, 210, 270, 330]) [1, th, 65.5, 2.8, 4, "arch"]],
+    [for (th = [45, 135, 225, 315]) [2, th, 88.7, 2.2, 0, "round"]]);
 function cw(w) = [0, 0, 0, w[3], w[4], w[5]];
 function cr(w) = T(w[0])[0];
 function cframe_U(w) = w[3] + (is_round(w) ? 2.4 : fr_w + bead_r + 1.2);
@@ -269,7 +271,8 @@ module shop_windows() for (w = WINDOWS) nf(w[0], w[1], w[2]) {
 du_ = -10;
 door_a = 3.2;  door_h = 10;
 module door_leaf() nf(1, du_, plinth_h) difference() {
-    translate([0, 0, -wall - 1]) linear_extrude(wall + 1.2) translate([0, -0.3]) offset(delta = 0.2) polygon(arch_pts(door_a, door_h + 0.3));
+    // the wall's depth only: 1 deeper, its foot hung over the open base
+    translate([0, 0, -wall]) linear_extrude(wall + 0.2) translate([0, -0.3]) offset(delta = 0.2) polygon(arch_pts(door_a, door_h + 0.3));
     // scored into squares by V grooves, their upper faces leaning 50 deg
     translate([-0.5, -1, -0.1]) cube([1, door_h + door_a + 4, 1]);
     for (zg = [3.4, 6.8, 10.2]) hull() {

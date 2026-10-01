@@ -236,7 +236,9 @@ module door_leaf() nf(1, 0, plinth_h) difference() {
     // two leaves: a groove between them and two panels each, sunk 0.3
     translate([0, 0, -0.1]) linear_extrude(2) {
         translate([-0.3, -1]) square([0.6, 40]);
-        for (s = [-1, 1]) { panel2d(s * 0.9, s * 3.4, 1.6, 6.4); panel2d(s * 0.9, s * 3.4, 8.6, 11.4); }
+        // panels only below the wreath: sunk under it, the panels' corners and the
+        // wreath left slivers that printed as four loose bodies
+        for (s = [-1, 1]) panel2d(s * 0.9, s * 3.4, 1.6, 6.4);
     }
 }
 // through the wall only: cut on out through the door's face it took the
@@ -248,7 +250,7 @@ module door_frame() nf(1, 0, plinth_h) relief_up(-0.4, fr_t) {
 }
 // the band is cut where the door's frame crosses it
 module door_band_cut() nf(1, 0, plinth_h) translate([0, 0, -wall - 1]) linear_extrude(wall + 6) offset(r = 2.0) door_outline();
-wr_z = plinth_h + dr_h - 3.2;
+wr_z = plinth_h + dr_h + 0.5;
 module wreath() nf(1, 0, wr_z) relief_up(-0.2, 0.2 + bd + 0.8) difference() { circle(r = 3.0, $fn = 40); circle(r = 1.6, $fn = 32); }
 module bow2d() {
     polygon([[0, 0], [-2.2, 1.1], [-2.2, -1.1]]);  polygon([[0, 0], [2.2, 1.1], [2.2, -1.1]]);
@@ -256,7 +258,8 @@ module bow2d() {
     polygon([[-0.4, 0], [-1.2, -1.9], [-0.4, -1.9], [0.1, -0.5]]);
     polygon([[0.4, 0], [1.2, -1.9], [0.4, -1.9], [-0.1, -0.5]]);
 }
-module wreath_bow() nf(1, 0, wr_z - 3.0) relief_up(-0.2, 0.2 + bd + 1.2) bow2d();
+// the bow at the wreath's top, clear of the panels
+module wreath_bow() nf(1, 0, wr_z + 3.0) relief_up(-0.2, 0.2 + bd + 1.2) bow2d();
 gz = plinth_h + dr_top + 6.2;
 g_half = 6.6;
 function g_y(x) = -2.2 * (1 - pow(x / g_half, 2));
