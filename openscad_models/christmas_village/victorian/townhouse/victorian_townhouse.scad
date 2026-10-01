@@ -131,8 +131,10 @@ m_in = ml_h / tan(m_a);
 hw_t = Wh + mf - m_in;      // its half-width at the break
 apex = mt + hw_t;           // the upper slope at 45 deg, to a point
 function m_off(z) = z <= mb ? mf : z <= mt ? mf - (z - mb) / tan(m_a) : mf - m_in - (z - mt);
-mr = 0.6;                   // its corners' radius: almost square
-function mpts(g, z) = [for (p = rrect_pts(W + 2*g, D + 2*g, mr, 5)) [p[0], p[1], z]];
+// its corners rounded 2.4, shrinking to fit the narrow top: at 0.6 the foot's
+// corners stood 0.4 out past the cornice's rounded corners, over air
+mr = 2.4;
+function mpts(g, z) = [for (p = rrect_pts(W + 2*g, D + 2*g, min(mr, Wh + g - 0.3), 5)) [p[0], p[1], z]];
 // the slates in courses, each with a bevelled lower edge standing out 0.6: the
 // bevel rises at 37 deg from upright, so no course's edge is a shelf
 sl_c = 3.0;
@@ -354,7 +356,9 @@ module door_outline() polygon(arch_pts(dr_a, dr_h));
 module door_leaf() nf(0, dr_u, zs) difference() {
     translate([0, 0, -wall]) linear_extrude(wall + bd) translate([-dr_a - 0.25, -0.3]) square([2 * dr_a + 0.5, dr_h + 0.3]);
     translate([0, 0, bd - 0.4]) linear_extrude(2) for (s = [-1, 1])
-        translate([min(s * 0.8, s * 3.2), 0.5]) square([2.4, 1.4]);   // low, clear of the wreath
+        // low, clear of the wreath, and pointed at 60 deg: square-headed, each
+        // panel's 0.4 recess had a level ceiling
+        let (x0 = min(s * 0.9, s * 2.7)) polygon([[x0, 0.4], [x0 + 1.8, 0.4], [x0 + 1.8, 0.8], [x0 + 0.9, 0.8 + 0.9 * tan(60)], [x0, 0.8]]);
 }
 // the fanlight's pane, back in the opening, and its bars fanning out on it
 module fan_pane() nf(0, dr_u, zs) translate([0, 0, -wall]) linear_extrude(wall - 0.4) intersection() {   // 1.28 thick, not 0.88

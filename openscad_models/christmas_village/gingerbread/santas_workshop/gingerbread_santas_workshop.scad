@@ -97,7 +97,9 @@ module drip2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate(
 // =====================================================================================
 // THE DRUM, round the origin
 // =====================================================================================
-FNC = 180;
+// 182, not 180: with a facet corner exactly at the front (270 deg), the wing's
+// ceiling ridge met the drum along it in an edge shared by four faces
+FNC = 182;
 MR  = 25.5;                 // the 46 mm tealight's circle stands 0.5 inside its wall
 MRi = MR - wall;
 TD  = 51.5;                 // its top, under the frosting
@@ -257,7 +259,7 @@ module kneelers() {
 }
 module eave_flare() {
     for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh - 0.15, Dh + 0.15)
-        polygon([[Wh - 1, zf0 - tan(fl_ang)], [xf, z_ceil(xf)], [xf, z_ceil(xf) + 0.3], [Wh - 1, z_ceil(Wh - 1) + 0.3]]);
+        polygon([[Wh - 1.1, zf0 - 1.1 * tan(fl_ang)], [xf, z_ceil(xf)], [xf, z_ceil(xf) + 0.3], [Wh - 1.1, z_ceil(Wh - 1.1) + 0.3]]);
 }
 module walls_solid() {
     intersection() {
