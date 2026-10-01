@@ -105,7 +105,7 @@ module xz(y0, y1) translate([0, y1, 0]) rotate([90, 0, 0]) linear_extrude(y1 - y
 module yz(x0, x1) translate([x0, 0, 0]) rotate([90, 0, 90]) linear_extrude(x1 - x0) children();
 
 // ---- the ground floor's brick and quoins ------------------------------------------------------
-function rpts(w, d, g, z) = [for (p = rrect_pts(w + 2*g, d + 2*g, corner_r + g, 5)) [p[0], p[1], z]];
+function rpts(w, d, g, z, r = corner_r) = [for (p = rrect_pts(w + 2*g, d + 2*g, r + g, 5)) [p[0], p[1], z]];
 module brick_skin(w, d, ztop) {
     n = nc(ztop);
     skin(concat(
@@ -134,8 +134,11 @@ module quoin_boxes() {
 module quoins() intersection() { brick_skin(W_lo, D, zc(2 * nq) + 2); quoin_boxes(); }
 
 // THE JETTY BEAM: the upper floor stands 2 out front and back on a dark beam
-// whose underside rises at 55 deg from the brick
-module jetty_beam() skin([rpts(W_lo, D, -0.2, cz0), rpts(W, D, 0, H1), rpts(W, D, 0, H1 + 1.4)], slices = 0);
+// whose underside rises at 55 deg from the brick. The upper floor's corners are
+// all but square (up_r): rounded like the brick's, the eave flare ran on past
+// them over air at all four corners and the slicer propped it
+up_r = 0.3;
+module jetty_beam() skin([rpts(W_lo, D, -0.2, cz0), rpts(W, D, 0, H1, up_r), rpts(W, D, 0, H1 + 1.4, up_r)], slices = 0);
 
 // ---- regions ---------------------------------------------------------------------------
 module below_ceil() xz(-60, 60) polygon([[-40, -5], [40, -5], [40, z_ceil(40)], [0, z_ceil(0)], [-40, z_ceil(-40)]]);
@@ -153,13 +156,13 @@ module kneelers() {
                                         [xe, z_out(xe) + 1], [Wh - 0.3, z_out(Wh - 0.3) + 1]]);
 }
 module eave_flare() {
-    for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh - 0.15, Dh + 0.15)
+    for (m = [0, 1]) mirror([m, 0, 0]) xz(-Dh, Dh)
         polygon([[Wh - 1, zf0 - tan(fl_ang)], [xf, z_ceil(xf)], [xf, z_ceil(xf) + 0.3], [Wh - 1, z_ceil(Wh - 1) + 0.3]]);
 }
 // the plaster upper floor and its gables
 module plaster() {
     intersection() {
-        translate([0, 0, H1]) linear_extrude(100) polygon(rrect_pts(W, D, corner_r, 5));
+        translate([0, 0, H1]) linear_extrude(100) polygon(rrect_pts(W, D, up_r, 5));
         union() { below_ceil(); gable_keep(); }
     }
     kneelers();
@@ -285,15 +288,18 @@ dr_a = 4.0;  dr_h = 12;
 module door_outline() polygon(seg_pts(dr_a, dr_h));
 module panel2d(x0, x1, z0, z1) polygon([[x0, z0], [x1, z0], [x1, z1], [(x0 + x1)/2, z1 + (x1 - x0)/2 * tan(60)], [x0, z1]]);
 module door_leaf() nfl(3, dr_u, plinth_h) difference() {
-    translate([0, 0, -wall]) linear_extrude(wall + 0.2) translate([0, -0.3]) offset(delta = 0.25) polygon(seg_pts(dr_a, dr_h + 0.3));
-    translate([0, 0, -0.1]) linear_extrude(2) for (s = [-1, 1]) panel2d(min(s * 0.8, s * 3.2), max(s * 0.8, s * 3.2), 1.6, 5.6);
+    translate([0, 0, -wall]) linear_extrude(wall + bd) translate([0, -0.3]) offset(delta = 0.25) polygon(seg_pts(dr_a, dr_h + 0.3));
+    translate([0, 0, bd - 0.4]) linear_extrude(2) for (s = [-1, 1]) panel2d(min(s * 0.8, s * 3.2), max(s * 0.8, s * 3.2), 1.6, 5.6);
 }
 // out through the bricks' bumps (the church: through the wall only, the
 // courses' ridges ran across the door)
 module door_opening() nfl(3, dr_u, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) door_outline();
-module door_frame() nfl(3, dr_u, plinth_h) relief_up(-0.4, fr_t) {
+// the frame a flush white band at the bricks' face, the leaf flush with it:
+// raised, the frame's head stood out over the leaf and the slicer propped the
+// whole doorway from the base
+module door_frame() nfl(3, dr_u, plinth_h) translate([0, 0, -0.6]) linear_extrude(0.6 + bd) difference() {
     intersection() { offset(r = 1.8) door_outline(); translate([-30, -0.5]) square([60, 100]); }
-    translate([0, -1]) offset(delta = 0.2) polygon(seg_pts(dr_a, dr_h + 1));
+    door_outline();
 }
 wr_z = plinth_h + dr_h - 4.4;
 module wreath() nfl(3, dr_u, wr_z) relief_up(-0.2, 0.2 + bd + 0.8) difference() { circle(r = 2.8, $fn = 40); circle(r = 1.4, $fn = 32); }
@@ -331,7 +337,10 @@ module lantern_glass() nfl(3, ln_u, ln_z) relief_up(-0.4, 1.8) translate([-1.2, 
 // ---- icicles under the long eaves, clear of the upper windows -----------------------------------
 function rnd(i, s) = rands(0, 1, 1, s + i)[0];
 IC = [for (i = [0 : 26]) [-Dh + 2.4 + i * (D - 4.8) / 26, 2.4 + 2.4 * rnd(i, 40), 1.8 + 0.6 * rnd(i, 80)]];
-function ic_clear(f, u) = len([for (w = UPW) if (w[0] == f && abs(u - w[1]) < w[3] + uf_w + 2.0) 1]) == 0;
+// clear of the upper windows and of the INN sign, whose top an icicle's tip
+// hung 0.2 over
+function ic_clear(f, u) = len([for (w = UPW) if (w[0] == f && abs(u - w[1]) < w[3] + uf_w + 2.0) 1]) == 0
+                       && !(f == 3 && abs(u - dr_u) < sg_w / 2 + 2.0);
 module icicle2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate([0, -len + 0.5]) circle(r = 0.5); }
 module icicles() for (f = [2, 3], c = IC) if (ic_clear(f, c[0])) nf(f, c[0], zf0 + 1) relief_up(-0.4, bd + 0.8) icicle2d(c[1], c[2]);
 

@@ -138,8 +138,10 @@ module stirrer() for (i = [0 : st_n - 1]) hull() { st_at(i); st_at(i + 1); }
 module stirrer_stripes() rotate(st_th) for (z = [st_z0 + 1 : 2.6 : st_z0 + st_L + 2])
     translate([st_r0, 0, z]) rotate([0, 28, 0]) cube([20, 20, 1.1], center = true);
 // THE HANDLE on the side (world +x): a D whose hole's ceiling and underside
-// both rise at more than 50 deg
-HDL = [[24, 15.0], [25.5, 13.5], [34.2, 25.6], [35.2, 29.5], [35.2, 44], [33, 50], [25.5, 57.5], [24, 57.5]];
+// both rise at more than 50 deg. Its foot starts inside the wall (x 24) and
+// meets the mug's face 2 mm up: begun at a point on the face, its first layers
+// printed as a loose island and the slicer propped them
+HDL = [[24, 12.3], [34.2, 25.6], [35.2, 29.5], [35.2, 44], [33, 50], [25.5, 57.5], [24, 57.5]];
 HDL_HOLE = [[25.6, 49.5], [29.8, 44.0], [31.0, 41], [31.0, 32], [29.8, 28.0], [25.6, 23.0]];
 module handle() rotate([90, 0, 0]) translate([0, 0, -2.5]) linear_extrude(5) difference() { polygon(HDL); polygon(HDL_HOLE); }
 
@@ -384,7 +386,9 @@ module body_raw() {
     marshmallows();
 }
 module roof_raw() {
-    difference() { cocoa(); mug_room(); }
+    // less the shop's room too: less the mug's only, a 0.3 ring of cocoa inside
+    // the wall hung flat over the shop's opening into the mug
+    difference() { cocoa(); room(); }
     difference() { at_shop() union() { slab(); tiles(); } room(); mug_cut(); }
     at_shop() door_leaf();
 }
