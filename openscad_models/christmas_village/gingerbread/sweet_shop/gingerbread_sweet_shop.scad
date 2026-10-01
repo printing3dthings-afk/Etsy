@@ -159,7 +159,7 @@ CW = concat(
     // the upper tiers' frames start just inside the frosting: 0.2 and 0.6 above
     // it, each frame's foot was a shelf over a one-layer gap the slicer propped
     [for (th = [30, 90, 150, 210, 270, 330]) [1, th, 65.5, 2.8, 4, "arch"]],
-    [for (th = [45, 135, 225, 315]) [2, th, 88.7, 2.2, 0, "round"]]);
+    [for (th = [45, 135, 225, 315]) [2, th, 88.2, 2.2, 0, "round"]]);
 function cw(w) = [0, 0, 0, w[3], w[4], w[5]];
 function cr(w) = T(w[0])[0];
 function cframe_U(w) = w[3] + (is_round(w) ? 3.0 : 3.2);
@@ -170,7 +170,9 @@ module cframe2d(w) {
     if (is_round(w)) translate([0, w[3]]) circle(r = w[3] + 2.6, $fn = 48);
     else {
         offset(r = 2.4) win_outline(w);
-        translate([-w[3] - 2.4, -3.0]) square([2 * w[3] + 4.8, 3.2]);
+        // 3.4 deep: at 3.0 the middle tier's sills met the wall 0.08 above the
+        // frosting's top and the near-miss left 30 zero-size bodies
+        translate([-w[3] - 2.4, -3.4]) square([2 * w[3] + 4.8, 3.6]);
     }
 }
 // plain on the cake, no beads: laid round in 1 mm strips, the outermost beads
