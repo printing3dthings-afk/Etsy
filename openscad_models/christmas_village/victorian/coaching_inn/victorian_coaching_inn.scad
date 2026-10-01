@@ -183,7 +183,9 @@ module pa_band() for (f = [2, 3]) nfl(f, pa_y, plinth_h) relief_up(-0.4, fr_t) {
         intersection() { offset(r = 2.6) pa_outline(); translate([-30, -0.5]) square([60, 100]); }
         translate([0, lancet_top(pa_a, pa_h) - 1.0]) polygon([[-1.4, 0], [1.4, 0], [2.0, 4.2], [-2.0, 4.2]]);
     }
-    pa_outline();
+    // inside the passage, which cuts it back: on the passage's own line its back
+    // face met the brick jamb in 52 edges of more than two faces
+    offset(delta = -0.3) pa_outline();
 }
 
 // ---- the rooms ----------------------------------------------------------------------------------
