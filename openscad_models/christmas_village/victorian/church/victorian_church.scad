@@ -246,7 +246,9 @@ module door_leaf() nf(1, 0, plinth_h) difference() {
 module door_opening() nf(1, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 3.1) door_outline();
 module door_frame() nf(1, 0, plinth_h) relief_up(-0.4, fr_t) {
     intersection() { offset(r = 1.8) door_outline(); translate([-30, -0.5]) square([60, 100]); }
-    translate([0, -1]) offset(delta = -0.3) polygon(lancet_pts(dr_a, dr_h + 1));
+    // starting 0.3 outside the outline, not 0.3 over the leaf: overlapping it,
+    // the frame's inner rim was propped up the whole door
+    translate([0, -1]) offset(delta = 0.3) polygon(lancet_pts(dr_a, dr_h + 1));
 }
 // the band is cut where the door's frame crosses it
 module door_band_cut() nf(1, 0, plinth_h) translate([0, 0, -wall - 1]) linear_extrude(wall + 6) offset(r = 2.0) door_outline();

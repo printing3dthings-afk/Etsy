@@ -406,7 +406,9 @@ module body_raw() {
     difference() { at_shop() walls_solid(); cake_cut(); }
 }
 module roof_raw() {
-    difference() { tier(1); cake_room(); c_openings(1); }
+    // its frames' holes too, though the frames lose to this part anyway: without
+    // them each pane's 0.2 recess had a flat head and the slicer propped all six
+    difference() { tier(1); cake_room(); c_openings(1); c_holes(1); }
     difference() { at_shop() union() { slab(); tiles(); } room(); cake_cut(); }
     at_shop() door_leaf();
     stem();
