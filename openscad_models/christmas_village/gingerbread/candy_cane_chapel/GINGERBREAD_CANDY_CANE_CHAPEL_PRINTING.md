@@ -77,7 +77,26 @@ is where the room is lowest.
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_BLOCK
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.48 mm, median 3.50 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 23.60 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed, and every edge shared by
+  exactly two faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): **0 flags**. 24.3 mm³ of 65,219 mm³ is not printed; 5.2 mm³ printed
+  that was not modelled; 1.3 mm³ printed in another colour. The largest
+  differences are hairlines 0.1 mm wide and 0.15 mm deep round the door at
+  the tower's foot, where the beaded frame and the stripes meet the curve.
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The crook's
+  tip scores 1.4, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the tower, the same mark as the other buildings, mirrored so it reads OBC
+  with the chapel turned over, front toward you.
 
 ## What it took to print without supports
 
@@ -107,6 +126,6 @@ each found on the gate's slicer or a section through the model:
 - **Raised details have sloped undersides.** That is how they print without
   supports. Frames, beads and drips read as wedges from below.
 - **The crook is the most fragile part.** It prints, and fragility scores it
-  FRAG_CROOK, but handle it with care.
+  1.4 against a watch level of 4, but handle it with care.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.
