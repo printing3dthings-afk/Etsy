@@ -524,15 +524,14 @@ module bay_openings() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) transl
 // the opening rests on it
 // exactly the wall's thickness: 0.3 into the bay, its ends met the openings'
 // ends and the side walls' inner faces along edges shared by four faces
-// the side panes stand 0.3 back from both faces: those walls are at 45 deg, and
-// their faces (an offset outline) and the glass's (a rotation) never quite
-// agree, so a flush pane left zero-width walls along its ends, six edges each
-// shared by four faces. And they run 0.4 into the wall at each end: the trim
-// part loses what the bay's wall owns, so their ends are cut by the opening's
-// own faces. Ending exactly at the opening, the two rotated boxes' faces did
-// not meet and the panes came out as loose bodies
-module bay_glass() for (i = [0 : 2], p = bpanes(i)) let (k = i == 1 ? 0 : 0.3, x = i == 1 ? 0 : 0.4)
-    bplace(i, by_g[0]) translate([p[0] - x, 0, -wall + k]) cube([p[1] - p[0] + 2 * x, by_g[1] - by_g[0], wall - 2 * k]);
+// the side panes run 0.4 into the wall at each end, and the trim part loses
+// what the bay's wall owns, so their ends are cut by the opening's own faces.
+// Ending exactly at the opening, the two rotated boxes' end faces did not quite
+// meet: flush, they left zero-width walls (six edges shared by four faces);
+// set 0.3 back, loose panes, and then a 0.3 ledge under each head the slicer
+// propped with 2,500 moves of support
+module bay_glass() for (i = [0 : 2], p = bpanes(i)) let (x = i == 1 ? 0 : 0.4)
+    bplace(i, by_g[0]) translate([p[0] - x, 0, -wall]) cube([p[1] - p[0] + 2 * x, by_g[1] - by_g[0], wall]);
 // a transom bar across each front pane, on the glass. Not on the side panes:
 // 3.2 wide, at 45 deg, their bars' ends met the panes' ends and the posts along
 // edges shared by four faces
