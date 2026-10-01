@@ -84,14 +84,14 @@ module win_bars(w) {
     translate([-20, is_round(w) ? w[3] - mull/2 : w[4] * 0.6]) square([40, is_round(w) ? mull : 2.2]);
 }
 module win_muntins(w, g) { intersection() { offset(r = g) win_outline(w); win_bars(w); } }
-module frame2d(w) {
+module frame2d(w, bead = true) {
     if (is_round(w)) translate([0, w[3]]) circle(r = w[3] + 2.0, $fn = 48);
     else {
         offset(r = fr_w) win_outline(w);
-        beads(arch_path(w[3], w[4], fr_w - 0.1, bead_sp));
+        if (bead) beads(arch_path(w[3], w[4], fr_w - 0.1, bead_sp));
     }
 }
-module frame_relief(w) relief_up(-0.4, fr_t) { frame2d(w); offset(r = 0.3) win_outline(w); }
+module frame_relief(w, bead = true) relief_up(-0.4, fr_t) { frame2d(w, bead); offset(r = 0.3) win_outline(w); }
 module drip2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate([0, -len + w/2 - 0.2]) circle(r = w/2 - 0.2); }
 
 // =====================================================================================
@@ -162,8 +162,10 @@ CW = concat(
     [for (th = [45, 135, 225, 315]) [2, th, 88.7, 2.2, 0, "round"]]);
 function cw(w) = [0, 0, 0, w[3], w[4], w[5]];
 function cr(w) = T(w[0])[0];
-function cframe_U(w) = w[3] + (is_round(w) ? 2.4 : fr_w + bead_r + 1.2);
-module c_frames() for (w = CW) cclip(cr(w), fr_t + 0.4) cyl_relief(cr(w), w[1], w[2], cframe_U(w)) frame_relief(cw(w));
+function cframe_U(w) = w[3] + (is_round(w) ? 2.4 : fr_w + 0.8);
+// plain on the cake, no beads: laid round in 1 mm strips, the outermost beads
+// were cut into slivers down to 0.02 mm, 170 of the thinnest spans in the model
+module c_frames() for (w = CW) cclip(cr(w), fr_t + 0.4) cyl_relief(cr(w), w[1], w[2], cframe_U(w)) frame_relief(cw(w), false);
 module c_bars() for (w = CW) cclip(cr(w), 0.4) cyl_relief(cr(w), w[1], w[2], w[3] + 1) relief_up(-0.4, 0.4) win_muntins(cw(w), 0.6);
 module c_glass() for (w = CW) intersection() {
     cplace(cr(w), w[1], w[2]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) win_outline(cw(w));
@@ -175,9 +177,14 @@ module c_openings(k) for (w = CW) if (w[0] == k) cyl_relief(cr(w), w[1], w[2], w
     translate([0, 0, -wall - 3]) linear_extrude(wall + 6) win_outline(cw(w));
 module c_holes(k) for (w = CW) if (w[0] == k) cyl_relief(cr(w), w[1], w[2], cframe_U(w))
     relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(cw(w));
-// SWEETS round the front, over the shop's ridge
-module sweets() cclip(T(0)[0], 1.0) cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) relief_up(-0.4, 0.9)
-    text("SWEETS", size = 4.2, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
+// SWEETS round the front, over the shop's ridge, inlaid flush: raised, every
+// level stroke (the E's arms, the T's bar) came to a knife edge under its
+// sloped underside, down to 0.01 mm
+module sweets() intersection() {
+    difference() { cylinder(r = T(0)[0] + 0.01, h = 100, $fn = FNC); cylinder(r = T(0)[0] - 0.6, h = 100, $fn = FNC); }
+    cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) translate([0, 0, -1.5]) linear_extrude(2)
+        text("SWEETS", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
+}
 // DRIPS off each ledge and the dome, clear of the windows' heads and SWEETS
 function cw_near(k, th, d) = len([for (w = CW) if (w[0] == k && abs((th - w[1] + 540) % 360 - 180) < d) 1]) > 0;
 function dr_ok(k, th) = k == 0 ? abs(th - 270) > 32
@@ -259,7 +266,7 @@ module corner_beads() {
 }
 // [face, u, z, a, straight height, kind]: a wide display window, a window in
 // each side
-WINDOWS = [[1, 7, 13, 5.2, 8, "arch"], [2, -2, 13, 2.6, 7, "arch"], [3, -2, 13, 2.6, 7, "arch"]];
+WINDOWS = [[1, 6.5, 13, 5.2, 8, "arch"], [2, -2, 13, 2.6, 7, "arch"], [3, -2, 13, 2.6, 7, "arch"]];
 module shop_frame_holes() for (w = WINDOWS) nf(w[0], w[1], w[2]) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(w);
 module shop_openings() for (w = WINDOWS) nf(w[0], w[1], w[2]) translate([0, 0, -wall - 2]) linear_extrude(wall + 4) win_outline(w);
 module shop_windows() for (w = WINDOWS) nf(w[0], w[1], w[2]) {
