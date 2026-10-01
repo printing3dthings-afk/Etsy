@@ -143,7 +143,9 @@ module gumdrop(r) rotate_extrude($fn = 32) polygon(concat([[0, -r * 1.2], [r, 0]
 CH_TH = 60;                 // the chimney's angle round the drum
 GD = [for (i = [0 : 23]) let (th = 15 * i + 7.5) if (abs(th - CH_TH) > 14) [th, i % 2 == 0]];
 gd_r = 1.9;
-module gumdrops_ring(red) for (g = GD) if (g[1] == red) rotate(g[0]) translate([MR + 0.3, 0, cz0 - 0.3]) gumdrop(gd_r);
+// their centres over the wall: at 0.3 out, each one's point hung 0.3 under the
+// frosting's edge and the slicer propped all 22
+module gumdrops_ring(red) for (g = GD) if (g[1] == red) rotate(g[0]) translate([MR - 0.2, 0, cz0]) gumdrop(gd_r);
 module apex_gumdrop() translate([0, 0, z_co(0) + 1.4]) gumdrop(3.0);
 
 // ---- the drum's windows, laid round it in strips (the sweet shop's cake) -----------------------
@@ -189,9 +191,9 @@ ch_top = 84;
 module chimney() translate([CHC[0], CHC[1], 0]) difference() {
     union() {
         translate([0, 0, plinth_h - 0.5]) cylinder(r = ch_r, h = ch_top - plinth_h + 0.5, $fn = 64);
-        // its crown flaring out at 45 deg
-        translate([0, 0, ch_top - 1.2]) cylinder(r1 = ch_r, r2 = ch_r + 1.2, h = 1.2, $fn = 64);
-        translate([0, 0, ch_top]) cylinder(r = ch_r + 1.2, h = 1.6, $fn = 64);
+        // its crown flaring out at 58 deg: at 45 the slicer propped it
+        translate([0, 0, ch_top - 1.6]) cylinder(r1 = ch_r, r2 = ch_r + 1.0, h = 1.6, $fn = 64);
+        translate([0, 0, ch_top]) cylinder(r = ch_r + 1.0, h = 1.6, $fn = 64);
     }
     translate([0, 0, ch_top - 4]) cylinder(r = 2.4, h = 10, $fn = 48);
 }
@@ -405,7 +407,7 @@ module base() {
 }
 // under the wing's doors, between its wall and the base's edge, mirrored to
 // read with the workshop turned over, front toward you
-module brand_mark() translate([0, SYc - Dh - 4.8, -0.5]) linear_extrude(1.3)
+module brand_mark() translate([0, SYc - Dh - 3.8, -0.5]) linear_extrude(1.3)
     mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
 // =====================================================================================

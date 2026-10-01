@@ -113,9 +113,12 @@ module quoins() intersection() { brick_skin(H); quoin_boxes(); }
 sc_o = 0.9;
 // the toy shop's string course: its foot 0.3 inside the wall, its underside
 // rising at 55 deg as it comes out
-module band(z, o = sc_o) skin([rpts(-0.3, z - 2.4), rpts(bd + o, z - 2.4 + (bd + o + 0.3) * tp), rpts(bd + o, z + 1.6)], slices = 0);
-co = 1.5;                   // the cornice stands out further
-module cornice() band(H, co);
+module band(z, o = sc_o, top = 1.6) skin([rpts(-0.3, z - 2.4), rpts(bd + o, z - 2.4 + (bd + o + 0.3) * tp), rpts(bd + o, z + top)], slices = 0);
+co = 1.5;                   // the cornice stands out further, and its face is
+// 1.2 tall: at 0.6 its lip in front of the mansard measured 1.1 all round
+c_top = 2.2;
+mb = H + c_top;             // the mansard's foot
+module cornice() band(H, co, c_top);
 
 // =====================================================================================
 // THE MANSARD
@@ -123,11 +126,11 @@ module cornice() band(H, co);
 mf  = bd + co - 0.6;        // its foot, 0.6 in from the cornice's edge
 m_a = 74;                   // its lower slope
 ml_h = 15;
-mt  = H + 1.6 + ml_h;       // the break
+mt  = mb + ml_h;            // the break
 m_in = ml_h / tan(m_a);
 hw_t = Wh + mf - m_in;      // its half-width at the break
 apex = mt + hw_t;           // the upper slope at 45 deg, to a point
-function m_off(z) = z <= H + 1.6 ? mf : z <= mt ? mf - (z - H - 1.6) / tan(m_a) : mf - m_in - (z - mt);
+function m_off(z) = z <= mb ? mf : z <= mt ? mf - (z - mb) / tan(m_a) : mf - m_in - (z - mt);
 mr = 0.6;                   // its corners' radius: almost square
 function mpts(g, z) = [for (p = rrect_pts(W + 2*g, D + 2*g, mr, 5)) [p[0], p[1], z]];
 // the slates in courses, each with a bevelled lower edge standing out 0.6: the
@@ -136,7 +139,7 @@ sl_c = 3.0;
 function m_courses(z0, z1, g = 0.6, gh = 0.8) = [for (k = [0 : floor((z1 - z0) / sl_c) - 1], j = [0 : 1])
     let (z = z0 + k * sl_c + [0, gh][j]) [m_off(z) + [0, g][j], z]];
 module mansard() {
-    P = concat([[mf, H + 1.2]], m_courses(H + 1.6, mt), m_courses(mt, apex - 3), [[m_off(apex - 1.2), apex - 1.2]]);
+    P = concat([[mf, H + 1.2]], m_courses(mb, mt), m_courses(mt, apex - 3), [[m_off(apex - 1.2), apex - 1.2]]);
     skin([for (q = P) mpts(q[0], q[1])], slices = 0);
 }
 // snow on the upper slope: a cap 1.4 over it, its edge wandering round
@@ -157,7 +160,9 @@ DORMERS = [[0, 14], [2, -12], [2, 12]];
 dw = 5;  dd = 10;           // half-width, depth back into the mansard
 dz0 = H + 1.2;  dz1 = H + 13;
 d_ridge = dz1 + dw * tp;
-module dormer2d() polygon([[-dw, dz0], [dw, dz0], [dw, dz1], [0, d_ridge], [-dw, dz1]]);
+// its ridge flattened 1.2 wide: drawn to a point it was a knife edge 0.36 thick
+// the length of each dormer
+module dormer2d() polygon([[-dw, dz0], [dw, dz0], [dw, dz1], [0.6, d_ridge - 0.6 * tp], [-0.6, d_ridge - 0.6 * tp], [-dw, dz1]]);
 module dormers() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, 0, -dd]) linear_extrude(dd) dormer2d();
 // the passage behind each dormer's window, under a gable of its own at 55 deg,
 // running in until the house's ceiling has risen above it
@@ -167,7 +172,7 @@ module dormer_passage() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, 0
     // front of it were 0.86 thick
     polygon([[-dpw, H + 0.5], [dpw, H + 0.5], [dpw, dz1 - 0.4], [0, dz1 - 0.4 + dpw * tp], [-dpw, dz1 - 0.4]]);
 DW = [3, 2.8, 6];           // the dormers' windows: sill, a, straight height
-d_fr = 1.8;
+d_fr = 2.4;                 // at 1.8 the frames' heads came to 0.7 at their front
 function dw_w() = [0, 0, H + DW[0], DW[1], DW[2], "seg"];
 
 // =====================================================================================
@@ -215,6 +220,11 @@ module dormer_windows() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, H
     relief_up(-0.4, 0.2) win_muntins(dw_w(), 0.6);
     translate([0, 0, -wall]) linear_extrude(wall - 0.4) offset(r = 0.6) win_outline(dw_w());
 }
+// the frames' holes in the slate face, sheared: cut straight, each window's
+// head over its pane was a level 0.4 mm ledge, and the slicer propped a column
+// for it from the snow, up through every window below
+module dormer_frame_holes() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, H + DW[0]])
+    relief_hole(-0.4, -0.2, 0.8 + 2.4) offset(r = 0.4) win_outline(dw_w());
 // a window box under the front window over the door
 module box2d(w) {
     bw = w[3] + fr_w + 0.4;
@@ -271,12 +281,17 @@ module bow_cut() at_bc() translate([0, 0, -1]) intersection() {
 }
 // its room, and the opening through the front wall: the room's own section,
 // straight to the cone and pointed at 60 deg into it
+module arch2d() polygon([[-rbi, -2], [rbi, -2], [rbi, zb], [0, R_zc(RB, 0)], [-rbi, zb]]);
 module bow_room() {
     at_bc() half() R_room(RB);
-    // only through the wall: run on 2.5 behind it, its point came within 1.3 of
-    // the cone's outside
-    translate([BC[0], -Dh - 1, 0]) rotate([90, 0, 0]) translate([0, 0, -wall - 1.4]) linear_extrude(wall + 1.4)
-        polygon([[-rbi, -2], [rbi, -2], [rbi, zb], [0, R_zc(RB, 0)], [-rbi, zb]]);
+    // through the wall, then on back only above the house's ceiling plane, so
+    // the two meet on that plane. Ended upright behind the wall, the solid
+    // between its back and the 60 deg ceiling came down to a knife edge
+    translate([BC[0], 0, 0]) xz(-Dh - 1, -x_in + 0.3) arch2d();
+    intersection() {
+        translate([BC[0], 0, 0]) xz(-Dh - 1, -5) arch2d();
+        translate([0, -x_in, Hc]) rotate([rm_a, 0, 0]) translate([-100, -100, 0]) cube(200);
+    }
 }
 // the cone runs right round: behind the wall's face it is buried in the mansard
 module bow_cone() at_bc() intersection() { full() R_full(RB, kv0b); full() R_slate(RB, kv0b); }
@@ -299,9 +314,9 @@ module bow_finial() at_bc() translate([0, 0, b_fin - 2.4]) {
     translate([0, 0, 6.0]) rotate([0, 0, 45]) cylinder(r1 = 1.1 * sqrt(2), r2 = 0.35, h = 1.1 * tan(60) * 1.0, $fn = 4);
 }
 // the string courses and the cornice carried round it
-module bow_collar(z, o) at_bc() half()
-    polygon([[rb - 0.5, z - 2.7], [rb + bd + o, z - 2.7 + (bd + o + 0.5) * tp], [rb + bd + o, z + 1.6], [rb - 0.5, z + 1.6]]);
-module bow_collars() { bow_collar(H1, sc_o); bow_collar(H2, sc_o); bow_collar(H, co); }
+module bow_collar(z, o, top = 1.6) at_bc() half()
+    polygon([[rb - 0.5, z - 2.7], [rb + bd + o, z - 2.7 + (bd + o + 0.5) * tp], [rb + bd + o, z + top], [rb - 0.5, z + top]]);
+module bow_collars() { bow_collar(H1, sc_o); bow_collar(H2, sc_o); bow_collar(H, co, c_top); }
 
 // its windows, laid round it in strips like the church's apse: three a floor
 module bplace(r, th, z) translate([BC[0] + r * cos(th), BC[1] + r * sin(th), z]) rotate([0, 0, th + 90]) rotate([90, 0, 0]) children();
@@ -340,14 +355,15 @@ module door_leaf() nf(0, dr_u, zs) difference() {
         translate([min(s * 0.8, s * 3.2), 0.5]) square([2.4, 1.4]);   // low, clear of the wreath
 }
 // the fanlight's pane, back in the opening, and its bars fanning out on it
-module fan_pane() nf(0, dr_u, zs) translate([0, 0, -wall]) linear_extrude(wall - 0.8) intersection() {
+module fan_pane() nf(0, dr_u, zs) translate([0, 0, -wall]) linear_extrude(wall - 0.4) intersection() {   // 1.28 thick, not 0.88
     offset(r = 0.4) door_outline(); translate([-10, dr_h]) square([20, 10]);
 }
-module fan_bars() nf(0, dr_u, zs) translate([0, 0, -0.9]) linear_extrude(0.7) intersection() {
+module fan_bars() nf(0, dr_u, zs) translate([0, 0, -0.5]) linear_extrude(0.6) intersection() {
     door_outline();
     union() {
         translate([-10, dr_h - 0.1]) square([20, 0.9]);
-        for (a = [45, 90, 135]) translate([0, dr_h]) rotate(a) translate([0, -0.4]) square([10, 0.8]);
+        // 55 deg off level, not 45: at 45 the slicer propped them
+        for (a = [55, 90, 125]) translate([0, dr_h]) rotate(a) translate([0, -0.4]) square([10, 0.8]);
         translate([0, dr_h]) circle(r = 1.4, $fn = 24);
     }
 }
@@ -358,7 +374,7 @@ module door_surround() nf(0, dr_u, zs) difference() {
     translate([0, 0, -0.6]) linear_extrude(0.6 + bd) intersection() {
         offset(r = 2.4) door_outline(); translate([-30, -0.5]) square([60, 100]);
     }
-    relief_hole(-0.8, -0.9, bd + 0.1) door_outline();
+    relief_hole(-0.4, -0.5, bd + 0.1) door_outline();
 }
 wr_z = zs + 5.6;
 module wreath() nf(0, dr_u, wr_z) relief_up(-0.2, bd + 1.0) difference() { circle(r = 2.6, $fn = 40); circle(r = 1.3, $fn = 32); }
@@ -454,10 +470,15 @@ module brand_mark() translate([dr_u, -Dh - 8.5, -0.5]) linear_extrude(1.3)
 // =====================================================================================
 // PARTS
 // =====================================================================================
-// the house's room: straight up to the cornice, then a pyramid at 55 deg
+// the house's room: straight up to just over the top floor's windows, then a
+// pyramid at 60 deg. At 55 its hips ran at 45.3 deg and the slicer propped the
+// whole ceiling; at 60 they run at 50.8, and it starts lower so its point stays
+// 3.5 under the mansard's
+rm_a = 60;
+Hc   = apex - 3.5 - x_in * tan(rm_a);
 module main_room() hull() {
-    translate([-x_in, -x_in, -2]) cube([2 * x_in, 2 * x_in, H + 3]);
-    translate([-0.01, -0.01, H + 1 + x_in * tp]) cube(0.02);
+    translate([-x_in, -x_in, -2]) cube([2 * x_in, 2 * x_in, Hc + 2]);
+    translate([-0.01, -0.01, Hc + x_in * tan(rm_a)]) cube(0.02);
 }
 module room() { main_room(); bow_room(); dormer_passage(); }
 module body_raw() {
@@ -472,7 +493,7 @@ module roof_raw() {
             difference() { union() { mansard(); dormers(); } chimney_col(); }
             bow_cone(); bow_slates();
         }
-        room(); dormer_openings();
+        room(); dormer_openings(); dormer_frame_holes();
     }
     finial();
     bow_finial();
