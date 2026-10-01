@@ -228,7 +228,8 @@ dr_top = lancet_top(dr_a, dr_h);
 module door_outline() polygon(lancet_pts(dr_a, dr_h));
 module panel2d(x0, x1, z0, z1) polygon([[x0, z0], [x1, z0], [x1, z1], [(x0 + x1)/2, z1 + (x1 - x0)/2 * tan(60)], [x0, z1]]);
 module door_leaf() nf(1, 0, plinth_h) difference() {
-    translate([0, 0, -wall - 1]) linear_extrude(wall + 1.2) translate([0, -0.3]) offset(delta = 0.2) polygon(lancet_pts(dr_a, dr_h + 0.3));
+    // the wall's thickness only: 1 mm deeper, its foot hung over the open base
+    translate([0, 0, -wall]) linear_extrude(wall + 0.2) translate([0, -0.3]) offset(delta = 0.2) polygon(lancet_pts(dr_a, dr_h + 0.3));
     // two leaves: a groove between them and two panels each, sunk 0.3
     translate([0, 0, -0.1]) linear_extrude(2) {
         translate([-0.3, -1]) square([0.6, 40]);
@@ -360,7 +361,9 @@ twh   = tw_s / 2;
 twi   = twh - wall;                                 // its room's half-width
 z_tw  = 112;                                        // the walls' top, the spire's foot
 module at_tw() translate([TCc[0], TCc[1], 0]) children();
-module tower_cut() at_tw() translate([0, 0, -1]) linear_extrude(300) polygon(rrect_pts(tw_s, tw_s, corner_r, 5));
+// 0.3 inside the tower's face, so the nave's walls run into it: cut at the face
+// itself, the two met in zero-width slivers along the tower's front-right edge
+module tower_cut() at_tw() translate([0, 0, -1]) linear_extrude(300) offset(delta = -0.3) polygon(rrect_pts(tw_s, tw_s, corner_r, 5));
 // the ring of brick, up 0.6 into the spire
 module tower_walls() at_tw() intersection() {
     brick_skin(tw_s, tw_s, z_tw + 1);
@@ -383,19 +386,6 @@ TWIN = concat([[1, 0, 18, 3.0, 9, "lancet"], [1, 0, 58, 3.0, 9, "lancet"], [3, 0
 module tower_windows() for (w = TWIN) tf(w[0], w[1], w[2]) win_relief(w);
 module tower_openings() for (w = TWIN) tf(w[0], w[1], w[2]) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) win_outline(w);
 module tower_frame_holes() for (w = TWIN) tf(w[0], w[1], w[2]) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(w);
-// QUOINS on its two free corners, short ones (the windows are near), skipped
-// where a window's frame or a band is
-tq_long = 4.0;  tq_short = 2.4;
-function tq_free(z0, z1) = len([for (w = TWIN) if (w[0] != 2 && z1 > w[2] - fr_w - 0.5 && z0 < w[2] + w_top(w) + fr_w + 0.5) 1]) == 0
-                         && len([for (b = TB_BANDS) if (z1 > b - 2.6 && z0 < b + 1.8) 1]) == 0;
-module tower_quoins() intersection() {
-    at_tw() brick_skin(tw_s, tw_s, z_tw - 2);
-    for (j = [0 : floor((z_tw - 6 - zc(0)) / (2 * bp)) - 1], sy = [-1, 1]) let (z0 = zc(2 * j), z1 = zc(2 * j + 2))
-        if (tq_free(z0, z1)) let (lx = j % 2 == 0 ? tq_long : tq_short, ly = j % 2 == 0 ? tq_short : tq_long) {
-            translate([TB[0] - 3, sy > 0 ? TB[3] - 0.5 : TB[2] - 3, z0 + q_off]) cube([lx + 3, 3.5, z1 - z0]);
-            translate([TB[0] - 3, sy > 0 ? TB[3] - ly : TB[2] - 3, z0 + q_off]) cube([3.5, ly + 3, z1 - z0]);
-        }
-}
 // its room: square, up into the spire, whose ceiling is the spire's inside
 module tower_room() at_tw() intersection() {
     translate([-twi, -twi, -2]) cube([2 * twi, 2 * twi, 300]);
@@ -442,14 +432,15 @@ module spire_courses() for (zb = [z_tw + 3 : sp_c : sp_top - 8]) hull() {
 module spire() at_tw() union() { spire_outer(); spire_courses(); }
 // the ball and cross, white, its arms' undersides at 45 deg
 module cross_ball() at_tw() translate([0, 0, sp_top]) {
-    // the ball's underside a 45 deg cone from the blunted tip: a sphere's
-    // lower half hung out over it
-    cylinder(r1 = sp_tip, r2 = 1.8, h = 1.8 - sp_tip, $fn = 32);
-    translate([0, 0, 1.8 - sp_tip]) intersection() { sphere(r = 1.8, $fn = 32); translate([-2, -2, 0]) cube(4); }
+    // the ball's underside a 57 deg cone from 0.5 down in the blunted tip: a
+    // sphere's lower half hung out over it, and at 45 deg the slicer propped it.
+    // Each piece starts inside the last, or they print as loose bodies
+    translate([0, 0, -0.5]) cylinder(r1 = sp_tip * cos(22.5) - 0.05, r2 = 1.8, h = 1.9, $fn = 32);
+    translate([0, 0, 1.3]) intersection() { sphere(r = 1.8, $fn = 32); translate([-2, -2, 0]) cube(4); }
     translate([-1, -1, 2.2]) cube([2, 2, 7.6]);
     hull() {
         translate([-2.9, -1, 6.4]) cube([5.8, 2, 1.8]);
-        translate([-1, -1, 4.4]) cube([2, 2, 0.01]);
+        translate([-1, -1, 3.8]) cube([2, 2, 0.01]);
     }
 }
 
@@ -568,7 +559,7 @@ module base() {
     }
 }
 // under the front, between the door's step and the base's edge
-module brand_mark() translate([0, -Dh - 4.6, -0.5]) linear_extrude(1.3)
+module brand_mark() translate([0, -Dh - 3.0, -0.5]) linear_extrude(1.3)
     mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
 // =====================================================================================
@@ -616,7 +607,6 @@ module trim_raw() {
                 tower_cut();
             }
             tower_bands();
-            tower_quoins();
             tower_windows();
             cross_ball();
             apse_collar();
@@ -664,7 +654,7 @@ else if (part == "preview") {
     color("#A8483A") { difference() { walls_solid(); tower_cut(); } tower_walls(); apse_walls(); }
     color("#2E3440") { difference() { union() { slab(); slates(); } tower_cut(); } spire(); apse_cone(); apse_slates(); door_leaf(); }
     color("#F4F1EA") { base(); difference() { union() { quoins(); band(W, D, H1); eave_flare(); icicles(); bargeboards(); finials(); snow_roof(); nave_windows(); } tower_cut(); }
-                       tower_bands(); tower_quoins(); tower_windows(); cross_ball(); apse_collar(); apse_curl(); apse_snow(); aw_frames(); door_frame(); }
+                       tower_bands(); tower_windows(); cross_ball(); apse_collar(); apse_curl(); apse_snow(); aw_frames(); door_frame(); }
     color("#2F6B45") { wreath(); garland(); }
 }
 else if (part == "all") {
