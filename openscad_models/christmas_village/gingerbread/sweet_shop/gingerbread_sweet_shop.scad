@@ -162,10 +162,21 @@ CW = concat(
     [for (th = [45, 135, 225, 315]) [2, th, 88.7, 2.2, 0, "round"]]);
 function cw(w) = [0, 0, 0, w[3], w[4], w[5]];
 function cr(w) = T(w[0])[0];
-function cframe_U(w) = w[3] + (is_round(w) ? 2.4 : fr_w + 0.8);
+function cframe_U(w) = w[3] + (is_round(w) ? 3.0 : 3.2);
+// the cake's frames: a wider band (2.4), a sill under each, a shallower relief
+// (1.0): every raised level part's front is its height less 1.2 (the sloped
+// underside), and at 1.8 tall the frames' feet and crowns came to 0.24 mm
+module cframe2d(w) {
+    if (is_round(w)) translate([0, w[3]]) circle(r = w[3] + 2.6, $fn = 48);
+    else {
+        offset(r = 2.4) win_outline(w);
+        translate([-w[3] - 2.4, -3.0]) square([2 * w[3] + 4.8, 3.2]);
+    }
+}
 // plain on the cake, no beads: laid round in 1 mm strips, the outermost beads
 // were cut into slivers down to 0.02 mm, 170 of the thinnest spans in the model
-module c_frames() for (w = CW) cclip(cr(w), fr_t + 0.4) cyl_relief(cr(w), w[1], w[2], cframe_U(w)) frame_relief(cw(w), false);
+module c_frames() for (w = CW) cclip(cr(w), 1.0) cyl_relief(cr(w), w[1], w[2], cframe_U(w))
+    relief_up(-0.4, 0.6) { cframe2d(cw(w)); offset(r = 0.3) win_outline(cw(w)); }
 module c_bars() for (w = CW) cclip(cr(w), 0.4) cyl_relief(cr(w), w[1], w[2], w[3] + 1) relief_up(-0.4, 0.4) win_muntins(cw(w), 0.6);
 module c_glass() for (w = CW) intersection() {
     cplace(cr(w), w[1], w[2]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) win_outline(cw(w));
