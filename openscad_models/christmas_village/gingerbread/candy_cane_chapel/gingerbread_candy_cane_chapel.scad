@@ -270,7 +270,10 @@ module gumdrops() difference() {
 // =====================================================================================
 rt   = 11.5;
 rti  = rt - wall;
-TC   = [0, -Dh - 4];
+// centred on the nave's inner face, so its inner wall crosses that face square:
+// centred 5.7 mm in front of it, the two met at 55 deg and left a knife edge of
+// wall the height of the doorway, the thinnest 1% of the whole model
+TC   = [0, -Dh + wall];
 FNT  = 160;
 // its spire: the village's swept profile, steep (68 deg) and white
 function R_zc(R, v) = R[0] + (R[1] - abs(v)) * R[2];
