@@ -239,8 +239,9 @@ module door_leaf() nf(1, 0, plinth_h) difference() {
         for (s = [-1, 1]) { panel2d(s * 0.9, s * 3.4, 1.6, 6.4); panel2d(s * 0.9, s * 3.4, 8.6, 11.4); }
     }
 }
-module door_opening() nf(1, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) door_outline();
-module door_hole() nf(1, 0, plinth_h) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) door_outline();
+// through the wall only: cut on out through the door's face it took the
+// wreath's bow with it, leaving two loose fragments the slicer propped
+module door_opening() nf(1, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 3.1) door_outline();
 module door_frame() nf(1, 0, plinth_h) relief_up(-0.4, fr_t) {
     intersection() { offset(r = 1.8) door_outline(); translate([-30, -0.5]) square([60, 100]); }
     translate([0, -1]) offset(delta = -0.3) polygon(lancet_pts(dr_a, dr_h + 1));
@@ -634,7 +635,7 @@ module body_part() {
         nave_openings(); nave_frame_holes();
         tower_openings(); tower_frame_holes();
         aw_openings(); aw_holes();
-        door_opening(); door_hole();
+        door_opening();
         joints();
         trim_raw(); accent_raw(); roof_raw();
     }

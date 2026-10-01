@@ -1757,3 +1757,14 @@ module tower_quoins() intersection() {
 
 <!-- /TRASH 20261001-001 -->
 
+<!-- TRASH id=20261001-002 date=2026-10-01 kind=snippet source="openscad_models/christmas_village/victorian/church/victorian_church.scad" reason="church door_hole removed: cut outward through the door's face it erased the wreath's brick bow (two loose fragments, slicer supports); the slate leaf fills the opening so no frame hole is needed" -->
+## 20261001-002 · 2026-10-01 · snippet · `openscad_models/christmas_village/victorian/church/victorian_church.scad`
+**Reason:** church door_hole removed: cut outward through the door's face it erased the wreath's brick bow (two loose fragments, slicer supports); the slate leaf fills the opening so no frame hole is needed  
+**Payload:** `data/trash/files/20261001-002__snippet.txt`
+
+```
+module door_hole() nf(1, 0, plinth_h) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) door_outline();
+```
+
+<!-- /TRASH 20261001-002 -->
+
