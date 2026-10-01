@@ -442,10 +442,10 @@ module trim_raw() {
             door_frame();
             peppermints();
         }
-        // not the nave's openings: its panes sit in them, and cut out, every
-        // window head was a bridge with nothing under it
+        // no openings: the nave's panes sit in them, and cut out, every window
+        // head was a bridge with nothing under it; the tower's, cut out, trimmed
+        // every frame head to the window's flat-topped outline (the toy shop)
         room();
-        tw_openings();
         brand_mark();
     }
     difference() { tw_glass(); room(); }

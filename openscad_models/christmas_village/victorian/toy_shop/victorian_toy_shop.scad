@@ -489,7 +489,9 @@ by_t = 26.5;                // its top; the fascia is between
 BFACES = [[[BX - BF - BP / 2, yw - BP / 2], 225, BP * sqrt(2) / 2], [[BX, yw - BP], -90, BF], [[BX + BF + BP / 2, yw - BP / 2], -45, BP * sqrt(2) / 2]];
 module bplace(i, z) let (f = BFACES[i]) translate([f[0][0], f[0][1], z]) rotate([0, 0, f[1] + 90]) rotate([90, 0, 0]) children();
 // the panes: on the front two, split by a mullion; one on each side
-function bpanes(i) = i == 1 ? [[-BF + 1.2, -0.7], [0.7, BF - 1.2]] : [[-BFACES[i][2] + 1.0, BFACES[i][2] - 1.0]];
+// the side panes stop 1.6 short of each end: at 1.0 the pane's end fell in
+// the corner post, and the post met the next face's wall along edges
+function bpanes(i) = i == 1 ? [[-BF + 1.2, -0.7], [0.7, BF - 1.2]] : [[-BFACES[i][2] + 1.6, BFACES[i][2] - 1.6]];
 module bay_solid() translate([0, 0, plinth_h - 0.5]) linear_extrude(by_t - plinth_h + 0.5) polygon(BPOLY);
 // its inside, open to the shop; the ceiling rises at 55 deg from the glazing's
 // head into the shop, so it is a slope, not a bridge
@@ -504,7 +506,7 @@ module bay_room() intersection() {
     // and the bay's inside came out solid, its panes sealed voids in it
     yz(-60, 60) polygon([[yb_in - 5, -5], [yb_in - 5, by_c0], [yb_in, by_c0], [yw + 10, by_c0 + (yw + 10 - yb_in) * tan(55)], [yw + 10, -5]]);
 }
-module bay_openings() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall - 1]) cube([p[1] - p[0], by_g[1] - by_g[0], wall + 2]);
+module bay_openings() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall - 0.3]) cube([p[1] - p[0], by_g[1] - by_g[0], wall + 0.6]);
 // the glass fills each opening through the wall's thickness, so the head of
 // the opening rests on it
 module bay_glass() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall - 0.3]) cube([p[1] - p[0], by_g[1] - by_g[0], wall + 0.3]);
@@ -607,10 +609,10 @@ module trim_raw() {
             door_frame();
             toys();
         }
-        // not the block's openings: the cottage's panes sit in them, and cut
-        // out, every window head was a bridge with nothing under it
+        // no openings: the panes sit in them, and the frames' heads have their
+        // own sheared holes. Cut by the tower's openings, every frame head was
+        // trimmed to the window's own flat-topped outline: a 1.2 mm ledge
         room();
-        tw_openings();
         brand_mark();
     }
     // the glass goes back in after the rooms and openings are cut
