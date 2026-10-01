@@ -232,13 +232,15 @@ module door_outline() polygon(lancet_pts(dr_a, dr_h));
 module panel2d(x0, x1, z0, z1) polygon([[x0, z0], [x1, z0], [x1, z1], [(x0 + x1)/2, z1 + (x1 - x0)/2 * tan(60)], [x0, z1]]);
 module door_leaf() nf(1, 0, plinth_h) difference() {
     // the wall's thickness only: 1 mm deeper, its foot hung over the open base
-    translate([0, 0, -wall]) linear_extrude(wall + 0.2) translate([0, -0.3]) offset(delta = 0.2) polygon(lancet_pts(dr_a, dr_h + 0.3));
+    // 0.05 under the frame's inner edge, so the two meet with no slot between
+    translate([0, 0, -wall]) linear_extrude(wall + 0.2) translate([0, -0.3]) offset(delta = 0.25) polygon(lancet_pts(dr_a, dr_h + 0.3));
     // two leaves: a groove between them and two panels each, sunk 0.3
     translate([0, 0, -0.1]) linear_extrude(2) {
         translate([-0.3, -1]) square([0.6, 40]);
         // panels only below the wreath: sunk under it, the panels' corners and the
         // wreath left slivers that printed as four loose bodies
-        for (s = [-1, 1]) panel2d(s * 0.9, s * 3.4, 1.6, 6.4);
+        // x0 < x1 on both sides: given as (-0.9, -3.4) the left panel's point turned down
+        for (s = [-1, 1]) panel2d(min(s * 0.9, s * 3.4), max(s * 0.9, s * 3.4), 1.6, 6.4);
     }
 }
 // through the wall only: cut on out through the door's face it took the
@@ -246,9 +248,9 @@ module door_leaf() nf(1, 0, plinth_h) difference() {
 module door_opening() nf(1, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 3.1) door_outline();
 module door_frame() nf(1, 0, plinth_h) relief_up(-0.4, fr_t) {
     intersection() { offset(r = 1.8) door_outline(); translate([-30, -0.5]) square([60, 100]); }
-    // starting 0.3 outside the outline, not 0.3 over the leaf: overlapping it,
-    // the frame's inner rim was propped up the whole door
-    translate([0, -1]) offset(delta = 0.3) polygon(lancet_pts(dr_a, dr_h + 1));
+    // its inner edge on the leaf's: 0.3 over it the rim was propped up the whole
+    // door, 0.3 outside it a 0.1 slot under the rim was propped instead
+    translate([0, -1]) offset(delta = 0.2) polygon(lancet_pts(dr_a, dr_h + 1));
 }
 // the band is cut where the door's frame crosses it
 module door_band_cut() nf(1, 0, plinth_h) translate([0, 0, -wall - 1]) linear_extrude(wall + 6) offset(r = 2.0) door_outline();
