@@ -19,7 +19,7 @@ if possible"). It is round:
 
 Three roofs at three heights, all one swooping profile. It is a hollow
 lantern with an open base, lit from inside by a battery LED tealight. It
-measures DIMS mm, snow base and spire included.
+measures 81.3 × 73.0 × 112.5 mm, snow base and spire included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
@@ -50,8 +50,8 @@ pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **COST_T** | **COST_F** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | COST_G of model **+ purge** |
+| **single colour** | **5 h 56 m** | **44.3 cm³, about 55 g of PLA** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 55 g of model **+ purge** |
 
 ## The tealight
 
@@ -68,7 +68,33 @@ against 48.9 mm.
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_BLOCK
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.50 mm, median 4.22 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 19.52 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed. The roof and the accent have
+  every edge shared by exactly two faces. The body carries 16 edges shared by
+  more than two and the trim 196, where the icing eave's curl meets the
+  turret's cone and where the porch's half bell meets the house. The merged
+  model is watertight there and slices clean; Bambu Studio may offer to repair
+  those two parts when the 3MF is opened.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 19.7 mm³ of 65,298 mm³ is not printed; 0.5 mm³ printed that was not
+  modelled; 1.5 mm³ printed in another colour. **3 flags, all cosmetic and
+  under 0.05 mm³ each:**
+  - 0.045 mm³ of chocolate over the door, where the porch's half bell meets
+    the wall (5 layers, 0.24 mm wide);
+  - 0.023 mm³ of icing in two left windows' frames, at their sills (3 layers,
+    0.2 mm wide).
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The
+  spire's crook scores 2.4, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
+  base, the same mark as the other buildings, mirrored so it reads OBC with
+  the house turned over, front toward you.
 
 ## Honest weak points
 
