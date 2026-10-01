@@ -126,7 +126,8 @@ module ropes() for (k = [0, 1]) let (r = T(k + 1)[0] + 0.8, n = round(2 * PI * r
     for (i = [0 : n - 1]) rotate(360 * i / n) translate([r, 0, T(k)[2] + 0.9]) sphere(r = 1.1, $fn = 16);
 // berries on each ledge, domes standing on the frosting
 module berries() for (k = [0, 1]) let (r = (T(k)[0] + T(k + 1)[0]) / 2 + 0.9, n = k == 0 ? 14 : 10)
-    for (i = [0 : n - 1]) rotate(360 * i / n + 9) translate([r, 0, T(k)[2] + 0.9]) intersection() {
+    // sunk 0.3: standing on the frosting's top face, each printed loose
+    for (i = [0 : n - 1]) rotate(360 * i / n + 9) translate([r, 0, T(k)[2] + 0.9 - 0.3]) intersection() {
         sphere(r = 1.7, $fn = 24);
         translate([-2, -2, 0]) cube(4);
     }
@@ -212,7 +213,10 @@ module nf(face, u, z) {
       : face == 2 ? [Wh, u, z] : [-Wh, u, z];
     translate(p) rotate([0, 0, r]) rotate([90, 0, 0]) children();
 }
-module below_ceil() xz(-60, 60) polygon([[-40, -5], [40, -5], [40, z_ceil(40)], [0, z_ceil(0)], [-40, z_ceil(-40)]]);
+// out to xe + 2, not the chapel's 40: on this low shop the ceiling's line is
+// under the floor by x = 40, the outline crossed itself and came out empty, and
+// the shop lost its room and its side walls
+module below_ceil() let (X = xe + 2) xz(-60, 60) polygon([[-X, -5], [X, -5], [X, z_ceil(X)], [0, z_ceil(0)], [-X, z_ceil(-X)]]);
 module gable_keep() {
     for (s = [-1, 1]) mirror([0, s < 0 ? 1 : 0, 0])
         xz(Dh - wall, Dh + 5) polygon([[-xe, -5], [xe, -5], [xe, z_out(xe) + 1], [0, z_out(0) + 1], [-xe, z_out(xe) + 1]]);
@@ -363,7 +367,8 @@ module base_slab() {
             offset(delta = -1.8 * (1 - cos(a1))) base2d();
 }
 DRIFTS = [[26, 8, 4, 7, 3.0], [-26, -6, 4, 6, 2.6], [8, 26, 7, 4, 2.8], [-14, 22, 5, 4, 2.4]];
-PM = [[-24, SYc - Dh - 3.8, 2.6], [23, SYc - Dh - 4.2, 2.2], [25.5, -17, 2.2]];
+// on the base's flat top: further out they hung over its rounded edge
+PM = [[-14, SYc - Dh - 2.8, 2.2], [17, SYc - Dh - 2.8, 2.0], [24.5, -14.4, 2.2]];
 module pepper_wedges(r) { for (i = [0 : 3]) rotate(i * 90 + 22.5) polygon([[0, 0], [r * 2, 0], [r * 2 * cos(45), r * 2 * sin(45)]]); circle(r = 0.5); }
 module peppermints(stripes = false) for (p = PM) translate([p[0], p[1], plinth_h - 0.2]) linear_extrude(1.4)
     if (stripes) union() { intersection() { circle(r = p[2]); pepper_wedges(p[2]); } circle(r = 0.8); } else circle(r = p[2]);
@@ -399,7 +404,9 @@ module roof_raw() {
 module accent_raw() {
     sweets();
     berries();
-    cherry();
+    // cut by the room: sunk 1.2 into the dome its foot reached under the room's
+    // ceiling and hung there
+    difference() { cherry(); room(); }
     at_shop() lollipop_swirl();
     peppermints(true);
 }
