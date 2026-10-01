@@ -1,0 +1,68 @@
+{
+  "gecko": {
+    "watertight": true,
+    "consistent_winding": true,
+    "bodies": 7,
+    "dimensions_mm": [
+      207.44754028320312,
+      55.982872009277344,
+      17.974308013916016
+    ],
+    "volume_mm3": 39713.548918150154
+  },
+  "gecko_coupon": {
+    "watertight": true,
+    "consistent_winding": true,
+    "bodies": 2,
+    "dimensions_mm": [
+      38.98433876037598,
+      17.978317260742188,
+      11.191327095031738
+    ],
+    "volume_mm3": 3443.6166559857484
+  },
+  "mushroom_base": {
+    "watertight": true,
+    "consistent_winding": true,
+    "bodies": 1,
+    "dimensions_mm": [
+      40.0,
+      40.0,
+      26.0
+    ],
+    "volume_mm3": 13373.461370786967
+  },
+  "mushroom_cap": {
+    "watertight": true,
+    "consistent_winding": true,
+    "bodies": 1,
+    "dimensions_mm": [
+      49.98493957519531,
+      49.98493957519531,
+      13.818072319030762
+    ],
+    "volume_mm3": 9914.427229235824
+  },
+  "switch_coupon": {
+    "watertight": true,
+    "consistent_winding": true,
+    "bodies": 1,
+    "dimensions_mm": [
+      24.0,
+      24.0,
+      1.5
+    ],
+    "volume_mm3": 565.7850645446742
+  },
+  "stem_coupon": {
+    "watertight": true,
+    "consistent_winding": true,
+    "bodies": 1,
+    "dimensions_mm": [
+      10.0,
+      10.0,
+      6.0
+    ],
+    "volume_mm3": 424.5087033334391
+  }
+}

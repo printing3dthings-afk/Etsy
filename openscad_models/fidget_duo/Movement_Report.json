@@ -1,0 +1,73 @@
+{
+  "joint_1_yaw_collision_mm3": {
+    "0": 0.0,
+    "5": 0.0,
+    "10": 0.0,
+    "15": 1.2852346410767481,
+    "20": 4.7768323522634475
+  },
+  "joint_1_pull_0_collision_mm3": 0.0,
+  "joint_1_pull_0.5_collision_mm3": 0.0,
+  "joint_1_pull_1_collision_mm3": 5.6846905938365735,
+  "joint_1_pull_2_collision_mm3": 40.13838697192796,
+  "joint_2_yaw_collision_mm3": {
+    "0": 0.0,
+    "5": 0.0,
+    "10": 0.0,
+    "15": 1.2852342342987744,
+    "20": 4.776831712057263
+  },
+  "joint_2_pull_0_collision_mm3": 0.0,
+  "joint_2_pull_0.5_collision_mm3": 0.0,
+  "joint_2_pull_1_collision_mm3": 5.684694438089082,
+  "joint_2_pull_2_collision_mm3": 40.13839504894622,
+  "joint_3_yaw_collision_mm3": {
+    "0": 0.0,
+    "5": 0.0,
+    "10": 0.0,
+    "15": 1.2852340371332314,
+    "20": 4.776833538274322
+  },
+  "joint_3_pull_0_collision_mm3": 0.0,
+  "joint_3_pull_0.5_collision_mm3": 0.0,
+  "joint_3_pull_1_collision_mm3": 5.684691509600573,
+  "joint_3_pull_2_collision_mm3": 40.138385734539646,
+  "joint_4_yaw_collision_mm3": {
+    "0": 0.0,
+    "5": 0.0,
+    "10": 0.0,
+    "15": 1.2852342541231867,
+    "20": 4.776832171777879
+  },
+  "joint_4_pull_0_collision_mm3": 0.0,
+  "joint_4_pull_0.5_collision_mm3": 0.0,
+  "joint_4_pull_1_collision_mm3": 5.684691509600573,
+  "joint_4_pull_2_collision_mm3": 40.138385734539646,
+  "joint_5_yaw_collision_mm3": {
+    "0": 0.0,
+    "5": 0.0,
+    "10": 0.0,
+    "15": 1.2852341711089632,
+    "20": 4.776833005806698
+  },
+  "joint_5_pull_0_collision_mm3": 0.0,
+  "joint_5_pull_0.5_collision_mm3": 0.0,
+  "joint_5_pull_1_collision_mm3": 5.684691518340212,
+  "joint_5_pull_2_collision_mm3": 40.13838562121115,
+  "joint_6_yaw_collision_mm3": {
+    "0": 0.0,
+    "5": 0.0,
+    "10": 0.0,
+    "15": 1.2852348342131563,
+    "20": 4.776828373724167
+  },
+  "joint_6_pull_0_collision_mm3": 0.0,
+  "joint_6_pull_0.5_collision_mm3": 0.0,
+  "joint_6_pull_1_collision_mm3": 5.684646109892128,
+  "joint_6_pull_2_collision_mm3": 40.13833494872597,
+  "cap_base_stroke_0_collision_mm3": 0.0,
+  "cap_base_stroke_1_collision_mm3": 0.0,
+  "cap_base_stroke_2_collision_mm3": 0.0,
+  "cap_base_stroke_3_collision_mm3": 0.0,
+  "cap_base_stroke_4_collision_mm3": 0.0
+}

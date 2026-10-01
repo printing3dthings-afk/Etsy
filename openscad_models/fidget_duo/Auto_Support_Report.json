@@ -1,0 +1,135 @@
+{
+  "gecko": {
+    "layers": 96,
+    "printed_height_mm": 18.0,
+    "filament_mm": 12210.0,
+    "filament_g": 36.4,
+    "moves_by_type": {
+      "Perimeter": 114194,
+      "Internal infill": 78908,
+      "Solid infill": 69572,
+      "External perimeter": 60918,
+      "Support material": 4027,
+      "Support material interface": 2760,
+      "Bridge infill": 1105,
+      "Top solid infill": 920,
+      "Overhang perimeter": 473,
+      "Skirt/Brim": 47,
+      "Custom": 1
+    },
+    "support_moves": 6787,
+    "overhang_perimeters": 473,
+    "bridges": 1105,
+    "height_shortfall_mm": -0.03,
+    "geometry_dropped": false
+  },
+  "gecko_coupon": {
+    "layers": 64,
+    "printed_height_mm": 11.2,
+    "filament_mm": 1387.0,
+    "filament_g": 4.1,
+    "moves_by_type": {
+      "Perimeter": 19428,
+      "External perimeter": 10669,
+      "Solid infill": 7121,
+      "Internal infill": 5220,
+      "Support material interface": 504,
+      "Support material": 392,
+      "Bridge infill": 173,
+      "Overhang perimeter": 85,
+      "Skirt/Brim": 56,
+      "Top solid infill": 42,
+      "Custom": 1
+    },
+    "support_moves": 896,
+    "overhang_perimeters": 85,
+    "bridges": 173,
+    "height_shortfall_mm": -0.01,
+    "geometry_dropped": false
+  },
+  "mushroom_base": {
+    "layers": 170,
+    "printed_height_mm": 26.0,
+    "filament_mm": 5495.8,
+    "filament_g": 16.4,
+    "moves_by_type": {
+      "Perimeter": 32961,
+      "Internal infill": 24435,
+      "External perimeter": 16919,
+      "Solid infill": 5588,
+      "Support material": 2513,
+      "Support material interface": 586,
+      "Top solid infill": 300,
+      "Bridge infill": 270,
+      "Overhang perimeter": 68,
+      "Skirt/Brim": 64,
+      "Custom": 1
+    },
+    "support_moves": 3099,
+    "overhang_perimeters": 68,
+    "bridges": 270,
+    "height_shortfall_mm": 0.0,
+    "geometry_dropped": false
+  },
+  "mushroom_cap": {
+    "layers": 81,
+    "printed_height_mm": 13.8,
+    "filament_mm": 3702.7,
+    "filament_g": 11.0,
+    "moves_by_type": {
+      "Perimeter": 27221,
+      "Solid infill": 23035,
+      "External perimeter": 15409,
+      "Internal infill": 13497,
+      "Bridge infill": 402,
+      "Support material": 285,
+      "Top solid infill": 155,
+      "Skirt/Brim": 64,
+      "Custom": 1
+    },
+    "support_moves": 285,
+    "overhang_perimeters": 0,
+    "bridges": 402,
+    "height_shortfall_mm": 0.02,
+    "geometry_dropped": false
+  },
+  "switch_coupon": {
+    "layers": 7,
+    "printed_height_mm": 1.4,
+    "filament_mm": 237.7,
+    "filament_g": 0.7,
+    "moves_by_type": {
+      "Solid infill": 1429,
+      "Perimeter": 385,
+      "Top solid infill": 280,
+      "External perimeter": 119,
+      "Skirt/Brim": 20,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 0,
+    "bridges": 0,
+    "height_shortfall_mm": 0.1,
+    "geometry_dropped": false
+  },
+  "stem_coupon": {
+    "layers": 30,
+    "printed_height_mm": 6.0,
+    "filament_mm": 449.2,
+    "filament_g": 1.3,
+    "moves_by_type": {
+      "Perimeter": 3945,
+      "Solid infill": 2932,
+      "External perimeter": 1707,
+      "Skirt/Brim": 65,
+      "Bridge infill": 53,
+      "Top solid infill": 52,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 0,
+    "bridges": 53,
+    "height_shortfall_mm": 0.0,
+    "geometry_dropped": false
+  }
+}
