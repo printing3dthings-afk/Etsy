@@ -70,7 +70,31 @@ edge. A 38 mm tealight has 54 mm, room for a 45 mm-tall generic one.
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_BLOCK
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.48 mm, median 4.15 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 14.80 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed. The body and the accent have
+  every edge shared by exactly two faces. The roof and the trim carry 20 and
+  80 edges shared by more than two, and two zero-area triangles each, all in
+  the few square millimetres where the gable's ridge dives into the cone and
+  its snow, roof and the cone meet. The merged model is watertight there and
+  slices clean; Bambu Studio may offer to repair those two parts when the 3MF
+  is opened.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): **0 flags**. 11.3 mm³ of 42,479 mm³ is not printed; 0.8 mm³ printed
+  that was not modelled; 0.4 mm³ printed in the next colour. The largest miss
+  is one layer at the tip of the gable's ridge (1.2 mm³, 0.42 mm deep).
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The chimney
+  pots score 1.8 and the cone's tip 2.0, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
+  base, in the band between the drum's opening and the base's edge. It is the
+  same mark as the other buildings, mirrored so it reads OBC with the cottage
+  turned over, front toward you.
 
 ## What it took to print without supports
 
@@ -104,5 +128,7 @@ were this building's own, each found on the gate's slicer or the mesh check:
 - **The wreath's and garland's bows are brick**, the wall's colour, so they
   read by their relief only. A fifth colour would have been needed for red.
 - **Icicles hang against the wall, not in the air.**
+- **The gable's snow shows as a small white block behind the finial**, where
+  it runs back into the cone.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.
