@@ -388,8 +388,10 @@ module cone_curl() at_tc() rotate_extrude($fn = FNT) R_curl(RC, kv0c);
 module course_band(R, x0e, x1) polygon([[x0e, R_top(R, x0e) - 1.0], [x0e, R_top(R, x0e) + 1.0], [x1, R_top(R, x1) + 0.05], [x1, R_top(R, x1) - 1.0]]);
 module cone_slates() at_tc() {
     ve = RC[5];
-    nk = ceil((ve - 0.8) / sh_c);
-    for (k = [0 : nk - 1]) let (x0 = ve - k * sh_c, x1 = max(ve - (k + 1) * sh_c - 0.5, 0.8))
+    // stopped under the snow cap (out to 6.2): run up to the tip, every
+    // course's step cut the cap's edge into slivers under 1 mm
+    nk = ceil((ve - 6.8) / sh_c);
+    for (k = [0 : nk - 1]) let (x0 = ve - k * sh_c, x1 = max(ve - (k + 1) * sh_c - 0.5, 6.8))
         if (x0 > x1 + 0.3) rotate_extrude($fn = FNT) course_band(RC, x0, x1);
 }
 function wave(t) = 1.2 * sin(t * 3.0) + 0.8 * sin(t * 7.0 + 60);
@@ -509,7 +511,9 @@ module bay_room() intersection() {
 module bay_openings() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall - 0.3]) cube([p[1] - p[0], by_g[1] - by_g[0], wall + 0.6]);
 // the glass fills each opening through the wall's thickness, so the head of
 // the opening rests on it
-module bay_glass() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall - 0.3]) cube([p[1] - p[0], by_g[1] - by_g[0], wall + 0.3]);
+// exactly the wall's thickness: 0.3 into the bay, its ends met the openings'
+// ends and the side walls' inner faces along edges shared by four faces
+module bay_glass() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall]) cube([p[1] - p[0], by_g[1] - by_g[0], wall]);
 // a transom bar across each pane, on the glass
 module bay_transoms() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0] + 6) relief_up(-0.4, 0.6) translate([p[0] - 0.3, 0]) square([p[1] - p[0] + 0.6, 1.2]);
 // the hipped roof: from the bay's top edges up into the wall at 45 deg
@@ -571,7 +575,9 @@ module roof_raw() {
     difference() { blk() difference() { union() { slab(); slates(); } blk_room(); chimney_col(); } turret_cut(); }
     difference() { union() { cone_roof(); cone_slates(); } tower_room(); }
     tower_finial();
-    bay_roof();
+    // cut by the room: where it runs back into the wall over the bay's opening
+    // into the shop, it hung over the shop
+    difference() { bay_roof(); room(); }
     door_leaf();
 }
 module accent_raw() {
