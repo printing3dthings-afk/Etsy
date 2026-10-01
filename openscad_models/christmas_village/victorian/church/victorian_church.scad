@@ -24,13 +24,14 @@
 //
 // COLOUR PARTS, ONE PRINT (victorian_church.3mf), priority
 // roof > accent > trim > body:
-//   body    brick: the nave, the tower, the apse, the kneelers, the wreath's
-//           and garland's bows, the step
+//   body    brick: the nave, the tower, the apse, the kneelers, the
+//           garland's bows, the step
 //   roof    slate: the nave's roof, the spire, the apse's cone, the door
 //   trim    white: snow base and drifts, quoins, sill course, the tower's bands
 //           and cornice, eave soffits, icicles, bargeboards and finials, snow on
 //           the roofs, every window's frame, tracery, bars and pane, the
-//           belfry's louvres, the door frame, the ball and cross
+//           belfry's louvres, the door frame, the wreath's bow, the ball and
+//           cross
 //   accent  evergreen: the wreath, the garland
 
 include <BOSL2/std.scad>
@@ -243,9 +244,9 @@ module door_leaf() nf(1, 0, plinth_h) difference() {
         for (s = [-1, 1]) panel2d(min(s * 0.9, s * 3.4), max(s * 0.9, s * 3.4), 1.6, 6.4);
     }
 }
-// through the wall only: cut on out through the door's face it took the
-// wreath's bow with it, leaving two loose fragments the slicer propped
-module door_opening() nf(1, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 3.1) door_outline();
+// out through the bricks' bumps: cut only through the wall, the brick courses'
+// 0.6 ridges ran on across the door and the slicer propped them
+module door_opening() nf(1, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) door_outline();
 module door_frame() nf(1, 0, plinth_h) relief_up(-0.4, fr_t) {
     intersection() { offset(r = 1.8) door_outline(); translate([-30, -0.5]) square([60, 100]); }
     // its inner edge on the leaf's: 0.3 over it the rim was propped up the whole
@@ -586,7 +587,6 @@ module body_raw() {
     difference() { walls_solid(); tower_cut(); }
     tower_walls();
     apse_walls();
-    wreath_bow();
     garland_bows();
     step();
 }
@@ -626,6 +626,8 @@ module trim_raw() {
             aw_frames();
             aw_bars();
             door_frame();
+            // white, not brick: the door's opening cuts the body, and took the bow with it
+            wreath_bow();
         }
         room();
         brand_mark();
