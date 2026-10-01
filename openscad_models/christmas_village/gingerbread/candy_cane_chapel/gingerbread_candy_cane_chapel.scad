@@ -323,7 +323,10 @@ st_f = 0.36;                // each one's share of its turn
 st_P = 2 * PI * rt * tan(35) / 1;   // rise per turn round the tower
 module helix(z0, z1) at_tc() translate([0, 0, z0]) for (k = [0 : st_n - 1]) rotate(k * 360 / st_n)
     linear_extrude(z1 - z0, twist = -360 * (z1 - z0) / st_P, slices = ceil((z1 - z0) / st_P * 90), $fn = 60)
-        polygon(concat([[0, 0]], [for (i = [0 : 12]) let (a = 360 / st_n * st_f * i / 12) 40 * [cos(a), sin(a)]]));
+        // from 0.6 out, not from the axis: meeting there, the three wedges left
+        // 450 edges shared by more than two faces up the spire's thin tip
+        polygon(concat([for (i = [12 : -1 : 0]) let (a = 360 / st_n * st_f * i / 12) 0.6 * [cos(a), sin(a)]],
+                       [for (i = [0 : 12]) let (a = 360 / st_n * st_f * i / 12) 40 * [cos(a), sin(a)]]));
 
 // THE CROOK: a candy-cane rod from the spire's tip, bending over sideways (so
 // it reads from the street) to 40 deg at its end, the most a rod can lean and
