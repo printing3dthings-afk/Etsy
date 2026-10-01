@@ -92,6 +92,15 @@ tower: three round frosted tiers stacked smaller and smaller, with drips and
 windows in each and a cherry on top, beside a small square shop front with a
 lollipop sign. Three storeys.
 
+**Fourth pair, picked 2026-10-01** from four forms each, after Scott saw the
+finished church and sweet shop. The **Victorian coaching inn** is a long
+two-storey brick inn with a timber-framed jettied upper floor, a big pointed
+carriage archway through one end, a hanging lantern and inn sign, and two
+chimneys: the widest building in the village. The **Gingerbread cocoa café**
+is a round tower shaped like a hot-cocoa mug, a handle on its side, whipped
+cream and marshmallows on top and a candy-cane stirrer, joined to a small
+square café front with a striped awning.
+
 **Tealight headroom on the round cottages, decided 2026-10-01:** the Victorian
 cottage, cupcake cottage and turret house stay as built, 46 mm tealight short
 of 50 mm of headroom (41.6–47.2 mm). Their notes recommend a 38 mm tealight,
