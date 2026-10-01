@@ -196,12 +196,15 @@ module win_bars(w) {
         translate([-mull/2, -3]) square([mull, 40]);
         translate([-20, w[4] * 0.55]) square([40, 2.2]);
     } else if (w[5] == "rose") translate([0, w[3]]) {
-        // tracery: four bars through the hub, a ring, the hub
-        for (q = [0 : 45 : 135]) rotate(q) translate([-2 * w[3], -mull/2]) square([4 * w[3], mull]);
-        difference() { circle(r = 0.58 * w[3] + 0.7); circle(r = 0.58 * w[3] - 0.7); }
+        // tracery: four bars through the hub, a ring, the hub. Every raised bar's
+        // underside slopes up 1.2 per mm out, so a level bar's front is its
+        // height less 1.2: no bar is level (turned 22.5), each 2.0 wide
+        for (q = [22.5 : 45 : 157.5]) rotate(q) translate([-2 * w[3], -1.0]) square([4 * w[3], 2.0]);
+        difference() { circle(r = 0.58 * w[3] + 1.0); circle(r = 0.58 * w[3] - 1.0); }
         circle(r = 1.7);
     } else if (w[5] == "louvre") {
-        for (i = [0 : 4]) translate([-20, 1.0 + i * (w[4] + 1.2) / 4.4]) square([40, 1.2]);
+        // three slats 2.2 tall: five 1.2 tall came to a knife edge at the front
+        for (i = [0 : 2]) translate([-20, 0.8 + i * 3.4]) square([40, 2.2]);
     } else {
         translate([-mull/2, -3]) square([mull, w[4] + mull + 3]);
         for (s = [-1, 1]) translate([0, w[4]]) rotate(s < 0 ? 180 - 62 : 62)
