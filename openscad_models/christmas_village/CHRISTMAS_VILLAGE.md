@@ -103,6 +103,15 @@ is a round tower shaped like a hot-cocoa mug, a handle on its side, whipped
 cream and marshmallows on top and a candy-cane stirrer, joined to a small
 square café front with a striped awning.
 
+**Fifth pair, picked 2026-10-01** from four forms each, after Scott saw the
+finished inn and cocoa café. The **Victorian townhouse** is a tall, narrow
+three-storey brick house, square, with a round bow window running up its whole
+front, a mansard slate roof with two dormers, and steps up to a door with a
+fanlight: the village's first three-storey house. The **Gingerbread Santa's
+workshop** is a roundhouse: a round gingerbread drum under a cone roof with
+gumdrops round its eave, a square loading wing with big double doors, and a
+tall round chimney striped like a peppermint.
+
 **Tealight headroom on the round cottages, decided 2026-10-01:** the Victorian
 cottage, cupcake cottage and turret house stay as built, 46 mm tealight short
 of 50 mm of headroom (41.6–47.2 mm). Their notes recommend a 38 mm tealight,
