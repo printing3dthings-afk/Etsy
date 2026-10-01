@@ -374,6 +374,9 @@ module fan_bars() nf(0, dr_u, zs) translate([0, 0, -0.5]) linear_extrude(0.6) in
     }
 }
 module door_opening() nf(0, dr_u, zs) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) door_outline();
+// the surround's sloped hole, cut from the brick too: cut from the surround
+// only, brick filled it down to the fanlight's head, a level 1 mm ledge
+module door_hole() nf(0, dr_u, zs) relief_hole(-0.4, -0.5, bd + 0.1) door_outline();
 // the surround a flush white band at the bricks' face (the inn's door), its
 // hole sheared so the fanlight's recess rises outward instead of a flat head
 module door_surround() nf(0, dr_u, zs) difference() {
@@ -540,7 +543,7 @@ module body_part() {
         room();
         blk_openings(); blk_frame_holes(); joints();
         bw_openings(); bw_holes();
-        door_opening();
+        door_opening(); door_hole();
         trim_raw(); accent_raw(); roof_raw();
     }
 }

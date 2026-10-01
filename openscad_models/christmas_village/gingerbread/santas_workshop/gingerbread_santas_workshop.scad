@@ -264,7 +264,9 @@ module eave_flare() {
 module walls_solid() {
     intersection() {
         translate([0, 0, plinth_h - 0.5]) linear_extrude(200) rect([W, D], rounding = corner_r);
-        union() { below_ceil(); gable_keep(); }
+        // the walls' top 0.3 up into the roof slab, which takes it: drawn on the
+        // same plane as the slab's underside, the two met in zero-thick sheets
+        union() { translate([0, 0, 0.3]) below_ceil(); gable_keep(); }
     }
     kneelers();
 }
