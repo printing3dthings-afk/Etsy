@@ -23,7 +23,7 @@ tower at its front**:
 It is a hollow lantern with an open base, lit from inside by a battery LED
 tealight. The tower opens into the nave through a pointed doorway, so one
 light fills both, and the tower's white walls glow with the stripes dark on
-them. It measures DIMS mm, snow base and crook included.
+them. It measures 68.0 × 83.8 × 132.3 mm, snow base and crook included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
@@ -54,8 +54,8 @@ pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **COST_T** | **COST_F** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | COST_G of model **+ purge** |
+| **single colour** | **6 h 36 m** | **49.3 cm³, about 61 g of PLA** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 61 g of model **+ purge** |
 
 The red stripes run the tower's whole height, so the AMS changes colour on
 almost every layer from the plinth to the crook. Expect the four-colour
@@ -64,7 +64,16 @@ suggests.
 
 ## The tealight
 
-TEALIGHT_BLOCK
+Measured on the exported model:
+
+- the base is open under the nave, and the tower opens into it;
+- a 46.6 mm circle round the nave's centre is clear from the table to
+  50.6 mm;
+- a 38 mm tealight has room to 56.6 mm.
+
+**This meets the series rule** (at least 46 mm across and 50 mm of headroom),
+by 0.6 mm. The steep gable comes down to a 49 mm eave, so the circle's edge
+is where the room is lowest.
 
 ## Verified before shipping — on the real exported meshes
 
@@ -95,7 +104,6 @@ each found on the gate's slicer or a section through the model:
 
 ## Honest weak points
 
-- TEALIGHT_WEAK
 - **Raised details have sloped undersides.** That is how they print without
   supports. Frames, beads and drips read as wedges from below.
 - **The crook is the most fragile part.** It prints, and fragility scores it
