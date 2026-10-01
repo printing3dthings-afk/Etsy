@@ -208,7 +208,9 @@ module eave_drips() for (f = [2, 3], c = DR) if (dr_clear(f, c[0])) nf(f, c[0], 
 rb_h = 3.2;  rb_t = 1.2;
 module gable_poly(lo, hi) polygon([[-xe, z_out(xe) + lo], [0, z_out(0) + lo], [xe, z_out(xe) + lo],
                                    [xe, z_out(xe) + hi], [0, z_out(0) + hi], [-xe, z_out(xe) + hi]]);
-RD = [for (i = [0 : 13]) let (x = 1.6 + i * 2.1) if (x < Wh - 2.4) [x, 1.2 + 3.2 * rnd(i, 110), 2.0 + 0.4 * rnd(i, 130)]];
+// from the second: the first pair, 1.6 either side of the peak, nearly met
+// under it and the slicer propped the gap between them
+RD = [for (i = [1 : 13]) let (x = 1.6 + i * 2.1) if (x < Wh - 2.4) [x, 1.2 + 3.2 * rnd(i, 110), 2.0 + 0.4 * rnd(i, 130)]];
 module rake2d(ext) {
     X = Wh - 1;
     polygon([[-X, z_out(X) + cp_hi + ext], [0, z_out(0) + cp_hi + ext], [X, z_out(X) + cp_hi + ext],
@@ -313,17 +315,18 @@ module helix(z0, z1) at_tc() translate([0, 0, z0]) for (k = [0 : st_n - 1]) rota
     linear_extrude(z1 - z0, twist = -360 * (z1 - z0) / st_P, slices = ceil((z1 - z0) / st_P * 90), $fn = 60)
         polygon(concat([[0, 0]], [for (i = [0 : 12]) let (a = 360 / st_n * st_f * i / 12) 40 * [cos(a), sin(a)]]));
 
-// THE CROOK: a candy-cane rod from the spire's tip, bending over toward the
-// street to 40 deg at its end, the most a rod can lean and print over nothing
+// THE CROOK: a candy-cane rod from the spire's tip, bending over sideways (so
+// it reads from the street) to 40 deg at its end, the most a rod can lean and
+// print over nothing. A cane's full hook would hang over air.
 cr_n = 12;  cr_L = 11;
 function cr_ang(i) = 40 * pow(i / cr_n, 2);
 function cr_pts(i) = i == 0 ? [0, 0] : let (p = cr_pts(i - 1)) [p[0] + cr_L / cr_n * sin(cr_ang(i)), p[1] + cr_L / cr_n * cos(cr_ang(i))];
 function cr_r(i) = 1.9 - 0.5 * i / cr_n;
 cr_z0 = R_top(RS, 0) - 2.5;
-module cr_at(i) let (p = cr_pts(i)) translate([TC[0], TC[1] - p[0], cr_z0 + p[1]]) sphere(r = cr_r(i), $fn = 24);
+module cr_at(i) let (p = cr_pts(i)) translate([TC[0] + p[0], TC[1], cr_z0 + p[1]]) sphere(r = cr_r(i), $fn = 24);
 module crook() for (i = [0 : cr_n - 1]) hull() { cr_at(i); cr_at(i + 1); }
 module crook_stripes() for (z = [cr_z0 + 1 : 2.4 : cr_z0 + cr_L + 2])
-    translate([TC[0], TC[1], z]) rotate([28, 0, 0]) cube([20, 20, 1.0], center = true);
+    translate([TC[0], TC[1], z]) rotate([0, -28, 0]) cube([20, 20, 1.0], center = true);
 
 // ---- the tower's windows and door ---------------------------------------------------------------
 module cplace(r, th, z) translate([TC[0] + r * cos(th), TC[1] + r * sin(th), z]) rotate([0, 0, th + 90]) rotate([90, 0, 0]) children();
@@ -339,9 +342,11 @@ function tw(w) = [0, 0, 0, w[2], w[3], "arch"];
 function tframe_U(w) = w[2] + fr_w + bead_r + 1.2;
 module tw_frames() tclip(fr_t + 0.4) for (w = TW) cyl_relief(rt, w[0], w[1], tframe_U(w)) frame_relief(tw(w));
 module tw_bars() tclip(0.4) for (w = TW) cyl_relief(rt, w[0], w[1], w[2] + 1) relief_up(-0.4, 0.4) win_muntins(tw(w), 0.6);
+// out to the face: the tower is the glass's own white, and 0.2 behind the face
+// each round head left a flat 0.2 mm crown the slicer propped from the snow
 module tw_glass() intersection() {
-    for (w = TW) cplace(rt, w[0], w[1]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) win_outline(tw(w));
-    at_tc() cylinder(r = rt - 0.2, h = 200, $fn = FNT);
+    for (w = TW) cplace(rt, w[0], w[1]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 1.2) offset(r = 0.6) win_outline(tw(w));
+    at_tc() cylinder(r = rt, h = 200, $fn = FNT);
 }
 module tw_openings() for (w = TW) cplace(rt, w[0], w[1]) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) win_outline(tw(w));
 module tw_holes() for (w = TW) cyl_relief(rt, w[0], w[1], tframe_U(w)) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(tw(w));
@@ -437,8 +442,9 @@ module trim_raw() {
             door_frame();
             peppermints();
         }
+        // not the nave's openings: its panes sit in them, and cut out, every
+        // window head was a bridge with nothing under it
         room();
-        nave_openings();
         tw_openings();
         brand_mark();
     }
