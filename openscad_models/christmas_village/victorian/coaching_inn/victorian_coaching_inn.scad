@@ -138,7 +138,10 @@ module quoins() intersection() { brick_skin(W_lo, D, zc(2 * nq) + 2); quoin_boxe
 // all but square (up_r): rounded like the brick's, the eave flare ran on past
 // them over air at all four corners and the slicer propped it
 up_r = 0.3;
-module jetty_beam() skin([rpts(W_lo, D, -0.2, cz0), rpts(W, D, 0, H1, up_r), rpts(W, D, 0, H1 + 1.4, up_r)], slices = 0);
+// On the gables it stands out over the bricks' bumps (bd): flush with the
+// plaster there, the bumps' last course rose past it as a 0.16 mm sliver
+function bpts(z) = [for (p = rrect_pts(W, D + 2 * (bd + 0.2), up_r, 5)) [p[0], p[1], z]];
+module jetty_beam() skin([rpts(W_lo, D, -0.2, cz0), bpts(H1), bpts(H1 + 1.4)], slices = 0);
 
 // ---- regions ---------------------------------------------------------------------------
 module below_ceil() xz(-60, 60) polygon([[-40, -5], [40, -5], [40, z_ceil(40)], [0, z_ceil(0)], [-40, z_ceil(-40)]]);
@@ -289,7 +292,7 @@ module door_outline() polygon(seg_pts(dr_a, dr_h));
 module panel2d(x0, x1, z0, z1) polygon([[x0, z0], [x1, z0], [x1, z1], [(x0 + x1)/2, z1 + (x1 - x0)/2 * tan(60)], [x0, z1]]);
 module door_leaf() nfl(3, dr_u, plinth_h) difference() {
     translate([0, 0, -wall]) linear_extrude(wall + bd) translate([0, -0.3]) offset(delta = 0.25) polygon(seg_pts(dr_a, dr_h + 0.3));
-    translate([0, 0, bd - 0.4]) linear_extrude(2) for (s = [-1, 1]) panel2d(min(s * 0.8, s * 3.2), max(s * 0.8, s * 3.2), 1.6, 5.6);
+    translate([0, 0, bd - 0.4]) linear_extrude(2) for (s = [-1, 1]) panel2d(min(s * 0.8, s * 3.2), max(s * 0.8, s * 3.2), 1.0, 2.4);   // under the wreath, which left them slivers
 }
 // out through the bricks' bumps (the church: through the wall only, the
 // courses' ridges ran across the door)
@@ -327,12 +330,12 @@ ln_u = -14.5;  ln_z = 17;
 module lantern_frame() nfl(3, ln_u, ln_z) relief_up(-0.4, 2.2) {
     union() {
         polygon([[-2.3, 7.2], [2.3, 7.2], [1.0, 8.8], [-1.0, 8.8]]);
-        translate([-0.5, 8.6]) square([1.0, 2.0]);
-        polygon([[-1.8, 1.4], [1.8, 1.4], [0, -0.6]]);
-        difference() { translate([-1.8, 1.2]) square([3.6, 6.2]); translate([-1.1, 1.9]) square([2.2, 4.8]); }
+        translate([-0.65, 8.6]) square([1.3, 2.0]);
+        polygon([[-2.3, 1.4], [2.3, 1.4], [0, -1.0]]);
+        difference() { translate([-2.3, 1.2]) square([4.6, 6.2]); translate([-1.0, 2.2]) square([2.0, 4.2]); }   // 1.3 bars, not 0.7
     }
 }
-module lantern_glass() nfl(3, ln_u, ln_z) relief_up(-0.4, 1.8) translate([-1.2, 1.8]) square([2.4, 5.0]);
+module lantern_glass() nfl(3, ln_u, ln_z) relief_up(-0.4, 1.8) translate([-1.2, 2.0]) square([2.4, 4.6]);
 
 // ---- icicles under the long eaves, clear of the upper windows -----------------------------------
 function rnd(i, s) = rands(0, 1, 1, s + i)[0];
@@ -409,10 +412,10 @@ module chimney(y) difference() {
             translate([-ch_s / 2, y - ch_s / 2, ch_top - 1.3]) cube([ch_s, ch_s, 0.01]);
             translate([-ch_s / 2 - 0.8, y - ch_s / 2 - 0.8, ch_top]) cube([ch_s + 1.6, ch_s + 1.6, 1.6]);
         }
-        for (x = [-1.8, 1.8]) translate([x, y, ch_top + 1.4]) cylinder(d = 3.0, h = 4.0, $fn = 32);
+        for (x = [-2.1, 2.1]) translate([x, y, ch_top + 1.4]) cylinder(d = 3.6, h = 4.0, $fn = 32);   // 1.3 walls round the flue
     }
     below_ceil();
-    for (x = [-1.8, 1.8]) translate([x, y, ch_top + 3.4]) cylinder(d = 1.0, h = 5, $fn = 20);
+    for (x = [-2.1, 2.1]) translate([x, y, ch_top + 3.4]) cylinder(d = 1.0, h = 5, $fn = 20);
 }
 module chimneys() for (y = CH_Y) chimney(y);
 module chimney_cols() for (y = CH_Y) translate([-ch_s / 2, y - ch_s / 2, 40]) cube([ch_s, ch_s, 80]);
@@ -462,7 +465,7 @@ module base() {
     }
 }
 // under the front, between the door's step and the base's edge (world frame)
-module brand_mark() translate([-dr_u, -Wh - 3.0, -0.5]) linear_extrude(1.3)
+module brand_mark() translate([-dr_u, -Wh - 1.5, -0.5]) linear_extrude(1.3)
     mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
 // =====================================================================================
