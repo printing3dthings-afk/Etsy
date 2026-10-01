@@ -126,7 +126,9 @@ module quoins() intersection() { brick_skin(zc(2 * nq) + 2); quoin_boxes(); }
 // THE STRING COURSE: a white band round the block at the first floor, its
 // underside rising at 55 deg as it comes out
 sc_o = 0.9;                 // proud of the brick
-module string_course() skin([rpts(W, D, bd - 0.2, H1 - 0.5), rpts(W, D, bd + sc_o, H1 - 0.5 + (sc_o + 0.2) * tan(55)),
+// its foot 0.3 inside the wall's plane: started 0.2 inside the brick's face it
+// stood 0.21 proud of the course groove under it, a ledge the slicer propped
+module string_course() skin([rpts(W, D, -0.3, H1 - 1.6), rpts(W, D, bd + sc_o, H1 - 1.6 + (bd + sc_o + 0.3) * tan(55)),
                              rpts(W, D, bd + sc_o, H1 + 1.6)], slices = 0);
 
 // ---- regions ---------------------------------------------------------------------------
@@ -430,7 +432,9 @@ module tw_glass() intersection() {
     for (w = TW) cplace(rt, w[0], w[1]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) win_outline(tw(w));
     at_tc() cylinder(r = rt - 0.2, h = 200, $fn = FNT);
 }
-module tw_openings() for (w = TW) cplace(rt, w[0], w[1]) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) win_outline(tw(w));
+// in strips like the holes: cut flat, on this curve the opening and the holes
+// left slivers of brick beside every window, each its own loose body
+module tw_openings() for (w = TW) cyl_relief(rt, w[0], w[1], w[2] + 1) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) win_outline(tw(w));
 // the holes in strips, like the frames: cut flat on this curve they cross the
 // frames' strips (the turret house: edges in the wall)
 module tw_holes() for (w = TW) cyl_relief(rt, w[0], w[1], tframe_U(w)) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(tw(w));
@@ -600,8 +604,9 @@ module trim_raw() {
             door_frame();
             toys();
         }
+        // not the block's openings: the cottage's panes sit in them, and cut
+        // out, every window head was a bridge with nothing under it
         room();
-        blk() blk_openings();
         tw_openings();
         brand_mark();
     }
@@ -614,7 +619,9 @@ module trim_part()   { difference() { trim_raw(); accent_raw(); roof_raw(); } }
 module body_part() {
     difference() {
         body_raw();
-        room(); bay_room();
+        // the bay's panes reach back into the wall: without these, brick stood
+        // loose inside each side pane
+        room(); bay_room(); bay_openings();
         blk() { blk_openings(); blk_frame_holes(); joints(); }
         tw_openings(); tw_holes(); door_opening(); door_hole();
         trim_raw(); accent_raw(); roof_raw();
