@@ -71,7 +71,34 @@ headroom): the square shop has two full storeys of wall under its gable.
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_BLOCK
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.45 mm, median 3.02 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 21.29 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed. The roof and the accent have
+  every edge shared by exactly two faces. The body carries 1 edge shared by
+  more than two and the trim 4, all high on the tower where it meets the
+  gable roof. The merged model is watertight there and slices clean; Bambu
+  Studio may offer to repair those two parts when the 3MF is opened.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 19.7 mm³ of 78,017 mm³ is not printed; 1.2 mm³ printed that was not
+  modelled; 0.6 mm³ printed in another colour. **6 flags, all white, all
+  cosmetic and none over 0.26 mm³:**
+  - 0.25 and 0.13 mm³ of the S in TOYS (its curves' thinnest ends, 0.4 mm
+    wide);
+  - 0.16 mm³ at the edge of the snow on the cone's crown;
+  - 0.09 mm³ each at three corners of the block, where the white eave meets
+    the gable's foot.
+  The as-printed renders show TOYS reading clearly.
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The tower's
+  finial scores 3.8, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the bay, the same mark as the other buildings, mirrored so it reads OBC
+  with the shop turned over, front toward you.
 
 ## What it took to print without supports
 
