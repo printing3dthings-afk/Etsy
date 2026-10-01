@@ -72,7 +72,25 @@ The bottom tier is 54 mm tall for it: its room keeps its full width to
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_BLOCK
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.39 mm, median 4.30 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 20.05 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed, and every edge shared by
+  exactly two faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): **0 flags**. 14.2 mm³ of 61,622 mm³ is not printed; 0.1 mm³ printed
+  that was not modelled; 0.2 mm³ printed in another colour. The largest miss
+  is 0.4 mm³ at the edge of the lollipop's disc.
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The cherry's
+  stem scores 2.7, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the shop, the same mark as the other buildings, mirrored so it reads OBC
+  with the shop turned over, front toward you.
 
 ## What it took to print without supports
 

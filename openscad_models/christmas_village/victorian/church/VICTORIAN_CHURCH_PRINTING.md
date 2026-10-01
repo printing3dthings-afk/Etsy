@@ -82,7 +82,32 @@ headroom). The nave's eave line was set at 50 mm for it.
 
 ## Verified before shipping — on the real exported meshes
 
-GATE_BLOCK
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.48 mm, median 3.24 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 23.81 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed. The roof, trim and accent
+  have every edge shared by exactly two faces. The body carries 10 edges
+  shared by more than two, where the apse's half cone meets the back wall. The
+  merged model is watertight there and slices clean; Bambu Studio may offer to
+  repair the body when the 3MF is opened.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 20.5 mm³ of 97,470 mm³ is not printed; 0.5 mm³ printed that was not
+  modelled; 0.2 mm³ printed in another colour. **9 flags, all white, all
+  cosmetic and none over 0.12 mm³:**
+  - the rose window's tracery bars, between its hub and its rim (six
+    flags, 0.04–0.12 mm³, 0.22 mm wide);
+  - the tips of the two gable finials (one layer each, 0.06 mm³);
+  - the tip of the wreath's bow (one layer, 0.03 mm³).
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The gable
+  finials score 3.4 and the cross 2.5, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the door, the same mark as the other buildings, mirrored so it reads OBC
+  with the church turned over, front toward you.
 
 ## What it took to print without supports
 
