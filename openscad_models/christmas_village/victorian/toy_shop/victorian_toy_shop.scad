@@ -128,7 +128,9 @@ module quoins() intersection() { brick_skin(zc(2 * nq) + 2); quoin_boxes(); }
 sc_o = 0.9;                 // proud of the brick
 // its foot 0.3 inside the wall's plane: started 0.2 inside the brick's face it
 // stood 0.21 proud of the course groove under it, a ledge the slicer propped
-module string_course() skin([rpts(W, D, -0.3, H1 - 1.6), rpts(W, D, bd + sc_o, H1 - 1.6 + (bd + sc_o + 0.3) * tan(55)),
+// its foot at H1 - 2.4 so its upright face is 1.4 tall: from H1 - 1.6 that face
+// was 0.6, a lip the gate measured at 0.84 all round the block
+module string_course() skin([rpts(W, D, -0.3, H1 - 2.4), rpts(W, D, bd + sc_o, H1 - 2.4 + (bd + sc_o + 0.3) * tan(55)),
                              rpts(W, D, bd + sc_o, H1 + 1.6)], slices = 0);
 
 // ---- regions ---------------------------------------------------------------------------
@@ -272,9 +274,15 @@ module slates() {
 }
 sn_x = 12;
 function sn_edge(y) = sn_x + 2.2 * sin(y * 17) + 1.3 * sin(y * 41 + 60);
+// the crest rounded (radius sn_rc, tangent to both slopes): drawn to a point it
+// was a knife edge the length of the ridge, the thinnest wall in the model
+sn_rc = 2.2;
+sn_zc = z_out(0) + 2.0 - sn_rc / cos(r_ang);
 module snow_roof() intersection() {
-    xz(-y_rr - 0.4, y_rr + 0.4) polygon([[-xe, z_out(xe) - 1.0], [0, z_out(0) - 1.0], [xe, z_out(xe) - 1.0],
-                           [xe, z_out(xe) + 2.0], [3, z_out(3) + 2.0], [0, z_out(0) + 2.4], [-3, z_out(3) + 2.0], [-xe, z_out(xe) + 2.0]]);
+    xz(-y_rr - 0.4, y_rr + 0.4) polygon(concat([[-xe, z_out(xe) - 1.0], [0, z_out(0) - 1.0], [xe, z_out(xe) - 1.0],
+                           [xe, z_out(xe) + 2.0]],
+                           [for (a = [r_ang : -5 : -r_ang]) [sn_rc * sin(a), sn_zc + sn_rc * cos(a)]],
+                           [[-xe, z_out(xe) + 2.0]]));
     translate([0, 0, 40]) linear_extrude(100)
         polygon(concat([for (i = [0 : 40]) let (y = -Dh + 2 * Dh * i / 40) [sn_edge(y), y]],
                        [for (i = [40 : -1 : 0]) let (y = -Dh + 2 * Dh * i / 40) [-sn_edge(-y), y]]));
@@ -409,7 +417,9 @@ module tower_finial() at_tc() translate([0, 0, t_fin - 2.4]) {
 // the gable's eave
 TCOL = [H1, 70];
 module collars() at_tc() for (z = TCOL) rotate_extrude($fn = FNT)
-    polygon([[rt - 0.5, z - 0.5], [rt + bd + sc_o, z - 0.5 + (bd + sc_o + 0.5) * tan(55)], [rt + bd + sc_o, z + 1.6], [rt - 0.5, z + 1.6]]);
+    // foot 2.7 down, so the slope reaches the face at z + 0.16 like the block's band;
+    // from z - 0.5 it overshot the band's top and the outline crossed itself
+    polygon([[rt - 0.5, z - 2.7], [rt + bd + sc_o, z - 2.7 + (bd + sc_o + 0.5) * tan(55)], [rt + bd + sc_o, z + 1.6], [rt - 0.5, z + 1.6]]);
 
 // ---- the tower's windows and door, laid round it -----------------------------------------------
 module cplace(r, th, z) translate([TC[0] + r * cos(th), TC[1] + r * sin(th), z]) rotate([0, 0, th + 90]) rotate([90, 0, 0]) children();
