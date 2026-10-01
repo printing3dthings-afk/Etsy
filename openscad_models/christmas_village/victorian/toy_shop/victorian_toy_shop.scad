@@ -514,8 +514,10 @@ module bay_openings() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) transl
 // exactly the wall's thickness: 0.3 into the bay, its ends met the openings'
 // ends and the side walls' inner faces along edges shared by four faces
 module bay_glass() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall]) cube([p[1] - p[0], by_g[1] - by_g[0], wall]);
-// a transom bar across each pane, on the glass
-module bay_transoms() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0] + 6) relief_up(-0.4, 0.6) translate([p[0] - 0.3, 0]) square([p[1] - p[0] + 0.6, 1.2]);
+// a transom bar across each front pane, on the glass. Not on the side panes:
+// 3.2 wide, at 45 deg, their bars' ends met the panes' ends and the posts along
+// edges shared by four faces
+module bay_transoms() for (i = [1], p = bpanes(i)) bplace(i, by_g[0] + 6) relief_up(-0.4, 0.6) translate([p[0] - 0.3, 0]) square([p[1] - p[0] + 0.6, 1.2]);
 // the hipped roof: from the bay's top edges up into the wall at 45 deg
 module bay_roof() hull() {
     translate([0, 0, by_t - 0.01]) linear_extrude(0.01) polygon(BPOLY);
@@ -587,7 +589,9 @@ module accent_raw() {
         bay_openings();
     }
     bay_transoms();
-    difference() { blk() window_boxes(); turret_cut(); }
+    // cut by the room: the left box's back runs 0.4 into the wall, and over
+    // the bay's opening into the shop that left it hanging as a fin
+    difference() { blk() window_boxes(); turret_cut(); room(); }
     wreath();
 }
 module trim_raw() {
