@@ -400,7 +400,8 @@ module cone_snow() at_tc() intersection() {
 t_fin = zst(0) + 1.6;
 module tower_finial() at_tc() translate([0, 0, t_fin - 2.4]) {
     translate([-1.1, -1.1, 0]) cube([2.2, 2.2, 6.6]);
-    translate([0, 0, 6.6]) rotate([0, 0, 45]) cylinder(r1 = 1.1 * sqrt(2), r2 = 0, h = 1.1 * tan(60) * 1.3, $fn = 4);
+    // its point blunted to 0.35: sharp, its last 0.33 mm never printed
+    translate([0, 0, 6.6]) rotate([0, 0, 45]) cylinder(r1 = 1.1 * sqrt(2), r2 = 0.35, h = 1.1 * tan(60) * 1.0, $fn = 4);
 }
 // COLLARS: the string course carried round the tower, and one where it clears
 // the gable's eave
@@ -499,7 +500,9 @@ module bay_room() intersection() {
         offset(delta = -wall) polygon(BPOLY);
         translate([BX - BF - BP + wall + 0.3, yw - 0.5]) square([2 * (BF + BP) - 2 * wall - 0.6, 3.5]);
     }
-    xz(-60, 60) polygon([[yb_in - 5, -5], [yb_in - 5, by_c0], [yb_in, by_c0], [yw + 10, by_c0 + (yw + 10 - yb_in) * tan(55)], [yw + 10, -5]]);
+    // a profile in (y, z), so swept along x: drawn with xz() it lay in (x, z)
+    // and the bay's inside came out solid, its panes sealed voids in it
+    yz(-60, 60) polygon([[yb_in - 5, -5], [yb_in - 5, by_c0], [yb_in, by_c0], [yw + 10, by_c0 + (yw + 10 - yb_in) * tan(55)], [yw + 10, -5]]);
 }
 module bay_openings() for (i = [0 : 2], p = bpanes(i)) bplace(i, by_g[0]) translate([p[0], 0, -wall - 1]) cube([p[1] - p[0], by_g[1] - by_g[0], wall + 2]);
 // the glass fills each opening through the wall's thickness, so the head of
