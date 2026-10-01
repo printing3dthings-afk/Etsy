@@ -121,7 +121,9 @@ c_apex = z_co(0);
 module cone() rotate_extrude($fn = FNC) polygon([[0, TD - 1], [cr0, TD - 1], [cr0, cz0], [0, c_apex]]);
 sh_c = 2.6;
 // each course's lower edge stands 1.0 proud on an upright face
-module course_band(x0, x1) polygon([[x0, z_co(x0) - 1.0], [x0, z_co(x0) + 1.0], [x1, z_co(x1) + 0.05], [x1, z_co(x1) - 1.0]]);
+// its upper end 0.3 over the cone, not 0.05: the feather edge met the cone in
+// edges shared by more than two faces
+module course_band(x0, x1) polygon([[x0, z_co(x0) - 1.0], [x0, z_co(x0) + 1.0], [x1, z_co(x1) + 0.3], [x1, z_co(x1) - 1.0]]);
 module shingles() {
     nk = ceil((cr0 - 7.2) / sh_c);
     for (k = [0 : nk - 1]) let (x0 = cr0 - k * sh_c, x1 = max(cr0 - (k + 1) * sh_c - 0.5, 7.2))
@@ -130,7 +132,8 @@ module shingles() {
 // a cap of icing on the point, its edge wandering round
 function wave(t) = 1.2 * sin(t * 3.0) + 0.8 * sin(t * 7.0 + 60);
 module cone_cap() intersection() {
-    rotate_extrude($fn = FNC) polygon([[0, z_co(0) - 1.0], [8, z_co(8) - 1.0], [8, z_co(8) + 1.8], [2, z_co(2) + 2.2], [0, z_co(0) + 2.4]]);
+    // its underside 0.7 into the cone, not 1.0 where the shingles' undersides are
+    rotate_extrude($fn = FNC) polygon([[0, z_co(0) - 0.7], [8, z_co(8) - 0.7], [8, z_co(8) + 1.8], [2, z_co(2) + 2.2], [0, z_co(0) + 2.4]]);
     translate([0, 0, TD]) linear_extrude(60) polygon([for (i = [0 : 179]) let (a = 2 * i) (6.6 + wave(a)) * [cos(a), sin(a)]]);
 }
 
@@ -145,7 +148,9 @@ GD = [for (i = [0 : 23]) let (th = 15 * i + 7.5) if (abs(th - CH_TH) > 14) [th, 
 gd_r = 1.9;
 // their centres over the wall: at 0.3 out, each one's point hung 0.3 under the
 // frosting's edge and the slicer propped all 22
-module gumdrops_ring(red) for (g = GD) if (g[1] == red) rotate(g[0]) translate([MR - 0.2, 0, cz0]) gumdrop(gd_r);
+// and 0.15 down: standing exactly on the frosting's top, each met it in a ring
+// of edges shared by more than two faces
+module gumdrops_ring(red) for (g = GD) if (g[1] == red) rotate(g[0]) translate([MR - 0.2, 0, cz0 - 0.15]) gumdrop(gd_r);
 module apex_gumdrop() translate([0, 0, z_co(0) + 1.4]) gumdrop(3.0);
 
 // ---- the drum's windows, laid round it in strips (the sweet shop's cake) -----------------------

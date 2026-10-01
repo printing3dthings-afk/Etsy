@@ -218,7 +218,9 @@ module dormer_openings() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, 
 module dormer_windows() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, H + DW[0]]) {
     relief_up(-0.4, 0.8) { offset(r = d_fr) win_outline(dw_w()); offset(r = 0.3) win_outline(dw_w()); }
     relief_up(-0.4, 0.2) win_muntins(dw_w(), 0.6);
-    translate([0, 0, -wall]) linear_extrude(wall - 0.4) offset(r = 0.6) win_outline(dw_w());
+    // the pane up to where the sloped hole begins (-0.2), like the house's: to
+    // -0.4 it left a 0.2 level ledge over each pane and the slicer propped all three
+    translate([0, 0, -wall]) linear_extrude(wall - 0.2) offset(r = 0.6) win_outline(dw_w());
 }
 // the frames' holes in the slate face, sheared: cut straight, each window's
 // head over its pane was a level 0.4 mm ledge, and the slicer propped a column
