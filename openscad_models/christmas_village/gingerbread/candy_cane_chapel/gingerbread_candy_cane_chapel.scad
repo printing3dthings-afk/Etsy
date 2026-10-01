@@ -245,13 +245,20 @@ module tiles() {
                 translate([-10, -y_rr - 1]) square([xe + 10, 2 * y_rr + 2]);
             }
         }
-    xz(-y_rr, y_rr) polygon([[1.2, z_out(1.2) - 1.0], [1.2, z_out(1.2) + 1.0], [0, z_out(0) + 1.4], [-1.2, z_out(1.2) + 1.0], [-1.2, z_out(1.2) - 1.0]]);
+    // the ridge bead's peak level with the slates' ridge, under the icing's rounded crest
+    xz(-y_rr, y_rr) polygon([[1.2, z_out(1.2) - 1.0], [1.2, z_out(1.2) + 1.0], [0, z_out(0)], [-1.2, z_out(1.2) + 1.0], [-1.2, z_out(1.2) - 1.0]]);
 }
 ic_x = 9;
 function ic_edge(y) = ic_x + 1.8 * sin(y * 23) + 1.2 * sin(y * 53 + 40);
+// the crest rounded (radius ic_rc, tangent to both slopes): drawn to a point it
+// was a knife edge the length of the ridge, measured at 0.61
+ic_rc = 2.2;
+ic_zc = z_out(0) + 2.0 - ic_rc / cos(r_ang);
 module icing_roof() intersection() {
-    xz(-y_rr - 0.4, y_rr + 0.4) polygon([[-xe, z_out(xe) - 1.0], [0, z_out(0) - 1.0], [xe, z_out(xe) - 1.0],
-                           [xe, z_out(xe) + 2.0], [3, z_out(3) + 2.0], [0, z_out(0) + 2.4], [-3, z_out(3) + 2.0], [-xe, z_out(xe) + 2.0]]);
+    xz(-y_rr - 0.4, y_rr + 0.4) polygon(concat([[-xe, z_out(xe) - 1.0], [0, z_out(0) - 1.0], [xe, z_out(xe) - 1.0],
+                           [xe, z_out(xe) + 2.0]],
+                           [for (a = [r_ang : -5 : -r_ang]) [ic_rc * sin(a), ic_zc + ic_rc * cos(a)]],
+                           [[-xe, z_out(xe) + 2.0]]));
     translate([0, 0, 40]) linear_extrude(100)
         polygon(concat([for (i = [0 : 60]) let (y = -Dh + 2 * Dh * i / 60) [ic_edge(y), y]],
                        [for (i = [60 : -1 : 0]) let (y = -Dh + 2 * Dh * i / 60) [-ic_edge(-y), y]]));
