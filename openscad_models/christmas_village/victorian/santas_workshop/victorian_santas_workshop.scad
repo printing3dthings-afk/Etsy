@@ -162,28 +162,29 @@ pane_t = 1.48;
 sh_r   = 1.6;
 function arch_pts(a, hgt, n = 36) = concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = 180 * i / n) [a * cos(q), hgt + a * sin(q)]]);
 module bw_outline() polygon(arch_pts(bw_a, bw_h));
-// the hole's section where it meets the pane: the arch with its head raised
-module bw_back2d() hull() { bw_outline(); translate([0, sh_r * recess]) bw_outline(); }
-// the reveal: one hull from the arch at the face to that section, so its floor
-// is level and its head a 58 deg slope, not a 4 mm ceiling over air. Drawn as
-// a straight copy unioned with a sheared one, the two met along the arch in
-// near-level steps and broken slivers ("4 bodies", supports from the table)
+// ONE OPENING through frame, brick and reveal: a hull from the arch at the
+// frame's face (fr_t) back to the pane, its floor level and its head rising
+// 1.6 per 1 inward (58 deg) the whole way. The frame used to have its own
+// opening, rising outward, and the reveal one rising inward: the two met in a
+// downward crease, near level round the arch's head, and the slicer propped it
+// from the window's floor. Drawn first as a straight copy unioned with a sheared
+// one, the reveal also met itself in broken slivers ("4 bodies")
+fr_w = 2.6;
+fr_t = bd + 0.6;
+sill = 3.4;
 module slice(z) translate([0, 0, z]) linear_extrude(0.01) children();
+function bw_rise(z) = sh_r * (fr_t - z);
+module bw_sec2d(z) hull() { bw_outline(); translate([0, bw_rise(z)]) bw_outline(); }
+module bw_back2d() bw_sec2d(-recess);
 module bw_hole() nf(3, BW_u, BW_z) {
-    linear_extrude(3) bw_outline();
-    hull() { slice(0) bw_outline(); slice(-recess) bw_back2d(); }
-}
-// a hole that grows upward as it comes out of the wall (the frames' and the
-// brick's round them), as one hull for the same reason
-module rise_hole(z0, z1, r) hull() {
-    slice(z0) offset(r = r) bw_outline();
-    slice(z1) hull() { offset(r = r) bw_outline(); translate([0, sh_r * (z1 - z0)]) offset(r = r) bw_outline(); }
+    hull() { slice(fr_t) bw_outline(); slice(-recess) bw_back2d(); }
+    translate([0, 0, fr_t]) linear_extrude(3) bw_outline();
 }
 module bw_pane() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) offset(r = 1.0) bw_back2d();
-// brick round the reveal and the pane, inside the room, down to the table
+// brick round the reveal and the pane, inside the room, down to the base
 bw_cd = recess + pane_t;    // its back face
 module bw_collar2d() union() {
-    offset(r = 2.6) hull() { bw_outline(); translate([0, sh_r * bw_cd]) bw_outline(); }
+    offset(r = 2.6) bw_sec2d(-bw_cd);
     translate([-bw_a - 2.6, -BW_z + 1]) square([2 * (bw_a + 2.6), BW_z - 1 + bw_h]);
 }
 module bw_collar() nf(3, BW_u, BW_z) translate([0, 0, -bw_cd]) linear_extrude(bw_cd - wall + 0.4) bw_collar2d();
@@ -193,19 +194,18 @@ module bw_collar_col() nf(3, BW_u, BW_z) translate([0, 0, -bw_cd - 0.01]) linear
     bw_collar2d();
     translate([-bw_a - 2.6, -BW_z - 3]) square([2 * (bw_a + 2.6), BW_z + bw_h]);
 }
-
 // the frame: raised white round the opening, a keystone and a sill
-fr_w = 2.6;
-fr_t = bd + 0.6;
-sill = 3.4;
 module bw_frame() nf(3, BW_u, BW_z) {
     difference() {
         relief_up(-0.4, fr_t) union() { offset(r = fr_w) bw_outline(); translate([-bw_a - fr_w - 0.8, -sill]) square([2 * (bw_a + fr_w + 0.8), sill + 1]); }
-        rise_hole(-0.5, fr_t + 0.1, 0.3);
+        hull() { slice(fr_t + 0.01) bw_outline(); slice(-recess) bw_back2d(); }
     }
-    relief_up(-0.4, fr_t + 0.5) translate([0, bw_h + bw_a - 1.2]) polygon([[-1.6, 0], [1.6, 0], [2.2, fr_w + 3.0], [-2.2, fr_w + 3.0]]);
+    // the keystone from the crown up, clear of the opening
+    difference() {
+        relief_up(-0.4, fr_t + 0.5) translate([0, bw_h + bw_a - 0.2]) polygon([[-1.6, 0], [1.6, 0], [2.2, fr_w + 2.2], [-2.2, fr_w + 2.2]]);
+        hull() { slice(fr_t + 0.6) bw_outline(); slice(-recess) bw_back2d(); }
+    }
 }
-module bw_frame_hole() nf(3, BW_u, BW_z) rise_hole(-0.2, fr_t + 2.4, 0.4);
 
 // what is drawn on the pane, in its own 2D frame (origin at the sill's centre).
 // Every line is 0.8 wide, every gap at least 0.8.
@@ -514,7 +514,7 @@ module body_part() {
         blk() {
             room();
             openings(); frame_holes();
-            bw_hole(); bw_frame_hole();
+            bw_hole();
             door_opening();
             joints();
         }
