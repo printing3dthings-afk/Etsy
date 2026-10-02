@@ -239,7 +239,10 @@ module ck_cookie() cclip(MR, 1.6) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6) {
 // shared strip planes and left open edges
 ck_br = ck_r + 3.0;
 module ck_beads() cclip(MR, 2.4) for (i = [0 : 23]) let (q = 15 * i, u = ck_br * cos(q), v = ck_br * sin(q))
-    cplace(MR, ck_th + u / MR * 180 / PI, ck_z + v) relief_up(-0.4, 2.4) circle(r = 0.8, $fn = 20);
+    // standing on the cookie's face (1.6), from 1.2 in it to 2.2: a relief this
+    // small, sheared from the wall (-0.4), closes before 1.4 out, and the dots
+    // were hidden inside the cookie
+    cplace(MR, ck_th + u / MR * 180 / PI, ck_z + v) relief_up(1.2, 2.2) circle(r = 0.8, $fn = 20);
 module ck_opening() cyl_relief(MR, ck_th, ck_z, ck_r + 1) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) circle(r = ck_r, $fn = 96);
 module ck_hole() cyl_relief(MR, ck_th, ck_z, ck_r + 1.8) relief_hole(-0.4, -0.2, 2.4 + 2.4) offset(r = 0.4) circle(r = ck_r, $fn = 96);
 module ck_glass() intersection() {
