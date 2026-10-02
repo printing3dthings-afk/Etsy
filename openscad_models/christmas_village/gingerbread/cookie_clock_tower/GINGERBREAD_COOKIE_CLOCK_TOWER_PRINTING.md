@@ -52,7 +52,7 @@ four parts, already aligned. Assign a filament to each part.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **5 h 02 m** | **40.2 cm³, about 50 g of PLA** |
+| **single colour** | **5 h 01 m** | **40.2 cm³, about 50 g of PLA** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 50 g of model **+ purge** |
 
 ## The tealight
@@ -71,14 +71,29 @@ discs to the cone.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.57 mm, median 3.60 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.56 mm, median 3.60 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
   - 17.02 cm² of bed contact;
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
   faces.
-- CHECKS_PENDING
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 9.8 mm³ of 54,938 mm³ is not printed; 1.0 mm³ printed that was not
+  modelled; 0.3 mm³ printed in another colour. **4 flags, all cosmetic
+  slivers 0.2 to 0.33 mm wide, too thin to lay:**
+  - the last of the icing cap at the cone's point (0.11 mm³);
+  - the tips of the two side scallops of the clock's cookie (0.04 mm³ each);
+  - the outer tip of one piped dot on the clock's upper right (0.03 mm³).
+- **The clock prints as drawn:** its face, hour dots and hands lose nothing
+  the comparison flags, and the 24 piped dots stand 0.6 mm proud of the
+  cookie in the exported trim part.
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The cane
+  scores 1.3, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the door, the same mark as the other buildings, mirrored so it reads OBC
+  with the tower turned over, front toward you.
 
 ## What it took to print without supports
 
