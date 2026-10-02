@@ -95,7 +95,7 @@ MR  = 26;                   // the discs' face
 MRi = MR - wall;            // the room: the 46.6 mm tealight's circle stands 0.5 inside
 // [foot, top] of each disc; the icing band sits between, 3.6 tall: at 3 its lip
 // over the bevel was 0.6 tall, the gate's thinnest walls
-DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 78]];
+DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 80]];
 TD  = DISCS[2][1];          // the top disc's top, under the frosting
 // each disc's rim: in 1.4 at its foot, out to the face (MR) at 50 deg,
 // upright, and (all but the top one) rounded back in 1.4 at its top. The face
@@ -185,8 +185,8 @@ module cclip(r, d) intersection() { children(); cylinder(r = r + d, h = 300, $fn
 // THE WINDOWS: [angle, sill, a, straight height]; 270 is the front
 // each frame's head 1.2 or more under the band over it: closer, the head and
 // the band met in walls under 0.5 mm
-CW = concat([for (th = [30, 150, 210, 330]) [th, 12.6, 3.2, 4]],
-            [for (th = [0, 90, 180, 225, 315]) [th, 31.6, 3.2, 5]],
+CW = concat([for (th = [30, 150, 210, 330]) [th, 11.6, 3.2, 4]],
+            [for (th = [0, 90, 180, 225, 315]) [th, 31.6, 3.2, 4]],
             [for (th = [20, 90, 160]) [th, 56, 3.2, 8]]);
 function cw(w) = [0, 0, 0, w[2], w[3]];
 function cframe_U(w) = w[2] + 3.2;
@@ -210,9 +210,9 @@ module c_holes() for (w = CW) cyl_relief(MR, w[0], w[1], cframe_U(w))
 // round with icing dots; its face the frosting glass in the wall, its hour dots
 // and hands running right through it, every line and gap 0.8 or more
 ck_th = 270;
-ck_z  = 62.6;
+ck_z  = 62.8;              // the cookie's top 0.2 under the frosting's underside
 ck_r  = 11;                 // the face
-ck_R  = 13.4;               // the cookie, to its scallops' roots: 14.9 to their tips
+ck_R  = 13.0;               // the cookie, to its scallops' roots: 14.5 to their tips
 module cookie2d() {
     circle(r = ck_R, $fn = 96);
     for (i = [0 : 17]) rotate(20 * i) translate([ck_R, 0]) circle(r = 1.5, $fn = 24);
@@ -220,8 +220,10 @@ module cookie2d() {
 // its back 1.2 into the wall: its lowest scallops sit on the disc's foot, where
 // the rim is set in
 module ck_cookie() cclip(MR, 1.6) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6) relief_up(-1.2, 1.6) { cookie2d(); offset(r = 0.3) circle(r = ck_r, $fn = 96); }
-module ck_beads() cclip(MR, 2.4) cyl_relief(MR, ck_th, ck_z, ck_R + 1.0)
-    relief_up(-0.4, 2.4) for (i = [0 : 23]) rotate(15 * i) translate([ck_r + 1.6, 0]) circle(r = 0.85, $fn = 20);
+// laid in the cookie's own strips (same U): in strips of their own, offset
+// 0.6 from the cookie's, the dots' backs met it in open edges
+module ck_beads() cclip(MR, 2.4) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6)
+    relief_up(-0.4, 2.4) for (i = [0 : 23]) rotate(15 * i) translate([ck_r + 1.2, 0]) circle(r = 0.8, $fn = 20);
 module ck_opening() cyl_relief(MR, ck_th, ck_z, ck_r + 1) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) circle(r = ck_r, $fn = 96);
 module ck_hole() cyl_relief(MR, ck_th, ck_z, ck_r + 1.8) relief_hole(-0.4, -0.2, 2.4 + 2.4) offset(r = 0.4) circle(r = ck_r, $fn = 96);
 module ck_glass() intersection() {
