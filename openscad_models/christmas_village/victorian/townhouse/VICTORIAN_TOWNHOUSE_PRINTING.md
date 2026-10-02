@@ -86,7 +86,21 @@ headroom), with room to spare: the house is 52 mm square inside its walls.
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
   faces.
-- CHECKS_PENDING
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 19.1 mm³ of 96,861 mm³ is not printed; 0.4 mm³ printed that was
+  not modelled; 0.3 mm³ printed in another colour. **5 flags:**
+  - three inside the roof, out of sight (5.8, 1.9 and 1.0 mm³, two layers
+    each at 91.2 mm): where each dormer's passage closes to a slit at the
+    peak of its gable, under the solid slate. Nothing on the outside changes,
+    and the gate's slicer finds no support or overhang there;
+  - the edge of the snow on the bow's cone (0.15 mm³);
+  - the edge of the door's wreath (0.2 mm wide, 0.07 mm³).
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The two
+  finials score 3.6 and 3.2, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the steps, the same mark as the other buildings, mirrored so it reads OBC
+  with the house turned over, front toward you.
 
 ## What it took to print without supports
 

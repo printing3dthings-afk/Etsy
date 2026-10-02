@@ -438,7 +438,10 @@ module accent_raw() {
     gumdrops_ring(true);
     apex_gumdrop();
     at_shop() ridge_gumdrops(true);
-    chimney_stripes();
+    // cut back to the room: the chimney sinks 0.33 mm past the drum's inner
+    // wall, and the stripes there hung in the room as helical slivers the
+    // slicer propped from the table (1,097 support moves, 2026-10-02)
+    difference() { chimney_stripes(); room(); }
     at_shop() porthole_stripes();
     peppermints(true);
 }
