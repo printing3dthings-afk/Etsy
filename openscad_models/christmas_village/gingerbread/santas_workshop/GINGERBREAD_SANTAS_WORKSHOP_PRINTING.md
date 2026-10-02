@@ -80,7 +80,19 @@ at 55° under the cone.
   - printed height equals modelled height;
   - 21.16 cm² of bed contact;
   - centre of mass over the base.
-- CHECKS_PENDING
+- Each of the four parts is closed, with every edge shared by exactly two
+  faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 13.3 mm³ of 53,281 mm³ is not printed; 0.1 mm³ printed that was
+  not modelled; 0.2 mm³ printed in another colour. **0 flags.** The largest
+  losses are 0.2 mm slivers of gingerbread where the chimney meets the drum,
+  and the edges of the stripes there (each under 0.2 mm³).
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch, no slender
+  runs.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the wing's doors, the same mark as the other buildings, mirrored so it
+  reads OBC with the workshop turned over, front toward you.
 
 ## What it took to print without supports
 
@@ -99,6 +111,9 @@ through the model or the renders:
 - **The chimney's stripes are drawn as ring sectors clear of its axis.**
   Drawn as triangles from the axis, the twist made a broken mesh that the
   modeller dropped without stopping, and the chimney came out plain white.
+  **They are cut back to the room:** the chimney sinks 0.33 mm past the drum's
+  inner wall, and there the stripes hung in the room as winding slivers the
+  slicer propped from the table (1,097 support moves).
 - **The wing's walls run 0.3 mm up into its roof**, which takes them. Drawn on
   the same plane as the roof's underside, the two met in zero-thick sheets.
 - **The icing cap and the shingles' undersides are 0.3 mm apart,** and the
