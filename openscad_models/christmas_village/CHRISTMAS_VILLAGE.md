@@ -145,7 +145,8 @@ height so a village lines up as a street.
 | 3 | **Church**: tall spire, round rose window | **Sweet shop**: round lollipop window and sign |
 | 4 | **Coaching inn**: two storeys, arched carriage gateway, lantern | **Cocoa cafe**: a tower shaped like a hot-cocoa mug |
 | 5 | **Townhouse**: tall and narrow, front steps, dormer | **Santa's workshop**: peppermint chimney, gumdrops on the ridge |
-| 6 | **Clock tower**: a big white clock face | **Cookie clock tower**: a frosted-cookie clock face |
+| 6 | **Santa's workshop**: one big window, toys on its glass (added 2026-10-02) | **Cookie clock tower**: a frosted-cookie clock face |
+| 7 | **Clock tower**: a big white clock face | |
 
 The two cottages come first: the design already exists, and they test each
 style's hardest details on the printer (the Victorian's pierced bargeboard and
