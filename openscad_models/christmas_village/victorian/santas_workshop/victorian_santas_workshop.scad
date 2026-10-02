@@ -160,15 +160,23 @@ pane_t = 1.48;
 sh_r   = 1.2;               // the reveal's head rises 1.2 per 1 inward: 50 deg, no shelf
 function arch_pts(a, hgt, n = 36) = concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = 180 * i / n) [a * cos(q), hgt + a * sin(q)]]);
 module bw_outline() polygon(arch_pts(bw_a, bw_h));
-// the reveal: straight in from the face, and a copy rising as it goes in, so its
-// head is a 50 deg slope, not a 4 mm ceiling over air
-module bw_shear() multmatrix([[1, 0, 0, 0], [0, 1, -sh_r, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) children();
-module bw_hole() nf(3, BW_u, BW_z) {
-    translate([0, 0, -recess]) linear_extrude(recess + 3) bw_outline();
-    bw_shear() translate([0, 0, -recess]) linear_extrude(recess) bw_outline();
-}
-// the hole's section where it meets the pane, and the pane over it with a margin
+// the hole's section where it meets the pane: the arch with its head raised
 module bw_back2d() hull() { bw_outline(); translate([0, sh_r * recess]) bw_outline(); }
+// the reveal: one hull from the arch at the face to that section, so its floor
+// is level and its head a 50 deg slope, not a 4 mm ceiling over air. Drawn as
+// a straight copy unioned with a sheared one, the two met along the arch in
+// near-level steps and broken slivers ("4 bodies", supports from the table)
+module slice(z) translate([0, 0, z]) linear_extrude(0.01) children();
+module bw_hole() nf(3, BW_u, BW_z) {
+    linear_extrude(3) bw_outline();
+    hull() { slice(0) bw_outline(); slice(-recess) bw_back2d(); }
+}
+// a hole that grows upward as it comes out of the wall (the frames' and the
+// brick's round them), as one hull for the same reason
+module rise_hole(z0, z1, r) hull() {
+    slice(z0) offset(r = r) bw_outline();
+    slice(z1) hull() { offset(r = r) bw_outline(); translate([0, SH * (z1 - z0)]) offset(r = r) bw_outline(); }
+}
 module bw_pane() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) offset(r = 1.0) bw_back2d();
 // brick round the reveal and the pane, inside the room, down to the table
 bw_cd = recess + pane_t;    // its back face
@@ -177,20 +185,25 @@ module bw_collar2d() union() {
     translate([-bw_a - 2.6, -BW_z + 1]) square([2 * (bw_a + 2.6), BW_z - 1 + bw_h]);
 }
 module bw_collar() nf(3, BW_u, BW_z) translate([0, 0, -bw_cd]) linear_extrude(bw_cd - wall + 0.4) bw_collar2d();
-module bw_collar_col() nf(3, BW_u, BW_z) translate([0, 0, -bw_cd - 0.01]) linear_extrude(bw_cd + 0.02) bw_collar2d();
+// the room leaves it right down below the table: stopped at 1 mm, the base under
+// it was cut away and the slicer propped the reveal's foot
+module bw_collar_col() nf(3, BW_u, BW_z) translate([0, 0, -bw_cd - 0.01]) linear_extrude(bw_cd + 0.02) union() {
+    bw_collar2d();
+    translate([-bw_a - 2.6, -BW_z - 3]) square([2 * (bw_a + 2.6), BW_z + bw_h]);
+}
 
 // the frame: raised white round the opening, a keystone and a sill
 fr_w = 2.6;
 fr_t = bd + 0.6;
 sill = 3.4;
 module bw_frame() nf(3, BW_u, BW_z) {
-    relief_up(-0.4, fr_t) {
-        union() { offset(r = fr_w) bw_outline(); translate([-bw_a - fr_w - 0.8, -sill]) square([2 * (bw_a + fr_w + 0.8), sill + 1]); }
-        offset(r = 0.3) bw_outline();
+    difference() {
+        relief_up(-0.4, fr_t) union() { offset(r = fr_w) bw_outline(); translate([-bw_a - fr_w - 0.8, -sill]) square([2 * (bw_a + fr_w + 0.8), sill + 1]); }
+        rise_hole(-0.5, fr_t + 0.1, 0.3);
     }
     relief_up(-0.4, fr_t + 0.5) translate([0, bw_h + bw_a - 1.2]) polygon([[-1.6, 0], [1.6, 0], [2.2, fr_w + 3.0], [-2.2, fr_w + 3.0]]);
 }
-module bw_frame_hole() nf(3, BW_u, BW_z) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) bw_outline();
+module bw_frame_hole() nf(3, BW_u, BW_z) rise_hole(-0.2, fr_t + 2.4, 0.4);
 
 // what is drawn on the pane, in its own 2D frame (origin at the sill's centre).
 // Every line is 0.8 wide, every gap at least 0.8.
@@ -230,11 +243,11 @@ module door_outline() polygon(arch_pts(dr_a, dr_h));
 module hinges2d() for (s = [-1, 1], z = [3.4, 9.0]) translate([s * (dr_a - 3.6), z]) square([6.0, 1.2], center = true);
 module door_leaf() nf(3, dr_u, plinth_h) difference() {
     translate([0, 0, -wall]) linear_extrude(wall + bd) translate([0, -0.3]) offset(delta = 0.25) polygon(arch_pts(dr_a, dr_h + 0.3));
-    // the meeting line and the planks: grooves upright, 0.8 and 0.6 wide
-    translate([0, 0, bd - 0.5]) linear_extrude(2) {
-        translate([-0.4, -1]) square([0.8, 40]);
-        for (s = [-1, 1], x = [3, 6]) translate([s * x - 0.3, -1]) square([0.6, 40]);
-    }
+    // the meeting line, a groove pointed at 60 deg under the crown. Plank grooves
+    // run up into the arch and across the hinges left little ceilings the
+    // slicer propped
+    translate([0, 0, bd - 0.5]) linear_extrude(2)
+        polygon([[-0.4, -1], [0.4, -1], [0.4, dr_h + dr_a - 3], [0, dr_h + dr_a - 3 + 0.4 * tan(60)], [-0.4, dr_h + dr_a - 3]]);
     translate([0, 0, bd - 0.6]) linear_extrude(2) hinges2d();
 }
 module hinges() nf(3, dr_u, plinth_h) translate([0, 0, bd - 0.6]) linear_extrude(0.6) hinges2d();
@@ -372,9 +385,11 @@ sk_x0 = -24.5;  sk_x1 = -17.0;  sk_w = 4.6;  sk_f = 1.3;
 module sky_band(lo, hi) xz(-y_rr, y_rr) polygon([[sk_x0 - 2, z_out(sk_x0 - 2) + lo], [sk_x1 + 2, z_out(sk_x1 + 2) + lo],
                                                [sk_x1 + 2, z_out(sk_x1 + 2) + hi], [sk_x0 - 2, z_out(sk_x0 - 2) + hi]]);
 module sky_box(g) for (y = SKY_Y) translate([sk_x0 + g, y - sk_w + g, 0]) cube([sk_x1 - sk_x0 - 2 * g, 2 * (sk_w - g), 200]);
-module skylight_frames() intersection() { sky_band(-1.2, 2.6); difference() { sky_box(0); sky_box(sk_f); } }
-module skylight_glass() intersection() { sky_band(-1.2, 1.8); sky_box(sk_f); }
-module skylight_cols() intersection() { sky_band(-1.3, 3); sky_box(-0.01); }
+// the frames sink 2 into the roof and join it; only the glass sits in a pocket
+// (in pockets, frames and all, they came out as three loose pieces)
+module skylight_frames() intersection() { sky_band(-2.0, 2.6); difference() { sky_box(0); sky_box(sk_f); } }
+module skylight_glass() intersection() { sky_band(-1.5, 1.8); sky_box(sk_f); }
+module skylight_cols() intersection() { sky_band(-1.2, 3); sky_box(sk_f); }
 
 // THE CHIMNEY astride the ridge near the right end
 CH_Y = -31;                 // world x 31
