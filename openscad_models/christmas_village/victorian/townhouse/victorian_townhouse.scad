@@ -158,7 +158,10 @@ module finial() translate([0, 0, fin_z]) {
 }
 
 // ---- dormers: [face, u] -----------------------------------------------------------------
-DORMERS = [[0, 14], [2, -12], [2, 12]];
+// at u 10, not 12-14: nearer the corners the house's ceiling there is its side
+// face, falling toward the wall, and it met each passage's gable in a level V
+// the slicer propped
+DORMERS = [[0, 10], [2, -10], [2, 10]];
 dw = 5;  dd = 10;           // half-width, depth back into the mansard
 dz0 = H + 1.2;  dz1 = H + 13;
 d_ridge = dz1 + dw * tp;
@@ -169,10 +172,15 @@ module dormers() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, 0, -dd])
 // the passage behind each dormer's window, under a gable of its own at 55 deg,
 // running in until the house's ceiling has risen above it
 dpw = dw - wall;
-module dormer_passage() for (d = DORMERS) nfw(d[0], d[1], 0, mf) translate([0, 0, -16]) linear_extrude(16 - wall)
-    // its floor 0.5 over the wall's top: at H - 1 the brick and cornice left in
-    // front of it were 0.86 thick
-    polygon([[-dpw, H + 0.5], [dpw, H + 0.5], [dpw, dz1 - 0.4], [0, dz1 - 0.4 + dpw * tp], [-dpw, dz1 - 0.4]]);
+module dormer_passage() for (d = DORMERS) nfw(d[0], d[1], 0, mf) intersection() {
+    translate([0, 0, -30]) linear_extrude(30 - wall)
+        // its floor 0.5 over the wall's top: at H - 1 the brick and cornice left
+        // in front of it were 0.86 thick
+        polygon([[-dpw, H + 0.5], [dpw, H + 0.5], [dpw, dz1 - 0.4], [0, dz1 - 0.4 + dpw * tp], [-dpw, dz1 - 0.4]]);
+    // ending on the plane of the house's ceiling that faces this wall (the bow's
+    // opening): ended upright, it left a knife edge where it met that ceiling
+    translate([0, Hc, -mf - wall]) rotate([-(90 - rm_a), 0, 0]) translate([-100, -100, 0]) cube(200);
+}
 DW = [3, 2.8, 6];           // the dormers' windows: sill, a, straight height
 d_fr = 2.4;                 // at 1.8 the frames' heads came to 0.7 at their front
 function dw_w() = [0, 0, H + DW[0], DW[1], DW[2], "seg"];
