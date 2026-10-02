@@ -59,7 +59,7 @@ other windows have their bars on the glass.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **9 h 32 m** | **72.6 cm³, about 90 g of PLA** |
+| **single colour** | **9 h 32 m** | **72.5 cm³, about 90 g of PLA** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 90 g of model **+ purge** |
 
 ## The tealight
@@ -85,7 +85,21 @@ the front wall, and the room is 56 mm deep so the circle still fits behind it.
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
   faces.
-- CHECKS_PENDING
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 19.7 mm³ of 95,557 mm³ is not printed; 0.2 mm³ printed that was
+  not modelled; 0.2 mm³ printed in another colour. **4 flags, all cosmetic
+  and none over 0.07 mm³:**
+  - the edges of the two wreaths (0.2 mm wide, 0.07 mm³ each);
+  - the tips of the two gable finials (one layer each, 0.07 mm³).
+- **The toys print as drawn.** Under 0.1 mm³ of the big window's glass and
+  toys is lost in the slice, every piece of it under 0.1 mm wide; the sign's
+  letters likewise.
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The finials
+  score 3.4, against a watch level of 4.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the doors, the same mark as the other buildings, mirrored so it reads OBC
+  with the workshop turned over, front toward you.
 
 ## What it took to print without supports
 
@@ -119,6 +133,9 @@ found on the gate's slicer or its mesh checks:
   ceilings the slicer propped.
 - **The eave is at 64 mm** so the window's keystone stays under the eave
   flare.
+- **The sign's letters are 3.4 mm, on a 33 mm board,** the most room between
+  the window's frame and the quoins. At 4.2 mm, WORKSHOP was 38.7 mm wide and
+  the board cut it to "VORKSHO" in the renders.
 
 ## Honest weak points
 

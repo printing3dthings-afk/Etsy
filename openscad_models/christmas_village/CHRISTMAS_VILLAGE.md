@@ -20,6 +20,7 @@ with the 5 different styles").
 | `gingerbread/cocoa_cafe/` | **Gingerbread cocoa café, printable (round and square).** Building #4: a white mug with red stripes, COCOA and a handle, full of cocoa under a swirl of whipped cream with marshmallows and a candy-cane stirrer, and a square gingerbread café out of its front under a striped awning. Meets the tealight rule (50.3 mm) |
 | `victorian/townhouse/` | **Victorian townhouse, printable (square and round).** Building #5: a tall, narrow three-storey brick house with a round bow window up its whole front under a bell-flared slate cone, a door with a fanlight up two steps, and a mansard roof with three dormers and a tall chimney. The village's first three-storey house (121.5 mm). Meets the tealight rule (70.7 mm) |
 | `gingerbread/santas_workshop/` | **Gingerbread Santa's workshop, printable (round and square).** Building #5: a round gingerbread drum under a steep chocolate cone with gumdrops round its foot, a square loading wing with chocolate-bar doors and a peppermint porthole, and a tall white chimney striped red like a peppermint stick. Meets the tealight rule (50.6 mm) |
+| `victorian/santas_workshop/` | **Victorian Santa's workshop, printable (square).** Building #6, built before the clock tower: a long one-storey brick workshop with one big round-arched window, its glass set deep in the wall with toys drawn on it in dark lines (rocking horse, teddy, sailboat, toy soldier, jack-in-the-box, a fanlight), arched loading doors with wreaths under a SANTA'S WORKSHOP sign, three skylights, white scalloped bargeboards and a chimney. `concepts/` holds the look studies Scott picked the mix from. Meets the tealight rule (65.7 mm) |
 | `references/` | Scott's reference photos for "more shape", and what they teach |
 | `concepts/` | the style study: `christmas_cottage_styles.scad` (one cottage, five styles), `render_styles.py` (exports every piece and renders each style in its colours), `meshes/` (the exported pieces), `images/` (front, three-quarter and top render per style, plus `styles_lineup.png`) |
 
@@ -113,6 +114,15 @@ fanlight: the village's first three-storey house. The **Gingerbread Santa's
 workshop** is a roundhouse: a round gingerbread drum under a cone roof with
 gumdrops round its eave, a square loading wing with big double doors, and a
 tall round chimney striped like a peppermint.
+
+**A Santa's workshop for the Victorian village (Scott, 2026-10-02):** "Make it
+have big windows with toys outlined on the windows sunk in so it looks like
+they are inside … I want it to look like his workshop would in that style."
+Built next, before the clock tower. From two look studies (`victorian/
+santas_workshop/concepts/`) he picked a mix: the long brick workshop with one
+big window, the loading doors with wreaths, skylights and white scalloped
+bargeboards. The toys are dark lines running through the window's white glass,
+so lit from inside they show as silhouettes.
 
 **Tealight headroom on the round cottages, decided 2026-10-01:** the Victorian
 cottage, cupcake cottage and turret house stay as built, 46 mm tealight short
