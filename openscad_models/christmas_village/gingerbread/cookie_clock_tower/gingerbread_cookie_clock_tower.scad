@@ -93,8 +93,9 @@ module drip2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate(
 FNC = 182;
 MR  = 26;                   // the discs' face
 MRi = MR - wall;            // the room: the 46.6 mm tealight's circle stands 0.5 inside
-// [foot, top] of each disc; the icing band sits between, 3 tall
-DISCS = [[plinth_h, 24], [27, 43], [46, 78]];
+// [foot, top] of each disc; the icing band sits between, 3.6 tall: at 3 its lip
+// over the bevel was 0.6 tall, the gate's thinnest walls
+DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 78]];
 TD  = DISCS[2][1];          // the top disc's top, under the frosting
 // each disc's rim: in 1.4 at its foot, out to the face (MR) at 50 deg,
 // upright, and (all but the top one) rounded back in 1.4 at its top. The face
@@ -113,13 +114,13 @@ module discs() rotate_extrude($fn = FNC) {
     // the core behind the icing bands
     for (i = [0 : 1]) translate([MRi - 0.3, DISCS[i][1]]) square([MR - ri - MRi + 0.3, DISCS[i + 1][0] - DISCS[i][1]]);
 }
-// THE ICING BANDS: in from the core, out to 0.9 proud at 50 deg, flat on top
+// THE ICING BANDS: in from the core, out to 0.7 proud at 50 deg, flat on top
 // for the next disc's foot
 module bands() rotate_extrude($fn = FNC) for (i = [0 : 1]) let (z0 = DISCS[i][1], z1 = DISCS[i + 1][0])
     // its bevel starting 0.25 under the disc's top, inside its rounding: from
     // the very point where the rounding ends, the two shared an edge ring and
     // the drips under it left open edges
-    polygon([[MR - ri - 0.4, z0 - 0.25], [MR - ri - 0.3, z0 - 0.25], [MR + 0.9, z0 - 0.25 + (ri + 1.2) * tan(50)], [MR + 0.9, z1], [MR - ri - 0.4, z1]]);
+    polygon([[MR - ri - 0.4, z0 - 0.25], [MR - ri - 0.3, z0 - 0.25], [MR + 0.7, z0 - 0.25 + (ri + 1.0) * tan(50)], [MR + 0.7, z1], [MR - ri - 0.4, z1]]);
 
 // the room keeps its full width to za, then closes in at 55 deg under the cone
 za  = TD - 1.6;
@@ -182,8 +183,10 @@ module cyl_relief(r, th, z, U, du = 1.0) for (i = [0 : ceil(2 * U / du) - 1]) le
 module cclip(r, d) intersection() { children(); cylinder(r = r + d, h = 300, $fn = FNC); }
 
 // THE WINDOWS: [angle, sill, a, straight height]; 270 is the front
-CW = concat([for (th = [30, 150, 210, 330]) [th, 12.6, 3.2, 5]],
-            [for (th = [0, 90, 180, 225, 315]) [th, 31, 3.2, 6]],
+// each frame's head 1.2 or more under the band over it: closer, the head and
+// the band met in walls under 0.5 mm
+CW = concat([for (th = [30, 150, 210, 330]) [th, 12.6, 3.2, 4]],
+            [for (th = [0, 90, 180, 225, 315]) [th, 31.6, 3.2, 5]],
             [for (th = [20, 90, 160]) [th, 56, 3.2, 8]]);
 function cw(w) = [0, 0, 0, w[2], w[3]];
 function cframe_U(w) = w[2] + 3.2;
@@ -207,9 +210,9 @@ module c_holes() for (w = CW) cyl_relief(MR, w[0], w[1], cframe_U(w))
 // round with icing dots; its face the frosting glass in the wall, its hour dots
 // and hands running right through it, every line and gap 0.8 or more
 ck_th = 270;
-ck_z  = 62;
+ck_z  = 62.6;
 ck_r  = 11;                 // the face
-ck_R  = 14;                 // the cookie, to its scallops' roots: 15.5 to their tips
+ck_R  = 13.4;               // the cookie, to its scallops' roots: 14.9 to their tips
 module cookie2d() {
     circle(r = ck_R, $fn = 96);
     for (i = [0 : 17]) rotate(20 * i) translate([ck_R, 0]) circle(r = 1.5, $fn = 24);
@@ -218,7 +221,7 @@ module cookie2d() {
 // the rim is set in
 module ck_cookie() cclip(MR, 1.6) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6) relief_up(-1.2, 1.6) { cookie2d(); offset(r = 0.3) circle(r = ck_r, $fn = 96); }
 module ck_beads() cclip(MR, 2.4) cyl_relief(MR, ck_th, ck_z, ck_R + 1.0)
-    relief_up(-0.4, 2.4) for (i = [0 : 23]) rotate(15 * i) translate([ck_r + 1.9, 0]) circle(r = 0.9, $fn = 20);
+    relief_up(-0.4, 2.4) for (i = [0 : 23]) rotate(15 * i) translate([ck_r + 1.6, 0]) circle(r = 0.85, $fn = 20);
 module ck_opening() cyl_relief(MR, ck_th, ck_z, ck_r + 1) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) circle(r = ck_r, $fn = 96);
 module ck_hole() cyl_relief(MR, ck_th, ck_z, ck_r + 1.8) relief_hole(-0.4, -0.2, 2.4 + 2.4) offset(r = 0.4) circle(r = ck_r, $fn = 96);
 module ck_glass() intersection() {
