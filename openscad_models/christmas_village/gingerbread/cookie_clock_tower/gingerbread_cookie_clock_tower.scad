@@ -95,7 +95,7 @@ MR  = 26;                   // the discs' face
 MRi = MR - wall;            // the room: the 46.6 mm tealight's circle stands 0.5 inside
 // [foot, top] of each disc; the icing band sits between, 3.6 tall: at 3 its lip
 // over the bevel was 0.6 tall, the gate's thinnest walls
-DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 80]];
+DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 81]];
 TD  = DISCS[2][1];          // the top disc's top, under the frosting
 // each disc's rim: in 1.4 at its foot, out to the face (MR) at 50 deg,
 // upright, and (all but the top one) rounded back in 1.4 at its top. The face
@@ -194,8 +194,15 @@ module cframe2d(w) {
     offset(r = 2.4) win_outline(w);
     translate([-w[3] - 2.4, -3.4]) square([2 * w[3] + 4.8, 3.6]);
 }
-module c_frames() for (w = CW) cclip(MR, 1.0) cyl_relief(MR, w[0], w[1], cframe_U(w))
-    relief_up(-1.2, 0.6) { cframe2d(cw(w)); offset(r = 0.3) win_outline(cw(w)); }
+// the series' relief from 0.4 in, and behind it a plain plate 1.2 into the
+// wall for where a disc's rim is set in. Sheared from 1.2 in, each frame's
+// opening rose 2.2 by its face, more than the frame is wide, and every head
+// came to a knife edge
+module back_plate(z0) translate([0, 0, z0]) linear_extrude(-0.4 - z0 + 0.01) children();
+module c_frames() for (w = CW) cclip(MR, 1.0) cyl_relief(MR, w[0], w[1], cframe_U(w)) {
+    relief_up(-0.4, 0.6) { cframe2d(cw(w)); offset(r = 0.3) win_outline(cw(w)); }
+    back_plate(-1.2) difference() { cframe2d(cw(w)); offset(r = 0.3) win_outline(cw(w)); }
+}
 module c_bars() for (w = CW) cclip(MR, 0.4) cyl_relief(MR, w[0], w[1], w[2] + 1) relief_up(-0.4, 0.4) win_muntins(cw(w), 0.6);
 module c_glass() for (w = CW) intersection() {
     cplace(MR, w[0], w[1]) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) offset(r = 0.6) win_outline(cw(w));
@@ -210,20 +217,25 @@ module c_holes() for (w = CW) cyl_relief(MR, w[0], w[1], cframe_U(w))
 // round with icing dots; its face the frosting glass in the wall, its hour dots
 // and hands running right through it, every line and gap 0.8 or more
 ck_th = 270;
-ck_z  = 62.8;              // the cookie's top 0.2 under the frosting's underside
-ck_r  = 11;                 // the face
-ck_R  = 13.0;               // the cookie, to its scallops' roots: 14.5 to their tips
+ck_z  = 63.2;              // the cookie's top under the frosting's underside
+ck_r  = 10;                 // the face: the cookie round it 4 wide, more than its opening rises
+ck_R  = 14.0;               // the cookie, to its scallops' roots: 15.5 to their tips
 module cookie2d() {
     circle(r = ck_R, $fn = 96);
     for (i = [0 : 17]) rotate(20 * i) translate([ck_R, 0]) circle(r = 1.5, $fn = 24);
 }
 // its back 1.2 into the wall: its lowest scallops sit on the disc's foot, where
 // the rim is set in
-module ck_cookie() cclip(MR, 1.6) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6) relief_up(-1.2, 1.6) { cookie2d(); offset(r = 0.3) circle(r = ck_r, $fn = 96); }
-// laid in the cookie's own strips (same U): in strips of their own, offset
-// 0.6 from the cookie's, the dots' backs met it in open edges
-module ck_beads() cclip(MR, 2.4) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6)
-    relief_up(-0.4, 2.4) for (i = [0 : 23]) rotate(15 * i) translate([ck_r + 1.2, 0]) circle(r = 0.8, $fn = 20);
+module ck_cookie() cclip(MR, 1.6) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6) {
+    relief_up(-0.4, 1.6) { cookie2d(); offset(r = 0.3) circle(r = ck_r, $fn = 96); }
+    back_plate(-1.2) difference() { cookie2d(); offset(r = 0.3) circle(r = ck_r, $fn = 96); }
+}
+// each dot placed on its own, square to the wall where it sits: laid in the
+// cookie's strips, or in strips of their own, the dots met the cookie on
+// shared strip planes and left open edges
+ck_br = ck_r + 3.0;
+module ck_beads() cclip(MR, 2.4) for (i = [0 : 23]) let (q = 15 * i, u = ck_br * cos(q), v = ck_br * sin(q))
+    cplace(MR, ck_th + u / MR * 180 / PI, ck_z + v) relief_up(-0.4, 2.4) circle(r = 0.8, $fn = 20);
 module ck_opening() cyl_relief(MR, ck_th, ck_z, ck_r + 1) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) circle(r = ck_r, $fn = 96);
 module ck_hole() cyl_relief(MR, ck_th, ck_z, ck_r + 1.8) relief_hole(-0.4, -0.2, 2.4 + 2.4) offset(r = 0.4) circle(r = ck_r, $fn = 96);
 module ck_glass() intersection() {
@@ -231,10 +243,10 @@ module ck_glass() intersection() {
     cylinder(r = MR - 0.2, h = 300, $fn = FNC);
 }
 module seg2(a, b, w) hull() { translate(a) circle(d = w, $fn = 12); translate(b) circle(d = w, $fn = 12); }
-module ck_dots2d() for (i = [0 : 11]) rotate(90 - 30 * i) translate([8.4, 0]) circle(r = i % 3 == 0 ? 1.2 : 0.85, $fn = 20);
+module ck_dots2d() for (i = [0 : 11]) rotate(90 - 30 * i) translate([7.6, 0]) circle(r = i % 3 == 0 ? 1.2 : 0.85, $fn = 20);
 module ck_hands2d() {
-    seg2([0, 0], 5.0 * [cos(150), sin(150)], 1.6);     // hour hand, to 10
-    seg2([0, 0], 6.0 * [cos(30), sin(30)], 1.2);       // minute hand, to 2
+    seg2([0, 0], 4.2 * [cos(150), sin(150)], 1.6);     // hour hand, to 10
+    seg2([0, 0], 5.2 * [cos(30), sin(30)], 1.2);       // minute hand, to 2
     circle(r = 1.4, $fn = 24);
 }
 module ck_inlay() intersection() {
@@ -258,12 +270,14 @@ module door_leaf() difference() {
 }
 module door_opening() cplace(MR, ck_th, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) polygon(arch_pts(dr_a, dr_h));
 module door_hole() cyl_relief(MR, ck_th, plinth_h, dr_a + 2.4) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) polygon(arch_pts(dr_a, dr_h));
-module door_frame() cclip(MR, fr_t + 0.6) cyl_relief(MR, ck_th, plinth_h, dr_a + 3.4) relief_up(-1.2, fr_t) {
-    union() {
-        intersection() { offset(r = fr_w) polygon(arch_pts(dr_a, dr_h)); translate([-30, -0.5]) square([60, 100]); }
-        intersection() { beads(arch_path(dr_a, dr_h, fr_w - 0.1, bead_sp, false)); translate([-30, 0.6]) square([60, 100]); }
-    }
-    translate([0, -1]) offset(delta = -0.3) polygon(arch_pts(dr_a, dr_h + 1));
+module door_frame2d() union() {
+    intersection() { offset(r = fr_w) polygon(arch_pts(dr_a, dr_h)); translate([-30, -0.5]) square([60, 100]); }
+    intersection() { beads(arch_path(dr_a, dr_h, fr_w - 0.1, bead_sp, false)); translate([-30, 0.6]) square([60, 100]); }
+}
+module door_hole2d() translate([0, -1]) offset(delta = -0.3) polygon(arch_pts(dr_a, dr_h + 1));
+module door_frame() cclip(MR, fr_t + 0.6) cyl_relief(MR, ck_th, plinth_h, dr_a + 3.4) {
+    relief_up(-0.4, fr_t) { door_frame2d(); door_hole2d(); }
+    back_plate(-1.2) difference() { door_frame2d(); door_hole2d(); }
 }
 
 // DRIPS off the bands and the frosting, clear of every window's head, the
