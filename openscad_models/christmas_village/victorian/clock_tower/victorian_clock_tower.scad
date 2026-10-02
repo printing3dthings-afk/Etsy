@@ -171,7 +171,8 @@ module door_leaf() difference() {
         difference() { cylinder(r = Rw + 0.2, h = 100, $fn = FN); translate([0, 0, -1]) cylinder(r = Rw - wall + 0.15, h = 102, $fn = FN); }
     }
     cyl_relief(Rw + 0.2, dth, plinth_h, dr_a + 0.6) translate([0, 0, -0.3]) linear_extrude(2) {
-        panel2d(-3.2, -0.6, 1.6, 5.8);  panel2d(0.6, 3.2, 1.6, 5.8);
+        // low, clear of the wreath's bow: up to 5.8 their heads ran into it
+        panel2d(-3.2, -0.6, 1.2, 3.6);  panel2d(0.6, 3.2, 1.2, 3.6);
     }
 }
 module door_opening() cplace(Rw, dth, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) polygon(arch_pts(dr_a, dr_h));
@@ -251,11 +252,19 @@ c_top = 2.2;
 zb    = z_cn + c_top;       // the pyramid's foot
 // the tower: its walls stand on the cone's ceiling (the chimney's way), so they
 // rise from a 58 deg slope, not a ledge, and run 1 up into the pyramid
-module tower_walls() difference() { tower_skin(zb + 1); below_ceil(); }
+// Under the cone (outside its cut, T - 0.3) they stop 0.3 over the ceiling, in
+// the cone, which takes it: down to the ceiling there, their foot lay on the
+// cone's underside and the two met in open edges
+module tower_walls() difference() {
+    tower_skin(zb + 1);
+    below_ceil();
+    difference() { sweep() R_below([H + 0.3, RV[1], RV[2]]); tower_col(); }
+}
 
-// QUOINS on the four corners, from the cone up to the string course
+// QUOINS on the four corners, from over the cone (63) up to the string course:
+// from inside the cone, they met it and the tower in open edges
 q_long = 5.0;  q_short = 2.8;  q_off = 0.5;
-module quoin_boxes() for (k = [nc(50) : nc(z_sc - 3) - 1], sx = [-1, 1], sy = [-1, 1])
+module quoin_boxes() for (k = [nc(63) : nc(z_sc - 3) - 1], sx = [-1, 1], sy = [-1, 1])
     let (z0 = zc(k), z1 = zc(k + 1), L = k % 2 ? q_long : q_short, M = k % 2 ? q_short : q_long) {
         translate([sx > 0 ? T - L : -T - 3, sy > 0 ? T - 0.5 : -T - 3, z0 + q_off]) cube([L + 3, 3.5, z1 - z0 - q_off]);
         translate([sx > 0 ? T - 0.5 : -T - 3, sy > 0 ? T - M : -T - 3, z0 + q_off]) cube([3.5, M + 3, z1 - z0 - q_off]);
@@ -308,8 +317,12 @@ pc = 3.0;
 function p_courses(z0, z1, g = 0.6, gh = 1.0) = [for (k = [0 : floor((z1 - z0) / pc) - 1], j = [0 : 1])
     let (z = z0 + k * pc + [0, gh][j]) [p_off(z) + [0, g][j], z]];
 z_pt = apex - 2.4;          // the point blunted to take the finial
+// its corners rounded with the cornice's (r + offset), shrinking up the hips:
+// nearly square (0.3), its foot's corners stood 0.3 out past the cornice's
+// rounded ones and the slicer propped all four from the cone
+function p_r(h) = max(0.3, corner_r + h - T);
 module pyramid() let (P = concat([[Tp, zb]], p_courses(zb + 1.0, z_pt - 2), [[p_off(z_pt), z_pt]]))
-    skin([for (q = P) sq_pts(q[0], q[1], 0.3)], slices = 0);
+    skin([for (q = P) sq_pts(q[0], q[1], p_r(q[0]))], slices = 0);
 // the tower's room under it, its ceiling the pyramid's face moved in 2.52
 tvp = 2.52 / cos(p_a);
 module tower_room() intersection() {

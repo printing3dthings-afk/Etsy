@@ -100,7 +100,9 @@ TD  = DISCS[2][1];          // the top disc's top, under the frosting
 // upright, and (all but the top one) rounded back in 1.4 at its top. The face
 // is MR exactly, so the windows, door and clock laid on MR stand proud of it
 ri = 1.0;
-module disc2d(d, last = false) let (z0 = d[0], z1 = d[1], rt = 1.6, zf = z0 == plinth_h ? z0 - 0.5 : z0 - 0.01,
+// the upper discs' feet 0.3 down into the band under them, which takes it (at
+// 0.01 the two left open edges)
+module disc2d(d, last = false) let (z0 = d[0], z1 = d[1], rt = 1.6, zf = z0 == plinth_h ? z0 - 0.5 : z0 - 0.3,
         top = last ? [[MR, z1 + 0.5]]
                    : [for (i = [0 : 8]) let (q = 90 * i / 8) [MR - ri + ri * cos(q), z1 - rt + rt * sin(q)]])
     polygon(concat([[MRi - 0.3, zf], [MR - ri, zf], [MR, z0 + ri * tan(50)]],
@@ -114,7 +116,10 @@ module discs() rotate_extrude($fn = FNC) {
 // THE ICING BANDS: in from the core, out to 0.9 proud at 50 deg, flat on top
 // for the next disc's foot
 module bands() rotate_extrude($fn = FNC) for (i = [0 : 1]) let (z0 = DISCS[i][1], z1 = DISCS[i + 1][0])
-    polygon([[MR - ri - 0.4, z0], [MR - ri, z0], [MR + 0.9, z0 + (ri + 0.9) * tan(50)], [MR + 0.9, z1], [MR - ri - 0.4, z1]]);
+    // its bevel starting 0.25 under the disc's top, inside its rounding: from
+    // the very point where the rounding ends, the two shared an edge ring and
+    // the drips under it left open edges
+    polygon([[MR - ri - 0.4, z0 - 0.25], [MR - ri - 0.3, z0 - 0.25], [MR + 0.9, z0 - 0.25 + (ri + 1.2) * tan(50)], [MR + 0.9, z1], [MR - ri - 0.4, z1]]);
 
 // the room keeps its full width to za, then closes in at 55 deg under the cone
 za  = TD - 1.6;
