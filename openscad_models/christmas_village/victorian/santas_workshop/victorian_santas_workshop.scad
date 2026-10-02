@@ -175,10 +175,12 @@ module slice(z) translate([0, 0, z]) linear_extrude(0.01) children();
 function bw_rise(z) = sh_r * (z + recess);
 module bw_sec2d(z) hull() { bw_outline(); translate([0, bw_rise(z)]) bw_outline(); }
 module bw_hull(z1) hull() { slice(-recess) bw_outline(); slice(z1) bw_sec2d(z1); }
-module bw_hole() nf(3, BW_u, BW_z) {
-    bw_hull(fr_t);
-    translate([0, 0, fr_t]) linear_extrude(3) bw_sec2d(fr_t);
-}
+// the brick, the frame and its keystone are all cut by this one solid: cut by
+// two copies on the same slope with different ends, the brick and the frame met
+// in open edges round the arch's head
+bw_z1 = fr_t + 0.6;
+module bw_cut() { bw_hull(bw_z1); translate([0, 0, bw_z1]) linear_extrude(3) bw_sec2d(bw_z1); }
+module bw_hole() nf(3, BW_u, BW_z) bw_cut();
 module bw_pane() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) offset(r = 1.0) bw_outline();
 // brick round the reveal and the pane, inside the room, down to the base
 bw_cd = recess + pane_t;    // its back face
@@ -198,11 +200,11 @@ bw_ftop = bw_h + bw_a + bw_rise(fr_t);   // the opening's crown at the frame's f
 module bw_frame() nf(3, BW_u, BW_z) {
     difference() {
         relief_up(-0.4, fr_t) union() { offset(r = fr_w) bw_sec2d(fr_t); translate([-bw_a - fr_w - 0.8, -sill]) square([2 * (bw_a + fr_w + 0.8), sill + 1]); }
-        bw_hull(fr_t + 0.6);
+        bw_cut();
     }
     difference() {
         relief_up(-0.4, fr_t + 0.5) translate([0, bw_ftop - 0.2]) polygon([[-1.6, 0], [1.6, 0], [2.2, fr_w + 2.2], [-2.2, fr_w + 2.2]]);
-        bw_hull(fr_t + 0.6);
+        bw_cut();
     }
 }
 
