@@ -222,7 +222,7 @@ ck_th = 270;
 // its lowest scallop 0.2 over the top disc's bevelled foot (at 63.2 it reached
 // the foot and stood out over the band), its top under the frosting
 ck_z  = 63.9;
-ck_r  = 10;                 // the face: the cookie round it 4 wide, more than its opening rises
+ck_r  = 9;                  // the face: the cookie round it 5 wide, room for the piped dots where the opening rises
 ck_R  = 14.0;               // the cookie, to its scallops' roots: 15.5 to their tips
 module cookie2d() {
     circle(r = ck_R, $fn = 96);
@@ -236,13 +236,19 @@ module ck_cookie() cclip(MR, 1.6) cyl_relief(MR, ck_th, ck_z, ck_R + 1.6) {
 }
 // each dot placed on its own, square to the wall where it sits: laid in the
 // cookie's strips, or in strips of their own, the dots met the cookie on
-// shared strip planes and left open edges
-ck_br = ck_r + 3.0;
-module ck_beads() cclip(MR, 2.4) for (i = [0 : 23]) let (q = 15 * i, u = ck_br * cos(q), v = ck_br * sin(q))
-    // standing on the cookie's face (1.6), from 1.2 in it to 2.2: a relief this
-    // small, sheared from the wall (-0.4), closes before 1.4 out, and the dots
-    // were hidden inside the cookie
-    cplace(MR, ck_th + u / MR * 180 / PI, ck_z + v) relief_up(1.2, 2.2) circle(r = 0.8, $fn = 20);
+// shared strip planes and left open edges.
+// Each is a sheared rod from 0.3 in the wall to 2.2 out, sheared as the cookie
+// is, so it stays inside the cookie all the way to its face (1.6) and stands
+// 0.6 proud of it. The ring follows the face's real cookie ring, which the
+// shear moves up: at the face the opening runs from -ck_r-0.4 to ck_r+2.8 and
+// the cookie from -12.08 to 14. Clipped like the other reliefs, from 1.2 to
+// 2.2, the dots closed before reaching the face and were hidden in the cookie.
+ck_dr = 0.6;
+ck_y0 = 0.88;               // the ring's centre on the face, above the clock's
+ck_rx = 11.7;  ck_ry = 11.8;
+module ck_beads() cclip(MR, 2.4) for (i = [0 : 23]) let (q = 15 * i, u = ck_rx * cos(q), v = ck_y0 + ck_ry * sin(q))
+    cplace(MR, ck_th + u / MR * 180 / PI, ck_z) shear_up() translate([0, 0, -0.3]) linear_extrude(2.5)
+        translate([0, v - SH * 1.6]) circle(r = ck_dr, $fn = 20);
 module ck_opening() cyl_relief(MR, ck_th, ck_z, ck_r + 1) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) circle(r = ck_r, $fn = 96);
 module ck_hole() cyl_relief(MR, ck_th, ck_z, ck_r + 1.8) relief_hole(-0.4, -0.2, 2.4 + 2.4) offset(r = 0.4) circle(r = ck_r, $fn = 96);
 module ck_glass() intersection() {
@@ -250,10 +256,10 @@ module ck_glass() intersection() {
     cylinder(r = MR - 0.2, h = 300, $fn = FNC);
 }
 module seg2(a, b, w) hull() { translate(a) circle(d = w, $fn = 12); translate(b) circle(d = w, $fn = 12); }
-module ck_dots2d() for (i = [0 : 11]) rotate(90 - 30 * i) translate([7.6, 0]) circle(r = i % 3 == 0 ? 1.2 : 0.85, $fn = 20);
+module ck_dots2d() for (i = [0 : 11]) rotate(90 - 30 * i) translate([6.8, 0]) circle(r = i % 3 == 0 ? 1.2 : 0.85, $fn = 20);
 module ck_hands2d() {
-    seg2([0, 0], 4.2 * [cos(150), sin(150)], 1.6);     // hour hand, to 10
-    seg2([0, 0], 5.2 * [cos(30), sin(30)], 1.2);       // minute hand, to 2
+    seg2([0, 0], 3.8 * [cos(150), sin(150)], 1.6);     // hour hand, to 10
+    seg2([0, 0], 4.8 * [cos(30), sin(30)], 1.2);       // minute hand, to 2
     circle(r = 1.4, $fn = 24);
 }
 module ck_inlay() intersection() {

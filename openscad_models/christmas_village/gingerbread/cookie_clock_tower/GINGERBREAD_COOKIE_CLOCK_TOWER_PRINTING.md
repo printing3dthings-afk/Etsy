@@ -104,13 +104,17 @@ section through the model:
   relief from 0.4 mm in, with a plain plate behind them 1.2 mm into the
   wall** for where a rim is set in. Sheared from 1.2 mm in, each opening rose
   more than its frame is wide and every head came to a knife edge.
-- **The clock's face is 20 mm across in a 28 mm cookie,** so the cookie
-  round it is wider than its opening rises; and the cookie's lowest scallop
-  stands 0.2 mm over the top disc's foot. Reaching the foot, it stood out over
-  the band.
+- **The clock's face is 18 mm across in a 28 mm cookie,** so the cookie
+  round it is wider than its opening rises, with room left for the piped
+  dots; and the cookie's lowest scallop stands 0.2 mm over the top disc's
+  foot. Reaching the foot, it stood out over the band.
 - **The piped dots round the clock are placed one by one,** square to the
-  wall. Laid in strips, theirs or the cookie's, they met the cookie on shared
-  strip planes and left open edges.
+  wall, each a rod sheared exactly as the cookie is, from 0.3 mm in the wall
+  to 0.6 mm proud of the cookie's face. Laid in strips, theirs or the
+  cookie's, they met the cookie on shared strip planes and left open edges;
+  clipped like the other reliefs, a dot this small closed before it reached
+  the face and all 24 were hidden inside the cookie. Their ring follows the
+  cookie as it is at its face, where the shear moves it up.
 - **The door's piped beads start 1.6 mm up,** on the upright face: from
   0.6 mm their cut feet stood over the bottom disc's bevelled foot.
 - **The glass, the hour dots and the hands stop at the room.** 0.6 mm into it,
