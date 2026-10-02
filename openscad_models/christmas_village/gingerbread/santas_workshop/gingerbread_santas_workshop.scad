@@ -209,7 +209,9 @@ ch_pitch = 30;
 module chimney_stripes() translate([CHC[0], CHC[1], 0]) intersection() {
     difference() { cylinder(r = ch_r + 0.01, h = ch_top - 1.2, $fn = 64); translate([0, 0, -1]) cylinder(r = ch_r - 0.6, h = 200, $fn = 64); }
     translate([0, 0, plinth_h]) linear_extrude(ch_top - plinth_h, twist = -360 * (ch_top - plinth_h) / ch_pitch, slices = 120, $fn = 64)
-        for (s = [0, 180]) rotate(s) polygon([[0, 0], [10, 0], [10 * cos(50), 10 * sin(50)]]);
+        // ring sectors clear of the axis: drawn as triangles from it, the twist
+        // made a degenerate solid that CGAL dropped, and the chimney came out white
+        for (s = [0, 180]) rotate(s) polygon([[3, 0], [8, 0], [8 * cos(50), 8 * sin(50)], [3 * cos(50), 3 * sin(50)]]);
 }
 
 // =====================================================================================
