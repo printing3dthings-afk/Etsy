@@ -124,6 +124,14 @@ big window, the loading doors with wreaths, skylights and white scalloped
 bargeboards. The toys are dark lines running through the window's white glass,
 so lit from inside they show as silhouettes.
 
+**Last pair, picked 2026-10-02** from four forms each, after Scott saw the
+finished Santa's workshops. The **Victorian clock tower** is a tall square
+brick tower on a round one-storey brick drum with arched windows, a big white
+clock face on each side near the top and a slate pyramid spire with a finial.
+The **Gingerbread cookie clock tower** is a round tower stacked from thick
+cookie discs, a big frosted round-cookie clock face on its front with candy
+hands, under a chocolate cone with gumdrops and a candy-cane spire.
+
 **Tealight headroom on the round cottages, decided 2026-10-01:** the Victorian
 cottage, cupcake cottage and turret house stay as built, 46 mm tealight short
 of 50 mm of headroom (41.6–47.2 mm). Their notes recommend a 38 mm tealight,
