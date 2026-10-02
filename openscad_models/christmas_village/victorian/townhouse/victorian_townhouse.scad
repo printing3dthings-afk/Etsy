@@ -176,7 +176,9 @@ module dormer_passage() for (d = DORMERS) nfw(d[0], d[1], 0, mf) intersection() 
     translate([0, 0, -30]) linear_extrude(30 - wall)
         // its floor 0.5 over the wall's top: at H - 1 the brick and cornice left
         // in front of it were 0.86 thick
-        polygon([[-dpw, H + 0.5], [dpw, H + 0.5], [dpw, dz1 - 0.4], [0, dz1 - 0.4 + dpw * tp], [-dpw, dz1 - 0.4]]);
+        // its gable at 60 deg, its sides 1.4 under the dormer's eave: at 55 deg the
+        // valley where it crossed the house's ceiling ran at 47.8 deg, propped
+        polygon([[-dpw, H + 0.5], [dpw, H + 0.5], [dpw, dz1 - 1.4], [0, dz1 - 1.4 + dpw * tan(60)], [-dpw, dz1 - 1.4]]);
     // ending on the plane of the house's ceiling that faces this wall (the bow's
     // opening): ended upright, it left a knife edge where it met that ceiling
     translate([0, Hc, -mf - wall]) rotate([-(90 - rm_a), 0, 0]) translate([-100, -100, 0]) cube(200);
