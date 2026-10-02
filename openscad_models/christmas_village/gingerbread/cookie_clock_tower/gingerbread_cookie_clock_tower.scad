@@ -95,7 +95,7 @@ MR  = 26;                   // the discs' face
 MRi = MR - wall;            // the room: the 46.6 mm tealight's circle stands 0.5 inside
 // [foot, top] of each disc; the icing band sits between, 3.6 tall: at 3 its lip
 // over the bevel was 0.6 tall, the gate's thinnest walls
-DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 81]];
+DISCS = [[plinth_h, 24], [27.6, 43.6], [47.2, 82]];
 TD  = DISCS[2][1];          // the top disc's top, under the frosting
 // each disc's rim: in 1.4 at its foot, out to the face (MR) at 50 deg,
 // upright, and (all but the top one) rounded back in 1.4 at its top. The face
@@ -219,7 +219,9 @@ module c_holes() for (w = CW) cyl_relief(MR, w[0], w[1], cframe_U(w))
 // round with icing dots; its face the frosting glass in the wall, its hour dots
 // and hands running right through it, every line and gap 0.8 or more
 ck_th = 270;
-ck_z  = 63.2;              // the cookie's top under the frosting's underside
+// its lowest scallop 0.2 over the top disc's bevelled foot (at 63.2 it reached
+// the foot and stood out over the band), its top under the frosting
+ck_z  = 63.9;
 ck_r  = 10;                 // the face: the cookie round it 4 wide, more than its opening rises
 ck_R  = 14.0;               // the cookie, to its scallops' roots: 15.5 to their tips
 module cookie2d() {
@@ -274,7 +276,9 @@ module door_opening() cplace(MR, ck_th, plinth_h) translate([0, 0, -wall - 3]) l
 module door_hole() cyl_relief(MR, ck_th, plinth_h, dr_a + 2.4) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) polygon(arch_pts(dr_a, dr_h));
 module door_frame2d() union() {
     intersection() { offset(r = fr_w) polygon(arch_pts(dr_a, dr_h)); translate([-30, -0.5]) square([60, 100]); }
-    intersection() { beads(arch_path(dr_a, dr_h, fr_w - 0.1, bead_sp, false)); translate([-30, 0.6]) square([60, 100]); }
+    // from 1.6 up, on the disc's upright face: from 0.6 their cut feet stood
+    // over the bottom disc's bevelled foot and the slicer propped them
+    intersection() { beads(arch_path(dr_a, dr_h, fr_w - 0.1, bead_sp, false)); translate([-30, 1.6]) square([60, 100]); }
 }
 module door_hole2d() translate([0, -1]) offset(delta = -0.3) polygon(arch_pts(dr_a, dr_h + 1));
 module door_frame() cclip(MR, fr_t + 0.6) cyl_relief(MR, ck_th, plinth_h, dr_a + 3.4) {
