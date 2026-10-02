@@ -237,7 +237,9 @@ module tower_skin(ztop) {
 }
 // where the cone is cut for the tower: 0.3 inside its face, so the cone runs into
 // the brick and no pocket opens between the courses' bumps at the tower's foot
-module tower_col() translate([-(T - 0.3), -(T - 0.3), 0]) cube([2 * (T - 0.3), 2 * (T - 0.3), 300]);
+// rounded like the tower's corners (r - 0.3): cut square, its corners met the
+// tower's rounded ones tangentially and left zero-thick slivers (11 bodies)
+module tower_col() translate([0, 0, -1]) linear_extrude(302) polygon([for (p = sq_pts(T - 0.3, 0, corner_r - 0.3)) [p[0], p[1]]]);
 
 // heights
 z_sc  = 78;                 // the string course, under the clock stage
@@ -262,7 +264,11 @@ module quoins() difference() { intersection() { tower_skin(z_sc); quoin_boxes();
 
 // BANDS (the townhouse's): rising at 55 deg as they come out
 bt = tan(55);
-module band(z, o, top = 1.6) skin([sq_pts(T - 0.3, z - 2.4), sq_pts(T + bd + o, z - 2.4 + (bd + o + 0.3) * bt), sq_pts(T + bd + o, z + top)], slices = 0);
+// their corners rounded with the offset (r + g), so a corner stands out no
+// further than a face: square, the cornice's corners leaned out at 45 deg and
+// the slicer propped all four from the table
+function bpts(g, z) = sq_pts(T + g, z, corner_r + g);
+module band(z, o, top = 1.6) skin([bpts(-0.3, z - 2.4), bpts(bd + o, z - 2.4 + (bd + o + 0.3) * bt), bpts(bd + o, z + top)], slices = 0);
 co = 1.5;
 module string_course() band(z_sc, 0.9);
 module cornice() band(z_cn, co, c_top);
@@ -379,7 +385,7 @@ module roof_raw() {
     difference() { pyramid(); room(); }
     finial();
     door_leaf();
-    ck_hands();
+    difference() { ck_hands(); room(); }
 }
 module accent_raw() wreath();
 module trim_raw() {
@@ -401,8 +407,10 @@ module trim_raw() {
         room();
         brand_mark();
     }
-    // the glass goes back in after the rooms and openings are cut
-    difference() { union() { sw_glass(); ck_glass(); } sweep() polygon([[0, -2], [Rw - wall - 0.2, -2], [Rw - wall - 0.2, H], [0, R_zc(RV, 0)]]); }
+    // the glass goes back in after the rooms and openings are cut, and stops at
+    // the room: 0.2 and 0.6 into it, the windows' and clocks' glass hung its
+    // lower edges in the room and the slicer propped them from the table
+    difference() { union() { sw_glass(); ck_glass(); } room(); }
 }
 module roof_part()   roof_raw();
 module accent_part() { difference() { accent_raw(); roof_raw(); } }

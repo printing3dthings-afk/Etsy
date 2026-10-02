@@ -37,7 +37,9 @@ include <BOSL2/std.scad>
 $fa = 4;  $fs = 0.4;
 part = "all";
 
-wall     = 1.68;
+// the wall is 2.2: the discs' rims set in 1.0 still leave 1.2 at their feet.
+// At 1.68 with rims set in 1.4, the wall there was 0.28 (1st percentile 0.40)
+wall     = 2.2;
 plinth_h = 8;
 SH       = 1.2;
 tp55     = tan(55);
@@ -89,15 +91,15 @@ module drip2d(len, w) hull() { translate([-w/2, 0]) square([w, 1.2]); translate(
 // 182, not 180 (the workshop): a facet corner exactly at the front met the
 // door's strips along it
 FNC = 182;
-MR  = 25.5;                 // the discs' face; the 46 mm tealight's circle stands 0.5 inside
-MRi = MR - wall;
+MR  = 26;                   // the discs' face
+MRi = MR - wall;            // the room: the 46.6 mm tealight's circle stands 0.5 inside
 // [foot, top] of each disc; the icing band sits between, 3 tall
 DISCS = [[plinth_h, 24], [27, 43], [46, 78]];
 TD  = DISCS[2][1];          // the top disc's top, under the frosting
 // each disc's rim: in 1.4 at its foot, out to the face (MR) at 50 deg,
 // upright, and (all but the top one) rounded back in 1.4 at its top. The face
 // is MR exactly, so the windows, door and clock laid on MR stand proud of it
-ri = 1.4;
+ri = 1.0;
 module disc2d(d, last = false) let (z0 = d[0], z1 = d[1], rt = 1.6, zf = z0 == plinth_h ? z0 - 0.5 : z0 - 0.01,
         top = last ? [[MR, z1 + 0.5]]
                    : [for (i = [0 : 8]) let (q = 90 * i / 8) [MR - ri + ri * cos(q), z1 - rt + rt * sin(q)]])
@@ -278,7 +280,7 @@ module base_slab() {
 DRIFTS = [[(MR + 1) * cos(-20), (MR + 1) * sin(-20), 7, 4, 3.0], [(MR + 1) * cos(110), (MR + 1) * sin(110), 7, 3.5, 2.8],
           [(MR + 1) * cos(200), (MR + 1) * sin(200), 5, 3.5, 2.4]];
 // on the base's flat top: further out they hung over its rounded edge
-PM = [[-12, -25.8, 2.2], [13, -25.4, 2.0], [27, 8, 2.2]];
+PM = [[-12, -26.8, 2.2], [13, -26.4, 2.0], [28, 8, 2.2]];
 module pepper_wedges(r) { for (i = [0 : 3]) rotate(i * 90 + 22.5) polygon([[0, 0], [r * 2, 0], [r * 2 * cos(45), r * 2 * sin(45)]]); circle(r = 0.5); }
 module peppermints(stripes = false) for (p = PM) translate([p[0], p[1], plinth_h - 0.2]) linear_extrude(1.4)
     if (stripes) union() { intersection() { circle(r = p[2]); pepper_wedges(p[2]); } circle(r = 0.8); } else circle(r = p[2]);
@@ -292,8 +294,8 @@ module base() {
         linear_extrude(plinth_h + 10) offset(delta = -2.4) base2d();
     }
 }
-// under the door, between the room's opening (-23.8) and the base's edge (-33)
-module brand_mark() translate([0, -28.4, -0.5]) linear_extrude(1.3)
+// under the door, between the room's opening (-23.8) and the base's edge (-33.5)
+module brand_mark() translate([0, -28.6, -0.5]) linear_extrude(1.3)
     mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
 
 // =====================================================================================
@@ -307,12 +309,14 @@ module body_raw() {
 module roof_raw() {
     difference() { union() { cone(); shingles(); } room(); }
     door_leaf();
-    ck_inlay() ck_dots2d();
+    // stopped at the room, like the glass: 0.6 into it, their lower edges hung
+    // there and the slicer propped them from the table
+    difference() { ck_inlay() ck_dots2d(); room(); }
 }
 module accent_raw() {
     gumdrops_ring(true);
     cane_stripes();
-    ck_inlay() ck_hands2d();
+    difference() { ck_inlay() ck_hands2d(); room(); }
     peppermints(true);
 }
 module trim_raw() {
