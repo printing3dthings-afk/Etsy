@@ -157,13 +157,15 @@ BW_z = 14;                  // its sill
 bw_a = 14;  bw_h = 19;      // half-width, straight sides: its crown at 47
 recess = 4.0;               // the pane's face behind the wall's face
 pane_t = 1.48;
-sh_r   = 1.2;               // the reveal's head rises 1.2 per 1 inward: 50 deg, no shelf
+// the reveal's head rises 1.6 per 1 inward, 58 deg. At 1.2 (50 deg) the gate's
+// slicer propped the whole head from the window's floor
+sh_r   = 1.6;
 function arch_pts(a, hgt, n = 36) = concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = 180 * i / n) [a * cos(q), hgt + a * sin(q)]]);
 module bw_outline() polygon(arch_pts(bw_a, bw_h));
 // the hole's section where it meets the pane: the arch with its head raised
 module bw_back2d() hull() { bw_outline(); translate([0, sh_r * recess]) bw_outline(); }
 // the reveal: one hull from the arch at the face to that section, so its floor
-// is level and its head a 50 deg slope, not a 4 mm ceiling over air. Drawn as
+// is level and its head a 58 deg slope, not a 4 mm ceiling over air. Drawn as
 // a straight copy unioned with a sheared one, the two met along the arch in
 // near-level steps and broken slivers ("4 bodies", supports from the table)
 module slice(z) translate([0, 0, z]) linear_extrude(0.01) children();
@@ -175,7 +177,7 @@ module bw_hole() nf(3, BW_u, BW_z) {
 // brick's round them), as one hull for the same reason
 module rise_hole(z0, z1, r) hull() {
     slice(z0) offset(r = r) bw_outline();
-    slice(z1) hull() { offset(r = r) bw_outline(); translate([0, SH * (z1 - z0)]) offset(r = r) bw_outline(); }
+    slice(z1) hull() { offset(r = r) bw_outline(); translate([0, sh_r * (z1 - z0)]) offset(r = r) bw_outline(); }
 }
 module bw_pane() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) offset(r = 1.0) bw_back2d();
 // brick round the reveal and the pane, inside the room, down to the table
