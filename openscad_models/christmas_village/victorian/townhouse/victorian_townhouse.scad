@@ -373,7 +373,9 @@ module door_leaf() nf(0, dr_u, zs) difference() {
 }
 // the fanlight's pane, back in the opening, and its bars fanning out on it
 module fan_pane() nf(0, dr_u, zs) translate([0, 0, -wall]) linear_extrude(wall - 0.4) intersection() {   // 1.28 thick, not 0.88
-    offset(r = 0.4) door_outline(); translate([-10, dr_h]) square([20, 10]);
+    // from 0.3 under the leaf's top, which takes it: from the top exactly, its
+    // corners met the transom bar's ends at the door's edge in four-face edges
+    offset(r = 0.4) door_outline(); translate([-10, dr_h - 0.3]) square([20, 10]);
 }
 module fan_bars() nf(0, dr_u, zs) translate([0, 0, -0.5]) linear_extrude(0.6) intersection() {
     door_outline();
