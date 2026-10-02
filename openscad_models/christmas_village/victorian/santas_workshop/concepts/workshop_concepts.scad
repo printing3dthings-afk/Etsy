@@ -2,6 +2,8 @@
 // Not a printable model: no hollow room, parts overlap, never gated.
 // concept = 1  long one-storey brick workshop, three tall arched toy windows
 // concept = 2  two-storey gable-window workshop with a hoist
+// concept = 3  Scott's mix: concept 1's long workshop, one big toy window,
+//              arched loading doors with wreaths, skylights, scalloped bargeboards
 // piece selects a filament colour: body (brick), roof (slate), trim (white),
 // accent (evergreen), toys (slate outlines on the panes).
 include <toys.scad>
@@ -228,4 +230,58 @@ module c2(piece) {
     if (piece == "roof") translate([0, yf2 - ov2 - 0.6, Rg + 1.2]) cylinder(r1 = 1.4, r2 = 0.3, h = 6);   // finial
 }
 
-if (concept == 1) c1(piece); else c2(piece);
+// ---------------------------------------------------------------- concept 3
+wx3 = -16; wa3 = 18; wh3 = 26; wz3 = base_h + 6;
+ROWS3 = [[0.8, [["horse", -9.5, 1.1], ["teddy", 3.0, 1.05], ["drum", 11.5, 1.0]]],
+         [13.8, [["soldier", -12.0, 1], ["boat", -4.5, 1], ["jack", 4.0, 1], ["soldier", 12.0, 1]]]];
+dx3 = 26;
+
+module c3_doors(piece) let (a = 11, h = 18) translate([dx3, yf1, base_h]) {
+    if (piece == "cut") xz(-1, 2) arch2d(a, h);
+    if (piece == "roof") xz(1.4, 2.2) difference() {
+        arch2d(a, h);
+        translate([-0.3, -1]) square([0.6, 40]);
+        for (s = [-1, 1], x = [3 : 3 : a - 1]) translate([s * x - 0.2, -1]) square([0.4, 40]);
+    }
+    if (piece == "trim") {
+        xz(-1.2, 0.2) difference() { offset(r = 1.8) arch2d(a, h); arch2d(a, h); }
+        xz(-1.6, 0.2) translate([0, h + a + 0.4]) polygon([[-1.4, 0], [1.4, 0], [2.0, 3.2], [-2.0, 3.2]]);
+        for (s = [-1, 1], z = [4, 15]) xz(1.0, 1.6) translate([s * 6.5, z]) square([8, 1.2], center = true);
+    }
+    if (piece == "accent") for (s = [-1, 1]) xz(0.8, 1.6) translate([s * 4.6, h + 0.5]) wreath2d();
+}
+
+module c3_sign(piece) translate([dx3, yf1, E1 - 10]) {
+    if (piece == "roof") xz(-1.4, 0.2) offset(r = 0.8) square([32, 11.4], center = true);
+    if (piece == "trim") xz(-2.0, -1) for (l = [["SANTA'S", 2.9], ["WORKSHOP", -2.9]]) translate([0, l[1]])
+        text(l[0], size = 4.0, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.04);
+}
+
+// scalloped bargeboards on both gable ends (planes x = +-(W1/2 + ov1))
+module c3_barge(piece) if (piece == "trim") for (m = [0, 1]) mirror([m, 0, 0]) translate([-W1 / 2 - ov1 - 0.2, 0, 0])
+    for (n = [0, 1]) mirror([0, n, 0]) yz(0, 1.4) let (a = P1, y0 = -D1 / 2 - ov1, z0 = E1 - ov1 * tan(a)) intersection() {
+        union() {
+            polygon([[y0, z0], [y0 + 80 * cos(a), z0 + 80 * sin(a)], [y0 + 80 * cos(a) + 2.6 * sin(a), z0 + 80 * sin(a) - 2.6 * cos(a)], [y0 + 2.6 * sin(a), z0 - 2.6 * cos(a)]]);
+            for (s = [3 : 4 : 40]) translate([y0 + s * cos(a) + 2.4 * sin(a), z0 + s * sin(a) - 2.4 * cos(a)]) circle(r = 1.4, $fn = 16);
+        }
+        translate([-80, 0]) square([80.001, 200]);
+    }
+
+module c3(piece) {
+    if (piece == "trim") { snow_base(W1 + 18, D1 + 20); quoin_set(W1, D1, base_h, E1); }
+    if (piece == "body") difference() {
+        union() { translate([-W1 / 2, -D1 / 2, base_h - 1]) cube([W1, D1, E1 - base_h + 1]); yz(-W1 / 2, W1 / 2) c1_gable2d(); }
+        courses(W1, D1, base_h, E1 - 0.5);
+        toy_window("cut", wx3, wz3, wa3, wh3, yf1, ROWS3);
+        c3_doors("cut");
+    }
+    if (piece == "roof") difference() { c1_roof3d(0, 2.6); translate([-W1, -40, R1 - 6]) cube([2 * W1, 80, 40]); }
+    if (piece == "trim") intersection() { c1_roof3d(2.2, 4.4); translate([-W1, -40, R1 - 6.2]) cube([2 * W1, 80, 40]); }
+    if (piece == "trim") for (x = [-W1 / 2 - ov1 + 4 : 9 : W1 / 2]) translate([x, yf1 - ov1 + 0.6, E1 - ov1 * tan(P1) - 0.6]) rotate([90, 0, 0]) linear_extrude(1) polygon([[-1.2, 0], [1.2, 0], [0, -3.6 - 2 * sin(x * 37)]]);
+    if (piece == "trim") { toy_window("pane", wx3, wz3, wa3, wh3, yf1, ROWS3, 7); toy_window("frame", wx3, wz3, wa3, wh3, yf1, ROWS3, 7); }
+    if (piece == "toys") { toy_window("toys", wx3, wz3, wa3, wh3, yf1, ROWS3); toy_window("shelf", wx3, wz3, wa3, wh3, yf1, ROWS3); }
+    c1_skylight(piece); c1_chimney(piece); c1_stovepipe(piece); c3_doors(piece); c3_sign(piece); c3_barge(piece);
+    if (piece == "accent") for (x = [-W1 / 2 + 4, W1 / 2 - 4]) translate([x, yf1 - 2.4, base_h]) scale([1, 0.7, 1]) cylinder(r1 = 3.4, r2 = 0.3, h = 11, $fn = 8);
+}
+
+if (concept == 1) c1(piece); else if (concept == 2) c2(piece); else c3(piece);
