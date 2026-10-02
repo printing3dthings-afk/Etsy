@@ -183,10 +183,12 @@ module cyl_relief(r, th, z, U, du = 1.0) for (i = [0 : ceil(2 * U / du) - 1]) le
 module cclip(r, d) intersection() { children(); cylinder(r = r + d, h = 300, $fn = FNC); }
 
 // THE WINDOWS: [angle, sill, a, straight height]; 270 is the front
-// each frame's head 1.2 or more under the band over it: closer, the head and
-// the band met in walls under 0.5 mm
-CW = concat([for (th = [30, 150, 210, 330]) [th, 11.6, 3.2, 4]],
-            [for (th = [0, 90, 180, 225, 315]) [th, 31.6, 3.2, 4]],
+// each frame wholly on its disc's upright face, between the foot's bevel and
+// the top's rounding: its sill starting on the bevel (the middle disc's at
+// 28.2), the sill's foot stood one layer out over the band and the slicer
+// propped it; its head in the rounding, the two met in walls under 0.5 mm
+CW = concat([for (th = [30, 150, 210, 330]) [th, 12.8, 3.2, 3.6]],
+            [for (th = [0, 90, 180, 225, 315]) [th, 32.4, 3.2, 3.6]],
             [for (th = [20, 90, 160]) [th, 56, 3.2, 8]]);
 function cw(w) = [0, 0, 0, w[2], w[3]];
 function cframe_U(w) = w[2] + 3.2;
