@@ -365,7 +365,9 @@ zs   = plinth_h + 3.6;      // its sill, on the landing
 dr_a = 4.0;  dr_h = 10;     // the leaf to dr_h, the fanlight's half-round over it
 module door_outline() polygon(arch_pts(dr_a, dr_h));
 module door_leaf() nf(0, dr_u, zs) difference() {
-    translate([0, 0, -wall]) linear_extrude(wall + bd) translate([-dr_a - 0.25, -0.3]) square([2 * dr_a + 0.5, dr_h + 0.3]);
+    // its top 0.2 over the fanlight's springing: level with it, the leaf cut the
+    // fanlight's bars exactly at the outline's corner, a zero-area face
+    translate([0, 0, -wall]) linear_extrude(wall + bd) translate([-dr_a - 0.25, -0.3]) square([2 * dr_a + 0.5, dr_h + 0.5]);
     translate([0, 0, bd - 0.4]) linear_extrude(2) for (s = [-1, 1])
         // low, clear of the wreath, and pointed at 60 deg: square-headed, each
         // panel's 0.4 recess had a level ceiling
