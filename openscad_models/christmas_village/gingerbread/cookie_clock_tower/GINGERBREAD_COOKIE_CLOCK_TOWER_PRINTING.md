@@ -89,6 +89,14 @@ discs to the cone.
 - **The clock prints as drawn:** its face, hour dots and hands lose nothing
   the comparison flags, and the 24 piped dots stand 0.6 mm proud of the
   cookie in the exported trim part.
+- **Re-checked on Bambu Studio itself (2026-10-03, stock P1S presets,
+  Classic walls).** 56 mm³ not printed, nothing filled, **24 flags, all
+  cosmetic** (≤ 0.06 mm³ each, 0.25–0.3 mm wide, in mirrored pairs on the
+  front): the top one or two layers of the piped icing dots and the thin
+  tips of the cookie's scallops. Classic walls lay nothing narrower than
+  ~0.45 mm, so each dot's cap is left off and the dots print about 0.4 mm
+  flatter than modelled. PrusaSlicer (Arachne) had 4 flags.
+- **Colour cost** (`tools/colour_cost.py --what-if`, Bambu stock, 2026-10-03): 23.8 h and 369 g in four colours, 689 colour changes; 1.7 h and 52 g in one. The icing white sits on 557 of 703 layers and costs 11.5 h and 173 g; the chocolate 3.5 h; the candy red 1.2 h.
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The cane
   scores 1.3, against a watch level of 4.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of

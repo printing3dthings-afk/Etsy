@@ -90,6 +90,13 @@ over the circle's edge; inside the tower the room runs on up to the pyramid.
   thin to lay. The courses end a hair short at the roof line.
 - **The clocks print as drawn:** their marks and hands lose nothing the
   comparison flags.
+- **Re-checked on Bambu Studio itself (2026-10-03, stock P1S presets,
+  Classic walls).** 92 mm³ not printed, nothing filled, **1 flag:** the inner
+  tips of the wreath ring, where its section thins under one bead (0.12 mm³,
+  8 layers). The ten brick-course slivers PrusaSlicer flagged do not flag
+  here. Cosmetic; thicken the wreath ring's inner edge to ≥ 0.45 mm if it ever
+  shows.
+- **Colour cost** (`tools/colour_cost.py --what-if`, Bambu stock, 2026-10-03): 25.5 h and 390 g in four colours, 757 colour changes; 1.8 h and 55 g in one. The white trim sits on 550 of 801 layers and costs 12.4 h and 188 g; the slate roof 6.9 h; the wreath 0.8 h.
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The finial
   scores 3.2, against a watch level of 4.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
