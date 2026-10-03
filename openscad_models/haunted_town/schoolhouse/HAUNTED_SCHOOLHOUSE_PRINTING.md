@@ -80,7 +80,25 @@ with room to spare.
   - printed height equals modelled height (154.4 mm);
   - 15.55 cm² of bed contact (20.6% of the footprint);
   - centre of mass over the base.
-- CHECKS_PENDING
+- Each of the four parts is closed, with every edge shared by exactly two
+  faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 12.6 mm³ of 108,966 mm³ is not printed; 1.0 mm³ printed that was
+  not modelled; nothing printed in another colour. **3 flags, none of them
+  visible detail:**
+  - the knife-edge tip of the ridge cap, 0.22 mm wide, at two points along
+    the sagging ridge (0.28 mm³ each), too thin to lay;
+  - one layer at the very top of the inside ceiling (1.4 mm³), where the
+    room's level ridge closes, inside the roof where nobody sees it.
+- **The clock prints as drawn:** its ring, marks and hands lose nothing the
+  comparison flags.
+- `fragility`: nothing slender enough to snap. 0 high, 1 watch: the finial,
+  8 mm tall, slenderness 5.0 against a watch level of 4 and the 17.5 of the
+  chapel bar that snapped. The belfry's 3.4 mm corner posts do not register.
+- **OBC maker's mark:** engraved 0.8 mm deep under the porch deck, the same
+  mark as the other buildings, mirrored so it reads OBC with the building
+  turned over, front toward you.
 
 ## What it took to print without supports
 
@@ -105,9 +123,10 @@ Every one of these was found on the gate's slicer and fixed in the model:
   rim drew a cluster of support.
 - **The gablet's slate cap is cut to the ceiling where it runs back over the
   room.** Uncut, its 30° underside hung there. The roof behind the gablet is
-  taken out only where the gablet itself stands above the room: taken out
-  whole, it left the roof resting on the gablet's 30° top where the gablet had
-  been cut away.
+  taken out exactly where the gablet itself stays. Taken out whole, it left
+  the roof resting on the gablet's 30° top where the gablet had been cut
+  away; taken out only above the ceiling, it overlapped the gablet's own
+  front wall.
 - **The arcade is cut inside the porch roof, on the porch roof's own
   stations,** and the porch roof is then taken out of it, so the arcade's top
   is the porch roof's underside exactly. Cut to a separate underside, the two
@@ -130,7 +149,7 @@ Every one of these was found on the gate's slicer and fixed in the model:
 - **Raised details have sloped undersides.** That is how they print without
   supports. The timbers, frames, the clock's ring and the porch roof read as
   wedges from below.
-- **The cupola's posts are 3.4 mm square.** They are the slenderest members
-  in the building; see the fragility result above.
+- **The finial is the one slender part** (a "watch", not a risk). Lift the
+  building by its walls, not its cupola.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.
