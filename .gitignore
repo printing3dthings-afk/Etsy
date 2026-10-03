@@ -139,3 +139,6 @@ tools/viewer/site/
 # downscales them to JPEG at publish time; the JPEGs are what ships.
 data/plate_stills/*.png
 data/plate_stills/*.rendercache
+
+# OpenSCAD union meshes: build intermediates for the gate, never committed
+openscad_models/**/*_union.stl
