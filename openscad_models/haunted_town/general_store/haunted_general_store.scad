@@ -357,17 +357,29 @@ module hoops() {
 }
 module barrels() { for (q = BARRELS) barrel_body(q); }
 
-// ---- props -------------------------------------------------------------------------------------
+// ---- props ---------------------------------------------------------------------------------------
 // Two timbers from the street up to the false front, where they are let 1 mm
 // into its face. 80 deg from horizontal; a pad under each foot.
+// Each braced back to the front from its middle, 56 deg up (2026-10-02):
+// 2.6 mm square and ~97 mm long in one run, the props scored slenderness 31 on
+// tools/fragility.py, against 17.5 for the window bar that snapped on Scott's
+// first chapel print.
 PROPS = [[-39, 96], [35, 96]];      // [x at the facade, height]
-pr_s = 2.6;
+pr_s = 3.2;
+br_a = 56;                          // the brace's rise from horizontal: its underside 34 deg from vertical
+module strut(a, b) hull() {
+    translate(a + [-pr_s/2, -pr_s/2, 0]) cube([pr_s, pr_s, 0.01]);
+    translate(b + [-pr_s/2, -pr_s/2, 0]) cube([pr_s, pr_s, 0.01]);
+}
 module props() {
-    for (p = PROPS) let (top = leaned([p[0], -Dh, p[1]]) + [0, 1.0, 0], foot = [p[0] - 2, -Dh - 20, 0]) {
-        hull() {
-            translate(foot + [-pr_s/2, -pr_s/2, 1.2]) cube([pr_s, pr_s, 0.01]);
-            translate(top + [-pr_s/2, -pr_s/2, 0]) cube([pr_s, pr_s, 0.01]);
-        }
+    for (p = PROPS) let (top = leaned([p[0], -Dh, p[1]]) + [0, 1.0, 0], foot = [p[0] - 2, -Dh - 20, 0],
+                         mid = (foot + [0, 0, 1.2] + top) / 2,
+                         d = (-Dh - ky * mid[2]) - mid[1],
+                         zb = mid[2] + d * tan(br_a),
+                         // the left one lands 2.5 in from the front's edge, which the lean pulls in
+                         back = leaned([mid[0] - kx * zb + (p[0] < 0 ? 2.5 : 0), -Dh, zb]) + [0, 1.0, 0]) {
+        strut(foot + [0, 0, 1.2], top);
+        strut(mid, back);
         translate(foot + [-2.5, -2.5, 0]) cube([5, 5, 1.21]);
     }
 }

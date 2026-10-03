@@ -2,7 +2,8 @@
 
 Building #3 of the Haunted Town series (`../HAUNTED_TOWN.md`). A board-and-batten
 store behind a tall false front that leans forward and to one side. The front
-is propped up by two raking timbers and carries a crooked MERCANTILE board.
+is propped up by two raking timbers, each braced back to the front from its
+middle, and carries a crooked MERCANTILE board.
 Two barrels stand on the ground beside the door. Behind the front is a steep
 tin shed roof with a crooked stove pipe.
 Like the others, it is a hollow lantern with an open base, lit from inside by
@@ -46,8 +47,8 @@ cream.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 38 m** | **~80 g** | 0 |
-| **four colour, AMS** | not reliable here | ~80 g model **+ purge** | **1,317** |
+| **single colour** (e.g. for Jessee to paint) | **9 h 48 m** | **~81 g** | 0 |
+| **four colour, AMS** | not reliable here | ~81 g model **+ purge** | **1,317** (before the braces) |
 
 The four-colour print makes about as many changes as the bakery (1,293).
 Trim and walls share almost every layer from the plinth to the top of the
@@ -70,11 +71,11 @@ the light.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.44 mm, median 2.60 mm, against the 1.2 mm floor
-    (1.24 before the panes);
+  - 1st-percentile wall 1.21 mm, median 2.64 mm, against the 1.2 mm floor
+    (1.44 before the braced props, 1.24 before the panes);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (124.0 mm);
-  - 11.76 cm² of bed contact (17.5% of the footprint);
+  - 11.84 cm² of bed contact (17.6% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - all four are closed, watertight surfaces;
@@ -84,6 +85,12 @@ the light.
     where the lining meets the board. They are slivers of no area, and the
     slicer handles them: the store slices with 0 supports.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
+- `print_fidelity` (re-run 2026-10-02 with the braced props): 1 flag, the
+  same 0.6 mm batten stub beside the door frame as before.
+- `fragility` (2026-10-02): **nothing slender enough to snap. 0 high, 0
+  watch.** Before the props were braced they were the town's only two "high"
+  members: 2.6 mm square and ~97 mm in one run, slenderness 31, against 17.5
+  for the chapel window bar that snapped on Scott's first print.
 - The roof part is 5 pieces, the trim 15 and the accent 13. Each piece was
   checked for real surface contact with the part it sits on, sampled by
   area. Every prop foot stands on its own pad on the plate.
@@ -110,6 +117,12 @@ the light.
   timbers run from 96 mm up the front, near its outer edges, to feet on the
   ground 20 mm ahead of it. They read as "this front is about to fall". On the plate they
   are plain 50°+ columns.
+- **Each prop is 3.2 mm square and braced from its middle** (2026-10-02).
+  A brace runs back up to the front at 56° from horizontal, so its underside
+  is 34° from vertical. The left brace lands 2.5 mm in from the front's edge,
+  which the lean pulls inward. Thickened alone, a prop would have needed to
+  be 5.3 mm square to stop being fragile; braced, two shorter runs of 3.2 mm
+  are enough and they still read as timbers.
 - **The shed roof is one 50° slab.** That is steep enough to print without
   a ceiling. The side view therefore reads as a lean-to rather than a low
   shed. That is the price of no supports and no lift-off lid.

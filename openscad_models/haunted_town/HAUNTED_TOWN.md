@@ -130,7 +130,7 @@ bars that snapped on that print, and none once they were glazed.
 | Chapel | none | none high; the tower's inside corner post is "watch" (an L, it held) |
 | Post Office | none | none |
 | Bakery | 2: the knife-edge tips of the sagging ridge at each gable | none |
-| General Store | 1: a 0.6 mm batten stub beside the door frame, 1.8 mm tall | **2 high: the timber props**, 2.6 mm square and ~97 mm long, slenderness 31 against 17.5 for the bar that snapped. Fix proposed to Scott |
+| General Store | 1: a 0.6 mm batten stub beside the door frame, 1.8 mm tall | none since 2026-10-02. The timber props were **2 high** (2.6 mm square, ~97 mm long, slenderness 31 against 17.5 for the bar that snapped); Scott picked the fix, 3.2 mm square and braced from the middle |
 | Cemetery | 3: the top layer of two spear-point pickets and one finial | 7 watch: tapering branch, shovel and picket tips |
 | Manor | none | 16 watch: window bars 13 mm long, ~2 × 2 mm, slenderness 6.4 |
 
