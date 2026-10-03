@@ -7841,3 +7841,107 @@ any geometric check:
 itself, one mesh per filament in its colour, from the G-code at 0.02 mm (the
 viewer payloads are simplified to 0.64 mm for the web and lose lettering).
 That still is an image the printer can make.
+
+## Technique 79 — Seven traps from the first two Christmas cottages (2026-09-28)
+
+Both cottages (`openscad_models/christmas_village/{victorian,gingerbread}/cottage/`)
+reuse the chapel's machinery, and both started out needing thousands of
+support moves and failing the mesh checks. Each fix below was found on the
+gate's own slicer or in `mesh_gate`, not by reading the source.
+
+1. **A sheared copy only slopes a STRAIGHT underside.** The chapel's coping
+   gets its underside by `intersection() { board; sheared(board); }`. Give the
+   board a scalloped or dripping edge and it fails: each scallop's sheared
+   copy rises into the plain band above it, and where the two overlap the
+   band's own underside stays FLAT. That flat strip between scallops was
+   29,000 support moves on the Victorian. Build it like `relief_up`: the
+   unsheared term is the shape run down to the table
+   (`minkowski() { shape; translate([-0.01, -60]) square([0.02, 60]); }`),
+   so only the sheared copy has an underside.
+2. **Two parts ending on "the same" plane don't.** `xz(y0, y1)` computes one
+   end as `y1 - (y1 - y0)`, so a slab ending at `y_r` and a coping starting at
+   `Dh - wall` differ by a rounding error. Between them you get
+   zero-thickness sheets, hundreds of non-manifold edges, and sometimes a
+   union that is not watertight. The fix every time: **overlap, never abut.**
+   The slab runs 0.4 under the coping, the snow runs 0.4 past the slab, the
+   eave flare runs 0.2 past the kneelers and 0.3 up into slab and kneelers,
+   and the coping runs 0.3 in past the wall's inner face. Whichever part has
+   priority cuts the other exactly, and no two planes are left to disagree.
+3. **An outline that touches itself at one point extrudes to a surface
+   that is not closed, and CGAL drops the whole object.** The only sign is an
+   `ERROR: The given mesh is not closed!` line in the log; the render still
+   "succeeds". Seen twice: `rotate_extrude` of a union of circles cut at the
+   axis (the gingerbread's corner beads), and four peppermint wedges meeting
+   at their tip. Draw a bead column's profile as ONE outline touching the
+   axis only at its two ends, and join wedges with a small disc at the
+   centre. **Grep every build log for `not closed`.**
+4. **A sheared relief's front edge is `width - 1.2 × (depth + 0.4)` tall.**
+   Frames 2.2 wide and 1.44 deep left the window heads' front edges 0.04 mm
+   tall: a knife edge, and the wall check's 1st percentile fell to 0.63 mm.
+   Keep that number ≥ 0.4: frames 2.6 wide, 0.6 proud of the brick.
+5. **A round-arched door's leaf must fill the arch.** The chapel's leaf
+   stops 0.2 short of its lancet head, which is steep. A round arch's crown
+   is flat, and over that gap it is an overhang the width of the door. Fill
+   the arch and go 0.2 past it into the wall. Stop the leaf's back 0.15 short
+   of the room, not flush with it. Run any groove in the leaf out through the
+   crown: a groove that stops under it leaves a flat ceiling.
+6. **A relief standing on another relief's face hangs.** The bows set on
+   the garland's face, and started from there, sat over air where the
+   garland's own sheared underside falls away behind them. Raise every
+   relief from the wall plane and let the priority order cut it.
+7. **Anything that reaches below the ceiling hangs in the room.** The
+   gumdrops' anchoring cones went 3 mm down through the roof into the
+   lantern. Cut every roof ornament with `below_ceil()`.
+
+Both then passed `product_gate` (0 supports, watertight, p1 wall ≥ 1.4 mm)
+with every part clean in `mesh_gate`.
+
+## Technique 80 — Six more traps from the Victorian shop-house (2026-09-30)
+
+The shop-house (`openscad_models/christmas_village/victorian/shop_house/`) is
+the first building with several masses: a jetty, a bay, a dormer. Its first
+slice needed 13,057 support moves. Everything below was found on the gate's
+slicer, in `mesh_gate`, or by a layer-by-layer section, not by reading the
+source.
+
+1. **The gate's slicer supports anything flatter than 45° from horizontal,
+   shear or no shear.** `virtual_printer.py` sets
+   `support-material-threshold 45`. Diamond leading at ±55° from vertical is
+   35° from horizontal, and every bar was supported: 11,800 moves. The
+   in-depth shear of `relief_up` does not rescue an in-plane slope. Keep
+   every bar at 45° from horizontal or steeper; 38° from vertical gives tall
+   diamonds, like real quarry glazing.
+2. **`relief_up` lifts a member's top when anything stands above it.** Its
+   straight term is smeared 60 mm down, so a top plate over the whole face
+   put every beam under it into the "straight" region. Each beam's top then
+   sheared up to a 0.18 mm knife edge, and the wall check's 1st percentile
+   fell to 0.18 mm. For framing use a straight term widened only sideways
+   (`relief_flat` in the shop-house). Then check that every member still
+   stands on something. Gable struts falling at 34° had been hidden by the
+   lifted beam; with level tops they hung in the air.
+3. **A frame's head and foot rails thin toward the front.** The opening's
+   head rises with the shear, and so does the frame's own foot. Draw the
+   frame `SH × (depth + 0.4)` deeper at both ends. At 1.6 mm wide the
+   dormer's head rail was gone entirely at the front.
+4. **Every eave needs a flare, and the slab's tip must continue it.** The
+   dormer's eaves were a horizontal line starting in mid-air. A 52° flare
+   from the wall fixed the line, but a slab whose last 0.08 mm drops back to
+   the 58° ceiling line still left a strip in the air. Copy the main slab's
+   `fl_xe` corner. Anything standing forward of a face (an overhang, a verge
+   board) gets an underside that rises at SH as it comes forward. Whatever
+   supports it must reach `SH × overhang` up into it, or the lifted
+   underside leaves an air gap.
+5. **Square window heads: bring the pane to the face.** A pane set 0.2 back
+   leaves the head a flat 0.2 mm ledge over the whole width, and between the
+   leading bars it shuts air pockets, each a separate "body". Set the pane
+   flush with the wall face. Also watch where a leading bar meets the centre
+   bar at the head: it sits `h × tan(angle) mod spacing` from the centre, and
+   within a bar's width of the centre bar's edge it closes off a sliver.
+6. **Cut every jetty member by the rooms.** The cove's foot was buried in the
+   brick, until the bay's opening removed the brick round it and left it
+   hanging.
+
+Separately, `virtual_printer.py` reported 117 g for a 73 g print. It summed
+every rise in E across 10,232 `G92 E0` resets that follow retractions. It
+now prefers the slicer's own `filament used [cm3]` line
+(`tests/test_virtual_printer_filament.py`).

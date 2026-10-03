@@ -232,14 +232,28 @@ def analyse(gcode_path, model_height=None):
     cur = None
     x = y = z = e = 0.0
     rel = False
+    # Filament counts only what goes past the retraction still owed. Two fixes
+    # met here:
+    #   2026-09-30: summing every rise in E counted each unretract after a
+    #     G92 E0 again -- 117 g for a model PrusaSlicer put at 58.9 cm3 (73 g).
+    #   2026-09-27: Bambu Studio always writes relative E (M83), and so does
+    #     PrusaSlicer's wipe-tower mode; read as absolute, E was nonsense.
+    # One debt counter covers both: a retraction adds to it, the next pushes
+    # pay it off before anything counts as new filament.
+    owed = 0.0
+    slicer_g = None
     for ln in open(gcode_path, errors="replace"):
         if ln.startswith(";TYPE:"):
             cur = ln[6:].strip(); continue
         if ln.startswith(";LAYER_CHANGE"):
             layers += 1; continue
-        # Relative E (2026-09-27). Bambu Studio always writes M83, and so does
-        # PrusaSlicer's wipe-tower mode; reading those E values as absolute
-        # counted only the pushes that happened to exceed the one before.
+        if ln.startswith("; filament used [cm3]"):           # PrusaSlicer
+            slicer_g = float(ln.split("=")[1]) * 1.24; continue
+        if ln.startswith("; total filament weight [g]"):     # Bambu Studio
+            # Not its "volume [cm^3]" line: on the chapel that read
+            # 143046.40 for 180 g, i.e. mm3 under a cm3 label.
+            slicer_g = sum(float(v) for v in ln.split(":", 1)[1].split(",") if v.strip())
+            continue
         if ln.startswith("M83"):
             rel = True; continue
         if ln.startswith("M82"):
@@ -258,16 +272,22 @@ def analyse(gcode_path, model_height=None):
             de = float(d["E"]) if rel else float(d["E"]) - e
             if not rel:
                 e = float(d["E"])
-        if de > 0:
-            filament_mm += de
+        if de < 0:
+            owed -= de
+        elif de > 0:
+            new = de - owed
+            owed = max(0.0, -new)
+            if new > 0:
+                filament_mm += new
             types[cur or "?"] += 1
             max_z = max(max_z, nz)
         x, y, z = float(d.get("X", x)), float(d.get("Y", y)), nz
-    vol_mm3 = filament_mm * 3.14159 * (1.75 / 2) ** 2
+    grams = slicer_g if slicer_g is not None else \
+        filament_mm * 3.14159 * (1.75 / 2) ** 2 * 1.24 / 1000   # PLA 1.24 g/cm3
     out = {
         "layers": layers, "printed_height_mm": round(max_z, 2),
         "filament_mm": round(filament_mm, 1),
-        "filament_g": round(vol_mm3 * 1.24 / 1000, 1),      # PLA 1.24 g/cm3
+        "filament_g": round(grams, 1),
         "moves_by_type": dict(types.most_common()),
         "support_moves": types.get("Support material", 0)
                          + types.get("Support material interface", 0),
