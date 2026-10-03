@@ -1664,3 +1664,24 @@ his. The stock handle's values are kept in a comment beside the P1S profile's
 ~60 mm), and `headScale` shrinks it further on small plates. That is a
 readability trade-off, so a small print is not hidden under the head. **Scott
 chose to keep it small (2026-09-23)** -- do not "correct" it to true size.
+
+## Bambu Studio plates: real totals and real colours (2026-10-03)
+
+Plates sliced by Bambu Studio (`tools/bambu_slicer.py`, translated to the
+PrusaSlicer comment dialect the exporter reads) load and play like any other.
+Two things changed in the exporter and page for them:
+
+- **Time and grams come from Bambu's own header**: `total estimated time`
+  and `total filament weight [g]`. The moves alone add up to 9 h of the haunted
+  chapel's 32 h; the rest is colour-change purge and waiting that no move
+  times. Bambu's `total filament volume [cm^3]` line is mm³ under a cm³ label
+  and is not used.
+- **A plate carries its own filament colours** (`filamentColours`, from the
+  G-code's `filament_colour` line). The spools and the filament colour mode use
+  them; plates without them fall back to the illustrative palette. Every plate
+  built before this has none, so it still shows the illustrative colours.
+
+The 77 committed plates are still PrusaSlicer slices. For the chapel the two
+disagree: PrusaSlicer says 29 h 24 m and 302 g, Bambu 32 h 04 m and 441 g.
+Re-slicing all of them on Bambu adds about 55 MB to the repository's history
+(see "Files" above), so it waits on Scott's go-ahead.

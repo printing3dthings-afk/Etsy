@@ -59,6 +59,14 @@ _NUM = r"([-+]?[0-9]*\.?[0-9]+)"
 _G1 = re.compile(r"^G[01]\s")
 _AXIS = {a: re.compile(rf"{a}{_NUM}") for a in "XYZEF"}
 _EST_TIME = re.compile(r"estimated printing time \(normal mode\)\s*=\s*(.+)")
+# Bambu Studio: "; model printing time: 1d 7h 58m 34s; total estimated time: 1d 8h 4m 49s".
+# The total includes every colour change's purge and wait, which no move in the
+# file times: the haunted chapel's moves add up to 9 h of a 32 h print
+# (2026-10-03), so without this the viewer published 9 h as the print time.
+_BAMBU_TIME = re.compile(r"total estimated time:\s*(.+)")
+# Bambu Studio's own per-filament weights. Not its "volume [cm^3]" line, which
+# is mm3 under a cm3 label.
+_BAMBU_GRAMS = re.compile(r"^; total filament weight \[g\] : (.+)")
 _TOOL = re.compile(r"^T(\d+)\s*$")
 _DUR = re.compile(r"(\d+)\s*([dhms])")
 
@@ -120,6 +128,8 @@ def parse(gcode_path):
     layer_z = None
     layer_h = None
     slicer_seconds = None
+    slicer_grams = None
+    filament_colours = []
     tool_changes = 0
     # Measured from the moves, never from the footer. The reason first given
     # here was wrong (corrected 2026-09-26): an earlier slice's footer looked
@@ -206,6 +216,19 @@ def parse(gcode_path):
                     m = _EST_TIME.search(line)
                     if m:
                         slicer_seconds = _seconds(m.group(1))
+                elif "total estimated time:" in line:
+                    m = _BAMBU_TIME.search(line)
+                    if m:
+                        slicer_seconds = _seconds(m.group(1))
+                elif line.startswith("; filament_colour = "):
+                    # Both slicers write the plate's real colours here,
+                    # ';'-separated. The viewer draws spools and beads in them.
+                    filament_colours = [c.strip() for c in line.split("=", 1)[1].split(";")
+                                        if re.fullmatch(r"#[0-9A-Fa-f]{6}", c.strip())]
+                elif line.startswith("; total filament weight [g]"):
+                    m = _BAMBU_GRAMS.match(line)
+                    if m:
+                        slicer_grams = sum(float(v) for v in m.group(1).split(",") if v.strip())
                 continue
             m = _TOOL.match(line)
             if m:
@@ -322,6 +345,8 @@ def parse(gcode_path):
         "filByToolLayer": fil_tool_layers,
         "layers": layers,
         "slicerSeconds": slicer_seconds,
+        "slicerGrams": slicer_grams,
+        "filamentColours": filament_colours,
         "bbox": [min(xs) / 100, min(ys) / 100, max(xs) / 100, max(ys) / 100],
     }
 
@@ -428,7 +453,7 @@ def build_job(gcode_path, name, notes="", tol_mm=0.02):
         total_time = kinematic
 
     total_fil = sum(l[4] for l in layers)
-    grams = total_fil * math.pi * (1.75 / 2) ** 2 / 1000 * 1.24
+    grams = raw.get("slicerGrams") or total_fil * math.pi * (1.75 / 2) ** 2 / 1000 * 1.24
     # Per-type speed summary. This is the payload's own teaching point: the
     # slicer runs the outer wall at roughly half the inner wall, and the top
     # surface slowest of all. Reporting the real min/median/max per type beats
@@ -467,6 +492,7 @@ def build_job(gcode_path, name, notes="", tol_mm=0.02):
         "timeFromSlicer": bool(slicer_total),
         "filamentMm": round(total_fil, 1),
         "filamentG": round(grams, 1),
+        "filamentColours": raw.get("filamentColours", []),
         "segmentsByType": per_type,
         "speedByType": speed_summary,
         "speedMin": all_spd[0],

@@ -52,9 +52,11 @@ and the render shows real layer banding and the skirt ring on the plate. That
 is what the part will actually look like, not a smooth CAD surface.
 
 **Two honest limits — state them, never imply otherwise:**
-1. PrusaSlicer is not Bambu Studio. Same engine lineage (Bambu Studio and Orca
-   are both PrusaSlicer forks) so the *geometric* decisions track closely.
-   Speeds and time estimates will not match Bambu's.
+1. Since 2026-10-03 the checks slice with **Bambu Studio itself** (stock P1S
+   presets) whenever it is installed — `tools/install_bambu_studio.sh` in each
+   new session; reports say `sliced by bambu` or `sliced by prusa`. Stock is
+   not Scott's tuned profile, and PrusaSlicer, the fallback, differs on thin
+   features (Technique 81).
 2. **It models nothing thermal.** Warping, bed adhesion, stringing, layer
    delamination, heat creep — all invisible. A part can pass every check here
    and still fail on the plate for a reason this cannot see.
@@ -7795,8 +7797,10 @@ printed where that colour has no model. A miss is FLAGGED when it reaches
 makes a miss visible. `--zoom X,Y,Z` draws model against toolpath at any spot:
 confirm every flag that way before acting on it.
 
-Limits measured on a calibration block (PrusaSlicer 2.7, Arachne walls — the
-same wall generator as Bambu Studio's production setting):
+Limits measured on a calibration block (PrusaSlicer 2.7, Arachne walls).
+**Correction 2026-10-03: Bambu Studio's STOCK 0.20mm Standard uses Classic
+walls, not Arachne, and drops every rib under 0.45 mm — see Technique 81 for
+the limits that hold on either setting. Design to those, not this table.**
 
 | feature | result |
 |---|---|
@@ -7945,3 +7949,77 @@ Separately, `virtual_printer.py` reported 117 g for a 73 g print. It summed
 every rise in E across 10,232 `G92 E0` resets that follow retractions. It
 now prefers the slicer's own `filament used [cm3]` line
 (`tests/test_virtual_printer_filament.py`).
+
+## Technique 81 — What Bambu Studio itself says: thin-feature limits on either wall setting, and what colour costs (2026-10-03)
+
+The print checks now slice with Bambu Studio 02.08.02.61 and its own stock P1S
+presets (`tools/bambu_slicer.py`; PrusaSlicer is only the fallback). Two
+things it measures change how a model should be drawn.
+
+**1. Thin features: design for both wall generators.** Bambu's stock
+0.20mm Standard uses **Classic** walls; CLAUDE.md recommends Arachne for
+production, and which one Scott actually prints with is not yet known. The
+two keep different things (calibration block, `print_fidelity`, each result
+checked with `--zoom`):
+
+| feature | Classic (Bambu stock) | Arachne |
+|---|---|---|
+| raised rib 0.05–0.40 mm wide | **dropped, every one** | 0.05–0.1 dropped; 0.15 and up prints |
+| raised rib 0.45 mm | prints | prints |
+| raised dot 0.3 mm | dropped | dropped |
+| raised dot 0.5–0.6 mm | prints | **dropped** |
+| raised dot 0.8 mm and up | prints | prints |
+
+**Rule: ribs, fins, bars and raised lines ≥ 0.45 mm wide; raised dots and pins
+≥ 0.8 mm across.** Those survive on either setting. Everything checked before
+2026-10-03 was sliced by PrusaSlicer's Arachne, so detail between 0.15 and
+0.45 mm wide passed then and may vanish in Bambu's stock profile — re-run
+`print_fidelity` on Bambu before trusting an older pass.
+
+**2. Colour costs per LAYER, not per gram.** Measured on the haunted chapel
+(`tools/colour_cost.py --what-if`):
+
+| chapel | filament | print time |
+|---|---|---|
+| one colour | 81 g | 2.8 h |
+| as designed, four colours | 441 g | 32.1 h, 1,007 colour changes |
+
+| colour | plastic if solid | filament used | layers it sits on | dropping it saves |
+|---|---|---|---|---|
+| body | 57 g | 180 g | 593 of 815 | — |
+| roof | 35 g | 66 g | 481 | 9.0 h, 104 g |
+| trim | 7 g | 139 g | 517 | **14.9 h, 177 g** |
+| accent (door, cross) | 0.7 g | 56 g | 229 | 4.0 h, 45 g |
+
+Every layer where a second colour appears costs at least one colour change,
+and every change purges 120–530 mm³ into the chute (Bambu's stock flush
+matrix for these colours; dark slate → cream is the worst at 528). So a
+small detail spread up the whole height — window frames on every storey, a
+door at the bottom and a cross at the top in one colour — costs more printer
+time than everything else together. What helps, in order:
+
+- **Group a colour by height.** The same trim confined to a band of layers
+  costs a fraction of trim scattered from plinth to spire. A colour that
+  appears only at the top or bottom of a model is cheap.
+- **Don't spend a colour on a tiny part at the far end of the model.** The
+  chapel's door and cross are 0.7 g and cost 4 hours because they sit 150 mm
+  apart. Print the far one in a neighbouring colour, or as a separate small
+  piece.
+- **Light after dark is the expensive change.** Bambu's flush matrix charges
+  by the pair; a dark part next to a white one on many layers is the worst
+  case.
+- Settings barely move it: flush-into-infill saved 4 g, Arachne cost 5 g more.
+  Halving the flush multiplier saves 128 g but risks cream coming out grey —
+  that is Scott's call on a test print, not a default.
+
+Run `tools/colour_cost.py --part ... --what-if` on every multi-colour model
+next to `print_fidelity`, and put the hours in front of Scott with the
+renders. A colour that costs ten hours should be a choice he made, not an
+accident of where a detail sat.
+
+**3. A 3MF for Bambu Studio needs `--layout bambu`.** Bambu builds parts only
+from `<components>`; the single-mesh layout PrusaSlicer reads opens in Bambu
+Studio as ONE part on one filament (verified in its CLI and source; the GUI
+shares the importer). `print_fidelity` and `colour_cost` pick the right
+layout themselves. Whether the shipped 3MFs need re-writing is waiting on
+Scott (does the chapel 3MF open as four parts for him?).

@@ -148,6 +148,29 @@ def test_layer_height_is_the_layers_own_not_a_bridge_inside_it():
         path.unlink(missing_ok=True)
 
 
+def test_bambu_totals_include_the_colour_change_purges():
+    """2026-10-03: the haunted chapel's moves add up to 9 h of Bambu's 32 h;
+    the rest is colour-change purge no move times. The viewer showed 9 h."""
+    text = FIXTURE.replace(
+        "; estimated printing time (normal mode) = 0h 2m 30s\n",
+        "; model printing time: 1d 7h 58m 34s; total estimated time: 1d 8h 4m 49s\n"
+        "; total filament volume [cm^3] : 143046.40,52033.26\n"
+        "; total filament weight [g] : 180.24,65.56\n"
+        "; filament_colour = #77716B;#2B2F38\n")
+    path = _write_gcode(text)
+    try:
+        job = gvd.build_job(path, "chapel", "")
+        check(job["totalSeconds"] == 32 * 3600 + 4 * 60 + 49,
+              f"Bambu's total (with purges) must win, got {job['totalSeconds']} s")
+        check(job["timeFromSlicer"], "the time must be marked as the slicer's own")
+        check(job["filamentColours"] == ["#77716B", "#2B2F38"],
+              f"the plate's own colours must reach the viewer, got {job['filamentColours']}")
+        check(job["filamentG"] == 245.8,
+              f"Bambu's weight line must win (its cm^3 line is mm3), got {job['filamentG']} g")
+    finally:
+        path.unlink(missing_ok=True)
+
+
 def test_build_job_keeps_the_label_it_was_given():
     """The exact shadowing bug: the label came back as a feature type."""
     with tempfile.NamedTemporaryFile("w", suffix=".gcode", delete=False) as fh:

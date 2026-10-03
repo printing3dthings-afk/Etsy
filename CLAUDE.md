@@ -3904,6 +3904,10 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      that print fine and snap in the hand -- the class of the chapel's first
      window bars, which it flags on the as-printed chapel and passes once
      glazed. Every FLAG is thickened, joined to something, or explained.
+  4d. On every multi-colour model, run `tools/colour_cost.py --part ... --what-if`
+     (2026-10-03). A colour costs per layer it sits on: the chapel is 2.8 h in
+     one colour and 32.1 h in four, and its 7 g of trim alone costs 14.9 h.
+     Show Scott the hours per colour with the renders. Design-skill Technique 81.
   5. Render three views (`tools/blender_render.py --views`, plus `--front=+y` if the model's front faces +Y) and show him before
      anything is called done. For anything whose detail matters, also show
      the as-printed still (`tools/as_printed.py` on the fidelity slice): it is

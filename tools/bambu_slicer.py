@@ -200,13 +200,15 @@ def flatten_preset(profiles_dir, kind, name):
     return merged
 
 
-def write_presets(workdir, app_files, colours, layer_height=None, supports=False):
+def write_presets(workdir, app_files, colours, layer_height=None, supports=False,
+                  process_overrides=None):
     """Flatten the stock presets into workdir; return (settings_arg, filaments_arg)."""
     profiles = app_files / "share" / "BambuStudio" / "profiles" / "BBL"
     workdir = Path(workdir)
     machine = flatten_preset(profiles, "machine", MACHINE)
     process = flatten_preset(profiles, "process", PROCESS)
     process.update(PROCESS_OVERRIDES)
+    process.update(process_overrides or {})
     process["enable_support"] = "1" if supports else "0"
     if layer_height:
         process["layer_height"] = str(layer_height)
@@ -318,9 +320,11 @@ def translate_gcode(src, dst, header=None, offset=(0.0, 0.0)):
 
 
 def slice_model(model_path, gcode_path, supports=False, layer_height=None, colours=None,
-          timeout=1800):
+                timeout=1800, process_overrides=None):
     """Slice with Bambu Studio's stock P1S presets. Writes Prusa-dialect G-code
-    to gcode_path (and Bambu's own beside it) and returns the slicer's summary."""
+    to gcode_path (and Bambu's own beside it) and returns the slicer's summary.
+    process_overrides: Bambu process keys to change from stock, e.g.
+    {"wall_generator": "arachne"} -- for measuring what a setting does."""
     loc = locate()
     if not loc:
         raise BambuSlicerError(
@@ -337,7 +341,8 @@ def slice_model(model_path, gcode_path, supports=False, layer_height=None, colou
     work = Path(tempfile.mkdtemp(prefix="bambu_slice_", dir=gcode_path.parent))
     try:
         settings, filaments = write_presets(work, app_files, colours[:max(n, 1)],
-                                            layer_height=layer_height, supports=supports)
+                                            layer_height=layer_height, supports=supports,
+                                            process_overrides=process_overrides)
         out = work / "out"
         cmd = _command(app_files, rt_files) + [
             "--debug", "1", "--slice", "0", "--outputdir", str(out),

@@ -48,6 +48,22 @@ var N_TYPE = TYPE_COLOR.length;
 var FILAMENT = ['#d9dbe0','#24272d','#8d939d','#c08a5a','#e0553d',
                 '#6fa8dc','#8bc34a','#f2c14e'];
 var MAX_FILAMENT = FILAMENT.length;
+// A plate that carries its own colours (the G-code's filament_colour line)
+// shows them instead (2026-10-03). Before this, every multi-colour plate was
+// drawn in the illustrative palette above, so the haunted chapel's slate roof
+// came out as a pale spool and its cream trim as charcoal.
+var DEFAULT_FILAMENT = FILAMENT.slice();
+var HEX = /^#[0-9a-fA-F]{6}$/;
+function useJobColours(raw) {
+  var c = (raw && raw.filamentColours) || [];
+  for (var i = 0; i < MAX_FILAMENT; i++) {
+    FILAMENT[i] = HEX.test(c[i] || '') ? c[i] : DEFAULT_FILAMENT[i];
+  }
+  var spools = (amsGroup && amsGroup.userData.spools) || [];
+  spools.forEach(function (m, i) {
+    if (m) { m.material.color.copy(lin(FILAMENT[i % FILAMENT.length])); }
+  });
+}
 var TYPE_HELP = {
   'External perimeter':'The outermost wall loop. The only extrusion a customer ever sees, and the one worth slowing down for.',
   'Perimeter':'Inner wall loops. Strength and a backing for the external wall.',
@@ -3264,6 +3280,7 @@ function syncSeamRange() {
 function mountJob(job) {
   if (jobMesh) { scene.remove(jobMesh); scene.remove(ghostMesh); jobGeom.dispose(); }
   jobGeom = job.geom;
+  useJobColours(job.raw);
   ghostMesh = new THREE.Mesh(jobGeom, makeMaterial(0.86, richShading));
   ghostMesh.material.polygonOffset = true;
   ghostMesh.material.polygonOffsetFactor = 2;

@@ -345,6 +345,32 @@ Source: [3DBite — Ironing Settings Guide](https://3dbite.com/bambu-studio-iron
 
 ---
 
+### Measured in Bambu Studio itself (2026-10-03)
+
+Sliced with Bambu Studio 02.08.02.61's own stock P1S presets
+(`tools/bambu_slicer.py`), not taken from documentation:
+
+- **Stock 0.20mm Standard uses Classic walls**, not Arachne, `detect_thin_wall`
+  off, arc fitting on, prime tower on (35 mm), sparse infill 15% grid, and
+  the P1S machine profile carries `extruder_offset = 0x2`.
+- **Classic drops every raised rib under 0.45 mm wide; Arachne keeps ribs from
+  0.15 mm but drops dots under 0.8 mm.** Design to ≥ 0.45 mm ribs and ≥ 0.8 mm
+  dots and either setting keeps them (design skill, Technique 81).
+- **Colour changes dominate multi-colour print time and filament.** The stock
+  flush matrix purges 120–530 mm³ per change depending on the colour pair
+  (dark → light worst). Haunted chapel: 2.8 h / 81 g in one colour, 32.1 h /
+  441 g in four. `tools/colour_cost.py` measures this per model.
+- **Settings that barely help:** per-object flush into infill (−4 g on the
+  chapel; it only purges into the object's own sparse infill, of which a small
+  building has little). **Flush multiplier 0.5** cut the chapel from 441 g to
+  313 g and 32.1 h to 29.4 h, but under-purging shows as the previous colour
+  bleeding into the next — test it on a real print with the worst pair (dark
+  → light) before using it on a product.
+- Bambu's G-code header line `total filament volume [cm^3]` is in mm³
+  (chapel: 143046.40 for 180 g). Read `total filament weight [g]` instead.
+- A 3MF only opens as separate colourable parts in Bambu Studio when parts are
+  `<components>` (`assemble_3mf --layout bambu`).
+
 ## Part 3 — The physics underneath (added 2026-09-20)
 
 Parts 1-2 above, and all 66 techniques in `3d-print-design/SKILL.md`, are
