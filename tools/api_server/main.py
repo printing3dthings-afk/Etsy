@@ -2671,6 +2671,28 @@ def _summarize_and_rotate_kb_file(
 
 _KB_DIR = ROOT / "data" / "knowledge_base"
 
+# Skills under .claude/skills/ are Claude Code's own loading path -- Frank has no
+# route to them, so 300KB of this shop's hardest-won 3D-print knowledge (53
+# numbered techniques, each one a real measured finding or a real bug) was
+# invisible to the agent that answers questions about 3D printing. Found
+# 2026-09-05 when Scott asked whether Frank knew any of it; it did not.
+#
+# Exposed here as an explicit allowlist rather than a glob over .claude/skills/,
+# because most of what lives there is vendored third-party web/design tooling
+# (GSAP, Obsidian, taste-skill -- see .claude/skills/SOURCES.md) that would bury
+# the real shop docs in the listing Frank sees. Only skills carrying knowledge
+# WE wrote about how this shop operates belong in the knowledge base. Keys are
+# flat filenames on purpose: /api/kb/{filename} cannot route a path with a slash.
+_KB_SKILL_DOCS = {
+    "skill_3d_print_design.md": ROOT / ".claude" / "skills" / "3d-print-design" / "SKILL.md",
+    "skill_verify_etsy_mutations.md": ROOT / ".claude" / "skills" / "verify-etsy-mutations" / "SKILL.md",
+}
+
+
+def _kb_skill_paths() -> dict[str, Path]:
+    """The allowlisted skill docs that actually exist on this deploy."""
+    return {name: path for name, path in _KB_SKILL_DOCS.items() if path.is_file()}
+
 
 def _kb_title(path: Path, text: str) -> str:
     m = _re.search(r"^#\s+(.+)", text, _re.MULTILINE)
@@ -2680,14 +2702,17 @@ def _kb_title(path: Path, text: str) -> str:
 
 
 def _kb_docs() -> list[dict]:
-    """Metadata for every *.md file in _KB_DIR, newest-modified first. .json data
-    files living in the same directory are intentionally excluded — they aren't docs."""
+    """Metadata for every *.md file in _KB_DIR plus the allowlisted skill docs,
+    newest-modified first. .json data files living in the same directory are
+    intentionally excluded — they aren't docs."""
     out = []
-    for p in sorted(_KB_DIR.glob("*.md")):
+    sources = [(p.name, p) for p in sorted(_KB_DIR.glob("*.md"))]
+    sources += sorted(_kb_skill_paths().items())
+    for name, p in sources:
         text = p.read_text()
         stat = p.stat()
         out.append({
-            "filename": p.name,
+            "filename": name,
             "title": _kb_title(p, text),
             "size": stat.st_size,
             "size_human": _human_size(stat.st_size),
@@ -2704,6 +2729,9 @@ def _resolve_kb_doc(filename: str) -> Path:
         if not target.is_file():
             raise HTTPException(status_code=404, detail="Doc not found")
         return target
+    skill = _kb_skill_paths().get(filename)
+    if skill is not None:
+        return skill
     base = _KB_DIR.resolve()
     target = (base / filename).resolve()
     if target.parent != base or not filename.endswith(".md"):
@@ -2714,11 +2742,14 @@ def _resolve_kb_doc(filename: str) -> Path:
 
 
 def _kb_search(query: str, limit_per_doc: int = 5) -> list[dict]:
-    """Case-insensitive per-line substring search across every doc in _KB_DIR.
-    Up to `limit_per_doc` matches per doc, each with 1 line of context above/below."""
+    """Case-insensitive per-line substring search across every doc in _KB_DIR and
+    every allowlisted skill doc. Up to `limit_per_doc` matches per doc, each with
+    1 line of context above/below."""
     q = query.lower()
     results = []
-    for p in sorted(_KB_DIR.glob("*.md")):
+    sources = [(p.name, p) for p in sorted(_KB_DIR.glob("*.md"))]
+    sources += sorted(_kb_skill_paths().items())
+    for name, p in sources:
         lines = p.read_text().splitlines()
         matches = []
         for i, line in enumerate(lines):
@@ -2729,7 +2760,7 @@ def _kb_search(query: str, limit_per_doc: int = 5) -> list[dict]:
                     break
         if matches:
             results.append({
-                "filename": p.name,
+                "filename": name,
                 "title": _kb_title(p, "\n".join(lines)),
                 "matches": matches,
                 "match_count": len(matches),
@@ -2869,6 +2900,19 @@ KNOWLEDGE BASE — use read_knowledge_base_doc on demand, never guess from memor
   complete 3D printer specs, full quality-gate rules, complete product catalog, pricing/tag/
   photo-prompt libraries, Etsy algorithm rules, and autonomy boundaries in full, beyond what's
   excerpted into this system prompt.
+- skill_3d_print_design.md is the deepest 3D-printing document this shop has: 50+ numbered
+  techniques, every one a real measured finding or a real bug found while building actual
+  models — OpenSCAD/CGAL pitfalls that render clean but print wrong, measured surface-texture
+  targets, Cherry MX and other real hardware dimensions, multi-colour inlay rules, per-part
+  print cost and time. 3D printing is the only category that has made money, so ANY question
+  about a print's design, geometry, texture, tolerances or printability goes here first —
+  3d_printing_expertise.md covers general DfAM and slicer settings, this covers what we
+  learned the hard way on our own parts. It is ~300KB — reach for it with `query` first
+  (technique titles are descriptive, so search the thing you actually need: "overhang",
+  "rugosity", "tolerance", "multi-colour"), and only read it in full if a search genuinely
+  isn't enough.
+- skill_verify_etsy_mutations.md is the required procedure after any staged Etsy action
+  executes: re-check the real live value on Etsy, because an 'executed' status is not proof.
 - Call read_knowledge_base_doc with no arguments to see what's available, with `filename` to
   read one in full, or with `query` to search across all of them. Retrieve when a decision
   genuinely depends on the full detail — don't retrieve for things you can already answer
@@ -3815,7 +3859,9 @@ AGENT_TOOLS = [
             "search every doc for a substring and get back matching lines with context. "
             "Use this any time a decision genuinely depends on ground truth beyond what's "
             "summarized for you — full quality-gate rules, pricing/tag/photo-prompt "
-            "libraries, competitor research, market research, or CLAUDE.md itself for "
+            "libraries, competitor research, market research, skill_3d_print_design.md for "
+            "anything about how a 3D model should actually be designed or whether it will "
+            "print, or CLAUDE.md itself for "
             "anything not echoed in your system prompt (3D printer specs, autonomy "
             "boundaries, full product catalog)."
         ),

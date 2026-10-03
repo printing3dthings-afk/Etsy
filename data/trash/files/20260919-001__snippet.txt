@@ -1,0 +1,17 @@
+function peiTexture() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 256;
+  var g = c.getContext('2d');
+  g.fillStyle = '#343943'; g.fillRect(0, 0, 256, 256);
+  var img = g.getImageData(0, 0, 256, 256), d = img.data;
+  for (var i = 0; i < d.length; i += 4) {
+    var n = (Math.random() - 0.5) * 54;
+    d[i] += n; d[i + 1] += n; d[i + 2] += n * 0.9;
+  }
+  g.putImageData(img, 0, 0);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(9, 9);
+  return tex;
+}
+

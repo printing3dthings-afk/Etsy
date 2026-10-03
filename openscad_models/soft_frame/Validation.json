@@ -1,0 +1,201 @@
+{
+  "housing": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_housing.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"160.0 x 63.4 x 125.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"175.82 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 2.80mm, 1st pct 2.80mm, 0.00% of material below one 0.42mm bead (0.00% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    160.0,\n    63.4,\n    125.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_housing.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 74\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "layers": 625,
+      "printed_height_mm": 125.0,
+      "filament_mm": 68329.5,
+      "filament_g": 203.8,
+      "moves_by_type": {
+        "Perimeter": 353183,
+        "Internal infill": 201132,
+        "External perimeter": 147179,
+        "Solid infill": 10825,
+        "Top solid infill": 2464,
+        "Bridge infill": 621,
+        "Skirt/Brim": 61,
+        "Custom": 1
+      },
+      "support_moves": 0,
+      "overhang_perimeters": 0,
+      "bridges": 621,
+      "height_shortfall_mm": 0.0,
+      "geometry_dropped": false
+    }
+  },
+  "drawer": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_drawer.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"153.5 x 121.7 x 53.8 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"153.50 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"0.56 cm2 of upward surface too shallow to hide a layer step (worst terrace 11.47 mm)\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 2.40mm, 1st pct 2.10mm, 0.00% of material below one 0.42mm bead (0.01% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    153.5,\n    121.7,\n    53.75\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_drawer.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  warn  Zero Faces: 6\n  warn  Zero Edges: 2\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 94\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "layers": 269,
+      "printed_height_mm": 53.8,
+      "filament_mm": 45221.5,
+      "filament_g": 134.9,
+      "moves_by_type": {
+        "Internal infill": 189522,
+        "Perimeter": 23877,
+        "Solid infill": 16530,
+        "External perimeter": 8296,
+        "Top solid infill": 1983,
+        "Bridge infill": 1920,
+        "Skirt/Brim": 21,
+        "Custom": 1
+      },
+      "support_moves": 0,
+      "overhang_perimeters": 0,
+      "bridges": 1920,
+      "height_shortfall_mm": -0.05,
+      "geometry_dropped": false
+    }
+  },
+  "divider_cross": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_divider_cross.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"141.9 x 30.0 x 2.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"8.41 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 30.00mm, 1st pct 0.58mm, 0.16% of material below one 0.42mm bead (1.71% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    141.9,\n    30.0,\n    2.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_divider_cross.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 167\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "layers": 10,
+      "printed_height_mm": 2.0,
+      "filament_mm": 3581.8,
+      "filament_g": 10.7,
+      "moves_by_type": {
+        "Solid infill": 6736,
+        "Perimeter": 1046,
+        "External perimeter": 699,
+        "Top solid infill": 677,
+        "Bridge infill": 44,
+        "Skirt/Brim": 29,
+        "Custom": 1
+      },
+      "support_moves": 0,
+      "overhang_perimeters": 0,
+      "bridges": 44,
+      "height_shortfall_mm": 0.0,
+      "geometry_dropped": false
+    }
+  },
+  "divider_long": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_divider_long.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"109.1 x 30.0 x 2.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"6.45 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 30.00mm, 1st pct 0.58mm, 0.16% of material below one 0.42mm bead (1.55% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    109.1,\n    30.0,\n    2.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_divider_long.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 167\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "layers": 10,
+      "printed_height_mm": 2.0,
+      "filament_mm": 2754.8,
+      "filament_g": 8.2,
+      "moves_by_type": {
+        "Solid infill": 5650,
+        "Perimeter": 1050,
+        "External perimeter": 698,
+        "Top solid infill": 554,
+        "Bridge infill": 44,
+        "Skirt/Brim": 28,
+        "Custom": 1
+      },
+      "support_moves": 0,
+      "overhang_perimeters": 0,
+      "bridges": 44,
+      "height_shortfall_mm": 0.0,
+      "geometry_dropped": false
+    }
+  },
+  "label": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_label.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"31.2 x 11.2 x 0.8 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"0.28 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 11.20mm, 1st pct 0.80mm, 0.00% of material below one 0.42mm bead (33.93% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    31.2,\n    11.2,\n    0.8\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_label.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 28\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "layers": 4,
+      "printed_height_mm": 0.8,
+      "filament_mm": 127.8,
+      "filament_g": 0.4,
+      "moves_by_type": {
+        "Solid infill": 459,
+        "Top solid infill": 139,
+        "Perimeter": 64,
+        "External perimeter": 64,
+        "Skirt/Brim": 32,
+        "Custom": 1
+      },
+      "support_moves": 0,
+      "overhang_perimeters": 0,
+      "bridges": 0,
+      "height_shortfall_mm": 0.0,
+      "geometry_dropped": false
+    }
+  },
+  "fit_test": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_fit_test.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"39.0 x 9.1 x 25.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"3.77 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"2 separate bodies, expected 2\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 8.50mm, 1st pct 2.80mm, 0.00% of material below one 0.42mm bead (0.00% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    39.0,\n    9.1,\n    25.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Soft_Frame/Soft_Frame_fit_test.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  ok    Thin Faces: 0\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "layers": 125,
+      "printed_height_mm": 25.0,
+      "filament_mm": 2274.8,
+      "filament_g": 6.8,
+      "moves_by_type": {
+        "Solid infill": 12454,
+        "Perimeter": 7005,
+        "External perimeter": 2750,
+        "Top solid infill": 149,
+        "Skirt/Brim": 23,
+        "Custom": 1
+      },
+      "support_moves": 0,
+      "overhang_perimeters": 0,
+      "bridges": 0,
+      "height_shortfall_mm": 0.0,
+      "geometry_dropped": false
+    }
+  },
+  "assembly_checks": {
+    "drawer_open_0": 0.0,
+    "drawer_open_42": 0.0,
+    "drawer_open_85": 0.0,
+    "stack_interference_mm3": 0.0,
+    "lift_0_8_capture_mm3": 224.7014659177415
+  }
+}
