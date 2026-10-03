@@ -8023,3 +8023,14 @@ Studio as ONE part on one filament (verified in its CLI and source; the GUI
 shares the importer). `print_fidelity` and `colour_cost` pick the right
 layout themselves. Whether the shipped 3MFs need re-writing is waiting on
 Scott (does the chapel 3MF open as four parts for him?).
+
+**4. Bambu's arrange may TURN a model, and nothing complains.** A 3MF Bambu
+did not write itself is auto-arranged on import, and arrange is allowed to
+rotate about Z. It turned the Victorian clock tower 29.5° (2026-10-03):
+`print_fidelity` reported 1,070 flags on a model that prints fine and put the
+door 13 mm from where it was drawn. The slicer call now passes
+`--allow-rotations=0` (the only spelling the CLI accepts), and
+`print_fidelity` refuses any slice whose footprint is wider than the model's.
+If a flag report suddenly covers every face of a symmetric model, suspect
+placement before geometry. Scott's GUI may do the same on import — worth
+checking that a model's front still faces the front before slicing.

@@ -182,8 +182,8 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("PRINT FIDELITY TESTS OK — ribs of 0.1 mm and less and dots of 0.5 mm "
-          "and less are reported dropped, printable ones are not, and the plain "
+    print("PRINT FIDELITY TESTS OK — on every installed slicer, the ribs and dots it "
+          "drops are reported and flagged, the ones it prints are not, and the plain "
           "walls read true.")
 
 

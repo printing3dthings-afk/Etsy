@@ -308,6 +308,24 @@ def _reaches(p, far):
 
 
 # ── the comparison ────────────────────────────────────────────────────────
+def _check_not_turned(pts, lo, hi, slack=1.0):
+    """Refuse a slice whose footprint is wider than the model's.
+
+    The centre check above cannot see a rotation: a part turned about its own
+    centre stays centred. Bambu Studio's arrange turned the Victorian clock
+    tower 29.5 degrees (2026-10-03) and the comparison reported 1,070 flags
+    on a model that prints fine. Dropped detail can only make the printed
+    footprint SMALLER, so any growth past bead overhang means the part moved.
+    """
+    printed = pts.max(0) - pts.min(0)
+    model = hi[:2] - lo[:2]
+    if (printed - model).max() > slack:
+        raise RuntimeError(
+            f"the slice's footprint {printed.round(2)} mm is wider than the model's "
+            f"{model.round(2)} mm: the slicer turned or moved the part, so every "
+            "comparison would be wrong; stopping here")
+
+
 def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=False):
     """parts: [(path, '#hex')]. Returns the report dict."""
     workdir = Path(workdir)
@@ -376,6 +394,7 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
             f"the slice is not centred where it was asked to be (printed centre "
             f"{seen.round(2)}, model centre {((lo[:2] + hi[:2]) / 2 + off).round(2)}); "
             "every comparison would be offset, so stopping here")
+    _check_not_turned(pts, lo, hi)
 
     events = []          # (kind, tool, z_bottom, h, polygon in model XY, size)
     area_model = defaultdict(float)

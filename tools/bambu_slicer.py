@@ -345,7 +345,14 @@ def slice_model(model_path, gcode_path, supports=False, layer_height=None, colou
                                             process_overrides=process_overrides)
         out = work / "out"
         cmd = _command(app_files, rt_files) + [
-            "--debug", "1", "--slice", "0", "--outputdir", str(out),
+            # --allow-rotations=0 (2026-10-03): a 3MF Bambu did not write
+            # itself is auto-arranged, and arrange may ROTATE it. The
+            # Victorian clock tower came back turned 29.5 degrees, so every
+            # face read as a miss (1,070 flags) and the door printed 13 mm from
+            # where it was modelled. Arrange still centres it on 128,128.
+            # Only the "=0" form parses: "--allow-rotations 0" and
+            # "--no-allow-rotations" both exit with an error.
+            "--debug", "1", "--allow-rotations=0", "--slice", "0", "--outputdir", str(out),
             "--load-settings", settings, "--load-filaments", filaments, str(model_path)]
         r = subprocess.run(cmd, capture_output=True, text=True, errors="replace",
                            timeout=timeout)

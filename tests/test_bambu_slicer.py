@@ -229,6 +229,30 @@ def test_a_real_two_colour_slice_keeps_both_parts():
     check(vp.slicer_of(td / "two.gcode") == "bambu", "the header must name Bambu Studio")
 
 
+def test_a_turned_slice_is_refused():
+    """The Victorian clock tower, turned 29.5 degrees by Bambu's arrange: a
+    34.4 mm square tower whose beads spanned 42.8 mm."""
+    import numpy as np
+    sq = np.array([[-17.2, -17.2], [17.2, -17.2], [17.2, 17.2], [-17.2, 17.2]])
+    a = np.radians(29.5)
+    turned = sq @ np.array([[np.cos(a), np.sin(a)], [-np.sin(a), np.cos(a)]])
+    lo, hi = np.array([-17.2, -17.2, 0]), np.array([17.2, 17.2, 10])
+    try:
+        pf._check_not_turned(turned, lo, hi)
+        check(False, "a turned footprint must be refused")
+    except RuntimeError as e:
+        check("turned or moved" in str(e), f"wrong refusal: {e}")
+    pf._check_not_turned(sq * 0.98, lo, hi)     # dropped detail shrinks it: fine
+
+
+def test_bambu_is_never_allowed_to_turn_the_part():
+    app = Path("/app")
+    cmd = " ".join(bs._command(app, app))
+    src = Path(bs.__file__).read_text()
+    check('"--allow-rotations=0"' in src,
+          "the slice call must pass --allow-rotations=0 (the only form the CLI parses)")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
