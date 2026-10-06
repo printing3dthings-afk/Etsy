@@ -417,7 +417,10 @@ module roof_part() difference() {
         difference() {
             union() { mansard_solid(); courses(); ridge_cap(); }
             zone_below();
-            difference() { dormer_block(); zone_below(0.3); }
+            // exactly what the body keeps of the dormer (the schoolhouse's
+            // lesson): taken out only above zone+0.3, the roof kept a 0.3 band
+            // inside the dormer's own front wall and the two parts overlapped
+            difference() { dormer_block(); cavity(); }
             // and the light channel: the 0.3 band of roof under the dormer
             // otherwise stood inside it as a loose sheet
             dm_channel();
