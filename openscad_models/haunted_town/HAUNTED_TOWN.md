@@ -13,7 +13,7 @@ Everything for the series lives here, one folder per piece (Scott,
 |---|---|---|
 | `chapel/` | `haunted_chapel.3mf` | `.scad` source, the four part `.stl`s, printing notes, `images/`, `photos/` of the first print |
 | `bakery/` | `haunted_bakery.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
-| `post_office/` | `haunted_post_office.3mf` (house and lift-off roof on one plate) | `.scad`, part `.stl`s including the lid, printing notes, `images/` |
+| `post_office/` | `haunted_post_office.3mf` (house and lift-off roof on one plate) | `.scad`, part `.stl`s including the lid, printing notes, `images/`, `photos/` of the first print (2026-10-06, white and painted) |
 | `general_store/` | `haunted_general_store.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
 | `schoolhouse/` | `haunted_schoolhouse.3mf` | `.scad`, `build.sh`, part `.stl`s, printing notes, `images/` |
 | `undertaker/` | `haunted_undertaker.3mf` | `.scad`, `build.sh`, part `.stl`s, printing notes, `images/` |

@@ -109,3 +109,23 @@ Measured on the exported mesh:
   0.2 mm steps, so the letters print with no supports: sliced with the
   letters and without, the support count is the same (0). Eroding the
   letters by one bead loses no letter.
+
+## First print (2026-10-06)
+
+Scott printed the house and lid in one colour (white PLA), and a second one
+painted, and photographed both; `photos/` holds them. What the print shows:
+
+- **It printed whole, with no supports.** Brick courses, the parapet's coping,
+  the gable-headed door and window, the window's bars on its glass, the
+  door's triangle light, the leaning chimney and stove pipe on the lift-off
+  lid all came out as modelled. The lid sits in its seat.
+- **Lit, it works** (`first_print_2026-10-06_painted_lit.jpg`): the window's
+  glass glows evenly behind its bars and the door's light shows.
+- **In one colour, the carved sign is hard to read.** The letters' carve
+  climbs in 58° steps so it prints without supports; in white, those steps
+  catch the light under each letter's arms, and the two F's read close to
+  E's ("POST OEFICE"). Lined in the accent colour on an AMS print, or
+  painted, the letters read cleanly. A one-colour version needs a fix before
+  it is sold that way: raised letters, or a deeper, plainer carve.
+- **The parcels' top edges are slightly rough,** small faces printed at the
+  top of a short stack. Cosmetic.
