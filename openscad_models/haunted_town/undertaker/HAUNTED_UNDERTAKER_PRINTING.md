@@ -76,7 +76,26 @@ ground and first floor windows.
   - printed height equals modelled height (160.3 mm);
   - 13.44 cm² of bed contact (30.5% of the footprint);
   - centre of mass over the base.
-- CHECKS_PENDING
+- Each of the four parts is closed, with every edge shared by exactly two
+  faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+  (The roof first kept a 0.3 mm band inside the dormer's own front wall and
+  overlapped the body there; it now takes out exactly what the body keeps of
+  the dormer.)
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 4.7 mm³ of 99,240 mm³ is not printed; 0.6 mm³ printed that was not
+  modelled; 0.4 mm³ printed in another colour. **4 flags, all cosmetic
+  slivers too thin to lay:**
+  - the ridge cap's knife-edge tip near each gable wall, 0.31 mm wide
+    (0.29 mm³ each);
+  - the tip of one scale either side at the back, 0.23 mm wide (0.02 mm³
+    each).
+- **The coffin windows, crosses and sign print as drawn:** they lose nothing
+  the comparison flags.
+- `fragility`: **nothing slender enough to snap. 0 high, 0 watch.**
+- **OBC maker's mark:** engraved 0.8 mm deep under the porch deck, the same
+  mark as the other buildings, mirrored so it reads OBC with the building
+  turned over, front toward you.
 
 ## What it took to print without supports
 

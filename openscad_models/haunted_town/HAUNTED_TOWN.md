@@ -16,6 +16,7 @@ Everything for the series lives here, one folder per piece (Scott,
 | `post_office/` | `haunted_post_office.3mf` (house and lift-off roof on one plate) | `.scad`, part `.stl`s including the lid, printing notes, `images/` |
 | `general_store/` | `haunted_general_store.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
 | `schoolhouse/` | `haunted_schoolhouse.3mf` | `.scad`, `build.sh`, part `.stl`s, printing notes, `images/` |
+| `undertaker/` | `haunted_undertaker.3mf` | `.scad`, `build.sh`, part `.stl`s, printing notes, `images/` |
 | `cemetery/` | `haunted_cemetery.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
 | `manor/` | `haunted_manor.3mf` (one piece, one colour) | `.scad`, `.stl`, printing notes, `images/` |
 
@@ -106,7 +107,7 @@ Confirmed by Scott 2026-09-25.
 | 2 | **Chapel** | stone, a bell tower on the front-left corner cracked above the roofline and tipped 7° away from the nave, one tall pointed window with Y tracery over the door, coped gables, two headstones by the step | **built 2026-09-26, awaiting Scott's review** — `chapel/haunted_chapel.3mf`, notes in `chapel/HAUNTED_CHAPEL_PRINTING.md` |
 | 3 | **General Store** | false-front facade taller than the building, leaning forward on two timber props, crooked "MERCANTILE" board, barrels by the door, crooked stove pipe on a tin shed roof | **built 2026-09-25, awaiting Scott's review** — `general_store/haunted_general_store.3mf`, notes in `general_store/HAUNTED_GENERAL_STORE_PRINTING.md` |
 | 4 | **Schoolhouse** | one-room school: half-timbered ochre walls, paired pointed windows, a hip roof with a bell cupola and a crooked chimney, a porch on pointed arches under a sagging roof, an oversized clock stopped at 11:47 in a gablet over the porch | **built 2026-10-02, awaiting Scott's review** — Scott picked the one-room school from four forms; `schoolhouse/haunted_schoolhouse.3mf`, notes in `schoolhouse/HAUNTED_SCHOOLHOUSE_PRINTING.md` |
-| 5 | Undertaker | narrow and tall between gables, a coffin standing upright against the porch post | saved |
+| 5 | **Undertaker** | tall and narrow, squeezed between the bare, broken gable ends of two vanished neighbours (their roof, floor and flue scars still on the walls); fish-scale front and back, coffin windows with crosses, a sagging mansard with a coffin dormer and a crooked chimney, an UNDERTAKER sign, and a coffin standing against the porch post. The town's tallest (160.3 mm) | **built 2026-10-02, awaiting Scott's review** — Scott picked "tall and squeezed" from four forms; `undertaker/haunted_undertaker.3mf`, notes in `undertaker/HAUNTED_UNDERTAKER_PRINTING.md` |
 | — | **Manor** | the first building: a tall Victorian house with a turret, gothic windows, a spiderweb rose window over the door, bats cut through the walls, carved jack-o'-lanterns | **built before the series rules** — `manor/haunted_manor.3mf`, notes in `manor/HAUNTED_MANOR_PRINTING.md`. One colour; its window bars are part of the wall, not separate trim |
 
 ## Scenery
@@ -133,6 +134,7 @@ bars that snapped on that print, and none once they were glazed.
 | Bakery | 2: the knife-edge tips of the sagging ridge at each gable | none |
 | General Store | 1: a 0.6 mm batten stub beside the door frame, 1.8 mm tall | none since 2026-10-02. The timber props were **2 high** (2.6 mm square, ~97 mm long, slenderness 31 against 17.5 for the bar that snapped); Scott picked the fix, 3.2 mm square and braced from the middle |
 | Schoolhouse (2026-10-02) | 3: the ridge cap's knife-edge tip at two points, and one layer at the inside ridge of the ceiling | 1 watch: the finial, slenderness 5.0 |
+| Undertaker (2026-10-02) | 4: the ridge cap's knife-edge tip near each gable wall, two scale tips at the back | none |
 | Cemetery | 3: the top layer of two spear-point pickets and one finial | 7 watch: tapering branch, shovel and picket tips |
 | Manor | none | 16 watch: window bars 13 mm long, ~2 × 2 mm, slenderness 6.4 |
 
