@@ -332,16 +332,22 @@ fs_d  = 0.84;               // course depth
 fs_rr = fs_d * t58;         // its ramp
 fs_z0 = plinth_h + 0.6;
 fs_top = co_z - 0.6;
-fs_n  = floor((fs_top - fs_z0 - fs_r - fs_rr - 0.5) / fs_p);
+// On the front they start just over the porch roof (its top meets the wall at
+// 48.4 to 50 mm): run on under it, the roof's steep underside cut the courses
+// into eight loose scales and sealed air pockets between them and the wall.
+// Below that the front is nearly all porch, and stays plain.
+fs_z0f = 50.6;
+function fs_z0_(face) = face == 1 ? fs_z0f : fs_z0;
+function fs_n_(face) = floor((fs_top - fs_z0_(face) - fs_r - fs_rr - 0.5) / fs_p);
 fs_x  = Wi + 0.3;            // 0.3 into each gable wall, one body with it
 function fs_scallop(dx) = let (m = dx - 2 * fs_r * floor((dx + fs_r) / (2 * fs_r))) fs_r - sqrt(max(0, fs_r * fs_r - m * m));
-function fs_L(k, x) = fs_z0 + k * fs_p + fs_scallop(x - (k % 2) * fs_r);
+function fs_L(k, x, z0 = fs_z0) = z0 + k * fs_p + fs_scallop(x - (k % 2) * fs_r);
 FS_ST = stations(-fs_x, fs_x, 260);
-function fs_prof(x) = concat(
-    [[-0.4, fs_L(0, x)]],
-    [for (k = [0 : fs_n - 1], j = [0 : 2]) [[0, fs_L(k, x) + 0.02], [fs_d, fs_L(k, x) + 0.02 + fs_rr], [fs_d, fs_L(k + 1, x)]][j]],
-    [[0, fs_L(fs_n, x) + 0.02], [fs_d, fs_L(fs_n, x) + 0.02 + fs_rr], [fs_d, fs_top], [-0.4, fs_top]]);
-module fs_skin(face) skin([for (x = FS_ST) [for (p = fs_prof(x))
+function fs_prof(x, z0, n) = concat(
+    [[-0.4, fs_L(0, x, z0)]],
+    [for (k = [0 : n - 1], j = [0 : 2]) [[0, fs_L(k, x, z0) + 0.02], [fs_d, fs_L(k, x, z0) + 0.02 + fs_rr], [fs_d, fs_L(k + 1, x, z0)]][j]],
+    [[0, fs_L(n, x, z0) + 0.02], [fs_d, fs_L(n, x, z0) + 0.02 + fs_rr], [fs_d, fs_top], [-0.4, fs_top]]);
+module fs_skin(face) skin([for (x = FS_ST) [for (p = fs_prof(x, fs_z0_(face), fs_n_(face)))
         face == 1 ? [x, -D/2 - p[0], p[1]] : [-x, D/2 + p[0], p[1]]]], slices = 0);
 // The courses run on under the frames, the door, the sign and the porch roof,
 // which the body loses to those parts anyway, so each joins them. Cut clear of
