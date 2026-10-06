@@ -171,7 +171,8 @@ module win_frame_outer() union() {
 }
 // a cross in every window: it stands on the glass, its arms sheared like any relief
 module win_cross() intersection() {
-    union() { translate([-0.6, -1]) square([1.2, 20]); translate([-4, 7.4]) square([8, 1.2]); }
+    // 1.6 wide: at 1.2 the bars measured under one bead
+    union() { translate([-0.8, -1]) square([1.6, 20]); translate([-4, 7.2]) square([8, 1.6]); }
     coffin2d(0.6);
 }
 
@@ -315,42 +316,37 @@ module chimney() {
 }
 
 // ---- fish scales, on the front and back walls ---------------------------------------------
-// Rows of round-bottomed scales, each row's bottoms laid over the joints of
-// the row below, 0.45 mm grooves between them. Every scale is a relief with a
-// sheared underside, so its round butt needs nothing under it.
-fs_r = 2.1;  fs_p = 3.6;
+// Laid like the town's clapboard, a REVERSED SAWTOOTH, with every course's
+// lower edge scalloped into a row of round butts (each row's half a scale
+// over from the one below). A course starts flush with the wall on its
+// scalloped line, ramps out 0.84 at 58 deg or steeper, runs flat, and steps
+// back in on an upward-facing ledge at the next course's line, so the scales
+// read as the ledges' scallops. Nothing faces down.
+// First built as one raised relief per scale (the town's sheared relief): each
+// scale's top was cut into arcs by the row above, the relief's flat top is
+// clipped over 0.2 either side, and along every row the arcs left slivers 0.01
+// to 0.3 mm thick -- 1.5% of the building under one bead.
+fs_r  = 2.1;                // scale radius
+fs_p  = 3.8;                // course height: 1.7 clear at the scallops' deepest overlap
+fs_d  = 0.84;               // course depth
+fs_rr = fs_d * t58;         // its ramp
 fs_z0 = plinth_h + 0.6;
-fs_n = floor((co_z - 0.6 - fs_z0) / fs_p);
-module scale_row(k) {
-    n = ceil(Wi / (2 * fs_r)) + 1;
-    for (i = [-n : n]) let (u = (i + (k % 2) * 0.5) * 2 * fs_r, z = fs_z0 + k * fs_p) {
-        translate([u, z + fs_r]) circle(r = fs_r, $fn = 24);
-        translate([u - fs_r, z + fs_r]) square([2 * fs_r, fs_p + 0.6]);
-    }
-}
-// Each row is opened by 0.4 after the row above is cut out of it: the cut
-// leaves a sharp horn on every scale between the two circles above it, and
-// those horns came out as walls under one bead.
-// ...and the whole pattern is opened by 0.5 once it has been trimmed round the
-// windows, the door, the sign and the walls' ends: every scale cut there
-// left a sliver, and 1.7% of the building measured under one bead.
-module scales2d(face) offset(r = 0.5) offset(r = -0.5) difference() {
-    intersection() {
-        union() for (k = [0 : fs_n - 1]) offset(r = 0.4) offset(r = -0.4) difference() {
-            scale_row(k);
-            if (k < fs_n - 1) offset(r = 0.45) scale_row(k + 1);
-        }
-        translate([-Wi + 0.6, fs_z0]) square([2 * Wi - 1.2, co_z - 0.6 - fs_z0]);
-    }
-    for (w = WINDOWS) if (w[0] == face) translate([w[1], w[2]]) offset(r = 0.8) win_frame_outer();
-    if (face == 1) {
-        translate([0, plinth_h]) offset(r = fr_w + 0.8) polygon(arch_head(door_a, door_h));
-        translate([-xp - 0.8, z_uw - 1]) square([2 * xp + 1.6, 9]);                 // where the porch roof meets the wall
-        rotate(sg_tilt) translate([-sg_w/2 - 0.8, sg_z - sg_h/2 - 0.8]) square([sg_w + 1.6, sg_h + 1.6]);
-        translate([-dm_w/2 - 0.8, H - 6]) square([dm_w + 1.6, 20]);
-    }
-}
-module scales() for (f = [0, 1]) face_tf(f, 0, 0) relief_up(-0.4, 0.8) scales2d(f);
+fs_top = co_z - 0.6;
+fs_n  = floor((fs_top - fs_z0 - fs_r - fs_rr - 0.5) / fs_p);
+fs_x  = Wi + 0.3;            // 0.3 into each gable wall, one body with it
+function fs_scallop(dx) = let (m = dx - 2 * fs_r * floor((dx + fs_r) / (2 * fs_r))) fs_r - sqrt(max(0, fs_r * fs_r - m * m));
+function fs_L(k, x) = fs_z0 + k * fs_p + fs_scallop(x - (k % 2) * fs_r);
+FS_ST = stations(-fs_x, fs_x, 260);
+function fs_prof(x) = concat(
+    [[-0.4, fs_L(0, x)]],
+    [for (k = [0 : fs_n - 1], j = [0 : 2]) [[0, fs_L(k, x) + 0.02], [fs_d, fs_L(k, x) + 0.02 + fs_rr], [fs_d, fs_L(k + 1, x)]][j]],
+    [[0, fs_L(fs_n, x) + 0.02], [fs_d, fs_L(fs_n, x) + 0.02 + fs_rr], [fs_d, fs_top], [-0.4, fs_top]]);
+module fs_skin(face) skin([for (x = FS_ST) [for (p = fs_prof(x))
+        face == 1 ? [x, -D/2 - p[0], p[1]] : [-x, D/2 + p[0], p[1]]]], slices = 0);
+// The courses run on under the frames, the door, the sign and the porch roof,
+// which the body loses to those parts anyway, so each joins them. Cut clear of
+// them with a 0.8 gap, every course left a sliver along every cut edge.
+module scales() for (f = [0, 1]) fs_skin(f);
 
 // ---- trim and openings --------------------------------------------------------------------
 module openings() {
