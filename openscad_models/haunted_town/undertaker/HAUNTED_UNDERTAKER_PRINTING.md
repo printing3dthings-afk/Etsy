@@ -35,9 +35,16 @@ already aligned. Assign a filament to each part.
 | body | the fish-scale front and back, the two gable walls and their scars, plinth, porch deck and step, the dormer | dusk blue `#3F4A63` |
 | roof | the mansard and its slate courses, ridge cap, the dormer's roof, the porch roof and its courses, the crooked chimney | slate `#2B2F38` |
 | trim | window frames, crosses and glass, the cornices, door and frame, the porch arcade, the sign board, the cross on the coffin | cream `#EFE6D2` |
-| accent | the coffin, the sign's carved letters | coffin wood `#6B4429` |
+| accent | the coffin, the sign's raised letters | coffin wood `#6B4429` |
 
 **Every window is glazed,** the dormer's too.
+
+**The UNDERTAKER letters stand 0.84 mm proud of the sign board** (changed
+2026-10-07). They were carved into it and lined with coffin wood, but on the
+first one-colour print of the post office the carve's stepped ceilings caught
+the light and its F's read as E's. Raised, they read by their shadow on a
+one-colour print. `../sign_test/` has a 20-minute test print of all four town
+signs; this sign's letters are the town's smallest, 4.0.
 
 ## Settings that are not optional
 
@@ -50,7 +57,7 @@ already aligned. Assign a filament to each part.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 16 m** | **70.8 cm³, about 88 g of PLA** |
+| **single colour** (e.g. for Jessee to paint) | **9 h 15 m** | **70.8 cm³, about 88 g of PLA** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 88 g of model **+ purge** |
 
 A listing must say which version the buyer gets.
@@ -71,28 +78,32 @@ ground and first floor windows.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.21 mm, median 3.00 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.39 mm, median 3.00 mm, against the 1.2 mm floor
+    (1.21 before the raised letters, 2026-10-07);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (160.3 mm);
   - 13.44 cm² of bed contact (30.5% of the footprint);
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
-  faces.
+  faces. They carry a few zero-area faces (body 5, roof 2, trim 11, accent
+  15, the accent's in the letters' 0.2 mm steps): slivers of no area, which
+  the slicer handles with 0 supports.
 - **The parts are disjoint.** All six pairwise intersections render empty.
   (The roof first kept a 0.3 mm band inside the dormer's own front wall and
   overlapped the body there; it now takes out exactly what the body keeps of
   the dormer.)
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 4.7 mm³ of 99,240 mm³ is not printed; 0.6 mm³ printed that was not
-  modelled; 0.4 mm³ printed in another colour. **4 flags, all cosmetic
-  slivers too thin to lay:**
+  layer; re-run 2026-10-07 with the raised letters): 4.6 mm³ of 99,349 mm³
+  is not printed; 0.2 mm³ printed that was not modelled; 0.4 mm³ printed in
+  another colour. **4 flags, all cosmetic slivers too thin to lay:**
   - the ridge cap's knife-edge tip near each gable wall, 0.31 mm wide
     (0.29 mm³ each);
   - the tip of one scale either side at the back, 0.23 mm wide (0.02 mm³
     each).
 - **The coffin windows, crosses and sign print as drawn:** they lose nothing
   the comparison flags.
-- `fragility`: **nothing slender enough to snap. 0 high, 0 watch.**
+- `fragility` (re-run 2026-10-07): **nothing slender enough to snap. 0
+  high, 0 watch.**
 - **OBC maker's mark:** engraved 0.8 mm deep under the porch deck, the same
   mark as the other buildings, mirrored so it reads OBC with the building
   turned over, front toward you.
@@ -130,6 +141,11 @@ fixed in the model:
 - **The sign's lettering is 42.2 mm wide on a 46 mm board.** At 4.2 mm the
   letters ran past the board's ends and left open edges and two support
   spots.
+- **The raised letters are built in five slabs,** each keeping only what has
+  letter under it all the way down its climb (1.2 up per 1 out, in 0.2 mm
+  steps). So only their undersides slope; the holes in the A and R and the
+  letters' tops stay as drawn. The town's general relief would have let each
+  lower stroke rise into the letter's hole and left slivers there.
 - **The windows' crosses are 1.6 mm bars.** At 1.2 they measured under one
   bead.
 
@@ -137,8 +153,8 @@ fixed in the model:
 
 - **Raised details have sloped undersides.** That is how they print without
   supports. The frames, crosses, sign and cornices read as wedges from below.
-- **The walls are at the floor, not above it.** The 1st-percentile wall is
-  1.21 mm against the 1.2 mm floor: the scales' course ends and the sign's
+- **The walls are just above the floor.** The 1st-percentile wall is
+  1.39 mm against the 1.2 mm floor: the scales' course ends and the sign's
   letters are the thinnest parts.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.

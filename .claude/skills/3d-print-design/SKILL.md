@@ -7945,3 +7945,41 @@ Separately, `virtual_printer.py` reported 117 g for a 73 g print. It summed
 every rise in E across 10,232 `G92 E0` resets that follow retractions. It
 now prefers the slicer's own `filament used [cm3]` line
 (`tests/test_virtual_printer_filament.py`).
+
+## Technique 81 — Raised letters read in one colour; build them as a climb, not a relief (2026-10-07, Haunted Town)
+
+The first post office print, in white PLA, printed whole and lit well, but
+its carved sign (Technique 76) was hard to read: the stepped 58° ceilings
+catch the light under each letter's arms, and the two F's read as E's.
+Scott: raise every sign. Technique 76 still holds for where a carve is
+wanted; for a sign that must read in one colour, raise it.
+
+- **Do not use the town's `relief_up` for lettering.** Its flat top is
+  clipped by the glyph swept downward, and a swept glyph covers every
+  counter. So the sheared copy of each lower stroke rises into the letter's
+  hole: the O, P, R and A partly fill at the face, with slivers down to
+  0.01 mm. On a test plate of all four signs: 1st-percentile wall 0.65 mm,
+  276 spans under one bead.
+- **Build the letters as a climb from below, in nested slabs.** Slab i keeps
+  a point only if the glyph holds the whole column under it for SH·t:
+  `intersection_for(j = [0 : k]) translate([0, j * 0.2]) text(...)`,
+  extruded between that slab's depths. Undersides slope at SH (1.2; 1.4 on
+  the general store's forward lean); tops, bars and counters stay as drawn.
+  Same plate: 1st percentile 1.24 mm, 144 spans under a bead, 0 supports, and
+  `print_fidelity` on the two smallest signs dropped nothing.
+- **Shift in 0.2 mm steps so every ledge lands on a layer.** Five slabs for
+  0.84 mm proud; `k = ceil(SH * t1 / 0.2 - 0.05)` for a slab whose front is
+  t1 out.
+- **Expect zero-area faces in the letters** (15 to 38 per accent part) where
+  the steps meet. The unions are watertight and slice with 0 supports. Say
+  so in the notes.
+- **A test coupon of lettering fails the thin-wall gate by construction.**
+  It is mostly letters, and strokes are under 1.2 mm by nature. Judge it by
+  the slicer and `print_fidelity` instead.
+- **Make a sign coupon from the building's own modules, not a crop.**
+  Include the building with `part = "none"`, render `sign_board()` and
+  `sign_letters()` with a plain slab in the face's own frame behind them, and
+  cut the slab flat to stand on. Cropping the real wall with planes left knife
+  edges wherever a plane met the brick or clapboard. Name the coupon's own
+  variables so they cannot clash with the include: a `zc` overrode the
+  undertaker's mansard curb and the coupon rendered empty.

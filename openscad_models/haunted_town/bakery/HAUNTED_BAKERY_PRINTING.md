@@ -18,13 +18,14 @@ of each opening, set into the wall all round, and the window's bars stand on
 it. The tealight glows through the panes, like frosted glass. On the first
 chapel print the tallest windows' free-standing bars snapped; the pane is
 what carries them now. The door stays open.
-| accent | the pie-crust frame round the shop window, the pie, the lining of the sign's carved letters | crust `#D4A96A` |
+| accent | the pie-crust frame round the shop window, the pie, the sign's raised letters | crust `#D4A96A` |
 
-**The BAKERY letters are carved into the sign board**, 0.6 mm deep, and
-lined with crust colour below that (changed 2026-09-26: they used to be a
-flush inlay, which does not show at all on a one-colour print). On a
-single-colour print the sign reads as an engraving; in colour it is crust
-letters sunk into cream.
+**The BAKERY letters stand 0.84 mm proud of the sign board** (changed
+2026-10-07). They were carved 0.6 mm into it and lined with crust colour, but
+on the first one-colour print of the post office the carve's stepped ceilings
+caught the light and its F's read as E's. Raised, the letters read by their
+shadow on a one-colour print; in colour they are crust letters on cream.
+`../sign_test/` has a 20-minute test print of all four town signs.
 
 The per-part `.stl` files are what the assembler consumes and what the gates
 check. They are not the deliverable.
@@ -77,8 +78,8 @@ house lifts off to switch it.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.44 mm against the 1.2 mm floor (1.24 before the
-    panes; the round windows' frames were the thinnest spans);
+  - 1st-percentile wall 1.30 mm against the 1.2 mm floor (re-run
+    2026-10-07 with the raised letters; 1.44 with the carved ones);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (148.8 mm);
   - 12.66 cm² of bed contact (17.3% of the footprint);
@@ -87,10 +88,10 @@ house lifts off to switch it.
   - watertight, consistent winding;
   - body and roof: **0 zero-area faces**, every edge shared by exactly two
     faces;
-  - trim and accent: **12 and 15 zero-area faces**, all in the carved sign,
-    where the lining meets the board. They are slivers of no area, and the
-    slicer handles them: the house slices with 0 supports and 0 overhang
-    perimeters.
+  - trim: **0 zero-area faces** (12 while the letters were carved);
+  - accent: **18 zero-area faces**, all in the raised letters, where their
+    0.2 mm steps meet. They are slivers of no area, and the slicer handles
+    them: the house slices with 0 supports and 0 overhang perimeters.
 - The trim part is 20 separate pieces and the accent part is 8. Each one was
   checked for real surface contact with the part it sits on, sampled by
   area. The sign board shares 489 mm² with the wall, the crate 206 mm², the
@@ -104,10 +105,17 @@ house lifts off to switch it.
   Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
   turn the building over with the front toward you (fixed 2026-09-27: it read
   "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
-- **The sign's letters:** carved 0.6 mm into the board and lined with crust
-  colour to 1.1 mm, strokes ≥ 0.84 mm. The carve's ceilings climb at 58° in
-  0.2 mm steps, so the letters need no supports: sliced with the letters and
-  without, the support count is the same (0).
+- **The sign's letters:** raised 0.84 mm (2026-10-07). They are built in
+  five slabs, each keeping only what has letter under it all the way down its
+  climb (1.2 up per 1 out, in 0.2 mm steps). So only their undersides slope;
+  the holes in the A, B and R and the letters' tops stay as drawn, and they
+  print with no supports.
+- `print_fidelity` (re-run 2026-10-07 with the raised letters): 4.4 mm³ of
+  144,986 mm³ is not printed, 0.6 mm³ printed that was not modelled, nothing
+  in another colour. **2 flags**, the same as before: the knife-edge tips of
+  the sagging ridge cap at each gable, 0.3 mm wide. The letters lose nothing
+  it flags.
+- `fragility` (2026-10-07): **0 high, 0 watch.**
 
 ## What was changed to make it print without supports
 
@@ -129,8 +137,9 @@ numbers.
   have had a ceiling.
 - **Every raised frame, the crust and the sign have a sheared underside and
   a flat top.**
-- **The BAKERY letters are carved, not raised**, with stepped 58° ceilings
-  (Technique 76).
+- **The BAKERY letters are raised, with stepped undersides** (2026-10-07).
+  They were carved, with stepped 58° ceilings (Technique 76), until the post
+  office's one-colour print showed a carve reads poorly in one colour.
 
 ## Revised 2026-09-25 for the town's variety plan
 

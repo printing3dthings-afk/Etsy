@@ -27,13 +27,14 @@ of each opening, set into the wall all round, and the window's bars stand on
 it. The tealight glows through the panes, like frosted glass. On the first
 chapel print the tallest windows' free-standing bars snapped; the pane is
 what carries them now. The door stays open.
-| accent | the barrels, the props and their feet, the lining of the carved MERCANTILE letters | kraft `#D4A96A` |
+| accent | the barrels, the props and their feet, the raised MERCANTILE letters | kraft `#D4A96A` |
 
-**The MERCANTILE letters are carved into the sign board**, 0.6 mm deep, and
-lined with kraft below that (changed 2026-09-26: they used to be a flush
-inlay, which does not show at all on a one-colour print). On a single-colour
-print the sign reads as an engraving; in colour it is kraft letters sunk into
-cream.
+**The MERCANTILE letters stand 0.84 mm proud of the sign board** (changed
+2026-10-07). They were carved 0.6 mm into it and lined with kraft, but on the
+first one-colour print of the post office the carve's stepped ceilings caught
+the light and its F's read as E's. Raised, the letters read by their shadow
+on a one-colour print; in colour they are kraft letters on cream.
+`../sign_test/` has a 20-minute test print of all four town signs.
 
 ## Settings that are not optional
 
@@ -47,7 +48,7 @@ cream.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 48 m** | **~81 g** | 0 |
+| **single colour** (e.g. for Jessee to paint) | **9 h 51 m** | **~81 g** | 0 |
 | **four colour, AMS** | not reliable here | ~81 g model **+ purge** | **1,317** (before the braces) |
 
 The four-colour print makes about as many changes as the bakery (1,293).
@@ -71,8 +72,8 @@ the light.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.21 mm, median 2.64 mm, against the 1.2 mm floor
-    (1.44 before the braced props, 1.24 before the panes);
+  - 1st-percentile wall 1.38 mm, median 2.71 mm, against the 1.2 mm floor
+    (re-run 2026-10-07 with the raised letters);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (124.0 mm);
   - 11.84 cm² of bed contact (17.6% of the footprint);
@@ -81,14 +82,16 @@ the light.
   - all four are closed, watertight surfaces;
   - body and roof: **0 zero-area faces**, every edge shared by exactly two
     faces;
-  - trim and accent: **24 and 23 zero-area faces**, in the carved sign,
-    where the lining meets the board. They are slivers of no area, and the
-    slicer handles them: the store slices with 0 supports.
+  - trim: **0 zero-area faces**;
+  - accent: **17 zero-area faces**, all in the letters, where their 0.2 mm
+    steps meet. They are slivers of no area, and the slicer handles them:
+    the store slices with 0 supports.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
-- `print_fidelity` (re-run 2026-10-02 with the braced props): 1 flag, the
-  same 0.6 mm batten stub beside the door frame as before.
-- `fragility` (2026-10-02): **nothing slender enough to snap. 0 high, 0
-  watch.** Before the props were braced they were the town's only two "high"
+- `print_fidelity` (re-run 2026-10-07 with the raised letters): 1 flag, the
+  same 0.6 mm batten stub beside the door frame as before. The letters lose
+  nothing it flags.
+- `fragility` (re-run 2026-10-07): **nothing slender enough to snap. 0 high,
+  0 watch.** Before the props were braced they were the town's only two "high"
   members: 2.6 mm square and ~97 mm in one run, slenderness 31, against 17.5
   for the chapel window bar that snapped on Scott's first print.
 - The roof part is 5 pieces, the trim 15 and the accent 13. Each piece was
@@ -101,11 +104,11 @@ the light.
   turn the building over with the front toward you (fixed 2026-09-27: it read
   "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
 - **MERCANTILE letters:** size 5.2, letter spacing 1.06, 51.5 mm wide on
-  the 56 mm board. Carved 0.6 mm into the tilted board and lined with kraft
-  to 1.1 mm. The carve's ceilings climb at 61° (58° plus the front's lean)
-  in 0.2 mm steps, so the letters print with no supports. At spacing 1.04
-  the carve left one knife edge in the union and failed the watertight
-  gate; 1.06 closed it.
+  the 56 mm board, raised 0.84 mm. They are built in five slabs, each keeping
+  only what has letter under it all the way down its climb (1.4 up per 1 out
+  here, steeper than the other signs for the front's lean, in 0.2 mm steps).
+  So only their undersides slope; the holes in the A and R and the letters'
+  tops stay as drawn, and they print with no supports.
 
 ## Design notes
 

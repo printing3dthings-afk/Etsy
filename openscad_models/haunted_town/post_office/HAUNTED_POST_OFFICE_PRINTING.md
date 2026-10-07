@@ -23,13 +23,14 @@ of each opening, set into the wall all round, and the window's bars stand on
 it. The tealight glows through the panes, like frosted glass. On the first
 chapel print the tallest windows' free-standing bars snapped; the pane is
 what carries them now. The door stays open.
-| house | accent | the parcels, the lining of the carved POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
+| house | accent | the parcels, the raised POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
 
-**The POST OFFICE letters are carved into the sign board**, 0.6 mm deep,
-and lined with kraft below that (changed 2026-09-26: they used to be a flush
-inlay, which does not show at all on a one-colour print). On a single-colour
-print the sign reads as an engraving; in colour it is kraft letters sunk into
-cream.
+**The POST OFFICE letters stand 0.84 mm proud of the sign board** (changed
+2026-10-07, after the first print: see below). They were carved 0.6 mm into
+the board and lined with kraft, and in one colour the carve read poorly.
+Raised, they read by their shadow on a one-colour print; in colour they are
+kraft letters on cream. `../sign_test/` has a 20-minute test print of this
+sign and the town's other three.
 | lid | lid | flat roof, leaning chimney, stove pipe | slate `#2B2F38` |
 
 ## Settings that are not optional
@@ -52,9 +53,9 @@ the base is open too.
 
 | | time | filament |
 |---|---|---|
-| house, single colour | 5 h 32 m | 50 g |
+| house, single colour | 5 h 34 m | 50 g |
 | lid | 1 h 36 m | 12 g |
-| **single colour, both** (e.g. for Jessee to paint) | **7 h 08 m** | **~62 g** |
+| **single colour, both** (e.g. for Jessee to paint) | **7 h 10 m** | **~62 g** |
 | **house in three colours + lid** | not reliable here | ~63 g model + purge |
 
 The colour house makes **446 colour changes**, far fewer than the bakery's
@@ -89,14 +90,18 @@ Measured on the exported mesh:
   - all four are closed, watertight surfaces;
   - body and lid: **0 zero-area faces**, every edge shared by exactly two
     faces;
-  - trim and accent: **27 and 20 zero-area faces**, all inside the carved
-    sign (51 to 55 mm up), where the lining meets the board. They are
-    slivers of no area, and the slicer handles them: sliced, the house
-    prints the same as before, with 0 supports.
+  - trim: **0 zero-area faces** (27 while the letters were carved);
+  - accent: **38 zero-area faces**, all in the raised letters (52 to 56 mm
+    up), where their 0.2 mm steps meet. They are slivers of no area, and the
+    slicer handles them: the house slices with 0 supports.
   - The house as a whole has 0 zero-area faces and every edge shared by
     exactly two faces.
 - **The house parts are disjoint.** All three pairwise intersections are
   EMPTY. The lid touches the house only at its seat (zero volume).
+- `print_fidelity` (re-run 2026-10-07 with the raised letters): the house
+  loses 0.4 mm³ of 49,691 mm³ and the lid nothing. **No flags** on either:
+  every letter prints as drawn.
+- `fragility` (2026-10-07): **0 high, 0 watch.**
 - Every trim and accent piece shares real surface with the part it sits on.
   The sign board shares 641 mm² with the wall, the coping 611 mm², each
   window frame about 250 mm², and the parcel string sits in the parcels.
@@ -104,11 +109,13 @@ Measured on the exported mesh:
   Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
   turn the building over with the front toward you (fixed 2026-09-27: it read
   "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
-- **POST OFFICE letters:** size 4.4, one line, carved 0.6 mm into the board
-  and lined with kraft to 1.1 mm. The carve's ceilings climb at 58° in
-  0.2 mm steps, so the letters print with no supports: sliced with the
-  letters and without, the support count is the same (0). Eroding the
-  letters by one bead loses no letter.
+- **POST OFFICE letters:** size 4.4, one line, raised 0.84 mm (2026-10-07).
+  They are built in five slabs, each keeping only what has letter under it
+  all the way down its climb (1.2 up per 1 out, in 0.2 mm steps). So only
+  their undersides slope; the holes in the O's and P and the bars of the
+  F's and E stay as drawn, and they print with no supports. The town's
+  general relief, tried first, let each lower stroke rise into the letter's
+  hole and left slivers there, thinner than a bead.
 
 ## First print (2026-10-06)
 
@@ -127,5 +134,8 @@ painted, and photographed both; `photos/` holds them. What the print shows:
   E's ("POST OEFICE"). Lined in the accent colour on an AMS print, or
   painted, the letters read cleanly. A one-colour version needs a fix before
   it is sold that way: raised letters, or a deeper, plainer carve.
+  **Fixed in the model 2026-10-07: the letters are raised** (Scott's call,
+  for every sign in the town). Not yet printed; `../sign_test/` is the quick
+  check.
 - **The parcels' top edges are slightly rough,** small faces printed at the
   top of a short stack. Cosmetic.

@@ -19,6 +19,7 @@ Everything for the series lives here, one folder per piece (Scott,
 | `undertaker/` | `haunted_undertaker.3mf` | `.scad`, `build.sh`, part `.stl`s, printing notes, `images/` |
 | `cemetery/` | `haunted_cemetery.3mf` | `.scad`, part `.stl`s, printing notes, `images/` |
 | `manor/` | `haunted_manor.3mf` (one piece, one colour) | `.scad`, `.stl`, printing notes, `images/` |
+| `sign_test/` | `haunted_town_sign_test.3mf` (the four shop signs, about 20 min each) | one `.scad` per sign built from the building's own sign modules, their `.stl`s, `SIGN_TEST.md`, a render |
 
 `images/` holds renders of the current model: `*_colour_*` in the four
 filament colours, `*_grey_*` in one neutral colour so the relief reads, and
@@ -76,6 +77,12 @@ What those references do that our first haunted manor did not:
   (`mirror([1, 0, 0])`) so it reads OBC with the building turned over, front
   toward you. A top-to-bottom flip looks almost right on O, B and C and
   shipped backwards on every building until 2026-09-27.
+- **Signs have raised letters**, 0.84 mm proud (Scott, 2026-10-07). The
+  carved, lined letters before them read poorly on the first one-colour print
+  of the post office: its F's looked like E's. The letters are built as a
+  climb in 0.2 mm steps so only their undersides slope (Technique 81 in
+  `.claude/skills/3d-print-design/SKILL.md`). The cemetery's carved
+  epitaphs were not part of that change and are still carved.
 
 ## Variety — no two buildings alike (Scott, 2026-09-25)
 
@@ -137,6 +144,10 @@ bars that snapped on that print, and none once they were glazed.
 | Undertaker (2026-10-02) | 4: the ridge cap's knife-edge tip near each gable wall, two scale tips at the back | none |
 | Cemetery | 3: the top layer of two spear-point pickets and one finial | 7 watch: tapering branch, shovel and picket tips |
 | Manor | none | 16 watch: window bars 13 mm long, ~2 × 2 mm, slenderness 6.4 |
+
+Re-run 2026-10-07 on the bakery, post office, general store and undertaker
+after their signs' letters were raised: the same flags as above, none of them
+in a sign, and nothing fragile.
 
 Every fidelity flag above was drawn with `--zoom` and is a point or sliver
 thinner than one bead. The prints carry essentially all of the modelled
