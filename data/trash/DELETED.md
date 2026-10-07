@@ -1746,3 +1746,98 @@ module sign_letters() difference() {
 
 <!-- /TRASH 20261007-004 -->
 
+<!-- TRASH id=20261007-005 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-005 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-005__snippet.txt`
+
+```
+// the sign: a brick-red board on the plaster, INN inlaid white and flush
+```
+
+<!-- /TRASH 20261007-005 -->
+
+<!-- TRASH id=20261007-006 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-006 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-006__snippet.txt`
+
+```
+module sign_text() intersection() {
+    sign_board();
+    nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
+        text("INN", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
+}
+```
+
+<!-- /TRASH 20261007-006 -->
+
+<!-- TRASH id=20261007-007 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-007 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-007__snippet.txt`
+
+```
+// the sign: a slate board, SANTA'S / WORKSHOP inlaid white and flush
+```
+
+<!-- /TRASH 20261007-007 -->
+
+<!-- TRASH id=20261007-008 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-008 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-008__snippet.txt`
+
+```
+module sign_text() intersection() {
+    sign_board();
+    nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
+        for (l = [["SANTA'S", 2.6], ["WORKSHOP", -2.6]]) translate([0, l[1]])
+            text(l[0], size = 3.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
+}
+```
+
+<!-- /TRASH 20261007-008 -->
+
+<!-- TRASH id=20261007-009 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/toy_shop/victorian_toy_shop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-009 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/toy_shop/victorian_toy_shop.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-009__snippet.txt`
+
+```
+// the letters, raised on the fascia
+module toys() bplace(1, (by_g[1] + by_t) / 2 + 0.2) relief_up(-0.4, 0.6)
+```
+
+<!-- /TRASH 20261007-009 -->
+
+<!-- TRASH id=20261007-010 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/gingerbread/sweet_shop/gingerbread_sweet_shop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-010 · 2026-10-07 · snippet · `openscad_models/christmas_village/gingerbread/sweet_shop/gingerbread_sweet_shop.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-010__snippet.txt`
+
+```
+// SWEETS round the front, over the shop's ridge, inlaid flush: raised, every
+// level stroke (the E's arms, the T's bar) came to a knife edge under its
+// sloped underside, down to 0.01 mm
+module sweets() intersection() {
+    difference() { cylinder(r = T(0)[0] + 0.01, h = 100, $fn = FNC); cylinder(r = T(0)[0] - 0.6, h = 100, $fn = FNC); }
+    cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) translate([0, 0, -1.5]) linear_extrude(2)
+        text("SWEETS", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
+}
+```
+
+<!-- /TRASH 20261007-010 -->
+
+<!-- TRASH id=20261007-011 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
+## 20261007-011 · 2026-10-07 · snippet · `openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad`
+**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
+**Payload:** `data/trash/files/20261007-011__snippet.txt`
+
+```
+module cocoa_text() press(270, 55.8)
+    text("COCOA", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
+```
+
+<!-- /TRASH 20261007-011 -->
+

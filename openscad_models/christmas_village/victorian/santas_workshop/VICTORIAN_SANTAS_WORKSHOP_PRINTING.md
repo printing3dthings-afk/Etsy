@@ -16,7 +16,7 @@ long one-storey brick workshop with one big round-arched toy window**:
     fanlight of rays over them;
   - arched slate loading doors, a wreath with a white bow on each leaf, white
     strap hinges, in a flush white frame with a keystone, on a brick step;
-  - over the doors a slate sign, SANTA'S / WORKSHOP inlaid in white;
+  - over the doors a slate sign, SANTA'S / WORKSHOP raised in white;
 - three glazed windows in the back and one in each gable;
 - a steep 55° slate roof:
   - three skylights in its front slope;
@@ -136,6 +136,10 @@ found on the gate's slicer or its mesh checks:
 - **The sign's letters are 3.4 mm, on a 33 mm board,** the most room between
   the window's frame and the quoins. At 4.2 mm, WORKSHOP was 38.7 mm wide and
   the board cut it to "VORKSHO" in the renders.
+- **The letters are raised 0.84 mm, not inlaid** (2026-10-07). Inlaid flush,
+  they were colour alone and would vanish on a one-colour or painted print,
+  as the haunted post office's first print showed. They are built as a climb
+  in 0.2 mm steps, so only their undersides slope.
 
 ## Honest weak points
 

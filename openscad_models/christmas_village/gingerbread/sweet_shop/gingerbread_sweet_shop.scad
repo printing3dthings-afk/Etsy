@@ -190,14 +190,19 @@ module c_openings(k) for (w = CW) if (w[0] == k) cyl_relief(cr(w), w[1], w[2], w
     translate([0, 0, -wall - 3]) linear_extrude(wall + 6) win_outline(cw(w));
 module c_holes(k) for (w = CW) if (w[0] == k) cyl_relief(cr(w), w[1], w[2], cframe_U(w))
     relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) win_outline(cw(w));
-// SWEETS round the front, over the shop's ridge, inlaid flush: raised, every
-// level stroke (the E's arms, the T's bar) came to a knife edge under its
-// sloped underside, down to 0.01 mm
-module sweets() intersection() {
-    difference() { cylinder(r = T(0)[0] + 0.01, h = 100, $fn = FNC); cylinder(r = T(0)[0] - 0.6, h = 100, $fn = FNC); }
-    cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) translate([0, 0, -1.5]) linear_extrude(2)
-        text("SWEETS", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
-}
+// Raised letters (2026-10-07): a flush inlay is colour alone and vanishes on a
+// one-colour or painted print (the haunted post office's first print). Each slab
+// keeps only what has letter under it all the way down its climb, SH up per 1
+// out in 0.2 mm steps (the layers'), so only the undersides slope and the
+// counters and tops stay as drawn (Technique 81).
+module letters_up(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.3 : i * h / n - 0.01,
+        k = ceil(SH * (i + 1) * h / n / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / n - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
+// SWEETS round the front, over the shop's ridge, raised. Raised with relief_up,
+// every level stroke (the E's arms, the T's bar) came to a knife edge under its
+// sloped underside, down to 0.01 mm, and it went flush; the climb has no such edge
+module sweets() cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) letters_up(0.84, 5)
+    text("SWEETS", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
 // DRIPS off each ledge and the dome, clear of the windows' heads and SWEETS
 function cw_near(k, th, d) = len([for (w = CW) if (w[0] == k && abs((th - w[1] + 540) % 360 - 180) < d) 1]) > 0;
 function dr_ok(k, th) = k == 0 ? abs(th - 270) > 32

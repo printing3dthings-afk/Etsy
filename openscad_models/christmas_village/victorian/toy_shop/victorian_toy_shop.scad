@@ -541,8 +541,16 @@ module bay_roof() hull() {
     translate([0, 0, by_t - 0.01]) linear_extrude(0.01) polygon(BPOLY);
     translate([BX - BF - BP, yw + 0.4, by_t + BP]) cube([2 * (BF + BP), 0.8, 0.01]);
 }
-// the letters, raised on the fascia
-module toys() bplace(1, (by_g[1] + by_t) / 2 + 0.2) relief_up(-0.4, 0.6)
+// Raised letters (2026-10-07): a flush inlay is colour alone and vanishes on a
+// one-colour or painted print (the haunted post office's first print). Each slab
+// keeps only what has letter under it all the way down its climb, SH up per 1
+// out in 0.2 mm steps (the layers'), so only the undersides slope and the
+// counters and tops stay as drawn (Technique 81).
+module letters_up(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.3 : i * h / n - 0.01,
+        k = ceil(SH * (i + 1) * h / n / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / n - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
+// the letters, raised 0.6 on the fascia (the town's relief_up filled the O)
+module toys() bplace(1, (by_g[1] + by_t) / 2 + 0.2) letters_up(0.6, 4)
     text("TOYS", size = 4.2, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.12);
 
 // =====================================================================================

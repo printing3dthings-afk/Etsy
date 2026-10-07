@@ -101,9 +101,13 @@ The café is the sweet shop's shop and the mug its bottom tier, each with every
 fix in their notes. These were this building's own, each found on the gate's
 slicer or a section through the model:
 
-- **Everything on the mug is flush.** Stripes, COCOA and the window outlines
-  are red pressed into the white wall to its own face, so nothing round the
-  mug has an underside to print over.
+- **Everything on the mug is flush except COCOA.** The stripes and the window
+  outlines are red pressed into the white wall to its own face, so they have
+  no underside to print over. COCOA was flush too until 2026-10-07; it is now
+  raised 0.84 mm, so it reads on a one-colour or painted print (flush, it was
+  colour alone, which the haunted post office's first print showed does not
+  read). It is a climb in 0.2 mm steps laid round the mug in 0.6 mm strips,
+  as on the sweet shop, so only its undersides slope.
 - **The handle's foot starts inside the wall** and meets the mug's face 2 mm
   up. Begun at a point on the face, its first layers printed as a loose
   island, and the slicer propped them. Its outside and its hole both rise at

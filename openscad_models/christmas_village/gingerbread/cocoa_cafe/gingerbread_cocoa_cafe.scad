@@ -167,7 +167,21 @@ module mw2d(w) {
     translate([-w[2], w[3] * 0.6 - 0.5]) square([2 * w[2], 1.0]);
 }
 module mug_windows() for (w = MW) press(w[0], w[1]) mw2d(w);
-module cocoa_text() press(270, 55.8)
+// Raised letters (2026-10-07): a flush inlay is colour alone and vanishes on a
+// one-colour or painted print (the haunted post office's first print). Each slab
+// keeps only what has letter under it all the way down its climb, SH up per 1
+// out in 0.2 mm steps (the layers'), so only the undersides slope and the
+// counters and tops stay as drawn (Technique 81).
+module letters_up(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.3 : i * h / n - 0.01,
+        k = ceil(SH * (i + 1) * h / n / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / n - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
+// laid round the mug in 0.6 mm strips, each flat on its tangent (the sweet shop's)
+module cyl_relief(r, th, z, U, du = 1.0) for (i = [0 : ceil(2 * U / du) - 1]) let (u = -U + i * du, uc = u + du / 2)
+    cplace(r, th + uc / r * 180 / PI, z) translate([-uc, 0, 0]) intersection() {
+        children();
+        translate([u - 0.15, -60, -10]) cube([du + 0.3, 150, 20]);
+    }
+module cocoa_text() cyl_relief(MR, 270, 55.8, 11.5, 0.6) letters_up(0.84, 5)
     text("COCOA", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
 
 // =====================================================================================

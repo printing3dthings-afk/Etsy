@@ -315,16 +315,21 @@ module bow2d() {
 // white: as brick, the door's opening would cut it away (the church)
 module wreath_bow() nfl(3, dr_u, wr_z + 2.8) relief_up(-0.2, 0.2 + bd + 1.2) bow2d();
 module step() nfl(3, dr_u, plinth_h - 0.5) translate([-dr_a - 2.6, 0, -0.2]) cube([2 * dr_a + 5.2, 1.9, 3.2]);
-// the sign: a brick-red board on the plaster, INN inlaid white and flush
+// the sign: a brick-red board on the plaster, INN raised in white
 // 13.6 wide, the most between the windows' frames, the letters 1.0 apart with a
 // margin: at 12, INN ran to the board's edges and at an angle read "NN"
 sg_z = 35.2;  sg_w = 13.6;  sg_h = 7.6;
 module sign_board() nf(3, dr_u, sg_z) relief_up(-0.4, 1.0) translate([-sg_w / 2, 0]) offset(r = 1.0) offset(delta = -1.0) square([sg_w, sg_h]);
-module sign_text() intersection() {
-    sign_board();
-    nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
-        text("INN", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
-}
+// Raised letters (2026-10-07): a flush inlay is colour alone and vanishes on a
+// one-colour or painted print (the haunted post office's first print). Each slab
+// keeps only what has letter under it all the way down its climb, SH up per 1
+// out in 0.2 mm steps (the layers'), so only the undersides slope and the
+// counters and tops stay as drawn (Technique 81).
+module letters_up(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.3 : i * h / n - 0.01,
+        k = ceil(SH * (i + 1) * h / n / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / n - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
+module sign_text() nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 1.0]) letters_up(0.84, 5)
+    text("INN", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
 // a small wreath in each front upper window, on its bars
 module window_wreaths() for (w = UPW) if (w[0] == 3) nf(3, w[1], w[2] + w[4] * 0.5) relief_up(-0.4, 0.9)
     difference() { circle(r = 2.0, $fn = 32); circle(r = 0.8, $fn = 20); }

@@ -109,8 +109,13 @@ or a section through the model:
   only 1.0 mm.** A raised level part's front edge is its height less 1.2 mm
   (its underside slopes), and beads laid round the cake in strips were cut
   into slivers.
-- **SWEETS is inlaid flush, not raised.** Raised, every level stroke came to
-  a knife edge.
+- **SWEETS is raised 0.84 mm, as a climb** (2026-10-07). It was inlaid flush,
+  because raised with the town's sheared relief every level stroke came to a
+  knife edge; but flush it is colour alone and vanishes on a one-colour or
+  painted print, as the haunted post office's first print showed. Built as a
+  climb in 0.2 mm steps, each slab keeping only what has letter under it all
+  the way down, the strokes keep flat fronts and only their undersides slope.
+  It is laid round the cake in 0.6 mm strips, each flat on its tangent.
 - **The chocolate tier's frames cut their sloped holes into it**, like the
   gingerbread tiers'. Without them each pane's 0.2 mm recess had a flat head,
   and the slicer propped all six.

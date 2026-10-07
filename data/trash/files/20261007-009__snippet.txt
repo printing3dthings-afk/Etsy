@@ -1,0 +1,2 @@
+// the letters, raised on the fascia
+module toys() bplace(1, (by_g[1] + by_t) / 2 + 0.2) relief_up(-0.4, 0.6)

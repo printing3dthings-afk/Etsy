@@ -270,17 +270,22 @@ module bow2d() {
 module wreath_bows() for (s = [-1, 1]) nf(3, dr_u + s * 4.5, wr_z - 2.6) relief_up(-0.2, 0.2 + bd + 1.2) bow2d();
 module step() nf(3, dr_u, plinth_h - 0.5) translate([-dr_a - 2.6, 0, -0.2]) cube([2 * dr_a + 5.2, 1.9, 3.2]);
 
-// the sign: a slate board, SANTA'S / WORKSHOP inlaid white and flush
+// the sign: a slate board, SANTA'S / WORKSHOP raised in white
 // 33 wide, the most between the window's frame and the quoins, the letters 3.4:
 // at 4.2 WORKSHOP was 38.7 wide and the board cut it to "VORKSHO"
 sg_z = 35.8;  sg_w = 33;  sg_h = 11.4;
 module sign_board() nf(3, dr_u, sg_z) relief_up(-0.4, 1.0) translate([-sg_w / 2, 0]) offset(r = 1.0) offset(delta = -1.0) square([sg_w, sg_h]);
-module sign_text() intersection() {
-    sign_board();
-    nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
-        for (l = [["SANTA'S", 2.6], ["WORKSHOP", -2.6]]) translate([0, l[1]])
-            text(l[0], size = 3.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
-}
+// Raised letters (2026-10-07): a flush inlay is colour alone and vanishes on a
+// one-colour or painted print (the haunted post office's first print). Each slab
+// keeps only what has letter under it all the way down its climb, SH up per 1
+// out in 0.2 mm steps (the layers'), so only the undersides slope and the
+// counters and tops stay as drawn (Technique 81).
+module letters_up(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.3 : i * h / n - 0.01,
+        k = ceil(SH * (i + 1) * h / n / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / n - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
+module sign_text() nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 1.0]) letters_up(0.84, 5)
+    for (l = [["SANTA'S", 2.6], ["WORKSHOP", -2.6]]) translate([0, l[1]])
+        text(l[0], size = 3.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
 
 // =====================================================================================
 // THE OTHER WINDOWS: segmental, glazed, the bars on the pane [face, u, z, a, h]

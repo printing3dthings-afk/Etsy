@@ -19,7 +19,7 @@ village:
     beam, king post and struts in each gable;
   - fifteen casement windows with dark frames and bars, and a small evergreen
     wreath in each front one;
-  - a brick-red INN sign over the door, its letters inlaid white;
+  - a brick-red INN sign over the door, its letters raised in white;
 - a steep 55° slate roof, snow on its upper half, icicles under the long
   eaves, dark scalloped bargeboards and finials on both gables;
 - two tall brick chimneys astride the ridge, each with two pots;
@@ -114,6 +114,10 @@ found on the gate's slicer, its thin-wall scan or a section through the model:
   flush with it.** Raised, the frame's head stood out over the recessed leaf
   and the slicer propped the whole doorway from the base. The door's panels
   sit low, under the wreath; above, the wreath left them slivers.
+- **INN is raised 0.84 mm, not inlaid** (2026-10-07). Inlaid flush, it was
+  colour alone and would vanish on a one-colour or painted print, as the
+  haunted post office's first print showed. The letters are built as a climb
+  in 0.2 mm steps, so only their undersides slope.
 - **No icicle over the INN sign.** One's tip hung 0.2 mm over the sign's top.
 - **On the gables the jetty beam stands out 0.8 mm**, over the bricks' bumps.
   Flush with the plaster there, the last course's bumps rose past it as a
