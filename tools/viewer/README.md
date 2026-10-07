@@ -1681,7 +1681,36 @@ Two things changed in the exporter and page for them:
   them; plates without them fall back to the illustrative palette. Every plate
   built before this has none, so it still shows the illustrative colours.
 
-The 77 committed plates are still PrusaSlicer slices. For the chapel the two
-disagree: PrusaSlicer says 29 h 24 m and 302 g, Bambu 32 h 04 m and 441 g.
-Re-slicing all of them on Bambu adds about 55 MB to the repository's history
-(see "Files" above), so it waits on Scott's go-ahead.
+## Every plate re-sliced on Bambu Studio (2026-10-07)
+
+Scott approved re-slicing all 77 plates on Bambu Studio's stock P1S presets.
+`tools/viewer/rebuild_plates.py` does it reproducibly: the manifest is
+`jobs/index.js` (every plate already names its source) plus
+`plate_settings.json` (colours for multi-colour plates, the pumpkins' layer
+heights, and notes rewritten where they quoted PrusaSlicer's numbers).
+
+    python3 tools/viewer/rebuild_plates.py --work /tmp/plates           # ~5 min slicing, ~7 min building
+
+What changed on the page, and why it matters:
+
+- **Single-colour print times fell to about a third.** Median Bambu time is
+  0.31x what PrusaSlicer said: the sauce bowl 12.7 h -> 2.6 h, the Crescent
+  base 12.6 h -> 2.7 h. PrusaSlicer ran generic speeds, not the P1S's, so
+  every time on the page was roughly 3x too long. Grams agree (median 0.95x).
+- **Multi-colour plates gained 44-70% in grams and ~10% in time** -- the
+  purge PrusaSlicer's wipe tower under-counted. Chapel: 302 g -> 441 g.
+- **Three plates are still PrusaSlicer slices, and say so on the plate.**
+  Bambu refused them with supports on: the mushroom lamp and sundial ("no
+  object is fully inside the print volume"; both span nearly the whole bed),
+  and the Glow downlight ("gcode path conflicts found between object2 and
+  object1": its two parts sit too close once supports are added). Slicing
+  them without supports would show a print that cannot be made.
+- **Real colours** on the six plates whose notes choose them (five haunted
+  buildings, the bayonet jar). The keychain, dumpling clicker, label tile and
+  snap box choose none, so they are sliced in the page's illustrative palette
+  and carry no colours; their purge numbers are for that palette.
+- Bambu's own support decisions differ a little: four plates PrusaSlicer
+  supported no longer need it, and four gain a trace (the general store
+  0.25 g) at Bambu's stock 30-degree threshold.
+
+Size: 68.7 MB of payloads against 65.2 MB before, same `--max-mb 1.0` policy.

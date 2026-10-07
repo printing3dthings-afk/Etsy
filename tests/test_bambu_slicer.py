@@ -253,6 +253,29 @@ def test_bambu_is_never_allowed_to_turn_the_part():
           "the slice call must pass --allow-rotations=0 (the only form the CLI parses)")
 
 
+def test_a_prusa_layout_3mf_converts_to_parts_bambu_can_read():
+    """The repo's 3MFs are single meshes with triangle ranges; Bambu reads
+    that as one part. to_bambu_layout must keep every part, its name, its
+    extruder and its triangles, and a plate's separate objects."""
+    td = Path(tempfile.mkdtemp(prefix="bambu_conv_"))
+    parts = _two_cubes(td)
+    src, dst = td / "prusa.3mf", td / "bambu.3mf"
+    assemble_3mf.assemble(src, [parts, [(parts[0][0], "#D4A96A")]], "plate")
+    info = assemble_3mf.to_bambu_layout(src, dst)
+    check(info["objects"] == 2 and info["parts"] == 3,
+          f"two objects, three parts expected, got {info}")
+    check(info["extruders"] == [1, 2, 3], f"extruders lost: {info['extruders']}")
+    with zipfile.ZipFile(dst) as z:
+        model = z.read("3D/3dmodel.model").decode()
+        cfg = z.read("Metadata/model_settings.config").decode()
+    check(model.count("<component ") == 3, "one component per part")
+    check(model.count("<item ") == 2 and model.count('transform="') == 2,
+          "both items keep their plate transforms")
+    check(model.count("<triangle ") == 36, f"12 triangles per cube, got {model.count('<triangle ')}")
+    check(cfg.count('key="extruder" value="2"') == 1, "the second part keeps filament 2")
+    check(bs.filament_count(dst) == 3, "filament_count reads the converted file")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

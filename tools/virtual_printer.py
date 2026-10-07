@@ -108,15 +108,16 @@ _BAMBU_COVERED = set(P1S) | set(MMU) | {"nozzle-diameter", "filament-diameter",
 
 
 def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800,
-                colours=None):
+                colours=None, slicer=None):
     """Slice to gcode_path in PrusaSlicer's comment dialect, whichever slicer
     runs. `colours`: one hex per filament slot (Bambu only; the slicer needs
-    distinct filaments, nothing reads the colours back)."""
+    distinct filaments). `slicer`: "bambu" or "prusa" for this call only,
+    instead of the process-wide VIRTUAL_PRINTER_SLICER (safe across threads)."""
     mesh_path, gcode_path = Path(mesh_path), Path(gcode_path)
     if not mesh_path.exists():
         raise VirtualPrinterError(f"mesh not found: {mesh_path}")
     gcode_path.parent.mkdir(parents=True, exist_ok=True)
-    if active_slicer() == "bambu":
+    if (slicer or active_slicer()) == "bambu":
         run = _bambu_runner(mesh_path, gcode_path, supports, extra, timeout, colours)
     else:
         run = _prusa_runner(mesh_path, gcode_path, supports, extra, timeout)

@@ -1,0 +1,99 @@
+{
+ "_about": "Per-plate slicing settings for tools/viewer/rebuild_plates.py. 'colours': filament colour per extruder slot, in slot order, from the model's printing notes. 'illustrative': true means the notes name no colours; the plate is sliced in the page's illustrative palette and carries none, so the page labels them illustrative. 'layer_height' and 'supports' override the defaults (0.20 mm, supports on) for plates whose point is a setting, like the pumpkin layer-height trio. 'note' replaces the plate's note when its numbers came from an earlier slice (2026-10-07: the notes quoted PrusaSlicer's times and grams).",
+ "haunted_chapel": {
+  "colours": [
+   "#77716B",
+   "#2B2F38",
+   "#EFE6D2",
+   "#D4A96A"
+  ],
+  "from": "openscad_models/haunted_town/chapel/HAUNTED_CHAPEL_PRINTING.md"
+ },
+ "haunted_bakery": {
+  "colours": [
+   "#5B4A5E",
+   "#2B2F38",
+   "#EFE6D2",
+   "#D4A96A"
+  ],
+  "from": "openscad_models/haunted_town/bakery/HAUNTED_BAKERY_PRINTING.md"
+ },
+ "haunted_cemetery": {
+  "colours": [
+   "#4A5140",
+   "#2B2F38",
+   "#EFE6D2",
+   "#D4A96A"
+  ],
+  "from": "openscad_models/haunted_town/cemetery/HAUNTED_CEMETERY_PRINTING.md"
+ },
+ "haunted_general_store": {
+  "colours": [
+   "#5E6B57",
+   "#2B2F38",
+   "#EFE6D2",
+   "#D4A96A"
+  ],
+  "from": "openscad_models/haunted_town/general_store/HAUNTED_GENERAL_STORE_PRINTING.md"
+ },
+ "haunted_post_office": {
+  "colours": [
+   "#7A3E33",
+   "#EFE6D2",
+   "#D4A96A",
+   "#2B2F38"
+  ],
+  "from": "openscad_models/haunted_town/post_office/HAUNTED_POST_OFFICE_PRINTING.md"
+ },
+ "bayonet_jar": {
+  "colours": [
+   "#2E5C8A",
+   "#FF6B35"
+  ],
+  "from": "openscad_models/BAYONET_JAR_PRINTING.md"
+ },
+ "keychain_mc": {
+  "illustrative": true,
+  "from": "openscad_models/MONOGRAM_KEYCHAIN_PRINTING.md",
+  "note": "The same keychain as the first plate, sliced for five filaments instead of one. 31.3 g and 2h 00m against 8.2 g and 24m -- 23 g of it, three quarters, is purge that goes straight in the bin. 52 filament changes. Its colours are illustrative: its notes choose none. Watch the AMS: it also needs five slots, and one AMS holds four."
+ },
+ "dumpling_clicker": {
+  "illustrative": true,
+  "from": "openscad_models/DUMPLING_CLICKER_PRINTING.md"
+ },
+ "label_tile": {
+  "illustrative": true,
+  "from": "openscad_models/LABEL_BIN_PRINTING.md"
+ },
+ "snap_box": {
+  "illustrative": true,
+  "from": "openscad_models/SNAP_BOX_PRINTING.md"
+ },
+ "pumpkin_010": {
+  "layer_height": 0.1,
+  "supports": false,
+  "from": "the plate's own note: supports off, layer height is the only thing that differs",
+  "note": "Same 93.8 mm part as the other two, supports off so layer height is the ONLY thing that differs. 938 layers, 50.6 g, 3h 11m. Against 0.20: 1h 12m longer for the same filament (under 1% less)."
+ },
+ "pumpkin_020": {
+  "layer_height": 0.2,
+  "supports": false,
+  "from": "the plate's own note: supports off, layer height is the only thing that differs",
+  "note": "The baseline: 470 layers, 50.9 g, 1h 59m. Scrub to the top dome and orbit low -- that is where the three layer heights visibly differ."
+ },
+ "pumpkin_028": {
+  "layer_height": 0.28,
+  "supports": false,
+  "from": "the plate's own note: supports off, layer height is the only thing that differs",
+  "note": "0.7x the 0.4 mm nozzle, the usual practical ceiling. 336 layers, 54.2 g, 1h 45m. Against 0.20: only 14 minutes faster and 6% MORE filament -- because top and bottom solid layers are COUNTED, not measured."
+ },
+ "cable_clip": {
+  "note": "1.5 g of its 11.5 g -- about 13% of the filament -- is support, printed and then binned. The arm curling past 45 degrees is what needs it."
+ },
+ "sauce_tray": {
+  "note": "Only 61 layers tall and it still takes 1h 35m -- against 1h 15m for the 406-layer phone stand. Footprint costs more time than height."
+ },
+ "mushroom": {
+  "note": "79 g of its 227 g is support -- 35% of the filament, built solely to hold the cap up, then snapped off and binned. 18h 57m on the plate. This is the exact part product_gate.py fails."
+ }
+}

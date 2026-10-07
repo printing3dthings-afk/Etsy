@@ -230,6 +230,84 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
             "triangles": int(sum(len(m.faces) for ms in loaded for m in ms))}
 
 
+def to_bambu_layout(src: Path, dst: Path) -> dict:
+    """Rewrite a single-mesh 3MF (parts as triangle ranges, the layout
+    PrusaSlicer reads) as components (the only layout Bambu Studio builds parts
+    from), keeping every part's name and extruder and every item's transform.
+
+    For 3MFs already in the repo: re-exporting them from OpenSCAD would need
+    the original part STLs and colours, which not every one still has. The
+    triangle ranges in Metadata/Slic3r_PE_model.config are the authority for
+    where each part starts and ends."""
+    import re
+    import xml.etree.ElementTree as ET
+    z = zipfile.ZipFile(src)
+    root = ET.fromstring(z.read("3D/3dmodel.model"))
+    ns = {"m": _NS}
+    cfg = z.read("Metadata/Slic3r_PE_model.config").decode() \
+        if "Metadata/Slic3r_PE_model.config" in z.namelist() else ""
+    volumes = {}
+    for oid, body in re.findall(r'<object id="(\d+)"[^>]*>(.*?)</object>', cfg, re.S):
+        vs = []
+        for lo, hi, meta in re.findall(r'<volume firstid="(\d+)" lastid="(\d+)">(.*?)</volume>', body, re.S):
+            name = re.search(r'key="name" value="([^"]*)"', meta)
+            ext = re.search(r'key="extruder" value="(\d+)"', meta)
+            vs.append((int(lo), int(hi), name.group(1) if name else f"part{len(vs) + 1}",
+                       int(ext.group(1)) if ext else 1))
+        volumes[oid] = vs
+
+    objs, cfgs, id_map, next_id, n_parts = [], [], {}, 1, 0
+    for obj in root.find("m:resources", ns).findall("m:object", ns):
+        oid = obj.get("id")
+        mesh = obj.find("m:mesh", ns)
+        if mesh is None:
+            raise ValueError(f"{src}: object {oid} has no mesh (already components?)")
+        verts = [(v.get("x"), v.get("y"), v.get("z"))
+                 for v in mesh.find("m:vertices", ns).findall("m:vertex", ns)]
+        tris = [(int(t.get("v1")), int(t.get("v2")), int(t.get("v3")))
+                for t in mesh.find("m:triangles", ns).findall("m:triangle", ns)]
+        vs = volumes.get(oid) or [(0, len(tris) - 1, f"object{oid}", 1)]
+        comps, parts = [], []
+        for lo, hi, name, ext in vs:
+            sub = tris[lo:hi + 1]
+            used = sorted({i for t in sub for i in t})
+            remap = {o: n for n, o in enumerate(used)}
+            v = "".join(f'<vertex x="{verts[i][0]}" y="{verts[i][1]}" z="{verts[i][2]}"/>' for i in used)
+            t = "".join(f'<triangle v1="{remap[a]}" v2="{remap[b]}" v3="{remap[c]}"/>' for a, b, c in sub)
+            objs.append(f'<object id="{next_id}" type="model"><mesh><vertices>{v}</vertices>'
+                        f'<triangles>{t}</triangles></mesh></object>')
+            comps.append(f'<component objectid="{next_id}"/>')
+            parts.append(f'<part id="{next_id}" subtype="normal_part">'
+                         f'<metadata key="name" value="{name}"/>'
+                         f'<metadata key="extruder" value="{ext}"/></part>')
+            next_id += 1
+            n_parts += 1
+        parent = next_id
+        next_id += 1
+        id_map[oid] = parent
+        objs.append(f'<object id="{parent}" type="model"><components>{"".join(comps)}'
+                    f'</components></object>')
+        cfgs.append(f'<object id="{parent}"><metadata key="name" value="{vs[0][2]}"/>'
+                    f'<metadata key="extruder" value="{vs[0][3]}"/>{"".join(parts)}</object>')
+
+    items = ""
+    for it in root.find("m:build", ns).findall("m:item", ns):
+        tf = f' transform="{it.get("transform")}"' if it.get("transform") else ""
+        items += f'<item objectid="{id_map[it.get("objectid")]}"{tf}/>'
+    model = (f'<?xml version="1.0" encoding="UTF-8"?>\n'
+             f'<model unit="millimeter" xml:lang="en-US" xmlns="{_NS}">'
+             f'<resources>{"".join(objs)}</resources><build>{items}</build></model>')
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as out:
+        out.writestr("[Content_Types].xml", _CONTENT_TYPES)
+        out.writestr("_rels/.rels", _RELS)
+        out.writestr("3D/3dmodel.model", model)
+        out.writestr("Metadata/model_settings.config",
+                     '<?xml version="1.0" encoding="UTF-8"?>\n<config>' + "".join(cfgs) + "</config>")
+    return {"objects": len(id_map), "parts": n_parts,
+            "extruders": sorted({e for vs in volumes.values() for *_, e in vs} or {1})}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Assemble one print-ready 3MF.")
     ap.add_argument("out")
