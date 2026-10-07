@@ -59,7 +59,7 @@ other windows have their bars on the glass.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **9 h 32 m** | **72.5 cm³, about 90 g of PLA** |
+| **single colour** | **9 h 38 m** | **72.6 cm³, about 90 g of PLA** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 90 g of model **+ purge** |
 
 ## The tealight
@@ -78,7 +78,8 @@ the front wall, and the room is 56 mm deep so the circle still fits behind it.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 3.29 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.30 mm, median 3.28 mm, against the 1.2 mm floor
+    (1.48 before the raised letters, 2026-10-07);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
   - 25.10 cm² of bed contact;
@@ -87,16 +88,18 @@ the front wall, and the room is 56 mm deep so the circle still fits behind it.
   faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 19.7 mm³ of 95,557 mm³ is not printed; 0.2 mm³ printed that was
-  not modelled; 0.2 mm³ printed in another colour. **4 flags, all cosmetic
-  and none over 0.07 mm³:**
+  layer; re-run 2026-10-07 with the raised letters): 19.9 mm³ of 95,619 mm³
+  is not printed; 0.1 mm³ printed that was not modelled; 0.2 mm³ printed in
+  another colour. **5 flags, all cosmetic and none over 0.09 mm³:**
   - the edges of the two wreaths (0.2 mm wide, 0.07 mm³ each);
-  - the tips of the two gable finials (one layer each, 0.07 mm³).
+  - the tips of the two gable finials (one layer each, 0.07 mm³);
+  - one layer off the top of SANTA'S, near its apostrophe (0.57 mm square,
+    0.08 mm³). New with the raised letters.
 - **The toys print as drawn.** Under 0.1 mm³ of the big window's glass and
   toys is lost in the slice, every piece of it under 0.1 mm wide; the sign's
   letters likewise.
-- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The finials
-  score 3.4, against a watch level of 4.
+- `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
+  0 watch. The finials score 3.4, against a watch level of 4.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
   the doors, the same mark as the other buildings, mirrored so it reads OBC
   with the workshop turned over, front toward you.

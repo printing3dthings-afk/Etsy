@@ -88,15 +88,16 @@ headroom).
   exactly two faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 12.3 mm³ of 117,227 mm³ is not printed; 0.1 mm³ printed that was
-  not modelled; 0.3 mm³ printed in another colour. **5 flags, all cosmetic
-  and none over 0.07 mm³:**
+  layer; re-run 2026-10-07 with the raised INN): 12.3 mm³ of 117,263 mm³ is
+  not printed; 0.1 mm³ printed that was not modelled; 0.3 mm³ printed in
+  another colour. **5 flags, the same as before, all cosmetic and none over
+  0.07 mm³, none in the sign:**
   - the tips of the two gable finials (one layer each, 0.07 mm³);
   - a corner of the plaster where it meets the jetty beam (one layer,
     0.06 mm³);
   - the edges of the door's wreath (0.2 mm wide, 0.04 mm³ each side).
-- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The gable
-  finials score 3.4, against a watch level of 4.
+- `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
+  0 watch. The gable finials score 3.4, against a watch level of 4.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
   the door, the same mark as the other buildings, mirrored so it reads OBC
   with the inn turned over, front toward you.
