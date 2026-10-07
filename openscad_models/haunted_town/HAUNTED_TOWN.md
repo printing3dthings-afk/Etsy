@@ -81,8 +81,8 @@ What those references do that our first haunted manor did not:
   carved, lined letters before them read poorly on the first one-colour print
   of the post office: its F's looked like E's. The letters are built as a
   climb in 0.2 mm steps so only their undersides slope (Technique 81 in
-  `.claude/skills/3d-print-design/SKILL.md`). The cemetery's carved
-  epitaphs were not part of that change and are still carved.
+  `.claude/skills/3d-print-design/SKILL.md`). The cemetery's epitaphs stay
+  carved (Scott, 2026-10-07: "Leave cemetery the way it is").
 
 ## Variety — no two buildings alike (Scott, 2026-09-25)
 
