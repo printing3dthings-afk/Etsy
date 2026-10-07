@@ -142,3 +142,5 @@ data/plate_stills/*.rendercache
 
 # OpenSCAD union meshes: build intermediates for the gate, never committed
 openscad_models/**/*_union.stl
+openscad_models/**/*_house.stl
+openscad_models/**/*_chk_*.stl

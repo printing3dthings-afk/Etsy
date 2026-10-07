@@ -265,19 +265,24 @@ sg_z = 54;  sg_w = 46;  sg_h = 8;      // the lettering is 42.2 wide
 sg_tilt = 2;                // hung crooked, left end low
 module sign_board() face_tf(1, 0, sg_z) rotate([0, 0, sg_tilt])
     relief_up(-0.4, fr_t) translate([-sg_w/2, -sg_h/2]) square([sg_w, sg_h]);
-// carved 0.6 into the board and lined with the accent (the bakery's method)
-lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
+// The letters stand 0.84 proud of the board (2026-10-07). Carved 0.6 into the
+// board and lined with the accent, they read by colour alone: on the first
+// print, in one colour (2026-10-06), the carve's stepped ceilings caught the
+// light under each letter's arms and the F's read as E's. Raised, they read
+// by their shadow.
 module sign_text() text("UNDERTAKER", size = 4.0, font = "Montserrat:style=Black",
                         halign = "center", valign = "center", spacing = 1.06);
 module sign_at() face_tf(1, 0, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
-module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
-module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
-    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
-module sign_carve() sign_at() sign_carve_local();
-module sign_letters() difference() {
-    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
-    sign_carve();
-}
+// Not relief_up: its flat-top clip is the letter swept down, which fills a
+// counter, so each lower stroke's sheared copy rose into the O's, P's and R's
+// and left slivers down to 0.01 mm. Here every slab keeps only what has letter
+// under it all the way down its climb (SH up per 1 out, in 0.2 steps, the
+// layers'): the undersides slope, the counters and the tops stay as drawn.
+lt_h = 0.84;  lt_n = 5;  lt_step = 0.2;
+function lt_k(i) = ceil(SH * (i + 1) * lt_h / lt_n / lt_step - 0.05);
+module sign_rise(k) intersection_for(j = [0 : k]) translate([0, j * lt_step]) sign_text();
+module sign_letters() sign_at() for (i = [0 : lt_n - 1]) let (t0 = i == 0 ? -0.3 : i * lt_h / lt_n - 0.01)
+    translate([0, 0, t0]) linear_extrude((i + 1) * lt_h / lt_n - t0) sign_rise(lt_k(i));
 
 // ---- the dormer: the front wall carried up through the mansard -----------------------------
 dm_w  = 18;
@@ -410,7 +415,7 @@ module body_part() difference() {
         dormer_block();
     }
     cavity(); openings(); frame_holes(); trim_raw(); accent_raw(); brand_mark();
-    porch_roof_slab(); porch_courses(); dormer_cap(); chimney(); sign_carve();
+    porch_roof_slab(); porch_courses(); dormer_cap(); chimney();
 }
 module roof_part() difference() {
     union() {
@@ -432,7 +437,7 @@ module roof_part() difference() {
     }
     gable_walls(); trim_raw(); accent_raw();
 }
-module trim_part()   difference() { trim_raw(); accent_raw(); sign_carve(); }
+module trim_part()   difference() { trim_raw(); accent_raw(); }
 module accent_part() accent_raw();
 
 if      (part == "none")   ;

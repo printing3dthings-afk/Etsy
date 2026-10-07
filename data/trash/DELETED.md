@@ -6,144 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260904-001 date=2026-09-04 kind=snippet source="tools/detail_probe.py" reason="Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for." -->
-## 20260904-001 · 2026-09-04 · snippet · `tools/detail_probe.py`
-**Reason:** Horizontal-banding metric cut 2026-09-04. Measured a real phenomenon but could not be made trustworthy in three principled attempts: (1) raw high-pass amplitude scored a single box-lid ledge as hard as a stack of ridges; (2) counting baseline crossings did not reject it, because multi-part plates genuinely oscillate; (3) a single-body filter plus a roundness gate finally rejected the box but also rejected every deeply fluted vase, since deep flutes make a rotational body look non-rotational to a radius-spread test. rugosity + texture_recipe.py already answer the question this was for.  
-**Payload:** `data/trash/files/20260904-001__snippet.txt`
-
-```python
-def ring_texture(m, slices=140, smooth=9):
-    """Horizontal banding: high-frequency ripple in radius-vs-height.
-
-    Deliberately NOT measured by slicing along X. An X-slice contains the
-    model's whole silhouette profile, so a vase neck or a pumpkin stem
-    dimple reads as huge "texture" -- the exact form-contamination the four
-    rejected metrics all suffered from. Instead: take the median radius of
-    each horizontal slice, subtract a moving average of itself, and keep
-    what's left. Taper, flare and belly are low-frequency and vanish in the
-    subtraction; a stack of ridges or beads is high-frequency and survives.
-    """
-    try:
-        # One body only. A plate holding a box AND its lid AND three tools
-        # makes the median radius jump every time a different part enters
-        # the slice, which reads as violent "banding" -- a plain Game Card
-        # Box topped the ranking at 41.8% that way, and counting the
-        # oscillations did not reject it because there genuinely were 64.
-        # The assumption this metric rests on is a single body, so enforce
-        # it rather than trying to filter the symptom.
-        try:
-            parts = m.split(only_watertight=False)
-            if len(parts) > 1:
-                m = max(parts, key=lambda p: len(p.faces))
-        except Exception:
-            pass
-        V = np.asarray(m.vertices, dtype=np.float64)
-        zc = V[:, 2]
-        z0, z1 = np.percentile(zc, 6), np.percentile(zc, 94)
-        if z1 - z0 <= 0:
-            return None
-        cx, cy = np.median(V[:, 0]), np.median(V[:, 1])
-        rad = np.hypot(V[:, 0] - cx, V[:, 1] - cy)
-        edges = np.linspace(z0, z1, slices + 1)
-        prof, round_ratio = [], []
-        for b in range(slices):
-            sel = (zc >= edges[b]) & (zc < edges[b + 1])
-            if sel.sum() < 8:
-                prof.append(np.nan)
-                continue
-            rb = rad[sel]
-            prof.append(float(np.median(rb)))
-            lo_r = float(np.percentile(rb, 10))
-            if lo_r > 1e-6:
-                round_ratio.append(float(np.percentile(rb, 90)) / lo_r)
-        # "Radius from the centroid" only means something on a roughly
-        # rotational body. On a flat hinged box it is noise, and that noise
-        # topped the banding ranking (a Game Card Box at 41.8%) even after
-        # single-body and oscillation filters, because the box really is one
-        # body and really does oscillate. Gate on the shape instead: a round
-        # or square-ish section stays under ~1.5, a slab does not.
-        if not round_ratio or float(np.median(round_ratio)) > 1.5:
-            return None
-        prof = np.array(prof)
-        ok = ~np.isnan(prof)
-        if ok.sum() < slices * 0.6:
-            return None
-        prof = np.interp(np.arange(slices), np.flatnonzero(ok), prof[ok])
-        k = np.ones(smooth) / smooth
-        base = np.convolve(np.pad(prof, smooth // 2, mode="edge"), k, mode="valid")[:slices]
-        resid = np.abs(prof - base)
-        # trim the ends: the moving average is least reliable there
-        resid = resid[smooth:-smooth] if len(resid) > 3 * smooth else resid
-        amp = float(np.median(resid))
-        mr = float(np.median(prof))
-        if mr < 1.0:
-            return None
-        # Amplitude alone is not banding. A single ledge -- a box lid step,
-        # a base flange -- is a step function, and a step is high-frequency,
-        # so it scored as hard as a stack of ridges (a plain "Game Card Box"
-        # topped the amplitude ranking at 41.8%). Real banding OSCILLATES,
-        # so count how many times the residual actually crosses its own
-        # baseline: one ledge gives ~2, a run of beads gives 10+.
-        signed = prof - base
-        signed = signed[smooth:-smooth] if len(signed) > 3 * smooth else signed
-        live = np.abs(signed) > max(amp * 0.5, 1e-6)
-        s = np.sign(signed[live])
-        cycles = int((np.diff(s) != 0).sum()) if len(s) > 1 else 0
-        return {
-            "ring_amp_mm": round(amp, 3),
-            "ring_amp_pct": round(100.0 * amp / mr, 3),
-            "ring_cycles": cycles,
-        }
-    except Exception:
-        return None
-```
-
-<!-- /TRASH 20260904-001 -->
-<!-- TRASH id=20260905-001 date=2026-09-05 kind=snippet source="tests/test_kb_skill_docs.py" reason="Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide." -->
-## 20260905-001 · 2026-09-05 · snippet · `tests/test_kb_skill_docs.py`
-**Reason:** Static grep over test sources for the ops_runbook writer. Replaced by a real before/after hash of data/knowledge_base/ in tests/run_all.py. The grep could only catch a test that NAMED the writer, so it stayed green while test_competitor_research_refresh appended to the real doc on every run via _run_competitor_research_refresh()'s internal call. Keeping both would leave a weaker duplicate that reads as coverage it does not provide.  
-**Payload:** `data/trash/files/20260905-001__snippet.txt`
-
-```python
-def test_suite_never_writes_to_the_real_runbook():
-    """No test may append to the git-tracked ops_runbook.md.
-
-    Found 2026-09-05: test_health_check_reap and test_health_check_broadened
-    exercise the escalation paths on purpose, and _append_ops_runbook_entry()
-    writes to _OPS_RUNBOOK_PATH -- which is _volume_or_local(...), so with no
-    volume mounted it falls back to the real data/knowledge_base copy. A suite
-    run put eight fabricated incidents (TESTCRASH, TESTHUNG, a /tmp/... volume)
-    into the document Frank reads as ground truth when Scott asks why something
-    broke. Any test that can reach that writer must repoint _OPS_RUNBOOK_PATH
-    at a tempfile first.
-    """
-    # Reaching the writer means calling something that appends, directly or via
-    # the health loop. A bare "_escalate" substring was too loose on the first
-    # pass -- it matched a test NAMED test_escalates_..., which writes nothing.
-    reaches = ("_append_ops_runbook_entry(", "server._escalate", "_health_check_iteration(")
-    # Two valid isolations: repoint the path, or mock the writer outright.
-    # Matched against CODE only. The first version of this check searched the
-    # raw file text, so the explanatory comment naming _OPS_RUNBOOK_PATH was
-    # enough to satisfy it -- deleting the actual assignment left the guard
-    # silently green. Verified by deleting it and watching this fail.
-    isolates = (_re.compile(r"^\s*server\._OPS_RUNBOOK_PATH\s*=", _re.M),
-                _re.compile(r'patch\.object\(\s*server\s*,\s*"_append_ops_runbook_entry"'))
-    for path in sorted((ROOT / "tests").glob("test_*.py")):
-        if path.name == Path(__file__).name:
-            continue  # this file names the patterns it searches for
-        src = path.read_text()
-        if not any(r in src for r in reaches):
-            continue
-        code = "\n".join(ln for ln in src.splitlines()
-                         if not ln.lstrip().startswith("#"))
-        check(any(pat.search(code) for pat in isolates),
-              f"{path.name} can reach the ops_runbook writer but neither repoints "
-              "server._OPS_RUNBOOK_PATH at a tempfile nor mocks "
-              "_append_ops_runbook_entry — it will append test fixtures to the "
-              "real git-tracked doc Frank reads as ground truth")
-```
-
-<!-- /TRASH 20260905-001 -->
 <!-- TRASH id=20260909-001 date=2026-09-09 kind=file source="openscad_models/monogram_keychain_J_all.3mf" reason="OpenSCAD's 3MF export MERGES every body into one object with no materials (verified: 1 object, 1 item, 0 basematerials, 20,065 fused triangles). This file looked like the print-ready deliverable and could not have filaments assigned at all. Superseded by monogram_keychain_J.3mf from tools/assemble_3mf.py." -->
 ## 20260909-001 · 2026-09-09 · file · `openscad_models/monogram_keychain_J_all.3mf`
 **Reason:** OpenSCAD's 3MF export MERGES every body into one object with no materials (verified: 1 object, 1 item, 0 basematerials, 20,065 fused triangles). This file looked like the print-ready deliverable and could not have filaments assigned at all. Superseded by monogram_keychain_J.3mf from tools/assemble_3mf.py.  
@@ -313,7 +175,6 @@ function peiTexture() {
 ```
 
 <!-- /TRASH 20260919-001 -->
-
 <!-- TRASH id=20260919-002 date=2026-09-19 kind=snippet source="tools/viewer/app.js" reason="Rebuilt from Bambu product photography: the AMS has a smoked half-cylinder DOME over the spool row, not a flat lid, and real reel/feeder hardware. The flat-lidded version read as an empty tray from above." -->
 ## 20260919-002 · 2026-09-19 · snippet · `tools/viewer/app.js`
 **Reason:** Rebuilt from Bambu product photography: the AMS has a smoked half-cylinder DOME over the spool row, not a flat lid, and real reel/feeder hardware. The flat-lidded version read as an empty tray from above.  
@@ -403,7 +264,6 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 ```
 
 <!-- /TRASH 20260919-002 -->
-
 <!-- TRASH id=20260919-003 date=2026-09-19 kind=snippet source="tools/viewer/app.js" reason="duplicate object-literal key: the greyscale remap collapsed 0x23262d and 0x22262e onto the same hex, so this row was shadowed by the next one and never applied" -->
 ## 20260919-003 · 2026-09-19 · snippet · `tools/viewer/app.js`
 **Reason:** duplicate object-literal key: the greyscale remap collapsed 0x23262d and 0x22262e onto the same hex, so this row was shadowed by the next one and never applied  
@@ -414,7 +274,6 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 ```
 
 <!-- /TRASH 20260919-003 -->
-
 <!-- TRASH id=20260923-001 date=2026-09-23 kind=snippet source="tools/viewer/app.js" reason="Dead SURFACE entry: the vertical blue-grey door grip it styled was replaced by the measured horizontal silver pill handle (2026-09-23)." -->
 ## 20260923-001 · 2026-09-23 · snippet · `tools/viewer/app.js`
 **Reason:** Dead SURFACE entry: the vertical blue-grey door grip it styled was replaced by the measured horizontal silver pill handle (2026-09-23).  
@@ -425,7 +284,6 @@ function buildAMS(spec, ox, oy, y1, zTop) {
 ```
 
 <!-- /TRASH 20260923-001 -->
-
 <!-- TRASH id=20260925-001 date=2026-09-25 kind=file source="openscad_models/haunted_post_office.scad" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-001 · 2026-09-25 · file · `openscad_models/haunted_post_office.scad`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -508,7 +366,6 @@ tr       = 2.52;            // slab thickness, normal to the slope (6 extr.)
 ```
 
 <!-- /TRASH 20260925-001 -->
-
 <!-- TRASH id=20260925-002 date=2026-09-25 kind=file source="openscad_models/haunted_post_office.3mf" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-002 · 2026-09-25 · file · `openscad_models/haunted_post_office.3mf`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -519,7 +376,6 @@ tr       = 2.52;            // slab thickness, normal to the slope (6 extr.)
 ```
 
 <!-- /TRASH 20260925-002 -->
-
 <!-- TRASH id=20260925-003 date=2026-09-25 kind=file source="openscad_models/HAUNTED_POST_OFFICE_PRINTING.md" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-003 · 2026-09-25 · file · `openscad_models/HAUNTED_POST_OFFICE_PRINTING.md`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -615,7 +471,6 @@ seen from outside.
 ```
 
 <!-- /TRASH 20260925-003 -->
-
 <!-- TRASH id=20260925-004 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_body.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-004 · 2026-09-25 · file · `openscad_models/haunted_post_office_body.stl`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -800,7 +655,6 @@ solid OpenSCAD_Model
 ```
 
 <!-- /TRASH 20260925-004 -->
-
 <!-- TRASH id=20260925-005 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_roof.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-005 · 2026-09-25 · file · `openscad_models/haunted_post_office_roof.stl`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -990,7 +844,6 @@ solid OpenSCAD_Model
 ```
 
 <!-- /TRASH 20260925-005 -->
-
 <!-- TRASH id=20260925-006 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_trim.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-006 · 2026-09-25 · file · `openscad_models/haunted_post_office_trim.stl`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -1147,7 +1000,6 @@ solid OpenSCAD_Model
 ```
 
 <!-- /TRASH 20260925-006 -->
-
 <!-- TRASH id=20260925-007 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_accent.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
 ## 20260925-007 · 2026-09-25 · file · `openscad_models/haunted_post_office_accent.stl`
 **Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
@@ -1365,7 +1217,6 @@ solid OpenSCAD_Model
 ```
 
 <!-- /TRASH 20260925-007 -->
-
 <!-- TRASH id=20260926-001 date=2026-09-26 kind=snippet source="openscad_models/haunted_bakery.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
 ## 20260926-001 · 2026-09-26 · snippet · `openscad_models/haunted_bakery.scad`
 **Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
@@ -1383,7 +1234,6 @@ module sign_letters() {
 ```
 
 <!-- /TRASH 20260926-001 -->
-
 <!-- TRASH id=20260926-002 date=2026-09-26 kind=snippet source="openscad_models/haunted_post_office.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
 ## 20260926-002 · 2026-09-26 · snippet · `openscad_models/haunted_post_office.scad`
 **Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
@@ -1398,7 +1248,6 @@ module sign_letters() {
 ```
 
 <!-- /TRASH 20260926-002 -->
-
 <!-- TRASH id=20260926-003 date=2026-09-26 kind=snippet source="openscad_models/haunted_general_store.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
 ## 20260926-003 · 2026-09-26 · snippet · `openscad_models/haunted_general_store.scad`
 **Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
@@ -1413,7 +1262,6 @@ module sign_letters() {
 ```
 
 <!-- /TRASH 20260926-003 -->
-
 <!-- TRASH id=20260926-004 date=2026-09-26 kind=snippet source="openscad_models/haunted_cemetery.scad" reason="Epitaphs were a flush colour-only inlay; replaced by carved, slate-lined lettering" -->
 ## 20260926-004 · 2026-09-26 · snippet · `openscad_models/haunted_cemetery.scad`
 **Reason:** Epitaphs were a flush colour-only inlay; replaced by carved, slate-lined lettering  
@@ -1429,7 +1277,6 @@ module stone_inlays() {
 ```
 
 <!-- /TRASH 20260926-004 -->
-
 <!-- TRASH id=20260930-001 date=2026-09-30 kind=file source="openscad_models/christmas_village/victorian/shop_house/victorian_shop_house.scad" reason="Replaced by the rounded shop-house (Scott, 2026-09-30: not squared). This is the finished, gated square version (commit 16df111)." -->
 ## 20260930-001 · 2026-09-30 · file · `openscad_models/christmas_village/victorian/shop_house/victorian_shop_house.scad`
 **Reason:** Replaced by the rounded shop-house (Scott, 2026-09-30: not squared). This is the finished, gated square version (commit 16df111).  
@@ -1531,7 +1378,6 @@ module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], 
 ```
 
 <!-- /TRASH 20260930-001 -->
-
 <!-- TRASH id=20260930-002 date=2026-09-30 kind=file source="openscad_models/christmas_village/victorian/cottage/victorian_cottage.scad" reason="Square Victorian cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (drum + front gable). Also at git commit a8eea51." -->
 ## 20260930-002 · 2026-09-30 · file · `openscad_models/christmas_village/victorian/cottage/victorian_cottage.scad`
 **Reason:** Square Victorian cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (drum + front gable). Also at git commit a8eea51.  
@@ -1627,7 +1473,6 @@ module shear_up(sh = SH) multmatrix([[1, 0, 0, 0], [0, 1, sh, 0], [0, 0, 1, 0], 
 ```
 
 <!-- /TRASH 20260930-002 -->
-
 <!-- TRASH id=20260930-003 date=2026-09-30 kind=file source="openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad" reason="Square gingerbread cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (cupcake drum + dome). Also at git commit 7de06df." -->
 ## 20260930-003 · 2026-09-30 · file · `openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad`
 **Reason:** Square gingerbread cottage, gated and finished; Scott 2026-09-30 asked for the cottages round (cupcake drum + dome). Also at git commit 7de06df.  
@@ -1733,7 +1578,6 @@ module kneelers() {
 ```
 
 <!-- /TRASH 20260930-003 -->
-
 <!-- TRASH id=20261001-001 date=2026-10-01 kind=snippet source="openscad_models/christmas_village/victorian/church/victorian_church.scad" reason="church tower quoins removed: skipped round windows and bands they left isolated white squares that read as noise (render 2026-10-01)" -->
 ## 20261001-001 · 2026-10-01 · snippet · `openscad_models/christmas_village/victorian/church/victorian_church.scad`
 **Reason:** church tower quoins removed: skipped round windows and bands they left isolated white squares that read as noise (render 2026-10-01)  
@@ -1756,7 +1600,6 @@ module tower_quoins() intersection() {
 ```
 
 <!-- /TRASH 20261001-001 -->
-
 <!-- TRASH id=20261001-002 date=2026-10-01 kind=snippet source="openscad_models/christmas_village/victorian/church/victorian_church.scad" reason="church door_hole removed: cut outward through the door's face it erased the wreath's brick bow (two loose fragments, slicer supports); the slate leaf fills the opening so no frame hole is needed" -->
 ## 20261001-002 · 2026-10-01 · snippet · `openscad_models/christmas_village/victorian/church/victorian_church.scad`
 **Reason:** church door_hole removed: cut outward through the door's face it erased the wreath's brick bow (two loose fragments, slicer supports); the slate leaf fills the opening so no frame hole is needed  
@@ -1767,4 +1610,139 @@ module door_hole() nf(1, 0, plinth_h) relief_hole(-0.4, -0.2, fr_t + 2.4) offset
 ```
 
 <!-- /TRASH 20261001-002 -->
+<!-- TRASH id=20261007-001 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/bakery/haunted_bakery.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
+## 20261007-001 · 2026-10-07 · snippet · `openscad_models/haunted_town/bakery/haunted_bakery.scad`
+**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
+**Payload:** `data/trash/files/20261007-001__snippet.txt`
+
+```
+// The letters are CARVED 0.6 into the board and lined with the accent part
+// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
+// or a slicer that put every part on one filament, lost the sign entirely.
+// The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
+// recess drew 1,528 support moves on a test block, the sheared one none.
+lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
+module sign_text() text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.06);
+module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
+// 2D: the part of the letters whose whole climb of h above it stays inside
+// them, sampled every lt_step. The same steps for every slab, so each deeper
+// slab lies inside the one in front of it and no cut can close over a pocket.
+module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
+// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
+// slabs rather than sheared copies of one prism: the copies' sides lay in
+// shared planes and left zero-area faces.
+module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
+    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
+// The letters and the board's hole are cut from the SAME placed cutter, so
+// their faces are one computation (placed as one already-cut solid, the
+// cemetery's linings came out a rounding error off their holes).
+module sign_carve() sign_at() sign_carve_local();
+module sign_letters() difference() {
+    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
+    sign_carve();
+}
+```
+
+<!-- /TRASH 20261007-001 -->
+
+<!-- TRASH id=20261007-002 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/post_office/haunted_post_office.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
+## 20261007-002 · 2026-10-07 · snippet · `openscad_models/haunted_town/post_office/haunted_post_office.scad`
+**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
+**Payload:** `data/trash/files/20261007-002__snippet.txt`
+
+```
+// The letters are CARVED 0.6 into the board and lined with the accent part
+// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
+// or a slicer that put every part on one filament, lost the sign entirely.
+// The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
+// recess drew 1,528 support moves on a test block, the sheared one none.
+lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
+module sign_text() text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.04);
+module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
+// 2D: the part of the letters whose whole climb of h above it stays inside
+// them, sampled every lt_step. The same steps for every slab, so each deeper
+// slab lies inside the one in front of it and no cut can close over a pocket.
+module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
+// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
+// slabs rather than sheared copies of one prism: the copies' sides lay in
+// shared planes and left zero-area faces.
+module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
+    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
+// The letters and the board's hole are cut from the SAME placed cutter, so
+// their faces are one computation (placed as one already-cut solid, the
+// cemetery's linings came out a rounding error off their holes).
+module sign_carve() sign_at() sign_carve_local();
+module sign_letters() difference() {
+    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
+    sign_carve();
+}
+```
+
+<!-- /TRASH 20261007-002 -->
+
+<!-- TRASH id=20261007-003 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/general_store/haunted_general_store.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
+## 20261007-003 · 2026-10-07 · snippet · `openscad_models/haunted_town/general_store/haunted_general_store.scad`
+**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
+**Payload:** `data/trash/files/20261007-003__snippet.txt`
+
+```
+// The letters are CARVED 0.6 into the board and lined with the accent part
+// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
+// or a slicer that put every part on one filament, lost the sign entirely.
+// The cut's ceilings rise outward at 61 deg, 58 plus the front's forward lean, -- a straight-cut 0.6
+// recess drew 1,528 support moves on a test block, the sheared one none.
+lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(61);  lt_n = 8;
+// Spacing 1.06, not 1.04 (2026-09-26): at 1.04 the carve's stepped ceilings
+// left a knife edge where CGAL joined the lining to the board, and the union
+// failed the watertight gate. Nudging the sign, the step (0.19 drew supports
+// under every letter: only 0.2 steps sit on the layers) or a proud lining all
+// just moved it; 1.06 closed it, and MERCANTILE is 51.5 of the board's 56 mm.
+module sign_text() text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.06);
+module sign_at() on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
+// 2D: the part of the letters whose whole climb of h above it stays inside
+// them, sampled every lt_step. The same steps for every slab, so each deeper
+// slab lies inside the one in front of it and no cut can close over a pocket.
+module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
+// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
+// slabs rather than sheared copies of one prism: the copies' sides lay in
+// shared planes and left zero-area faces.
+module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
+    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
+// The letters and the board's hole are cut from the SAME placed cutter, so
+// their faces are one computation (placed as one already-cut solid, the
+// cemetery's linings came out a rounding error off their holes).
+module sign_carve() sign_at() sign_carve_local();
+module sign_letters() difference() {
+    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
+    sign_carve();
+}
+```
+
+<!-- /TRASH 20261007-003 -->
+
+<!-- TRASH id=20261007-004 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/undertaker/haunted_undertaker.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
+## 20261007-004 · 2026-10-07 · snippet · `openscad_models/haunted_town/undertaker/haunted_undertaker.scad`
+**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
+**Payload:** `data/trash/files/20261007-004__snippet.txt`
+
+```
+// carved 0.6 into the board and lined with the accent (the bakery's method)
+lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
+module sign_text() text("UNDERTAKER", size = 4.0, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.06);
+module sign_at() face_tf(1, 0, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
+module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
+module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
+    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
+module sign_carve() sign_at() sign_carve_local();
+module sign_letters() difference() {
+    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
+    sign_carve();
+}
+```
+
+<!-- /TRASH 20261007-004 -->
 
