@@ -1,5 +1,9 @@
 # Christmas Village — a collectible lantern series
 
+**For sale (Scott, 2026-10-07):** the Christmas villages will be sold on Etsy;
+the Haunted Town is for Scott's own use this year. More test prints the weekend
+of 2026-10-10.
+
 Started 2026-09-27 (Scott: "I want to start the setup of a Christmas village.
 Start putting together 5 ideas of styles we should go with … same building
 with the 5 different styles").

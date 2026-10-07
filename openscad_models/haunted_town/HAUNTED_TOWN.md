@@ -1,5 +1,8 @@
 # Haunted Town — a collectible lantern series
 
+**For Scott's own use this year (Scott, 2026-10-07):** "Haunted town is for me
+only this year." No Etsy listings for it in 2026.
+
 **Square stays (Scott, 2026-09-30):** the Christmas village went round, and
 "The Halloween keep square for now." The Haunted Town keeps its square
 plans and gables.
