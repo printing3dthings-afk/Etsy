@@ -73,7 +73,7 @@ headroom): the square shop has two full storeys of wall under its gable.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.45 mm, median 3.02 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.47 mm, median 3.02 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
   - 21.29 cm² of bed contact;
@@ -85,16 +85,20 @@ headroom): the square shop has two full storeys of wall under its gable.
   Studio may offer to repair those two parts when the 3MF is opened.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 19.7 mm³ of 78,017 mm³ is not printed; 1.2 mm³ printed that was not
-  modelled; 0.6 mm³ printed in another colour. **6 flags, all white, all
-  cosmetic and none over 0.26 mm³:**
-  - 0.25 and 0.13 mm³ of the S in TOYS (its curves' thinnest ends, 0.4 mm
-    wide);
+  layer; re-run 2026-10-07 with TOYS raised as a climb): 18.8 mm³ of
+  78,013 mm³ is not printed; 1.8 mm³ printed that was not modelled; 0.6 mm³
+  printed in another colour. **4 flags, all white, all cosmetic and none over
+  0.17 mm³:**
   - 0.16 mm³ at the edge of the snow on the cone's crown;
   - 0.09 mm³ each at three corners of the block, where the white eave meets
     the gable's foot.
-  The as-printed renders show TOYS reading clearly.
-- `fragility`: nothing slender enough to snap. 0 high, 0 watch. The tower's
+  TOYS loses nothing the comparison flags. With the town's sheared relief it
+  lost 0.25 and 0.13 mm³ of its S, and the relief partly filled its O.
+- **TOYS is raised 0.6 mm as a climb in 0.2 mm steps** (2026-10-07): each
+  slab keeps only what has letter under it all the way down, so only the
+  undersides slope and the O stays open.
+- `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
+  0 watch. The tower's
   finial scores 3.8, against a watch level of 4.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
   the bay, the same mark as the other buildings, mirrored so it reads OBC
