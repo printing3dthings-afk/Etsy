@@ -360,8 +360,10 @@ module tower_shell(t0, t1) at_tc() rotate_extrude($fn = FNT) difference() {
     offset(delta = t0) tower_prof2d();
     R_room(RS);
 }
+// 0.05 on into the wall: one that ends at the wall's face only touches it, and
+// the union can keep the face between (the coaching inn, 2026-10-08)
 module tower_in_shell(t0, t1) at_tc() rotate_extrude($fn = FNT)
-    translate([rti - t1, plinth_h]) square([t1 - t0, RS[0] - 1 - plinth_h]);
+    translate([rti - t1, plinth_h]) square([t1 - t0 + 0.05, RS[0] - 1 - plinth_h]);
 // A band raised t its stripe moved up SH * t: the stripe narrowed by the angle
 // that climb turns through, so its upper edge (in angle) is the one that steps.
 // Built narrowed rather than as the stripe intersected with a raised copy of
