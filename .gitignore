@@ -144,3 +144,4 @@ data/plate_stills/*.rendercache
 openscad_models/**/*_union.stl
 openscad_models/**/*_house.stl
 openscad_models/**/*_chk_*.stl
+openscad_models/christmas_village/downloads/out/
