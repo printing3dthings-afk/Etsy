@@ -21,7 +21,9 @@ module art_out(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.01 : i * h / n 
 // pane and prints without support; it reads as a soft shadow under each line.
 module art_in(d, n) for (i = [0 : n - 1]) let (t0 = i * d / n, t1 = (i + 1) * d / n,
         k = ceil(SH * (d - t0) / 0.2 - 0.05))
-    translate([0, 0, -t1]) linear_extrude(t1 - t0 + 0.01) for (j = [0 : k]) translate([0, -j * 0.2]) children();
+    // grown 0.01: the shifted copies met corner to corner, and the slab came out
+    // of linear_extrude as a mesh CGAL would not close (Santa's workshop, 2026-10-08)
+    translate([0, 0, -t1]) linear_extrude(t1 - t0 + 0.01) offset(delta = 0.01) union() for (j = [0 : k]) translate([0, -j * 0.2]) children();
 
 // The flat front of a relief built h proud with SH-sheared undersides: only
 // there can art stand on it without hanging over the slope below.
