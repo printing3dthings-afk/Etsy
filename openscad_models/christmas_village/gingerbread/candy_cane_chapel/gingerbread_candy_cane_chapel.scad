@@ -370,9 +370,16 @@ module tower_in_shell(t0, t1) at_tc() rotate_extrude($fn = FNT)
 // itself: the two copies' twisted facets crossed, and left 1,838 crumbs of
 // band up the spire and round the door (2026-10-08).
 function st_climb(t) = st_w - 360 * SH * t / st_P;
+// the straight wall's bands stop under the eave's flare (st_zw); the spire's
+// are swept (spire_bands)
+st_zw = 87.9;
 module stripe_bands() {
     zt = R_top(RS, 0) + 1;
-    for (i = [0 : 1]) intersection() { tower_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2)); }
+    for (i = [0 : 1]) intersection() {
+        tower_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2));
+        translate([-100, -100, 0]) cube([200, 200, st_zw]);
+    }
+    spire_bands();
     difference() {
         for (i = [0 : 2]) intersection() { tower_in_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2)); }
         // through the doorway, the inner bands stop at its edge, the cut over
@@ -388,6 +395,29 @@ module tower_frames_clear() {
     for (w = TW) cyl_relief(rt, w[0], w[1], tframe_U(w)) translate([0, 0, -1]) linear_extrude(3) offset(r = fr_w) win_outline(tw(w));
     cyl_relief(rt, dth, plinth_h, door_a + fr_w + 1.2) translate([0, 0, -1]) linear_extrude(3) offset(r = fr_w) polygon(arch_pts(door_a, door_h));
 }
+// THE SPIRE'S BANDS, swept along its profile rather than cut from a shell: a
+// 0.2 mm shell on the 68 deg spire, cut by the twisted prism's facets, came
+// apart into 1,274 crumbs (2026-10-08). Each band is one solid from the eave's
+// edge to below the crook: its inner face 0.05 inside the spire, its outer
+// 0.4 out along the profile's normal, and its upper edge in angle trimmed by
+// the climb, so that side slopes SH up per 1 out like every band below it.
+sp_h = 0.4;  sp_n = 110;  sp_J = 8;
+function sp_v(i) = RS[5] - 0.2 - (RS[5] - 1.6) * i / (sp_n - 1);
+function sp_p(i) = [sp_v(i), R_top(RS, sp_v(i))];
+function sp_nrm(i) = let (a = sp_p(max(i - 1, 0)), b = sp_p(min(i + 1, sp_n - 1)), t = (b - a) / norm(b - a)) [t[1], -t[0]];
+function sp_last() = max([for (i = [0 : sp_n - 1]) if (sp_p(i)[1] < cr_z0 - 1) i]);
+function sp_pt(i, j, s) = let (q = sp_p(i) + sp_nrm(i) * (s == 0 ? -0.05 : sp_h),
+        a = 360 * (q[1] - (plinth_h - 1)) / st_P + j / sp_J * (s == 0 ? st_w : st_climb(sp_h)))
+    [q[0] * cos(a), q[0] * sin(a), q[1]];
+module spire_band() let (N = sp_last() + 1, J = sp_J, id = function (i, j, s) (i * (J + 1) + j) * 2 + s)
+    polyhedron([for (i = [0 : N - 1], j = [0 : J], s = [0 : 1]) sp_pt(i, j, s)], concat(
+        [for (i = [0 : N - 2], j = [0 : J - 1]) [id(i, j, 1), id(i + 1, j, 1), id(i + 1, j + 1, 1), id(i, j + 1, 1)]],
+        [for (i = [0 : N - 2], j = [0 : J - 1]) [id(i, j + 1, 0), id(i + 1, j + 1, 0), id(i + 1, j, 0), id(i, j, 0)]],
+        [for (i = [0 : N - 2]) [id(i, 0, 0), id(i + 1, 0, 0), id(i + 1, 0, 1), id(i, 0, 1)]],
+        [for (i = [0 : N - 2]) [id(i, J, 1), id(i + 1, J, 1), id(i + 1, J, 0), id(i, J, 0)]],
+        [for (j = [0 : J - 1]) [id(0, j, 0), id(0, j, 1), id(0, j + 1, 1), id(0, j + 1, 0)]],
+        [for (j = [0 : J - 1]) [id(N - 1, j + 1, 0), id(N - 1, j + 1, 1), id(N - 1, j, 1), id(N - 1, j, 0)]]));
+module spire_bands() at_tc() for (k = [0 : st_n - 1]) rotate(k * 360 / st_n) spire_band();
 // where the tower's wall is cut away inside the nave (its doorway), no band
 module stripe_relief() difference() { stripe_bands(); difference() { nave_room(); turret_partition(); } tower_frames_clear(); }
 module cane_stripes_up() for (s = [-1, 1]) nf(1, s * cane_x, plinth_h) translate([0, 0, fr_t + 0.5])
