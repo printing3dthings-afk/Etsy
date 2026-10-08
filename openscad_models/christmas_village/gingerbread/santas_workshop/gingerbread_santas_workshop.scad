@@ -453,10 +453,10 @@ module chimney_stripes_up() translate([CHC[0], CHC[1], 0]) for (k = [0 : 1]) int
     // lower edge both carry the edge up, by SH times the step or more
     ch_twist(SH * (k + 1) * 0.15);
 }
-// 2 SH: at SH the slicer propped the upper half of the ring (1,485 moves)
+// on the frame's flat front, back to where its climb starts (relief_lib)
 module porthole_stripes_up() let (w = WINDOWS[0]) nf(w[0], w[1], w[2]) translate([0, 0, fr_t])
-    art_out(0.3, 2, 2 * SH) intersection() {
-        top_face(fr_t) translate([0, w[3]]) difference() { circle(r = w[3] + 2.0, $fn = 48); circle(r = w[3] + 0.3); }
+    art_out(0.3, 2) intersection() {
+        top_face(fr_t + 0.4) translate([0, w[3]]) difference() { circle(r = w[3] + 2.0, $fn = 48); circle(r = w[3] + 0.3); }
         translate([0, w[3]]) pepper_wedges(w[3] + 3);
     }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)

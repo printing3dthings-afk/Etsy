@@ -437,10 +437,10 @@ module roof_raw() {
 // The lollipop's swirl and the peppermints' stripes were colour alone, flush:
 // a white print lost them. Each now stands out 0.3 on its flat front, its lower
 // edges climbing SH per 1 out, so nothing hangs.
-// full width with a skirt at 2 SH (relief_lib), kept 0.6 further up the disc's
-// flat front so the skirt lands on it
-module lollipop_swirl_up() nf(1, 0, lp_z) translate([0, 0, 1.3]) art_skirt(0.3, 2, 2 * SH)
-    intersection() { top_face(1.9) circle(r = lp_r - 0.2, $fn = 48); swirl2d(); }
+// full width with a skirt, kept the skirt's depth further up the disc's flat
+// front so it lands there (relief_lib)
+module lollipop_swirl_up() nf(1, 0, lp_z) translate([0, 0, 1.3]) art_skirt(0.3, 2)
+    intersection() { top_face(1.6) circle(r = lp_r - 0.2, $fn = 48); swirl2d(); }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
     intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
 

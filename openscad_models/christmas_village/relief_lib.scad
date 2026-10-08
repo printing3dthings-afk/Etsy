@@ -41,12 +41,16 @@ module art_in(d, n) let (m = art_n(d, n)) for (i = [0 : m - 1]) let (t0 = i * d 
     translate([0, 0, -t1]) linear_extrude(t1 - t0 + 0.01) offset(delta = 0.01) union() for (j = [0 : k]) translate([0, -j * 0.2]) children();
 
 // sh, where given, is the climb per 1 out. SH (1.2, 50 deg) is only 5 deg
-// inside the slicer's 45 deg support threshold, and on small round and tilted
-// art that margin went: the turret's columns, the gingerbread workshop's
-// porthole and the chapel's round window were all propped (2026-10-08). At
-// 2 SH a test column sliced with no support at all. (Written 2 * SH where used:
-// a variable here would be evaluated before the building assigns SH.)
+// inside the slicer's 45 deg support threshold: on the turret house's columns,
+// whose stripes tilt 28 deg, that margin went and the slicer propped them; a
+// column sliced alone at 2 SH needed none (2026-10-08).
 
 // The flat front of a relief built h proud with SH-sheared undersides: only
 // there can art stand on it without hanging over the slope below.
+// h is the relief's whole depth, back to where its climb starts: relief_up(-0.4,
+// fr_t) climbs from -0.4, and its hole (relief_hole) is raised SH * (fr_t + 0.4)
+// at the front. Given fr_t, the porthole's wedges ran 0.48 mm past the hole's
+// raised top and the slicer propped them (the gingerbread workshop, 1,485
+// moves); given fr_t + 0.4 they sliced clean (2026-10-08). A skirt (art_skirt)
+// needs its own length on top: h + (skirt depth).
 module top_face(h, sh = SH) intersection() { children(); translate([0, sh * h]) children(); }
