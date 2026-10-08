@@ -269,10 +269,14 @@ module roof_raw() {
 // flat front, its lower edges climbing SH per 1 out, so nothing hangs. The
 // canes' stripes keep their width and take a skirt, kept the skirt's depth
 // further up the cane's flat front so it lands there (relief_lib).
+// Nothing narrower than a bead (2026-10-08): the wedges' points and the
+// stripes' corners where the trims cut them came out as 0.001 mm3 crumbs
+// (5 loose bodies) and walls under 1.2 mm (1st percentile 0.85).
+module w12() offset(r = 0.6) offset(delta = -0.6) children();
 module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
-    translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2) intersection() { top_face(fr_t + 0.8) cane2d(-s); stripes2d(); }
+    translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2) w12() intersection() { top_face(fr_t + 0.8) cane2d(-s); stripes2d(); }
 module w_stripes_up() sclip(Rw, fr_t + 0.31) for (w = WINS) srelief(Rw, w[0], w[1], pr + 0.6)
-    translate([0, 0, fr_t]) art_out(0.3, 2) intersection() {
+    translate([0, 0, fr_t]) art_out(0.3, 2) w12() intersection() {
         top_face(fr_t + 0.4) difference() { translate([0, w[2]]) circle(r = pr, $fn = 64); offset(r = 0.3) w_outline(w); }
         translate([0, w[2]]) pepper_wedges(pr);
     }
