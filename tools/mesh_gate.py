@@ -232,7 +232,7 @@ def _wall_spans(m, samples=64):
         origins[:, u] = U.ravel(); origins[:, v] = V.ravel()
         origins[:, axis] = hi[axis] + max(m.extents) * 0.1
         dirs = np.zeros((U.size, 3)); dirs[:, axis] = -1.0
-        loc, ray_idx, tri_idx = m.ray.intersects_location(origins, dirs, multiple_hits=True)
+        loc, ray_idx, tri_idx = _hits(m, origins, dirs)
         if len(loc) == 0:
             continue
         incidence = np.abs(m.face_normals[tri_idx][:, axis])
@@ -285,6 +285,20 @@ def _wall_spans(m, samples=64):
                 pairs.extend(a for a, k in zip(cand, inside) if k)
         spans.extend(_true_thickness(m, pairs))
     return np.array(spans)
+
+
+def _hits(m, origins, dirs, chunk=256):
+    """intersects_location in chunks of rays, results identical.
+
+    All 4,096 rays of one axis in one call ran a 23 MB building (the
+    gingerbread turret house with its relief, 2026-10-08) past 9 GB and the
+    kernel killed the gate, which then reported nothing.
+    """
+    out = [np.zeros((0, 3)), np.zeros(0, dtype=int), np.zeros(0, dtype=int)]
+    for a in range(0, len(origins), chunk):
+        loc, ri, ti = m.ray.intersects_location(origins[a:a + chunk], dirs[a:a + chunk], multiple_hits=True)
+        out = [np.concatenate([out[0], loc]), np.concatenate([out[1], ri + a]), np.concatenate([out[2], ti])]
+    return out
 
 
 def _pair(origin, axis, t0, t1, n0, n1):
