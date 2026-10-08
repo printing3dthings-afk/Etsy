@@ -10,16 +10,20 @@
 // Raised out of a face, h proud in n slabs. Each slab keeps only what has line
 // under it all the way down its climb, SH up per 1 out: only the undersides
 // slope; tops, gaps and counters stay as drawn.
-module art_out(h, n) for (i = [0 : n - 1]) let (t0 = i == 0 ? -0.01 : i * h / n - 0.01,
-        k = ceil(SH * (i + 1) * h / n / 0.2 - 0.05))
-    translate([0, 0, t0]) linear_extrude((i + 1) * h / n - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
+// Slabs are never deeper than 0.2 / SH, so each 0.2 mm step climbs SH per 1
+// out (2026-10-08): with 0.2 mm slabs every step climbed 0.2 per 0.2, 45 deg,
+// and the slicer propped the clock faces and the toy window.
+function art_n(h, n) = max(n, ceil(h * SH / 0.2));
+module art_out(h, n) let (m = art_n(h, n)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
+        k = ceil(SH * (i + 1) * h / m / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / m - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
 
 // Thickened into the back of a glazed pane, d deep in n slabs, toward -z. Lit
 // from behind, thicker plastic passes less light, so the lines show dark on the
 // glow, the way a lithophane works. Each line carries a fillet under it that
 // shrinks with depth (SH up per 1 in), so its underside rises as it leaves the
 // pane and prints without support; it reads as a soft shadow under each line.
-module art_in(d, n) for (i = [0 : n - 1]) let (t0 = i * d / n, t1 = (i + 1) * d / n,
+module art_in(d, n) let (m = art_n(d, n)) for (i = [0 : m - 1]) let (t0 = i * d / m, t1 = (i + 1) * d / m,
         k = ceil(SH * (d - t0) / 0.2 - 0.05))
     // grown 0.01: the shifted copies met corner to corner, and the slab came out
     // of linear_extrude as a mesh CGAL would not close (Santa's workshop, 2026-10-08)
