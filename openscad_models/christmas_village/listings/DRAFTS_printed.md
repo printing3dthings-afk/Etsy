@@ -22,7 +22,7 @@ Drafts only. Nothing is published; each goes to the Action Center for Scott's ap
 **Description:**
 
 ```
-A round brick cottage under a snowy slate cone, with a little gable over its wreathed door: the first house of the Victorian village. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A round cottage under a steep, snow-capped cone roof, with a little gable over its wreathed door: the first house of the Victorian village. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -99,7 +99,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A rounded Victorian shop with a bow window downstairs and a jettied timber-framed storey above, under one swept slate roof. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A rounded Victorian shop with a bow window downstairs and a timber-framed storey jutting out above, under one swept roof. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -176,7 +176,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A two-storey brick toy shop with TOYS raised on its bay window, and a round tower on the corner with a flared slate cone. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A two-storey toy shop with TOYS in raised letters over its bay window, and a round corner tower with a flared cone. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -253,7 +253,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-The tallest building in the village: a brick church with a rose window, a square bell tower and a tall octagonal spire. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+The tallest building in the village: a church with a round rose window, a square bell tower and a tall spire. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -330,7 +330,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A long two-storey coaching inn with a pointed carriage archway right through one end, and an INN sign with raised letters. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A long two-storey coaching inn with a pointed carriage archway right through one end, timbers framing its upper floor and an INN sign in raised letters. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -407,7 +407,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A tall, narrow three-storey townhouse with a round bow window running up its whole front and a mansard roof with dormers. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A tall, narrow three-storey townhouse with a round bow running up its whole front and a mansard roof with dormers. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -484,7 +484,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A long brick workshop with one big arched window full of toys, lit from inside so they show against the glowing glass. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A long workshop with one big arched window full of toys, under a sign that reads SANTA'S WORKSHOP. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -561,7 +561,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A square brick clock tower rising out of a round brick drum, with a big clock face on every side that glows when lit. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+A square clock tower rising out of a round drum, with a clock face set at ten past ten on every side. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -638,7 +638,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A gingerbread cottage shaped like a cupcake: a fluted drum under a chocolate dome dripping with white icing. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A cottage shaped like a cupcake: a fluted drum under a dome dripping with piped icing and topped with gumdrops. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -715,7 +715,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A swooping gingerbread house with a leaning turret and a candy-cane spire bent over at the top. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A swooping gingerbread-style house with a leaning turret and a candy-cane spire bent over at the top. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -792,7 +792,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A gingerbread chapel with a round tower striped red in a spiral like a candy cane, its spire curling over into a crook. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A gingerbread-style chapel with a round tower that rises to a spire curling over like a candy cane's crook, and striped candy canes at its door. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -808,7 +808,7 @@ A gingerbread chapel with a round tower striped red in a spiral like a candy can
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📏 SIZE
 ━━━━━━━━━━━━━━━━━━━━━━━━
-68 × 84 × 133 mm (2.7 × 3.3 × 5.2 in), snow base included. One solid piece.
+68 × 84 × 132 mm (2.7 × 3.3 × 5.2 in), snow base included. One solid piece.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 💡 LIGHTING
@@ -869,7 +869,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A three-tier layer cake with a cherry on top and a little gingerbread sweet shop standing out of its front. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A three-tier layer cake with a cherry on top, SWEETS across its bottom tier and a little shop standing out of its front. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -946,7 +946,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A tower shaped like a hot-cocoa mug, piled with whipped cream and marshmallows, with a gingerbread cafe out of its front. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A tower shaped like a hot-cocoa mug, piled with whipped cream and marshmallows, with COCOA on the mug and a little cafe out front. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -1023,7 +1023,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A round gingerbread workshop under a steep chocolate cone ringed with gumdrops, with a peppermint-stick chimney up its back. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A round workshop under a steep shingled cone ringed with gumdrops, with a striped peppermint-stick chimney winding up its back. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
@@ -1100,7 +1100,7 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A tower stacked from three thick gingerbread cookies, with a big frosted-cookie clock that glows when lit. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+A tower stacked from three thick cookies, with a big frosted-cookie clock set at ten past ten. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
