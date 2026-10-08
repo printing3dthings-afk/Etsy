@@ -17,10 +17,10 @@ of 2026-10-10.
 - **Shipped prints are white,** so buyers can paint them.
 - **Files sell both ways:** each building as its own download listing, and a
   bundle of each style's whole village.
-- **Lit by a standard battery LED tealight.** Still to decide: whether a
-  tealight ships with a printed building. If not, the listing says "tealight
-  not included" and gives the size that fits (up to about 38 mm across and
-  45 mm tall).
+- **Lit by a standard battery LED tealight, and one ships with every printed
+  building** (Scott, 2026-10-08). The listing says so; the download listings
+  say a tealight is not included and give the size that fits (up to about
+  38 mm across and 45 mm tall).
 
 **Signs have raised letters** (2026-10-07): INN, SANTA'S WORKSHOP, TOYS,
 SWEETS and COCOA. Flush inlays were colour alone and vanish on a one-colour
