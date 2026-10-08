@@ -137,5 +137,9 @@ painted, and photographed both; `photos/` holds them. What the print shows:
   **Fixed in the model 2026-10-07: the letters are raised** (Scott's call,
   for every sign in the town). Not yet printed; `../sign_test/` is the quick
   check.
+- **Painted, the carved sign read "POST OFFKE"** (`photos/painted_lit_front_2026-10-08.webp`,
+  painted by Jessee from the carved print). The carve did not show where the
+  I and C were, so they were painted as a K. Raised letters give the brush a
+  clear edge to follow as well.
 - **The parcels' top edges are slightly rough,** small faces printed at the
   top of a short stack. Cosmetic.

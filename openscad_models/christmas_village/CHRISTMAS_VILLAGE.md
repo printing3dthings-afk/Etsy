@@ -4,6 +4,17 @@
 the Haunted Town is for Scott's own use this year. More test prints the weekend
 of 2026-10-10.
 
+**How they sell (Scott, 2026-10-08):**
+- **Two kinds of listing:** printed buildings shipped, and the files as a
+  digital download.
+- **Shipped prints are one colour only.**
+- **Photos will include buildings painted by Jessee.** Since a buyer gets an
+  unpainted one-colour print, every listing that shows a painted building
+  must say so plainly, next to the photo and in the description: shown
+  painted, ships unpainted in one colour.
+- **Painted or colour versions are by request only:** a buyer messages Scott,
+  who may sell one painted. No listing offers them as an option.
+
 **Signs have raised letters** (2026-10-07): INN, SANTA'S WORKSHOP, TOYS,
 SWEETS and COCOA. Flush inlays were colour alone and vanish on a one-colour
 or painted print, as the haunted post office's first print showed. Each sign
