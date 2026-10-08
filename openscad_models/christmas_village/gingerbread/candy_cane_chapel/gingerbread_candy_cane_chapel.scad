@@ -322,12 +322,13 @@ module spire() at_tc() rotate_extrude($fn = FNT) R_full(RS, kv0s);
 st_n = 3;                   // stripes
 st_f = 0.36;                // each one's share of its turn
 st_P = 2 * PI * rt * tan(35) / 1;   // rise per turn round the tower
-module helix(z0, z1) at_tc() translate([0, 0, z0]) for (k = [0 : st_n - 1]) rotate(k * 360 / st_n)
+st_w = 360 / st_n * st_f;    // each stripe's angle round the tower
+module helix(z0, z1, a1 = st_w) at_tc() translate([0, 0, z0]) for (k = [0 : st_n - 1]) rotate(k * 360 / st_n)
     linear_extrude(z1 - z0, twist = -360 * (z1 - z0) / st_P, slices = ceil((z1 - z0) / st_P * 90), $fn = 60)
         // from 0.6 out, not from the axis: meeting there, the three wedges left
         // 450 edges shared by more than two faces up the spire's thin tip
-        polygon(concat([for (i = [12 : -1 : 0]) let (a = 360 / st_n * st_f * i / 12) 0.6 * [cos(a), sin(a)]],
-                       [for (i = [0 : 12]) let (a = 360 / st_n * st_f * i / 12) 40 * [cos(a), sin(a)]]));
+        polygon(concat([for (i = [12 : -1 : 0]) let (a = a1 * i / 12) 0.6 * [cos(a), sin(a)]],
+                       [for (i = [0 : 12]) let (a = a1 * i / 12) 40 * [cos(a), sin(a)]]));
 
 // THE CROOK: a candy-cane rod from the spire's tip, bending over sideways (so
 // it reads from the street) to 40 deg at its end, the most a rod can lean and
@@ -361,21 +362,32 @@ module tower_shell(t0, t1) at_tc() rotate_extrude($fn = FNT) difference() {
 }
 module tower_in_shell(t0, t1) at_tc() rotate_extrude($fn = FNT)
     translate([rti - t1, plinth_h]) square([t1 - t0, RS[0] - 1 - plinth_h]);
+// A band raised t its stripe moved up SH * t: the stripe narrowed by the angle
+// that climb turns through, so its upper edge (in angle) is the one that steps.
+// Built narrowed rather than as the stripe intersected with a raised copy of
+// itself: the two copies' twisted facets crossed, and left 1,838 crumbs of
+// band up the spire and round the door (2026-10-08).
+function st_climb(t) = st_w - 360 * SH * t / st_P;
 module stripe_bands() {
     zt = R_top(RS, 0) + 1;
-    for (i = [0 : 1]) intersection() {
-        tower_shell(i * 0.2, (i + 1) * 0.2);
-        helix(plinth_h - 1, zt);
-        translate([0, 0, SH * (i + 1) * 0.2]) helix(plinth_h - 1, zt);
-    }
-    for (i = [0 : 2]) intersection() {
-        tower_in_shell(i * 0.2, (i + 1) * 0.2);
-        helix(plinth_h - 1, zt);
-        translate([0, 0, SH * (i + 1) * 0.2]) helix(plinth_h - 1, zt);
+    for (i = [0 : 1]) intersection() { tower_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2)); }
+    difference() {
+        for (i = [0 : 2]) intersection() { tower_in_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2)); }
+        // through the doorway, the inner bands stop at its edge, the cut over
+        // its head climbing SH per 1 into the room
+        cyl_relief(rt, dth, plinth_h, door_a + 2.4) relief_hole(-wall, -wall - 1.2, 0.5, -SH) offset(delta = 0.2) polygon(arch_pts(door_a, door_h));
     }
 }
+// No band over the door and the windows: there it stood as a skin over their
+// frames, the door's leaf and the panes. It stops at each frame's edge, and
+// the frame below holds up whatever runs over a head.
+module tower_frames_clear() {
+    tw_frames(); door_frame();
+    for (w = TW) cyl_relief(rt, w[0], w[1], tframe_U(w)) translate([0, 0, -1]) linear_extrude(3) offset(r = fr_w) win_outline(tw(w));
+    cyl_relief(rt, dth, plinth_h, door_a + fr_w + 1.2) translate([0, 0, -1]) linear_extrude(3) offset(r = fr_w) polygon(arch_pts(door_a, door_h));
+}
 // where the tower's wall is cut away inside the nave (its doorway), no band
-module stripe_relief() difference() { stripe_bands(); difference() { nave_room(); turret_partition(); } }
+module stripe_relief() difference() { stripe_bands(); difference() { nave_room(); turret_partition(); } tower_frames_clear(); }
 module cane_stripes_up() for (s = [-1, 1]) nf(1, s * cane_x, plinth_h) translate([0, 0, fr_t + 0.5])
     art_out(0.3, 2) intersection() { top_face(fr_t + 0.5) cane2d(-s); stripes2d(); }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
