@@ -86,12 +86,17 @@ in at 55° under the cream.
   exactly two faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-07 with COCOA raised): **0 flags**. 6.7 mm³ of
-  51,155 mm³ is not printed; 0.04 mm³ printed that was not modelled; 0.3 mm³
-  printed in another colour. COCOA loses nothing it flags. The largest miss
-  is 0.6 mm³ in total, spread 0.16 mm wide up the café's back corners where
-  they meet the mug.
-- `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
+  layer; re-run 2026-10-08 with the relief): **0 flags**. 6.6 mm³ of
+  52,551 mm³ is not printed; 0.07 mm³ printed that was not modelled;
+  0.29 mm³ printed in another colour. The largest miss is 0.6 mm³ in
+  total, 0.16 mm wide up the café's back corners where they meet the mug.
+- **The stripes and windows read on a one-colour print (2026-10-08).** The
+  mug's two stripes and its drawn windows stand out 0.4 mm, the awning's,
+  stirrer's and peppermints' stripes 0.3 mm; the windows also thicken 0.8 mm
+  into the mug's back, so lit they should show darker on the glow (not yet seen on
+  a real print). Gate: 0 support moves. Six overlap checks re-run one at a
+  time and each verified empty.
+- `fragility` (re-run 2026-10-08): nothing slender enough to snap. 0 high,
   0 watch, 0 slender runs.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
   the café, the same mark as the other buildings, mirrored so it reads OBC
