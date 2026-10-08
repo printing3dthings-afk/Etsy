@@ -296,9 +296,12 @@ module timbers() intersection() {
 // rails ran on past the corners, and their ends stood 0.4 out over the next
 // face with no wall under them to climb from; the slicer propped all four.
 module face_span(hw) intersection() { children(); translate([-hw + up_r, -10]) square([2 * (hw - up_r), 200]); }
+// Raised full width and 0.15 wider each side (2026-10-08): trimmed from below
+// as they climbed (art_out), the 1.2 mm timbers and 0.9 mm casement bars came
+// out under a bead at the front, and the gate's 1st percentile sat at 1.06.
 module timber_art(i) {
-    for (f = [2, 3]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) face_span(Dh) long_timbers(f); else translate([0, 0, -wall]) art_in(0.8, 4) long_timbers(f);
-    for (f = [0, 1], g = [0 : 6]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) face_span(Wh) gable_piece(f, g); else translate([0, 0, -wall]) art_in(0.8, 4) gable_piece(f, g);
+    for (f = [2, 3]) nf(f, 0, 0) if (i == 0) art_skirt(0.4, 2) face_span(Dh) offset(delta = 0.15) long_timbers(f); else translate([0, 0, -wall]) art_in(0.8, 4) long_timbers(f);
+    for (f = [0, 1], g = [0 : 6]) nf(f, 0, 0) if (i == 0) art_skirt(0.4, 2) face_span(Wh) offset(delta = 0.15) gable_piece(f, g); else translate([0, 0, -wall]) art_in(0.8, 4) gable_piece(f, g);
 }
 module timbers_relief() {
     intersection() {
