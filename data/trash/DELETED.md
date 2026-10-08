@@ -1852,3 +1852,42 @@ module bw_art() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_ext
 
 <!-- /TRASH 20261008-001 -->
 
+<!-- TRASH id=20261008-002 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/candy_cane_chapel/gingerbread_candy_cane_chapel.scad" reason="Crook's raised rings removed: an 11 mm rod leaning to 40 deg; the rings needed 1,413 support moves even clipped clear of base and tip (2026-10-08)" -->
+## 20261008-002 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/candy_cane_chapel/gingerbread_candy_cane_chapel.scad`
+**Reason:** Crook's raised rings removed: an 11 mm rod leaning to 40 deg; the rings needed 1,413 support moves even clipped clear of base and tip (2026-10-08)  
+**Payload:** `data/trash/files/20261008-002__snippet.txt`
+
+```
+module cr_at_g(i, d) let (p = cr_pts(i)) translate([TC[0] + p[0], TC[1], cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
+module crook_g(d) for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
+// Climbing 2 SH per 1 out, not SH: on stripes tilted 28 deg, SH alone left the
+// slicer propping a test column's (the turret house, 2026-10-08); twice that
+// sliced clean. And clear of the tip's end cap, which faces down past the rod.
+module crook_stripes_up() for (k = [0 : 1]) intersection() {
+    difference() { crook_g((k + 1) * 0.15); crook_g(k * 0.15); }
+    crook_stripes();
+    translate([0, 0, 2 * SH * (k + 1) * 0.15]) crook_stripes();
+    translate([-100, -100, 0]) cube([200, 200, cr_z0 + cr_pts(cr_n)[1] - cr_r(cr_n)]);
+}
+```
+
+<!-- /TRASH 20261008-002 -->
+
+<!-- TRASH id=20261008-003 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/turret_house/gingerbread_turret_house.scad" reason="Turret spire's raised rings removed, as the chapel crook's: a bent candy-cane rod leaning to 40 deg (2026-10-08)" -->
+## 20261008-003 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/turret_house/gingerbread_turret_house.scad`
+**Reason:** Turret spire's raised rings removed, as the chapel crook's: a bent candy-cane rod leaning to 40 deg (2026-10-08)  
+**Payload:** `data/trash/files/20261008-003__snippet.txt`
+
+```
+module sp_at_g(i, d) let (p = sp_pts(i)) translate([tx + p[0] * cos(tc_ang), ty + p[0] * sin(tc_ang), sp_z0 + p[1]]) sphere(r = sp_r(i) + d, $fn = 24);
+module spire_g(d) for (i = [0 : sp_n - 1]) hull() { sp_at_g(i, d); sp_at_g(i + 1, d); }
+module spire_stripes_up() for (k = [0 : 1]) lean() intersection() {
+    difference() { spire_g((k + 1) * 0.15); spire_g(k * 0.15); }
+    stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([0, 0, 2 * SH * (k + 1) * 0.15]) stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([-100, -100, 0]) cube([200, 200, sp_z0 + sp_pts(sp_n)[1] - sp_r(sp_n)]);
+}
+```
+
+<!-- /TRASH 20261008-003 -->
+

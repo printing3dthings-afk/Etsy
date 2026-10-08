@@ -431,17 +431,9 @@ module round_wedges_up() for (w = WINDOWS) if (is_round(w)) nf(w[0], w[1], w[2])
         top_face(fr_t + 0.4) translate([0, w[3]]) difference() { circle(r = w[3] + 3.2, $fn = 64); circle(r = w[3] + 0.3); }
         translate([0, w[3]]) pepper_wedges(w[3] + 3.2);
     }
-module cr_at_g(i, d) let (p = cr_pts(i)) translate([TC[0] + p[0], TC[1], cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
-module crook_g(d) for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
-// Climbing 2 SH per 1 out, not SH: on stripes tilted 28 deg, SH alone left the
-// slicer propping a test column's (the turret house, 2026-10-08); twice that
-// sliced clean. And clear of the tip's end cap, which faces down past the rod.
-module crook_stripes_up() for (k = [0 : 1]) intersection() {
-    difference() { crook_g((k + 1) * 0.15); crook_g(k * 0.15); }
-    crook_stripes();
-    translate([0, 0, 2 * SH * (k + 1) * 0.15]) crook_stripes();
-    translate([-100, -100, 0]) cube([200, 200, cr_z0 + cr_pts(cr_n)[1] - cr_r(cr_n)]);
-}
+// The crook keeps its stripes as colour only: an 11 mm rod leaning to 40 deg
+// is near the slicer's 45 deg on its own, and raised rings on it needed 1,413
+// support moves, clear of its base and tip or not (2026-10-08).
 
 // ---- the tower's windows and door ---------------------------------------------------------------
 module cplace(r, th, z) translate([TC[0] + r * cos(th), TC[1] + r * sin(th), z]) rotate([0, 0, th + 90]) rotate([90, 0, 0]) children();
@@ -545,7 +537,6 @@ module accent_raw() {
     cane_stripes_up();
     pepper_stripes_up();
     round_wedges_up();
-    crook_stripes_up();
 }
 module trim_raw() {
     difference() {
