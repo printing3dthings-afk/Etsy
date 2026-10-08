@@ -76,7 +76,8 @@ in at 55° under the cream.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.59 mm, median 4.56 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.48 mm, median 4.52 mm, against the 1.2 mm floor
+    (1.59 with COCOA flush, before 2026-10-07);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
   - 20.05 cm² of bed contact;
@@ -85,12 +86,13 @@ in at 55° under the cream.
   exactly two faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): **0 flags**. 6.7 mm³ of 51,120 mm³ is not printed; 0.03 mm³ printed
-  that was not modelled; 0.3 mm³ printed in another colour. The largest miss
+  layer; re-run 2026-10-07 with COCOA raised): **0 flags**. 6.7 mm³ of
+  51,155 mm³ is not printed; 0.04 mm³ printed that was not modelled; 0.3 mm³
+  printed in another colour. COCOA loses nothing it flags. The largest miss
   is 0.6 mm³ in total, spread 0.16 mm wide up the café's back corners where
   they meet the mug.
-- `fragility`: nothing slender enough to snap. 0 high, 0 watch, 0 slender
-  runs.
+- `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
+  0 watch, 0 slender runs.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
   the café, the same mark as the other buildings, mirrored so it reads OBC
   with the café turned over, front toward you.

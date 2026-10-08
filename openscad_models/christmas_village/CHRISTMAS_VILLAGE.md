@@ -4,6 +4,13 @@
 the Haunted Town is for Scott's own use this year. More test prints the weekend
 of 2026-10-10.
 
+**Signs have raised letters** (2026-10-07): INN, SANTA'S WORKSHOP, TOYS,
+SWEETS and COCOA. Flush inlays were colour alone and vanish on a one-colour
+or painted print, as the haunted post office's first print showed. Each sign
+is a climb in 0.2 mm steps (Technique 81 in
+`.claude/skills/3d-print-design/SKILL.md`); all five buildings were re-checked
+with 0 supports and no fidelity flags in a sign.
+
 Started 2026-09-27 (Scott: "I want to start the setup of a Christmas village.
 Start putting together 5 ideas of styles we should go with … same building
 with the 5 different styles").
