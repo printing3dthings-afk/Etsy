@@ -14,6 +14,13 @@ of 2026-10-10.
   painted, ships unpainted in one colour.
 - **Painted or colour versions are by request only:** a buyer messages Scott,
   who may sell one painted. No listing offers them as an option.
+- **Shipped prints are white,** so buyers can paint them.
+- **Files sell both ways:** each building as its own download listing, and a
+  bundle of each style's whole village.
+- **Lit by a standard battery LED tealight.** Still to decide: whether a
+  tealight ships with a printed building. If not, the listing says "tealight
+  not included" and gives the size that fits (up to about 38 mm across and
+  45 mm tall).
 
 **Signs have raised letters** (2026-10-07): INN, SANTA'S WORKSHOP, TOYS,
 SWEETS and COCOA. Flush inlays were colour alone and vanish on a one-colour
