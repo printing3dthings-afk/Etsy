@@ -84,12 +84,12 @@ W = {
  ("gingerbread", "turret_house"): dict(
     tag="turret house",
     feat=["Round-ended roof swooping out into a curl of icing, with gumdrops along the ridge",
-          "Leaning round turret with icing collars and a bell cone under a striped candy-cane spire",
+          "Leaning round turret with icing collars and a bell cone under a candy-cane spire bent over at the top",
           "Half-round porch on striped peppermint-stick columns over a chocolate-bar door",
           "Six arched windows framed in icing beads, three roofs at three heights"]),
  ("gingerbread", "candy_cane_chapel"): dict(
     tag="candy cane decor",
-    feat=["Round tower with raised candy-cane stripes winding all the way up, and a spire that curls over at the tip",
+    feat=["Round tower and spire that curls over at the tip like a candy cane's crook; its spiral stripes are left for you to paint",
           "Gable roof of scallop tiles with icing dripping off the eaves",
           "Arched windows framed in icing beads and a peppermint round window in the back gable",
           "Striped candy canes standing either side of the tower; one tealight lights tower and nave"]),
@@ -127,6 +127,11 @@ COMMON_TAGS = ["christmas village", "tealight house", "lighted village", "paint 
                "unpainted decor", "village houses"]
 TAIL = {"victorian": "3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included",
         "gingerbread": "3D Printed Tealight House, White to Paint, LED Tealight Included"}
+
+# The opening hook is still the download listing's (B[...]["hook"]), which
+# names colours ("striped red", "chocolate"); before these go live each
+# printed listing needs its own hook in shape terms, checked against the new
+# white renders (2026-10-08).
 
 # Not decided yet: each line is a question for Scott, printed at the top of the
 # drafts so none ships as a guess.

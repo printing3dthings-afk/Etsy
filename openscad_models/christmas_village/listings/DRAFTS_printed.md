@@ -723,7 +723,7 @@ A swooping gingerbread house with a leaning turret and a candy-cane spire bent o
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Round-ended roof swooping out into a curl of icing, with gumdrops along the ridge
-• Leaning round turret with icing collars and a bell cone under a striped candy-cane spire
+• Leaning round turret with icing collars and a bell cone under a candy-cane spire bent over at the top
 • Half-round porch on striped peppermint-stick columns over a chocolate-bar door
 • Six arched windows framed in icing beads, three roofs at three heights
 • Every window, door and line is raised or cut in, so it shows on plain white and your brush has an edge to follow
@@ -799,7 +799,7 @@ A gingerbread chapel with a round tower striped red in a spiral like a candy can
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Round tower with raised candy-cane stripes winding all the way up, and a spire that curls over at the tip
+• Round tower and spire that curls over at the tip like a candy cane's crook; its spiral stripes are left for you to paint
 • Gable roof of scallop tiles with icing dripping off the eaves
 • Arched windows framed in icing beads and a peppermint round window in the back gable
 • Striped candy canes standing either side of the tower; one tealight lights tower and nave
