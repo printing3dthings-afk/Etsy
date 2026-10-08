@@ -31,6 +31,7 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
+_BED_MM = 256.0   # Bambu P1S build plate, X and Y
 _NS = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
 _CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -141,11 +142,23 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
 
     objs, slic3rs, bambus, items = [], [], [], ""
     x = 0.0
+    lo = [np.min([m.bounds[0] for m in ms], axis=0) for ms in loaded]
+    hi = [np.max([m.bounds[1] for m in ms], axis=0) for ms in loaded]
+    # A row wider than the P1S bed goes front to back instead (2026-10-08): the
+    # Discount Tire walls and roof, 178 and 175 mm wide, came out 362 mm long
+    # in a row, off the plate, though they fit one behind the other.
+    row = sum(h[0] - l[0] for l, h in zip(lo, hi)) + gap * (len(loaded) - 1)
+    column = mode != "assembly" and row > _BED_MM
+    y = 0.0
     for gi, (ms, ns, ex) in enumerate(zip(loaded, names, extruders)):
         o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
         objs.append(o); slic3rs.append(sl); bambus.append(bm)
         if mode == "assembly":
             items += f'<item objectid="{gi+1}"/>'
+        elif column:
+            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
+                      f'{-lo[gi][0]:.4f} {y - lo[gi][1]:.4f} 0"/>')
+            y += float(hi[gi][1] - lo[gi][1]) + gap
         else:
             w = float(max(m.bounds[1][0] for m in ms) - min(m.bounds[0][0] for m in ms))
             if items:

@@ -113,6 +113,26 @@ def test_plated_objects_do_not_overlap():
               f"plated objects overlap in X: {lo} vs {hi}")
 
 
+def test_plate_too_wide_for_a_row_goes_front_to_back():
+    """Two 175 mm parts: a row is 356 mm, off a 256 mm P1S plate (the Discount
+    Tire walls and roof, 2026-10-08). Stacked in Y they fit."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        a = Path(td) / "walls.stl"; b = Path(td) / "roof.stl"
+        trimesh.creation.box([175, 70, 40]).export(a)
+        trimesh.creation.box([175, 60, 15]).export(b)
+        out = Path(td) / "plate.3mf"
+        assemble_3mf.assemble(out, [[(a, "#111111")], [(b, "#111111")]], "plate", gap=10.0)
+        sc = trimesh.load(str(out))
+        boxes = []
+        for node in sc.graph.nodes_geometry:
+            T, gname = sc.graph[node]
+            boxes.append(trimesh.transform_points(sc.geometry[gname].bounds, T))
+        ext = np.max([w[1] for w in boxes], axis=0) - np.min([w[0] for w in boxes], axis=0)
+        check(ext[0] <= 256 and ext[1] <= 256, f"plate footprint {ext[:2]} exceeds the 256 mm bed")
+        (y0, y1), (y2, y3) = sorted((w[0][1], w[1][1]) for w in boxes)
+        check(y1 <= y2 + 1e-6, f"stacked objects overlap in Y: {y0, y1} vs {y2, y3}")
+
 def test_a_plate_entry_may_itself_be_multipart():
     """The dumpling clicker: a 4-colour bun plus a separate basket."""
     import tempfile
