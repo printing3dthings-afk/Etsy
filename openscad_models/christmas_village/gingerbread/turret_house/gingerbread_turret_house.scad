@@ -499,22 +499,26 @@ module roof_raw() {
 
 // ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
 // The columns', the spire's and the peppermints' stripes were colour alone,
-// flush: a white print lost them. Each now stands out 0.3 in two 0.15 steps,
-// its lower edge climbing SH per 1 out, so nothing hangs.
+// flush: a white print lost them. Each now stands out 0.3 in two 0.15 steps.
+// On the columns and spire, whose stripes tilt 28 deg, the lower edge climbs
+// 2 SH per 1 out: at SH the slicer propped them (z 9-13, 1,789 support moves);
+// a column sliced alone at 2 SH needed none. The spire's stop short of its
+// tip's end cap, which faces down past the rod.
 module column_stripes_up(c) for (k = [0 : 1]) intersection() {
     translate([c[0], c[1], plinth_h - 0.5]) difference() {
         cylinder(r = col_r + (k + 1) * 0.15, h = spring - 2.4 - plinth_h + 0.5, $fn = 40);
         translate([0, 0, -1]) cylinder(r = col_r + k * 0.15 - 0.01, h = 100, $fn = 40);
     }
     stripe_slabs(c, plinth_h + 1, spring - 3, 2.4, 1.0, 28);
-    translate([0, 0, SH * (k + 1) * 0.15]) stripe_slabs(c, plinth_h + 1, spring - 3, 2.4, 1.0, 28);
+    translate([0, 0, 2 * SH * (k + 1) * 0.15]) stripe_slabs(c, plinth_h + 1, spring - 3, 2.4, 1.0, 28);
 }
 module sp_at_g(i, d) let (p = sp_pts(i)) translate([tx + p[0] * cos(tc_ang), ty + p[0] * sin(tc_ang), sp_z0 + p[1]]) sphere(r = sp_r(i) + d, $fn = 24);
 module spire_g(d) for (i = [0 : sp_n - 1]) hull() { sp_at_g(i, d); sp_at_g(i + 1, d); }
 module spire_stripes_up() for (k = [0 : 1]) lean() intersection() {
     difference() { spire_g((k + 1) * 0.15); spire_g(k * 0.15); }
     stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
-    translate([0, 0, SH * (k + 1) * 0.15]) stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([0, 0, 2 * SH * (k + 1) * 0.15]) stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([-100, -100, 0]) cube([200, 200, sp_z0 + sp_pts(sp_n)[1] - sp_r(sp_n)]);
 }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
     intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
