@@ -1970,3 +1970,15 @@ module stripe_relief() difference() { stripe_bands(); difference() { nave_room()
 
 <!-- /TRASH 20261008-004 -->
 
+<!-- TRASH id=20261008-005 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad" reason="Cottage canes' raised stripes removed: trimmed to a narrow cane's flat front they left slivers (0.04-0.89 mm spans) and the 1st-percentile wall at 1.19 mm (2026-10-08)" -->
+## 20261008-005 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad`
+**Reason:** Cottage canes' raised stripes removed: trimmed to a narrow cane's flat front they left slivers (0.04-0.89 mm spans) and the 1st-percentile wall at 1.19 mm (2026-10-08)  
+**Payload:** `data/trash/files/20261008-005__snippet.txt`
+
+```
+module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
+    translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2) w12() intersection() { top_face(fr_t + 0.8) cane2d(-s); stripes2d(); }
+```
+
+<!-- /TRASH 20261008-005 -->
+

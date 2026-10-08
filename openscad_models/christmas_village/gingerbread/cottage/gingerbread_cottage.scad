@@ -264,17 +264,16 @@ module roof_raw() {
 }
 
 // ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
-// The canes', the peppermint windows' and the peppermints' stripes were colour
-// alone, flush: a white print lost them. Each now stands out 0.3 on its relief's
-// flat front, its lower edges climbing SH per 1 out, so nothing hangs. The
-// canes' stripes keep their width and take a skirt, kept the skirt's depth
-// further up the cane's flat front so it lands there (relief_lib).
-// Nothing narrower than a bead (2026-10-08): the wedges' points and the
-// stripes' corners where the trims cut them came out as 0.001 mm3 crumbs
-// (5 loose bodies) and walls under 1.2 mm (1st percentile 0.85).
+// The peppermint windows' and the peppermints' stripes were colour alone,
+// flush: a white print lost them. Each now stands out 0.3 on its relief's flat
+// front, its lower edges climbing SH per 1 out, so nothing hangs.
+// Nothing narrower than a bead (2026-10-08): the wedges' points where the
+// trims cut them came out as 0.001 mm3 crumbs (5 loose bodies) and walls under
+// 1.2 mm (1st percentile 0.85).
 module w12() offset(r = 0.6) offset(delta = -0.6) children();
-module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
-    translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2) w12() intersection() { top_face(fr_t + 0.8) cane2d(-s); stripes2d(); }
+// The canes' stripes stay colour only (2026-10-08): the canes themselves stand
+// proud, but trimmed to a cane's narrow flat front the stripes left slivers
+// (spans 0.04-0.89 mm) and the 1st-percentile wall at 1.19 mm.
 module w_stripes_up() sclip(Rw, fr_t + 0.31) for (w = WINS) srelief(Rw, w[0], w[1], pr + 0.6)
     // full width with a skirt (2026-10-08): trimmed from below, the wedges
     // left the 1st-percentile wall at 1.15 mm
@@ -290,7 +289,6 @@ module accent_raw() {
     canes(true);
     peppermints(true);
     w_frames(true);
-    cane_stripes_up();
     w_stripes_up();
     pepper_stripes_up();
 }
