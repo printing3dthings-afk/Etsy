@@ -34,6 +34,7 @@
 
 include <BOSL2/std.scad>
 include <../../../lattice_lib.scad>   // rrect_pts
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -286,6 +287,28 @@ module timbers() intersection() {
         for (f = [0, 1], i = [0 : 6]) nf(f, 0, 0) translate([0, 0, -wall - 1]) linear_extrude(wall + 2) gable_piece(f, i);
     }
 }
+// Flush, the timbers and the casements were colour alone: a white print lost
+// them, and lit, the thin plaster glowed evenly (2026-10-08). They stand 0.4
+// proud of the plaster, for daylight and a painter's brush, and thicken 0.8 into
+// the room so they show dark on the glow. Clipped to the walls' faces, so none
+// stands out past a corner or over a gable's edge.
+module timber_art(i) {
+    for (f = [2, 3]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) long_timbers(f); else translate([0, 0, -wall]) art_in(0.8, 4) long_timbers(f);
+    for (f = [0, 1], g = [0 : 6]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) gable_piece(f, g); else translate([0, 0, -wall]) art_in(0.8, 4) gable_piece(f, g);
+}
+module timbers_relief() {
+    intersection() {
+        translate([0, 0, H1]) linear_extrude(100) offset(r = 0.45) polygon(rrect_pts(W, D, up_r, 5));
+        union() { below_ceil(); gable_keep(); }
+        difference() { timber_art(0); plaster(); }
+    }
+    intersection() { plaster_core(); timber_art(1); }
+}
+// inside the plaster's walls, under its ceiling and gables
+module plaster_core() intersection() {
+    translate([0, 0, H1]) linear_extrude(100) polygon(rrect_pts(W - 2 * wall, D - 2 * wall, up_r, 5));
+    union() { below_ceil(); gable_keep(); }
+}
 
 // ---- the door, its wreath; the INN sign; the wreaths in the upper windows -------------------
 dr_u = 12;                  // world x -12
@@ -491,6 +514,7 @@ module roof_raw() blk() {
     difference() { union() { slab(); slates(); } upper_room(); chimney_cols(); }
     difference() { jetty_beam(); room(); }
     difference() { timbers(); room(); }
+    timbers_relief();
     bargeboards();
     finials();
     door_leaf();

@@ -33,6 +33,7 @@
 //           stripes
 
 include <BOSL2/std.scad>
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -261,11 +262,29 @@ module roof_raw() {
     difference() { chocolate(); room(); }
     door_leaf();
 }
+
+// ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
+// The canes', the peppermint windows' and the peppermints' stripes were colour
+// alone, flush: a white print lost them. Each now stands out 0.3 on its relief's
+// flat front, its lower edges climbing SH per 1 out, so nothing hangs.
+module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
+    translate([0, 0, fr_t + 0.5]) art_out(0.3, 2) intersection() { top_face(fr_t + 0.5) cane2d(-s); stripes2d(); }
+module w_stripes_up() sclip(Rw, fr_t + 0.31) for (w = WINS) srelief(Rw, w[0], w[1], pr + 0.6)
+    translate([0, 0, fr_t]) art_out(0.3, 2) intersection() {
+        top_face(fr_t) difference() { translate([0, w[2]]) circle(r = pr, $fn = 64); offset(r = 0.3) w_outline(w); }
+        translate([0, w[2]]) pepper_wedges(pr);
+    }
+module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
+    intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
+
 module accent_raw() {
     gumdrops();
     canes(true);
     peppermints(true);
     w_frames(true);
+    cane_stripes_up();
+    w_stripes_up();
+    pepper_stripes_up();
 }
 module trim_raw() {
     difference() {

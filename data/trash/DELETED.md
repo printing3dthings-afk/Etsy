@@ -1841,3 +1841,14 @@ module cocoa_text() press(270, 55.8)
 
 <!-- /TRASH 20261007-011 -->
 
+<!-- TRASH id=20261008-001 date=2026-10-08 kind=snippet source="victorian_santas_workshop.scad" reason="Toy window art given relief so a white print shows it (2026-10-08)." -->
+## 20261008-001 · 2026-10-08 · snippet · `victorian_santas_workshop.scad`
+**Reason:** Toy window art given relief so a white print shows it (2026-10-08).  
+**Payload:** `data/trash/files/20261008-001__snippet.txt`
+
+```
+module bw_art() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d();
+```
+
+<!-- /TRASH 20261008-001 -->
+

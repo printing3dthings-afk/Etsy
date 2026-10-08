@@ -32,6 +32,7 @@
 //           stripes, the peppermints' stripes
 
 include <BOSL2/std.scad>
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -434,6 +435,32 @@ module roof_raw() {
     difference() { at_shop() union() { slab(); tiles(); } room(); drum_cut(); }
     at_shop() door_leaf();
 }
+
+// ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
+// The chimney's, the porthole's and the peppermints' stripes were colour
+// alone, flush: a white print lost them. Each now stands out 0.3 in 0.15
+// steps, its lower edge climbing SH per 1 out, so nothing hangs.
+module ch_twist(dz) translate([0, 0, plinth_h + dz]) linear_extrude(ch_top - plinth_h, twist = -360 * (ch_top - plinth_h) / ch_pitch, slices = 120, $fn = 64)
+    for (s = [0, 180]) rotate(s) polygon([[3, 0], [8, 0], [8 * cos(50), 8 * sin(50)], [3 * cos(50), 3 * sin(50)]]);
+// up to the crown's flare, which takes the stripes' tops
+module chimney_stripes_up() translate([CHC[0], CHC[1], 0]) for (k = [0 : 1]) intersection() {
+    difference() {
+        cylinder(r = ch_r + (k + 1) * 0.15, h = ch_top - 1.6, $fn = 64);
+        translate([0, 0, -1]) cylinder(r = ch_r + k * 0.15 - 0.01, h = 200, $fn = 64);
+    }
+    ch_twist(0);
+    // shifting the twist up turns it as well as lifting it; along the band's
+    // lower edge both carry the edge up, by SH times the step or more
+    ch_twist(SH * (k + 1) * 0.15);
+}
+module porthole_stripes_up() let (w = WINDOWS[0]) nf(w[0], w[1], w[2]) translate([0, 0, fr_t])
+    art_out(0.3, 2) intersection() {
+        top_face(fr_t) translate([0, w[3]]) difference() { circle(r = w[3] + 2.0, $fn = 48); circle(r = w[3] + 0.3); }
+        translate([0, w[3]]) pepper_wedges(w[3] + 3);
+    }
+module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
+    intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
+
 module accent_raw() {
     gumdrops_ring(true);
     apex_gumdrop();
@@ -444,6 +471,9 @@ module accent_raw() {
     difference() { chimney_stripes(); room(); }
     at_shop() porthole_stripes();
     peppermints(true);
+    difference() { chimney_stripes_up(); room(); }
+    at_shop() porthole_stripes_up();
+    pepper_stripes_up();
 }
 module trim_raw() {
     difference() {

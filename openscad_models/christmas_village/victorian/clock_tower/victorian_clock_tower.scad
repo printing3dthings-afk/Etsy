@@ -33,6 +33,7 @@
 
 include <BOSL2/std.scad>
 include <../../../lattice_lib.scad>   // rrect_pts
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -303,6 +304,14 @@ module dial2d() {
     circle(r = 1.3, $fn = 24);
 }
 module ck_hands() for (f = [0 : 3]) tf(f, z_ck) translate([0, 0, -wall - 0.6]) linear_extrude(wall + 0.4) dial2d();
+// Flush, the marks and hands were colour alone and a white print lost them
+// (2026-10-08). They stand 0.4 proud of the glass's face, for daylight and a
+// painter's brush, and thicken 0.8 into the tower's room behind it, so lit they
+// show dark on the glow. Added after the room is cut, which would take them.
+module ck_art() for (f = [0 : 3]) tf(f, z_ck) {
+    translate([0, 0, -0.2]) art_out(0.4, 2) dial2d();
+    translate([0, 0, -wall]) art_in(0.8, 4) dial2d();
+}
 
 // =====================================================================================
 // THE PYRAMID, its slate courses, snow on its point, a finial
@@ -399,6 +408,7 @@ module roof_raw() {
     finial();
     door_leaf();
     difference() { ck_hands(); room(); }
+    ck_art();
 }
 module accent_raw() wreath();
 module trim_raw() {

@@ -33,6 +33,7 @@
 //           canes' and peppermints' stripes, the round window's wedges
 
 include <BOSL2/std.scad>
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -341,6 +342,57 @@ module crook() for (i = [0 : cr_n - 1]) hull() { cr_at(i); cr_at(i + 1); }
 module crook_stripes() for (z = [cr_z0 + 1 : 2.4 : cr_z0 + cr_L + 2])
     translate([TC[0], TC[1], z]) rotate([0, -28, 0]) cube([20, 20, 1.0], center = true);
 
+
+// ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
+// Every stripe here was colour alone, flush in its part: a white print lost the
+// tower's candy cane and every other stripe, and a painter had no edge to follow.
+// Now each stands out 0.4 (0.3 on the small canes, peppermints and crook).
+// The tower's bands also thicken 0.6 into its room on the straight wall, so lit
+// they show dark on the glow. Every band's lower edge climbs SH per 1 out, so
+// nothing hangs.
+module tower_prof2d() {
+    polygon([[rti - 0.3, plinth_h - 0.5], [rt, plinth_h - 0.5], [rt, R_zc(RS, rt) + 0.6], [rti - 0.3, R_zc(RS, rti - 0.3) + 0.6]]);
+    R_full(RS, kv0s);
+}
+module tower_shell(t0, t1) at_tc() rotate_extrude($fn = FNT) difference() {
+    intersection() { offset(delta = t1) tower_prof2d(); translate([0, plinth_h]) square([100, 300]); }
+    offset(delta = t0) tower_prof2d();
+    R_room(RS);
+}
+module tower_in_shell(t0, t1) at_tc() rotate_extrude($fn = FNT)
+    translate([rti - t1, plinth_h]) square([t1 - t0, RS[0] - 1 - plinth_h]);
+module stripe_bands() {
+    zt = R_top(RS, 0) + 1;
+    for (i = [0 : 1]) intersection() {
+        tower_shell(i * 0.2, (i + 1) * 0.2);
+        helix(plinth_h - 1, zt);
+        translate([0, 0, SH * (i + 1) * 0.2]) helix(plinth_h - 1, zt);
+    }
+    for (i = [0 : 2]) intersection() {
+        tower_in_shell(i * 0.2, (i + 1) * 0.2);
+        helix(plinth_h - 1, zt);
+        translate([0, 0, SH * (i + 1) * 0.2]) helix(plinth_h - 1, zt);
+    }
+}
+// where the tower's wall is cut away inside the nave (its doorway), no band
+module stripe_relief() difference() { stripe_bands(); difference() { nave_room(); turret_partition(); } }
+module cane_stripes_up() for (s = [-1, 1]) nf(1, s * cane_x, plinth_h) translate([0, 0, fr_t + 0.5])
+    art_out(0.3, 2) intersection() { top_face(fr_t + 0.5) cane2d(-s); stripes2d(); }
+module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
+    intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
+module round_wedges_up() for (w = WINDOWS) if (is_round(w)) nf(w[0], w[1], w[2]) translate([0, 0, fr_t])
+    art_out(0.3, 2) intersection() {
+        top_face(fr_t) translate([0, w[3]]) difference() { circle(r = w[3] + 3.2, $fn = 64); circle(r = w[3] + 0.3); }
+        translate([0, w[3]]) pepper_wedges(w[3] + 3.2);
+    }
+module cr_at_g(i, d) let (p = cr_pts(i)) translate([TC[0] + p[0], TC[1], cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
+module crook_g(d) for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
+module crook_stripes_up() for (k = [0 : 1]) intersection() {
+    difference() { crook_g((k + 1) * 0.15); crook_g(k * 0.15); }
+    crook_stripes();
+    translate([0, 0, SH * (k + 1) * 0.15]) crook_stripes();
+}
+
 // ---- the tower's windows and door ---------------------------------------------------------------
 module cplace(r, th, z) translate([TC[0] + r * cos(th), TC[1] + r * sin(th), z]) rotate([0, 0, th + 90]) rotate([90, 0, 0]) children();
 module cyl_relief(r, th, z, U, du = 1.0) for (i = [0 : ceil(2 * U / du) - 1]) let (u = -U + i * du, uc = u + du / 2)
@@ -439,6 +491,11 @@ module accent_raw() {
     round_wedges();
     difference() { intersection() { tower_solid(); helix(plinth_h - 1, R_top(RS, 0) + 1); } room(); }
     intersection() { crook(); crook_stripes(); }
+    stripe_relief();
+    cane_stripes_up();
+    pepper_stripes_up();
+    round_wedges_up();
+    crook_stripes_up();
 }
 module trim_raw() {
     difference() {

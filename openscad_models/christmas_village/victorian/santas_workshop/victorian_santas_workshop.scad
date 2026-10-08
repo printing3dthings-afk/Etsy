@@ -40,6 +40,7 @@
 include <BOSL2/std.scad>
 include <../../../lattice_lib.scad>   // rrect_pts
 include <toys_lib.scad>
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -232,7 +233,14 @@ module pane_art2d() {
         }
     }
 }
-module bw_art() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d();
+// The toys run through the glass (colour), stand 0.4 proud of its face so they
+// show by day and give a painter an edge, and thicken 0.8 into its back so they
+// show dark when lit (2026-10-08). Flush alone, a white print lost them.
+module bw_art() nf(3, BW_u, BW_z) {
+    translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d();
+    translate([0, 0, -recess]) art_out(0.4, 2) pane_art2d();
+    translate([0, 0, -recess - pane_t]) art_in(0.8, 4) pane_art2d();
+}
 
 // =====================================================================================
 // THE LOADING DOORS, arched, a wreath on each leaf, and the sign over them

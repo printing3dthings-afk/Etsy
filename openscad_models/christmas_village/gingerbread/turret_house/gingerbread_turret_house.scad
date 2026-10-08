@@ -29,6 +29,7 @@
 //           the peppermints' stripes
 
 include <BOSL2/std.scad>
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -495,11 +496,37 @@ module roof_raw() {
     difference() { lean() union() { cone_roof(); cone_tiles(); } room(); }
     door_leaf();
 }
+
+// ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
+// The columns', the spire's and the peppermints' stripes were colour alone,
+// flush: a white print lost them. Each now stands out 0.3 in two 0.15 steps,
+// its lower edge climbing SH per 1 out, so nothing hangs.
+module column_stripes_up(c) for (k = [0 : 1]) intersection() {
+    translate([c[0], c[1], plinth_h - 0.5]) difference() {
+        cylinder(r = col_r + (k + 1) * 0.15, h = spring - 2.4 - plinth_h + 0.5, $fn = 40);
+        translate([0, 0, -1]) cylinder(r = col_r + k * 0.15 - 0.01, h = 100, $fn = 40);
+    }
+    stripe_slabs(c, plinth_h + 1, spring - 3, 2.4, 1.0, 28);
+    translate([0, 0, SH * (k + 1) * 0.15]) stripe_slabs(c, plinth_h + 1, spring - 3, 2.4, 1.0, 28);
+}
+module sp_at_g(i, d) let (p = sp_pts(i)) translate([tx + p[0] * cos(tc_ang), ty + p[0] * sin(tc_ang), sp_z0 + p[1]]) sphere(r = sp_r(i) + d, $fn = 24);
+module spire_g(d) for (i = [0 : sp_n - 1]) hull() { sp_at_g(i, d); sp_at_g(i + 1, d); }
+module spire_stripes_up() for (k = [0 : 1]) lean() intersection() {
+    difference() { spire_g((k + 1) * 0.15); spire_g(k * 0.15); }
+    stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([0, 0, SH * (k + 1) * 0.15]) stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+}
+module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
+    intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
+
 module accent_raw() {
     gumdrops();
     for (c = COL) column_stripes(c);
     intersection() { lean() spire(); lean() stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28); }
     peppermints(true);
+    for (c = COL) column_stripes_up(c);
+    spire_stripes_up();
+    pepper_stripes_up();
 }
 module trim_raw() {
     difference() {

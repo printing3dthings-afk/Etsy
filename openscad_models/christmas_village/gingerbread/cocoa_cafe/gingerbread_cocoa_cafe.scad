@@ -32,6 +32,7 @@
 //           stripes
 
 include <BOSL2/std.scad>
+include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -406,6 +407,38 @@ module roof_raw() {
     difference() { at_shop() union() { slab(); tiles(); } room(); mug_cut(); }
     at_shop() door_leaf();
 }
+
+// ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
+// The mug's stripes and drawn windows, the awning's, stirrer's and peppermints'
+// stripes were colour alone, flush: a white print showed a plain mug. Now each
+// stands out 0.3-0.4 with its underside climbing SH per 1 out, and the windows
+// also thicken 0.8 inside the mug (the mug is the glass), so lit they show dark.
+module mug_windows_up() for (w = MW) {
+    cyl_relief(MR, w[0], w[1], w[2] + 2.2, 0.6) art_out(0.4, 2) mw2d(w);
+    cyl_relief(MRi, w[0], w[1], w[2] + 2.2, 0.6) art_in(0.8, 4) mw2d(w);
+}
+module stripes_up() rotate_extrude($fn = FNC) for (z = [11.0, 59.0])
+    polygon([[MR - 0.01, z], [MR + 0.4, z + SH * 0.4], [MR + 0.4, z + 1.6], [MR - 0.01, z + 1.6]]);
+module awning_stripes_up() {
+    intersection() {
+        difference() { translate([0, 0, 0.3]) awning(); awning(); }
+        nf(1, aw_u, 0) for (i = [-4 : 4]) translate([i * 2.2 - 0.55, 0, -5]) cube([1.1, 60, 20]);
+    }
+    nf(1, aw_u, 0) translate([0, 0, aw_d]) art_out(0.3, 2) intersection() {
+        translate([-aw_L / 2, aw_z1]) square([aw_L, aw_z2 - aw_z1]);
+        for (i = [-4 : 4]) translate([i * 2.2 - 0.55, 0]) square([1.1, 60]);
+    }
+}
+module st_at_g(i, d) let (p = st_pts(i)) rotate(st_th) translate([st_r0 + p[0], 0, st_z0 + p[1]]) sphere(r = 1.9 + d, $fn = 24);
+module stirrer_g(d) for (i = [0 : st_n - 1]) hull() { st_at_g(i, d); st_at_g(i + 1, d); }
+module stirrer_stripes_up() for (k = [0 : 1]) intersection() {
+    difference() { stirrer_g((k + 1) * 0.15); stirrer_g(k * 0.15); }
+    stirrer_stripes();
+    translate([0, 0, SH * (k + 1) * 0.15]) stirrer_stripes();
+}
+module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
+    intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
+
 module accent_raw() {
     difference() { stripes(); room(); }
     difference() { mug_windows(); room(); }
@@ -414,6 +447,11 @@ module accent_raw() {
     at_shop() awning_stripes();
     intersection() { stirrer(); stirrer_stripes(); }
     peppermints(true);
+    // less the cafe's room only: the mug's room is where the windows thicken
+    difference() { union() { mug_windows_up(); stripes_up(); } at_shop() shop_room(); }
+    at_shop() awning_stripes_up();
+    stirrer_stripes_up();
+    pepper_stripes_up();
 }
 module trim_raw() {
     difference() {
