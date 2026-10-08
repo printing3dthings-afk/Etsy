@@ -238,8 +238,10 @@ module pane_art2d() {
 // show dark when lit (2026-10-08). Flush alone, a white print lost them.
 module bw_art() nf(3, BW_u, BW_z) {
     translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d();
-    translate([0, 0, -recess]) art_out(0.4, 2) pane_art2d();
-    translate([0, 0, -recess - pane_t]) art_in(0.8, 4) pane_art2d();
+    // the relief 1.2 wide, the drawn lines' 0.8 grown 0.2 each side: at 0.8,
+    // a toy's every raised line was a wall under one bead and failed the gate
+    translate([0, 0, -recess]) art_out(0.4, 2) offset(r = 0.2) pane_art2d();
+    translate([0, 0, -recess - pane_t]) art_in(0.8, 4) offset(r = 0.2) pane_art2d();
 }
 
 // =====================================================================================
