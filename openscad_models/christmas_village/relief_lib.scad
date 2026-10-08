@@ -18,6 +18,17 @@ module art_out(h, n) let (m = art_n(h, n)) for (i = [0 : m - 1]) let (t0 = i == 
         k = ceil(SH * (i + 1) * h / m / 0.2 - 0.05))
     translate([0, 0, t0]) linear_extrude((i + 1) * h / m - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
 
+// Raised out of a face, h proud, full width at its front: the same climb as
+// art_out, but built by adding a skirt under each line instead of trimming the
+// line from below. art_out's outer slab keeps only what has line under it all
+// the way down, so a 1.2 mm horizontal stroke 0.4 proud came out 0.6 to 1.0 mm
+// tall: walls under the gate's floor, a toy window's worth (Santa's workshop,
+// 2026-10-08). Here the front is the line as drawn and the skirt below it,
+// SH up per 1 out, is the slope; gaps narrower than the skirt close at the root.
+module art_skirt(h, n) let (m = art_n(h, n)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
+        t1 = (i + 1) * h / m, k = ceil(SH * (h - t1) / 0.2 - 0.05))
+    translate([0, 0, t0]) linear_extrude(t1 - t0) offset(delta = 0.01) union() for (j = [0 : max(k, 0)]) translate([0, -j * 0.2]) children();
+
 // Thickened into the back of a glazed pane, d deep in n slabs, toward -z. Lit
 // from behind, thicker plastic passes less light, so the lines show dark on the
 // glow, the way a lithophane works. Each line carries a fillet under it that
