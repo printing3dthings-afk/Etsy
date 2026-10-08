@@ -276,8 +276,10 @@ module w12() offset(r = 0.6) offset(delta = -0.6) children();
 module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
     translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2) w12() intersection() { top_face(fr_t + 0.8) cane2d(-s); stripes2d(); }
 module w_stripes_up() sclip(Rw, fr_t + 0.31) for (w = WINS) srelief(Rw, w[0], w[1], pr + 0.6)
-    translate([0, 0, fr_t]) art_out(0.3, 2) w12() intersection() {
-        top_face(fr_t + 0.4) difference() { translate([0, w[2]]) circle(r = pr, $fn = 64); offset(r = 0.3) w_outline(w); }
+    // full width with a skirt (2026-10-08): trimmed from below, the wedges
+    // left the 1st-percentile wall at 1.15 mm
+    translate([0, 0, fr_t]) art_skirt(0.3, 2) w12() intersection() {
+        top_face(fr_t + 0.7) difference() { translate([0, w[2]]) circle(r = pr, $fn = 64); offset(r = 0.3) w_outline(w); }
         translate([0, w[2]]) pepper_wedges(pr);
     }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
