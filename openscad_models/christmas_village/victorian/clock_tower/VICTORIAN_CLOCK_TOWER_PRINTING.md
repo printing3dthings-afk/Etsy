@@ -83,13 +83,19 @@ over the circle's edge; inside the tower the room runs on up to the pyramid.
   faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 26.8 mm³ of 58,548 mm³ is not printed; 1.3 mm³ printed that was
-  not modelled; 0.4 mm³ printed in another colour. **10 flags, all the same
+  layer): 27.4 mm³ of 58,800 mm³ is not printed; 2.3 mm³ printed that was
+  not modelled; 0.4 mm³ printed in another colour (rebuilt with the clocks'
+  relief, 2026-10-08). **10 flags, all the same
   and cosmetic:** the last slivers of the tower's brick courses where they
   run into the slate cone, 0.2 to 0.5 mm wide (0.27 to 0.45 mm³ each), too
   thin to lay. The courses end a hair short at the roof line.
 - **The clocks print as drawn:** their marks and hands lose nothing the
   comparison flags.
+- **The clocks read on a one-colour print (2026-10-08).** The marks and hands
+  stand 0.2 mm proud of each glass face and thicken 0.8 mm into its back, so
+  a white print shows them by daylight and a painter has an edge to follow;
+  lit, the thicker plastic should show them darker on the glow (not yet seen
+  on a real print). Gate rerun: 0 support moves, 1st-percentile wall 1.48 mm.
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The finial
   scores 3.2, against a watch level of 4.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
