@@ -266,11 +266,14 @@ module roof_raw() {
 // ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
 // The canes', the peppermint windows' and the peppermints' stripes were colour
 // alone, flush: a white print lost them. Each now stands out 0.3 on its relief's
-// flat front, its lower edges climbing SH per 1 out, so nothing hangs.
+// flat front, its lower edges climbing 2 SH per 1 out, so nothing hangs (SH
+// alone sits 5 deg inside the slicer's threshold; see relief_lib). The canes'
+// stripes keep their width and take a skirt, kept 0.6 further up the cane's
+// flat front so the skirt lands on it.
 module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
-    translate([0, 0, fr_t + 0.5]) art_out(0.3, 2) intersection() { top_face(fr_t + 0.5) cane2d(-s); stripes2d(); }
+    translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2, 2 * SH) intersection() { top_face(fr_t + 1.1) cane2d(-s); stripes2d(); }
 module w_stripes_up() sclip(Rw, fr_t + 0.31) for (w = WINS) srelief(Rw, w[0], w[1], pr + 0.6)
-    translate([0, 0, fr_t]) art_out(0.3, 2) intersection() {
+    translate([0, 0, fr_t]) art_out(0.3, 2, 2 * SH) intersection() {
         top_face(fr_t) difference() { translate([0, w[2]]) circle(r = pr, $fn = 64); offset(r = 0.3) w_outline(w); }
         translate([0, w[2]]) pepper_wedges(pr);
     }

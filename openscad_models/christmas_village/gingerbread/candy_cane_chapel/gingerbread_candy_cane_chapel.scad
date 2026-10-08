@@ -421,11 +421,13 @@ module spire_bands() at_tc() for (k = [0 : st_n - 1]) rotate(k * 360 / st_n) spi
 // where the tower's wall is cut away inside the nave (its doorway), no band
 module stripe_relief() difference() { stripe_bands(); difference() { nave_room(); turret_partition(); } tower_frames_clear(); }
 module cane_stripes_up() for (s = [-1, 1]) nf(1, s * cane_x, plinth_h) translate([0, 0, fr_t + 0.5])
-    art_out(0.3, 2) intersection() { top_face(fr_t + 0.5) cane2d(-s); stripes2d(); }
+    // full width with a skirt at 2 SH, kept 0.6 further up the cane's flat front
+    // so the skirt lands on it (relief_lib: SH alone was propped)
+    art_skirt(0.3, 2, 2 * SH) intersection() { top_face(fr_t + 1.1) cane2d(-s); stripes2d(); }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
     intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
 module round_wedges_up() for (w = WINDOWS) if (is_round(w)) nf(w[0], w[1], w[2]) translate([0, 0, fr_t])
-    art_out(0.3, 2) intersection() {
+    art_out(0.3, 2, 2 * SH) intersection() {
         top_face(fr_t) translate([0, w[3]]) difference() { circle(r = w[3] + 3.2, $fn = 64); circle(r = w[3] + 0.3); }
         translate([0, w[3]]) pepper_wedges(w[3] + 3.2);
     }

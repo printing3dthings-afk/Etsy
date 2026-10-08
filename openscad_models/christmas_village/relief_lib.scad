@@ -13,9 +13,9 @@
 // Slabs are never deeper than 0.2 / SH, so each 0.2 mm step climbs SH per 1
 // out (2026-10-08): with 0.2 mm slabs every step climbed 0.2 per 0.2, 45 deg,
 // and the slicer propped the clock faces and the toy window.
-function art_n(h, n) = max(n, ceil(h * SH / 0.2));
-module art_out(h, n) let (m = art_n(h, n)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
-        k = ceil(SH * (i + 1) * h / m / 0.2 - 0.05))
+function art_n(h, n, sh = SH) = max(n, ceil(h * sh / 0.2));
+module art_out(h, n, sh = SH) let (m = art_n(h, n, sh)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
+        k = ceil(sh * (i + 1) * h / m / 0.2 - 0.05))
     translate([0, 0, t0]) linear_extrude((i + 1) * h / m - t0) intersection_for(j = [0 : k]) translate([0, j * 0.2]) children();
 
 // Raised out of a face, h proud, full width at its front: the same climb as
@@ -25,8 +25,8 @@ module art_out(h, n) let (m = art_n(h, n)) for (i = [0 : m - 1]) let (t0 = i == 
 // tall: walls under the gate's floor, a toy window's worth (Santa's workshop,
 // 2026-10-08). Here the front is the line as drawn and the skirt below it,
 // SH up per 1 out, is the slope; gaps narrower than the skirt close at the root.
-module art_skirt(h, n) let (m = art_n(h, n)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
-        t1 = (i + 1) * h / m, k = ceil(SH * (h - t1) / 0.2 - 0.05))
+module art_skirt(h, n, sh = SH) let (m = art_n(h, n, sh)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
+        t1 = (i + 1) * h / m, k = ceil(sh * (h - t1) / 0.2 - 0.05))
     translate([0, 0, t0]) linear_extrude(t1 - t0) offset(delta = 0.01) union() for (j = [0 : max(k, 0)]) translate([0, -j * 0.2]) children();
 
 // Thickened into the back of a glazed pane, d deep in n slabs, toward -z. Lit
@@ -40,6 +40,13 @@ module art_in(d, n) let (m = art_n(d, n)) for (i = [0 : m - 1]) let (t0 = i * d 
     // of linear_extrude as a mesh CGAL would not close (Santa's workshop, 2026-10-08)
     translate([0, 0, -t1]) linear_extrude(t1 - t0 + 0.01) offset(delta = 0.01) union() for (j = [0 : k]) translate([0, -j * 0.2]) children();
 
+// sh, where given, is the climb per 1 out. SH (1.2, 50 deg) is only 5 deg
+// inside the slicer's 45 deg support threshold, and on small round and tilted
+// art that margin went: the turret's columns, the gingerbread workshop's
+// porthole and the chapel's round window were all propped (2026-10-08). At
+// 2 SH a test column sliced with no support at all. (Written 2 * SH where used:
+// a variable here would be evaluated before the building assigns SH.)
+
 // The flat front of a relief built h proud with SH-sheared undersides: only
 // there can art stand on it without hanging over the slope below.
-module top_face(h) intersection() { children(); translate([0, SH * h]) children(); }
+module top_face(h, sh = SH) intersection() { children(); translate([0, sh * h]) children(); }
