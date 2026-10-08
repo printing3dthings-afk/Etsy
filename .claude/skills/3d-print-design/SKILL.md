@@ -7983,3 +7983,36 @@ wanted; for a sign that must read in one colour, raise it.
   edges wherever a plane met the brick or clapboard. Name the coupon's own
   variables so they cannot clash with the include: a `zc` overrode the
   undertaker's mansard curb and the coupon rendered empty.
+
+## Technique 82 — Relief on everything colour-only, for one-colour prints (2026-10-08, Christmas villages)
+
+Every line drawn only in colour (stripes, clock hands, toys on glass,
+timbers) vanishes on a white print, lit or not. `christmas_village/
+relief_lib.scad` raises them (`art_out`, `art_skirt`) and thickens them into
+a pane's back (`art_in`). What the first pass across 15 buildings got wrong,
+each found by the gate or a slicer test, not by reading the code:
+
+- **Trimming from below thins lines.** `art_out` keeps only what has line
+  under it, so a 1.2 mm horizontal stroke 0.4 proud is 0.6-1.0 mm at its
+  front and the thin-wall gate fails (Santa's toys, the inn's timbers).
+  `art_skirt` keeps the line as drawn at the front and adds a sloped skirt
+  below it; use it for anything line-like.
+- **Art on a relief stands back to where that relief's climb starts.**
+  `relief_up(-0.4, fr_t)` raises its hole by SH·(fr_t + 0.4) at the front.
+  Art trimmed with `top_face(fr_t)` overhung the porthole's raised top by
+  0.48 mm: 1,152 support moves. `top_face(fr_t + 0.4)`: none. A skirt needs
+  its own depth on top of that.
+- **A clip at a face only touches it.** The inn's inner timber thickening
+  was clipped exactly at the wall; the union kept the face between, and
+  every gable window read as two 0.8 mm skins. Reach 0.05 into the wall.
+- **SH is 5° inside the slicer's 45° threshold.** On stripes tilted 28°
+  round a column that margin went; 2·SH sliced clean. Test a part alone
+  before applying a steeper climb anywhere else: the porthole's supports
+  looked the same and had a different cause.
+- **A thin shell cut by a twisted prism crumbles.** The chapel spire's
+  stripes, a 0.2 mm shell on a 68° cone cut by `linear_extrude(twist=…)`,
+  came out in 1,274 pieces. Sweep the band as one polyhedron instead.
+- **Five renders at once ran the container out of memory** and the kernel
+  killed the union, so the gate measured an old file and reported a
+  failure that was not there. Render the parts, then the union alone, and
+  delete the old union first so a failed render cannot pass as a result.
