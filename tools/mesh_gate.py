@@ -281,13 +281,14 @@ def _wall_spans(m, samples=64):
                     if c[k] > 0.5 and c[k + 1] > 0.5:
                         cand.append(_pair(origins[r], axis, t[k], t[k + 1], n[k], n[k + 1]))
             if cand:
-                inside = m.contains(np.array([(a[1] + a[3]) / 2 for a in cand]))
+                mids = np.array([(a[1] + a[3]) / 2 for a in cand])
+                inside = np.concatenate([m.contains(mids[a:a + 256]) for a in range(0, len(mids), 256)])
                 pairs.extend(a for a, k in zip(cand, inside) if k)
         spans.extend(_true_thickness(m, pairs))
     return np.array(spans)
 
 
-def _hits(m, origins, dirs, chunk=256):
+def _hits(m, origins, dirs, chunk=256, multiple=True):
     """intersects_location in chunks of rays, results identical.
 
     All 4,096 rays of one axis in one call ran a 23 MB building (the
@@ -296,7 +297,7 @@ def _hits(m, origins, dirs, chunk=256):
     """
     out = [np.zeros((0, 3)), np.zeros(0, dtype=int), np.zeros(0, dtype=int)]
     for a in range(0, len(origins), chunk):
-        loc, ri, ti = m.ray.intersects_location(origins[a:a + chunk], dirs[a:a + chunk], multiple_hits=True)
+        loc, ri, ti = m.ray.intersects_location(origins[a:a + chunk], dirs[a:a + chunk], multiple_hits=multiple)
         out = [np.concatenate([out[0], loc]), np.concatenate([out[1], ri + a]), np.concatenate([out[2], ti])]
     return out
 
@@ -336,7 +337,7 @@ def _true_thickness(m, pairs):
         eps = 1e-4
         starts = np.array([p - eps * n for p0, n0, p1, n1 in redo for p, n in ((p0, n0), (p1, n1))])
         dirs = np.array([-n for p0, n0, p1, n1 in redo for n in (n0, n1)])
-        loc, ri, _ = m.ray.intersects_location(starts, dirs, multiple_hits=False)
+        loc, ri, _ = _hits(m, starts, dirs, multiple=False)
         depth = np.full(len(starts), np.inf)
         depth[ri] = np.linalg.norm(loc - starts[ri], axis=1) + eps
         for k in range(len(redo)):
