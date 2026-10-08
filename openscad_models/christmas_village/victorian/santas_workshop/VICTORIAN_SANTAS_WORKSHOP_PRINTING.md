@@ -88,13 +88,19 @@ the front wall, and the room is 56 mm deep so the circle still fits behind it.
   faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-07 with the raised letters): 19.9 mm³ of 95,619 mm³
-  is not printed; 0.1 mm³ printed that was not modelled; 0.2 mm³ printed in
+  layer; re-run 2026-10-08 with the toys raised): 20.1 mm³ of 95,717 mm³
+  is not printed; 0.2 mm³ printed that was not modelled; 1.0 mm³ printed in
   another colour. **5 flags, all cosmetic and none over 0.09 mm³:**
   - the edges of the two wreaths (0.2 mm wide, 0.07 mm³ each);
   - the tips of the two gable finials (one layer each, 0.07 mm³);
   - one layer off the top of SANTA'S, near its apostrophe (0.57 mm square,
     0.08 mm³). New with the raised letters.
+- **The toys read on a one-colour print (2026-10-08).** Each line stands
+  0.4 mm proud of the glass at its drawn width plus 0.2 a side (1.2 mm), on a
+  skirt that climbs SH per 1 out (`art_skirt`), and thickens 0.8 mm into the
+  glass's back, so a white print shows them by daylight and a painter has an
+  edge; lit, they should show darker on the glow (not yet seen on a real
+  print). Gate: 0 support moves, 1st-percentile wall 1.25 mm.
 - **The toys print as drawn.** Under 0.1 mm³ of the big window's glass and
   toys is lost in the slice, every piece of it under 0.1 mm wide; the sign's
   letters likewise.
