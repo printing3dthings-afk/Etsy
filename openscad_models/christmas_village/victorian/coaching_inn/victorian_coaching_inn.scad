@@ -295,10 +295,12 @@ module timbers() intersection() {
 // Outside, each face's timbers stop where its flat ends (2026-10-08): the top
 // rails ran on past the corners, and their ends stood 0.4 out over the next
 // face with no wall under them to climb from; the slicer propped all four.
-// And they start SH * 0.4 above the jetty line (2026-10-08): the relief is cut
-// flat at H1, and the posts' skirts (art_skirt) ended there in a 0.4 mm ledge
-// over the jetty beam's slope; the slicer propped every post (6,764 moves).
-module face_span(hw) intersection() { children(); translate([-hw + up_r, H1 + SH * 0.4]) square([2 * (hw - up_r), 200]); }
+// And their skirts' feet stand 0.6 above the jetty line, on the plaster's
+// straight face (2026-10-08). Under it the jetty beam already leans out 35 deg;
+// with the posts' feet on its top edge, every layer there stepped out past the
+// slicer's 45 deg and it propped every post (6,074 moves, from the outer relief
+// alone on the old inn).
+module face_span(hw) intersection() { children(); translate([-hw + up_r, H1 + 0.6 + SH * 0.4]) square([2 * (hw - up_r), 200]); }
 // Raised full width and 0.15 wider each side (2026-10-08): trimmed from below
 // as they climbed (art_out), the 1.2 mm timbers and 0.9 mm casement bars came
 // out under a bead at the front, and the gate's 1st percentile sat at 1.06.
