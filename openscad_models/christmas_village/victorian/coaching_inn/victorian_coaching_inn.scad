@@ -292,9 +292,13 @@ module timbers() intersection() {
 // proud of the plaster, for daylight and a painter's brush, and thicken 0.8 into
 // the room so they show dark on the glow. Clipped to the walls' faces, so none
 // stands out past a corner or over a gable's edge.
+// Outside, each face's timbers stop where its flat ends (2026-10-08): the top
+// rails ran on past the corners, and their ends stood 0.4 out over the next
+// face with no wall under them to climb from; the slicer propped all four.
+module face_span(hw) intersection() { children(); translate([-hw + up_r, -10]) square([2 * (hw - up_r), 200]); }
 module timber_art(i) {
-    for (f = [2, 3]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) long_timbers(f); else translate([0, 0, -wall]) art_in(0.8, 4) long_timbers(f);
-    for (f = [0, 1], g = [0 : 6]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) gable_piece(f, g); else translate([0, 0, -wall]) art_in(0.8, 4) gable_piece(f, g);
+    for (f = [2, 3]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) face_span(Dh) long_timbers(f); else translate([0, 0, -wall]) art_in(0.8, 4) long_timbers(f);
+    for (f = [0, 1], g = [0 : 6]) nf(f, 0, 0) if (i == 0) art_out(0.4, 2) face_span(Wh) gable_piece(f, g); else translate([0, 0, -wall]) art_in(0.8, 4) gable_piece(f, g);
 }
 module timbers_relief() {
     intersection() {
@@ -302,11 +306,14 @@ module timbers_relief() {
         union() { below_ceil(); gable_keep(); }
         difference() { timber_art(0); plaster(); }
     }
-    intersection() { plaster_core(); timber_art(1); }
+    // 0.05 into the walls (2026-10-08): clipped at their face, the thickening only
+    // touched them, the union kept the face between, and the gate read wall and
+    // thickening each as a 0.8 mm skin
+    intersection() { plaster_core(0.05); timber_art(1); }
 }
-// inside the plaster's walls, under its ceiling and gables
-module plaster_core() intersection() {
-    translate([0, 0, H1]) linear_extrude(100) polygon(rrect_pts(W - 2 * wall, D - 2 * wall, up_r, 5));
+// inside the plaster's walls, under its ceiling and gables; g reaches into them
+module plaster_core(g = 0) intersection() {
+    translate([0, 0, H1]) linear_extrude(100) polygon(rrect_pts(W - 2 * wall + 2 * g, D - 2 * wall + 2 * g, up_r, 5));
     union() { below_ceil(); gable_keep(); }
 }
 
