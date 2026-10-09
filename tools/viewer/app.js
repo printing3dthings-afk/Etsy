@@ -3500,7 +3500,11 @@ function tick(now) {
     // A recording follows the wall clock, uncapped: with the 0.1 s cap a slow
     // machine fell behind and a 10-second video came out 54 s long (2026-10-09).
     // There it just gets fewer frames.
-    if (tl.on) { play.t = (now - tl.t0) / 1000 * play.speed; }
+    if (tl.on) {
+      play.t = (now - tl.t0) / 1000 * play.speed;
+      // a third of a turn over the clip: enough to show it is solid
+      cam.theta = tl.theta0 + Math.min(1, (now - tl.t0) / (TL_SECONDS * 1000)) * TL_ORBIT;
+    }
     if (play.t >= JOB.total) {
       play.t = JOB.total; setPlaying(false);
       if (tl.on) { tlStop(true); }   // timelapse ends with the print
@@ -3564,7 +3568,7 @@ function setPlaying(on) {
 //   without its caption must not pass for one. Each frame is copied onto a 2D
 //   canvas straight after render (same task, so no preserveDrawingBuffer) and
 //   the label drawn over it; that canvas is what is recorded.
-var TL_SECONDS = 10;
+var TL_SECONDS = 10, TL_ORBIT = Math.PI * 2 / 3;
 var tl = {rec: null, chunks: [], stream: null, on: false, save: true,
           canvas: null, ctx: null, speed: 0, ext: 'webm', t0: 0};
 function tlMime() {
@@ -3623,6 +3627,14 @@ function tlStop(save) {
   setPlaying(false);
   play.speed = tl.speed;
   paintSpeedButtons();
+  var pv = tl.prev;
+  if (pv) {
+    tl.prev = null;
+    if (pv.motion !== machineMotion) { setMotion(pv.motion); }
+    if (pv.part !== partOnly) { setPartOnly(pv.part); }
+    if (pv.color !== colorMode) { setColorMode(pv.color); }
+    for (var k in pv.cam) { cam[k] = pv.cam[k]; }
+  }
 }
 function startTimelapse() {
   if (!JOB) { notice('Load a plate first, then record its video.'); return; }
@@ -3636,7 +3648,10 @@ function startTimelapse() {
   }
   tl.ext = mime[1];
   tl.chunks = [];
-  tlFrame();   // size the canvas before the stream is taken from it
+  // Sized, not drawn: copying the WebGL canvas outside its own frame copies a
+  // cleared buffer, and every video opened on a black frame.
+  tl.canvas.width = renderer.domElement.width;
+  tl.canvas.height = renderer.domElement.height;
   try {
     tl.stream = tl.canvas.captureStream(30);
     tl.rec = new MediaRecorder(tl.stream,
@@ -3672,6 +3687,18 @@ function startTimelapse() {
   // From layer 1, at whatever speed fits the whole print into TL_SECONDS;
   // tick() stops the recording when the print ends.
   tl.speed = play.speed;
+  // The video is of the part, close up, turning: the default machine view is
+  // a wide shot of a dark box with the print a speck inside it (2026-10-09).
+  // Part only frames the finished object; with the bed still, the part grows
+  // up into that frame instead of sinking out of it. All put back on stop.
+  tl.prev = {part: partOnly, motion: machineMotion, color: colorMode,
+             cam: {theta: cam.theta, phi: cam.phi, r: cam.r, tx: cam.tx, ty: cam.ty, tz: cam.tz}};
+  if (machineMotion) { setMotion(false); }
+  setPartOnly(true);
+  // in the colours of the spools it prints from, not the feature-type diagnostic
+  if (colorMode !== 'filament') { setColorMode('filament'); }
+  cam.r *= 0.8;   // Part only's framing leaves room to orbit by hand; a clip wants it fuller
+  tl.theta0 = cam.theta;
   play.t = 0; setSeg(0); refreshReadout(true);
   play.speed = JOB.total / TL_SECONDS;
   paintSpeedButtons();
@@ -3679,8 +3706,7 @@ function startTimelapse() {
   tl.rec.start(250);
   tl.t0 = performance.now();
   setPlaying(true);
-  notice('Recording ' + TL_SECONDS + ' seconds of the current view' +
-    ($('partview').getAttribute('aria-pressed') !== 'true' ? ' \u2014 try Part only for a close-up of the print' : '') + '.');
+  notice('Recording a ' + TL_SECONDS + '-second close-up. Your view comes back when it ends.');
 }
 
 // Debug handle for the browser tests. Read-only except setViewMode, which the
@@ -3965,8 +3991,13 @@ function paintJobList() {
   });
   // Pick a plate near the bottom of eleven and the list must not leave it
   // offscreen -- "which one am I on" should never need a scroll to answer.
-  if (current && current.scrollIntoView) {
-    current.scrollIntoView({block: 'nearest'});
+  // Only the list's own box scrolls (2026-10-09): scrolling the card into view also moves
+  // the window, and on a phone, where the list is not a scroll box, every load
+  // scrolled the page 292 px down -- header gone, top of the printer cut off.
+  if (current && host.scrollHeight > host.clientHeight + 1) {
+    var hr = host.getBoundingClientRect(), cr = current.getBoundingClientRect();
+    if (cr.top < hr.top) { host.scrollTop -= hr.top - cr.top; }
+    else if (cr.bottom > hr.bottom) { host.scrollTop += cr.bottom - hr.bottom; }
   }
   if (!shown.length) {
     host.innerHTML = '<p class="legnote">' + (plateQuick === 'favourites'
@@ -4510,6 +4541,13 @@ function setPartOnly(on) {
 // reading as an enclosure, and parks the target low where the nozzle works.
 // With the machine gone both of those are wrong: the part ends up small and
 // half out of frame. This frames the part itself.
+function setMotion(on) {
+  machineMotion = on;
+  $('motion').setAttribute('aria-pressed', String(on));
+  $('motion').textContent = on ? 'Bed drops' : 'Part grows';
+  if (JOB) { frameJob(JOB); setSeg(play.seg); }
+}
+
 function frameSolo(job) {
   var b = job.raw.bbox;
   var z = job.layers[job.layers.length - 1][0] / 100;
@@ -5099,10 +5137,7 @@ function initUI() {
   });
 
   $('motion').addEventListener('click', function () {
-    machineMotion = $('motion').getAttribute('aria-pressed') !== 'true';
-    $('motion').setAttribute('aria-pressed', String(machineMotion));
-    $('motion').textContent = machineMotion ? 'Bed drops' : 'Part grows';
-    if (JOB) { frameJob(JOB); setSeg(play.seg); }
+    setMotion($('motion').getAttribute('aria-pressed') !== 'true');
   });
 
   $('partview').addEventListener('click', function () {

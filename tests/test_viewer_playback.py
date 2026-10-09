@@ -202,7 +202,7 @@ def test_load_progress_measures_against_the_plates_own_size():
 
 def test_a_recorded_video_lasts_the_same_whatever_the_plate():
     """At the top replay speed the median plate recorded 1.3 s (2026-10-09)."""
-    m = re.search(r"var TL_SECONDS = (\d+);", _src())
+    m = re.search(r"var TL_SECONDS = (\d+)\b", _src())
     check(m is not None and 5 <= int(m.group(1)) <= 15,
           "the video length must be fixed between 5 and 15 s")
     body = _function("startTimelapse")
@@ -214,6 +214,27 @@ def test_a_recorded_video_lasts_the_same_whatever_the_plate():
           "a recording must follow the wall clock, not the capped frame step")
     check("simulation, not print footage" in _function("tlFrame"),
           "every recorded frame must say it is a simulation")
+
+
+def test_loading_a_plate_never_scrolls_the_page():
+    """On a phone the plate list is not a scroll box, so scrollIntoView moved
+    the window: every load scrolled 292 px down, header gone and the top of
+    the printer cut off (2026-10-09). Only the list's own box may scroll."""
+    body = _function("paintJobList")
+    check("scrollIntoView" not in body, "paintJobList must not scroll the page")
+    check("host.scrollTop" in body, "paintJobList must still keep the current card in its own list")
+
+
+def test_a_recording_is_a_close_up_and_puts_the_view_back():
+    start, stop = _function("startTimelapse"), _function("tlStop")
+    check("setPartOnly(true)" in start, "a recording must frame the part, not the machine")
+    check("setMotion(false)" in start, "the part must grow into frame, not sink out of it")
+    check("setColorMode('filament')" in start, "a recording shows the spools' colours")
+    check("tl.prev" in start and "tl.prev" in stop, "the view in use must be saved and restored")
+    for what in ("setPartOnly(pv.part)", "setMotion(pv.motion)", "setColorMode(pv.color)"):
+        check(what in stop, "tlStop must restore with %s" % what)
+    check("tlFrame()" not in start,
+          "copying the WebGL canvas outside its frame records a black first frame")
 
 
 def test_a_rebuilt_machine_is_put_back_where_the_print_is():
