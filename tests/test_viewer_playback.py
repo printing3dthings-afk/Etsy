@@ -148,17 +148,72 @@ def test_a_quality_change_restores_every_appearance_uniform():
 
 
 def test_a_late_payload_for_another_plate_is_not_mounted():
-    src = _src()
+    # Every path names the plate it loaded: a fetched payload by the id it was
+    # fetched for, a <script> fallback by its data-job tag.
     loader = _function("loadJob")
-    check("setAttribute('data-job', id)" in loader,
-          "loadJob must tag the script with the plate it is for")
-    m = re.search(r"window\.__JOB_LOADED = function \(raw\) \{(.*?)\n\};", src, re.S)
-    check(m is not None, "__JOB_LOADED not found")
-    if m:
-        body = m.group(1)
-        check(body.count("forId !== currentId") >= 2,
-              "__JOB_LOADED must drop a stale payload both on arrival and after "
-              "the two frames it waits before building")
+    check("mountRaw(raw, id)" in loader,
+          "loadJob must mount a fetched payload under the id it fetched")
+    check("setAttribute('data-job', id)" in _function("loadJobScriptTag"),
+          "the script-tag fallback must tag the script with the plate it is for")
+    body = _function("mountRaw")
+    check(body.count("forId !== currentId") >= 2,
+          "mountRaw must drop a stale payload both on arrival and after "
+          "the two frames it waits before building")
+
+
+def _parse_job_text(text):
+    node = shutil.which("node")
+    fn = _function("parseJobText")
+    js = fn + "\nconst t=require('fs').readFileSync(0,'utf8');" \
+         "try{const r=parseJobText(t);console.log(JSON.stringify({ok:true,name:r.name,layers:r.layers.length}))}" \
+         "catch(e){console.log(JSON.stringify({ok:false}))}"
+    r = subprocess.run([node, "-e", js], input=text, capture_output=True, text=True, timeout=60)
+    return json.loads(r.stdout)
+
+
+def test_a_plate_file_is_read_as_data_not_run():
+    """2026-10-09: fetched and dropped plates are parsed, never executed. A
+    dropped file run as a script could do anything the page can; and an inline
+    script can be refused by the page's host where a parse cannot."""
+    if not shutil.which("node"):
+        print("  (skipped: no node on PATH)")
+        return
+    real = (ROOT / "tools" / "viewer" / "jobs" / "label_tile.js").read_text(encoding="utf-8")
+    out = _parse_job_text(real)
+    check(out.get("ok") and out.get("layers", 0) > 0,
+          "a real plate file must parse to its layers, got %r" % out)
+    out = _parse_job_text("alert(document.cookie)")
+    check(out == {"ok": False}, "a file that is not a plate must be refused, got %r" % out)
+    for name in ("loadJob", "loadPreviewFile"):
+        body = _function(name)
+        check("parseJobText(" in body, "%s must parse the payload as data" % name)
+        check("createElement('script')" not in body and ".text = " not in body,
+              "%s must not turn a payload into a script" % name)
+
+
+def test_load_progress_measures_against_the_plates_own_size():
+    """A compressing host sends the compressed Content-Length while the reader
+    counts decompressed bytes, so the bar would fill long before the end."""
+    check("Content-Length" not in _function("loadJobFetch"),
+          "progress must not divide by the response's Content-Length")
+    check("sizeMB" in _function("loadJob"),
+          "progress must use the plate index's own payload size")
+
+
+def test_a_recorded_video_lasts_the_same_whatever_the_plate():
+    """At the top replay speed the median plate recorded 1.3 s (2026-10-09)."""
+    m = re.search(r"var TL_SECONDS = (\d+);", _src())
+    check(m is not None and 5 <= int(m.group(1)) <= 15,
+          "the video length must be fixed between 5 and 15 s")
+    body = _function("startTimelapse")
+    check("JOB.total / TL_SECONDS" in body,
+          "recording speed must fit the whole print into TL_SECONDS")
+    check("SPEEDS[SPEEDS.length - 1]" not in body,
+          "recording must not run at the top replay speed")
+    check("(now - tl.t0) / 1000 * play.speed" in _function("tick"),
+          "a recording must follow the wall clock, not the capped frame step")
+    check("simulation, not print footage" in _function("tlFrame"),
+          "every recorded frame must say it is a simulation")
 
 
 def test_a_rebuilt_machine_is_put_back_where_the_print_is():

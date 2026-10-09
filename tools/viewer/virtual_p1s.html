@@ -230,6 +230,26 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;
 #loading[hidden]{display:none}
 @keyframes sweep{0%{margin-left:0}50%{margin-left:70%}100%{margin-left:0}}
 @media (prefers-reduced-motion:reduce){#loading .bar{animation:none;width:100%}}
+/* Real download progress (2026-10-09): the bar stops sweeping and fills. */
+#loading>div{display:grid;justify-items:center}
+#loading.determinate .bar{animation:none;margin-left:0;transition:width .15s linear}
+#loadpct{margin-top:8px;font-family:var(--fm);font-size:11px;color:var(--dim);
+  letter-spacing:.02em;text-transform:none;max-width:280px;text-align:center}
+/* Record button: the dot blinks while the video is being made. */
+.tbtn .recdot{fill:var(--bad)}
+.tbtn.rec{background:#3a1414;border-color:var(--bad);color:#ffb3ab}
+.tbtn.rec .recdot{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.tbtn.rec .recdot{animation:none}}
+#dropoverlay{position:fixed;inset:0;z-index:60;display:grid;place-items:center;
+  background:rgba(8,9,11,.82);border:3px dashed var(--amber);border-radius:6px;
+  font-family:var(--fd);font-size:18px;letter-spacing:.06em;color:var(--amber-soft);
+  pointer-events:none}
+#dropoverlay[hidden],#notice[hidden]{display:none}
+#notice{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:20;
+  background:var(--panel);border:1px solid var(--line-hi);border-left:3px solid var(--warn);
+  color:var(--ink);font-size:12.5px;padding:10px 14px;border-radius:4px;max-width:min(480px,90%);
+  box-shadow:0 6px 24px rgba(0,0,0,.5)}
 
 /* ── reference panels ─────────────────────────────────── */
 .tabs{display:flex;gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
@@ -530,7 +550,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
   <div id="stage">
     <img id="still" alt="" hidden>
     <div id="stillnote" hidden>Path-traced still of the finished part</div>
-    <div id="loading">Slicing data<div class="barwrap"><div class="bar"></div></div></div>
+    <div id="loading"><div><span id="loadlabel">Slicing data</span><div class="barwrap"><div class="bar" id="loadbar"></div></div><div id="loadpct"></div></div></div>
     <div id="hint"><span class="wide">drag orbit · wheel to zoom · shift-drag pan</span><span class="narrow">drag to orbit · pinch to zoom</span></div>
   </div>
 
@@ -649,6 +669,9 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         <svg id="playicon" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg></button>
       <button class="tbtn" id="restart" title="Back to layer 1" aria-label="Restart from layer 1">
         <svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L5.5 8z"/></svg></button>
+      <button class="tbtn" id="timelapse" aria-pressed="false" title="Record a 10-second video of this print"
+        aria-label="Record a 10-second video of this print">
+        <svg viewBox="0 0 16 16"><circle class="recdot" cx="8" cy="8" r="5"/></svg></button>
       <div class="scrub">
         <span class="tlabel">L<b id="lnum">0</b></span>
         <input type="range" id="scrub" min="0" max="1000" value="0" step="1"
@@ -683,6 +706,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
   </footer>
 </div>
 
+<div id="notice" role="status" hidden></div>
+<div id="dropoverlay" hidden>Drop a plate file (jobs/&lt;id&gt;.js) to preview it</div>
 <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <dialog id="helpdialog" class="helpdialog" aria-labelledby="helptitle">
   <div class="helphead"><h2 id="helptitle">Viewer shortcuts</h2>

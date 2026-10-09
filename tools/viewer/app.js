@@ -161,6 +161,9 @@ var MATERIALS = [
 // \u2500\u2500 dom \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 var $ = function (id) { return document.getElementById(id); };
 var stage = $('stage'), loading = $('loading');
+// stall watchdog timer for job loads (armed in loadJob, cleared in mountRaw)
+var loadWatchdog = null;
+var jobName = '';   // the mounted plate's display name, for the video caption
 
 // \u2500\u2500 three.js scene \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 var renderer, scene, camera, chamber, plate, grid, nozzle, gantry;
@@ -170,6 +173,11 @@ var EXCLUDE_W = 18, EXCLUDE_D = 28;
 var bedGroup, shadowPlane, glowSprite, headScale = 1;
 var doorGroup, extPanels = [], machineBounds = null;
 var amsGroup, yRails, chamberLamp;
+// hot-nozzle light rig. nozzleGlow is a PointLight parented to the nozzle
+// group so it tracks the print position for free (setSeg moves the group);
+// ledHalo is the additive sprite faking bloom around the chamber LED bar.
+// Both are pulsing gently in tick().
+var nozzleGlow = null, ledHalo = null;
 var doorOpen = false, doorAngle = 0, doorTarget = 0;
 var viewMode = 'machine';   // 'machine' = solid exterior, 'chamber' = cutaway
 var jobMesh = null, ghostMesh = null, jobGeom = null;
@@ -519,6 +527,12 @@ function initScene() {
   var rim = new THREE.DirectionalLight(0x8fb4ff, 0.32);
   rim.position.set(430, 300, 140);
   scene.add(rim);
+  // soft cool fill from the front-top so the chamber interior never falls
+  // to mud when the door is open. No shadows, low intensity -- it lifts, not
+  // flattens.
+  var fill = new THREE.DirectionalLight(0xbdd4ff, 0.22);
+  fill.position.set(60, -560, 420);
+  scene.add(fill);
 
   // buildChamber owns the toolhead now -- it has to, because which head gets
   // built depends on which machine is selected.
@@ -1306,6 +1320,15 @@ function buildInterior(X, Y, ox, oy, zBot, zTop, x0, x1, y0, y1, t, detailed) {
     surface(0x2f2f30));
   shell.position.set(x0 + t + 5, ledY, zTop - 30);
   chamber.add(shell);
+  // additive halo faking bloom around the LED bar. Sprites are the only
+  // bloom this three build gets (no EffectComposer vendored), and the bar's
+  // own emitter material already reads hot -- this just sells the spill.
+  ledHalo = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture(),
+    transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, opacity: 0.5}));
+  ledHalo.scale.set(46, ledLen * 1.6, 1);
+  ledHalo.position.set(x0 + t + 12, ledY, zTop - 30);
+  chamber.add(ledHalo);
   // Tight falloff on purpose. A 5V 0.3A strip pools light near itself and
   // leaves the far corners dim; the first pass's wide, bright lamp flattened
   // the whole chamber into even grey, which reads as a lightbox, not a P1S.
@@ -1597,8 +1620,12 @@ function buildFloor() {
   if (floorMesh) { scene.remove(floorMesh); floorMesh.geometry.dispose(); }
   floorMesh = new THREE.Mesh(
     new THREE.PlaneGeometry(3200, 3200),
-    new THREE.MeshStandardMaterial({color: lin(0x272728), roughness: 0.66,
-      metalness: 0.0, envMapIntensity: 0.30}));
+    // a hint of sheen -- lower roughness and a touch of metalness so the
+    // studio HDRI gives the floor a soft reflective lift instead of flat
+    // concrete. Still dark enough that the machine, not the floor, is the
+    // subject.
+    new THREE.MeshStandardMaterial({color: lin(0x232326), roughness: 0.38,
+      metalness: 0.22, envMapIntensity: 0.65}));
   floorMesh.position.set(machineBounds.ox, machineBounds.oy,
                          machineBounds.zBot - 13);
   floorMesh.material.normalMap = panelNormalMap();
@@ -1665,6 +1692,23 @@ function syncDoorControl() {
 // and carrying it onto another profile would be the same contradiction the
 // enclosure was. Visibility survives the swap so changing machines mid-print
 // does not blank the nozzle.
+// hot-nozzle light rig. A warm point light parented to the nozzle group so
+// it tracks the live print position for free (setSeg moves the group), plus a
+// wide faint halo sprite faking bloom around the extrusion point. Called by
+// both toolhead builders; the pulse lives in tick().
+function addNozzleGlow(g) {
+  nozzleGlow = new THREE.PointLight(0xffb35c, 0.85, 230, 2);
+  nozzleGlow.position.set(0, 0, 4);
+  g.add(nozzleGlow);
+  var halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture(),
+    transparent: true, depthWrite: false,
+    blending: THREE.AdditiveBlending, opacity: 0.35}));
+  halo.scale.set(64, 64, 1);
+  halo.position.set(0, 0, 1.2);
+  halo.name = 'nozzleHalo';
+  g.add(halo);
+}
+
 function rebuildToolhead(detailed) {
   var wasVisible = nozzle ? nozzle.visible : false;
   var scale = nozzle ? nozzle.scale.x : 1;
@@ -1696,6 +1740,7 @@ function buildSimpleHead() {
   glowSprite.scale.set(26, 26, 1);
   glowSprite.position.z = 0.6;
   g.add(glowSprite);
+  addNozzleGlow(g);
   return g;
 }
 
@@ -1787,6 +1832,7 @@ function buildToolhead() {
   glowSprite.scale.set(26, 26, 1);
   glowSprite.position.set(0, 0, 0.6);
   g.add(glowSprite);
+  addNozzleGlow(g);
   return g;
 }
 
@@ -3451,7 +3497,14 @@ function tick(now) {
   if (JOB && play.on && !play.scrubbing) {
     var dt = play.last ? Math.min((now - play.last) / 1000, 0.1) : 0;
     play.t += dt * play.speed;
-    if (play.t >= JOB.total) { play.t = JOB.total; setPlaying(false); }
+    // A recording follows the wall clock, uncapped: with the 0.1 s cap a slow
+    // machine fell behind and a 10-second video came out 54 s long (2026-10-09).
+    // There it just gets fewer frames.
+    if (tl.on) { play.t = (now - tl.t0) / 1000 * play.speed; }
+    if (play.t >= JOB.total) {
+      play.t = JOB.total; setPlaying(false);
+      if (tl.on) { tlStop(true); }   // timelapse ends with the print
+    }
     setSeg(segAtTime(play.t));
   }
   var _frameDt = _tickLast ? now - _tickLast : 0;
@@ -3462,7 +3515,25 @@ function tick(now) {
   setResolution(now);
   adaptResolution(now, _frameDt);
   updateDoor();
-  updateCutaway();
+  // gentle breathing on the hot-nozzle rig. The extrusion point feels
+  // alive while printing and settles when idle; amplitude is small on purpose
+  // -- a strobing nozzle would read as a fault, not a feature.
+  var _pulse = 0.5 + 0.5 * Math.sin(now * 0.006);
+  if (nozzleGlow) { nozzleGlow.intensity = 0.60 + 0.50 * _pulse; }
+  if (glowSprite && glowSprite.material) {
+    glowSprite.material.opacity = 0.68 + 0.27 * _pulse;
+  }
+  // a throwing updateCutaway used to poison every frame after it. One
+  // strike disables the chamber view for the session and falls back.
+  if (!_cutawayBroken) {
+    try { updateCutaway(); }
+    catch (e) {
+      console.error('[viewer] updateCutaway threw; chamber view disabled:', e);
+      _cutawayBroken = true;
+      setViewMode('machine');
+      notice('Chamber view unavailable for this plate \u2014 showing machine view');
+    }
+  }
   // A growing print changes the shadow every frame in principle, but at a
   // layer every few frames the difference is well under a pixel. Explicit
   // changes (new plate, scrub, door, printer) refresh it immediately.
@@ -3472,6 +3543,7 @@ function tick(now) {
     shadowDirty = false;
   }
   renderer.render(scene, camera);
+  if (tl.on) { tlFrame(); }
 }
 
 function setPlaying(on) {
@@ -3481,6 +3553,146 @@ function setPlaying(on) {
     : '<path d="M3 1.5v13l11-6.5z"/>';
   $('play').setAttribute('title', on ? 'Pause (space)' : 'Play (space)');
 }
+
+// ── timelapse export (2026-10-09) ─────────────────────────────────────────
+// Records the replay as a short video for a listing or a post. Two rules:
+// - Fixed length, whatever the plate. Recording at the top replay speed made
+//   it as long as the print divided by 15,000: 1.3 s for the median plate,
+//   under 5 s for 70 of the 77.
+// - It says what it is, in the picture. This is the slicer's toolpath drawn
+//   by this page, not a camera on a real print, and a clip that travels
+//   without its caption must not pass for one. Each frame is copied onto a 2D
+//   canvas straight after render (same task, so no preserveDrawingBuffer) and
+//   the label drawn over it; that canvas is what is recorded.
+var TL_SECONDS = 10;
+var tl = {rec: null, chunks: [], stream: null, on: false, save: true,
+          canvas: null, ctx: null, speed: 0, ext: 'webm', t0: 0};
+function tlMime() {
+  if (typeof MediaRecorder === 'undefined') { return null; }
+  // H.264 MP4 first: it is what listing sites and phones take as is. Never a
+  // bare 'video/mp4': Chromium without H.264 answers it with VP9 inside an
+  // .mp4 (seen 2026-10-09), which plenty of players refuse.
+  var cands = [['video/mp4;codecs=avc1.42E01E', 'mp4'], ['video/mp4;codecs=avc1', 'mp4'],
+               ['video/webm;codecs=vp9', 'webm'], ['video/webm;codecs=vp8', 'webm'],
+               ['video/webm', 'webm']];
+  for (var i = 0; i < cands.length; i++) {
+    try { if (MediaRecorder.isTypeSupported(cands[i][0])) { return cands[i]; } }
+    catch (e) { /* older engine: keep looking */ }
+  }
+  return ['', 'webm'];
+}
+function tlFrame() {
+  var src = renderer.domElement, c = tl.canvas, x = tl.ctx;
+  if (c.width !== src.width || c.height !== src.height) {
+    c.width = src.width; c.height = src.height;
+  }
+  x.drawImage(src, 0, 0);
+  var u = Math.max(12, Math.round(c.height / 42));
+  x.font = '600 ' + u + 'px "IBM Plex Sans", system-ui, sans-serif';
+  var name = jobName || 'plate';
+  var lines = [name, 'Toolpath replay of the sliced G-code — a simulation, not print footage'];
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) { w = Math.max(w, x.measureText(lines[i]).width); }
+  var pad = Math.round(u * 0.6), h = lines.length * u * 1.35 + pad * 2;
+  x.fillStyle = 'rgba(13,14,17,0.78)';
+  x.fillRect(pad, c.height - h - pad, w + pad * 2, h);
+  for (var j = 0; j < lines.length; j++) {
+    x.fillStyle = j === 0 ? '#ffb35c' : '#e9e7e2';
+    x.fillText(lines[j], pad * 2, c.height - h - pad + pad + u * (1.05 + j * 1.35));
+  }
+}
+function paintSpeedButtons() {
+  Array.prototype.forEach.call($('speeds').children, function (c, i) {
+    c.setAttribute('aria-pressed', String(SPEEDS[i].v === play.speed));
+  });
+}
+function tlSetUI(on) {
+  tl.on = on;
+  var b = $('timelapse');
+  if (b) {
+    b.classList.toggle('rec', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.title = on ? 'Stop recording' : 'Record a ' + TL_SECONDS + '-second video of this print';
+  }
+}
+function tlStop(save) {
+  if (!tl.on || !tl.rec) { return; }
+  tl.save = save !== false;
+  tlSetUI(false);   // button first: onstop fires async, UI must not lag it
+  try { tl.rec.stop(); } catch (e) { /* already stopped */ }
+  setPlaying(false);
+  play.speed = tl.speed;
+  paintSpeedButtons();
+}
+function startTimelapse() {
+  if (!JOB) { notice('Load a plate first, then record its video.'); return; }
+  var mime = tlMime();
+  tl.canvas = tl.canvas || document.createElement('canvas');
+  tl.ctx = tl.ctx || tl.canvas.getContext('2d');
+  if (!mime || !tl.canvas.captureStream) {
+    notice('Recording needs MediaRecorder and canvas capture — ' +
+      'this browser does not have them.');
+    return;
+  }
+  tl.ext = mime[1];
+  tl.chunks = [];
+  tlFrame();   // size the canvas before the stream is taken from it
+  try {
+    tl.stream = tl.canvas.captureStream(30);
+    tl.rec = new MediaRecorder(tl.stream,
+      mime[0] ? {mimeType: mime[0], videoBitsPerSecond: 8e6} : undefined);
+  } catch (e) {
+    console.error('[viewer] MediaRecorder failed to start:', e);
+    notice('Could not start the recorder in this browser.');
+    return;
+  }
+  tl.rec.ondataavailable = function (ev) {
+    if (ev.data && ev.data.size) { tl.chunks.push(ev.data); }
+  };
+  tl.rec.onstop = function () {
+    if (tl.stream) {
+      tl.stream.getTracks().forEach(function (t) { t.stop(); });
+      tl.stream = null;
+    }
+    if (tl.save && tl.chunks.length) {
+      var blob = new Blob(tl.chunks, {type: tl.ext === 'mp4' ? 'video/mp4' : 'video/webm'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (currentId || 'plate').replace(/^preview:/, '') +
+        '-toolpath-replay.' + tl.ext;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      notice('Saved ' + a.download);
+    } else if (tl.save) {
+      notice('Nothing was recorded — try again.');
+    }
+    tl.chunks = [];
+  };
+  // From layer 1, at whatever speed fits the whole print into TL_SECONDS;
+  // tick() stops the recording when the print ends.
+  tl.speed = play.speed;
+  play.t = 0; setSeg(0); refreshReadout(true);
+  play.speed = JOB.total / TL_SECONDS;
+  paintSpeedButtons();
+  tlSetUI(true);
+  tl.rec.start(250);
+  tl.t0 = performance.now();
+  setPlaying(true);
+  notice('Recording ' + TL_SECONDS + ' seconds of the current view' +
+    ($('partview').getAttribute('aria-pressed') !== 'true' ? ' \u2014 try Part only for a close-up of the print' : '') + '.');
+}
+
+// Debug handle for the browser tests. Read-only except setViewMode, which the
+// View button already exposes.
+window.__viewer = {
+  getJob: function () { return JOB; },
+  setViewMode: setViewMode,
+  tlInfo: function () {
+    return {on: tl.on, chunks: tl.chunks.length, speed: play.speed,
+            state: tl.rec ? tl.rec.state : 'none', ext: tl.ext};
+  }
+};
 
 // \u2500\u2500 readout \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // Layer navigation (2026-09-19). Scrubbing is a time slider -- it lands
@@ -4054,11 +4266,39 @@ function setDoor(open) {
   if (viewMode === 'machine') { machineCamera(open); }
 }
 
+// ── chamber-view fallback ───────────────────────────────────────────────────
+// Chamber view hides the panels and draws the whole bead mesh unclipped, and
+// on a weak GPU switching to it has killed the tab. Anything that throws
+// mid-switch now falls back to machine view with a notice, not a dead page.
+// (A triangle budget was tried too and dropped, 2026-10-09: set at 2.5M
+// segments it could never fire -- the heaviest plate has under 400k.)
+var _cutawayBroken = false;
+function notice(msg, ms) {
+  var n = $('notice');
+  if (!n) { announce(msg); return; }
+  n.textContent = msg; n.hidden = false;
+  announce(msg);
+  clearTimeout(n._t);
+  n._t = setTimeout(function () { n.hidden = true; }, ms || 6000);
+}
 function setViewMode(mode) {
-  viewMode = mode;
-  $('viewmode').textContent = mode === 'machine' ? 'View: machine' : 'View: chamber';
-  $('viewmode').setAttribute('aria-pressed', String(mode === 'machine'));
-  if (JOB) { frameJob(JOB); }
+  try {
+    viewMode = mode;
+    $('viewmode').textContent = mode === 'machine' ? 'View: machine' : 'View: chamber';
+    $('viewmode').setAttribute('aria-pressed', String(mode === 'machine'));
+    if (JOB) { frameJob(JOB); }
+  } catch (e) {
+    console.error('[viewer] chamber view switch threw; falling back to machine view:', e);
+    notice('Chamber view unavailable for this plate \u2014 showing machine view');
+    try {
+      viewMode = 'machine';
+      $('viewmode').textContent = 'View: machine';
+      $('viewmode').setAttribute('aria-pressed', 'true');
+      if (JOB) { frameJob(JOB); }
+    } catch (e2) {
+      console.error('[viewer] machine-view fallback also threw:', e2);
+    }
+  }
 }
 
 function setColorMode(mode) {
@@ -4325,14 +4565,29 @@ function applyVisibility() {
 }
 
 // \u2500\u2500 job loading \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// A payload loaded by <script> tag (file://, or wherever fetch fails) calls
+// this; one fetched or dropped on the page is parsed as data and goes straight
+// to mountRaw, so its text is never run as code (2026-10-09).
 window.__JOB_LOADED = function (raw) {
+  var cs = document.currentScript;
+  mountRaw(raw, cs && cs.getAttribute('data-job'));
+};
+
+// The payload is `window.__JOB_LOADED({...});`: everything between the first
+// '(' and the last ')' is JSON. Anything else is not a plate.
+function parseJobText(text) {
+  var head = 'window.__JOB_LOADED(';
+  var a = text.indexOf(head), b = text.lastIndexOf(')');
+  if (a < 0 || b <= a) { throw new Error('not a viewer plate file'); }
+  return JSON.parse(text.slice(a + head.length, b));
+}
+
+function mountRaw(raw, forId) {
   if (!scene) { return; }
   // A payload is only mounted if it is still the plate asked for (2026-09-27).
   // Click A then B and A's script can land last: it used to mount A under B's
-  // name and source line. The script tag says which plate it is; checked again
-  // after the two frames below, since a click can land in between.
-  var cs = document.currentScript;
-  var forId = cs && cs.getAttribute('data-job');
+  // name and source line. forId says which plate it is; checked again after
+  // the two frames below, since a click can land in between.
   if (forId && forId !== currentId) { return; }
   // Geometry build is synchronous and can take a second on the heaviest plate.
   // Yield first so the loading overlay actually paints before the main thread
@@ -4340,6 +4595,7 @@ window.__JOB_LOADED = function (raw) {
   requestAnimationFrame(function () { requestAnimationFrame(function () {
     if (forId && forId !== currentId) { return; }
     bootStage('Building ' + (raw.name || 'the plate'));
+    jobName = raw.name || '';
     var job = buildJob(raw);
     _polys = b64(raw.polys, Int32Array);
     layerFilCum = new Float64Array(raw.layers.length + 1);
@@ -4370,29 +4626,145 @@ window.__JOB_LOADED = function (raw) {
     play.t = 0; setSeg(0); setPlaying(true);
     autoQuality();
     refreshReadout(true);
+    if (loadWatchdog) { clearTimeout(loadWatchdog); loadWatchdog = null; }
     loading.hidden = true;
+    // a dropped export mounts as a temporary plate, never added to the
+    // library index. Say so out loud so the library state is never ambiguous.
+    if (currentId && currentId.indexOf('preview:') === 0) {
+      notice('Previewing "' + (raw.name || 'plate') + '" (preview) \u2014 ' +
+        'not added to the library');
+    }
     // A layer asked for by the URL can only be applied now: until this point
     // JOB.layerSeg does not exist, so the index would have nothing to mean.
     applyPendingLayer();
   }); });
-};
+}
+
+// ── load progress (2026-10-09) ─────────────────────────────────────────────
+// Payloads are fetched so the overlay can show real megabytes, then parsed as
+// data (parseJobText) rather than run. fetch() rejects on file://, so a
+// failure falls back to the <script> tag, which works from disk.
+// The total is the payload's own size from the plate index, not the response's
+// Content-Length: a host that compresses sends the compressed length while the
+// reader counts decompressed bytes, which would fill the bar far too early.
+function setLoadProgress(loaded, total) {
+  var bar = $('loadbar'), pct = $('loadpct');
+  loading.classList.add('determinate');   // stops the indeterminate sweep
+  var mb = (loaded / 1048576).toFixed(1);
+  if (total > 0) {
+    // capped short of done: the index size is rounded, and parsing still follows
+    var p = Math.min(99, loaded / total * 100);
+    if (bar) { bar.style.width = p.toFixed(1) + '%'; }
+    if (pct) {
+      pct.textContent = mb + ' of ' + (total / 1048576).toFixed(1) + ' MB';
+    }
+  } else {
+    if (bar) { bar.style.width = '100%'; }
+    if (pct) { pct.textContent = mb + ' MB'; }
+  }
+}
+function resetLoadProgress() {
+  loading.classList.remove('determinate');
+  var bar = $('loadbar'), pct = $('loadpct');
+  if (bar) { bar.style.width = ''; }
+  if (pct) { pct.textContent = ''; }
+}
+function loadJobScriptTag(id) {
+  var s = document.createElement('script');
+  s.setAttribute('data-job', id);
+  s.src = 'jobs/' + id + '.js';
+  s.onerror = function () {
+    bootStage('Could not load jobs/' + id + '.js');
+    resetLoadProgress();
+  };
+  document.body.appendChild(s);
+}
+function loadJobFetch(id, total) {
+  return fetch('jobs/' + id + '.js').then(function (resp) {
+    if (!resp.ok) { throw new Error('HTTP ' + resp.status); }
+    if (!resp.body || !resp.body.getReader) { return resp.text(); }
+    var reader = resp.body.getReader(), chunks = [], loaded = 0;
+    function pump() {
+      return reader.read().then(function (r) {
+        if (r.done) {
+          var buf = new Uint8Array(loaded), off = 0;
+          for (var i = 0; i < chunks.length; i++) {
+            buf.set(chunks[i], off); off += chunks[i].length;
+          }
+          return new TextDecoder().decode(buf);
+        }
+        chunks.push(r.value); loaded += r.value.length;
+        setLoadProgress(loaded, total);
+        return pump();
+      });
+    }
+    return pump();
+  });
+}
 
 function loadJob(id) {
   if (id === currentId && JOB) { return; }
   currentId = id;
   loading.hidden = false;
-  loading.firstChild.textContent = 'Loading ' +
-    (INDEX.filter(function (j) { return j.id === id; })[0] || {name:id}).name;
+  resetLoadProgress();
+  var meta = INDEX.filter(function (j) { return j.id === id; })[0] || {name: id};
+  bootStage('Loading ' + meta.name);
   paintJobList();
   setPlaying(false);
-  var s = document.createElement('script');
-  s.setAttribute('data-job', id);
-  s.src = 'jobs/' + id + '.js';
-  s.onerror = function () {
-    loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
-      'Could not load jobs/' + id + '.js</div>';
+  loadJobFetch(id, (meta.sizeMB || 0) * 1048576).then(function (text) {
+    if (id !== currentId) { return; }   // clicked away mid-download
+    var raw;
+    try { raw = parseJobText(text); }
+    catch (e) {
+      console.error('[viewer] jobs/' + id + '.js did not parse:', e);
+      bootStage('Could not read jobs/' + id + '.js');
+      resetLoadProgress();
+      return;
+    }
+    mountRaw(raw, id);
+  }, function () {
+    // file:// and anything else fetch cannot reach: the old script-tag path.
+    if (id !== currentId) { return; }
+    resetLoadProgress();
+    loadJobScriptTag(id);
+  });
+  // Some sandboxed previews (iOS Files) sat on the loading screen forever with
+  // no error. After 30s with no plate mounted, say so instead of spinning.
+  // Cleared in mountRaw when the plate mounts.
+  if (loadWatchdog) { clearTimeout(loadWatchdog); }
+  loadWatchdog = setTimeout(function () {
+    if (id === currentId && !loading.hidden) {
+      bootStage('Taking a while…');
+      var pct = $('loadpct');
+      if (pct) { pct.textContent = 'If this never finishes, this preview can’t load the print data — open the page in a desktop browser.'; }
+    }
+  }, 30000);
+}
+
+// ── drag-and-drop preview ───────────────────────────────────────────────────
+// A plate file exported by tools/gcode_viewer_data.py, dropped on the page,
+// mounts as a temporary plate and is never added to the library. It is parsed
+// as data: run as a script, a dropped file could do anything the page can.
+function loadPreviewFile(file) {
+  var rd = new FileReader();
+  rd.onload = function () {
+    var raw;
+    try { raw = parseJobText(String(rd.result)); }
+    catch (e) {
+      notice(file.name + ' is not a viewer plate file (jobs/<id>.js).');
+      return;
+    }
+    var id = 'preview:' + file.name.replace(/\.js$/i, '');
+    currentId = id;
+    loading.hidden = false;
+    resetLoadProgress();
+    bootStage('Previewing ' + file.name);
+    paintJobList();
+    setPlaying(false);
+    mountRaw(raw, id);
   };
-  document.body.appendChild(s);
+  rd.onerror = function () { notice('Could not read ' + file.name); };
+  rd.readAsText(file);
 }
 
 // \u2500\u2500 reference panes \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -4583,6 +4955,43 @@ function initUI() {
   $('restart').addEventListener('click', function () {
     if (!JOB) { return; }
     play.t = 0; setSeg(0); refreshReadout(true);
+  });
+
+  // ── timelapse export button ────────────────────────────────────────────
+  $('timelapse').addEventListener('click', function () {
+    if (tl.on) { tlStop(true); } else { startTimelapse(); }
+  });
+
+  // ── drag-and-drop plate preview (see loadPreviewFile) ───────────────────
+  var _dragDepth = 0;
+  function showDropOverlay(on) {
+    var o = $('dropoverlay');
+    if (o) { o.hidden = !on; }
+  }
+  window.addEventListener('dragenter', function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.types) { return; }
+    if (Array.prototype.indexOf.call(e.dataTransfer.types, 'Files') === -1) { return; }
+    e.preventDefault();
+    _dragDepth++;
+    showDropOverlay(true);
+  });
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('dragleave', function (e) {
+    e.preventDefault();
+    if (--_dragDepth <= 0) { _dragDepth = 0; showDropOverlay(false); }
+  });
+  window.addEventListener('drop', function (e) {
+    e.preventDefault();
+    _dragDepth = 0;
+    showDropOverlay(false);
+    var fs = e.dataTransfer && e.dataTransfer.files;
+    if (!fs || !fs.length) { return; }
+    var f = fs[0];
+    if (!/\.js$/i.test(f.name)) {
+      notice('Drop a jobs/<id>.js export file to preview it.');
+      return;
+    }
+    loadPreviewFile(f);
   });
 
   var sc = $('scrub');
@@ -4920,9 +5329,8 @@ function closeHelp() {
 // went wrong is worse than one that crashed visibly, so it says.
 // The overlay's own text node, so a long stage cannot be mistaken for a hang.
 function bootStage(label) {
-  if (loading.firstChild && loading.firstChild.nodeType === 3) {
-    loading.firstChild.textContent = label;
-  }
+  var l = $('loadlabel');
+  if (l) { l.textContent = label; }
 }
 
 function bootFailed(e) {

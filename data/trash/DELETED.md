@@ -1982,3 +1982,30 @@ module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s 
 
 <!-- /TRASH 20261008-005 -->
 
+<!-- TRASH id=20261009-001 date=2026-10-09 kind=snippet source="tools/viewer/app.js" reason="Replaced by the fetch-and-parse loader (plates read as data, real progress); the <script> path survives as loadJobScriptTag for file://" -->
+## 20261009-001 · 2026-10-09 · snippet · `tools/viewer/app.js`
+**Reason:** Replaced by the fetch-and-parse loader (plates read as data, real progress); the <script> path survives as loadJobScriptTag for file://  
+**Payload:** `data/trash/files/20261009-001__snippet.txt`
+
+```javascript
+function loadJob(id) {
+  if (id === currentId && JOB) { return; }
+  currentId = id;
+  loading.hidden = false;
+  loading.firstChild.textContent = 'Loading ' +
+    (INDEX.filter(function (j) { return j.id === id; })[0] || {name:id}).name;
+  paintJobList();
+  setPlaying(false);
+  var s = document.createElement('script');
+  s.setAttribute('data-job', id);
+  s.src = 'jobs/' + id + '.js';
+  s.onerror = function () {
+    loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
+      'Could not load jobs/' + id + '.js</div>';
+  };
+  document.body.appendChild(s);
+}
+```
+
+<!-- /TRASH 20261009-001 -->
+

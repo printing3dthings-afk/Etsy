@@ -78,6 +78,34 @@ instead of just failing. The steps *after* it (`upload-pages-artifact`,
 `deploy-pages`) have never run, so treat them as untested until a green run
 exists.
 
+## Recording, previews and loading (2026-10-09)
+
+Folded in from a v3 build Scott sent as a zip (`p1s-chamber-v3b.zip`), keeping
+what worked and fixing what did not:
+
+- **Record button** (beside restart) saves a 10-second video of the current
+  view: MP4 when the browser records H.264, WebM otherwise. Every frame
+  carries a caption naming the plate and saying it is a toolpath simulation,
+  not print footage, so a clip that travels without its context still says
+  what it is. v3 recorded at the top replay speed, which made the median
+  plate 1.3 s long; the speed is now whatever fits the whole print into
+  10 s, timed off the wall clock so a slow machine gets fewer frames rather
+  than a longer video.
+- **Dropping a `jobs/<id>.js` file** on the page previews it without adding it
+  to the library. Fetched and dropped plates are parsed as data
+  (`parseJobText`), never run: v3 ran a dropped file as a script, which on a
+  public page means anything dropped could act as the page.
+- **Loading shows real megabytes**, measured against the plate's size in the
+  index rather than Content-Length (a compressing host sends the compressed
+  length). After 30 s it says the data is not arriving instead of spinning.
+- **Chamber view falls back** to machine view with a notice if switching
+  throws, rather than killing the page. v3 also had a triangle budget that no
+  plate could reach (2.5M segments against a largest of under 400k); dropped.
+- Kept the nozzle glow, LED halo, fill light and floor sheen. Left out the
+  frosted-glass panels (they sit beside the 3D view, so there is nothing
+  behind them to blur) and v3's page file, which was a saved Artifact page
+  with the host's own document wrapped around it.
+
 ## Rendering (overhauled 2026-09-17)
 
 Everything used to draw with `MeshLambertMaterial` under the renderer's
