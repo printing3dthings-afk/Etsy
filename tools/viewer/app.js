@@ -45,8 +45,22 @@ var N_TYPE = TYPE_COLOR.length;
 // One palette for both the spools in the AMS and the filament colour mode, so
 // the bead on the plate is the colour of the spool it came off. Illustrative,
 // not read from any machine -- the printer panel says so.
-var FILAMENT = ['#d9dbe0','#24272d','#8d939d','#c08a5a','#e0553d',
-                '#6fa8dc','#8bc34a','#f2c14e'];
+var FILAMENT_DEFAULT = ['#d9dbe0','#24272d','#8d939d','#c08a5a','#e0553d',
+                        '#6fa8dc','#8bc34a','#f2c14e'];
+// A plate exported with --colours carries the colours it was designed in
+// (raw.toolColors), and its beads and spools take those instead (2026-10-09):
+// a close-up recording of a brick-and-slate church in placeholder greys would
+// show a building nobody can buy. Plates without them keep the defaults.
+var FILAMENT = FILAMENT_DEFAULT.slice();
+function applyToolColors(raw) {
+  var own = raw && raw.toolColors;
+  for (var i = 0; i < FILAMENT.length; i++) {
+    FILAMENT[i] = (own && own[i]) || FILAMENT_DEFAULT[i];
+  }
+  ((amsGroup && amsGroup.userData.spools) || []).forEach(function (m, i) {
+    if (m) { m.material.color.copy(lin(FILAMENT[i % FILAMENT.length])); }
+  });
+}
 var MAX_FILAMENT = FILAMENT.length;
 var TYPE_HELP = {
   'External perimeter':'The outermost wall loop. The only extrusion a customer ever sees, and the one worth slowing down for.',
@@ -3713,6 +3727,7 @@ function startTimelapse() {
 // View button already exposes.
 window.__viewer = {
   getJob: function () { return JOB; },
+  toolColors: function () { return FILAMENT.slice(); },
   setViewMode: setViewMode,
   tlInfo: function () {
     return {on: tl.on, chunks: tl.chunks.length, speed: play.speed,
@@ -4634,6 +4649,7 @@ function mountRaw(raw, forId) {
     if (forId && forId !== currentId) { return; }
     bootStage('Building ' + (raw.name || 'the plate'));
     jobName = raw.name || '';
+    applyToolColors(raw);   // before mountJob: its materials read FILAMENT
     var job = buildJob(raw);
     _polys = b64(raw.polys, Int32Array);
     layerFilCum = new Float64Array(raw.layers.length + 1);
@@ -4901,7 +4917,8 @@ function paintPrinter() {
     'photography of the 4-slot unit \u2014 the smoked dome over the spool row, ' +
     'the drive roller and gear block per slot \u2014 with its proportions taken ' +
     'from the published 368 \u00d7 283 \u00d7 224 mm and the 197\u2013202 mm spool ' +
-    'compatibility range. Its spool colours are illustrative; nothing ' +
+    'compatibility range. Its spool colours are illustrative, except on a ' +
+    'plate exported with its own design colours; nothing ' +
     'here is reading your machine.</div>';
   $('platesel').addEventListener('change', function (e) {
     plateId = e.target.value;

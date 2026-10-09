@@ -296,8 +296,10 @@ def test_the_plate_list_says_how_many_are_out_of_view():
 
 
 def test_the_selected_plate_is_scrolled_into_view():
+    # By scrolling the list's own box: scrollIntoView moved the whole page on a
+    # phone (2026-10-09), see test_viewer_playback.
     src = APP.read_text(encoding="utf-8")
-    check("current.scrollIntoView({block: 'nearest'})" in src,
+    check("host.scrollTop -= hr.top - cr.top" in src and "host.scrollTop += cr.bottom - hr.bottom" in src,
           "picking plate 11 of 11 must not leave it off the top of the list")
 
 

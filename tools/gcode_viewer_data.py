@@ -510,6 +510,14 @@ def main(argv=None):
                          "to fit one page, and the honest way to buy that is a "
                          "coarser path on the heavy plates only -- not a quietly "
                          "coarser one everywhere.")
+    ap.add_argument("--colours", action="append", default=[], metavar="STEM=#HEX,#HEX",
+                    help="the plate's design colours, one per filament in tool "
+                         "order; the viewer draws its beads and spools in them "
+                         "instead of its placeholder palette -- repeatable")
+    ap.add_argument("--append", action="store_true",
+                    help="merge these jobs into the outdir's existing index.js "
+                         "(same id replaced, the rest kept) instead of writing an "
+                         "index of only these")
     ap.add_argument("--simplify", type=float, default=0.02, metavar="MM",
                     help="drop points that shift the path less than this "
                          "(default 0.02mm = 1/20 of a bead; 0 keeps every point)")
@@ -518,6 +526,14 @@ def main(argv=None):
     labels = dict(kv.split("=", 1) for kv in a.label)
     notes = dict(kv.split("=", 1) for kv in a.note)
     sources = dict(kv.split("=", 1) for kv in a.source)
+    colours = {}
+    for kv in a.colours:
+        stem, hexes = kv.split("=", 1)
+        cs = [h.strip() for h in hexes.split(",")]
+        bad = [h for h in cs if not re.fullmatch(r"#[0-9A-Fa-f]{6}", h)]
+        if bad:
+            ap.error(f"--colours {stem}: not #RRGGBB: {', '.join(bad)}")
+        colours[stem] = cs
     out = Path(a.outdir)
     out.mkdir(parents=True, exist_ok=True)
 
@@ -533,6 +549,8 @@ def main(argv=None):
                 tol = round(tol * 2, 4)
                 job = build_job(p, labels.get(stem, stem), notes.get(stem, ""), tol)
         job["simplifyMm"] = tol
+        if stem in colours:
+            job["toolColors"] = colours[stem]
         # Each job is its own script so the page loads one, not all of them.
         # Same-origin <script src> rather than fetch(): a script tag is the
         # one transport the artifact CSP is unambiguous about.
@@ -561,6 +579,13 @@ def main(argv=None):
               f"{job['totalSeconds'] / 60:6.0f} min  "
               f"{job['speedMin']}-{job['speedMax']} mm/s  {mb:5.2f} MB")
 
+    # Without --append the index is only this run's jobs: adding the Christmas
+    # village to the 77-plate library would have dropped the other 77 from it.
+    if a.append and (out / "index.js").exists():
+        old = (out / "index.js").read_text()
+        old = json.loads(old[old.index("["):old.rindex("]") + 1])
+        new_ids = {j["id"] for j in index}
+        index = [j for j in old if j["id"] not in new_ids] + index
     (out / "index.js").write_text(
         "window.__PRINT_INDEX = " + json.dumps(index, separators=(",", ":")) + ";\n")
     total = sum(i["sizeMB"] for i in index)

@@ -237,6 +237,16 @@ def test_a_recording_is_a_close_up_and_puts_the_view_back():
           "copying the WebGL canvas outside its frame records a black first frame")
 
 
+def test_a_plate_is_drawn_in_its_own_colours_and_the_next_one_resets():
+    """A plate exported with --colours is drawn in them; one without goes back
+    to the placeholder palette rather than keeping the last plate's (2026-10-09)."""
+    body = _function("mountRaw")
+    a, b = body.find("applyToolColors(raw)"), body.find("mountJob(job)")
+    check(0 <= a < b, "colours must be applied before mountJob builds the materials")
+    ap = _function("applyToolColors")
+    check("FILAMENT_DEFAULT[i]" in ap, "a plate without colours must fall back to the defaults")
+
+
 def test_a_rebuilt_machine_is_put_back_where_the_print_is():
     body = _function("restoreModeAfterRebuild")
     check("buildAMSState()" in body,

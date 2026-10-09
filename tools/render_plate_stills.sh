@@ -24,6 +24,9 @@ SAMPLES=${SAMPLES:-64}
 # and nothing else, and the per-plate lens guessing this script used to do is
 # gone with the coupling that made it necessary.
 LENS=${LENS:-55}
+# Per-render limit. blender_render's 300s default timed out two half-million-
+# triangle plates when they rendered alongside other jobs (2026-10-09).
+TIMEOUT=${TIMEOUT:-300}
 mkdir -p "$MESH" "$OUT"
 
 if [ $# -gt 0 ]; then
@@ -47,7 +50,7 @@ for n in "${names[@]}"; do
     [ -f "$MESH/$n.ply" ] || python3 tools/gcode_to_mesh.py "$src" -o "$MESH/$n.ply"
     echo "[$i/$total] rendering $n"
     if ! python3 tools/blender_render.py "$MESH/$n.ply" -o "$OUT/$n.png" \
-        --color "$COLOR" --samples "$SAMPLES" --lens "$LENS" >/dev/null; then
+        --color "$COLOR" --samples "$SAMPLES" --lens "$LENS" --timeout "$TIMEOUT" >/dev/null; then
       echo "[$i/$total] FAILED: $n"
       failed+=("$n")
     fi

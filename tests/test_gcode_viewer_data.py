@@ -245,6 +245,48 @@ def test_payload_round_trips_through_base64():
         path.unlink(missing_ok=True)
 
 
+def test_append_merges_into_the_library_instead_of_replacing_it():
+    """Adding one plate rewrote index.js as that plate alone: exporting the
+    Christmas village into the viewer would have emptied the 77-plate library
+    of everything else (2026-10-09). --append keeps the rest; an id already
+    there is replaced, not listed twice."""
+    import json
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td)
+        a, b = out / "plate_a.gcode", out / "plate_b.gcode"
+        a.write_text(FIXTURE); b.write_text(FIXTURE)
+        def index():
+            t = (out / "index.js").read_text()
+            return [j["id"] for j in json.loads(t[t.index("["):t.rindex("]") + 1])]
+        gvd.main(["-d", str(out), str(a)])
+        gvd.main(["-d", str(out), "--append", str(b)])
+        check(index() == ["plate_a", "plate_b"], f"--append must keep plate_a, got {index()}")
+        gvd.main(["-d", str(out), "--append", "--label", "plate_a=Renamed", str(a)])
+        check(sorted(index()) == ["plate_a", "plate_b"],
+              f"re-adding an id must replace it, got {index()}")
+        gvd.main(["-d", str(out), str(b)])
+        check(index() == ["plate_b"], "without --append the index is only this run's jobs")
+
+
+def test_a_plate_can_carry_its_design_colours():
+    """--colours puts the plate's own filament colours in the payload, so the
+    viewer draws a brick-and-slate building in brick and slate, not in its
+    placeholder palette. A malformed colour is refused, not shipped."""
+    import json
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td); g = out / "plate.gcode"; g.write_text(FIXTURE)
+        gvd.main(["-d", str(out), "--colours", "plate=#A8483A,#2e3440", str(g)])
+        t = (out / "plate.js").read_text()
+        raw = json.loads(t[t.index("(") + 1:t.rindex(")")])
+        check(raw.get("toolColors") == ["#A8483A", "#2e3440"],
+              f"design colours must reach the payload, got {raw.get('toolColors')!r}")
+        try:
+            gvd.main(["-d", str(out), "--colours", "plate=red", str(g)])
+            check(False, "a colour that is not #RRGGBB must be refused")
+        except SystemExit as e:
+            check(e.code != 0, "refusing a bad colour must exit non-zero")
+
+
 def test_empty_gcode_raises_instead_of_returning_an_empty_job():
     with tempfile.NamedTemporaryFile("w", suffix=".gcode", delete=False) as fh:
         fh.write("; nothing here\nG1 Z5 F5000\n")
