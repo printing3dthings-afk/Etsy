@@ -74,7 +74,15 @@ for it automatically (`enablement: true`) but the workflow token is not allowed
 to grant it — the first run failed with "Resource not accessible by
 integration". Everything before that step passed, including the built site and
 the plate-count guard, and the workflow now prints that fix in its own log
-instead of just failing. The steps *after* it (`upload-pages-artifact`,
+instead of just failing.
+
+**And a second switch, found when Pages was turned on (2026-10-09).** Turning
+Pages on creates a `github-pages` environment that only accepts the default
+branch, and the workflow runs on `claude/new-session-o245bl`: the first
+dispatched run was refused with "Branch ... is not allowed to deploy to
+github-pages due to environment protection rules". Settings -> Environments ->
+github-pages -> Deployment branches and tags -> add a rule for that branch.
+Neither setting can be changed through this session's GitHub access. The steps *after* it (`upload-pages-artifact`,
 `deploy-pages`) have never run, so treat them as untested until a green run
 exists.
 
