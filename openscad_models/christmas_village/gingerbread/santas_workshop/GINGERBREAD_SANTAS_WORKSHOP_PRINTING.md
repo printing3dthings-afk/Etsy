@@ -75,7 +75,7 @@ at 55° under the cone.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 4.28 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.48 mm, median 4.27 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
   - 21.16 cm² of bed contact;
@@ -84,7 +84,7 @@ at 55° under the cone.
   faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 13.3 mm³ of 53,281 mm³ is not printed; 0.1 mm³ printed that was
+  layer): 12.1 mm³ of 53,429 mm³ is not printed; 0.1 mm³ printed that was
   not modelled; 0.2 mm³ printed in another colour. **0 flags.** The largest
   losses are 0.2 mm slivers of gingerbread where the chimney meets the drum,
   and the edges of the stripes there (each under 0.2 mm³).
