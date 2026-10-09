@@ -1,0 +1,8 @@
+module st_at_g(i, d) let (p = st_pts(i)) rotate(st_th) translate([st_r0 + p[0], 0, st_z0 + p[1]]) sphere(r = 1.9 + d, $fn = 24);
+module stirrer_g(d) for (i = [0 : st_n - 1]) hull() { st_at_g(i, d); st_at_g(i + 1, d); }
+module stirrer_stripes_up() for (k = [0 : 1]) intersection() {
+    difference() { stirrer_g((k + 1) * 0.15); stirrer_g(k * 0.15); }
+    stirrer_stripes();
+    translate([0, 0, SH * (k + 1) * 0.15]) stirrer_stripes();
+}
+    stirrer_stripes_up();

@@ -2009,3 +2009,32 @@ function loadJob(id) {
 
 <!-- /TRASH 20261009-001 -->
 
+<!-- TRASH id=20261009-002 date=2026-10-09 kind=snippet source="openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad" reason="Cocoa cafe: mug windows' inner thickening (art_in) overhung on the curved inner wall; the slicer propped it from the mug floor (gate 2026-10-09)" -->
+## 20261009-002 · 2026-10-09 · snippet · `openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad`
+**Reason:** Cocoa cafe: mug windows' inner thickening (art_in) overhung on the curved inner wall; the slicer propped it from the mug floor (gate 2026-10-09)  
+**Payload:** `data/trash/files/20261009-002__snippet.txt`
+
+```
+    cyl_relief(MRi, w[0], w[1], w[2] + 2.2, 0.6) art_in(0.8, 4) mw2d(w);
+```
+
+<!-- /TRASH 20261009-002 -->
+
+<!-- TRASH id=20261009-003 date=2026-10-09 kind=snippet source="openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad" reason="Cocoa cafe: stirrer stripe relief on the tilted cane needed supports; stripes left to paint" -->
+## 20261009-003 · 2026-10-09 · snippet · `openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad`
+**Reason:** Cocoa cafe: stirrer stripe relief on the tilted cane needed supports; stripes left to paint  
+**Payload:** `data/trash/files/20261009-003__snippet.txt`
+
+```
+module st_at_g(i, d) let (p = st_pts(i)) rotate(st_th) translate([st_r0 + p[0], 0, st_z0 + p[1]]) sphere(r = 1.9 + d, $fn = 24);
+module stirrer_g(d) for (i = [0 : st_n - 1]) hull() { st_at_g(i, d); st_at_g(i + 1, d); }
+module stirrer_stripes_up() for (k = [0 : 1]) intersection() {
+    difference() { stirrer_g((k + 1) * 0.15); stirrer_g(k * 0.15); }
+    stirrer_stripes();
+    translate([0, 0, SH * (k + 1) * 0.15]) stirrer_stripes();
+}
+    stirrer_stripes_up();
+```
+
+<!-- /TRASH 20261009-003 -->
+
