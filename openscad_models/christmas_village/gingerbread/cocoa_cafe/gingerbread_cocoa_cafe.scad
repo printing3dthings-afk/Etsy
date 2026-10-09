@@ -416,19 +416,24 @@ module roof_raw() {
 // found: the windows thickened 0.8 inside the mug, whose undersides overhang on
 // its curved inner wall and were propped from the mug's floor; and stripes on
 // the tilted stirrer. The stirrer's stripes are left to paint.
+// Built as skirts at twice the climb (2026-10-09): trimmed from below
+// (art_out) the window lines came out under the gate's 1.2 mm floor, and at SH
+// the lower windows' sills were propped from the floor -- wrapped round the mug
+// in flat strips, 50 deg had no margin left, the turret's columns' lesson.
 module mug_windows_up() for (w = MW) {
-    cyl_relief(MR, w[0], w[1], w[2] + 2.2, 0.6) art_out(0.4, 2) mw2d(w);
+    cyl_relief(MR, w[0], w[1], w[2] + 2.2, 0.6) art_skirt(0.4, 2, 2 * SH) mw2d(w);
 }
 module stripes_up() rotate_extrude($fn = FNC) for (z = [11.0, 59.0])
-    polygon([[MR - 0.01, z], [MR + 0.4, z + SH * 0.4], [MR + 0.4, z + 1.6], [MR - 0.01, z + 1.6]]);
+    polygon([[MR - 0.01, z - 2 * SH * 0.4], [MR + 0.4, z], [MR + 0.4, z + 1.6], [MR - 0.01, z + 1.6]]);
 module awning_stripes_up() {
     intersection() {
         difference() { translate([0, 0, 0.3]) awning(); awning(); }
-        nf(1, aw_u, 0) for (i = [-4 : 4]) translate([i * 2.2 - 0.55, 0, -5]) cube([1.1, 60, 20]);
+        // not the outer pair: they cross the awning's ends and stood 0.25 mm wide
+        nf(1, aw_u, 0) for (i = [-3 : 3]) translate([i * 2.2 - 0.55, 0, -5]) cube([1.1, 60, 20]);
     }
     nf(1, aw_u, 0) translate([0, 0, aw_d]) art_out(0.3, 2) intersection() {
         translate([-aw_L / 2, aw_z1]) square([aw_L, aw_z2 - aw_z1]);
-        for (i = [-4 : 4]) translate([i * 2.2 - 0.55, 0]) square([1.1, 60]);
+        for (i = [-3 : 3]) translate([i * 2.2 - 0.55, 0]) square([1.1, 60]);
     }
 }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)

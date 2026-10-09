@@ -348,26 +348,15 @@ module body_raw() {
 }
 
 // ---- RELIEF FOR A ONE-COLOUR PRINT (2026-10-08) -------------------------------------------------
-// The clock's dots and hands, the cane's and the peppermints' stripes were
-// colour alone, flush: a white print lost them. The dots and hands stand 0.4
-// proud of the glass and thicken 0.8 into the room, so lit they show dark; the
-// stripes stand out 0.3 in 0.15 steps. Every lower edge climbs SH per 1 out.
+// The clock's dots and hands and the peppermints' stripes were colour alone,
+// flush: a white print lost them. The dots and hands stand 0.4 proud of the
+// glass and thicken 0.8 into the room, so lit they show dark; the stripes stand
+// out 0.3. Every lower edge climbs SH per 1 out. The cane's stripes had relief
+// too and needed 4,638 support moves on the tilted cane: left to paint
+// (2026-10-09), as on the chapel's crook and the cafe's stirrer.
 module ck_art() {
     cyl_relief(MR, ck_th, ck_z, ck_r + 1.2, 0.6) translate([0, 0, -0.2]) art_out(0.4, 2) children();
     cyl_relief(MRi, ck_th, ck_z, ck_r + 1.2, 0.6) art_in(0.8, 4) children();
-}
-module cr_at_g(i, d) let (p = cr_pts(i)) translate([p[0], 0, cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
-module cane_g(d) {
-    translate([0, 0, z_co(0) - 3]) cylinder(r = 1.9 + d, h = cn_z0 + cn_h - z_co(0) + 3, $fn = 24);
-    for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
-}
-module cane_slabs(dz) for (z = [cn_z0 + 1.0 : 2.4 : cr_z0 + cr_L + 2]) translate([0, 0, z + dz]) rotate([0, -28, 0]) cube([20, 20, 1.0], center = true);
-// above the cone's cap only: below it the rod is buried in the icing
-module cane_stripes_up() for (k = [0 : 1]) intersection() {
-    difference() { cane_g((k + 1) * 0.15); cane_g(k * 0.15); }
-    cane_slabs(0);
-    cane_slabs(SH * (k + 1) * 0.15);
-    translate([-50, -50, cn_z0]) cube([100, 100, 100]);
 }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
     intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
@@ -386,7 +375,6 @@ module accent_raw() {
     difference() { ck_inlay() ck_hands2d(); room(); }
     peppermints(true);
     ck_art() ck_hands2d();
-    cane_stripes_up();
     pepper_stripes_up();
 }
 module trim_raw() {
