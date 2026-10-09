@@ -82,7 +82,12 @@ branch, and the workflow runs on `claude/new-session-o245bl`: the first
 dispatched run was refused with "Branch ... is not allowed to deploy to
 github-pages due to environment protection rules". Settings -> Environments ->
 github-pages -> Deployment branches and tags -> add a rule for that branch.
-Neither setting can be changed through this session's GitHub access. The steps *after* it (`upload-pages-artifact`,
+Neither setting can be changed through this session's GitHub access.
+
+**Live since 2026-10-09: https://printing3dthings-afk.github.io/Etsy/** — the
+first green run, with both switches in. `upload-pages-artifact` and
+`deploy-pages` have run now; checked by fetching the page, its hashed viewer
+bundle, three.js, the 86-plate index, a plate and a thumbnail. The steps *after* it (`upload-pages-artifact`,
 `deploy-pages`) have never run, so treat them as untested until a green run
 exists.
 
