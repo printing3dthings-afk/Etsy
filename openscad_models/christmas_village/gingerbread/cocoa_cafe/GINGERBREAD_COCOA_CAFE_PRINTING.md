@@ -76,8 +76,8 @@ in at 55° under the cream.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 4.52 mm, against the 1.2 mm floor
-    (1.59 with COCOA flush, before 2026-10-07);
+  - 1st-percentile wall 1.23 mm, median 4.48 mm, against the 1.2 mm floor
+    (1.59 with COCOA flush, before 2026-10-07; 1.48 before the relief);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
   - 20.05 cm² of bed contact;
@@ -86,17 +86,27 @@ in at 55° under the cream.
   exactly two faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-08 with the relief): **0 flags**. 6.6 mm³ of
-  52,551 mm³ is not printed; 0.07 mm³ printed that was not modelled;
-  0.29 mm³ printed in another colour. The largest miss is 0.6 mm³ in
+  layer; re-run 2026-10-09 on the fixed relief): **0 flags**. 7.5 mm³ of
+  51,836 mm³ is not printed; 0.05 mm³ printed that was not modelled;
+  0.31 mm³ printed in another colour. The largest miss is 0.6 mm³ in
   total, 0.16 mm wide up the café's back corners where they meet the mug.
-- **The stripes and windows read on a one-colour print (2026-10-08).** The
-  mug's two stripes and its drawn windows stand out 0.4 mm, the awning's,
-  stirrer's and peppermints' stripes 0.3 mm; the windows also thicken 0.8 mm
-  into the mug's back, so lit they should show darker on the glow (not yet seen on
-  a real print). Gate: 0 support moves. Six overlap checks re-run one at a
-  time and each verified empty.
-- `fragility` (re-run 2026-10-08): nothing slender enough to snap. 0 high,
+- **The stripes and windows read on a one-colour print.** The mug's two
+  stripes and its drawn windows stand out 0.4 mm, built as skirts climbing at
+  twice SH; the awning's and peppermints' stripes stand out 0.3 mm. The
+  awning's outer pair of stripes and the stirrer's stripes are colour only:
+  on a white print, paint them.
+- **Correction (2026-10-09).** The 2026-10-08 pass recorded here was measured
+  on a union older than the relief parts. Gated on a fresh union, the relief
+  as first drawn failed: 8,386 support moves and a 1.01 mm wall. The windows
+  had also thickened 0.8 mm into the mug, and those undersides overhung the
+  curved inner wall and were propped from the mug's floor; the stirrer's
+  stripes needed supports on the tilted cane; the window lines, trimmed from
+  below, measured under the wall floor; and the awning's outer stripes stood
+  0.25 mm wide past its ends. All four are fixed as above (the removed code is
+  archived), and the figures in this section are from the rebuilt model:
+  gate 0 support moves, six overlap checks re-run one at a time and each
+  verified empty.
+- `fragility` (re-run 2026-10-09): nothing slender enough to snap. 0 high,
   0 watch, 0 slender runs.
 - **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
   the café, the same mark as the other buildings, mirrored so it reads OBC
