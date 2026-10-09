@@ -106,6 +106,33 @@ what worked and fixing what did not:
   behind them to blur) and v3's page file, which was a saved Artifact page
   with the host's own document wrapped around it.
 
+## Close-up recordings, design colours, the Christmas village (2026-10-09)
+
+- **Recording is a close-up.** The record button switches to Part only, holds
+  the bed still so the part grows up into the frame instead of sinking out of
+  it, uses filament colours, frames a little tighter and turns a third of the
+  way round over the 10 s. The view, motion and colour mode in use come back
+  when it ends. The default machine view had recorded a wide shot of a dark
+  box with the print a speck inside it.
+- **Plates can carry their design colours.** `gcode_viewer_data.py --colours
+  STEM=#RRGGBB,...` (one per filament, tool order) puts `toolColors` in the
+  payload; the beads and AMS spools take them, and the next plate without
+  them goes back to the placeholder palette. The Christmas village plates use
+  their building palettes (Victorian `#A8483A #2E3440 #F4F1EA #2F6B45`,
+  gingerbread `#C68642 #5A3825 #F7F3EE #D7263D`, body/roof/trim/accent).
+  Older plates, the haunted town included, still use the placeholders: their
+  3MFs record which part goes on which slot but not the colour.
+- **`--append`** merges new plates into the existing `index.js`. Without it
+  the exporter writes an index of only the plates it was given, which would
+  have emptied the library of everything else.
+- **Christmas village plates come from the print checks' own four-colour
+  slices** (`print_fidelity --keep`), and their thumbnails from the as-printed
+  render of that same slice: a colour picture of exactly the toolpath on
+  screen, not a separate model render.
+- **Phone:** loading a plate scrolled the whole page 292 px, because the
+  plate list is not a scroll box there and scrollIntoView moves the window.
+  Only the list's own box scrolls now.
+
 ## Rendering (overhauled 2026-09-17)
 
 Everything used to draw with `MeshLambertMaterial` under the renderer's
