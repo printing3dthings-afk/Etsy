@@ -385,6 +385,9 @@ def parse(gcode_path):
     }
 
 
+SPEED_MERGE_REL = 0.10
+
+
 def simplify(raw, tol_mm=0.02):
     """Drop points whose removal shifts the path less than `tol_mm`.
 
@@ -392,11 +395,18 @@ def simplify(raw, tol_mm=0.02):
     grid's own visible effect, let alone anything a browser renders. It removes
     8-30% of points on real plates.
 
-    HARD CONSTRAINT: a point is never dropped where the SPEED changes. Merging
-    two segments that ran at different feedrates would invent a speed for the
-    merged one and move a colour boundary, and the speed view exists precisely
-    to show where the slicer changed its mind. Geometry may be approximated;
-    the slicer's decisions may not.
+    A point is never dropped where the SPEED changes by more than
+    SPEED_MERGE_REL (10%). Merging across a real change would invent a speed
+    and move a colour boundary, and the speed view exists to show where the
+    slicer changed its mind.
+
+    It was "never across ANY change" until 2026-10-10. At the P1S's real speeds
+    the 21 mm3/s flow cap binds on every line a little wider than nominal, so
+    the speed changes nearly every segment (199, 206, 209, 214 mm/s ...): the
+    vase went from 64k segments to 234k at the same tolerance, and plates blew
+    past the size cap. Differences that small are invisible on the speed ramp.
+    A merged segment's speed is the length-weighted mean of what it replaces,
+    and its TIME is their exact sum, so the replay loses nothing.
     """
     if tol_mm <= 0:
         return raw
@@ -410,8 +420,10 @@ def simplify(raw, tol_mm=0.02):
         keep = [0]
         anchor = 0
         for i in range(1, n - 1):
-            # segment i-1 ends at point i, segment i starts at it
-            if speeds[seg_at + i - 1] != speeds[seg_at + i]:
+            # segment i-1 ends at point i, segment i starts at it; compared with
+            # the run's first segment so a slow ramp cannot creep past the limit
+            sa, sb = speeds[seg_at + anchor], speeds[seg_at + i]
+            if abs(sa - sb) > SPEED_MERGE_REL * max(sa, sb):
                 keep.append(i)
                 anchor = i
                 continue
@@ -429,10 +441,18 @@ def simplify(raw, tol_mm=0.02):
         for i in keep:
             new_pts.append(pts[(s0 + i) * 2])
             new_pts.append(pts[(s0 + i) * 2 + 1])
-        # the merged segment inherits the speed of the run it replaces, which
-        # is unambiguous precisely because a speed change is never merged over
         for k in range(len(keep) - 1):
-            new_speeds.append(speeds[seg_at + keep[k]])
+            a, b = keep[k], keep[k + 1]
+            if b - a == 1:
+                new_speeds.append(speeds[seg_at + a])
+            else:
+                num = den = 0.0
+                for j in range(a, b):
+                    L = math.hypot(pts[(s0 + j + 1) * 2] - pts[(s0 + j) * 2],
+                                   pts[(s0 + j + 1) * 2 + 1] - pts[(s0 + j) * 2 + 1])
+                    num += speeds[seg_at + j] * L
+                    den += L
+                new_speeds.append(int(round(num / den)) if den > 0 else speeds[seg_at + a])
             # A merged segment takes exactly as long as the moves it replaces.
             if seg_times is not None:
                 new_times.append(sum(seg_times[seg_at + keep[k]:seg_at + keep[k + 1]]))

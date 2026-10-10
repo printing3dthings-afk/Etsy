@@ -207,6 +207,14 @@ What it does now:
   On the keychain's lettering the head averages 40–75 mm/s against a commanded
   278: the moves are too short to reach full speed. That is the real reason a
   small detailed part takes longer than its length suggests.
+- **Simplification merges speed jitter under 10%.** At real speeds the
+  21 mm³/s flow cap binds on every line slightly wider than nominal, so the
+  speed changes almost every segment (199, 206, 209, 214 mm/s ...). The old
+  rule ("never merge across any speed change") then merged almost nothing: the
+  vase went from 64k to 234k segments, and plates passed 5 MB. Now a merged
+  segment keeps the exact sum of the times it replaces, at the length-weighted
+  mean speed. A real change (over 10%) is never merged. The vase now fits 3 MB
+  at a finer path tolerance (0.16 mm) than it had before (0.64 mm).
 - **`tools/regen_viewer_jobs.py`** re-slices every plate from its source and
   re-exports it, keeping its name, notes, colours and place in the list
   (`--resume` skips plates already done).

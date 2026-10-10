@@ -456,6 +456,22 @@ def test_an_overflowed_time_estimate_is_never_trusted():
           "the fallback total must still be positive, got %r" % job["totalSeconds"])
 
 
+def test_simplify_merges_flow_cap_jitter_but_not_a_real_speed_change():
+    """At P1S speeds the flow cap changes the speed a few percent on nearly
+    every line, which stopped simplification from merging anything and blew
+    plates past the size cap (the vase: 64k -> 234k segments). Within 10% they
+    merge, at the length-weighted mean; a real change still never does."""
+    # Collinear, so geometry alone would merge everything into one segment.
+    pts = [0, 0, 1000, 0, 2000, 0, 3000, 0, 4000, 0]
+    raw = {"pts": pts, "polys": [0, 0, 5], "speeds": [270, 278, 262, 100],
+           "segTimes": [0.1, 0.2, 0.3, 0.4], "layers": [[20, 0, 1, 1.0, 0, 0.2]]}
+    out = gvd.simplify(raw, 0.02)
+    check(out["speeds"] == [270, 100],
+          f"270/278/262 should merge (mean 270) and 100 stay apart, got {out['speeds']}")
+    check(abs(sum(out["segTimes"]) - 1.0) < 1e-9 and abs(out["segTimes"][0] - 0.6) < 1e-9,
+          f"merged time must be the exact sum, got {out['segTimes']}")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
