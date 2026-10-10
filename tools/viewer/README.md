@@ -269,6 +269,54 @@ What it still does not know:
 - The AMS's cut and purge beyond its stated load and unload times.
 - Anything thermal.
 
+## The AMS swap, played out (2026-10-10)
+
+A colour change used to be a minute of the head drifting slowly across the bed.
+It now follows Bambu's own `change_filament_gcode`
+(`fdm_bbl_3dp_001_common.json`, BambuStudio `resources/profiles/BBL`, read
+2026-10-10), move for move:
+
+1. The bed drops 3 mm.
+2. The head goes to the purge chute (X70, Y245, then Y265) and the part fan
+   goes off.
+3. It wipes on the brush (X90, Y255, X100, X120).
+4. It goes to the cutter (X20 Y50, then Y−3).
+5. It waits at the chute while the AMS pulls the old filament back and feeds
+   the new one.
+6. It shakes the purge off (X80/X60, twice). The part fan comes back on.
+7. It wipes again and returns to the print. The bed comes back up.
+
+The AMS panel switches slots once the 28 s unload is over.
+
+**Timing.** Each move is timed as a trapezoid at the profile's M204 S9000.
+Whatever is left of the gap the motion model timed is the wait. On the village
+plates that is about 58 s of a 65 s gap. On real plates (cocoa café, sweet
+shop, Santa's workshop, haunted bakery) every one of the 800–1,300 tool changes
+lands in exactly such a gap. The one extra large gap is the first load, before
+the first line.
+
+**What is not in the G-code, and says so on the page:**
+
+- *Where the head waits during unload and load.* The firmware decides, and it
+  is drawn at the chute. The readout labels that move "(firmware move,
+  assumed)".
+- *The flush.* This slice is PrusaSlicer's and flushes the old colour into the
+  wipe tower, not out of the chute as Bambu Studio does. The swap readout says
+  so.
+
+**The purge counter.** The AMS note keeps running totals: grams purged so far
+and colour changes made out of the total. "Purged so far" is the slice's own
+wipe-tower filament, scaled by how much of the tower's length is down. The
+change count leaves out the first load, which is not a colour change.
+
+`tests/test_viewer_motion.py` runs the sequence under node and checks four
+things:
+
+- it fills the modelled gap exactly;
+- it reaches the chute and the cutter;
+- it ends on the next line at the next layer's height;
+- the fan and the AMS slot switch where the G-code switches them.
+
 ## Detail: ultra (2026-10-10)
 
 Scott asked for the viewer to look a lot more real. The Detail button now has

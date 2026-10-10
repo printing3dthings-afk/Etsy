@@ -3760,6 +3760,20 @@ function buildJob(raw) {
     }
   }
 
+  // How much of the wipe tower is down by each segment, for the running purge
+  // count, and where each colour change falls.
+  var wipeType = raw.types ? raw.types.indexOf('Wipe tower') : -1;
+  var wipeCum = new Float64Array(si + 1), swaps = [], kw = 0, wsum = 0;
+  for (var pw = 0; pw < nPoly; pw++) {
+    var nw = polys[pw * 3 + 2] - 1, isW = polys[pw * 3] === wipeType;
+    if (kw > 0 && nw > 0 && segTool[kw - 1] !== segTool[kw]) { swaps.push(kw); }
+    for (var qw = 0; qw < nw; qw++, kw++) {
+      wipeCum[kw] = wsum;
+      if (isW) { wsum += segLen[kw]; }
+    }
+  }
+  wipeCum[si] = wsum;
+
   var g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Int16BufferAttribute(vPos, 3));
   g.setAttribute('normal', new THREE.Int8BufferAttribute(vNrm, 3, true));
@@ -3775,7 +3789,8 @@ function buildJob(raw) {
   return {raw:raw, geom:g, nSeg:si, segEnd:segEnd, segCum:segCum,
           segDone:segDone, segVtx:segVtx, segV:raw.segV ? b64(raw.segV, Uint16Array) : null,
           segLayer:segLayer, layerSeg:layerSeg, total:cum,
-          segSpeed:spd, segTool:segTool, layers:layers,
+          segSpeed:spd, segTool:segTool, layers:layers, wipeCum:wipeCum,
+          swaps:new Int32Array(swaps),
           seamXYZ:new Float32Array(seamXYZ), seamSeg:new Int32Array(seamSeg),
           seamStats:seamStats(seamXYZ, seamLayer, layers.length)};
 }
@@ -4200,8 +4215,125 @@ function beadCentre(arr, vtx, out) {
   return out;
 }
 
+// ── the AMS swap (2026-10-10) ─────────────────────────────────────────────
+// A filament change on the P1S is not a pause. Bambu's own change_filament
+// G-code (fdm_bbl_3dp_001_common in BambuStudio's BBL profiles, read
+// 2026-10-10) drops the bed 3 mm, runs the head back to the purge chute and
+// over its brush, across to the front-left to cut the filament, waits while
+// the AMS pulls the old one back and feeds the new one, shakes the purged
+// plastic off at the chute, wipes, and comes back. The motion model already
+// times the gap as a swap (28 s unload + 29 s load, plus the moves); this
+// spends that time where the head really goes, instead of drifting across the
+// bed for a minute.
+//
+// Two places are not in the G-code and are said so in the readout: where the
+// head waits during the unload and load (the firmware moves it; drawn at the
+// chute, where the flush comes out), and the flush itself, which this slice
+// puts on the wipe tower instead of out of the chute.
+// [x, y, feed mm/min, phase]; null leaves that axis where it is.
+var SWAP_IN = [
+  [70, null, 21000, 'to the purge chute'], [null, 245, 21000, 'to the purge chute'],
+  [null, 265, 3000, 'to the purge chute'],
+  [90, null, 3000, 'wiping on the chute brush'], [null, 255, 4000, 'wiping on the chute brush'],
+  [100, null, 5000, 'wiping on the chute brush'], [120, null, 15000, 'wiping on the chute brush'],
+  [20, 50, 21000, 'to the cutter'], [null, -3, 21000, 'cutting the filament'],
+  [70, 265, 21000, 'to the chute (firmware move, assumed)']
+];
+var SWAP_OUT = [
+  [80, null, 15000, 'shaking off the purge'], [60, null, 15000, 'shaking off the purge'],
+  [80, null, 15000, 'shaking off the purge'], [60, null, 15000, 'shaking off the purge'],
+  [70, null, 5000, 'wiping on the chute brush'], [90, null, 3000, 'wiping on the chute brush'],
+  [null, 255, 4000, 'wiping on the chute brush'], [100, null, 5000, 'wiping on the chute brush'],
+  [null, 265, 5000, 'wiping on the chute brush'], [70, null, 10000, 'wiping on the chute brush'],
+  [100, null, 5000, 'wiping on the chute brush'], [70, null, 10000, 'wiping on the chute brush'],
+  [100, null, 5000, 'wiping on the chute brush'], [165, null, 15000, 'wiping on the chute brush'],
+  [null, 256, 15000, 'back to the print']
+];
+var SWAP_ACCEL = 9000, SWAP_LIFT = 3, SWAP_MIN_S = 40;
+var SWAP_HELP = 'Bambu\u2019s own filament-change sequence: bed down 3 mm, purge chute, ' +
+  'brush, cutter, then the AMS pulls the old filament back (about 28 s) and feeds the new ' +
+  'one (about 29 s). Where the head waits during that is the firmware\u2019s choice and is ' +
+  'drawn at the chute. This slice flushes the old colour into the wipe tower, not out of ' +
+  'the chute.';
+var SWAP_UNLOAD_S = 28;   // of P1S_TOOLCHANGE_S in tools/p1s_motion.py
+var _swap = null, swapNow = null;
+
+// Rest to rest at the profile's M204 S9000: the corners in this sequence are
+// all right angles, which classic jerk stops at anyway.
+function swapMoveTime(d, feed, a) {
+  var v = feed / 60;
+  if (d <= 0) { return 0; }
+  return d >= v * v / a ? v / a + d / v : 2 * Math.sqrt(d / a);
+}
+
+function isSwapGap(k) {
+  return printerId === 'p1s' && k > 0 && k < JOB.nSeg &&
+    JOB.segTool[k - 1] !== JOB.segTool[k] &&
+    JOB.segCum[k] - JOB.segDone[k - 1] >= SWAP_MIN_S;
+}
+
+// Keyframes for the swap in the gap before segment k: [t, x, y, lift, phase].
+function swapPlan(k, ax, ay, bx, by) {
+  if (_swap && _swap.k === k && _swap.job === JOB) { return _swap; }
+  var t0 = JOB.segDone[k - 1], span = JOB.segCum[k] - t0;
+  var keys = [], x = ax, y = ay, t = 0;
+  function go(nx, ny, feed, lift, phase, a) {
+    var d = Math.hypot(nx - x, ny - y);
+    t += Math.max(swapMoveTime(d, feed, a || SWAP_ACCEL),
+                  swapMoveTime(Math.abs(lift - keys[keys.length - 1][3]), 1200, 500));
+    x = nx; y = ny;
+    keys.push([t, x, y, lift, phase]);
+  }
+  keys.push([0, ax, ay, 0, 'lifting the nozzle clear']);
+  go(ax, ay, 1200, SWAP_LIFT, 'lifting the nozzle clear');
+  SWAP_IN.forEach(function (m) {
+    go(m[0] == null ? x : m[0], m[1] == null ? y : m[1], m[2], SWAP_LIFT, m[3]);
+  });
+  var tIn = t, mark = keys.length;
+  SWAP_OUT.forEach(function (m) {
+    go(m[0] == null ? x : m[0], m[1] == null ? y : m[1], m[2], SWAP_LIFT, m[3]);
+  });
+  go(bx, by, 30000, SWAP_LIFT, 'back to the print');
+  go(bx, by, 1200, 0, 'back to the print');
+  // Everything the moves do not use is the AMS at work, at the chute.
+  var dwell = span - t, scale = 1;
+  if (dwell < 0) { scale = span / t; dwell = 0; }
+  for (var i = 0; i < keys.length; i++) {
+    keys[i][0] = keys[i][0] * scale + (i >= mark ? dwell : 0);
+  }
+  keys.splice(mark, 0, [tIn * scale + dwell, keys[mark - 1][1], keys[mark - 1][2], SWAP_LIFT,
+                        'loading the new filament']);
+  _swap = {k: k, job: JOB, t0: t0, keys: keys, dwellAt: tIn * scale, dwell: dwell, mark: mark,
+           from: JOB.segTool[k - 1], to: JOB.segTool[k]};
+  return _swap;
+}
+
+// Head position at time t inside the swap, eased within each move.
+function swapPlace(sw, t, zPrev, zTop) {
+  var u = t - sw.t0, keys = sw.keys, i = 1;
+  while (i < keys.length - 1 && keys[i][0] < u) { i++; }
+  var a = keys[i - 1], b = keys[i];
+  var g = b[0] > a[0] ? Math.max(0, Math.min(1, (u - a[0]) / (b[0] - a[0]))) : 1;
+  var e = g * g * (3 - 2 * g);
+  var phase = b[4];
+  if (b[4] === 'loading the new filament') {
+    phase = u - sw.dwellAt < sw.dwell * SWAP_UNLOAD_S / 57 ? 'unloading the old filament'
+                                                           : 'loading the new filament';
+  }
+  // The descent onto the next layer is the last move; up to then the bed
+  // holds the old layer's height plus the lift.
+  var za = (i - 1 === keys.length - 1 ? zTop : zPrev) + a[3];
+  var zb = (i === keys.length - 1 ? zTop : zPrev) + b[3];
+  // M106 P1 S0 once the head reaches the chute, S255 once the load is done.
+  swapNow = {phase: phase, fanOff: u >= keys[4][0] && u < keys[sw.mark][0],
+             loaded: phase !== 'unloading the old filament' && u >= sw.dwellAt,
+             from: sw.from, to: sw.to};
+  placeHead(a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, za + (zb - za) * e);
+}
+
 var _pa = [0, 0], _pb = [0, 0];
 function applyPlayhead(t) {
+  swapNow = null;
   if (!JOB || !JOB.segDone || !jobGeom) { return; }
   var k = play.seg;
   if (k >= JOB.nSeg) { return; }
@@ -4231,6 +4363,12 @@ function applyPlayhead(t) {
   var tPrev = JOB.segDone[k - 1];
   var span = t0 - tPrev;
   if (span <= 0) { return; }
+  if (isSwapGap(k)) {
+    beadCentre(arr, vStart, _pa);
+    swapPlace(swapPlan(k, JOB.segEnd[(k - 1) * 3], JOB.segEnd[(k - 1) * 3 + 1], _pa[0], _pa[1]),
+              t, JOB.segEnd[(k - 1) * 3 + 2], zTop);
+    return;
+  }
   var g = Math.max(0, Math.min(1, (t - tPrev) / span));
   var e = g * g * (3 - 2 * g);
   var ax = JOB.segEnd[(k - 1) * 3], ay = JOB.segEnd[(k - 1) * 3 + 1];
@@ -4536,7 +4674,9 @@ function refreshReadout(force) {
   var fil = layerFilCum[li] + (L[4] * ((seg - a0) / Math.max(1, a1 - a0)));
   $('r-fil').innerHTML = grams(fil).toFixed(1) + ' <small>g</small>';
   var v = seg > 0 ? JOB.segSpeed[seg - 1] : 0;
-  if (JOB.segV && seg < JOB.nSeg && seg > 0 && play.t < JOB.segCum[seg]) {
+  if (swapNow) {
+    $('r-spd').innerHTML = 'swap';
+  } else if (JOB.segV && seg < JOB.nSeg && seg > 0 && play.t < JOB.segCum[seg]) {
     $('r-spd').innerHTML = 'travel';
   } else if (JOB.segV) {
     // What the head actually averages over the line, after accelerating out
@@ -4553,7 +4693,7 @@ function refreshReadout(force) {
   $('r-seg').textContent = seg.toLocaleString() + ' moves';
   // Bambu's PLA profile: both fans off for the first layer, then part fan
   // 100% and auxiliary 70%.
-  var first = li === 0;
+  var first = li === 0 || (swapNow && swapNow.fanOff);
   var rt = $('r-temp');
   if (rt) {
     rt.innerHTML = HEAT.nozzle + '<small> / ' + (PLA_BED[plateId] || HEAT.bed) + ' \u00b0C</small>';
@@ -4564,10 +4704,21 @@ function refreshReadout(force) {
   var nf = $('nowfeat');
   nf.firstElementChild.style.background = tIdx >= 0 ? TYPE_COLOR[tIdx] : 'var(--faint)';
   var fname = tIdx >= 0 ? JOB.raw.types[tIdx] : null;
+  if (swapNow) {
+    fname = 'Filament swap \u2014 ' + swapNow.phase;
+    nf.firstElementChild.style.background = 'var(--faint)';
+  }
   $('r-feat').textContent = fname || 'idle';
   if (fname !== _lastFeat) {
     _lastFeat = fname;
-    $('featnote').textContent = fname ? (TYPE_HELP[fname] || '') : 'Press play to start the job.';
+    $('featnote').textContent = swapNow ? SWAP_HELP
+      : fname ? (TYPE_HELP[fname] || '') : 'Press play to start the job.';
+  }
+  if (swapNow) {
+    var want = swapNow.loaded ? swapNow.to : swapNow.from;
+    if (want !== amsActive) { amsActive = want; paintFeed(); }
+  } else if (seg > 0 && amsActive !== JOB.segTool[seg - 1]) {
+    amsActive = JOB.segTool[seg - 1]; paintFeed();
   }
   paintAMS();
   $('lnum').textContent = seg ? li + 1 : 0;
@@ -5096,10 +5247,17 @@ function paintAMS() {
       ' filaments and one AMS holds ' + cap + '.</span> A second unit would have to be ' +
       'chained to print it as sliced.';
   } else if (amsSlots.length > 1) {
+    // Running totals: the wipe tower laid so far, as a share of the slice's
+    // own wipe-tower filament, and the colour changes already made.
     var purge = (JOB.raw.filamentByType || {})['Wipe tower'] || 0;
-    note.innerHTML = 'Every filament change wipes the old colour into the purge tower. ' +
-      '<b>' + grams(purge).toFixed(1) + ' g</b> of this plate is purge \u2014 ' +
-      (JOB.raw.toolChanges || 0) + ' changes.';
+    var seg = play.seg, wc = JOB.wipeCum, sw = JOB.swaps;
+    var done = 0, lo = 0, hi = sw.length;
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (sw[mid] <= seg) { lo = mid + 1; } else { hi = mid; } }
+    done = lo;
+    var sofar = wc[JOB.nSeg] > 0 ? purge * wc[seg] / wc[JOB.nSeg] : 0;
+    note.innerHTML = 'Every colour change flushes the old colour into the wipe tower. ' +
+      '<b>' + grams(sofar).toFixed(1) + ' g</b> purged so far of <b>' + grams(purge).toFixed(1) +
+      ' g</b> \u2014 ' + done.toLocaleString() + ' of ' + sw.length.toLocaleString() + ' changes made.';
   } else {
     // The bar is progress through THIS plate's filament, which is what it
     // measures -- saying "off a full spool" while showing plate progress would
