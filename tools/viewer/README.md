@@ -146,6 +146,50 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## A real studio (2026-10-10)
+
+**The old studio never rendered.** `buildEnvironment()` built a room of
+softbox panels and passed it to `PMREMGenerator.fromScene`. In r128 that
+renders the cube with a far plane of 100, and every panel sat 300–420 units
+out, so none of it was drawn.
+
+Measured in the browser: a frame lit by that room and a frame lit by its
+background colour alone are identical (mean pixel difference 0.001 of 255).
+What metal and glass reflected was one flat blue-grey fill with nothing in it.
+The fill did light the scene: taking the environment away darkens the frame by
+7 levels on average. It just never had a softbox, a cool fill or a dark wall in
+it, and the lighting comments described a room nobody had ever seen.
+
+**Now the reflections are a photographed studio.** Poly Haven's
+[Studio Small 09](https://polyhaven.com/a/studio_small_09) (Sergej Majboroda,
+CC0): two octabox softboxes over a white cyclorama floor under a dark ceiling,
+neutral white balance (mean RGB 0.87 / 0.85 / 0.85). How it is shipped:
+
+- **Format.** The 1k file, raw RGBE bytes deflated and base64'd into
+  `hdri/studio.js` (1.6 MB). It loads like a plate, after the page is up.
+- **Decoding.** `DecompressionStream` turns it back into a `DataTexture` with
+  `RGBEEncoding`, and PMREM blurs it for rough surfaces.
+- **Placement.** It is drawn on a sphere of radius 40, inside the far plane,
+  turned so the capture's +Y is this scene's +Z.
+- **Fallback.** A browser without `DecompressionStream` keeps the flat fill.
+
+**How bright.** The key, rim and lamp were tuned against the flat fill, so the
+studio comes in at 0.6 of its captured level (`ENV_EXPOSURE`). Rendered at
+0.35, 0.6 and 1.0 against the old fill, in the machine view and the part view:
+
+- 0.6 lifts the shadow sides with neutral light from the white floor;
+- it turns the part-view floor from blue to neutral grey;
+- it gives the glass and the AMS lid something to reflect;
+- 1.0 starts to flatten the shading.
+
+The Limits tab now says the reflections are a photographed studio and not the
+inside of a P1S. `tests/test_viewer_realism.py` checks four things:
+
+- the sphere sits inside the far plane;
+- the capture is turned upright;
+- the shipped file decodes to the size it claims;
+- an old browser falls back cleanly.
+
 ## Layout: less scrolling (2026-10-10)
 
 Scott: "There is too much scrolling. I need it to be easier to navigate

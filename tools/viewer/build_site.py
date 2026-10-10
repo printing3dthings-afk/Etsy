@@ -136,6 +136,16 @@ def build(out: Path) -> Path:
         shutil.rmtree(jobs_out)
     shutil.copytree(jobs_src, jobs_out)
 
+    # The captured studio the scene reflects (app.js, loadStudioEnvironment).
+    # Missing is not fatal to the page -- it keeps its dark placeholder -- but
+    # it is to the build, which would otherwise ship that silently.
+    env_src = HERE / "hdri" / "studio.js"
+    if not env_src.exists():
+        raise SystemExit("missing %s -- the page would fall back to a flat dark "
+                         "environment with nothing to reflect." % env_src)
+    (out / "hdri").mkdir(exist_ok=True)
+    shutil.copy2(env_src, out / "hdri" / "studio.js")
+
     # Path-traced stills. Already downscaled and committed as JPEG by
     # tools/webify_stills.py, so this is a copy rather than a conversion --
     # which is what lets a fresh CI checkout (no local PNGs) still build a

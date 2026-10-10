@@ -246,6 +246,50 @@ def test_motion_toggle_keeps_part_only_framed_on_the_part():
           "toggling bed motion in Part only must frame the part, not the machine")
 
 
+def test_the_studio_sits_inside_the_cube_cameras_far_plane():
+    # r128's PMREMGenerator.fromScene renders the cube with far = 100. The old
+    # softbox room sat 300-420 units out and never reached a pixel; a frame lit
+    # by it was identical to one lit by its background colour alone.
+    body = _function("applyStudioEnvironment")
+    m = re.search(r"new THREE\.SphereGeometry\(([0-9.]+),", body)
+    check(m is not None, "the captured studio must be drawn on a sphere")
+    if m:
+        check(float(m.group(1)) < 100,
+              "studio sphere radius %s is outside fromScene's far plane of 100 "
+              "-- it would be clipped, exactly as the old softboxes were" % m.group(1))
+    check("pmrem.fromScene(room, 0)" in body, "the studio must go through PMREM")
+    check("rotation.x = Math.PI / 2" in body,
+          "the capture is Y-up and this scene is Z-up; unrotated, the floor of "
+          "the studio would light the machine from the side")
+
+
+def test_the_captured_studio_ships_and_decodes():
+    import base64, json as _json, zlib
+    path = ROOT / "tools" / "viewer" / "hdri" / "studio.js"
+    check(path.exists(), "hdri/studio.js is missing")
+    if not path.exists():
+        return
+    src = path.read_text()
+    check(src.startswith("window.__ENV_LOADED(") and src.rstrip().endswith(");"),
+          "the studio file must call the loader app.js installs")
+    env = _json.loads(src[len("window.__ENV_LOADED("):src.rstrip().rindex(")")])
+    check(env.get("license") == "CC0" and "polyhaven.com" in env.get("source", ""),
+          "the studio must say where it came from and under what licence")
+    raw = zlib.decompress(base64.b64decode(env["data"]))
+    check(len(raw) == env["w"] * env["h"] * 4,
+          "decoded studio is %d bytes, expected w*h*4 = %d" % (len(raw), env["w"] * env["h"] * 4))
+    check("'hdri/studio.js'" in _src(), "app.js must load the file the build ships")
+    build = (ROOT / "tools" / "viewer" / "build_site.py").read_text()
+    check('HERE / "hdri" / "studio.js"' in build, "build_site.py must ship the studio")
+
+
+def test_a_browser_without_decompression_keeps_the_placeholder():
+    body = _function("loadStudioEnvironment")
+    check("typeof DecompressionStream === 'undefined'" in body,
+          "an older browser must fall back to the placeholder, not throw")
+    check(".catch(function (e)" in body, "a failed decode must not take the page down")
+
+
 def run() -> None:
     import sys
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

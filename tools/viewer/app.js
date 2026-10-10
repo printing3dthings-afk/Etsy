@@ -433,47 +433,97 @@ function glassMaterial() {
 }
 
 // ── environment ────────────────────────────────────────────────────────────
-// The thing that actually makes metal look like metal. Without an environment
-// map a MeshStandardMaterial with metalness 0.9 has nothing to reflect and
-// renders nearly black -- which is the classic "I switched to PBR and it got
-// worse" failure. This builds a small studio by hand (overhead softbox, cool
-// fill from one side, warm bounce from below) and runs it through PMREM so
-// rough surfaces get a properly blurred version of it.
+// What metal, glass and every PBR surface reflect, and the ambient light that
+// fills what the key misses.
+//
+// THE OLD STUDIO NEVER RENDERED (found 2026-10-10). This used to build a room
+// of softbox panels 300-420 units from the origin and hand it to
+// PMREMGenerator.fromScene(room, 0.5). r128's fromScene renders the cube with
+// a far plane of 100, so every panel was clipped. Measured: a frame lit by
+// that room and one lit by its background colour alone are identical (mean
+// pixel difference 0.001 of 255). What metal and glass reflected was one flat
+// blue-grey fill with nothing in it -- no softbox, no cool fill, no dark wall.
+// The fill itself did light the scene (taking the environment away darkens
+// the frame by 7 levels on average); it just never had a studio in it.
+//
+// Now: a real studio, captured. Poly Haven's "Studio Small 09" (Sergej
+// Majboroda, CC0) -- two octabox softboxes, a white cyclorama floor and a dark
+// ceiling, neutral white balance (mean RGB 0.87/0.85/0.85). It loads after the
+// page is up (1.6 MB, raw RGBE deflated, hdri/studio.js) and replaces this
+// placeholder. Until it arrives, or on a browser without DecompressionStream,
+// the placeholder is that same flat fill the page always had in practice,
+// now on purpose.
+var ENV_DARK = 0x0b0d12;
 function buildEnvironment() {
   var pmrem = new THREE.PMREMGenerator(renderer);
   var room = new THREE.Scene();
-  room.background = new THREE.Color(lin(0x0b0d12));
-
-  function panel(w, h, d, color, intensity, x, y, z, rx, ry) {
-    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshBasicMaterial({color: lin(color)}));
-    m.material.color.multiplyScalar(intensity);
-    m.position.set(x, y, z);
-    if (rx) { m.rotation.x = rx; }
-    if (ry) { m.rotation.y = ry; }
-    room.add(m);
-    return m;
-  }
-
-  // First pass at these numbers had a 1.5-intensity cool fill and it turned
-  // the whole machine powder blue -- an environment map lights EVERYTHING, so
-  // a tint that looks like a tasteful accent in isolation becomes the colour
-  // of the product. Warm key, restrained cool, and a dark back wall so metal
-  // has something black to reflect: without a dark region in the environment,
-  // polished surfaces have no contrast and read as flat grey plastic.
-  panel(600, 10, 420, 0xfff2de, 2.2,    0,  360,   40, 0, 0);   // key softbox
-  panel(10, 460, 420, 0xa8c0e0, 0.45, -420,  60,    0, 0, 0);   // cool fill
-  panel(10, 460, 420, 0xffcfa0, 0.30,  420,  40,    0, 0, 0);   // warm kicker
-  panel(600, 10, 420, 0x5a6270, 0.18,   0, -300,    0, 0, 0);   // floor bounce
-  panel(600, 460, 10, 0x05070b, 1.0,    0,   40, -360, 0, 0);   // back wall
-
-  envRT = pmrem.fromScene(room, 0.5);
+  room.background = new THREE.Color(lin(ENV_DARK));
+  envRT = pmrem.fromScene(room, 0);
   scene.environment = envRT.texture;
-  room.traverse(function (o) {
-    if (o.geometry) { o.geometry.dispose(); }
-    if (o.material) { o.material.dispose(); }
-  });
   pmrem.dispose();
+}
+
+// How bright the captured studio is against the scene's own lights. The key,
+// rim and lamp were tuned against an environment that was effectively black,
+// so the studio comes in at a fraction of its captured level: enough to give
+// glass and metal something to reflect and to lift the shadow sides, not
+// enough to flatten the key's shadows. Chosen from renders at 0.35, 0.6 and
+// 1.0 against the old fill (README, "A real studio"): 1.0 starts to flatten.
+var ENV_EXPOSURE = 0.6, ENV_YAW = 0;
+var envState = 'placeholder';
+
+function loadStudioEnvironment() {
+  if (typeof DecompressionStream === 'undefined' || typeof Response === 'undefined') {
+    envState = 'unsupported';
+    return;
+  }
+  window.__ENV_LOADED = function (env) {
+    var bin = atob(env.data), z = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) { z[i] = bin.charCodeAt(i); }
+    new Response(new Blob([z]).stream().pipeThrough(new DecompressionStream('deflate')))
+      .arrayBuffer().then(function (buf) {
+        var px = new Uint8Array(buf);
+        if (px.length !== env.w * env.h * 4) { throw new Error('size ' + px.length); }
+        applyStudioEnvironment(px, env.w, env.h);
+      }).catch(function (e) {
+        envState = 'failed';
+        console.warn('[viewer] studio environment not applied:', e);
+      });
+  };
+  var s = document.createElement('script');
+  s.src = 'hdri/studio.js';
+  s.onerror = function () { envState = 'failed'; console.warn('[viewer] hdri/studio.js did not load'); };
+  document.body.appendChild(s);
+}
+
+function applyStudioEnvironment(px, w, h) {
+  if (!renderer || !scene) { return; }
+  var tex = new THREE.DataTexture(px, w, h, THREE.RGBAFormat, THREE.UnsignedByteType);
+  tex.encoding = THREE.RGBEEncoding;
+  tex.magFilter = tex.minFilter = THREE.NearestFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  var mat = new THREE.MeshBasicMaterial({map: tex, side: THREE.BackSide, fog: false});
+  mat.color.setScalar(ENV_EXPOSURE);
+  // Inside the 100-unit far plane fromScene renders with (see above).
+  var sky = new THREE.Mesh(new THREE.SphereGeometry(40, 96, 48), mat);
+  // The capture's up is +Y; this scene's is +Z.
+  sky.rotation.x = Math.PI / 2;
+  var turn = new THREE.Group();
+  turn.rotation.z = ENV_YAW;
+  turn.add(sky);
+  var room = new THREE.Scene();
+  room.add(turn);
+  var pmrem = new THREE.PMREMGenerator(renderer);
+  var rt = pmrem.fromScene(room, 0);
+  pmrem.dispose();
+  sky.geometry.dispose(); mat.dispose(); tex.dispose();
+  if (envRT) { envRT.dispose(); }
+  envRT = rt;
+  scene.environment = rt.texture;
+  envState = 'studio';
+  shadowDirty = true;
+  if (typeof syncStill === 'function') { syncStill(); }
 }
 
 // ── post-processing: the "ultra" detail tier (2026-10-10) ──────────────────
@@ -960,6 +1010,7 @@ function initScene() {
   // AmbientLight that used to carry it is gone -- leaving it in on top of an
   // IBL is what makes a PBR scene look washed and plastic.
   buildEnvironment();
+  loadStudioEnvironment();
   buildBackdrop();
   // Directional intensity has to win over the environment or the shadow it
   // casts is invisible: an IBL contributes ambient that nothing occludes, so
