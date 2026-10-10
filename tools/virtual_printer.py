@@ -116,6 +116,10 @@ MMU = {
     "single-extruder-multi-material-priming": "0",
     "wipe-tower": "1", "wipe-tower-x": "180", "wipe-tower-y": "140",
     "use-relative-e-distances": "1",
+    # Required since the slices moved to the marlin2 flavour (P1S_MOTION, so
+    # PrusaSlicer writes per-feature M204 accelerations): with relative E it
+    # refuses to slice at all unless the extruder is reset every layer.
+    "layer-gcode": "G92 E0",
 }
 
 
