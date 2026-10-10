@@ -3322,7 +3322,7 @@ var JOB = null;           // decoded payload + derived arrays
 function buildJob(raw) {
   var pts = b64(raw.pts, Int16Array);
   var polys = b64(raw.polys, Int32Array);
-  var spd = b64(raw.speeds, Uint8Array);
+  var spd = b64(raw.speeds, raw.speedBits === 16 ? Uint16Array : Uint8Array);
   var polyTool = raw.polyTool ? b64(raw.polyTool, Uint8Array) : null;
   var layers = raw.layers;               // [z*100, polyStart, polyCount, sec, mm, h]
   var nPoly = polys.length / 3;
@@ -3367,12 +3367,13 @@ function buildJob(raw) {
   // it actually is instead of as a field of facets.
   var vNrm  = new Int8Array(nPt * BEAD_PTS * 3);
   var vType = new Uint8Array(nPt * BEAD_PTS);
-  var vSpd  = new Uint8Array(nPt * BEAD_PTS);
+  var vSpd  = raw.speedBits === 16 ? new Uint16Array(nPt * BEAD_PTS) : new Uint8Array(nPt * BEAD_PTS);
   var vTool = new Uint8Array(nPt * BEAD_PTS);
   var index = new Uint32Array(nSeg * BEAD_IDX);
   var segEnd = new Float32Array(nSeg * 3);
   var segLen = new Float32Array(nSeg);
-  var segCum = new Float32Array(nSeg + 1);
+  var segCum = new Float64Array(nSeg + 1);
+  var segVtx = new Uint32Array(nSeg);    // first vertex of each segment's END point
   var segLayer = new Int32Array(nSeg);
   var segTool = new Uint8Array(nSeg);
   var layerSeg = new Int32Array(layers.length + 1);
@@ -3584,6 +3585,7 @@ function buildJob(raw) {
           var lx = (x - pts[(s + i - 1) * 2]) / 100;
           var ly = (y - pts[(s + i - 1) * 2 + 1]) / 100;
           segLen[si] = Math.hypot(lx, ly);
+          segVtx[si] = b;
           segEnd[si * 3] = x / 100; segEnd[si * 3 + 1] = y / 100;
           segEnd[si * 3 + 2] = ztop / 100;
           segLayer[si] = li;
@@ -3629,15 +3631,39 @@ function buildJob(raw) {
     seamLayer.push(li);
   }
 
-  // Time: each layer's own duration, distributed inside it by extruded length.
-  var cum = 0;
-  for (li = 0; li < layers.length; li++) {
-    var a0 = layerSeg[li], a1 = layerSeg[li + 1], tot = 0;
-    for (k = a0; k < a1; k++) { tot += segLen[k]; }
-    var dur = layers[li][3];
-    for (k = a0; k < a1; k++) {
-      segCum[k] = cum;
-      cum += tot > 0 ? dur * segLen[k] / tot : 0;
+  // Time, 2026-10-10: move by move, from the P1S motion model the exporter
+  // ran (tools/p1s_motion.py). segV is each segment's average speed under
+  // acceleration and cornering, gapT what happens between one line and the
+  // next -- travel, retraction, Z-hop, layer change, filament swap. A segment
+  // STARTS at segCum[k] and is DONE at segDone[k]; with gaps those are no
+  // longer the same as the next segment's start.
+  //
+  // Older payloads carry neither, and keep the old model: each layer's time
+  // spread evenly over its extruded length, every line in a layer at one
+  // speed, travel instant.
+  var segDone = null, cum = 0;
+  if (raw.segV && raw.gapT) {
+    var segV = b64(raw.segV, Uint16Array), gapT = b64(raw.gapT, Float32Array);
+    segDone = new Float64Array(si);
+    var kk = 0;
+    for (var pp = 0; pp < nPoly; pp++) {
+      cum += gapT[pp] || 0;
+      for (var qq = 0; qq < polys[pp * 3 + 2] - 1; qq++, kk++) {
+        segCum[kk] = cum;
+        var sv2 = segV[kk];
+        cum += sv2 >= 65535 ? 0 : segLen[kk] * 100 / sv2;
+        segDone[kk] = cum;
+      }
+    }
+  } else {
+    for (li = 0; li < layers.length; li++) {
+      var a0 = layerSeg[li], a1 = layerSeg[li + 1], tot = 0;
+      for (k = a0; k < a1; k++) { tot += segLen[k]; }
+      var dur = layers[li][3];
+      for (k = a0; k < a1; k++) {
+        segCum[k] = cum;
+        cum += tot > 0 ? dur * segLen[k] / tot : 0;
+      }
     }
   }
   segCum[si] = cum;
@@ -3646,13 +3672,15 @@ function buildJob(raw) {
   g.setAttribute('position', new THREE.Int16BufferAttribute(vPos, 3));
   g.setAttribute('normal', new THREE.Int8BufferAttribute(vNrm, 3, true));
   g.setAttribute('aType', new THREE.Uint8BufferAttribute(vType, 1));
-  g.setAttribute('aSpeed', new THREE.Uint8BufferAttribute(vSpd, 1));
+  g.setAttribute('aSpeed', raw.speedBits === 16 ? new THREE.Uint16BufferAttribute(vSpd, 1)
+                                               : new THREE.Uint8BufferAttribute(vSpd, 1));
   g.setAttribute('aTool', new THREE.Uint8BufferAttribute(vTool, 1));
   g.setIndex(new THREE.BufferAttribute(index, 1));
   g.boundingSphere = new THREE.Sphere(
     new THREE.Vector3(128, 128, 128), 400);   // set by hand: positions are raw int16
 
   return {raw:raw, geom:g, nSeg:si, segEnd:segEnd, segCum:segCum,
+          segDone:segDone, segVtx:segVtx, segV:raw.segV ? b64(raw.segV, Uint16Array) : null,
           segLayer:segLayer, layerSeg:layerSeg, total:cum,
           segSpeed:spd, segTool:segTool, layers:layers,
           seamXYZ:new Float32Array(seamXYZ), seamSeg:new Int32Array(seamSeg),
@@ -3820,6 +3848,7 @@ function syncSeamRange() {
 
 function mountJob(job) {
   if (jobMesh) { scene.remove(jobMesh); scene.remove(ghostMesh); jobGeom.dispose(); }
+  _partial = null;   // indexes the old geometry; never write it into the new one
   jobGeom = job.geom;
   ghostMesh = new THREE.Mesh(jobGeom, makeMaterial(0.86, richShading));
   ghostMesh.material.polygonOffset = true;
@@ -3958,6 +3987,17 @@ var layerFilCum = null;
 // run over the starts and subtract one, which is the same number mid-print but
 // tops out at nSeg - 1, so the last bead of every plate was never drawn.
 function segAtTime(t) {
+  var d = JOB.segDone;
+  if (d) {
+    // Segments whose own end is at or before t. With travel between lines the
+    // end of one is not the start of the next, so segCum alone cannot say.
+    var a = 0, z = JOB.nSeg;
+    while (a < z) {
+      var m = (a + z) >> 1;
+      if (d[m] <= t) { a = m + 1; } else { z = m; }
+    }
+    return a;
+  }
   var lo = 1, hi = JOB.nSeg + 1, c = JOB.segCum;
   while (lo < hi) {
     var mid = (lo + hi) >> 1;
@@ -3968,40 +4008,132 @@ function segAtTime(t) {
 
 function setSeg(seg) {
   seg = Math.max(0, Math.min(JOB.nSeg, seg));
+  restorePartial();
   play.seg = seg;
   jobGeom.setDrawRange(0, seg * 24);   // BEAD_IDX in buildJob
   syncSeamRange();
   if (seg > 0) {
     var i = (seg - 1) * 3;
-    var px = JOB.segEnd[i], py = JOB.segEnd[i + 1], zTop = JOB.segEnd[i + 2];
-    var oy = machineBounds ? machineBounds.oy : py;
-    if (PRINTERS[printerId].bedslinger) {
-      // A bed-slinger is the other machine entirely: the BED travels in Y and
-      // the gantry climbs in Z. Replaying a P1S's motion on it would be the
-      // same lie as drawing it with a door.
-      var slide = machineMotion ? py - oy : 0;
-      bedGroup.position.set(0, -slide, 0);
-      jobMesh.position.set(0, -slide, 0);
-      ghostMesh.position.set(0, -slide, 0);
-      nozzle.position.set(px, py - slide, zTop);
-      gantry.position.y = py - slide;
-      gantry.position.z = zTop + 44 * headScale;
-    } else {
-      // The P1S: the gantry is fixed and the BED descends, so the nozzle holds
-      // one height and everything printed sinks away from it.
-      var drop = machineMotion ? zTop : 0;
-      bedGroup.position.set(0, 0, -drop);
-      jobMesh.position.set(0, 0, -drop);
-      ghostMesh.position.set(0, 0, -drop);
-      nozzle.position.set(px, py, zTop - drop);
-      gantry.position.y = py;
-      gantry.position.z = zTop - drop + 44 * headScale;
-    }
-    if (yRails) { yRails.position.z = gantry.position.z; }
+    placeHead(JOB.segEnd[i], JOB.segEnd[i + 1], JOB.segEnd[i + 2]);
   }
   if (!play.on) { shadowDirty = true; }
   syncStill();
   updateAMS(seg);
+}
+
+// Where the nozzle is and how far the bed has dropped, for a nozzle tip at
+// (px, py) laying a layer whose top is zTop.
+function placeHead(px, py, zTop) {
+  var oy = machineBounds ? machineBounds.oy : py;
+  if (PRINTERS[printerId].bedslinger) {
+    // A bed-slinger is the other machine entirely: the BED travels in Y and
+    // the gantry climbs in Z. Replaying a P1S's motion on it would be the
+    // same lie as drawing it with a door.
+    var slide = machineMotion ? py - oy : 0;
+    bedGroup.position.set(0, -slide, 0);
+    jobMesh.position.set(0, -slide, 0);
+    ghostMesh.position.set(0, -slide, 0);
+    nozzle.position.set(px, py - slide, zTop);
+    gantry.position.y = py - slide;
+    gantry.position.z = zTop + 44 * headScale;
+  } else {
+    // The P1S: the gantry is fixed and the BED descends, so the nozzle holds
+    // one height and everything printed sinks away from it.
+    var drop = machineMotion ? zTop : 0;
+    bedGroup.position.set(0, 0, -drop);
+    jobMesh.position.set(0, 0, -drop);
+    ghostMesh.position.set(0, 0, -drop);
+    nozzle.position.set(px, py, zTop - drop);
+    gantry.position.y = py;
+    gantry.position.z = zTop - drop + 44 * headScale;
+  }
+  if (yRails) { yRails.position.z = gantry.position.z; }
+}
+
+// ── between whole segments (2026-10-10) ───────────────────────────────────
+// setSeg() works in whole segments: a line appears when it is finished and the
+// nozzle sits on its end. At real speed that is the visible difference between
+// a replay and a machine -- the head jumped line to line and teleported across
+// every gap. With the motion model's timing this places the head where it
+// actually is at time t: partway along the line it is laying, which is drawn
+// growing behind it, or on its way across a travel, lifted 0.4 mm (the P1S
+// profile's Z-hop) while it crosses.
+var _partial = null;    // {at: index into the position array, orig: Int16Array(12)}
+var HOP_MM = 0.4;
+
+function restorePartial() {
+  if (!_partial || !jobGeom) { _partial = null; return; }
+  var attr = jobGeom.attributes.position;
+  attr.array.set(_partial.orig, _partial.at);
+  markPositions(attr, _partial.at);
+  _partial = null;
+}
+
+// Restoring one segment and growing the next can both happen in one frame, at
+// different offsets. One updateRange per upload, so the two are merged: setting
+// it twice would upload only the second and leave the first segment shrunk on
+// the GPU. three sets count back to -1 once it has uploaded.
+function markPositions(attr, at) {
+  var r = attr.updateRange;
+  if (r.count === -1) {
+    r.offset = at; r.count = 12;
+  } else {
+    var lo = Math.min(r.offset, at), hi = Math.max(r.offset + r.count, at + 12);
+    r.offset = lo; r.count = hi - lo;
+  }
+  attr.needsUpdate = true;
+}
+
+// Centre of a bead point from its four vertices: points 0 and 3 are the two
+// outer shoulders, symmetric about the path.
+function beadCentre(arr, vtx, out) {
+  var o = vtx * 3;
+  out[0] = (arr[o] + arr[o + 9]) / 200;
+  out[1] = (arr[o + 1] + arr[o + 10]) / 200;
+  return out;
+}
+
+var _pa = [0, 0], _pb = [0, 0];
+function applyPlayhead(t) {
+  if (!JOB || !JOB.segDone || !jobGeom) { return; }
+  var k = play.seg;
+  if (k >= JOB.nSeg) { return; }
+  var t0 = JOB.segCum[k], t1 = JOB.segDone[k];
+  var arr = jobGeom.attributes.position.array;
+  var vEnd = JOB.segVtx[k], vStart = vEnd - 4;
+  var zTop = JOB.segEnd[k * 3 + 2];
+  if (t >= t0 && t1 > t0) {
+    // Laying segment k: grow its end toward the real end.
+    var f = Math.min(1, (t - t0) / (t1 - t0));
+    var at = vEnd * 3;
+    _partial = {at: at, orig: arr.slice(at, at + 12)};
+    var st = vStart * 3;
+    for (var c = 0; c < 12; c++) {
+      arr[at + c] = Math.round(arr[st + c] + (_partial.orig[c] - arr[st + c]) * f);
+    }
+    markPositions(jobGeom.attributes.position, at);
+    jobGeom.setDrawRange(0, (k + 1) * 24);
+    beadCentre(arr, vEnd, _pb);
+    placeHead(_pb[0], _pb[1], zTop);
+    return;
+  }
+  // Crossing the gap before segment k: from where the last line ended to
+  // where this one starts. Eased, because a real move accelerates out and
+  // brakes in; the hop is a half-sine so it lifts and settles.
+  if (k === 0) { return; }
+  var tPrev = JOB.segDone[k - 1];
+  var span = t0 - tPrev;
+  if (span <= 0) { return; }
+  var g = Math.max(0, Math.min(1, (t - tPrev) / span));
+  var e = g * g * (3 - 2 * g);
+  var ax = JOB.segEnd[(k - 1) * 3], ay = JOB.segEnd[(k - 1) * 3 + 1];
+  var zPrev = JOB.segEnd[(k - 1) * 3 + 2];
+  beadCentre(arr, vStart, _pa);
+  var dist = Math.hypot(_pa[0] - ax, _pa[1] - ay);
+  var hop = dist > 1 ? HOP_MM * Math.sin(Math.PI * g) : 0;
+  // A layer change happens first: Z moves, then the head travels.
+  var z = zTop === zPrev ? zTop : zPrev + (zTop - zPrev) * Math.min(1, g / 0.2);
+  placeHead(ax + (_pa[0] - ax) * e, ay + (_pa[1] - ay) * e, z + hop);
 }
 
 function tick(now) {
@@ -4021,6 +4153,7 @@ function tick(now) {
       if (tl.on) { tlStop(true); }   // timelapse ends with the print
     }
     setSeg(segAtTime(play.t));
+    applyPlayhead(play.t);
   }
   var _frameDt = _tickLast ? now - _tickLast : 0;
   _tickLast = now;
@@ -4292,7 +4425,20 @@ function refreshReadout(force) {
   var fil = layerFilCum[li] + (L[4] * ((seg - a0) / Math.max(1, a1 - a0)));
   $('r-fil').innerHTML = grams(fil).toFixed(1) + ' <small>g</small>';
   var v = seg > 0 ? JOB.segSpeed[seg - 1] : 0;
-  $('r-spd').innerHTML = v + ' <small>mm/s</small>';
+  if (JOB.segV && seg < JOB.nSeg && seg > 0 && play.t < JOB.segCum[seg]) {
+    $('r-spd').innerHTML = 'travel';
+  } else if (JOB.segV) {
+    // What the head actually averages over the line, after accelerating out
+    // of one corner and braking into the next -- next to what the G-code
+    // asked for. On short lines the two are far apart.
+    var k = Math.min(play.t >= JOB.segCum[seg] && seg < JOB.nSeg ? seg : seg - 1, JOB.nSeg - 1);
+    var sv = k >= 0 ? JOB.segV[k] : 0;
+    var avg = sv >= 65535 || !sv ? v : Math.round(sv / 100);
+    var set = k >= 0 ? JOB.segSpeed[k] : 0;
+    $('r-spd').innerHTML = avg + ' <small>mm/s' + (set && set !== avg ? ' &middot; set ' + set : '') + '</small>';
+  } else {
+    $('r-spd').innerHTML = v + ' <small>mm/s</small>';
+  }
   $('r-seg').textContent = seg.toLocaleString() + ' moves';
   var tIdx = seg > 0 ? typeOfSeg(seg - 1) : -1;
   var nf = $('nowfeat');

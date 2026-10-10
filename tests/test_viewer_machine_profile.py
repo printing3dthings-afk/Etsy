@@ -204,10 +204,14 @@ def test_the_two_kinematics_are_actually_different():
     # the gantry and drops the bed. Replaying one machine's motion on the other
     # is the same class of lie as drawing it with the wrong case.
     src = APP.read_text(encoding="utf-8")
-    seg = src[src.index("function setSeg"):]
+    # placeHead() since 2026-10-10: setSeg and the between-segment playhead
+    # both put the head somewhere, and both must honour the kinematics.
+    seg = src[src.index("function placeHead"):]
     seg = seg[:seg.index("\n}\n")]
+    check("placeHead(" in src[src.index("function setSeg"):src.index("function placeHead")],
+          "setSeg must place the head through placeHead")
     check("PRINTERS[printerId].bedslinger" in seg,
-          "setSeg must branch on the machine's kinematics")
+          "placeHead must branch on the machine's kinematics")
     check("bedGroup.position.set(0, -slide, 0)" in seg,
           "a bed-slinger moves its bed in Y")
     check("bedGroup.position.set(0, 0, -drop)" in seg,

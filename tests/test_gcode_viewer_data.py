@@ -236,9 +236,10 @@ def test_payload_round_trips_through_base64():
         back = struct.unpack(f"<{len(pts) // 2}h", pts)
         check(list(back) == raw["pts"],
               "int16 point payload did not survive the base64 round trip")
-        spd = list(base64.b64decode(job["speeds"]))
-        check(spd == raw["speeds"],
-              "uint8 speed payload did not survive the base64 round trip")
+        sb = base64.b64decode(job["speeds"])
+        spd = list(struct.unpack(f"<{len(sb) // 2}H", sb))
+        check(job.get("speedBits") == 16 and spd == raw["speeds"],
+              "uint16 speed payload did not survive the base64 round trip")
         # 0.01mm quantization: a 10.00mm coordinate must come back as 1000.
         check(1000 in back, f"expected a 10.00mm coordinate as 1000, got {back[:8]}")
     finally:
@@ -449,8 +450,8 @@ def test_an_overflowed_time_estimate_is_never_trusted():
         job = gvd.build_job(p, "overflow")
     finally:
         p.unlink(missing_ok=True)
-    check(job["timeFromSlicer"] is False,
-          "an overflowed estimate must fall back to the measured sum")
+    check(job["timeFromSlicer"] is False and job["slicerSeconds"] is None,
+          "an overflowed estimate must never be passed on as the slicer's figure")
     check(job["totalSeconds"] > 0,
           "the fallback total must still be positive, got %r" % job["totalSeconds"])
 

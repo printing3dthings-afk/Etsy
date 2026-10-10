@@ -50,6 +50,54 @@ P1S = {
 }
 
 
+# How fast the P1S actually moves (2026-10-10). Until this, every slice ran on
+# PrusaSlicer's defaults -- walls and infill at 15-90 mm/s, 1500 mm/s2 -- so
+# the viewer replayed a P1S at roughly a third of its real pace: the phone
+# stand came out at 4 h 58 min. These are Bambu Studio's own numbers, read
+# from its system profiles on 2026-10-10 (bambulab/BambuStudio, resources/
+# profiles/BBL): process "0.20mm Standard @BBL P1P" (the P1-series Standard;
+# standard-nozzle column), machine "Bambu Lab P1S 0.4 nozzle", filament
+# "Bambu PLA Basic" (max volumetric 21 mm3/s) and fdm_filament_pla (slow down
+# below 4 s a layer, never under 20 mm/s).
+#
+# Two mappings are approximations and are named as such:
+#   * PrusaSlicer has one first-layer speed; Bambu runs first-layer walls at 50
+#     and first-layer infill at 105. 50 for all of it is the conservative side.
+#   * Overhang slowdown: Bambu buckets by how much of the line overhangs (0-25%
+#     no change, 25-50% 50, 50-75% 30, 75-100% 10); PrusaSlicer buckets by how
+#     much still overlaps the layer below. Mapped bucket for bucket, reversed.
+# Bambu's small-perimeter threshold is 0 (off), so small perimeters run at
+# wall speed here rather than PrusaSlicer's 15 mm/s default.
+P1S_MOTION = {
+    "external-perimeter-speed": "200", "perimeter-speed": "300",
+    "infill-speed": "270", "solid-infill-speed": "250",
+    "top-solid-infill-speed": "200", "gap-fill-speed": "250",
+    "bridge-speed": "50", "support-material-speed": "150",
+    "support-material-interface-speed": "80", "travel-speed": "500",
+    "first-layer-speed": "50", "small-perimeter-speed": "100%",
+    "enable-dynamic-overhang-speeds": "1",
+    "overhang-speed-0": "10", "overhang-speed-1": "10",
+    "overhang-speed-2": "30", "overhang-speed-3": "50",
+    "default-acceleration": "10000", "external-perimeter-acceleration": "5000",
+    "perimeter-acceleration": "10000", "infill-acceleration": "10000",
+    "solid-infill-acceleration": "10000", "top-solid-infill-acceleration": "2000",
+    "travel-acceleration": "10000", "first-layer-acceleration": "500",
+    "machine-limits-usage": "time_estimate_only",
+    "machine-max-acceleration-x": "20000", "machine-max-acceleration-y": "20000",
+    "machine-max-acceleration-z": "500", "machine-max-acceleration-e": "5000",
+    "machine-max-acceleration-extruding": "20000",
+    "machine-max-acceleration-retracting": "5000",
+    "machine-max-acceleration-travel": "9000",
+    "machine-max-feedrate-x": "500", "machine-max-feedrate-y": "500",
+    "machine-max-feedrate-z": "20", "machine-max-feedrate-e": "30",
+    "machine-max-jerk-x": "9", "machine-max-jerk-y": "9",
+    "machine-max-jerk-z": "3", "machine-max-jerk-e": "2.5",
+    "filament-max-volumetric-speed": "21",
+    "slowdown-below-layer-time": "4", "min-print-speed": "20",
+    "retract-length": "0.8", "retract-speed": "30", "retract-lift": "0.4",
+    "retract-before-travel": "1", "gcode-flavor": "marlin2",
+}
+
 # Multi-material, for a 3MF that already carries a per-part extruder (which is
 # what tools/assemble_3mf.py writes into Metadata/Slic3r_PE_model.config).
 # Two findings from getting a real 5-filament slice out of PrusaSlicer 2.7.2,
@@ -100,7 +148,7 @@ def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800):
     # (single-extruder-multi-material, wipe-tower) take no separate argument, so
     # the spaced form made the slicer read the "1" as a second input file and
     # fail with "No such file: 1". The = form is accepted for every option.
-    for k, v in {**P1S, **(extra or {})}.items():
+    for k, v in {**P1S, **P1S_MOTION, **(extra or {})}.items():
         cmd.append(f"--{k}={v}")
     if supports:
         cmd.append("--support-material")

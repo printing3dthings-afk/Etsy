@@ -31,7 +31,11 @@ import math
 import re
 import struct
 import sys
+from array import array
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import p1s_motion  # noqa: E402
 
 # Order matters -- it is the index written into the payload and the order the
 # legend renders in. Keep new types appended, never inserted.
@@ -60,6 +64,7 @@ _G1 = re.compile(r"^G[01]\s")
 _AXIS = {a: re.compile(rf"{a}{_NUM}") for a in "XYZEF"}
 _EST_TIME = re.compile(r"estimated printing time \(normal mode\)\s*=\s*(.+)")
 _TOOL = re.compile(r"^T(\d+)\s*$")
+_ACC = {k: re.compile(rf"{k}{_NUM}") for k in "PSTR"}
 _DUR = re.compile(r"(\d+)\s*([dhms])")
 
 
@@ -106,7 +111,7 @@ def parse(gcode_path):
 
     pts = []                 # flat int16 x,y pairs
     polys = []               # flat int32 triples: type, startPoint, nPoints
-    speeds = []              # uint8 mm/s, one per SEGMENT, in draw order
+    speeds = []              # commanded mm/s, one per SEGMENT, in draw order
     poly_tool = []           # uint8 extruder index, one per POLYLINE
     layers = []              # [z_hundredths, polyStart, polyCount, time_s, filament_mm]
 
@@ -121,6 +126,13 @@ def parse(gcode_path):
     layer_h = None
     slicer_seconds = None
     tool_changes = 0
+    # Every move goes through the P1S motion model (tools/p1s_motion.py), and
+    # each one is owned by what the viewer shows it as: an extrusion segment
+    # (owner >= 0, its index) or the gap before polyline p (owner -(p + 1)) --
+    # travel, retraction, Z-hop, layer change, filament swap.
+    planner = p1s_motion.Planner(p1s_motion.limits_from_gcode(gcode_path))
+    owner = array("l")
+    acc_p = acc_t = acc_r = 0.0
     # Measured from the moves, never from the footer. The reason first given
     # here was wrong (corrected 2026-09-26): an earlier slice's footer looked
     # 44% short of "11,200 mm actually extruded", but that 11,200 counted only
@@ -218,6 +230,28 @@ def parse(gcode_path):
                     cur_tool = nt
                     run_tool = nt
                     tool_changes += 1
+                    planner.add_fixed(p1s_motion.P1S_TOOLCHANGE_S)
+                    owner.append(-(len(polys) // 3 + 1))
+                continue
+            if line.startswith("M204"):
+                for k in "PSTR":
+                    m = _ACC[k].search(line)
+                    if not m:
+                        continue
+                    v = float(m.group(1))
+                    if k in "PS":
+                        acc_p = v
+                    if k == "T" or (k == "S" and not acc_t):
+                        acc_t = v
+                    if k == "R":
+                        acc_r = v
+                continue
+            if line.startswith("G4"):
+                ms = re.search(r"P" + _NUM, line)
+                sec = re.search(r"S" + _NUM, line)
+                planner.add_fixed((float(ms.group(1)) / 1000 if ms else 0.0)
+                                  + (float(sec.group(1)) if sec else 0.0))
+                owner.append(-(len(polys) // 3 + (1 if run else 0) + 1))
                 continue
             if line.startswith("M83"):
                 relative_e = True
@@ -236,6 +270,7 @@ def parse(gcode_path):
             nx, ny, nz, ne, nf = (_axis(line, a) for a in "XYZEF")
             if nf is not None:
                 feed = nf
+            pz = z
             if nz is not None:
                 z = nz
             px, py = x, y
@@ -252,6 +287,11 @@ def parse(gcode_path):
             dist = math.hypot(x - px, y - py)
             if dist > 0 and feed > 0:
                 layer_time += dist / (feed / 60.0)
+            moving = dist > 0 or z != pz
+            kind = "print" if (de > 0 and dist > 0) else ("travel" if moving else "retract")
+            blk = planner.add_move(x - px, y - py, z - pz, de, feed / 60.0,
+                                   {"print": acc_p, "travel": acc_t or acc_p,
+                                    "retract": acc_r}[kind], kind)
 
             # Filament is counted NET, every E move of either sign (2026-09-26).
             # Counting only forward moves that travel counted each filament
@@ -276,13 +316,28 @@ def parse(gcode_path):
                     run_tool = cur_tool
                     run.append((px, py))
                 run.append((x, y))
-                # Clamped, not scaled: a P1S profile tops out well under 255
-                # mm/s, so one byte holds the real number with no unit games.
-                run_speed.append(max(1, min(255, int(round(feed / 60.0)))))
-            elif dist > 0:
-                flush_run()      # a travel ends the current path
+                # Two bytes since 2026-10-10: Bambu's own P1S profile runs
+                # inner walls at 300 mm/s, and one byte had clamped them to 255.
+                run_speed.append(max(1, min(65535, int(round(feed / 60.0)))))
+                if blk is not None:
+                    owner.append(len(speeds) + len(run_speed) - 1)
+            else:
+                if dist > 0:
+                    flush_run()      # a travel ends the current path
+                if blk is not None:
+                    owner.append(-(len(polys) // 3 + (1 if run else 0) + 1))
 
     flush_layer()
+
+    times = planner.solve()
+    seg_times = [0.0] * len(speeds)
+    n_poly = len(polys) // 3
+    gap_times = [0.0] * (n_poly + 1)
+    for k, o in enumerate(owner):
+        if o >= 0:
+            seg_times[o] += times[k]
+        else:
+            gap_times[min(-o - 1, n_poly)] += times[k]
 
     if not layers:
         raise ValueError(
@@ -322,6 +377,10 @@ def parse(gcode_path):
         "filByToolLayer": fil_tool_layers,
         "layers": layers,
         "slicerSeconds": slicer_seconds,
+        "segTimes": seg_times,
+        # gapTimes[p] is everything between polyline p-1 ending and p starting;
+        # the trailing entry is the end of the file, which the replay never shows.
+        "gapTimes": gap_times[:n_poly],
         "bbox": [min(xs) / 100, min(ys) / 100, max(xs) / 100, max(ys) / 100],
     }
 
@@ -342,8 +401,9 @@ def simplify(raw, tol_mm=0.02):
     if tol_mm <= 0:
         return raw
     pts, polys, speeds = raw["pts"], raw["polys"], raw["speeds"]
+    seg_times = raw.get("segTimes")
     tol = tol_mm * 100
-    new_pts, new_polys, new_speeds = [], [], []
+    new_pts, new_polys, new_speeds, new_times = [], [], [], []
     seg_at = 0
     for pi in range(len(polys) // 3):
         t, s0, n = polys[pi * 3:pi * 3 + 3]
@@ -373,10 +433,15 @@ def simplify(raw, tol_mm=0.02):
         # is unambiguous precisely because a speed change is never merged over
         for k in range(len(keep) - 1):
             new_speeds.append(speeds[seg_at + keep[k]])
+            # A merged segment takes exactly as long as the moves it replaces.
+            if seg_times is not None:
+                new_times.append(sum(seg_times[seg_at + keep[k]:seg_at + keep[k + 1]]))
         new_polys.extend((t, start, len(keep)))
         seg_at += n - 1
     raw = dict(raw)
     raw["pts"], raw["polys"], raw["speeds"] = new_pts, new_polys, new_speeds
+    if seg_times is not None:
+        raw["segTimes"] = new_times
     _refit_layers(raw, polys)
     return raw
 
@@ -386,6 +451,52 @@ def _refit_layers(raw, old_polys):
     point counts shrink -- so layer records still index the same polylines."""
     assert len(raw["polys"]) == len(old_polys), \
         "simplification must not add or remove polylines; layer records index them"
+
+
+def _model_timing(raw):
+    """Per-segment average speeds, per-polyline gap times and the total, from
+    the motion model's times, measured against the quantised points the viewer
+    will draw. Rewrites each layer's time to the modelled one."""
+    pts, polys, layers = raw["pts"], raw["polys"], raw["layers"]
+    seg_t, gaps = raw["segTimes"], raw["gapTimes"]
+    seg_v = []
+    eff = []          # the time the viewer will actually spend on each segment
+    k = 0
+    lost = 0.0
+    for pi in range(len(polys) // 3):
+        s0, n = polys[pi * 3 + 1], polys[pi * 3 + 2]
+        for i in range(n - 1):
+            ax, ay = pts[(s0 + i) * 2], pts[(s0 + i) * 2 + 1]
+            bx, by = pts[(s0 + i + 1) * 2], pts[(s0 + i + 1) * 2 + 1]
+            length = math.hypot(bx - ax, by - ay)            # 0.01 mm units
+            t = seg_t[k]
+            if length < 0.5 or t <= 0:
+                # Collapsed to one quantised point: the viewer cannot spend time
+                # on a segment it draws as nothing, so the time moves to the gap.
+                seg_v.append(65535)
+                eff.append(0.0)
+                lost += t
+            else:
+                v = max(1, min(65535, int(round(length / t))))
+                seg_v.append(v)
+                eff.append(length / v)
+            k += 1
+        if lost and pi + 1 < len(gaps):
+            gaps[pi + 1] += lost
+            lost = 0.0
+    total = 0.0
+    seg_at = 0
+    for layer in layers:
+        p0, pc = layer[1], layer[2]
+        lt = 0.0
+        for pi in range(p0, p0 + pc):
+            lt += gaps[pi]
+            n = polys[pi * 3 + 2]
+            lt += sum(eff[seg_at:seg_at + n - 1])
+            seg_at += n - 1
+        layer[3] = round(lt, 2)
+        total += lt
+    return seg_v, [float(g) for g in gaps], total
 
 
 def _b64(values, fmt):
@@ -408,24 +519,17 @@ def _modal_layer_height(layers):
 def build_job(gcode_path, name, notes="", tol_mm=0.02):
     raw = simplify(parse(gcode_path), tol_mm)
     layers = raw["layers"]
-    kinematic = sum(l[3] for l in layers)
     slicer_total = raw["slicerSeconds"]
 
-    # The per-move estimate below ignores acceleration and travel, so it runs
-    # ~5-10% short of the slicer's own figure. Rather than publish a number I
-    # know is wrong, scale the per-layer distribution -- which IS accurate
-    # relative to itself -- so the total lands on the slicer's estimate.
-    # `> 0`, not just truthy: a multi-material slice here reported
-    # "estimated printing time = -2147483648s" (a real PrusaSlicer overflow on
-    # an MMU job), and a negative scale factor would have turned every layer
-    # time negative and published it as fact.
-    if slicer_total and slicer_total > 0 and kinematic > 0:
-        k = slicer_total / kinematic
-        for l in layers:
-            l[3] = round(l[3] * k, 2)
-        total_time = slicer_total
-    else:
-        total_time = kinematic
+    # Time comes from the P1S motion model, move by move (tools/p1s_motion.py):
+    # acceleration, cornering, travel, retraction and filament swaps. It used to
+    # be each layer's feedrate sum scaled to the slicer's footer and spread
+    # evenly over the layer; that is kept only as the comparison figure. On a
+    # single-filament plate the model and PrusaSlicer's own estimator agree to
+    # within a percent (they implement the same planner); on a multi-filament
+    # one the slicer's figure is unreliable (it has printed -2147483648 s) and
+    # has no swap time, so the model is the only honest number.
+    seg_v, gap_t, total_time = _model_timing(raw)
 
     total_fil = sum(l[4] for l in layers)
     grams = total_fil * math.pi * (1.75 / 2) ** 2 / 1000 * 1.24
@@ -464,7 +568,9 @@ def build_job(gcode_path, name, notes="", tol_mm=0.02):
         "firstLayerHeight": round(layers[0][5], 3) if layers else 0.2,
         "beadWidth": 0.42,
         "totalSeconds": round(total_time, 1),
-        "timeFromSlicer": bool(slicer_total),
+        "timeFromSlicer": False,
+        "timeModel": "P1S, Marlin classic-jerk planner (tools/p1s_motion.py)",
+        "slicerSeconds": slicer_total,
         "filamentMm": round(total_fil, 1),
         "filamentG": round(grams, 1),
         "segmentsByType": per_type,
@@ -474,7 +580,13 @@ def build_job(gcode_path, name, notes="", tol_mm=0.02):
         "layers": layers,
         "pts": _b64(raw["pts"], "h"),
         "polys": _b64(raw["polys"], "i"),
-        "speeds": _b64(raw["speeds"], "B"),
+        "speeds": _b64(raw["speeds"], "H"),
+        "speedBits": 16,
+        # Per segment, its average speed under the motion model, in 0.01 mm/s:
+        # the viewer divides the segment's own length by it, so the two always
+        # agree on the quantised geometry it actually draws.
+        "segV": _b64(seg_v, "H"),
+        "gapT": _b64(gap_t, "f"),
         # One extruder index per polyline. Present even on a single-colour job,
         # where it is all zeros -- the AMS feeds the nozzle either way, and the
         # viewer should not need a special case to show that.
@@ -584,8 +696,11 @@ def main(argv=None):
     if a.append and (out / "index.js").exists():
         old = (out / "index.js").read_text()
         old = json.loads(old[old.index("["):old.rindex("]") + 1])
-        new_ids = {j["id"] for j in index}
-        index = [j for j in old if j["id"] not in new_ids] + index
+        # Replaced where it stood: the plate list's "Featured" order is this
+        # order, and re-exporting a plate must not move it to the bottom.
+        fresh = {j["id"]: j for j in index}
+        old_ids = {j["id"] for j in old}
+        index = [fresh.get(j["id"], j) for j in old] + [j for j in index if j["id"] not in old_ids]
     (out / "index.js").write_text(
         "window.__PRINT_INDEX = " + json.dumps(index, separators=(",", ":")) + ";\n")
     total = sum(i["sizeMB"] for i in index)

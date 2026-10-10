@@ -594,8 +594,17 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
       <div class="caveat"><b>This is PrusaSlicer, not Bambu Studio.</b> They share
         an engine lineage — Bambu Studio and Orca are both PrusaSlicer forks — so
         perimeters, overhang classification, bridges and support generation track
-        closely. Speeds and time estimates will <b>not</b> match what your P1S
-        shows. Treat the clock as a ratio between jobs, not a promise.</div>
+        closely. The speeds are Bambu's own: since 2026-10-10 every plate is
+        sliced at the P1-series 0.20 mm Standard profile's speeds and
+        accelerations and the P1S's machine limits, read from Bambu Studio's
+        system profiles. The clock times every move — accelerating out of each
+        corner, braking into the next, crossing each gap at travel speed, and
+        57 s for each AMS swap (Bambu's stated unload and load times). On
+        single-filament plates it agrees with PrusaSlicer's own estimator to
+        within a percent. It does <b>not</b> know Bambu's firmware, which may
+        corner faster than this model allows; the heating, bed levelling and
+        calibration before the first line; or the AMS's cut and flush beyond
+        those load times. Close, not exact.</div>
       <div class="caveat"><b>Real print mode hides things that are really
         there.</b> Sparse infill and the skirt are switched off so you see the
         part the way you would with the door open — they are still printed,
@@ -635,10 +644,12 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         adhesion, stringing, layer delamination and heat creep are invisible here.
         A part can replay perfectly and still fail on the plate for a reason this
         cannot see.</div>
-      <div class="caveat"><b>Travel moves are not drawn.</b> They are roughly half
-        the move count and none of them lay plastic, so they are dropped from the
-        payload. The nozzle marker jumps between paths the way the real head does,
-        but the flight path is not shown.</div>
+      <div class="caveat"><b>Travel moves are timed, not drawn.</b> They lay no
+        plastic, so there is no line for them, but the nozzle flies across each
+        one taking the time the motion model gives it, lifting 0.4 mm (the
+        profile's Z-hop) on the way. Its path is drawn straight; the real head
+        may route around printed walls. The line being laid grows behind the
+        nozzle as it moves.</div>
       <div class="caveat"><b>A layer count is layer changes, not height divided
         by layer height.</b> On any plate with supports the two differ, because
         the slicer gives support material its own layer heights and injects

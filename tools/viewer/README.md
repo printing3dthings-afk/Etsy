@@ -146,6 +146,80 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## Real P1S motion (2026-10-10)
+
+Scott asked how real the physics are. The honest answer was: not very.
+
+- **Every plate was sliced at PrusaSlicer's defaults**, 15–90 mm/s at
+  1500 mm/s², about a third of the P1S's real pace. The phone stand showed
+  4 h 58 min.
+- **Inside a layer, every line ran at one speed.** Each layer's time was spread
+  evenly over its length.
+- **Travel took no time**, and the nozzle teleported between islands.
+- **AMS swaps took no time either.** Village buildings make 800–1,300 swaps.
+
+What it does now:
+
+- **Bambu's own speeds.** `virtual_printer.P1S_MOTION` holds the P1-series
+  "0.20mm Standard" process, the "Bambu Lab P1S 0.4 nozzle" machine limits and
+  "Bambu PLA Basic". All three were read from Bambu Studio's system profiles
+  (bambulab/BambuStudio, `resources/profiles/BBL`) on 2026-10-10:
+  - walls: outer 200 mm/s, inner 300 mm/s;
+  - infill: sparse 270 mm/s, solid 250 mm/s;
+  - travel: 500 mm/s;
+  - accelerations: 10,000 mm/s² by default, 5,000 on the outer wall, 2,000 on
+    the top surface;
+  - jerk: 9 mm/s;
+  - flow: at most 21 mm³/s;
+  - layer time: slow down below 4 s.
+
+  The comment there names the two approximations: the first-layer speed and
+  the overhang buckets.
+- **Every move is timed** (`tools/p1s_motion.py`). It is Marlin's planner with
+  classic jerk, the same physics PrusaSlicer's estimator implements:
+  - a target speed and an acceleration per move, capped by the machine;
+  - a junction speed between moves;
+  - backward and forward passes, then a trapezoid per move.
+
+  Travel, retraction, Z-hop, layer changes and 57 s per AMS swap count too.
+  The swap time is Bambu's 28 s unload plus 29 s load; the flush is already in
+  the G-code as wipe-tower moves.
+- **The model is checked against PrusaSlicer's own estimator** on the same
+  slice:
+  - phone stand: 4,643 s against 4,650 s;
+  - keychain, ball joint, bayonet jar, cable hook and the Crescent parts: all
+    within a minute.
+
+  `tests/test_p1s_motion.py` re-slices a plate and fails past 3%.
+- **The payload carries the timing**, per segment and per gap:
+  - `segV` is each segment's average speed in 0.01 mm/s, measured on the
+    quantised points the viewer draws;
+  - `gapT` is the time before each polyline;
+  - speeds are 16-bit now, because inner walls at 300 mm/s had clamped to 255.
+- **The viewer plays it**:
+  - the line being laid grows behind the nozzle;
+  - the nozzle crosses each gap eased in and out, lifting 0.4 mm (the profile's
+    Z-hop) on the way; on the P1S that lift is the bed dropping, so it is drawn
+    that way;
+  - the readout shows the speed actually averaged over the current line next
+    to the commanded one.
+
+  On the keychain's lettering the head averages 40–75 mm/s against a commanded
+  278: the moves are too short to reach full speed. That is the real reason a
+  small detailed part takes longer than its length suggests.
+- **`tools/regen_viewer_jobs.py`** re-slices every plate from its source and
+  re-exports it, keeping its name, notes, colours and place in the list
+  (`--resume` skips plates already done).
+
+What it still does not know:
+
+- Bambu's firmware and input shaping, which may let it corner faster than
+  classic jerk.
+- The heating, levelling and calibration before the first line (several
+  minutes).
+- The AMS's cut and purge beyond its stated load and unload times.
+- Anything thermal.
+
 ## Detail: ultra (2026-10-10)
 
 Scott asked for the viewer to look a lot more real. The Detail button now has
