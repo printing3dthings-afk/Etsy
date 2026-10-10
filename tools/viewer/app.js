@@ -641,22 +641,43 @@ var POST_FINAL_FRAG = POST_COMMON + '\n' + [
   'uniform sampler2D tBloom;',
   'uniform vec2 uAOTexel;',
   'uniform float uAOStrength, uBloom, uFarAO, uDebug, uSS;',
+  'uniform float uFocus, uBand, uCocK, uCocMax;',
   'uniform vec2 uOutTexel;',
   'vec3 toSRGB(vec3 c) {',
   '  return mix(pow(c, vec3(0.41666)) * 1.055 - vec3(0.055), c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));',
   '}',
-  'void main() {',
-  '  vec3 c;',
+  'float cocAt(float z) { return clamp(uCocK * max(0.0, abs(z - uFocus) - uBand) / max(z, 1.0), 0.0, uCocMax); }',
+  'vec3 sceneAt(vec2 uv) {',
   '  if (uSS > 1.0) {',
   '    vec2 o = 0.25 * uOutTexel;',
-  '    c = 0.25 * (toLin(texture2D(tScene, vUv + vec2(-o.x, -o.y)).rgb) + toLin(texture2D(tScene, vUv + vec2(o.x, -o.y)).rgb)',
-  '              + toLin(texture2D(tScene, vUv + vec2(-o.x, o.y)).rgb) + toLin(texture2D(tScene, vUv + vec2(o.x, o.y)).rgb));',
-  '  } else {',
-  '    c = toLin(texture2D(tScene, vUv).rgb);',
+  '    return 0.25 * (toLin(texture2D(tScene, uv + vec2(-o.x, -o.y)).rgb) + toLin(texture2D(tScene, uv + vec2(o.x, -o.y)).rgb)',
+  '                 + toLin(texture2D(tScene, uv + vec2(-o.x, o.y)).rgb) + toLin(texture2D(tScene, uv + vec2(o.x, o.y)).rgb));',
   '  }',
+  '  return toLin(texture2D(tScene, uv).rgb);',
+  '}',
+  'void main() {',
+  '  vec3 c = sceneAt(vUv);',
   // Depth-aware upsample of the half-resolution occlusion: of the four nearest
   // low-res texels, trust the ones at this pixel's own depth.
   '  float z = -viewPos(vUv, texture2D(tDepth, vUv).x).z;',
+  // Depth of field: a lens focused on the orbit target, sharp through a band
+  // as deep as the subject and softening beyond it. Gathered from the taps
+  // that are themselves blurred enough to reach this pixel, so a sharp edge
+  // in front never smears onto the background behind it.
+  '  float coc = cocAt(z);',
+  '  if (coc > 0.75) {',
+  '    vec3 acc = c; float wsum = 1.0;',
+  '    for (int i = 0; i < 20; i++) {',
+  '      float a = (float(i) + 0.5) / 20.0;',
+  '      float r = sqrt(a) * coc;',
+  '      float th = float(i) * 2.39996;',
+  '      vec2 uv = vUv + vec2(cos(th), sin(th)) * r * uOutTexel;',
+  '      float zt = -viewPos(uv, texture2D(tDepth, uv).x).z;',
+  '      float w = smoothstep(r - 1.0, r + 1.0, cocAt(zt));',
+  '      acc += sceneAt(uv) * w; wsum += w;',
+  '    }',
+  '    c = acc / wsum;',
+  '  }',
   '  float ao = 1.0;',
   '  if (z < uFarAO) {',
   '    float sum = 0.0, ws = 0.0;',
@@ -739,6 +760,7 @@ function buildPost() {
     uAOTexel: {value: new THREE.Vector2()},
     uAOStrength: {value: POST_AO_STRENGTH}, uBloom: {value: POST_BLOOM},
     uFarAO: {value: 2000}, uDebug: {value: 0}, uSS: {value: 1},
+    uFocus: {value: 400}, uBand: {value: 100}, uCocK: {value: 0}, uCocMax: {value: 10},
     uOutTexel: {value: new THREE.Vector2()}});
   return p;
 }
@@ -838,8 +860,29 @@ function renderPost() {
   f.tBloom.value = p.ups[0].texture;
   f.uAOTexel.value.set(1 / p.ao.width, 1 / p.ao.height);
   f.uSS.value = ss;
+  postFocus(f);
   f.uOutTexel.value.set(1 / p.w, 1 / p.h);
   postPass(p, p.mFinal, null);
+}
+
+// Where the lens focuses and how shallow it is. On the part alone it is a
+// product shot: the whole part sharp, the tabletop and backdrop going soft.
+// On the machine, a gentle falloff -- the chamber stays readable. Strength is
+// in pixels per output pixel height, so a phone and a desktop see the same
+// picture.
+function postFocus(f) {
+  var r = view && view.r ? view.r : 600;
+  var scale = (post ? post.h : 800) / 800;
+  f.uFocus.value = r;
+  if (JOB && machineHidden()) {
+    var b = JOB.raw.bbox, top = JOB.layers[JOB.layers.length - 1][0] / 100;
+    f.uBand.value = Math.max(b[2] - b[0], b[3] - b[1], top) * 0.75;
+    f.uCocK.value = 26 * scale;
+  } else {
+    f.uBand.value = r * 0.22;
+    f.uCocK.value = 9 * scale;
+  }
+  f.uCocMax.value = 11 * scale;
 }
 
 function postDispose() {
@@ -3009,6 +3052,22 @@ var JOB_PARS = [
   'varying float vZmm;',
   'varying vec3 vJobColor;',
   'varying float vJobVis;',
+  // Heat (2026-10-10): when each bead was laid, and the clock now.
+  'attribute float aDep;',
+  'uniform float uNow;',
+  'uniform vec4 uHeat;',       // nozzle, chamber, bed (degC), first-layer top (mm)
+  'uniform vec3 uTau;',        // fast cooling with fan, without, slow soak (s)
+  'varying float vTemp;',
+  'vec3 inferno(float t){',
+  '  const vec3 c0=vec3(0.000219,0.001651,-0.019481);',
+  '  const vec3 c1=vec3(0.106513,0.563956,3.932712);',
+  '  const vec3 c2=vec3(11.602493,-3.972854,-15.942394);',
+  '  const vec3 c3=vec3(-41.703996,17.436399,44.354145);',
+  '  const vec3 c4=vec3(77.162936,-33.402359,-81.807309);',
+  '  const vec3 c5=vec3(-71.319428,32.626064,73.209520);',
+  '  const vec3 c6=vec3(25.131126,-12.242669,-23.070325);',
+  '  return clamp(c0+t*(c1+t*(c2+t*(c3+t*(c4+t*(c5+t*c6))))),0.0,1.0);',
+  '}',
   'vec3 magma(float t){',
   '  const vec3 c0=vec3(-0.002136,-0.000750,-0.005386);',
   '  const vec3 c1=vec3(0.251661,0.677523,2.494027);',
@@ -3029,6 +3088,18 @@ var JOB_VERT = [
   '  vec3 jByFil = uTool[int(aTool + 0.5)];',
   '  vJobColor = uMode < 0.5 ? jByFeature : (uMode < 1.5 ? jBySpeed : jByFil);',
   '  if (uOverride.r >= 0.0) { vJobColor = uOverride; }',
+  // Two-stage cooling from the nozzle's temperature: the bead's own surface
+  // losing heat to moving air (fast; far slower on the first layer, where the
+  // part fan is off), then the part soaking it away (slow). The first
+  // millimetres sit on a heated bed, so they settle toward the bed's
+  // temperature, not the chamber's. Constants and their basis: see the
+  // README section "Heat".
+  '  float jAge = max(uNow - aDep, 0.0);',
+  '  float jZ = position.z * 0.01;',
+  '  float jT1 = jZ <= uHeat.w + 0.001 ? uTau.y : uTau.x;',
+  '  float jEnv = mix(uHeat.z, uHeat.y, smoothstep(0.4, 3.0, jZ));',
+  '  vTemp = jEnv + (uHeat.x - jEnv) * (0.65 * exp(-jAge / jT1) + 0.35 * exp(-jAge / uTau.z));',
+  '  if (uMode > 2.5) { vJobColor = inferno(0.1 + 0.9 * clamp((vTemp - 30.0) / 190.0, 0.0, 1.0)); }',
   '  vJobColor = mix(vJobColor, vec3(0.012, 0.013, 0.017), uDim);',
   '  vJobVis = uVis[jt];',
   '  vZmm = position.z * 0.01;'
@@ -3063,7 +3134,10 @@ function makeMaterial(dim, rich) {
     // A real highlight on satin PLA brightens the colour; it does not
     // neutralise it. 0.35 keeps the directional band and stops doing that.
     uSheen: {value: 0.35},
-    uLayerAmp: {value: 1.5}
+    uLayerAmp: {value: 1.5},
+    uNow:   {value: 0},
+    uHeat:  {value: new THREE.Vector4(HEAT.nozzle, HEAT.chamber, HEAT.bed, 0.2)},
+    uTau:   {value: new THREE.Vector3(HEAT.tauFan, HEAT.tauNoFan, HEAT.tauSoak)}
   };
   // Printed PLA is neither chalk nor gloss: a matte-satin dielectric. Rich
   // shading buys a tighter lobe and a real environment reflection; the cheap
@@ -3095,7 +3169,13 @@ function makeMaterial(dim, rich) {
                'varying vec3 vJobColor;\nvarying float vJobVis;\n' +
                'varying float vZmm;\nuniform float uSat;\n' +
                'uniform float uLayerH;\nuniform vec3 uKeyW;\n' +
-               'uniform float uSheen;\nuniform float uLayerAmp;')
+               'uniform float uSheen;\nuniform float uLayerAmp;\nvarying float vTemp;')
+      // Molten plastic is wet: freshly laid PLA is glossy until it sets.
+      // Only the standard material has a roughness to change; on the fast
+      // path this include is absent and the replace does nothing.
+      .replace('#include <roughnessmap_fragment>',
+               '#include <roughnessmap_fragment>\n' +
+               '  roughnessFactor = mix(roughnessFactor, 0.14, smoothstep(150.0, 215.0, vTemp));')
       .replace('#include <lights_fragment_end>',
                '#include <lights_fragment_end>\n' +
                // Anisotropic sheen -- the thing that actually makes a surface
@@ -3369,6 +3449,7 @@ function buildJob(raw) {
   var vType = new Uint8Array(nPt * BEAD_PTS);
   var vSpd  = raw.speedBits === 16 ? new Uint16Array(nPt * BEAD_PTS) : new Uint8Array(nPt * BEAD_PTS);
   var vTool = new Uint8Array(nPt * BEAD_PTS);
+  var vDep  = new Float32Array(nPt * BEAD_PTS);   // seconds into the print the point was laid
   var index = new Uint32Array(nSeg * BEAD_IDX);
   var segEnd = new Float32Array(nSeg * 3);
   var segLen = new Float32Array(nSeg);
@@ -3668,6 +3749,17 @@ function buildJob(raw) {
   }
   segCum[si] = cum;
 
+  // When each point was laid: a segment's end point when the segment is done,
+  // a polyline's first point when its first segment starts.
+  for (k = 0; k < si; k++) {
+    var tEnd = segDone ? segDone[k] : segCum[k + 1];
+    var ve = segVtx[k];
+    for (var q4 = 0; q4 < BEAD_PTS; q4++) { vDep[ve + q4] = tEnd; }
+    if (k === 0 || segVtx[k - 1] !== ve - BEAD_PTS) {
+      for (q4 = 0; q4 < BEAD_PTS; q4++) { vDep[ve - BEAD_PTS + q4] = segCum[k]; }
+    }
+  }
+
   var g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Int16BufferAttribute(vPos, 3));
   g.setAttribute('normal', new THREE.Int8BufferAttribute(vNrm, 3, true));
@@ -3675,6 +3767,7 @@ function buildJob(raw) {
   g.setAttribute('aSpeed', raw.speedBits === 16 ? new THREE.Uint16BufferAttribute(vSpd, 1)
                                                : new THREE.Uint8BufferAttribute(vSpd, 1));
   g.setAttribute('aTool', new THREE.Uint8BufferAttribute(vTool, 1));
+  g.setAttribute('aDep', new THREE.Float32BufferAttribute(vDep, 1));
   g.setIndex(new THREE.BufferAttribute(index, 1));
   g.boundingSphere = new THREE.Sphere(
     new THREE.Vector3(128, 128, 128), 400);   // set by hand: positions are raw int16
@@ -3920,7 +4013,21 @@ var colorMode = 'feature';
 // colour of the spool they came off, which is the whole point. What makes it
 // "real" is everything around that: what is hidden, how it is lit, and how
 // much of the machine is on screen.
-var COLOR_MODE_ID = {feature: 0, speed: 1, filament: 2, real: 2};
+var COLOR_MODE_ID = {feature: 0, speed: 1, filament: 2, real: 2, heat: 3};
+
+// ── heat (2026-10-10) ─────────────────────────────────────────────────────
+// Every plate here is sliced for PLA, so these are Bambu's PLA numbers, read
+// from Bambu Studio's system profiles (fdm_filament_pla): nozzle 220 degC, part
+// fan off on the first layer and at 100% after it, the auxiliary fan at 70%
+// after it, and the bed per plate. The cooling time constants are NOT from a
+// profile: they are a lumped-capacitance estimate for a 0.42 x 0.2 mm bead,
+// worked in the README ("Heat"), and are labelled an estimate on the page.
+var HEAT = {nozzle: 220, chamber: 35, bed: 55, tauFan: 2.1, tauNoFan: 21, tauSoak: 40,
+            soften: 45, partFan: 100, auxFan: 70};
+// PLA bed temperature for each plate, from the same profile: hot_plate,
+// textured_plate and cool_plate temps; SuperTack 45. Engineering is 0 there
+// (not recommended for PLA), so it keeps the textured value.
+var PLA_BED = {textured: 55, smooth: 55, dual: 55, engineering: 55, supertack: 45, starry: 55};
 
 // Measured against the legend swatches rather than picked by eye: see
 // tools/viewer/README.md. 0 in real-print mode, which wants the photographic
@@ -4154,6 +4261,10 @@ function tick(now) {
     }
     setSeg(segAtTime(play.t));
     applyPlayhead(play.t);
+  }
+  if (jobMesh) {
+    jobMesh.material.uniforms.uNow.value = play.t;
+    ghostMesh.material.uniforms.uNow.value = play.t;
   }
   var _frameDt = _tickLast ? now - _tickLast : 0;
   _tickLast = now;
@@ -4440,6 +4551,15 @@ function refreshReadout(force) {
     $('r-spd').innerHTML = v + ' <small>mm/s</small>';
   }
   $('r-seg').textContent = seg.toLocaleString() + ' moves';
+  // Bambu's PLA profile: both fans off for the first layer, then part fan
+  // 100% and auxiliary 70%.
+  var first = li === 0;
+  var rt = $('r-temp');
+  if (rt) {
+    rt.innerHTML = HEAT.nozzle + '<small> / ' + (PLA_BED[plateId] || HEAT.bed) + ' \u00b0C</small>';
+    $('r-fan').innerHTML = (first ? 0 : HEAT.partFan) + '<small>% &middot; aux '
+      + (first ? 0 : HEAT.auxFan) + '%</small>';
+  }
   var tIdx = seg > 0 ? typeOfSeg(seg - 1) : -1;
   var nf = $('nowfeat');
   nf.firstElementChild.style.background = tIdx >= 0 ? TYPE_COLOR[tIdx] : 'var(--faint)';
@@ -5041,9 +5161,9 @@ function setColorMode(mode) {
     b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === mode));
   });
   var real = mode === 'real';
-  var speedy = mode === 'speed', fil = mode === 'filament';
+  var speedy = mode === 'speed', fil = mode === 'filament', heat = mode === 'heat';
   $('speedpanel').hidden = !speedy;
-  $('legend').hidden = speedy || fil || real;
+  $('legend').hidden = speedy || fil || real || heat;
   $('realpanel').hidden = !real;
   applyRealMode();
   if (real) {
@@ -5052,6 +5172,17 @@ function setColorMode(mode) {
       + 'with the door open. Internal walls and infill are hidden because the '
       + 'outer wall is in front of them, not because they are not printed. '
       + '<b>The lighting is still an invented studio rig</b> \u2014 see Limits.';
+    applyVisibility();
+    return;
+  }
+  if (heat) {
+    $('legnote').innerHTML = '<b>Estimated</b> temperature of every bead, from the moment '
+      + 'it left the nozzle at ' + HEAT.nozzle + ' \u00b0C: white-hot to deep purple at '
+      + 'chamber temperature. With the part fan on a bead drops below PLA\'s '
+      + HEAT.soften + ' \u00b0C softening point in a few seconds; on the first layer, with '
+      + 'the fan off and the bed under it, it takes far longer. Small layers printed '
+      + 'quickly land on plastic that is still soft \u2014 the reason the slicer slows '
+      + 'them down. The cooling constants are a physics estimate, not a measurement: see Limits.';
     applyVisibility();
     return;
   }
@@ -5248,7 +5379,14 @@ function setMotion(on) {
   machineMotion = on;
   $('motion').setAttribute('aria-pressed', String(on));
   $('motion').textContent = on ? 'Bed drops' : 'Part grows';
-  if (JOB) { frameJob(JOB); setSeg(play.seg); }
+  // With the machine hidden this must frame the part, not the machine:
+  // frameJob() re-shows the gantry and pulls back to machine distance, which
+  // left Part only showing a speck under two floating rails (2026-10-10).
+  if (JOB) {
+    if (machineHidden()) { frameSolo(JOB); applyRealMode(); }
+    else { frameJob(JOB); }
+    setSeg(play.seg);
+  }
 }
 
 function frameSolo(job) {
@@ -5302,6 +5440,10 @@ function applyVisibility() {
     }
     m.material.uniforms.uMode.value = COLOR_MODE_ID[colorMode] || 0;
     if (JOB) { m.material.uniforms.uSpd.value.set(JOB.raw.speedMin, JOB.raw.speedMax); }
+    var hu = m.material.uniforms.uHeat.value;
+    hu.z = PLA_BED[plateId] || HEAT.bed;
+    hu.w = JOB ? JOB.layers[0][0] / 100 : 0.2;
+    m.material.uniforms.uNow.value = play.t;
   });
 }
 

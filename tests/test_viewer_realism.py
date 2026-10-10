@@ -210,6 +210,42 @@ def test_a_device_without_float_buffers_never_claims_ultra():
           "without WebGL2 float buffers the button must never say ultra, got %r" % out["seen"])
 
 
+def test_heat_constants_are_bambus_pla_profile_and_the_derivation():
+    src = _src()
+    m = re.search(r"var HEAT = \{nozzle: (\d+), chamber: (\d+), bed: (\d+), tauFan: ([0-9.]+), "
+                  r"tauNoFan: ([0-9.]+), tauSoak: ([0-9.]+),\s*soften: (\d+), partFan: (\d+), auxFan: (\d+)\}", src)
+    check(m is not None, "HEAT constants must be declared in one place")
+    if not m:
+        return
+    noz, cham, bed, tf, tn, ts, soft, pf, af = (float(x) for x in m.groups())
+    # fdm_filament_pla: nozzle_temperature 220, textured_plate_temp 55,
+    # temperature_vitrification 45, fan_min_speed 100, additional_cooling_fan_speed 70
+    check((noz, bed, soft, pf, af) == (220, 55, 45, 100, 70),
+          "HEAT must hold Bambu's PLA profile values, got %r" % ((noz, bed, soft, pf, af),))
+    # Lumped capacitance, as worked in the README: C/(hA) per mm of bead.
+    area_mm2 = 0.0754
+    cap = area_mm2 * 1.26e-3 * 1.8          # J/K per mm (rho g/mm3, cp J/gK)
+    surf_m2 = 0.82e-6                        # m2 per mm
+    for h, tau, name in [(100, tf, "fan"), (10, tn, "no fan")]:
+        want = cap / (h * surf_m2)
+        check(abs(tau - want) / want < 0.05,
+              "tau with %s should be %.1f s from the derivation, got %s" % (name, want, tau))
+
+
+def test_every_bead_carries_when_it_was_laid():
+    body = _function("buildJob")
+    check("g.setAttribute('aDep'" in body, "beads need a deposition-time attribute")
+    check("segDone ? segDone[k] : segCum[k + 1]" in body,
+          "a point is laid when its segment is DONE, not when the next starts")
+    check("uNow.value = play.t" in _function("tick"), "the cooling clock must follow playback")
+
+
+def test_motion_toggle_keeps_part_only_framed_on_the_part():
+    body = _function("setMotion")
+    check(re.search(r"if \(machineHidden\(\)\) \{ frameSolo\(JOB\);", body) is not None,
+          "toggling bed motion in Part only must frame the part, not the machine")
+
+
 def run() -> None:
     import sys
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

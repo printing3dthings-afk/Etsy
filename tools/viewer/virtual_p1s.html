@@ -502,6 +502,8 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
           <div class="cell"><div class="k">Remaining</div><div class="v" id="r-rem">—</div></div>
           <div class="cell"><div class="k">Filament</div><div class="v" id="r-fil">—</div></div>
           <div class="cell"><div class="k">Speed</div><div class="v" id="r-spd">—</div></div>
+          <div class="cell"><div class="k">Nozzle / bed</div><div class="v" id="r-temp">—</div></div>
+          <div class="cell"><div class="k">Part fan</div><div class="v" id="r-fan">—</div></div>
         </div>
         <div id="nowfeat"><span class="sw" style="background:var(--faint)"></span>
           <span id="r-feat">idle</span><span id="r-seg" class="mono"></span></div>
@@ -523,6 +525,7 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
           <button type="button" data-mode="speed" aria-pressed="false">Speed</button>
           <button type="button" data-mode="filament" aria-pressed="false">Filament</button>
           <button type="button" data-mode="real" aria-pressed="false">Real print</button>
+          <button type="button" data-mode="heat" aria-pressed="false">Heat</button>
         </div>
         <div id="realpanel" hidden>
           <div class="rlabel">Show</div>
@@ -640,10 +643,16 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
         readable; the P1S's actual LED is one bar on the left beam. A prettier
         replay is not a more accurate one, and the closer this gets to looking
         photographic the more worth saying that is.</div>
-      <div class="caveat"><b>Nothing thermal is modelled.</b> Warping, bed
-        adhesion, stringing, layer delamination and heat creep are invisible here.
-        A part can replay perfectly and still fail on the plate for a reason this
-        cannot see.</div>
+      <div class="caveat"><b>Heat is an estimate; its consequences are not
+        modelled.</b> The Heat view cools every bead from Bambu's 220 °C nozzle
+        temperature, with the part fan off on the first layer and on after it,
+        as Bambu's PLA profile sets them. How fast it cools is a physics
+        estimate for a 0.42 × 0.2 mm bead (about 2 s with the fan, 20 s
+        without, then a slower soak into the part), not a measurement. Use it
+        to compare: this small layer is still warm when the next one lands.
+        Warping, bed adhesion, stringing, layer delamination and heat creep are
+        still invisible here. A part can replay perfectly and still fail on the
+        plate for a reason this cannot see.</div>
       <div class="caveat"><b>Travel moves are timed, not drawn.</b> They lay no
         plastic, so there is no line for them, but the nozzle flies across each
         one taking the time the motion model gives it, lifting 0.4 mm (the

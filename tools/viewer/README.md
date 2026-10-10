@@ -146,6 +146,47 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## Heat (2026-10-10)
+
+The **Heat** colour mode shows the estimated temperature of every bead from the
+moment it leaves the nozzle. In real-print mode the same model makes plastic
+still above about 150 °C look wet: molten PLA is glossy until it sets.
+
+The readout also shows nozzle and bed temperature and both fans.
+
+**From Bambu's PLA profile** (`fdm_filament_pla`, read 2026-10-10):
+
+| Setting | Value |
+|---|---|
+| Nozzle | 220 °C |
+| Bed, textured / smooth / dual / starry PEI | 55 °C |
+| Bed, SuperTack | 45 °C |
+| Engineering plate | 0 in the profile (not recommended for PLA); the viewer uses 55 °C |
+| Part fan | off on the first layer, 100% after |
+| Auxiliary fan | off on the first layer, 70% after |
+| Softening point (`temperature_vitrification`) | 45 °C |
+
+**Not from any profile, and labelled an estimate on the page:** how fast a bead
+cools. It is a lumped-capacitance calculation for a 0.42 × 0.2 mm bead:
+
+- **Heat it holds:** 0.0754 mm² cross-section × 1.26 g/cm³ (Bambu PLA Basic)
+  × about 1.8 J/g·K gives about 1.7×10⁻⁴ J/K per mm of bead.
+- **Surface it loses heat from:** about 0.82 mm² per mm (the top and two sides).
+- **Fast stage, fan on:** a forced-air coefficient of about 100 W/m²·K gives
+  τ ≈ 2.1 s.
+- **Fast stage, fan off:** natural convection, about 10 W/m²·K, gives
+  τ ≈ 21 s. This applies on the first layer.
+- **Slow stage:** a 40 s soak for heat conducted away into the rest of the part.
+
+The fast and slow stages are blended 65/35. The bead cools toward the chamber,
+taken as 35 °C. For the first millimetres it cools toward the bed temperature
+instead.
+
+Real cooling also depends on the fan duct, the part's shape, the wall beside
+it and the next layer landing on it. The colours are good for comparing (this
+small layer is still warm when the next one lands; that big one is not), not
+for reading off a degree.
+
 ## Real P1S motion (2026-10-10)
 
 Scott asked how real the physics are. The honest answer was: not very.
