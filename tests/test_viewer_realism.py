@@ -91,7 +91,8 @@ def test_the_sky_is_not_shaded_as_a_crease():
 
 def test_the_near_plane_follows_the_zoom():
     body = _function("updateCamera")
-    m = re.search(r"nearWant = Math\.max\(1, Math\.min\(40, view\.r \* ([0-9.]+)\)\)", body)
+    # rr is the real camera distance (view.r stood back by stageFit.k on a phone).
+    m = re.search(r"nearWant = Math\.max\(1, Math\.min\(40, (?:view\.r|rr) \* ([0-9.]+)\)\)", body)
     check(m is not None, "updateCamera must scale the near plane with the orbit radius")
     if m:
         k = float(m.group(1))

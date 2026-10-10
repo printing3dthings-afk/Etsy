@@ -186,6 +186,76 @@ def test_the_readout_fold_survives_storage_being_unavailable():
           "with nothing remembered, a phone starts folded")
 
 
+_FIT_HARNESS = """
+var narrow = %s;
+var window = {matchMedia: function () { return {matches: narrow}; }};
+function rect(top, bottom) { return {getBoundingClientRect: function () { return {top: top, bottom: bottom}; }, offsetParent: {}}; }
+var stage = rect(0, 362);
+var els = {hud: rect(8, 50), camtools: rect(320, 354)};
+function $(id) { return els[id]; }
+var offset = null;
+var camera = {far: 0, setViewOffset: function (fw, fh, x, y) { offset = y; }, clearViewOffset: function () { offset = 'none'; }};
+var sky = {s: 1, scale: {setScalar: function (v) { sky.s = v; }}};
+var scene = {fog: {near: 0, far: 0}, getObjectByName: function (n) { return n === 'backdrop' ? sky : null; }};
+%s
+%s
+measureStageFit(390, 362);
+console.log(JSON.stringify({k: stageFit.k, shift: stageFit.shift, offset: offset,
+  fog: [scene.fog.near, scene.fog.far], sky: sky.s, far: camera.far}));
+"""
+
+
+def _fit(narrow):
+    node = shutil.which("node")
+    if not node:
+        return None
+    block = (re.search(r"^var stageFit = .*?;$", APP, re.M).group(0) + "\n" +
+             re.search(r"^var FOG_NEAR = .*?;$", APP, re.M).group(0))
+    js = _FIT_HARNESS % ("true" if narrow else "false", block, _function("measureStageFit"))
+    r = subprocess.run([node, "-e", js], capture_output=True, text=True, timeout=60)
+    if r.returncode != 0:
+        raise AssertionError(r.stderr)
+    return json.loads(r.stdout.strip().splitlines()[-1])
+
+
+def test_a_phone_frames_the_printer_in_the_space_the_overlays_leave():
+    # Scott, 2026-10-10: "Can't see the whole printer on screen" on a phone.
+    # 362 px of stage, readout to y=50, camera bar from y=320: 50+6 above and
+    # 42+6 below are covered, leaving 258 px for the machine.
+    out = _fit(True)
+    if out is None:
+        print("  (skipped: no node on PATH)")
+        return
+    free = (362 - 56 - 48) / 362
+    check(abs(out["k"] - 1 / free) < 1e-6,
+          "the camera should stand back by 1/%.3f = %.3f, got %r" % (free, 1 / free, out["k"]))
+    check(out["shift"] == 4 and out["offset"] == -4,
+          "the picture should shift to centre the free band, got %r" % out)
+    k = out["k"]
+    # Found in the first phone screenshot of this fix: the machine fitted, but
+    # sat in the fog and lost its backdrop, both sized to the old distance.
+    check(abs(out["fog"][0] - 700 * k) < 1e-6 and abs(out["fog"][1] - 2400 * k) < 1e-6,
+          "the fog must stand back with the camera, got %r" % out["fog"])
+    check(abs(out["sky"] - k) < 1e-9, "the backdrop sphere must grow with the camera distance")
+    check(abs(out["far"] - 4000 * k) < 1e-6, "the far plane must grow with the camera distance")
+
+
+def test_a_desktop_is_framed_as_before():
+    out = _fit(False)
+    if out is None:
+        return
+    check(out["k"] == 1 and out["offset"] == "none",
+          "on a desktop the readout sits beside the machine; nothing should move, got %r" % out)
+
+
+def test_focus_and_occlusion_use_the_real_camera_distance():
+    for fn in ("postFocus", "postAORadius"):
+        check("view.r * stageFit.k" in _function(fn),
+              "%s must use the real distance, or the part goes out of focus on a phone" % fn)
+    check("rr = view.r * stageFit.k" in _function("updateCamera"),
+          "the camera position must stand back by stageFit.k")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

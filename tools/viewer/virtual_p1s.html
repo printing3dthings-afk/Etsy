@@ -497,11 +497,19 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:
 
   #hud{left:8px;top:8px;max-width:calc(100% - 16px)}
   #hud .cell .v{font-size:13.5px}
+  /* Folded on a phone: one strip, numbers then what is printing, so it costs
+     the print ~40px of height instead of ~70. */
+  #hud.min{display:flex;align-items:stretch}
+  #hud.min .grid2{flex:none}
+  #hud.min .cell{padding:4px 7px}
+  #hud.min .cell .k{font-size:8.5px}
+  #hud.min #nowfeat{border-top:0;border-left:1px solid var(--line);min-width:0;flex:1;
+    padding:4px 6px;font-size:10.5px}
   /* A row along the foot of the print, not a column down its side: on a
      326px-tall stage the column covered a third of the machine. */
   #camtools{right:8px;left:8px;top:auto;bottom:8px;flex-direction:row}
-  #camtools button{flex:1;padding:10px 4px;font-size:11px;text-align:center}
-  #hint{bottom:56px}
+  #camtools button{flex:1;padding:7px 4px;font-size:11px;text-align:center}
+  #hint{bottom:48px}
 
   /* Thumb-sized targets. */
   .leg{min-height:44px;padding:4px 6px}

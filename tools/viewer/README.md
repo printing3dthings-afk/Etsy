@@ -146,6 +146,42 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## The whole printer on a phone (2026-10-10)
+
+Scott, after the layout change: "the phone version is too cramped. Can't see
+the whole printer on screen."
+
+**Why.** Every framing is a fixed camera distance tuned on a wide desktop
+stage. On a 390 × 844 phone with a panel open the stage is 362 px tall. The
+readout covered the top 50 px and the camera bar the bottom 40, which left
+the machine and its AMS about 250 px, so they were cut off.
+
+**Fixes:**
+
+- **The camera fits the free band.** `measureStageFit()` runs on every
+  resize, panel change and readout fold. It measures the band between the
+  overlays and stands the camera back by `stageFit.k`, enough for the
+  subject to fit that band and to fit a narrow stage. A view offset centres
+  the subject in the band. Every framing and every hand zoom scale together,
+  so a zoom you set stays the same zoom when a panel opens. Overlays only
+  count at phone width; on a desktop the readout sits beside the machine.
+- **What was sized to the old distance stands back too.**
+  - *Fog:* at 700–2400 mm, the machine sat in the haze.
+  - *Backdrop sphere:* 2600 mm, seen from inside only, so a camera outside it
+    lost the backdrop.
+  - *Far plane:* 4000 mm.
+  - *Focus and occlusion radius:* both use the real distance. Focusing at the
+    old one would have blurred the part.
+- **A phone opens on the printer.** The panel starts folded (stage 649 px);
+  the tab bar opens it.
+- **Slimmer overlays.** The folded readout is one strip, and the camera bar is
+  shorter.
+
+`tests/test_viewer_layout.py` runs `measureStageFit()` under node with the
+real overlay geometry and checks the factor, the centring, the fog, the
+backdrop and the far plane. It also checks that a desktop is framed exactly
+as before.
+
 ## A real studio (2026-10-10)
 
 **The old studio never rendered.** `buildEnvironment()` built a room of

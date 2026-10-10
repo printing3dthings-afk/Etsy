@@ -865,7 +865,7 @@ function postPass(p, material, target) {
 // is, so a crease reads the same at every zoom: a fixed radius would vanish on
 // the whole machine and turn a keychain into a smudge.
 function postAORadius() {
-  var r = view && view.r ? view.r : 600;
+  var r = view && view.r ? view.r * stageFit.k : 600;
   return Math.max(1.2, Math.min(28, r * 0.03));
 }
 
@@ -931,7 +931,9 @@ function renderPost() {
 // in pixels per output pixel height, so a phone and a desktop see the same
 // picture.
 function postFocus(f) {
-  var r = view && view.r ? view.r : 600;
+  // The real distance to the target: on a phone the camera stands back by
+  // stageFit.k, and focusing at view.r would put the subject out of focus.
+  var r = view && view.r ? view.r * stageFit.k : 600;
   var scale = (post ? post.h : 800) / 800;
   f.uFocus.value = r;
   if (JOB && machineHidden()) {
@@ -1013,8 +1015,8 @@ function initScene() {
     // Matched to the backdrop's horizon band, not to the clear colour: the floor
   // dissolves into fog at its edges, and when the two colours disagree that
   // dissolve becomes a visible seam across the image.
-  scene.fog = new THREE.Fog(0x141a25, 700, 2400);
-  camera = new THREE.PerspectiveCamera(38, 1, 1, 4000);
+  scene.fog = new THREE.Fog(0x141a25, FOG_NEAR, FOG_FAR);
+  camera = new THREE.PerspectiveCamera(38, 1, 1, CAM_FAR);
   camera.up.set(0, 0, 1);
   // The environment map does most of the ambient work now, so the flat
   // AmbientLight that used to carry it is gone -- leaving it in on top of an
@@ -2793,7 +2795,47 @@ function onResize() {
   if (!w || !h) { return; }
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
+  measureStageFit(w, h);
   camera.updateProjectionMatrix();
+}
+
+// ── fit the frame to what is actually visible (2026-10-10) ────────────────
+// Scott, on a phone: "Can't see the whole printer on screen." Every framing
+// here is a fixed distance tuned on a wide desktop stage. A phone's stage is
+// 390 x 362 px with a panel open, the readout covers the top 70 and the camera
+// bar the bottom 40, so the machine had about 250 px of height and was cut off.
+//
+// Rather than re-tune each framing, the camera stands further back by
+// stageFit.k -- enough for the subject to fit the free band between the
+// overlays, and for one about as wide as it is tall (FIT_ASPECT) to fit a
+// narrow stage -- and the picture is shifted so the subject centres in that
+// band. Every framing and every hand zoom scale together, so a zoom you set
+// stays the same zoom when a panel opens. Overlays only count at phone width:
+// on a desktop the readout sits beside the machine, not over it.
+var stageFit = {k: 1, shift: 0}, FIT_ASPECT = 0.9;
+var FOG_NEAR = 700, FOG_FAR = 2400, CAM_FAR = 4000;
+function measureStageFit(w, h) {
+  var top = 0, bottom = 0;
+  if (window.matchMedia && window.matchMedia('(max-width:1180px)').matches) {
+    var sr = stage.getBoundingClientRect(), hud = $('hud'), ct = $('camtools');
+    if (hud && hud.offsetParent) { top = Math.max(0, hud.getBoundingClientRect().bottom - sr.top + 6); }
+    if (ct && ct.offsetParent) { bottom = Math.max(0, sr.bottom - ct.getBoundingClientRect().top + 6); }
+  }
+  var free = Math.max(0.45, (h - top - bottom) / h);
+  stageFit.k = Math.max(1, 1 / free, FIT_ASPECT * h / w);
+  stageFit.shift = (top - bottom) / 2;
+  if (stageFit.shift) { camera.setViewOffset(w, h, 0, -stageFit.shift, w, h); }
+  else { camera.clearViewOffset(); }
+  // Everything sized to the old camera distance stands back with it. Left
+  // alone, a phone's camera ~2-3 m out put the machine in the 700-2400 mm fog
+  // (dark, washed grey), stood outside the 2600 mm backdrop sphere (which is
+  // seen from inside only, so it vanished), and neared the 4000 mm far plane.
+  if (scene) {
+    if (scene.fog) { scene.fog.near = FOG_NEAR * stageFit.k; scene.fog.far = FOG_FAR * stageFit.k; }
+    var sky = scene.getObjectByName('backdrop');
+    if (sky) { sky.scale.setScalar(stageFit.k); }
+  }
+  camera.far = CAM_FAR * stageFit.k;
 }
 
 // \u2500\u2500 orbit (hand-rolled: OrbitControls is not on the allowed CDN as a UMD) \u2500\u2500\u2500
@@ -2984,11 +3026,11 @@ function updateCamera(now) {
   });
   if (!settled) { moveUntil = Math.max(moveUntil, now + 60); }
 
-  var sp = Math.sin(view.phi), cp = Math.cos(view.phi);
+  var sp = Math.sin(view.phi), cp = Math.cos(view.phi), rr = view.r * stageFit.k;
   camera.position.set(
-    view.tx + view.r * sp * Math.cos(view.theta),
-    view.ty + view.r * sp * Math.sin(view.theta),
-    view.tz + view.r * cp);
+    view.tx + rr * sp * Math.cos(view.theta),
+    view.ty + rr * sp * Math.sin(view.theta),
+    view.tz + rr * cp);
   camera.lookAt(view.tx, view.ty, view.tz);
   // The near plane follows the zoom (2026-10-10). Depth precision falls off as
   // distance squared over the near plane, and at a fixed 1 mm the whole
@@ -2996,7 +3038,7 @@ function updateCamera(now) {
   // occlusion pass to tell a flat floor from a crease -- it shaded the floor
   // darker the further away it was. 4% of the orbit radius never clips
   // anything: the camera always looks at a target that far away.
-  var nearWant = Math.max(1, Math.min(40, view.r * 0.04));
+  var nearWant = Math.max(1, Math.min(40, rr * 0.04));
   if (Math.abs(camera.near - nearWant) > camera.near * 0.05) {
     camera.near = nearWant;
     camera.updateProjectionMatrix();
@@ -6280,6 +6322,12 @@ function initUI() {
     setHudFolded(!$('hud').classList.contains('min'), true);
   });
   setHudFolded(hudFoldedAtStart(), false);
+  // A phone opens on the printer, not a list: the panel starts folded and the
+  // tab bar under the transport opens it.
+  if (window.matchMedia && window.matchMedia('(max-width:1180px)').matches) {
+    document.getElementById('app').setAttribute('data-sheet', 'closed');
+  }
+  paintPanelTabs();
 
   // -- workspace shell controls --------------------------------------------
   $('toggleleft').addEventListener('click', function () {
@@ -6437,6 +6485,7 @@ function hudFoldedAtStart() {
 }
 function setHudFolded(folded, remember) {
   $('hud').classList.toggle('min', folded);
+  if (renderer) { onResize(); }
   var b = $('hudtoggle');
   b.textContent = folded ? 'More' : 'Less';
   b.setAttribute('aria-expanded', String(!folded));
