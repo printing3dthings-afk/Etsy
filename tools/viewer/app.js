@@ -588,17 +588,27 @@ var POST_AO_FRAG = POST_COMMON + '\n' + [
   '  float d = texture2D(tDepth, vUv).x;',
   '  vec3 p = viewPos(vUv, d);',
   '  if (d >= 0.99999 || -p.z > uFarAO) { gl_FragColor = vec4(1.0, 60000.0, 0.0, 1.0); return; }',
-  '  vec3 pr = viewPos(vUv + vec2(uTexel.x, 0.0), texture2D(tDepth, vUv + vec2(uTexel.x, 0.0)).x);',
-  '  vec3 pl = viewPos(vUv - vec2(uTexel.x, 0.0), texture2D(tDepth, vUv - vec2(uTexel.x, 0.0)).x);',
-  '  vec3 pu = viewPos(vUv + vec2(0.0, uTexel.y), texture2D(tDepth, vUv + vec2(0.0, uTexel.y)).x);',
-  '  vec3 pd = viewPos(vUv - vec2(0.0, uTexel.y), texture2D(tDepth, vUv - vec2(0.0, uTexel.y)).x);',
+  '  float rPx = min(uRadius * uProjScale / -p.z, 90.0);',
+  '  if (rPx < 1.5) { gl_FragColor = vec4(1.0, -p.z, 0.0, 1.0); return; }',
+  // The surface direction is read from depth an eighth of the radius away,
+  // not one texel. One texel on a 2x supersampled buffer resolves the 0.2 mm
+  // layer ridges, so the normal swung ridge-to-groove from pixel to pixel and
+  // beat against this pass's half-resolution grid: soft vertical bands down
+  // every wall in ultra (2026-10-10, measured: band amplitude 6.0 with this
+  // pass on, 2.7 with it off, 2.6 with supersampling off).
+  '  vec2 nOff = uTexel * max(1.0, rPx * 0.125);',
+  '  vec3 pr = viewPos(vUv + vec2(nOff.x, 0.0), texture2D(tDepth, vUv + vec2(nOff.x, 0.0)).x);',
+  '  vec3 pl = viewPos(vUv - vec2(nOff.x, 0.0), texture2D(tDepth, vUv - vec2(nOff.x, 0.0)).x);',
+  '  vec3 pu = viewPos(vUv + vec2(0.0, nOff.y), texture2D(tDepth, vUv + vec2(0.0, nOff.y)).x);',
+  '  vec3 pd = viewPos(vUv - vec2(0.0, nOff.y), texture2D(tDepth, vUv - vec2(0.0, nOff.y)).x);',
   '  vec3 dx = abs(pr.z - p.z) < abs(p.z - pl.z) ? pr - p : p - pl;',
   '  vec3 dy = abs(pu.z - p.z) < abs(p.z - pd.z) ? pu - p : p - pd;',
   '  vec3 n = normalize(cross(dx, dy));',
   '  if (dot(n, p) > 0.0) { n = -n; }',
-  '  float rPx = min(uRadius * uProjScale / -p.z, 90.0);',
-  '  if (rPx < 1.5) { gl_FragColor = vec4(1.0, -p.z, 0.0, 1.0); return; }',
   '  float r2 = uRadius * uRadius;',
+  // Nothing closer than 8% of the radius occludes: that is the scale of the
+  // groove between two beads, which the bead shading already draws.
+  '  float rMin2 = r2 * 0.0064;',
   '  float rot = ign(gl_FragCoord.xy) * 6.2831853;',
   '  float occ = 0.0;',
   '  for (int i = 0; i < N; i++) {',
@@ -609,7 +619,7 @@ var POST_AO_FRAG = POST_COMMON + '\n' + [
   '    vec3 v = q - p;',
   '    float vv = dot(v, v);',
   '    float cosA = dot(v, n) * inversesqrt(vv + 1e-6);',
-  '    occ += max(cosA - 0.12, 0.0) * clamp(1.0 - vv / r2, 0.0, 1.0);',
+  '    occ += max(cosA - 0.12, 0.0) * clamp(1.0 - vv / r2, 0.0, 1.0) * smoothstep(rMin2, 4.0 * rMin2, vv);',
   '  }',
   '  float ao = clamp(1.0 - 2.6 * occ / float(N), 0.0, 1.0);',
   '  gl_FragColor = vec4(ao, -p.z, 0.0, 1.0);',

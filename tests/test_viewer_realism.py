@@ -290,6 +290,22 @@ def test_a_browser_without_decompression_keeps_the_placeholder():
     check(".catch(function (e)" in body, "a failed decode must not take the page down")
 
 
+def test_occlusion_reads_the_wall_not_the_layer_ridges():
+    # Ultra drew soft vertical bands down every wall (2026-10-10). Measured on
+    # the phone stand's back plate: band amplitude 6.0 with occlusion on, 2.7
+    # with it off, 2.6 with supersampling off. A one-texel normal on a 2x
+    # buffer resolved the 0.2 mm ridges and beat against the half-res AO grid.
+    ao = _shader("POST_AO_FRAG")
+    check("uTexel * max(1.0, rPx * 0.125)" in ao,
+          "the occlusion normal must be read across a fraction of the radius, not one texel")
+    check("texture2D(tDepth, vUv + vec2(uTexel.x, 0.0))" not in ao,
+          "a one-texel normal is back -- it resolves bead ridges and bands the walls")
+    check("smoothstep(rMin2, 4.0 * rMin2, vv)" in ao,
+          "occluders at bead-groove distance must be ignored")
+    i, j = ao.index("float rPx ="), ao.index("vec2 nOff")
+    check(i < j, "rPx has to be known before the normal footprint can use it")
+
+
 def run() -> None:
     import sys
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

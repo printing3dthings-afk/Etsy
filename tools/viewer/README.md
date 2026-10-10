@@ -455,7 +455,7 @@ under 22 fps does it lose the rich materials as well. Any error in the
 post-processing path drops to high for the session with a notice, never a
 black canvas.
 
-### Four things that went wrong on the way, each now a test
+### Five things that went wrong on the way, each now a test
 
 All in `tests/test_viewer_realism.py`.
 
@@ -478,6 +478,20 @@ All in `tests/test_viewer_realism.py`.
   in steps too coarse to tell a flat floor from a crease. The near plane is
   4% of the orbit distance (1 to 40 mm), which never clips anything because
   the camera always looks at a target that far away.
+- **Soft vertical bands down every wall** (found later the same day, in a
+  part-only close-up).
+  - *Narrowing it down:* switching one pass off at a time took the band
+    amplitude on the phone stand's back plate from 6.0 to 2.7 with occlusion
+    off, and to 2.6 with supersampling off. The shadow map made no
+    difference; the bands showed at 3072 and at 1536.
+  - *The cause:* occlusion read each pixel's surface direction from depth
+    one texel away. On a 2× buffer that resolves the 0.2 mm layer ridges, so
+    the direction swung ridge-to-groove and beat against the occlusion pass's
+    half-resolution grid.
+  - *The fix:* the direction is read across an eighth of the occlusion
+    radius, and nothing closer than 8% of the radius occludes, which is
+    bead-groove scale. The bead shading already draws the grooves.
+  - *Afterwards:* amplitude 2.67, the same as with occlusion off.
 
 ## Rendering (overhauled 2026-09-17)
 
