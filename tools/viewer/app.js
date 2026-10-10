@@ -4717,6 +4717,23 @@ window.__viewer = {
   getJob: function () { return JOB; },
   toolColors: function () { return FILAMENT.slice(); },
   setViewMode: setViewMode,
+  // Scripted playback (2026-10-10), for frame-by-frame video export: a script
+  // drives the page clock (Playwright's fake clock) one video frame at a time
+  // instead of recording whatever the browser manages in real time, which on
+  // a slow machine is a stutter. Same functions the controls use.
+  seek: function (t) {
+    if (!JOB) { return; }
+    play.t = Math.max(0, Math.min(JOB.total, t));
+    setSeg(segAtTime(play.t));
+    applyPlayhead(play.t);
+    refreshReadout(true);
+  },
+  setSpeed: function (v) { play.speed = v; paintSpeedButtons(); },
+  setPlaying: function (on) { setPlaying(!!on); },
+  setFilament: function (hex) { setFilamentOverride(hex || null); },
+  playState: function () {
+    return {t: play.t, total: JOB ? JOB.total : 0, on: play.on, speed: play.speed, seg: play.seg};
+  },
   tlInfo: function () {
     return {on: tl.on, chunks: tl.chunks.length, speed: play.speed,
             state: tl.rec ? tl.rec.state : 'none', ext: tl.ext};

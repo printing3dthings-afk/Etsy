@@ -195,6 +195,17 @@ def test_only_a_real_p1s_colour_change_is_choreographed():
     check(not out["other"], "the sequence is the P1S's; other machines keep a plain travel")
 
 
+def test_a_script_can_drive_playback_frame_by_frame():
+    # Video export renders one frame at a time against a fake page clock
+    # (2026-10-10): it needs to set the time and speed without the controls.
+    src = APP.read_text()
+    api = src[src.index("window.__viewer = {"):src.index("};", src.index("window.__viewer = {"))]
+    for name in ("seek:", "setSpeed:", "setPlaying:", "setFilament:", "playState:"):
+        check(name in api, "window.__viewer has no %s" % name[:-1])
+    check("setSeg(segAtTime(play.t));" in api and "applyPlayhead(play.t);" in api,
+          "seek must place the head and the partly drawn line exactly as playback does")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

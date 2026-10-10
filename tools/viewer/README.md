@@ -146,6 +146,21 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## Scripted playback, for video (2026-10-10)
+
+`window.__viewer` gained `seek(t)`, `setSpeed(v)`, `setPlaying(on)`,
+`setFilament(hex)` and `playState()`. They call the same functions the controls
+call. They exist for frame-by-frame video export:
+
+- A Playwright script installs its fake clock and steps the page one animation
+  frame per video frame.
+- It turns the camera by `window.__VP.cam` and screenshots each frame.
+
+The built-in recorder captures whatever the browser manages in real time,
+which on a slow machine is a stutter. The first use was the TikTok clips of
+the haunted chapel and post office, sliced in white to match the prints Scott
+actually made.
+
 ## The whole printer on a phone (2026-10-10)
 
 Scott, after the layout change: "the phone version is too cramped. Can't see
