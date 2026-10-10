@@ -1,0 +1,6 @@
+module stone_inlays() {
+    for (s = STONES) intersection() {
+        place_stone(s) stone_body(s);
+        place_stone(s) translate([0, -st_t/2 + lt, 0]) rotate([90, 0, 0]) linear_extrude(lt + 0.01) stone_inlay_2d(s);
+    }
+}

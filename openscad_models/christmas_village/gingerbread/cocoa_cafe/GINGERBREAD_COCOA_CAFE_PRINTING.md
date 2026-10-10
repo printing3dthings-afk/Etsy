@@ -1,0 +1,151 @@
+# Gingerbread Cocoa Café — printing notes
+
+Building #4 of the Gingerbread Christmas village
+(`../../CHRISTMAS_VILLAGE.md`). Picked by Scott on 2026-10-01 from four forms
+("Cocoa-mug tower café"), it is **a round tower shaped like a hot-cocoa mug,
+with a small gingerbread café standing out of its front**:
+
+- a white mug:
+  - red stripes round its foot and under its rim, COCOA in red across its
+    front;
+  - two rows of arched windows drawn in red on the white, with their bars;
+  - a chunky red handle on its side;
+- in the mug, cocoa to just under the rim, a tall swirl of whipped cream,
+  four toasted marshmallows floating round it, and a red-and-white
+  candy-cane stirrer leaning out;
+- out of the mug's front, a square gingerbread café under a chocolate gable
+  of scallop tiles and icing:
+  - a wide arched display window under a red-and-white striped awning;
+  - a chocolate-bar door, both framed in piped icing beads, and a window in
+    each side;
+  - icing piped down its front corners and dripping off its eaves and rake;
+  - a piped white heart in its gable;
+- a soft snow base with a rounded edge, drifts and three peppermints.
+
+It is a hollow lantern with an open base, lit from inside by a battery LED
+tealight. The café opens into the mug through its own room, so one light
+fills both. The mug's windows are drawn on, not cut: the mug's wall is
+1.68 mm of white and glows all round between its red lines, and the café's
+windows are glazed. It measures 68.7 × 77.5 × 97.4 mm, snow base and cream
+included.
+
+`images/` holds renders of this model: `*_colour_*` in the four filament
+colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
+they show what the printer makes. Each has front, three-quarter and top
+views. They are renders, not photos of a print.
+
+**Print this:** `gingerbread_cocoa_cafe.3mf`. It is one object with four
+parts, already aligned. Assign a filament to each part.
+
+| part | what it is | colour in the file |
+|---|---|---|
+| body | the café's walls, the marshmallows | gingerbread `#C68642` |
+| roof | the cocoa, the café's roof and its tiles, the door | chocolate `#5A3825` |
+| trim | snow base and drifts, the mug, the whipped cream, the stirrer, the awning's white, the café's frames with their beads, panes and bars, corner beads, eaves, rake and roof icing, the heart, the peppermints' white | icing white `#F7F3EE` |
+| accent | the mug's stripes, COCOA, its windows' outlines and bars, the handle, the awning's and stirrer's stripes, the peppermints' stripes | candy red `#D7263D` |
+
+## Settings that are not optional
+
+- **Supports OFF.** Verified: the gate's slicer reports 0 support moves and
+  0 overhang perimeters.
+- **Print it standing up, as it sits in the file.**
+- 0.2 mm layers.
+
+## Cost — sliced, not estimated
+
+| version | time | filament |
+|---|---|---|
+| **single colour** | **4 h 33 m** | **35.3 cm³, about 44 g of PLA** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 44 g of model **+ purge** |
+
+## The tealight
+
+Measured on the exported model:
+
+- the base is open under the mug and the café;
+- a 46.6 mm circle round the mug's centre is clear from the table to
+  50.3 mm;
+- a 38 mm tealight has room to 56.5 mm.
+
+**This meets the series rule** (at least 46 mm across and 50 mm of headroom).
+The mug's radius (25.5 mm) was set for it: the 46.6 mm circle stands 0.5 mm
+inside the wall, and the room keeps its full width to 49.6 mm before it closes
+in at 55° under the cream.
+
+## Verified before shipping — on the real exported meshes
+
+- `product_gate` **PASSED** on the union of the four parts:
+  - watertight, one body;
+  - 1st-percentile wall 1.23 mm, median 4.48 mm, against the 1.2 mm floor
+    (1.59 with COCOA flush, before 2026-10-07; 1.48 before the relief);
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height;
+  - 20.05 cm² of bed contact;
+  - centre of mass over the base.
+- `mesh_gate` on each of the four parts: closed, and every edge shared by
+  exactly two faces.
+- **The parts are disjoint.** All six pairwise intersections render empty.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer; re-run 2026-10-09 on the fixed relief): **0 flags**. 7.5 mm³ of
+  51,836 mm³ is not printed; 0.05 mm³ printed that was not modelled;
+  0.31 mm³ printed in another colour. The largest miss is 0.6 mm³ in
+  total, 0.16 mm wide up the café's back corners where they meet the mug.
+- **The stripes and windows read on a one-colour print.** The mug's two
+  stripes and its drawn windows stand out 0.4 mm, built as skirts climbing at
+  twice SH; the awning's and peppermints' stripes stand out 0.3 mm. The
+  awning's outer pair of stripes and the stirrer's stripes are colour only:
+  on a white print, paint them.
+- **Correction (2026-10-09).** The 2026-10-08 pass recorded here was measured
+  on a union older than the relief parts. Gated on a fresh union, the relief
+  as first drawn failed: 8,386 support moves and a 1.01 mm wall. The windows
+  had also thickened 0.8 mm into the mug, and those undersides overhung the
+  curved inner wall and were propped from the mug's floor; the stirrer's
+  stripes needed supports on the tilted cane; the window lines, trimmed from
+  below, measured under the wall floor; and the awning's outer stripes stood
+  0.25 mm wide past its ends. All four are fixed as above (the removed code is
+  archived), and the figures in this section are from the rebuilt model:
+  gate 0 support moves, six overlap checks re-run one at a time and each
+  verified empty.
+- `fragility` (re-run 2026-10-09): nothing slender enough to snap. 0 high,
+  0 watch, 0 slender runs.
+- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+  the café, the same mark as the other buildings, mirrored so it reads OBC
+  with the café turned over, front toward you.
+
+## What it took to print without supports
+
+The café is the sweet shop's shop and the mug its bottom tier, each with every
+fix in their notes. These were this building's own, each found on the gate's
+slicer or a section through the model:
+
+- **Everything on the mug is flush except COCOA.** The stripes and the window
+  outlines are red pressed into the white wall to its own face, so they have
+  no underside to print over. COCOA was flush too until 2026-10-07; it is now
+  raised 0.84 mm, so it reads on a one-colour or painted print (flush, it was
+  colour alone, which the haunted post office's first print showed does not
+  read). It is a climb in 0.2 mm steps laid round the mug in 0.6 mm strips,
+  as on the sweet shop, so only its undersides slope.
+- **The handle's foot starts inside the wall** and meets the mug's face 2 mm
+  up. Begun at a point on the face, its first layers printed as a loose
+  island, and the slicer propped them. Its outside and its hole both rise at
+  more than 50°.
+- **The cocoa stops at the café's room as well as the mug's.** Cut by the
+  mug's room only, a 0.3 mm ring of it inside the wall hung flat over the
+  café's opening into the mug.
+- **The cream is a soft-serve swirl whose coils lean out no more than 30°**,
+  piled high enough to cover the room's cone everywhere.
+- **The stirrer leans out from 18° to 40°**, the most a rod can lean and
+  print over nothing (the candy cane chapel's crook).
+- **The awning is a wedge whose underside rises at 50° from the wall.**
+
+## Honest weak points
+
+- **The stirrer is the part to handle with care.** It is a 3.8 mm rod
+  leaning out of the cream.
+- **Raised details have sloped undersides.** That is how they print without
+  supports. The café's frames, drips and the awning read as wedges from
+  below.
+- **The mug's windows are drawn, not open:** the light comes through the
+  white wall, not through panes.
+- **It has not been printed yet.** Everything above was measured on the
+  model and its slice.

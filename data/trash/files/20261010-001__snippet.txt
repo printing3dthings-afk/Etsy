@@ -1,0 +1,44 @@
+// ── environment ────────────────────────────────────────────────────────────
+// The thing that actually makes metal look like metal. Without an environment
+// map a MeshStandardMaterial with metalness 0.9 has nothing to reflect and
+// renders nearly black -- which is the classic "I switched to PBR and it got
+// worse" failure. This builds a small studio by hand (overhead softbox, cool
+// fill from one side, warm bounce from below) and runs it through PMREM so
+// rough surfaces get a properly blurred version of it.
+function buildEnvironment() {
+  var pmrem = new THREE.PMREMGenerator(renderer);
+  var room = new THREE.Scene();
+  room.background = new THREE.Color(lin(0x0b0d12));
+
+  function panel(w, h, d, color, intensity, x, y, z, rx, ry) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+      new THREE.MeshBasicMaterial({color: lin(color)}));
+    m.material.color.multiplyScalar(intensity);
+    m.position.set(x, y, z);
+    if (rx) { m.rotation.x = rx; }
+    if (ry) { m.rotation.y = ry; }
+    room.add(m);
+    return m;
+  }
+
+  // First pass at these numbers had a 1.5-intensity cool fill and it turned
+  // the whole machine powder blue -- an environment map lights EVERYTHING, so
+  // a tint that looks like a tasteful accent in isolation becomes the colour
+  // of the product. Warm key, restrained cool, and a dark back wall so metal
+  // has something black to reflect: without a dark region in the environment,
+  // polished surfaces have no contrast and read as flat grey plastic.
+  panel(600, 10, 420, 0xfff2de, 2.2,    0,  360,   40, 0, 0);   // key softbox
+  panel(10, 460, 420, 0xa8c0e0, 0.45, -420,  60,    0, 0, 0);   // cool fill
+  panel(10, 460, 420, 0xffcfa0, 0.30,  420,  40,    0, 0, 0);   // warm kicker
+  panel(600, 10, 420, 0x5a6270, 0.18,   0, -300,    0, 0, 0);   // floor bounce
+  panel(600, 460, 10, 0x05070b, 1.0,    0,   40, -360, 0, 0);   // back wall
+
+  envRT = pmrem.fromScene(room, 0.5);
+  scene.environment = envRT.texture;
+  room.traverse(function (o) {
+    if (o.geometry) { o.geometry.dispose(); }
+    if (o.material) { o.material.dispose(); }
+  });
+  pmrem.dispose();
+}
+

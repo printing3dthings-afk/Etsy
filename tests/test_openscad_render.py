@@ -19,7 +19,7 @@ two groups:
      process_sticker_sheets.py's rembg fallback). When openscad IS
      available, these run for real against the actual binary -- confirmed
      working end-to-end during development (2026-08-14: a real cube([10,
-     10,10]) rendered a genuine 1503-byte ASCII STL with real vertex data,
+     10,10]) rendered a genuine binary STL with real vertex data,
      bad syntax and an empty-geometry difference() both surfaced as
      OpenSCADError instead of a silent/bare failure, and a -D size override
      changed the actual rendered vertex coordinates).
@@ -113,9 +113,18 @@ def test_real_render_produces_a_genuine_mesh():
         result = osr.render_scad("cube([10,10,10]);", out)
         check(result == out, f"expected render_scad to return {out}, got {result}")
         check(out.exists() and out.stat().st_size > 0, "expected a real non-empty STL file on disk")
-        content = out.read_text()
-        check(content.startswith("solid"), f"expected ASCII STL header, got: {content[:40]!r}")
-        check("vertex" in content, "expected real vertex data in the STL")
+        # BINARY STL since 2026-09-12 (--export-format binstl). This test used to
+        # read the file as text and assert an ASCII "solid" header; that broke the
+        # moment the default changed, which is the test doing its job. The intent
+        # -- "is this a genuine mesh?" -- is unchanged, so verify it the way the
+        # format actually works: an 80-byte header, a uint32 triangle count, then
+        # exactly 50 bytes per triangle. A truncated or ASCII file fails this.
+        raw = out.read_bytes()
+        check(not raw.startswith(b"solid"), "expected BINARY STL, got an ASCII one")
+        n_tris = int.from_bytes(raw[80:84], "little")
+        check(n_tris == 12, f"a cube is 12 triangles, header claims {n_tris}")
+        check(len(raw) == 84 + 50 * n_tris,
+              f"binary STL size should be 84 + 50*{n_tris} = {84 + 50 * n_tris}, got {len(raw)}")
 
 
 def test_real_bad_syntax_raises_openscaderror_not_bare_crash():
@@ -142,10 +151,26 @@ def test_real_param_override_changes_the_render():
         out_big = Path(td) / "big.stl"
         osr.render_scad("size=5; cube([size,size,size]);", out_small, params={"size": "5"})
         osr.render_scad("size=5; cube([size,size,size]);", out_big, params={"size": "50"})
-        small_txt, big_txt = out_small.read_text(), out_big.read_text()
-        check(small_txt != big_txt, "a -D size override must actually change the rendered geometry")
-        check("50" in big_txt, f"expected the overridden size (50) to appear in vertex coordinates, "
-                                f"got a render that doesn't mention it: {big_txt[:200]!r}")
+        # Binary STL (see the note in test_real_render_produces_a_genuine_mesh).
+        # Checking the real geometry is strictly better than grepping "50" out of
+        # ASCII vertex text ever was -- that string could have matched a coordinate
+        # in an unrelated axis.
+        small_raw, big_raw = out_small.read_bytes(), out_big.read_bytes()
+        check(small_raw != big_raw, "a -D size override must actually change the rendered geometry")
+        import struct
+        def _extent(raw):
+            n = int.from_bytes(raw[80:84], "little")
+            xs = []
+            for i in range(n):
+                off = 84 + 50 * i + 12          # skip the facet normal
+                for v in range(3):
+                    xs.append(struct.unpack_from("<f", raw, off + 12 * v)[0])
+            return max(xs) - min(xs)
+        big_ext, small_ext = _extent(big_raw), _extent(small_raw)
+        check(abs(big_ext - 50.0) < 0.01,
+              f"-D size=50 should render a 50mm cube, measured {big_ext:.3f}mm")
+        check(abs(small_ext - 5.0) < 0.01,
+              f"-D size=5 should render a 5mm cube, measured {small_ext:.3f}mm")
 
 
 def test_end_to_end_via_chat_tool_dispatch():

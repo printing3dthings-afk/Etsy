@@ -1,0 +1,11 @@
+module cr_at_g(i, d) let (p = cr_pts(i)) translate([TC[0] + p[0], TC[1], cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
+module crook_g(d) for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
+// Climbing 2 SH per 1 out, not SH: on stripes tilted 28 deg, SH alone left the
+// slicer propping a test column's (the turret house, 2026-10-08); twice that
+// sliced clean. And clear of the tip's end cap, which faces down past the rod.
+module crook_stripes_up() for (k = [0 : 1]) intersection() {
+    difference() { crook_g((k + 1) * 0.15); crook_g(k * 0.15); }
+    crook_stripes();
+    translate([0, 0, 2 * SH * (k + 1) * 0.15]) crook_stripes();
+    translate([-100, -100, 0]) cube([200, 200, cr_z0 + cr_pts(cr_n)[1] - cr_r(cr_n)]);
+}

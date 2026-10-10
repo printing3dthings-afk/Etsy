@@ -1,0 +1,17 @@
+function loadJob(id) {
+  if (id === currentId && JOB) { return; }
+  currentId = id;
+  loading.hidden = false;
+  loading.firstChild.textContent = 'Loading ' +
+    (INDEX.filter(function (j) { return j.id === id; })[0] || {name:id}).name;
+  paintJobList();
+  setPlaying(false);
+  var s = document.createElement('script');
+  s.setAttribute('data-job', id);
+  s.src = 'jobs/' + id + '.js';
+  s.onerror = function () {
+    loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
+      'Could not load jobs/' + id + '.js</div>';
+  };
+  document.body.appendChild(s);
+}

@@ -1,0 +1,266 @@
+// Six-well sauce cup tray -- OnBrandCraftz
+//
+// Holds six standard 2oz plastic portion cups in a ring. It holds the CUPS,
+// never the sauce: FDM layer lines are porous and harbour bacteria, and this
+// shop's P1S runs a stock BRASS nozzle, which sheds trace lead. A tray a
+// customer pours sauce into is not a claim we can defend (CLAUDE.md's
+// top-priority rule), and it is also why nearly every popular real design in
+// this category holds a packet or a tub rather than the sauce itself.
+//
+// Cup dimensions are measured from two independent suppliers, not guessed:
+//   Choice  2oz: top 2-3/8in (60.3) x bottom 1-3/4in (44.5) x 1-1/8in (28.6)
+//   Dart 200PC : top 2-3/8in (60.3) x bottom 1-13/16in (46.0) x 1-3/16in (30.2)
+// The TOP diameter agrees exactly across brands; bottom and height do not.
+// So the well grips the cup's TAPER at a fixed bore -- the one dimension both
+// brands share -- instead of matching a full cone that only fits one of them.
+
+$fa = 2;  $fs = 0.4;        // Technique 43: OpenSCAD's 12/2 defaults ARE the
+                            // "blocky" look. Every organic model gets these.
+
+include <BOSL2/std.scad>
+
+part = "tray";              // tray | preview | cutters | mark
+
+// ---------- the cup this is built for (measured, sourced) ----------
+cup_rim_d   = 60.30;
+cup_base_d  = 44.50;        // Choice; Dart is 46.0 -- both clear well_bore_d
+cup_h       = 28.60;
+
+// ---------- wells ----------
+n_wells     = 6;
+well_bore_d = 47.00;        // the cup wedges where its taper reaches this.
+                            // Below both brands' rim, above both their bases,
+                            // so every brand seats -- only the depth varies.
+well_mouth_d= 53.00;        // top of the entry chamfer. Kept SHORT on
+                            // purpose: widen it and the cup stops on the
+                            // chamfer's top edge instead of the bore, which
+                            // seats it 20mm higher and hangs its base clean
+                            // through the table.
+// For n wells evenly spaced, adjacent CENTRES are exactly ring_r apart
+// (2*ring_r*sin(180/6) = ring_r). The binding clearance is not the bore --
+// it is the cup RIM, which is wider than the bore and flares out ABOVE the
+// tray where no geometry constrains it. A first pass sized this against the
+// bores at 52 and the rendered cups overlapped each other by 8.3mm: six cups
+// that could not physically be inserted, in a model that rendered clean.
+ring_r      = 63.00;        // cup_rim_d + 2.7 gap between neighbouring rims
+
+// ---------- plate ----------
+// THE TOP FACE IS FLAT (2026-09-08). It was a shallow paraboloid -- 7.5 at the
+// axis rising to 14 at the rim -- which scalloped the rim for free but printed
+// as 32 concentric terraces across the whole face, a 30.9mm flat disc in the
+// middle and rings tightening outward. Its steepest slope anywhere was 8.4
+// degrees: a 1.35mm terrace, 3.2 extrusions wide. The sibling bowl printed
+// with the identical defect and Scott saw it on the real part -- see
+// Technique 54, and SAUCE_BOWL_PRINTING.md. No slicer setting fixes it;
+// ironing cannot fill a vertical step and adaptive layers do nothing at a
+// stationary point. A flat face is one clean top surface with no steps.
+//
+// plate_h is now the real, constant thickness and is DERIVED from the well
+// stack rather than picked: the cup seats on the bore's top edge, the chamfer
+// runs above that, and mouth_straight of parallel bore above THAT keeps the
+// visible mouth a clean circle instead of the chamfer's top edge.
+bore_top    = 6.00;         // cup seats on the bore's top edge, here
+chamfer_h   = 3.00;
+mouth_straight = 3.00;
+plate_h     = bore_top + chamfer_h + mouth_straight;   // 12.00, flat
+base_r      = 88.00;
+
+// ---------- silhouette: six petals, one per cup ----------
+n_petals    = 6;
+petal_amp   = 16.00;   // the hero form: one bold lobe per cup. Deep valleys
+                       // are not only prettier, they remove real area -- and
+                       // on a 200mm tray the whole print cost is layer AREA.
+
+// ---------- surface: flutes carved INWARD, under the rim ----------
+// Technique 52 measured this shop at rugosity 1.000-1.086 against a 157-mesh
+// reference corpus whose p75 is 1.235, and concluded plain surfaces read as
+// unfinished. Its own prescription is to raise texture OUTWARD rather than
+// carve in -- but raising it here was wrong, and a three-way silhouette
+// comparison in plan is what showed why: proud ridges become the outline, and
+// 48 of them turned a clean six-petal flower into a ragged sawtooth. The
+// petals are the hero form (Technique 31: spend boldness in one place), so
+// the flutes are cut IN, below the rim, and never reach the rim's radius.
+// The plan silhouette stays the petal curve; the skirt still gets real
+// relief; and the rim now overhangs the fluted band, which is a shadow line
+// rather than a defect. There is a real wall budget for this: even at a petal
+// valley the nearest bore is 18mm away, so a 2.6mm groove costs nothing.
+// OFF (depth 0). Two studio renders settled this empirically rather than by
+// argument: at 2.6mm the flutes vanished under soft light, and at 3.4mm with
+// deliberately raking light they STILL vanished -- because the rim sits at the
+// full petal radius and overhangs them, so the fluted band is only visible
+// from near floor level. On a tray that lives on a table, nobody ever sees it.
+// The petal silhouette is the hero and carries the piece alone (Technique 31:
+// spend boldness in one place); a feature no one can see is not texture, it is
+// print time. Left parameterised, not deleted -- on a taller-skirted variant,
+// or one without the overhanging rim, this would read fine.
+n_flutes    = 36;
+flute_depth = 0.00;
+flute_rise  = 1.20;         // fade in off the bed: the first layer prints the
+                            // full clean outline
+flute_top   = 13.00;        // flutes are gone by here, so the rim is one
+flute_fall  = 4.40;         // unbroken line. 3.4mm over 4.4mm of fade is
+                            // 37.7 deg from vertical -- inside the 40 deg
+                            // limit Technique 35 sets for a visible surface.
+                            // Depth went 2.6 -> 3.4 because the STUDIO render
+                            // showed the shallower cut washing out completely
+                            // under soft light while looking fine in the flat
+                            // CAD preview -- Technique 36's exact warning.
+
+// ---------- top edge ----------
+top_cham_h  = 1.20;
+top_cham_r  = 1.00;         // radius shrinking as z rises = every layer sits
+                            // on a wider one. Never chamfer the BOTTOM edge:
+                            // it is the bed contact.
+
+// No centre boss. The dish's own low middle is the negative space
+// (Technique 31: leave deliberate plain surface, don't fill every face), and
+// it is where a drip off a cup ends up rather than on the table.
+
+// ---------- maker's mark ----------
+// Sized against THIS model's own flat run: the centre pad bounded by the bores,
+// 2 * (ring_r - well_bore_d/2). mark_size is DERIVED from it so a -D variant on
+// a smaller footprint cannot inherit an oversized mark -- which is exactly what
+// the 1oz tray did, sitting at 50.8% of its pad while the 2oz sat at 39.9%.
+//
+// THE MARK IS "OBC", NOT THE FULL WORDMARK, AND THAT IS A PRINTABILITY
+// DECISION. The standing rule sizes a mark by its WIDTH against the flat run,
+// and says nothing about stroke width -- but stroke width is what decides
+// whether it survives the printer. Measured on the real cutter cross-sections:
+// "OnBrandCraftz" in Caveat Bold has thinnest strokes of 0.45 / 0.40 / 0.34 /
+// 0.20mm on the four variants at 50% of pad, i.e. 1.08 / 0.94 / 0.81 / 0.48 of
+// a single 0.42mm extrusion. Three of the four cannot print at all and the
+// fourth is one bead wide. "OBC" is 3.43x shorter per unit of size, so at the
+// same overall width it gets 3.43x the size and the same multiple of stroke:
+// 1.2-1.8mm, or 2.6-3.8 extrusions, on every variant including the smallest.
+//
+// If the full wordmark is ever wanted back, it needs a pad roughly 3.4x wider
+// or a much heavier font -- re-measure, do not assume.
+mark_text     = "OBC";
+mark_per_size = 2.089;      // mm of width per unit of size, MEASURED for this
+                            // exact string and font. Changing either invalidates
+                            // it; re-measure via part="mark", which renders the
+                            // cutter alone in about a second.
+mark_frac     = 0.45;       // top of the 35-45% standing range
+mark_pad      = 2 * (ring_r - well_bore_d / 2);
+mark_size     = mark_pad * mark_frac / mark_per_size;
+mark_depth  = 0.70;
+
+
+// ============================================================
+// SILHOUETTE
+// ============================================================
+
+function flute_fade(z) = min(min(1, z / flute_rise),
+                             max(0, min(1, (flute_top - z) / flute_fall)));
+
+// Radius pulled IN near the top only. A chamfer here is safe; the same
+// chamfer at z=0 would lift the bed contact off its own outline.
+function edge_trim(z) = (z > plate_h - top_cham_h)
+    ? top_cham_r * (z - (plate_h - top_cham_h)) / top_cham_h
+    : 0;
+
+// Technique 19: a smooth (0.5+0.5cos) groove reads as soft fluting; abs(cos)
+// puts a cusp at every zero crossing and reads as sharp corrugation instead.
+// Petals and flutes are both maxima at a=0, so the pattern lands the same way
+// on every petal without any phase term -- the alignment bug Technique 19
+// documents came from ADDING a phase that was not needed.
+function skirt_r(a, z) =
+      base_r
+    + petal_amp * cos(n_petals * a)
+    - flute_depth * (0.5 + 0.5 * cos(n_flutes * a)) * flute_fade(z)
+    - edge_trim(z);
+
+function ring(z) = [for (a = [0 : 1 : 359]) [skirt_r(a,z) * cos(a),
+                                             skirt_r(a,z) * sin(a)]];
+
+// DERIVED from plate_h, never a literal list. This was hardcoded ending at
+// 17.0, and when plate_h was changed to 14 the body silently stayed 17mm tall
+// -- the dish cut hid it in every render, and only measuring the exported
+// mesh's bounding box caught it (16.1mm where 14 was intended). Same class of
+// bug as any magic number: a -D override appears to work and does nothing.
+// Dense near the bed for the flute fade-in and near the rim for the chamfer,
+// coarse through the middle where nothing changes.
+z_samples = concat(
+    [0, 0.4, 0.8, 1.2, 1.6, 2.0],
+    [for (i = [1 : 8]) 2.0 + (plate_h - top_cham_h - 2.0) * i / 8],
+    [plate_h - top_cham_h * 0.66, plate_h - top_cham_h * 0.33, plate_h]
+);
+
+// One skin(), never a union of per-segment extrudes -- Technique 5 measured
+// that as the difference between 45 seconds and a timeout.
+module skirt_solid() {
+    skin([for (z = z_samples) ring(z)], z = z_samples, slices = 0);
+}
+
+module tray_gross() { skirt_solid(); }
+
+
+// ============================================================
+// WELLS
+// ============================================================
+
+module well_cutter() {
+    // through-bore: the cup's base hangs in free air below the seat, and the
+    // cup can be pushed out from underneath. No floor to bridge.
+    translate([0, 0, -1])
+        cylinder(h = bore_top + 1, d = well_bore_d);
+    translate([0, 0, bore_top])
+        cylinder(h = chamfer_h, d1 = well_bore_d, d2 = well_mouth_d);
+    // straight above the chamfer, up through whatever height the dished top
+    // face happens to have at this radius
+    translate([0, 0, bore_top + chamfer_h])
+        cylinder(h = plate_h + 5, d = well_mouth_d);
+}
+
+module wells() {
+    for (i = [0 : n_wells - 1])
+        rotate([0, 0, i * 360 / n_wells])
+            translate([ring_r, 0, 0]) well_cutter();
+}
+
+
+// ============================================================
+// MAKER'S MARK -- negative cut, underside, standing rule
+// ============================================================
+
+module brand_mark() {
+    // Cutter dips BELOW z=0. A cutter that only touches the surface removes
+    // nothing and renders perfectly clean (Technique 4).
+    translate([0, 0, -0.5])
+        linear_extrude(height = mark_depth + 0.5)
+            mirror([0, 1, 0])
+                text(mark_text, size = mark_size,
+                     font = "Caveat:style=Bold",
+                     halign = "center", valign = "center");
+}
+
+
+// ============================================================
+// PREVIEW ONLY -- never exported
+// ============================================================
+
+module cup_mock() {
+    seat_t = (cup_rim_d - well_bore_d) * cup_h / (cup_rim_d - cup_base_d);
+    translate([0, 0, bore_top - (cup_h - seat_t)])
+        cylinder(h = cup_h, d1 = cup_base_d, d2 = cup_rim_d);
+}
+
+module cups() {
+    for (i = [0 : n_wells - 1])
+        rotate([0, 0, i * 360 / n_wells])
+            translate([ring_r, 0, 0]) cup_mock();
+}
+
+
+module tray() {
+    difference() { tray_gross(); wells(); brand_mark(); }
+}
+
+
+if      (part == "tray")    tray();
+else if (part == "cutters") { wells(); }          // Technique 37: check a
+else if (part == "mark")    brand_mark();         // cutter's OWN extents alone
+else if (part == "preview") {
+    color("#E8DFD2") tray();
+    color("#C0392B", 0.55) cups();
+}
