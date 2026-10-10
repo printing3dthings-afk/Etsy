@@ -354,9 +354,14 @@ module body_raw() {
 // out 0.3. Every lower edge climbs SH per 1 out. The cane's stripes had relief
 // too and needed 4,638 support moves on the tilted cane: left to paint
 // (2026-10-09), as on the chapel's crook and the cafe's stirrer.
+// Strips laid from ck_r + 1.5, not + 1.2 (2026-10-10): at 10.2 / 0.6 a strip
+// seam fell exactly on the clock's centre line, through the hub and the 12 and
+// 6 o'clock dots, whose circles have a vertex on that line, and the
+// overlapping strips met there in non-manifold edges -- 69 of them, and the
+// union was not watertight. Half a strip over, no seam is on the line.
 module ck_art() {
-    cyl_relief(MR, ck_th, ck_z, ck_r + 1.2, 0.6) translate([0, 0, -0.2]) art_out(0.4, 2) children();
-    cyl_relief(MRi, ck_th, ck_z, ck_r + 1.2, 0.6) art_in(0.8, 4) children();
+    cyl_relief(MR, ck_th, ck_z, ck_r + 1.5, 0.6) translate([0, 0, -0.2]) art_out(0.4, 2) children();
+    cyl_relief(MRi, ck_th, ck_z, ck_r + 1.5, 0.6) art_in(0.8, 4) children();
 }
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
     intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
