@@ -4503,6 +4503,11 @@ function paintSpeedButtons() {
   Array.prototype.forEach.call($('speeds').children, function (c, i) {
     c.setAttribute('aria-pressed', String(SPEEDS[i].v === play.speed));
   });
+  var cyc = $('speedcycle');
+  if (cyc) {
+    var cur = SPEEDS.filter(function (x) { return x.v === play.speed; })[0];
+    cyc.textContent = cur ? cur.l : play.speed + '\u00d7';
+  }
 }
 function tlSetUI(on) {
   tl.on = on;
@@ -5848,21 +5853,23 @@ function paintPrinter() {
     row('Printable area', '0\u2013256 mm in X and Y, origin at the front-left corner') +
     row('Reserved', EXCLUDE_W + ' \u00d7 ' + EXCLUDE_D + ' mm front-left corner (shown in orange)') +
     '</table>' +
-    '<div class="caveat"><b>How a print gets aligned on it.</b> The plate is ' +
+    '<details class="caveat"><summary>How a print gets aligned on it</summary><p>The plate is ' +
     'not positioned by eye \u2014 the slot in its rear tab drops over the ' +
     'heatbed\u2019s locating pins, so the machine\u2019s 0,0 lands in the same ' +
     'physical place every time. The slicer then arranges the part inside that ' +
     'square: centred on 128, 128 for a single object, and clear of the reserved ' +
     'corner. <span class="mono">tools/plate_audit.py</span> checks every plate ' +
     'on this page against exactly those two numbers, read out of Bambu\u2019s own ' +
-    'P1S machine profile.</div>' +
+    'P1S machine profile.</p></details>' +
     '<h3>What sliced this toolpath</h3><table class="kv">' +
     row('Build volume', p.bed[0] + ' \u00d7 ' + p.bed[1] + ' \u00d7 ' + p.bed[2] + ' mm') +
     row('Motion', p.motion) + row('Chamber', p.chamber) +
     row('Enclosed', p.enclosed ? 'Yes' : 'No') +
     row('AMS', p.ams ? p.ams.slots + ' slots, ' + p.ams.w + ' \u00d7 ' + p.ams.d +
         ' \u00d7 ' + p.ams.h + ' mm, ' + p.ams.kg.toFixed(1) + ' kg' : 'None fitted') +
-    row('Nozzle', p.nozzle.toFixed(1) + ' mm brass') +
+    // Stainless steel, per Bambu's own P1S spec sheet (read 2026-09-19); this
+    // said brass. Other machines' nozzle material is not on file, so not claimed.
+    row('Nozzle', p.nozzle.toFixed(1) + ' mm' + (printerId === 'p1s' ? ' stainless steel' : '')) +
     row('Layer height', (JOB ? JOB.raw.layerHeight : 0.2).toFixed(2) + ' mm') +
     row('First layer', (JOB && JOB.raw.firstLayerHeight ?
         JOB.raw.firstLayerHeight : 0.2).toFixed(2) + ' mm') +
@@ -5881,11 +5888,12 @@ function paintPrinter() {
     row('Nozzle', m.noz + ' \u00b0C') + row('Bed', m.bed + ' \u00b0C') +
     row('Dry before use', m.dry) + row('Plate', m.plate) +
     '</table>' +
-    '<div class="caveat">Changing the machine redraws the chamber and the volume ' +
+    '<details class="caveat"><summary>Changing the machine does not re-slice</summary><p>Changing the machine redraws the chamber and the volume ' +
     'row. It does <b>not</b> re-slice \u2014 every toolpath here came out of the P1S ' +
     'profile above. Re-slicing lives in <span class="mono">tools/virtual_printer.py' +
-    '</span>.</div>' +
-    '<div class="caveat"><b>What is taken from Bambu\u2019s own documentation:</b> ' +
+    '</span>.</p></details>' +
+    '<details class="caveat"><summary>Where this drawing of the machine comes from</summary><p>' +
+    '<b>What is taken from Bambu\u2019s own documentation:</b> ' +
     'outside dimensions, build volume, AMS size, the 2.7-inch 192\u00d764 screen, ' +
     'the fixed gantry over a bed that descends, a Z axis of <b>three</b> lead ' +
     'screws turned together by one stepper through a belt under the base, three ' +
@@ -5907,7 +5915,7 @@ function paintPrinter() {
     'from the published 368 \u00d7 283 \u00d7 224 mm and the 197\u2013202 mm spool ' +
     'compatibility range. Its spool colours are illustrative, except on a ' +
     'plate exported with its own design colours; nothing ' +
-    'here is reading your machine.</div>';
+    'here is reading your machine.</p></details>';
   $('platesel').addEventListener('change', function (e) {
     plateId = e.target.value;
     buildChamber(PRINTERS[printerId].bed);
@@ -5987,12 +5995,19 @@ function initUI() {
     b.setAttribute('aria-pressed', String(s.v === play.speed));
     b.addEventListener('click', function () {
       play.speed = s.v;
-      Array.prototype.forEach.call($('speeds').children, function (c) {
-        c.setAttribute('aria-pressed', String(c === b));
-      });
+      paintSpeedButtons();
     });
     $('speeds').appendChild(b);
   });
+  // On a phone the six speeds are one button that steps through them.
+  $('speedcycle').addEventListener('click', function () {
+    var i = 0;
+    while (i < SPEEDS.length && SPEEDS[i].v !== play.speed) { i++; }
+    play.speed = SPEEDS[(i + 1) % SPEEDS.length].v;
+    paintSpeedButtons();
+    announce('Playback ' + $('speedcycle').textContent);
+  });
+  paintSpeedButtons();
 
   $('play').addEventListener('click', function () { if (JOB) { setPlaying(!play.on); } });
   $('restart').addEventListener('click', function () {
@@ -6194,6 +6209,17 @@ function initUI() {
       });
     });
 
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rail]'), function (b) {
+    b.addEventListener('click', function () { showRail(b.getAttribute('data-rail')); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#mtabs [data-m]'), function (b) {
+    b.addEventListener('click', function () { showPanel(b.getAttribute('data-m')); });
+  });
+  $('hudtoggle').addEventListener('click', function () {
+    setHudFolded(!$('hud').classList.contains('min'), true);
+  });
+  setHudFolded(hudFoldedAtStart(), false);
+
   // -- workspace shell controls --------------------------------------------
   $('toggleleft').addEventListener('click', function () {
     railHidden.left = !railHidden.left;
@@ -6250,6 +6276,7 @@ function initUI() {
     if (e.key === '/') {
       e.preventDefault();
       railHidden.left = false; applyRails();
+      showPanel('plates', true);
       var f = $('platefilter');
       if (f) { f.focus(); f.select(); }
       return;
@@ -6293,6 +6320,68 @@ function applyRails() {
   // whole boot down with it (empty plate list, stuck spinner), which is the
   // same class of failure the boot block's try/catch exists to report.
   if (renderer) { onResize(); }
+}
+
+// -- panels (2026-10-10) ---------------------------------------------------
+// The left rail is three tabs, and on a phone a tab bar under the transport
+// opens one panel at a time (Info is the right rail). #app carries which one
+// is chosen, so a laptop window narrowed to phone width keeps the same panel.
+function showRail(name) {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-rail]'), function (b) {
+    var sel = b.getAttribute('data-rail') === name;
+    b.setAttribute('aria-selected', String(sel));
+    $('rail-' + b.getAttribute('data-rail')).hidden = !sel;
+  });
+  var app = document.getElementById('app');
+  if (app.getAttribute('data-m') !== 'info') { app.setAttribute('data-m', name); }
+  paintPanelTabs();
+  // A hidden pane measures as zero, so the "N more plates" count is stale
+  // until it is measured again on screen.
+  if (name === 'plates' && typeof updatePlateMore === 'function') { updatePlateMore(); }
+}
+
+// Tapping the open panel's tab again folds it away and gives the print the
+// whole height; `keepOpen` is for shortcuts that must land on the panel.
+function showPanel(name, keepOpen) {
+  var app = document.getElementById('app');
+  var open = app.getAttribute('data-sheet') !== 'closed';
+  if (!keepOpen && open && app.getAttribute('data-m') === name) {
+    app.setAttribute('data-sheet', 'closed');
+  } else {
+    app.setAttribute('data-sheet', 'open');
+    app.setAttribute('data-m', name);
+    if (name !== 'info') { showRail(name); }
+  }
+  paintPanelTabs();
+  if (renderer) { onResize(); }
+}
+
+function paintPanelTabs() {
+  var app = document.getElementById('app');
+  var m = app.getAttribute('data-m'), open = app.getAttribute('data-sheet') !== 'closed';
+  Array.prototype.forEach.call(document.querySelectorAll('#mtabs [data-m]'), function (b) {
+    b.setAttribute('aria-selected', String(open && b.getAttribute('data-m') === m));
+  });
+}
+
+// The readout folds to layer, time left and speed. Remembered per browser,
+// and folded by default on a phone, where the full grid would cover the print.
+var HUD_KEY = 'vp1s.hud.folded';
+function hudFoldedAtStart() {
+  try {
+    var v = localStorage.getItem(HUD_KEY);
+    if (v === '1' || v === '0') { return v === '1'; }
+  } catch (e) { /* no storage: fall through to the default */ }
+  return !!(window.matchMedia && window.matchMedia('(max-width:1180px)').matches);
+}
+function setHudFolded(folded, remember) {
+  $('hud').classList.toggle('min', folded);
+  var b = $('hudtoggle');
+  b.textContent = folded ? 'More' : 'Less';
+  b.setAttribute('aria-expanded', String(!folded));
+  if (remember) {
+    try { localStorage.setItem(HUD_KEY, folded ? '1' : '0'); } catch (e) { /* ignore */ }
+  }
 }
 
 // A link to the exact plate and layer on screen. The hash is read on boot, so

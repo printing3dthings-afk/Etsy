@@ -1950,3 +1950,91 @@ function buildEnvironment() {
 ```
 
 <!-- /TRASH 20261010-001 -->
+
+<!-- TRASH id=20261010-002 date=2026-10-10 kind=snippet source="tools/viewer/virtual_p1s.html" reason="View-options popover CSS and the stacked phone layout, replaced by stage camera tools, tabbed rails and the app-style phone layout (Scott, 2026-10-10: too much scrolling)" -->
+## 20261010-002 · 2026-10-10 · snippet · `tools/viewer/virtual_p1s.html`
+**Reason:** View-options popover CSS and the stacked phone layout, replaced by stage camera tools, tabbed rails and the app-style phone layout (Scott, 2026-10-10: too much scrolling)  
+**Payload:** `data/trash/files/20261010-002__snippet.txt`
+
+```html
+/* ── view menu ────────────────────────────────────── */
+.viewbtns button[aria-pressed="true"]{background:#241a0f;color:var(--amber-soft)}
+.viewmenu{position:relative}
+.viewmenu summary{list-style:none;padding:7px 10px;border:1px solid var(--line-hi);border-radius:3px;
+  background:var(--rail);font-size:11.5px;cursor:pointer;color:var(--dim)}
+.viewmenu summary::-webkit-details-marker{display:none}
+.viewmenu summary::after{content:' +';color:var(--amber-soft)}
+.viewmenu[open] summary::after{content:' −'}
+.viewmenu .viewbtns{position:absolute;right:0;bottom:calc(100% + 8px);z-index:8;width:420px;
+  padding:6px;background:var(--panel);border:1px solid var(--line-hi);border-radius:4px;
+  box-shadow:0 14px 34px rgba(0,0,0,.48)}
+.viewbtns{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);
+  flex-wrap:wrap;min-width:0}
+.speeds{flex-wrap:wrap;min-width:0}
+.viewbtns button{padding:6px 10px;background:var(--rail);font-size:11.5px}
+.viewbtns button:hover{color:var(--amber)}
+@media (max-width:1180px){
+  /* Source order puts both rails before the viewport; on a phone the print
+     itself has to come first, so the narrow layout re-places by area. */
+  #app{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"h" "s" "f" "l" "r";
+    grid-template-rows:auto 56vh auto auto auto;height:auto}
+  header{grid-area:h} #stage{grid-area:s} footer{grid-area:f}
+  #left{grid-area:l} #right{grid-area:r}
+  aside{max-height:none;overflow:visible}
+  #jobs{max-height:none}
+  #stage{min-height:340px}
+  header{padding:8px 14px;gap:8px}
+  header h1{font-size:15px}
+  /* The subtitle is explanatory, not operational; on a phone it costs
+     ~50px of the 3D viewport for nothing. */
+  header .sub{display:none}
+  #buildchip{font-size:10px}
+  .scrub{order:5;flex-basis:100%;min-width:0}
+
+  /* The transport is the only control you use continuously, and the page is
+     ~2700px tall on a phone -- letting it scroll away means scrolling back up
+     to pause. Pinned, with the last rail padded so nothing hides under it. */
+  footer{position:sticky;bottom:0;z-index:6;
+    box-shadow:0 -10px 22px rgba(0,0,0,.5)}
+  #right{padding-bottom:72px}
+
+  /* Thumb-sized targets. Measured at 22-29px before this; 44 is the floor. */
+  .leg{min-height:44px;padding:4px 6px}
+  .modeswap button{padding:13px 4px}
+  .speeds button,.viewbtns button{padding:13px 11px;font-size:11px}
+  .viewbtns,.speeds{flex:1 1 100%}
+  /* The new controls, sized for a thumb. The view menu drops out of its
+     popover and becomes an inline block, because a 420px popover anchored to
+     the bottom of a phone viewport has nowhere to go. */
+  .viewmenu{flex:1 1 100%}
+  .viewmenu summary{padding:13px 11px;text-align:center}
+  .viewmenu .viewbtns{position:static;width:auto;margin-top:5px;box-shadow:none}
+  .header-actions{width:100%;order:5}
+  .shellbtn{flex:1;justify-content:center;min-height:40px}
+  .layernav{flex:1 1 100%}
+  .layernav button{flex:1;height:44px}
+  .layernav label{flex:2;justify-content:center;height:44px}
+  .plate-tools{grid-template-columns:minmax(0,1fr) 112px}
+  .jobfav{width:40px;height:40px;font-size:19px}
+  .job{padding-right:50px}
+  /* Collapsing a rail is a desktop affordance: at this width the rails are
+     stacked sections of one scrolling page, and hiding one just removes
+     content with no space reclaimed. The buttons stay for Copy view / Help. */
+  #app.left-collapsed,#app.right-collapsed,#app.left-collapsed.right-collapsed{
+    grid-template-columns:minmax(0,1fr)}
+  #app.left-collapsed #left,#app.right-collapsed #right{display:block}
+  .tbtn{width:46px;height:46px}
+  .tabs button{padding:15px 4px}
+  select,input[type=number]{padding:12px 9px}
+  input[type=range]{height:44px}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px}
+  .mat td{padding:9px 6px 9px 0}
+  .kv td{padding:7px 0}
+  #hint{font-size:10px}
+}
+```
+
+<!-- /TRASH 20261010-002 -->
+

@@ -146,6 +146,61 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## Layout: less scrolling (2026-10-10)
+
+Scott: "There is too much scrolling. I need it to be easier to navigate
+around. I want people to be able to rely on this." Measured before, with the
+Phone Stand loaded:
+
+| Size | Before |
+|---|---|
+| 1440 × 900 | left rail 1,731 px of content in 757 px; right 2,327 px |
+| 1280 × 720 | readout, AMS and colour modes all below the plate list, out of sight |
+| 390 × 844 phone | page 11,755 px tall; the plate list alone 8,493 px |
+| every size | page scrolled 16 px from the body's default margin |
+
+What moved:
+
+- **The live readout is on the print.** Layer, height, elapsed, remaining,
+  filament, speed, nozzle/bed and fan float over the stage's top-left, so
+  nothing that changes while a print plays can scroll away. "Less" folds it to
+  layer, time left and speed. It starts folded on a phone, and the choice is
+  remembered in this browser.
+- **The camera is on the print.** Iso, Front, Top, Part only and Full screen
+  are a small toolbar on the stage: top-right on a desktop, a row along the
+  foot on a phone. The footer's "View options" pop-up is gone.
+- **The left rail is three tabs:**
+  - *Plates*: the list fills the whole tab.
+  - *This print*: the plate's notes, what is being printed now, the AMS and
+    the purge count.
+  - *Display*: colour modes, and the scene switches (door, cutaway, ghost,
+    seams, bed motion, detail).
+- **The right rail's tabs stay pinned.** Every Limits caveat, and the long
+  notes on the Printer tab, fold under a one-line heading. The first Limits
+  caveat starts open.
+- **A phone is one screen, with nothing below the fold:**
+  - the print, the transport, a tab bar (Plates · Print · Display · Info) and
+    one panel;
+  - tap the open tab again to fold the panel away and give the print the
+    whole height;
+  - the six playback speeds become one button that steps through them.
+- **The header fits on one row on a laptop.** The library totals and the
+  subtitle give way first.
+
+Every control kept its id, so nothing in `app.js` that drives one had to
+change. `tests/test_viewer_layout.py` pins the move: the readout and camera on
+the stage, a pane for every tab, every control present exactly once, a phone
+exactly one screen tall, and the tab logic run under node.
+
+Two corrections made on the way, both statements to the reader that had gone
+false:
+
+- *"Nothing on this page is physics."* Since the motion model and the Heat
+  view, it was not true. It now says what is simulated and what still is not.
+- *"0.4 mm brass nozzle."* Bambu's P1S spec sheet says stainless steel
+  (CLAUDE.md, corrected 2026-09-19). Fixed on the Printer tab and in
+  "Profile used". Other machines' nozzle material is not claimed.
+
 ## Heat (2026-10-10)
 
 The **Heat** colour mode shows the estimated temperature of every bead from the
