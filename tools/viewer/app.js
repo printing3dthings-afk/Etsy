@@ -286,6 +286,11 @@ function buildBackdrop() {
     new THREE.MeshBasicMaterial({map: tex, side: THREE.BackSide, fog: false}));
   sky.rotation.x = Math.PI / 2;   // the scene is Z-up; the gradient is not
   sky.name = 'backdrop';
+  // Writes no depth, so the occlusion pass reads it as empty background. Its
+  // inside is a concave shell, and anything concave is exactly what ambient
+  // occlusion darkens -- the sky came out a grey smudge.
+  sky.material.depthWrite = false;
+  sky.renderOrder = -1;
   scene.add(sky);
   return N;
 }
@@ -471,6 +476,403 @@ function buildEnvironment() {
   pmrem.dispose();
 }
 
+// ── post-processing: the "ultra" detail tier (2026-10-10) ──────────────────
+// Scott asked for the viewer to look a lot more real. The materials and the
+// light rig were already physically based; what every real photograph has and
+// this page did not is the light that does NOT arrive. Ambient light is
+// blocked in every corner, crease and contact line -- where a part meets the
+// plate, between the AMS spools, in the gap under the toolhead -- and without
+// that the whole scene floats, lit evenly from nowhere. That is the single
+// biggest tell of a CG render, and no material change fixes it.
+//
+// So the scene renders into an off-screen buffer and three passes finish it:
+//   ambient occlusion  from the depth buffer alone (no second geometry pass:
+//                      the heaviest plate is 3 million triangles, and paying
+//                      for them twice per frame is what SAOPass/SSAOPass do)
+//   bloom              only what sits at the top of the tone curve -- the
+//                      chamber LED, the hot nozzle, a glint
+//   finish             sRGB, and a 1/255 dither that stops the dark backdrop
+//                      banding into steps (the lens vignette is already a CSS
+//                      overlay on #stage; doing it twice crushed the corners)
+//
+// The materials still tone-map themselves, exactly as on the plain path, and
+// that is deliberate. The first version rendered raw HDR and applied ACES at
+// the end, which moved every transparent blend in front of the curve: the
+// smoked door's reflection, no longer compressed before it was mixed in, went
+// milky enough to hide the print behind it. Keeping the curve in the material
+// means high and ultra differ only by what the passes add.
+//
+// Built on first use and torn down on any failure: a device without WebGL2 or
+// float colour buffers, or a shader that will not compile there, renders the
+// way it always did and says so once.
+var post = null, postBroken = false, postWanted = true;
+var POST_AO_STRENGTH = 0.85, POST_BLOOM = 0.28;
+
+var POST_VERT = 'varying vec2 vUv;\nvoid main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+
+var POST_COMMON = [
+  'varying vec2 vUv;',
+  'uniform sampler2D tDepth;',
+  'uniform mat4 uInvProj;',
+  'vec3 viewPos(vec2 uv, float d) {',
+  '  vec4 v = uInvProj * vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0);',
+  '  return v.xyz / v.w;',
+  '}',
+  'float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }',
+  'vec3 toLin(vec3 c) {',
+  '  return mix(pow(c * 0.9478672986 + vec3(0.0521327014), vec3(2.4)), c * 0.0773993808, vec3(lessThanEqual(c, vec3(0.04045))));',
+  '}'
+].join('\n');
+
+// Normal reconstructed from depth, choosing for each axis whichever neighbour
+// lies on the same surface (the smaller depth step). Taking the plain
+// derivative instead puts a bright halo on every silhouette, because the
+// difference across an edge is to a surface a metre behind.
+var POST_AO_FRAG = POST_COMMON + '\n' + [
+  'uniform vec2 uTexel;',
+  'uniform float uRadius;',      // mm, in the world
+  'uniform float uProjScale;',   // pixels per mm at 1 mm from the camera
+  'uniform float uFarAO;',
+  'const int N = 14;',
+  'void main() {',
+  '  float d = texture2D(tDepth, vUv).x;',
+  '  vec3 p = viewPos(vUv, d);',
+  '  if (d >= 0.99999 || -p.z > uFarAO) { gl_FragColor = vec4(1.0, 60000.0, 0.0, 1.0); return; }',
+  '  vec3 pr = viewPos(vUv + vec2(uTexel.x, 0.0), texture2D(tDepth, vUv + vec2(uTexel.x, 0.0)).x);',
+  '  vec3 pl = viewPos(vUv - vec2(uTexel.x, 0.0), texture2D(tDepth, vUv - vec2(uTexel.x, 0.0)).x);',
+  '  vec3 pu = viewPos(vUv + vec2(0.0, uTexel.y), texture2D(tDepth, vUv + vec2(0.0, uTexel.y)).x);',
+  '  vec3 pd = viewPos(vUv - vec2(0.0, uTexel.y), texture2D(tDepth, vUv - vec2(0.0, uTexel.y)).x);',
+  '  vec3 dx = abs(pr.z - p.z) < abs(p.z - pl.z) ? pr - p : p - pl;',
+  '  vec3 dy = abs(pu.z - p.z) < abs(p.z - pd.z) ? pu - p : p - pd;',
+  '  vec3 n = normalize(cross(dx, dy));',
+  '  if (dot(n, p) > 0.0) { n = -n; }',
+  '  float rPx = min(uRadius * uProjScale / -p.z, 90.0);',
+  '  if (rPx < 1.5) { gl_FragColor = vec4(1.0, -p.z, 0.0, 1.0); return; }',
+  '  float r2 = uRadius * uRadius;',
+  '  float rot = ign(gl_FragCoord.xy) * 6.2831853;',
+  '  float occ = 0.0;',
+  '  for (int i = 0; i < N; i++) {',
+  '    float a = (float(i) + 0.5) / float(N);',
+  '    float ang = rot + a * 6.2831853 * 3.0;',   // three turns of a spiral
+  '    vec2 uv = vUv + vec2(cos(ang), sin(ang)) * (a * rPx) * uTexel;',
+  '    vec3 q = viewPos(uv, texture2D(tDepth, uv).x);',
+  '    vec3 v = q - p;',
+  '    float vv = dot(v, v);',
+  '    float cosA = dot(v, n) * inversesqrt(vv + 1e-6);',
+  '    occ += max(cosA - 0.12, 0.0) * clamp(1.0 - vv / r2, 0.0, 1.0);',
+  '  }',
+  '  float ao = clamp(1.0 - 2.6 * occ / float(N), 0.0, 1.0);',
+  '  gl_FragColor = vec4(ao, -p.z, 0.0, 1.0);',
+  '}'
+].join('\n');
+
+// Separable, depth-aware: a blur that ignored depth would bleed the darkness
+// of a crease out across the open face beside it.
+var POST_BLUR_FRAG = [
+  'varying vec2 vUv;',
+  'uniform sampler2D tAO;',
+  'uniform vec2 uDir;',
+  'void main() {',
+  '  vec4 c = texture2D(tAO, vUv);',
+  '  float z0 = c.g, sum = c.r * 0.2, ws = 0.2;',
+  '  for (int i = 1; i <= 4; i++) {',
+  '    float g = exp(-float(i * i) / 8.0) * 0.2;',
+  '    vec4 a = texture2D(tAO, vUv + uDir * float(i));',
+  '    vec4 b = texture2D(tAO, vUv - uDir * float(i));',
+  '    float wa = g * max(0.0, 1.0 - abs(a.g - z0) / (0.03 * z0 + 0.4));',
+  '    float wb = g * max(0.0, 1.0 - abs(b.g - z0) / (0.03 * z0 + 0.4));',
+  '    sum += a.r * wa + b.r * wb; ws += wa + wb;',
+  '  }',
+  '  gl_FragColor = vec4(sum / ws, z0, 0.0, 1.0);',
+  '}'
+].join('\n');
+
+// Bloom: a soft-knee threshold, then a mip chain down and back up. Each level
+// is a 4-tap box on bilinear samples going down and a 9-tap tent coming up,
+// which is the dual-filter shape that does not shimmer as the camera moves.
+var POST_BRIGHT_FRAG = POST_COMMON + '\n' + [
+  'uniform sampler2D tScene;',
+  'uniform vec2 uTexel;',
+  'void main() {',
+  '  vec3 c = vec3(0.0);',
+  '  c += texture2D(tScene, vUv + uTexel * vec2(-1.0, -1.0)).rgb;',
+  '  c += texture2D(tScene, vUv + uTexel * vec2( 1.0, -1.0)).rgb;',
+  '  c += texture2D(tScene, vUv + uTexel * vec2(-1.0,  1.0)).rgb;',
+  '  c += texture2D(tScene, vUv + uTexel * vec2( 1.0,  1.0)).rgb;',
+  '  c = toLin(c * 0.25);',
+  // The buffer holds tone-mapped colour, so "brighter than white" is the top
+  // of the curve: only what is already near its shoulder blooms. Luminance,
+  // not the brightest channel: on max(r,g,b) a saturated orange print sits at
+  // the top of its red channel and the whole part glowed like a lamp.
+  '  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));',
+  '  gl_FragColor = vec4(c * smoothstep(0.62, 0.95, l), 1.0);',
+  '}'
+].join('\n');
+var POST_DOWN_FRAG = [
+  'varying vec2 vUv;',
+  'uniform sampler2D tSrc;',
+  'uniform vec2 uTexel;',
+  'void main() {',
+  '  vec3 c = texture2D(tSrc, vUv + uTexel * vec2(-1.0, -1.0)).rgb',
+  '         + texture2D(tSrc, vUv + uTexel * vec2( 1.0, -1.0)).rgb',
+  '         + texture2D(tSrc, vUv + uTexel * vec2(-1.0,  1.0)).rgb',
+  '         + texture2D(tSrc, vUv + uTexel * vec2( 1.0,  1.0)).rgb;',
+  '  gl_FragColor = vec4(c * 0.25, 1.0);',
+  '}'
+].join('\n');
+var POST_UP_FRAG = [
+  'varying vec2 vUv;',
+  'uniform sampler2D tSrc;',     // the smaller level
+  'uniform sampler2D tBase;',    // this level
+  'uniform vec2 uTexel;',        // of the smaller level
+  'void main() {',
+  '  vec3 c = texture2D(tSrc, vUv).rgb * 4.0;',
+  '  c += (texture2D(tSrc, vUv + uTexel * vec2(-1.0, 0.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, 0.0)).rgb',
+  '      + texture2D(tSrc, vUv + uTexel * vec2(0.0, -1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(0.0, 1.0)).rgb) * 2.0;',
+  '  c += texture2D(tSrc, vUv + uTexel * vec2(-1.0, -1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, -1.0)).rgb',
+  '     + texture2D(tSrc, vUv + uTexel * vec2(-1.0, 1.0)).rgb + texture2D(tSrc, vUv + uTexel * vec2(1.0, 1.0)).rgb;',
+  '  gl_FragColor = vec4(c / 16.0 + texture2D(tBase, vUv).rgb, 1.0);',
+  '}'
+].join('\n');
+
+var POST_FINAL_FRAG = POST_COMMON + '\n' + [
+  'uniform sampler2D tScene;',
+  'uniform sampler2D tAO;',
+  'uniform sampler2D tBloom;',
+  'uniform vec2 uAOTexel;',
+  'uniform float uAOStrength, uBloom, uFarAO, uDebug, uSS;',
+  'uniform vec2 uOutTexel;',
+  'vec3 toSRGB(vec3 c) {',
+  '  return mix(pow(c, vec3(0.41666)) * 1.055 - vec3(0.055), c * 12.92, vec3(lessThanEqual(c, vec3(0.0031308))));',
+  '}',
+  'void main() {',
+  '  vec3 c;',
+  '  if (uSS > 1.0) {',
+  '    vec2 o = 0.25 * uOutTexel;',
+  '    c = 0.25 * (toLin(texture2D(tScene, vUv + vec2(-o.x, -o.y)).rgb) + toLin(texture2D(tScene, vUv + vec2(o.x, -o.y)).rgb)',
+  '              + toLin(texture2D(tScene, vUv + vec2(-o.x, o.y)).rgb) + toLin(texture2D(tScene, vUv + vec2(o.x, o.y)).rgb));',
+  '  } else {',
+  '    c = toLin(texture2D(tScene, vUv).rgb);',
+  '  }',
+  // Depth-aware upsample of the half-resolution occlusion: of the four nearest
+  // low-res texels, trust the ones at this pixel's own depth.
+  '  float z = -viewPos(vUv, texture2D(tDepth, vUv).x).z;',
+  '  float ao = 1.0;',
+  '  if (z < uFarAO) {',
+  '    float sum = 0.0, ws = 0.0;',
+  '    for (int i = 0; i < 4; i++) {',
+  '      vec2 o = vec2(i == 0 || i == 2 ? -0.5 : 0.5, i < 2 ? -0.5 : 0.5) * uAOTexel;',
+  '      vec4 s = texture2D(tAO, vUv + o);',
+  '      float w = 1.0 / (1e-3 + abs(s.g - z) / max(z, 1.0));',
+  '      sum += s.r * w; ws += w;',
+  '    }',
+  '    ao = sum / ws;',
+  '  }',
+  '  if (uDebug > 0.5) { gl_FragColor = vec4(vec3(ao), 1.0); return; }',
+  '  c *= mix(1.0, ao, uAOStrength);',
+  '  c += texture2D(tBloom, vUv).rgb * uBloom;',
+  '  c = toSRGB(clamp(c, 0.0, 1.0));',
+  '  c += (ign(gl_FragCoord.xy) - 0.5) / 255.0;',
+  '  gl_FragColor = vec4(c, 1.0);',
+  '}'
+].join('\n');
+
+function postSupported() {
+  var caps = renderer.capabilities, ext = renderer.extensions;
+  return caps.isWebGL2 && (ext.has('EXT_color_buffer_float') || ext.has('EXT_color_buffer_half_float'));
+}
+
+function buildPost() {
+  var cam2 = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  var quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), null);
+  quad.frustumCulled = false;
+  var qs = new THREE.Scene();
+  qs.add(quad);
+  function rt(type, opts) {
+    var o = {type: type, format: THREE.RGBAFormat, depthBuffer: false,
+             minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter};
+    for (var k in opts) { o[k] = opts[k]; }
+    return new THREE.WebGLRenderTarget(1, 1, o);
+  }
+  function mat(frag, uniforms) {
+    return new THREE.ShaderMaterial({vertexShader: POST_VERT, fragmentShader: frag,
+      uniforms: uniforms, depthTest: false, depthWrite: false, toneMapped: false});
+  }
+  var depthTex = new THREE.DepthTexture();
+  depthTex.type = THREE.UnsignedIntType;
+  depthTex.format = THREE.DepthFormat;
+  var scn = new THREE.WebGLMultisampleRenderTarget(1, 1, {
+    type: THREE.HalfFloatType, format: THREE.RGBAFormat, depthBuffer: true,
+    minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter});
+  scn.depthTexture = depthTex;
+  // sRGB-encoded, like the canvas, so every transparent surface blends in the
+  // same space it always has. Linear blending (tried first, twice) lifted the
+  // smoked door's reflection over the dark chamber into a milky haze that hid
+  // the print, and mixed the fog -- which three applies after encoding -- at
+  // twice its brightness.
+  scn.texture.encoding = THREE.sRGBEncoding;
+  // Four samples at a pixel ratio of one, two on a dense screen where the
+  // pixels themselves already do half the antialiasing and the buffer is four
+  // times the size.
+  scn.samples = basePixelRatio >= 1.75 ? 2 : 4;
+  var baseSamples = scn.samples;
+  var H = THREE.HalfFloatType;
+  var p = {
+    cam: cam2, quad: quad, qs: qs, scn: scn, w: 0, h: 0, sw: 0, sh: 0,
+    baseSamples: baseSamples,
+    ao: rt(H), aoB: rt(H), bright: rt(H), mips: [rt(H), rt(H), rt(H), rt(H)],
+    ups: [rt(H), rt(H), rt(H), rt(H)],   // sizes: bright, mips[0..2]
+    invProj: new THREE.Matrix4(), size: new THREE.Vector2()
+  };
+  [p.ao, p.aoB].forEach(function (t) { t.texture.minFilter = t.texture.magFilter = THREE.NearestFilter; });
+  p.mAO = mat(POST_AO_FRAG, {tDepth: {value: depthTex}, uInvProj: {value: p.invProj},
+    uTexel: {value: new THREE.Vector2()}, uRadius: {value: 10}, uProjScale: {value: 1},
+    uFarAO: {value: 2000}});
+  p.mBlur = mat(POST_BLUR_FRAG, {tAO: {value: null}, uDir: {value: new THREE.Vector2()}});
+  p.mBright = mat(POST_BRIGHT_FRAG, {tScene: {value: scn.texture},
+    uTexel: {value: new THREE.Vector2()}});
+  p.mDown = mat(POST_DOWN_FRAG, {tSrc: {value: null}, uTexel: {value: new THREE.Vector2()}});
+  p.mUp = mat(POST_UP_FRAG, {tSrc: {value: null}, tBase: {value: null},
+    uTexel: {value: new THREE.Vector2()}});
+  p.mFinal = mat(POST_FINAL_FRAG, {tScene: {value: scn.texture}, tDepth: {value: depthTex},
+    tAO: {value: p.ao.texture}, tBloom: {value: null}, uInvProj: {value: p.invProj},
+    uAOTexel: {value: new THREE.Vector2()},
+    uAOStrength: {value: POST_AO_STRENGTH}, uBloom: {value: POST_BLOOM},
+    uFarAO: {value: 2000}, uDebug: {value: 0}, uSS: {value: 1},
+    uOutTexel: {value: new THREE.Vector2()}});
+  return p;
+}
+
+// Supersampling on a still frame. MSAA only antialiases triangle edges; a
+// printed wall is hundreds of 0.2 mm layers whose shading changes inside every
+// pixel, and at one sample per pixel it beats against the pixel grid into
+// moire -- the concentric arcs across a flat wall that no real photograph has.
+// Rendering the scene at up to twice the resolution and filtering it down is
+// the only thing that removes it. Only while still (the settle pass already
+// decides that), and capped by total pixels so a dense tablet screen does not
+// ask for a 22-megapixel buffer.
+var POST_SS_MAX = 2, POST_SS_PIXELS = 6.0e6;
+
+function postSize(p, w, h, ss) {
+  var sw = Math.round(w * ss), sh = Math.round(h * ss);
+  if (p.w === w && p.h === h && p.sw === sw && p.sh === sh) { return; }
+  // Two samples once supersampled -- the extra pixels already do the edge
+  // work, and the buffer is up to four times the size.
+  var samples = ss > 1 ? 2 : p.baseSamples;
+  if (p.scn.samples !== samples) {
+    p.scn.samples = samples;
+    if (p.sw === sw && p.sh === sh) { p.scn.dispose(); }
+  }
+  p.w = w; p.h = h; p.sw = sw; p.sh = sh;
+  p.scn.setSize(sw, sh);
+  var hw = Math.max(1, w >> 1), hh = Math.max(1, h >> 1);
+  p.ao.setSize(hw, hh); p.aoB.setSize(hw, hh); p.bright.setSize(hw, hh);
+  var mw = hw, mh = hh;
+  p.mips.forEach(function (t) { mw = Math.max(1, mw >> 1); mh = Math.max(1, mh >> 1); t.setSize(mw, mh); });
+  p.ups[0].setSize(p.bright.width, p.bright.height);
+  for (var i = 0; i < 3; i++) { p.ups[i + 1].setSize(p.mips[i].width, p.mips[i].height); }
+}
+
+function postPass(p, material, target) {
+  p.quad.material = material;
+  renderer.setRenderTarget(target);
+  renderer.render(p.qs, p.cam);
+}
+
+// How far occlusion reaches, in millimetres. Tied to how far away the camera
+// is, so a crease reads the same at every zoom: a fixed radius would vanish on
+// the whole machine and turn a keychain into a smudge.
+function postAORadius() {
+  var r = view && view.r ? view.r : 600;
+  return Math.max(1.2, Math.min(28, r * 0.03));
+}
+
+function renderPost() {
+  if (!post) { post = buildPost(); }
+  var p = post;
+  var size = renderer.getDrawingBufferSize(p.size);
+  var ss = 1;
+  if (hiRes) {
+    ss = Math.min(POST_SS_MAX, Math.sqrt(POST_SS_PIXELS / Math.max(1, size.x * size.y)));
+    if (ss < 1.2) { ss = 1; }
+  }
+  postSize(p, size.x, size.y, ss);
+  renderer.setRenderTarget(p.scn);
+  renderer.render(scene, camera);
+
+  p.invProj.copy(camera.projectionMatrixInverse);
+  var u = p.mAO.uniforms;
+  u.uTexel.value.set(1 / p.sw, 1 / p.sh);
+  u.uRadius.value = postAORadius();
+  u.uProjScale.value = 0.5 * p.sh * camera.projectionMatrix.elements[5];
+  postPass(p, p.mAO, p.ao);
+  p.mBlur.uniforms.tAO.value = p.ao.texture;
+  p.mBlur.uniforms.uDir.value.set(1 / p.ao.width, 0);
+  postPass(p, p.mBlur, p.aoB);
+  p.mBlur.uniforms.tAO.value = p.aoB.texture;
+  p.mBlur.uniforms.uDir.value.set(0, 1 / p.ao.height);
+  postPass(p, p.mBlur, p.ao);
+
+  p.mBright.uniforms.uTexel.value.set(0.5 / p.w, 0.5 / p.h);   // a quarter of a bright-pass texel
+  postPass(p, p.mBright, p.bright);
+  var src = p.bright;
+  p.mips.forEach(function (t) {
+    p.mDown.uniforms.tSrc.value = src.texture;
+    p.mDown.uniforms.uTexel.value.set(0.5 / src.width, 0.5 / src.height);
+    postPass(p, p.mDown, t);
+    src = t;
+  });
+  // Back up the chain: each level is the tent-filtered level below it plus
+  // its own downsample, ending at half resolution.
+  var small = p.mips[3];
+  for (var i = 2; i >= -1; i--) {
+    var out = p.ups[i + 1];
+    p.mUp.uniforms.tSrc.value = small.texture;
+    p.mUp.uniforms.tBase.value = (i >= 0 ? p.mips[i] : p.bright).texture;
+    p.mUp.uniforms.uTexel.value.set(1 / small.width, 1 / small.height);
+    postPass(p, p.mUp, out);
+    small = out;
+  }
+
+  var f = p.mFinal.uniforms;
+  f.tBloom.value = p.ups[0].texture;
+  f.uAOTexel.value.set(1 / p.ao.width, 1 / p.ao.height);
+  f.uSS.value = ss;
+  f.uOutTexel.value.set(1 / p.w, 1 / p.h);
+  postPass(p, p.mFinal, null);
+}
+
+function postDispose() {
+  if (!post) { return; }
+  [post.scn, post.ao, post.aoB, post.bright].concat(post.mips, post.ups)
+    .forEach(function (t) { t.dispose(); });
+  [post.mAO, post.mBlur, post.mBright, post.mDown, post.mUp, post.mFinal]
+    .forEach(function (m) { m.dispose(); });
+  post.quad.geometry.dispose();
+  post = null;
+}
+
+function postActive() {
+  return postWanted && richShading && !postBroken && postSupported();
+}
+
+// The one call tick() makes. Any failure drops back to the plain path for the
+// rest of the session rather than leaving a black canvas.
+function renderFrame() {
+  if (postActive()) {
+    try { renderPost(); return; }
+    catch (e) {
+      console.error('[viewer] post-processing failed; rendering without it:', e);
+      postBroken = true;
+      postDispose();
+      renderer.setRenderTarget(null);
+      notice('Detail: ultra is not available on this device — showing high');
+      paintQuality();
+    }
+  }
+  renderer.render(scene, camera);
+}
+
 function initScene() {
   renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
   basePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
@@ -553,11 +955,13 @@ function initScene() {
   buildChamber(PRINTERS.p1s.bed);
 
   window.__VP = {scene: scene, camera: camera, cam: cam, view: view, spin: spin,
+                 post: function () { return post; },
                  basePixelRatio: function () { return basePixelRatio; }};
   onResize();
   window.addEventListener('resize', onResize);
   attachOrbit(renderer.domElement);
   renderer.setAnimationLoop(tick);
+  paintQuality();
 }
 
 // ── the machine ────────────────────────────────────────────────────────────
@@ -1680,6 +2084,88 @@ function applyShadows(root) {
   });
 }
 
+// ── the part view's studio (2026-10-10) ───────────────────────────────────
+// With the machine hidden the part used to hang in the dark with nothing
+// under it: no floor, so no shadow, so no sense of it standing anywhere -- the
+// first thing that made it read as a render. This is the tabletop of a product
+// shot: a floor exactly at the part's first layer that catches its shadow and
+// fades out into the backdrop, and the key light's shadow frustum pulled in
+// from the whole machine to the part alone. Over 840 mm the 1536 map spent
+// 0.55 mm a texel, so a keychain's shadow was a blur; fitted to the part it is
+// a few hundredths.
+//
+// Front face only, so orbiting underneath to read the first layer -- the
+// reason the under light exists -- looks straight through it.
+var partFloor = null, _studioKey = '';
+function partFloorMaterial() {
+  var c = document.createElement('canvas');
+  c.width = c.height = 256;
+  var g = c.getContext('2d');
+  var grd = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grd.addColorStop(0.00, '#ffffff');
+  grd.addColorStop(0.22, '#ffffff');
+  grd.addColorStop(0.70, '#5a5a5a');
+  grd.addColorStop(1.00, '#000000');
+  g.fillStyle = grd;
+  g.fillRect(0, 0, 256, 256);
+  // A pool of light under the part, falling off toward the edge, the way a
+  // softbox over a tabletop lights it. Colour in the map, fade in the alpha.
+  var c2 = document.createElement('canvas');
+  c2.width = c2.height = 256;
+  var g2 = c2.getContext('2d');
+  var pool = g2.createRadialGradient(128, 128, 0, 128, 128, 128);
+  pool.addColorStop(0.00, '#ffffff');
+  pool.addColorStop(0.30, '#d9d9d9');
+  pool.addColorStop(1.00, '#7a7a7a');
+  g2.fillStyle = pool;
+  g2.fillRect(0, 0, 256, 256);
+  return new THREE.MeshStandardMaterial({
+    color: lin(0x3a3e46), roughness: 0.62, metalness: 0.0, envMapIntensity: 0.45,
+    map: srgbMap(new THREE.CanvasTexture(c2)),
+    alphaMap: new THREE.CanvasTexture(c), transparent: true, depthWrite: true});
+}
+
+function syncPartStudio() {
+  var on = !!(JOB && jobMesh && machineHidden());
+  var key = on ? [JOB.raw.bbox.join(','), JOB.layers.length, jobMesh.position.z.toFixed(2)].join('|') : 'off';
+  if (key === _studioKey) { return; }
+  _studioKey = key;
+  if (!on) {
+    if (partFloor) { partFloor.visible = false; }
+    aimShadowCamera();
+    shadowDirty = true;
+    return;
+  }
+  var b = JOB.raw.bbox;
+  var top = JOB.layers[JOB.layers.length - 1][0] / 100;
+  var cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2, z0 = jobMesh.position.z;
+  var size = Math.max(b[2] - b[0], b[3] - b[1], top, 20);
+  if (!partFloor) {
+    partFloor = new THREE.Mesh(new THREE.CircleGeometry(1, 72), partFloorMaterial());
+    partFloor.receiveShadow = true;
+    partFloor.name = 'partFloor';
+    scene.add(partFloor);
+  }
+  var rad = size * 7;
+  partFloor.scale.set(rad, rad, 1);
+  // A hair below the first layer, which sits exactly at z0: coplanar, the two
+  // would z-fight into stripes.
+  partFloor.position.set(cx, cy, z0 - 0.04);
+  partFloor.visible = true;
+  if (keyLight) {
+    var span = size * 0.95 + 6;
+    keyLight.target.position.set(cx, cy, z0 + top * 0.4);
+    keyLight.target.updateMatrixWorld();
+    // Same direction as the machine rig, just closer.
+    keyLight.position.set(cx - 190 * 0.9, cy - 250 * 0.9, z0 + top * 0.4 + 780 * 0.9);
+    var sc = keyLight.shadow.camera;
+    sc.left = -span; sc.right = span; sc.top = span; sc.bottom = -span;
+    sc.near = 300; sc.far = 1400;
+    sc.updateProjectionMatrix();
+  }
+  shadowDirty = true;
+}
+
 function restoreMotionVisibility() {
   if (!JOB) { return; }
   if (gantry) { gantry.visible = true; }
@@ -2400,6 +2886,17 @@ function updateCamera(now) {
     view.ty + view.r * sp * Math.sin(view.theta),
     view.tz + view.r * cp);
   camera.lookAt(view.tx, view.ty, view.tz);
+  // The near plane follows the zoom (2026-10-10). Depth precision falls off as
+  // distance squared over the near plane, and at a fixed 1 mm the whole
+  // machine view, 1.3 m out, resolved depth in steps too coarse for the
+  // occlusion pass to tell a flat floor from a crease -- it shaded the floor
+  // darker the further away it was. 4% of the orbit radius never clips
+  // anything: the camera always looks at a target that far away.
+  var nearWant = Math.max(1, Math.min(40, view.r * 0.04));
+  if (Math.abs(camera.near - nearWant) > camera.near * 0.05) {
+    camera.near = nearWant;
+    camera.updateProjectionMatrix();
+  }
 }
 
 // While the view is actually moving, render fewer pixels. A phone caps out at
@@ -3533,6 +4030,7 @@ function tick(now) {
   setResolution(now);
   adaptResolution(now, _frameDt);
   updateDoor();
+  syncPartStudio();
   // gentle breathing on the hot-nozzle rig. The extrusion point feels
   // alive while printing and settles when idle; amplitude is small on purpose
   // -- a strobing nozzle would read as a fault, not a feature.
@@ -3560,7 +4058,7 @@ function tick(now) {
     renderer.shadowMap.needsUpdate = true;
     shadowDirty = false;
   }
-  renderer.render(scene, camera);
+  renderFrame();
   if (tl.on) { tlFrame(); }
 }
 
@@ -4122,11 +4620,45 @@ function setQuality(rich) {
   applyVisibility();
   if (jobMesh) { jobMesh.castShadow = rich; }
   shadowDirty = true;
+  paintQuality();
+}
+
+// Three tiers on one button: ultra (high plus the post-processing above),
+// high, fast. aria-pressed still means "the rich materials are on", which is
+// what it meant before ultra existed.
+function paintQuality() {
+  var tier = postActive() ? 'ultra' : richShading ? 'high' : 'fast';
+  syncShadowRes(tier);
+  // Off ultra, give the buffers back: on a dense screen they run to a few
+  // hundred megabytes, and a device stepped down for being slow is the one
+  // least able to spare them.
+  if (tier !== 'ultra') { postDispose(); }
   var b = $('quality');
-  if (b) {
-    b.setAttribute('aria-pressed', String(rich));
-    b.textContent = rich ? 'Detail: high' : 'Detail: fast';
-  }
+  if (!b) { return; }
+  b.setAttribute('aria-pressed', String(richShading));
+  b.setAttribute('data-tier', tier);
+  b.textContent = 'Detail: ' + tier;
+}
+
+// Ultra doubles the key light's shadow map. Over the machine's frustum 1536
+// texels are 0.31 mm each, which smears the print's shadow on the plate and
+// its own self-shadowing into a soft grey; 3072 halves that. The map is only
+// re-rendered when something moves (shadowDirty), so the cost is memory --
+// 38 MB -- not frame time.
+function syncShadowRes(tier) {
+  if (!keyLight) { return; }
+  var want = tier === 'ultra' ? 3072 : 1536;
+  if (keyLight.shadow.mapSize.x === want) { return; }
+  keyLight.shadow.mapSize.set(want, want);
+  if (keyLight.shadow.map) { keyLight.shadow.map.dispose(); keyLight.shadow.map = null; }
+  shadowDirty = true;
+}
+
+function cycleQuality() {
+  if (postActive()) { postWanted = false; paintQuality(); }
+  else if (richShading) { setQuality(false); }
+  else { postWanted = true; setQuality(true); }
+  shadowDirty = true;
 }
 
 // One automatic step down, never up: a device that cannot hold a readable
@@ -4141,6 +4673,16 @@ function autoQuality() {
     n++;
     if (performance.now() - t0 < 1600) { requestAnimationFrame(sample); return; }
     var fps = n / ((performance.now() - t0) / 1000);
+    // Ultra goes first: losing the occlusion pass costs less of the picture
+    // than losing the rich materials, so a device gets a second measurement
+    // at high before it is stepped all the way down to fast.
+    if (fps < 22 && postActive()) {
+      postWanted = false;
+      paintQuality();
+      n = 0; t0 = performance.now();
+      requestAnimationFrame(sample);
+      return;
+    }
     if (fps < 22) {
       setQuality(false);
       var note = $('legnote');
@@ -5150,7 +5692,7 @@ function initUI() {
   }
 
   $('quality').addEventListener('click', function () {
-    setQuality($('quality').getAttribute('aria-pressed') !== 'true');
+    cycleQuality();
   });
 
   $('motion').addEventListener('click', function () {

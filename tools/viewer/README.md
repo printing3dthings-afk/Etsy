@@ -146,6 +146,69 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## Detail: ultra (2026-10-10)
+
+Scott asked for the viewer to look a lot more real. The Detail button now has
+three steps, **ultra → high → fast**, and ultra is the default wherever the
+browser has WebGL2 with float colour buffers. Where it does not, the button
+never offers ultra. Not yet seen on a real iPad: everything here was checked
+in a software renderer. Ultra is high with four things added:
+
+- **Ambient occlusion.** Light that does not arrive: in the crease where a
+  part meets the plate, inside a recess, under the toolhead, where the
+  machine stands on the floor. It is worked out from the depth buffer alone,
+  at half resolution, then blurred with a depth-aware filter so a crease
+  does not bleed onto the face beside it. No second pass over the geometry:
+  SAOPass and SSAOPass render the scene again for normals, and the heaviest
+  plate is 3 million triangles.
+- **Bloom** on what sits at the very top of the tone curve -- the hot nozzle,
+  the chamber LED, a glint -- keyed on luminance, so a saturated orange print
+  does not glow.
+- **Supersampling on a still frame**, up to 2× per axis and 6 megapixels in
+  all. MSAA only smooths triangle edges; a printed wall is hundreds of
+  0.2 mm layers whose shading changes inside every pixel, and at one sample
+  per pixel it beats against the pixel grid into moiré arcs. Only once the
+  view settles (the existing settle pass decides that), so it costs nothing
+  while orbiting or playing.
+- **A 3072 shadow map** instead of 1536: the print's shadow on the plate and
+  its self-shadowing come out sharp rather than a grey smear. It is redrawn
+  only when something moves, so it costs memory (38 MB), not frame time.
+
+**Part only** also got a studio floor: a tabletop at the part's first layer
+that catches its shadow and fades into the backdrop, with the key light's
+shadow frustum pulled in from the whole machine to the part (840 mm of
+frustum spent 0.55 mm a texel; fitted to a keychain it is a few hundredths).
+It is front-face only, so orbiting underneath still shows the first layer.
+
+A slow device steps itself down: ultra goes first, and only if it is still
+under 22 fps does it lose the rich materials as well. Any error in the
+post-processing path drops to high for the session with a notice, never a
+black canvas.
+
+### Four things that went wrong on the way, each now a test
+
+All in `tests/test_viewer_realism.py`.
+
+- **Black outlines round every silhouette.** Background pixels were marked
+  with a depth of 1e5 in a half-float buffer, whose maximum is 65504. It
+  stored infinity, the blur divided infinity by infinity, and the NaN came
+  out black. The marker is 60000 now.
+- **The floor twice as bright, the door glass milky.** The first version
+  rendered raw HDR and applied the tone curve at the end. That moved every
+  transparent blend in front of the curve, and three r128 also adds fog
+  after encoding, so the fog came out at double brightness. The buffer is
+  sRGB-encoded and the materials still tone-map themselves now, so high and
+  ultra are identical underneath what the passes add (measured: floor
+  17,22,32 in both).
+- **The whole print glowing.** Bloom keyed on the brightest channel; an
+  orange part sits at the top of its red channel.
+- **A grey smudge for a sky and a darkening floor.** The backdrop is a sphere
+  seen from inside, which is concave, which is what occlusion darkens; it
+  writes no depth now. And at a fixed 1 mm near plane, depth 1.3 m out came
+  in steps too coarse to tell a flat floor from a crease. The near plane is
+  4% of the orbit distance (1 to 40 mm), which never clips anything because
+  the camera always looks at a target that far away.
+
 ## Rendering (overhauled 2026-09-17)
 
 Everything used to draw with `MeshLambertMaterial` under the renderer's
