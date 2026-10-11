@@ -3908,6 +3908,15 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      anything is called done. For anything whose detail matters, also show
      the as-printed still (`tools/as_printed.py` on the fidelity slice): it is
      rendered from the toolpath, so it is an image the printer can make.
+  6. Add it to the viewer (Scott, 2026-10-11: "Everything we build needs to
+     be in there"). Export the slice the checks ran on with
+     `tools/gcode_viewer_data.py <gcode> -d tools/viewer/jobs --append`
+     (`--label`, `--note`, `--source`, and `--colours` in its design
+     colours), add a 900×900 thumbnail from the as-printed render to
+     `data/plate_stills/<id>.jpg`, run the viewer tests and push: the shared
+     link (printing3dthings-afk.github.io/Etsy) redeploys on its own. A
+     design that is not a tested print yet still goes in, and its note
+     says so.
 
   **Printability is a hard constraint, not a tradeoff.** Minimum wall 1.2mm, no
   unsupported overhang past 45°, flat base with a real footprint, no floating
