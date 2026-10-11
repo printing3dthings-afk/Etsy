@@ -164,8 +164,104 @@ module form5() {
     pole(-L/2 - 10, -D/2 - 10, 110); sign(0, -D/2, 48, 60);
 }
 
+// ---------------------------------------------------------------- shared bits for the 4+5 mixes
+module crenels_rect(w, d, z, h = 7, t = 5, n = 6) {      // battlements round a w x d top
+    translate([0, 0, z]) difference() {
+        linear_extrude(h) difference() { square([w, d], center = true); square([w - 2*t, d - 2*t], center = true); }
+        for (i = [0 : n - 1]) for (sy = [-1, 1]) {
+            translate([-w/2 + (i + 0.5) * w / n - w/(4*n), sy * d/2 - t, h/2]) cube([w/(2*n), 2*t, h]);
+        }
+        for (i = [0 : n - 1]) for (sx = [-1, 1]) {
+            translate([sx * w/2 - t, -d/2 + (i + 0.5) * d / n - d/(4*n), h/2]) cube([2*t, d/(2*n), h]);
+        }
+    }
+}
+module crenels_round(r, z, h = 6, n = 8) {
+    translate([0, 0, z]) difference() {
+        cylinder(r = r + 2, h = h); translate([0, 0, -1]) cylinder(r = r - 3, h = h + 2);
+        for (i = [0 : n - 1]) rotate(i * 360 / n) translate([r - 6, -2.5, h/2]) cube([12, 5, h]);
+    }
+}
+// sawtooth roof over an L x D box at eave z: n teeth rising +X, glass on each vertical face
+module sawtooth(L, D, z, n, th) {
+    tw = L / n;
+    for (i = [0 : n - 1]) {
+        x0 = -L/2 + i * tw;
+        if (part == "roof") translate([x0, D/2, z]) rotate([90, 0, 0])
+            linear_extrude(D) polygon([[0, th], [tw, 0], [0, 0]]);
+        if (part == "trim") translate([x0 - WIN_PROUD, -D/2 + 5, z + 3]) cube([WIN_PROUD * 2, D - 10, th - 7]);
+    }
+}
+module stack(x, y, h, d = 16) {                           // chimney stack with a banded cap
+    if (part == "body") translate([x, y, 0]) cylinder(d = d, h = h - 10);
+    if (part == "accent") translate([x, y, h - 10]) cylinder(d1 = d + 5, d2 = d, h = 10);
+}
+
+// ---------------------------------------------------------------- 6 castle factory (symmetric)
+// The factory hall is the castle: a sawtooth hall walled by four round
+// turrets, a crenellated gatehouse in front, two chimney stacks rising
+// out of the roof as the tallest points.
+module form6() {
+    L = 124; D = 72; WALL = 64; TR = 15;
+    turrets = [[-1, -1, 118], [1, -1, 118], [-1, 1, 134], [1, 1, 134]];
+    if (part == "body") {
+        translate([-L/2, -D/2, 0]) cube([L, D, WALL]);
+        for (t = turrets) translate([t[0] * L/2, t[1] * D/2, 0]) cylinder(r = TR, h = t[2]);
+        translate([-19, -D/2 - 14, 0]) cube([38, 18, 84]);                 // gatehouse
+    }
+    if (part == "roof") {
+        for (t = turrets) translate([t[0] * L/2, t[1] * D/2, 0]) cone(TR + 4, t[2], 32);
+        translate([0, -D/2 - 5, 0]) crenels_rect(38, 18, 84, n = 3);
+    }
+    sawtooth(L - 2*TR, D, WALL, 3, 30);
+    stack(-14, 6, 176); stack(16, 6, 192, 18);
+    if (part == "trim") {
+        for (k = [-1, 1]) for (j = [0, 1]) glass_y(k * (31 + j * 18), -D/2, 12, 14, 40);
+        mirror([0, 1, 0]) for (k = [-1.5 : 1 : 1.5]) glass_y(k * 22, -D/2, 12, 15, 42);
+        for (sx = [-1, 1]) translate([sx * (L/2 + TR - 1), 0, 0]) glass_x(0, 0, 16, 26, 44);
+        for (t = turrets) translate([t[0] * L/2, t[1] * D/2 - TR, 0]) glass_y(0, 0, t[2] - 44, 9, 22);
+        glass_y(0, -D/2 - 14, 54, 18, 20);                                  // gatehouse rose
+    }
+    if (part == "accent") translate([-10, -D/2 - 16, 0]) cube([20, 3, 36]);
+    pole(-L/2 - TR - 12, -D/2 - 14, 112); sign(0, -D/2 - 14, 40, 38);
+}
+
+// ---------------------------------------------------------------- 7 keep + factory wing (asymmetric)
+// A castle keep with two front turrets, and running off its side a long
+// sawtooth workshop wing whose chimney stacks climb past the keep.
+module form7() {
+    K = 66; KH = 100; WL = 92; WD = 60; WW = 56;
+    wx = K/2 + WL/2 - 2;                                                    // wing centre
+    if (part == "body") {
+        translate([-K/2, -K/2, 0]) cube([K, K, KH]);
+        for (t = [[-1, 150], [1, 126]]) translate([t[0] * K/2, -K/2, 0]) cylinder(r = 16, h = t[1]);
+        translate([wx - WL/2, -WD/2, 0]) cube([WL, WD, WW]);
+        translate([-17, -K/2 - 14, 0]) cube([34, 16, 64]);
+    }
+    if (part == "roof") {
+        pyramid(K - 8, KH, 40);
+        for (t = [[-1, 150], [1, 126]]) translate([t[0] * K/2, -K/2, 0]) cone(20, t[1], t[1] > 140 ? 40 : 30);
+        translate([0, -K/2 - 6, 0]) crenels_rect(34, 16, 64, n = 3);
+    }
+    if (part == "roof") crenels_rect(K, K, KH, n = 5);
+    translate([wx, 0, 0]) sawtooth(WL, WD, WW, 3, 28);
+    stack(wx - 10, 14, 190, 18); stack(wx + 24, 14, 160);
+    if (part == "trim") {
+        for (sx = [-1, 1]) glass_y(sx * 12, -K/2, 66, 13, 26);
+        for (k = [-1.5 : 1 : 1.5]) glass_y(wx + k * 21, -WD/2, 10, 14, 38);
+        mirror([0, 1, 0]) for (k = [-1.5 : 1 : 1.5]) glass_y(wx + k * 21, -WD/2, 10, 14, 38);
+        translate([wx + WL/2, 0, 0]) mirror([1, 0, 0]) glass_x(0, 0, 12, 30, 40);
+        translate([-K/2, 0, 0]) glass_x(0, 0, 30, 26, 50);
+        for (t = [[-1, 150], [1, 126]]) translate([t[0] * K/2, -K/2 - 16, 0]) glass_y(0, 0, t[1] - 42, 9, 22);
+    }
+    if (part == "accent") translate([-9, -K/2 - 16, 0]) cube([18, 3, 34]);
+    pole(-K/2 - 26, -K/2 - 12, 112); sign(wx, -WD/2, 42, 60);
+}
+
 if (form == 1) form1();
 if (form == 2) form2();
 if (form == 3) form3();
 if (form == 4) form4();
 if (form == 5) form5();
+if (form == 6) form6();
+if (form == 7) form7();
