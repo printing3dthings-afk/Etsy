@@ -22,7 +22,9 @@ It is **a gingerbread toy factory that is also a castle**:
   battlements: chocolate-bar doors with a peppermint on each leaf, the
   SANTA'S / WORKSHOP sign over them, a rose window above;
 - **seven big arched windows** round the hall, each with its own toys drawn
-  on the icing glass in chocolate lines;
+  on the icing glass in chocolate lines. Behind the glass every line stands
+  1.8 mm out of the pane, so lit from inside the toys show as dark outlines
+  on the glow even printed all in white, the way a lithophane works;
 - **two candy-cane chimney stacks**, the village's tallest points, white with
   red stripes winding up them;
 - a **red-and-white NORTH POLE** at the front corner, a white ball on top and
@@ -87,8 +89,13 @@ These were this skin's own:
 
 ## Honest weak points
 
-- **The toys are line drawings about 0.8 mm wide**; small details are at the
-  limit of a 0.4 mm nozzle.
+- **The toys are line drawings about 0.8 mm wide** on the outside; small
+  details are at the limit of a 0.4 mm nozzle. Behind the glass they are
+  1.4 mm wide, and each line's sloped underside reads in the glow as a soft
+  shadow under it.
+- **The glow outlines have not been seen lit yet.** 3.3 mm of plastic on a
+  line against the pane's 1.5 is the lithophane rule of thumb; how dark they
+  read depends on the filament and the light.
 - **Raised details have sloped undersides.** That is how they print without
   supports.
 - **The roofs and cones are solid chocolate**, so the light comes out through

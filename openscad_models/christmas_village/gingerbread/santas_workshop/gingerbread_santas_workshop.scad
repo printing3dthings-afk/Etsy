@@ -371,8 +371,17 @@ module pane_art2d(w) {
 module w_art(w) face_at(w[0], w[1], w[2]) {
     translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d(w);
     translate([0, 0, -recess]) art_skirt(0.4, 2) offset(r = 0.2) pane_art2d(w);
-    translate([0, 0, -recess - pane_t]) art_in(0.8, 4) offset(r = 0.2) pane_art2d(w);
+    translate([0, 0, -recess - pane_t]) art_in(art_d, 4) offset(r = 0.3) pane_art2d(w);
 }
+// The toys' lines stand art_d out of the back of the pane, so lit from inside
+// they show dark on the glow in white plastic too (Scott, 2026-10-12): 3.3 mm
+// of plastic on a line against the pane's 1.5. Until then they had never been
+// printed at all: the room was cut out of the roof part, which the art is in,
+// and it took the 0.8 mm the art stood out with it. w_glow_col keeps the room
+// off that space; the lines are 1.4 wide there, over the 1.2 wall floor.
+art_d = 1.8;
+module w_glow_col(w) face_at(w[0], w[1], w[2]) translate([0, 0, -w_cd - art_d - 1]) linear_extrude(art_d + 1.02)
+    hull() { offset(r = 1.3) w_outline(w); translate([0, -SH * art_d - 0.5]) offset(r = 1.3) w_outline(w); }
 
 // =====================================================================================
 // THE GLAZED TEETH and the turrets' little windows: segmental, bars on the pane
@@ -653,7 +662,7 @@ module trim_raw() {
         brand_mark();
     }
 }
-module roof_part()   difference() { roof_raw(); room(); }
+module roof_part()   difference() { roof_raw(); difference() { room(); for (w = TOYW) w_glow_col(w); } }
 module accent_part() difference() { accent_raw(); roof_raw(); }
 module trim_part()   difference() { trim_raw(); accent_raw(); roof_raw(); }
 module body_part() {

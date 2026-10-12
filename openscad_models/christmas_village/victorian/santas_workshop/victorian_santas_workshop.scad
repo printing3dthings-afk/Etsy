@@ -359,8 +359,17 @@ module pane_art2d(w) {
 module w_art(w) face_at(w[0], w[1], w[2]) {
     translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d(w);
     translate([0, 0, -recess]) art_skirt(0.4, 2) offset(r = 0.2) pane_art2d(w);
-    translate([0, 0, -recess - pane_t]) art_in(0.8, 4) offset(r = 0.2) pane_art2d(w);
+    translate([0, 0, -recess - pane_t]) art_in(art_d, 4) offset(r = 0.3) pane_art2d(w);
 }
+// The toys' lines stand art_d out of the back of the pane, so lit from inside
+// they show dark on the glow in white plastic too (Scott, 2026-10-12): 3.3 mm
+// of plastic on a line against the pane's 1.5. Until then they had never been
+// printed at all: the room was cut out of the roof part, which the art is in,
+// and it took the 0.8 mm the art stood out with it. w_glow_col keeps the room
+// off that space; the lines are 1.4 wide there, over the 1.2 wall floor.
+art_d = 1.8;
+module w_glow_col(w) face_at(w[0], w[1], w[2]) translate([0, 0, -w_cd - art_d - 1]) linear_extrude(art_d + 1.02)
+    hull() { offset(r = 1.3) w_outline(w); translate([0, -SH * art_d - 0.5]) offset(r = 1.3) w_outline(w); }
 
 // =====================================================================================
 // THE GLAZED TEETH and the turrets' little windows: segmental, bars on the pane
@@ -590,11 +599,78 @@ module room() difference() {
 }
 
 // =====================================================================================
+// BRICK BOND: Scott wanted the brick of the post office and chapel (2026-10-12).
+// Courses alone read as clapboard. Upright joints, staggered half a brick
+// course to course, each a whole course tall and floored 0.1 behind the
+// course's root as on the post office, so nothing they leave has a ceiling.
+// Left out near corners, turrets, frames, the door, the sign, the rose, the
+// icicles, under every roof's edge and round the garlands.
+// =====================================================================================
+bl = 7;  bj = 0.6;  JM = 1.5;
+// the upright faces of the second and third teeth were plain: courses on them
+// too, between the roof below and 6 under the ridge (the slab's end above)
+tk0 = ceil((EAVE + 2.5 - plinth_h - 0.4) / bp);
+tk1 = floor((RIDGE - 6 - plinth_h - 0.4) / bp);
+module tooth_courses() for (i = [1 : NT - 1]) translate([xi(i), 0, 0]) mirror([1, 0, 0]) xz(-Dh, Dh)
+    polygon(concat([[-0.5, zc(tk0)]],
+        [for (k = [tk0 : tk1 - 1], j = [0 : 2]) let (z0 = zc(k), z1 = zc(k + 1)) [[0, z0], [bd, z0 + br], [bd, z1 - bd]][j]],
+        [[0, zc(tk1)], [-0.5, zc(tk1)]]));
+// faces: 0-6 as face_at, 7 and 8 the gatehouse's +x and -x sides
+module jface(f) if (f <= 6) face_at(f, 0, 0) children();
+    else translate([(f == 7 ? 1 : -1) * GWh, 0, 0]) rotate([0, 0, f == 7 ? 90 : -90]) rotate([90, 0, 0]) children();
+function jspan(f) = f <= 1 ? [-(Lh - TR - 3.1), Lh - TR - 3.1] : f <= 3 ? [-(Dh - TR - 3.1), Dh - TR - 3.1]
+    : f <= 5 ? [-(Dh - 2.5), Dh - 2.5] : f == 6 ? [-(GWh - 2.5), GWh - 2.5]
+    : f == 7 ? [GH_y + 2.5, -Dh - 3.1] : [Dh + 3.1, -GH_y - 2.5];
+function jtop(f, u) = f == 0 ? min(z_ceil(u - 1.2), z_ceil(u + 1.2)) - 1
+    : f == 1 ? min(z_ceil(-u - 1.2), z_ceil(-u + 1.2)) - 1
+    : f == 2 ? RIDGE - tvb(0) - 1 : f == 3 ? z_sof - 7 : f <= 5 ? zc(tk1) : GH - 2.5;
+function jbot(f) = (f == 4 || f == 5) ? zc(tk0) : 0;
+function jkeep(f) = concat(
+    [for (w = TOYW) if (w[0] == f) [w[1] - w[3] - fr_w - 0.8, w[1] + w[3] + fr_w + 0.8, w[2] - sill, w[2] + w_ftop(w) + 4.6]],
+    [for (w = CLER) if (w[0] == f) [w[1] - w[3] - fr_w - 0.8, w[1] + w[3] + fr_w + 0.8, w[2] - sill, w[2] + seg_top(w[3], w[4]) + 5.6]],
+    f == 0 ? [[-GWh - 0.6, GWh + 0.6, 0, 300]] : [],
+    f == 6 ? [[-dr_a - 1.8, dr_a + 1.8, 0, plinth_h + dr_h + dr_a + 3.4], [-sg_w / 2, sg_w / 2, sg_z, sg_z + sg_h],
+              [-rose_r - 2.4, rose_r + 2.4, rose_z - rose_r - 2.4, rose_z + rose_r + 2.4]] : []);
+function jclear(u, z0, z1, ko) = len([for (b = ko) if (u + bj / 2 + JM > b[0] && u - bj / 2 - JM < b[1] && z1 + JM > b[2] && z0 - JM < b[3]) 1]) == 0;
+function jus(f, k) = let (sp = jspan(f), z0 = zc(k), z1 = zc(k + 1), ko = jkeep(f))
+    z0 < jbot(f) ? [] : [for (u = [sp[0] + (k % 2) * bl / 2 : bl : sp[1]]) if (z1 <= jtop(f, u) && jclear(u, z0, z1, ko)) u];
+// one prism per face: every joint on it lies at the same depth
+module face_joints(f) jface(f) translate([0, 0, -0.1]) linear_extrude(2.2)
+    for (k = [1 : 45]) for (u = jus(f, k)) translate([u - bj / 2, zc(k)]) square([bj, bp]);
+// round walls: radial joints, all of one drum's in one polyhedron (a few
+// hundred separate boxes would each be a CGAL union)
+function jbox(c, a, r0, r1, z0, z1) = let (ca = cos(a), sa = sin(a))
+    [for (r = [r0, r1], t = [-bj / 2, bj / 2], z = [z0, z1]) [c[0] + r * ca - t * sa, c[1] + r * sa + t * ca, z]];
+JF = [[0, 4, 6, 2], [1, 5, 4, 0], [3, 7, 5, 1], [5, 7, 6, 4], [7, 3, 2, 6], [3, 1, 0, 2]];
+module boxes(B) if (len(B) > 0) polyhedron([for (b = B) each jbox(b[0], b[1], b[2], b[3], b[4], b[5])],
+    [for (n = [0 : len(B) - 1], q = JF) [for (i = q) i + 8 * n]]);
+function adiff(a, b) = abs(((a - b) % 360 + 540) % 360 - 180);
+function t_exposed(p) = max(abs(p[0]) - Lh, abs(p[1]) - Dh) > 3.1;
+function t_twin_clear(ti, a, z0, z1) = len([for (w = TWIN) if (w[0] == ti
+    && adiff(a, t_ang(ti)) < (w[2] + 2.6 + JM + bj / 2) / TR * 180 / PI
+    && z1 + JM > w[1] - sill && z0 - JM < w[1] + seg_top(w[2], w[3]) + 2.0) 1]) == 0;
+function turret_jb(ti) = let (t = TURS[ti], c = tpos(t), n = 13)
+    [for (k = [1 : 60], j = [0 : n - 1]) let (z0 = zc(k), z1 = zc(k + 1), a = t_ang(ti) + (j + (k % 2) / 2) * 360 / n,
+         p = [c[0] + (TR + 0.3) * cos(a), c[1] + (TR + 0.3) * sin(a)])
+        if (z1 <= t[2] - cb_h - 1 && t_exposed(p) && t_twin_clear(ti, a, z0, z1)) [c, a, TR - 0.1, TR + 2.1, z0, z1]];
+function stack_jb(s) = let (n = round(2 * PI * s[2] / bl))
+    [for (k = [1 : 75], j = [0 : n - 1]) let (z0 = zc(k), z1 = zc(k + 1), a = (j + (k % 2) / 2) * 360 / n,
+         x = s[0] + (s[2] + 0.3) * cos(a))
+        if (z0 >= max(z_out(x - 1.2), z_out(x + 1.2)) + 2.0 && z1 <= s[3] - 7.5 && (z1 < s[3] - 24 || z0 > s[3] - 16))
+            [[s[0], s[1]], a, s[2] - 0.1, s[2] + 2.1, z0, z1]];
+module brick_joints() {
+    for (f = [0 : 8]) face_joints(f);
+    for (ti = [0 : 3]) boxes(turret_jb(ti));
+    for (s = STACKS) boxes(stack_jb(s));
+}
+
+// =====================================================================================
 // PARTS
 // =====================================================================================
 module hall_walls() intersection() { brick_box(L, D, RIDGE + 2); envelope(0.6); }
 module body_raw() {
     hall_walls();
+    tooth_courses();
     for (t = TURS) { turret_drum(t); turret_corbel(t); }
     gate_block();
     merlons();
@@ -639,7 +715,7 @@ module trim_raw() {
         brand_mark();
     }
 }
-module roof_part()   difference() { roof_raw(); room(); }
+module roof_part()   difference() { roof_raw(); difference() { room(); for (w = TOYW) w_glow_col(w); } }
 module accent_part() difference() { accent_raw(); roof_raw(); }
 module trim_part()   difference() { trim_raw(); accent_raw(); roof_raw(); }
 module body_part() {
@@ -652,6 +728,7 @@ module body_part() {
         twin_openings(); twin_holes();
         rose_cut(); rose_holes();
         door_opening();
+        brick_joints();
         trim_raw(); accent_raw(); roof_raw();
     }
 }

@@ -15,6 +15,11 @@ The first workshop (one long brick room, one big toy window) is kept in
 
 It is **a toy factory that is also a castle**:
 
+- **laid in brick all over**, like the haunted post office and chapel
+  (Scott, 2026-10-12): every course bulges out under a sloped underside, and
+  upright joints staggered half a brick course to course make the bond, on
+  the hall, the teeth's upright faces, the turrets, the gatehouse and the
+  stacks;
 - a brick hall under **three sawtooth roofs**, each tooth's tall upright face
   glazed with three segmental lights, so the roofline glows from inside; two
   more lights in the left end;
@@ -26,7 +31,9 @@ It is **a toy factory that is also a castle**:
 - **seven big arched toy windows** round the hall, each with its own scene
   drawn on the glass in dark lines: rocking horses, trains, teddies, drums,
   sailboats, toy soldiers, jacks-in-the-box and gifts, on the floor and on a
-  shelf;
+  shelf. Behind the glass every line stands 1.8 mm out of the pane, so lit
+  from inside the toys show as dark outlines on the glow even printed all in
+  white, the way a lithophane works;
 - **two brick chimney stacks**, the village's tallest points, with corbelled
   caps, snow, and evergreen garlands with bobbles;
 - a **candy-striped NORTH POLE** at the front corner, a white ball on top
@@ -125,8 +132,14 @@ inside walls' feet are 0.3 thicker, up to the eave.
 
 ## Honest weak points
 
-- **The toys are line drawings about 0.8 mm wide**, the old workshop's
-  toys and drawing rules; small details are at the limit of a 0.4 mm nozzle.
+- **The toys are line drawings about 0.8 mm wide** on the outside, the old
+  workshop's toys and drawing rules; small details are at the limit of a
+  0.4 mm nozzle. Behind the glass they are 1.4 mm wide, and each line's
+  sloped underside (how it prints without supports) reads in the glow as a
+  soft shadow under it.
+- **The glow outlines have not been seen lit yet.** 3.3 mm of plastic on a
+  line against the pane's 1.5 is the lithophane rule of thumb; how dark they
+  read depends on the filament and the light.
 - **Raised details have sloped undersides.** That is how they print without
   supports.
 - **The roofs and cones are solid slate**, so the light comes out through the
