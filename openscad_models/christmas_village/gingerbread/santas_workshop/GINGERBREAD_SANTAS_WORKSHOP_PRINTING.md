@@ -1,134 +1,97 @@
 # Gingerbread Santa's Workshop — printing notes
 
-Building #5 of the Gingerbread Christmas village
-(`../../CHRISTMAS_VILLAGE.md`). Picked by Scott on 2026-10-01 from four forms
-("Roundhouse workshop"), it is **a round gingerbread workshop under a steep
-chocolate cone, with a square loading wing and a peppermint chimney**:
+The village's centrepiece, built 2026-10-11/12 alongside the Victorian one
+(`../../victorian/santas_workshop/`), which has the full story of the brief
+and of every printability fix: the two share one layout and differ only in
+their skin. Scott asked for the workshop to be "the center piece of the
+village … bigger and more magical within the theme," the same idea in each
+village's style, and picked the castle-factory mix.
 
-- a tall gingerbread drum with arched windows on two levels framed in icing,
-  and a frosted ledge round its top with icing dripping down the wall;
-- a steep chocolate cone of shingle courses over it:
-  - red and white gumdrops in turn all round its foot;
-  - a cap of icing on its point, with a big red gumdrop on top;
-- out of its front, a square gingerbread loading wing under a chocolate
-  gable of scallop tiles and icing:
-  - big chocolate-bar double doors, scored into squares, framed in piped
-    icing beads;
-  - a round window in its gable, its frame striped like a peppermint;
-  - gumdrops along its ridge, icing down its front corners and dripping off
-    its eaves and rake, a window in each side;
-- up the drum's back, a tall round white chimney with two red stripes
-  winding up it like a peppermint stick;
-- a soft snow base with a rounded edge, drifts and three peppermints.
+The first workshop (a round gingerbread drum with a loading wing) is kept in
+`../santas_workshop_v1/`.
 
-It is a hollow lantern with an open base, lit from inside by a battery LED
-tealight. The wing opens into the drum through its own room, so one light
-fills both. It measures 67.0 × 80.9 × 94.1 mm, snow base and gumdrop
-included.
+It is **a gingerbread toy factory that is also a castle**:
+
+- a gingerbread hall under **three chocolate sawtooth roofs**, each tooth's
+  tall face glazed in icing with three lights, so the roofline glows from
+  inside; two more lights in the left end;
+- **four round gingerbread turrets** at the corners, each under a frosted
+  ledge with icing drips and a chocolate shingle cone with icing on its crown
+  and a red gumdrop on its point, the back two taller;
+- an **iced gatehouse** out of the front, red and white gumdrops on its
+  battlements: chocolate-bar doors with a peppermint on each leaf, the
+  SANTA'S / WORKSHOP sign over them, a rose window above;
+- **seven big arched windows** round the hall, each with its own toys drawn
+  on the icing glass in chocolate lines;
+- **two candy-cane chimney stacks**, the village's tallest points, white with
+  red stripes winding up them;
+- a **red-and-white NORTH POLE** at the front corner, a white ball on top and
+  a NORTH POLE sign on knee braces;
+- a white soffit and icing drips under the right end's eave;
+- a soft snow base with drifts and red and white gumdrops.
+
+A hollow lantern lit from inside by a battery LED tealight: open base, every
+window glazed. Inside walls under the two roof valleys carry the sawtooth,
+each cut through by a tall lancet arch, so one tealight in the wide middle
+bay lights all three; the turrets open off the hall through lancet doorways,
+the gatehouse through a lancet arch.
+
+It measures {{SIZE}} mm, snow base and stacks included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
-they show what the printer makes. Each has front, three-quarter and top
-views. They are renders, not photos of a print.
+they show what the printer makes. They are renders, not photos of a print.
 
 **Print this:** `gingerbread_santas_workshop.3mf`. It is one object with four
 parts, already aligned. Assign a filament to each part.
 
 | part | what it is | colour in the file |
 |---|---|---|
-| body | the drum, the wing's walls | gingerbread `#C68642` |
-| roof | the cone and its shingles, the wing's roof and its tiles, the doors | chocolate `#5A3825` |
-| trim | snow base and drifts, the frosting and its drips, the cone's cap, every frame with its beads, panes and bars, the wing's corner beads, eaves, rake and roof icing, the chimney, the white gumdrops, the peppermints' white | icing white `#F7F3EE` |
-| accent | the red gumdrops, the chimney's and the porthole's stripes, the peppermints' stripes | candy red `#D7263D` |
-
-**Every window is glazed.** Each has its pane, and its bars stand on the
-pane.
+| body | the hall and its inside walls, the turrets, the gatehouse and its battlements, the window collars, the step | gingerbread `#C68642` |
+| roof | the roofs and their shingles, the turret cones, the chocolate-bar doors, the sign boards, the NORTH POLE board and braces, the toys and lines drawn on the glass | chocolate `#5A3825` |
+| trim | snow base and drifts, icing on the roofs, ledges, cones and battlements, every frame, sill, pane and bar, the copings, the soffit and drips, the letters, the chimneys' white, the pole's white stripe and ball, the white gumdrops, the peppermints' white | icing white `#F7F3EE` |
+| accent | the chimneys' and the pole's red stripes, the red gumdrops, the peppermints' stripes | candy red `#D7263D` |
 
 ## Settings that are not optional
 
-- **Supports OFF.** Verified: the gate's slicer reports 0 support moves and
-  0 overhang perimeters.
+- **Supports OFF.** {{SUPPORT_LINE}}
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
 
 ## Cost — sliced, not estimated
 
-| version | time | filament |
-|---|---|---|
-| **single colour** | **5 h 32 m** | **38.1 cm³, about 47 g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 47 g of model **+ purge** |
-
-## The tealight
-
-Measured on the exported model:
-
-- the base is open under the drum and the wing;
-- a 46.6 mm circle round the drum's centre is clear from the table to
-  50.6 mm;
-- a 38 mm tealight has room to 56.8 mm.
-
-**This meets the series rule** (at least 46 mm across and 50 mm of
-headroom). The drum's room keeps its full width to 49.9 mm, then closes in
-at 55° under the cone.
+{{COST}}
 
 ## Verified before shipping — on the real exported meshes
 
-- `product_gate` **PASSED** on the union of the four parts:
-  - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 4.27 mm, against the 1.2 mm floor;
-  - 0 supports, 0 overhang perimeters;
-  - printed height equals modelled height;
-  - 21.16 cm² of bed contact;
-  - centre of mass over the base.
-- Each of the four parts is closed, with every edge shared by exactly two
-  faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
-- `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 12.1 mm³ of 53,429 mm³ is not printed; 0.1 mm³ printed that was
-  not modelled; 0.2 mm³ printed in another colour. **0 flags.** The largest
-  losses are 0.2 mm slivers of gingerbread where the chimney meets the drum,
-  and the edges of the stripes there (each under 0.2 mm³).
-- `fragility`: nothing slender enough to snap. 0 high, 0 watch, no slender
-  runs.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the wing's doors, the same mark as the other buildings, mirrored so it
-  reads OBC with the workshop turned over, front toward you.
+{{VERIFIED}}
 
 ## What it took to print without supports
 
-The drum is the sweet shop's bottom tier and the wing its shop (the candy cane
-chapel's nave), each with every fix in their notes. These were this
-building's own, each found on the gate's slicer, its mesh checks, a section
-through the model or the renders:
+Every fix in the Victorian notes applies here, made once in the shared layout.
+These were this skin's own:
 
-- **The gumdrops are domes on a cone at 50°** that sinks into whatever they
-  stand on, so none has a flat underside over air. **The ones round the
-  eave sit over the wall.** At 0.3 mm out, each one's point hung under the
-  frosting's edge and the slicer propped all 22. They also stand 0.15 mm
-  down in the frosting: standing exactly on its top, each met it in a ring of
-  edges shared by more than two faces.
-- **The chimney's crown flares out at 58°.** At 45° the slicer propped it.
-- **The chimney's stripes are drawn as ring sectors clear of its axis.**
-  Drawn as triangles from the axis, the twist made a broken mesh that the
-  modeller dropped without stopping, and the chimney came out plain white.
-  **They are cut back to the room:** the chimney sinks 0.33 mm past the drum's
-  inner wall, and there the stripes hung in the room as winding slivers the
-  slicer propped from the table (1,097 support moves).
-- **The wing's walls run 0.3 mm up into its roof**, which takes them. Drawn on
-  the same plane as the roof's underside, the two met in zero-thick sheets.
-- **The icing cap and the shingles' undersides are 0.3 mm apart,** and the
-  shingles' upper ends stand 0.3 mm over the cone: at 0.05 and face to face,
-  they met in edges shared by more than two faces.
-- **The wing is 32 mm wide,** so its ridge stays under the drum's frosting.
+- **The candy-cane stripes** were cut to a ring 2 mm wider than the chimney,
+  so they stood out of it as helical ribs, every underside an overhang (1,342
+  overhang perimeters on their own). They are cut to the cane's own outline
+  now, flush.
+- **Five of the base gumdrops** stood past the snow base's edge, and one sat
+  inside a turret's hollow. Every one is now its own width inside the base.
+- **The chocolate-bar doors' scores**: each groove's upper flank climbed 40
+  degrees and its mouth left a 0.2 mm level lip; the two upright scores ran
+  up into the arch under the white frame. The grooves' roots are lowered so
+  the flank climbs 50 degrees, and the upright scores stop short of the arch
+  under pointed tops.
+- **The roofs end flush with the smooth walls.** Past them, each slab's corner
+  at a valley began in air.
 
 ## Honest weak points
 
-- **The chimney is the part to handle with care.** It is a 9.2 mm column
-  standing 30 mm clear of the cone.
+- **The toys are line drawings about 0.8 mm wide**; small details are at the
+  limit of a 0.4 mm nozzle.
 - **Raised details have sloped undersides.** That is how they print without
-  supports. Frames, drips and the frosting's edges read as wedges from
-  below.
-- **The cone is solid chocolate over the room's ceiling**, so the light comes
-  out through the windows, not the roof.
+  supports.
+- **The roofs and cones are solid chocolate**, so the light comes out through
+  the windows, not the roofs.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.

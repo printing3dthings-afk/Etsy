@@ -72,11 +72,11 @@ B = {
  ("victorian", "santas_workshop"): dict(
     tag="santa workshop stl",
     lead="Victorian Santa's Workshop STL 3MF, Christmas Village",
-    hook="A long brick workshop with one big arched window full of toys, lit from inside so they show against the glowing glass.",
-    feat=["Big round-arched window with a rocking horse, teddy, sailboat, toy soldier and jack-in-the-box drawn on its glass",
-          "Arched loading doors with a wreath on each leaf, under a SANTA'S WORKSHOP sign with raised letters",
-          "Three skylights in the slate roof, scalloped bargeboards and finials, a tall chimney",
-          "Snow on the roof, icicles under the eaves, a soft snow base with drifts"]),
+    hook="The village's centrepiece: a toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys.",
+    feat=["Brick hall under three sawtooth slate roofs, each tall face glazed with three lights so the roofline glows",
+          "Seven big arched windows, each with its own toys drawn on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts",
+          "Four round turrets under snowy slate cones, a crenellated gatehouse with wreathed doors under a SANTA'S WORKSHOP sign and a rose window",
+          "Two garlanded brick chimney stacks, a candy-striped NORTH POLE sign, a snow base with drifts"]),
  ("victorian", "clock_tower"): dict(
     tag="clock tower stl",
     lead="Victorian Christmas Village Clock Tower STL 3MF",
@@ -128,11 +128,11 @@ B = {
  ("gingerbread", "santas_workshop"): dict(
     tag="santa workshop stl",
     lead="Gingerbread Santa's Workshop STL 3MF, Christmas Village",
-    hook="A round gingerbread workshop under a steep chocolate cone ringed with gumdrops, with a peppermint-stick chimney up its back.",
-    feat=["Gingerbread drum with arched windows on two levels and icing dripping from its top ledge",
-          "Steep chocolate shingle cone with red and white gumdrops round its foot and a big gumdrop on top",
-          "Loading wing with chocolate-bar double doors and a peppermint round window",
-          "Tall white chimney with red stripes winding up it like a peppermint stick"]),
+    hook="The village's centrepiece: a gingerbread toy factory that is also a castle, its chocolate sawtooth roofs and seven big windows glowing with toys.",
+    feat=["Gingerbread hall under three chocolate sawtooth roofs, each tall face glazed in icing with three lights",
+          "Seven big arched windows, each with its own toys drawn on the icing glass",
+          "Four round turrets under chocolate shingle cones with icing and a gumdrop on each point, an iced gatehouse with gumdrops, chocolate-bar doors with peppermints and a SANTA'S WORKSHOP sign",
+          "Two candy-cane chimney stacks, a red-and-white NORTH POLE sign, a snow base with gumdrops"]),
  ("gingerbread", "cookie_clock_tower"): dict(
     tag="cookie decor",
     lead="Gingerbread Christmas Village Cookie Clock Tower STL 3MF",

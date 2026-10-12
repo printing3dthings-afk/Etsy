@@ -87,6 +87,14 @@ module jack_in_box() {
     translate([0, 9.1]) polygon([[-1.0, 0], [1.0, 0], [0.3, 1.6]]);
 }
 
+// a wrapped present: box, ribbon both ways, a bow of two loops (2026-10-11)
+module gift() {
+    translate([-3.4, 0]) stroke() square([6.8, 5.6]);
+    seg([0, 0.4], [0, 5.2]);
+    seg([-3.0, 2.8], [3.0, 2.8]);
+    for (s = [-1, 1]) translate([s * 1.5, 6.9]) stroke() scale([1.3, 0.9]) circle(r = 1.1, $fn = 24);
+}
+
 module toy(name) {
     if (name == "teddy") teddy();
     else if (name == "horse") rocking_horse();
@@ -95,4 +103,5 @@ module toy(name) {
     else if (name == "drum") drum();
     else if (name == "boat") sailboat();
     else if (name == "jack") jack_in_box();
+    else if (name == "gift") gift();
 }

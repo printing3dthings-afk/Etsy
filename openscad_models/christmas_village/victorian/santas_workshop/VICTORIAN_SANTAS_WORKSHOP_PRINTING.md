@@ -1,34 +1,46 @@
 # Victorian Santa's Workshop — printing notes
 
-Building #6 of the Dickens Victorian Christmas village
-(`../../CHRISTMAS_VILLAGE.md`), built before the clock tower. Scott asked on
-2026-10-02 for "a Santa workshop … big windows with toys outlined on the
-windows sunk in so it looks like they are inside." From two look studies
-(`concepts/`) he picked a mix: the long workshop, one big window, the loading
-doors with wreaths, the skylights and white scalloped bargeboards. It is **a
-long one-storey brick workshop with one big round-arched toy window**:
+The village's centrepiece, built 2026-10-11/12. Scott asked for the workshop
+to be redone: "It needs to be the center piece of the village. It needs to be
+bigger and more magical within the theme." His answers to the questions
+first: the tallest building in the village (about 190 mm), a glowing toy
+workshop inside with the toys drawn on its glowing windows, a NORTH POLE sign
+and striped pole, the village's four colours, and the same idea in each
+village's style. From five shapes (`../../concepts/santas_workshop_forms.jpg`)
+he asked for a mix of the workshop castle and the toy factory, and of the two
+mixes (`../../concepts/santas_workshop_castle_factory_mixes.jpg`) took A.
 
-- a brick front with white quoins:
-  - the big window, its white glass set 3.5 mm deep in the wall behind a
-    splayed brick reveal, in a raised white frame with a keystone and sill;
-  - on the glass, drawn in dark lines: a rocking horse and a teddy on the
-    floor, a shelf with a sailboat, a toy soldier and a jack-in-the-box, and a
-    fanlight of rays over them;
-  - arched slate loading doors, a wreath with a white bow on each leaf, white
-    strap hinges, in a flush white frame with a keystone, on a brick step;
-  - over the doors a slate sign, SANTA'S / WORKSHOP raised in white;
-- three glazed windows in the back and one in each gable;
-- a steep 55° slate roof:
-  - three skylights in its front slope;
-  - snow on its upper half, icicles under the long eaves;
-  - white scalloped bargeboards and slate finials on both gables;
-  - a tall brick chimney astride the ridge with two pots;
-- a soft snow base with a rounded edge and drifts.
+The first workshop (one long brick room, one big toy window) is kept in
+`../santas_workshop_v1/`.
 
-It is a hollow lantern with an open base, lit from inside by a battery LED
-tealight. The toys' lines run right through the white glass, so with the
-light on they show dark against it, like toys standing inside the workshop.
-It measures 99.0 × 69.0 × 121.4 mm, snow base and chimney pots included.
+It is **a toy factory that is also a castle**:
+
+- a brick hall under **three sawtooth roofs**, each tooth's tall upright face
+  glazed with three segmental lights, so the roofline glows from inside; two
+  more lights in the left end;
+- **four round brick turrets** at the corners under slate cones with snow on
+  their crowns and finials, the back two taller, two little windows in each;
+- a **crenellated gatehouse** out of the front, snow on its merlons:
+  slate doors with wreaths and white bows on a step, the SANTA'S / WORKSHOP
+  sign over them, a rose window above;
+- **seven big arched toy windows** round the hall, each with its own scene
+  drawn on the glass in dark lines: rocking horses, trains, teddies, drums,
+  sailboats, toy soldiers, jacks-in-the-box and gifts, on the floor and on a
+  shelf;
+- **two brick chimney stacks**, the village's tallest points, with corbelled
+  caps, snow, and evergreen garlands with bobbles;
+- a **candy-striped NORTH POLE** at the front corner, a white ball on top
+  and a NORTH POLE sign on knee braces;
+- a white soffit and icicles under the right end's eave;
+- a soft snow base with drifts.
+
+It is a hollow lantern lit from inside by a battery LED tealight: open base,
+every window glazed. Inside walls under the two roof valleys carry the
+sawtooth, each cut through by a tall lancet arch, so one tealight in the wide
+middle bay lights all three; the turrets open off the hall through lancet
+doorways, the gatehouse through a lancet arch.
+
+It measures {{SIZE}} mm, snow base and stacks included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
@@ -40,125 +52,84 @@ parts, already aligned. Assign a filament to each part.
 
 | part | what it is | colour in the file |
 |---|---|---|
-| body | the walls and gables, the brick behind the big window, the chimney, the step | brick red `#A8483A` |
-| roof | the roof, the skylights' frames, the finials, the doors, the sign board, the toys and fanlight on the glass | slate `#2E3440` |
-| trim | snow base and drifts, quoins, the eave flare, icicles, snow on the roof, the bargeboards, every window's frame, keystone, sill and glass, the back windows' bars, the door frame, hinges and bows, the skylights' glass, the sign's letters | white `#F4F1EA` |
-| accent | the two wreaths | evergreen `#2F6B45` |
-
-**Every window is glazed.** The big window's toys are part of its glass; the
-other windows have their bars on the glass.
+| body | the hall and its inside walls, the turrets and their corbels, the gatehouse and merlons, the chimney stacks, the window collars, the step, the pole's red stripe | brick red `#A8483A` |
+| roof | the roofs and their slates, the turret cones, the doors, the sign boards, the NORTH POLE board and braces, the toys and lines drawn on the glass | slate `#2E3440` |
+| trim | snow base and drifts, snow on the roofs, cones, merlons and stacks, every frame, sill, pane and bar, the copings, the soffit and icicles, the letters, the pole's white stripe and ball, the finials, the wreaths' bows | white `#F4F1EA` |
+| accent | the wreaths and the chimney garlands | evergreen `#2F6B45` |
 
 ## Settings that are not optional
 
-- **Supports OFF.** Verified: the gate's slicer reports 0 support moves and
-  0 overhang perimeters.
+- **Supports OFF.** {{SUPPORT_LINE}}
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
 
 ## Cost — sliced, not estimated
 
-| version | time | filament |
-|---|---|---|
-| **single colour** | **9 h 38 m** | **72.6 cm³, about 90 g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 90 g of model **+ purge** |
-
-## The tealight
-
-Measured on the exported model:
-
-- the base is open under the whole room;
-- a 46.6 mm circle in the room's middle is clear from the table to 65.7 mm;
-- a 38 mm tealight has room to 71.7 mm.
-
-**This meets the series rule** (at least 46 mm across and 50 mm of
-headroom). The brick behind the big window stands 5 mm into the room from
-the front wall, and the room is 56 mm deep so the circle still fits behind it.
+{{COST}}
 
 ## Verified before shipping — on the real exported meshes
 
-- `product_gate` **PASSED** on the union of the four parts:
-  - watertight, one body;
-  - 1st-percentile wall 1.30 mm, median 3.28 mm, against the 1.2 mm floor
-    (1.48 before the raised letters, 2026-10-07);
-  - 0 supports, 0 overhang perimeters;
-  - printed height equals modelled height;
-  - 25.10 cm² of bed contact;
-  - centre of mass over the base.
-- Each of the four parts is closed, with every edge shared by exactly two
-  faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
-- `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-08 with the toys raised): 20.1 mm³ of 95,717 mm³
-  is not printed; 0.2 mm³ printed that was not modelled; 1.0 mm³ printed in
-  another colour. **5 flags, all cosmetic and none over 0.09 mm³:**
-  - the edges of the two wreaths (0.2 mm wide, 0.07 mm³ each);
-  - the tips of the two gable finials (one layer each, 0.07 mm³);
-  - one layer off the top of SANTA'S, near its apostrophe (0.57 mm square,
-    0.08 mm³). New with the raised letters.
-- **The toys read on a one-colour print (2026-10-08).** Each line stands
-  0.4 mm proud of the glass at its drawn width plus 0.2 a side (1.2 mm), on a
-  skirt that climbs SH per 1 out (`art_skirt`), and thickens 0.8 mm into the
-  glass's back, so a white print shows them by daylight and a painter has an
-  edge; lit, they should show darker on the glow (not yet seen on a real
-  print). Gate: 0 support moves, 1st-percentile wall 1.25 mm.
-- **The toys print as drawn.** Under 0.1 mm³ of the big window's glass and
-  toys is lost in the slice, every piece of it under 0.1 mm wide; the sign's
-  letters likewise.
-- `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
-  0 watch. The finials score 3.4, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the doors, the same mark as the other buildings, mirrored so it reads OBC
-  with the workshop turned over, front toward you.
+{{VERIFIED}}
 
 ## What it took to print without supports
 
-The block is the coaching inn's (`../coaching_inn`), all brick and without
-the jetty, with every fix in its notes. These were this building's own, each
-found on the gate's slicer or its mesh checks:
+The first slice of the finished model asked for supports in eleven places.
+Every one was a real overhang and was fixed in the model, not in the slicer:
 
-- **The big window's opening splays outward.** One opening runs through the
-  frame, the brick and the reveal. It is the arch at the glass, and its head
-  rises 1.2 per 1 toward the frame's face over a level floor, so its lowest
-  edge is the glass's, which holds each layer up. Two earlier versions were
-  propped from the window's floor:
-  - a head rising inward left the arch at the frame's face as the lowest
-    edge: the top of a round arch, near level across 20 mm, with nothing
-    behind it;
-  - a frame opening rising outward over a reveal rising inward met it in a
-    near-level downward crease round the arch's head.
-- **That opening is one hull, and the brick, frame and keystone are all cut
-  by the same one.** As a straight copy joined to a sheared one it broke into
-  slivers (four bodies); cut by two copies on the same slope with different
-  ends, the brick and the frame met in open edges.
-- **The brick behind the window stands on the base.** Stopped 1 mm above the
-  table, the base under it was cut away and the slicer propped its foot.
-- **The toys and the fanlight run through the glass, flush,** not raised on
-  it: nothing about them hangs over air.
-- **The skylights have upright sides,** not sides square to the roof (a
-  lower side square to a 55° roof leans out over air), and their frames sink
-  2 mm into the roof. In pockets they came out as three loose pieces.
-- **The doors have one groove,** the meeting line, pointed under the crown.
-  Plank grooves running up into the arch and across the hinges left small
-  ceilings the slicer propped.
-- **The eave is at 64 mm** so the window's keystone stays under the eave
-  flare.
-- **The sign's letters are 3.4 mm, on a 33 mm board,** the most room between
-  the window's frame and the quoins. At 4.2 mm, WORKSHOP was 38.7 mm wide and
-  the board cut it to "VORKSHO" in the renders.
-- **The letters are raised 0.84 mm, not inlaid** (2026-10-07). Inlaid flush,
-  they were colour alone and would vanish on a one-colour or painted print,
-  as the haunted post office's first print showed. They are built as a climb
-  in 0.2 mm steps, so only their undersides slope.
+- **The cone slates.** Each ring of slate was a flat step 0.9 proud, so every
+  ring's foot was a ledge and the slicer propped all four cones from the
+  table. Chamfered at 50 degrees, each lip was still a thin wedge with air
+  under it. They are now the toy shop's courses: an upright foot standing on
+  the ring below, sloping back into the cone.
+- **The snow on the cones** ended in a level ledge 1 mm proud. Its wavy foot
+  is now an upright face standing on the cone.
+- **The turrets' hollows** started 0.6 narrower than the rooms under them,
+  a ledge round the top of every turret. They are now as wide as the room and
+  parallel to the cone.
+- **The pointed arches** through the inside walls and into the gatehouse were
+  equilateral, whose crowns meet at 30 degrees. They are lancets now (radius
+  six times the half-span), crowns at 56 degrees, the same height. The
+  turrets' doorways are the same lancet.
+- **The chimney caps, garlands and the finials** all flared at exactly 45
+  degrees, which the slicer props. They flare at 36 to 52 degrees now, and the
+  garlands' bobbles stand on cones instead of hanging as whole spheres.
+- **The merlons' snow** ran straight across the crenels and stood 0.3 past
+  the stone. It now caps each merlon only, flush.
+- **The merlons' corners** were square on a brick block with 1.5 mm rounded
+  corners, so each corner hung past the block. They are rounded to match.
+- **The NORTH POLE sign's braces** stood in front of the board with their
+  tips clear of the pole. Each is now the hull of a strip sunk in the pole and
+  the board's end, its underside climbing 50 degrees.
+- **The right end's eave** ran 2 mm past the wall, so its lowest edge was its
+  tip, in air. It runs 1 mm out over a white soffit climbing 55 degrees from
+  the wall; the icicles hang from the soffit. (Before this the icicles had all
+  fallen inside the toy window's keep-out and none was made.)
+- **The gatehouse's room** ran 3 mm into the hall, so its ridge cut up through
+  the hall's roof behind the gatehouse and left the gatehouse's back 0.5 mm
+  thick. It now stops a wall short; the pointed arch is the way through.
+- **The OBC mark** sat 0.2 mm from the base's edge. It is 1 mm further in.
+
+**And the tealight did not fit.** With three equal roof teeth the inside
+walls cut the hall into bays 38.7 mm wide: no room for the village's 46 mm
+circle, and a 38 mm tealight only with 0.3 mm to spare. An inside wall cannot
+open wider than a lancet whose crown stays under its valley (24 mm), and a
+flat doorway 49 mm wide was tried and failed the gate: its lintel's edges print
+as perimeters over air. So the middle tooth is wider (51 mm against 36.5 at
+the ends) and every tooth climbs 55 mm instead of 47, which keeps the middle
+ceiling at 47 degrees and the end ones at 56; the chimney flues moved into
+the two end bays. {{TEALIGHT}}
+
+And one found by `print_fidelity`: the window collars' support columns
+stopped 0.1 short of the inside walls, a sealed hairline slit down each. The
+inside walls' feet are 0.3 thicker, up to the eave.
 
 ## Honest weak points
 
-- **The toys are line drawings 0.8 mm wide.** They read clearly from the
-  front and lit from inside; small details (the teddy's eyes, the horse's
-  saddle) are at the limit of what a 0.4 mm nozzle draws.
+- **The toys are line drawings about 0.8 mm wide**, the old workshop's
+  toys and drawing rules; small details are at the limit of a 0.4 mm nozzle.
 - **Raised details have sloped undersides.** That is how they print without
-  supports. Frames, keystones, the sign and the wreaths read as wedges from
-  below.
-- **The roof is solid slate,** so the light comes out through the windows,
-  not the roof.
+  supports.
+- **The roofs and cones are solid slate**, so the light comes out through the
+  windows, not the roofs.
 - **It has not been printed yet.** Everything above was measured on the
   model and its slice.

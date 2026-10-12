@@ -222,7 +222,20 @@ def section(mesh, z):
     segs = segs[np.any(segs[:, 0] != segs[:, 1], axis=1)]
     if not len(segs):
         return Polygon()
-    parts = [shapely.build_area(shapely.node(MultiLineString([q.tolist() for q in segs])))]
+    # GEOS's noding can fail to converge on near-coincident segments ("Iterated
+    # noding failed to converge"), which crashed the whole run on one layer of
+    # the castle workshop (2026-10-11). Retry on a coarser grid; if that fails
+    # too, drop this build for this layer -- the trimesh build below still
+    # stands, and a miss either way is confirmed against the mesh.
+    parts = []
+    for dec in (4, 3):
+        g = np.round(segs, dec)
+        g = g[np.any(g[:, 0] != g[:, 1], axis=1)]
+        try:
+            parts = [shapely.build_area(shapely.node(MultiLineString([q.tolist() for q in g])))]
+            break
+        except shapely.errors.GEOSException:
+            continue
     try:
         sec = mesh.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
         if sec is not None:
