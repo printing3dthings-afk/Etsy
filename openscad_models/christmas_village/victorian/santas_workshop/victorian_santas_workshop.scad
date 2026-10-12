@@ -376,8 +376,10 @@ function seg_top(a, hgt) = hgt + 0.35 * a;
 mull = 1.68;
 module s_outline(w) polygon(seg_pts(w[3], w[4]));
 module s_bars(w) { translate([-mull / 2, -3]) square([mull, 60]); translate([-20, w[4] * 0.5]) square([40, 2.2]); }
-module s_frame_outer(w) { offset(r = fr_w) s_outline(w); translate([-w[3] - fr_w - 0.8, -sill]) square([2 * (w[3] + fr_w + 0.8), sill + 1]); }
-module s_keystone(w) translate([0, seg_top(w[3], w[4]) - 1.2]) polygon([[-1.3, 0], [1.3, 0], [1.9, fr_w + 2.6], [-1.9, fr_w + 2.6]]);
+// its head raised by what relief_up's shear takes off it, so the band is fr_w
+// deep at its face too: at 1.2 mm it was a wedge the wall check failed (2026-10-12)
+module s_frame_outer(w) { hull() { offset(r = fr_w) s_outline(w); translate([0, SH * fr_t]) offset(r = fr_w) s_outline(w); } translate([-w[3] - fr_w - 0.8, -sill]) square([2 * (w[3] + fr_w + 0.8), sill + 1]); }
+module s_keystone(w) translate([0, seg_top(w[3], w[4]) - 1.2 + SH * fr_t]) polygon([[-1.3, 0], [1.3, 0], [1.9, fr_w + 2.6], [-1.9, fr_w + 2.6]]);
 module cler_holes() for (w = CLER) face_at(w[0], w[1], w[2]) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) s_outline(w);
 module cler_openings() for (w = CLER) face_at(w[0], w[1], w[2]) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) s_outline(w);
 module cler_windows() for (w = CLER) face_at(w[0], w[1], w[2]) {
@@ -421,7 +423,7 @@ function sn_run(y, i) = 11 + 2.4 * sin(y * 13 + 70 * i) + 1.4 * sin(y * 37 + 30 
 module roof_snow(i) intersection() {
     x0 = xi(i);
     xz(-Dh - ov, Dh + ov) polygon([[x0 - 0.01, RIDGE - 1.0],   // flush with the slab's ends: 0.3 past them it hung (2026-10-12)
-         [x0 - 0.01, RIDGE + 2.2], [x0 + 22, RIDGE - RISE * 22 / TWS[i] + 1.8], [x0 + 22, RIDGE - RISE * 22 / TWS[i] - 1.0]]);
+         [x0 - 0.01, RIDGE + 1.6], [x0 + 22, RIDGE - RISE * 22 / TWS[i] + 1.8], [x0 + 22, RIDGE - RISE * 22 / TWS[i] - 1.0]]);
     linear_extrude(200) polygon(concat([for (k = [0 : 40]) let (y = -Dh - 3 + (D + 6) * k / 40) [x0 + sn_run(y, i), y]], [[x0 - 1, Dh + 3], [x0 - 1, -Dh - 3]]));
 }
 // under the right end's eave, a white soffit from the wall out to the slab's
@@ -563,8 +565,13 @@ module part_shims() for (i = [1 : NT - 1]) difference() {
 }
 // a lancet doorway from the hall into each turret, facing the hall's middle
 module turret_door(t) translate(tpos(t)) rotate([0, 0, atan2(-t[1], -t[0])])
-    translate([TR - wall - 1.5, 0, plinth_h]) rotate([90, 0, 90]) linear_extrude(wall + 3) pointed2d(5, 30, 6);   // crown 54.6, its slopes 56 deg: cut through the
-    // curved wall at 48.6 deg the slicer still propped it (2026-10-12)
+    translate([TR - wall - 1.5, 0, plinth_h]) rotate([90, 0, 90]) hull() {
+        // jambs radial: parallel, they met the drum's face at 70 deg and left a
+        // knife edge of wall along each (2026-10-12)
+        linear_extrude(0.01) scale([(TR - wall - 1.5) / (TR + 1.5), 1]) pointed2d(5, 30, 6);
+        translate([0, 0, wall + 3 - 0.01]) linear_extrude(0.01) pointed2d(5, 30, 6);
+    }   // crown 54.6, its slopes 56 deg (steeper inside, where the jambs close in): cut
+        // through the curved wall at 48.6 deg the slicer still propped it (2026-10-12)
 module room() difference() {
     union() {
         // kept out of the turrets: where the hall's room ran into a turret it
