@@ -157,6 +157,12 @@ direction = target - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 bpy.context.scene.camera = cam
 cam.data.lens = lens
+# Blender's default far clip is 1000 units, and at 85 mm the camera stands
+# 4.4 sizes off: past about 225 mm of model the far side vanished. A village
+# accessories scene 243 mm across rendered as only the bridge nearest the
+# camera (2026-10-13). The clip now reaches past the whole scene.
+cam.data.clip_end = dist + size * 4
+cam.data.clip_start = max(0.1, dist * 0.001)
 
 def add_area(name, loc, energy, sz, target):
     bpy.ops.object.light_add(type='AREA', location=loc)
