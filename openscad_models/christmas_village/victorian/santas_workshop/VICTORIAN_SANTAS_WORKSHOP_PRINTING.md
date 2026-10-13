@@ -79,7 +79,33 @@ parts, already aligned. Assign a filament to each part.
 
 ## Verified before shipping — on the real exported meshes
 
-{{VERIFIED}}
+- `product_gate` **PASSED** on the CGAL union of the four parts
+  (2026-10-13):
+  - watertight, one body;
+  - 1st-percentile wall 1.48 mm, median 2.91 mm, against the 1.2 mm floor;
+  - 0 supports, 0 overhang perimeters;
+  - printed height equals modelled height (193.6 mm);
+  - 80.02 cm² of bed contact, 30% of the footprint;
+  - centre of mass over the base.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer): 43.0 mm³ of 425,314 mm³ is not printed, 3.5 mm³ printed that was
+  not modelled, 1.3 mm³ printed in another colour. **11 flags, none over
+  0.48 mm³:**
+  - two 0.3 mm slivers of white glass beside the rose window's spokes
+    (0.43 and 0.47 mm³): too narrow to extrude; spokes and glass print;
+  - two 0.5 mm slivers at the wavy foot of the roof snow over a slate
+    (0.24 and 0.28 mm³);
+  - one layer of one sign letter's top (0.08 mm³);
+  - the tips of the two wreaths' leaves either side of the doors, seven
+    layers 0.2 mm wide (0.07 mm³ each);
+  - four single layers of brick, 0.4-0.5 mm wide, where the front and back
+    walls' top course meets the two valleys at 110.6-111 mm
+    (0.05-0.06 mm³ each).
+- `fragility`: nothing slender enough to snap. 0 high, 0 watch; the most
+  slender runs are the snow base's lips, slenderness 1.6.
+- Renders: `images/*_colour_*` from the four parts, `images/*_as_printed_*`
+  from the four-colour toolpath (outer walls, skins and overhangs: what any
+  outside view sees). `../../listings/white_check/` has it all in white.
 
 ## What it took to print without supports
 
@@ -130,6 +156,25 @@ ceiling at 47 degrees and the end ones at 56; the chimney flues moved into
 the two end bays. Measured on the exported model: a 46.6 mm circle stands in the middle bay with
 54.4 mm of headroom, which meets the series rule (at least 46 mm across and
 50 mm of headroom).
+
+**The brick bond and the glowing toys (Scott, 2026-10-12).** The courses
+alone read as clapboard; the upright joints that make them brick are cut
+whole courses tall and floored behind each course's root, as on the post
+office, so none leaves a ceiling. The teeth's upright faces were plain and
+have courses too. The toys on the glass had never been printed at all: the
+room was cut out of the slate part, which holds them, and took everything
+standing out of the back of the pane with it. The room now stays off that
+space and the lines stand 1.8 mm out instead of 0.8.
+
+**Then three thin spots the wall check found, and one leak:** the roof snow
+rose 0.6 above each coping as a 0.3 mm fin; the glazed teeth's frame heads
+were 1.2 mm wedges at their face; and the turrets' doorway jambs met the
+round walls at 70 degrees, a knife edge. The snow starts flush with the
+coping, the frame heads are full depth, the jambs are radial. With the
+brick bond in, the union came out not watertight: two joints on the right
+stack had their flat tops exactly on a ring of the stack's 72-gon at 138.4
+and 164.4, and the export shared two edges between four faces. The stack
+joints sit 0.05 mm higher now.
 
 And one found by `print_fidelity`: the window collars' support columns
 stopped 0.1 short of the inside walls, a sealed hairline slit down each. The
