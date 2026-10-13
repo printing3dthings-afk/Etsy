@@ -49,8 +49,10 @@ module base() difference() {
     union() { rsq(P + RO, z0 - 1.5, LR); translate([0, 0, z0 - 1.5]) hull() { rsq(P + RO, 0.01, LR); translate([0, 0, 1.5]) rsq(P + RO - 1.5, 0.01, LR); } }
     translate([0, 0, fl]) rsq(PI_, z0);
 }
-module posts() for (x = [-1, 1], y = [-1, 1]) translate([x * (P - pane / 2), y * (P - pane / 2), z0 - 0.5])
-    cylinder(r = PR, h = H + 0.5, $fn = 24);
+// down to the plate: started at the glass's foot, each corner hung over the
+// base's bevel and the slicer propped it (2026-10-13)
+module posts() for (x = [-1, 1], y = [-1, 1]) translate([x * (P - pane / 2), y * (P - pane / 2), 0])
+    cylinder(r = PR, h = zr, $fn = 24);
 // the rail: out RO past the glass, its underside sloped in, SH up per 1 out
 module rail() difference() {
     hull() { translate([0, 0, zr - SH * RO - 2]) rsq(P, 0.01); translate([0, 0, zr - 2]) rsq(P + RO, 2, LR); }
@@ -88,11 +90,13 @@ module ribbon() {
 }
 // the bow: two standing loops-and-knot plates, crossed, so four loops show
 // from above. The loops climb steeply enough that their undersides print, and
-// their holes are pointed at the top.
+// their holes peak at 60 deg.
+// Each loop rises from a flat foot, not a round one: a round foot curled under
+// itself at the plate, and the slicer propped every loop (2026-10-13).
 module bow_plate() rotate([90, 0, 0]) linear_extrude(3.4, center = true) {
     for (m = [0, 1]) mirror([m, 0]) difference() {
-        hull() { translate([2.2, 2.4]) circle(2.4); translate([8.2, 14]) circle(4.8); }
-        translate([7.6, 13]) hull() { circle(2.0); translate([0, 2.0 * sqrt(2)]) circle(0.01); }
+        hull() { translate([0, 0]) square([5, 0.1]); translate([8.2, 14]) circle(4.8); }
+        translate([7.6, 13]) hull() { circle(2.0); translate([0, 4.0]) circle(0.01); }
     }
     translate([-4, 0]) square([8, 2]);
 }

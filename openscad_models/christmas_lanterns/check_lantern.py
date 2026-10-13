@@ -3,8 +3,9 @@
 
     python3 check_lantern.py hex_lantern|drum_lantern|gift_box_lantern [step ...]
 
-steps (default all, in order): parts gate 3mf fidelity fragility colour night
-as_printed viewer. Every result lands in <lantern>/logs and <lantern>/images,
+steps (default all, in order): parts gate cost 3mf fidelity fragility colour
+night as_printed viewer. cost slices each one-body union in one colour and
+times it with the P1S motion model, the same clock the viewer uses. Every result lands in <lantern>/logs and <lantern>/images,
 the same layout the village buildings use. Run <lantern>/build.sh and
 build.sh union first.
 
@@ -62,7 +63,7 @@ def rgb(h):
 
 def main():
     name = sys.argv[1]
-    steps = sys.argv[2:] or ["parts", "gate", "3mf", "fidelity", "fragility", "colour", "night", "as_printed", "viewer"]
+    steps = sys.argv[2:] or ["parts", "gate", "cost", "3mf", "fidelity", "fragility", "colour", "night", "as_printed", "viewer"]
     L = LANTERNS[name]
     d = HERE / name
     logs, imgs = d / "logs", d / "images"
@@ -81,13 +82,34 @@ def main():
             shown[p] = work / f"shown_{p}.stl"; m.export(shown[p])
 
     if "parts" in steps:
-        run([sys.executable, HERE / "lantern_mesh.py", "check", *[stl(p) for p, _ in allparts]], logs / "parts.txt")
+        txt = ""
+        for obj in L["objects"]:
+            txt += run([sys.executable, HERE / "lantern_mesh.py", "check", *[stl(p) for p, _ in obj]]).stdout
+        if "lid_lift" in L:
+            # the lid set on the box: its groove must clear the band, nothing may collide
+            txt += "lid on the box:\n" + run([sys.executable, HERE / "lantern_mesh.py", "check", *[shown[p] for p, _ in allparts]]).stdout
+        (logs / "parts.txt").write_text(txt)
+        print(txt)
     if "gate" in steps:
         txt = ""
         for u in L["unions"]:
             r = run([sys.executable, TOOLS / "product_gate.py", d / u])
             txt += r.stdout
         (logs / "gate.txt").write_text(txt)
+        print(txt)
+    if "cost" in steps:
+        sys.path.insert(0, str(TOOLS))
+        from virtual_printer import report
+        from gcode_viewer_data import build_job
+        txt = ""
+        for u in L["unions"]:
+            g = work / f"cost_{Path(u).stem}.gcode"
+            r = report(str(d / u), str(g), supports=False)
+            j = build_job(g, u)
+            s_ = j["totalSeconds"]
+            txt += (f"{u}: {int(s_ // 3600)} h {int(s_ % 3600 // 60)} m, {r['filament_mm'] / 1000:.1f} m of filament, "
+                    f"{j['filamentG']} g, {r['layers']} layers, single colour, supports off\n")
+        (logs / "cost.txt").write_text(txt)
         print(txt)
     if "3mf" in steps:
         args = []
@@ -106,7 +128,10 @@ def main():
             txt += r.stdout
         (logs / "fidelity.txt").write_text(txt)
     if "fragility" in steps:
-        run([sys.executable, TOOLS / "fragility.py", *[stl(p) for p, _ in allparts]], logs / "fragility.txt")
+        txt = ""
+        for obj in L["objects"]:
+            txt += run([sys.executable, TOOLS / "fragility.py", *[stl(p) for p, _ in obj]]).stdout
+        (logs / "fragility.txt").write_text(txt)
     if "colour" in steps:
         run([sys.executable, TOOLS / "blender_render.py", *sum([["--part", f"{shown[p]}:{rgb(c)}"] for p, c in allparts], []),
              "-o", imgs / f"{name}_colour.png", "--views", "--front=-y", "--samples", "96", "--timeout", "1200"], logs / "render.txt")

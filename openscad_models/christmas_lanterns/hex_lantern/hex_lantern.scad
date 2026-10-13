@@ -17,7 +17,11 @@ part = "all";
 // stands on, so manifold3d welds them instead of leaving touching shells
 // (2026-10-13: the touching parts came out as 60 bodies)
 EMB = 0;
-SH = 1.2;          // relief undersides climb 1.2 per 1 out (relief_lib)
+// relief undersides climb 1.6 per 1 out (58 deg). relief_lib's 1.2 (50 deg)
+// sits 5 deg inside the slicer's 45 deg threshold, and where two of the
+// relief's steps fell in one layer the slicer propped the sky's stars and the
+// houses' eaves (4,975 support moves, 2026-10-13).
+SH = 1.6;
 $fa = 4; $fs = 0.4;
 
 // ---- size --------------------------------------------------------------------------------
@@ -48,8 +52,10 @@ function fa(k) = 30 + 60 * k;
 module on_face(a, d, z = 0) rotate([0, 0, a]) translate([d, 0, z]) rotate([90, 0, 90]) children();
 // on a roof face: x along it, y up its slope from the foot, z out of it
 module on_roof(a) rotate([0, 0, a]) translate([RA, 0, zt]) rotate([0, -TH, 0]) rotate([90, 0, 90]) children();
+// a hair over 60 deg, so each face's snow overlaps the next at the hip and the
+// two weld; meeting exactly, they shared an edge four faces deep (2026-10-13)
 module sector(a) translate([0, 0, -1]) linear_extrude(400)
-    polygon([[0, 0], 300 * [cos(a - 30), sin(a - 30)], 300 * [cos(a + 30), sin(a + 30)]]);
+    polygon([[0, 0], 300 * [cos(a - 30.05), sin(a - 30.05)], 300 * [cos(a + 30.05), sin(a + 30.05)]]);
 
 // ---- frame -------------------------------------------------------------------------------
 module plinth() difference() {
@@ -98,9 +104,11 @@ module art() for (k = [0 : 5]) on_face(fa(k), AP + 0.01 - EMB) translate([-W / 2
 
 // ---- snow on the crown, the bow on the front ---------------------------------------------
 V0 = LF * 0.5;              // the snow's lower edge, up the slope
-module snow2d(k) let (wv = SIDE * RA / AP * (1 - V0 / LF) + 8, n = round(wv / 5.2)) union() {
+// the drips stop 3 mm short of the hips: cut there by the next face's sector,
+// half-drips came out as 0.3 mm slivers (2026-10-13)
+module snow2d(k) let (wf = 2 * RA * tan(30) * (1 - V0 / LF), wv = wf + 8, n = round((wf - 6) / 5.2)) union() {
     translate([-wv / 2, V0]) square([wv, LF]);
-    for (i = [0 : n]) let (u = -wv / 2 + i * wv / n, r = (i + k) % 3 == 0 ? 3.0 : (i + k) % 3 == 1 ? 2.2 : 1.6)
+    for (i = [0 : n]) let (u = -(wf - 6) / 2 + i * (wf - 6) / n, r = (i + k) % 3 == 0 ? 3.0 : (i + k) % 3 == 1 ? 2.4 : 1.9)
         translate([u, V0]) circle(r, $fn = 24);
 }
 module snow() difference() {
@@ -108,12 +116,11 @@ module snow() difference() {
     if (EMB == 0) frame();
     translate([0, 0, zc]) cylinder(r = 50, h = 50);
 }
+// solid loops: with holes their rims were 1 mm and a fifth of the lantern's
+// spans under one wall (2026-10-13)
 module bow2d() {
     for (m = [0, 1]) mirror([m, 0]) {
-        difference() {
-            hull() { translate([1.6, 0]) circle(1.6); translate([6.4, 2.6]) scale([1.3, 1]) circle(2.6); }
-            hull() { translate([3.6, 0.9]) circle(0.6); translate([6.2, 2.4]) scale([1.3, 1]) circle(1.0); }
-        }
+        hull() { translate([1.6, 0]) circle(1.6); translate([6.4, 2.6]) scale([1.3, 1]) circle(2.6); }
         polygon([[-1.2, -0.6], [1.8, -0.8], [5.2, -10], [3.4, -9.0], [2.4, -11]]);
     }
     circle(2.2);

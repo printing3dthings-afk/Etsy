@@ -24,7 +24,7 @@ part = "all";
 // keeps its overlap with the rings, so manifold3d welds them (hex lantern,
 // 2026-10-13: parts that only touched came out as separate shells)
 EMB = 0;
-SH = 1.2;
+SH = 1.6;           // 58 deg: the hex lantern at 1.2 drew supports (see hex_lantern.scad)
 FN = 240;                   // round enough that the wrapped art meets the glass
 
 R    = 40;                  // the glass's outer face

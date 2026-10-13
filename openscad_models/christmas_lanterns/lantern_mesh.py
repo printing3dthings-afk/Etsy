@@ -22,8 +22,13 @@ import manifold3d as mf
 
 
 def to_manifold(m: trimesh.Trimesh, name: str) -> mf.Manifold:
-    out = mf.Manifold(mf.Mesh(vert_properties=np.asarray(m.vertices, np.float32),
-                              tri_verts=np.asarray(m.faces, np.uint32)))
+    # From the raw triangle soup, merged by manifold itself: CGAL writes two
+    # solids that touch along a line as one edge shared by four faces, which
+    # trimesh's own vertex merge turns into a non-manifold mesh manifold refuses.
+    tri = np.asarray(m.vertices, np.float64)[np.asarray(m.faces)].reshape(-1, 3)
+    mesh = mf.Mesh(vert_properties=tri.astype(np.float32), tri_verts=np.arange(len(tri), dtype=np.uint32).reshape(-1, 3))
+    mesh.merge()
+    out = mf.Manifold(mesh)
     if out.status() != mf.Error.NoError:
         sys.exit(f"{name}: manifold3d refuses it ({out.status()}) -- not a closed mesh")
     return out
@@ -31,7 +36,15 @@ def to_manifold(m: trimesh.Trimesh, name: str) -> mf.Manifold:
 
 def to_trimesh(m: mf.Manifold) -> trimesh.Trimesh:
     g = m.to_mesh()
-    return trimesh.Trimesh(np.asarray(g.vert_properties)[:, :3], np.asarray(g.tri_verts), process=True)
+    t = trimesh.Trimesh(np.asarray(g.vert_properties)[:, :3], np.asarray(g.tri_verts), process=True)
+    # Drop sheets that enclose nothing. The drum's welded union came back with
+    # thirteen two-triangle back-to-back slivers beside its one real body, each
+    # sharing an edge with it, so the body read as open (2026-10-13).
+    cc = trimesh.graph.connected_components(t.face_adjacency, nodes=np.arange(len(t.faces)), min_len=1)
+    keep = [c for c in cc if len(c) > 4 or abs(t.submesh([c], append=True).volume) > 1e-6]
+    if len(keep) < len(cc):
+        t = t.submesh(keep, append=True)
+    return t
 
 
 def load(path: str) -> mf.Manifold:
@@ -65,12 +78,19 @@ def union(out, paths):
 
 
 def wrap(flat, out, radius, z, minus, step):
-    t = trimesh.load(flat, force="mesh")
+    # Weld first: where two pieces of the stepped relief touch along a line (the
+    # drum's snowman, at its waist), the line stays a four-face edge through any
+    # boolean, and trimesh -- and so product_gate -- reads the part as open. A
+    # copy shifted 0.003 mm across the face turns each such line into a sliver
+    # of overlap, and the union closes it (2026-10-13).
+    m0 = to_manifold(trimesh.load(flat, force="mesh"), flat)
+    m0 = mf.Manifold.batch_boolean([m0, m0.translate([0.003, 0, 0]), m0.translate([0, 0.003, 0])], mf.OpType.Add)
+    t = to_trimesh(m0)
     v, f = trimesh.remesh.subdivide_to_size(t.vertices, t.faces, max_edge=step)
     x, y, d = v[:, 0], v[:, 1], v[:, 2]
     a, r = x / radius, radius + d
     w = np.column_stack([r * np.cos(a), r * np.sin(a), y + z])
-    m = to_manifold(trimesh.Trimesh(w, f, process=True), flat)
+    m = to_manifold(trimesh.Trimesh(w, f, process=False), flat)
     for p in minus:
         m = m - load(p)
     t = to_trimesh(m)
