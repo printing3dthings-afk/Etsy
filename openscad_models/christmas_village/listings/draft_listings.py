@@ -73,8 +73,8 @@ B = {
     tag="santa workshop stl",
     lead="Victorian Santa's Workshop STL 3MF, Christmas Village",
     hook="The village's centrepiece: a toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys.",
-    feat=["Brick hall under three sawtooth slate roofs, each tall face glazed with three lights so the roofline glows",
-          "Seven big arched windows, each with its own toys drawn on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts",
+    feat=["Laid in brick all over, staggered joints on every wall, turret and chimney, under three sawtooth slate roofs whose tall faces are glazed so the roofline glows",
+          "Seven big arched windows, each with its own toys on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit, the toys show dark against the glow, even printed in one colour",
           "Four round turrets under snowy slate cones, a crenellated gatehouse with wreathed doors under a SANTA'S WORKSHOP sign and a rose window",
           "Two garlanded brick chimney stacks, a candy-striped NORTH POLE sign, a snow base with drifts"]),
  ("victorian", "clock_tower"): dict(
@@ -130,7 +130,7 @@ B = {
     lead="Gingerbread Santa's Workshop STL 3MF, Christmas Village",
     hook="The village's centrepiece: a gingerbread toy factory that is also a castle, its chocolate sawtooth roofs and seven big windows glowing with toys.",
     feat=["Gingerbread hall under three chocolate sawtooth roofs, each tall face glazed in icing with three lights",
-          "Seven big arched windows, each with its own toys drawn on the icing glass",
+          "Seven big arched windows, each with its own toys on the icing glass; lit, the toys show dark against the glow, even printed in one colour",
           "Four round turrets under chocolate shingle cones with icing and a gumdrop on each point, an iced gatehouse with gumdrops, chocolate-bar doors with peppermints and a SANTA'S WORKSHOP sign",
           "Two candy-cane chimney stacks, a red-and-white NORTH POLE sign, a snow base with gumdrops"]),
  ("gingerbread", "cookie_clock_tower"): dict(
