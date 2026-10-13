@@ -19,6 +19,9 @@ It is a hollow shade over a battery LED tealight: the base is open, so it
 lifts off and goes back down over the light. Inside it is 61.4 mm across the
 flats, room for any tealight.
 
+The maker's mark, OBC, is engraved 0.7 mm into the inside face of the
+plinth's front wall, where it reads when the lantern is lifted off.
+
 Lit from inside, every scene shows dark on the glow: the glass is 1.3 mm,
 the scenes stand 1.6 mm out of it, and the thicker plastic passes less
 light, the way a lithophane does. It works printed all in white.
@@ -66,12 +69,12 @@ clock).
 - `../lantern_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.30 mm, median 4.80 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.30 mm, median 4.57 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (155.2 mm);
   - 13.5 cm² of bed contact, 22% of the footprint; centre of mass over it.
 - `print_fidelity` (the colour slice compared with the model, layer by
-  layer): 4.9 mm³ of 79,459 mm³ not printed, 2.2 mm³ printed that was not
+  layer): 4.9 mm³ of 79,444 mm³ not printed, 2.2 mm³ printed that was not
   modelled, nothing in the wrong colour. **4 flags, 0.019 mm³ each:** one
   layer, 0.23 mm wide, along the crowns of the bow's two loops (z 113.4). The
   bow prints whole.
@@ -83,6 +86,9 @@ clock).
 The first slices asked for supports in several places; every one was fixed
 in the model:
 
+- **The maker's mark**, cut under the plinth's 4.4 mm ring, came out as
+  letters the slicer propped. It is cut into the plinth's inside face
+  instead, each step in sloping its ceiling at the relief's 1.6 per 1.
 - **The corner posts** stood 2 mm into the hollow over the open base, and
   the slicer propped them from the plate. They are trimmed flush with the
   glass inside.

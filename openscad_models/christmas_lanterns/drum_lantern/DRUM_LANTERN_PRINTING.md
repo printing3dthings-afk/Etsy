@@ -16,7 +16,11 @@ One unbroken Christmas Eve wrapped all the way round a glass drum:
   its edge in drips.
 
 It is a hollow shade over a battery LED tealight, open at both ends: it lifts
-off and goes back down over the light. Inside it is 77.4 mm across.
+off and goes back down over the light. Inside it is 68 mm across at its foot
+(77.4 mm above it): a low foot inside the base ring carries the maker's mark.
+
+The maker's mark, OBC, is engraved 0.8 mm into the underside of that foot,
+at the front, mirrored so it reads from below.
 
 Lit from inside, the scene shows dark on the glow: the glass is 1.3 mm, the
 scene stands 1.6 mm out of it, and the thicker plastic passes less light,
@@ -54,8 +58,8 @@ Two filaments.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **2 h 3 m** | **20.0 m, 60 g** |
-| two colour, AMS | slice in Bambu Studio for the real time and purge | about 60 g of model **+ purge** |
+| **single colour** | **2 h 7 m** | **20.8 m, 62 g** |
+| two colour, AMS | slice in Bambu Studio for the real time and purge | about 62 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
 clock).
@@ -75,17 +79,21 @@ crosses the seam but the snowy ground. `build.sh` does all of it.
 - `../lantern_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.30 mm, median 2.03 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.30 mm, median 1.94 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (103.4 mm);
-  - 15.2 cm² of bed contact, 19% of the footprint; centre of mass over it.
+  - 25.5 cm² of bed contact, 32% of the footprint; centre of mass over it.
 - `print_fidelity` (the colour slice compared with the model, layer by
-  layer): 0.54 mm³ of 91,848 mm³ not printed, 0.11 mm³ printed that was not
+  layer): 0.56 mm³ of 94,260 mm³ not printed, 0.11 mm³ printed that was not
   modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: 0 high, 0 watch, no slender runs.
 
 ## What it took
 
+- **The maker's mark** was first cut into the base ring's own 5.8 mm
+  underside and then its curved inside face; on both the slicer propped the
+  letters. The foot inside the ring widens the underside to 10.5 mm, and the
+  mark sits there.
 - **The scene's undersides** climb 1.6 per 1 out, as on the hex lantern,
   whose first slice at 1.2 propped its stars and eaves.
 - **The wrap** first came out with two edges shared by four faces, where two

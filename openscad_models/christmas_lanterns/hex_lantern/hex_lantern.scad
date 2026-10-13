@@ -92,7 +92,8 @@ module hanging_ring() rotate([90, 0, 0]) linear_extrude(4, center = true) differ
     hull() { translate([-3.2, 0]) square([6.4, 0.1]); translate([0, 9]) circle(7); }
     translate([0, 9]) hull() { circle(3.4); translate([0, 3.4 * 2]) circle(0.01); }
 }
-module frame() { plinth(); posts(); rail(); roof(); crown(); }
+// the maker's mark inside the plinth's front
+module frame() difference() { union() { plinth(); posts(); rail(); roof(); crown(); } brand_mark_inside(API, z0 / 2, 4.4); }
 
 // ---- glass and its scenes ---------------------------------------------------------------
 module glass() difference() {

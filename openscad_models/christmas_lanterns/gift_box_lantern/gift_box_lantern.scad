@@ -64,7 +64,8 @@ module band() difference() {
               translate([0, 0, zr - 0.01]) rsq(BO, BH + 0.01); }
     hull() { translate([0, 0, zr - SH * 0.8 - 0.01]) rsq(PI_, 0.01); translate([0, 0, zr]) rsq(BI, BH + 1); }
 }
-module frame() { base(); posts(); rail(); band(); }
+// the maker's mark under the middle of the floor
+module frame() difference() { union() { base(); posts(); rail(); band(); } brand_mark(0, 7); }
 module glass() difference() {
     translate([0, 0, z0 - 0.5]) difference() { rsq(P, H); translate([0, 0, -1]) rsq(PI_, H + 2); }
     if (EMB == 0) frame();

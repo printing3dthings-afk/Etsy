@@ -42,9 +42,14 @@ WR   = 2 * PI * (R + RO);   // the rim's outer face, unrolled
 DR   = 1.4;                 // the drape, out of the rim
 
 // ---- frame -------------------------------------------------------------------------------
+// A low foot inside the ring, 1.6 tall, widens its underside to 10.5 mm for
+// the maker's mark: on the ring's own 5.8 mm, and on its curved inside face,
+// the slicer propped the letters (2026-10-13). 68 mm stays clear inside.
+RF = 34;
 module base_ring() difference() {
     union() { cylinder(r = R + 4.5, h = z0 - 2, $fn = FN); translate([0, 0, z0 - 2]) cylinder(r1 = R + 4.5, r2 = R + 2.5, h = 2, $fn = FN); }
-    translate([0, 0, -1]) cylinder(r = RI, h = z0 + 2, $fn = FN);
+    translate([0, 0, -1]) cylinder(r = RF, h = z0 + 2, $fn = FN);
+    translate([0, 0, 1.6]) cylinder(r = RI, h = z0 + 2, $fn = FN);
 }
 // the rim: out RO past the glass, its underside sloped in, SH up per 1 out
 module rim() difference() {
@@ -54,7 +59,8 @@ module rim() difference() {
     }
     translate([0, 0, zr - SH * RO - 1]) cylinder(r = RI, h = zt - zr + SH * RO + 2, $fn = FN);
 }
-module frame() { base_ring(); rim(); }
+// the maker's mark under the base ring's front, on the foot
+module frame() difference() { union() { base_ring(); rim(); } brand_mark(-(RF + R + 4.5) / 2, 4.4); }
 module glass() difference() {
     translate([0, 0, z0 - 0.5]) difference() { cylinder(r = R, h = H + 1, $fn = FN); translate([0, 0, -1]) cylinder(r = RI, h = H + 3, $fn = FN); }
     if (EMB == 0) frame();
