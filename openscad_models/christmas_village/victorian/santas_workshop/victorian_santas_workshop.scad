@@ -657,7 +657,10 @@ function stack_jb(s) = let (n = round(2 * PI * s[2] / bl))
     [for (k = [1 : 75], j = [0 : n - 1]) let (z0 = zc(k), z1 = zc(k + 1), a = (j + (k % 2) / 2) * 360 / n,
          x = s[0] + (s[2] + 0.3) * cos(a))
         if (z0 >= max(z_out(x - 1.2), z_out(x + 1.2)) + 2.0 && z1 <= s[3] - 7.5 && (z1 < s[3] - 24 || z0 > s[3] - 16))
-            [[s[0], s[1]], a, s[2] - 0.1, s[2] + 2.1, z0, z1]];
+            // 0.05 up: flush with the courses, a joint's flat top met a ring of the
+            // stack's 72-gon edge-on at 138.4 and 164.4, and the union exported two
+            // edges shared by four faces (product_gate: not watertight, 2026-10-13)
+            [[s[0], s[1]], a, s[2] - 0.1, s[2] + 2.1, z0 + 0.05, z1 + 0.05]];
 module brick_joints() {
     for (f = [0 : 8]) face_joints(f);
     for (ti = [0 : 3]) boxes(turret_jb(ti));
