@@ -43,20 +43,27 @@ def _rgb(hexcol):
     return ",".join("%.3f" % (int(h[i:i + 2], 16) / 255) for i in (0, 2, 4))
 
 
-def meshes(gcode, out_dir, tol_mm=0.02):
+# Inner perimeters and internal solid infill sit behind the outer wall and under
+# the top skin, so no exterior view can see them. --exterior leaves them out.
+# The Santa's workshops (2026-10-13) made 900 MB of PLY with them in, and
+# Blender was killed at 11.4 GB building the scene.
+INTERIOR_TYPES = {1, 4}
+
+
+def meshes(gcode, out_dir, tol_mm=0.02, hidden=HIDDEN):
     """One PLY per filament that prints part of the finished object."""
     payload = gvd.build_job(Path(gcode), "as_printed", tol_mm=tol_mm)
     pts = g2m._decode(payload["pts"], np.int16).reshape(-1, 2) / 100.0
     polys = g2m._decode(payload["polys"], np.int32).reshape(-1, 3)
     tools = g2m._decode(payload["polyTool"], np.uint8)
-    keep = np.array([t not in HIDDEN for t in polys[:, 0]])
+    keep = np.array([t not in hidden for t in polys[:, 0]])
     used = sorted(set(tools[keep].tolist()))
     idx = np.concatenate([np.arange(s, s + n) for _, s, n in polys[keep]])
     p = pts[idx]
     centre = ((p[:, 0].min() + p[:, 0].max()) / 2, (p[:, 1].min() + p[:, 1].max()) / 2)
     out = {}
     for t in used:
-        V, F = g2m.build(payload, hidden=HIDDEN, tool=t, centre=centre)
+        V, F = g2m.build(payload, hidden=hidden, tool=t, centre=centre)
         f = Path(out_dir) / f"as_printed_T{t}.ply"
         g2m.write_ply(f, V, F)
         out[t] = f
@@ -74,10 +81,12 @@ def main(argv=None):
     ap.add_argument("--samples", type=int, default=64)
     ap.add_argument("--timeout", type=int, default=900, help="seconds per view")
     ap.add_argument("--keep", help="keep the PLY meshes here")
+    ap.add_argument("--exterior", action="store_true",
+                    help="leave out inner perimeters and internal solid infill (unseen from outside)")
     a = ap.parse_args(argv)
     work = Path(a.keep) if a.keep else Path(tempfile.mkdtemp(prefix="as_printed_"))
     work.mkdir(parents=True, exist_ok=True)
-    got = meshes(a.gcode, work)
+    got = meshes(a.gcode, work, hidden=HIDDEN | INTERIOR_TYPES if a.exterior else HIDDEN)
     args = []
     for t, f in got.items():
         col = a.colour[t] if t < len(a.colour) else "#9A9A9A"
