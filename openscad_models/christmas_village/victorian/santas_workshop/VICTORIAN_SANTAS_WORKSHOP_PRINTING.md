@@ -47,7 +47,7 @@ sawtooth, each cut through by a tall lancet arch, so one tealight in the wide
 middle bay lights all three; the turrets open off the hall through lancet
 doorways, the gatehouse through a lancet arch.
 
-It measures {{SIZE}} mm, snow base and stacks included.
+It measures 206 × 129 × 193.6, snow base and stacks included.
 
 `images/` holds renders of this model: `*_colour_*` in the four filament
 colours, and `*_as_printed_*` rendered from the sliced toolpath itself, so
@@ -66,13 +66,16 @@ parts, already aligned. Assign a filament to each part.
 
 ## Settings that are not optional
 
-- **Supports OFF.** {{SUPPORT_LINE}}
+- **Supports OFF.** The slice of the four parts together needs none: 0 support moves and 0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
 
 ## Cost — sliced, not estimated
 
-{{COST}}
+| version | time | filament |
+|---|---|---|
+| **single colour** | **15 h 32 m** | **313 cm³, about 388 g of PLA** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 388 g of model **+ purge** |
 
 ## Verified before shipping — on the real exported meshes
 
@@ -124,7 +127,9 @@ flat doorway 49 mm wide was tried and failed the gate: its lintel's edges print
 as perimeters over air. So the middle tooth is wider (51 mm against 36.5 at
 the ends) and every tooth climbs 55 mm instead of 47, which keeps the middle
 ceiling at 47 degrees and the end ones at 56; the chimney flues moved into
-the two end bays. {{TEALIGHT}}
+the two end bays. Measured on the exported model: a 46.6 mm circle stands in the middle bay with
+54.4 mm of headroom, which meets the series rule (at least 46 mm across and
+50 mm of headroom).
 
 And one found by `print_fidelity`: the window collars' support columns
 stopped 0.1 short of the inside walls, a sealed hairline slit down each. The

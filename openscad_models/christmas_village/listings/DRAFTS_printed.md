@@ -475,7 +475,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Santa's Workshop — printed
 
-**Price:** $39.99 (print time 9 h 38 m) · **Box:** 6 × 5 × 7 in (estimate)
+**Price:** $39.99 (print time 15 h 32 m) · **Box:** 10 × 7 × 10 in (estimate)
 
 **Title** (121 chars): Victorian Santa's Workshop, Christmas Village, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -484,23 +484,23 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A long workshop with one big arched window full of toys, under a sign that reads SANTA'S WORKSHOP. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
+The village's centrepiece: a toy factory that is also a castle, laid in brick all over, its sawtooth roofs and seven big windows glowing with toys. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Big round-arched window with a rocking horse, teddy, sailboat, toy soldier and jack-in-the-box raised on its glass
-• Arched loading doors with a wreath on each leaf, under a SANTA'S WORKSHOP sign in raised letters
-• Three skylights in the roof, scalloped bargeboards and finials, a tall chimney
-• Snow on the roof, icicles under the eaves, a snow base with drifts
+• Raised brick all over, staggered joints on every wall, turret and chimney, under three sawtooth roofs of raised slates, each tall face glazed with three lights
+• Seven big arched windows, each with its own toys raised on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit from inside, the toys show dark against the glow
+• Four round turrets under snow-capped cones, a crenellated gatehouse with wreathed doors under a raised SANTA'S WORKSHOP sign and a rose window
+• Two brick chimney stacks with garlands, a NORTH POLE sign on its pole, a snow base with drifts
 • Every window, door and line is raised or cut in, so it shows on plain white and your brush has an edge to follow
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📏 SIZE
 ━━━━━━━━━━━━━━━━━━━━━━━━
-99 × 69 × 121 mm (3.9 × 2.7 × 4.8 in), snow base included. One solid piece.
+206 × 129 × 194 mm (8.1 × 5.1 × 7.6 in), snow base included. One solid piece.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 💡 LIGHTING
@@ -517,7 +517,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 9 h 38 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 15 h 32 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -1014,7 +1014,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Santa's Workshop — printed
 
-**Price:** $34.99 (print time 5 h 32 m) · **Box:** 5 × 5 × 6 in (estimate)
+**Price:** $39.99 (print time 11 h 56 m) · **Box:** 10 × 7 × 10 in (estimate)
 
 **Title** (113 chars): Gingerbread Santa's Workshop, Christmas Village, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -1023,23 +1023,23 @@ Design © OnBrandCraftz.
 **Description:**
 
 ```
-A round workshop under a steep shingled cone ringed with gumdrops, with a striped peppermint-stick chimney winding up its back. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
+The village's centrepiece: a gingerbread toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys. This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Round drum with arched windows on two levels and icing dripping from its top ledge
-• Steep shingled cone with gumdrops round its foot and a big gumdrop on top
-• Loading wing with chocolate-bar double doors and a peppermint round window
-• Tall chimney with raised stripes winding up it like a peppermint stick
+• Hall under three shingled sawtooth roofs, each tall face glazed with three lights
+• Seven big arched windows, each with its own toys raised on the glass; lit from inside, the toys show dark against the glow
+• Four round turrets under shingled cones with snow piled on top and a gumdrop on each point, a gatehouse with gumdrops on its battlements, scored chocolate-bar doors with peppermints and a SANTA'S WORKSHOP sign
+• Two tall chimney stacks, a NORTH POLE sign on its pole, a snow base with gumdrops
 • Every window, door and line is raised or cut in, so it shows on plain white and your brush has an edge to follow
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📏 SIZE
 ━━━━━━━━━━━━━━━━━━━━━━━━
-67 × 81 × 94 mm (2.6 × 3.2 × 3.7 in), snow base included. One solid piece.
+206 × 129 × 192 mm (8.1 × 5.1 × 7.6 in), snow base included. One solid piece.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 💡 LIGHTING
@@ -1056,7 +1056,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 5 h 32 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 11 h 56 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 

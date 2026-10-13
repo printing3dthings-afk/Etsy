@@ -446,17 +446,17 @@ This model was designed with the help of AI tools, from original concepts by the
 **Description:**
 
 ```
-A long brick workshop with one big arched window full of toys, lit from inside so they show against the glowing glass. This is a digital download of 3D print files for the Victorian Santa's Workshop, part of the OnBrandCraftz Victorian Christmas village.
+The village's centrepiece: a toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys. This is a digital download of 3D print files for the Victorian Santa's Workshop, part of the OnBrandCraftz Victorian Christmas village.
 
 ⚠️ DIGITAL DOWNLOAD: 3D print files only. No physical item is shipped and no tealight is included. You need a 3D printer.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Big round-arched window with a rocking horse, teddy, sailboat, toy soldier and jack-in-the-box drawn on its glass
-• Arched loading doors with a wreath on each leaf, under a SANTA'S WORKSHOP sign with raised letters
-• Three skylights in the slate roof, scalloped bargeboards and finials, a tall chimney
-• Snow on the roof, icicles under the eaves, a soft snow base with drifts
+• Laid in brick all over, staggered joints on every wall, turret and chimney, under three sawtooth slate roofs whose tall faces are glazed so the roofline glows
+• Seven big arched windows, each with its own toys on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit, the toys show dark against the glow, even printed in one colour
+• Four round turrets under snowy slate cones, a crenellated gatehouse with wreathed doors under a SANTA'S WORKSHOP sign and a rose window
+• Two garlanded brick chimney stacks, a candy-striped NORTH POLE sign, a snow base with drifts
 • Hollow lantern with an open base: set it over a battery LED tealight and it glows through every window
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -469,10 +469,10 @@ A long brick workshop with one big arched window full of toys, lit from inside s
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🖨️ PRINTING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Size: 99 × 69 × 121 mm
+• Size: 206 × 129 × 194 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 9 h 38 m, about 90 g of PLA (sliced estimate)
+• One colour: about 15 h 32 m, about 388 g of PLA (sliced estimate)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -950,17 +950,17 @@ This model was designed with the help of AI tools, from original concepts by the
 **Description:**
 
 ```
-A round gingerbread workshop under a steep chocolate cone ringed with gumdrops, with a peppermint-stick chimney up its back. This is a digital download of 3D print files for the Gingerbread Santa's Workshop, part of the OnBrandCraftz Gingerbread Christmas village.
+The village's centrepiece: a gingerbread toy factory that is also a castle, its chocolate sawtooth roofs and seven big windows glowing with toys. This is a digital download of 3D print files for the Gingerbread Santa's Workshop, part of the OnBrandCraftz Gingerbread Christmas village.
 
 ⚠️ DIGITAL DOWNLOAD: 3D print files only. No physical item is shipped and no tealight is included. You need a 3D printer.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Gingerbread drum with arched windows on two levels and icing dripping from its top ledge
-• Steep chocolate shingle cone with red and white gumdrops round its foot and a big gumdrop on top
-• Loading wing with chocolate-bar double doors and a peppermint round window
-• Tall white chimney with red stripes winding up it like a peppermint stick
+• Gingerbread hall under three chocolate sawtooth roofs, each tall face glazed in icing with three lights
+• Seven big arched windows, each with its own toys on the icing glass; lit, the toys show dark against the glow, even printed in one colour
+• Four round turrets under chocolate shingle cones with icing and a gumdrop on each point, an iced gatehouse with gumdrops, chocolate-bar doors with peppermints and a SANTA'S WORKSHOP sign
+• Two candy-cane chimney stacks, a red-and-white NORTH POLE sign, a snow base with gumdrops
 • Hollow lantern with an open base: set it over a battery LED tealight and it glows through every window
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -973,10 +973,10 @@ A round gingerbread workshop under a steep chocolate cone ringed with gumdrops, 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🖨️ PRINTING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Size: 67 × 81 × 94 mm
+• Size: 206 × 129 × 192 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 5 h 32 m, about 47 g of PLA (sliced estimate)
+• One colour: about 11 h 56 m, about 350 g of PLA (sliced estimate)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -1105,7 +1105,7 @@ The whole OnBrandCraftz Victorian Christmas village: all 8 buildings as 3D print
 • Victorian Church: 79 × 93 × 164 mm, about 9 h 02 m in one colour
 • Victorian Coaching Inn: 97 × 69 × 111 mm, about 8 h 43 m in one colour
 • Victorian Townhouse: 65 × 76 × 122 mm, about 8 h 03 m in one colour
-• Victorian Santa's Workshop: 99 × 69 × 121 mm, about 9 h 38 m in one colour
+• Victorian Santa's Workshop: 206 × 129 × 194 mm, about 15 h 32 m in one colour
 • Victorian Clock Tower: 67 × 67 × 160 mm, about 6 h 10 m in one colour
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1154,7 +1154,7 @@ The whole OnBrandCraftz Gingerbread Christmas village: all 7 buildings as 3D pri
 • Gingerbread Candy Cane Chapel: 68 × 84 × 132 mm, about 6 h 36 m in one colour
 • Gingerbread Sweet Shop: 67 × 77 × 114 mm, about 5 h 28 m in one colour
 • Gingerbread Cocoa Café: 69 × 77 × 97 mm, about 4 h 33 m in one colour
-• Gingerbread Santa's Workshop: 67 × 81 × 94 mm, about 5 h 32 m in one colour
+• Gingerbread Santa's Workshop: 206 × 129 × 192 mm, about 11 h 56 m in one colour
 • Gingerbread Cookie Clock Tower: 67 × 67 × 141 mm, about 5 h 01 m in one colour
 
 ━━━━━━━━━━━━━━━━━━━━━━━━

@@ -71,11 +71,11 @@ W = {
           "The bow and every dormer open into the house, so one tealight lights them all"]),
  ("victorian", "santas_workshop"): dict(
     tag="santa workshop",
-    hook="The village's centrepiece: a toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys.",
-    feat=["Brick hall under three sawtooth slate roofs, each tall face glazed with three lights so the roofline glows",
-          "Seven big arched windows, each with its own toys drawn on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts",
-          "Four round turrets under snowy slate cones, a crenellated gatehouse with wreathed doors under a SANTA'S WORKSHOP sign and a rose window",
-          "Two garlanded brick chimney stacks, a candy-striped NORTH POLE sign, a snow base with drifts"]),
+    hook="The village's centrepiece: a toy factory that is also a castle, laid in brick all over, its sawtooth roofs and seven big windows glowing with toys.",
+    feat=["Raised brick all over, staggered joints on every wall, turret and chimney, under three sawtooth roofs of raised slates, each tall face glazed with three lights",
+          "Seven big arched windows, each with its own toys raised on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit from inside, the toys show dark against the glow",
+          "Four round turrets under snow-capped cones, a crenellated gatehouse with wreathed doors under a raised SANTA'S WORKSHOP sign and a rose window",
+          "Two brick chimney stacks with garlands, a NORTH POLE sign on its pole, a snow base with drifts"]),
  ("victorian", "clock_tower"): dict(
     hook="A square clock tower rising out of a round drum, with a clock face set at ten past ten on every side.",
     tag="clock tower decor",
@@ -120,11 +120,11 @@ W = {
           "Snow base with peppermints; one tealight lights mug and cafe"]),
  ("gingerbread", "santas_workshop"): dict(
     tag="santa workshop",
-    hook="The village's centrepiece: a gingerbread toy factory that is also a castle, its chocolate sawtooth roofs and seven big windows glowing with toys.",
-    feat=["Gingerbread hall under three chocolate sawtooth roofs, each tall face glazed in icing with three lights",
-          "Seven big arched windows, each with its own toys drawn on the icing glass",
-          "Four round turrets under chocolate shingle cones with icing and a gumdrop on each point, an iced gatehouse with gumdrops, chocolate-bar doors with peppermints and a SANTA'S WORKSHOP sign",
-          "Two candy-cane chimney stacks, a red-and-white NORTH POLE sign, a snow base with gumdrops"]),
+    hook="The village's centrepiece: a gingerbread toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys.",
+    feat=["Hall under three shingled sawtooth roofs, each tall face glazed with three lights",
+          "Seven big arched windows, each with its own toys raised on the glass; lit from inside, the toys show dark against the glow",
+          "Four round turrets under shingled cones with snow piled on top and a gumdrop on each point, a gatehouse with gumdrops on its battlements, scored chocolate-bar doors with peppermints and a SANTA'S WORKSHOP sign",
+          "Two tall chimney stacks, a NORTH POLE sign on its pole, a snow base with gumdrops"]),
  ("gingerbread", "cookie_clock_tower"): dict(
     hook="A tower stacked from three thick cookies, with a big frosted-cookie clock set at ten past ten.",
     tag="cookie decor",
