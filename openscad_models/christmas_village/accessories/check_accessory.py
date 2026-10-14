@@ -23,6 +23,16 @@ PIECES = {
                  "lantern on a staff, on a patch of snow."),
     "bandstand": ("Victorian Bandstand", "An octagonal bandstand: a brick plinth with steps, white columns, iron "
                   "railings, an arched frieze hung with wreaths and a slate roof under snow."),
+    "frozen_fountain": ("Victorian Frozen Fountain", "A twelve-sided brick basin frozen over, a column with two bowls and a jet "
+                        "frozen in mid-air, falls of ice frozen as they poured from each bowl, a wreath on the basin and snow on the ice."),
+    "chestnut_cart": ("Victorian Chestnut Cart", "A hot chestnut seller's barrow parked in the snow: two wheels, a glowing "
+                      "brazier with a tall chimney, a pan of chestnuts and a wreath on the front."),
+    "village_well": ("Victorian Village Well", "A round brick well under a steep slate roof on four posts, snow along the ridge, "
+                     "a bucket on the rim and a wreath on the gable."),
+    "town_tree": ("Victorian Town Christmas Tree", "The town's Christmas tree on a brick plinth: five tiers of green with red "
+                  "baubles, a star on top, snow on the boughs and presents round the foot."),
+    "steam_train": ("Victorian Steam Train", "A little steam engine and its carriage on a snowy track: a wreath on the smokebox, "
+                    "lit windows in the carriage and snow on the roofs."),
     "horse_sleigh": ("Victorian Horse Sleigh", "A draught horse pulling a red sleigh piled with presents through the snow."),
 }
 
