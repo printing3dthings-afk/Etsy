@@ -77,12 +77,71 @@ moved 0.15 mm any way sideways they touch nothing.
 
 ## Cost — sliced, not estimated
 
-PENDING
+| piece | single colour | filament |
+|---|---|---|
+| sleigh | 0 h 17 m | 2.0 m, 5.9 g |
+| horse, near half | 0 h 4 m | 0.4 m, 1.1 g |
+| horse, far half | 0 h 4 m | 0.4 m, 1.1 g |
+| **all three** | **0 h 25 m** | **2.8 m, 8.1 g** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock). In four colours the colour changes cost far more than the model: the
+viewer's colour slices (PrusaSlicer, with a wipe tower, one piece at a time)
+run 4 h 28 m and 38.4 g for the sleigh, 1 h 47 m and 13.1 g for the near half
+and 1 h 38 m and 12.7 g for the far one. The 3MF puts all three on one plate
+so the changes are shared; Bambu Studio's purge differs, so slice it there
+for the real number.
 
 ## Verified before shipping — on the real exported meshes
 
-PENDING
+- `tools/part_mesh.py check`: every part of every piece closed, no two parts
+  of one piece overlap.
+- `product_gate` on each piece's one-body union:
+  - **sleigh: PASSED.** Watertight, one body; 1st-percentile wall 1.30 mm,
+    median 3.2 mm; 0 supports, 0 overhang perimeters; 13.1 cm² of bed
+    contact, 76% of the footprint.
+  - **each horse half: 0 supports, 0 overhang perimeters**, watertight, one
+    body, 3.8 cm² of bed contact. Its min_wall reads under the floor (1st
+    percentile 0.48 mm). That is the measurement, not the part: rays near
+    the outline of a half-dome lying flat cross very little plastic, and
+    print_fidelity, which slices the half and compares every layer's beads
+    with the model, finds nothing missing (below).
+  - **the horse, assembled** (both halves together, as it stands): 1st-
+    percentile wall 1.31 mm, median 7.2 mm. Walls are judged here, on the
+    object a buyer holds.
+- `print_fidelity`, the colour slice compared with the model layer by layer:
+  **0 flags on all three pieces.** The sleigh loses 1.5 mm³ of 6,646 mm³, the
+  halves 0.26 and 0.86 mm³ of about 1,110 mm³ each; nothing is printed that
+  was not modelled, and nothing in the wrong colour.
+- `fragility`: **0 high, 0 watch** on every piece and on the assembled horse.
+  The longest slender run is the runner sweeps (slenderness 3.7).
+- The fit, above: no overlap between horse and sleigh; the hooves seat with
+  0.15 mm clearance.
+
+`images/` holds renders: `victorian_horse_sleigh_colour_*` of it assembled
+in its four colours, and `hs_*_as_printed_*` of each piece from its sliced
+toolpath. They are renders, not photos of a print.
 
 ## What it took
 
-PENDING
+- **The horse.** Two standing horses (a boxy one, then a chess-knight one
+  that read as a llama) were not good enough to sell; splitting it is what
+  made a real horse possible.
+- **Legs.** Each leg first touched the spine plane only along a line: it
+  stood on a hairline in the print and left zero-width slivers in the other
+  half. Each leg now meets the plane through a 1.2 mm edge and stays in its
+  own half, and each half carries only its own legs.
+- **Thin features** under one bead were thickened: ears (joined at the
+  middle), tail tip, the end of the blaze, the traces, and the collar, whose
+  lower edge print_fidelity flagged at 0.47 mm.
+- **The girth and traces** were first scaled about the origin, and the girth
+  ran out to a knife edge under the belly; both are scaled about the barrel's
+  middle now, so they stand evenly proud.
+- **The sleigh** first asked for 1,439 support moves: the presents and the
+  cushion floated 0.1 mm over the tub's floor, the bows hung over the lids'
+  edges, the runner tails ran off the snow where the oval narrows, and the
+  dash leaned forward over the sides' flare. Each fixed; then the presents
+  were moved onto a layer line, because starting mid-layer split one layer
+  between red and green and the slicer dropped the red.
+- **The runner sweeps** are free at the top; at 1.4 mm thick fragility
+  marked them "watch". They are 1.7 mm thick and wider now.

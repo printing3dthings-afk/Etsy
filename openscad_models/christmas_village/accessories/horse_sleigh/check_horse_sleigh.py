@@ -35,3 +35,7 @@ if __name__ == "__main__":
         tags=[f"_{p}" for p in PIECES],
         tag_labels={"_sleigh": " (sleigh)", "_near": " (horse, near half)", "_far": " (horse, far half)"},
     ), steps)
+    # model_checks names the 3MF after the parts' stem; the notes and the
+    # viewer give it its product name
+    if (HERE / "hs.3mf").exists():
+        (HERE / "hs.3mf").replace(HERE / "victorian_horse_sleigh.3mf")
