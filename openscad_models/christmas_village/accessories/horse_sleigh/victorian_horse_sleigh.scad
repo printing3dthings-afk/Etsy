@@ -182,8 +182,10 @@ module cushion() {
 // presents: [x, y, size, height, box colour, ribbon colour]
 GIFTS = [[-24.6, -1.6, 5.0, 5.0, "trim", "accent"], [-20.6, 2.3, 3.8, 3.8, "accent", "trim"],
          [-29.0, 2.4, 3.6, 3.2, "roof", "body"], [-24.6, -1.6, 3.0, 2.4, "accent", "trim"]];
-// they stand 0.1 into the tub's floor (7.4): set over it, they floated
-FLOOR = 7.3;
+// they stand on a layer line inside the tub's floor (7.4): set over it they
+// floated, and set at 7.3 they split the 7.2-7.4 layer between red and green,
+// and the slicer dropped the red (2026-10-14)
+FLOOR = 7.2;
 function gz(i) = i == 3 ? FLOOR + GIFTS[0][3] : FLOOR;
 module gift(i) let (g = GIFTS[i]) translate([g[0], g[1], gz(i)]) translate([-g[2] / 2, -g[2] / 2, 0]) cube([g[2], g[2], g[3]]);
 module ribbon(i) let (g = GIFTS[i], w = 1.3, t = 0.25) translate([g[0], g[1], gz(i)]) {
