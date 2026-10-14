@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Run the full check set on a built lantern (2026-10-13).
+"""Run the full check set on a built lantern (2026-10-13; the steps moved to
+tools/model_checks.py on 2026-10-14, when the village accessories became the
+check set's second user. This file now only describes the lanterns).
 
     python3 check_lantern.py hex_lantern|drum_lantern|gift_box_lantern [step ...]
 
@@ -12,13 +14,12 @@ build.sh union first.
 The gift box prints as two objects (box, lid). The lid is built standing on
 the plate, so the colour and night renders take a copy lifted onto the box.
 """
-import subprocess, sys
+import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-TOOLS = ROOT / "tools"
-SCRATCH = Path("/tmp/lantern_checks")
+sys.path.insert(0, str(HERE.parents[1] / "tools"))
+from model_checks import run_checks  # noqa: E402
 
 SLATE, WHITE, RED, GREEN = "#2E3440", "#F4F1EA", "#C62F3A", "#2F6B45"
 LANTERNS = {
@@ -46,118 +47,13 @@ LANTERNS = {
 }
 
 
-def run(cmd, log=None, **kw):
-    print("$", " ".join(str(c) for c in cmd)[:240], flush=True)
-    r = subprocess.run([str(c) for c in cmd], capture_output=True, text=True, **kw)
-    out = r.stdout + (r.stderr if r.returncode else "")
-    if log:
-        Path(log).write_text(out)
-    if r.returncode:
-        print(out[-3000:])
-    return r
-
-
-def rgb(h):
-    h = h.lstrip("#"); return ",".join(f"{int(h[i:i+2], 16) / 255:.3f}" for i in (0, 2, 4))
-
-
-def main():
-    name = sys.argv[1]
-    steps = sys.argv[2:] or ["parts", "gate", "cost", "3mf", "fidelity", "fragility", "colour", "night", "as_printed", "viewer"]
-    L = LANTERNS[name]
-    d = HERE / name
-    logs, imgs = d / "logs", d / "images"
-    logs.mkdir(exist_ok=True); imgs.mkdir(exist_ok=True)
-    work = SCRATCH / name
-    work.mkdir(parents=True, exist_ok=True)
-    stl = lambda p: d / f"{name}_{p}.stl"
-    allparts = [p for obj in L["objects"] for p in obj]
-
-    # the scene as it stands, lid on: for the renders
-    shown = {p: stl(p) for p, _ in allparts}
-    if "lid_lift" in L:
-        import trimesh
-        for p, _ in L["objects"][1]:
-            m = trimesh.load(stl(p)); m.apply_translation([0, 0, L["lid_lift"]])
-            shown[p] = work / f"shown_{p}.stl"; m.export(shown[p])
-
-    if "parts" in steps:
-        txt = ""
-        for obj in L["objects"]:
-            txt += run([sys.executable, HERE / "lantern_mesh.py", "check", *[stl(p) for p, _ in obj]]).stdout
-        if "lid_lift" in L:
-            # the lid set on the box: its groove must clear the band, nothing may collide
-            txt += "lid on the box:\n" + run([sys.executable, HERE / "lantern_mesh.py", "check", *[shown[p] for p, _ in allparts]]).stdout
-        (logs / "parts.txt").write_text(txt)
-        print(txt)
-    if "gate" in steps:
-        txt = ""
-        for u in L["unions"]:
-            r = run([sys.executable, TOOLS / "product_gate.py", d / u])
-            txt += r.stdout
-        (logs / "gate.txt").write_text(txt)
-        print(txt)
-    if "cost" in steps:
-        sys.path.insert(0, str(TOOLS))
-        from virtual_printer import report
-        from gcode_viewer_data import build_job
-        txt = ""
-        for u in L["unions"]:
-            g = work / f"cost_{Path(u).stem}.gcode"
-            r = report(str(d / u), str(g), supports=False)
-            j = build_job(g, u)
-            s_ = j["totalSeconds"]
-            txt += (f"{u}: {int(s_ // 3600)} h {int(s_ % 3600 // 60)} m, {r['filament_mm'] / 1000:.1f} m of filament, "
-                    f"{j['filamentG']} g, {r['layers']} layers, single colour, supports off\n")
-        (logs / "cost.txt").write_text(txt)
-        print(txt)
-    if "3mf" in steps:
-        args = []
-        for i, obj in enumerate(L["objects"]):
-            if i:
-                args.append("+")
-            args += [f"{stl(p)}:{c}" for p, c in obj]
-        run([sys.executable, TOOLS / "assemble_3mf.py", *(["--plate"] if len(L["objects"]) > 1 else []),
-             d / f"{name}.3mf", *args], logs / "3mf.txt")
-    if "fidelity" in steps:
-        txt = ""
-        for i, obj in enumerate(L["objects"]):
-            k = work / f"fid{i}"
-            r = run([sys.executable, TOOLS / "print_fidelity.py", *sum([["--part", f"{stl(p)}:{c}"] for p, c in obj], []),
-                     "--keep", k], cwd=d)
-            txt += r.stdout
-        (logs / "fidelity.txt").write_text(txt)
-    if "fragility" in steps:
-        txt = ""
-        for obj in L["objects"]:
-            txt += run([sys.executable, TOOLS / "fragility.py", *[stl(p) for p, _ in obj]]).stdout
-        (logs / "fragility.txt").write_text(txt)
-    if "colour" in steps:
-        run([sys.executable, TOOLS / "blender_render.py", *sum([["--part", f"{shown[p]}:{rgb(c)}"] for p, c in allparts], []),
-             "-o", imgs / f"{name}_colour.png", "--views", "--front=-y", "--samples", "96", "--timeout", "1200"], logs / "render.txt")
-    if "night" in steps:
-        for az, tag in ((35, "night"), (-20, "night_front")):
-            run([sys.executable, HERE / "concepts" / "night_render.py", imgs / f"{name}_{tag}.png", *[shown[p] for p, _ in allparts],
-                 "--light-z", L["light_z"], "--az", az, "--samples", "160", "--res", "1100"], logs / f"{tag}.txt")
-    if "as_printed" in steps:
-        for i, obj in enumerate(L["objects"]):
-            tag = "" if len(L["objects"]) == 1 else ("_box", "_lid")[i]
-            run([sys.executable, TOOLS / "as_printed.py", work / f"fid{i}" / "fidelity.gcode",
-                 *sum([["--colour", c] for c in dict.fromkeys(c for _, c in obj)], []),
-                 "-o", imgs / f"{name}{tag}_as_printed.png", "--views", "--exterior", "--timeout", "1800"], logs / f"as_printed{tag}.txt")
-    if "viewer" in steps:
-        jobs = ROOT / "tools" / "viewer" / "jobs"
-        for i, obj in enumerate(L["objects"]):
-            tag = "" if len(L["objects"]) == 1 else ("_box", "_lid")[i]
-            stem = f"{name}{tag}"
-            g = work / f"{stem}.gcode"
-            g.write_bytes((work / f"fid{i}" / "fidelity.gcode").read_bytes())
-            label = L["label"] + {"": "", "_box": " (box)", "_lid": " (lid)"}[tag]
-            cols = ",".join(dict.fromkeys(c for _, c in obj))
-            run([sys.executable, TOOLS / "gcode_viewer_data.py", g, "-d", jobs, "--append",
-                 "--label", f"{stem}={label}", "--note", f"{stem}={L['note']}",
-                 "--source", f"{stem}=christmas_lanterns/{name}/{name}.3mf", "--colours", f"{stem}={cols}"], logs / f"viewer{tag}.txt")
-
-
 if __name__ == "__main__":
-    main()
+    name = sys.argv[1]
+    L = dict(LANTERNS[name])
+    cfg = dict(label=L["label"], note=L["note"], objects=L["objects"], unions=L["unions"],
+               source=f"christmas_lanterns/{name}/{name}.3mf",
+               night=(HERE / "concepts" / "night_render.py", L["light_z"]))
+    if "lid_lift" in L:
+        cfg.update(tags=["_box", "_lid"], tag_labels={"_box": " (box)", "_lid": " (lid)"},
+                   shown={1: [0, 0, L["lid_lift"]]})
+    run_checks(HERE / name, name, cfg, sys.argv[2:] or None)

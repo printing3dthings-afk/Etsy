@@ -1,13 +1,13 @@
 #!/bin/bash
 # Export the parts and wrap the flat ones round the drum; with "union", the
-# one-body mesh the gate checks. ../lantern_mesh.py check proves the colour
+# one-body mesh the gate checks. tools/part_mesh.py check proves the colour
 # parts closed and disjoint. BOSL2 and the village's relief library live in
 # the repo.
 set -e
 cd "$(dirname "$0")"
 export OPENSCADPATH="$(cd ../../../assets/openscad_libs && pwd)"
 name=drum_lantern
-M="python3 ../lantern_mesh.py"
+M="python3 ../../../tools/part_mesh.py"
 # R, z0, RO and zr from drum_lantern.scad
 R=40; Z0=7; RR=43.5; ZR=95
 mkdir -p logs

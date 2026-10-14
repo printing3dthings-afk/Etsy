@@ -68,7 +68,7 @@ clock).
 
 OpenSCAD cannot bend geometry. The panorama and the snow's drape are built
 flat in `drum_lantern.scad` (`art_flat`, `drape_flat`), stepped out of the
-glass the same way as the other lanterns' scenes, and `../lantern_mesh.py
+glass the same way as the other lanterns' scenes, and `tools/part_mesh.py
 wrap` bends them round the drum: along the glass becomes round it, out of
 the glass becomes out from it. They are subdivided to 2.5 mm first, so a
 long edge follows the curve to within 0.02 mm. The scene is drawn so nothing
@@ -76,7 +76,7 @@ crosses the seam but the snowy ground. `build.sh` does all of it.
 
 ## Verified before shipping — on the real exported meshes
 
-- `../lantern_mesh.py check`: every part closed, no two overlap.
+- `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
   - 1st-percentile wall 1.30 mm, median 1.94 mm, against the 1.2 mm floor;

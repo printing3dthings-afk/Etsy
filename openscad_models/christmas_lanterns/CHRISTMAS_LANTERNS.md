@@ -27,10 +27,12 @@ frame's colour on white glass.
   nozzle. No stroke under 1.3 mm (`SW`), no gap under 0.8 mm; `glow_out`
   steps the drawing out of the glass so its undersides print without
   support, after `glow_clean` takes off whatever is too fine to print.
-- `lantern_mesh.py`: proves the colour parts closed and disjoint, welds them
-  into one body for the gate (manifold3d), and wraps the drum's flat
-  panorama round its glass.
-- `check_lantern.py`: the full check set for one lantern (gate, 3MF,
+- `tools/part_mesh.py` (moved there from this folder on 2026-10-14, when the
+  village accessories needed it too): proves the colour parts closed and
+  disjoint, welds them into one body for the gate (manifold3d), and wraps
+  the drum's flat panorama round its glass.
+- `check_lantern.py`: describes each lantern (parts, colours, light height)
+  for `tools/model_checks.py`, which runs the full check set (gate, 3MF,
   fidelity, fragility, colour and night renders, as-printed, viewer).
 - each lantern's `build.sh` exports its parts; `build.sh union` makes the
   gate's mesh.

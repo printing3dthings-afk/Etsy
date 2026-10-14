@@ -1,6 +1,6 @@
 #!/bin/bash
 # Export the colour parts, or with "union" the one-body mesh the gate checks.
-# ../lantern_mesh.py check *_{frame,glass,art,snow,bow}.stl proves the parts
+# tools/part_mesh.py check *_{frame,glass,art,snow,bow}.stl proves the parts
 # closed and disjoint.
 # BOSL2 and the village's relief library live in the repo.
 set -e
@@ -15,7 +15,7 @@ if [ "$1" = "union" ]; then
     openscad -D "part=\"$p\"" -D EMB=0.05 -o "logs/u_$p.stl" $name.scad > "logs/u_$p.log" 2>&1 &
   done
   wait
-  python3 ../lantern_mesh.py union ${name}_union.stl $(for p in $parts; do echo logs/u_$p.stl; done)
+  python3 ../../../tools/part_mesh.py union ${name}_union.stl $(for p in $parts; do echo logs/u_$p.stl; done)
   exit
 fi
 for p in $parts; do

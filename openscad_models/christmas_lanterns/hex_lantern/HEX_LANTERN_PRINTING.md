@@ -66,7 +66,7 @@ clock).
 
 ## Verified before shipping — on the real exported meshes
 
-- `../lantern_mesh.py check`: every part closed, no two overlap.
+- `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
   - 1st-percentile wall 1.30 mm, median 4.57 mm, against the 1.2 mm floor;

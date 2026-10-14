@@ -70,7 +70,7 @@ purge.
 
 ## Verified before shipping — on the real exported meshes
 
-- `../lantern_mesh.py check`: every part closed; no two parts of the box,
+- `tools/part_mesh.py check`: every part closed; no two parts of the box,
   or of the lid, overlap; and with the lid set on the box, nothing collides.
 - `product_gate` **PASSED** on each piece's one-body union:
   - box: watertight, one body; 1st-percentile wall 1.30 mm against the 1.2
