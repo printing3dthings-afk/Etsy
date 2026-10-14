@@ -1,6 +1,9 @@
-"""Build the five OBC marks from obc_logo_options.scad, measure each as an
-engraving (what a 0.42 mm bead can cut, and what walls between cuts survive),
-and draw a comparison sheet."""
+"""Build OBC marks from obc_logo_options.scad (1-5) and obc_logo_options_2.scad
+(6-10), measure each as an engraving (what a 0.42 mm bead can cut, and what
+walls between cuts survive), and draw a comparison sheet.
+
+    logo_sheet.py out.png [designs]        e.g. 6,7,8,9,10
+    logo_sheet.py x measure 6,7"""
 import json, subprocess, tempfile, sys
 from pathlib import Path
 import numpy as np, trimesh
@@ -10,22 +13,35 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path("/home/user/Etsy")
 SCAD = ROOT / "openscad_models/brand/obc_logo_options.scad"
+SCAD2 = ROOT / "openscad_models/brand/obc_logo_options_2.scad"
 OUT = Path(sys.argv[1])
 BEAD = 0.42
-NAMES = {1: "Maker's Stamp", 2: "Scallop Badge", 3: "Ribbon", 4: "Happy O", 5: "Toolpath"}
+NAMES = {1: "Maker's Stamp", 2: "Scallop Badge", 3: "Ribbon", 4: "Happy O", 5: "Toolpath",
+         6: "Heart O", 7: "Smile", 8: "Tiles", 9: "Cat O", 10: "Sparkle"}
 BLURB = {1: "Heavy sans in a rounded frame,\nlike a potter's stamp.",
          2: "Rounded letters in a scalloped badge,\nlike a sticker.",
          3: "OBC knocked out of a ribbon banner,\nthe letters left standing.",
          4: "A round O with a kawaii face,\nthen BC.",
-         5: "One even line with round ends,\nthe way the nozzle draws it."}
+         5: "One even line with round ends,\nthe way the nozzle draws it.",
+         6: "A clean wordmark whose O\nhides a heart.",
+         7: "The word with a gentle smile\nunderneath.",
+         8: "Letters knocked out of tiles,\na star in the fourth.",
+         9: "A clean wordmark; the O\nwears two cat ears.",
+         10: "A clean wordmark with a\nsparkle at the C's shoulder."}
+# the playful detail's second colour, for screens only; never engraved
+ACCENT = {6: (236, 112, 146), 7: (238, 122, 88), 8: (238, 122, 88), 9: (236, 140, 170), 10: (232, 170, 60)}
 
-def polys(d):
+def polys(d, part="engrave"):
     with tempfile.TemporaryDirectory() as td:
         stl = Path(td) / "l.stl"
-        r = subprocess.run(["openscad", "-D", f"design={d}", "-o", str(stl), str(SCAD)], capture_output=True, text=True)
+        r = subprocess.run(["openscad", "-D", f"design={d}", "-D", f'part="{part}"', "-o", str(stl),
+                            str(SCAD2 if d >= 6 else SCAD)], capture_output=True, text=True)
         m = trimesh.load(str(stl), force="mesh")
     sec = m.section(plane_origin=[0, 0, 1], plane_normal=[0, 0, 1])
-    return sec.to_2D()[0].polygons_full
+    # to_2D(np.eye(4)) keeps the world XY frame: left to choose, trimesh puts
+    # every section in its own frame and an accent drawn over the word lands
+    # beside the part it belongs to
+    return sec.to_2D(to_2D=np.eye(4))[0].polygons_full
 
 def raster(ps, px, pad):
     b = np.array([p.bounds for p in ps]); mn = b[:, :2].min(0) - pad; mx = b[:, 2:].max(0) + pad
@@ -64,7 +80,7 @@ def font(sz, bold=False):
     f = ROOT / ("assets/fonts/Poppins-SemiBold.ttf" if bold else "assets/fonts/Poppins-Regular.ttf")
     return ImageFont.truetype(str(f), sz)
 
-def draw_mark(ps, box, colour, bg=None, circle=False, fit=0.72):
+def draw_mark(ps, box, colour, bg=None, circle=False, fit=0.72, acc=None, acc_colour=None):
     W, H = box
     img = Image.new("RGB", box, bg or CREAM)
     dr = ImageDraw.Draw(img)
@@ -80,6 +96,12 @@ def draw_mark(ps, box, colour, bg=None, circle=False, fit=0.72):
         for i in p.interiors: hd.polygon(tf(i.coords), fill=0)
     m = hi.resize((W, H), Image.LANCZOS)
     img.paste(Image.new("RGB", box, colour), (0, 0), m)
+    if acc:
+        ha = Image.new("L", (W * 3, H * 3), 0); hd = ImageDraw.Draw(ha)
+        for p in acc:
+            hd.polygon(tf(p.exterior.coords), fill=255)
+            for i in p.interiors: hd.polygon(tf(i.coords), fill=0)
+        img.paste(Image.new("RGB", box, acc_colour), (0, 0), ha.resize((W, H), Image.LANCZOS))
     return img
 
 def engraved_view(masks, box):
@@ -98,25 +120,27 @@ if len(sys.argv) > 2 and sys.argv[2] == "measure":
         print(measure(d)[0])
     sys.exit()
 COL, MARGIN = 520, 40
+DESIGNS = [int(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else [1, 2, 3, 4, 5]
 rows = []
 res = []
-for d in range(1, 6):
+for d in DESIGNS:
     m, ps, masks = measure(d); res.append(m)
-    rows.append((ps, masks, m))
+    rows.append((d, ps, polys(d, "accent") if d in ACCENT else None, masks, m))
 H = 1500
 sheet = Image.new("RGB", (MARGIN * 2 + COL * 5, H), CREAM)
 sd = ImageDraw.Draw(sheet)
-sd.text((MARGIN, 30), "OBC — five marks", font=font(46, True), fill=INK)
+sd.text((MARGIN, 30), "OBC — five marks" if DESIGNS[0] == 1 else "OBC — five more: professional, with one fun detail", font=font(46, True), fill=INK)
 sd.text((MARGIN, 92), "Each is drawn once in OpenSCAD: the logo you see is the cutter the printer gets. Bottom row: the mark as engraved 0.8 mm into a print at its real size, magnified; red would be anything a 0.4 mm nozzle could not make.",
         font=font(20), fill=MUTE)
-for i, (ps, masks, m) in enumerate(rows):
+for i, (d, ps, acc, masks, m) in enumerate(rows):
     x = MARGIN + i * COL
-    sd.text((x + 10, 160), f"{i + 1}  {NAMES[i + 1]}", font=font(30, True), fill=INK)
-    sd.multiline_text((x + 10, 205), BLURB[i + 1], font=font(19), fill=MUTE, spacing=4)
-    sheet.paste(draw_mark(ps, (COL - 30, 420), INK), (x + 5, 280))
-    ic = draw_mark(ps, (230, 230), (255, 255, 255), bg=CREAM, circle=True, fit=0.62)
+    ac = ACCENT.get(d)
+    sd.text((x + 10, 160), f"{d}  {NAMES[d]}", font=font(30, True), fill=INK)
+    sd.multiline_text((x + 10, 205), BLURB[d], font=font(19), fill=MUTE, spacing=4)
+    sheet.paste(draw_mark(ps, (COL - 30, 420), INK, acc=acc, acc_colour=ac), (x + 5, 280))
+    ic = draw_mark(ps, (230, 230), (255, 255, 255), bg=CREAM, circle=True, fit=0.62, acc=acc, acc_colour=ac)
     sheet.paste(ic, (x + 10, 730))
-    sheet.paste(draw_mark(ps, (230, 230), (255, 255, 255), bg=INK, fit=0.7), (x + 260, 730))
+    sheet.paste(draw_mark(ps, (230, 230), (255, 255, 255), bg=INK, fit=0.7, acc=acc, acc_colour=ac), (x + 260, 730))
     sd.text((x + 10, 968), "shop icon", font=font(17), fill=MUTE); sd.text((x + 260, 968), "on dark", font=font(17), fill=MUTE)
     sheet.paste(engraved_view(masks, (COL - 30, 300)), (x + 5, 1010))
     ok = m["cut_lost_mm2"] < 0.1 and m["wall_lost_mm2"] < 0.1
