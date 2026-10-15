@@ -71,10 +71,12 @@ would paint them.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **4 h 48 m** | **~39 g** | 0 |
+| **single colour** (e.g. for Jessee to paint) | **1 h 35 m** | **13.0 m, 39 g** | 0 |
 | **four colour, AMS** | not reliable here | ~39 g model **+ purge** | **475** |
 
-The detail pass added about 46 minutes over the first version (4 h 02 m).
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark. On the slicer's older
+clock the detail pass had added about 46 minutes over the first version.
 The slicer's single-colour total is 31.5 cm³, about 39 g of PLA. With
 PrusaSlicer's 140 mm³ flush, the four-colour print uses about 143 g in all,
 so the wipe tower is **~104 g**, more than twice the cemetery itself. Slice it in
@@ -85,12 +87,12 @@ which version the buyer gets.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.20 mm, median 5.45 mm, against the 1.2 mm
-    floor. That is exactly at the floor: 47 of 6,567 wall samples
-    are under 1.2 mm, where the rule allows 1%;
+  - 1st-percentile wall 1.20 mm, median 5.48 mm, against the 1.2 mm
+    floor. That is exactly at the floor; none of it is under one bead
+    (re-run 2026-10-15 with the inlaid mark);
   - 0 supports, 0 overhang perimeters;
   - printed height matches the model (66.6 mm);
-  - 61.5 cm² of bed contact (78% of the footprint);
+  - 62.0 cm² of bed contact (78% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight;
@@ -103,6 +105,12 @@ which version the buyer gets.
   - Slicers repair flush contacts on import, and the hill slices with 0
     supports.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer, first run 2026-10-15): 3.0 mm³ of 77,430 mm³ is not printed,
+  0.01 mm³ printed that was not modelled, 0.31 mm³ printed in another colour.
+  **3 flags, all tips, none over 0.08 mm³:** the points of the two gate
+  posts' finials (one and two layers, 0.5 mm across) and the point of one
+  headstone (one layer, 0.4 mm across). Nothing at the mark.
 - **Every piece touches the model**, sampled by area. The smallest shares
   are the skeleton hand (13% of its surface, about 28 mm²) and the shovel
   (15%, 32 mm²).
