@@ -94,7 +94,8 @@ the light.
   2026-10-15), the body and the trim share 4.4 mm³: three sheets about
   0.02 mm thick on the front wall, where three of the cream frames between
   15 and 39 mm up meet it. The same 4.4 mm³ was there before the mark
-  changed. The fidelity slice below prints nothing in the wrong colour there.
+  changed. In the whole fidelity slice below, 0.08 mm³ prints in the wrong
+  colour.
 - `print_fidelity` (re-run 2026-10-15 with the inlaid mark): 1 flag, the
   same 0.6 mm batten stub beside the door frame as before. The letters lose
   nothing it flags.
