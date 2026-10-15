@@ -57,7 +57,7 @@ signs; this sign's letters are the town's smallest, 4.0.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **3 h 16 m** | **29.4 m, 88 g** |
+| **single colour** (e.g. for Jessee to paint) | **3 h 15 m** | **29.4 m, 88 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 88 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
