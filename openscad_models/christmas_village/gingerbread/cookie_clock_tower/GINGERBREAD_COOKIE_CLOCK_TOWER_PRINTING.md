@@ -35,7 +35,7 @@ four parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the cookie discs, the clock's cookie | gingerbread `#C68642` |
-| roof | the cone and its shingles, the door, the clock's hour dots | chocolate `#5A3825` |
+| roof | the cone and its shingles, the door, the clock's hour dots, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, the icing bands and their drips, the top's frosting and drips, the cone's cap, the window frames, glass and bars, the door's piped frame, the clock's piped dots and its face, the white gumdrops, the cane, the peppermints' white | icing white `#F7F3EE` |
 | accent | the clock's hands, the red gumdrops, the cane's stripes, the peppermints' stripes | candy red `#D7263D` |
 
@@ -91,9 +91,11 @@ discs to the cone.
   cookie in the exported trim part.
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The cane
   scores 1.3, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+- **OBC maker's mark:** inlaid in chocolate under the snow base in front of
   the door, the same mark as the other buildings, mirrored so it reads OBC
-  with the tower turned over, front toward you.
+  with the tower turned over, front toward you. The logo's letters, 4.6 mm
+  tall and 15.9 mm wide, are cut 0.6 mm into the icing white and filled flush;
+  a groove one layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

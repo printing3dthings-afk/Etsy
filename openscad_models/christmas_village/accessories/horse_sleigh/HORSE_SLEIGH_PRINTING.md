@@ -17,8 +17,10 @@ snow:
   a small green one stacked on the white;
 - on an oval of snow with the sleigh banked into it.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside of the snow,
-mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in slate into the underside of the snow:
+the logo's letters, 5 mm tall and 17.1 mm wide, cut 0.6 mm into the white
+and filled flush, mirrored so they read from below. A groove one layer deep
+crosses their face, the stripes of the logo.
 
 Assembled it measures 70.0 × 24.8 × 30.8 mm.
 
@@ -48,7 +50,7 @@ them), and the ears are joined at the middle all the way up.
 
 | object | prints | parts |
 |---|---|---|
-| sleigh | standing, as it sits in the file | slate runners, posts, a present; green cushion and presents; white snow, rim, presents; red tub and a ribbon |
+| sleigh | standing, as it sits in the file | slate runners, posts, a present, the OBC mark inlaid underneath; green cushion and presents; white snow, rim, presents; red tub and a ribbon |
 | horse, near half | lying on its cut face | slate horse; green collar; white blaze and feathers; red girth and trace |
 | horse, far half | lying on its cut face | the same, mirrored |
 

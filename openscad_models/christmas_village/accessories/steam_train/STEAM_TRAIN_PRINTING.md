@@ -14,8 +14,10 @@ A little tank engine and one carriage on a snowy track, all one print:
 - **snow** along both roofs;
 - **slate rails on red sleepers**, on a long blob of snow with two drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside, mirrored so it
-reads from below.
+The maker's mark, OBC, is inlaid in slate into the underside: the logo's
+letters, 5 mm tall and 17.1 mm wide, cut 0.6 mm into the white and filled
+flush, mirrored so they read from below. A groove one layer deep crosses
+their face, the stripes of the logo.
 
 It measures 64.0 × 26.0 × 25.4 mm.
 
@@ -29,7 +31,7 @@ already aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the frames, the carriage, the bunker, the sleepers, the bow | brick red `#A8483A` |
-| roof | wheels, smokebox, chimney, coal, roofs, rails | slate `#2E3440` |
+| roof | wheels, smokebox, chimney, coal, roofs, rails, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the snow, the bands, the dome, the hubs, the window panes | white `#F4F1EA` |
 | accent | the boiler, the cab, the wreath | green `#2F6B45` |
 
@@ -44,8 +46,8 @@ already aligned. Assign a filament to each colour.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **0 h 21 m** | **2.9 m, 8.6 g** |
-| four colour | see below | 8.6 g of model **+ purge** |
+| **single colour** | **0 h 21 m** | **2.9 m, 8.5 g** |
+| four colour | see below | 8.5 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
 clock). In colour, the colour changes cost far more than the model: the
@@ -58,11 +60,11 @@ number, or print several on one plate so the changes are shared.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.31 mm, median 9.6 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.36 mm, median 9.60 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 25.4 mm of 25.37 modelled;
-  - 14.7 cm² of bed contact, 88% of the footprint; centre of mass over it.
-- `print_fidelity`: 0.44 mm³ of 12,889 mm³ not printed, nothing printed
+  - 15.1 cm² of bed contact, 91% of the footprint; centre of mass over it.
+- `print_fidelity`: 0.44 mm³ of 12,939 mm³ not printed, 0.11 mm³ printed
   that was not modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: 0 high, 0 watch. The one slender run is the chimney,
   slenderness 2.1.

@@ -20,7 +20,7 @@ already aligned. Assign a filament to each part.
 |---|---|---|
 | body | walls, plinth, the leaning false front, battens | sage `#5E6B57` |
 | roof | shed roof slab, tin ribs, stove pipe, barrel hoops | slate `#2B2F38` |
-| trim | diamond window frames, bars and panes, door frame and door, back corner boards, the sign board, the cap on the front | cream `#EFE6D2` |
+| trim | diamond window frames, bars and panes, door frame and door, back corner boards, the sign board, the cap on the front, the OBC mark inlaid underneath | cream `#EFE6D2` |
 
 **Every window is glazed** (added 2026-09-27). A 1.48 mm pane fills the back
 of each opening, set into the wall all round, and the window's bars stand on
@@ -99,10 +99,12 @@ the light.
   area. Every prop foot stands on its own pad on the plate.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step: Montserrat
-  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+- **OBC maker's mark:** inlaid in cream under the step. It reads OBC when you
   turn the building over with the front toward you (fixed 2026-09-27: it read
-  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them). The
+  logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm into the sage
+  and filled flush; a groove one layer deep crosses their face, the stripes of
+  the logo.
 - **MERCANTILE letters:** size 5.2, letter spacing 1.06, 51.5 mm wide on
   the 56 mm board, raised 0.84 mm. They are built in five slabs, each keeping
   only what has letter under it all the way down its climb (1.4 up per 1 out

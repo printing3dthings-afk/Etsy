@@ -35,7 +35,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the drum, the tower, the step | brick red `#A8483A` |
-| roof | the cone and the pyramid with their slates, the finial, the door, the clocks' hour marks and hands | slate `#2E3440` |
+| roof | the cone and the pyramid with their slates, the finial, the door, the clocks' hour marks and hands, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, the eave's soffit, snow on the cone and the pyramid, icicles, quoins, the string course and cornice, every window's frame, keystone, bars and glass, the clock faces and their rings, the door frame, the wreath's bow | white `#F4F1EA` |
 | accent | the wreath | evergreen `#2F6B45` |
 
@@ -54,8 +54,11 @@ parts, already aligned. Assign a filament to each part.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **6 h 10 m** | **46.4 cm³, about 57 g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 57 g of model **+ purge** |
+| **single colour** | **2 h 12 m** | **19.4 m, 58 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 58 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -77,14 +80,14 @@ over the circle's edge; inside the tower the room runs on up to the pyramid.
   - 1st-percentile wall 1.48 mm, median 2.95 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 14.68 cm² of bed contact;
+  - 15.04 cm² of bed contact;
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
   faces.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 27.4 mm³ of 58,800 mm³ is not printed; 2.3 mm³ printed that was
-  not modelled; 0.4 mm³ printed in another colour (rebuilt with the clocks'
+  layer): 27.4 mm³ of 58,845 mm³ is not printed; 2.1 mm³ printed that was
+  not modelled; 0.37 mm³ printed in another colour (rebuilt with the clocks'
   relief, 2026-10-08). **10 flags, all the same
   and cosmetic:** the last slivers of the tower's brick courses where they
   run into the slate cone, 0.2 to 0.5 mm wide (0.27 to 0.45 mm³ each), too
@@ -98,9 +101,11 @@ over the circle's edge; inside the tower the room runs on up to the pyramid.
   on a real print). Gate rerun: 0 support moves, 1st-percentile wall 1.48 mm.
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The finial
   scores 3.2, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the door, the same mark as the other buildings, mirrored so it reads OBC
-  with the tower turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the snow base in front of the
+  door, the same mark as the other buildings, mirrored so it reads OBC with
+  the tower turned over, front toward you. The logo's letters, 4.6 mm tall and
+  15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove one
+  layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

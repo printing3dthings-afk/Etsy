@@ -17,8 +17,10 @@ It holds a battery LED tealight: the box has a floor, and the lid lifts off
 to reach the switch. A band round the box's mouth fits a groove under the
 lid, 0.25 mm clear each side, so the lid sits square and cannot slide off.
 
-The maker's mark, OBC, is engraved 0.8 mm into the middle of the box's
-underside, mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in white into the middle of the box's
+underside: the logo's letters, 4.4 mm tall and 15.3 mm wide, cut 0.6 mm into
+the green and filled flush, mirrored so they read from below. A groove one
+layer deep crosses their face, the stripes of the logo.
 
 Lit from inside, every scene shows dark on the glow: the glass is 1.3 mm,
 the scenes stand 1.6 mm out of it, and the thicker plastic passes less
@@ -39,7 +41,7 @@ and the lid, each standing as it prints. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | frame | the box's floor, base band, posts, rail and the band the lid keys onto | green `#2F6B45` |
-| glass | the four glass sides | white `#F4F1EA` |
+| glass | the four glass sides, the OBC mark inlaid underneath | white `#F4F1EA` |
 | art | the scenes on the glass | green `#2F6B45` |
 | lid | the lid | green `#2F6B45` |
 | ribbon | the ribbon and the bow | red `#C62F3A` |

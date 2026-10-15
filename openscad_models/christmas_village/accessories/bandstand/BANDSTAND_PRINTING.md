@@ -16,8 +16,10 @@ An octagonal bandstand on a village green:
   finial** on top;
 - on a round blob of snow with four low drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the middle of the underside,
-mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in slate into the middle of the underside:
+the logo's letters, 6 mm tall and 20.1 mm wide, cut 0.6 mm into the white
+and filled flush, mirrored so they read from below. Two grooves one layer
+deep cross their face, the stripes of the logo.
 
 It measures 72.0 × 72.0 × 72.1 mm.
 
@@ -31,7 +33,7 @@ already aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the brick plinth, the bows | brick red `#A8483A` |
-| roof | the roof, the finial, the railings | slate `#2E3440` |
+| roof | the roof, the finial, the railings, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the snow, the floor, steps, columns, valance, cornice | white `#F4F1EA` |
 | accent | the wreaths | green `#2F6B45` |
 
@@ -46,7 +48,7 @@ already aligned. Assign a filament to each colour.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **1 h 16 m** | **10.8 m, 32 g** |
+| **single colour** | **1 h 15 m** | **10.8 m, 32 g** |
 | four colour | see below | 32 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
@@ -60,11 +62,11 @@ Bambu Studio's purge differs; slice there for the real number.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.40 mm, median 7.2 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.40 mm, median 7.13 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 72.2 mm of 72.14 modelled;
-  - 39.9 cm² of bed contact, 77% of the footprint; centre of mass over it.
-- `print_fidelity`: 4.8 mm³ of 53,580 mm³ not printed, 0.08 mm³ printed that
+  - 40.5 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 4.8 mm³ of 53,624 mm³ not printed, 0.08 mm³ printed that
   was not modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: 0 high, 0 watch. Fourteen slender runs of slenderness 3.5 at
   most: the bars between the railings' arches, 1.6 mm wide and 5.6 mm tall,

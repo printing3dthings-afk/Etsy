@@ -19,8 +19,10 @@ It is a hollow shade over a battery LED tealight, open at both ends: it lifts
 off and goes back down over the light. Inside it is 68 mm across at its foot
 (77.4 mm above it): a low foot inside the base ring carries the maker's mark.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside of that foot,
-at the front, mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in white into the underside of that foot,
+at the front: the logo's letters, 4.4 mm tall and 15.3 mm wide, cut 0.6 mm
+into the slate and filled flush, mirrored so they read from below. A groove
+one layer deep crosses their face, the stripes of the logo.
 
 Lit from inside, the scene shows dark on the glow: the glass is 1.3 mm, the
 scene stands 1.6 mm out of it, and the thicker plastic passes less light,
@@ -40,7 +42,7 @@ aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | frame | the base ring and the rim | slate `#2E3440` |
-| glass | the glass drum | white `#F4F1EA` |
+| glass | the glass drum, the OBC mark inlaid underneath | white `#F4F1EA` |
 | art | the panorama on the glass | slate `#2E3440` |
 | bead | the roll of snow along the rim | white `#F4F1EA` |
 | drape | the snow hanging over the rim's edge | white `#F4F1EA` |

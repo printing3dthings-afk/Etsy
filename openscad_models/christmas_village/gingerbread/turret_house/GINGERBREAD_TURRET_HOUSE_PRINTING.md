@@ -32,7 +32,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the house, turret and porch walls | gingerbread `#C68642` |
-| roof | the three chocolate roofs and their scallop tiles, the door | chocolate `#5A3825` |
+| roof | the three chocolate roofs and their scallop tiles, the door, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, the curled icing eaves and drips, icing on the ridge, the turret's collars, window frames, panes and bars, the porch columns, the spire, the peppermints' white | icing white `#F7F3EE` |
 | accent | gumdrops, the stripes on the columns and spire, the peppermints' stripes | candy red `#D7263D` |
 
@@ -92,9 +92,11 @@ against 48.9 mm.
     0.2 mm wide).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The
   spire's crook scores 2.4, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
-  base, the same mark as the other buildings, mirrored so it reads OBC with
-  the house turned over, front toward you.
+- **OBC maker's mark:** inlaid in chocolate under the front of the snow base,
+  the same mark as the other buildings, mirrored so it reads OBC with the
+  house turned over, front toward you. The logo's letters, 4.6 mm tall and
+  15.9 mm wide, are cut 0.6 mm into the icing white and filled flush; a groove
+  one layer deep crosses their face, the stripes of the logo.
 
 ## Honest weak points
 

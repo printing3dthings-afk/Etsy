@@ -35,7 +35,7 @@ already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the brick drum and gable, the chimney and pots, the wreath's and garland's bows, the step | brick red `#A8483A` |
-| roof | the slate cone and the gable's roof, the bargeboard and finial, the door | slate `#2E3440` |
+| roof | the slate cone and the gable's roof, the bargeboard and finial, the door, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, the eave's soffit, snow on the roofs, icicles, every pane, the window and door frames, keystones and bars | white `#F4F1EA` |
 | accent | the wreath, the garland, the window boxes | evergreen `#2F6B45` |
 
@@ -91,10 +91,12 @@ edge. A 38 mm tealight has 54 mm, room for a 45 mm-tall generic one.
   is one layer at the tip of the gable's ridge (1.2 mm³, 0.42 mm deep).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The chimney
   pots score 1.8 and the cone's tip 2.0, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
-  base, in the band between the drum's opening and the base's edge. It is the
-  same mark as the other buildings, mirrored so it reads OBC with the cottage
-  turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the front of the snow base, in
+  the band between the drum's opening and the base's edge. It is the same mark
+  as the other buildings, mirrored so it reads OBC with the cottage turned
+  over, front toward you. The logo's letters, 4.6 mm tall and 15.9 mm wide,
+  are cut 0.6 mm into the white and filled flush; a groove one layer deep
+  crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

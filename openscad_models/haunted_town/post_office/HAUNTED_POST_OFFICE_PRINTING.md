@@ -16,7 +16,7 @@ the house (three colour parts) and its roof lid (one colour).
 | object | part | what it is | colour in the file |
 |---|---|---|---|
 | house | body | brick walls, plinth, step, the lid's seat inside the parapet | brick `#7A3E33` |
-| house | trim | parapet coping, window and door frames, muntins, window panes, door, sign board, the parcels' string | cream `#EFE6D2` |
+| house | trim | parapet coping, window and door frames, muntins, window panes, door, sign board, the parcels' string, the OBC mark inlaid underneath | cream `#EFE6D2` |
 
 **Every window is glazed** (added 2026-09-27). A 1.48 mm pane fills the back
 of each opening, set into the wall all round, and the window's bars stand on
@@ -105,10 +105,12 @@ Measured on the exported mesh:
 - Every trim and accent piece shares real surface with the part it sits on.
   The sign board shares 641 mm² with the wall, the coping 611 mm², each
   window frame about 250 mm², and the parcel string sits in the parcels.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step: Montserrat
-  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+- **OBC maker's mark:** inlaid in cream under the step. It reads OBC when you
   turn the building over with the front toward you (fixed 2026-09-27: it read
-  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them). The
+  logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm into the brick
+  and filled flush; a groove one layer deep crosses their face, the stripes of
+  the logo.
 - **POST OFFICE letters:** size 4.4, one line, raised 0.84 mm (2026-10-07).
   They are built in five slabs, each keeping only what has letter under it
   all the way down its climb (1.2 up per 1 out, in 0.2 mm steps). So only

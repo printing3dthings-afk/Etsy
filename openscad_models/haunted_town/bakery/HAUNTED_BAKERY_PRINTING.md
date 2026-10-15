@@ -11,7 +11,7 @@ aligned. Assign a filament to each part.
 |---|---|---|
 | body | walls, plinth, gables and battens, eave flare, step | plum `#5B4A5E` |
 | roof | roof slab, shingles, ridge cap, chimney | slate `#2B2F38` |
-| trim | window and door frames, muntins, window panes, door, corner boards, sign board, crate | cream `#EFE6D2` |
+| trim | window and door frames, muntins, window panes, door, corner boards, sign board, crate, the OBC mark inlaid underneath | cream `#EFE6D2` |
 
 **Every window is glazed** (added 2026-09-27). A 1.48 mm pane fills the back
 of each opening, set into the wall all round, and the window's bars stand on
@@ -101,10 +101,12 @@ house lifts off to switch it.
   CGAL welds the roof to the eave.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step: Montserrat
-  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
+- **OBC maker's mark:** inlaid in cream under the step. It reads OBC when you
   turn the building over with the front toward you (fixed 2026-09-27: it read
-  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
+  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them). The
+  logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm into the plum
+  and filled flush; a groove one layer deep crosses their face, the stripes of
+  the logo.
 - **The sign's letters:** raised 0.84 mm (2026-10-07). They are built in
   five slabs, each keeping only what has letter under it all the way down its
   climb (1.2 up per 1 out, in 0.2 mm steps). So only their undersides slope;

@@ -24,7 +24,7 @@ already aligned. Assign a filament to each part.
 |---|---|---|
 | body | stone walls, tower, plinth, step, the ledge under the eaves | stone grey `#77716B` |
 | roof | roof slab, slate courses, ridge cap, spire | slate `#2B2F38` |
-| trim | gable coping, window frames, tracery and panes, door frame, the tower's two bands, the headstones | cream `#EFE6D2` |
+| trim | gable coping, window frames, tracery and panes, door frame, the tower's two bands, the headstones, the OBC mark inlaid underneath | cream `#EFE6D2` |
 
 **Every framed window is glazed** (added 2026-09-27). A 1.48 mm pane fills the
 back of each opening, set into the wall all round, and the window's bars stand
@@ -88,10 +88,11 @@ so the chapel lifts off to switch the light.
   - **the cross, 39.8 mm²**. Its 2.4 mm post is set 3.5 mm into a socket in
     the spire's solid tip; standing on the spire's cut top alone, it had 3 mm².
 - The 3MF slices with all four parts and all four extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step, the same
-  Montserrat Black mark as the other buildings: size 4.6, letter spacing
-  1.16, 16.2 mm wide. It reads OBC when you turn the chapel over with the
-  front toward you; checked on the sliced first layer.
+- **OBC maker's mark:** inlaid in cream under the step, the same mark as the
+  other buildings. It reads OBC when you turn the chapel over with the front
+  toward you. The logo's letters, 4.6 mm
+  tall and 15.9 mm wide, are cut 0.6 mm into the stone grey and filled flush;
+  a groove one layer deep crosses their face, the stripes of the logo.
 
 ## Design notes: what it took to print without supports
 

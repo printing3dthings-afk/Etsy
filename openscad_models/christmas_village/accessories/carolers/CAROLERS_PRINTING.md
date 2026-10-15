@@ -16,8 +16,10 @@ Four carolers on a patch of snow, facing the street:
 They are figurines in the peg-doll manner: round coats and heads, no faces.
 At 25 mm tall a face would be below one extrusion.
 
-The maker's mark, OBC, is engraved 0.8 mm into the middle of the underside,
-mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in slate into the middle of the underside:
+the logo's letters, 4.4 mm tall and 15.3 mm wide, cut 0.6 mm into the white
+and filled flush, mirrored so they read from below. A groove one layer deep
+crosses their face, the stripes of the logo.
 
 It measures 40.0 × 24.8 × 35.7 mm (the lantern is the top).
 
@@ -31,7 +33,7 @@ aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | two coats, scarves, the bonnet | brick red `#A8483A` |
-| roof | a coat, the hats, the cap, the books, the staff and lantern | slate `#2E3440` |
+| roof | a coat, the hats, the cap, the books, the staff and lantern, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the heads, the pages, the lantern's glass, the snow | white `#F4F1EA` |
 | accent | the lady's coat, two scarves | green `#2F6B45` |
 
@@ -62,11 +64,11 @@ colour and paint it.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.20 mm, median 5.5 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.20 mm, median 5.55 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 35.6 mm of 35.68 modelled;
-  - 7.4 cm² of bed contact, 74% of the footprint; centre of mass over it.
-- `print_fidelity`: 0.56 mm³ of 5,034 mm³ not printed, nothing printed that
+  - 7.7 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 0.54 mm³ of 5,062 mm³ not printed, nothing printed that
   was not modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: 0 high, 0 watch. One slender run of slenderness 3.2, the
   staff above the bearer's hand; it is 2 mm thick and set into his coat all

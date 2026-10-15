@@ -41,7 +41,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the drum, the wing's walls | gingerbread `#C68642` |
-| roof | the cone and its shingles, the wing's roof and its tiles, the doors | chocolate `#5A3825` |
+| roof | the cone and its shingles, the wing's roof and its tiles, the doors, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, the frosting and its drips, the cone's cap, every frame with its beads, panes and bars, the wing's corner beads, eaves, rake and roof icing, the chimney, the white gumdrops, the peppermints' white | icing white `#F7F3EE` |
 | accent | the red gumdrops, the chimney's and the porthole's stripes, the peppermints' stripes | candy red `#D7263D` |
 
@@ -94,9 +94,11 @@ at 55° under the cone.
   and the edges of the stripes there (each under 0.2 mm³).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch, no slender
   runs.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the wing's doors, the same mark as the other buildings, mirrored so it
-  reads OBC with the workshop turned over, front toward you.
+- **OBC maker's mark:** inlaid in chocolate under the snow base in front of
+  the wing's doors, the same mark as the other buildings, mirrored so it reads
+  OBC with the workshop turned over, front toward you. The logo's letters, 4.6
+  mm tall and 15.9 mm wide, are cut 0.6 mm into the icing white and filled
+  flush; a groove one layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

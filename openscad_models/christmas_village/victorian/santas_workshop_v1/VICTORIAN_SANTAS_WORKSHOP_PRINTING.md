@@ -45,7 +45,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the walls and gables, the brick behind the big window, the chimney, the step | brick red `#A8483A` |
-| roof | the roof, the skylights' frames, the finials, the doors, the sign board, the toys and fanlight on the glass | slate `#2E3440` |
+| roof | the roof, the skylights' frames, the finials, the doors, the sign board, the toys and fanlight on the glass, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, quoins, the eave flare, icicles, snow on the roof, the bargeboards, every window's frame, keystone, sill and glass, the back windows' bars, the door frame, hinges and bows, the skylights' glass, the sign's letters | white `#F4F1EA` |
 | accent | the two wreaths | evergreen `#2F6B45` |
 
@@ -110,9 +110,11 @@ the front wall, and the room is 56 mm deep so the circle still fits behind it.
   letters likewise.
 - `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
   0 watch. The finials score 3.4, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the doors, the same mark as the other buildings, mirrored so it reads OBC
-  with the workshop turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the snow base in front of the
+  doors, the same mark as the other buildings, mirrored so it reads OBC with
+  the workshop turned over, front toward you. The logo's letters, 4.6 mm tall
+  and 15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove
+  one layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

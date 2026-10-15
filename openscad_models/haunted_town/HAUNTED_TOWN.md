@@ -75,11 +75,14 @@ What those references do that our first haunted manor did not:
 - **Same street**: identical plinth height (8 mm) and ground-floor door height
   on every building so a row lines up.
 - **One identity feature per building**, big enough to read in a thumbnail.
-- **OBC maker's mark** engraved under the step, strokes ≥ 2 extrusions:
-  Montserrat Black, size 4.6, letter spacing 1.16, flipped LEFT-TO-RIGHT
-  (`mirror([1, 0, 0])`) so it reads OBC with the building turned over, front
-  toward you. A top-to-bottom flip looks almost right on O, B and C and
-  shipped backwards on every building until 2026-09-27.
+- **OBC maker's mark** under the step, the logo Scott chose (2026-10-14):
+  `../brand/obc_mark.scad`, inlaid in the cream trim colour 0.6 mm into the
+  dark body, 4.6 mm tall, every stroke and gap ≥ 2 extrusions, one groove a
+  layer deep across the letters for the logo's stripes. Flipped
+  LEFT-TO-RIGHT so it reads OBC with the building turned over, front toward
+  you. A top-to-bottom flip looks almost right on O, B and C and shipped
+  backwards on every building until 2026-09-27. The manor keeps its older
+  engraved mark on the front of its plinth.
 - **Signs have raised letters**, 0.84 mm proud (Scott, 2026-10-07). The
   carved, lined letters before them read poorly on the first one-colour print
   of the post office: its F's looked like E's. The letters are built as a

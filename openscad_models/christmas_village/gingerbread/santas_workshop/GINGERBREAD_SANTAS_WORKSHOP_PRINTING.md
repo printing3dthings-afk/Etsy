@@ -50,7 +50,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the hall and its inside walls, the turrets, the gatehouse and its battlements, the window collars, the step | gingerbread `#C68642` |
-| roof | the roofs and their shingles, the turret cones, the chocolate-bar doors, the sign boards, the NORTH POLE board and braces, the toys and lines drawn on the glass | chocolate `#5A3825` |
+| roof | the roofs and their shingles, the turret cones, the chocolate-bar doors, the sign boards, the NORTH POLE board and braces, the toys and lines drawn on the glass, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, icing on the roofs, ledges, cones and battlements, every frame, sill, pane and bar, the copings, the soffit and drips, the letters, the chimneys' white, the pole's white stripe and ball, the white gumdrops, the peppermints' white | icing white `#F7F3EE` |
 | accent | the chimneys' and the pole's red stripes, the red gumdrops, the peppermints' stripes | candy red `#D7263D` |
 

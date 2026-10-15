@@ -36,7 +36,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the bottom and top tiers, the shop's walls | gingerbread `#C68642` |
-| roof | the middle tier, the shop's roof and its tiles, the door, the cherry's stem | chocolate `#5A3825` |
+| roof | the middle tier, the shop's roof and its tiles, the door, the cherry's stem, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, the frosting on every ledge and the dome, the drips, the piped ropes, the cream band, window and door frames with their beads, panes and bars, the shop's corner beads, eaves, rake and roof icing, the lollipop and its stick, the peppermints' white | icing white `#F7F3EE` |
 | accent | SWEETS, the berries, the cherry, the lollipop's swirl, the peppermints' stripes | candy red `#D7263D` |
 
@@ -91,9 +91,11 @@ The bottom tier is 54 mm tall for it: its room keeps its full width to
 - `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
   0 watch. The cherry's
   stem scores 2.7, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+- **OBC maker's mark:** inlaid in chocolate under the snow base in front of
   the shop, the same mark as the other buildings, mirrored so it reads OBC
-  with the shop turned over, front toward you.
+  with the shop turned over, front toward you. The logo's letters, 4.6 mm tall
+  and 15.9 mm wide, are cut 0.6 mm into the icing white and filled flush; a
+  groove one layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

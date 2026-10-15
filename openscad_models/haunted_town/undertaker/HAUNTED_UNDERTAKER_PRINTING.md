@@ -34,7 +34,7 @@ already aligned. Assign a filament to each part.
 |---|---|---|
 | body | the fish-scale front and back, the two gable walls and their scars, plinth, porch deck and step, the dormer | dusk blue `#3F4A63` |
 | roof | the mansard and its slate courses, ridge cap, the dormer's roof, the porch roof and its courses, the crooked chimney | slate `#2B2F38` |
-| trim | window frames, crosses and glass, the cornices, door and frame, the porch arcade, the sign board, the cross on the coffin | cream `#EFE6D2` |
+| trim | window frames, crosses and glass, the cornices, door and frame, the porch arcade, the sign board, the cross on the coffin, the OBC mark inlaid underneath | cream `#EFE6D2` |
 | accent | the coffin, the sign's raised letters | coffin wood `#6B4429` |
 
 **Every window is glazed,** the dormer's too.
@@ -104,9 +104,11 @@ ground and first floor windows.
   the comparison flags.
 - `fragility` (re-run 2026-10-07): **nothing slender enough to snap. 0
   high, 0 watch.**
-- **OBC maker's mark:** engraved 0.8 mm deep under the porch deck, the same
-  mark as the other buildings, mirrored so it reads OBC with the building
-  turned over, front toward you.
+- **OBC maker's mark:** inlaid in cream under the porch deck, the same mark as
+  the other buildings, mirrored so it reads OBC with the building turned over,
+  front toward you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut
+  0.6 mm into the dusk blue and filled flush; a groove one layer deep crosses
+  their face, the stripes of the logo.
 
 ## What it took to print without supports
 

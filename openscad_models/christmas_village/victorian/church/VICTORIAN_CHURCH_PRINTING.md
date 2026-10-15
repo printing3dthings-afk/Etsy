@@ -43,7 +43,7 @@ already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the nave, the tower and the apse, the kneelers, the garland's bows, the step | brick red `#A8483A` |
-| roof | the nave's roof, the spire, the apse's cone, the door | slate `#2E3440` |
+| roof | the nave's roof, the spire, the apse's cone, the door, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, quoins, the sill course, the tower's bands and cornice, eave soffits, icicles, bargeboards and finials, snow on the roofs, every window's frame, tracery, bars and pane, the belfry's louvres, the door frame, the wreath's bow, the ball and cross | white `#F4F1EA` |
 | accent | the wreath, the garland | evergreen `#2F6B45` |
 
@@ -65,8 +65,11 @@ louvres stand on the pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **9 h 02 m** | **65.3 cm³, about 81 g of PLA** |
+| **single colour** | **3 h 17 m** | **27.2 m, 81 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 81 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -84,20 +87,25 @@ headroom). The nave's eave line was set at 50 mm for it.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 3.24 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.48 mm, median 3.28 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 23.81 cm² of bed contact;
+  - 24.17 cm² of bed contact;
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts: closed. The roof, trim and accent
   have every edge shared by exactly two faces. The body carries 10 edges
   shared by more than two, where the apse's half cone meets the back wall. The
   merged model is watertight there and slices clean; Bambu Studio may offer to
   repair the body when the 3MF is opened.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- **The parts are disjoint in the model:** all six pairwise intersections
+  render empty in OpenSCAD. Measured on the exported meshes
+  (`tools/part_mesh.py check`, 2026-10-15), the body and the roof share
+  0.93 mm³ in 254 slivers spread along the faces where they touch: float
+  residue of the export, not a modelled overlap, and present before the
+  mark changed.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 20.5 mm³ of 97,470 mm³ is not printed; 0.5 mm³ printed that was not
-  modelled; 0.2 mm³ printed in another colour. **9 flags, all white, all
+  layer): 20.6 mm³ of 97,511 mm³ is not printed; 0.43 mm³ printed that was not
+  modelled; 0.14 mm³ printed in another colour. **9 flags, all white, all
   cosmetic and none over 0.12 mm³:**
   - the rose window's tracery bars, between its hub and its rim (six
     flags, 0.04–0.12 mm³, 0.22 mm wide);
@@ -105,9 +113,11 @@ headroom). The nave's eave line was set at 50 mm for it.
   - the tip of the wreath's bow (one layer, 0.03 mm³).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The gable
   finials score 3.4 and the cross 2.5, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the door, the same mark as the other buildings, mirrored so it reads OBC
-  with the church turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the snow base in front of the
+  door, the same mark as the other buildings, mirrored so it reads OBC with
+  the church turned over, front toward you. The logo's letters, 4.6 mm tall
+  and 15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove
+  one layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

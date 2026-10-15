@@ -36,7 +36,7 @@ already aligned. Assign a filament to each part.
 |---|---|---|
 | body | plastered walls, plinth and porch deck, the clock gablet, the cupola's base | ochre `#A8814A` |
 | roof | hip roof, slate courses, ridge and hip caps, crooked chimney, porch roof, the gablet's roof, the cupola's cap | slate `#2B2F38` |
-| trim | window frames and glass, door and frame, the porch arcade, the clock's glass, the gablet's bargeboard, the belfry | cream `#EFE6D2` |
+| trim | window frames and glass, door and frame, the porch arcade, the clock's glass, the gablet's bargeboard, the belfry, the OBC mark inlaid underneath | cream `#EFE6D2` |
 | accent | the half-timbering, the clock's ring, marks and hands, the bell, the finial | timber `#2E2219` |
 
 The walls are ochre, not red: the post office is already brick red, and the
@@ -96,9 +96,11 @@ with room to spare.
 - `fragility`: nothing slender enough to snap. 0 high, 1 watch: the finial,
   8 mm tall, slenderness 5.0 against a watch level of 4 and the 17.5 of the
   chapel bar that snapped. The belfry's 3.4 mm corner posts do not register.
-- **OBC maker's mark:** engraved 0.8 mm deep under the porch deck, the same
-  mark as the other buildings, mirrored so it reads OBC with the building
-  turned over, front toward you.
+- **OBC maker's mark:** inlaid in cream under the porch deck, the same mark as
+  the other buildings, mirrored so it reads OBC with the building turned over,
+  front toward you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut
+  0.6 mm into the ochre and filled flush; a groove one layer deep crosses
+  their face, the stripes of the logo.
 
 ## What it took to print without supports
 

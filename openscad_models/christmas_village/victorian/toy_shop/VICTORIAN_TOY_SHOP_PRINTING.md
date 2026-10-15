@@ -36,7 +36,7 @@ already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the shop and the tower, the kneelers, the chimney, the wreath's bow, the step | brick red `#A8483A` |
-| roof | the gable roof, the bay's roof, the cone and its finial, the door | slate `#2E3440` |
+| roof | the gable roof, the bay's roof, the cone and its finial, the door, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, quoins, the string course and the tower's collars, eave soffits, icicles, bargeboards and gable finials, snow on the roofs, every window's frame, keystone, bars and pane, the door frame, the bay's glass, the letters TOYS | white `#F4F1EA` |
 | accent | the bay shopfront, the window boxes, the wreath | evergreen `#2F6B45` |
 
@@ -100,9 +100,11 @@ headroom): the square shop has two full storeys of wall under its gable.
 - `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
   0 watch. The tower's
   finial scores 3.8, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the bay, the same mark as the other buildings, mirrored so it reads OBC
-  with the shop turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the snow base in front of the
+  bay, the same mark as the other buildings, mirrored so it reads OBC with the
+  shop turned over, front toward you. The logo's letters, 4.6 mm tall and 15.9
+  mm wide, are cut 0.6 mm into the white and filled flush; a groove one layer
+  deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

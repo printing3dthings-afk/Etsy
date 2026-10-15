@@ -15,8 +15,10 @@ A cast-iron fingerpost:
 The arms carry no lettering: at this size a word would be under one
 extrusion wide.
 
-The maker's mark, OBC, is engraved 0.8 mm into the middle of the underside,
-mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in slate into the middle of the underside:
+the logo's letters, 4 mm tall and 14.1 mm wide, cut 0.6 mm into the white
+and filled flush, mirrored so they read from below. A groove one layer deep
+crosses their face, the stripes of the logo.
 
 It measures 25.1 × 20.0 × 44.2 mm.
 
@@ -29,7 +31,7 @@ aligned. Assign a filament to each colour.
 
 | part | what it is | colour in the file |
 |---|---|---|
-| roof | the post and the brackets | slate `#2E3440` |
+| roof | the post and the brackets, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the arms, the snow, the base | white `#F4F1EA` |
 
 ## Settings that are not optional

@@ -49,7 +49,7 @@ already aligned.
 |---|---|---|
 | body | the hill, the grave mounds, the dirt pile, the grass, the pumpkins' stems | moss `#4A5140` |
 | roof | the tree and crow, the fence and gate, the stepping stones and pebbles, the lining of every carving on the stones (epitaphs, motifs, cracks), the pumpkins' faces, the skull's eyes | slate `#2B2F38` |
-| trim | the seven headstones and their bases, BOO's kerb, the skeleton hand, the bones, the skull | cream `#EFE6D2` |
+| trim | the seven headstones and their bases, BOO's kerb, the skeleton hand, the bones, the skull, the OBC mark inlaid underneath | cream `#EFE6D2` |
 | accent | the three pumpkins, the shovel | kraft `#D4A96A` |
 
 **The epitaphs, motifs and cracks are carved into the stones**, 0.6 mm
@@ -118,10 +118,12 @@ which version the buyer gets.
     apart.
   - NEXT has its own letter spacing (1.3) and a wider tablet: at the common
     1.12, its X and T stood 0.26 mm apart and would have fused.
-- **OBC maker's mark:** engraved 0.8 mm deep in the underside, under the middle of the hill: Montserrat
-  Black, size 4.6, letter spacing 1.16, 16.2 mm wide. It reads OBC when you
-  turn the hill over with the front toward you (fixed 2026-09-27: it read
-  "ƆBO", and its letters ran together, with 0.39–0.46 mm between them).
+- **OBC maker's mark:** inlaid in cream in the underside, under the middle of
+  the hill. It reads OBC when you turn the hill over with the front toward you
+  (fixed 2026-09-27: it read "ƆBO", and its letters ran together, with
+  0.39–0.46 mm between them). The logo's letters, 4.6 mm tall and 15.9 mm
+  wide, are cut 0.6 mm into the moss and filled flush; a groove one layer deep
+  crosses their face, the stripes of the logo.
 
 ## What the detail pass took
 

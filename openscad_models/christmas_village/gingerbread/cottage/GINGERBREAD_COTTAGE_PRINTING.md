@@ -35,7 +35,7 @@ already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the drum and its flutes | gingerbread `#C68642` |
-| roof | the chocolate dome, the chocolate-bar door | chocolate `#5A3825` |
+| roof | the chocolate dome, the chocolate-bar door, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, the rim's icing and drips, the windows' rings, panes and bars, the door frame and its beads, the canes' white, the peppermints' white | icing white `#F7F3EE` |
 | accent | gumdrops, cane stripes, the windows' and peppermints' stripes | candy red `#D7263D` |
 
@@ -92,10 +92,12 @@ early. Bambu's own LED tealight (37.2 × 36.6 mm) fits with 10 mm to spare. A
   - one layer at the edge of the front-right window's icing ring
     (0.04 mm³).
 - `fragility`: nothing slender at all. 0 high, 0 watch, 0 slender runs.
-- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
-  base, in the band between the drum's opening and the base's edge. It is the
-  same mark as the other buildings, mirrored so it reads OBC with the cottage
-  turned over, front toward you.
+- **OBC maker's mark:** inlaid in chocolate under the front of the snow base,
+  in the band between the drum's opening and the base's edge. It is the same
+  mark as the other buildings, mirrored so it reads OBC with the cottage
+  turned over, front toward you. The logo's letters, 4.6 mm tall and 15.9 mm
+  wide, are cut 0.6 mm into the icing white and filled flush; a groove one
+  layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

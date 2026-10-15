@@ -14,8 +14,10 @@ A hot chestnut seller's barrow parked in the snow:
 - **a green wreath** with a red bow on the front end, **snow** on the lid;
 - on an oval of snow with two drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside, mirrored so it
-reads from below.
+The maker's mark, OBC, is inlaid in slate into the underside: the logo's
+letters, 5 mm tall and 17.1 mm wide, cut 0.6 mm into the white and filled
+flush, mirrored so they read from below. A groove one layer deep crosses
+their face, the stripes of the logo.
 
 It measures 52.0 × 30.0 × 42.9 mm.
 
@@ -29,7 +31,7 @@ already aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the box, the bow, the embers, the chestnuts | brick red `#A8483A` |
-| roof | the wheels, axles, handles, brazier, chimney | slate `#2E3440` |
+| roof | the wheels, axles, handles, brazier, chimney, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the snow, the rim, the spokes | white `#F4F1EA` |
 | accent | the wreath | green `#2F6B45` |
 
@@ -44,7 +46,7 @@ already aligned. Assign a filament to each colour.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **0 h 20 m** | **2.2 m, 6.7 g** |
+| **single colour** | **0 h 19 m** | **2.2 m, 6.7 g** |
 | four colour | see below | 6.7 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
@@ -58,11 +60,11 @@ number, or print several on one plate so the changes are shared.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.30 mm, median 3.2 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.32 mm, median 3.21 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 42.8 mm of 42.85 modelled;
-  - 11.7 cm² of bed contact, 75% of the footprint; centre of mass over it.
-- `print_fidelity`: 0.04 mm³ of 8,708 mm³ not printed, nothing printed that
+  - 12.2 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 0.03 mm³ of 8,758 mm³ not printed, nothing printed that
   was not modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: **0 high, 3 watch.** The chimney (16.8 mm free above the
   brazier, slenderness 6.0) and the two handles (4.9 and 4.7). Lift it by

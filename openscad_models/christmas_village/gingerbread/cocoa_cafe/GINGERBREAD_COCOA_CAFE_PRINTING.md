@@ -40,7 +40,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the café's walls, the marshmallows | gingerbread `#C68642` |
-| roof | the cocoa, the café's roof and its tiles, the door | chocolate `#5A3825` |
+| roof | the cocoa, the café's roof and its tiles, the door, the OBC mark inlaid underneath | chocolate `#5A3825` |
 | trim | snow base and drifts, the mug, the whipped cream, the stirrer, the awning's white, the café's frames with their beads, panes and bars, corner beads, eaves, rake and roof icing, the heart, the peppermints' white | icing white `#F7F3EE` |
 | accent | the mug's stripes, COCOA, its windows' outlines and bars, the handle, the awning's and stirrer's stripes, the peppermints' stripes | candy red `#D7263D` |
 
@@ -108,9 +108,11 @@ in at 55° under the cream.
   verified empty.
 - `fragility` (re-run 2026-10-09): nothing slender enough to snap. 0 high,
   0 watch, 0 slender runs.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
+- **OBC maker's mark:** inlaid in chocolate under the snow base in front of
   the café, the same mark as the other buildings, mirrored so it reads OBC
-  with the café turned over, front toward you.
+  with the café turned over, front toward you. The logo's letters, 4.6 mm tall
+  and 15.9 mm wide, are cut 0.6 mm into the icing white and filled flush; a
+  groove one layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

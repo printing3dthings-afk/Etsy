@@ -60,7 +60,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the hall and its inside walls, the turrets and their corbels, the gatehouse and merlons, the chimney stacks, the window collars, the step, the pole's red stripe | brick red `#A8483A` |
-| roof | the roofs and their slates, the turret cones, the doors, the sign boards, the NORTH POLE board and braces, the toys and lines drawn on the glass | slate `#2E3440` |
+| roof | the roofs and their slates, the turret cones, the doors, the sign boards, the NORTH POLE board and braces, the toys and lines drawn on the glass, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, snow on the roofs, cones, merlons and stacks, every frame, sill, pane and bar, the copings, the soffit and icicles, the letters, the pole's white stripe and ball, the finials, the wreaths' bows | white `#F4F1EA` |
 | accent | the wreaths and the chimney garlands | evergreen `#2F6B45` |
 

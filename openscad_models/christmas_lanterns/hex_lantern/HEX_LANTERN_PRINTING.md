@@ -20,7 +20,9 @@ lifts off and goes back down over the light. Inside it is 61.4 mm across the
 flats, room for any tealight.
 
 The maker's mark, OBC, is engraved 0.7 mm into the inside face of the
-plinth's front wall, where it reads when the lantern is lifted off.
+plinth's front wall, where it reads when the lantern is lifted off: the
+letters of the new logo (Montserrat ExtraBold, set 0.95 mm apart). Hidden
+there, it is cut, not inlaid, and carries no stripes.
 
 Lit from inside, every scene shows dark on the glow: the glass is 1.3 mm,
 the scenes stand 1.6 mm out of it, and the thicker plastic passes less

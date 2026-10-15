@@ -16,8 +16,10 @@ A village well under its own little roof:
   wreath;
 - on a round blob of snow with two drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside, mirrored so it
-reads from below.
+The maker's mark, OBC, is inlaid in slate into the underside: the logo's
+letters, 5 mm tall and 17.1 mm wide, cut 0.6 mm into the white and filled
+flush, mirrored so they read from below. A groove one layer deep crosses
+their face, the stripes of the logo.
 
 It measures 38.0 × 38.0 × 45.4 mm.
 
@@ -31,7 +33,7 @@ already aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the well, the bow | brick red `#A8483A` |
-| roof | the roof, the ice, the bucket | slate `#2E3440` |
+| roof | the roof, the ice, the bucket, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the snow, the coping, posts, valance, gables, the bucket's band | white `#F4F1EA` |
 | accent | the wreath | green `#2F6B45` |
 
@@ -46,8 +48,8 @@ already aligned. Assign a filament to each colour.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **0 h 23 m** | **2.4 m, 7.1 g** |
-| four colour | see below | 7.1 g of model **+ purge** |
+| **single colour** | **0 h 23 m** | **2.4 m, 7.0 g** |
+| four colour | see below | 7.0 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
 clock). In colour, the colour changes cost far more than the model: the
@@ -60,11 +62,11 @@ number, or print several on one plate so the changes are shared.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.40 mm, median 3.2 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.40 mm, median 3.21 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 45.4 mm of 45.42 modelled;
-  - 11.2 cm² of bed contact, 78% of the footprint; centre of mass over it.
-- `print_fidelity`: 0.28 mm³ of 8,255 mm³ not printed (the deepest spot
+  - 11.3 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 0.16 mm³ of 8,297 mm³ not printed (the deepest spot
   0.28 mm), nothing printed that was not modelled, nothing in the wrong
   colour. **0 flags.**
 - `fragility`: **0 high, 4 watch**: the four posts, 10 mm free between the

@@ -16,8 +16,10 @@ A tiered fountain that froze as it ran:
   ice;
 - on a round blob of snow with two drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside, mirrored so it
-reads from below.
+The maker's mark, OBC, is inlaid in slate into the underside: the logo's
+letters, 5 mm tall and 17.1 mm wide, cut 0.6 mm into the white and filled
+flush, mirrored so they read from below. A groove one layer deep crosses
+their face, the stripes of the logo.
 
 It measures 56.0 × 56.0 × 42.9 mm.
 
@@ -31,7 +33,7 @@ already aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the basin, the column and bowls, the bow | brick red `#A8483A` |
-| roof | the ice in the basin and the bowls | slate `#2E3440` |
+| roof | the ice in the basin and the bowls, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the snow, the coping, the falls, the jet | white `#F4F1EA` |
 | accent | the wreath | green `#2F6B45` |
 

@@ -39,7 +39,7 @@ already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the brick shop floor, the bow window's brick stall riser, the chimney and pots, the step | brick red `#A8483A` |
-| roof | the slate roof and dormer roof, all the dark timber (sill beam, posts, braces, cove and brackets, window frames and leading), the bargeboard and finial, the door | slate `#2E3440` |
+| roof | the slate roof and dormer roof, all the dark timber (sill beam, posts, braces, cove and brackets, window frames and leading), the bargeboard and finial, the door, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, the plaster upper storey and dormer walls, the soffit under the eave's curl and the flares under the dormer's eaves, snow on both roofs, the icicles, every pane, the shop windows' frames, keystones and bars, the door frame, transom and fanlight | white `#F4F1EA` |
 | accent | the bow window's frame and bars, the wreath, the window box | evergreen `#2F6B45` |
 
@@ -96,10 +96,12 @@ The series rule is at least 46 mm across and at least 50 mm of headroom.
     0.5 mm.
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The dormer's
   finial scores 2.5, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the front of the snow
-  base, in the band between the bow's opening and the base's edge. It is the
-  same mark as the cottages, mirrored so it reads OBC with the model turned
-  over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the front of the snow base, in
+  the band between the bow's opening and the base's edge. It is the same mark
+  as the cottages, mirrored so it reads OBC with the model turned over, front
+  toward you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm
+  into the white and filled flush; a groove one layer deep crosses their face,
+  the stripes of the logo.
 
 ## What it took to print without supports
 

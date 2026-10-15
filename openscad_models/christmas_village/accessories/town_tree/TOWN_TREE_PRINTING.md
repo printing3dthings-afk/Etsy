@@ -14,8 +14,10 @@ The town's Christmas tree:
   tied with a white ribbon and bow;
 - on a round blob of snow with two drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the underside, mirrored so it
-reads from below.
+The maker's mark, OBC, is inlaid in slate into the underside: the logo's
+letters, 5 mm tall and 17.1 mm wide, cut 0.6 mm into the white and filled
+flush, mirrored so they read from below. A groove one layer deep crosses
+their face, the stripes of the logo.
 
 It measures 46.0 × 46.0 × 77.5 mm.
 
@@ -29,7 +31,7 @@ already aligned. Assign a filament to each colour.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the plinth, the baubles, two presents | brick red `#A8483A` |
-| roof | one present | slate `#2E3440` |
+| roof | one present, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | the snow, the cap, the star, the ribbons | white `#F4F1EA` |
 | accent | the tree, two presents | green `#2F6B45` |
 
@@ -44,8 +46,8 @@ already aligned. Assign a filament to each colour.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **0 h 37 m** | **4.9 m, 14.5 g** |
-| four colour | see below | 14.5 g of model **+ purge** |
+| **single colour** | **0 h 37 m** | **4.8 m, 14.4 g** |
+| four colour | see below | 14.4 g of model **+ purge** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
 clock). In colour, the colour changes cost far more than the model: the
@@ -58,11 +60,11 @@ print several on one plate so the changes are shared.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.63 mm, median 19.4 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.73 mm, median 19.66 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 77.4 mm of 77.45 modelled;
-  - 16.1 cm² of bed contact, 76% of the footprint; centre of mass over it.
-- `print_fidelity`: 3.7 mm³ of 26,572 mm³ not printed, all of it hairlines
+  - 16.5 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 3.7 mm³ of 26,623 mm³ not printed, all of it hairlines
   under the flag size (the deepest 0.35 mm, at the baubles' edges); nothing
   printed that was not modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: 0 high, 0 watch, no slender runs.

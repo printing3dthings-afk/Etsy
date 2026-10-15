@@ -40,7 +40,7 @@ already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the house, the bow, the chimney, the steps and cheek walls | brick red `#A8483A` |
-| roof | the mansard and its dormers, the bow's cone, the finials, the door | slate `#2E3440` |
+| roof | the mansard and its dormers, the bow's cone, the finials, the door, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, quoins, string courses, the cornice, every window's frame, keystone, bars and pane, the door surround and fanlight, the copings, icicles, snow on the roofs, the wreath's bow | white `#F4F1EA` |
 | accent | the wreath, the window box | evergreen `#2F6B45` |
 
@@ -98,9 +98,11 @@ headroom), with room to spare: the house is 52 mm square inside its walls.
   - the edge of the door's wreath (0.2 mm wide, 0.07 mm³).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The two
   finials score 3.6 and 3.2, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the steps, the same mark as the other buildings, mirrored so it reads OBC
-  with the house turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the snow base in front of the
+  steps, the same mark as the other buildings, mirrored so it reads OBC with
+  the house turned over, front toward you. The logo's letters, 4.6 mm tall and
+  15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove one
+  layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

@@ -42,7 +42,7 @@ parts, already aligned. Assign a filament to each part.
 | part | what it is | colour in the file |
 |---|---|---|
 | body | the brick ground floor and the archway's walls, the chimneys, the sign board, the step | brick red `#A8483A` |
-| roof | the roof, the jetty beam, every timber, the upper windows' frames and bars, the bargeboards and finials, the door, the lantern | slate `#2E3440` |
+| roof | the roof, the jetty beam, every timber, the upper windows' frames and bars, the bargeboards and finials, the door, the lantern, the OBC mark inlaid underneath | slate `#2E3440` |
 | trim | snow base and drifts, quoins, the plaster upper floor, the eave soffit, icicles, snow on the roof, the ground windows' frames, keystones, bars and panes, the door frame and the wreath's bow, the archway's voussoirs, the lantern's glass, INN | white `#F4F1EA` |
 | accent | the wreaths | evergreen `#2F6B45` |
 
@@ -106,9 +106,11 @@ headroom).
   on a real print). Gate: 0 support moves, 1st-percentile wall 1.32 mm.
 - `fragility` (re-run 2026-10-08): nothing slender enough to snap. 0 high,
   0 watch. The gable finials score 3.4, against a watch level of 4.
-- **OBC maker's mark:** engraved 0.8 mm deep under the snow base in front of
-  the door, the same mark as the other buildings, mirrored so it reads OBC
-  with the inn turned over, front toward you.
+- **OBC maker's mark:** inlaid in slate under the snow base in front of the
+  door, the same mark as the other buildings, mirrored so it reads OBC with
+  the inn turned over, front toward you. The logo's letters, 4.6 mm tall and
+  15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove one
+  layer deep crosses their face, the stripes of the logo.
 
 ## What it took to print without supports
 

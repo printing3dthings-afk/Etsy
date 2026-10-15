@@ -14,8 +14,10 @@ A hexagonal Penfold pillar box, the kind that stood on British streets in the
 - **snow** lying on the cap, its foot running out to nothing on the slope;
 - on a small soft blob of snow with two drifts.
 
-The maker's mark, OBC, is engraved 0.8 mm into the middle of the underside,
-mirrored so it reads from below.
+The maker's mark, OBC, is inlaid in brick red into the middle of the
+underside: the logo's letters, 4 mm tall and 14.1 mm wide, cut 0.6 mm into
+the white and filled flush, mirrored so they read from below. A groove one
+layer deep crosses their face, the stripes of the logo.
 
 It measures 21.0 × 21.0 × 33.3 mm.
 
@@ -28,7 +30,7 @@ already aligned. Assign a filament to each colour.
 
 | part | what it is | colour in the file |
 |---|---|---|
-| body | the box | brick red `#A8483A` |
+| body | the box, the OBC mark inlaid underneath | brick red `#A8483A` |
 | trim | the snow, the base, the bow | white `#F4F1EA` |
 | accent | the wreath | green `#2F6B45` |
 
