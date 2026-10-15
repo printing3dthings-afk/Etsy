@@ -62,11 +62,11 @@ number, or print several on one plate so the changes are shared.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.21 mm, median 3.8 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.21 mm, median 3.78 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 42.8 mm of 42.9 modelled;
-  - 24.1 cm² of bed contact, 77% of the footprint; centre of mass over it.
-- `print_fidelity`: 0.02 mm³ of 17,692 mm³ not printed, nothing printed
+  - 24.5 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 0.01 mm³ of 17,742 mm³ not printed, nothing printed
   that was not modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: **0 high, 14 watch.** All of them are the falls: the big
   bowl's run 16.8 mm at slenderness 8.8 to 10.3, the small bowl's 7.6 mm.
