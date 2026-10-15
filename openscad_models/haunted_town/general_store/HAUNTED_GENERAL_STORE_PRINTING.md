@@ -48,8 +48,11 @@ on a one-colour print; in colour they are kraft letters on cream.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 51 m** | **~81 g** | 0 |
-| **four colour, AMS** | not reliable here | ~81 g model **+ purge** | **1,317** (before the braces) |
+| **single colour** (e.g. for Jessee to paint) | **4 h 12 m** | **27.2 m, 81 g** | 0 |
+| **four colour, AMS** | not reliable here | ~81 g model **+ purge** | **1,321** (2026-10-15, with the inlaid mark) |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 The four-colour print makes about as many changes as the bakery (1,293).
 Trim and walls share almost every layer from the plinth to the top of the
@@ -72,11 +75,11 @@ the light.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.38 mm, median 2.71 mm, against the 1.2 mm floor
+  - 1st-percentile wall 1.44 mm, median 2.75 mm, against the 1.2 mm floor
     (re-run 2026-10-07 with the raised letters);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (124.0 mm);
-  - 11.84 cm² of bed contact (17.6% of the footprint);
+  - 12.20 cm² of bed contact (18.2% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - all four are closed, watertight surfaces;
@@ -86,11 +89,16 @@ the light.
   - accent: **17 zero-area faces**, all in the letters, where their 0.2 mm
     steps meet. They are slivers of no area, and the slicer handles them:
     the store slices with 0 supports.
-- **The parts are disjoint.** All six pairwise intersections render EMPTY.
-- `print_fidelity` (re-run 2026-10-07 with the raised letters): 1 flag, the
+- **The parts are disjoint in OpenSCAD:** all six pairwise intersections
+  render EMPTY. Measured on the exported meshes (`tools/part_mesh.py check`,
+  2026-10-15), the body and the trim share 4.4 mm³: three sheets about
+  0.02 mm thick on the front wall, where three of the cream frames between
+  15 and 39 mm up meet it. The same 4.4 mm³ was there before the mark
+  changed. The fidelity slice below prints nothing in the wrong colour there.
+- `print_fidelity` (re-run 2026-10-15 with the inlaid mark): 1 flag, the
   same 0.6 mm batten stub beside the door frame as before. The letters lose
   nothing it flags.
-- `fragility` (re-run 2026-10-07): **nothing slender enough to snap. 0 high,
+- `fragility` (2026-10-07, not re-run: the mark changes no member): **nothing slender enough to snap. 0 high,
   0 watch.** Before the props were braced they were the town's only two "high"
   members: 2.6 mm square and ~97 mm in one run, slenderness 31, against 17.5
   for the chapel window bar that snapped on Scott's first print.
