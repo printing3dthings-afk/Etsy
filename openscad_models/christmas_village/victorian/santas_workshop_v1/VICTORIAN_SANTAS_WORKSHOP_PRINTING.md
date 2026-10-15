@@ -63,8 +63,11 @@ other windows have their bars on the glass.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **9 h 38 m** | **72.6 cm³, about 90 g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 90 g of model **+ purge** |
+| **single colour** | **3 h 12 m** | **30.4 m, 91 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 91 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -82,18 +85,22 @@ the front wall, and the room is 56 mm deep so the circle still fits behind it.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.30 mm, median 3.28 mm, against the 1.2 mm floor
+  - 1st-percentile wall 1.30 mm, median 3.18 mm, against the 1.2 mm floor
     (1.48 before the raised letters, 2026-10-07);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 25.10 cm² of bed contact;
+  - 25.46 cm² of bed contact;
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
   faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- **The parts are disjoint in the model:** all six pairwise intersections
+  render empty in OpenSCAD. Measured on the exported meshes
+  (`tools/part_mesh.py check`, 2026-10-15), the body and the roof share
+  0.54 mm³ where their faces touch: float residue of the export, the same
+  0.540 mm³ before the mark changed.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-08 with the toys raised): 20.1 mm³ of 95,717 mm³
-  is not printed; 0.2 mm³ printed that was not modelled; 1.0 mm³ printed in
+  layer; re-run 2026-10-15 with the inlaid mark): 20.1 mm³ of 95,759 mm³
+  is not printed; 0.15 mm³ printed that was not modelled; 1.0 mm³ printed in
   another colour. **5 flags, all cosmetic and none over 0.09 mm³:**
   - the edges of the two wreaths (0.2 mm wide, 0.07 mm³ each);
   - the tips of the two gable finials (one layer each, 0.07 mm³);
