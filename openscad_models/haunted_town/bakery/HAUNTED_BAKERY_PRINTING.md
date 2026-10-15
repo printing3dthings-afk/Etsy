@@ -42,13 +42,17 @@ check. They are not the deliverable.
 
 ## Cost — sliced, not estimated
 
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
+
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **11 h 28 m** | **~113 g** | 0 |
+| **single colour** (e.g. for Jessee to paint) | **3 h 51 m** | **37.9 m, 113 g** | 0 |
 | **four colour, AMS** | not reliable here (see below) | ~120 g model **+ purge** | **1,293** |
 
 The four-colour slice uses all four filaments (selected 545, 409, 239 and 101
-times). There are 1,293 tool changes because the trim and the walls
+times). There are 1,293 tool changes (still 1,293 in the 2026-10-15 slice
+with the inlaid mark) because the trim and the walls
 share almost every layer from the plinth to the roof.
 
 **The purge is the real cost of the colour version.** With PrusaSlicer's
@@ -78,11 +82,11 @@ house lifts off to switch it.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.30 mm against the 1.2 mm floor (re-run
-    2026-10-07 with the raised letters; 1.44 with the carved ones);
+  - 1st-percentile wall 1.31 mm, median 3.69 mm, against the 1.2 mm floor
+    (re-run 2026-10-15 with the inlaid mark);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (148.8 mm);
-  - 12.66 cm² of bed contact (17.3% of the footprint);
+  - 13.10 cm² of bed contact (17.9% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight, consistent winding;
@@ -97,7 +101,7 @@ house lifts off to switch it.
   area. The sign board shares 489 mm² with the wall, the crate 206 mm², the
   pie 89 mm², and every frame about half its surface.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
-- The union mesh (used only for the gate) carries 108 zero-area faces where
+- The union mesh (used only for the gate) carries 104 zero-area faces where
   CGAL welds the roof to the eave.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
@@ -112,12 +116,12 @@ house lifts off to switch it.
   climb (1.2 up per 1 out, in 0.2 mm steps). So only their undersides slope;
   the holes in the A, B and R and the letters' tops stay as drawn, and they
   print with no supports.
-- `print_fidelity` (re-run 2026-10-07 with the raised letters): 4.4 mm³ of
-  144,986 mm³ is not printed, 0.6 mm³ printed that was not modelled, nothing
+- `print_fidelity` (re-run 2026-10-15 with the inlaid mark): 4.4 mm³ of
+  145,027 mm³ is not printed, 0.57 mm³ printed that was not modelled, nothing
   in another colour. **2 flags**, the same as before: the knife-edge tips of
   the sagging ridge cap at each gable, 0.3 mm wide. The letters lose nothing
   it flags.
-- `fragility` (2026-10-07): **0 high, 0 watch.**
+- `fragility` (2026-10-15): **0 high, 0 watch.**
 
 ## What was changed to make it print without supports
 
