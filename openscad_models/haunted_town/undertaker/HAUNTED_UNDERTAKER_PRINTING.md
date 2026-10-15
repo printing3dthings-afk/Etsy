@@ -57,10 +57,12 @@ signs; this sign's letters are the town's smallest, 4.0.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 15 m** | **70.8 cm³, about 88 g of PLA** |
+| **single colour** (e.g. for Jessee to paint) | **3 h 16 m** | **29.4 m, 88 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 88 g of model **+ purge** |
 
-A listing must say which version the buyer gets.
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark. The four-colour slice
+changes colour 983 times. A listing must say which version the buyer gets.
 
 ## The tealight
 
@@ -78,14 +80,16 @@ ground and first floor windows.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.39 mm, median 3.00 mm, against the 1.2 mm floor
+  - 1st-percentile wall 1.40 mm, median 3.00 mm, against the 1.2 mm floor
     (1.21 before the raised letters, 2026-10-07);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (160.3 mm);
-  - 13.44 cm² of bed contact (30.5% of the footprint);
+  - 13.80 cm² of bed contact (31.4% of the footprint);
   - centre of mass over the base.
-- Each of the four parts is closed, with every edge shared by exactly two
-  faces. They carry a few zero-area faces (body 5, roof 2, trim 11, accent
+- Each of the four parts is closed. The roof, trim and accent have every
+  edge shared by exactly two faces; the body has nine shared by more than
+  two along the porch deck's front, 8 mm up (`tools/part_mesh.py check`,
+  2026-10-15; the same nine before the mark changed). They carry a few zero-area faces (body 5, roof 2, trim 11, accent
   15, the accent's in the letters' 0.2 mm steps): slivers of no area, which
   the slicer handles with 0 supports.
 - **The parts are disjoint.** All six pairwise intersections render empty.
@@ -93,7 +97,7 @@ ground and first floor windows.
   overlapped the body there; it now takes out exactly what the body keeps of
   the dormer.)
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-07 with the raised letters): 4.6 mm³ of 99,349 mm³
+  layer; re-run 2026-10-15 with the inlaid mark): 4.6 mm³ of 99,390 mm³
   is not printed; 0.2 mm³ printed that was not modelled; 0.4 mm³ printed in
   another colour. **4 flags, all cosmetic slivers too thin to lay:**
   - the ridge cap's knife-edge tip near each gable wall, 0.31 mm wide
