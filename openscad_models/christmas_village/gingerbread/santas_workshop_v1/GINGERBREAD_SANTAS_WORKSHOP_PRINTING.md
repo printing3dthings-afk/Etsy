@@ -59,8 +59,11 @@ pane.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **5 h 32 m** | **38.1 cm³, about 47 g of PLA** |
+| **single colour** | **1 h 55 m** | **15.9 m, 47 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 47 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -79,17 +82,22 @@ at 55° under the cone.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 4.27 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.48 mm, median 4.31 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 21.16 cm² of bed contact;
+  - 21.52 cm² of bed contact;
   - centre of mass over the base.
-- Each of the four parts is closed, with every edge shared by exactly two
-  faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- Each of the four parts is closed. The roof, trim and accent have every
+  edge shared by exactly two faces; the body has one shared by more than two,
+  44.5 mm up on the front centre line.
+- **The parts are disjoint in OpenSCAD:** all six pairwise intersections
+  render empty. Measured on the exported meshes (`tools/part_mesh.py check`,
+  2026-10-15), the body and the roof share 1.0 mm³ where their faces touch.
+  The meshes from before the mark changed carry the same edge and the same
+  1.025 mm³, so neither is the mark.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 12.1 mm³ of 53,429 mm³ is not printed; 0.1 mm³ printed that was
-  not modelled; 0.2 mm³ printed in another colour. **0 flags.** The largest
+  layer): 12.1 mm³ of 53,458 mm³ is not printed; 0.14 mm³ printed that was
+  not modelled; 0.15 mm³ printed in another colour. **0 flags.** The largest
   losses are 0.2 mm slivers of gingerbread where the chimney meets the drum,
   and the edges of the stripes there (each under 0.2 mm³).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch, no slender
