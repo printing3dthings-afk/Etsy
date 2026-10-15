@@ -59,13 +59,14 @@ slice there for the real number, or print several on one plate.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.29 mm, median 3.2 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.39 mm, median 3.34 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 44.0 mm of 44.2 modelled;
-  - 2.6 cm² of bed contact, 51% of the footprint; centre of mass over it.
-- `print_fidelity`: 9.6 mm³ of 1,912 mm³ not printed, in slivers 0.1 mm wide
-  where the arms meet the post and the brackets; 0.2 mm³ printed that was not
-  modelled. **0 flags.**
+  - 2.8 cm² of bed contact, 56% of the footprint; centre of mass over it.
+- `print_fidelity`: 9.4 mm³ of 1,939 mm³ not printed, in slivers 0.1 mm wide
+  where the arms meet the post and the brackets; 0.04 mm³ printed that was not
+  modelled; 0.8 mm³ in the other colour, hairlines 0.06 mm wide where the
+  post meets the snow. **0 flags.**
 - `fragility`: 0 high, 0 watch. Three short slender runs (slenderness 2 at
   most) where the arms join the post.
 
