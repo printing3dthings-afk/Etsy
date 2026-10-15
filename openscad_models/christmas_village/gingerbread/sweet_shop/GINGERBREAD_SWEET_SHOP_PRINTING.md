@@ -54,8 +54,11 @@ pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **5 h 28 m** | **40.6 cm³, about 50 g of PLA** |
+| **single colour** | **2 h 6 m** | **16.9 m, 50 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 50 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -74,18 +77,22 @@ The bottom tier is 54 mm tall for it: its room keeps its full width to
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.29 mm, median 4.29 mm, against the 1.2 mm floor
+  - 1st-percentile wall 1.33 mm, median 4.30 mm, against the 1.2 mm floor
     (1.39 with SWEETS flush, before 2026-10-07);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 20.05 cm² of bed contact;
+  - 20.41 cm² of bed contact;
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts: closed, and every edge shared by
   exactly two faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- **The parts are disjoint in the model:** all six pairwise intersections
+  render empty in OpenSCAD. Measured on the exported meshes
+  (`tools/part_mesh.py check`, 2026-10-15), the body and the roof share
+  0.43 mm³ where their faces touch: float residue of the export, the same
+  0.427 mm³ before the mark changed.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-07 with SWEETS raised): **0 flags**. 14.1 mm³ of
-  61,660 mm³ is not printed; 0.1 mm³ printed that was not modelled; 0.2 mm³
+  layer; re-run 2026-10-15 with the inlaid mark): **0 flags**. 14.1 mm³ of
+  61,729 mm³ is not printed; 0.11 mm³ printed that was not modelled; 0.24 mm³
   printed in another colour. SWEETS loses nothing it flags. The largest miss
   is 0.4 mm³ at the edge of the lollipop's disc.
 - `fragility` (re-run 2026-10-07): nothing slender enough to snap. 0 high,
