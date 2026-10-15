@@ -60,8 +60,11 @@ stand on the pane. The upper floor's casements are inlaid in the plaster.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **8 h 43 m** | **69.3 cm³, about 86 g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 86 g of model **+ purge** |
+| **single colour** | **3 h 7 m** | **29.7 m, 89 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 89 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -79,17 +82,21 @@ headroom).
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 4.48 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.32 mm, median 4.48 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 37.85 cm² of bed contact;
+  - 38.21 cm² of bed contact;
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts: closed, and every edge shared by
   exactly two faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- **The parts are disjoint in the model:** all six pairwise intersections
+  render empty in OpenSCAD. Measured on the exported meshes
+  (`tools/part_mesh.py check`, 2026-10-15), the body and the roof share
+  0.61 mm³ where their faces touch: float residue of the export, the same
+  0.606 mm³ before the mark changed.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-08 with the timbers raised): 30.8 mm³ of 113,783 mm³
-  is not printed; 0.6 mm³ printed that was not modelled; 0.2 mm³ printed in
+  layer; re-run 2026-10-15 with the inlaid mark): 30.8 mm³ of 113,825 mm³
+  is not printed; 0.56 mm³ printed that was not modelled; 0.17 mm³ printed in
   another colour. **8 flags:**
   - four new ones, 4.1 mm³ each, at z 42.8-44.0 above the four corner
     casements, about 1.1 mm inside the 1.68 mm plaster wall: a pocket 1.16 mm
