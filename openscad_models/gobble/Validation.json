@@ -1,0 +1,115 @@
+{
+  "body": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Gobble/Gobble_body.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"172.0 x 210.0 x 109.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"1060.03 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"16.08 cm2 of upward surface too shallow to hide a layer step (worst terrace 6.64 mm)\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 25.60mm, 1st pct 3.20mm, 0.00% of material below one 0.42mm bead (0.25% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    172.0,\n    210.0,\n    109.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Gobble/Gobble_body.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  warn  Zero Faces: 12\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 100\n  warn  Sharp Edge: 2\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "status": "NOT VERIFIED",
+      "reason": "slicing produced nothing (exit -11):\n",
+      "runtime_issue": "Saved PrusaSlicer binary and archive are truncated; support requirements not validated."
+    }
+  },
+  "tongue": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Gobble/Gobble_tongue.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"112.0 x 100.0 x 75.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"156.87 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 13.00mm, 1st pct 4.00mm, 0.01% of material below one 0.42mm bead (0.02% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    112.0,\n    100.0,\n    75.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Gobble/Gobble_tongue.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 113\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "status": "NOT VERIFIED",
+      "reason": "slicing produced nothing (exit -11):\n",
+      "runtime_issue": "Saved PrusaSlicer binary and archive are truncated; support requirements not validated."
+    }
+  },
+  "tray": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Gobble/Gobble_tray.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"108.0 x 52.0 x 31.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"41.55 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 3.00mm, 1st pct 3.00mm, 0.00% of material below one 0.42mm bead (0.03% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    108.0,\n    52.0,\n    31.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Gobble/Gobble_tray.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 119\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "status": "NOT VERIFIED",
+      "reason": "slicing produced nothing (exit -11):\n",
+      "runtime_issue": "Saved PrusaSlicer binary and archive are truncated; support requirements not validated."
+    }
+  },
+  "eye": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Gobble/Gobble_eye.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"30.0 x 40.0 x 3.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"2.61 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 15.48mm, 1st pct 1.80mm, 0.00% of material below one 0.42mm bead (0.00% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    30.0,\n    40.0,\n    3.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Gobble/Gobble_eye.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  ok    Thin Faces: 0\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "status": "NOT VERIFIED",
+      "reason": "slicing produced nothing (exit -11):\n",
+      "runtime_issue": "Saved PrusaSlicer binary and archive are truncated; support requirements not validated."
+    }
+  },
+  "pupil": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Gobble/Gobble_pupil.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"13.0 x 13.0 x 1.8 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"0.23 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"no shallow upward surface\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 7.25mm, 1st pct 1.80mm, 0.00% of material below one 0.42mm bead (0.00% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    13.0,\n    13.0,\n    1.8\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Gobble/Gobble_pupil.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  ok    Thin Faces: 0\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "status": "NOT VERIFIED",
+      "reason": "slicing produced nothing (exit -11):\n",
+      "runtime_issue": "Saved PrusaSlicer binary and archive are truncated; support requirements not validated."
+    }
+  },
+  "tooth": {
+    "mesh_gate": {
+      "exit_code": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Gobble/Gobble_tooth.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"14.0 x 28.0 x 4.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"0.82 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"1.78 cm2 of upward surface too shallow to hide a layer step (worst terrace 7.07 mm)\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 6.57mm, 1st pct 1.05mm, 0.00% of material below one 0.42mm bead (0.20% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    13.98,\n    27.97,\n    4.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "exit_code": 0,
+      "output": "/workspace/scratch/308f9e219c65/Gobble/Gobble_tooth.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 142\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    },
+    "slice": {
+      "status": "NOT VERIFIED",
+      "reason": "slicing produced nothing (exit -11):\n",
+      "runtime_issue": "Saved PrusaSlicer binary and archive are truncated; support requirements not validated."
+    }
+  },
+  "assembly_checks": {
+    "phone_body": 0.0,
+    "phone_tongue": 0.0,
+    "phone_tray": 0.0,
+    "phone_eyeL": 0.0,
+    "phone_pupilL": 0.0,
+    "phone_toothL": 0.0,
+    "phone_eyeR": 0.0,
+    "phone_pupilR": 0.0,
+    "phone_toothR": 0.0
+  }
+}

@@ -1,0 +1,8 @@
+// The letters are a FLUSH inlay in the board's face, in the accent colour --
+// no relief. Raised 1 mm, every horizontal stroke was a sub-bead slab with
+// an underside; inlaid, the colour does the work and the face stays flat.
+module sign_letters() {
+    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t - 0.8])
+        linear_extrude(0.8) text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
+                                 halign = "center", valign = "center", spacing = 1.06);
+}

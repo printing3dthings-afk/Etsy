@@ -36,6 +36,17 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
 
 import main as server  # noqa: E402
 
+# The success path calls _append_ops_runbook_entry(), which writes to
+# _OPS_RUNBOOK_PATH -- _volume_or_local(...), so with no volume mounted that is
+# the git-tracked data/knowledge_base/ops_runbook.md. This test already isolates
+# _COMPETITOR_RESEARCH_PATH but not this one, so every suite run appended a real
+# "Monthly competitor research refresh" entry to the doc Frank reads as ground
+# truth. Caught 2026-09-05.
+_tmp_runbook = tempfile.NamedTemporaryFile(
+    prefix="frank_competitor_refresh_runbook_", suffix=".md", delete=False)
+_tmp_runbook.close()
+server._OPS_RUNBOOK_PATH = Path(_tmp_runbook.name)
+
 _failures: list[str] = []
 
 

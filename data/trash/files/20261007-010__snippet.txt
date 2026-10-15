@@ -1,0 +1,8 @@
+// SWEETS round the front, over the shop's ridge, inlaid flush: raised, every
+// level stroke (the E's arms, the T's bar) came to a knife edge under its
+// sloped underside, down to 0.01 mm
+module sweets() intersection() {
+    difference() { cylinder(r = T(0)[0] + 0.01, h = 100, $fn = FNC); cylinder(r = T(0)[0] - 0.6, h = 100, $fn = FNC); }
+    cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) translate([0, 0, -1.5]) linear_extrude(2)
+        text("SWEETS", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
+}

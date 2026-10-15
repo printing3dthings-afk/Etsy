@@ -1,5 +1,5 @@
 # OnBrandCraftz — Master TODO List
-*Last updated: 2026-06-04*
+*Last updated: 2026-09-11*
 
 ---
 
@@ -14,6 +14,7 @@
 | 3 | **Photograph filament tags** — send photos of filament spools tonight so I can log them into `tools/filament_tracker.py`. Include the spool used for OBC-3DRK-002 (Skinny Can Koozie) | Tonight | Needed to track COGS per product |
 | 4 | **Run TikTok OAuth** — `python tools/tiktok_oauth.py` | 5 min | Unlocks TikTok auto-posting |
 | 19 | **Set up Gmail relay for digital delivery emails** — Microsoft killed basic-auth/app-password SMTP for personal Outlook.com mailboxes (Sept 2024), so `SMTP_PASSWORD` can't be an Outlook app password. Create or use an existing Gmail account → Google Account → Security → 2-Step Verification → App passwords → generate one → send the Gmail address + app password to Claude to add to `.env` as `SMTP_USER`/`SMTP_PASSWORD` (host becomes `smtp.gmail.com`). Customers still see OnBrandCraftz / Printing3dthings@outlook.com as the reply-to. | 10 min | Unlocks `tools/digital_delivery_tools.py` — direct email delivery of corrected/replacement files to customers (e.g. Christina Curry's wrong-file order) |
+| 21 | **Rotate `APP_SECRET_TOKEN`** — the current value was read aloud in a Claude session transcript on 2026-09-10, so treat it as disclosed. It is the bearer token for every plain-REST staging endpoint on Frank *and* the shared secret the mobile app and the P1S bridge authenticate with, so all three have to change together: (a) generate a new random value, (b) set `APP_SECRET_TOKEN` in Railway and redeploy, (c) update `tools/relay/.env` on the bridge machine and restart `bambu_p1s_bridge.py`, (d) update the mobile app's stored token. Doing (b) alone silently kills printer telemetry. | 15 min | Nothing is broken today — this is a disclosed-credential rotation, not an outage |
 
 ### New platform accounts (free — each unlocks a new revenue stream)
 
@@ -48,6 +49,7 @@
 | 15 | **Connect Buffer.com for TikTok** (after #4) — Buffer.com free account → connect TikTok → schedule from `data/tiktok_content_calendar.json` | 10 min | 30 days of content already written |
 | 16 | **Test SMTP from your machine** — run `python tools/ads_monitor.py` and confirm email arrives at Printing3dthings@outlook.com | 5 min | SMTP port 587 is blocked in this environment, works fine from Windows |
 | 17 | **Etsy re-auth** — due ~September 1, 2026 — run `python tools/etsy_oauth.py` | 2 min | OAuth refresh token expires 90 days after last auth |
+| 20 | **Measure your Stanley cup** — three numbers with calipers, for the Stanley snack tray design: (1) lid **outer diameter** at its widest, where a tray would rest, (2) **straw outer diameter**, (3) **straw offset from centre** — centre of lid to centre of straw. Send all three. | 2 min | Stanley publishes the bounding box and base diameter but **not** the lid OD or straw diameter, and no retailer lists them. "Fits a Stanley" is a compatibility claim — CLAUDE.md's top rule makes an untested one a hard stop, so this cannot be guessed |
 | 18 | **Back-to-school keywords** — by July 4, 2026 — run `python tools/seasonal_keywords.py --push` | 5 min | Updates all planner keywords for back-to-school peak season |
 
 ---
@@ -130,6 +132,86 @@ python tools/upload_sticker_listings.py
 ---
 
 ## 📋 BACKLOG (future work, no deadline)
+
+### 3D print designs
+*Added 2026-09-08. There was no 3D-print queue in this file before; design work
+was tracked only in `openscad_models/*_PRINTING.md` per product, which records
+what was built and not what is still wanted.*
+
+| Design | Status | Blocked on |
+|---|---|---|
+| **Stanley-style tumbler snack tray** — sits on the lid of a Quencher-type cup, straw hole through the middle, self-centring conical seat underneath so it fits a *range* of tumbler diameters rather than one model, 3–4 shallow snack compartments. Same six-petal flower language as the sauce trays. | Concept approved by Scott 2026-09-08, geometry **not started** | The three measurements in YOUR ACTIONS #20. Also needs a concept pitch before any `.scad` is written, per the standing rule |
+| **Tighter sauce-cup fit** — the 2oz cavity has a constant 3.33mm radial gap (6.7mm across); the cup is held by being 18mm down a well, not by contact. A real nesting fit needs a 55.2mm mouth instead of 61.1mm, which visibly shrinks every well and wants `ring_r` re-solved with it. | Measured and documented 2026-09-08, **not changed** | Scott's call — it is a look change to an approved design, not a bug fix |
+| **Personalized desk name plate + phone dock** — ~150 × 45 × 55mm wedge, the name across the face as a flush two-colour inlay, a ramped slot behind it holding a phone at reading angle, pen groove along the top. Prints face-down on smooth PEI so the name side comes off mirror-flat (the `snap_box` trick). ~2.5h, ~55g, two colours, no supports. New-job / graduation / teacher / coworker gifts. | Pitched 2026-09-09, **not chosen, nothing written** | Scott picking it. Lowest risk of the three — every technique in it is already proven on a real print |
+| **Rotating desk carousel organizer** — ~95mm dia × 85mm, three tiers of angled pockets on a print-in-place thrust bearing, comes off the plate already turning. ~3h, ~60g, one plate. Nothing in the catalogue moves, and a spinning object films in three seconds — external traffic is a confirmed Etsy ranking signal. | Pitched 2026-09-09, **not chosen, nothing written** | Scott picking it. Highest-value technique risk: same mechanism class that fused the keychain twice, so a 20-minute bearing coupon gets printed before any 3-hour run (see Technique 57 — design to the *deposited-bead* gap, not the modelled one) |
+| **Self-watering planter** — ~110mm dia × 120mm, inner pot with a wick stem sitting in an outer reservoir, water-level slot so the refill point is visible. Two objects, one plate, PETG for moisture per the filament table. ~4h, ~90g. The upsell to the live Ribbed Planter Pot — same audience, higher price, and the only one of the three with proof the buyer already exists. | Pitched 2026-09-09, **not chosen, nothing written** | Scott picking it. Highest product risk: a planter that seeps is a bad review, and watertightness rides on wall count and flow calibration as much as geometry. Needs a 24h fill test on paper towel before it ever lists |
+| **Phyllotaxis luminary** — ~95mm dia × 140mm. Several hundred raised lenses on the golden-angle spiral (sunflower-seed packing); each lens is a thin spot in the wall, so backlit it becomes a field of hundreds of glowing points that reorganise into new spirals as you walk past. Texture **raised outward**, not cut in — there is a cavity, so depth is wall-limited (Technique 52's option 1). Detail target **rugosity ≥1.8**. ~4.5h, no supports, every lens self-supporting by construction. | Pitched 2026-09-09, **not chosen, nothing written** | Scott picking it. Above the usual 4h target — fine at lamp pricing (the target is a goal, not a hard stop; Scott 2026-09-10), but slice it and say the number rather than hide it |
+| **Geode tea light holder** — ~85mm dia × 75mm. Fractured rock exterior from a layered noise field, split down one side opening onto an interior lined with faceted crystal facets; candlelight escapes through the crack and catches every facet. The only one of the three where the *inside* is the payoff. Detail target **rugosity ≥1.5**, which the noise field gives free. | Pitched 2026-09-09, **not chosen, nothing written** | Scott picking it. Lowest risk of the three at ~2h, and the buyer is already proven — two tea light holders are live |
+
+**Pitched and deliberately not included (2026-09-09):** a hinged keepsake/ring
+box with a personalised lid inlay. Dropped before pitching because `snap_box`
+already ships a two-piece box with a flush multi-colour logo inlay in the lid —
+a hinge is a real difference, but the product it sells is the same one.
+
+**Not on this list on purpose:** adding the straw hole to the existing 6-well
+sauce tray. Measured 2026-09-08 — the tray's solid centre is only 73mm across
+and a Quencher rim needs to land at 98mm, so the rim falls where the wells
+already are. Moving the wells out means `ring_r` 63 → 78, which scales the tray
+to ~251mm (the bed is 256) and ~11.8 hours. A separate, smaller product is the
+right answer.
+
+### 3D print tooling — getting a file to the P1S
+*Written up 2026-09-08 so this can be decided later without re-deriving it.
+Today the answer is **no, Frank cannot send a print**, and that is by design,
+not an oversight — see "Why it cannot today" below.*
+
+**Option A — drop the file where Bambu Studio can see it.** *Small, low risk.*
+The relay already has `local_write_binary_file`, which writes into an Allowed
+Folder on Scott's machine. Point it at a folder, and a finished `.3mf` lands
+there ready to open — no downloading files out of chat. Scott still slices and
+still presses Print. This uses an existing, already-scoped capability rather
+than opening any new path to the printer. Roughly an afternoon.
+
+**Option B — real job submission.** *Bigger, and it has a blocker that is not
+about permissions.* Two steps on a P1S in LAN mode:
+
+1. **Upload** the file to the printer over FTPS (implicit TLS, port 990, user
+   `bblp`, password = the printer's Access Code).
+2. **Publish** an MQTT command referencing it.
+
+Step 2 is **already proven in this repo** — `tools/relay/bambu_p1s_bridge.py`
+connects on MQTT/TLS 8883 as `bblp` with the Access Code and publishes to
+`device/{SERIAL}/request` every second. The command channel exists and works;
+only the payload differs.
+
+Step 1 is **NOT verified here.** The FTPS details above are community-
+documented, the same status the camera protocol had before the bridge checked
+it against a real open-source reference (see the "Camera relay" comment block
+in the bridge). Verify it against a real printer before trusting it.
+
+**The real blocker is slicing, not access.** A P1S expects a Bambu-flavoured
+3MF carrying its own metadata and AMS handling. This container has
+`prusa-slicer`, which is fine for the honest time/cost estimates in the
+`*_PRINTING.md` notes, but its output is not a drop-in for a P1S — sending it
+would likely fail or print badly. Real submission wants Bambu Studio or Orca
+doing the slice on Scott's machine, which is where Option A already puts the
+file anyway.
+
+**Why it cannot today, verified in code:**
+- The bridge publishes exactly one MQTT message ever: `{"pushing": {"command":
+  "pushall"}}` — a status request. No upload, no print command.
+- `_LOCAL_EXEC_WHITELIST = {"dir_listing", "disk_usage"}`, with the comment
+  *"Step 1 scope, Scott's locked-in decision: read-only diagnostics only."* The
+  relay re-checks against its own hardcoded copy rather than trusting the
+  server's, so a compromised Frank could not widen it.
+- Frank is on Railway and has no route to the home LAN at all.
+- Starting a print is a physical, irreversible action on a machine with hot
+  parts — the class the Autonomy Boundaries section gates. Even built, it
+  should stage for approval rather than fire, same as an Etsy publish.
+
+**Recommendation:** Option A on its own merits. Option B only if unattended
+queueing turns out to be worth it, and never without the slicing question
+answered first.
 
 ### More planners
 | ID | Product | Theme | Season |

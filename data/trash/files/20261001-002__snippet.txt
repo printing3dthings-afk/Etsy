@@ -1,0 +1,1 @@
+module door_hole() nf(1, 0, plinth_h) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) door_outline();

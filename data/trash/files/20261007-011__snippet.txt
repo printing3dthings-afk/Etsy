@@ -1,0 +1,2 @@
+module cocoa_text() press(270, 55.8)
+    text("COCOA", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);

@@ -1,0 +1,86 @@
+{
+  "Base": {
+    "watertight": true,
+    "bodies": 1,
+    "engraved_depth_mm": 0.7,
+    "engraving_bounds": [
+      [
+        -59.0,
+        -4.40460205078125,
+        0.6999998092651367
+      ],
+      [
+        -31.0,
+        4.40460205078125,
+        0.6999998092651367
+      ]
+    ],
+    "sha256": "981369da432e6d1c49c0d7873a3dae38c161deaab0ebc2b658ef1635f484ecf0",
+    "mesh_gate": {
+      "returncode": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Crescent_Valet/Crescent_Base.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"210.0 x 154.0 x 100.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"436.09 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"7.45 cm2 of upward surface too shallow to hide a layer step (worst terrace 6.12 mm)\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 18.18mm, 1st pct 4.80mm, 0.02% of material below one 0.42mm bead (0.02% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    210.0,\n    154.0,\n    99.99\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "returncode": 0,
+      "output": "/workspace/scratch/308f9e219c65/Crescent_Valet/Crescent_Base.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  warn  Zero Faces: 2\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 64\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    }
+  },
+  "Tray": {
+    "watertight": true,
+    "bodies": 1,
+    "engraved_depth_mm": 0.7,
+    "engraving_bounds": [
+      [
+        -72.0,
+        -3.7753753662109375,
+        0.6999998092651367
+      ],
+      [
+        -48.0,
+        3.7753753662109375,
+        0.6999998092651367
+      ]
+    ],
+    "sha256": "628a7473311a3ef3b3ece6f855596f98ca5f3641bb27bab80dd603e35b60cd79",
+    "mesh_gate": {
+      "returncode": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/Crescent_Valet/Crescent_Tray.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"121.0 x 133.0 x 18.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"53.10 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"9.94 cm2 of upward surface too shallow to hide a layer step (worst terrace 1.52 mm)\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 3.09mm, 1st pct 2.17mm, 0.02% of material below one 0.42mm bead (0.02% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    121.03,\n    132.99,\n    18.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "returncode": 0,
+      "output": "/workspace/scratch/308f9e219c65/Crescent_Valet/Crescent_Tray.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 102\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    }
+  },
+  "Glow": {
+    "watertight": true,
+    "bodies": 1,
+    "engraved_depth_mm": 0.7,
+    "engraving_bounds": [
+      [
+        97.0,
+        -18.146148681640625,
+        0.6999998092651367
+      ],
+      [
+        117.0,
+        -11.853851318359375,
+        0.6999998092651367
+      ]
+    ],
+    "sha256": "4aba4c5bf503ab63470c98f8a2587355efac7fec61317ed77e917b025580e066",
+    "mesh_gate": {
+      "returncode": 0,
+      "output": "{\n  \"file\": \"/workspace/scratch/308f9e219c65/shell.stl\",\n  \"passed\": true,\n  \"checks\": [\n    {\n      \"check\": \"fits_build_volume\",\n      \"pass\": true,\n      \"detail\": \"160.0 x 76.0 x 235.0 mm vs P1S 256 x 256 x 256\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"watertight\",\n      \"pass\": true,\n      \"detail\": \"closed surface\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"winding_consistent\",\n      \"pass\": true,\n      \"detail\": \"normals agree\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"positive_volume\",\n      \"pass\": true,\n      \"detail\": \"1170.89 cm3\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"component_count\",\n      \"pass\": true,\n      \"detail\": \"1 separate bodies, expected 1\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"no_degenerate_faces\",\n      \"pass\": true,\n      \"detail\": \"0 zero-area faces\",\n      \"level\": \"FAIL\"\n    },\n    {\n      \"check\": \"terracing\",\n      \"pass\": true,\n      \"detail\": \"37.93 cm2 of upward surface too shallow to hide a layer step (worst terrace 4.07 mm)\",\n      \"level\": \"INFO\"\n    },\n    {\n      \"check\": \"wall_thickness\",\n      \"pass\": true,\n      \"detail\": \"median 33.77mm, 1st pct 1.50mm, 0.00% of material below one 0.42mm bead (0.01% below two)\",\n      \"level\": \"INFO\"\n    }\n  ],\n  \"bbox_mm\": [\n    160.0,\n    76.0,\n    235.0\n  ]\n}\n",
+      "stderr": ""
+    },
+    "print_check": {
+      "returncode": 0,
+      "output": "/workspace/scratch/308f9e219c65/shell.stl\n  ok    Non Manifold Edges: 0\n  ok    Bad Contiguous Edges: 0\n  ok    Intersect Face: 0\n  ok    Zero Faces: 0\n  ok    Zero Edges: 0\n  ok    Non-Flat Faces: 0\n  warn  Thin Faces: 141\n  ok    Sharp Edge: 0\n  ok    Overhang Face: 0\nPASSED\n",
+      "stderr": ""
+    }
+  }
+}

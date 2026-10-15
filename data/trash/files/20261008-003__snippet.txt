@@ -1,0 +1,8 @@
+module sp_at_g(i, d) let (p = sp_pts(i)) translate([tx + p[0] * cos(tc_ang), ty + p[0] * sin(tc_ang), sp_z0 + p[1]]) sphere(r = sp_r(i) + d, $fn = 24);
+module spire_g(d) for (i = [0 : sp_n - 1]) hull() { sp_at_g(i, d); sp_at_g(i + 1, d); }
+module spire_stripes_up() for (k = [0 : 1]) lean() intersection() {
+    difference() { spire_g((k + 1) * 0.15); spire_g(k * 0.15); }
+    stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([0, 0, 2 * SH * (k + 1) * 0.15]) stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
+    translate([-100, -100, 0]) cube([200, 200, sp_z0 + sp_pts(sp_n)[1] - sp_r(sp_n)]);
+}
