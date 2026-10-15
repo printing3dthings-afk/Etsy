@@ -57,6 +57,13 @@ def union(d, name):
                        cwd=d, capture_output=True, text=True, env=env)
     if r.returncode:
         raise SystemExit(f"union export failed:\n{r.stderr[-2000:]}")
+    # CGAL writes two solids that touch along a line as one edge of four
+    # faces; manifold's merge welds them without moving a vertex. With the
+    # inlay added, the Victorian cottage's union kept two such edges where
+    # the gable dives into the cone and failed watertight (2026-10-15).
+    import part_mesh
+    p = d / f"{name}_union.stl"
+    part_mesh.to_trimesh(part_mesh.load(str(p))).export(p)
 
 
 def export_parts(d, name):
