@@ -35,6 +35,7 @@
 //   accent  evergreen: the wreath, the garland
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../../lattice_lib.scad>   // rrect_pts
 
 $fa = 4;  $fs = 0.4;
@@ -571,8 +572,8 @@ module base() {
     }
 }
 // under the front, between the door's step and the base's edge
-module brand_mark() translate([0, -Dh - 3.0, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([0, -Dh - 3.0, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([0, -Dh - 3.0, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // =====================================================================================
 // PARTS
@@ -590,7 +591,9 @@ module body_raw() {
     garland_bows();
     step();
 }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { union() { slab(); slates(); } nave_room(); tower_cut(); }
     difference() { spire(); tower_room(); }
     difference() { union() { apse_cone(); apse_slates(); } apse_room(); }

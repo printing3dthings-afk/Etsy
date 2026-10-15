@@ -16,6 +16,7 @@ include <../../relief_lib.scad>
 include <../accessory_lib.scad>
 
 part = "all";
+MARK = [[-4, 0], 5.0];         // the maker's mark: where on the base, its cap height
 SH = 1.2;
 
 zb = 3.2;                   // the snow's top
@@ -122,7 +123,7 @@ module base() difference() {
         // snow on the box's lid, in front of the brazier
         translate([BX - 2.6, 0, Z1 - 0.3]) scale([2.2, 5.6, 1.0]) intersection() { sphere(1, $fn = 32); translate([-2, -2, 0]) cube(4); }
     }
-    brand_mark([-4, 0], 5.0);
+    brand_mark(MARK[0], MARK[1]);
 }
 
 module raw(p) {

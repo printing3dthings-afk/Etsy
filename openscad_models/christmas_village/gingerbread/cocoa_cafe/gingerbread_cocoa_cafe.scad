@@ -32,6 +32,7 @@
 //           stripes
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
@@ -388,8 +389,8 @@ module base() {
     }
 }
 // under the shop's front, between its wall and the base's edge
-module brand_mark() translate([4, SYc - Dh - 4.8, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([4, SYc - Dh - 4.8, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([4, SYc - Dh - 4.8, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 
 // =====================================================================================
@@ -400,7 +401,9 @@ module body_raw() {
     difference() { at_shop() walls_solid(); mug_cut(); }
     marshmallows();
 }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     // less the shop's room too: less the mug's only, a 0.3 ring of cocoa inside
     // the wall hung flat over the shop's opening into the mug
     difference() { cocoa(); room(); }

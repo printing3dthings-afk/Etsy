@@ -33,6 +33,7 @@
 // at the back edge of a 46 mm circle round the centre.
 
 include <BOSL2/std.scad>
+include <../../brand/obc_mark.scad>   // the OBC maker's mark
 
 $fa = 2;  $fs = 0.4;
 
@@ -372,17 +373,11 @@ module props() {
 }
 
 // ---- mark ------------------------------------------------------------------------------------------
-module brand_mark() {
-    // Read from below with the front toward you (2026-09-27). The letters were
-    // flipped top-to-bottom, which O, B and C nearly survive, so it went
-    // unnoticed until Scott's chapel read "ƆBO" under his hand: they need
-    // flipping left-to-right. Spacing 1.16 at size 4.6: at 1.0 the plastic
-    // left between letters was 0.39-0.46 mm, under one bead, so the slicer
-    // dropped it and the letters ran together. Now 1.1-1.3 mm, 16.2 mm wide.
-    translate([door_x, -Dh - st_d / 2, -0.5]) linear_extrude(1.3)
-        mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black",
-                               halign = "center", valign = "center", spacing = 1.16);
-}
+// the maker's mark (2026-10-14): OBC inlaid 0.6 mm in the trim's cream, so it reads
+// light on the dark body, grooved like the logo (../../brand/obc_mark.scad).
+// The library mirrors it to read from below with the front toward you.
+module brand_mark() translate([door_x, -Dh - st_d / 2, 0]) obc_cut(4.6);       // the letters, cut from the body
+module brand_inlay() translate([door_x, -Dh - st_d / 2, 0]) obc_inlay(4.6);    // and filled in cream
 
 // ---- parts ---------------------------------------------------------------------------------------------
 module body_solid() {
@@ -392,7 +387,8 @@ module body_solid() {
     all_battens();
     step();
 }
-module trim_raw() {
+module trim_raw() { trim_raw0(); brand_inlay(); }   // the mark's inlay prints in cream
+module trim_raw0() {
     for (w = WINDOWS) on_face(w[0], w[1], w[2]) {
         relief_up(-0.4, fr_t) { win_frame_outer(w); offset(r = 0.3) win_outline(w); }
         translate([0, 0, -0.4]) linear_extrude(bd + 0.4) win_muntins(w, 0.6);

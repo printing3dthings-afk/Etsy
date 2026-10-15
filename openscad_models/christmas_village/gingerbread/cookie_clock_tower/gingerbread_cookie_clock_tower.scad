@@ -33,6 +33,7 @@
 //           stripes, the peppermints' stripes
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
@@ -335,8 +336,8 @@ module base() {
     }
 }
 // under the door, between the room's opening (-23.8) and the base's edge (-33.5)
-module brand_mark() translate([0, -28.6, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([0, -28.6, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([0, -28.6, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // =====================================================================================
 // PARTS
@@ -366,7 +367,9 @@ module ck_art() {
 module pepper_stripes_up() for (p = PM) translate([p[0], p[1], plinth_h + 1.19]) linear_extrude(0.31)
     intersection() { circle(r = p[2] - 0.3); pepper_wedges(p[2]); }
 
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { union() { cone(); shingles(); } room(); }
     door_leaf();
     // stopped at the room, like the glass: 0.6 into it, their lower edges hung

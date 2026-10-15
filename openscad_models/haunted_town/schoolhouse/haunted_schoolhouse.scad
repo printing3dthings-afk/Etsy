@@ -45,6 +45,7 @@
 // plate to the wall top at 62 mm and higher inward.
 
 include <BOSL2/std.scad>
+include <../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../lattice_lib.scad>   // shared, lives in openscad_models/
 
 $fa = 2;  $fs = 0.4;
@@ -427,7 +428,8 @@ module openings() {
 module frame_holes() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2]) relief_hole(-0.4, -0.2, fr_t + 1.84) offset(r = 0.4) pair2d();
 }
-module trim_raw() {
+module trim_raw() { trim_raw0(); brand_inlay(); }   // the mark's inlay prints in cream
+module trim_raw0() {
     for (w = WINDOWS) face_tf(w[0], w[1], w[2]) {
         relief_up(-0.4, fr_t) { win_frame_outer(); offset(r = 0.3) pair2d(); }
         // the glass behind both slits, 0.6 into the reveal all round
@@ -451,9 +453,11 @@ module accent_raw() {
 // ---- mark ------------------------------------------------------------------------------
 // Under the porch deck, read from below with the front toward you: flipped
 // left-to-right (2026-09-27, the chapel's lesson), spacing 1.16 at size 4.6.
-module brand_mark() translate([0, (y_f + y_w) / 2, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black",
-                           halign = "center", valign = "center", spacing = 1.16);
+// the maker's mark (2026-10-14): OBC inlaid 0.6 mm in the trim's cream, so it reads
+// light on the dark body, grooved like the logo (../../brand/obc_mark.scad).
+// The library mirrors it to read from below with the front toward you.
+module brand_mark() translate([0, (y_f + y_w) / 2, 0]) obc_cut(4.6);       // the letters, cut from the body
+module brand_inlay() translate([0, (y_f + y_w) / 2, 0]) obc_inlay(4.6);    // and filled in cream
 
 // ---- parts ------------------------------------------------------------------------------
 module body_core() {

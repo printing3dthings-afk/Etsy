@@ -2384,6 +2384,25 @@ work look like a gap that needs re-doing.
 
 ## Standing rule — every finished physical design gets an OnBrandCraftz maker's mark, as a negative (engraved) cut (2026-08-27)
 
+**Current standard (2026-10-15): use `openscad_models/brand/obc_mark.scad`.**
+Scott chose a new logo, gold OBC with horizontal stripes
+(`openscad_models/brand/icons/`). In prints it becomes an INLAY: the
+letters (Montserrat ExtraBold, set 0.95 mm apart) cut 0.6 mm into the
+underside and filled in a contrasting colour, flush, with the logo's
+stripes as grooves one layer deep across their face. Engraved white on
+white, the old mark barely showed. `obc_cut(h)` comes out of the base,
+`obc_inlay(h)` goes in the contrasting part, `h` is the cap height. Both
+are already mirrored to read from below. The inlay stands 0.02 mm proud of
+its cut so the welded print closes; whatever part holds the base must
+subtract the inlay too, or the colour parts overlap by that 0.02. On a
+one-colour model use `obc_engrave(h)`. The stripes are NOT cut through the
+letters: at print scale a stripe can't be finer than two beads, and struck
+through they took out the B's middle bar at 4-6 mm and broke OBC up like a
+barcode at 8-10. Pick the inlay colour for contrast with the base: slate on
+white (Victorian), chocolate on icing (gingerbread), cream on the haunted
+town's dark bodies. The rule below still holds: the mark is a cut, never
+raised.
+
 Scott's explicit, durable instruction: don't forget to add the OnBrandCraftz
 mark, and it must be a NEGATIVE part (an engraved/recessed cut into the
 model), never a raised/positive add-on. This reuses the exact

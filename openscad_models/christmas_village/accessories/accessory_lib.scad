@@ -16,12 +16,19 @@ $fa = 4; $fs = 0.3;
 PRIORITY = ["roof", "accent", "trim", "body"];
 function above(p) = p == "roof" ? [] : p == "accent" ? ["roof"] : p == "trim" ? ["roof", "accent"] : ["roof", "accent", "trim"];
 
+// A piece sets MARK = [[x, y], cap height] for its maker's mark, and may set
+// MARK_PART to the colour the inlay prints in (slate, "roof", by default).
+// base() cuts the letters out of the snow with brand_mark(MARK[0], MARK[1]);
+// the inlay is added to MARK_PART here, so no piece's raw() has to know of it.
+function mark_on(p) = !is_undef(MARK) && p == (is_undef(MARK_PART) ? "roof" : MARK_PART);
+module mark_inlay() translate([MARK[0][0], MARK[0][1], 0]) obc_inlay(MARK[1]);
+module raw_marked(p) { raw(p); if (mark_on(p)) mark_inlay(); }
 module part_out(p) difference() {
-    raw(p);
-    for (q = above(p)) raw(q);
+    raw_marked(p);
+    for (q = above(p)) raw_marked(q);
 }
 module emit() {
-    if (part == "union") union() for (p = PRIORITY) raw(p);
+    if (part == "union") union() for (p = PRIORITY) raw_marked(p);
     else if (part == "all") {
         color("#2E3440") part_out("roof"); color("#2F6B45") part_out("accent");
         color("#F4F1EA") part_out("trim"); color("#A8483A") part_out("body");
@@ -46,11 +53,12 @@ module drift(p, s) translate([p[0], p[1], p[2] - 0.3]) intersection() {
 }
 
 // ---- the maker's mark ------------------------------------------------------------------------
-// Engraved 0.8 deep into the underside, mirrored to read from below, as on the
-// village's buildings. Montserrat Black "OBC": 2.6 extrusions a stroke at
-// size 4.0 (tools/glyph_probe.py, 2026-10-13); never smaller than that.
-module brand_mark(p, size = 4.0, a = 0) translate([p[0], p[1], -0.5]) rotate([0, 0, a]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = size, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+// OBC inlaid 0.6 mm into the underside in a contrasting colour, grooved like
+// the logo (../../brand/obc_mark.scad, 2026-10-14). This cuts the letters out
+// of the snow; emit() adds the coloured inlay. Engraved white on white, the
+// old mark barely showed.
+include <../../brand/obc_mark.scad>
+module brand_mark(p, h = 5.0, a = 0) translate([p[0], p[1], 0]) rotate([0, 0, a]) obc_cut(max(h, 4.0));
 
 // ---- shapes that print without support -------------------------------------------------------
 // a hole whose crown peaks at 60 deg

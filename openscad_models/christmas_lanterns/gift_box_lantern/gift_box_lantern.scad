@@ -65,8 +65,9 @@ module band() difference() {
     hull() { translate([0, 0, zr - SH * 0.8 - 0.01]) rsq(PI_, 0.01); translate([0, 0, zr]) rsq(BI, BH + 1); }
 }
 // the maker's mark under the middle of the floor
-module frame() difference() { union() { base(); posts(); rail(); band(); } brand_mark(0, 7); }
-module glass() difference() {
+module frame() difference() { union() { base(); posts(); rail(); band(); } brand_mark(0, 7); brand_inlay(0, 7); }
+module glass() { glass0(); brand_inlay(0, 7); }   // the maker's mark prints in the glass's white
+module glass0() difference() {
     translate([0, 0, z0 - 0.5]) difference() { rsq(P, H); translate([0, 0, -1]) rsq(PI_, H + 2); }
     if (EMB == 0) frame();
 }

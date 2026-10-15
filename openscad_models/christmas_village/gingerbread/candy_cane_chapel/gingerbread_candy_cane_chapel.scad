@@ -33,6 +33,7 @@
 //           canes' and peppermints' stripes, the round window's wedges
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
@@ -446,8 +447,8 @@ module base() {
     }
 }
 // under the tower, between its room's opening and the base's edge
-module brand_mark() translate([TC[0], TC[1] - rti - 5.2, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([TC[0], TC[1] - rti - 5.2, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([TC[0], TC[1] - rti - 5.2, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // =====================================================================================
 // PARTS
@@ -455,7 +456,9 @@ module brand_mark() translate([TC[0], TC[1] - rti - 5.2, -0.5]) linear_extrude(1
 module room() { difference() { nave_room(); turret_partition(); } tower_room(); }
 module tower_solid() { tower_walls(); spire(); }
 module body_raw() difference() { walls_solid(); turret_cut(); }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { union() { slab(); tiles(); } nave_room(); turret_cut(); }
     door_leaf();
 }

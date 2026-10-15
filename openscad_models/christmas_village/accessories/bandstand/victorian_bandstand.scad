@@ -21,6 +21,7 @@ include <../../relief_lib.scad>
 include <../accessory_lib.scad>
 
 part = "all";
+MARK = [[0, 0], 6.0];         // the maker's mark: where on the base, its cap height
 SH = 1.2;
 C  = 1 / cos(22.5);         // an octagon's corner, per 1 of its flat
 
@@ -136,7 +137,7 @@ module base() difference() {
             drift([-12, 29, zb], [8, 3.5, 1.1]); drift([20, 22, zb], [6, 5, 0.9]);
         } base2d_in(); }
     }
-    brand_mark([0, 0], 6.0);
+    brand_mark(MARK[0], MARK[1]);
 }
 
 module raw(p) {

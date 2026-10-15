@@ -32,6 +32,7 @@
 //   accent  evergreen: the bow window, the wreath, the window box
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 
 $fa = 4;  $fs = 0.4;
 part = "all";
@@ -509,8 +510,8 @@ module base() {
 }
 // centred in the band between the bow's opening (-26.3) and the base's edge
 // (-34.5): at -Ru - 3.4 its letters came within 0.8 mm of the edge
-module brand_mark() translate([0, -Ru - 2.4, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([0, -Ru - 2.4, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([0, -Ru - 2.4, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // ---- brick joints ------------------------------------------------------------------------------------------
 // vertical mortar joints, staggered by course, round the whole shop floor;
@@ -539,7 +540,9 @@ module body_raw() {
     chimney();
     step();
 }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { roof_slate(); room(); chimney_col(); }
     difference() { slates(); room(); chimney_col(); dmw() dm_env(); }
     difference() { union() { cove(); for (s = BRK) if (clear_at(s, H1 - 6, H1)) bracket(s); } room(); bow_room(); }

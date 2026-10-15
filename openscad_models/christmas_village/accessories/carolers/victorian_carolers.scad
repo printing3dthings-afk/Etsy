@@ -18,6 +18,7 @@ include <../../relief_lib.scad>
 include <../accessory_lib.scad>
 
 part = "all";
+MARK = [[-1.5, 0], 4.4];         // the maker's mark: where on the base, its cap height
 SH = 1.2;
 zb = 3.0;                   // the snow's top
 
@@ -133,7 +134,7 @@ module base() difference() {
         snow_base(zb) base2d();
         clip_to() { union() { drift([-15.5, -6.5, zb], [3.5, 2.4, 1.3]); drift([14.5, 5.0, zb], [3.4, 2.2, 1.2]); } base2d_in(); }
     }
-    brand_mark([-1.5, 0], 4.4);
+    brand_mark(MARK[0], MARK[1]);
 }
 
 module raw(p) let ($p = p) {

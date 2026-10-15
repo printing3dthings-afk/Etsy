@@ -29,6 +29,7 @@
 //           the peppermints' stripes
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../relief_lib.scad>
 
 $fa = 4;  $fs = 0.4;
@@ -481,8 +482,8 @@ module base() {
 }
 // in the solid band between the room's opening and the porch's lobe: at the
 // lobe's foot (-Dh - rp - 3.5) the letters broke out through its curved edge
-module brand_mark() translate([0, -Dh - 7.5, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([0, -Dh - 7.5, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([0, -Dh - 7.5, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // ---- parts ----------------------------------------------------------------------------------------------
 module body_raw() {
@@ -490,7 +491,9 @@ module body_raw() {
     turret_walls();
     difference() { porch_walls(); porch_arch(); col_clear(); }
 }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { union() { roof_main(); tiles(); } room(); turret_cut(); }
     difference() { union() { porch_roof(); porch_tiles(); } room(); }
     difference() { lean() union() { cone_roof(); cone_tiles(); } room(); }

@@ -35,6 +35,7 @@
 //           the peppermints' stripes
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../../lattice_lib.scad>   // rrect_pts
 include <../../victorian/santas_workshop/toys_lib.scad>
 include <../../relief_lib.scad>
@@ -558,9 +559,9 @@ GUMS = [[-Lh - 3.5, -14, 1], [-Lh - 3.5, 14, 0], [Lh + 3.5, -17, 0], [Lh + 3.5, 
 module base_gumdrops(red) for (g = GUMS) if (g[2] == (red ? 1 : 0)) translate([g[0], g[1], plinth_h + 0.2]) gumdrop(2.4);
 module merlon_gumdrops(red) for (i = [0 : 3]) if ((i % 2 == 0) == red)
     translate([GC[0] - GWh + 1.5 + (i < 2 ? 0 : GW - 3.0), GC[1] - GD / 2 + 1.5 + (i % 2) * (GD - 3.0), GH + mer_h + 1.4]) gumdrop(1.4);
-module brand_mark() translate([32, -Dh - 3.0, -0.5]) linear_extrude(1.3)   // at y -40 it came 0.2 from the base's edge, at x 40 0.7 from the turret's open floor (2026-10-12)
-   
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+// at y -40 it came 0.2 from the base's edge, at x 40 0.7 from the turret's open floor (2026-10-12)
+module brand_mark() translate([32, -Dh - 3.0, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([32, -Dh - 3.0, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // =====================================================================================
 // THE ROOM: one space under the three teeth, the turrets and the gatehouse,
@@ -624,7 +625,9 @@ module body_raw() {
     step();
 }
 module turret_cols() for (t = TURS) translate(tpos(t)) translate([0, 0, -1]) cylinder(r = TR + bd, h = 300, $fn = 96);
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() {
         union() { for (i = [0 : NT - 1]) { slab(i); slates(i); } }
         for (s = STACKS) stack_col(s);

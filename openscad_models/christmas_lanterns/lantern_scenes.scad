@@ -266,19 +266,15 @@ module landscape(k, w, h) {
 }
 
 // ---- the maker's mark ------------------------------------------------------------------------
-// Engraved 0.8 deep into the underside, mirrored to read from below, as on the
-// village's buildings. Montserrat Black "OBC": 2.85 extrusions a stroke at size
-// 4.4, 4.6 at size 7 (tools/glyph_probe.py, 2026-10-13).
-module brand_mark(y, size) translate([0, y, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = size, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
-// On a narrow ring the slicer filled the letters' ceilings with support (the
-// hex and drum lanterns, 2026-10-13), so there the mark goes on the inside face
-// of the base instead: hidden, upright, reading from inside, cut dp in with
-// each step's top coming down SH per 1, so its ceilings slope and print. On a
-// curved wall start the plane inside the hollow, where the wall's arc is at
-// the word's ends: started at the wall's middle, the ends' first step was 0.4
-// deep and the slicer propped it (the drum, 2026-10-13).
+// OBC inlaid 0.6 mm into the underside in the lantern's white, grooved like the
+// logo (../brand/obc_mark.scad, 2026-10-14): brand_mark() cuts the letters from
+// the frame, brand_inlay() is the white that fills them. Subtract both from the
+// frame: the inlay stands 0.02 proud of its cut so the welded print closes,
+// and the frame must give that up or the two parts overlap.
+include <../brand/obc_mark.scad>
+module brand_mark(y, h) translate([0, y, 0]) obc_cut(h);
+module brand_inlay(y, h) translate([0, y, 0]) obc_inlay(h);
 module brand_mark_inside(d, z, size, dp = 0.7) let (m = ceil(dp * SH / 0.2)) translate([0, -d, z]) rotate([90, 0, 180])
     for (i = [0 : m - 1]) let (t1 = dp * (i + 1) / m, k = ceil(SH * t1 / 0.2 - 0.05))
         translate([0, 0, -t1]) linear_extrude(t1 - dp * i / m + (i == 0 ? 0.6 : 0.01)) intersection_for(j = [0 : k]) translate([0, -j * 0.2])
-            text("OBC", size = size, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+            obc_solid2d(size);     // the logo's letters (2026-10-14); hidden, so engraved, not inlaid

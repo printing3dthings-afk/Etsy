@@ -17,6 +17,7 @@ include <../../relief_lib.scad>
 include <../accessory_lib.scad>
 
 part = "all";
+MARK = [[0, 0], 5.0];         // the maker's mark: where on the base, its cap height
 SH = 1.2;
 TS = 1.3;                   // a tier's underside: 1.3 up per 1 out, so a facet's corner still climbs SH
 C = 1 / cos(22.5);          // an octagon's corner, per 1 of its flat
@@ -117,7 +118,7 @@ module base() difference() {
         snow_base(zb) base2d();
         clip_to() { union() { drift([-16, 10, zb], [4, 3, 1.0]); drift([13, -14, zb], [3.5, 3, 0.9]); } base2d_in(); }
     }
-    brand_mark([0, 0], 5.0);
+    brand_mark(MARK[0], MARK[1]);
 }
 
 module raw(p) {

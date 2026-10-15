@@ -21,6 +21,7 @@ include <../../relief_lib.scad>
 include <../accessory_lib.scad>
 
 part = "all";
+MARK = [[-10.5, 0], 5.0];     // the maker's mark: where on the base (BX, the base's middle), its cap height
 SH = 1.2;
 
 zb = 3.2;                   // the snow's top
@@ -141,7 +142,7 @@ module base() difference() {
         snow_base(zb) base2d();
         clip_to() { union() { drift([BX - 26, 9, zb], [4, 2.5, 0.9]); drift([BX + 22, -9, zb], [3.5, 2.5, 0.9]); } base2d_in(); }
     }
-    brand_mark([BX, 0], 5.0);
+    brand_mark(MARK[0], MARK[1]);
 }
 
 RH_C = 2.2; RH_K = 2.4;     // the roofs' rise to their ridges

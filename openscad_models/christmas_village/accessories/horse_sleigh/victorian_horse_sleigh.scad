@@ -28,6 +28,7 @@
 //         flat on their cut faces) | sleigh (the sleigh on its snow) | scene
 part = "all";
 piece = "scene";
+MARK = piece == "sleigh" || piece == "scene" ? [[-12, 0], 5.0] : undef;   // the maker's mark, on the sleigh's base only
 half = piece == "near" ? 1 : piece == "far" ? -1 : 0;
 SH = 1.2;
 zb = 3.2;                   // the snow's top, where the hooves stand
@@ -207,7 +208,7 @@ module snow() difference() {
         clip_to() { union() { drift([-34, -9.4, zb], [5, 2.2, 1.0]); drift([16, 8.6, zb], [5, 2.0, 0.9]); } base2d_in(); }
     }
     for (l = LEGS) translate([0, 0, zb - SK]) linear_extrude(SK + 1) offset(delta = 0.15) hoof2d(l[0], l[1]);
-    brand_mark([-12, 0], 5.0);
+    brand_mark(MARK[0], MARK[1]);
 }
 module sleigh(p) {
     if (p == "body") tub();

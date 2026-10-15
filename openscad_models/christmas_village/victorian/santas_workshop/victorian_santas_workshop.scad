@@ -33,6 +33,7 @@
 //   accent  evergreen: the wreaths and the chimney garlands
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../../lattice_lib.scad>   // rrect_pts
 include <toys_lib.scad>
 include <../../relief_lib.scad>
@@ -545,9 +546,9 @@ module base() {
         linear_extrude(plinth_h + 10) offset(delta = -2.4) base2d();
     }
 }
-module brand_mark() translate([32, -Dh - 3.0, -0.5]) linear_extrude(1.3)   // at y -40 it came 0.2 from the base's edge, at x 40 0.7 from the turret's open floor (2026-10-12)
-   
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+// at y -40 it came 0.2 from the base's edge, at x 40 0.7 from the turret's open floor (2026-10-12)
+module brand_mark() translate([32, -Dh - 3.0, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([32, -Dh - 3.0, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // =====================================================================================
 // THE ROOM: one space under the three teeth, the turrets and the gatehouse,
@@ -683,7 +684,9 @@ module body_raw() {
     step();
 }
 module turret_cols() for (t = TURS) translate(tpos(t)) translate([0, 0, -1]) cylinder(r = TR + bd, h = 300, $fn = 96);
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() {
         union() { for (i = [0 : NT - 1]) { slab(i); slates(i); } }
         for (s = STACKS) stack_col(s);

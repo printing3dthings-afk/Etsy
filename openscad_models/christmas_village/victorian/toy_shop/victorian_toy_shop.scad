@@ -36,6 +36,7 @@
 //   accent  evergreen: the bay shopfront, the window boxes, the wreath
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../../lattice_lib.scad>   // rrect_pts
 
 $fa = 4;  $fs = 0.4;
@@ -581,8 +582,8 @@ module base() {
     }
 }
 // under the bay, between its opening and the base's edge
-module brand_mark() translate([BX, yw - BP - 3.2, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([BX, yw - BP - 3.2, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([BX, yw - BP - 3.2, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // =====================================================================================
 // PARTS
@@ -599,7 +600,9 @@ module body_raw() {
     wreath_bow();
     step();
 }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { blk() difference() { union() { slab(); slates(); } blk_room(); chimney_col(); } turret_cut(); }
     difference() { union() { cone_roof(); cone_slates(); } tower_room(); }
     tower_finial();

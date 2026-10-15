@@ -60,8 +60,9 @@ module rim() difference() {
     translate([0, 0, zr - SH * RO - 1]) cylinder(r = RI, h = zt - zr + SH * RO + 2, $fn = FN);
 }
 // the maker's mark under the base ring's front, on the foot
-module frame() difference() { union() { base_ring(); rim(); } brand_mark(-(RF + R + 4.5) / 2, 4.4); }
-module glass() difference() {
+module frame() difference() { union() { base_ring(); rim(); } brand_mark(-(RF + R + 4.5) / 2, 4.4); brand_inlay(-(RF + R + 4.5) / 2, 4.4); }
+module glass() { glass0(); brand_inlay(-(RF + R + 4.5) / 2, 4.4); }   // the maker's mark prints in the glass's white
+module glass0() difference() {
     translate([0, 0, z0 - 0.5]) difference() { cylinder(r = R, h = H + 1, $fn = FN); translate([0, 0, -1]) cylinder(r = RI, h = H + 3, $fn = FN); }
     if (EMB == 0) frame();
 }

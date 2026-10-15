@@ -17,6 +17,7 @@ include <../../relief_lib.scad>
 include <../accessory_lib.scad>
 
 part = "all";
+MARK = [[0, 0], 5.0];         // the maker's mark: where on the base, its cap height
 SH = 1.2;
 C = 1 / cos(15);            // a twelve-gon's corner, per 1 of its flat
 
@@ -123,7 +124,7 @@ module base() difference() {
         snow_base(zb) base2d();
         clip_to() { union() { drift([-17, -19, zb], [5, 3, 1.1]); drift([20, 15, zb], [4, 5, 1.0]); } base2d_in(); }
     }
-    brand_mark([0, 0], 5.0);
+    brand_mark(MARK[0], MARK[1]);
 }
 
 module raw(p) {

@@ -32,6 +32,7 @@
 //   accent  evergreen: the wreath
 
 include <BOSL2/std.scad>
+include <../../../brand/obc_mark.scad>   // the OBC maker's mark
 include <../../../lattice_lib.scad>   // rrect_pts
 include <../../relief_lib.scad>
 
@@ -378,8 +379,8 @@ module base() {
 }
 // in the band between the room's opening (-25.3) and the base's edge (-33.5),
 // clear of the step
-module brand_mark() translate([0, -29.6, -0.5]) linear_extrude(1.3)
-    mirror([1, 0, 0]) text("OBC", size = 4.6, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.16);
+module brand_mark() translate([0, -29.6, 0]) obc_cut(4.6);       // the letters, cut from the base
+module brand_inlay() translate([0, -29.6, 0]) obc_inlay(4.6);    // and filled in the roof's colour
 
 // ---- the drum's brick joints, clear of every opening ----------------------------------------------
 function box_s(s0, s1, z0, z1) = [s0, s1, z0, z1];
@@ -402,7 +403,9 @@ module body_raw() {
     tower_walls();
     step();
 }
-module roof_raw() {
+// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
+module roof_raw() { roof_raw0(); brand_inlay(); }
+module roof_raw0() {
     difference() { union() { roof_slate(); slates(); } room(); tower_col(); }
     difference() { pyramid(); room(); }
     finial();
