@@ -57,8 +57,11 @@ on the pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **6 h 41 m** | **49.9 cm³, about 62 g of PLA** |
+| **single colour** | **2 h 19 m** | **20.7 m, 62 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 62 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -77,19 +80,26 @@ The series rule is at least 46 mm across and at least 50 mm of headroom.
   - 1st-percentile wall 1.44 mm, median 4.05 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 23.00 cm² of bed contact;
+  - 23.36 cm² of bed contact;
   - centre of mass over the base.
-- `mesh_gate` on each of the four parts: closed, every edge shared by
-  exactly two faces.
+- `mesh_gate` on each of the four parts, when they were built: closed, every
+  edge shared by exactly two faces. `part_mesh.py`, which merges the raw
+  triangles itself, disagrees for three of them (below).
   - Zero-area triangles: 61 in the roof, 3 in the trim, 3 in the accent,
     none in the body. Each is a needle where two features' edges meet, and
     slicers ignore them.
   - The body and the trim also carry 42 and 45 zero-volume specks where the
     parts were cut from each other. They have no volume to print.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- **The parts are disjoint in OpenSCAD:** all six pairwise intersections
+  render empty. Measured on the exported meshes (`tools/part_mesh.py check`,
+  2026-10-15), the roof, trim and accent read as open, and the roof and the
+  trim share 16.3 mm³ in about 2,000 slivers along the line where the snow
+  meets the roof, 57-64 mm up. The meshes from before the mark changed carry
+  the same open parts and the same 16.3 mm³ (and then also 0.96 mm³ between
+  accent and roof, which is now gone). Not the mark; not yet fixed.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
   layer): **0 flags**.
-  - 12.3 mm³ of 72,462 mm³ is not printed; 0.7 mm³ printed that was not
+  - 12.3 mm³ of 72,506 mm³ is not printed; 0.70 mm³ printed that was not
     modelled; 0.6 mm³ printed in the next colour.
   - The largest misses are the wavy edges of the snow on the crown and the
     dormer, under 0.5 mm deep, and two green edges near the top of the bow window, under
