@@ -84,9 +84,9 @@ crosses the seam but the snowy ground. `build.sh` does all of it.
   - 1st-percentile wall 1.30 mm, median 1.94 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (103.4 mm);
-  - 25.5 cm² of bed contact, 32% of the footprint; centre of mass over it.
+  - 25.8 cm² of bed contact, 32% of the footprint; centre of mass over it.
 - `print_fidelity` (the colour slice compared with the model, layer by
-  layer): 0.56 mm³ of 94,260 mm³ not printed, 0.11 mm³ printed that was not
+  layer, 2026-10-15 with the inlaid mark): 0.54 mm³ of 94,298 mm³ not printed, 0.11 mm³ printed that was not
   modelled, nothing in the wrong colour. **0 flags.**
 - `fragility`: 0 high, 0 watch, no slender runs.
 
