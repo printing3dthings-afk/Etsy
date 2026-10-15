@@ -59,11 +59,11 @@ print several on one plate so the changes are shared.
 - `tools/part_mesh.py check`: every part closed, no two overlap.
 - `product_gate` **PASSED** on the parts welded into one body:
   - watertight, one body;
-  - 1st-percentile wall 1.38 mm, median 10.4 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.37 mm, median 10.58 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height 33.2 mm of 33.31 modelled;
-  - 3.4 cm² of bed contact, 77% of the footprint; centre of mass over it.
-- `print_fidelity`: 0.22 mm³ of 4,094 mm³ not printed, nothing printed that
+  - 3.5 cm² of bed contact, 78% of the footprint; centre of mass over it.
+- `print_fidelity`: 0.02 mm³ of 4,100 mm³ not printed, nothing printed that
   was not modelled. **0 flags.**
 - `fragility`: 0 high, 0 watch, no slender runs.
 
