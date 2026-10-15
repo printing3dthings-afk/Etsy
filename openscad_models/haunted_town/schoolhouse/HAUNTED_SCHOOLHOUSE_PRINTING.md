@@ -55,10 +55,12 @@ town's variety plan gives every building its own wall colour.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **10 h 55 m** | **81.1 cm³, about 101 g of PLA** |
+| **single colour** (e.g. for Jessee to paint) | **3 h 43 m** | **33.7 m, 101 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 101 g of model **+ purge** |
 
-A listing must say which version the buyer gets.
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark. The four-colour slice
+changes colour 1,076 times. A listing must say which version the buyer gets.
 
 ## The tealight
 
@@ -78,14 +80,19 @@ with room to spare.
   - 1st-percentile wall 1.48 mm, median 3.52 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (154.4 mm);
-  - 15.55 cm² of bed contact (20.6% of the footprint);
+  - 15.91 cm² of bed contact (21.0% of the footprint);
   - centre of mass over the base.
-- Each of the four parts is closed, with every edge shared by exactly two
-  faces.
+- Each of the four parts is closed. The roof, trim and accent have every
+  edge shared by exactly two faces; the body does not (below).
 - **The parts are disjoint.** All six pairwise intersections render empty.
+- `tools/part_mesh.py check` (2026-10-15) reads the body as open: six edges
+  shared by more than two faces along the front of the porch deck, 8 mm up.
+  The body from before the mark changed carries the same six; the welded
+  union is closed and passes the gate.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 12.6 mm³ of 108,966 mm³ is not printed; 1.0 mm³ printed that was
-  not modelled; nothing printed in another colour. **3 flags, none of them
+  layer, re-run 2026-10-15 with the inlaid mark): 12.8 mm³ of 109,007 mm³ is
+  not printed; 1.0 mm³ printed that was not modelled; nothing printed in
+  another colour. **3 flags, none of them
   visible detail:**
   - the knife-edge tip of the ridge cap, 0.22 mm wide, at two points along
     the sagging ridge (0.28 mm³ each), too thin to lay;
