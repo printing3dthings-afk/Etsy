@@ -54,8 +54,11 @@ pane. The tealight glows through the panes and the bay's glass.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **8 h 21 m** | **60.7 cm³, about 75 g of PLA** |
+| **single colour** | **2 h 59 m** | **25.2 m, 75 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 75 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -73,10 +76,10 @@ headroom): the square shop has two full storeys of wall under its gable.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.47 mm, median 3.02 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.48 mm, median 3.02 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 21.29 cm² of bed contact;
+  - 21.65 cm² of bed contact;
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts: closed. The roof and the accent have
   every edge shared by exactly two faces. The body carries 1 edge shared by
@@ -85,8 +88,8 @@ headroom): the square shop has two full storeys of wall under its gable.
   Studio may offer to repair those two parts when the 3MF is opened.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer; re-run 2026-10-07 with TOYS raised as a climb): 18.8 mm³ of
-  78,013 mm³ is not printed; 1.8 mm³ printed that was not modelled; 0.6 mm³
+  layer; re-run 2026-10-15 with the inlaid mark): 18.8 mm³ of
+  78,058 mm³ is not printed; 1.7 mm³ printed that was not modelled; 0.6 mm³
   printed in another colour. **4 flags, all white, all cosmetic and none over
   0.17 mm³:**
   - 0.16 mm³ at the edge of the snow on the cone's crown;
