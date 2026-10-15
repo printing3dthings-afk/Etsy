@@ -63,9 +63,9 @@ clock):
 
 | piece | time | filament |
 |---|---|---|
-| box | 2 h 31 m | 20.8 m, 62 g |
+| box | 2 h 30 m | 20.7 m, 62 g |
 | lid | 0 h 56 m | 12.4 m, 37 g |
-| **together** | **3 h 27 m** | **33.2 m, 99 g** |
+| **together** | **3 h 26 m** | **33.1 m, 99 g** |
 
 In three colours on the AMS, slice in Bambu Studio for the real time and
 purge.
@@ -76,7 +76,7 @@ purge.
   or of the lid, overlap; and with the lid set on the box, nothing collides.
 - `product_gate` **PASSED** on each piece's one-body union:
   - box: watertight, one body; 1st-percentile wall 1.30 mm against the 1.2
-    mm floor; 0 supports; 56 cm² of bed contact, 98% of its footprint;
+    mm floor; 0 supports; 57 cm² of bed contact, 99% of its footprint;
   - lid: watertight, one body; 1st-percentile wall 2.35 mm; 0 supports; 50
     cm² of bed contact, 82%;
   - the gate's uncalibrated risk note gives the lid a 70.5 mm "widest
@@ -84,7 +84,7 @@ purge.
     its length. Across, it bridges 2.8 mm, and the slicer prints it with no
     support and no overhang perimeter.
 - `print_fidelity` (the colour slice compared with the model, layer by
-  layer): **0 flags on either piece.** The box loses 0.4 mm³ of 54,673 mm³
+  layer): **0 flags on either piece.** The box loses 0.4 mm³ of 54,761 mm³
   and fills 0.54 mm³, in slivers 0.27 mm wide at the scenes' edges; the lid
   loses nothing.
 - `fragility`: 0 high, 0 watch, no slender runs on either piece.
