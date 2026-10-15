@@ -44,10 +44,14 @@ small slit windows, the belfry and the door stay open.
 
 | version | time | filament | colour changes |
 |---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **9 h 46 m** | **~88 g** | 0 |
-| **four colour, AMS** | not reliable here | ~90 g model **+ purge** | **1,016** |
+| **single colour** (e.g. for Jessee to paint) | **3 h 15 m** | **29.4 m, 88 g** | 0 |
+| **four colour, AMS** | not reliable here | ~90 g model **+ purge** | **1,017** |
 
-The four-colour slice changes colour 1,016 times, fewer than the bakery
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
+
+The four-colour slice changes colour 1,017 times (1,016 before the cream
+mark was inlaid underneath), fewer than the bakery
 (1,293) or the general store (1,317). The walls and the cream frames share
 fewer layers here. With PrusaSlicer's 140 mm³ flush the wipe tower is
 **212 g**, more than twice the chapel itself. Slice it in Bambu Studio for
@@ -68,16 +72,20 @@ so the chapel lifts off to switch the light.
 
 - `product_gate` **PASSED** on the union:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 2.92 mm, against the 1.2 mm floor
+  - 1st-percentile wall 1.48 mm, median 2.86 mm, against the 1.2 mm floor
     (1.20 before the panes, which took the thinnest spots off the floor);
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (163.0 mm);
-  - 10.42 cm² of bed contact (17.8% of the footprint);
+  - 10.78 cm² of bed contact (18.4% of the footprint);
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts:
   - watertight;
   - **0 zero-area faces**;
   - every edge shared by exactly two faces.
+- `print_fidelity` (the four-colour slice compared with the model, layer by
+  layer, 2026-10-15 with the inlaid mark): **0 flags**. 3.98 mm³ of
+  79,633 mm³ is not printed, 0.59 mm³ printed that was not modelled,
+  0.02 mm³ in another colour.
 - **The parts are disjoint.** All six pairwise intersections render EMPTY.
 - Every trim and accent piece touches the part it sits on, sampled by area:
   - each nave window's frame and pane, 256–271 mm²;
