@@ -53,8 +53,11 @@ pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **4 h 31 m** | **32.5 cm³, about 40 g of PLA** |
+| **single colour** | **1 h 33 m** | **13.5 m, 40 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 40 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -72,21 +75,23 @@ edge. A 38 mm tealight has 54 mm, room for a 45 mm-tall generic one.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.48 mm, median 4.15 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.51 mm, median 4.15 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 14.80 cm² of bed contact;
+  - 15.16 cm² of bed contact;
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts: closed. The body and the accent have
   every edge shared by exactly two faces. The roof and the trim carry 20 and
   80 edges shared by more than two, and two zero-area triangles each, all in
   the few square millimetres where the gable's ridge dives into the cone and
-  its snow, roof and the cone meet. The merged model is watertight there and
+  its snow, roof and the cone meet. The merged model is watertight there once
+  welded (OpenSCAD's union kept two edges of four faces where they touch;
+  `check_building.py` welds it with manifold3d, volume unchanged) and
   slices clean; Bambu Studio may offer to repair those two parts when the 3MF
   is opened.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): **0 flags**. 11.3 mm³ of 42,479 mm³ is not printed; 0.8 mm³ printed
+  layer): **0 flags**. 11.3 mm³ of 42,524 mm³ is not printed; 0.72 mm³ printed
   that was not modelled; 0.4 mm³ printed in the next colour. The largest miss
   is one layer at the tip of the gable's ridge (1.2 mm³, 0.42 mm deep).
 - `fragility`: nothing slender enough to snap. 0 high, 0 watch. The chimney
