@@ -53,12 +53,15 @@ the base is open too.
 
 | | time | filament |
 |---|---|---|
-| house, single colour | 5 h 34 m | 50 g |
-| lid | 1 h 36 m | 12 g |
-| **single colour, both** (e.g. for Jessee to paint) | **7 h 10 m** | **~62 g** |
+| house, single colour | 2 h 0 m | 16.7 m, 50 g |
+| lid | 0 h 25 m | 3.9 m, 12 g |
+| **single colour, both** (e.g. for Jessee to paint) | **2 h 25 m** | **~62 g** |
 | **house in three colours + lid** | not reliable here | ~63 g model + purge |
 
-The colour house makes **446 colour changes**, far fewer than the bakery's
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
+
+The colour house makes **446 colour changes** (the same with the inlaid mark), far fewer than the bakery's
 1,351. Printed together with the lid on one plate, as the file lays them out,
 it is **619 changes**: the slate lid shares its first 35 mm of layers with the
 house. (Until 2026-09-26 the file put the lid on the brick slot, so a colour
@@ -98,10 +101,10 @@ Measured on the exported mesh:
     exactly two faces.
 - **The house parts are disjoint.** All three pairwise intersections are
   EMPTY. The lid touches the house only at its seat (zero volume).
-- `print_fidelity` (re-run 2026-10-07 with the raised letters): the house
-  loses 0.4 mm³ of 49,691 mm³ and the lid nothing. **No flags** on either:
+- `print_fidelity` (re-run 2026-10-15 with the inlaid mark): the house
+  loses 0.4 mm³ of 49,733 mm³ and the lid nothing. **No flags** on either:
   every letter prints as drawn.
-- `fragility` (2026-10-07): **0 high, 0 watch.**
+- `fragility` (2026-10-15): **0 high, 0 watch.**
 - Every trim and accent piece shares real surface with the part it sits on.
   The sign board shares 641 mm² with the wall, the coping 611 mm², each
   window frame about 250 mm², and the parcel string sits in the parcels.
