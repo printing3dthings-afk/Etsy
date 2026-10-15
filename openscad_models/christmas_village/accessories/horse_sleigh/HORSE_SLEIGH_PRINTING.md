@@ -81,10 +81,10 @@ moved 0.15 mm any way sideways they touch nothing.
 
 | piece | single colour | filament |
 |---|---|---|
-| sleigh | 0 h 17 m | 2.0 m, 5.9 g |
+| sleigh | 0 h 16 m | 2.0 m, 5.9 g |
 | horse, near half | 0 h 4 m | 0.4 m, 1.1 g |
 | horse, far half | 0 h 4 m | 0.4 m, 1.1 g |
-| **all three** | **0 h 25 m** | **2.8 m, 8.1 g** |
+| **all three** | **0 h 24 m** | **2.8 m, 8.1 g** |
 
 Single colour, supports off, timed with the P1S motion model (the viewer's
 clock). In four colours the colour changes cost far more than the model: the
@@ -100,8 +100,8 @@ for the real number.
   of one piece overlap.
 - `product_gate` on each piece's one-body union:
   - **sleigh: PASSED.** Watertight, one body; 1st-percentile wall 1.30 mm,
-    median 3.2 mm; 0 supports, 0 overhang perimeters; 13.1 cm² of bed
-    contact, 76% of the footprint.
+    median 3.21 mm; 0 supports, 0 overhang perimeters; 13.6 cm² of bed
+    contact, 78% of the footprint.
   - **each horse half: 0 supports, 0 overhang perimeters**, watertight, one
     body, 3.8 cm² of bed contact. Its min_wall reads under the floor (1st
     percentile 0.48 mm). That is the measurement, not the part: rays near
@@ -112,7 +112,7 @@ for the real number.
     percentile wall 1.31 mm, median 7.2 mm. Walls are judged here, on the
     object a buyer holds.
 - `print_fidelity`, the colour slice compared with the model layer by layer:
-  **0 flags on all three pieces.** The sleigh loses 1.5 mm³ of 6,646 mm³, the
+  **0 flags on all three pieces.** The sleigh loses 1.5 mm³ of 6,695 mm³, the
   halves 0.26 and 0.86 mm³ of about 1,110 mm³ each; nothing is printed that
   was not modelled, and nothing in the wrong colour.
 - `fragility`: **0 high, 0 watch** on every piece and on the assembled horse.
