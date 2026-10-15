@@ -53,8 +53,11 @@ pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **4 h 52 m** | **39.3 cm³, about 49 g of PLA** |
+| **single colour** | **1 h 53 m** | **16.3 m, 49 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 49 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -73,10 +76,10 @@ early. Bambu's own LED tealight (37.2 × 36.6 mm) fits with 10 mm to spare. A
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.38 mm, median 9.22 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.41 mm, median 9.22 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 18.37 cm² of bed contact;
+  - 18.73 cm² of bed contact;
   - centre of mass over the base.
 - `mesh_gate` on each of the four parts: closed, every edge shared by
   exactly two faces. Zero-area triangles: 20 in the body, 1 in the trim, none
@@ -84,13 +87,13 @@ early. Bambu's own LED tealight (37.2 × 36.6 mm) fits with 10 mm to spare. A
   slicers ignore them.
 - **The parts are disjoint.** All six pairwise intersections render empty.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 11.0 mm³ of 92,881 mm³ is not printed; 0.9 mm³ printed that was not
-  modelled; 0.2 mm³ printed in the next colour. **4 flags, all cosmetic:**
+  layer): 11.0 mm³ of 92,945 mm³ is not printed; 0.93 mm³ printed that was not
+  modelled; 0.2 mm³ printed in the next colour. **3 flags, all cosmetic:**
   - three flute tops (0.13–0.15 mm³ each, at 35 mm). Each flute stops under
     the rim's flare, and its last half-millimetre tapers to a sliver the
-    printer rounds off. It shows on 3 of the 40 flutes;
-  - one layer at the edge of the front-right window's icing ring
-    (0.04 mm³).
+    printer rounds off. It shows on 3 of the 40 flutes. (The 2026-10-15
+    re-slice no longer flags the one-layer sliver at the front-right
+    window's icing ring, 0.04 mm³, that an earlier slice did.)
 - `fragility`: nothing slender at all. 0 high, 0 watch, 0 slender runs.
 - **OBC maker's mark:** inlaid in chocolate under the front of the snow base,
   in the band between the drum's opening and the base's edge. It is the same
