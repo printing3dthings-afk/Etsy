@@ -60,8 +60,11 @@ pane, and its bars stand on the pane.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **8 h 03 m** | **59.6 cm³, about 74 g of PLA** |
+| **single colour** | **2 h 53 m** | **24.8 m, 74 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 74 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
 
@@ -79,17 +82,21 @@ headroom), with room to spare: the house is 52 mm square inside its walls.
 
 - `product_gate` **PASSED** on the union of the four parts:
   - watertight, one body;
-  - 1st-percentile wall 1.33 mm, median 2.73 mm, against the 1.2 mm floor;
+  - 1st-percentile wall 1.34 mm, median 2.74 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height;
-  - 20.25 cm² of bed contact;
+  - 20.61 cm² of bed contact;
   - centre of mass over the base.
 - Each of the four parts is closed, with every edge shared by exactly two
   faces.
-- **The parts are disjoint.** All six pairwise intersections render empty.
+- **The parts are disjoint in the model:** all six pairwise intersections
+  render empty in OpenSCAD. Measured on the exported meshes
+  (`tools/part_mesh.py check`, 2026-10-15), the body and the roof share
+  1.36 mm³ where their faces touch: float residue of the export, the same
+  1.359 mm³ before the mark changed.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
-  layer): 19.1 mm³ of 96,861 mm³ is not printed; 0.4 mm³ printed that was
-  not modelled; 0.3 mm³ printed in another colour. **5 flags:**
+  layer): 19.1 mm³ of 96,907 mm³ is not printed; 0.41 mm³ printed that was
+  not modelled; 0.27 mm³ printed in another colour. **5 flags:**
   - three inside the roof, out of sight (5.8, 1.9 and 1.0 mm³, two layers
     each at 91.2 mm): where each dormer's passage closes to a slit at the
     peak of its gable, under the solid slate. Nothing on the outside changes,
