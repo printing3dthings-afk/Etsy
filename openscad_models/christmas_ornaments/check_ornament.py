@@ -60,5 +60,5 @@ if __name__ == "__main__":
             shown[i - 1] = [((i - 1) % 3 - 1) * sx, -((i - 1) // 3 - 0.5) * sy, 0]
         tags.append(f"_{i}")
     run_checks(d, S["name"], dict(label=S["label"], note=S["note"], objects=objects, unions=unions,
-                                  tags=tags, shown=shown, source=f"christmas_ornaments/{key}/{S['name']}s.3mf"),
+                                  tags=tags, shown=shown, source=f"christmas_ornaments/{key}/{S['name']}.3mf"),
                sys.argv[2:] or None)

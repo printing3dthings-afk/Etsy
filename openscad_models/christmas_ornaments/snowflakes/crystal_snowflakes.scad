@@ -78,7 +78,10 @@ module flake(n) let (D = DESIGNS[n - 1]) difference() {
         gem([0, 0], RH, 30);
         loop();
     }
-    obc_engrave(4.0);      // on the back, mirrored to read from behind
+    // on the back, mirrored to read from behind; whole letters, since with no
+    // inlay over them the logo's ridges are strips one layer thick that
+    // tools/fragility.py watched on every flake (2026-10-21)
+    obc_engrave(4.0, 0.8, 0.15, ridges = false);
 }
 
 if (part == "flake") flake(design);
