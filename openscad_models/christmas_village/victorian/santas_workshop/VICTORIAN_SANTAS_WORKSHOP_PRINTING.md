@@ -74,19 +74,27 @@ parts, already aligned. Assign a filament to each part.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **15 h 32 m** | **313 cm³, about 388 g of PLA** |
+| **single colour** | **15 h 40 m** | **130.1 m, 388 g** |
 | **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 388 g of model **+ purge** |
+
+Single colour, supports off, timed with the P1S motion model (the viewer's
+clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## Verified before shipping — on the real exported meshes
 
 - `product_gate` **PASSED** on the CGAL union of the four parts
-  (2026-10-13):
+  (re-run 2026-10-15 with the inlaid mark; the union alone took six hours):
   - watertight, one body;
   - 1st-percentile wall 1.48 mm, median 2.91 mm, against the 1.2 mm floor;
   - 0 supports, 0 overhang perimeters;
   - printed height equals modelled height (193.6 mm);
-  - 80.02 cm² of bed contact, 30% of the footprint;
+  - 80.38 cm² of bed contact, 30% of the footprint;
   - centre of mass over the base.
+- `tools/part_mesh.py check` (2026-10-15) reads the body and the trim as
+  open and finds 1.37 mm³ shared by body and roof and 1.36 mm³ by roof and
+  trim, in hundreds of zero-thickness slivers where the parts touch. The
+  meshes from before the mark carried the same open parts, the same 1.37 and
+  1.23 mm³; the slivers at the mark itself have no volume.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
   layer): 43.0 mm³ of 425,314 mm³ is not printed, 3.5 mm³ printed that was
   not modelled, 1.3 mm³ printed in another colour. **11 flags, none over
