@@ -32,7 +32,12 @@ fill it, and the logo's stripe ridges would be strips one layer thick.
   come from the sliced toolpath.
 
 **Print these:** `crystal_snowflake.3mf` has all six on one plate in one
-colour. Or print any one STL on its own.
+colour, three across and two deep, 217 × 176 mm. Or print any one STL on its
+own.
+
+The first version of this file put the six in a single column 575 mm long,
+two thirds of it off the plate: `tools/assemble_3mf.py` could only lay
+objects in a row or a column. It wraps them onto shelves now (2026-10-21).
 
 ## Settings that are not optional
 

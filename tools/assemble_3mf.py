@@ -148,13 +148,33 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
     # Discount Tire walls and roof, 178 and 175 mm wide, came out 362 mm long
     # in a row, off the plate, though they fit one behind the other.
     row = sum(h[0] - l[0] for l, h in zip(lo, hi)) + gap * (len(loaded) - 1)
+    col = sum(h[1] - l[1] for l, h in zip(lo, hi)) + gap * (len(loaded) - 1)
     column = mode != "assembly" and row > _BED_MM
+    # Too many for a row OR a column: shelves, left to right, wrapping before
+    # the bed's edge (2026-10-21). Six snowflake ornaments 68 x 85 mm went
+    # into a column 575 mm long, two thirds of it off the plate.
+    shelves = column and col > _BED_MM
+    spots, sx, sy, depth = [], 0.0, 0.0, 0.0
+    if shelves:
+        for l, h in zip(lo, hi):
+            w, d = float(h[0] - l[0]), float(h[1] - l[1])
+            if sx > 0 and sx + w > _BED_MM:
+                sx, sy, depth = 0.0, sy + depth + gap, 0.0
+            spots.append((sx - float(l[0]), sy - float(l[1])))
+            sx += w + gap
+            depth = max(depth, d)
+        if sy + depth > _BED_MM:
+            print(f"warning: {len(loaded)} objects need {sy + depth:.0f} mm of plate depth on "
+                  f"shelves; the P1S has {_BED_MM:.0f}. Split them over two plates.", file=sys.stderr)
     y = 0.0
     for gi, (ms, ns, ex) in enumerate(zip(loaded, names, extruders)):
         o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
         objs.append(o); slic3rs.append(sl); bambus.append(bm)
         if mode == "assembly":
             items += f'<item objectid="{gi+1}"/>'
+        elif shelves:
+            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
+                      f'{spots[gi][0]:.4f} {spots[gi][1]:.4f} 0"/>')
         elif column:
             items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
                       f'{-lo[gi][0]:.4f} {y - lo[gi][1]:.4f} 0"/>')

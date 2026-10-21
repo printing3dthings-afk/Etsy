@@ -146,13 +146,30 @@ floor.data.materials.append(fmat)
 # sea of floor (a 123mm axolotl filled under half the frame). Anchored at
 # 50mm, so the old distance is recovered at a normal lens and every other
 # focal length reframes to match instead of rescaling the subject.
-dist = size * 2.6 * (lens / 50.0)
-cam_x = dist * math.cos(el) * math.sin(az)
-cam_y = -dist * math.cos(el) * math.cos(az)
-cam_z = dist * math.sin(el) + size * 0.15
-bpy.ops.object.camera_add(location=(cam_x, cam_y, cam_z))
+#
+# Then fitted to the part's own box (2026-10-21). size*2.6 assumes a part about
+# as tall as it is wide, and aimed a quarter of its width up: a flat ornament
+# 88 mm across and 13 mm tall sat low and small in a sea of floor, and so did
+# the nativity laid out as a scene. Now the camera keeps that direction and
+# stands just far enough back for every corner of the box to land inside 86%
+# of the frame, aimed at the box's middle.
+hz = max(zs) - minz
+target = mathutils.Vector((0, 0, hz / 2))
+back = mathutils.Vector((math.cos(el) * math.sin(az), -math.cos(el) * math.cos(az), math.sin(el)))
+fwd = -back
+right = fwd.cross(mathutils.Vector((0, 0, 1))).normalized()
+up = right.cross(fwd)
+tan_half = 18.0 / lens * 0.86          # 36 mm sensor across a square frame
+hx, hy = (max(xs) - min(xs)) / 2, (max(ys) - min(ys)) / 2
+dist = 0.0
+for sx in (-1, 1):
+    for sy in (-1, 1):
+        for sz in (0, 1):
+            c = mathutils.Vector((sx * hx, sy * hy, sz * hz)) - target
+            dist = max(dist, c.dot(back) + max(abs(c.dot(right)), abs(c.dot(up))) / tan_half)
+cam_loc = target + back * dist
+bpy.ops.object.camera_add(location=tuple(cam_loc))
 cam = bpy.context.active_object
-target = mathutils.Vector((0, 0, size * 0.28))
 direction = target - cam.location
 cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 bpy.context.scene.camera = cam
@@ -246,6 +263,9 @@ def _render_key(parts, color, azimuth, elevation, samples, resolution, lens) -> 
     except OSError:
         return None
     h.update(repr((tuple(color), azimuth, elevation, samples, resolution, lens)).encode())
+    # and this file: a change to the framing or lighting must not be answered
+    # from a render made before it (the box fit, 2026-10-21)
+    h.update(Path(__file__).read_bytes())
     return h.hexdigest()
 
 

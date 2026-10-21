@@ -133,6 +133,36 @@ def test_plate_too_wide_for_a_row_goes_front_to_back():
         (y0, y1), (y2, y3) = sorted((w[0][1], w[1][1]) for w in boxes)
         check(y1 <= y2 + 1e-6, f"stacked objects overlap in Y: {y0, y1} vs {y2, y3}")
 
+def test_too_many_for_a_row_or_a_column_go_on_shelves():
+    """Six snowflake ornaments, 68 x 85 mm: a row is 438 mm and a column 540,
+    and the column went 575 mm off the plate (2026-10-21). On shelves, three
+    across and two deep, they fit, and none overlaps another."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        groups = []
+        for i in range(6):
+            f = Path(td) / f"flake_{i}.stl"
+            trimesh.creation.box([68, 85, 6]).export(f)
+            groups.append([(f, "#D8E6F0")])
+        out = Path(td) / "plate.3mf"
+        assemble_3mf.assemble(out, groups, "plate", gap=6.0)
+        sc = trimesh.load(str(out))
+        boxes = []
+        for node in sc.graph.nodes_geometry:
+            T, gname = sc.graph[node]
+            boxes.append(trimesh.transform_points(sc.geometry[gname].bounds, T))
+        check(len(boxes) == 6, f"expected 6 objects, got {len(boxes)}")
+        lo = np.min([w[0] for w in boxes], axis=0); hi = np.max([w[1] for w in boxes], axis=0)
+        check(hi[0] - lo[0] <= 256 and hi[1] - lo[1] <= 256,
+              f"shelved plate footprint {(hi - lo)[:2]} exceeds the 256 mm bed")
+        for i in range(6):
+            for j in range(i + 1, 6):
+                a, b = boxes[i], boxes[j]
+                apart = (a[1][0] <= b[0][0] + 1e-6 or b[1][0] <= a[0][0] + 1e-6 or
+                         a[1][1] <= b[0][1] + 1e-6 or b[1][1] <= a[0][1] + 1e-6)
+                check(apart, f"shelved objects {i} and {j} overlap")
+
+
 def test_a_plate_entry_may_itself_be_multipart():
     """The dumpling clicker: a 4-colour bun plus a separate basket."""
     import tempfile
