@@ -97,8 +97,8 @@ clock), re-sliced 2026-10-15 with the inlaid mark.
   1.23 mm³; the slivers at the mark itself have no volume.
 - `print_fidelity` (the four-colour slice compared with the model, layer by
   layer, re-run 2026-10-21 with the inlaid mark): 42.8 mm³ of 425,356 mm³ is
-  not printed, 3.5 mm³ printed that was not modelled, 1.3 mm³ printed in another colour. **11 flags, none over
-  0.48 mm³:**
+  not printed, 3.5 mm³ printed that was not modelled, 1.3 mm³ printed in
+  another colour. **11 flags, none over 0.48 mm³:**
   - two 0.3 mm slivers of white glass beside the rose window's spokes
     (0.43 and 0.47 mm³): too narrow to extrude; spokes and glass print;
   - two 0.5 mm slivers at the wavy foot of the roof snow over a slate
