@@ -179,9 +179,10 @@ module stable() translate([SW / 2, 0, 0]) difference() {
 // long tail down to the ridge. Every underside climbs 47 deg or more; a
 // five-pointed star's side arms climb only 38 under their points and the
 // slicer propped them (2026-10-21).
-// Its top arm ends in a flat 1.8 wide: to a point, tools/fragility.py watched
-// it (slenderness 4.3, 2026-10-21).
-module bethlehem2d() polygon([[0.9, 34], [2.9, 24.6], [8.8, 22], [1.8, 14.4], [0, 0], [-1.8, 14.4], [-8.8, 22], [-2.9, 24.6], [-0.9, 34]]);
+// Its top arm ends in a flat 1.8 wide, and its tail is a stem 3.2 wide down
+// into the ridge. Tapering to points, tools/fragility.py watched the tail
+// (slenderness 4.3, 2026-10-21): the whole star hung from 2 mm2 at the ridge.
+module bethlehem2d() polygon([[0.9, 34], [2.9, 24.6], [8.8, 22], [1.8, 14.4], [1.6, 0], [-1.6, 0], [-1.8, 14.4], [-8.8, 22], [-2.9, 24.6], [-0.9, 34]]);
 // as thick as the roof shell and over it: 4 thick it stood 0.5 out past the
 // open front, over nothing, and the slicer propped it from the plate
 module star_ridge() translate([SW / 2, ST / 2 + 0.2, SR - 3]) rotate([90, 0, 0]) linear_extrude(ST - 0.4, center = true) bethlehem2d();
