@@ -2791,6 +2791,7 @@ function glowTexture() {
 }
 
 function onResize() {
+  if (vid && vid.on) { return; }   // a video export owns the canvas size until it ends
   var w = stage.clientWidth, h = stage.clientHeight;
   if (!w || !h) { return; }
   renderer.setSize(w, h, false);
@@ -2826,16 +2827,19 @@ function measureStageFit(w, h) {
   stageFit.shift = (top - bottom) / 2;
   if (stageFit.shift) { camera.setViewOffset(w, h, 0, -stageFit.shift, w, h); }
   else { camera.clearViewOffset(); }
-  // Everything sized to the old camera distance stands back with it. Left
-  // alone, a phone's camera ~2-3 m out put the machine in the 700-2400 mm fog
-  // (dark, washed grey), stood outside the 2600 mm backdrop sphere (which is
-  // seen from inside only, so it vanished), and neared the 4000 mm far plane.
+  scaleSceneTo(stageFit.k);
+}
+// Everything sized to the old camera distance stands back with it. Left
+// alone, a phone's camera ~2-3 m out put the machine in the 700-2400 mm fog
+// (dark, washed grey), stood outside the 2600 mm backdrop sphere (which is
+// seen from inside only, so it vanished), and neared the 4000 mm far plane.
+function scaleSceneTo(k) {
   if (scene) {
-    if (scene.fog) { scene.fog.near = FOG_NEAR * stageFit.k; scene.fog.far = FOG_FAR * stageFit.k; }
+    if (scene.fog) { scene.fog.near = FOG_NEAR * k; scene.fog.far = FOG_FAR * k; }
     var sky = scene.getObjectByName('backdrop');
-    if (sky) { sky.scale.setScalar(stageFit.k); }
+    if (sky) { sky.scale.setScalar(k); }
   }
-  camera.far = CAM_FAR * stageFit.k;
+  camera.far = CAM_FAR * k;
 }
 
 // \u2500\u2500 orbit (hand-rolled: OrbitControls is not on the allowed CDN as a UMD) \u2500\u2500\u2500
@@ -4485,6 +4489,7 @@ function applyPlayhead(t) {
 }
 
 function tick(now) {
+  if (vid && vid.on) { return; }   // a video export draws its own frames
   if (JOB && play.on && !play.scrubbing) {
     var dt = play.last ? Math.min((now - play.last) / 1000, 0.1) : 0;
     play.t += dt * play.speed;
@@ -4711,6 +4716,345 @@ function startTimelapse() {
   notice('Recording a ' + TL_SECONDS + '-second close-up. Your view comes back when it ends.');
 }
 
+// ── video export for social media (2026-10-21) ───────────────────────────
+// Scott: the timelapse button was "having trouble", and these clips go out on
+// social media. Reproduced headless the same day: a "10-second" recording
+// decoded to ONE frame, 670x691, VP9 WebM with no duration in its header.
+// MediaRecorder records whatever the page manages to draw in real time, so a
+// busy phone records a slideshow at whatever odd size its window happens to be,
+// in a format Instagram will not take.
+//
+// So the clip is rendered, not recorded: every frame is posed, drawn at a
+// fixed social size and handed to the browser's own H.264 encoder (WebCodecs),
+// then wrapped as MP4 by mp4-muxer (MIT, vendor/). Every frame is in the file
+// on any device; a slow one only takes longer. Where WebCodecs or H.264 is
+// missing it falls back to VP9 in MP4, and without WebCodecs at all to the old
+// real-time recorder above.
+//
+// The caption stays in every frame, as before: this is the slicer's toolpath
+// drawn by this page, not footage of a print, and a clip that travels without
+// its caption must not pass for one.
+var VID_FORMATS = {
+  // top/bottom: the share of the frame each app's own buttons and caption sit
+  // over, measured off Reels and TikTok screenshots; the part and the caption
+  // stay out of it
+  reel:     {w: 1080, h: 1920, top: 0.13, bottom: 0.25, side: 0.04, tag: '9x16',
+             label: 'Reels, TikTok, Shorts (9:16)'},
+  portrait: {w: 1080, h: 1350, top: 0.04, bottom: 0.04, side: 0.04, tag: '4x5',
+             label: 'Instagram or Facebook feed (4:5)'},
+  square:   {w: 1080, h: 1080, top: 0.04, bottom: 0.04, side: 0.04, tag: '1x1',
+             label: 'Square (1:1)'}
+};
+var VID_FPS = 30;
+var VID_HOLD = 2.5;          // seconds at the end on the finished part, still turning
+var VID_ORBIT = Math.PI * 0.75;
+var vid = {on: false, cancel: false, blob: null, name: ''};
+
+function vidSupported() {
+  return typeof VideoEncoder !== 'undefined' && typeof VideoFrame !== 'undefined' &&
+    !!window.Mp4Muxer;
+}
+
+// H.264 High, then Main, then Baseline (all level 4.0, which takes 1080x1920
+// at 30 fps), then VP9. 1.2 bits a pixel per second-ish: 12 Mbps at 1080x1920,
+// well above what the apps re-encode to, so their pass is the only one that
+// shows.
+function vidCodec(f) {
+  var bitrate = Math.round(f.w * f.h * 30 * 0.2);
+  var tries = [['avc1.640028', 'avc'], ['avc1.4D4028', 'avc'], ['avc1.42E028', 'avc'],
+               ['vp09.00.40.08', 'vp9']];
+  var i = 0;
+  function next() {
+    if (i >= tries.length) { return Promise.resolve(null); }
+    var t = tries[i++];
+    var cfg = {codec: t[0], width: f.w, height: f.h, bitrate: bitrate, framerate: VID_FPS,
+               bitrateMode: 'variable', latencyMode: 'quality'};
+    if (t[1] === 'avc') { cfg.avc = {format: 'avc'}; }
+    return VideoEncoder.isConfigSupported(cfg).then(function (r) {
+      return r && r.supported ? {config: r.config || cfg, mux: t[1]} : next();
+    }, next);
+  }
+  return next();
+}
+
+// How far back the camera stands, so the part fills the free span of the
+// frame (after the apps' overlays and the caption) at every turn of the orbit.
+// It turns about its vertical axis, so across the frame it is never wider than
+// its footprint's diagonal; down the frame, its height seen from the camera's
+// pitch plus the footprint's depth foreshortened. The near side stands closer
+// than the axis, so the distance gains that much. A bounding sphere framed the
+// signpost at a third of the frame (2026-10-21).
+function vidDistance(f, capFrac) {
+  var b = partBounds(JOB), z = b[4];
+  var dx = b[2] - b[0], dy = b[3] - b[1];
+  var hw = 0.5 * Math.sqrt(dx * dx + dy * dy);
+  var hh = 0.5 * (z * Math.sin(cam.phi) + 2 * hw * Math.abs(Math.cos(cam.phi)));
+  var vf = camera.fov * Math.PI / 180, aspect = f.w / f.h;
+  var tV = Math.tan(vf / 2) * (1 - f.top - f.bottom - capFrac);
+  var tH = Math.tan(vf / 2) * aspect * (1 - 2 * f.side);
+  return Math.max(hw / tH, hh / tV) / 0.92 + hw;
+}
+
+// The caption, sized to the frame: the plate's name and what the clip is.
+function vidCaption(f) {
+  var c = vid.canvas, x = vid.ctx, W = f.w;
+  var m = Math.round(W * 0.055), maxW = W - 2 * m;
+  var name = jobName || 'Plate';
+  var u = Math.round(W * 0.052);
+  x.font = '600 ' + u + 'px "Chakra Petch", Impact, sans-serif';
+  while (u > 30 && x.measureText(name).width > maxW) {
+    u -= 2; x.font = '600 ' + u + 'px "Chakra Petch", Impact, sans-serif';
+  }
+  var u2 = Math.round(W * 0.027);
+  var line2 = 'Toolpath simulation of the sliced G-code — not print footage';
+  var f2 = '500 ' + u2 + 'px "IBM Plex Sans", system-ui, sans-serif';
+  x.font = f2;
+  while (u2 > 18 && x.measureText(line2).width > maxW) {
+    u2 -= 1; f2 = '500 ' + u2 + 'px "IBM Plex Sans", system-ui, sans-serif'; x.font = f2;
+  }
+  var y0 = Math.round(f.top * f.h + m * 0.6);
+  var h = Math.round(u * 1.1 + u2 * 1.5 + m * 0.7);
+  return {u: u, u2: u2, f2: f2, line2: line2, name: name, m: m, y0: y0, h: h};
+}
+
+function vidDrawCaption(cap) {
+  var x = vid.ctx;
+  var grad = x.createLinearGradient(0, cap.y0 - cap.m, 0, cap.y0 + cap.h + cap.m);
+  grad.addColorStop(0, 'rgba(13,14,17,0)');
+  grad.addColorStop(0.25, 'rgba(13,14,17,0.62)');
+  grad.addColorStop(0.75, 'rgba(13,14,17,0.62)');
+  grad.addColorStop(1, 'rgba(13,14,17,0)');
+  x.fillStyle = grad;
+  x.fillRect(0, cap.y0 - cap.m, vid.canvas.width, cap.h + 2 * cap.m);
+  x.textAlign = 'center';
+  x.textBaseline = 'alphabetic';
+  x.fillStyle = '#ffb35c';
+  x.font = '600 ' + cap.u + 'px "Chakra Petch", Impact, sans-serif';
+  x.fillText(cap.name, vid.canvas.width / 2, cap.y0 + cap.u);
+  x.fillStyle = '#e9e7e2';
+  x.font = cap.f2;
+  x.fillText(cap.line2, vid.canvas.width / 2, cap.y0 + cap.u * 1.1 + cap.u2 * 1.3);
+}
+
+function vidEase(u) { return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2; }
+
+function vidUI(state, text, frac) {
+  var o = $('vidprog');
+  if (!o) { return; }
+  o.hidden = state === 'off';
+  o.setAttribute('data-state', state);
+  if (text != null) { $('vidmsg').textContent = text; }
+  if (frac != null) { $('vidbar').style.width = (100 * frac).toFixed(1) + '%'; }
+}
+
+function vidPreview() {
+  var pv = $('vidpreview');
+  if (!pv || !vid.canvas) { return; }
+  var c = vid.canvas, h = 320, w = Math.round(h * c.width / c.height);
+  if (pv.width !== w || pv.height !== h) { pv.width = w; pv.height = h; }
+  pv.getContext('2d').drawImage(c, 0, 0, w, h);
+}
+
+function vidWait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+function openVidDialog() {
+  if (!JOB) { notice('Load a plate first, then make its video.'); return; }
+  if (!vidSupported()) {
+    // no WebCodecs here: the real-time recorder is all this browser can do
+    startTimelapse();
+    return;
+  }
+  var d = $('viddialog');
+  if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); }
+}
+
+function closeVidDialog() {
+  var d = $('viddialog');
+  if (!d) { return; }
+  if (d.close) { d.close(); } else { d.removeAttribute('open'); }
+}
+
+// scale < 1 is for the browser tests only: a software GPU needs minutes a
+// frame at 1080 wide, and the pipeline is the same at any size
+function makeVideo(fmtKey, seconds, scale) {
+  var f = VID_FORMATS[fmtKey] || VID_FORMATS.reel;
+  if (scale > 0 && scale < 1) {
+    f = Object.assign({}, f, {w: 2 * Math.round(f.w * scale / 2), h: 2 * Math.round(f.h * scale / 2)});
+  }
+  seconds = Math.max(2, Math.min(60, +seconds || 15));
+  if (!JOB || vid.on) { return Promise.resolve(null); }
+  return vidCodec(f).then(function (codec) {
+    if (!codec) {
+      notice('This browser cannot encode video — using the live recorder instead.');
+      startTimelapse();
+      return null;
+    }
+    return vidRun(f, seconds, codec);
+  });
+}
+
+function vidRun(f, seconds, codec) {
+  vid.on = true; vid.cancel = false; vid.blob = null;
+  vid.canvas = vid.canvas || document.createElement('canvas');
+  vid.ctx = vid.ctx || vid.canvas.getContext('2d');
+  vid.canvas.width = f.w; vid.canvas.height = f.h;
+  vidUI('run', 'Setting up…', 0);
+
+  var prev = {part: partOnly, motion: machineMotion, color: colorMode, t: play.t,
+              playing: play.on, hiRes: hiRes, lowRes: lowRes,
+              cam: {theta: cam.theta, phi: cam.phi, r: cam.r, tx: cam.tx, ty: cam.ty, tz: cam.tz}};
+  setPlaying(false);
+  if (machineMotion) { setMotion(false); }
+  setPartOnly(true);
+  if (colorMode !== 'filament') { setColorMode('filament'); }
+
+  var fonts = document.fonts && document.fonts.load
+    ? Promise.all(['600 60px "Chakra Petch"', '500 30px "IBM Plex Sans"'].map(function (q) {
+        return document.fonts.load(q).catch(function () {});
+      }))
+    : Promise.resolve();
+
+  var muxer, enc, err = null, N, Nb, cap, theta0, D, t0;
+  return fonts.then(function () {
+    renderer.setPixelRatio(1);
+    renderer.setSize(f.w, f.h, false);
+    camera.aspect = f.w / f.h;
+    hiRes = true; lowRes = false;   // the settled, supersampled path: every frame is a still
+    cap = vidCaption(f);
+    var capFrac = (cap.h + cap.m) / f.h;
+    D = vidDistance(f, capFrac);
+    // Stand back with the scene's fog and backdrop, as the phone fit does
+    var k = Math.max(1, D / 600);
+    stageFit.k = k;
+    scaleSceneTo(k);
+    cam.r = view.r = D / k;
+    theta0 = cam.theta;
+    // centre the part in the band between the caption and the apps' buttons
+    var top = (f.top + capFrac) * f.h, bottom = f.bottom * f.h;
+    camera.setViewOffset(f.w, f.h, 0, -(top - bottom) / 2, f.w, f.h);
+    camera.updateProjectionMatrix();
+
+    muxer = new Mp4Muxer.Muxer({
+      target: new Mp4Muxer.ArrayBufferTarget(),
+      video: {codec: codec.mux, width: f.w, height: f.h, frameRate: VID_FPS},
+      fastStart: 'in-memory',
+      firstTimestampBehavior: 'offset'
+    });
+    enc = new VideoEncoder({
+      output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); },
+      error: function (e) { err = e; }
+    });
+    enc.configure(codec.config);
+    N = Math.round(seconds * VID_FPS);
+    Nb = N - Math.round(Math.min(VID_HOLD, seconds * 0.25) * VID_FPS);
+    t0 = performance.now();
+    return vidFrame(0);
+  }).then(function () {
+    if (vid.cancel || err) { throw err || new Error('cancelled'); }
+    vidUI('run', 'Finishing the file…', 1);
+    return enc.flush();
+  }).then(function () {
+    enc.close();
+    muxer.finalize();
+    var buf = muxer.target.buffer;
+    vid.blob = new Blob([buf], {type: 'video/mp4'});
+    vid.name = (currentId || 'plate').replace(/^preview:/, '') + '-' + f.tag + '.mp4';
+    vidRestore();
+    var mb = (buf.byteLength / 1048576).toFixed(1);
+    vidUI('done', 'Ready: ' + f.w + '×' + f.h + ', ' + seconds + ' s, ' +
+      (codec.mux === 'avc' ? 'H.264' : 'VP9') + ' MP4, ' + mb + ' MB', 1);
+    $('vidshare').hidden = !vidCanShare();
+    return vid.blob;
+  }).catch(function (e) {
+    try { if (enc && enc.state !== 'closed') { enc.close(); } } catch (e2) { /* closed */ }
+    vidRestore();
+    if (vid.cancel) { vidUI('off'); notice('Video cancelled.'); return null; }
+    console.error('[viewer] video export failed:', e);
+    vidUI('fail', 'The video could not be made here: ' + ((e && e.message) || e), 0);
+    return null;
+  });
+
+  function vidFrame(i) {
+    if (i >= N || vid.cancel || err) { return Promise.resolve(); }
+    var t = i < Nb ? JOB.total * Math.min(1, i / Math.max(1, Nb - 1)) : JOB.total;
+    play.t = t;
+    setSeg(segAtTime(t));
+    applyPlayhead(t);
+    if (jobMesh) {
+      jobMesh.material.uniforms.uNow.value = t;
+      ghostMesh.material.uniforms.uNow.value = t;
+    }
+    cam.theta = theta0 + vidEase(i / Math.max(1, N - 1)) * VID_ORBIT;
+    ['theta', 'phi', 'r', 'tx', 'ty', 'tz'].forEach(function (key) { view[key] = cam[key]; });
+    var now = t0 + i * 1000 / VID_FPS;
+    updateCamera(now);
+    updateDoor();
+    syncPartStudio();
+    if (!_cutawayBroken) { try { updateCutaway(); } catch (e) { _cutawayBroken = true; } }
+    renderer.shadowMap.needsUpdate = true;
+    renderFrame();
+    // same task as the render: the WebGL buffer is only readable until it is composited
+    vid.ctx.drawImage(renderer.domElement, 0, 0, f.w, f.h);
+    vidDrawCaption(cap);
+    var frame = new VideoFrame(vid.canvas, {timestamp: Math.round(i * 1e6 / VID_FPS),
+                                            duration: Math.round(1e6 / VID_FPS)});
+    enc.encode(frame, {keyFrame: i % VID_FPS === 0});
+    frame.close();
+    if (i % 4 === 0 || i === N - 1) {
+      var spent = (performance.now() - t0) / 1000, left = spent / (i + 1) * (N - i - 1);
+      vidPreview();
+      vidUI('run', 'Rendering frame ' + (i + 1) + ' of ' + N +
+        (i > 8 ? ' — about ' + hms(left) + ' left' : ''), (i + 1) / N);
+    }
+    // let the page paint, and do not run ahead of the encoder
+    function vidDrain() {
+      return enc.encodeQueueSize > 3 ? vidWait(8).then(vidDrain) : vidWait(0);
+    }
+    return vidDrain().then(function () { return vidFrame(i + 1); });
+  }
+
+  function vidRestore() {
+    vid.on = false;
+    hiRes = prev.hiRes; lowRes = prev.lowRes;
+    if (prev.motion !== machineMotion) { setMotion(prev.motion); }
+    if (prev.part !== partOnly) { setPartOnly(prev.part); }
+    if (prev.color !== colorMode) { setColorMode(prev.color); }
+    for (var key in prev.cam) { cam[key] = prev.cam[key]; }
+    applyPixelRatio();          // renderer back to the stage, and its fit
+    play.t = prev.t;
+    setSeg(segAtTime(play.t));
+    applyPlayhead(play.t);
+    refreshReadout(true);
+    shadowDirty = true;
+  }
+}
+
+function vidCanShare() {
+  if (!vid.blob || !navigator.canShare) { return false; }
+  try {
+    return navigator.canShare({files: [new File([vid.blob], vid.name, {type: 'video/mp4'})]});
+  } catch (e) { return false; }
+}
+
+function vidSave() {
+  if (!vid.blob) { return; }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(vid.blob);
+  a.download = vid.name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  notice('Saved ' + vid.name);
+}
+
+// On a phone, straight into the share sheet: Instagram, TikTok, Photos.
+function vidShare() {
+  if (!vidCanShare()) { vidSave(); return; }
+  navigator.share({files: [new File([vid.blob], vid.name, {type: 'video/mp4'})],
+                   title: jobName || 'Toolpath replay'})
+    .catch(function (e) { if (e && e.name !== 'AbortError') { vidSave(); } });
+}
+
 // Debug handle for the browser tests. Read-only except setViewMode, which the
 // View button already exposes.
 window.__viewer = {
@@ -4733,6 +5077,18 @@ window.__viewer = {
   setFilament: function (hex) { setFilamentOverride(hex || null); },
   playState: function () {
     return {t: play.t, total: JOB ? JOB.total : 0, on: play.on, speed: play.speed, seg: play.seg};
+  },
+  // the video export, scripted: resolves to the MP4 Blob (or null)
+  makeVideo: function (fmt, seconds, scale) { return makeVideo(fmt, seconds, scale); },
+  camInfo: function () {
+    return {cam: Object.assign({}, cam), view: Object.assign({}, view), k: stageFit.k,
+            pos: camera.position.toArray(), aspect: camera.aspect, fov: camera.fov,
+            offset: camera.view ? Object.assign({}, camera.view) : null,
+            bbox: JOB ? JOB.raw.bbox : null, mesh: jobMesh ? jobMesh.position.toArray() : null,
+            buffer: [renderer.domElement.width, renderer.domElement.height]};
+  },
+  vidInfo: function () {
+    return {on: vid.on, supported: vidSupported(), size: vid.blob ? vid.blob.size : 0, name: vid.name};
   },
   tlInfo: function () {
     return {on: tl.on, chunks: tl.chunks.length, speed: play.speed,
@@ -5672,9 +6028,32 @@ function setMotion(on) {
   }
 }
 
-function frameSolo(job) {
+// The part's own extent: every bead part-only view draws, so not the wipe
+// tower, prime line, skirt or supports (2026-10-21). raw.bbox is the whole
+// plate's, and on a colour plate the tower sits beside the part: framed on it,
+// the signpost came out a speck circling an empty point in the video export.
+// [x0, y0, x1, y1, ztop] in mm, cached on the job.
+function partBounds(job) {
+  if (job._partBounds) { return job._partBounds; }
+  var pos = job.geom.attributes.position.array, typ = job.geom.attributes.aType.array;
+  var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+  for (var v = 0, n = typ.length; v < n; v++) {
+    if (PART_HIDDEN[typ[v]]) { continue; }
+    var x = pos[v * 3], y = pos[v * 3 + 1], z = pos[v * 3 + 2];
+    if (x < x0) { x0 = x; } if (x > x1) { x1 = x; }
+    if (y < y0) { y0 = y; } if (y > y1) { y1 = y; }
+    if (z > z1) { z1 = z; }
+  }
   var b = job.raw.bbox;
-  var z = job.layers[job.layers.length - 1][0] / 100;
+  job._partBounds = x1 >= x0
+    ? [x0 / 100, y0 / 100, x1 / 100, y1 / 100, z1 / 100]
+    : [b[0], b[1], b[2], b[3], job.layers[job.layers.length - 1][0] / 100];
+  return job._partBounds;
+}
+
+function frameSolo(job) {
+  var b = partBounds(job);
+  var z = b[4];
   var w = Math.max(b[2] - b[0], b[3] - b[1], z, 20);
   cam.tx = (b[0] + b[2]) / 2;
   cam.ty = (b[1] + b[3]) / 2;
@@ -6137,8 +6516,20 @@ function initUI() {
 
   // ── timelapse export button ────────────────────────────────────────────
   $('timelapse').addEventListener('click', function () {
-    if (tl.on) { tlStop(true); } else { startTimelapse(); }
+    if (tl.on) { tlStop(true); } else { openVidDialog(); }
   });
+  $('vidgo').addEventListener('click', function () {
+    var fmt = (document.querySelector('input[name="vidfmt"]:checked') || {}).value || 'reel';
+    var secs = +$('vidlen').value || 15;
+    closeVidDialog();
+    makeVideo(fmt, secs);
+  });
+  $('vidclose').addEventListener('click', closeVidDialog);
+  $('vidcancel').addEventListener('click', function () {
+    if (vid.on) { vid.cancel = true; } else { vidUI('off'); }
+  });
+  $('vidsave').addEventListener('click', vidSave);
+  $('vidshare').addEventListener('click', vidShare);
 
   // ── drag-and-drop plate preview (see loadPreviewFile) ───────────────────
   var _dragDepth = 0;

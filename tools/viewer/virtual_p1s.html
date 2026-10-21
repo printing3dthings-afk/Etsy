@@ -345,6 +345,44 @@ select,input[type=number]{background:var(--rail);border:1px solid var(--line-hi)
 .layernav input[type=number]{width:58px;padding:3px 5px;text-align:right}
 
 
+/* ── video export (2026-10-21) ────────────────────── */
+.vidfmts{display:grid;gap:8px;margin:0 0 14px;padding:0;border:0}
+.vidfmts legend,.vidlen label{font-family:var(--fm);font-size:11px;color:var(--dim);
+  letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.vidfmt{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line-hi);
+  border-radius:4px;cursor:pointer;color:var(--ink)}
+.vidfmt:has(input:checked){border-color:var(--amber);background:#221608}
+.vidfmt input{accent-color:var(--amber);margin:0}
+.vidfmt .shape{flex:none;border:1.5px solid var(--dim);border-radius:2px}
+.vidfmt small{display:block;font-family:var(--fm);font-size:10.5px;color:var(--faint)}
+.vidlen{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px}
+.vidlen select{background:var(--rail);color:var(--ink);border:1px solid var(--line-hi);
+  border-radius:3px;padding:6px 8px;font-family:var(--fm);font-size:12px}
+.vidgo{width:100%;padding:11px;border-radius:4px;background:var(--amber);color:#160c02;
+  border:1px solid var(--amber);font-family:var(--fd);font-weight:600;font-size:14px;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.vidgo:hover{background:var(--amber-soft)}
+#vidprog{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  background:rgba(7,8,10,.9);padding:16px}
+#vidprog[hidden]{display:none}
+.vidcard{width:min(420px,100%);background:var(--panel);border:1px solid var(--line-hi);border-radius:6px;
+  padding:16px;display:grid;gap:12px;justify-items:center;box-shadow:0 24px 80px rgba(0,0,0,.72)}
+.vidcard h2{font-size:14px;letter-spacing:.06em;text-transform:uppercase;justify-self:start}
+#vidpreview{height:min(320px,42vh);width:auto;max-width:100%;border:1px solid var(--line);
+  border-radius:3px;background:var(--void)}
+.vidtrack{width:100%;height:6px;background:var(--rail);border-radius:3px;overflow:hidden}
+#vidbar{height:100%;width:0;background:var(--amber)}
+#vidmsg{font-family:var(--fm);font-size:11.5px;color:var(--dim);text-align:center;
+  font-variant-numeric:tabular-nums;margin:0}
+#vidprog[data-state="fail"] #vidmsg{color:var(--bad)}
+.vidacts{display:flex;gap:8px;width:100%}
+.vidacts button{flex:1;padding:10px;border-radius:4px;border:1px solid var(--line-hi);
+  color:var(--ink);font-family:var(--fm);font-size:12px;cursor:pointer;background:var(--rail)}
+.vidacts button.main{background:var(--amber);border-color:var(--amber);color:#160c02;font-weight:600}
+#vidprog[data-state="run"] .whendone{display:none}
+#vidprog:not([data-state="run"]) .whenrun{display:none}
+#vidprog[data-state="fail"] .whenok{display:none}
+
 /* ── help ─────────────────────────────────────────── */
 .helpdialog{width:min(520px,calc(100vw - 28px));max-height:calc(100vh - 28px);padding:0;
   border:1px solid var(--line-hi);border-radius:5px;background:var(--panel);color:var(--ink);
@@ -820,8 +858,8 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:
         <svg id="playicon" viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg></button>
       <button class="tbtn" id="restart" title="Back to layer 1" aria-label="Restart from layer 1">
         <svg viewBox="0 0 16 16"><path d="M3 2h2v12H3zM14 2v12L5.5 8z"/></svg></button>
-      <button class="tbtn" id="timelapse" aria-pressed="false" title="Record a 10-second video of this print"
-        aria-label="Record a 10-second video of this print">
+      <button class="tbtn" id="timelapse" aria-pressed="false" title="Make a video of this print for social media"
+        aria-label="Make a video of this print">
         <svg viewBox="0 0 16 16"><circle class="recdot" cx="8" cy="8" r="5"/></svg></button>
       <button class="tbtn" id="speedcycle" title="Playback speed — tap for the next one"
         aria-label="Playback speed">1k×</button>
@@ -851,6 +889,44 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:
 <div id="notice" role="status" hidden></div>
 <div id="dropoverlay" hidden>Drop a plate file (jobs/&lt;id&gt;.js) to preview it</div>
 <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+<dialog id="viddialog" class="helpdialog" aria-labelledby="vidtitle">
+  <div class="helphead"><h2 id="vidtitle">Make a video</h2>
+    <button type="button" class="helpclose" id="vidclose" aria-label="Close">×</button></div>
+  <div class="helpbody">
+    <fieldset class="vidfmts"><legend>Format</legend>
+      <label class="vidfmt"><input type="radio" name="vidfmt" value="reel" checked>
+        <span class="shape" style="width:13px;height:23px"></span>
+        <span>Reels, TikTok, Shorts<small>9:16 · 1080 × 1920</small></span></label>
+      <label class="vidfmt"><input type="radio" name="vidfmt" value="portrait">
+        <span class="shape" style="width:18px;height:23px"></span>
+        <span>Instagram or Facebook feed<small>4:5 · 1080 × 1350</small></span></label>
+      <label class="vidfmt"><input type="radio" name="vidfmt" value="square">
+        <span class="shape" style="width:20px;height:20px"></span>
+        <span>Square<small>1:1 · 1080 × 1080</small></span></label>
+    </fieldset>
+    <div class="vidlen"><label for="vidlen">Length</label>
+      <select id="vidlen"><option value="10">10 seconds</option>
+        <option value="15" selected>15 seconds</option><option value="30">30 seconds</option></select></div>
+    <button type="button" class="vidgo" id="vidgo">Make video</button>
+    <p>The whole print plays, the camera turning round the part, then a few
+    seconds on the finished piece. Every frame is rendered at full size and saved
+    as an MP4, so it looks the same on a phone as on a computer; a phone just
+    takes longer. The caption saying it is a toolpath simulation stays on it.</p>
+  </div>
+</dialog>
+<div id="vidprog" hidden data-state="run" role="dialog" aria-modal="true" aria-labelledby="vidhead">
+  <div class="vidcard">
+    <h2 id="vidhead">Video</h2>
+    <canvas id="vidpreview" width="180" height="320" aria-label="Preview of the frame being rendered"></canvas>
+    <div class="vidtrack"><div id="vidbar"></div></div>
+    <p id="vidmsg" aria-live="polite">Setting up…</p>
+    <div class="vidacts">
+      <button type="button" class="whendone whenok main" id="vidshare" hidden>Share…</button>
+      <button type="button" class="whendone whenok" id="vidsave">Save MP4</button>
+      <button type="button" id="vidcancel"><span class="whenrun">Cancel</span><span class="whendone">Close</span></button>
+    </div>
+  </div>
+</div>
 <dialog id="helpdialog" class="helpdialog" aria-labelledby="helptitle">
   <div class="helphead"><h2 id="helptitle">Viewer shortcuts</h2>
     <button type="button" class="helpclose" id="closehelp" aria-label="Close help">×</button></div>
@@ -869,5 +945,6 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:
 </dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.min.js"></script>
 <script src="jobs/index.js"></script>
 <script src="app.js"></script>

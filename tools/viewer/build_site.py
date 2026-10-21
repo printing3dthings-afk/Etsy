@@ -41,6 +41,8 @@ BODY_OPEN = '</head>\n<body>\n'
 TAIL = '\n</body>\n</html>\n'
 
 CDN_THREE = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
+# The video export's MP4 muxer (2026-10-21), vendored the same way as three.js
+CDN_MUXER = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.min.js'
 
 
 def build(out: Path) -> Path:
@@ -57,6 +59,11 @@ def build(out: Path) -> Path:
             "so the offline rewrite silently did nothing. Update CDN_THREE."
             % CDN_THREE)
     body_part = body_part.replace(CDN_THREE, "three.min.js")
+    if CDN_MUXER not in body_part:
+        raise SystemExit(
+            "the mp4-muxer <script src> in virtual_p1s.html is not %s any more, "
+            "so the offline rewrite silently did nothing. Update CDN_MUXER." % CDN_MUXER)
+    body_part = body_part.replace(CDN_MUXER, "mp4-muxer.min.js")
 
     # app.js is an EXTERNAL script at a filename that changes with its
     # content. Two other approaches were tried on real hardware first and both
@@ -125,6 +132,13 @@ def build(out: Path) -> Path:
             "and stop working offline. Fetch it with:\n  curl -o %s %s"
             % (three, three, CDN_THREE))
     shutil.copy2(three, out / "three.min.js")
+    muxer = HERE / "vendor" / "mp4-muxer.min.js"
+    if not muxer.exists():
+        raise SystemExit(
+            "missing %s -- without it the built site cannot make videos offline. "
+            "Fetch it with:\n  curl -o %s %s" % (muxer, muxer, CDN_MUXER))
+    shutil.copy2(muxer, out / "mp4-muxer.min.js")
+    shutil.copy2(HERE / "vendor" / "mp4-muxer.LICENSE", out / "mp4-muxer.LICENSE")
 
     jobs_src = HERE / "jobs"
     if not (jobs_src / "index.js").exists():

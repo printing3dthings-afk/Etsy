@@ -211,7 +211,9 @@ def _fit(narrow):
         return None
     block = (re.search(r"^var stageFit = .*?;$", APP, re.M).group(0) + "\n" +
              re.search(r"^var FOG_NEAR = .*?;$", APP, re.M).group(0))
-    js = _FIT_HARNESS % ("true" if narrow else "false", block, _function("measureStageFit"))
+    # scaleSceneTo() is measureStageFit's own tail, split out for the video export
+    js = _FIT_HARNESS % ("true" if narrow else "false", block,
+                         _function("measureStageFit") + "\n" + _function("scaleSceneTo"))
     r = subprocess.run([node, "-e", js], capture_output=True, text=True, timeout=60)
     if r.returncode != 0:
         raise AssertionError(r.stderr)

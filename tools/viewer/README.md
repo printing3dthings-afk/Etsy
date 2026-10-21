@@ -146,6 +146,69 @@ what worked and fixing what did not:
   plate list is not a scroll box there and scrollIntoView moves the window.
   Only the list's own box scrolls now.
 
+## Video export for social media (2026-10-21)
+
+Scott: the timelapse button was "having trouble", and the clips go out on
+social media. Reproduced headless the same day with the record button on the
+steam train: a "10-second" video that decoded to **one frame**, 670×691,
+VP9 WebM with no duration in its header. MediaRecorder records whatever the
+page manages to draw in real time, so a busy device records a slideshow at
+the window's own odd size, in a format Instagram will not take.
+
+The button now opens **Make a video**:
+
+| format | size | for |
+|---|---|---|
+| 9:16 | 1080 × 1920 | Reels, TikTok, Shorts |
+| 4:5 | 1080 × 1350 | Instagram and Facebook feed |
+| 1:1 | 1080 × 1080 | square |
+
+Lengths are 10, 15 or 30 s. The clip is rendered, not recorded:
+
+- **Every frame is posed and drawn.** Each frame is posed from its own
+  index: the print's time, the camera's turn. It is drawn at the format's
+  size with the settled, supersampled render path, so every frame is a
+  still-quality frame.
+- **Every frame is encoded.** The browser's own encoder (WebCodecs) takes
+  each frame: H.264 High, then Main, then Baseline, then VP9. The 12 Mbps
+  bitrate at 1080×1920 is above what the apps re-encode to. mp4-muxer wraps
+  the result as an MP4 with its index at the front.
+- **A slow device only takes longer.** Every frame is in the file whatever
+  the device; the progress card shows the frame being drawn and the time
+  left.
+- **What the clip shows.** The whole print plays with the camera easing
+  three-eighths of the way round the part, then 2.5 s on the finished piece,
+  still turning.
+- **The part is framed from its own beads.** The wipe tower, prime line,
+  skirt and supports don't count, and the part stays out of the band each app
+  covers with its own buttons and caption. Framed on the plate's bounding
+  box, a colour plate's tower pulled the camera off the part. The
+  interactive Part-only view now frames from the same beads.
+- **The caption is on every frame:** the plate's name and "Toolpath
+  simulation of the sliced G-code — not print footage", below the apps' top
+  bar.
+- **Save or share.** At the end, **Save MP4** downloads the file. Where the
+  browser can share files (a phone), **Share…** opens the system share sheet
+  straight to Instagram, TikTok or Photos.
+
+Without WebCodecs (older browsers) the button falls back to the real-time
+recorder above. The muxer is `vendor/mp4-muxer.min.js` (mp4-muxer 5.2.1,
+MIT, licence beside it). The Artifact page loads it from jsDelivr and
+`build_site.py` rewrites that to the local copy, as it does for three.js.
+
+**Verified headless (Chromium 1194, software GL), at quarter size because
+the software GPU takes over a minute a frame at 1080:**
+
+- Every file decodes to its full frame count at a constant 30 fps with its
+  exact duration: 90 of 90 frames, 3.000 s; 120 of 120, 4.000 s.
+- The signpost and the steam train are framed and turning in 9:16 and 1:1.
+
+This Chromium has no H.264 encoder, so those files are VP9 in MP4. Chrome
+and Safari encode H.264 through the same code; the codec is the only
+difference. `window.__viewer.makeVideo(fmt, seconds, scale)` drives it from
+a script; `scale` is for tests only. Source checks:
+`tests/test_viewer_video_export.py`.
+
 ## Scripted playback, for video (2026-10-10)
 
 `window.__viewer` gained `seek(t)`, `setSpeed(v)`, `setPlaying(on)`,
