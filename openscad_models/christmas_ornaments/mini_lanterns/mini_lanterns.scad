@@ -55,11 +55,13 @@ module posts() for (k = [0 : 5]) rotate([0, 0, 60 * k]) translate([cr(AP) - 0.6,
 module rail() hull() { translate([0, 0, zr - SH * RO]) hex(AP, 0.01); translate([0, 0, zr]) hex(AP + RO, zt - zr); }
 module roof() translate([0, 0, zt - 0.01]) hex_frustum(RA, AC, zc - zt + 0.01);
 module hanging_ring() rotate([90, 0, 0]) linear_extrude(3.2, center = true) difference() {
-    hull() { translate([-2.6, 0]) square([5.2, 0.1]); translate([0, 6.4]) circle(4.8); }
+    // its foot 4.4 wide, so its corners stand on the crown (5.2, they stood
+    // 0.4 past its flats and the slicer propped them, 2026-10-21)
+    hull() { translate([-2.2, 0]) square([4.4, 0.1]); translate([0, 6.4]) circle(4.8); }
     translate([0, 6.4]) hull() { circle(2.3); translate([0, 2.3 * 2]) circle(0.01); }   // peaked at 60 deg
 }
 module crown() {
-    translate([0, 0, zc - 0.01]) hex_frustum(AC, AC * 0.8, 1.6);
+    translate([0, 0, zc - 0.01]) hex(AC, 1.6);
     translate([0, 0, zc + 1.4]) hanging_ring();
 }
 MARK_H = 4.4;
@@ -102,35 +104,64 @@ module well() {
     translate([0, 13.6]) polygon([[-6.4, 0], [6.4, 0], [0, 5.6]]);
 }
 module filler() { translate([W / 2, HS * 0.52]) flake(5.2); sky(W, HS, [[0.2, 0.9], [0.8, 0.84], [0.25, 0.16], [0.78, 0.2]], 1.9); }
+// every stroke widened 0.16 a side: at this size the scenes' walls, frames and
+// flake arms were 0.86-0.95 mm, under the gate's 1.2 floor (2026-10-21)
 module scene(k) intersection() {
     square([W, HS]);
-    if (k == 4 || k == 1) building(design); else filler();
+    offset(r = 0.16, $fn = 12) if (k == 4 || k == 1) building(design); else filler();
 }
+// raised with a skirt under each stroke (relief_lib's art_skirt): trimmed from
+// below (glow_out), the cross on the church and the stars' arms kept only
+// slivers in their outer slabs, 0.24 mm (2026-10-21)
 module art() for (k = [0 : 5]) on_face(fa(k), AP + 0.01 - EMB) translate([-W / 2, z0])
-    glow_out(AD, 1) scene(k);
+    art_skirt(AD, 1) scene(k);
 
 // ---- snow on the crown, a bow on the front ------------------------------------------------
 V0 = LF * 0.42;
-// the drips keep 3 mm in from the hips: where two faces' end drips met
-// there, they touched along a line and left the snow open (2026-10-21)
-module snow2d(k) let (wf = 2 * RA * tan(30) * (1 - V0 / LF), wv = wf + 6, n = 2) union() {
-    translate([-wv / 2, V0]) square([wv, LF]);
+// The snow is one band round the whole roof, from V0 up to the crown, with
+// drips below it on each face. Drawn per face and welded at the hips, it left
+// a wedge 0.05-0.14 mm thin along every hip, where one face's drape stood past
+// the hip over the next (2026-10-21). The band is the roof grown 1 mm outward
+// and cut off square below V0, so it has no seam; its lower edge is a face
+// standing straight up, with nothing under it. (Stepped up 1.6 per 1 like the
+// reliefs, every step on a 49 deg roof was a sliver.)
+module drips2d(k) let (wf = 2 * RA * tan(30) * (1 - V0 / LF), n = 2)
     for (i = [0 : n]) let (u = -(wf - 6.5) / 2 + i * (wf - 6.5) / n, r = (i + k) % 2 == 0 ? 1.8 : 1.4)
         translate([u, V0]) circle(r, $fn = 24);
+TN = atan(RH / RA);                 // the roof's faces from flat
+SN = 1.0;                           // the snow's depth, square to the roof
+// the roof grown d outward square to its faces (d / sin(TN) measured across)
+module roof_out(d) hull() {
+    translate([0, 0, zt - 1]) hex(RA + d / sin(TN) + RA / RH, 0.01);
+    translate([0, 0, zc + 1]) hex(RA + d / sin(TN) - (zc + 1 - zt) * RA / RH, 0.01);
+}
+module snow_band() intersection() {
+    roof_out(SN);
+    translate([0, 0, zt - 1]) hex(RA - V0 * cos(TN), zc - zt + 2);
 }
 module snow() difference() {
-    for (k = [0 : 5]) intersection() { sector(fa(k)); on_roof(fa(k)) translate([0, 0, 0.01 - EMB]) glow_out(1.0, 1) snow2d(k); }
+    intersection() {
+        roof_out(SN);
+        union() {
+            snow_band();
+            for (k = [0 : 5]) intersection() { sector(fa(k)); on_roof(fa(k)) translate([0, 0, 0.01 - EMB]) glow_out(SN + 0.15, 1) drips2d(k); }
+        }
+    }
     if (EMB == 0) frame();
     translate([0, 0, zc]) cylinder(r = 50, h = 50);
 }
 module bow2d() {
     for (m = [0, 1]) mirror([m, 0]) {
         hull() { translate([1.2, 0]) circle(1.2); translate([4.2, 1.7]) scale([1.3, 1]) circle(1.7); }
-        polygon([[-0.9, -0.5], [1.4, -0.6], [3.6, -6.2], [2.3, -5.6], [1.6, -7]]);
+        // square-ended tails: forked, their two points were 0.27 mm slivers
+        polygon([[-0.9, -0.5], [1.4, -0.6], [3.7, -6.4], [1.5, -6.9]]);
     }
     circle(1.6);
 }
-module bow() on_roof(fa(4)) translate([0, LF * 0.18, 0.01 - EMB]) glow_out(1.0, 1) bow2d();
+// its tails (7 below its knot) end on the roof: at LF * 0.18 they hung 2 mm
+// past the eave over nothing, and the slicer built a column from the bed to
+// hold them (2026-10-21). Its loops stay under the snow, which starts at V0.
+module bow() on_roof(fa(4)) translate([0, LF * 0.29, 0.01 - EMB]) glow_out(1.0, 1) bow2d();
 
 // ---- parts ---------------------------------------------------------------------------------
 module the(p) {
