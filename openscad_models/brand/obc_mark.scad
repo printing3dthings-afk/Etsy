@@ -72,7 +72,11 @@ module obc_cut(h, depth = OBC_INLAY) mirror([1, 0, 0]) translate([0, 0, -0.5]) l
 // letters and the ridges across them grow by twice it. A one-colour mark has no
 // inlay to fill them, and at the logo's 0.95 they read as walls under the
 // gate's 1.2 floor (the nativity, 2026-10-21).
-module obc_engrave(h, depth = 0.8, inset = 0) mirror([1, 0, 0]) {
-    translate([0, 0, -0.5]) linear_extrude(0.5 + OBC_GROOVE + 0.01) offset(delta = -inset) obc_face2d(h);
-    translate([0, 0, OBC_GROOVE]) linear_extrude(depth - OBC_GROOVE) offset(delta = -inset) obc_solid2d(h);
+// ridges = false cuts the letters whole: with no inlay above them, the ridges
+// are strips one layer thick and the gate reads them as 0.2 mm walls.
+module obc_engrave(h, depth = 0.8, inset = 0, ridges = true) mirror([1, 0, 0]) {
+    if (ridges) {
+        translate([0, 0, -0.5]) linear_extrude(0.5 + OBC_GROOVE + 0.01) offset(delta = -inset) obc_face2d(h);
+        translate([0, 0, OBC_GROOVE]) linear_extrude(depth - OBC_GROOVE) offset(delta = -inset) obc_solid2d(h);
+    } else translate([0, 0, -0.5]) linear_extrude(depth + 0.5) offset(delta = -inset) obc_solid2d(h);
 }
