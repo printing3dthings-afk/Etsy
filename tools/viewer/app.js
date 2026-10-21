@@ -4750,31 +4750,103 @@ var VID_HOLD = 2.5;          // seconds at the end on the finished part, still t
 var VID_ORBIT = Math.PI * 0.75;
 var vid = {on: false, cancel: false, blob: null, name: ''};
 
-function vidSupported() {
-  return typeof VideoEncoder !== 'undefined' && typeof VideoFrame !== 'undefined' &&
-    !!window.Mp4Muxer;
-}
+// Always H.264. The first version fell back to VP9 where the browser had no
+// H.264 encoder, and Scott's first test clip, VP9 in an MP4, played as a black
+// screen on his phone (2026-10-21): iPhones and Instagram do not decode it.
+// Where WebCodecs has no H.264 (Firefox without OpenH264, Chromium builds),
+// the frames go to h264-mp4-encoder instead (WebAssembly, MIT, vendor/):
+// slower, but the file is the same kind.
+function vidSupported() { return typeof WebAssembly !== 'undefined'; }
 
 // H.264 High, then Main, then Baseline (all level 4.0, which takes 1080x1920
-// at 30 fps), then VP9. 1.2 bits a pixel per second-ish: 12 Mbps at 1080x1920,
-// well above what the apps re-encode to, so their pass is the only one that
-// shows.
+// at 30 fps). 1.2 bits a pixel per second-ish: 12 Mbps at 1080x1920, well
+// above what the apps re-encode to, so their pass is the only one that shows.
 function vidCodec(f) {
+  var wasm = {wasm: true};
+  if (typeof VideoEncoder === 'undefined' || typeof VideoFrame === 'undefined' || !window.Mp4Muxer) {
+    return Promise.resolve(wasm);
+  }
   var bitrate = Math.round(f.w * f.h * 30 * 0.2);
-  var tries = [['avc1.640028', 'avc'], ['avc1.4D4028', 'avc'], ['avc1.42E028', 'avc'],
-               ['vp09.00.40.08', 'vp9']];
+  var tries = ['avc1.640028', 'avc1.4D4028', 'avc1.42E028'];
   var i = 0;
   function next() {
-    if (i >= tries.length) { return Promise.resolve(null); }
-    var t = tries[i++];
-    var cfg = {codec: t[0], width: f.w, height: f.h, bitrate: bitrate, framerate: VID_FPS,
-               bitrateMode: 'variable', latencyMode: 'quality'};
-    if (t[1] === 'avc') { cfg.avc = {format: 'avc'}; }
+    if (i >= tries.length) { return Promise.resolve(wasm); }
+    var cfg = {codec: tries[i++], width: f.w, height: f.h, bitrate: bitrate, framerate: VID_FPS,
+               bitrateMode: 'variable', latencyMode: 'quality', avc: {format: 'avc'}};
     return VideoEncoder.isConfigSupported(cfg).then(function (r) {
-      return r && r.supported ? {config: r.config || cfg, mux: t[1]} : next();
+      return r && r.supported ? {config: r.config || cfg} : next();
     }, next);
   }
   return next();
+}
+
+// The browser's own encoder: each frame a VideoFrame, muxed by mp4-muxer.
+function vidWebCodecsSink(f, codec) {
+  var muxer = new Mp4Muxer.Muxer({
+    target: new Mp4Muxer.ArrayBufferTarget(),
+    video: {codec: 'avc', width: f.w, height: f.h, frameRate: VID_FPS},
+    fastStart: 'in-memory',
+    firstTimestampBehavior: 'offset'
+  });
+  var sink = {err: null, label: 'H.264'};
+  var enc = new VideoEncoder({
+    output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); },
+    error: function (e) { sink.err = e; }
+  });
+  enc.configure(codec.config);
+  sink.add = function (canvas, i) {
+    var frame = new VideoFrame(canvas, {timestamp: Math.round(i * 1e6 / VID_FPS),
+                                        duration: Math.round(1e6 / VID_FPS)});
+    enc.encode(frame, {keyFrame: i % VID_FPS === 0});
+    frame.close();
+  };
+  sink.backlog = function () { return enc.encodeQueueSize; };
+  sink.done = function () {
+    return enc.flush().then(function () {
+      enc.close();
+      muxer.finalize();
+      return new Uint8Array(muxer.target.buffer);
+    });
+  };
+  sink.abort = function () { try { if (enc.state !== 'closed') { enc.close(); } } catch (e) { /* closed */ } };
+  return Promise.resolve(sink);
+}
+
+// h264-mp4-encoder, loaded only when needed: 1.7 MB the page does not need
+// until a browser without an H.264 encoder makes a video. Its address is in
+// the page (meta h264-encoder) so the offline site can point it at its own copy.
+function vidLoadWasm() {
+  if (window.HME) { return Promise.resolve(); }
+  var m = document.querySelector('meta[name="h264-encoder"]');
+  if (!m) { return Promise.reject(new Error('no H.264 encoder is available in this browser')); }
+  return new Promise(function (ok, fail) {
+    var sc = document.createElement('script');
+    sc.src = m.getAttribute('content');
+    sc.onload = function () { if (window.HME) { ok(); } else { fail(new Error('the H.264 encoder did not load')); } };
+    sc.onerror = function () { fail(new Error('the H.264 encoder could not be downloaded')); };
+    document.head.appendChild(sc);
+  });
+}
+
+function vidWasmSink(f) {
+  return vidLoadWasm().then(function () { return HME.createH264MP4Encoder(); }).then(function (e) {
+    e.width = f.w; e.height = f.h; e.frameRate = VID_FPS;
+    e.quantizationParameter = 20;   // 10 best .. 51 worst; 20 keeps the layer lines
+    e.speed = 4;
+    e.groupOfPictures = VID_FPS;
+    e.initialize();
+    var sink = {err: null, label: 'H.264'};
+    sink.add = function (canvas) { e.addFrameRgba(vid.ctx.getImageData(0, 0, f.w, f.h).data); };
+    sink.backlog = function () { return 0; };
+    sink.done = function () {
+      e.finalize();
+      var out = e.FS.readFile(e.outputFilename);
+      e.delete();
+      return Promise.resolve(out);
+    };
+    sink.abort = function () { try { e.delete(); } catch (x) { /* deleted */ } };
+    return sink;
+  });
 }
 
 // How far back the camera stands, so the part fills the free span of the
@@ -4883,20 +4955,18 @@ function makeVideo(fmtKey, seconds, scale) {
   }
   seconds = Math.max(2, Math.min(60, +seconds || 15));
   if (!JOB || vid.on) { return Promise.resolve(null); }
-  return vidCodec(f).then(function (codec) {
-    if (!codec) {
-      notice('This browser cannot encode video — using the live recorder instead.');
-      startTimelapse();
-      return null;
-    }
-    return vidRun(f, seconds, codec);
-  });
+  return vidCodec(f).then(function (codec) { return vidRun(f, seconds, codec); });
 }
 
 function vidRun(f, seconds, codec) {
   vid.on = true; vid.cancel = false; vid.blob = null;
-  vid.canvas = vid.canvas || document.createElement('canvas');
-  vid.ctx = vid.ctx || vid.canvas.getContext('2d');
+  // the WebAssembly encoder reads every frame back, so its canvas lives on the CPU
+  var cpu = !!codec.wasm;
+  if (!vid.canvas || vid.cpu !== cpu) {
+    vid.canvas = document.createElement('canvas');
+    vid.ctx = vid.canvas.getContext('2d', cpu ? {willReadFrequently: true} : undefined);
+    vid.cpu = cpu;
+  }
   vid.canvas.width = f.w; vid.canvas.height = f.h;
   vidUI('run', 'Setting up…', 0);
 
@@ -4914,7 +4984,7 @@ function vidRun(f, seconds, codec) {
       }))
     : Promise.resolve();
 
-  var muxer, enc, err = null, N, Nb, cap, theta0, D, t0;
+  var sink = null, N, Nb, cap, theta0, D, t0;
   return fonts.then(function () {
     renderer.setPixelRatio(1);
     renderer.setSize(f.w, f.h, false);
@@ -4934,39 +5004,29 @@ function vidRun(f, seconds, codec) {
     camera.setViewOffset(f.w, f.h, 0, -(top - bottom) / 2, f.w, f.h);
     camera.updateProjectionMatrix();
 
-    muxer = new Mp4Muxer.Muxer({
-      target: new Mp4Muxer.ArrayBufferTarget(),
-      video: {codec: codec.mux, width: f.w, height: f.h, frameRate: VID_FPS},
-      fastStart: 'in-memory',
-      firstTimestampBehavior: 'offset'
-    });
-    enc = new VideoEncoder({
-      output: function (chunk, meta) { muxer.addVideoChunk(chunk, meta); },
-      error: function (e) { err = e; }
-    });
-    enc.configure(codec.config);
+    if (codec.wasm) { vidUI('run', 'Loading the video encoder…', 0); }
+    return codec.wasm ? vidWasmSink(f) : vidWebCodecsSink(f, codec);
+  }).then(function (s) {
+    sink = s;
     N = Math.round(seconds * VID_FPS);
     Nb = N - Math.round(Math.min(VID_HOLD, seconds * 0.25) * VID_FPS);
     t0 = performance.now();
     return vidFrame(0);
   }).then(function () {
-    if (vid.cancel || err) { throw err || new Error('cancelled'); }
+    if (vid.cancel || sink.err) { throw sink.err || new Error('cancelled'); }
     vidUI('run', 'Finishing the file…', 1);
-    return enc.flush();
-  }).then(function () {
-    enc.close();
-    muxer.finalize();
-    var buf = muxer.target.buffer;
+    return sink.done();
+  }).then(function (buf) {
     vid.blob = new Blob([buf], {type: 'video/mp4'});
     vid.name = (currentId || 'plate').replace(/^preview:/, '') + '-' + f.tag + '.mp4';
     vidRestore();
     var mb = (buf.byteLength / 1048576).toFixed(1);
     vidUI('done', 'Ready: ' + f.w + '×' + f.h + ', ' + seconds + ' s, ' +
-      (codec.mux === 'avc' ? 'H.264' : 'VP9') + ' MP4, ' + mb + ' MB', 1);
+      sink.label + ' MP4, ' + mb + ' MB', 1);
     $('vidshare').hidden = !vidCanShare();
     return vid.blob;
   }).catch(function (e) {
-    try { if (enc && enc.state !== 'closed') { enc.close(); } } catch (e2) { /* closed */ }
+    if (sink) { sink.abort(); }
     vidRestore();
     if (vid.cancel) { vidUI('off'); notice('Video cancelled.'); return null; }
     console.error('[viewer] video export failed:', e);
@@ -4975,7 +5035,7 @@ function vidRun(f, seconds, codec) {
   });
 
   function vidFrame(i) {
-    if (i >= N || vid.cancel || err) { return Promise.resolve(); }
+    if (i >= N || vid.cancel || sink.err) { return Promise.resolve(); }
     var t = i < Nb ? JOB.total * Math.min(1, i / Math.max(1, Nb - 1)) : JOB.total;
     play.t = t;
     setSeg(segAtTime(t));
@@ -4996,10 +5056,7 @@ function vidRun(f, seconds, codec) {
     // same task as the render: the WebGL buffer is only readable until it is composited
     vid.ctx.drawImage(renderer.domElement, 0, 0, f.w, f.h);
     vidDrawCaption(cap);
-    var frame = new VideoFrame(vid.canvas, {timestamp: Math.round(i * 1e6 / VID_FPS),
-                                            duration: Math.round(1e6 / VID_FPS)});
-    enc.encode(frame, {keyFrame: i % VID_FPS === 0});
-    frame.close();
+    sink.add(vid.canvas, i);
     if (i % 4 === 0 || i === N - 1) {
       var spent = (performance.now() - t0) / 1000, left = spent / (i + 1) * (N - i - 1);
       vidPreview();
@@ -5008,7 +5065,7 @@ function vidRun(f, seconds, codec) {
     }
     // let the page paint, and do not run ahead of the encoder
     function vidDrain() {
-      return enc.encodeQueueSize > 3 ? vidWait(8).then(vidDrain) : vidWait(0);
+      return sink.backlog() > 3 ? vidWait(8).then(vidDrain) : vidWait(0);
     }
     return vidDrain().then(function () { return vidFrame(i + 1); });
   }

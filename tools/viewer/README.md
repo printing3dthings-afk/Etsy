@@ -169,10 +169,17 @@ Lengths are 10, 15 or 30 s. The clip is rendered, not recorded:
   index: the print's time, the camera's turn. It is drawn at the format's
   size with the settled, supersampled render path, so every frame is a
   still-quality frame.
-- **Every frame is encoded.** The browser's own encoder (WebCodecs) takes
-  each frame: H.264 High, then Main, then Baseline, then VP9, at a 12 Mbps
-  variable-bitrate target at 1080×1920, above what the apps re-encode to.
-  mp4-muxer wraps the result as an MP4 with its index at the front.
+- **Every frame is encoded, always as H.264.** The browser's own encoder
+  (WebCodecs) takes each frame where it can: H.264 High, then Main, then
+  Baseline, at a 12 Mbps variable-bitrate target at 1080×1920, above what
+  the apps re-encode to. mp4-muxer wraps the result as an MP4 with its index
+  at the front. Where the browser has no H.264 encoder, h264-mp4-encoder
+  takes the frames instead (WebAssembly, Baseline, quantiser 20). It is
+  slower, but the file is the same kind.
+- **Never VP9.** The first version fell back to VP9 in that case. Scott's
+  first test clip was one, and it played as a **black screen** on his phone,
+  because iPhones and Instagram do not decode VP9 in an MP4. The same frames
+  re-encoded as H.264 played. Nothing in the page encodes VP9 now.
 - **A slow device only takes longer.** Every frame is in the file whatever
   the device; the progress card shows the frame being drawn and the time
   left.
@@ -191,24 +198,30 @@ Lengths are 10, 15 or 30 s. The clip is rendered, not recorded:
   browser can share files (a phone), **Share…** opens the system share sheet
   straight to Instagram, TikTok or Photos.
 
-Without WebCodecs (older browsers) the button falls back to the real-time
-recorder above. The muxer is `vendor/mp4-muxer.min.js` (mp4-muxer 5.2.1,
-MIT, licence beside it). The Artifact page loads it from jsDelivr and
-`build_site.py` rewrites that to the local copy, as it does for three.js.
+Only a browser without WebAssembly falls back to the real-time recorder
+above. Both libraries are vendored, each with its MIT licence beside it:
 
-**Verified headless (Chromium 1194, software GL):**
+- **`vendor/mp4-muxer.min.js`** (mp4-muxer 5.2.1, 32 KB) loads with the page.
+- **`vendor/h264-mp4-encoder.web.js`** (h264-mp4-encoder 1.0.12, 1.7 MB)
+  loads only when a browser needs it. The page finds it at the address in
+  its `h264-encoder` meta tag.
 
-- **Quarter size:** 90 of 90 frames in 3.000 s, and 120 of 120 in 4.000 s,
-  each at a constant 30 fps. The signpost and the steam train are framed
-  and turning in 9:16 and 1:1.
-- **Full size:** the steam train at 1080×1920 decodes to 60 of 60 frames at
-  30 fps in exactly 2.000 s, 7.7 Mbps. Layer lines are sharp, and the
-  caption sits under the top band. It took 13 s a frame here; a phone's
-  GPU is far faster, but that has not been measured.
+The Artifact page fetches both from jsDelivr; `build_site.py` points them
+at the local copies, as it does for three.js.
 
-This Chromium has no H.264 encoder, so those files are VP9 in MP4. Chrome
-and Safari encode H.264 through the same code; the codec is the only
-difference. `window.__viewer.makeVideo(fmt, seconds, scale)` drives it from
+**Verified headless (Chromium 1194, software GL).** This Chromium has no
+H.264 encoder of its own, so these runs went through h264-mp4-encoder:
+
+- **The output:** H.264 Baseline MP4s. The steam train in 9:16 decodes to 90
+  of 90 frames in 3.000 s; the signpost in 1:1, to 60 of 60 in 2.000 s.
+  Both run at a constant 30 fps, and their brightness (frame-average luma
+  80–110) shows no blank frame.
+- **The full-size render:** 1080×1920, 60 of 60 frames, sharp layer lines,
+  the caption under the top band. That run was encoded VP9, before the fix.
+  It took 13 s a frame here; a phone's GPU is far faster, but that has not
+  been measured.
+
+Chrome and Safari encode H.264 themselves, through the same frame loop. `window.__viewer.makeVideo(fmt, seconds, scale)` drives it from
 a script; `scale` is for tests only. Source checks:
 `tests/test_viewer_video_export.py`.
 

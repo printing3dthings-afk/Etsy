@@ -43,6 +43,9 @@ TAIL = '\n</body>\n</html>\n'
 CDN_THREE = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'
 # The video export's MP4 muxer (2026-10-21), vendored the same way as three.js
 CDN_MUXER = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.1/build/mp4-muxer.min.js'
+# The H.264 encoder for browsers without one of their own (2026-10-21), loaded
+# by the page only when it is needed, from the address in its meta tag
+CDN_H264 = 'https://cdn.jsdelivr.net/npm/h264-mp4-encoder@1.0.12/embuild/dist/h264-mp4-encoder.web.js'
 
 
 def build(out: Path) -> Path:
@@ -50,6 +53,11 @@ def build(out: Path) -> Path:
     # The page's own <title>/<link>/<style> belong in the head; everything from
     # the first real element onward is the body. The marker is the page's own
     # opening tag, not a guess about line numbers.
+    if CDN_H264 not in page:
+        raise SystemExit(
+            "the h264-encoder meta in virtual_p1s.html is not %s any more, so the "
+            "offline rewrite silently did nothing. Update CDN_H264." % CDN_H264)
+    page = page.replace(CDN_H264, "h264-mp4-encoder.web.js")
     split = page.index("<div id=")
     head_part, body_part = page[:split], page[split:]
 
@@ -139,6 +147,12 @@ def build(out: Path) -> Path:
             "Fetch it with:\n  curl -o %s %s" % (muxer, muxer, CDN_MUXER))
     shutil.copy2(muxer, out / "mp4-muxer.min.js")
     shutil.copy2(HERE / "vendor" / "mp4-muxer.LICENSE", out / "mp4-muxer.LICENSE")
+    for name in ("h264-mp4-encoder.web.js", "h264-mp4-encoder.LICENSE"):
+        src = HERE / "vendor" / name
+        if not src.exists():
+            raise SystemExit("missing %s -- without it the built site makes no video in a "
+                             "browser that has no H.264 encoder of its own." % src)
+        shutil.copy2(src, out / name)
 
     jobs_src = HERE / "jobs"
     if not (jobs_src / "index.js").exists():

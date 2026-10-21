@@ -479,16 +479,18 @@ def test_the_height_readback_is_hinted():
     """
     js = (ROOT / "tools" / "viewer" / "app.js").read_text(encoding="utf-8")
     reads = [m for m in re.finditer(r"\.getImageData\(", js)]
-    check(len(reads) == 1,
-          "%d canvas readbacks in app.js -- there is exactly one, in "
-          "heightToNormal, and it is hinted. A second one needs the same "
+    # The second (2026-10-21): the video export's WebAssembly H.264 encoder
+    # takes each frame's pixels, for browsers with no H.264 encoder of their
+    # own. Its canvas is made with the same hint, in vidRun.
+    check(len(reads) == 2,
+          "%d canvas readbacks in app.js -- there are exactly two, in "
+          "heightToNormal and vidWasmSink, both hinted. Another needs the same "
           "hint and its own reason for existing." % len(reads))
-    if reads:
-        before = js[:reads[0].start()]
-        owner = re.findall(r"^function (\w+)\(", before, re.M)
-        check(owner and owner[-1] == "heightToNormal",
-              "the readback moved out of heightToNormal (now in %s)"
-              % (owner[-1] if owner else "?"))
+    owners = [(re.findall(r"^function (\w+)\(", js[:m.start()], re.M) or ["?"])[-1] for m in reads]
+    check(sorted(owners) == ["heightToNormal", "vidWasmSink"],
+          "the readbacks moved (now in %s)" % ", ".join(owners))
+    check("willReadFrequently: true" in (re.search(r"^function vidRun\(.*?^\}$", js, re.S | re.M) or [""])[0],
+          "the video export's readback canvas must carry the willReadFrequently hint")
     maker = re.search(r"function grainNormalMap\(.*?\n\}", js, re.S)
     # The literal call, not the word: the comment above it explains why the
     # hint is there and matching that made this test pass with the hint gone.
