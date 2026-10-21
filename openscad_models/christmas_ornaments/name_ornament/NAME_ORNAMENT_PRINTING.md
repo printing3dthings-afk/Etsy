@@ -43,7 +43,8 @@ at most 13 mm. Names were checked at both ends:
 
 - **"Christopher"** (11 letters) passes `part_mesh` and `product_gate`, with
   the same 2.65 mm 1st-percentile wall as the sample.
-- **"Mia"** (3 letters): see the check below.
+- **"Mia"** (3 letters, set at the 13 mm cap) passes both too, with the
+  same 2.65 mm wall.
 
 Longer than about 11 letters, the script face gets thin enough to check
 again before selling.
