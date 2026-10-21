@@ -64,8 +64,15 @@ module obc_inlay(h, depth = OBC_INLAY) mirror([1, 0, 0]) {
     translate([0, 0, OBC_GROOVE]) linear_extrude(depth - OBC_GROOVE) offset(delta = 0.02) obc_solid2d(h);
 }
 module obc_cut(h, depth = OBC_INLAY) mirror([1, 0, 0]) translate([0, 0, -0.5]) linear_extrude(depth + 0.5) obc_solid2d(h);
-// as a cutter: the letters, less the bands, which stay at the face as ridges
-module obc_engrave(h, depth = 0.8) mirror([1, 0, 0]) difference() {
-    translate([0, 0, -0.5]) linear_extrude(depth + 0.5) obc_solid2d(h);
-    translate([0, 0, -1]) linear_extrude(1 + OBC_GROOVE) difference() { obc_solid2d(h); obc_face2d(h); }
+// as a cutter: the face's bands in the first layer, the whole letters above,
+// so the grooves stay at the face as ridges. Built from the same two shapes as
+// the inlay: subtracting one cleaned outline from the other left slivers of
+// no width and a mesh CGAL would not close (2026-10-21, its first use).
+// inset > 0 pulls the cut in that far all round: the walls left between the
+// letters and the ridges across them grow by twice it. A one-colour mark has no
+// inlay to fill them, and at the logo's 0.95 they read as walls under the
+// gate's 1.2 floor (the nativity, 2026-10-21).
+module obc_engrave(h, depth = 0.8, inset = 0) mirror([1, 0, 0]) {
+    translate([0, 0, -0.5]) linear_extrude(0.5 + OBC_GROOVE + 0.01) offset(delta = -inset) obc_face2d(h);
+    translate([0, 0, OBC_GROOVE]) linear_extrude(depth - OBC_GROOVE) offset(delta = -inset) obc_solid2d(h);
 }
