@@ -147,12 +147,12 @@ floor.data.materials.append(fmat)
 # 50mm, so the old distance is recovered at a normal lens and every other
 # focal length reframes to match instead of rescaling the subject.
 #
-# Then fitted to the part's own box (2026-10-21). size*2.6 assumes a part about
-# as tall as it is wide, and aimed a quarter of its width up: a flat ornament
-# 88 mm across and 13 mm tall sat low and small in a sea of floor, and so did
-# the nativity laid out as a scene. Now the camera keeps that direction and
-# stands just far enough back for every corner of the box to land inside 86%
-# of the frame, aimed at the box's middle.
+# Then fitted to the parts themselves (2026-10-21). size*2.6 assumes a part
+# about as tall as it is wide, and aimed a quarter of its width up: a flat
+# ornament 88 mm across and 13 mm tall sat low and small in a sea of floor,
+# and so did the nativity laid out as a scene. Now the camera keeps that
+# direction and stands just far enough back for every vertex to land inside
+# 86% of the frame, aimed at the box's middle.
 hz = max(zs) - minz
 target = mathutils.Vector((0, 0, hz / 2))
 back = mathutils.Vector((math.cos(el) * math.sin(az), -math.cos(el) * math.cos(az), math.sin(el)))
@@ -160,13 +160,18 @@ fwd = -back
 right = fwd.cross(mathutils.Vector((0, 0, 1))).normalized()
 up = right.cross(fwd)
 tan_half = 18.0 / lens * 0.86          # 36 mm sensor across a square frame
-hx, hy = (max(xs) - min(xs)) / 2, (max(ys) - min(ys)) / 2
+# Over the parts' own vertices, not the box's corners: a set laid out flat
+# (six snowflakes) fills little of its box, and the box's far corners kept it
+# small. Stepped through at most ~200k vertices.
+bpy.context.view_layer.update()
 dist = 0.0
-for sx in (-1, 1):
-    for sy in (-1, 1):
-        for sz in (0, 1):
-            c = mathutils.Vector((sx * hx, sy * hy, sz * hz)) - target
-            dist = max(dist, c.dot(back) + max(abs(c.dot(right)), abs(c.dot(up))) / tan_half)
+for o in built:
+    vs = o.data.vertices
+    step = max(1, len(vs) * len(built) // 200000)
+    mw = o.matrix_world
+    for k in range(0, len(vs), step):
+        c = mw @ vs[k].co - target
+        dist = max(dist, c.dot(back) + max(abs(c.dot(right)), abs(c.dot(up))) / tan_half)
 cam_loc = target + back * dist
 bpy.ops.object.camera_add(location=tuple(cam_loc))
 cam = bpy.context.active_object
