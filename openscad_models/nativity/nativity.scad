@@ -93,7 +93,9 @@ module baby() {
     // the baby: a swaddled bundle, its foot down in the hay (at 11.5 its corners
     // stood over the mound's falling edge and were propped), and its head
     pts([[-11, -4, 10.4], [9, -4, 10.4], [-11, 4, 10.4], [9, 4, 10.4], [-9, -3, 16.5], [7, -3, 16.5], [-9, 3, 16.5], [7, 3, 16.5]]);
-    translate([11.5, 0, 0]) pts(concat(ring(6, 0.8, 19.4, 0), ring(6, 4.0, 15.0, 0), [[0, 0, 10.8]]));   // sunk into the hay
+    // the head, its chin sunk into the hay: at 10.8 its point came up through
+    // the mound's surface as a sliver the slicer dropped (print_fidelity, 2026-10-21)
+    translate([11.5, 0, 0]) pts(concat(ring(6, 0.8, 19.4, 0), ring(6, 4.0, 15.0, 0), [[0, 0, 9.8]]));
 }
 // a king: tall robe, crown, a gift held in front; style 1..3
 module king(style) let (zs = [0, 44, 41, 43][style], hz = zs + 4.4, hr = 5.4) {
@@ -143,10 +145,11 @@ module ox() {
 module donkey() {
     pts([[-17, -7.5, 0], [14, -7.5, 0], [-17, 7.5, 0], [14, 7.5, 0], [-14, -6, 12], [10, -6, 13], [-14, 6, 12], [10, 6, 13]]);
     pts([[12, -4.6, 0], [12, 4.6, 0], [26, -3.4, 0], [26, 3.4, 0], [13, -4.2, 17], [13, 4.2, 17], [24, -3, 8.5], [24, 3, 8.5]]);   // head
-    // long ears, 1.2 x 1.4 at the tip, their feet inside the head (from 12.4
-    // they stood 0.4 behind it, a sliver the slicer propped)
-    for (s = [-1, 1]) pts([[13.2, s * 1.6, 13], [15.6, s * 1.6, 13], [13.2, s * 3.8, 13], [15.6, s * 3.8, 13],
-                           [13.4, s * 3.6, 27], [14.8, s * 3.6, 27], [13.4, s * 4.8, 27], [14.8, s * 4.8, 27]]);
+    // long ears, 2.0 x 2.2 at the tip, their feet inside the head (from 12.4
+    // they stood 0.4 behind it, a sliver the slicer propped). At 1.2 x 1.4 and
+    // 27 high, tools/fragility.py watched them (slenderness 6.2, 2026-10-21).
+    for (s = [-1, 1]) pts([[13.2, s * 1.4, 13], [15.8, s * 1.4, 13], [13.2, s * 3.8, 13], [15.8, s * 3.8, 13],
+                           [13.4, s * 3.0, 25], [15.4, s * 3.0, 25], [13.4, s * 5.2, 25], [15.4, s * 5.2, 25]]);
 }
 module sheep() {
     pts(concat(ring(8, 9, 0, 0, 0.15), ring(7, 8, 7, 10, 0.2), [[0, 0, 11.5]]) * [[1.25, 0, 0], [0, 1, 0], [0, 0, 1]]);
@@ -176,7 +179,9 @@ module stable() translate([SW / 2, 0, 0]) difference() {
 // long tail down to the ridge. Every underside climbs 47 deg or more; a
 // five-pointed star's side arms climb only 38 under their points and the
 // slicer propped them (2026-10-21).
-module bethlehem2d() polygon([[0, 34], [2.4, 24.6], [8.8, 22], [1.8, 14.4], [0, 0], [-1.8, 14.4], [-8.8, 22], [-2.4, 24.6]]);
+// Its top arm ends in a flat 1.8 wide: to a point, tools/fragility.py watched
+// it (slenderness 4.3, 2026-10-21).
+module bethlehem2d() polygon([[0.9, 34], [2.9, 24.6], [8.8, 22], [1.8, 14.4], [0, 0], [-1.8, 14.4], [-8.8, 22], [-2.9, 24.6], [-0.9, 34]]);
 // as thick as the roof shell and over it: 4 thick it stood 0.5 out past the
 // open front, over nothing, and the slicer propped it from the plate
 module star_ridge() translate([SW / 2, ST / 2 + 0.2, SR - 3]) rotate([90, 0, 0]) linear_extrude(ST - 0.4, center = true) bethlehem2d();
