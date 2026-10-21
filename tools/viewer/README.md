@@ -170,9 +170,9 @@ Lengths are 10, 15 or 30 s. The clip is rendered, not recorded:
   size with the settled, supersampled render path, so every frame is a
   still-quality frame.
 - **Every frame is encoded.** The browser's own encoder (WebCodecs) takes
-  each frame: H.264 High, then Main, then Baseline, then VP9. The 12 Mbps
-  bitrate at 1080×1920 is above what the apps re-encode to. mp4-muxer wraps
-  the result as an MP4 with its index at the front.
+  each frame: H.264 High, then Main, then Baseline, then VP9, at a 12 Mbps
+  variable-bitrate target at 1080×1920, above what the apps re-encode to.
+  mp4-muxer wraps the result as an MP4 with its index at the front.
 - **A slow device only takes longer.** Every frame is in the file whatever
   the device; the progress card shows the frame being drawn and the time
   left.
@@ -196,12 +196,15 @@ recorder above. The muxer is `vendor/mp4-muxer.min.js` (mp4-muxer 5.2.1,
 MIT, licence beside it). The Artifact page loads it from jsDelivr and
 `build_site.py` rewrites that to the local copy, as it does for three.js.
 
-**Verified headless (Chromium 1194, software GL), at quarter size because
-the software GPU takes over a minute a frame at 1080:**
+**Verified headless (Chromium 1194, software GL):**
 
-- Every file decodes to its full frame count at a constant 30 fps with its
-  exact duration: 90 of 90 frames, 3.000 s; 120 of 120, 4.000 s.
-- The signpost and the steam train are framed and turning in 9:16 and 1:1.
+- **Quarter size:** 90 of 90 frames in 3.000 s, and 120 of 120 in 4.000 s,
+  each at a constant 30 fps. The signpost and the steam train are framed
+  and turning in 9:16 and 1:1.
+- **Full size:** the steam train at 1080×1920 decodes to 60 of 60 frames at
+  30 fps in exactly 2.000 s, 7.7 Mbps. Layer lines are sharp, and the
+  caption sits under the top band. It took 13 s a frame here; a phone's
+  GPU is far faster, but that has not been measured.
 
 This Chromium has no H.264 encoder, so those files are VP9 in MP4. Chrome
 and Safari encode H.264 through the same code; the codec is the only
