@@ -113,8 +113,17 @@ module scene(k) intersection() {
 // raised with a skirt under each stroke (relief_lib's art_skirt): trimmed from
 // below (glow_out), the cross on the church and the stars' arms kept only
 // slivers in their outer slabs, 0.24 mm (2026-10-21)
-module art() for (k = [0 : 5]) on_face(fa(k), AP + 0.01 - EMB) translate([-W / 2, z0])
-    art_skirt(AD, 1) scene(k);
+// The skirt under the ground strip reached 1.6 below the panel, into the
+// plinth: 17 mm3 in the frame, printed in the frame's colour (2026-10-21). It
+// is cut off at the plinth's top, where the strip stands on the plinth.
+module art() difference() {
+    intersection() {
+        for (k = [0 : 5]) on_face(fa(k), AP + 0.01 - EMB) translate([-W / 2, z0])
+            art_skirt(AD, 1) scene(k);
+        translate([0, 0, z0 - EMB]) cylinder(r = 50, h = 100);
+    }
+    if (EMB == 0) frame();
+}
 
 // ---- snow on the crown, a bow on the front ------------------------------------------------
 V0 = LF * 0.42;
@@ -125,7 +134,9 @@ V0 = LF * 0.42;
 // and cut off square below V0, so it has no seam; its lower edge is a face
 // standing straight up, with nothing under it. (Stepped up 1.6 per 1 like the
 // reliefs, every step on a 49 deg roof was a sliver.)
-module drips2d(k) let (wf = 2 * RA * tan(30) * (1 - V0 / LF), n = 2)
+// none on the bow's face: there its loops met the drips, and cut apart they
+// left a red sliver 0.27 mm wide the slicer dropped (2026-10-21)
+module drips2d(k) let (wf = 2 * RA * tan(30) * (1 - V0 / LF), n = 2) if (k != 4)
     for (i = [0 : n]) let (u = -(wf - 6.5) / 2 + i * (wf - 6.5) / n, r = (i + k) % 2 == 0 ? 1.8 : 1.4)
         translate([u, V0]) circle(r, $fn = 24);
 TN = atan(RH / RA);                 // the roof's faces from flat

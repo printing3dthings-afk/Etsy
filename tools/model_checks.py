@@ -68,13 +68,16 @@ def run_checks(d, name, cfg, steps=None):
     tags = cfg.get("tags") or ([""] if len(objs) == 1 else [f"_{i}" for i in range(len(objs))])
 
     shown = {p: stl(p) for p, _ in allparts}
+    # moved through manifold, not trimesh: moved 120 mm in float32, two of a
+    # mini-lantern's art vertices 1e-5 apart rounded into one and the closed
+    # part's copy read as open (2026-10-21)
+    if cfg.get("shown"):
+        sys.path.insert(0, str(TOOLS))
+        import part_mesh
     for i, off in cfg.get("shown", {}).items():
-        import trimesh
         for p, _ in objs[i]:
-            m = trimesh.load(stl(p))
-            m.apply_translation(off)
             shown[p] = work / f"shown_{p}.stl"
-            m.export(shown[p])
+            part_mesh.to_trimesh(part_mesh.load(str(stl(p))).translate(list(off))).export(shown[p])
 
     if "parts" in steps:
         txt = ""
