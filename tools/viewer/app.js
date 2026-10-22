@@ -4957,7 +4957,9 @@ function closeVidDialog() {
 // opts (2026-10-22, the Etsy listing clips): plate keeps the build plate and
 // the chamber in shot, the part close up on it, where Part only floats it in a
 // studio; caption: false leaves the frame clean; hold is the end's seconds on
-// the finished part; color: 'real' draws it in Real print.
+// the finished part; color: 'real' draws it in Real print; from and to render
+// only those frames of the clip, posed exactly as in the whole one, so a long
+// clip can be made in pieces that survive a lost machine and joined after.
 function makeVideo(fmtKey, seconds, scale, opts) {
   var f = VID_FORMATS[fmtKey] || VID_FORMATS.reel;
   if (scale > 0 && scale < 1) {
@@ -5012,7 +5014,7 @@ function vidRun(f, seconds, codec, opts) {
       }))
     : Promise.resolve();
 
-  var sink = null, N, Nb, cap, theta0, D, t0;
+  var sink = null, N, Nb, cap, theta0, D, t0, i0, i1;
   // On the plate, only the bed and the print stay in shot. The head is parked
   // out of it, as a Bambu timelapse parks it for every frame: close up, the
   // toolhead filled the first frames and the gantry crossed the part. The
@@ -5054,8 +5056,10 @@ function vidRun(f, seconds, codec, opts) {
     sink = s;
     N = Math.round(seconds * VID_FPS);
     Nb = N - Math.round(Math.min(hold, seconds * 0.25) * VID_FPS);
+    i0 = Math.max(0, Math.min(N, opts.from | 0));
+    i1 = opts.to != null ? Math.max(i0, Math.min(N, opts.to | 0)) : N;
     t0 = performance.now();
-    return vidFrame(0);
+    return vidFrame(i0);
   }).then(function () {
     if (vid.cancel || sink.err) { throw sink.err || new Error('cancelled'); }
     vidUI('run', 'Finishing the file…', 1);
@@ -5079,7 +5083,7 @@ function vidRun(f, seconds, codec, opts) {
   });
 
   function vidFrame(i) {
-    if (i >= N || vid.cancel || sink.err) { return Promise.resolve(); }
+    if (i >= i1 || vid.cancel || sink.err) { return Promise.resolve(); }
     var t = i < Nb ? JOB.total * Math.min(1, i / Math.max(1, Nb - 1)) : JOB.total;
     play.t = t;
     setSeg(segAtTime(t));
@@ -5096,17 +5100,17 @@ function vidRun(f, seconds, codec, opts) {
     syncPartStudio();
     if (!_cutawayBroken) { try { updateCutaway(); } catch (e) { _cutawayBroken = true; } }
     if (plate) { vidHideMachine(); }
-    if (i % VID_SHADOW_EVERY === 0 || i === Nb) { renderer.shadowMap.needsUpdate = true; }
+    if (i % VID_SHADOW_EVERY === 0 || i === Nb || i === i0) { renderer.shadowMap.needsUpdate = true; }
     renderFrame();
     // same task as the render: the WebGL buffer is only readable until it is composited
     vid.ctx.drawImage(renderer.domElement, 0, 0, f.w, f.h);
     if (cap) { vidDrawCaption(cap); }
     sink.add(vid.canvas, i);
-    if (i % 4 === 0 || i === N - 1) {
-      var spent = (performance.now() - t0) / 1000, left = spent / (i + 1) * (N - i - 1);
+    if (i % 4 === 0 || i === i1 - 1) {
+      var done = i - i0 + 1, spent = (performance.now() - t0) / 1000, left = spent / done * (i1 - i - 1);
       vidPreview();
       vidUI('run', 'Rendering frame ' + (i + 1) + ' of ' + N +
-        (i > 8 ? ' — about ' + hms(left) + ' left' : ''), (i + 1) / N);
+        (done > 8 ? ' — about ' + hms(left) + ' left' : ''), (i + 1) / N);
     }
     // let the page paint, and do not run ahead of the encoder
     function vidDrain() {

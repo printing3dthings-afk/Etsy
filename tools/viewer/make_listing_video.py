@@ -8,8 +8,13 @@
 Drives the page's own frame-exact export headless (window.__viewer.makeVideo)
 with the plate options: the print close up on its build plate, the head and
 enclosure out of shot, no caption, and a hold on the finished part. The page
-hands back an H.264 MP4; x264 then re-encodes it as High profile, yuv420p,
-no audio track, index at the front, the form Etsy and phones take.
+hands back H.264 MP4s; x264 then joins and re-encodes them as High profile,
+yuv420p, no audio track, index at the front, the form Etsy and phones take.
+
+The clip is made in chunks of --chunk frames, each saved to --work as it
+finishes, and a rerun skips the chunks already there. On this container's
+software renderer the hex lantern takes over two hours, and the first run of
+all eight lost three hours of frames when the machine restarted (2026-10-22).
 
 Scott's rule for these: the camera is on the print itself, sitting on the
 plate, close enough to watch the layers build. Not the whole machine, and not
@@ -24,9 +29,10 @@ import time
 from pathlib import Path
 
 CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+FPS = 30   # VID_FPS in app.js
 
 
-def render(url, job, seconds, hold, fmt, scale):
+def render(url, job, seconds, hold, fmt, scale, frm=None, to=None):
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         kw = {"executable_path": CHROME} if Path(CHROME).exists() else {}
@@ -38,18 +44,18 @@ def render(url, job, seconds, hold, fmt, scale):
         name = pg.evaluate("window.__viewer.getJob().raw.name")
         print(f"{job}: loaded {name!r}", flush=True)
         t0 = time.time()
-        b64 = pg.evaluate("""async ([fmt, s, sc, h]) => {
-            const blob = await window.__viewer.makeVideo(fmt, s, sc, {plate: true, caption: false, hold: h});
+        b64 = pg.evaluate("""async ([fmt, s, sc, h, a, b]) => {
+            const blob = await window.__viewer.makeVideo(fmt, s, sc, {plate: true, caption: false, hold: h, from: a, to: b});
             if (!blob) { return null; }
             const buf = new Uint8Array(await blob.arrayBuffer());
             let bin = '';
             for (let i = 0; i < buf.length; i += 32768) { bin += String.fromCharCode.apply(null, buf.subarray(i, i + 32768)); }
             return btoa(bin);
-        }""", [fmt, seconds, scale, hold])
+        }""", [fmt, seconds, scale, hold, frm, to])
         b.close()
     if not b64:
         sys.exit(f"{job}: the page made no video")
-    print(f"{job}: rendered in {time.time() - t0:.0f} s", flush=True)
+    print(f"{job}: frames {frm}-{to} rendered in {time.time() - t0:.0f} s", flush=True)
     return base64.b64decode(b64)
 
 
@@ -62,15 +68,28 @@ def main():
     ap.add_argument("--hold", type=float, default=2, help="seconds on the finished part")
     ap.add_argument("--format", default="square", choices=["square", "portrait", "reel"])
     ap.add_argument("--scale", type=float, default=1, help="below 1 for quick framing checks only")
+    ap.add_argument("--chunk", type=int, default=60, help="frames per saved piece")
+    ap.add_argument("--work", default=None, help="where the pieces are kept (default: a temp dir)")
     a = ap.parse_args()
-    raw = render(a.url, a.job, a.seconds, a.hold, a.format, a.scale)
-    with tempfile.NamedTemporaryFile(suffix=".mp4") as f:
-        f.write(raw)
-        f.flush()
-        Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", f.name, "-an", "-c:v", "libx264",
-                        "-preset", "slow", "-crf", "17", "-profile:v", "high", "-level", "4.0",
-                        "-pix_fmt", "yuv420p", "-movflags", "+faststart", a.out], check=True)
+    n = round(max(2, min(60, a.seconds)) * FPS)
+    work = Path(a.work or tempfile.mkdtemp(prefix=f"{a.job}_"))
+    work.mkdir(parents=True, exist_ok=True)
+    pieces = []
+    for i0 in range(0, n, a.chunk):
+        i1 = min(n, i0 + a.chunk)
+        piece = work / f"{a.job}_{i0:04d}_{i1:04d}.mp4"
+        if not piece.exists():
+            tmp = piece.with_suffix(".part")
+            tmp.write_bytes(render(a.url, a.job, a.seconds, a.hold, a.format, a.scale, i0, i1))
+            tmp.rename(piece)
+        pieces.append(piece)
+    lst = work / f"{a.job}_pieces.txt"
+    lst.write_text("".join(f"file '{p}'\n" for p in pieces))
+    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+                    "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-profile:v", "high",
+                    "-level", "4.0", "-pix_fmt", "yuv420p", "-r", str(FPS), "-movflags", "+faststart",
+                    a.out], check=True)
     print(f"{a.job}: wrote {a.out}")
 
 

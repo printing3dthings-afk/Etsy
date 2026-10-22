@@ -259,6 +259,12 @@ pixels. 1080 with supersampling costs about what 540 does. Measured on the
 pillar box, the print mesh is 1.3 s of a 1.7 s frame; dropping supersampling
 or post-processing saved nothing.
 
+**`from` and `to`** render only those frames, each posed as in the whole
+clip, with the shadow redrawn on the first. The first run of all eight clips
+lost three hours of frames when this container restarted mid-render, so
+`make_listing_video.py` makes each clip in 60-frame pieces kept on disk, and a
+rerun skips the pieces it already has.
+
 `make_listing_video.py` drives it headless against a built, served site. It
 re-encodes the page's MP4 with x264: High profile, CRF 17, yuv420p, no audio,
 index at the front. The eight Christmas listing clips in
