@@ -4748,6 +4748,12 @@ var VID_FORMATS = {
 var VID_FPS = 30;
 var VID_HOLD = 2.5;          // seconds at the end on the finished part, still turning
 var VID_ORBIT = Math.PI * 0.75;
+// The shadow map is redrawn every half second of clip and once on the
+// finished part, not every frame: on the hex lantern it cost 27 s of a 28 s
+// frame at 1080 (2026-10-22), and the light does not move with the camera, so
+// between redraws only the part's growth goes unshadowed. The live view
+// refreshes it every 10-30 frames for the same reason.
+var VID_SHADOW_EVERY = 15;
 var vid = {on: false, cancel: false, blob: null, name: ''};
 
 // Always H.264. The first version fell back to VP9 where the browser had no
@@ -4948,17 +4954,23 @@ function closeVidDialog() {
 
 // scale < 1 is for the browser tests only: a software GPU needs minutes a
 // frame at 1080 wide, and the pipeline is the same at any size
-function makeVideo(fmtKey, seconds, scale) {
+// opts (2026-10-22, the Etsy listing clips): plate keeps the build plate and
+// the chamber in shot, the part close up on it, where Part only floats it in a
+// studio; caption: false leaves the frame clean; hold is the end's seconds on
+// the finished part; color: 'real' draws it in Real print.
+function makeVideo(fmtKey, seconds, scale, opts) {
   var f = VID_FORMATS[fmtKey] || VID_FORMATS.reel;
   if (scale > 0 && scale < 1) {
     f = Object.assign({}, f, {w: 2 * Math.round(f.w * scale / 2), h: 2 * Math.round(f.h * scale / 2)});
   }
   seconds = Math.max(2, Math.min(60, +seconds || 15));
   if (!JOB || vid.on) { return Promise.resolve(null); }
-  return vidCodec(f).then(function (codec) { return vidRun(f, seconds, codec); });
+  return vidCodec(f).then(function (codec) { return vidRun(f, seconds, codec, opts || {}); });
 }
 
-function vidRun(f, seconds, codec) {
+function vidRun(f, seconds, codec, opts) {
+  var plate = !!opts.plate, capOn = opts.caption !== false;
+  var hold = opts.hold != null ? +opts.hold : VID_HOLD;
   vid.on = true; vid.cancel = false; vid.blob = null;
   // the WebAssembly encoder reads every frame back, so its canvas lives on the CPU
   var cpu = !!codec.wasm;
@@ -4970,13 +4982,29 @@ function vidRun(f, seconds, codec) {
   vid.canvas.width = f.w; vid.canvas.height = f.h;
   vidUI('run', 'Setting up…', 0);
 
-  var prev = {part: partOnly, motion: machineMotion, color: colorMode, t: play.t,
+  var prev = {part: partOnly, motion: machineMotion, color: colorMode, t: play.t, view: viewMode,
               playing: play.on, hiRes: hiRes, lowRes: lowRes,
               cam: {theta: cam.theta, phi: cam.phi, r: cam.r, tx: cam.tx, ty: cam.ty, tz: cam.tz}};
   setPlaying(false);
   if (machineMotion) { setMotion(false); }
-  setPartOnly(true);
-  if (colorMode !== 'filament') { setColorMode('filament'); }
+  if (plate) {
+    // the part grows on a still plate, seen through the chamber's cutaway: the
+    // panels between the camera and the part are hidden, the plate is not
+    if (partOnly) { setPartOnly(false); }
+    if (viewMode !== 'chamber') { setViewMode('chamber'); }
+    frameSolo(JOB);
+    // the turn centred on the side away from the purge tower: on the hex
+    // lantern it stands as tall as the part beside it, and the first clip
+    // spent its middle looking at the tower (2026-10-22)
+    var tw = towerCentre(JOB);
+    if (tw) { cam.theta = Math.atan2(tw[1] - cam.ty, tw[0] - cam.tx) + Math.PI - VID_ORBIT / 2; }
+  } else {
+    setPartOnly(true);
+  }
+  // real: the filament colours with the internal infill hidden, as on the
+  // plate; filament keeps every bead
+  var wantColor = opts.color === 'real' ? 'real' : 'filament';
+  if (colorMode !== wantColor) { setColorMode(wantColor); }
 
   var fonts = document.fonts && document.fonts.load
     ? Promise.all(['600 60px "Chakra Petch"', '500 30px "IBM Plex Sans"'].map(function (q) {
@@ -4985,14 +5013,30 @@ function vidRun(f, seconds, codec) {
     : Promise.resolve();
 
   var sink = null, N, Nb, cap, theta0, D, t0;
+  // On the plate, only the bed and the print stay in shot. The head is parked
+  // out of it, as a Bambu timelapse parks it for every frame: close up, the
+  // toolhead filled the first frames and the gantry crossed the part. The
+  // enclosure's meshes go too: framing the 155 mm hex lantern stands the
+  // camera outside it, and the door and front frame cut across the part
+  // (2026-10-22). Its lights stay on. Each mesh's own visibility comes back.
+  var hidden = [];
+  function vidHideMachine() {
+    [nozzle, gantry, yRails, doorGroup, amsGroup, chamber].forEach(function (g) {
+      if (!g) { return; }
+      g.traverse(function (o) {
+        if ((o.isMesh || o.isSprite || o.isLine) && o.visible) { o.visible = false; hidden.push(o); }
+      });
+    });
+  }
   return fonts.then(function () {
     renderer.setPixelRatio(1);
     renderer.setSize(f.w, f.h, false);
     camera.aspect = f.w / f.h;
     hiRes = true; lowRes = false;   // the settled, supersampled path: every frame is a still
-    cap = vidCaption(f);
-    var capFrac = (cap.h + cap.m) / f.h;
-    D = vidDistance(f, capFrac);
+    cap = capOn ? vidCaption(f) : null;
+    var capFrac = cap ? (cap.h + cap.m) / f.h : 0;
+    // on the plate, a margin of plate round the part says where it stands
+    D = vidDistance(f, capFrac) * (plate ? 0.8 : 1);
     // Stand back with the scene's fog and backdrop, as the phone fit does
     var k = Math.max(1, D / 600);
     stageFit.k = k;
@@ -5009,7 +5053,7 @@ function vidRun(f, seconds, codec) {
   }).then(function (s) {
     sink = s;
     N = Math.round(seconds * VID_FPS);
-    Nb = N - Math.round(Math.min(VID_HOLD, seconds * 0.25) * VID_FPS);
+    Nb = N - Math.round(Math.min(hold, seconds * 0.25) * VID_FPS);
     t0 = performance.now();
     return vidFrame(0);
   }).then(function () {
@@ -5051,11 +5095,12 @@ function vidRun(f, seconds, codec) {
     updateDoor();
     syncPartStudio();
     if (!_cutawayBroken) { try { updateCutaway(); } catch (e) { _cutawayBroken = true; } }
-    renderer.shadowMap.needsUpdate = true;
+    if (plate) { vidHideMachine(); }
+    if (i % VID_SHADOW_EVERY === 0 || i === Nb) { renderer.shadowMap.needsUpdate = true; }
     renderFrame();
     // same task as the render: the WebGL buffer is only readable until it is composited
     vid.ctx.drawImage(renderer.domElement, 0, 0, f.w, f.h);
-    vidDrawCaption(cap);
+    if (cap) { vidDrawCaption(cap); }
     sink.add(vid.canvas, i);
     if (i % 4 === 0 || i === N - 1) {
       var spent = (performance.now() - t0) / 1000, left = spent / (i + 1) * (N - i - 1);
@@ -5076,6 +5121,10 @@ function vidRun(f, seconds, codec) {
     if (prev.motion !== machineMotion) { setMotion(prev.motion); }
     if (prev.part !== partOnly) { setPartOnly(prev.part); }
     if (prev.color !== colorMode) { setColorMode(prev.color); }
+    if (prev.view !== viewMode) { setViewMode(prev.view); }
+    hidden.forEach(function (o) { o.visible = true; });
+    hidden = [];
+    if (plate) { applyRealMode(); }   // the head and gantry back as the view has them
     for (var key in prev.cam) { cam[key] = prev.cam[key]; }
     applyPixelRatio();          // renderer back to the stage, and its fit
     play.t = prev.t;
@@ -5136,12 +5185,12 @@ window.__viewer = {
     return {t: play.t, total: JOB ? JOB.total : 0, on: play.on, speed: play.speed, seg: play.seg};
   },
   // the video export, scripted: resolves to the MP4 Blob (or null)
-  makeVideo: function (fmt, seconds, scale) { return makeVideo(fmt, seconds, scale); },
+  makeVideo: function (fmt, seconds, scale, opts) { return makeVideo(fmt, seconds, scale, opts); },
   camInfo: function () {
     return {cam: Object.assign({}, cam), view: Object.assign({}, view), k: stageFit.k,
             pos: camera.position.toArray(), aspect: camera.aspect, fov: camera.fov,
             offset: camera.view ? Object.assign({}, camera.view) : null,
-            bbox: JOB ? JOB.raw.bbox : null, mesh: jobMesh ? jobMesh.position.toArray() : null,
+            bbox: JOB ? JOB.raw.bbox : null, part: JOB ? partBounds(JOB) : null, mesh: jobMesh ? jobMesh.position.toArray() : null,
             buffer: [renderer.domElement.width, renderer.domElement.height]};
   },
   vidInfo: function () {
@@ -6106,6 +6155,19 @@ function partBounds(job) {
     ? [x0 / 100, y0 / 100, x1 / 100, y1 / 100, z1 / 100]
     : [b[0], b[1], b[2], b[3], job.layers[job.layers.length - 1][0] / 100];
   return job._partBounds;
+}
+
+// The purge tower's centre in mm, or null on a plate without one; cached.
+function towerCentre(job) {
+  if (job._tower !== undefined) { return job._tower; }
+  var pos = job.geom.attributes.position.array, typ = job.geom.attributes.aType.array;
+  var sx = 0, sy = 0, n = 0;
+  for (var v = 0, m = typ.length; v < m; v++) {
+    if (typ[v] !== 12) { continue; }
+    sx += pos[v * 3]; sy += pos[v * 3 + 1]; n++;
+  }
+  job._tower = n ? [sx / n / 100, sy / n / 100] : null;
+  return job._tower;
 }
 
 function frameSolo(job) {

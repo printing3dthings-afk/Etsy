@@ -96,6 +96,42 @@ def test_every_frame_says_it_is_a_simulation():
     check("f.top * f.h" in cap, "the caption must sit below the apps' own top bar")
 
 
+def test_the_buttons_clip_keeps_its_caption():
+    """caption: false exists for the Etsy listing clips, made from a script
+    (2026-10-22). The page's own button must still caption every frame."""
+    src = _src()
+    check("makeVideo(fmt, secs);" in src, "the dialog must call makeVideo without options")
+    check("capOn = opts.caption !== false" in _function("vidRun"),
+          "only an explicit caption: false may drop the caption")
+
+
+def test_the_listing_clip_is_the_part_on_its_plate():
+    """Scott's rule for the Etsy listing clips (2026-10-22): the print on the
+    build plate, close up -- not the whole machine, not Part only's studio."""
+    run = _function("vidRun")
+    check("if (partOnly) { setPartOnly(false); }" in run and "setViewMode('chamber')" in run,
+          "on the plate the machine view must stay, cut away, not Part only")
+    hide = run[run.find("function vidHideMachine"):]
+    for g in ("nozzle", "gantry", "yRails", "doorGroup", "chamber"):
+        check(g in hide[:600], "the plate clip must hide %s out of shot" % g)
+    check("o.isMesh" in hide[:600], "only meshes may go: the chamber lamp must keep lighting the part")
+    check("hidden.forEach(function (o) { o.visible = true; })" in run,
+          "every mesh the clip hid must come back afterwards")
+    check("setViewMode(prev.view)" in run, "the view mode must come back afterwards")
+    check("towerCentre(JOB)" in run and "Math.PI - VID_ORBIT / 2" in run,
+          "the turn must be centred on the side away from the purge tower")
+    check("typ[v] !== 12" in _function("towerCentre"), "the tower is type 12, Wipe tower")
+
+
+def test_the_shadow_is_not_redrawn_every_frame():
+    """27 s of a 28 s frame on the hex lantern was the shadow pass (2026-10-22)."""
+    run = _function("vidRun")
+    check("i % VID_SHADOW_EVERY === 0 || i === Nb" in run,
+          "the shadow must be redrawn on a schedule and once on the finished part")
+    check(run.count("renderer.shadowMap.needsUpdate = true") == 1,
+          "nothing else in the frame loop may force a shadow redraw")
+
+
 def test_the_view_comes_back():
     run = _function("vidRun")
     for what in ("setPartOnly(prev.part)", "setMotion(prev.motion)", "setColorMode(prev.color)",

@@ -225,6 +225,45 @@ Chrome and Safari encode H.264 themselves, through the same frame loop. `window.
 a script; `scale` is for tests only. Source checks:
 `tests/test_viewer_video_export.py`.
 
+## Etsy listing clips: the part on its plate (2026-10-22)
+
+Scott's standing rule for listing videos: the camera is on the print itself,
+sitting on the build plate, close enough to watch the layers build. Not the
+whole machine, and not Part only's floating studio view. `makeVideo` takes a
+fourth argument for this; the page's own button never passes it, so its clips
+keep their caption.
+
+- **`plate: true`** keeps the machine view, cut away. Then it hides every
+  mesh but the bed and the print, for each frame, and puts back each one's
+  visibility after the clip.
+  - The head and gantry are hidden as a Bambu timelapse parks them for every
+    frame: close up, the toolhead filled the first frames and the gantry
+    crossed the part.
+  - The enclosure is hidden because framing the 155 mm hex lantern stands
+    the camera outside it, and the door and front frame cut across the part.
+  - The chamber lamp is a light, not a mesh, so it stays on.
+- **The camera** is framed from the part's own beads at 0.8 of the
+  social-clip distance, leaving a margin of plate round it. Its turn is
+  centred on the side away from the purge tower: on the hex lantern the tower
+  stands as tall as the part, and the first clip spent its middle looking at
+  the tower.
+- **`caption: false`** leaves the frame clean. **`hold`** sets the seconds on
+  the finished part.
+- **The shadow map** is redrawn every 15 frames and once on the finished
+  part, in every clip. Measured on the hex lantern at 1080: the shadow pass
+  was 27 s of a 28 s frame. The light does not move with the camera, so
+  between redraws only the part's growth goes unshadowed.
+
+**Cost here:** the frame time is set by the toolpath's vertex count, not the
+pixels. 1080 with supersampling costs about what 540 does. Measured on the
+pillar box, the print mesh is 1.3 s of a 1.7 s frame; dropping supersampling
+or post-processing saved nothing.
+
+`make_listing_video.py` drives it headless against a built, served site. It
+re-encodes the page's MP4 with x264: High profile, CRF 17, yuv420p, no audio,
+index at the front. The eight Christmas listing clips in
+`business/listing-videos/` came from it, at 1080 × 1080, 15 s with a 2 s hold.
+
 ## Scripted playback, for video (2026-10-10)
 
 `window.__viewer` gained `seek(t)`, `setSpeed(v)`, `setPlaying(on)`,
