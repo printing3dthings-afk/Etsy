@@ -4952,12 +4952,15 @@ function closeVidDialog() {
   if (d.close) { d.close(); } else { d.removeAttribute('open'); }
 }
 
-// scale < 1 is for the browser tests only: a software GPU needs minutes a
-// frame at 1080 wide, and the pipeline is the same at any size
+// scale < 1 makes a smaller clip: the browser tests use it, since a software
+// GPU needs minutes a frame at 1080 wide, and so do the 720 per-product
+// timelapses (2026-10-22); the pipeline is the same at any size
 // opts (2026-10-22, the Etsy listing clips): plate keeps the build plate and
 // the chamber in shot, the part close up on it, where Part only floats it in a
 // studio; caption: false leaves the frame clean; hold is the end's seconds on
-// the finished part; color: 'real' draws it in Real print; from and to render
+// the finished part; color: 'real' draws it in Real print; detail: 'fast',
+// 'high' or 'ultra' sets the tier for the clip whatever the page stepped down
+// to; from and to render
 // only those frames of the clip, posed exactly as in the whole one, so a long
 // clip can be made in pieces that survive a lost machine and joined after.
 function makeVideo(fmtKey, seconds, scale, opts) {
@@ -4985,7 +4988,7 @@ function vidRun(f, seconds, codec, opts) {
   vidUI('run', 'Setting up…', 0);
 
   var prev = {part: partOnly, motion: machineMotion, color: colorMode, t: play.t, view: viewMode,
-              playing: play.on, hiRes: hiRes, lowRes: lowRes,
+              playing: play.on, hiRes: hiRes, lowRes: lowRes, rich: richShading, post: postWanted,
               cam: {theta: cam.theta, phi: cam.phi, r: cam.r, tx: cam.tx, ty: cam.ty, tz: cam.tz}};
   setPlaying(false);
   if (machineMotion) { setMotion(false); }
@@ -5007,6 +5010,13 @@ function vidRun(f, seconds, codec, opts) {
   // plate; filament keeps every bead
   var wantColor = opts.color === 'real' ? 'real' : 'filament';
   if (colorMode !== wantColor) { setColorMode(wantColor); }
+  // the page steps itself down on a slow device, headless most of all: the
+  // first eight listing clips came out at fast without anyone choosing it
+  if (opts.detail === 'fast' || opts.detail === 'high' || opts.detail === 'ultra') {
+    postWanted = opts.detail === 'ultra';
+    if (richShading !== (opts.detail !== 'fast')) { setQuality(opts.detail !== 'fast'); }
+    else { paintQuality(); }
+  }
 
   var fonts = document.fonts && document.fonts.load
     ? Promise.all(['600 60px "Chakra Petch"', '500 30px "IBM Plex Sans"'].map(function (q) {
@@ -5126,6 +5136,8 @@ function vidRun(f, seconds, codec, opts) {
     if (prev.part !== partOnly) { setPartOnly(prev.part); }
     if (prev.color !== colorMode) { setColorMode(prev.color); }
     if (prev.view !== viewMode) { setViewMode(prev.view); }
+    postWanted = prev.post;
+    if (richShading !== prev.rich) { setQuality(prev.rich); } else { paintQuality(); }
     hidden.forEach(function (o) { o.visible = true; });
     hidden = [];
     if (plate) { applyRealMode(); }   // the head and gantry back as the view has them
@@ -5678,6 +5690,10 @@ function autoQuality() {
   autoQualityDone = true;
   var n = 0, t0 = performance.now();
   (function sample() {
+    // a video export draws a frame every few seconds on a slow machine, and
+    // stepping down mid-clip changed the detail between one frame and the
+    // next (2026-10-22): the measurement is not of the live view then
+    if (vid && vid.on) { return; }
     n++;
     if (performance.now() - t0 < 1600) { requestAnimationFrame(sample); return; }
     var fps = n / ((performance.now() - t0) / 1000);

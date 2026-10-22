@@ -32,7 +32,7 @@ CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
 FPS = 30   # VID_FPS in app.js
 
 
-def render(url, job, seconds, hold, fmt, scale, frm=None, to=None):
+def render(url, job, seconds, hold, fmt, scale, detail, frm=None, to=None):
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         kw = {"executable_path": CHROME} if Path(CHROME).exists() else {}
@@ -44,14 +44,15 @@ def render(url, job, seconds, hold, fmt, scale, frm=None, to=None):
         name = pg.evaluate("window.__viewer.getJob().raw.name")
         print(f"{job}: loaded {name!r}", flush=True)
         t0 = time.time()
-        b64 = pg.evaluate("""async ([fmt, s, sc, h, a, b]) => {
-            const blob = await window.__viewer.makeVideo(fmt, s, sc, {plate: true, caption: false, hold: h, from: a, to: b});
+        b64 = pg.evaluate("""async ([fmt, s, sc, h, a, b, d]) => {
+            const blob = await window.__viewer.makeVideo(fmt, s, sc,
+                {plate: true, caption: false, hold: h, from: a, to: b, detail: d});
             if (!blob) { return null; }
             const buf = new Uint8Array(await blob.arrayBuffer());
             let bin = '';
             for (let i = 0; i < buf.length; i += 32768) { bin += String.fromCharCode.apply(null, buf.subarray(i, i + 32768)); }
             return btoa(bin);
-        }""", [fmt, seconds, scale, hold, frm, to])
+        }""", [fmt, seconds, scale, hold, frm, to, detail])
         b.close()
     if not b64:
         sys.exit(f"{job}: the page made no video")
@@ -67,7 +68,9 @@ def main():
     ap.add_argument("--seconds", type=float, default=15)
     ap.add_argument("--hold", type=float, default=2, help="seconds on the finished part")
     ap.add_argument("--format", default="square", choices=["square", "portrait", "reel"])
-    ap.add_argument("--scale", type=float, default=1, help="below 1 for quick framing checks only")
+    ap.add_argument("--size", type=int, default=1080, help="the clip's width in pixels (formats are 1080 wide)")
+    ap.add_argument("--detail", default="high", choices=["fast", "high", "ultra"],
+                    help="the page steps itself down to fast headless unless told")
     ap.add_argument("--chunk", type=int, default=60, help="frames per saved piece")
     ap.add_argument("--work", default=None, help="where the pieces are kept (default: a temp dir)")
     a = ap.parse_args()
@@ -80,7 +83,7 @@ def main():
         piece = work / f"{a.job}_{i0:04d}_{i1:04d}.mp4"
         if not piece.exists():
             tmp = piece.with_suffix(".part")
-            tmp.write_bytes(render(a.url, a.job, a.seconds, a.hold, a.format, a.scale, i0, i1))
+            tmp.write_bytes(render(a.url, a.job, a.seconds, a.hold, a.format, a.size / 1080, a.detail, i0, i1))
             tmp.rename(piece)
         pieces.append(piece)
     lst = work / f"{a.job}_pieces.txt"

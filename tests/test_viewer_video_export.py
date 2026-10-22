@@ -123,6 +123,18 @@ def test_the_listing_clip_is_the_part_on_its_plate():
     check("typ[v] !== 12" in _function("towerCentre"), "the tower is type 12, Wipe tower")
 
 
+def test_the_clip_keeps_the_detail_it_was_asked_for():
+    """Headless, the page stepped itself down to fast, and the step-down could
+    land mid-clip (2026-10-22): the eight listing clips came out at fast."""
+    run = _function("vidRun")
+    check("opts.detail === 'high'" in run and "setQuality(opts.detail !== 'fast')" in run,
+          "detail must set the tier for the clip")
+    check("setQuality(prev.rich)" in run and "postWanted = prev.post" in run,
+          "the page's own tier must come back after the clip")
+    auto = _function("autoQuality")
+    check("if (vid && vid.on) { return; }" in auto, "the automatic step-down must not run during an export")
+
+
 def test_the_shadow_is_not_redrawn_every_frame():
     """27 s of a 28 s frame on the hex lantern was the shadow pass (2026-10-22)."""
     run = _function("vidRun")
