@@ -3926,6 +3926,21 @@ When any API call returns 401 and the refresh endpoint also returns 401:
   Iterating on an already-approved design needs no new approval. See the matching
   standing rule in `.claude/skills/3d-print-design/SKILL.md`.
 
+- **Detail-print method — scope rule (Scott, 2026-10-23).** Scott asked for a
+  step up in fine-detail design. Until he decides otherwise:
+  - **Do NOT rework the existing Christmas designs before the holidays.** They
+    are listed, and changing their files now risks breaking live listings.
+  - **Pilot the new method on ONE building only: the Victorian Santa's
+    Workshop.** Deliver before/after renders and the 0.4mm slice check
+    (`tools/print_fidelity.py` on a 0.4mm-nozzle slice), then stop and wait for
+    his decision.
+  - **If he approves the pilot,** the new method is used for all NEW designs
+    from then on. Reworking existing designs waits until after Dec 25, starting
+    with the top sellers by Etsy sales data, not by guess.
+  - **A better pilot rework never overwrites the original file.** Save it as a
+    v2 alongside, so live listings keep their current files until Scott
+    chooses to swap.
+
 ### Hard Stops — Never Do Without Explicit Permission
 
 - Push to production Etsy without Scott's final review of photos + listing content
