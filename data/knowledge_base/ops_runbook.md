@@ -27393,3 +27393,21 @@ Refreshed competitor_research_2026.md (32 chars). Live search terms used: printa
   ✗ AD015 generation failed
   → AD016: Ancient Library
   ⚠ AD016: GEMINI_API_KEY not set -- skipping automated art QA. Set it to enable garbled-te
+
+### 2026-10-23 — Etsy connection suspected dead again; GitHub-side causes found and closed
+**Symptom:** Muse saw `/health` ok but could not read `/api/credentials/status` (bearer-only).
+**Found:** `APP_SECRET_TOKEN` was never set as a GitHub Actions secret. So `tools/ci_refresh_etsy_secrets.py`
+never synced with the server: every run rotated the workflow's own copy of the refresh token, the
+2026-06-17 failure class. The daily schedule has been off since 2026-07-10, but a manual run on
+2026-08-08 failed inside the refresh step. That run's log could not be read from the agent sandbox,
+so whether it consumed the server's token is unconfirmed. The script also wrote the GitHub secrets
+before pushing the new pair to the server, so a failed secret write stranded the server on a dead
+token.
+**Fixed:** the script now refuses to rotate unless synced with the server, and pushes the new pair to
+the server first. `.github/workflows/health_watchdog.yml` checks `/api/credentials/status` once a day
+(`tools/ci_check_etsy_token.py`) and opens the issue "Etsy connection needs attention" (GitHub emails
+Scott) when Etsy is not live, when the token is within 14 days of the 90-day limit, or when the check
+cannot run.
+**Needs Scott:** add `APP_SECRET_TOKEN` as an Actions secret (same value as Railway's). Re-auth with
+`tools/etsy_oauth.py` if Etsy is confirmed dead. Never paste the new refresh token into the GitHub
+`ETSY_REFRESH_TOKEN` secret: two copies of one token are two lineages.

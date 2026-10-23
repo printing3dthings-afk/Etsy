@@ -195,19 +195,26 @@ def main() -> int:
         )
         return 1
 
-    sync_with_railway = bool(railway_url and app_token)
-    if not sync_with_railway:
+    # 2026-10-23: refuse to rotate unless synced with the live server. Rotating
+    # this workflow's own copy "works", but if that copy is the same token the
+    # server holds, Etsy invalidates the server's at once -- the 2026-06-17
+    # failure class. APP_SECRET_TOKEN was never set as an Actions secret, so
+    # every run, including the manual one on 2026-08-08, rotated unsynced.
+    if not (railway_url and app_token):
         print(
-            "NOTE: RAILWAY_APP_URL/APP_SECRET_TOKEN not set -- rotating from this "
-            "workflow's own GH secret only. This works but can silently diverge from "
-            "the live server's own token rotations (see ops_runbook.md, 2026-06-17). "
-            "Add both as repo secrets to close that gap.",
+            "ERROR: RAILWAY_APP_URL and APP_SECRET_TOKEN must both be Actions secrets. "
+            "Without them this would rotate its own copy of the Etsy refresh token and "
+            "can kill the live server's (ops_runbook.md, 2026-06-17). Not rotating.",
+            file=sys.stderr,
         )
-    else:
-        live = fetch_railway_tokens(railway_url, app_token)
-        if live and live.get("refresh_token") and live["refresh_token"] != refresh_token:
-            print("Live server has a newer refresh token than this workflow's GH secret -- using it.")
-            refresh_token = live["refresh_token"]
+        return 1
+    live = fetch_railway_tokens(railway_url, app_token)
+    if not (live and live.get("refresh_token")):
+        print("ERROR: could not read the live server's current Etsy tokens -- not rotating.", file=sys.stderr)
+        return 1
+    if live["refresh_token"] != refresh_token:
+        print("Live server has a newer refresh token than this workflow's GH secret -- using it.")
+        refresh_token = live["refresh_token"]
 
     try:
         token_data = refresh_etsy_token(client_id, refresh_token)
@@ -223,15 +230,18 @@ def main() -> int:
 
     mask_and_export("ETSY_ACCESS_TOKEN", new_access)
 
+    # The server first: Etsy has already invalidated the old refresh token, so
+    # the new pair must reach the server before anything else can fail. Written
+    # after the GitHub secrets, a failed secret write exited before the server
+    # heard of the new token and left it holding a dead one.
+    push_railway_tokens(railway_url, app_token, new_access, new_refresh, refresh_token)
+
     try:
         update_repo_secret(repo, pat, "ETSY_ACCESS_TOKEN", new_access)
         update_repo_secret(repo, pat, "ETSY_REFRESH_TOKEN", new_refresh)
     except Exception as e:
         print(f"ERROR: failed to write rotated tokens back to GitHub secrets: {e}", file=sys.stderr)
         return 1
-
-    if sync_with_railway:
-        push_railway_tokens(railway_url, app_token, new_access, new_refresh, refresh_token)
 
     print("Etsy access token refreshed and GitHub secrets rotated successfully.")
     return 0
