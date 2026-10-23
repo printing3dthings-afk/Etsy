@@ -1,0 +1,140 @@
+{
+  "gecko": {
+    "layers": 90,
+    "printed_height_mm": 18.0,
+    "filament_mm": 11229.4,
+    "filament_g": 33.5,
+    "moves_by_type": {
+      "Perimeter": 114194,
+      "Internal infill": 78908,
+      "Solid infill": 69572,
+      "External perimeter": 60918,
+      "Bridge infill": 1105,
+      "Top solid infill": 920,
+      "Overhang perimeter": 473,
+      "Skirt/Brim": 52,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 473,
+    "bridges": 1105,
+    "height_shortfall_mm": -0.03,
+    "geometry_dropped": false,
+    "supports_enabled": false,
+    "profile_note": "Support off to preserve joints; physical bridge/clearance test required"
+  },
+  "gecko_coupon": {
+    "layers": 56,
+    "printed_height_mm": 11.2,
+    "filament_mm": 1287.5,
+    "filament_g": 3.8,
+    "moves_by_type": {
+      "Perimeter": 19413,
+      "External perimeter": 10668,
+      "Solid infill": 7121,
+      "Internal infill": 5220,
+      "Bridge infill": 173,
+      "Overhang perimeter": 85,
+      "Skirt/Brim": 55,
+      "Top solid infill": 42,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 85,
+    "bridges": 173,
+    "height_shortfall_mm": -0.01,
+    "geometry_dropped": false,
+    "supports_enabled": false,
+    "profile_note": "Support off to preserve joints; physical bridge/clearance test required"
+  },
+  "mushroom_base": {
+    "layers": 130,
+    "printed_height_mm": 26.0,
+    "filament_mm": 4733.5,
+    "filament_g": 14.1,
+    "moves_by_type": {
+      "Perimeter": 24850,
+      "Internal infill": 23550,
+      "External perimeter": 12780,
+      "Solid infill": 5378,
+      "Top solid infill": 740,
+      "Overhang perimeter": 100,
+      "Skirt/Brim": 64,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 100,
+    "bridges": 0,
+    "height_shortfall_mm": 0.0,
+    "geometry_dropped": false,
+    "supports_enabled": false,
+    "profile_note": "Support off; supplied orientation"
+  },
+  "mushroom_cap": {
+    "layers": 81,
+    "printed_height_mm": 13.8,
+    "filament_mm": 3702.7,
+    "filament_g": 11.0,
+    "moves_by_type": {
+      "Perimeter": 27221,
+      "Solid infill": 23035,
+      "External perimeter": 15409,
+      "Internal infill": 13497,
+      "Bridge infill": 402,
+      "Support material": 285,
+      "Top solid infill": 155,
+      "Skirt/Brim": 64,
+      "Custom": 1
+    },
+    "support_moves": 285,
+    "overhang_perimeters": 0,
+    "bridges": 402,
+    "height_shortfall_mm": 0.02,
+    "geometry_dropped": false,
+    "supports_enabled": true,
+    "profile_note": "Supports on inside cap recess"
+  },
+  "switch_coupon": {
+    "layers": 10,
+    "printed_height_mm": 1.5,
+    "filament_mm": 262.3,
+    "filament_g": 0.8,
+    "moves_by_type": {
+      "Solid infill": 2007,
+      "Perimeter": 542,
+      "Top solid infill": 282,
+      "External perimeter": 170,
+      "Skirt/Brim": 21,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 0,
+    "bridges": 0,
+    "height_shortfall_mm": 0.0,
+    "geometry_dropped": false,
+    "supports_enabled": false,
+    "profile_note": "Support off; supplied orientation"
+  },
+  "stem_coupon": {
+    "layers": 30,
+    "printed_height_mm": 6.0,
+    "filament_mm": 449.2,
+    "filament_g": 1.3,
+    "moves_by_type": {
+      "Perimeter": 3945,
+      "Solid infill": 2932,
+      "External perimeter": 1707,
+      "Skirt/Brim": 65,
+      "Bridge infill": 53,
+      "Top solid infill": 52,
+      "Custom": 1
+    },
+    "support_moves": 0,
+    "overhang_perimeters": 0,
+    "bridges": 53,
+    "height_shortfall_mm": 0.0,
+    "geometry_dropped": false,
+    "supports_enabled": false,
+    "profile_note": "Support off; supplied orientation"
+  }
+}
