@@ -1,0 +1,13 @@
+// carved 0.6 into the board and lined with the accent (the bakery's method)
+lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
+module sign_text() text("UNDERTAKER", size = 4.0, font = "Montserrat:style=Black",
+                        halign = "center", valign = "center", spacing = 1.06);
+module sign_at() face_tf(1, 0, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
+module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
+module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
+    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
+module sign_carve() sign_at() sign_carve_local();
+module sign_letters() difference() {
+    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
+    sign_carve();
+}

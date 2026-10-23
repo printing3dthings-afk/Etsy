@@ -1,0 +1,42 @@
+{
+  "Chomp_body": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 1671456.4427010722
+  },
+  "Chomp_tongue": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 162867.54718499238
+  },
+  "Chomp_eye_-1": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 18173.206969734467
+  },
+  "Chomp_pupil_-1": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 1168.1583877814276
+  },
+  "Chomp_glint_-1": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 29.737998061496757
+  },
+  "Chomp_eye_1": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 18173.206907279713
+  },
+  "Chomp_pupil_1": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 1168.158387781429
+  },
+  "Chomp_glint_1": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 29.737998061496757
+  }
+}

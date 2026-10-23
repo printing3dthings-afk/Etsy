@@ -1,0 +1,5 @@
+# intermediate meshes: the flat art before wrapping, the sunk parts for the
+# gate's union, and the unions themselves (rebuilt by build.sh union)
+*/logs/*.stl
+*_union.stl
+*.rendercache

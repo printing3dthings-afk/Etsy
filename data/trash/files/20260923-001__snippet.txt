@@ -1,0 +1,1 @@
+  0x7b8493: [0.30, 0.88],  // door grip, brushed aluminium

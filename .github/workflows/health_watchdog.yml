@@ -110,3 +110,26 @@ jobs:
       - name: Fail the job if the default branch has drifted
         if: steps.branch.outputs.status == 'fail'
         run: exit 1
+
+      # 2026-10-23: the Etsy connection died silently. Frank's own 75-day
+      # warning lives inside Frank (a to-do and the alert bell), which nobody
+      # sees unless they open the dashboard. This checks it from outside once a
+      # day and opens an issue (GitHub emails Scott) when Etsy is not live, when
+      # the refresh token is within 14 days of Etsy's 90-day limit, or when the
+      # check cannot run at all. Once a day, not every 5 minutes: the status
+      # endpoint makes a live Etsy call, and Etsy call volume is kept down.
+      - name: Is it the daily Etsy token check's window?
+        id: clock
+        if: always()
+        run: |
+          h=$(date -u +%H); m=$(date -u +%M)
+          if [ "$h" = "14" ] && [ "${m#0}" -lt 30 ]; then echo "daily=true" >> "$GITHUB_OUTPUT"; else echo "daily=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Check the Etsy connection and token age
+        if: always() && (github.event_name == 'workflow_dispatch' || steps.clock.outputs.daily == 'true')
+        env:
+          RAILWAY_APP_URL: ${{ secrets.RAILWAY_APP_URL }}
+          APP_SECRET_TOKEN: ${{ secrets.APP_SECRET_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          WARN_DAYS: '14'
+        run: python tools/ci_check_etsy_token.py

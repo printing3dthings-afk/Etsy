@@ -48,6 +48,19 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
         sys.path.insert(0, sp)
 
 import main as server  # noqa: E402
+
+# This test drives _calendar_tasks_loop's real sub-tasks, one of which is
+# _run_scheduled_coloring_check() -> _append_ops_runbook_entry() -> _OPS_RUNBOOK_PATH.
+# That path is _volume_or_local(...), so with no volume mounted it is the git-tracked
+# data/knowledge_base/ops_runbook.md, and every full-suite run appended a real
+# "Scheduled coloring run" entry to the doc Frank reads as ground truth. It only
+# reproduced under the full suite, never when this file was run alone. Caught
+# 2026-09-06 by run_all.py's knowledge-base fingerprint; same fix as
+# test_competitor_research_refresh.py.
+_tmp_runbook = tempfile.NamedTemporaryFile(
+    prefix="frank_calheartbeat_runbook_", suffix=".md", delete=False)
+_tmp_runbook.close()
+server._OPS_RUNBOOK_PATH = Path(_tmp_runbook.name)
 import db  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 

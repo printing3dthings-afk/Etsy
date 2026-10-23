@@ -16,7 +16,54 @@ number, it's stated as such.
 
 ---
 
+## 0. CORRECTION (2026-09-11): I had not read the library, and it cost a wrong recommendation
+
+Scott asked whether I had researched these tools to an industry standard. The
+honest answer was no — 64 techniques in SKILL.md, every one earned from a real
+failure in this shop's own models, and almost nothing from the reference
+material. An audit made it concrete: **of BOSL2's 1,057 module/function
+definitions, this shop's entire catalogue calls 35 — 3.3%** — and several of
+those are base OpenSCAD, not BOSL2 at all.
+
+**The cost was not hypothetical.** §1 below stated, and I repeated to Scott as
+fact, that concave fillets where a limb meets a body are "the one thing worth
+coming back [to Blender] for" because `hull()` is a convex hull. That is
+**wrong**. BOSL2 ships `join_prism()` — *"Join an arbitrary prism to a plane,
+sphere, cylinder or another arbitrary prism with a fillet… continuous curvature
+rounding"* — plus `prism_connector()`, described in its own docs as "much
+easier to use". Verified live: a 9mm leg joined to a 30mm sphere with a 5mm
+fillet renders watertight, one body, zero degenerate faces, `mesh_gate` PASSED.
+I went to Blender partly on a premise I had never checked.
+
+**Capability areas this shop has never touched, with the problem each solves:**
+
+| BOSL2 file | defs | what it is | the bug it would have prevented |
+|---|---|---|---|
+| `attachments.scad` | 83 | `attach`/`position`/`align`/`anchor`/`orient`, `edge_profile`, `face_profile` | **every** "I estimated where the surface was" failure — the fox eye ×3, the manor windows sliced by the tower, the tombstone recess |
+| `rounding.scad` | 66 | `join_prism`, `prism_connector`, filleted prism joints | the concave-fillet claim above |
+| `skin.scad` | 51 | `texture()` — named procedural textures (dots, dimples, cones, bricks, diamonds, checkers) with a `roughness=` parameter, for sweeps, revolutions and VNF arrays | the tombstone's weathering, built from ~100 boolean cutters and then attempted again in Blender |
+| `vnf.scad` + `beziers.scad` | 97 | arbitrary polyhedra, `vnf_vertex_array`, and bezier **surfaces** | "true organic double-curvature is out of reach of CSG" — overstated at best |
+| `masks.scad` | 48 | edge profiling: roundover, cove, teardrop, ogee | every hand-rolled edge treatment |
+| `geometry.scad` | 95 | line/plane/circle intersections, circle from 3 points | the coordinate maths done by hand in half these models |
+| `distributors.scad` | 43 | copy/distribute onto a line, grid or path | every hand-written `for` loop |
+| `partitions.scad` | 22 | cut with a plane, partition into interlocking pieces | anything larger than the 256mm bed |
+
+**The rule this produces:** before concluding a tool *cannot* do something,
+check its library index. "CSG cannot express X" was asserted three times in
+this document and was wrong at least once. Reading a file list takes two
+minutes; acting on a false limit costs a session.
+
 ## 1. Tool choice: OpenSCAD stays primary, Blender is a narrow secondary tool
+
+> **CORRECTED 2026-09-11 by direct test — see `BLENDER_REFERENCE.md` §2.**
+> The Boolean paragraph below is sourced from bug reports and is too harsh.
+> Run against a real 59k-face organic shell, the **Exact** solver was correct
+> every time; the failures reproduce only when the *cutter* is defective
+> (flipped normals → silent no-op; open or degenerate → silently non-manifold;
+> enclosing → correctly empty), and the **Fast** solver gives a different,
+> wrong answer while still gating watertight. Read the warning as *"validate
+> the cutter, always `solver='EXACT'`"* — not *"avoid Blender booleans."*
+> The verdict that OpenSCAD stays primary for dimensioned parts is unchanged.
 
 **Verdict, and why:** for anything with real dimensions — mechanical parts,
 snap-fits, gears, threads, precise assemblies — stay in OpenSCAD. Blender's
@@ -40,6 +87,146 @@ brushes are NOT scriptable this way — that's an honest limit, not a gap to
 paper over; the scriptable substitute for organic surface *variation* (not
 deliberate sculpted shape) is a Displace modifier or Geometry Nodes driven by a
 procedural noise texture.
+
+**TESTED IN THIS CONTAINER, 2026-09-11 — the verdict above holds, and now with
+numbers.** Everything above was reasoned from sources; this is what actually
+happened when it was run headless on a real part (the tombstone stone, 16,444
+triangles out of OpenSCAD). Scripted modelling works: primitive → modifier
+stack → apply → export → `mesh_gate` PASSED, with zero human clicking. It is
+also *fast* — faster than the CSG it would replace.
+
+| approach | hard edges | grain | mesh | time |
+|---|---|---|---|---|
+| Simple subdiv ×3 + Displace | **kept** | inherits the CSG triangulation — reads as creases, not stone | watertight, 1.58M tris | 18s |
+| **Voxel** remesh 0.55mm + Displace | **melted** | **real, topology-independent** | watertight, 172k tris | **1.8s** |
+| **Sharp** remesh + Displace | — | — | **NOT watertight — 26 open edges, gate FAILED** | 2.1s |
+
+The two usable rows trade off directly and neither is a net win on a
+hard-surface part. Simple subdivision divides each *triangle* into four, so
+density follows the CSG topology rather than space, and displacing it draws the
+original triangulation on the surface as visible creases. A voxel remesh gives
+genuinely uniform density and real granular texture — and rounds off every
+sharp edge, which on this model destroyed exactly the angular chipping the
+weathering rebuild existed to produce. The sharp-preserving remesh mode failed
+the manifold gate on the first attempt, which is the reliability problem §1
+warns about showing up unprompted.
+
+**So: reach for Blender when the whole surface is MEANT to be organic, not to
+add texture to a CSG part whose edges matter.** Displacement costs almost
+nothing at print time (3h 03m 39s → 3h 04m 23s, 50.49g → 50.53g) — the cost is
+the edges, not the printer.
+
+Three bpy gotchas that cost real time, all specific to the 4.0.2 build here:
+- **`bpy.ops` attribute access is lazy, so `hasattr(bpy.ops.wm, "stl_export")`
+  returns True for an operator that does not exist** and only fails on call.
+  Probe with `dir(bpy.ops.wm)` instead. 4.0.2 has `wm.stl_import` but the
+  exporter is still the old `export_mesh.stl` — import and export are not
+  symmetric.
+- `modifier_apply` refuses with *"Modifiers cannot be applied to multi-user
+  data"* on a freshly imported mesh. `o.data = o.data.copy()` first.
+- Set the object active **and** selected before applying; the importer does not
+  reliably leave it that way.
+
+**THE FOX, RUN FOR REAL (2026-09-11, Scott: "try the fox in blender to see how
+it comes out") — and the answer sharpened the rule above.** `mochi_fox_organizer`
+looked like the ideal Blender candidate: a chibi animal, paused mid-detail-pass,
+whose `.scad` carries a long comment about three failed attempts to place ONE
+eye recess because a hull-chain's real surface cannot be predicted from its
+control points. Built it in Blender at v2's exact proportions. Result: **110 ×
+98 × 102mm, 250.1 cm³, one body, watertight, mesh_gate PASSED** — against v2's
+110 × 101 × 102 and 242.9 cm³. Dimensionally it lands.
+
+**And the OpenSCAD version is still the better object.** Three reasons, all
+visible in a lit render side by side:
+
+1. **The fox's form is EXPRESSIBLE in CSG** — it is spheres and hull-chains.
+   That means it was never in Blender's territory. Blender's territory is a
+   form CSG *cannot* express; "chibi animal made of blobs" turns out to be
+   exactly what CSG is fine at. Being organic-looking is not the test. Being
+   inexpressible is.
+2. **Voxel remesh quantises the surface to a grid**, so smooth curves come back
+   with subtle terracing — visible banding on the tail and crown at 0.55mm
+   voxels. OpenSCAD's surfaces are analytic and have none.
+3. **The face would have to be re-authored.** Eyes, cheeks, whisker dimples and
+   mouth are all CSG cuts placed against measured surface positions. Without
+   them the Blender fox reads as a blob; with the face, v2 reads as a fox. The
+   hard part of that model was never the body.
+
+What Blender appeared to buy — **concave fillets at every junction** — is NOT
+in fact unique to it; see §0. `join_prism()`/`prism_connector()` do exactly this
+in OpenSCAD, verified. The observation below about `hull()` swelling outward is
+true; the conclusion that only Blender could fix it was not. `hull()` is a convex hull, so on the v2 fox the neck, ear roots,
+tail root and every foot swell OUTWARD where they meet the body. A voxel union
+plus a light smooth gives the soft inward fillet a sculpted creature has. That
+is the one thing worth coming back for — and on this model it did not outweigh
+points 1–3.
+
+**Two approaches tried; record both.** Metaballs first, because they blend
+natively — and the proportions were uncontrollable: a metaball surface is the
+SUM of every element's field, so the ~26 balls forming the head taper summed
+into a field that swallowed the single body ball entirely. Head and body fused
+into one sphere, the feet vanished, 91 cm³ against an expected 243. **Metaballs
+are for a shape you are free-forming, and wrong for one whose radii are already
+decided.** What worked instead is **voxel-remesh union**: real primitives at the
+exact radii, joined as overlapping shells, resolved by ONE voxel remesh. No
+Boolean modifier anywhere — that is deliberate, given §1's reliability point.
+
+`tools/blender_model.py` is the wrapper this section said to build "the first
+time a real design genuinely needs it". Its guard is the manifold check: it
+refuses a non-watertight result and deletes it, because that is Blender's
+characteristic failure the way a silently-ignored module is OpenSCAD's.
+
+**SECOND SESSION ON IT (2026-09-11, Scott: "put some more work in on blender.
+Just like openscad you will get better results"). He was right that one
+afternoon is not a verdict.** What came out of actually working at it:
+
+**The unique capability is that Blender can MEASURE ITS OWN SURFACE at author
+time.** `obj.ray_cast(origin, direction, depsgraph=dg)` returns the exact hit
+point and normal on the finished mesh. That is the thing OpenSCAD structurally
+cannot do, and it is exactly what `mochi_fox_organizer.scad` spends a long
+comment failing at: three attempts to place ONE eye recess, because a
+hull-chain's surface cannot be predicted from its control points and had to be
+measured out of an exported mesh by hand each time. In Blender it is one line.
+
+Better still, **scan a column instead of asking for one point.** Walking z at
+fixed x and printing the hit y gives the whole face profile, including where
+the head ENDS and the chest begins (a sudden drop in y is that boundary). Doing
+that corrected v2's own numbers: v2 cuts a cheek at (x=13, z=62), and on this
+shell z=62 at x=13 is **15mm back, on the chest** — the head surface at that x
+does not start until z=64. A guess cannot tell you that; a measurement cannot
+fail to.
+
+**The working pipeline is the hybrid, and it is worth the handoff:**
+Blender builds the organic shell and measures it → decimate → OpenSCAD
+`import()` + `difference()` does every cut with the measured coordinates.
+Result on the fox: **110.03 × 100.92 × 101.61mm, 241.8 cm³, watertight, one
+body, Volumes: 2, mesh_gate PASSED** — against v2's 110 × 101.1 × 101.7 and
+242.9 cm³. 55 seconds for the cut.
+
+Three hard-won mechanics:
+
+- **BAKE TRANSFORMS BEFORE JOINING.** `join()` keeps only the ACTIVE object's
+  transform and rewrites everyone else into its frame, so a cutter cloud whose
+  first member carried a rotation gets that rotation applied to the whole cloud
+  about the origin. Eleven raycast-placed recesses, each individually correct,
+  collectively swung out to x −34…+35. `bake()`/`join_all()` in
+  `tools/blender_model.py` exist for this.
+- **`bpy.ops.object.transform_apply()` defaults every axis to True.** Calling
+  it as `transform_apply(scale=True)` also applies location and rotation. That
+  is usually what you want and never what you wrote.
+- **DECIMATE BEFORE HANDING A MESH TO CGAL.** A 212k-triangle import made
+  OpenSCAD's Nef conversion blow past a two-minute timeout before the boolean
+  started. Blender's decimate to ~60k takes seconds, and on a smooth organic
+  shell it costs nothing visible. 212k → 59k turned a timeout into 55 seconds.
+
+**Still unresolved, and routed around rather than solved:** a Boolean
+DIFFERENCE against the full fox shell returns an EMPTY mesh, while the same
+boolean works on a cube, on a remeshed three-sphere body, and on the full fox
+with a trivial cutter. Signed volume is positive (normals outward), the cutter
+is closed with zero open edges, and the mesh gates clean. Nothing in ~10
+instrumented runs isolated it. That is precisely the reliability §1 cites, and
+the correct response is the handoff above rather than more attempts — CGAL does
+this boolean in 55 seconds and is right.
 
 **The correct integration pattern, if/when this gets built:** OpenSCAD builds
 the precise, dimensioned structure and exports STL → Blender (headless,
@@ -277,3 +464,44 @@ Sources: [MakerWorld Flexi Animal collection](https://makerworld.com/en/collecti
 [3DSEARCH — best-selling 3D printed Etsy items 2026](https://3dsearch.net/blog/best-selling-3d-printed-items-etsy-2026),
 [Insight Agent — best-selling 3D printed items](https://www.insightagent.app/guides/best-selling-3d-printed-items-etsy),
 [Sovol — PIP hinges/joints design guide](https://www.sovol3d.com/blogs/news/print-in-place-3d-printing-how-to-design-hinges-joints-and-moving-parts-that-actually-work)
+
+---
+
+## Blender capability audit (2026-09-11, Scott: "Are you using everything blender has the ability to do when it comes to designing a 3d print?")
+
+Answered by counting rather than asserting, same as the BOSL2 audit in §0.
+
+**8 of 57 modifiers used — 14%.** Used: REMESH (voxel), BOOLEAN, DECIMATE,
+SMOOTH, LAPLACIANSMOOTH, SUBSURF, DISPLACE, TRIANGULATE. **175 Geometry Node
+types and ~80 `bmesh.ops` never touched at all.**
+
+Of the 49 unused modifiers, four have real print applications this repo has
+hand-rolled or gone without:
+
+| modifier | what it would do here |
+|---|---|
+| **SOLIDIFY** | hollow a closed shell to a wall thickness in one step — currently done by revolving a hand-built closed cross-section (Technique 1) or by CSG subtraction |
+| **CURVE bevel** (via a curve object) | sweep a real profile along a path — would fix the `sleeping_fox` tail's voxel scalloping, which decimation only softened |
+| **MIRROR** | symmetry with a real seam weld, instead of authoring both halves |
+| **SCREW / SKIN** | revolutions and limb-from-skeleton generation |
+
+**The find that mattered more than the answer: `object_print3d_utils`.**
+Blender's own official 3D-Print Toolbox was present and never enabled. It
+covers the two checks `tools/mesh_gate.py` cannot make — **self-intersection**
+and **wall thickness** — and running it found 11 self-intersecting faces on
+`tombstone_stone` and 38 on `mochi_fox_organizer`, both of which pass
+`mesh_gate` and both of which sliced clean. Full finding, the located
+coordinates, and the tool built from it (`tools/print_check.py`) are in
+SKILL.md Technique 66. Run both gates; neither is a superset of the other.
+
+**The standing criticism, now RESOLVED — and it was wrong.** This doc argued
+twice that Blender throws away parametrics: a mesh, once built, has no
+`size=40` to override. Geometry Nodes was flagged as the likely counterexample
+and left untested. **It has now been tested** (`BLENDER_REFERENCE.md` §4): a
+node group built entirely in headless Python, driven by a named `Density`
+input, regenerated 5,760 → 17,760 faces on a parameter change with no script
+re-run. That is exactly the `-D size=40` equivalent.
+
+**Retract the criticism for Geometry Nodes.** It still holds for a plain
+sculpted or voxel-remeshed mesh, which genuinely has no parameters left. State
+it that narrowly from now on.

@@ -1,0 +1,5 @@
+module sign_letters() {
+    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
+        linear_extrude(0.8) text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
+                                 halign = "center", valign = "center", spacing = 1.04);
+}
