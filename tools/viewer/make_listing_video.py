@@ -60,6 +60,18 @@ def render(url, job, seconds, hold, fmt, scale, detail, frm=None, to=None):
     return base64.b64decode(b64)
 
 
+def blank(piece):
+    """True when the piece's frames are black. With this container's disk full
+    the browser drew nothing, and six blank clips were pushed before anyone
+    looked (2026-10-23)."""
+    r = subprocess.run(["ffmpeg", "-v", "error", "-i", str(piece), "-vf",
+                        "select='not(mod(n,15))',signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-",
+                        "-f", "null", "-"], capture_output=True, text=True)
+    lum = [float(x.split("=")[1]) for x in r.stdout.split() if x.startswith("lavfi.signalstats.YAVG=")]
+    # black is 16 in video range; a real frame of the plate measured 110-125
+    return not lum or min(lum) < 24
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("job", help="the plate's id in the viewer, e.g. hex_lantern")
@@ -84,6 +96,9 @@ def main():
         if not piece.exists():
             tmp = piece.with_suffix(".part")
             tmp.write_bytes(render(a.url, a.job, a.seconds, a.hold, a.format, a.size / 1080, a.detail, i0, i1))
+            if blank(tmp):
+                tmp.unlink()
+                sys.exit(f"{a.job}: frames {i0}-{i1} came out black -- check the disk and the GPU process")
             tmp.rename(piece)
         pieces.append(piece)
     lst = work / f"{a.job}_pieces.txt"
