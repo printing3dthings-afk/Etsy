@@ -302,7 +302,10 @@ module gate_way() translate([0, -Dh + wall + 0.5, 0]) rotate([90, 0, 0]) linear_
 function arch_pts(a, hgt, n = 36) = concat([[-a, 0], [a, 0]], [for (i = [0 : n]) let (q = 180 * i / n) [a * cos(q), hgt + a * sin(q)]]);
 dr_a = 8;  dr_h = 11;
 module door_outline() polygon(arch_pts(dr_a, dr_h));
-module hinges2d() for (s = [-1, 1], z = [3.4, 9.4]) translate([s * (dr_a - 3.4), z]) square([5.6, 1.2], center = true);
+// v2: each strap starts just outside the first plank groove (2.85 to 7.4).
+// From 1.8, the groove at 2.6 left a 0.55 strip of white strap at its inner
+// end that the slice dropped: four flags (2026-10-24)
+module hinges2d() for (s = [-1, 1], z = [3.4, 9.4]) translate([s * (2.85 + 7.4) / 2, z]) square([7.4 - 2.85, 1.2], center = true);
 module door_leaf() face_at(6, 0, plinth_h) difference() {
     translate([0, 0, -wall]) linear_extrude(wall + bd) translate([0, -0.3]) offset(delta = 0.25) polygon(arch_pts(dr_a, dr_h + 0.3));
     translate([0, 0, bd - 0.5]) linear_extrude(2)
