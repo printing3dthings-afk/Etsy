@@ -1,0 +1,6 @@
+logs/fidelity_work/
+logs/*.gcode
+*/logs/fidelity_work/
+*/logs/*.gcode
+*.rendercache
+*/images/*.rendercache
