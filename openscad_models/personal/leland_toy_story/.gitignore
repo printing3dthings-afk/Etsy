@@ -4,3 +4,4 @@ logs/*.gcode
 */logs/*.gcode
 *.rendercache
 */images/*.rendercache
+finish.log
