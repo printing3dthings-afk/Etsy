@@ -31,7 +31,7 @@ to 85, so the print takes about 8 hours instead of 24.
 | | |
 |---|---|
 | size | 90 mm across, 194 mm tall |
-| time | 7 h 47 m (Bambu Studio's estimate, 0.20 mm layers) |
+| time | 7 h 51 m (Bambu Studio's estimate, 0.20 mm layers) |
 | filament | about 167 g, including the purge tower and flushing |
 | slots | 1 white `#F4F1EA`, 2 red `#C8312B`, 3 blue `#2B5FA8`, 4 yellow `#F2C230` |
 | supports | **off**: the slice needs none |
