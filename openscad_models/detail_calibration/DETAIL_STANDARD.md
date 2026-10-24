@@ -105,9 +105,13 @@ matters.
    relief does (Technique 59).
 
 7. **Nothing hangs past 45° from upright, and design to about 37°.** The
-   gate's slicer supports at 45. Every v2 underside climbs at 45 or steeper:
-   dentils and cornice exactly 45, brackets 35. The 5° margin (Technique 82)
-   is what keeps a sheared or tilted copy of it clean.
+   gate's slicer supports at 45. Exactly 45 is not safe: v2's first cornice
+   and dentils sat at 45 and the union's slice put 29,332 support moves under
+   them, from the plate up. At 36° and 35° the same slice put none. A detail's
+   own ceiling counts too, however small. A 0.5 mm plank groove clipped to an
+   arch had a 22° top near the crown, and that propped the door with 1,290
+   moves. Ending each groove in a 60° point, as the original door's meeting
+   line already did, cleared it.
 
 8. **Detail comes in three sizes, and every visible face carries the
    smallest.**

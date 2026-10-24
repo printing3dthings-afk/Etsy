@@ -253,14 +253,16 @@ module merlon_snow() translate([GC[0], GC[1], GH]) {
     translate([0, 0, 3.2]) linear_extrude(1.0) merlon2d();
 }
 // v2: a stone cornice under the battlements, on a course of dentils. The
-// cornice climbs out 1.6 from the brick's root over 1.6 (45 deg) to a 2.0
-// upright face; each dentil climbs out 1.4 over 1.4 and runs up into the
-// cornice's chamfer, so no face of either hangs. Every height is on the 0.2
-// grid (82.4, 84.0, 86.0; 80.2, 81.6): heights snap to whole layers in the
-// slice, so a height off the grid prints up to half a layer off.
+// cornice climbs out 1.6 from the brick's root over 2.2 (36 deg) to a 2.0
+// upright face; each dentil climbs out 1.4 over 2.0 (35 deg) and runs up into
+// the cornice's chamfer. At exactly 45 deg, the slicer's threshold, the
+// slice of the union put 29,332 support moves under them, from the plate up
+// (2026-10-24). Every height is on the 0.2 grid (81.8, 84.0, 86.0; 79.6,
+// 81.6): heights snap to whole layers in the slice, so off the grid they
+// print up to half a layer off.
 // Front and sides only: the band stops 1.0 short of the hall's face.
-cn_z0 = GH - 3.6;  cn_z1 = GH - 2.0;  cn_g = 1.6;
-dn_z0 = GH - 5.8;  dn_z1 = GH - 4.4;  dn_g = 1.4;  dn_w = 1.2;  dn_p = 2.6;
+cn_z0 = GH - 4.2;  cn_z1 = GH - 2.0;  cn_g = 1.6;
+dn_z0 = GH - 6.4;  dn_z1 = GH - 4.4;  dn_g = 1.4;  dn_w = 1.2;  dn_p = 2.6;
 module gate_cornice() intersection() {
     translate(GC) skin([rpts(GW, GD, 0, cn_z0), rpts(GW, GD, cn_g, cn_z1), rpts(GW, GD, cn_g, GH)], slices = 0);
     translate([-100, -200, 0]) cube([200, 200 - Dh - 1.0, 200]);
@@ -310,12 +312,17 @@ module door_leaf() face_at(6, 0, plinth_h) difference() {
 }
 // v2: the leaves boarded: grooves 0.5 wide, 0.5 deep, either side of the
 // meeting line, stopping 1.2 inside the arch. Upright, so the slice keeps
-// them to the hundredth (the coupon's vertical grooves)
-module door_planks() translate([0, 0, bd - 0.5]) linear_extrude(2) intersection() {
-    for (s = [-1, 1], u = [2.6, 5.2]) translate([s * u - 0.25, -1]) square([0.5, 40]);
-    offset(delta = -1.2) polygon(arch_pts(dr_a, dr_h));
-}
-module hinges() face_at(6, 0, plinth_h) translate([0, 0, bd - 0.6]) linear_extrude(0.6) hinges2d();
+// them to the hundredth (the coupon's vertical grooves). Each ends in a 60
+// deg point, like the meeting line: clipped to the arch instead, its top was
+// a 0.5 ceiling as shallow as 22 deg near the crown, and the slice propped
+// the door with 1,290 support moves (2026-10-24).
+function plank_top(u) = dr_h + sqrt(pow(dr_a - 1.2, 2) - pow(abs(u) + 0.25, 2)) - 0.6;
+module door_planks() translate([0, 0, bd - 0.5]) linear_extrude(2)
+    for (s = [-1, 1], u = [2.6, 5.2]) let (c = s * u, t = plank_top(c))
+        polygon([[c - 0.25, -1], [c + 0.25, -1], [c + 0.25, t], [c, t + 0.25 * tan(60)], [c - 0.25, t]]);
+// v2: the planks run through the straps too. Stopped under them, each strap's
+// underside bridged its groove: 8 overhang perimeters in the slice (2026-10-24)
+module hinges() face_at(6, 0, plinth_h) difference() { translate([0, 0, bd - 0.6]) linear_extrude(0.6) hinges2d(); door_planks(); }
 module door_opening() face_at(6, 0, plinth_h) translate([0, 0, -wall - 3]) linear_extrude(wall + 6) door_outline();
 module door_frame() face_at(6, 0, plinth_h) {
     translate([0, 0, -0.6]) linear_extrude(0.6 + bd) difference() {
