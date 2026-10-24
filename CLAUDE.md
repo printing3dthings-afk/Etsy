@@ -585,6 +585,34 @@ only. Frank's backend receives frames at `POST /api/printer/camera-frame` and se
 `GET /api/printer/camera.jpg` (404s if the last frame is older than 15s — never serves a stale image as
 if it were live).
 
+**Sending prints to the P1S (2026-10-24, Scott: "slice to the best print settings
+and send to printer").** Three steps, and the printer is touched only after the
+second:
+1. **Slice** with Bambu Studio itself: `python3 tools/bambu_slice.py body.stl:#F4F1EA
+   trim.stl:#C8312B -o model.gcode.3mf --quality standard [--pause-at 4.2]`. Bambu's
+   own P1S 0.4 / PLA Basic profiles, the Production Quality Settings above, supports
+   off (a support in the slice is reported as a model defect). Runs headless in a
+   cloud container (Flathub install, see the module docstring).
+2. **Send** with `python3 tools/send_print.py model.gcode.3mf --label "..." --ams
+   0,1,2,3 --notes "spools to load"`: uploads to the volume, checks it came back
+   byte-identical, and stages a `start_print` action. **Scott approves it in the
+   Action Center**; the card says to clear the plate and load the spools.
+3. **The bridge starts it.** `bambu_p1s_bridge.py` polls `GET /api/print-jobs/next`,
+   and starts a job only if the printer is reporting and idle, within 30 minutes of
+   the approval. It uploads over FTPS (implicit TLS, port 990) and sends
+   `project_file` over MQTT, then reports `started` or `failed` with the reason. A
+   busy printer fails the job instead of waiting, since waiting would start it on a
+   plate that still holds the last print. The kill switch stops both approval and
+   claiming. Routes: `POST /api/print-jobs/stage`, `GET /api/print-jobs`,
+   `/next`, `/{id}/status`, `/{id}/cancel`.
+
+**Not yet live, two steps only Scott can do:** pull and restart the bridge on the
+home machine (`python tools/relay/bambu_p1s_bridge.py --test-ftp` checks the upload
+path without printing anything); and if the first approved job reports "did not
+start", turn on LAN Only + Developer Mode on the printer. Bambu requires that for
+third-party start commands on current firmware, and LAN Only turns off Bambu's
+cloud, so Bambu Handy's remote access stops while it is on.
+
 ---
 
 ## Frank Desktop App

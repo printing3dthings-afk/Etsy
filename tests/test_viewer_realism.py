@@ -146,6 +146,8 @@ var freed = 0;
 function postDispose() { freed++; }
 function setQuality(rich) { richShading = rich; paintQuality(); }
 var clock = 0, frames = [];
+// autoQuality() skips its measurement while a clip is exporting (2026-10-22)
+var vid = {on: false};
 var performance = {now: function () { return clock; }};
 function requestAnimationFrame(f) { frames.push(f); }
 %s

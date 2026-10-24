@@ -10305,6 +10305,89 @@ async def get_printer_camera_frame(_token: str = Depends(_auth_session_or_bearer
     return Response(content=frame, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
+# ── Print jobs: staged -> approved -> claimed by the home bridge (2026-10-24) ──
+# Frank never talks to the printer. A start_print action, once Scott approves
+# it, becomes a print_jobs row; the bridge on his LAN polls /next, uploads the
+# file to the P1S and starts it, then reports back through /status.
+_PRINT_JOB_REPORTABLE = ("started", "failed")
+
+
+@app.post("/api/print-jobs/stage")
+async def stage_print_job(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Stage a print of a sliced .gcode.3mf already uploaded to the volume.
+    Nothing reaches the printer until Scott approves it in the Action Center."""
+    payload = {
+        "file_path": (body.get("file_path") or "").strip(),
+        "label": (body.get("label") or "").strip() or Path(body.get("file_path") or "print").name,
+        "plate": body.get("plate", 1),
+        "ams_mapping": body.get("ams_mapping"),
+        "bed_type": body.get("bed_type", "textured_plate"),
+        "notes": (body.get("notes") or "").strip()[:2000],
+    }
+    ok, msg = await asyncio.to_thread(_validate_print_payload, payload)
+    if not ok:
+        raise HTTPException(status_code=422, detail=msg)
+    summary = (body.get("summary") or "").strip() or f"Print {payload['label']} on the P1S"
+    aid = await asyncio.to_thread(db.enqueue_action, "start_print", summary, payload)
+    with _cache_lock:
+        _cache.pop("actions", None)
+    return {"staged": True, "action_id": aid, "status": "pending"}
+
+
+@app.get("/api/print-jobs")
+async def get_print_jobs(limit: int = 50, _token: str = Depends(_auth_session_or_bearer)):
+    return {"jobs": await asyncio.to_thread(db.list_print_jobs, max(1, min(limit, 200)))}
+
+
+@app.get("/api/print-jobs/next")
+async def get_next_print_job(_token: str = Depends(_auth_session_or_bearer)):
+    """The bridge's poll. Claims the oldest approved job (queued -> sending)
+    so it is handed out once; returns job=null when there is nothing to do or
+    the kill switch is engaged."""
+    state = await asyncio.to_thread(db.get_relay_state)
+    if state.get("killed"):
+        return {"job": None, "reason": "kill switch is engaged"}
+    job = await asyncio.to_thread(db.claim_next_print_job)
+    if job is None:
+        return {"job": None}
+    await asyncio.to_thread(db.log_activity, "printer_bridge", "print_job_claimed",
+                            f"#{job['id']} {job.get('label') or ''}", {"print_job_id": job["id"]})
+    job["download"] = {"root": "volume", "path": job["file_path"]}
+    return {"job": job}
+
+
+@app.post("/api/print-jobs/{job_id}/status")
+async def report_print_job_status(job_id: int, body: dict, _token: str = Depends(_auth_session_or_bearer)):
+    """The bridge reports what happened to a job it claimed."""
+    status = (body.get("status") or "").strip()
+    if status not in _PRINT_JOB_REPORTABLE:
+        raise HTTPException(status_code=422, detail=f"status must be one of {', '.join(_PRINT_JOB_REPORTABLE)}")
+    job = await asyncio.to_thread(db.get_print_job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="print job not found")
+    if job["status"] != "sending":
+        raise HTTPException(status_code=409, detail=f"print job is {job['status']}, not sending")
+    detail = (body.get("detail") or "").strip()[:2000] or None
+    await asyncio.to_thread(db.set_print_job_status, job_id, status, detail)
+    await asyncio.to_thread(db.log_activity, "printer_bridge", f"print_job_{status}",
+                            f"#{job_id} {job.get('label') or ''}: {detail or ''}".strip(),
+                            {"print_job_id": job_id}, "ok" if status == "started" else "error")
+    return {"id": job_id, "status": status}
+
+
+@app.post("/api/print-jobs/{job_id}/cancel")
+async def cancel_print_job(job_id: int, _token: str = Depends(_rate_limited_auth)):
+    """Withdraw an approved job before the bridge claims it. A job already
+    sent to the printer is stopped at the printer, not here."""
+    job = await asyncio.to_thread(db.get_print_job, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="print job not found")
+    if job["status"] != "queued":
+        raise HTTPException(status_code=409, detail=f"print job is {job['status']}; only a queued job can be cancelled here")
+    await asyncio.to_thread(db.set_print_job_status, job_id, "cancelled", "cancelled before the bridge claimed it")
+    return {"id": job_id, "status": "cancelled"}
+
+
 # ── COGS / profit-per-listing (2026-07-17 capabilities audit item 4) ────────
 # No real per-listing cost data exists anywhere in this codebase (checked:
 # product_catalog.json, makerworld_specs.json, business_config.py -- none
@@ -12888,13 +12971,58 @@ _LISTING_CREATE_STAGED_ACTION_TYPES = ("create_listing",)
 # local write to the two override sidecars (product_catalog_overrides.json +
 # listing_manifest_overrides.json), so it doesn't even need EtsyAPIClient.
 _REGISTER_PRODUCT_STAGED_ACTION_TYPES = ("register_product",)
+# start_print (2026-10-24, Scott: "slice to the best print settings and send to
+# printer"). Starting a print is physical and can't be undone from here, so it
+# is staged like an Etsy write. Approving it only queues a print_jobs row: the
+# home bridge (tools/relay/bambu_p1s_bridge.py) is the one thing that can reach
+# the printer, and it re-checks the printer is idle before it starts anything.
+_PRINT_STAGED_ACTION_TYPES = ("start_print",)
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
     + _VIDEO_STAGED_ACTION_TYPES + _REGISTER_COMMAND_STAGED_ACTION_TYPES
     + _SOCIAL_STAGED_ACTION_TYPES + _LISTING_CREATE_STAGED_ACTION_TYPES
-    + _REGISTER_PRODUCT_STAGED_ACTION_TYPES
+    + _REGISTER_PRODUCT_STAGED_ACTION_TYPES + _PRINT_STAGED_ACTION_TYPES
 )
+_PRINT_BED_TYPES = ("auto", "textured_plate", "cool_plate", "eng_plate", "hot_plate")
+
+
+def _validate_print_payload(p: dict) -> tuple[bool, str]:
+    """A start_print payload names a sliced Bambu project (.gcode.3mf) on the
+    volume that really holds G-code for the plate it asks to print."""
+    if "volume" not in _FILE_ROOTS:
+        return False, "no volume is mounted, so there is nowhere for the bridge to fetch the file from"
+    path = (p.get("file_path") or "").strip()
+    if not path:
+        return False, "missing file_path"
+    if not path.endswith(".gcode.3mf"):
+        return False, "file_path must be a sliced .gcode.3mf (Bambu Studio's export), not a model file"
+    try:
+        target = _resolve_in_root("volume", path)
+    except HTTPException:
+        return False, f"file_path escapes the volume root: {path}"
+    if not target.is_file():
+        return False, f"sliced file not found on the volume: {path}"
+    plate = p.get("plate", 1)
+    if not isinstance(plate, int) or isinstance(plate, bool) or plate < 1:
+        return False, "plate must be a positive integer"
+    try:
+        import zipfile
+        with zipfile.ZipFile(target) as z:
+            names = set(z.namelist())
+    except Exception as exc:
+        return False, f"sliced file is not a readable 3MF: {exc}"
+    if f"Metadata/plate_{plate}.gcode" not in names:
+        return False, f"no G-code for plate {plate} in {path} (was it sliced?)"
+    ams = p.get("ams_mapping")
+    if ams is not None:
+        if (not isinstance(ams, list) or not 1 <= len(ams) <= 16
+                or any(not isinstance(x, int) or isinstance(x, bool) or not -1 <= x <= 15 for x in ams)):
+            return False, "ams_mapping must be a list of 1-16 AMS tray numbers (0-15, or -1 for unused)"
+    bed = p.get("bed_type", "textured_plate")
+    if bed not in _PRINT_BED_TYPES:
+        return False, f"bed_type must be one of {', '.join(_PRINT_BED_TYPES)}"
+    return True, "ok"
 
 
 _EXPECTED_LISTING_PHOTO_SIZE = (2400, 2400)  # CLAUDE.md standard listing photo spec
@@ -13119,6 +13247,8 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         if not target.is_file():
             return False, f"staged video file not found: {path}"
         return True, "ok"
+    if t in _PRINT_STAGED_ACTION_TYPES:
+        return _validate_print_payload(p)
     if t == "post_tiktok":
         path = (p.get("video_path") or "").strip()
         if not path:
@@ -13640,6 +13770,18 @@ _CATALOG_CATEGORY_TO_MANIFEST_TYPE = {
 }
 
 
+def _execute_print_staged_action(a: dict) -> dict:
+    """Queue an approved print for the bridge. Nothing here reaches the
+    printer: the bridge claims the job, checks the P1S is idle, then starts it."""
+    p = a.get("payload") or {}
+    job_id = db.create_print_job(
+        a.get("id"), p["file_path"], p.get("label") or "", p.get("plate", 1),
+        p.get("ams_mapping"), p.get("bed_type", "textured_plate"),
+    )
+    return {"print_job_id": job_id, "status": "queued",
+            "note": "Queued for the printer bridge, which starts it only if the P1S is idle."}
+
+
 def _execute_register_product_staged_action(a: dict) -> dict:
     """Apply an approved register_product action (2026-08-05, catalog
     reconciliation feature) -- a PURE LOCAL write, zero Etsy API calls.
@@ -14016,7 +14158,8 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
     is_social = a["type"] in _SOCIAL_STAGED_ACTION_TYPES
     is_create_listing = a["type"] in _LISTING_CREATE_STAGED_ACTION_TYPES
     is_register_product = a["type"] in _REGISTER_PRODUCT_STAGED_ACTION_TYPES
-    if is_local:
+    is_print = a["type"] in _PRINT_STAGED_ACTION_TYPES
+    if is_local or is_print:
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
             raise HTTPException(status_code=409, detail="kill switch is engaged — local actions are suspended")
@@ -14058,6 +14201,10 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
             # Pure local write, no network call -- short timeout is plenty.
             result = await asyncio.wait_for(
                 asyncio.to_thread(_execute_register_product_staged_action, a), timeout=15.0
+            )
+        elif is_print:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_execute_print_staged_action, a), timeout=15.0
             )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)

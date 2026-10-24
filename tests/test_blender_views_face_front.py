@@ -26,7 +26,9 @@ def check(cond: bool, msg: str) -> None:
 def _camera_y_sign(az_deg: float) -> float:
     # The same expression the Blender script uses for the camera's Y.
     src = (ROOT / "tools" / "blender_render.py").read_text()
-    check("cam_y = -dist * math.cos(el) * math.cos(az)" in src,
+    # since 2026-10-21 the camera stands at target + back * dist, dist > 0
+    check("back = mathutils.Vector((math.cos(el) * math.sin(az), -math.cos(el) * math.cos(az), math.sin(el)))" in src
+          and "cam_loc = target + back * dist" in src,
           "the camera Y formula changed; re-derive this test from it")
     return math.copysign(1.0, -math.cos(math.radians(az_deg)))
 

@@ -9004,7 +9004,8 @@ const _ACT_TYPE_GLYPH = {
   create_listing: '✨', register_command: '🖥️',
   // 2026-08-05 (full-Etsy-audit finding): register_product fell through to the
   // same generic ❓ this comment block already fixed for 6 other types.
-  register_product: '📋'
+  register_product: '📋',
+  start_print: '🖨️'
 };
 function _actAgeStr(a) {
   const t = a.staged_at || a.created_at || a.decided_at;
@@ -9183,6 +9184,13 @@ function _actionPreviewBody(a) {
       (p.confidence ? `<div style="margin-top:4px;color:var(--muted)">Classification confidence: ${escHtml(p.confidence)}${p.reasoning ? ' — ' + escHtml(p.reasoning) : ''}</div>` : '') +
       `<div class="sub" style="margin-top:6px">Local record only — does not touch the live Etsy listing.</div>`;
   }
+  if (a.type === 'start_print') {
+    return `<div><strong>Print:</strong> ${escHtml(p.label || '')}</div>` +
+      `<div style="margin-top:4px">File: <span style="font-family:monospace">${escHtml(p.file_path || '')}</span> · plate ${escHtml(String(p.plate || 1))} · ${escHtml(p.bed_type || 'textured_plate')}</div>` +
+      (p.ams_mapping ? `<div style="margin-top:4px">AMS trays: ${escHtml(p.ams_mapping.map(x => x < 0 ? '–' : String(x + 1)).join(', '))}</div>` : '') +
+      (p.notes ? `<div style="margin-top:4px;white-space:pre-wrap">${escHtml(p.notes)}</div>` : '') +
+      `<div class="sub" style="margin-top:6px">Approving queues it for the printer bridge, which starts it only if the P1S is idle. Clear the plate and load the spools first.</div>`;
+  }
   return '';
 }
 function renderApproval(a) {
@@ -9208,6 +9216,7 @@ function renderApproval(a) {
   else if (a.type === 'update_price') meta += ` · $${escHtml(Number(p.price||0).toFixed(2))}`;
   else if (a.type === 'toggle_listing_state') meta += ` · → ${escHtml(p.new_state || '')}`;
   else if (a.type === 'register_product') meta += ` · ${escHtml(p.name || '')} (${escHtml(p.category || 'uncategorized')})`;
+  else if (a.type === 'start_print') meta += ` · plate ${escHtml(String(p.plate || 1))}`;
   return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
     ${thumb}
     <div class="hub-listing-info">
@@ -9250,7 +9259,8 @@ const _APPROVE_CONFIRM_MSGS = {
   // register_command only writes registered_commands.json + the in-process
   // command table).
   register_product: 'Approve and save this as a new product record in Frank’s catalog? (Local record only — does not touch Etsy.)',
-  register_command: 'Approve and register this as a new runnable command? (Local record only — does not touch Etsy.)'
+  register_command: 'Approve and register this as a new runnable command? (Local record only — does not touch Etsy.)',
+  start_print: 'Approve and start this print on the P1S? Make sure the plate is clear and the right spools are loaded.'
 };
 // Walks to the shared button row (.act-btns desktop / .pp-acts mobile) so
 // Reject/Fix can't be tapped mid-approve either, not just the tapped button.

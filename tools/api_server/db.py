@@ -306,6 +306,23 @@ CREATE TABLE IF NOT EXISTS settings (
   value      TEXT,               -- string value; NULL/absent = fall back to env/default
   updated_at TEXT
 );
+-- Print jobs for the P1S (2026-10-24). A row exists only once Scott has
+-- approved a start_print action; the home bridge claims queued rows, uploads
+-- the sliced file to the printer and starts it, and reports back here.
+CREATE TABLE IF NOT EXISTS print_jobs (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  action_id   INTEGER,
+  created_at  TEXT NOT NULL,
+  updated_at  TEXT NOT NULL,
+  file_path   TEXT NOT NULL,     -- relative to the volume files root
+  label       TEXT,
+  plate       INTEGER NOT NULL DEFAULT 1,
+  ams_mapping TEXT,              -- JSON list: the AMS tray (0-15) for each filament slot
+  bed_type    TEXT,
+  status      TEXT NOT NULL,     -- 'queued' | 'sending' | 'started' | 'failed' | 'cancelled'
+  detail      TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_print_jobs_status ON print_jobs(status, id);
 """
 
 
@@ -1845,6 +1862,100 @@ def get_relay_state() -> dict:
         if r:
             return dict(r)
         return {"id": 1, "last_heartbeat": None, "killed": 0, "killed_at": None, "killed_by": None}
+    finally:
+        conn.close()
+
+
+# ── Print jobs (P1S) ─────────────────────────────────────────────────────────────
+
+def _print_job_row(r) -> dict:
+    d = dict(r)
+    d["ams_mapping"] = json.loads(d["ams_mapping"]) if d.get("ams_mapping") else None
+    return d
+
+
+def create_print_job(action_id: int | None, file_path: str, label: str, plate: int,
+                     ams_mapping: list | None, bed_type: str | None) -> int:
+    """Queue an approved print for the bridge. Status starts 'queued'."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO print_jobs (action_id, created_at, updated_at, file_path, label, plate, "
+            "ams_mapping, bed_type, status) VALUES (?,?,?,?,?,?,?,?, 'queued')",
+            (action_id, ts, ts, file_path, label, plate,
+             json.dumps(ams_mapping) if ams_mapping is not None else None, bed_type),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def claim_next_print_job(max_age_s: float = 30 * 60) -> dict | None:
+    """The oldest queued job, moved to 'sending' in the same transaction, so two
+    bridge polls can never both start it.
+
+    A job queued longer than max_age_s is failed instead of started: approving
+    a print says the plate is clear and the spools are loaded now, and a
+    bridge that was offline for hours must not start it when it comes back."""
+    init_db()
+    now = datetime.now(timezone.utc)
+    ts = now.isoformat()
+    cutoff = (now - timedelta(seconds=max_age_s)).isoformat()
+    conn = _connect()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        conn.execute(
+            "UPDATE print_jobs SET status='failed', updated_at=?, "
+            "detail='expired: approved over ' || ? || ' min ago and never started' "
+            "WHERE status='queued' AND created_at < ?",
+            (ts, f"{max_age_s / 60:g}", cutoff),
+        )
+        r = conn.execute("SELECT * FROM print_jobs WHERE status='queued' ORDER BY id LIMIT 1").fetchone()
+        if not r:
+            conn.commit()
+            return None
+        conn.execute("UPDATE print_jobs SET status='sending', updated_at=? WHERE id=? AND status='queued'",
+                     (ts, r["id"]))
+        conn.commit()
+        job = _print_job_row(r)
+        job["status"] = "sending"
+        return job
+    finally:
+        conn.close()
+
+
+def set_print_job_status(job_id: int, status: str, detail: str | None = None) -> bool:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute("UPDATE print_jobs SET status=?, detail=?, updated_at=? WHERE id=?",
+                           (status, detail, ts, job_id))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def get_print_job(job_id: int) -> dict | None:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM print_jobs WHERE id=?", (job_id,)).fetchone()
+        return _print_job_row(r) if r else None
+    finally:
+        conn.close()
+
+
+def list_print_jobs(limit: int = 50) -> list:
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute("SELECT * FROM print_jobs ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+        return [_print_job_row(r) for r in rows]
     finally:
         conn.close()
 
