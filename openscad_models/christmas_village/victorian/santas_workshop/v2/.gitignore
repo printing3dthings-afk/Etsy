@@ -3,3 +3,4 @@
 *.stl
 logs/fidelity_work/
 logs/*.gcode
+*.rendercache
