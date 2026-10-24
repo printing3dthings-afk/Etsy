@@ -5,3 +5,4 @@ logs/*.gcode
 *.rendercache
 */images/*.rendercache
 finish.log
+*_union.stl

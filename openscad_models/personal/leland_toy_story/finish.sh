@@ -12,5 +12,5 @@ python3 $T/blender_render.py --part plaque/leland_plaque_blue.stl:$B --part plaq
   --part plaque/leland_plaque_red.stl:$R --part plaque/leland_plaque_yellow.stl:$Y --elevation 70 --azimuth 0 --resolution 1400 --timeout 2400 -o plaque/images/plaque.png
 echo RENDERS_DONE
 mkdir -p print_files
-(cd rocket && ./build.sh cgal white red blue yellow plate) && (cd plaque && ./build.sh cgal blue white red yellow)
+(cd rocket && ./build.sh cgal white red blue yellow plate) && (cd plaque && ./build.sh cgal slot1 green red yellow)
 echo CGAL_DONE

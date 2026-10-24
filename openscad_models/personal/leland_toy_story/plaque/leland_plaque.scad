@@ -1,88 +1,115 @@
-// LELAND name plaque, Toy Story style -- for Leland's 2nd birthday (Scott,
-// 2026-10-24). PERSONAL, NOT FOR SALE (Toy Story is Disney/Pixar's).
+// LELAND name plaque: Buzz Lightyear's open wings -- for Leland's 2nd
+// birthday (Scott, 2026-10-24). PERSONAL, NOT FOR SALE (Toy Story is
+// Disney/Pixar's).
 //
-// Sky-blue plate with Andy's-room white clouds; Buzz's white wings with red
-// tips spread behind the name; LELAND in yellow with a red outline, the way
-// the Toy Story logo letters; Woody's gold sheriff star above, SHERIFF cut
-// into it.
+// v2, from Scott's reference photo of the toy's back (2026-10-24): the first
+// plaque's swept white wings with red tips "do not look like Buzz
+// Lightyear's". The real ones are straight and level, purple, with a band of
+// red-and-white diagonal stripes along the top edge over a thin green line,
+// two panels a side (the outer a little smaller), and rounded green end caps,
+// the left one with a red light. Here the wings ARE the plaque: LELAND
+// across them in yellow with a red outline, Woody's sheriff star above on
+// the white-and-green jetpack.
 //
 // Prints face up, flat back on the plate: every raised part stands on the one
-// under it, so there is nothing to hang and nothing to support. One solid
-// piece, rounded corners, top edge chamfered, nothing that can come off --
-// he's two. Hang it with Command strips or mounting tape on the flat back.
+// under it, nothing to support. One solid piece, rounded corners, nothing
+// that can come off. Hang it with Command strips on the flat back.
 //
-// PARTS by colour, priority yellow > red > white > blue:
-//   blue    the plate          z 0   - 4.0
-//   white   clouds             z 4.0 - 5.0   wings  z 4.0 - 6.0
-//   red     wing tips          z 4.0 - 6.0   letter outline  z 4.0 - 7.6
-//   yellow  letters            z 4.0 - 9.0   star   z 4.0 - 8.0
-// Every height is on the 0.2 grid (detail_calibration/DETAIL_STANDARD.md).
+// FIVE COLOURS ON A FOUR-SLOT AMS, ONE SWAP: purple is only ever the bottom
+// 4.0 mm (the wings' face), white only ever above it. Both are slot 1: pause
+// after the layer at 4.0 and swap the purple spool for white.
+//   slot 1  purple   z 0   - 4.0   the wings
+//           white    z 4.0 - 5.6   stripes, the jetpack's panel
+//   slot 2  green    z 0   - 6.0   end caps, jetpack, the line under the stripes (z 4.0 - 5.2)
+//   slot 3  red      z 4.0 - 7.6   stripes, the letters' outline, the left cap's light
+//   slot 4  yellow   z 0   - 9.0   letters (z 4.0 - 9.0), the star (from the plate up)
+// priority yellow > red > green > slot 1. Heights on the 0.2 grid.
 
 $fa = 3;  $fs = 0.3;
 part = "all";
 
-W = 200;  H = 110;  R = 14;  T = 4.0;  cham = 0.8;
+T = 4.0;                              // the wings' face: purple below, white above (the swap)
 NAME = "LELAND";
-n_font = "Fredoka:style=SemiBold";  n_size = 26;  n_y = -10;
-n_fat = 0.6;  n_out = 2.6;            // letters fattened a little; the red outline's width
+n_font = "Fredoka:style=SemiBold";  n_size = 25;  n_y = -8;
+n_fat = 0.6;  n_out = 2.6;
 
-module plate2d() offset(r = R) square([W - 2 * R, H - 2 * R], center = true);
-module name2d() translate([0, n_y]) offset(r = n_fat) text(NAME, size = n_size, font = n_font, halign = "center", valign = "center", spacing = 1.04);
-module outline2d() offset(r = n_out) name2d();
+// ---- the wings: two panels a side, from Scott's photo (0.2 mm per pixel at 210 mm span) ---------
+IN  = [0, 61, -26, 24];               // inner panel [x0, x1, y0, y1], right side
+OUT = [61.8, 100, -23, 20];             // outer panel: a little lower on top, a little higher underneath
+band = 13;                            // the stripe band down from each panel's top
+module rrect(x0, x1, y0, y1, r) translate([x0 + r, y0 + r]) offset(r = r) square([x1 - x0 - 2 * r, y1 - y0 - 2 * r]);
+module panel(p, r = 2) rrect(p[0], p[1], p[2], p[3], r);
+module both() { children(); mirror([1, 0]) children(); }
+module wings2d() both() { panel(IN); panel(OUT); }
+// the seam between the panels: a real 0.8 gap, the panels joined under it up
+// to 0.6 below the face. Cut as a groove across overlapping panels it left
+// 0.35 slivers of purple at the corners (print_fidelity, 2026-10-24)
+module bridge2d() both() translate([60.4, OUT[2] + 1]) square([2, OUT[3] - OUT[2] - 2]);
+// the band: red and white diagonal stripes, 6 wide, leaning 30 deg, and the
+// thin green line under them
+st_w = 6;
+// clipped to the panel's own rounded outline: drawn square, the band's
+// corners hung past the panels' rounded ones and the slicer propped them
+// (1,014 support moves, 2026-10-24)
+module band2d(p) intersection() { panel(p); translate([p[0], p[3] - band]) square([p[1] - p[0], band]); }
+module bands2d() both() { band2d(IN); band2d(OUT); }
+module red_stripes2d() intersection() { bands2d(); both() for (i = [-4 : 2 : 30]) translate([i * st_w, 0]) multmatrix([[1, tan(30), 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) translate([0, -40]) square([st_w, 80]); }
+module white_stripes2d() difference() { bands2d(); red_stripes2d(); }
+module line2d() both() for (p = [IN, OUT]) intersection() { panel(p); translate([p[0], p[3] - band - 1.4]) square([p[1] - p[0], 1.4]); }
 
-// clouds: Andy's wallpaper, a few soft blobs scattered over the sky
-CLOUDS = [[-70, 38, 0.9], [-36, 22, 0.6], [66, 38, 0.9], [76, -38, 0.8], [-74, -38, 0.8], [6, -42, 0.7]];
-module cloud2d(s) scale(s) union() {
-    translate([-9, 0]) circle(r = 6.5); translate([0, 3]) circle(r = 8.5); translate([10, 0]) circle(r = 6.5);
-    translate([-12, -4]) square([24, 6]);
-}
-module clouds2d() intersection() { offset(delta = -4) plate2d(); for (c = CLOUDS) translate([c[0], c[1]]) cloud2d(c[2]); }
+// end caps: rounded green tabs beyond the outer panels, reaching above and below them
+CAP = [99, 109, -27, 16];
+module caps2d() both() rrect(CAP[0], CAP[1], CAP[2], CAP[3], 4);
+module light2d() mirror([1, 0]) intersection() { rrect(CAP[0], CAP[1], CAP[2], CAP[3], 4); translate([CAP[0] - 1, CAP[3] - 8]) square([20, 20]); }   // the left cap's red top
 
-// Buzz's wings: one each side, swept up and out from behind the name, red tips
-// swept up and out, so they show past the letters and above them
-module wing2d() offset(r = 3) offset(delta = -3)
-    polygon([[0, -8], [34, -6], [92, 18], [95, 30], [88, 36], [34, 18], [0, 16]]);
-tip_x = 78;
-module wings2d() for (s = [-1, 1]) scale([s, 1]) translate([0, n_y]) wing2d();
-module tips2d()  intersection() { wings2d(); union() { translate([tip_x, -100]) square([100, 200]); translate([-tip_x - 100, -100]) square([100, 200]); } }
+// ---- the jetpack: green, rising above the wings to carry the star; a white panel down its middle --------
+module jet2d() rrect(-27, 27, -30, 38, 9);
+// above the name only: run down behind it, the panel left white slivers round
+// the letters' outline (print_fidelity: 19.9 mm3 printed white there)
+module jet_panel2d() rrect(-17, 17, 7, 32, 6);
 
-// Woody's sheriff star: six points, a ball on each, SHERIFF across it
-st_c = [0, 31];  st_r = 15;
+// ---- Woody's sheriff star, above the jetpack: six points, a ball on each ---------------------------
+st_c = [0, 42];  st_r = 14;
 module star2d() translate(st_c) {
     polygon([for (i = [0 : 11]) let (a = 90 + i * 30, r = i % 2 == 0 ? st_r : st_r * 0.64) [r * cos(a), r * sin(a)]]);
     for (i = [0 : 5]) let (a = 90 + i * 60) translate([st_r * cos(a), st_r * sin(a)]) circle(r = 2.4);
     circle(r = st_r * 0.56);
 }
-module sheriff2d() translate(st_c) text("SHERIFF", size = 2.8, font = "Montserrat:style=Black", halign = "center", valign = "center");
+// No SHERIFF lettering: at 2.8, 3.6 and 4.2 high a stroke of it dropped in
+// the slice every time (print_fidelity, 2026-10-24); the six-point star with
+// its balls reads as Woody's badge without it.
 
-// the plate, its top edge chamfered in two steps
-module plate_raw() {
-    linear_extrude(T - cham) plate2d();
-    translate([0, 0, T - cham - 0.01]) linear_extrude(cham + 0.01) offset(delta = -cham) plate2d();
-}
+module name2d() translate([0, n_y]) offset(r = n_fat) text(NAME, size = n_size, font = n_font, halign = "center", valign = "center", spacing = 1.04);
+module outline2d() offset(r = n_out) name2d();
+
 module rise(z0, z1) translate([0, 0, z0]) linear_extrude(z1 - z0) children();
 
-module yellow_raw() difference() {
-    union() { rise(T - 0.4, 9.0) name2d(); rise(T - 0.4, 8.0) star2d(); }
-    rise(8.0 - 0.6, 9) sheriff2d();      // SHERIFF cut 0.6 into the star's face
-}
-module red_raw()   { rise(T - 0.4, 7.6) outline2d(); rise(T - 0.4, 6.0) tips2d(); }
-module white_raw() { rise(T - 0.4, 6.0) wings2d(); rise(T - 0.4, 5.0) clouds2d(); }
-module blue_raw()  plate_raw();
+// ---- parts ---------------------------------------------------------------------------------------
+module yellow_raw() { rise(T - 0.01, 9.0) name2d(); rise(0, 8.0) star2d(); }
+module red_raw()   { rise(T - 0.01, 7.6) outline2d(); rise(T - 0.01, 5.2) red_stripes2d(); rise(T - 0.01, 6.0) light2d(); }
+module green_raw() { rise(0, 6.0) caps2d(); rise(0, T) jet2d(); rise(T - 0.01, 5.2) line2d(); }
+module white_raw() { rise(T, 5.2) white_stripes2d(); rise(T, 5.6) jet_panel2d(); }
+// the wings' base also runs under the whole letter outline: the end letters'
+// outline reached past the inner panels over the seam gap and printed into air
+// (2026-10-24)
+module purple_raw() { rise(0, T) { wings2d(); offset(r = 0.4) outline2d(); } rise(0, T - 0.6) bridge2d(); }
 
+// slot 1 is one part: purple below the swap, white above it
+module slot1_raw() { purple_raw(); white_raw(); }
 module yellow_part() yellow_raw();
 module red_part()    difference() { red_raw(); yellow_raw(); }
-module white_part()  difference() { white_raw(); red_raw(); yellow_raw(); }
-module blue_part()   difference() { blue_raw(); white_raw(); red_raw(); yellow_raw(); }
+module green_part()  difference() { green_raw(); red_raw(); yellow_raw(); }
+module slot1_part()  difference() { slot1_raw(); green_raw(); red_raw(); yellow_raw(); }
 
 if      (part == "yellow") yellow_part();
 else if (part == "red")    red_part();
-else if (part == "white")  white_part();
-else if (part == "blue")   blue_part();
-else if (part == "union")  union() { yellow_part(); red_part(); white_part(); blue_part(); }
+else if (part == "green")  green_part();
+else if (part == "slot1")  slot1_part();
+else if (part == "union")  union() { yellow_part(); red_part(); green_part(); slot1_part(); }
 else if (part == "all") {
-    color("#2B5FA8") blue_part();
-    color("#F4F1EA") white_part();
+    color("#6A3FB0") difference() { slot1_part(); rise(T + 0.1, 20) square(400, center = true); }
+    color("#F4F1EA") intersection() { slot1_part(); rise(T + 0.1, 20) square(400, center = true); }
+    color("#5DBB3F") green_part();
     color("#C8312B") red_part();
     color("#F2C230") yellow_part();
 }
