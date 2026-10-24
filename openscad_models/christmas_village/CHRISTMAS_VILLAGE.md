@@ -33,6 +33,22 @@ Started 2026-09-27 (Scott: "I want to start the setup of a Christmas village.
 Start putting together 5 ideas of styles we should go with … same building
 with the 5 different styles").
 
+## Printing them: one colour, matte white (Scott, 2026-10-24)
+
+Scott prints the village builds in **matte white** (Bambu PLA Matte). Slice
+with `tools/bambu_slice.py <building>_union.stl:#F4F1EA --filament pla_matte`.
+
+Why one colour: sliced on the AMS in four colours, every building is mostly
+purge. The Victorian cottage puts about 33 g into the house and about 320 g
+into some 800 colour changes (357 g, 25 h); the four next-smallest buildings
+need 383–430 g and 25–31 h each. In matte white the cottage is 38 g and
+1 h 41 m. The colour-only details were given relief for exactly this
+(2026-10-0x, "Check what survives on a white one-colour print").
+
+| building, matte white | filament | time |
+|---|---|---|
+| Victorian cottage (`victorian/cottage/gcode/`) | 38 g | 1 h 41 m |
+
 ## What's in this folder
 
 | folder | what it is |

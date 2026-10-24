@@ -54,7 +54,9 @@ PROCESS = {
     "fine": "0.12mm Fine @BBL X1C",
     "extra_fine": "0.08mm Extra Fine @BBL X1C",
 }
-FILAMENT = "Bambu PLA Basic @BBL P1S 0.4 nozzle"
+FILAMENTS = {"pla_basic": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+             # the village builds print in matte white (Scott, 2026-10-24)
+             "pla_matte": "Bambu PLA Matte @BBL P1S 0.4 nozzle"}
 
 # CLAUDE.md "Production Quality Settings" -- the shop's own retail standard.
 # "Customers only see the outside": the outer wall is slowed and printed first.
@@ -131,7 +133,8 @@ def _set(cfg: dict, key: str, value) -> None:
     cfg[key] = [v] * len(cur) if isinstance(cur, list) else v
 
 
-def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool = True) -> tuple[str, str]:
+def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool = True,
+                   filament: str = "pla_basic") -> tuple[str, str]:
     """Write the machine, process and filament files; returns the two CLI args."""
     machine = flatten("machine", MACHINE)
     process = flatten("process", PROCESS[quality])
@@ -149,7 +152,7 @@ def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool
     process_f.write_text(json.dumps(process, indent=1))
     fils = []
     for i, c in enumerate(colours or ["#F4F1EA"]):
-        f = flatten("filament", FILAMENT)
+        f = flatten("filament", FILAMENTS[filament])
         f["from"] = "system"
         _set(f, "filament_colour", c.upper())
         p = workdir / f"filament_{i + 1}.json"
@@ -334,7 +337,8 @@ def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path) -> list[str
 
 
 def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = "standard",
-                pause_zs: list[float] | None = None, retail: bool = True, log=print) -> dict:
+                pause_zs: list[float] | None = None, retail: bool = True, log=print,
+                filament: str = "pla_basic") -> dict:
     """Slice the given parts for the P1S. Returns the slice's own summary."""
     ensure_installed()
     out = Path(out).resolve()
@@ -343,7 +347,7 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
         work = Path(td)
         model = work / "model.3mf"
         colours = build_bambu_3mf(groups, model)
-        settings, filaments = write_profiles(work, quality, colours, retail)
+        settings, filaments = write_profiles(work, quality, colours, retail, filament)
         outdir = work / "out"
         outdir.mkdir()
         cmd = _cmd() + ["--slice", "0", "--arrange", "0",
@@ -360,7 +364,7 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     s = summarise(out)
     s["paused_at_mm"] = paused_at
     s.update({"file": str(out), "quality": quality, "process": PROCESS[quality],
-              "retail_settings": retail, "slot_colours": colours})
+              "retail_settings": retail, "filament": FILAMENTS[filament], "slot_colours": colours})
     if s["support_lines"]:
         log(f"WARNING: the slice contains support ({s['support_lines']} support sections) -- fix the model")
     if s.get("slots_used") is not None and len(s["slots_used"]) < len(colours):
@@ -373,10 +377,12 @@ def main() -> None:
     ap.add_argument("parts", nargs="+", help='mesh.stl:#RRGGBB per part; "+" starts a new object')
     ap.add_argument("-o", "--out", required=True, help="the .gcode.3mf to write")
     ap.add_argument("--quality", choices=sorted(PROCESS), default="standard")
+    ap.add_argument("--filament", choices=sorted(FILAMENTS), default="pla_basic")
     ap.add_argument("--pause-at", type=float, action="append", default=[], help="pause before this layer height (mm)")
     ap.add_argument("--bambu-defaults", action="store_true", help="Bambu's profile as-is, without the shop's retail settings")
     a = ap.parse_args()
-    s = slice_parts(parse_parts(a.parts), Path(a.out), a.quality, a.pause_at, retail=not a.bambu_defaults)
+    s = slice_parts(parse_parts(a.parts), Path(a.out), a.quality, a.pause_at, retail=not a.bambu_defaults,
+                    filament=a.filament)
     print(json.dumps(s, indent=1))
     if s["support_lines"]:
         sys.exit(2)
