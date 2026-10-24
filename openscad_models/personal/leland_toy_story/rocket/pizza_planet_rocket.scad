@@ -2,10 +2,10 @@
 // 2026-10-24). PERSONAL, NOT FOR SALE: Toy Story is Disney/Pixar's, so this
 // never goes in the shop, the catalogue or the public viewer.
 //
-// A white rocket on a blue pedestal lettered PIZZA PLANET, red nose, fins
-// and bands, blue-rimmed portholes, and a yellow ringed planet on the tip.
-// A battery LED tealight inside lights it: the white body glows softly, and
-// each porthole, thinned to 1.0 mm from inside, glows bright.
+// A white rocket with white fins on a blue pedestal lettered PIZZA PLANET,
+// red nose and bands, six portholes ringed by V-grooves, and a yellow ringed
+// planet on the tip. A battery LED tealight inside lights it: the 1.6 mm
+// white body glows evenly, and each groove glows a little brighter.
 //
 // FOR A TWO-YEAR-OLD:
 //  * battery tealights run on a coin cell, which is dangerous swallowed. The
@@ -13,16 +13,16 @@
 //    or #4 x 3/8"), the way real toy battery doors are closed: nothing to
 //    twist or pop off by hand.
 //  * nothing thin sticks out: fins 6 mm, the planet's ring on a solid cone,
-//    the portholes' rims fused to the body.
+//    the portholes grooved into the body, nothing to pick at.
 //  * a wide, low base (90 mm across for 197 mm of height) so it doesn't tip.
 //
 // Prints standing up, no supports: every underside climbs at 40 deg from
 // upright or steeper (detail_calibration/DETAIL_STANDARD.md rule 7).
 //
 // PARTS (one print, four filaments) + the base plate (printed on its own):
-//   white  the body
-//   red    nose, fins, bands
-//   blue   pedestal, porthole rims
+//   white  the body and fins (red_fins = true makes the fins red: 24 h on the AMS, not 8)
+//   red    nose, bands
+//   blue   pedestal (blue_rims = true gives the portholes blue rings instead of grooves)
 //   yellow letters, the planet and its ring
 // priority yellow > blue > red > white
 
@@ -107,6 +107,16 @@ module rim(p) intersection() {
     at_face(p[0], p[1]) translate([0, 0, -1]) linear_extrude(10) difference() { circle(r = p[2] + rim_w, $fn = 96); circle(r = p[2], $fn = 96); }
     difference() { envelope(0.01); envelope(-rim_d); }
 }
+// the same ring cut into the white body as a V: straight in, the groove's
+// ceiling (each ring's top, each porthole's bottom edge) hung flat 0.8 deep
+// and the slicer propped all six from the plate (25,806 support moves,
+// 2026-10-24). Each 0.05 of depth narrows the ring by rim_k x 0.05 on both
+// edges, so the ceiling climbs at atan(1 / rim_k) = 34 deg from upright.
+rim_k = 1.5;  rim_step = 0.05;
+module rim_groove(p) for (i = [0 : round(rim_d / rim_step) - 1]) let (d0 = i * rim_step, d1 = d0 + rim_step) intersection() {
+    at_face(p[0], p[1]) translate([0, 0, -1]) linear_extrude(10) difference() { circle(r = p[2] + rim_w - rim_k * d1, $fn = 96); circle(r = p[2] + rim_k * d1, $fn = 96); }
+    difference() { envelope(0.01 - d0); envelope(-d1); }
+}
 // NOT USED (2026-10-24): the wall thinned to 1.0 behind each porthole. With
 // a teardrop roof at 38.7 deg the slicer propped all six pockets from the
 // plate (15,600 support moves); at 27 deg it still did, with columns ending at
@@ -155,15 +165,22 @@ module planet_raw() {
 // ---- parts -------------------------------------------------------------------------------------
 // the planet is the ring and the ball; the cone under them is the nose's tip
 module yellow_raw() { letters_raw(); intersection() { planet_raw(); translate([-20, -20, PL - 2.6]) cube([40, 40, 20]); } }
-module blue_raw()   { pedestal_raw(); for (p = PORTS) rim(p); }
-module red_raw()    { nose_raw(); fins_raw(); for (z = BANDS) band(z); planet_raw(); }
-module white_raw()  { body_raw(); }
+// blue_rims = false cuts each porthole ring 0.8 into the white body instead:
+// no colour change through the middle of the rocket, and the thinner wall in
+// the groove glows brighter when lit
+blue_rims = false;  // Scott, 2026-10-24: grooved ports (with white fins: 85 colour changes, not 611)
+module blue_raw()   { pedestal_raw(); if (blue_rims) for (p = PORTS) rim(p); }
+// red_fins = false prints the fins in the body's white: on the AMS, red fins
+// beside a white body are a colour change on every layer from 16 to 82 mm
+red_fins = false;   // Scott, 2026-10-24: white fins, 7h 53m instead of 24h on the AMS
+module red_raw()    { nose_raw(); if (red_fins) fins_raw(); for (z = BANDS) band(z); planet_raw(); }
+module white_raw()  { body_raw(); if (!red_fins) fins_raw(); }
 
 module yellow_part() difference() { yellow_raw(); cavity(); }
 module blue_part()   difference() { blue_raw(); yellow_raw(); cavity(); }
 module red_part()    difference() { red_raw(); yellow_raw(); blue_raw(); cavity(); }
 pockets = false;   // see glow_pocket: the porthole pockets propped the print; the thin wall glows instead
-module white_part()  difference() { white_raw(); red_raw(); yellow_raw(); blue_raw(); cavity(); if (pockets) for (p = PORTS) glow_pocket(p); }
+module white_part()  difference() { white_raw(); red_raw(); yellow_raw(); blue_raw(); cavity(); if (pockets) for (p = PORTS) glow_pocket(p); if (!blue_rims) for (p = PORTS) rim_groove(p); }
 
 // the base plate: as wide as the pedestal, two countersunk screw holes, and a
 // ring to seat the tealight (39.5 inside: standard tealights are 38-39)
