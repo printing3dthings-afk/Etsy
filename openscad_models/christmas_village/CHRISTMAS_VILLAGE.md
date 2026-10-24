@@ -42,8 +42,8 @@ Why one colour: sliced on the AMS in four colours, every building is mostly
 purge. The Victorian cottage puts about 33 g into the house and about 320 g
 into some 800 colour changes (357 g, 25 h); the four next-smallest buildings
 need 383–430 g and 25–31 h each. In matte white the cottage is 38 g and
-1 h 41 m. The colour-only details were given relief for exactly this
-(2026-10-0x, "Check what survives on a white one-colour print").
+1 h 41 m. The colour-only details were already given relief so that a white print
+still shows them.
 
 | building, matte white | filament | time |
 |---|---|---|
