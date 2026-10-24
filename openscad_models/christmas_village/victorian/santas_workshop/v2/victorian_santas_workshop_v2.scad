@@ -514,9 +514,17 @@ module slates(i) {
         }
 }
 // v2: joints across each course, 0.5 wide, slates 3.4 long, staggered half a
-// slate course to course; cut only above the slab's top face, as on the cones
+// slate course to course; cut only above the slab's top face, as on the cones.
+// None within 3 of a turret or a stack: where a turret's column trims a
+// course to a point, a joint beside it cut off a shard 0.49 wide that the
+// slice dropped (2026-10-24, at the front-left turret)
 rs_p = 3.4;
 module roof_slate_joints(i, k, a, b) let (x0 = xi(i))
+    difference() { roof_slate_joints0(i, k, a, b);
+        for (t = TURS) translate(tpos(t)) translate([0, 0, -1]) cylinder(r = TR + bd + 3, h = 300, $fn = 96);
+        for (s = STACKS) translate([s[0], s[1], -1]) cylinder(r = s[2] + 0.8 + 3, h = 300, $fn = 72);
+    }
+module roof_slate_joints0(i, k, a, b) let (x0 = xi(i))
     intersection() {
         for (y = [-Dh - ov + 1.2 + (k % 2) * rs_p / 2 : rs_p : Dh + ov - 1.2])
             translate([x0 + b - 0.6, y - sj_w / 2, RIDGE - RISE * a / TWS[i] - 1.5]) cube([a - b + 1.2, sj_w, RISE * (a - b) / TWS[i] + 3]);
