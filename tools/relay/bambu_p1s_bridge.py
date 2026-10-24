@@ -31,6 +31,13 @@ Verify the MQTT handshake alone (no push to Frank, prints one parsed report
 and exits):
   python tools/relay/bambu_p1s_bridge.py --test
 
+Approved prints: Scott approves a start_print action in Frank's Action
+Center, and this bridge uploads that sliced file to the P1S and starts it --
+only if the printer is idle, and only within 30 minutes of the approval. The
+printer must be in LAN Only mode with Developer Mode on (see "Print jobs"
+below). `--test-ftp` checks the upload path alone; `--no-print-jobs` turns
+the feature off.
+
 Camera relay pushes a JPEG snapshot to Frank every time the printer sends
 one (not true video streaming, but frequent enough to feel live). It uses
 the P1S's local camera port, a protocol Bambu Lab has never officially
@@ -43,15 +50,18 @@ only.
 from __future__ import annotations
 
 import argparse
+import ftplib
 import json
 import os
 import socket
 import ssl
 import struct
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -93,6 +103,10 @@ _SPEED_MODE_BY_LEVEL = {1: "Silent", 2: "Standard", 3: "Sport", 4: "Ludicrous"}
 
 _last_push_at = 0.0
 _push_lock = threading.Lock()
+# the printer's last reported gcode_state, for the print-job thread
+_printer_state: dict = {"state": None, "at": 0.0}
+_state_lock = threading.Lock()
+_mqtt_client = None
 
 
 def _post_json(path: str, payload: dict) -> bool:
@@ -228,6 +242,11 @@ def _on_message(client, userdata, msg, test_mode: bool = False, result_holder: l
             result_holder.append(parsed)
         return
 
+    if parsed.get("state"):
+        with _state_lock:
+            _printer_state["state"] = parsed["state"]
+            _printer_state["at"] = time.time()
+
     with _push_lock:
         now = time.time()
         if now - _last_push_at < PUSH_MIN_INTERVAL_SECS:
@@ -260,7 +279,9 @@ def _build_client(on_message):
 
 
 def run_telemetry_loop() -> None:
+    global _mqtt_client
     client = _build_client(_on_message)
+    _mqtt_client = client
     while True:
         try:
             client.connect(BAMBU_IP, MQTT_PORT, keepalive=30)
@@ -404,6 +425,217 @@ def run_test_camera(timeout_secs: float = 15.0) -> None:
     print(f"[bambu-bridge] CAMERA TEST OK — received a {sizes[0]}-byte JPEG frame.", flush=True)
 
 
+# ── Print jobs (2026-10-24) ───────────────────────────────────────────────────
+# Scott approves a start_print action in Frank's Action Center; Frank queues a
+# job; this thread claims it, uploads the sliced .gcode.3mf to the printer and
+# starts it. Frank never reaches the printer itself. Protocol: FTPS (implicit
+# TLS, port 990, user bblp) into the printer's storage, then a "project_file"
+# command on the same MQTT request topic the telemetry uses. Reimplemented from
+# the protocol as bambulabs_api documents it, not copied.
+#
+# The printer has to accept LAN commands: on current P1S firmware that means
+# LAN Only mode with Developer Mode switched on (printer screen -> Settings ->
+# LAN Only, then Developer Mode). Without it the printer ignores the start
+# command, and the job is reported failed after START_TIMEOUT_SECS.
+
+JOB_POLL_SECS = 10
+START_TIMEOUT_SECS = 90
+STATE_FRESH_SECS = 30
+FTPS_PORT = 990
+# a print can start only from these; FINISH and FAILED mean the last job is
+# over, and Scott's approval is what says the plate has been cleared since
+_IDLE_STATES = ("IDLE", "FINISH", "FAILED")
+_STARTED_STATES = ("PREPARE", "RUNNING", "SLICING")
+
+
+def _get_json(path: str) -> dict | None:
+    req = urllib.request.Request(FRANK_API_BASE + path, headers={"Authorization": f"Bearer {APP_TOKEN}"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except (urllib.error.URLError, ValueError) as exc:
+        print(f"[bambu-bridge] GET {path} failed: {exc}", flush=True)
+        return None
+
+
+def _download_job_file(job: dict, dest: Path) -> None:
+    d = job["download"]
+    q = urllib.parse.urlencode({"root": d["root"], "path": d["path"]})
+    req = urllib.request.Request(f"{FRANK_API_BASE}/api/files/download?{q}",
+                                 headers={"Authorization": f"Bearer {APP_TOKEN}"})
+    with urllib.request.urlopen(req, timeout=120) as r, open(dest, "wb") as f:
+        while True:
+            chunk = r.read(1 << 16)
+            if not chunk:
+                break
+            f.write(chunk)
+
+
+def _report(job_id: int, status: str, detail: str) -> None:
+    print(f"[bambu-bridge] print job #{job_id}: {status} -- {detail}", flush=True)
+    _post_json(f"/api/print-jobs/{job_id}/status", {"status": status, "detail": detail})
+
+
+class _ImplicitFTPS(ftplib.FTP_TLS):
+    """ftplib speaks explicit FTPS (AUTH TLS); the printer wants TLS from the
+    first byte, and wants the data channel to reuse the control channel's TLS
+    session, which ftplib doesn't do on its own."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._sock = None
+
+    @property
+    def sock(self):
+        return self._sock
+
+    @sock.setter
+    def sock(self, value):
+        if value is not None and not isinstance(value, ssl.SSLSocket):
+            value = self.context.wrap_socket(value)
+        self._sock = value
+
+    def ntransfercmd(self, cmd, rest=None):
+        conn, size = ftplib.FTP.ntransfercmd(self, cmd, rest)
+        if self._prot_p:
+            conn = self.context.wrap_socket(conn, session=self.sock.session)
+        return conn, size
+
+
+def _ftps() -> _ImplicitFTPS:
+    ctx = ssl.create_default_context()
+    # the printer's certificate is self-signed, same as its MQTT broker (see _build_client)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    ftp = _ImplicitFTPS(context=ctx, timeout=30)
+    ftp.connect(BAMBU_IP, FTPS_PORT)
+    ftp.login("bblp", BAMBU_ACCESS_CODE)
+    ftp.prot_p()
+    return ftp
+
+
+def _upload_to_printer(local: Path, remote_name: str) -> None:
+    ftp = _ftps()
+    try:
+        with open(local, "rb") as f:
+            ftp.storbinary(f"STOR {remote_name}", f)
+    finally:
+        try:
+            ftp.quit()
+        except Exception:
+            ftp.close()
+
+
+def _printer_file_name(job: dict) -> str:
+    base = Path(job["file_path"]).name
+    safe = "".join(c if c.isalnum() or c in "._-" else "_" for c in base)
+    return safe if safe.endswith(".gcode.3mf") else safe + ".gcode.3mf"
+
+
+def _start_command(job: dict, remote_name: str) -> dict:
+    ams = job.get("ams_mapping")
+    return {"print": {
+        "sequence_id": str(int(time.time())),
+        "command": "project_file",
+        "param": f"Metadata/plate_{int(job.get('plate') or 1)}.gcode",
+        "subtask_name": job.get("label") or remote_name,
+        "file": remote_name,
+        "url": f"ftp:///{remote_name}",
+        "project_id": "0", "profile_id": "0", "task_id": "0", "subtask_id": "0",
+        "bed_type": job.get("bed_type") or "textured_plate",
+        "bed_leveling": True,
+        "flow_cali": True,
+        "vibration_cali": True,
+        "layer_inspect": False,
+        "timelapse": False,
+        "use_ams": bool(ams),
+        "ams_mapping": ams or [],
+        "skip_objects": None,
+    }}
+
+
+def _current_state() -> tuple[str | None, float]:
+    with _state_lock:
+        st, at = _printer_state["state"], _printer_state["at"]
+    return st, (time.time() - at) if at else float("inf")
+
+
+def _handle_job(job: dict, *, workdir: Path, start_timeout: float = START_TIMEOUT_SECS) -> str:
+    """Run one claimed job to 'started' or 'failed', reporting either to Frank."""
+    jid = job["id"]
+    state, age = _current_state()
+    if state is None or age > STATE_FRESH_SECS:
+        _report(jid, "failed", "no recent report from the printer, so it could not be checked idle; stage it again once the bridge shows it online")
+        return "failed"
+    if state not in _IDLE_STATES:
+        _report(jid, "failed", f"the printer was {state}, not idle, when the job arrived; stage it again once the plate is clear")
+        return "failed"
+    if _mqtt_client is None:
+        _report(jid, "failed", "the bridge has no MQTT connection to the printer")
+        return "failed"
+    local = workdir / f"job_{jid}.gcode.3mf"
+    remote = _printer_file_name(job)
+    try:
+        _download_job_file(job, local)
+        _upload_to_printer(local, remote)
+    except Exception as exc:
+        _report(jid, "failed", f"could not get the file onto the printer: {exc}")
+        return "failed"
+    finally:
+        local.unlink(missing_ok=True)
+    info = _mqtt_client.publish(f"device/{BAMBU_SERIAL}/request", json.dumps(_start_command(job, remote)))
+    if getattr(info, "rc", 0) != 0:
+        _report(jid, "failed", f"MQTT publish of the start command failed (rc={info.rc})")
+        return "failed"
+    sent_at = time.time()
+    while time.time() - sent_at < start_timeout:
+        with _state_lock:
+            st, at = _printer_state["state"], _printer_state["at"]
+        if at > sent_at and st in _STARTED_STATES:
+            _report(jid, "started", f"{remote} plate {job.get('plate') or 1} is {st} on the printer")
+            return "started"
+        time.sleep(1)
+    st, _ = _current_state()
+    _report(jid, "failed", f"uploaded {remote} but the printer did not start within {start_timeout:.0f}s "
+                           f"(last state {st}); is Developer Mode on? see the bridge's print-jobs notes")
+    return "failed"
+
+
+def run_print_job_loop() -> None:
+    """Poll Frank for approved jobs. Frank hands out nothing while its kill switch is engaged."""
+    workdir = Path(tempfile.mkdtemp(prefix="bambu_jobs_"))
+    while True:
+        try:
+            # Claim nothing while the printer is silent: the job stays queued
+            # (and expires after 30 min) instead of failing on a reconnect.
+            # A BUSY printer is different: _handle_job fails that job at once,
+            # because waiting for the print to end would start the new one on
+            # a plate that still holds the old one.
+            if _current_state()[1] > STATE_FRESH_SECS:
+                time.sleep(JOB_POLL_SECS)
+                continue
+            res = _get_json("/api/print-jobs/next")
+            job = (res or {}).get("job")
+            if job:
+                print(f"[bambu-bridge] claimed print job #{job['id']} ({job.get('label')})", flush=True)
+                _handle_job(job, workdir=workdir)
+        except Exception as exc:  # never let one bad job kill the poller
+            print(f"[bambu-bridge] print-job loop error: {exc}", flush=True)
+        time.sleep(JOB_POLL_SECS)
+
+
+def run_test_ftp() -> None:
+    """Log in to the printer's storage over FTPS and list it. Uploads and starts nothing."""
+    try:
+        ftp = _ftps()
+        names = ftp.nlst()
+        ftp.quit()
+    except Exception as exc:
+        print(f"[bambu-bridge] FTPS TEST FAILED: {exc}", flush=True)
+        sys.exit(1)
+    print(f"[bambu-bridge] FTPS TEST OK -- {len(names)} entries on the printer's storage: {', '.join(names[:12])}", flush=True)
+
+
 def _require_config() -> None:
     missing = [name for name, val in (
         ("BAMBU_IP", BAMBU_IP), ("BAMBU_ACCESS_CODE", BAMBU_ACCESS_CODE),
@@ -419,6 +651,8 @@ def main() -> None:
     parser.add_argument("--test", action="store_true", help="Verify the MQTT handshake, print one parsed report, exit.")
     parser.add_argument("--test-camera", action="store_true", help="Connect to the camera port alone, print one frame's size, exit.")
     parser.add_argument("--no-camera", action="store_true", help="Run telemetry only -- skip the camera relay thread.")
+    parser.add_argument("--test-ftp", action="store_true", help="Log in to the printer's storage over FTPS, list it, exit. Prints nothing.")
+    parser.add_argument("--no-print-jobs", action="store_true", help="Never start prints -- skip the approved-print-job poller.")
     args = parser.parse_args()
 
     _require_config()
@@ -429,9 +663,14 @@ def main() -> None:
     if args.test_camera:
         run_test_camera()
         return
+    if args.test_ftp:
+        run_test_ftp()
+        return
 
     if not args.no_camera:
         threading.Thread(target=run_camera_loop, daemon=True).start()
+    if not args.no_print_jobs:
+        threading.Thread(target=run_print_job_loop, daemon=True).start()
 
     run_telemetry_loop()
 
