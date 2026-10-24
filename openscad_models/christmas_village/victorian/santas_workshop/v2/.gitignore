@@ -1,0 +1,5 @@
+# Fast-engine meshes are for checking only (see build.sh); the roof alone is
+# over GitHub's 100 MB limit. Shipped meshes come from ./build.sh cgal.
+*.stl
+logs/fidelity_work/
+logs/*.gcode
