@@ -1,0 +1,1127 @@
+{
+ "decided": "2026-10-25, Scott: deactivate the digital-art listings (never delete); keep 3D prints, STL/3MF downloads and the 3D SVG sign packs",
+ "source": "data/product_catalog.json; re-check every listing live on Etsy before staging",
+ "count": 160,
+ "listings": [
+  {
+   "product_id": "DP1026",
+   "etsy_listing_id": "4509179201",
+   "category": "digital_planner",
+   "name": "Ultimate Digital Life Planner (Lavender Dreams)",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "DP1027",
+   "etsy_listing_id": "4509184958",
+   "category": "digital_planner",
+   "name": "Student & School Planner 2026 (Cotton Candy)",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "DP1028",
+   "etsy_listing_id": "4509184962",
+   "category": "digital_planner",
+   "name": "Budget & Finance Planner 2026 (Midnight Blue)",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "DP1029",
+   "etsy_listing_id": "4509184968",
+   "category": "digital_planner",
+   "name": "Fitness & Wellness Planner 2026 (Coral Peach)",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "BUNDLE_PLANNERS",
+   "etsy_listing_id": "4512188970",
+   "category": "digital_planner_bundle",
+   "name": "All 4 Planners Bundle",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "SVG_FLORAL",
+   "etsy_listing_id": "4514130045",
+   "category": "svg_bundle",
+   "name": "Floral Botanical SVG Bundle",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "SVG_CHRISTIAN",
+   "etsy_listing_id": "4514134583",
+   "category": "svg_bundle",
+   "name": "Christian Faith SVG Bundle",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "SVG_GRAD",
+   "etsy_listing_id": "4514136783",
+   "category": "svg_bundle",
+   "name": "Graduation 2026 SVG Bundle",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "SVG_MOM_LIFE",
+   "etsy_listing_id": "4514392281",
+   "category": "svg_bundle",
+   "name": "Mom Life SVG Bundle \u2014 20 Designs",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "SVG_GOOD_VIBES",
+   "etsy_listing_id": "4514536935",
+   "category": "svg_bundle",
+   "name": "Good Vibes SVG Bundle",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "SUBLIM_MOM_LIFE",
+   "etsy_listing_id": "4514777212",
+   "category": "sublimation",
+   "name": "Mom Life Tumbler Wrap Sublimation",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "STICKER_DP1026",
+   "etsy_listing_id": "4512254015",
+   "category": "sticker_pack",
+   "name": "Kawaii Sticker Pack \u2014 Lavender Dreams",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "STICKER_DP1027",
+   "etsy_listing_id": "4512254027",
+   "category": "sticker_pack",
+   "name": "Kawaii Sticker Pack \u2014 Cotton Candy",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "STICKER_DP1028",
+   "etsy_listing_id": "4512255514",
+   "category": "sticker_pack",
+   "name": "Kawaii Sticker Pack \u2014 Midnight Blue",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "STICKER_DP1029",
+   "etsy_listing_id": "4512255536",
+   "category": "sticker_pack",
+   "name": "Kawaii Sticker Pack \u2014 Coral Peach",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "STICKER_BUNDLE",
+   "etsy_listing_id": "4512254035",
+   "category": "sticker_pack",
+   "name": "Kawaii Sticker Pack Bundle \u2014 All 4 Themes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "STICKER_FREE",
+   "etsy_listing_id": "4512255508",
+   "category": "sticker_pack",
+   "name": "Free Kawaii Sticker Pack Sampler",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_SVG_FLORAL",
+   "etsy_listing_id": "4515439743",
+   "category": "svg_bundle_license",
+   "name": "Commercial License | Floral Botanical SVG Bundle | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_SVG_CHRISTIAN",
+   "etsy_listing_id": "4515439751",
+   "category": "svg_bundle_license",
+   "name": "Commercial License | Christian Faith SVG Bundle | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_SVG_GRAD",
+   "etsy_listing_id": "4515439755",
+   "category": "svg_bundle_license",
+   "name": "Commercial License | Graduation 2026 SVG Bundle | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_SVG_MOM_LIFE",
+   "etsy_listing_id": "4515437432",
+   "category": "svg_bundle_license",
+   "name": "Commercial License | Mom Life SVG Bundle 20 Designs | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_SVG_GOOD_VIBES",
+   "etsy_listing_id": "4515439763",
+   "category": "svg_bundle_license",
+   "name": "Commercial License | Good Vibes SVG Bundle | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_SVG_WESTERN",
+   "etsy_listing_id": "4515437442",
+   "category": "svg_bundle_license",
+   "name": "Commercial License | Western SVG Bundle 12 Designs | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_STICKER_DP1026",
+   "etsy_listing_id": "4515437452",
+   "category": "sticker_pack_license",
+   "name": "Commercial License | Kawaii Sticker Pack Lavender D | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_STICKER_DP1027",
+   "etsy_listing_id": "4515437456",
+   "category": "sticker_pack_license",
+   "name": "Commercial License | Kawaii Sticker Pack Cotton Can | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_STICKER_DP1028",
+   "etsy_listing_id": "4515437464",
+   "category": "sticker_pack_license",
+   "name": "Commercial License | Kawaii Sticker Pack Midnight B | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_STICKER_DP1029",
+   "etsy_listing_id": "4515439799",
+   "category": "sticker_pack_license",
+   "name": "Commercial License | Kawaii Sticker Pack Coral Peac | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "LICENSE_STICKER_BUNDLE",
+   "etsy_listing_id": "4515439809",
+   "category": "sticker_pack_license",
+   "name": "Commercial License | Kawaii Sticker Pack Bundle All | Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "DP1008",
+   "etsy_listing_id": "4519185019",
+   "category": "wall_art",
+   "name": "Mediterranean Lemon Window, Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "DP1009",
+   "etsy_listing_id": "4519185199",
+   "category": "wall_art",
+   "name": "Amalfi Coast Village Print, Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "DP1010",
+   "etsy_listing_id": "4519185236",
+   "category": "wall_art",
+   "name": "Mediterranean Terrace Print, Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "BUNDLE_MED",
+   "etsy_listing_id": "4519185376",
+   "category": "wall_art_bundle",
+   "name": "Mediterranean Series \u2014 Set of 3",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_PRINTABLE",
+   "etsy_listing_id": "4522868228",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Printable, Adult Coloring Book, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_FUN_ADVENTURE_COLORING_PAGES",
+   "etsy_listing_id": "4522863662",
+   "category": "coloring_pages",
+   "name": "Fun Adventure Coloring Pages, Kids Coloring Book, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519456348",
+   "category": "paper_pack",
+   "name": "Sunflower Studio Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519457131",
+   "category": "paper_pack",
+   "name": "Sage Garden Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519457007",
+   "category": "paper_pack",
+   "name": "Ocean Breeze Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519455964",
+   "category": "paper_pack",
+   "name": "Mocha Latte Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519455834",
+   "category": "paper_pack",
+   "name": "Midnight Blue Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519455652",
+   "category": "paper_pack",
+   "name": "Mermaidcore Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519456441",
+   "category": "paper_pack",
+   "name": "Matcha Serenity Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519455342",
+   "category": "paper_pack",
+   "name": "Lavender Dreams Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519456175",
+   "category": "paper_pack",
+   "name": "Cotton Candy Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519456025",
+   "category": "paper_pack",
+   "name": "Coral Peach Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519455899",
+   "category": "paper_pack",
+   "name": "Cherry Blossom Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK",
+   "etsy_listing_id": "4519454834",
+   "category": "paper_pack",
+   "name": "Celestial Night Digital Paper Pack, Scrapbook, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_11",
+   "etsy_listing_id": "4519454376",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 11, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_10",
+   "etsy_listing_id": "4519455175",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 10, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_09",
+   "etsy_listing_id": "4519455049",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 09, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_08",
+   "etsy_listing_id": "4519454887",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 08, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_07",
+   "etsy_listing_id": "4519454743",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 07, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_06",
+   "etsy_listing_id": "4519453732",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 06, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_05",
+   "etsy_listing_id": "4519454497",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 05, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_04",
+   "etsy_listing_id": "4519454361",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 04, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_03",
+   "etsy_listing_id": "4519453332",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 03, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_02",
+   "etsy_listing_id": "4519453196",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 02, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_01",
+   "etsy_listing_id": "4519453983",
+   "category": "coloring_pages",
+   "name": "Kawaii Coloring Pages Set 01, 5 Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_ORANGE_FLOWER_PRINT",
+   "etsy_listing_id": "4519288171",
+   "category": "wall_art",
+   "name": "Orange Flower Print, Botanical Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_FUNNY_DOG_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509214477",
+   "category": "wall_art",
+   "name": "Funny Dog Printable Wall Art, Instant Download, Golden Retriever",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_KAWAII_ART_PRINT_NO_1026",
+   "etsy_listing_id": "4515682147",
+   "category": "wall_art",
+   "name": "Kawaii Art Print No.1026, Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MOON_PHASES_PRINT",
+   "etsy_listing_id": "4515682013",
+   "category": "wall_art",
+   "name": "Moon Phases Print, Celestial Wall Art, Lunar Cycle Astrono, Printable",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_ABSTRACT_BRUSHSTROKE_PRINTABLE_ART",
+   "etsy_listing_id": "4515678344",
+   "category": "wall_art",
+   "name": "Abstract Brushstroke Printable Art, Instant Download, Modern",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_VINTAGE_BOTANICAL_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515678198",
+   "category": "wall_art",
+   "name": "Vintage Botanical Printable Wall Art, Instant Download, Herb",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "MISC_BOTANICAL_HERBS_ART_PRINT",
+   "etsy_listing_id": "4515674594",
+   "category": "uncategorized",
+   "name": "Botanical Herbs Art Print, Kitchen Wall Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_BOHO_BOTANICAL_FLORAL_WALL_ART",
+   "etsy_listing_id": "4515674250",
+   "category": "wall_art",
+   "name": "Boho Botanical Floral Wall Art Print | Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_BOHO_BOTANICAL_FLORAL_WALL_ART_2",
+   "etsy_listing_id": "4515674144",
+   "category": "wall_art",
+   "name": "Boho Botanical Floral Wall Art Print, Multiple Sizes, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_MINIMALIST_LINE_ART_PRINT",
+   "etsy_listing_id": "4515674042",
+   "category": "uncategorized",
+   "name": "Minimalist Line Art Print, Modern Wall Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_COTTAGECORE_BOTANICAL_ART_PRINT",
+   "etsy_listing_id": "4515673828",
+   "category": "uncategorized",
+   "name": "Cottagecore Botanical Art Print, Nature Wall Decor, Multiple Sizes",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "MISC_WATERCOLOR_FLORAL_ART_PRINT",
+   "etsy_listing_id": "4515676915",
+   "category": "uncategorized",
+   "name": "Watercolor Floral Art Print | Boho Wall Decor | Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_TROPICAL_BOTANICAL_ART_PRINT",
+   "etsy_listing_id": "4515673064",
+   "category": "uncategorized",
+   "name": "Tropical Botanical Art Print, Jungle Wall Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_MINIMALIST_TYPOGRAPHY_ART_PRINT",
+   "etsy_listing_id": "4515672972",
+   "category": "uncategorized",
+   "name": "Minimalist Typography Art Print, Quote Wall Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_FLORAL_WREATH_ART_PRINT",
+   "etsy_listing_id": "4515676301",
+   "category": "uncategorized",
+   "name": "Floral Wreath Art Print, Botanical Wall Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_KAWAII_STATIONERY_ART_PRINT",
+   "etsy_listing_id": "4515676185",
+   "category": "uncategorized",
+   "name": "Kawaii Stationery Art Print, Cute Desk Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_PASTEL_CELESTIAL_ART_PRINT",
+   "etsy_listing_id": "4515672588",
+   "category": "uncategorized",
+   "name": "Pastel Celestial Art Print, Moon Stars Decor, Multiple Sizes",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PARIS_SKYLINE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515672496",
+   "category": "wall_art",
+   "name": "Paris Skyline Printable Wall Art, Instant Download, Minimali",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_GRAND_CANYON_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515675887",
+   "category": "wall_art",
+   "name": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_TROPICAL_LEAVES_PRINT",
+   "etsy_listing_id": "4515675813",
+   "category": "wall_art",
+   "name": "Tropical Leaves Print, Bold Monstera Palm Wall Art, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_ABSTRACT_WOMAN_PORTRAIT_PRINT",
+   "etsy_listing_id": "4515672204",
+   "category": "wall_art",
+   "name": "Abstract Woman Portrait Print, Feminist Line Art Wall Decor, Printable",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_ITALIAN_KITCHEN_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515675583",
+   "category": "wall_art",
+   "name": "Italian Kitchen Printable Wall Art, Instant Download, Food",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_AUTUMN_FOX_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515675481",
+   "category": "wall_art",
+   "name": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_HUMMINGBIRD_WATERCOLOR_PRINT",
+   "etsy_listing_id": "4515675373",
+   "category": "wall_art",
+   "name": "Hummingbird Watercolor Print, Botanical Bird Art, Floral W, Printable",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_BABY_BEAR_NURSERY_PRINT",
+   "etsy_listing_id": "4515671764",
+   "category": "wall_art",
+   "name": "Baby Bear Nursery Print, Woodland Nursery Art, Printable",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_MOUNTAIN_LAKE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515675145",
+   "category": "wall_art",
+   "name": "Mountain Lake Printable Wall Art, Instant Download, Landscap",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_WILDFLOWER_MEADOW_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515671558",
+   "category": "wall_art",
+   "name": "Wildflower Meadow Printable Wall Art, Instant Download, Bota",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_CAT_READING_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515671458",
+   "category": "wall_art",
+   "name": "Cat Reading Printable Wall Art, Instant Download, Bookish",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_OCEAN_WAVE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515671336",
+   "category": "wall_art",
+   "name": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_LAVENDER_FIELDS_WATERCOLOR_PRINT",
+   "etsy_listing_id": "4515671216",
+   "category": "wall_art",
+   "name": "Lavender Fields Watercolor Print, Provence Wall Art, Printable",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_SNOWY_OWL_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515670946",
+   "category": "wall_art",
+   "name": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_FARMHOUSE_ROOSTER_ART_PRINT",
+   "etsy_listing_id": "4515669596",
+   "category": "wall_art",
+   "name": "Farmhouse Rooster Art Print, Kitchen Wall Decor, Country F, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_SPRING_CHERRY_BLOSSOM",
+   "etsy_listing_id": "4515672895",
+   "category": "wall_art",
+   "name": "Spring Cherry Blossom Watercolor Print, Printable, Instant Download",
+   "catalog_status": "draft"
+  },
+  {
+   "product_id": "WA_SUMMER_SUNFLOWER",
+   "etsy_listing_id": "4515669370",
+   "category": "wall_art",
+   "name": "Summer Sunflower Watercolor Print, Printable, Instant Download",
+   "catalog_status": "draft"
+  },
+  {
+   "product_id": "WA_AUTUMN_FOREST_PATH",
+   "etsy_listing_id": "4515669246",
+   "category": "wall_art",
+   "name": "Autumn Forest Path Watercolor Print, Printable, Instant Download",
+   "catalog_status": "draft"
+  },
+  {
+   "product_id": "WA_WINTER_BIRCH_HOLLY",
+   "etsy_listing_id": "4515669140",
+   "category": "wall_art",
+   "name": "Winter Birch & Holly Watercolor Print, Printable, Instant Download",
+   "catalog_status": "draft"
+  },
+  {
+   "product_id": "WA_COASTAL_ART_SET_OF_4",
+   "etsy_listing_id": "4515668698",
+   "category": "wall_art",
+   "name": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_FOX_WATERCOLOR_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515672065",
+   "category": "wall_art",
+   "name": "Fox Watercolor Printable Wall Art, Instant Download, Woodlan",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4515671951",
+   "category": "wall_art",
+   "name": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_WOODLAND_ANIMAL_GALLERY_WALL_SET",
+   "etsy_listing_id": "4513713142",
+   "category": "wall_art",
+   "name": "Woodland Animal Gallery Wall Set of 5, Printable, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_BOTANICAL_GALLERY_WALL_SET_OF",
+   "etsy_listing_id": "4513713106",
+   "category": "wall_art",
+   "name": "Botanical Gallery Wall Set of 5, Printable Prints, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_COASTAL_GALLERY_WALL_SET_OF",
+   "etsy_listing_id": "4513713044",
+   "category": "wall_art",
+   "name": "Coastal Gallery Wall Set of 5, Printable Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_HUMMINGBIRD_NURSERY_PRINT",
+   "etsy_listing_id": "4513713984",
+   "category": "wall_art",
+   "name": "Hummingbird Nursery Print, Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_WATERCOLOR_FOX_NURSERY_PRINT",
+   "etsy_listing_id": "4513713962",
+   "category": "wall_art",
+   "name": "Watercolor Fox Nursery Print, Printable Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_OWL_NURSERY_WALL_ART",
+   "etsy_listing_id": "4513713936",
+   "category": "wall_art",
+   "name": "Owl Nursery Wall Art, Printable Instant Download, Woodland",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_BEAR_NURSERY_WALL_ART",
+   "etsy_listing_id": "4513713922",
+   "category": "wall_art",
+   "name": "Bear Nursery Wall Art, Printable Instant Download, Woodland",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_FOX_NURSERY_WALL_ART",
+   "etsy_listing_id": "4513714191",
+   "category": "wall_art",
+   "name": "Fox Nursery Wall Art, Printable Instant Download, Woodland",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PARIS_SKYLINE_PRINT",
+   "etsy_listing_id": "4513714013",
+   "category": "wall_art",
+   "name": "Paris Skyline Print, Black White Wall Art, Instant Download, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_VINTAGE_BOTANICAL_PRINT",
+   "etsy_listing_id": "4513713945",
+   "category": "wall_art",
+   "name": "Vintage Botanical Print, Black White Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MOON_PHASES_PRINT_2",
+   "etsy_listing_id": "4513713712",
+   "category": "wall_art",
+   "name": "Moon Phases Print, Black White Wall Art, Instant Download, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_JAPANDI_TREE_PRINT",
+   "etsy_listing_id": "4513713514",
+   "category": "wall_art",
+   "name": "Japandi Tree Print, Black White Wall Art, Instant Download, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MINIMALIST_BOTANICAL_PRINT",
+   "etsy_listing_id": "4513713805",
+   "category": "wall_art",
+   "name": "Minimalist Botanical Print, Black White Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_COASTAL_ART_SET_OF_4_2",
+   "etsy_listing_id": "4512784817",
+   "category": "wall_art",
+   "name": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512783077",
+   "category": "wall_art",
+   "name": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_FOX_WATERCOLOR_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512780869",
+   "category": "wall_art",
+   "name": "Fox Watercolor Printable Wall Art, Instant Download, Woodland",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PELICAN_WATERCOLOR_PRINT",
+   "etsy_listing_id": "4512780614",
+   "category": "wall_art",
+   "name": "Pelican Watercolor Print, Coastal Art, Instant Download, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_CORAL_REEF_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512776173",
+   "category": "wall_art",
+   "name": "Coral Reef Printable Wall Art, Instant Download, Ocean",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_LIGHTHOUSE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512774863",
+   "category": "wall_art",
+   "name": "Lighthouse Printable Wall Art, Instant Download, Coastal",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_SEA_TURTLE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512772539",
+   "category": "wall_art",
+   "name": "Sea Turtle Printable Wall Art, Instant Download, Ocean",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_WINTER_BIRCH_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512772452",
+   "category": "wall_art",
+   "name": "Winter Birch Printable Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_AUTUMN_MAPLE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512770031",
+   "category": "wall_art",
+   "name": "Autumn Maple Printable Wall Art, Instant Download, Fall",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_SUNFLOWER_WATERCOLOR_PRINT",
+   "etsy_listing_id": "4512768771",
+   "category": "wall_art",
+   "name": "Sunflower Watercolor Print, Botanical Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_CHERRY_BLOSSOM_WATERCOLOR_PRINT",
+   "etsy_listing_id": "4512768858",
+   "category": "wall_art",
+   "name": "Cherry Blossom Watercolor Print, Spring Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_ROOSTER_KITCHEN_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512763302",
+   "category": "wall_art",
+   "name": "Rooster Kitchen Printable Wall Art, Instant Download, Farm",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_SNOWY_OWL_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512760671",
+   "category": "wall_art",
+   "name": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_LAVENDER_FIELDS_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4512760918",
+   "category": "wall_art",
+   "name": "Lavender Fields Printable Wall Art, Instant Download, Provence",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_OCEAN_WAVE_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512758123",
+   "category": "wall_art",
+   "name": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_CAT_READING_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512758458",
+   "category": "wall_art",
+   "name": "Cat Reading Printable Wall Art, Instant Download, Bookish",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_WILDFLOWER_MEADOW_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512756952",
+   "category": "wall_art",
+   "name": "Wildflower Meadow Printable Wall Art, Instant Download, Botanical",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MOUNTAIN_LAKE_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512755568",
+   "category": "wall_art",
+   "name": "Mountain Lake Printable Wall Art, Instant Download, Landscape",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_BABY_BEAR_NURSERY_PRINT_2",
+   "etsy_listing_id": "4512753302",
+   "category": "wall_art",
+   "name": "Baby Bear Nursery Print, Woodland Animal Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_HUMMINGBIRD_WATERCOLOR_PRINT",
+   "etsy_listing_id": "4512750191",
+   "category": "uncategorized",
+   "name": "Hummingbird Watercolor Print, Botanical Bird Art, Floral Wall Decor",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_AUTUMN_FOX_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4512747600",
+   "category": "wall_art",
+   "name": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_ITALIAN_KITCHEN_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4509597559",
+   "category": "wall_art",
+   "name": "Italian Kitchen Printable Wall Art, Instant Download, Food",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_ABSTRACT_WOMAN_PORTRAIT_PRINT",
+   "etsy_listing_id": "4509596017",
+   "category": "uncategorized",
+   "name": "Abstract Woman Portrait Print, Feminist Line Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_TROPICAL_LEAVES_PRINT_2",
+   "etsy_listing_id": "4509600086",
+   "category": "wall_art",
+   "name": "Tropical Leaves Print, Bold Monstera Palm Wall Art, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_GRAND_CANYON_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4509593697",
+   "category": "wall_art",
+   "name": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PARIS_SKYLINE_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4509593623",
+   "category": "wall_art",
+   "name": "Paris Skyline Printable Wall Art, Instant Download, Minimalist",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_VINTAGE_BOTANICAL_PRINTABLE_WALL_ART_2",
+   "etsy_listing_id": "4509593487",
+   "category": "wall_art",
+   "name": "Vintage Botanical Printable Wall Art, Instant Download, Herbarium",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_ABSTRACT_BRUSHSTROKE_PRINTABLE_ART_2",
+   "etsy_listing_id": "4509598784",
+   "category": "wall_art",
+   "name": "Abstract Brushstroke Printable Art, Instant Download, Modern",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MOON_PHASES_PRINT_3",
+   "etsy_listing_id": "4509598660",
+   "category": "wall_art",
+   "name": "Moon Phases Print, Celestial Wall Art, Lunar Cycle, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_MINIMALIST_BOTANICAL_LINE_ART_PRINT",
+   "etsy_listing_id": "4509259354",
+   "category": "uncategorized",
+   "name": "Minimalist Botanical Line Art Print, Boho Decor, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "MISC_WATERCOLOR_BOTANICAL_PRINT",
+   "etsy_listing_id": "4509258700",
+   "category": "uncategorized",
+   "name": "Watercolor Botanical Print, Soft Pastel Flower Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_CHECKERBOARD_FLORAL_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509258172",
+   "category": "wall_art",
+   "name": "Checkerboard Floral Printable Wall Art, Instant Download, Bold",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_DAY_OF_THE_DEAD_SKULL",
+   "etsy_listing_id": "4509215145",
+   "category": "wall_art",
+   "name": "Day of the Dead Skull Print, Colorful Maximalist Wall Art, Printable",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MUSCLE_CAR_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509219904",
+   "category": "wall_art",
+   "name": "Muscle Car Printable Wall Art, Instant Download, Chevelle",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_ASTRONAUT_SPACE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509214803",
+   "category": "wall_art",
+   "name": "Astronaut Space Printable Wall Art, Instant Download, Galaxy",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_FULL_MOON_OCEAN_PRINTABLE_WALL",
+   "etsy_listing_id": "4509219594",
+   "category": "wall_art",
+   "name": "Full Moon Ocean Printable Wall Art, Instant Download, Moody",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_POPPY_FIELD_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509214237",
+   "category": "wall_art",
+   "name": "Poppy Field Printable Wall Art, Instant Download, Impressionist",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MOUNTAIN_MEADOW_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509214051",
+   "category": "wall_art",
+   "name": "Mountain Meadow Printable Wall Art, Instant Download, Landscape",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_JAPANDI_TREE_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509218860",
+   "category": "wall_art",
+   "name": "Japandi Tree Printable Wall Art, Instant Download, Zen",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_WHITE_ROSES_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509213667",
+   "category": "wall_art",
+   "name": "White Roses Printable Wall Art, Instant Download, Romantic",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_SHE_BELIEVED_SHE_COULD",
+   "etsy_listing_id": "4509213533",
+   "category": "wall_art",
+   "name": "She Believed She Could, Empowerment Quote Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_GOOD_THINGS_TAKE_TIME_PRINTABLE",
+   "etsy_listing_id": "4509213345",
+   "category": "wall_art",
+   "name": "Good Things Take Time Printable Art, Instant Download, Quote",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_MEDITERRANEAN_WINDOW_PRINTABLE_ART",
+   "etsy_listing_id": "4509218152",
+   "category": "wall_art",
+   "name": "Mediterranean Window Printable Art, Instant Download, Amalfi",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PAMPAS_GRASS_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509193237",
+   "category": "wall_art",
+   "name": "Pampas Grass Printable Wall Art, Boho, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_SAGE_LAVENDER_BOTANICAL_PRINT",
+   "etsy_listing_id": "4509193231",
+   "category": "wall_art",
+   "name": "Sage Lavender Botanical Print, Dusty Rose Wall Art, Instant Download",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_BOHO_WILDFLOWER_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509198434",
+   "category": "wall_art",
+   "name": "Boho Wildflower Printable Wall Art, Instant Download, Sage",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_EUCALYPTUS_BRANCH_PRINTABLE_WALL_ART",
+   "etsy_listing_id": "4509198446",
+   "category": "wall_art",
+   "name": "Eucalyptus Branch Printable Wall Art, Instant Download, Botanical",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "WA_PICK_ANY_3_PRINTS",
+   "etsy_listing_id": "4513637740",
+   "category": "wall_art",
+   "name": "Pick Any 3 Prints, Printable Wall Art Bundle, Instant Download",
+   "catalog_status": "inactive"
+  },
+  {
+   "product_id": "EDU1001",
+   "etsy_listing_id": "4559982945",
+   "category": "digital_planner",
+   "name": "Kawaii Interactive Tracing Workbook for Kids (Sunflower Studio)",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "EDU1002",
+   "etsy_listing_id": "4559982929",
+   "category": "digital_planner",
+   "name": "Kawaii Interactive Tracing Workbook for Kids (Truck Zone)",
+   "catalog_status": "active"
+  },
+  {
+   "product_id": "EDU1003",
+   "etsy_listing_id": "4559982763",
+   "category": "digital_planner",
+   "name": "Cursive & Skills Workbook for Kids (Ocean Breeze, Grade 1-2)",
+   "catalog_status": "active"
+  }
+ ]
+}

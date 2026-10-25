@@ -45,13 +45,16 @@ def _source() -> str:
     return HUD_PATH.read_text(encoding="utf-8")
 
 
-def test_all_5_call_sites_are_keyboard_reachable():
+def test_every_call_site_is_keyboard_reachable():
+    # 2026-10-25: the digital-builder panels went, taking two of the three
+    # advanced toggles and both "+ new one" links with them. The static
+    # template toggle remains.
     source = _source()
     advanced_toggle_sites = re.findall(r'class="cd-advanced-toggle"[^>]*', source)
     newcode_link_sites = re.findall(r'class="cd-newcode-link"[^>]*', source)
-    check(len(advanced_toggle_sites) == 3, f"expected 3 .cd-advanced-toggle call sites, found {len(advanced_toggle_sites)}")
-    check(len(newcode_link_sites) == 2, f"expected 2 .cd-newcode-link call sites, found {len(newcode_link_sites)}")
-    for site in advanced_toggle_sites + newcode_link_sites:
+    check(len(advanced_toggle_sites) >= 1, "expected the static .cd-advanced-toggle call site to remain")
+    check(not newcode_link_sites, f"the .cd-newcode-link sites went with the digital builders, found {len(newcode_link_sites)}")
+    for site in advanced_toggle_sites:
         check('role="button"' in site, f"call site missing role=\"button\": {site!r}")
         check('tabindex="0"' in site, f"call site missing tabindex=\"0\": {site!r}")
 
@@ -60,12 +63,11 @@ def test_onclick_handlers_are_unchanged():
     """The fix should be purely additive -- the same onclick handlers must
     still be wired, not replaced or duplicated."""
     source = _source()
-    check(source.count('onclick="_createToggleAdvanced(this)"') == 3,
-          "expected exactly 3 onclick=\"_createToggleAdvanced(this)\" occurrences, unchanged by this pass")
-    check(source.count('onclick="_createToggleNewCode(true)"') == 1,
-          "expected exactly 1 onclick=\"_createToggleNewCode(true)\" occurrence, unchanged by this pass")
-    check(source.count('onclick="_createToggleNewCode(false)"') == 1,
-          "expected exactly 1 onclick=\"_createToggleNewCode(false)\" occurrence, unchanged by this pass")
+    toggles = len(re.findall(r'class="cd-advanced-toggle"', source))
+    check(source.count('onclick="_createToggleAdvanced(this)"') == toggles,
+          "every .cd-advanced-toggle must keep its onclick=\"_createToggleAdvanced(this)\" handler")
+    check("function _createToggleAdvanced(" in source, "the _createToggleAdvanced handler must still be defined")
+    check("_createToggleNewCode" not in source, "no call may remain to the removed _createToggleNewCode")
 
 
 def test_reuses_the_existing_global_role_button_machinery_not_new_handlers():
@@ -93,8 +95,8 @@ def run() -> None:
         for f in _failures:
             print(" -", f)
         sys.exit(1)
-    print("ADVANCED TOGGLE KEYBOARD TESTS OK — all 5 .cd-advanced-toggle/.cd-newcode-link call sites "
-          "are role=\"button\" tabindex=\"0\" with their onclick handlers unchanged, reusing the existing "
+    print("ADVANCED TOGGLE KEYBOARD TESTS OK — every .cd-advanced-toggle call site "
+          "is role=\"button\" tabindex=\"0\" with its onclick handler wired, reusing the existing "
           "generic role=\"button\" keyboard-activation and focus-visible machinery.")
 
 

@@ -431,26 +431,6 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "timeout": 150,  # measured ~118s against the full live catalog on 2026-06-18; 60s always timed out
         "long_running": False,
     },
-    "generate_coloring_pages": {
-        "script": "tools/generate_coloring_pages.py",
-        "description": "Generate all 20 kawaii coloring pages via gpt-image-1 (takes ~15 min)",
-        "timeout": 30,
-        "long_running": True,
-    },
-    "generate_coloring_pages_preview": {
-        "script": "tools/generate_coloring_pages.py",
-        "args": ["--preview"],
-        "description": "Preview coloring page listing JSON — no API calls, instant",
-        "timeout": 30,
-        "long_running": False,
-    },
-    "generate_coloring_pages_quick": {
-        "script": "tools/generate_coloring_pages.py",
-        "args": ["--themes", "3"],
-        "description": "Generate first 3 coloring page themes only (~3 min)",
-        "timeout": 30,
-        "long_running": True,
-    },
     # rebuild_sticker_pack.py removed from this registry on 2026-06-18 — it
     # DELETEs the live digital file, uploads a replacement, and PATCHes the
     # listing description directly against the Etsy API with no stage_action
@@ -477,38 +457,6 @@ _EXEC_COMMANDS: dict[str, dict] = {
         ),
         "timeout": 330,  # measured ~281.8s against the full live catalog on 2026-06-18; 180s always timed out
         "long_running": False,
-    },
-    # CLAUDE.md "Fully Autonomous" list explicitly grants "Run seasonal keyword
-    # reports and dry-run previews" -- neither of these two writes to Etsy.
-    # Pushing the swap for real (--push) stays gated: it's not in either args
-    # list below, and _FORBIDDEN_EXEC_FLAGS already refuses it if ever passed
-    # as extra_args, so the only path to actually changing a listing's tags
-    # is Scott approving a stage_action in the Action Center.
-    "seasonal_keywords_report": {
-        "script": "tools/seasonal_keywords.py",
-        "description": "Show which listings have an upcoming/overdue seasonal keyword swap (read-only)",
-        "timeout": 60,
-        "long_running": False,
-    },
-    "seasonal_keywords_preview": {
-        "script": "tools/seasonal_keywords.py",
-        "args": ["--dry-run"],
-        "description": "Preview exactly which tags would be swapped on which listings, without applying anything",
-        "timeout": 60,
-        "long_running": False,
-    },
-    # requires_approval=True: this is the one Workflows-screen command that writes
-    # a new file (a backup ZIP) rather than just reporting. It can't mutate Etsy or
-    # destroy anything live, but it still routes through the run_script staged-action
-    # type so that path gets exercised for real before any higher-risk script is
-    # ever added to it (see _SCRIPT_STAGED_ACTION_TYPES below).
-    "backup_digital_products": {
-        "script": "tools/backup_digital_products.py",
-        "args": ["--no-sync"],
-        "description": "Create a timestamped ZIP backup of digital_products/ (local only, no Etsy mutation)",
-        "timeout": 120,
-        "long_running": False,
-        "requires_approval": True,
     },
     "backup_hub_db": {
         "script": "tools/backup_hub_db.py",
@@ -985,8 +933,6 @@ class _CachedStaticFiles(StaticFiles):
 
 if _STATIC_DIR.exists():
     app.mount("/static", _CachedStaticFiles(directory=str(_STATIC_DIR)), name="static")
-
-
 
 
 def _auth_session_or_bearer(request: Request) -> str:
@@ -3154,9 +3100,8 @@ AGENT_TOOLS = [
             "Always fetch the listing first so your change is accurate.\n\n"
             "action_type='register_product' is different from the rest — it's a pure local "
             "catalog write (no Etsy API call at all), for a product whose files/photos already "
-            "exist OUTSIDE the build_product pipeline (e.g. a physical/manually-produced item, "
-            "or a listing that's live on Etsy but was never registered here). Use it when asked "
-            "to register/add/catalog a product that isn't going through build_product."
+            "exist (e.g. a 3D print or 3D file pack, or a listing that's live on Etsy but was "
+            "never registered here). Use it when asked to register/add/catalog a product."
         ),
         "input_schema": {
             "type": "object",
@@ -3596,164 +3541,6 @@ AGENT_TOOLS = [
             "type": "object",
             "properties": {
                 "pid": {"type": "string", "description": "Product code to check, e.g. 'DP1030'."},
-            },
-            "required": ["pid"],
-        },
-    },
-    {
-        "name": "generate_listing_photos",
-        "description": (
-            "Generate the full 10-photo Etsy listing set for a planner from its built PDF — "
-            "real rendered pages in device mockups (satisfies the cardinal 'photos must show "
-            "the REAL product' rule; no AI stand-ins). Local render, effectively no API cost. "
-            "Writes into the product's <pid>_listing_images/ folder, openable from Files. "
-            "Requires the planner PDF to already exist. The only AI touch is photo 7 (the "
-            "app-compatibility graphic) when the shared asset is missing — rendered on the "
-            "chosen engine (default Gemini). Use when asked to make or regenerate a product's "
-            "listing photos."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
-                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
-                           "description": "Art engine for photo 7 if it must be generated. Default 'gemini'."},
-            },
-            "required": ["pid"],
-        },
-    },
-    {
-        "name": "build_planner",
-        "description": (
-            "Build a full digital planner from scratch — base dated + undated PDFs with an "
-            "AI-generated kawaii cover, then finalized with hyperlinked navigation, a TOC, "
-            "fillable form fields, and embedded sticker sheets. Runs in the BACKGROUND "
-            "(~2-4 min); the finished <pid>.pdf and <pid>U.pdf appear in Files when done. "
-            "The cover art is the only paid AI step (~a cent) — this is the one builder that "
-            "spends money. Defaults to the Gemini art engine (no OpenAI needed). Use when "
-            "asked to build or rebuild a planner. Only works for configured planner codes "
-            "(DP1030-DP1034)."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
-                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
-                           "description": "Art engine for the cover. Default 'gemini'."},
-            },
-            "required": ["pid"],
-        },
-    },
-    {
-        "name": "build_product",
-        "description": (
-            "Build an ENTIRE product end to end, in the BACKGROUND (each deliverable appears "
-            "in Files as it finishes; <pid>_*_build.log carries the live log + final QC "
-            "verdict). Nothing is published (Scott-gated). Dispatches by category — pass "
-            "`category` explicitly, or omit it and it's looked up from product_catalog.json "
-            "by `pid`:\n"
-            "  • digital_planner (default when uncatalogued): sticker pack → planner PDFs "
-            "(dated + undated) → all 10 listing photos → QC. Configured codes only "
-            "(DP1030-DP1034) — pid required.\n"
-            "  • wall_art: multi-size print ZIP → QC. If WA-code source art already exists on "
-            "disk, just pass pid. For a BRAND-NEW wall-art product with no source art yet, "
-            "also pass `description` (what to generate) — real new art is created first via "
-            "the approved-engine pipeline, then QC'd; optionally pass `reference_image_id` "
-            "(from the Reference Photos library) to steer the art's style.\n"
-            "  • coloring_pages: for an EXISTING catalogued set, pass pid alone. For a NEW "
-            "theme set, pid is optional (a fresh COLOR#### code is picked automatically) — "
-            "pass `description` as ONE theme (e.g. 'ocean animals'), which expands into a "
-            "full set of never-before-repeated individual subjects automatically. Optionally "
-            "pass `difficulty` (standard/kids/adult — kids and adult use different line "
-            "weight and engine defaults, never mix tiers in one set).\n"
-            "  • wall_calendar: pid + `theme` (one of the configured calendar themes) + "
-            "optional `year` (defaults to next year). Generates 12 header illustrations, "
-            "dated + undated monthly-grid PDFs (both week-start variants), and a "
-            "year-at-a-glance poster, then QC.\n"
-            "Any category whose art is freshly AI-generated in this call returns "
-            "needs_visual_qc:true — eyeball the result for garbled text/wrong subject before "
-            "it goes further, no file-level gate catches that. Use when asked to build/make/"
-            "produce a whole product, a new product idea, or 'everything' for a code — for "
-            "any category, not just planners."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "pid": {"type": "string",
-                        "description": "Product code, e.g. 'DP1030', 'WA1030'. Optional only "
-                                       "for a brand-new coloring_pages set (auto-assigned)."},
-                "category": {"type": "string",
-                             "enum": ["digital_planner", "wall_art", "coloring_pages", "wall_calendar"],
-                             "description": "Explicit category. Omit to auto-detect from "
-                                            "product_catalog.json via pid (falls back to "
-                                            "digital_planner if pid isn't catalogued)."},
-                "description": {"type": "string",
-                                 "description": "Required to generate brand-new art: for "
-                                                "wall_art, a description of the art to create; "
-                                                "for coloring_pages, ONE theme to expand into a "
-                                                "full new subject set. Not used for "
-                                                "digital_planner or wall_calendar."},
-                "theme": {"type": "string",
-                          "description": "Required for wall_calendar — the calendar theme key "
-                                         "(see the Color Design System theme catalog in "
-                                         "CLAUDE.md/read_knowledge_base_doc for the live list)."},
-                "year": {"type": "integer",
-                         "description": "wall_calendar only. Defaults to next year if omitted."},
-                "difficulty": {"type": "string", "enum": ["standard", "kids", "adult"],
-                               "description": "coloring_pages only, new sets. Defaults to "
-                                              "'standard'. Never mix tiers within one set."},
-                "reference_image_id": {"type": "string",
-                                        "description": "wall_art only, new art. Optional id from "
-                                                       "the Reference Photos library — its style "
-                                                       "(not its subject) guides the new art."},
-                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram", "grok"],
-                           "description": "Art engine for whatever this call generates. Default "
-                                          "'gemini' (coloring_pages instead defaults 'openai' "
-                                          "for kids difficulty, 'grok' for teen/adult, unless "
-                                          "set explicitly here)."},
-            },
-            "required": [],
-        },
-    },
-    {
-        "name": "build_sticker_pack",
-        "description": (
-            "Build a planner's full kawaii sticker pack from scratch — generate the themed "
-            "sheets (matching the planner's color palette), strip their backgrounds to "
-            "transparent, segment every sticker into an individual PNG, and package "
-            "<pid>_sticker_pack.zip (png_sheets/ + individual_stickers/). Runs in the "
-            "BACKGROUND (~2-4 min); the ZIP appears in Files when done. Sheet art is the "
-            "paid AI step. Reports a REAL measured sticker count, but the sheets still need "
-            "a human eyeball for garbled in-image text before the count goes on a live "
-            "listing. Defaults to the Gemini art engine (no OpenAI needed — the pack renders "
-            "on a solid background and is stripped to transparent, so any engine works). Only "
-            "works for codes with a sticker spec (DP1030-DP1034)."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
-                "sheets": {"type": "integer",
-                           "description": "Optional: only build the first N sheets (default: all 9)."},
-                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
-                           "description": "Art engine for the sheets. Default 'gemini'."},
-            },
-            "required": ["pid"],
-        },
-    },
-    {
-        "name": "generate_print_zip",
-        "description": (
-            "Build a wall-art product's multi-size print ZIP from its source JPG — "
-            "4×6/8×12/12×18/16×24, 8×10/16×20, A4/A3, and square, all at 300 DPI in sRGB, "
-            "with a README. Pure local resize, no API cost. Rejects lifestyle-composite "
-            "source files (only raw art). Writes print_zips/<pid>_print_sizes.zip. Use when "
-            "asked to make the printable size set for a wall-art listing."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "pid": {"type": "string", "description": "Wall-art code, e.g. 'WA1030'."},
             },
             "required": ["pid"],
         },
@@ -5311,18 +5098,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return {"staged": staged, "count": len(staged), "errors": errors}
         if name == "qc_check_product":
             return _qc_check_product(tool_input or {})
-        if name == "generate_listing_photos":
-            return _produce_listing_photos(tool_input or {})
-        if name == "generate_print_zip":
-            return _produce_print_zip(tool_input or {})
         if name == "render_openscad_model":
             return _produce_openscad_render(tool_input or {})
-        if name == "build_planner":
-            return _produce_build_planner(tool_input or {})
-        if name == "build_sticker_pack":
-            return _produce_build_sticker_pack(tool_input or {})
-        if name == "build_product":
-            return _produce_build_product(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -5729,10 +5506,9 @@ conflicts with data/knowledge_base/business_standards.md, that file is the sourc
 
 _BATCH_TAG_PROMPT = """\
 You are the Etsy SEO specialist for OnBrandCraftz, a shop selling:
-- Kawaii digital planners (fillable PDF for GoodNotes, Notability, iPad) — $9.99–$14.99
-- Kawaii sticker packs (PNG sheets for GoodNotes Elements) — $4.99–$9.99
-- 3D-print SVG/3MF packs (multi-color Bambu Lab files) — $9.99–$14.99
-- Printable wall art & signs (instant download) — $2.99–$14.99
+- 3D printed home decor and gifts, printed on a Bambu Lab P1S and shipped (lamps, vases, planters, candle holders, can koozies, Christmas village buildings and accessories)
+- 3D print files: STL/3MF downloads, including multi-color Bambu Lab files
+- 3D-print SVG sign packs for Bambu Studio
 
 Generate exactly 13 Etsy search tags for each listing below.
 
@@ -5746,36 +5522,29 @@ STRICT TAG RULES (enforced by code — any violation is auto-rejected):
 7. Use multi-word buyer-intent phrases — no single-word tags
 8. Cover all search angles: product type, style, app/tool, room/use case, occasion, format
 
-CANONICAL TAG SETS (use these exactly when the listing title matches):
-- Life/Ultimate planner → digital planner,goodnotes planner,notability planner,ipad planner,kawaii planner,fillable planner,2026 life planner,kawaii sticker pack,instant download,printable planner,daily planner pdf,planner bundle,habit tracker pdf
-- Student/School planner → student planner,digital planner,school planner,goodnotes planner,notability planner,ipad planner,academic planner,study planner,kawaii planner,fillable planner,back to school,instant download,kawaii sticker pack
-- Budget/Finance planner → budget planner,finance planner,digital planner,goodnotes planner,money planner,ipad planner,fillable planner,savings planner,debt payoff planner,kawaii planner,instant download,budget tracker,2026 budget plan
-- Fitness/Wellness planner → fitness planner,wellness planner,digital planner,goodnotes planner,health planner,ipad planner,habit tracker,meal planner pdf,kawaii planner,fillable planner,instant download,self care planner,2026 fitness plan
-
 PRODUCT-SPECIFIC GUIDANCE:
-- Digital planners: always include goodnotes planner, ipad planner, fillable planner, instant download, kawaii sticker pack
-- SVG packs / 3D prints: always include 3d print svg, svg cut file, digital download, bambu lab svg, multi color print + theme tags
-- Printable wall art: always include printable wall art, instant download, digital download + room/style/occasion tags
-- Sticker packs: always include goodnotes stickers, digital stickers, planner stickers, kawaii stickers, instant download
+- Shipped 3D prints: describe the object, room, style, material finish and gift occasion (e.g. 3d printed lamp, table lamp gift, matte white decor, housewarming gift); never "instant download"
+- 3D print files (STL/3MF): always include stl file, 3mf file, 3d print file, digital download + object/theme tags; say bambu lab only if the file is a Bambu multi-color project
+- SVG sign packs: always include 3d print svg, bambu lab svg, multi color print, digital download + theme tags
 
 Respond with ONLY a valid JSON array — no markdown, no explanation, no code fences:
 [{"listing_id": 123, "tags": ["tag one","tag two","tag three","tag four","tag five","tag six","tag seven","tag eight","tag nine","tag ten","tag eleven","tag twelve","tag thirteen"]}, ...]
 
 Each tags array MUST contain exactly 13 strings. Each string MUST be 20 characters or fewer.
 
-The canonical tag sets and product guidance above are a fast-path summary for batch tagging.
+The product guidance above is a fast-path summary for batch tagging.
 If they ever conflict with data/knowledge_base/business_standards.md, that file is the source of truth.\
 """.replace("OnBrandCraftz", business_config.BUSINESS_NAME)
 
 
 _TITLE_FIX_PROMPT = (
-    "Generate a new Etsy listing title for " + business_config.BUSINESS_NAME + ". Shop sells: kawaii digital planners "
-    "(GoodNotes/iPad), sticker packs, 3D-print SVG packs, printable wall art.\n\n"
+    "Generate a new Etsy listing title for " + business_config.BUSINESS_NAME + ". Shop sells: shipped 3D prints "
+    "(home decor and gifts), 3D print files (STL/3MF) and 3D-print SVG sign packs.\n\n"
     "TITLE RULES (code-enforced — violation = rejection):\n"
     "1. Maximum 70 characters — hard limit (mobile ranking penalty above 70)\n"
     "2. First 20-30 characters = primary search keyword buyers type\n"
     "3. Comma separators only (no pipes)\n"
-    "4. Include 'Instant Download' and either '2026' or 'Undated' for planners\n"
+    "4. Include 'Instant Download' only for downloadable files, never for a shipped print\n"
     "5. No keyword stuffing — natural buyer language\n\n"
     "Current listing:\n"
     "TITLE: {title}\n"
@@ -6197,8 +5966,6 @@ def api_run_command(request: Request, id: str = ""):
     return StreamingResponse(generate(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-
-
 @app.get("/api/me")
 async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Return the username/role/email/name associated with the current session.
@@ -6352,8 +6119,6 @@ async def admin_delete_user(username: str, request: Request, _token: str = Depen
         print(f"[auth] delete_sessions_for_user({uname!r}) failed after admin_delete_user -- sessions "
               f"may not be fully revoked: {exc}", flush=True)
     return {"ok": True}
-
-
 
 
 # FRANK gets its own manifest + service worker, scoped to /frank, so it installs as
@@ -9469,11 +9234,6 @@ _WEEKLY_MONITOR_SCRIPTS = [
     "listing_drop_monitor.py",
     "review_monitor.py",
     "order_notifier.py",
-    # Stages tag fixes for approval (refactored 2026-07-09 — no longer writes
-    # to Etsy directly, see the script's own module docstring). Fits CLAUDE.md's
-    # stated trigger ("run after any batch of new listings") well enough on a
-    # weekly cadence without needing a dedicated "batch just published" hook.
-    "audit_fix_wall_art_tags.py",
     # Added 2026-07-15 after discovering DP1030-1034's source files existed
     # nowhere durable (not on disk, never published to Etsy) — this catches
     # both halves of that failure class (a live listing losing its attached
@@ -9490,24 +9250,6 @@ _WEEKLY_MONITOR_SCRIPTS = [
     "backup_hub_db.py",
 ]
 
-# Fixed 2026-07-09 (weakness audit): this set used to be built to match CLAUDE.md's
-# documented table, but the table itself didn't match tools/seasonal_keywords.py's
-# real computed/hardcoded `update_by` deadlines — 2 of the 4 dates fired AFTER their
-# season's actual deadline (Back to School's real deadline is Jul 4, not "mid-July";
-# Valentine's is ~Jan 3, not Jan 5), and 2 of the script's 6 seasons (Mother's Day,
-# Teacher Appreciation) had no trigger at all. Each date below now sits a few days to
-# two weeks BEFORE that season's real deadline (computed the same way
-# seasonal_keywords.py's own _build_calendar()/_update_by() do) so the check always
-# fires with room to act, never after the window has already closed:
-#   Back to School   — deadline Jul 4   -> trigger Jun 20
-#   Holiday/New Year — deadline Nov 8   -> trigger Oct 15 (already early, unchanged)
-#   Valentine's      — deadline ~Jan 3  -> trigger Dec 28 (of the prior year)
-#   Spring Reset     — deadline ~Feb 6  -> trigger Jan 15 (already early, unchanged)
-#   Mother's Day     — deadline Mar 30  -> trigger Mar 20 (new)
-#   Teacher Appreciation — deadline Mar 25 -> trigger Mar 15 (new)
-_SEASONAL_TRIGGER_DATES = {
-    (6, 20), (10, 15), (12, 28), (1, 15), (3, 20), (3, 15),
-}
 
 _ADS_KILL_SPEND_USD = 30.0
 _ADS_KILL_ROAS = 1.5
@@ -9615,25 +9357,6 @@ def _run_art_authenticity_check() -> str:
     return "ran listing_integrity_check.py --full"
 
 
-def _run_seasonal_keyword_check() -> str:
-    """Runs seasonal_keywords.py --dry-run only on the 4 documented calendar
-    dates. The --push step (which actually edits live listings) stays a
-    manual, explicit action per Autonomy Boundaries — this only ever surfaces
-    the recommendation as a todo for Scott to review and push himself."""
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "seasonal_keywords.py"), "--dry-run"],
-        capture_output=True, text=True, timeout=300, cwd=str(ROOT),
-    )
-    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
-    db.add_todo(
-        "Seasonal keyword window is open — dry-run recommendation ready for your review "
-        "(run `python tools/seasonal_keywords.py --push` yourself once you've checked it).",
-        added_by="frank", category="scott_only",
-    )
-    _append_ops_runbook_entry("Seasonal keyword dry-run", out[:4000])
-    return "ran seasonal_keywords.py --dry-run"
-
-
 # 2026-07-17 (Wave 4, C3): data/knowledge_base/competitor_research_2026.md was a
 # static one-off snapshot (written May 2026, ~10 weeks stale by this audit) with
 # no refresh mechanism -- Frank's chat agent reads it on demand via
@@ -9655,17 +9378,12 @@ _COMPETITOR_RESEARCH_PATH = db.resolve_persistent_path(
     seed_from=ROOT / "data" / "knowledge_base" / "competitor_research_2026.md",
 )
 _COMPETITOR_RESEARCH_SEARCH_TERMS = [
-    "printable wall art digital download",
-    "digital planner goodnotes",
-    "kawaii sticker pack goodnotes",
-    # 2026-08-08: the refresh prompt below has always claimed to cover all 4 product
-    # lines ("wall art, digital planners, kawaii sticker packs, 3D-print SVG packs"),
-    # but this list only ever had 3 terms -- coloring pages had no search term at all,
-    # and SVG packs were named in the prompt without ever being searched for. The live
-    # competitor_research_2026.md doc stayed wall-art-titled/scoped as a result. Two
-    # terms added to close the gap between what this refresh claims to do and what it
-    # actually searches for.
-    "coloring pages printable digital download",
+    # 3D prints and 3D print files only since 2026-10-25 (Scott: "We are
+    # switching gears. 3d prints and 3d print files.")
+    "3d printed lamp",
+    "3d printed vase",
+    "3d printed christmas village",
+    "christmas village stl file",
     "3d print svg file bundle",
 ]
 
@@ -9706,8 +9424,8 @@ def _run_competitor_research_refresh() -> str:
 
     user_payload = (
         f"Today is {date.today().isoformat()}. Refresh this shop's competitive intelligence "
-        f"report for its digital product lines (wall art, digital planners, kawaii sticker "
-        f"packs, 3D-print SVG packs, coloring pages). Use web_search for anything that needs "
+        f"report for its product lines (shipped 3D prints, 3D print files as STL/3MF "
+        f"downloads, and 3D-print SVG sign packs). Use web_search for anything that needs "
         f"current internet data (Etsy algorithm changes, pricing/trend research, seasonal "
         f"shifts) and the REAL LIVE ETSY DATA below for actual current competitor listings.\n\n"
         f"REAL LIVE ETSY DATA (search_listings, today):\n{comparable_text}\n\n"
@@ -10764,41 +10482,6 @@ async def global_search(q: str = "", _token: str = Depends(_auth_session_or_bear
     return {"query": q, "results": results, "count": len(results)}
 
 
-def _run_scheduled_art_check() -> str:
-    """Runs post_scheduled_art.py with no flags every day — the script's own
-    main() already self-gates on data/art_schedule.json's next_post_date, so
-    this just needs to run daily and let it decide whether today is actually
-    its every-other-day turn. As of 2026-07-09 the script no longer publishes
-    live on its own — it generates the listing as a draft, uploads photos/file,
-    then stages a publish_listing action for approval (see the script's module
-    docstring). This function only ever runs the generation step; the actual
-    Etsy activation always waits for a human tap in the Action Center."""
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "post_scheduled_art.py")],
-        capture_output=True, text=True, timeout=900, cwd=str(ROOT),
-    )
-    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
-    if "[SCHEDULED] Not due yet" in out or "[SCHEDULED] Not due" in out:
-        return "not due today"
-    _append_ops_runbook_entry("Scheduled art run", out[:3000])
-    return "ran (see ops_runbook for output)"
-
-
-def _run_scheduled_coloring_check() -> str:
-    """Runs post_scheduled_coloring.py with no flags daily — self-gates on
-    data/coloring_schedule.json's next_post_date (every 4 days). Generates draft
-    pack (Adult, Kids, Kawaii) and stages action for approval."""
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "tools" / "post_scheduled_coloring.py")],
-        capture_output=True, text=True, timeout=900, cwd=str(ROOT),
-    )
-    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
-    if "[SCHEDULED COLORING] Not due yet" in out or "Not due yet" in out:
-        return "not due today"
-    _append_ops_runbook_entry("Scheduled coloring run", out[:3000])
-    return "ran (see ops_runbook for output)"
-
-
 def _sync_calendar_to_google() -> str:
     """Pushes Frank's own due-dated todos and imminent seasonal/tax
     deadlines onto a connected Google Calendar, so both directions live in
@@ -10952,10 +10635,7 @@ async def _calendar_tasks_loop() -> None:
     last_weekly = _get_calendar_task_last_run("weekly")
     last_monthly = _get_calendar_task_last_run("monthly")
     last_competitor_research = _get_calendar_task_last_run("competitor_research")
-    last_seasonal = _get_calendar_task_last_run("seasonal")
     last_ads_check = _get_calendar_task_last_run("ads_check")
-    last_art_check = _get_calendar_task_last_run("art_check")
-    last_coloring_check = _get_calendar_task_last_run("coloring_check")
     last_art_authenticity = _get_calendar_task_last_run("art_authenticity")
     last_star_seller_check = _get_calendar_task_last_run("star_seller_check")
     last_gcal_sync = _get_calendar_task_last_run("gcal_sync")
@@ -11018,15 +10698,6 @@ async def _calendar_tasks_loop() -> None:
                 except Exception as exc:
                     print(f"[calendar-tasks] competitor research refresh error: {exc}", flush=True)
                     failed.append(f"competitor-research:{exc}")
-            if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
-                try:
-                    await asyncio.to_thread(_run_seasonal_keyword_check)
-                    last_seasonal = today
-                    _set_calendar_task_last_run("seasonal", today)
-                    ran.append("seasonal-keywords")
-                except Exception as exc:
-                    print(f"[calendar-tasks] seasonal keyword check error: {exc}", flush=True)
-                    failed.append(f"seasonal-keywords:{exc}")
             if today != last_ads_check:
                 try:
                     detail = await asyncio.to_thread(_check_ads_thresholds)
@@ -11045,24 +10716,6 @@ async def _calendar_tasks_loop() -> None:
                 except Exception as exc:
                     print(f"[calendar-tasks] star seller check error: {exc}", flush=True)
                     failed.append(f"star-seller:{exc}")
-            if today != last_art_check:
-                try:
-                    detail = await asyncio.to_thread(_run_scheduled_art_check)
-                    last_art_check = today
-                    _set_calendar_task_last_run("art_check", today)
-                    ran.append(f"scheduled-art:{detail}")
-                except Exception as exc:
-                    print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
-                    failed.append(f"scheduled-art:{exc}")
-            if today != last_coloring_check:
-                try:
-                    detail = await asyncio.to_thread(_run_scheduled_coloring_check)
-                    last_coloring_check = today
-                    _set_calendar_task_last_run("coloring_check", today)
-                    ran.append(f"scheduled-coloring:{detail}")
-                except Exception as exc:
-                    print(f"[calendar-tasks] scheduled coloring check error: {exc}", flush=True)
-                    failed.append(f"scheduled-coloring:{exc}")
             if today != last_gcal_sync:
                 try:
                     detail = await asyncio.to_thread(_sync_calendar_to_google)
@@ -11090,8 +10743,8 @@ async def _calendar_tasks_loop() -> None:
             if not detail_parts:
                 detail_parts.append(
                     f"no scheduled task due today (last: weekly={last_weekly}, "
-                    f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
-                    f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
+                    f"monthly={last_monthly}, ads={last_ads_check}, "
+                    f"art_authenticity={last_art_authenticity}, "
                     f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync}, "
                     f"etsy_file_inventory={last_etsy_file_inventory})"
                 )
@@ -11175,7 +10828,7 @@ async def _startup() -> None:
 async def run_calendar_tasks_now(request: Request):
     """Manually trigger each calendar-gated task once, ignoring its normal date
     gate (for testing). Requires X-App-Token header. Read-only/notify-only —
-    see _run_weekly_monitors/_run_monthly_shop_health/_run_seasonal_keyword_check/
+    see _run_weekly_monitors/_run_monthly_shop_health/
     _check_ads_thresholds docstrings for exactly what each one does.
 
     2026-07-19: previously never updated _calendar_tasks_loop's own persisted
@@ -11200,9 +10853,7 @@ async def run_calendar_tasks_now(request: Request):
         ("weekly_monitors", "weekly", _run_weekly_monitors),
         ("monthly_shop_health", "monthly", _run_monthly_shop_health),
         ("competitor_research", "competitor_research", _run_competitor_research_refresh),
-        ("seasonal_keywords", "seasonal", _run_seasonal_keyword_check),
         ("ads_threshold", "ads_check", _check_ads_thresholds),
-        ("scheduled_art", "art_check", _run_scheduled_art_check),
         ("star_seller", "star_seller_check", _check_star_seller_status),
     ]:
         try:
@@ -11269,7 +10920,6 @@ async def test_email_system_endpoint(request: Request):
         test_email_system.update_env_file("SMTP_PASSWORD", password)
 
     return {"success": success, "message": msg, "host": host, "port": port, "user": user}
-
 
 
 @app.post("/api/file-audit/run")
@@ -12692,29 +12342,6 @@ async def autofix_title(listing_id: int, _token: str = Depends(_rate_limited_aut
     if "error" in result:
         raise HTTPException(status_code=502, detail=result["error"])
     return {"staged": True, **result}
-
-
-@app.get("/api/listings/{listing_id}/gate6-check")
-async def gate6_check(listing_id: int, assume_wall_art: bool = False, _token: str = Depends(_auth_session_or_bearer)):
-    """Read-only: does this listing need the wall-art Gate 6 description fix?
-    No AI call, no staging, no budget spent against _rate_limited_auth's
-    shared 30/hour cap (unlike the POST autofix routes below) — safe to sweep
-    across the whole catalog to scope a fix before staging anything real."""
-    listing = await _fetch_listing_for_autofix(listing_id)
-    title = listing.get("title", "")
-    description = listing.get("description", "") or ""
-    if assume_wall_art:
-        product_type = "wall_art"
-    else:
-        import listing_qc
-        product_type = listing_qc._detect_product_type(title, description)
-    if product_type != "wall_art":
-        return {"listing_id": listing_id, "needs_fix": False, "reason": f"not a wall_art listing (detected: {product_type})"}
-    needs_fix = _description_needs_gate6_fix(description)
-    return {
-        "listing_id": listing_id, "needs_fix": needs_fix,
-        "reason": "missing instant-download/printable signal" if needs_fix else "already compliant",
-    }
 
 
 @app.post("/api/autofix/description/{listing_id}")
@@ -14803,263 +14430,6 @@ async def produce_qc_check(body: dict, _token: str = Depends(_rate_limited_auth)
     return await asyncio.to_thread(_qc_check_product, body or {})
 
 
-_MAX_COLORING_LISTING_PHOTOS = 10  # Etsy's hard per-listing photo cap
-
-
-def _extract_coloring_page_images(zip_path: Path, n: int) -> list[tuple[str, bytes]]:
-    """Pick up to n individual page images straight from a coloring-pages
-    product ZIP -- the exact "root-level PNG" file definition qc_sweep.
-    coloring_zip_page_count() already uses (reused here, not re-derived).
-    When the pack has more than n pages, samples n evenly across the whole
-    set (not just the first n) so the listing photos represent the full
-    pack. Returns (filename, bytes) pairs in page order."""
-    with zipfile.ZipFile(zip_path) as zf:
-        names = sorted(nm for nm in zf.namelist() if nm.lower().endswith(".png") and "/" not in nm)
-        if len(names) > n:
-            step = len(names) / n
-            names = [names[int(i * step)] for i in range(n)]
-        return [(name, zf.read(name)) for name in names]
-
-
-def _produce_coloring_pages_listing_photos(pid: str) -> dict:
-    """Stage up to _MAX_COLORING_LISTING_PHOTOS real individual coloring
-    pages -- straight from the product's own delivered ZIP, the exact files
-    the customer receives, never an AI-generated stand-in -- as this
-    product's Etsy listing photos. Added 2026-07-25 after COLOR1003
-    published with zero listing photos (coloring_pages has no AI photo
-    pipeline like digital_planner's) -- Scott's direct instruction was to
-    use the real pack images rather than build a lifestyle-photo pipeline.
-
-    Requires the product to already have a real Etsy listing_id (there must
-    be a listing to stage photos against) -- publish first via the Products
-    review modal, then run this."""
-    entry = _find_catalog_product(pid)
-    if entry is None:
-        return {"error": f"unknown product_id: {pid}"}
-    if entry.get("category") != "coloring_pages":
-        return {"error": f"{pid} is category '{entry.get('category')}', not coloring_pages"}
-
-    review = _gather_product_review(pid)
-    listing_id = review.get("listing_id") if review else None
-    if not listing_id:
-        return {"error": f"{pid} has no Etsy listing yet — publish it first, then stage photos"}
-
-    zip_entry = next((f for f in (entry.get("files") or [])
-                       if f.lower().endswith(".zip") and "_listing_images/" not in f), None)
-    if zip_entry is None:
-        return {"error": f"no coloring-pages ZIP found in {pid}'s catalog files"}
-    zip_path = _catalog_file_abs_path(zip_entry)
-    if zip_path is None:
-        return {"error": f"coloring-pages ZIP not found on disk: {zip_entry}"}
-
-    pages = _extract_coloring_page_images(zip_path, _MAX_COLORING_LISTING_PHOTOS)
-    if not pages:
-        return {"error": f"no individual page PNGs found in {zip_path.name}"}
-
-    staged_root = _FILE_ROOTS["staged_photos"] / pid
-    staged_root.mkdir(parents=True, exist_ok=True)
-    staged: list[dict] = []
-    stage_errors: list[dict] = []
-    for rank, (name, data) in enumerate(pages, start=1):
-        dest_name = f"page_{rank:02d}.png"
-        (staged_root / dest_name).write_bytes(data)
-        try:
-            # asyncio.run here is safe ONLY because this sync function always
-            # runs off the event loop (dispatched via asyncio.to_thread), so
-            # it spins a fresh loop on the worker thread. It would deadlock/
-            # break if _stage_photo_action ever awaited something bound to
-            # the main server loop (today it only awaits its own to_thread).
-            action_id = asyncio.run(_stage_photo_action(
-                listing_id=listing_id, rank=rank, sku=pid,
-                rel_path=f"{pid}/{dest_name}",
-                summary=f"Coloring page {rank}/{len(pages)} listing photo: {pid} (from {Path(name).name})",
-                physics="", scene_prompt="", design_paths=[zip_entry],
-                category="coloring_pages",
-            ))
-            staged.append({"rank": rank, "action_id": action_id, "source": name})
-        except Exception as exc:  # noqa: BLE001
-            stage_errors.append({"rank": rank, "source": name, "error": str(exc)[:200]})
-
-    message = (
-        f"Staged {len(staged)}/{len(pages)} real coloring-page photos for {pid}'s Etsy listing "
-        f"(#{listing_id}) — review and approve in the Action Center."
-    )
-    if stage_errors:
-        message += f" {len(stage_errors)} failed to stage — see errors."
-    return {
-        "pid": pid, "listing_id": listing_id, "staged": staged,
-        "errors": stage_errors, "message": message,
-    }
-
-
-def _produce_listing_photos(inp: dict) -> dict:
-    """Generate a planner's full 10-photo listing set — real, self-verifying
-    AI-rendered lifestyle photos via tools/listing_photo_pipeline.py (THE
-    STANDARD LIFESTYLE METHOD documented in CLAUDE.md), not a plain local
-    render. Rewritten 2026-07-17 (Wave 4 photo-pipeline audit): the previous
-    version (gen_planner_listing_photos.generate_for_planner()) never called
-    an AI image model at all — a hand-drawn iPad bezel composited onto a flat
-    gradient, no real photography — which is the actual root cause behind
-    "photos look AI-generated / not convincing": there was no photorealistic
-    rendering happening, at all, for the shop's core product line.
-
-    If the product already has a live/draft Etsy listing_id (gen_planner_
-    listing_photos.PLANNER_PAGES[pid]['listing_id']), each passed photo is
-    staged into the Action Center for one-tap approval, exactly like the
-    SS-series photo path already does — closing the "zero automated QA gate
-    on the photos Scott actually looks at" gap the same audit found. Products
-    with no listing_id yet (e.g. DP1030-1034, still pre-publish drafts) have
-    nowhere to stage a photo update TO, so those fall back to the existing
-    Files-screen folder-drop UX unchanged.
-
-    coloring_pages (2026-07-25): delegates entirely to
-    _produce_coloring_pages_listing_photos() -- real pack pages, not an AI
-    render, since this pipeline (below) is planner-specific."""
-    pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not pid:
-        return {"error": "pid is required (e.g. 'DP1030')"}
-    entry = _find_catalog_product(pid)
-    if entry and entry.get("category") == "coloring_pages":
-        return _produce_coloring_pages_listing_photos(pid)
-    engine, eng_err = _resolve_art_engine(inp)
-    if eng_err:
-        return {"error": eng_err}
-    try:
-        import gen_planner_listing_photos as glp
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"photo pipeline unavailable: {exc}"}
-    if pid not in glp.PLANNER_PAGES:
-        return {"error": f"{pid} isn't a configured planner "
-                         f"(have {', '.join(sorted(glp.PLANNER_PAGES))})."}
-    from pathlib import Path as _P
-    if not (_P(glp.ART_DIR) / f"{pid}.pdf").exists():
-        return {"error": f"{pid}.pdf not found in product files — build/sync the planner PDF first."}
-    try:
-        out_dir, photos = glp.generate_ai_photos_for_planner(pid, engine=engine)
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"photo generation failed: {exc}"}
-
-    passed = [p for p in photos if p["passed"]]
-    failed = [p for p in photos if not p["passed"]]
-    realism_flags = [p for p in photos if p.get("realism_issues")]
-
-    listing_id = glp.PLANNER_PAGES[pid].get("listing_id")
-    staged: list[dict] = []
-    stage_errors: list[dict] = []
-    if listing_id and passed:
-        staged_root = _FILE_ROOTS["staged_photos"] / pid
-        staged_root.mkdir(parents=True, exist_ok=True)
-        for rank, p in enumerate(photos, start=1):
-            if not p["passed"]:
-                continue
-            src = _P(out_dir) / p["filename"]
-            dest = staged_root / p["filename"]
-            try:
-                shutil.copy2(src, dest)
-                summary = f"AI listing photo {rank}/10 ({p['slot']}): {pid}"
-                if p.get("realism_issues"):
-                    summary += " ⚠ realism notes"
-                # Same asyncio.run-on-a-worker-thread caveat as
-                # _produce_coloring_pages_listing_photos above.
-                action_id = asyncio.run(_stage_photo_action(
-                    listing_id=listing_id, rank=rank, sku=pid,
-                    rel_path=f"{pid}/{p['filename']}", summary=summary,
-                    physics=p.get("physics", ""), scene_prompt=p.get("scene_prompt", ""),
-                    design_paths=p.get("design_paths", []),
-                ))
-                staged.append({"slot": p["slot"], "rank": rank, "action_id": action_id})
-            except Exception as exc:  # noqa: BLE001
-                stage_errors.append({"slot": p["slot"], "error": str(exc)[:200]})
-
-    if staged:
-        message = (
-            f"Generated {len(passed)}/10 listing photos for {pid} and staged "
-            f"{len(staged)} for your approval in the Action Center."
-        )
-    else:
-        message = (
-            f"Generated {len(passed)}/10 listing photos for {pid} → "
-            f"{pid}_listing_images/. Open them from the Files screen."
-        )
-        if not listing_id:
-            message += " (No Etsy listing_id yet for this product — nothing to stage against.)"
-    if failed:
-        message += f" {len(failed)} slot(s) failed verification — see 'failed' below."
-    if realism_flags:
-        message += f" {len(realism_flags)} photo(s) have non-blocking realism notes — see 'realism_flags'."
-
-    return {
-        "pid": pid,
-        "count": len(passed),
-        "photos": photos,
-        "failed": failed,
-        "realism_flags": realism_flags,
-        "staged": staged,
-        "stage_errors": stage_errors,
-        "engine": engine,
-        "folder": f"product_files/{pid}_listing_images",
-        "message": message,
-    }
-
-
-@app.post("/api/produce/listing-photos")
-async def produce_listing_photos(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Generate a planner's 10-photo listing set from its built PDF (local render,
-    effectively no API cost). Can take ~20-40s for the full set."""
-    try:
-        return await asyncio.wait_for(
-            asyncio.to_thread(_produce_listing_photos, body or {}), timeout=200)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Photo generation timed out — try again.")
-
-
-def _produce_print_zip(inp: dict) -> dict:
-    """Build a wall-art product's multi-size print ZIP (4×6/8×12/12×18/16×24,
-    8×10/16×20, A4/A3, square @300dpi, sRGB) from its source JPG. Pure local
-    resize, zero API cost. Rejects lifestyle-composite sources (only raw art)."""
-    pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not pid:
-        return {"error": "pid is required (e.g. 'WA1030')"}
-    try:
-        import generate_print_sizes as gps
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"print-size pipeline unavailable: {exc}"}
-    up = gps.UPSCALED_DIR / f"{pid}.jpg"
-    base = gps.PRODUCT_FILES_DIR / f"{pid}.jpg"
-    src = up if up.exists() else base
-    if not src.exists():
-        return {"error": f"No source art for {pid} — looked for {pid}.jpg in product_files/ and upscaled/."}
-    try:
-        gps.PRINT_ZIPS_DIR.mkdir(parents=True, exist_ok=True)
-        res = gps.process_file(src, pid, force=True)
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"print-ZIP generation failed: {exc}"}
-    if res.get("status") == "error":
-        return {"pid": pid, "error": res.get("error", "unknown error")}
-    size_mb = res.get("size_mb")
-    size_mb = round(size_mb, 1) if isinstance(size_mb, (int, float)) else None
-    return {
-        "pid": pid,
-        "status": res.get("status"),
-        "zip": f"print_zips/{pid}_print_sizes.zip",
-        "size_mb": size_mb,
-        "message": f"Built the multi-size print ZIP for {pid}"
-                   + (f" ({size_mb} MB)" if size_mb is not None else "")
-                   + " — open it from the Files screen.",
-    }
-
-
-@app.post("/api/produce/print-zip")
-async def produce_print_zip(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Build a wall-art product's multi-size print ZIP from its source JPG
-    (local resize, no API cost). Can take ~15-40s for large art."""
-    try:
-        return await asyncio.wait_for(
-            asyncio.to_thread(_produce_print_zip, body or {}), timeout=200)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Print-ZIP build timed out — try again.")
-
-
 _OPENSCAD_OUTPUT_SUBDIR = "openscad_models"  # under _product_log_dir()'s base, alongside product_files/
 
 
@@ -15231,194 +14601,6 @@ async def produce_hyperframes_render(body: dict, _token: str = Depends(_rate_lim
                                                       "or check the composition has a data-duration/GSAP timeline.")
 
 
-def _produce_coloring_pack(inp: dict) -> dict:
-    """Kick off a coloring_pages product's ZIP-set rebuild in the BACKGROUND via
-    generate_coloring_pages.py --pack <pack>. Determines which of the two theme
-    packs ('kawaii' vs 'fun_basic') to use from the product's OWN catalog filename
-    convention (e.g. 'coloring_set_05.zip' -> kawaii, 'coloring_fun_basic_set_02.zip'
-    -> fun_basic) so the caller never has to know that mapping. Long-running like
-    the planner/sticker builds above (up to 20 gpt-image-1 calls for anything not
-    already cached on disk -- generate_coloring_page() skips a theme's PNG if it
-    already exists, so rebuilding one missing set doesn't re-pay for the other 19),
-    so it runs detached the same way; the finished ZIPs show up in Files."""
-    pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not pid:
-        return {"error": "pid is required (e.g. 'COLOR_KAWAII_COLORING_PAGES_SET_05')"}
-    try:
-        catalog = json.loads(Path("data/product_catalog.json").read_text())
-    except OSError:
-        catalog = []
-    entry = next((e for e in catalog if e.get("product_id") == pid), None)
-    if entry is None:
-        return {"error": f"{pid} not found in the catalog"}
-    files = entry.get("files") or []
-    if not files:
-        return {"error": f"{pid} has no files listed in the catalog to infer a theme pack from"}
-    pack = "fun_basic" if files[0].startswith("coloring_fun_basic_set_") else "kawaii"
-    script = ROOT / "tools" / "generate_coloring_pages.py"
-    if not script.exists():
-        return {"error": "generate_coloring_pages.py is missing from this deploy."}
-    from pathlib import Path as _P
-    try:
-        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
-                  or ("/data/files" if _P("/data/files").is_dir()
-                      else str(ROOT / "data" / "digital_products")))
-        logdir = base / "product_files"
-        logdir.mkdir(parents=True, exist_ok=True)
-        _logf = open(logdir / f"{pid}_coloring_build.log", "w")  # noqa: SIM115 — handed to Popen
-    except Exception:  # noqa: BLE001
-        _logf = subprocess.DEVNULL
-    proc = subprocess.Popen(
-        [sys.executable, str(script), "--pack", pack],
-        stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
-    )
-    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_coloring_pack:{pid}", datetime.now(timezone.utc))
-    return {
-        "pid": pid,
-        "started": True,
-        "os_pid": proc.pid,
-        "pack": pack,
-        "message": f"Rebuilding the '{pack}' coloring pack in the background (only uncached "
-                   f"pages cost an AI call). When it finishes, the ZIP sets appear in Files "
-                   f"({pid}_coloring_build.log has the run output).",
-    }
-
-
-@app.post("/api/produce/coloring-pack")
-async def produce_coloring_pack(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Kick off a coloring-pages product's ZIP-set rebuild in the background.
-    Returns immediately; the ZIPs appear in Files when done."""
-    return await asyncio.to_thread(_produce_coloring_pack, body or {})
-
-
-def _register_prepublish_coloring_listing_images(pid: str, zip_path: Path) -> list[str]:
-    """Sample real pages straight from a coloring-pages product's own
-    delivered ZIP (never an AI stand-in) and register them into the
-    catalog's `files` list BEFORE the listing is ever published -- so
-    stage_product_publish()'s photo_paths (built from review["photos"],
-    which reads catalog `files` entries containing "_listing_images/") picks
-    them up automatically, and _execute_create_listing_staged_action()
-    uploads them to Etsy in the SAME approval as the listing draft itself.
-    No separate post-publish photo-staging round needed (2026-08-11, Scott:
-    "make it so the photos are in there when the listing goes into drafts so
-    we don't have to do work more than once").
-
-    Distinct from _produce_coloring_pages_listing_photos() (which stages
-    individual listing_photo actions against an ALREADY-LIVE listing_id, for
-    refreshing photos on a listing that already exists) -- this one runs
-    pre-publish, writing files + a catalog registration instead of staged
-    actions. Returns the list of registered catalog paths (empty if the ZIP
-    had no page images to sample)."""
-    pages = _extract_coloring_page_images(zip_path, _MAX_COLORING_LISTING_PHOTOS)
-    if not pages:
-        return []
-    img_dir = _product_log_dir() / f"{pid}_listing_images"
-    img_dir.mkdir(parents=True, exist_ok=True)
-    registered: list[str] = []
-    for rank, (_name, data) in enumerate(pages, start=1):
-        dest_name = f"page_{rank:02d}.png"
-        (img_dir / dest_name).write_bytes(data)
-        registered.append(f"data/digital_products/product_files/{pid}_listing_images/{dest_name}")
-    entry = _find_catalog_product(pid) or {}
-    existing_files = list(entry.get("files") or [])
-    _write_product_catalog_override(pid, {"files": existing_files + registered})
-    return registered
-
-
-def _register_prepublish_calendar_listing_images(pid: str, zip_path: Path) -> list[str]:
-    """WC-series analog of _register_prepublish_coloring_listing_images():
-    pulls the real year-at-a-glance poster JPG straight out of the
-    product's own delivered ZIP (never an AI stand-in) and registers it as
-    this product's first listing photo before publish is ever staged, so it
-    uploads in the same create_listing approval as the draft itself.
-
-    Only registers the ONE real deliverable preview -- the remaining
-    lifestyle-room photo slots (hero-on-wall, gallery grouping, etc.) still
-    need the standard AI-photo pipeline, same as wall_art's existing "no
-    lifestyle photos in the one-tap build" precedent (see _produce_build_
-    product()'s own docstring) -- this just avoids leaving the listing at
-    literally zero photos in the meantime."""
-    try:
-        with zipfile.ZipFile(zip_path) as zf:
-            poster_name = next((n for n in zf.namelist() if "yearglance" in n.lower()
-                                 and n.lower().endswith((".jpg", ".jpeg"))), None)
-            if poster_name is None:
-                return []
-            poster_bytes = zf.read(poster_name)
-    except (OSError, zipfile.BadZipFile):
-        return []
-
-    img_dir = _product_log_dir() / f"{pid}_listing_images"
-    img_dir.mkdir(parents=True, exist_ok=True)
-    dest_name = "photo_01_yearglance.jpg"
-    (img_dir / dest_name).write_bytes(poster_bytes)
-    registered = [f"data/digital_products/product_files/{pid}_listing_images/{dest_name}"]
-
-    entry = _find_catalog_product(pid) or {}
-    existing_files = list(entry.get("files") or [])
-    _write_product_catalog_override(pid, {"files": existing_files + registered})
-    return registered
-
-
-def _produce_coloring_bundle(inp: dict) -> dict:
-    """Combine several EXISTING coloring-pages products' real, already-
-    generated ZIPs into one new bundle product's ZIP — zero AI spend, pure
-    repackaging (2026-08-10, cost-effective-scale request). Synchronous and
-    fast (disk I/O only, no subprocess) unlike the AI-generation produce
-    endpoints above. See generate_coloring_pages.merge_existing_sets_into_
-    bundle()'s docstring for the merge mechanics and why only new-pipeline
-    (COLOR100x) sources are reachable — older pre-volume-fix products' source
-    files were never migrated and aren't present to merge."""
-    source_pids = (inp or {}).get("source_pids")
-    if not isinstance(source_pids, list) or len(source_pids) < 2:
-        return {"error": "source_pids must be a list of at least 2 existing coloring-pages product IDs"}
-    source_pids = [str(p).strip().upper() for p in source_pids if str(p).strip()]
-    description = str((inp or {}).get("description", "")).strip()
-    if not description:
-        return {"error": "description is required (short name for the new bundle product)"}
-    bundle_pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not bundle_pid:
-        bundle_pid = _next_coloring_pid()
-    if _find_catalog_product(bundle_pid) is not None:
-        return {"error": f"{bundle_pid} already exists in the catalog — pick a different pid"}
-
-    import generate_coloring_pages as _gcp
-    result = _gcp.merge_existing_sets_into_bundle(source_pids, bundle_pid)
-    if result["total_pages"] == 0:
-        return {"error": f"none of the requested source pids had a reachable ZIP on this deploy's "
-                          f"volume: {', '.join(result['missing'])}"}
-
-    rel_path = f"data/digital_products/coloring_pages/sets/coloring_{bundle_pid.lower()}_set_01.zip"
-    _register_new_product_overlay(bundle_pid, "coloring_pages", description, None, [rel_path], description)
-
-    photos_registered = _register_prepublish_coloring_listing_images(bundle_pid, result["zip_path"])
-
-    missing_note = f" Could not find a ZIP for: {', '.join(result['missing'])}." if result["missing"] else ""
-    photo_note = (f" {len(photos_registered)} listing photos pre-registered — they'll upload "
-                  f"automatically with the listing draft, no separate staging step needed."
-                  if photos_registered else " (no page images found to use as listing photos)")
-    return {
-        "pid": bundle_pid,
-        "status": "merged",
-        "zip": rel_path,
-        "included": result["included"],
-        "missing": result["missing"],
-        "total_pages": result["total_pages"],
-        "photos_registered": len(photos_registered),
-        "message": f"Combined {len(result['included'])} existing product(s) into {result['total_pages']} "
-                   f"real pages for {bundle_pid} — zero new AI spend.{missing_note}{photo_note} "
-                   f"Open Products to author listing content and stage for review.",
-    }
-
-
-@app.post("/api/produce/coloring-bundle")
-async def produce_coloring_bundle(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Merge several existing coloring-pages products' real ZIPs into one new
-    bundle listing's ZIP. Fast and synchronous (no background job) — see
-    _produce_coloring_bundle()'s docstring."""
-    return await asyncio.to_thread(_produce_coloring_bundle, body or {})
-
-
 # Approved image engines (mirrors tools/image_gen.py's engine dispatch). Single
 # source of truth for BOTH the produce-builders' engine validation below and
 # the /api/settings image_engine validation further down this file (see
@@ -15445,15 +14627,6 @@ def _resolve_art_engine(inp: dict) -> tuple[str | None, str | None]:
     return eng, None
 
 
-def _subprocess_env_with_engine(engine: str | None) -> dict:
-    """os.environ plus IMAGE_ENGINE, so a spawned builder renders art with the
-    chosen engine instead of the server's default."""
-    env = dict(os.environ)
-    if engine:
-        env["IMAGE_ENGINE"] = engine
-    return env
-
-
 def _product_log_dir() -> Path:
     """Where a background build's log file (and other per-product artifacts)
     live: the persistent Railway volume's files dir when mounted, else the
@@ -15467,527 +14640,6 @@ def _product_log_dir() -> Path:
     logdir = base / "product_files"
     logdir.mkdir(parents=True, exist_ok=True)
     return logdir
-
-
-def _produce_build_planner(inp: dict) -> dict:
-    """Kick off a full planner build in the BACKGROUND (base dated + undated PDFs +
-    AI cover → finalized PDFs with nav/fillable fields/embedded stickers) via
-    tools/build_planner.py. Long-running (~2-4 min), so it runs detached and the
-    finished PDFs show up in Files. The cover art is the only paid AI step.
-    This is the one produce pipeline that spends money — priced into the SaaS
-    subscription; it is never triggered automatically, only on a deliberate call."""
-    pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not pid:
-        return {"error": "pid is required (e.g. 'DP1030')"}
-    engine, eng_err = _resolve_art_engine(inp)
-    if eng_err:
-        return {"error": eng_err}
-    try:
-        import generate_planner_v2 as _gpv2
-        configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"planner builder unavailable: {exc}"}
-    if configured and pid not in configured:
-        return {"error": f"{pid} isn't a configured planner (have {', '.join(sorted(configured))})."}
-    script = ROOT / "tools" / "build_planner.py"
-    if not script.exists():
-        return {"error": "build_planner.py is missing from this deploy."}
-    # Log to the volume so a failed detached build is diagnosable in Files.
-    log_file = f"{pid}_build.log"
-    try:
-        _logf = open(_product_log_dir() / log_file, "w")  # noqa: SIM115 — handed to Popen
-    except Exception:  # noqa: BLE001
-        _logf = subprocess.DEVNULL
-    proc = subprocess.Popen(
-        [sys.executable, str(script), pid],
-        stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
-        env=_subprocess_env_with_engine(engine),
-    )
-    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_planner:{pid}", datetime.now(timezone.utc))
-    return {
-        "pid": pid,
-        "started": True,
-        "os_pid": proc.pid,
-        "engine": engine,
-        "log_file": log_file,
-        "message": f"Building {pid} in the background (~2-4 min) with {engine} cover art. "
-                   f"When it finishes, {pid}.pdf and {pid}U.pdf appear in Files "
-                   f"(and {pid}_build.log has the run output).",
-    }
-
-
-@app.post("/api/produce/build-planner")
-async def produce_build_planner(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Kick off a full planner build in the background (base PDFs + AI cover →
-    finalized PDFs). Returns immediately; the PDFs appear in Files when done."""
-    return await asyncio.to_thread(_produce_build_planner, body or {})
-
-
-def _produce_build_sticker_pack(inp: dict) -> dict:
-    """Kick off a full sticker-pack build in the BACKGROUND via
-    tools/build_sticker_pack.py: generate the 9 themed sheets on a solid
-    background (any engine), strip + segment + package into <PID>_sticker_pack.zip.
-    Long-running (~2-4 min for 9 sheets), so it runs detached; the ZIP + processed
-    sheets show up in Files when done. Sheet art is the only paid AI step.
-
-    Reality check that keeps us honest (top rule — NEVER LIE TO THE CUSTOMER): the
-    build reports a REAL measured sticker count, but AI can still garble in-image
-    text, which no file gate catches. So this returns needs_visual_qc:true — the
-    pack must be eyeballed before its count/claims go on a live listing."""
-    pid = str((inp or {}).get("pid", "")).strip().upper()
-    if not pid:
-        return {"error": "pid is required (e.g. 'DP1030')"}
-    engine, eng_err = _resolve_art_engine(inp)
-    if eng_err:
-        return {"error": eng_err}
-    try:
-        import build_sticker_pack as _bsp
-        configured = set(getattr(_bsp, "SPEC_MODULES", {}) or {})
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"sticker-pack builder unavailable: {exc}"}
-    if configured and pid not in configured:
-        return {"error": f"{pid} has no sticker spec (have {', '.join(sorted(configured))})."}
-    script = ROOT / "tools" / "build_sticker_pack.py"
-    if not script.exists():
-        return {"error": "build_sticker_pack.py is missing from this deploy."}
-    sheets = inp.get("sheets")
-    args = [sys.executable, str(script), pid]
-    if isinstance(sheets, int) and sheets > 0:
-        args += ["--sheets", str(sheets)]
-    # Log to the volume so a failed detached build is diagnosable in Files.
-    log_file = f"{pid}_stickers_build.log"
-    try:
-        _logf = open(_product_log_dir() / log_file, "w")  # noqa: SIM115 — handed to Popen
-    except Exception:  # noqa: BLE001
-        _logf = subprocess.DEVNULL
-    proc = subprocess.Popen(
-        args, stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
-        env=_subprocess_env_with_engine(engine),
-    )
-    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_sticker_pack:{pid}", datetime.now(timezone.utc))
-    return {
-        "pid": pid,
-        "started": True,
-        "os_pid": proc.pid,
-        "engine": engine,
-        "needs_visual_qc": True,
-        "log_file": log_file,
-        "message": f"Building {pid}'s sticker pack in the background (~2-4 min) with {engine} "
-                   f"sheet art. When it finishes, {pid}_sticker_pack.zip appears in Files "
-                   f"({pid}_stickers_build.log has the run output). "
-                   f"Eyeball the sheets for garbled text before the count goes on a live listing.",
-    }
-
-
-@app.post("/api/produce/build-sticker-pack")
-async def produce_build_sticker_pack(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Kick off a full sticker-pack build in the background (themed sheets → strip →
-    segment → ZIP). Returns immediately; the pack appears in Files when done."""
-    return await asyncio.to_thread(_produce_build_sticker_pack, body or {})
-
-
-def _resolve_build_category(pid: str, explicit: str | None) -> str:
-    """category param if given, else looked up from product_catalog.json by pid,
-    else falls back to 'digital_planner' (the pre-2026-07-18 default, so an
-    unrecognized/uncataloged pid keeps behaving exactly like it always did)."""
-    if explicit:
-        return explicit
-    try:
-        catalog = json.loads(Path("data/product_catalog.json").read_text())
-    except OSError:
-        catalog = []
-    entry = next((e for e in catalog if e.get("product_id") == pid), None)
-    return (entry or {}).get("category") or "digital_planner"
-
-
-def _produce_build_product(inp: dict) -> dict:
-    """Kick off a FULL product build in the BACKGROUND. Dispatches by category
-    (2026-07-18: generalized from the original digital-planner-only flow, per
-    Scott's ask to have a one-tap build for other listing types too) --
-    resolved from the explicit `category` field if given, else looked up from
-    product_catalog.json by pid:
-
-      digital_planner: stickers → planner PDFs → 10 listing photos → QC
-                        (tools/build_product.py — unchanged from before).
-      wall_art / wall_art_bundle: multi-size print ZIP → QC
-                        (tools/build_wallart_product.py — no lifestyle photos
-                        in this one-tap flow, see its own docstring for why).
-      coloring_pages: coloring pages + ZIP sets → QC
-                        (tools/build_coloring_product.py — same photos caveat).
-
-    Every other category has no verified generator wired yet (2026-07-18
-    scoping decision) and returns a clear error rather than silently doing
-    nothing or guessing. Publishing always stays Scott-gated regardless of
-    category — this only produces + QCs the files.
-
-    Same honesty guard as the sticker builder (top rule — NEVER LIE): planner
-    builds return needs_visual_qc:true (AI can garble in-image text, which no
-    file gate catches) — wall_art/coloring_pages don't generate new AI art in
-    this flow UNLESS a `description` is supplied for a genuinely new pid with
-    no existing art/catalog entry (2026-07-22, see below), in which case the
-    same honesty flag applies to them too.
-
-    (2026-07-22) A genuinely new wall_art/coloring_pages pid with no existing
-    source art / catalog entry can now actually be BUILT, not just cleanly
-    rejected: pass `description` (free text describing the art) and this
-    generates real new art via the same approved-engine pipeline every other
-    AI image call in this app uses, before continuing into the existing
-    build chain. On a clean exit, a background watcher thread durably
-    registers the new product (as a `status: "draft"`, never auto-published)
-    so it shows up in Products for review -- see _register_new_product_overlay().
-
-    (2026-07-24) For coloring_pages specifically, `description` is now ONE
-    general theme (e.g. "ocean animals"), not literal subject lines --
-    _resolve_coloring_subjects() expands it into NEW_THEME_SET_SIZE distinct,
-    never-before-used subjects itself, checked against a permanent
-    cross-listing registry so no coloring-page subject is ever generated
-    twice across the whole catalog (Scott: "It will be a set of individual
-    coloring pages. Never to repeat a creation."). Packaged into exactly one
-    ZIP. (2026-08-08: bumped 20->30 per Scott, "made in groups of 30" -- see
-    generate_coloring_pages.NEW_THEME_SET_SIZE, the one place that size
-    lives.) An optional `difficulty` (standard/kids/adult) picks one style
-    tier for the whole group -- see generate_dynamic_theme_set()'s docstring.
-
-    (2026-07-25) For coloring_pages specifically, `pid` is now OPTIONAL --
-    Scott: "It should auto generate the code." Omit it (empty string) along
-    with a `description` and Frank picks the next free COLOR#### code itself
-    via _next_coloring_pid() before continuing exactly as if that code had
-    been typed by hand. Every other category still requires an explicit pid,
-    unchanged."""
-    pid = str((inp or {}).get("pid", "")).strip().upper()
-    category = _resolve_build_category(pid, (inp or {}).get("category"))
-    description = str((inp or {}).get("description", "")).strip()
-    if not pid:
-        if category == "coloring_pages" and description:
-            pid = _next_coloring_pid()
-        elif category == "coloring_pages":
-            import generate_coloring_pages as _gcp_err
-            return {"error": f"Describe a theme first (e.g. 'ocean animals') and Frank "
-                              f"will pick the code and generate {_gcp_err.NEW_THEME_SET_SIZE} "
-                              f"subjects from it."}
-        else:
-            return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
-    extra_args: list[str] = []
-    reg_name: str | None = None
-    reg_price: float | None = None
-    reg_files: list[str] | None = None
-
-    if category in ("wall_art", "wall_art_bundle"):
-        # Pre-flight check (2026-07-22, mirroring the digital_planner branch
-        # below): build_wallart_product.py hard-requires a source JPG at
-        # product_files/<PID>.jpg or upscaled/<PID>.jpg to already exist --
-        # without this check a genuinely new pid spawned a doomed subprocess
-        # that failed several minutes later with only a generic exit-code
-        # shown in the polling UI, the real reason buried in the log tail.
-        try:
-            import generate_print_sizes as _gps
-            has_source_art = (
-                (_gps.UPSCALED_DIR / f"{pid}.jpg").exists()
-                or (_gps.PRODUCT_FILES_DIR / f"{pid}.jpg").exists()
-            )
-        except Exception as exc:  # noqa: BLE001
-            return {"error": f"wall-art builder unavailable: {exc}"}
-        engine = None
-        if not has_source_art:
-            if not description:
-                return {"error": f"No source art found for {pid}. Add {pid}.jpg to "
-                                  f"product_files/ (or upscaled/) yourself, or describe the "
-                                  f"art you want in the 'new one' box and I'll generate it."}
-            engine, eng_err = _resolve_art_engine(inp)
-            if eng_err:
-                return {"error": eng_err}
-            # (2026-07-30) Fold in a Reference Photos library selection, if given --
-            # the "library only right now" gap Scott reported (uploading a reference
-            # image did nothing). One cached vision call turns the image into style
-            # notes appended to the prompt as guidance, not a literal copy target.
-            ref_id = str((inp or {}).get("reference_image_id", "")).strip()
-            if ref_id:
-                style_notes, ref_err = _reference_image_style_notes(ref_id)
-                if ref_err:
-                    return {"error": ref_err}
-                description = f"{description}\n\nStyle reference (match this look, not the subject): {style_notes}"
-            extra_args = ["--description", description, "--engine", engine]
-            reg_name, reg_price = description[:120] or pid, None
-            reg_files = [f"data/digital_products/print_zips/{pid}_print_sizes.zip"]
-        script_name, log_suffix, proc_label = "build_wallart_product.py", "wallart_build", "build_wallart_product"
-        steps = (["generate art", "print-size ZIP", "quality check"] if extra_args
-                  else ["print-size ZIP", "quality check"])
-        needs_visual_qc = bool(extra_args)  # new AI art can garble details -- eyeball it
-    elif category == "coloring_pages":
-        # Pre-flight check (2026-07-22): build_coloring_product.py's own
-        # _catalog_lookup() hard-requires the pid to already be a
-        # product_catalog.json entry with a non-empty files list (that's how
-        # it infers which theme pack to build) -- reuse that exact function
-        # rather than duplicating its logic, and fail fast with the real
-        # reason instead of spawning a subprocess that exits 2 minutes later.
-        #
-        # Check the REAL catalog state first, THEN fall back to `description`
-        # -- not the other way around. A stale leftover description (typed
-        # while "+ new one" was open, not cleared when switching back to the
-        # picker) must never hijack a rebuild of an EXISTING product into
-        # generating brand-new pages instead. Same ordering wall_art already
-        # uses above (has_source_art checked before description is read).
-        try:
-            import build_coloring_product as _bcp
-            catalog_hit = _bcp._catalog_lookup(pid)
-        except Exception as exc:  # noqa: BLE001
-            return {"error": f"coloring-pages builder unavailable: {exc}"}
-        engine = None
-        if catalog_hit is None:
-            if not description:
-                return {"error": f"{pid} isn't in the coloring-pages catalog yet (or has no "
-                                  f"files listed). Pick an existing set from the list, or "
-                                  f"describe a new theme in the 'new one' box and I'll build it."}
-            # (2026-07-24) `description` is now ONE theme, not literal subjects -- Frank
-            # expands it into NEW_THEME_SET_SIZE distinct, never-before-used subjects
-            # itself, checked against the permanent cross-listing registry -- see
-            # _resolve_coloring_subjects()'s docstring. Scott: "It will be a set of
-            # individual coloring pages. Never to repeat a creation."
-            #
-            # subjects override (2026-08-09): _resolve_coloring_subjects()'s own
-            # Anthropic call can be unusable (confirmed in production the same day --
-            # "Your credit balance is too low to access the Anthropic API" on every
-            # attempt, real vs. a registry collision, verified against server logs).
-            # A caller (Claude, or any future non-chat integration) can supply the
-            # already-expanded subject list directly via inp['subjects'] to skip the
-            # LLM-expansion step entirely -- this is a different SOURCE for subjects,
-            # never a bypass of the "never repeat a creation" guarantee: still exactly
-            # NEW_THEME_SET_SIZE entries, still checked against the full registry, still
-            # recorded via the same _record_used_coloring_subjects() call below.
-            subjects_override = (inp or {}).get("subjects")
-            if isinstance(subjects_override, list) and subjects_override:
-                import generate_coloring_pages as _gcp_subj
-                subjects = [str(s).strip() for s in subjects_override if str(s).strip()]
-                if len(subjects) != _gcp_subj.NEW_THEME_SET_SIZE:
-                    return {"error": f"subjects must contain exactly {_gcp_subj.NEW_THEME_SET_SIZE} "
-                                      f"non-empty entries, got {len(subjects)}"}
-                registry = _coloring_theme_registry()
-                # 2026-08-10: exclude this SAME pid's own prior reservations from the
-                # collision set. Subjects are recorded eagerly, before the subprocess
-                # spawns (see _record_used_coloring_subjects()'s docstring) -- without
-                # this exemption, a build interrupted partway through (container
-                # restart, crash) can never be retried: its own already-reserved
-                # subjects would permanently self-collide on every resubmission of the
-                # same payload. Cross-pid collisions are still blocked as before.
-                used_normalized = {e["normalized"] for e in registry if e.get("product_id") != pid}
-                seen_this_batch: set[str] = set()
-                dupes = []
-                for s in subjects:
-                    norm = _normalize_subject(s)
-                    if norm in used_normalized or norm in seen_this_batch:
-                        dupes.append(s)
-                    seen_this_batch.add(norm)
-                if dupes:
-                    return {"error": f"{len(dupes)} supplied subject(s) already used (repeated "
-                                      f"within this batch, or already in the shop-wide registry): "
-                                      f"{'; '.join(dupes[:5])}{'...' if len(dupes) > 5 else ''}"}
-            else:
-                subjects, subj_err = _resolve_coloring_subjects(description)
-                if subj_err:
-                    return {"error": subj_err}
-            # difficulty (2026-08-08, Scott: "make sure the kids coloring pages are
-            # separate from the adult due to the adult being more detailed") -- one
-            # explicit tier for this WHOLE build, never mixed within a group (see
-            # generate_dynamic_theme_set()'s own docstring). Defaults to "standard"
-            # (the pre-existing behavior) for any caller that doesn't send it.
-            import generate_coloring_pages as _gcp
-            difficulty = str((inp or {}).get("difficulty", "standard")).strip().lower()
-            if difficulty not in _gcp.DIFFICULTY_CHOICES:
-                difficulty = "standard"
-            # engine default by difficulty (2026-08-09, Scott: "make grok more for
-            # teen and adult coloring pages. open ai for kids") -- confirmed across 3
-            # real side-by-side prompts (cabin/treehouse/monster truck) in the
-            # Reference Photos library that Grok renders denser, more intricate
-            # linework (teen/adult) and OpenAI renders simpler, thicker-lined art
-            # (kids) from the identical prompt. Only kicks in when the caller left
-            # engine blank -- the Create screen's dropdown always sends an explicit
-            # value (defaulted client-side, see _syncColoringEngineDefault()), so
-            # this mainly protects non-UI callers; an explicit engine choice always
-            # wins over this default.
-            engine_inp = dict(inp or {})
-            if not str(engine_inp.get("engine", "")).strip():
-                engine_inp["engine"] = "openai" if difficulty == "kids" else "grok"
-            engine, eng_err = _resolve_art_engine(engine_inp)
-            if eng_err:
-                return {"error": eng_err}
-            extra_args = ["--description", "\n".join(subjects), "--engine", engine,
-                          "--difficulty", difficulty]
-            reg_name, reg_price = description.splitlines()[0][:120] or pid, None
-            # NEW_THEME_SET_SIZE always caps subjects at one fixed size -> always exactly one ZIP, deterministic.
-            reg_files = [f"data/digital_products/coloring_pages/sets/coloring_{pid.lower()}_set_01.zip"]
-            # Record the reservation NOW, before the subprocess spawns -- see
-            # _record_used_coloring_subjects()'s own docstring for why eager (not
-            # deferred-to-success) is the correct tradeoff for a permanent registry.
-            _record_used_coloring_subjects(pid, description, subjects)
-        script_name, log_suffix, proc_label = "build_coloring_product.py", "coloring_build", "build_coloring_product"
-        steps = (["coloring pages (new theme)", "quality check"] if extra_args
-                  else ["coloring pages", "quality check"])
-        needs_visual_qc = bool(extra_args)
-    elif category == "digital_planner":
-        engine, eng_err = _resolve_art_engine(inp)
-        if eng_err:
-            return {"error": eng_err}
-        try:
-            import generate_planner_v2 as _gpv2
-            configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
-        except Exception as exc:  # noqa: BLE001
-            return {"error": f"product builder unavailable: {exc}"}
-        if configured and pid not in configured:
-            return {"error": f"{pid} isn't a configured planner (have {', '.join(sorted(configured))})."}
-        script_name, log_suffix, proc_label = "build_product.py", "product_build", "build_product"
-        steps = ["sticker pack", "planner PDFs", "listing photos", "quality check"]
-        needs_visual_qc = True
-    elif category == "wall_calendar":
-        # WC-series (2026-08-11) -- built from a real competitive-research +
-        # adversarial-review workflow pass before any code shipped; see
-        # generate_wall_calendar.py's own module docstring for the design
-        # decisions (week-start as a real product axis, the undated-variant
-        # date-leak fix, why the monthly PDF isn't run through generate_
-        # print_sizes.py). No auto-pid generation (yet) -- explicit pid
-        # required, same as wall_art.
-        import generate_wall_calendar as _gwc
-        theme = str((inp or {}).get("theme", "")).strip().lower()
-        if theme not in _gwc.CALENDAR_THEMES:
-            return {"error": f"theme is required for wall_calendar (have: "
-                              f"{', '.join(sorted(_gwc.CALENDAR_THEMES))})"}
-        engine, eng_err = _resolve_art_engine(inp)
-        if eng_err:
-            return {"error": eng_err}
-        year = (inp or {}).get("year")
-        try:
-            year = int(year) if year else _gwc.NEW_YEAR
-        except (TypeError, ValueError):
-            return {"error": f"year must be an integer, got {year!r}"}
-        extra_args = ["--theme", theme, "--year", str(year), "--engine", engine]
-        reg_name = f"{_gwc.CALENDAR_THEMES[theme]['label']} {year} Wall Calendar"
-        reg_price = None
-        reg_files = [f"data/digital_products/wall_calendars/packs/{pid.lower()}_calendar_pack.zip"]
-        description = reg_name
-        script_name, log_suffix, proc_label = "generate_wall_calendar.py", "calendar_build", "build_wall_calendar"
-        steps = ["header art (12 illustrations)", "monthly-grid PDFs", "year-at-a-glance poster", "quality check"]
-        needs_visual_qc = True  # header art is freshly AI-generated -- same honesty flag as any fresh-art build
-    else:
-        return {"error": f"'{category}' has no verified one-tap build pipeline yet (have: "
-                          f"digital_planner, wall_art, coloring_pages, wall_calendar). Use the "
-                          f"individual Create-screen tools for this product instead."}
-
-    script = ROOT / "tools" / script_name
-    if not script.exists():
-        return {"error": f"{script_name} is missing from this deploy."}
-    log_file = f"{pid}_{log_suffix}.log"
-    try:
-        _logf = open(_product_log_dir() / log_file, "w")  # noqa: SIM115 — handed to Popen
-    except Exception:  # noqa: BLE001
-        _logf = subprocess.DEVNULL
-    proc = subprocess.Popen(
-        [sys.executable, str(script), pid] + extra_args,
-        stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
-        env=_subprocess_env_with_engine(engine) if engine else None,
-    )
-    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"{proc_label}:{pid}", datetime.now(timezone.utc))
-    if category in ("wall_art", "wall_art_bundle", "coloring_pages", "wall_calendar") and reg_files is not None:
-        # A watcher thread, not inline registration: only a CLEAN exit (0)
-        # means the files this record claims actually exist. Registering
-        # eagerly (before the subprocess even finishes) would let a failed
-        # build register a product whose deliverables don't exist -- exactly
-        # the kind of thing CLAUDE.md's top-priority rule forbids.
-        def _watch_and_register(_proc=proc, _pid=pid, _cat=category, _name=reg_name,
-                                 _price=reg_price, _files=reg_files, _desc=description):
-            rc = _proc.wait()
-            if rc == 0:
-                _register_new_product_overlay(_pid, _cat, _name or _pid, _price, _files, _desc)
-                # (2026-08-11) Pre-register listing photos here too -- same fix as
-                # the bundle-merge path (_register_prepublish_coloring_listing_
-                # images's own docstring) so a standard new-theme coloring/
-                # calendar build also has photos ready to upload the moment its
-                # create_listing action is approved, not a separate manual round
-                # after. Calendars only get the poster (a real deliverable, not
-                # an AI stand-in) pre-registered this way -- the remaining
-                # lifestyle-room photo slots still need the standard AI-photo
-                # flow, same as wall_art's existing "no lifestyle photos in the
-                # one-tap build" precedent, just not left at zero photos either.
-                if _cat == "coloring_pages" and _files:
-                    zip_path = _catalog_file_abs_path(_files[0])
-                    if zip_path is not None:
-                        _register_prepublish_coloring_listing_images(_pid, zip_path)
-                elif _cat == "wall_calendar" and _files:
-                    zip_path = _catalog_file_abs_path(_files[0])
-                    if zip_path is not None:
-                        _register_prepublish_calendar_listing_images(_pid, zip_path)
-        threading.Thread(target=_watch_and_register, daemon=True).start()
-    result = {
-        "pid": pid,
-        "category": category,
-        "started": True,
-        "os_pid": proc.pid,
-        "steps": steps,
-        "needs_visual_qc": needs_visual_qc,
-        "log_file": log_file,
-        "message": f"Building {pid} ({category}) in the background: {' → '.join(steps)}. "
-                   f"Files land in Files as each step finishes "
-                   f"({pid}_{log_suffix}.log has the live run log + the final QC verdict). "
-                   f"Nothing is published.",
-    }
-    if engine:
-        result["engine"] = engine
-    return result
-
-
-@app.post("/api/produce/build-product")
-async def produce_build_product(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Kick off a full product build (steps vary by category — see
-    _produce_build_product()'s docstring) in the background. Returns
-    immediately; deliverables appear in Files as they finish."""
-    return await asyncio.to_thread(_produce_build_product, body or {})
-
-
-# ── Retry a failed background build straight from its Today-tab alert ────────
-#
-# _health_check_iteration() (above) tracks every one-tap build in
-# _LONG_RUNNING_PROCS keyed by f"{proc_label}:{pid}" (e.g.
-# "build_coloring_product:COLOR1002") and, on a non-zero exit or a hang,
-# records it as an agent_heartbeat row named f"build:{cmd_name}" with status
-# "error" -- exactly the alert Scott saw on the Today tab with no way to act
-# on it ("Why don't these have the option fix? I know you can", 2026-07-31).
-# This dispatcher maps each proc_label prefix back to the exact same builder
-# function its own one-tap Create-screen button already calls, so "Retry"
-# is not a new mutation path -- it's the identical, already-approved action,
-# just re-triggered from the alert instead of typed in again.
-_LOOP_RETRY_BUILDERS = {
-    "build_coloring_pack": _produce_coloring_pack,
-    "build_planner": _produce_build_planner,
-    "build_sticker_pack": _produce_build_sticker_pack,
-    "build_product": _produce_build_product,
-    "build_wallart_product": _produce_build_product,
-    "build_coloring_product": _produce_build_product,
-}
-
-
-def _retry_build_loop(inp: dict) -> dict:
-    """`name` is a build-loop's agent_heartbeat name/label, e.g.
-    'build:build_coloring_product:COLOR1002' or the bare
-    'build_coloring_product:COLOR1002' (the Today alert only has the label
-    on hand) -- both accepted. Never touches Etsy; each target function is
-    already a real, independently-callable endpoint with its own validation,
-    so a bad pid still fails with that function's own clear error."""
-    raw = str((inp or {}).get("name", "")).strip()
-    if raw.startswith("build:"):
-        raw = raw[len("build:"):]
-    if ":" not in raw:
-        return {"error": f"'{raw}' isn't a recognized build-loop name (expected '<builder>:<pid>')."}
-    proc_label, _, pid = raw.partition(":")
-    builder = _LOOP_RETRY_BUILDERS.get(proc_label)
-    if builder is None:
-        return {"error": f"'{proc_label}' has no retry handler (retriable: "
-                          f"{', '.join(sorted(_LOOP_RETRY_BUILDERS))})."}
-    return builder({"pid": pid})
-
-
-@app.post("/api/loops/retry")
-async def retry_build_loop(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Today tab's Retry button on a failed background-build alert. See
-    _retry_build_loop()'s docstring."""
-    return await asyncio.to_thread(_retry_build_loop, body or {})
 
 
 @app.get("/api/produce/status")
@@ -16296,23 +14948,6 @@ def _find_catalog_product(product_id: str) -> dict | None:
             "files": ov.get("files", []),
         }
     return None
-
-
-def _next_coloring_pid() -> str:
-    """(2026-07-25) Scott: "It should auto generate the code" -- the Create
-    screen's Coloring Pages new-theme panel no longer asks him to hand-type
-    a code. Scans for the lowest unused COLOR#### numeric code (this
-    generator's own naming convention -- distinct from the 2 legacy fixed
-    packs' descriptive COLOR_* slugs, e.g. COLOR_KAWAII_COLORING_PAGES_SET_11,
-    which never collide with a purely-numeric suffix). Reuses
-    _find_catalog_product() -- the same base-catalog + overlay dual-source
-    uniqueness check every other pid-collision guard in this file already
-    uses -- so a collision with ANY category's existing pid, not just
-    coloring_pages, is caught too."""
-    n = 1001
-    while _find_catalog_product(f"COLOR{n}") is not None:
-        n += 1
-    return f"COLOR{n}"
 
 
 # Deliverable files are what a buyer actually downloads -- distinct from listing
@@ -19694,159 +18329,12 @@ def _register_new_product_overlay(product_id: str, category: str, name: str,
 # volume-or-local sidecar pattern as _PRODUCT_CATALOG_OVERRIDES_PATH above --
 # never a git-tracked file (a Railway redeploy is a fresh git checkout). ──
 
-def _normalize_subject(s: str) -> str:
-    """Lowercased, whitespace-collapsed form used for exact-match dedup
-    comparisons against the coloring-theme registry -- catches trivial
-    formatting drift (extra spaces, casing) without fuzzy/semantic matching,
-    which would need a second LLM call to judge and isn't worth the cost for
-    what's fundamentally a literal-repeat guard."""
-    return " ".join(s.strip().lower().split())
 
-
-_COLORING_THEME_REGISTRY_PATH = (
-    (_FILE_ROOTS["volume"] / "coloring_theme_registry.json") if "volume" in _FILE_ROOTS
-    else (ROOT / "data" / "coloring_theme_registry.json")
-)
-
-
-def _coloring_theme_registry() -> list[dict]:
-    """Each entry: {subject, normalized, product_id, theme, created_at}.
-    Tolerant of a missing/corrupt file -- an empty registry (before the
-    first-ever dynamic build) is valid, not an error."""
-    try:
-        data = json.loads(_COLORING_THEME_REGISTRY_PATH.read_text())
-        return data if isinstance(data, list) else []
-    except (OSError, json.JSONDecodeError):
-        return []
-
-
-def _write_coloring_theme_registry(entries: list[dict]) -> None:
-    """Atomic write (temp file + replace) -- same pattern as
-    _write_product_catalog_override()."""
-    _COLORING_THEME_REGISTRY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    tmp = _COLORING_THEME_REGISTRY_PATH.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(entries, indent=2))
-    tmp.replace(_COLORING_THEME_REGISTRY_PATH)
-
-
-def _record_used_coloring_subjects(product_id: str, theme: str, subjects: list[str]) -> None:
-    """Appends one registry entry per finalized subject. Called from
-    _produce_build_product()'s coloring_pages branch BEFORE the build
-    subprocess spawns -- a subject reserved for a build that later fails is
-    simply never reused again (mildly wasteful, never wrong); writing only
-    after success would leave a window where two builds kicked off close
-    together could both read an empty exclude-diff and land on the same
-    subject, which is the worse failure under a "never repeat, permanent,
-    catalog-wide" rule."""
-    registry = _coloring_theme_registry()
-    now = datetime.now(timezone.utc).isoformat()
-    for s in subjects:
-        registry.append({
-            "subject": s, "normalized": _normalize_subject(s),
-            "product_id": product_id, "theme": theme, "created_at": now,
-        })
-    _write_coloring_theme_registry(registry)
-
-
-_COLORING_SUBJECT_PROMPT = (
-    "You generate individual coloring-book PAGE SUBJECTS for an Etsy coloring-pages listing. "
-    "Given ONE general theme typed by the shop owner, invent the requested number of distinct "
-    "page subjects, each clearly on-theme, each meaningfully different from every other subject "
-    "in this batch AND from every subject in the 'already used -- never repeat these' list "
-    "(a genuinely different specific scene/subject, not just a reworded synonym of one already "
-    "used). Each subject is a short, concrete single-page scene description, 5-20 words, e.g. "
-    "'A sleepy fox curled under an oak tree'. "
-    'Respond with ONLY a JSON object of the exact shape {"subjects": ["...", "..."]} '
-    "containing exactly the requested number of strings -- no commentary, no markdown fence."
-)
-_COLORING_REGISTRY_PROMPT_CAP = 400  # most recent registry entries sent as "already used"
 # context -- the registry grows unbounded over years of use; this bounds prompt/token cost
 # while still covering everything recent. The defensive post-check in
 # _resolve_coloring_subjects() below checks the FULL registry (cheap in-memory set, no
 # token cost) so nothing older can slip through just because it aged out of this prompt
 # window -- belt-and-suspenders per CLAUDE.md: code-verified gates, not trust in AI output.
-
-
-def _generate_coloring_subjects(theme: str, exclude: list[str], count: int,
-                                 already_accepted: list[str] | None = None) -> list[str]:
-    """One Anthropic call: expand Scott's one-line theme into `count` distinct,
-    on-theme coloring-page subjects, steered away from `exclude` (recent slice
-    of the durable cross-listing registry) and from `already_accepted` (this
-    call's own earlier accepted subjects, used by _resolve_coloring_subjects()'s
-    retry pass). Returns [] on no API key / empty theme / call failure /
-    unparseable response -- caller decides what an empty result means."""
-    if not ANTHROPIC_KEY or not theme.strip() or count <= 0:
-        return []
-    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
-    exclude_block = "\n".join(f"- {s}" for s in exclude[-_COLORING_REGISTRY_PROMPT_CAP:]) or "(none yet)"
-    accepted_block = "\n".join(f"- {s}" for s in (already_accepted or [])) or "(none)"
-    dynamic_block = (
-        f"\n\nTHEME: {theme}\nREQUESTED COUNT: {count}\n\n"
-        f"ALREADY USED -- NEVER REPEAT THESE:\n{exclude_block}\n\n"
-        f"ALREADY ACCEPTED THIS BATCH -- must also differ from these:\n{accepted_block}"
-    )
-    try:
-        msg = _anthropic_create(
-            client, model=business_config.MODEL_CHEAP, max_tokens=2000,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": _COLORING_SUBJECT_PROMPT, "cache_control": {"type": "ephemeral"}},
-                    {"type": "text", "text": dynamic_block},
-                ],
-            }],
-        )
-    except Exception as exc:  # noqa: BLE001
-        print(f"[coloring-subjects] generation call failed: {exc}", flush=True)
-        return []
-    raw = msg.content[0].text.strip()
-    parsed = _extract_json_object(raw)
-    subjects = parsed.get("subjects") if isinstance(parsed, dict) else None
-    if not isinstance(subjects, list):
-        return []
-    return [str(s).strip() for s in subjects if str(s).strip()]
-
-
-def _resolve_coloring_subjects(theme: str) -> tuple[list[str], str | None]:
-    """Turns Scott's one-line theme into exactly generate_coloring_pages.
-    NEW_THEME_SET_SIZE subjects (30, as of 2026-08-08), never repeating
-    anything in the durable, catalog-wide, forward-only registry (2026-07-24,
-    "never repeat a creation"). Belt-and-suspenders: even though the prompt is given the
-    exclude list, this ALSO code-verifies every returned subject against the
-    FULL registry (normalized exact match) and silently drops anything that
-    slips past the LLM, retrying once for the shortfall. Returns
-    (subjects, error) -- error is None on success, else subjects is []."""
-    if not ANTHROPIC_KEY:
-        return [], ("Frank's AI provider isn't configured (ANTHROPIC_API_KEY unset), so it "
-                     "can't turn a theme into subjects yet.")
-    import generate_coloring_pages as gcp
-    n_needed = gcp.NEW_THEME_SET_SIZE
-    registry = _coloring_theme_registry()
-    used_normalized = {e["normalized"] for e in registry}
-    exclude_prompt = [e["subject"] for e in registry]
-    accepted: list[str] = []
-    accepted_normalized: set[str] = set()
-
-    for _attempt in range(2):  # 1 initial + 1 retry for any shortfall
-        shortfall = n_needed - len(accepted)
-        if shortfall <= 0:
-            break
-        batch = _generate_coloring_subjects(theme, exclude=exclude_prompt, count=shortfall,
-                                             already_accepted=accepted)
-        for s in batch:
-            norm = _normalize_subject(s)
-            if norm in used_normalized or norm in accepted_normalized:
-                continue  # the LLM slipped and repeated something -- drop it, don't trust it
-            accepted.append(s)
-            accepted_normalized.add(norm)
-            if len(accepted) == n_needed:
-                break
-
-    if len(accepted) < n_needed:
-        return [], (f"Could only generate {len(accepted)}/{n_needed} distinct new subjects for "
-                     f"'{theme}' without repeating something already used shop-wide. Try a "
-                     f"broader or different theme.")
-    return accepted, None
 
 
 # File-ownership index for the Files screen (2026-07-22) — lets /api/files

@@ -124,9 +124,7 @@ def test_calendar_tasks_run_endpoint_persists_shop_local_date():
          patch.object(server, "_run_weekly_monitors", return_value="ok"), \
          patch.object(server, "_run_monthly_shop_health", return_value="ok"), \
          patch.object(server, "_run_competitor_research_refresh", return_value="ok"), \
-         patch.object(server, "_run_seasonal_keyword_check", return_value="ok"), \
          patch.object(server, "_check_ads_thresholds", return_value="ok"), \
-         patch.object(server, "_run_scheduled_art_check", return_value="ok"), \
          patch.object(server, "_check_star_seller_status", return_value="ok"), \
          patch.object(server, "_set_calendar_task_last_run") as mock_set:
         asyncio.run(server.run_calendar_tasks_now(fake_request))

@@ -265,63 +265,6 @@ def test_file_audit_alerts_read_the_report():
 
 # ── _produce_build_product() category dispatch ──
 
-def test_unsupported_category_returns_clear_error_no_subprocess():
-    with patch("subprocess.Popen") as mock_popen:
-        result = server._produce_build_product({"pid": "SVG1001", "category": "svg_bundle"})
-    check("error" in result, f"an unsupported category must return an error: {result}")
-    check(not mock_popen.called, "no subprocess should ever be spawned for an unsupported category")
-
-
-def test_category_resolved_from_catalog_when_not_explicit():
-    # 2026-07-22: _produce_build_product() now pre-flight-checks that wall_art
-    # source art actually exists before spawning (data/digital_products/ is
-    # gitignored/ephemeral, so no real source JPGs are on disk in this
-    # sandbox) -- patch generate_print_sizes' directory constants to a temp
-    # dir holding a fake source file so this still exercises the real
-    # category-auto-resolution-from-catalog behavior this test is about,
-    # without the pre-flight check short-circuiting it first.
-    entry = next(e for e in _real_catalog() if e["category"] == "wall_art")
-    pid = entry["product_id"]
-    with tempfile.TemporaryDirectory() as tmpdir:
-        product_files_dir = Path(tmpdir) / "product_files"
-        product_files_dir.mkdir(parents=True, exist_ok=True)
-        (product_files_dir / f"{pid}.jpg").write_bytes(b"fixture")
-        import generate_print_sizes as gps
-        with patch.object(gps, "PRODUCT_FILES_DIR", product_files_dir), \
-             patch.object(gps, "UPSCALED_DIR", product_files_dir / "upscaled"), \
-             patch("subprocess.Popen") as mock_popen:
-            mock_popen.return_value.pid = 999999
-            result = server._produce_build_product({"pid": pid})
-    check(result.get("category") == "wall_art", f"category should be auto-resolved from the catalog by pid: {result}")
-    check(mock_popen.called, "a supported category should spawn a build subprocess")
-    args = mock_popen.call_args[0][0]
-    check("build_wallart_product.py" in args[1], f"wall_art should dispatch to build_wallart_product.py: {args}")
-    server._LONG_RUNNING_PROCS.pop(999999, None)
-
-
-def test_coloring_pages_dispatches_to_its_own_script():
-    entry = next(e for e in _real_catalog() if e["category"] == "coloring_pages")
-    pid = entry["product_id"]
-    with patch("subprocess.Popen") as mock_popen:
-        mock_popen.return_value.pid = 999998
-        result = server._produce_build_product({"pid": pid})
-    check(result.get("category") == "coloring_pages", f"expected coloring_pages category: {result}")
-    check(mock_popen.called, "coloring_pages should spawn a build subprocess")
-    args = mock_popen.call_args[0][0]
-    check("build_coloring_product.py" in args[1], f"coloring_pages should dispatch to build_coloring_product.py: {args}")
-    server._LONG_RUNNING_PROCS.pop(999998, None)
-
-
-def test_digital_planner_path_unchanged():
-    with patch("subprocess.Popen") as mock_popen:
-        mock_popen.return_value.pid = 999997
-        result = server._produce_build_product({"pid": "DP1030", "engine": "gemini"})
-    check(result.get("category") == "digital_planner", f"expected digital_planner category: {result}")
-    check(result.get("needs_visual_qc") is True, "planner builds must still carry the visual-QC honesty flag")
-    args = mock_popen.call_args[0][0]
-    check("build_product.py" in args[1], f"digital_planner should still dispatch to the original build_product.py: {args}")
-    server._LONG_RUNNING_PROCS.pop(999997, None)
-
 
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:

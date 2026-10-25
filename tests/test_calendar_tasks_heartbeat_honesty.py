@@ -49,8 +49,9 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
 
 import main as server  # noqa: E402
 
-# This test drives _calendar_tasks_loop's real sub-tasks, one of which is
-# _run_scheduled_coloring_check() -> _append_ops_runbook_entry() -> _OPS_RUNBOOK_PATH.
+# This test drives _calendar_tasks_loop's real sub-tasks, which can reach
+# _append_ops_runbook_entry() -> _OPS_RUNBOOK_PATH (the daily scheduled coloring
+# run did, until it was removed on 2026-10-25).
 # That path is _volume_or_local(...), so with no volume mounted it is the git-tracked
 # data/knowledge_base/ops_runbook.md, and every full-suite run appended a real
 # "Scheduled coloring run" entry to the doc Frank reads as ground truth. It only
@@ -86,10 +87,10 @@ def test_daily_brief_last_sent_date_is_persisted():
 
 
 def test_run_one_calendar_tasks_iteration_with_a_failure_reports_error_not_ok():
-    # Clear any prior state for the 5 date-independent ("daily") sub-tasks so
+    # Clear any prior state for the 4 date-independent ("daily") sub-tasks so
     # they're all guaranteed "due" this iteration regardless of what day this
     # test happens to run on.
-    for key in ("ads_check", "star_seller_check", "art_check", "gcal_sync", "etsy_file_inventory"):
+    for key in ("ads_check", "star_seller_check", "gcal_sync", "etsy_file_inventory"):
         db.set_setting(f"calendar_task_last_{key}", None)
 
     call_count = {"n": 0}
@@ -104,10 +105,8 @@ def test_run_one_calendar_tasks_iteration_with_a_failure_reports_error_not_ok():
          patch.object(server, "_run_monthly_shop_health", return_value=None), \
          patch.object(server, "_run_art_authenticity_check", return_value=None), \
          patch.object(server, "_run_competitor_research_refresh", return_value="ok"), \
-         patch.object(server, "_run_seasonal_keyword_check", return_value=None), \
          patch.object(server, "_check_ads_thresholds", side_effect=RuntimeError("simulated ads-check failure")), \
          patch.object(server, "_check_star_seller_status", return_value="fine"), \
-         patch.object(server, "_run_scheduled_art_check", return_value="skipped"), \
          patch.object(server, "_sync_calendar_to_google", return_value="synced"), \
          patch.object(server, "_run_etsy_file_inventory_sweep", return_value="0 listings"):
         try:
@@ -126,7 +125,7 @@ def test_run_one_calendar_tasks_iteration_with_a_failure_reports_error_not_ok():
 
 
 def test_run_one_calendar_tasks_iteration_all_success_reports_ok():
-    for key in ("ads_check", "star_seller_check", "art_check", "gcal_sync", "etsy_file_inventory"):
+    for key in ("ads_check", "star_seller_check", "gcal_sync", "etsy_file_inventory"):
         db.set_setting(f"calendar_task_last_{key}", None)
 
     call_count = {"n": 0}
@@ -141,10 +140,8 @@ def test_run_one_calendar_tasks_iteration_all_success_reports_ok():
          patch.object(server, "_run_monthly_shop_health", return_value=None), \
          patch.object(server, "_run_art_authenticity_check", return_value=None), \
          patch.object(server, "_run_competitor_research_refresh", return_value="ok"), \
-         patch.object(server, "_run_seasonal_keyword_check", return_value=None), \
          patch.object(server, "_check_ads_thresholds", return_value="fine"), \
          patch.object(server, "_check_star_seller_status", return_value="fine"), \
-         patch.object(server, "_run_scheduled_art_check", return_value="skipped"), \
          patch.object(server, "_sync_calendar_to_google", return_value="synced"), \
          patch.object(server, "_run_etsy_file_inventory_sweep", return_value="0 listings"):
         try:
@@ -170,14 +167,12 @@ def _logged_in_client() -> TestClient:
 
 
 def test_manual_calendar_tasks_endpoint_persists_last_run_dates():
-    for key in ("ads_check", "star_seller_check", "art_check"):
+    for key in ("ads_check", "star_seller_check"):
         db.set_setting(f"calendar_task_last_{key}", None)
     with patch.object(server, "_run_weekly_monitors", return_value="ok"), \
          patch.object(server, "_run_monthly_shop_health", return_value="ok"), \
          patch.object(server, "_run_competitor_research_refresh", return_value="ok"), \
-         patch.object(server, "_run_seasonal_keyword_check", return_value="ok"), \
          patch.object(server, "_check_ads_thresholds", return_value="ok"), \
-         patch.object(server, "_run_scheduled_art_check", return_value="ok"), \
          patch.object(server, "_check_star_seller_status", side_effect=RuntimeError("boom")):
         r = server.app.router  # touch to ensure app is importable; real call below
         resp = _logged_in_client().post("/api/calendar-tasks/run", headers={"X-App-Token": server.APP_TOKEN})
