@@ -2739,38 +2739,19 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <!-- ══════════ CREATE — the one place to make what goes on a listing. Redesigned
-       2026-07-22 for someone who's never used Frank: a category-first chooser (one
-       honest button per kind of listing — 3 that actually build today, 4 shown as
-       "coming soon" rather than hidden or faked) replaces the old single "type any
-       code" flow. Every original tool ID/handler is unchanged (studioGenerate/
-       svgcConvert/lsgGenerate/studioStageToEtsy/studioPostInstagram/Facebook/
-       buildProductRun/buildPlannerRun/stickerPackRun/printZipRun/photoSetRun/
-       qcRunCheck all still exist and still read the same element IDs) — only WHERE
-       those elements live in the DOM and how they're labeled changed. Real
-       categories now render bx-pid/bx-engine/bx-run-btn/bx-result (plus, for
-       Digital Planner and Wall Art, the bp-*/sp-*/ps-*/pz-* secondary "rebuild just
-       one part" fields) dynamically into #create-detail via
-       createOpenCategory()/renderCategoryPanelHtml() further down this file, rather
-       than as always-visible top-level cards. ══════════ -->
+  <!-- ══════════ CREATE — the one place to start what goes on a listing: a
+       category-first chooser, one honest button per kind of listing. Since
+       2026-10-25 (3D prints and 3D print files only) the digital-art builders are
+       gone; each tile opens its form or an honest "made by hand" note in
+       #create-detail via createOpenCategory(). ══════════ -->
   <div class="screen" id="screen-create">
     <div class="panel brk" style="height:100%;overflow-y:auto">
       <div class="panel-title">Create</div>
-      <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What would you like to make? Frank builds it, you review it, then you approve it before anything goes live.</div>
+      <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What are you listing? Register a 3D print, look up a listing, or make a product video. Nothing goes live until you approve it.</div>
 
       <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
-        <div class="create-choice" data-cat="digital_planner" role="button" tabindex="0" onclick="createOpenCategory('digital_planner')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:700;margin-top:6px">Digital Planner</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">PDF, cover, and matching stickers</div></div>
-        <div class="create-choice" data-cat="wall_art" role="button" tabindex="0" onclick="createOpenCategory('wall_art')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:700;margin-top:6px">Wall Art</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Every print size, ready to sell</div></div>
-        <div class="create-choice" data-cat="coloring_pages" role="button" tabindex="0" onclick="createOpenCategory('coloring_pages')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🎨</div><div style="font-weight:700;margin-top:6px">Coloring Pages</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">A themed set, packaged and ready</div></div>
-        <div class="create-choice soon" data-cat="sticker_pack" role="button" tabindex="0" onclick="createOpenCategory('sticker_pack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🌈</div><div style="font-weight:600;margin-top:6px">Sticker Pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
         <div class="create-choice soon" data-cat="svg_3dprint_pack" role="button" tabindex="0" onclick="createOpenCategory('svg_3dprint_pack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">✂️</div><div style="font-weight:600;margin-top:6px">SVG / 3D-Print Pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
-        <div class="create-choice soon" data-cat="sublimation" role="button" tabindex="0" onclick="createOpenCategory('sublimation')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🧣</div><div style="font-weight:600;margin-top:6px">Sublimation</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
         <div class="create-choice" data-cat="3d_print_physical" role="button" tabindex="0" onclick="createOpenCategory('3d_print_physical')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🏺</div><div style="font-weight:700;margin-top:6px">3D-Print Items</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Register a hand-made physical product</div></div>
         <div class="create-choice" data-cat="etsy_listing_lookup" role="button" tabindex="0" onclick="createOpenCategory('etsy_listing_lookup')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
@@ -2837,12 +2818,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Save inspiration and style-reference images here — photos you took, screenshots, things you found on Pinterest — organized by what they're for. When you build a new Wall Art design below, you can pick one of these to match its visual style. (Wall Art only for now — other categories are library-only until their generators support it.)</div>
 
         <select id="refimg-category" aria-label="What is this photo for?" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <option value="digital_planner">Digital Planner</option>
-          <option value="wall_art">Wall Art</option>
-          <option value="coloring_pages">Coloring Pages</option>
-          <option value="sticker_pack">Sticker Pack</option>
           <option value="svg_3dprint_pack">SVG / 3D-Print Pack</option>
-          <option value="sublimation">Sublimation</option>
           <option value="3d_print_physical">3D-Print Items</option>
           <option value="general" selected>General inspiration</option>
         </select>
@@ -3622,20 +3598,11 @@ async function renderPhoneToday(){
   if (_todayLastGoodCheck) {
     html += `<div style="color:var(--muted);font-size:10px;padding:6px 2px 0;text-align:right">Checked ${_timeAgo(new Date(_todayLastGoodCheck).toISOString())}</div>`;
   }
-  _phoneBundleOpps = bundleOpps;
   if (bundleOpps.length){
     html += '<div class="pmore-grp">Opportunities</div>';
-    html += bundleOpps.map((o,bi) =>
+    html += bundleOpps.map(o =>
       `<div class="palert good"><span class="pdot" aria-hidden="true"></span><div>${escHtml(o.title)}` +
       (o.suggestion ? `<div style="color:var(--muted);margin-top:2px">${escHtml(o.suggestion)}</div>` : '') +
-      // 2026-07-31 (Scott: "Why don't these have the option fix? I know you can"):
-      // picking WHICH existing designs go into a bundle is a real curation call --
-      // nothing here auto-selects real files into a fake "ready" listing (that
-      // would risk the top-priority "never lie to the customer" rule if the wrong
-      // designs got bundled). This opens the Create screen's matching build panel
-      // instead, pre-filled with a starter description, so Scott picks the actual
-      // designs before anything gets built.
-      `<div style="margin-top:6px"><button class="act-btn secondary" style="font-size:11.5px;padding:5px 10px" onclick="phoneStartBundleDraft(${bi})">＋ Start bundle listing</button></div>` +
       `</div></div>`
     ).join('');
   }
@@ -3648,26 +3615,20 @@ async function renderPhoneToday(){
   if (m.stale) el.querySelectorAll('.ptiles [data-countup]').forEach(node => { node.textContent = node.dataset.target; });
   else el.querySelectorAll('[data-countup]').forEach(node => _animateCountUp(node, node.dataset.target));
 }
-// Action sheet for a tapped Needs-attention card: Frank fixes it, retries a
-// failed build, shows Quality Audit specifics, or opens the listing on Etsy.
+// Action sheet for a tapped Needs-attention card: Frank fixes it, shows
+// Quality Audit specifics, or opens the listing on Etsy.
 let _phoneNeeds = [];
 let _phoneNeedsKeys = new Set();  // keys from the last render, for the resolve animation above
 let _phoneSheetItem = null;
 // 2026-07-31 (Scott: "Why don't these have the option fix? I know you can"):
-// agent_heartbeat alerts come in two retriable shapes -- a failed/hung
-// one-tap build (heartbeat name "build:<builder>:<pid>", e.g.
-// "build:build_coloring_product:COLOR1002") and the daily Quality Audit loop
-// itself ("quality_audit", no pid). Everything else under that same source
-// (credential leaks, Anthropic spend cap, Etsy token expiry) has no
-// in-app fix at all -- those require an action in a third-party console or
-// a local OAuth flow, so they correctly get no action button here.
-const _RETRIABLE_BUILD_PREFIXES = ['build_coloring_pack', 'build_planner', 'build_sticker_pack',
-  'build_product', 'build_wallart_product', 'build_coloring_product'];
+// of the agent_heartbeat alerts, only the daily Quality Audit loop
+// ("quality_audit") has something to show in-app. Everything else under that
+// source (credential leaks, Anthropic spend cap, Etsy token expiry) needs an
+// action in a third-party console or a local OAuth flow, so it gets no button.
+// (Failed one-tap builds could be retried here until the digital-art builders
+// were removed on 2026-10-25.)
 function _heartbeatRetryKind(name){
-  if (!name) return null;
-  if (name === 'quality_audit') return 'quality_audit';
-  const bare = name.startsWith('build:') ? name.slice(6) : name;
-  return _RETRIABLE_BUILD_PREFIXES.includes(bare.split(':')[0]) ? 'retry' : null;
+  return name === 'quality_audit' ? 'quality_audit' : null;
 }
 function phoneNeedsSheet(i){
   const it = _phoneNeeds[i];
@@ -3682,10 +3643,7 @@ function phoneNeedsSheet(i){
   subEl.style.overflowY = '';
   const fixBtn = document.getElementById('phone-sheet-fix');
   const viewBtn = document.getElementById('phone-sheet-view');
-  if (retryKind === 'retry') {
-    if (fixBtn) { fixBtn.style.display = ''; fixBtn.disabled = false; fixBtn.textContent = '🔁 Retry build'; }
-    if (viewBtn) viewBtn.style.display = 'none';
-  } else if (retryKind === 'quality_audit') {
+  if (retryKind === 'quality_audit') {
     if (fixBtn) { fixBtn.style.display = ''; fixBtn.disabled = false; fixBtn.textContent = '🔍 View details'; }
     if (viewBtn) viewBtn.style.display = 'none';
   } else {
@@ -3713,28 +3671,8 @@ function phoneNeedsSheet(i){
 function phoneSheetPrimaryAction(){
   const it = _phoneSheetItem; if (!it) return;
   const kind = _heartbeatRetryKind(it.heartbeat_name);
-  if (kind === 'retry') return phoneSheetRetryBuild();
   if (kind === 'quality_audit') return phoneSheetQualityAuditDetails();
   return phoneSheetFix();
-}
-async function phoneSheetRetryBuild(){
-  const it = _phoneSheetItem; if (!it || !it.heartbeat_name) return;
-  const btn = document.getElementById('phone-sheet-fix');
-  const orig = btn ? btn.textContent : '';
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Retrying…'; }
-  try {
-    const r = await fetchWithTimeout(BASE+'/api/loops/retry',
-      {method:'POST', headers:{'Content-Type':'application/json', Authorization:'Bearer '+TOKEN},
-       body: JSON.stringify({name: it.heartbeat_name})}, 20000);
-    const d = await r.json().catch(()=>({}));
-    if (!r.ok || d.error) throw new Error(d.error || d.detail || ('HTTP '+r.status));
-    phoneSheetClose();
-    showToast(d.message || 'Retrying in the background — check Files when it finishes.', 'ok', 6000);
-  } catch(e) {
-    showToast('Could not retry: ' + (e.message||e), 'err', 6000);
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = orig; }
-  }
 }
 async function phoneSheetQualityAuditDetails(){
   const it = _phoneSheetItem; if (!it) return;
@@ -3761,25 +3699,6 @@ async function phoneSheetQualityAuditDetails(){
     showToast('Could not load audit details: ' + (e.message||e), 'err', 6000);
     if (btn) { btn.disabled = false; btn.textContent = orig; }
   }
-}
-// 2026-07-31: opens the Create screen's matching build panel with the "+ new
-// one" description box pre-filled with a starter note. Deliberately NOT a
-// one-tap auto-build -- picking WHICH existing designs go into a bundle is a
-// real curation call; nothing here invents a "ready" listing from files it
-// never actually selected (see the Opportunities-card comment above).
-let _phoneBundleOpps = [];
-function phoneStartBundleDraft(i){
-  const o = _phoneBundleOpps[i]; if (!o) return;
-  if (typeof phoneOpenScreen === 'function') phoneOpenScreen('create');
-  if (typeof createOpenCategory !== 'function' || !_CREATE_CATEGORIES[o.category]) {
-    showToast('Open Create → the matching category to build this bundle.', 'info', 6000);
-    return;
-  }
-  createOpenCategory(o.category);
-  _createToggleNewCode(true);
-  const desc = document.getElementById('bx-description');
-  if (desc) desc.value = 'Bundle listing — ' + (o.title || '') + '. Pick 3-5 of the strongest existing designs '
-    + '(see the Products screen for the full list), then describe the collection\\'s shared theme/tone here before building.';
 }
 function phoneSheetClose(){
   document.body.classList.remove('phone-sheet-open');
@@ -4647,91 +4566,21 @@ const _GLOBAL_LOADERS = [
 let _activeScreen = 'cmd';
 
 // ══════════ Create screen redesign (2026-07-22) ══════════════════════════════════
-// One honest button per kind of listing. Real categories (a working one-tap build
-// pipeline exists) render a product picker + the existing bx-*/bp-*/sp-*/ps-*/pz-*
-// fields into the single #create-detail accordion panel; "coming soon" categories
-// render a short honest explanation instead of a fake/dead button. Only one
-// category's markup ever exists in the DOM at a time, so every reused element ID
-// (bx-pid, bx-engine, bx-run-btn, bx-result, bp-*, sp-*, ps-*, pz-*) is always
-// unique — buildProductRun()/buildPlannerRun()/stickerPackRun()/printZipRun()/
-// photoSetRun() below are completely unchanged except for one addition each: a
-// call to createPollBuildStatus() so a kicked-off build shows real progress
-// instead of a static "Check Files" dead end (see that function's own docstring).
+// One honest button per kind of listing, opening into the single #create-detail
+// accordion panel. Since 2026-10-25 (3D prints and 3D print files only) no
+// category has a one-tap builder: the planner, wall-art, coloring-page and
+// sticker builders were removed, so a category either opens its own form
+// (3D-print registration, listing lookup, product video) or says plainly that
+// it is made by hand.
 const _CREATE_CATEGORIES = {
-  digital_planner: {
-    // allowNewCode: false -- Digital Planner is a closed, hardcoded set of
-    // exactly 9 pre-designed planners (DP1026-1034, generate_planner_v2.py's
-    // _ALL_V2_PIDS), all of which are already in the picker dropdown above.
-    // The "+ new one" free-text option could NEVER succeed for any other
-    // code -- showing it was itself a false promise (Scott reported this
-    // live, 2026-07-22: "every action on this page has to work"). Removed
-    // here rather than just erroring honestly like Wall Art/Coloring Pages
-    // below, because there's no code path that could ever make it work --
-    // adding a 10th planner requires a developer editing generate_planner_v2.py
-    // and redeploying, not something typeable in this box.
-    icon: '🗓️', label: 'Digital Planner', real: true, usesEngine: true, allowNewCode: false,
-    blurb: 'A full planner — dated and undated PDF versions, a cover, clickable menus, boxes you can type into, and a matching kawaii sticker pack.',
-    placeholder: 'e.g. DP1030', primaryLabel: 'Build this planner',
-  },
-  wall_art: {
-    // usesEngine: false governs the OUTER "Advanced > Art style" disclosure,
-    // which belongs to the existing-product REBUILD path only (packaging
-    // print sizes from art that's already on disk -- genuinely generates no
-    // new AI art, so a style picker there stays a dead control). The new-art
-    // generation path (usesNewArtDescription, 2026-07-22) is a separate,
-    // narrower control that only appears inside "+ new one" -- see
-    // _renderCategoryPanelHtml()'s usesNewArtDescription branch below.
-    icon: '🖼️', label: 'Wall Art', real: true, usesEngine: false,
-    usesNewArtDescription: true, usesReferenceImage: true,
-    newArtPlaceholder: 'Describe the wall art you want, e.g. "a boho sun in terracotta and cream watercolor"',
-    blurb: 'Every print size a buyer expects, ready to sell — small to large, square, and standard paper sizes, all print-quality.',
-    placeholder: 'e.g. WA1030', primaryLabel: 'Build this wall art',
-  },
-  coloring_pages: {
-    // usesEngine: false -- same reason as wall_art above (the existing-product
-    // rebuild path repackages already-generated pages, no new art). New-theme
-    // generation (usesNewArtDescription) is the separate new-code path.
-    icon: '🎨', label: 'Coloring Pages', real: true, usesEngine: false,
-    usesNewArtDescription: true,
-    // autoGenerateCode (2026-07-25): Scott: "It should auto generate the
-    // code" -- unlike Wall Art, the new-theme path never shows a typed-code
-    // field at all; Frank assigns the next free COLOR#### code itself once
-    // a theme is described (see _renderCategoryPanelHtml()'s
-    // autoGenerateCode branch and _next_coloring_pid() in main.py).
-    autoGenerateCode: true,
-    // usesDifficulty (2026-08-08, Scott: "make sure the kids coloring pages
-    // are separate from the adult due to the adult being more detailed") --
-    // shows a #bx-difficulty picker (see _renderCategoryPanelHtml()) so ONE
-    // explicit tier governs the whole 30-page group, never mixed. wall_art
-    // (the other usesNewArtDescription category) has no equivalent concept,
-    // so this flag is coloring_pages-only.
-    usesDifficulty: true,
-    newCodeLinkLabel: '＋ This is a new one — describe it and I\\'ll build it',
-    newArtPlaceholder: 'One general theme, e.g. "ocean animals" -- Frank turns it into 30 distinct coloring-page subjects, never repeating a subject used before.',
-    blurb: 'A themed set of 30 individual coloring pages, all one difficulty tier, packaged into one ZIP and ready to sell.',
-    placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
-  },
-  sticker_pack: {
-    icon: '🌈', label: 'Sticker Pack', real: false,
-    soon: "There's no automatic builder for standalone Sticker Packs yet — for now these get made by hand. (Sticker sheets that come bundled with a Digital Planner still build automatically as part of that planner.)",
-  },
   svg_3dprint_pack: {
     icon: '✂️', label: 'SVG / 3D-Print Pack', real: false,
     soon: "There's no automatic builder for SVG / 3D-Print Packs yet — for now these get made by hand.",
     pointer: 'You can still turn a reference photo into a cutting file — see "Cutting File (SVG)" in Advanced Tools below.',
   },
-  sublimation: {
-    icon: '🧣', label: 'Sublimation', real: false,
-    soon: "There's no automatic builder for Sublimation designs yet — for now these get made by hand.",
-  },
-  // 3d_print_physical (2026-08-05): still real:false here (no automatic
-  // BUILDER exists -- these genuinely are made by hand) but this key is
-  // now special-cased in _renderCategoryPanelHtml() before this `real`
-  // flag is ever read, same pattern as etsy_listing_lookup/product_video
-  // below -- it opens a registration form (_renderPhysicalRegisterPanelHtml)
-  // instead of the "coming soon" stub. This entry stays real:false so the
-  // bundle-opportunity auto-open check at phoneStartBundleDraft() (which
-  // only makes sense for digital bundle categories) correctly skips it.
+  // 3d_print_physical (2026-08-05): no automatic builder (these are made by
+  // hand), so _renderCategoryPanelHtml() special-cases it to open the
+  // registration form (_renderPhysicalRegisterPanelHtml) instead.
   '3d_print_physical': {
     icon: '🏺', label: '3D-Print Items', real: false,
     soon: "There's no automatic builder for 3D-printed items yet — for now these get made by hand.",
@@ -4739,75 +4588,11 @@ const _CREATE_CATEGORIES = {
 };
 let _createOpenCat = null;
 
-function _engineOptionsHtml(defaultEngine){
-  // These are all pure-generate calls (new cover art / new wall-art master /
-  // new coloring-page theme) -- never an edit/input-image call -- so Ideogram
-  // (generate-only, best in-image text per CLAUDE.md) is safe and useful to
-  // offer here. Added 2026-07-30: it was already backend-approved
-  // (_APPROVED_ART_ENGINES, main.py) but missing from every picker that used
-  // this shared options list. Same trap hit again 2026-08-05 adding Grok --
-  // check every picker that calls this function, not just this one.
-  //
-  // defaultEngine (2026-08-09): lets a caller start a different option
-  // selected instead of the generic gemini default -- Coloring Pages passes
-  // 'grok' since its own difficulty picker starts on "Standard" (see the
-  // usesDifficulty render branch above and _syncColoringEngineDefault()
-  // below). Every other caller passes nothing and keeps the old behavior.
-  const d = defaultEngine || 'gemini';
-  const opt = (val, label) => '<option value="' + val + '"' + (val === d ? ' selected' : '') + '>' + label + '</option>';
-  return opt('gemini', 'Standard (recommended)')
-    + opt('openai', 'Alternative — best for transparent backgrounds')
-    + opt('gpt-image-2', 'Alternative — sharper in-image text')
-    + opt('ideogram', 'Alternative — best in-image text (titles/covers)')
-    + opt('grok', 'Alternative — xAI Grok (denser, more intricate line art)');
-}
-
-// Coloring Pages only (2026-08-09): re-selects #bx-engine's default whenever
-// #bx-difficulty changes, so picking Kids always lands on OpenAI and picking
-// Standard/Adult always lands on Grok -- matches main.py's own difficulty-
-// based engine default for any caller that leaves engine blank. Scott can
-// still hand-pick a different engine afterward; this only resets the
-// starting point on a difficulty change, it never locks the dropdown.
-function _syncColoringEngineDefault(){
-  const diffEl = document.getElementById('bx-difficulty');
-  const engEl = document.getElementById('bx-engine');
-  if (!diffEl || !engEl) return;
-  engEl.value = (diffEl.value === 'kids') ? 'openai' : 'grok';
-}
-
-// One "rebuild just this part" row inside a real category's advanced disclosure —
-// reuses the exact IDs/onclick handlers the original always-visible cards used
-// (bp-pid/bp-engine/bp-run-btn/bp-result, etc.), just condensed and relocated.
-function _cdSecondaryRow(o){
-  let html = '<div style="margin-bottom:14px"><div style="font-weight:600;font-size:12.5px;margin-bottom:4px">' + escHtml(o.title) + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">' + escHtml(o.desc) + '</div>';
-  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
-  html += '<input id="' + o.pidId + '" type="text" placeholder="' + escHtml(o.placeholder) + '" autocapitalize="characters" style="flex:1;min-width:150px;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px" />';
-  if (o.engineId) html += '<select id="' + o.engineId + '" style="padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
-  html += '<button class="act-btn secondary" onclick="' + o.onclick + '" id="' + o.btnId + '" style="white-space:nowrap">' + escHtml(o.btnLabel) + '</button>';
-  html += '</div><div id="' + o.resultId + '" style="margin-top:8px"></div></div>';
-  return html;
-}
-function _createSecondaryRowsHtml(key){
-  if (key === 'digital_planner') {
-    return _cdSecondaryRow({title:'Just the planner PDF', desc:'Rebuild the dated + undated PDFs on their own.', pidId:'bp-pid', placeholder:'Planner code, e.g. DP1030', engineId:'bp-engine', btnId:'bp-run-btn', btnLabel:'Rebuild PDF', onclick:'buildPlannerRun()', resultId:'bp-result'})
-      + _cdSecondaryRow({title:'Just the sticker pack', desc:'Rebuild the 9 themed sticker sheets on their own.', pidId:'sp-pid', placeholder:'Planner code, e.g. DP1030', engineId:'sp-engine', btnId:'sp-run-btn', btnLabel:'Rebuild stickers', onclick:'stickerPackRun()', resultId:'sp-result'})
-      + _cdSecondaryRow({title:'Just the 10 listing photos', desc:'Re-render the 10 Etsy photos from the already-built PDF.', pidId:'ps-pid', placeholder:'Planner code, e.g. DP1030', engineId:'ps-engine', btnId:'ps-run-btn', btnLabel:'Rebuild photos', onclick:'photoSetRun()', resultId:'ps-result'});
-  }
-  if (key === 'wall_art') {
-    return _cdSecondaryRow({title:'Just the print-size ZIP', desc:'Rebuild the multi-size print files on their own.', pidId:'pz-pid', placeholder:'Wall-art code, e.g. WA1030', engineId:null, btnId:'pz-run-btn', btnLabel:'Rebuild ZIP', onclick:'printZipRun()', resultId:'pz-result'});
-  }
-  return '';
-}
-
 function _renderCategoryPanelHtml(key){
   // etsy_listing_lookup (2026-07-25): not a build category at all -- typing
   // an ID here jumps straight into the existing product-review/publish
-  // pipeline (openProductReviewModal()), so it deliberately skips
-  // _CREATE_CATEGORIES/the build-picker machinery below (product-code
-  // picker, description textarea, engine select, buildProductRun()) --
-  // that's all for kicking off a BUILD, not an ID lookup, and reusing it
-  // here would be more code for a worse fit.
+  // pipeline (openProductReviewModal()), so it skips
+  // _CREATE_CATEGORIES.
   if (key === 'etsy_listing_lookup') return _renderListingLookupPanelHtml();
   // product_video (2026-07-25): same reasoning as etsy_listing_lookup above --
   // generating/staging/posting a video isn't a _produce_build_product() build
@@ -4823,102 +4608,10 @@ function _renderCategoryPanelHtml(key){
   if (key === '3d_print_physical') return _renderPhysicalRegisterPanelHtml();
   const cfg = _CREATE_CATEGORIES[key];
   if (!cfg) return '';
-  if (!cfg.real) {
-    let html = '<div style="font-size:26px;margin-bottom:6px" aria-hidden="true">' + cfg.icon + '</div>';
-    html += '<div style="font-weight:700;margin-bottom:6px">' + escHtml(cfg.label) + ' — coming soon</div>';
-    html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6">' + escHtml(cfg.soon) + '</div>';
-    if (cfg.pointer) html += '<div style="font-size:12.5px;color:var(--cyan2);margin-top:8px">' + escHtml(cfg.pointer) + '</div>';
-    return html;
-  }
-  let html = '<div style="font-weight:700;margin-bottom:4px">' + cfg.icon + ' ' + escHtml(cfg.label) + '</div>';
-  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">' + escHtml(cfg.blurb) + '</div>';
-
-  html += '<div id="create-pid-picker-wrap">';
-  html += '<select id="create-pid-select" aria-label="Choose an existing ' + escHtml(cfg.label) + '" onchange="_createPidSelectChanged()" style="width:100%;margin-bottom:6px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">'
-    + '<option value="">Choose one you already have…</option></select>';
-  if (cfg.allowNewCode !== false) {
-    const newCodeLabel = cfg.newCodeLinkLabel || '＋ This is a new one — I\\'ll type the code';
-    html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)" role="button" tabindex="0">' + newCodeLabel + '</span>';
-  }
-  html += '</div>';
-  html += '<div id="create-pid-freetext-wrap" style="display:none;margin-bottom:6px">';
-  // autoGenerateCode (2026-07-25): no typed-code field at all for this
-  // category -- Frank assigns the code itself once a theme is described
-  // (see _next_coloring_pid() in main.py). #bx-pid still has to exist with
-  // this exact id (buildProductRun() and _createPidSelectChanged() both
-  // read/write it regardless of category) -- type="hidden" keeps it inert
-  // (never focusable, never shown) rather than removing the element.
-  if (cfg.autoGenerateCode) {
-    html += '<div class="hub-listing-meta" style="margin-bottom:6px">Frank picks the code automatically once you describe a theme below.</div>'
-      + '<input id="bx-pid" type="hidden" value="" />';
-  } else {
-    html += '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
-  }
-  // usesNewArtDescription (2026-07-22): Wall Art / Coloring Pages can now
-  // actually generate genuinely new art/pages for a brand-new code, not just
-  // reject it -- but that needs a description of what to make (a bare code
-  // like "WA1050" carries zero information about the design) plus an engine
-  // choice, since real AI generation happens on this path. Scoped to the
-  // free-text "new code" sub-panel only -- the existing-product rebuild path
-  // above still needs neither.
-  if (cfg.usesNewArtDescription) {
-    html += '<textarea id="bx-description" rows="3" placeholder="' + escHtml(cfg.newArtPlaceholder || '') + '" style="width:100%;box-sizing:border-box;margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:13px;resize:vertical"></textarea>';
-    // usesDifficulty (2026-08-08): coloring_pages only -- one tier for the whole
-    // 30-page group. #bx-difficulty only exists in the DOM for categories that
-    // opt in; buildProductRun() null-checks it and defaults to 'standard' when
-    // absent (wall_art, the other usesNewArtDescription category, has no picker).
-    if (cfg.usesDifficulty) {
-      html += '<label style="font-size:11px;color:var(--muted);display:block;margin:8px 0 4px">Difficulty</label>';
-      html += '<select id="bx-difficulty" onchange="_syncColoringEngineDefault()" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">'
-        + '<option value="standard" selected>Standard — moderate detail (most listings)</option>'
-        + '<option value="kids">Kids — big, bold, very simple (ages 3-8)</option>'
-        + '<option value="adult">Adult — intricate, dense detail</option>'
-        + '</select>';
-    }
-    html += '<label style="font-size:11px;color:var(--muted);display:block;margin:6px 0 4px">Art style</label>';
-    // Coloring Pages defaults to Grok (denser, more intricate line art) since
-    // the initial difficulty above is "standard" -- _syncColoringEngineDefault()
-    // swaps this to OpenAI the moment Kids is picked. Every other category keeps
-    // the generic gemini default via the no-arg call. (2026-08-09, Scott: "make
-    // grok more for teen and adult coloring pages. open ai for kids" -- confirmed
-    // across 3 real side-by-side prompts in the Reference Photos library.)
-    html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml(cfg.usesDifficulty ? 'grok' : null) + '</select>';
-    if (cfg.usesDifficulty) {
-      html += '<div class="hub-listing-meta" style="margin-top:4px">Standard/Adult default to Grok (denser detail) — Kids default to OpenAI (simpler, thicker lines). Change the dropdown above anytime to override.</div>';
-    }
-    // usesReferenceImage (2026-07-30, wall_art only for now): lets a Reference
-    // Photos library upload actually feed into generation -- previously the
-    // library was upload-only with nothing downstream reading it. One vision
-    // call turns the picked image into style notes appended to the prompt;
-    // _createSyncReferencePicker() (called from createOpenCategory()) fills
-    // the options from _refImages, filtered to this category, once loaded.
-    if (cfg.usesReferenceImage) {
-      html += '<label for="create-ref-select" style="font-size:11px;color:var(--muted);display:block;margin:8px 0 4px">Match a reference photo (optional)</label>';
-      html += '<select id="create-ref-select" aria-label="Match a reference photo" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px"><option value="">None — describe the style above</option></select>';
-    }
-  }
-  html += '<div style="margin-top:6px"><span class="cd-newcode-link" onclick="_createToggleNewCode(false)" role="button" tabindex="0">← pick from the list instead</span></div></div>';
-
-  // usesEngine: false (wall_art, coloring_pages) -- this category's one-tap
-  // build generates no new AI art, so an art-style picker would be a dead
-  // control the backend never reads (see _CREATE_CATEGORIES' own comment).
-  // Skip the whole Advanced disclosure rather than show an empty one.
-  if (cfg.usesEngine) {
-    html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)" role="button" tabindex="0">Advanced ▸</span>';
-    html += '<div class="cd-advanced-body"><div class="cd-advanced-inner">';
-    html += '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Art style (used for the AI-generated art step only)</label>';
-    html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
-    html += '</div></div>';
-  }
-
-  html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="buildProductRun()" id="bx-run-btn">' + escHtml(cfg.primaryLabel) + '</button></div>';
-  html += '<div id="bx-result" style="margin-top:12px"></div>';
-
-  const secondary = _createSecondaryRowsHtml(key);
-  if (secondary) {
-    html += '<div style="margin-top:16px"><span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)" role="button" tabindex="0">Rebuild just one part ▸</span>';
-    html += '<div class="cd-advanced-body"><div class="cd-advanced-inner">' + secondary + '</div></div></div>';
-  }
+  let html = '<div style="font-size:26px;margin-bottom:6px" aria-hidden="true">' + cfg.icon + '</div>';
+  html += '<div style="font-weight:700;margin-bottom:6px">' + escHtml(cfg.label) + ' — coming soon</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6">' + escHtml(cfg.soon) + '</div>';
+  if (cfg.pointer) html += '<div style="font-size:12.5px;color:var(--cyan2);margin-top:8px">' + escHtml(cfg.pointer) + '</div>';
   return html;
 }
 
@@ -5120,8 +4813,6 @@ function createOpenCategory(key){
   if (tile) tile.classList.add('open');
   panel.className = 'create-detail';
   panel.innerHTML = _renderCategoryPanelHtml(key);
-  _createSyncProductPicker(key);
-  _createSyncReferencePicker(key);
   // product_video (2026-07-25): #studio-videos-list / #setting-video-engine only
   // exist in the DOM once this panel is open -- the create-screen show hook
   // (SCREEN_LOAD_HOOKS.create) already calls loadStudioVideos()/loadCreateEngines()
@@ -5138,76 +4829,6 @@ function createGoto(id){
   // createOpenCategory() above, without noticing Brand Kit still called this --
   // every chooser tile threw ReferenceError on click for over a week.
   document.getElementById(id)?.scrollIntoView({behavior:'smooth', block:'start'});
-}
-function _createPidSelectChanged(){
-  const sel = document.getElementById('create-pid-select');
-  const hidden = document.getElementById('bx-pid');
-  if (sel && hidden) hidden.value = sel.value;
-}
-function _createToggleNewCode(showFreeText){
-  const pickerWrap = document.getElementById('create-pid-picker-wrap');
-  const freeWrap = document.getElementById('create-pid-freetext-wrap');
-  if (!pickerWrap || !freeWrap) return;
-  pickerWrap.style.display = showFreeText ? 'none' : '';
-  freeWrap.style.display = showFreeText ? '' : 'none';
-  const pid = document.getElementById('bx-pid');
-  if (showFreeText && pid) {
-    pid.value = '';
-    // autoGenerateCode (2026-07-25): #bx-pid is a hidden input for this
-    // category -- it can never receive focus, so focus the description
-    // textarea instead so opening "+ new one" still lands the cursor
-    // somewhere useful.
-    const openCfg = _CREATE_CATEGORIES[_createOpenCat];
-    if (openCfg && openCfg.autoGenerateCode) {
-      const descEl = document.getElementById('bx-description');
-      if (descEl) descEl.focus();
-    } else {
-      pid.focus();
-    }
-  } else if (!showFreeText) {
-    // Switching back to the picker: a code typed into the free-text field must
-    // not silently survive into the build -- resync the hidden #bx-pid to
-    // whatever the (visible-again) <select> currently shows, same as a real
-    // onchange would (found in QA review, 2026-07-22: this path previously left
-    // #bx-pid holding stale free-typed text after "pick from the list instead").
-    _createPidSelectChanged();
-    // Same reasoning for a typed art description (2026-07-22 new-art flow):
-    // switching back to an existing-product pick must never carry a stale
-    // description along -- the backend already guards against this too
-    // (checks real catalog/source-art state before ever reading description),
-    // but clearing it here means the UI never even shows a leftover value
-    // that isn't going to be used.
-    const descEl = document.getElementById('bx-description');
-    if (descEl) descEl.value = '';
-  }
-}
-function _createSyncProductPicker(key){
-  const sel = document.getElementById('create-pid-select');
-  if (!sel) return;
-  // Idempotent: loadProducts() can resolve and call this again (e.g. re-entering
-  // the Create screen with a panel still open) — reset to just the placeholder
-  // option first so re-population never duplicates entries.
-  while (sel.options.length > 1) sel.remove(1);
-  const items = (_products || []).filter(p => p.category === key)
-    .sort((a, b) => String(a.id).localeCompare(String(b.id)));
-  items.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.id + ' — ' + (p.title || '');
-    sel.appendChild(opt);
-  });
-}
-function _createSyncReferencePicker(key){
-  const sel = document.getElementById('create-ref-select');
-  if (!sel) return;
-  while (sel.options.length > 1) sel.remove(1);
-  const items = (_refImages || []).filter(im => im.category === key);
-  items.forEach(im => {
-    const opt = document.createElement('option');
-    opt.value = im.id;
-    opt.textContent = im.description || im.filename;
-    sel.appendChild(opt);
-  });
 }
 function _createToggleAdvanced(el){
   const body = el.nextElementSibling;
@@ -5229,64 +4850,6 @@ function _createToggleAdvanced(el){
   });
 })();
 
-// Live build-status polling (2026-07-22) — closes the biggest usability gap the
-// old Create screen had: tapping a build button used to give a static ack plus a
-// "Check Files" link and NOTHING ELSE, so there was no way to tell whether a
-// build was still running, had crashed, or had actually finished short of
-// manually going to Files and guessing. Polls GET /api/produce/status (which
-// reads the same _LONG_RUNNING_PROCS registry the server's own health-check loop
-// already tracks) every ~4s and renders elapsed time + a live log tail into
-// outEl, ending in a clear success or failure card.
-function createPollBuildStatus(osPid, logFile, outEl){
-  if (!osPid || !outEl) return;
-  const startedAt = Date.now();
-  const timeoutMs = 10 * 60 * 1000;
-  // A direct element reference, not a getElementById lookup by a fixed id --
-  // the digital_planner panel alone can have up to 4 build buttons live at
-  // once (the main build plus 3 "rebuild just one part" rows), each calling
-  // this function into its OWN outEl. A shared hardcoded id meant whichever
-  // box rendered first "won" every subsequent poll's getElementById lookup,
-  // silently overwriting that box while the others never updated (found in
-  // QA review, 2026-07-22).
-  const box = document.createElement('div');
-  box.style.marginTop = '10px';
-  outEl.appendChild(box);
-  const poll = async () => {
-    if (!box.isConnected) return;  // panel was closed/replaced — stop polling quietly
-    if (Date.now() - startedAt > timeoutMs) {
-      box.innerHTML = '<div class="hub-listing-meta" style="color:var(--gold)">Still going after 10 minutes — check Files, or try again in a bit.</div>';
-      return;
-    }
-    let d;
-    try {
-      const r = await fetchWithTimeout(BASE + '/api/produce/status?os_pid=' + osPid + '&log_file=' + encodeURIComponent(logFile || ''), {
-        headers: {Authorization: 'Bearer ' + TOKEN}
-      }, 10000);
-      d = await r.json().catch(() => ({}));
-    } catch (e) {
-      setTimeout(poll, 4000);
-      return;
-    }
-    if (!box.isConnected) return;  // panel closed/replaced while the request was in flight
-    const tail = d.log_tail ? '<pre style="white-space:pre-wrap;font-size:10.5px;color:var(--muted);background:var(--panel);border-radius:var(--r-sm);padding:8px;margin-top:6px;max-height:160px;overflow-y:auto">' + escHtml(d.log_tail) + '</pre>' : '';
-    if (d.known === false) {
-      box.innerHTML = '<div class="hub-listing-meta">Lost track of this build (it\\'s been a while) — check Files for the result.</div>';
-      return;
-    }
-    if (d.running) {
-      const elapsed = Math.round((d.elapsed_s || 0));
-      box.innerHTML = '<div class="hub-spinner" style="margin:6px auto"></div><div class="hub-listing-meta" style="text-align:center">Still building… ' + elapsed + 's so far</div>' + tail;
-      setTimeout(poll, 4000);
-    } else if (d.exit_code === 0) {
-      box.innerHTML = '<div style="font-weight:600;color:var(--green)">✓ Done</div>' + tail
-        + '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">See it in Files →</button></div>';
-      showToast('Finished building', 'ok');
-    } else {
-      box.innerHTML = '<div style="font-weight:600;color:var(--red)">✗ Something went wrong (exit code ' + d.exit_code + ')</div>' + tail;
-    }
-  };
-  setTimeout(poll, 1500);
-}
 
 // ══════════ Reference Photos library (2026-07-22) ════════════════════════════════
 let _refImages = [];
@@ -5433,185 +4996,10 @@ async function qcRunCheck(){
   }finally{ if(btn) btn.disabled=false; }
 }
 
-// One-tap listing-photo set — hits POST /api/produce/listing-photos (local render,
-// no AI cost). Renders 10 photos from the planner's real PDF pages into its folder.
-async function photoSetRun(){
-  const pidEl=document.getElementById('ps-pid');
-  const btn=document.getElementById('ps-run-btn');
-  const out=document.getElementById('ps-result');
-  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
-  const engEl=document.getElementById('ps-engine');
-  const engine=(engEl&&engEl.value)||'gemini';
-  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
-  if(btn) btn.disabled=true;
-  if(out) out.innerHTML='<div class="hub-spinner"></div><div class="hub-listing-meta" style="text-align:center;margin-top:6px">Rendering 10 photos… ~20–40s</div>';
-  try{
-    const r=await fetchWithTimeout(BASE+'/api/produce/listing-photos', {
-      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine})
-    }, 210000);
-    const d=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
-    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
-    let html='<div style="font-weight:600;margin-bottom:6px"><span style="color:var(--green)">✓</span> '+
-      escHtml(d.pid)+' — generated '+(d.count||0)+' photo'+((d.count||0)!==1?'s':'')+'</div>';
-    (d.photos||[]).forEach(fn=>{ html+='<div class="hub-listing-meta" style="padding:2px 0">🖼️ '+escHtml(fn)+'</div>'; });
-    html+='<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Open in Files →</button></div>';
-    out.innerHTML=html;
-    showToast('Generated '+(d.count||0)+' listing photos for '+escHtml(d.pid), 'ok');
-  }catch(e){
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Generation failed')+'</div>';
-  }finally{ if(btn) btn.disabled=false; }
-}
 
-// One-tap wall-art print-size ZIP — POST /api/produce/print-zip (local resize, no AI cost).
-async function printZipRun(){
-  const pidEl=document.getElementById('pz-pid');
-  const btn=document.getElementById('pz-run-btn');
-  const out=document.getElementById('pz-result');
-  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
-  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a wall-art code first (e.g. WA1030).</div>'; return; }
-  if(btn) btn.disabled=true;
-  if(out) out.innerHTML='<div class="hub-spinner"></div><div class="hub-listing-meta" style="text-align:center;margin-top:6px">Building print sizes… ~15–40s</div>';
-  try{
-    const r=await fetchWithTimeout(BASE+'/api/produce/print-zip', {
-      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid})
-    }, 210000);
-    const d=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
-    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
-    out.innerHTML='<div style="font-weight:600"><span style="color:var(--green)">✓</span> '+escHtml(d.pid)+
-      ' — '+escHtml(d.zip||'print ZIP')+(d.size_mb!=null?(' ('+d.size_mb+' MB)'):'')+'</div>'+
-      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Open in Files →</button></div>';
-    showToast('Built print ZIP for '+escHtml(d.pid), 'ok');
-  }catch(e){
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed')+'</div>';
-  }finally{ if(btn) btn.disabled=false; }
-}
 
-// One-tap full planner build — POST /api/produce/build-planner. Kicks off a
-// background build (base PDFs + AI cover → finalized PDFs); returns immediately.
-async function buildPlannerRun(){
-  const pidEl=document.getElementById('bp-pid');
-  const btn=document.getElementById('bp-run-btn');
-  const out=document.getElementById('bp-result');
-  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
-  const engEl=document.getElementById('bp-engine');
-  const engine=(engEl&&engEl.value)||'gemini';
-  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
-  if(btn) btn.disabled=true;
-  if(out) out.innerHTML='<div class="hub-spinner"></div>';
-  try{
-    const r=await fetchWithTimeout(BASE+'/api/produce/build-planner', {
-      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine})
-    }, 30000);
-    const d=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
-    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
-    out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — build started</div>'+
-      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>';
-    createPollBuildStatus(d.os_pid, d.log_file, out);
-    showToast('Building '+escHtml(d.pid)+' — watching progress below', 'ok');
-  }catch(e){
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
-  }finally{ if(btn) btn.disabled=false; }
-}
 
-// One-tap full sticker-pack build — POST /api/produce/build-sticker-pack. Kicks off
-// a background build (themed sheets → strip → segment → ZIP); returns immediately.
-async function stickerPackRun(){
-  const pidEl=document.getElementById('sp-pid');
-  const btn=document.getElementById('sp-run-btn');
-  const out=document.getElementById('sp-result');
-  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
-  const engEl=document.getElementById('sp-engine');
-  const engine=(engEl&&engEl.value)||'gemini';
-  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
-  if(btn) btn.disabled=true;
-  if(out) out.innerHTML='<div class="hub-spinner"></div>';
-  try{
-    const r=await fetchWithTimeout(BASE+'/api/produce/build-sticker-pack', {
-      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine})
-    }, 30000);
-    const d=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
-    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
-    out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — sticker build started</div>'+
-      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>';
-    createPollBuildStatus(d.os_pid, d.log_file, out);
-    showToast('Building '+escHtml(d.pid)+' stickers — watching progress below', 'ok');
-  }catch(e){
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
-  }finally{ if(btn) btn.disabled=false; }
-}
 
-// One-tap FULL product build — POST /api/produce/build-product. Chains
-// stickers → planner → photos → QC in the background; returns immediately.
-async function buildProductRun(){
-  const pidEl=document.getElementById('bx-pid');
-  const btn=document.getElementById('bx-run-btn');
-  const out=document.getElementById('bx-result');
-  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
-  const engEl=document.getElementById('bx-engine');
-  const engine=(engEl&&engEl.value)||'gemini';
-  const descEl=document.getElementById('bx-description');
-  const description=((descEl&&descEl.value)||'').trim();
-  // difficulty (2026-08-08): only coloring_pages renders #bx-difficulty --
-  // absent for every other category, so this always falls back to 'standard'
-  // there (matches the server-side default in main.py's build branch).
-  const diffEl=document.getElementById('bx-difficulty');
-  const difficulty=(diffEl&&diffEl.value)||'standard';
-  const refEl=document.getElementById('create-ref-select');
-  const referenceImageId=(refEl&&refEl.value)||'';
-  const cfg = _CREATE_CATEGORIES[_createOpenCat];
-  const autoGen = !!(cfg && cfg.autoGenerateCode);
-  if(!pid && !autoGen){
-    // buildProductRun() is the ONE main build button shared by every real
-    // category (Digital Planner, Wall Art, Coloring Pages) -- the empty-pid
-    // message must not hardcode "planner code"/DP1030 for all of them (Scott
-    // reported this live on Coloring Pages, 2026-07-22). Use the currently
-    // open category's own placeholder/label instead.
-    const example = (cfg && cfg.placeholder) || 'e.g. DP1030';
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a code first (' + escHtml(example) + ').</div>';
-    return;
-  }
-  if(!pid && autoGen && !description){
-    // autoGenerateCode (2026-07-25): there's no code to check anymore -- the
-    // only thing that can be missing is the theme itself.
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Describe a theme first — Frank will pick the code automatically.</div>';
-    return;
-  }
-  if(btn) btn.disabled=true;
-  if(out) out.innerHTML='<div class="hub-spinner"></div>';
-  try{
-    // category is the currently-open real category's key (_createOpenCat) --
-    // without it, the server falls back to guessing the category from
-    // product_catalog.json, which defaults to "digital_planner" for any
-    // genuinely new/uncataloged pid (exactly what "+ new one" is for). That
-    // silently misrouted new Coloring Pages/Wall Art codes into the planner
-    // branch and rejected them with planner-specific wording (Scott reported
-    // this live, 2026-07-22: "COLOR01 isn't a configured planner...").
-    const r=await fetchWithTimeout(BASE+'/api/produce/build-product', {
-      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine, category: _createOpenCat, description, difficulty, reference_image_id: referenceImageId})
-    }, 30000);
-    const d=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
-    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
-    let steps='';
-    (d.steps||[]).forEach((s,i)=>{ steps+='<div class="hub-listing-meta" style="padding:1px 0">'+(i+1)+'. '+escHtml(s)+'</div>'; });
-    out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — full build started</div>'+
-      steps+
-      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>';
-    createPollBuildStatus(d.os_pid, d.log_file, out);
-    showToast('Building all of '+escHtml(d.pid)+' — watching progress below', 'ok');
-  }catch(e){
-    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
-  }finally{ if(btn) btn.disabled=false; }
-}
 // Rapid tab-bouncing (2026-08-07, Scott reported "long delay switching between sections
 // on my phone, sometimes have to close and reopen"): showScreen() used to re-fire EVERY
 // loader for a screen (up to 12 concurrent fetches for cmd, 8 for settings) on every single
@@ -10534,7 +9922,6 @@ async function loadProducts() {
     const d = await authGet('/api/products').then(r => r.json());
     _products = d.products || [];
     if (el) renderProductsContent();
-    if (_createOpenCat) _createSyncProductPicker(_createOpenCat);
   } catch(e) {
     if (el) el.innerHTML = '<div class="hub-empty">' + escHtml(e.message || 'Failed to load products') + '</div>';
   }
@@ -10619,69 +10006,7 @@ function productSheetOpenFiles(productId){
   productSheetClose();
   _productGoToScreen('files');
 }
-// kind -> {label, endpoint, warnExtra}. 'planner'/'stickers' are the original
-// digital-planner-only actions; 'wallart_printzip' and 'coloring' extend the same
-// tap-to-fix flow to Wall Art and Coloring Pages (2026-07-18) -- the other
-// categories without a generator this round get an honest Etsy-verified/flagged
-// state instead of a button here (see openProductFixSheet()).
-const _PRODUCT_REGEN_KINDS = {
-  planner: {
-    label: 'the dated + undated PDF', endpoint: '/api/produce/build-planner',
-    warnExtra: 'This starts a NEW AI generation job (about 2-4 minutes, costs real AI credits) and ' +
-      'produces brand-new cover art -- NOT a recovery of the exact file that was originally ' +
-      'uploaded to Etsy. If this listing is already live, the regenerated art may look different ' +
-      'from what buyers currently see.',
-  },
-  stickers: {
-    label: 'the sticker pack', endpoint: '/api/produce/build-sticker-pack',
-    warnExtra: 'This starts a NEW AI generation job (about 2-4 minutes, costs real AI credits) and ' +
-      'produces brand-new sticker art -- NOT a recovery of the exact file that was originally ' +
-      'uploaded to Etsy. If this listing is already live, the regenerated art may look different ' +
-      'from what buyers currently see.',
-  },
-  wallart_printzip: {
-    label: 'the multi-size print ZIP', endpoint: '/api/produce/print-zip', timeoutMs: 210000,
-    warnExtra: 'This re-packages the print sizes from the existing source art file already on ' +
-      'this deploy -- no new AI art is generated, so this only works if the source JPG is present. ' +
-      'Runs while you wait (can take up to a couple minutes for large art).',
-  },
-  coloring: {
-    label: 'the coloring pack', endpoint: '/api/produce/coloring-pack',
-    warnExtra: 'This starts a background job that regenerates only the theme pages not already ' +
-      'cached on disk (real AI credits for any uncached page) and re-zips the pack. Any freshly ' +
-      'generated pages may look different from what buyers currently see.',
-  },
-};
 
-async function productRegenerateBuild(productId, kind){
-  // NOT a silent one-tap fix (2026-07-18 design decision) -- these start real build
-  // jobs that can produce NEW art, not a recovery of the exact bytes already live on
-  // Etsy. Say so plainly and require an explicit confirm before firing.
-  const meta = _PRODUCT_REGEN_KINDS[kind];
-  if (!meta) return;
-  const warn = 'Regenerate ' + meta.label + ' for ' + productId + '?\\n\\n' + meta.warnExtra + '\\n\\nContinue?';
-  if (!confirm(warn)) return;
-  const endpoint = meta.endpoint;
-  try {
-    const r = await fetchWithTimeout(BASE + endpoint, {
-      method: 'POST', headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
-      body: JSON.stringify({pid: productId}),
-    }, meta.timeoutMs || 20000);
-    const d = await r.json().catch(()=>({}));
-    if (!r.ok || d.error) throw new Error(d.error || d.detail || ('HTTP '+r.status));
-    productSheetClose();
-    showToast(d.message || ('Started regenerating ' + meta.label + ' for ' + productId + '.'), 'ok', 7000);
-    // 2026-07-18: drop it from the current view now that a fix is in flight --
-    // it would otherwise keep sitting there red for the ~2-4 min the job takes,
-    // reading as still broken/unaddressed. loadProducts() (next real navigation
-    // to this screen) re-fetches fresh and will show it again if it's genuinely
-    // still missing once the job finishes.
-    const idx = _products.findIndex(x => x.id === productId);
-    if (idx !== -1) { _products.splice(idx, 1); renderProductsContent(); }
-  } catch(e) {
-    showToast('Could not start regeneration: ' + (e.message||e), 'err', 6000);
-  }
-}
 function openProductFixSheet(p){
   _productSheetItem = p;
   const missing = (p.files||[]).filter(f => !f.exists).map(f => f.name);
@@ -10691,41 +10016,16 @@ function openProductFixSheet(p){
     ? 'The catalog has no file paths recorded for this product.'
     : (missing.length ? 'Missing on this deploy: ' + missing.join(', ') : 'Some files are missing on this deploy.');
 
-  const isPlanner = p.category === 'digital_planner';
-  const isWallArt = p.category === 'wall_art' || p.category === 'wall_art_bundle';
-  const isColoring = p.category === 'coloring_pages';
-  const needsPdf = missing.some(n => n.toLowerCase().endsWith('.pdf'));
-  const needsZip = missing.some(n => n.toLowerCase().endsWith('_sticker_pack.zip'));
-
   let btns = '';
-  let hasRealFix = false;
-  if (isPlanner && needsPdf) {
-    hasRealFix = true;
-    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'planner\\')">🤖 Regenerate PDF (dated + undated)</button>';
-  }
-  if (isPlanner && needsZip) {
-    hasRealFix = true;
-    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'stickers\\')">🤖 Regenerate sticker pack</button>';
-  }
-  if (isWallArt) {
-    hasRealFix = true;
-    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'wallart_printzip\\')">🤖 Regenerate print-size ZIP</button>';
-  }
-  if (isColoring) {
-    hasRealFix = true;
-    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'coloring\\')">🤖 Regenerate coloring pack</button>';
-  }
-  if (!hasRealFix) {
-    // No generator wired for this category yet (2026-07-18 scoping decision) --
-    // show the REAL state from tools/audit_product_files.py's Etsy check instead
-    // of a fake regenerate button, so this is never a silent dead end.
-    if (p.file_audit === 'verified_live') {
-      btns += '<div style="font-size:12.5px;opacity:0.85;margin-bottom:8px">✅ Verified live on Etsy — this is a missing LOCAL backup only, not a customer-facing problem.</div>';
-    } else if (p.file_audit === 'genuinely_missing') {
-      btns += '<div style="font-size:12.5px;color:var(--red);margin-bottom:8px">⚠️ Not found on Etsy or locally — flagged for review (see the alerts bell).</div>';
-    } else {
-      btns += '<div style="font-size:12.5px;opacity:0.85;margin-bottom:8px">ℹ️ Not yet checked against Etsy — run tools/audit_product_files.py to verify.</div>';
-    }
+  // No generator exists for any category since the digital-art builders were
+  // removed (2026-10-25) -- show the REAL state from tools/audit_product_files.py's
+  // Etsy check, so this is never a silent dead end.
+  if (p.file_audit === 'verified_live') {
+    btns += '<div style="font-size:12.5px;opacity:0.85;margin-bottom:8px">✅ Verified live on Etsy — this is a missing LOCAL backup only, not a customer-facing problem.</div>';
+  } else if (p.file_audit === 'genuinely_missing') {
+    btns += '<div style="font-size:12.5px;color:var(--red);margin-bottom:8px">⚠️ Not found on Etsy or locally — flagged for review (see the alerts bell).</div>';
+  } else {
+    btns += '<div style="font-size:12.5px;opacity:0.85;margin-bottom:8px">ℹ️ Not yet checked against Etsy — run tools/audit_product_files.py to verify.</div>';
   }
   if (p.listing_id) {
     btns += '<button class="psheet-btn" onclick="window.open(\\'https://www.etsy.com/listing/' + p.listing_id + '\\',\\'_blank\\')">🏷 View listing on Etsy</button>';
@@ -10834,25 +10134,6 @@ function _renderProductReview(review){
     html += '<div class="prm-photo-grid">' + review.photos.filter(ph => ph.url).map(ph =>
       '<img src="' + ph.url + '" alt="' + escHtml(ph.name) + '" onclick="window.open(\\'' + ph.url + '\\',\\'_blank\\')">'
     ).join('') + '</div>';
-  } else if (review.category === 'wall_art') {
-    // (2026-07-25) Honest scope note, never a blocker -- listing photos
-    // aren't auto-generated for wall_art yet (its pipeline is scene-
-    // specific, not a single product-id-only call like the planner one).
-    // Says so plainly rather than pretending it's automated.
-    html += '<div class="prm-blocking" style="opacity:.8">ℹ️ Listing photos aren\\'t auto-generated for ' +
-      'Wall Art yet — build them from the Create screen\\'s Wall Art panel before publishing, or ' +
-      'publish content-only and add photos on Etsy directly.</div>';
-  } else if (review.category === 'coloring_pages') {
-    // (2026-07-25) Unlike wall_art, coloring_pages CAN get real listing
-    // photos with no AI pipeline needed -- the "Stage listing photos from
-    // pack" button (below, once a listing_id exists) uses the product's own
-    // real pack pages. Before publish there's no listing_id to stage
-    // against yet, so this stays informational-only until then.
-    html += '<div class="prm-blocking" style="opacity:.8">ℹ️ No listing photos yet — ' +
-      (review.listing_id
-        ? 'use the "Stage listing photos from pack" button below to add the real pack pages.'
-        : 'publish first, then stage the real pack pages as photos from this screen.') +
-      '</div>';
   }
 
   html += '<div class="prm-block-title">Files</div><div>' +
@@ -10878,17 +10159,13 @@ function _renderProductReview(review){
     btns += '<button class="psheet-btn primary" onclick="productReviewGenerateContent(\\'' + review.product_id + '\\')" id="prm-gen-btn">✨ Generate listing content</button>';
   } else if (review.listing_id) {
     btns += '<div class="hub-listing-meta" style="margin-bottom:2px">Etsy draft #' + escHtml(String(review.listing_id)) + ' — not yet live.</div>';
-    // (2026-07-25) coloring_pages has no AI listing-photo pipeline (unlike
-    // digital_planner) -- this stages the product's own real pack pages
-    // instead, so a listing published content-only isn't stuck with zero
-    // photos forever. Only offered once photos are actually missing.
-    if (review.category === 'coloring_pages' && !(review.photos && review.photos.length)) {
-      btns += '<button class="psheet-btn secondary" onclick="productReviewGenerateColoringPhotos(\\'' + review.product_id + '\\')" id="prm-color-photo-btn">📸 Stage listing photos from pack</button>';
-    }
     btns += '<button class="psheet-btn primary" onclick="productReviewActivate(\\'' + review.product_id + '\\',\\'' + review.listing_id + '\\')">🚀 Activate on Etsy</button>';
   } else {
     const blocking = [];
-    const PUBLISH_SUPPORTED_CATEGORIES = ['digital_planner', 'wall_art', 'coloring_pages'];
+    // Publishing from here covered planners, wall art and coloring pages only;
+    // those were removed on 2026-10-25 (3D prints and 3D print files only), and
+    // publishing a 3D product from this screen isn't built yet.
+    const PUBLISH_SUPPORTED_CATEGORIES = [];
     if (!PUBLISH_SUPPORTED_CATEGORIES.includes(review.category)) blocking.push('publishing isn\\'t supported yet for category "' + review.category + '"');
     if (review.qc.verdict === 'fail') blocking.push('QC gate failed: ' + review.qc.message);
     const missingFiles = review.deliverables.filter(d => !d.exists);
@@ -10900,34 +10177,6 @@ function _renderProductReview(review){
     }
   }
   actions.innerHTML = btns;
-}
-async function productReviewGenerateColoringPhotos(productId){
-  // (2026-07-25) Stages the product's own real coloring-pack pages as Etsy
-  // listing photos -- reuses the existing /api/produce/listing-photos
-  // endpoint, which now dispatches to the coloring_pages-specific path
-  // server-side (see _produce_listing_photos()'s category check). Each
-  // staged photo needs Scott's one-tap approval in the Action Center same
-  // as every other Etsy write, so this re-fetches the review (to show any
-  // now-staged photo state) and points at Approvals, mirroring
-  // productReviewPublish()'s pattern.
-  const btn = document.getElementById('prm-color-photo-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Staging…'; }
-  try {
-    const r = await fetchWithTimeout(BASE + '/api/produce/listing-photos',
-      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
-       body: JSON.stringify({pid: productId})}, 60000);
-    const d = await r.json().catch(()=>({}));
-    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
-    if (d.error) throw new Error(d.error);
-    const r2 = await authGet('/api/products/' + productId + '/review', 20000);
-    if (r2.ok) _renderProductReview(await r2.json());
-    showToast(d.message || 'Listing photos staged for approval.', 'ok', 7000);
-    if (typeof phoneTab === 'function') phoneTab('appr');
-    if (typeof loadActions === 'function') loadActions();
-  } catch(e) {
-    showToast('Could not stage listing photos: ' + (e.message||e), 'err', 7000);
-    if (btn) { btn.disabled = false; btn.textContent = '📸 Stage listing photos from pack'; }
-  }
 }
 async function productReviewGenerateContent(productId){
   // (2026-07-25) Replaces the old productReviewAskFrankToDraft(), which just

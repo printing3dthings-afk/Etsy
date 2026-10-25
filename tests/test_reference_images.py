@@ -281,53 +281,6 @@ def test_style_notes_caches_after_first_vision_call():
         check(stored.get("style_notes") == notes1, f"style_notes must be persisted, got {stored}")
 
 
-def test_build_product_wall_art_folds_in_reference_style_notes():
-    # The actual bug Scott reported: uploading a reference photo did nothing.
-    # Confirms a wall_art new-art build with reference_image_id set actually
-    # appends the style notes to the --description arg the subprocess receives.
-    root, meta_path = _isolated_roots()
-    with patch.dict(server._FILE_ROOTS, {"reference_images": root}), \
-         patch.object(server, "_REFERENCE_IMAGES_META_PATH", meta_path):
-        c = _logged_in_client()
-        entry = c.post(
-            "/api/reference-images/upload",
-            params={"filename": "inspo.png", "category": "wall_art"},
-            content=_png_bytes(),
-            headers={"Content-Type": "application/octet-stream"},
-        ).json()
-
-        import image_gen
-        captured = {}
-
-        class _FakeProc:
-            pid = 424242
-            def wait(self):
-                return 0
-
-        def _fake_popen(args, **kwargs):
-            captured["args"] = args
-            return _FakeProc()
-
-        with patch.object(image_gen, "describe_reference_style", return_value="soft sage green, minimal line art"), \
-             patch.object(server, "_resolve_art_engine", return_value=("gemini", None)), \
-             patch("generate_print_sizes.UPSCALED_DIR", root), \
-             patch("generate_print_sizes.PRODUCT_FILES_DIR", root), \
-             patch.object(server.subprocess, "Popen", side_effect=_fake_popen), \
-             patch.object(server.threading, "Thread") as mock_thread:
-            result = server._produce_build_product({
-                "pid": "WA_REFTEST01", "category": "wall_art",
-                "description": "a sun motif", "reference_image_id": entry["id"],
-            })
-        check(result.get("started") is True, f"expected the build to start, got {result}")
-        check("args" in captured, "subprocess.Popen must have been called")
-        args = captured.get("args", [])
-        check("--description" in args, f"expected --description in subprocess args, got {args}")
-        desc_arg = args[args.index("--description") + 1]
-        check("soft sage green, minimal line art" in desc_arg,
-              f"the reference image's style notes must be folded into the description, got {desc_arg!r}")
-        check("a sun motif" in desc_arg, f"the original description must still be present, got {desc_arg!r}")
-
-
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

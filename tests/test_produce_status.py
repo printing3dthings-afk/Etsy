@@ -146,70 +146,11 @@ def test_requires_auth():
     check(r.status_code in (401, 403), f"unauthenticated request must be rejected, got {r.status_code}")
 
 
-def test_build_kickoff_rejects_unconfigured_codes_cleanly():
-    # The unconfigured-code path must error without ever reaching subprocess.Popen
-    # (i.e. without spawning anything) -- this is a DIFFERENT contract than the
-    # success path below (which must carry log_file); kept as its own test rather
-    # than standing in for the success-path assertion the earlier version of this
-    # test claimed to cover but didn't (caught in QA review, 2026-07-22).
-    out = server._produce_build_planner({"pid": "DP9999"})
-    check("error" in out and "log_file" not in out, f"unconfigured planner must error cleanly with no log_file, got {out}")
-    out = server._produce_build_sticker_pack({"pid": "DP9999"})
-    check("error" in out and "log_file" not in out, f"unconfigured sticker pack must error cleanly with no log_file, got {out}")
-    out = server._produce_build_product({"pid": "DP9999"})
-    check("error" in out and "log_file" not in out, f"unconfigured product must error cleanly with no log_file, got {out}")
-
-
 def _fake_popen(*_args, **_kwargs):
     proc = MagicMock()
     proc.pid = 800000 + id(proc) % 1000  # distinct-enough fake OS pid per call
     proc.poll.return_value = None
     return proc
-
-
-def test_build_kickoff_success_path_carries_log_file():
-    # The real contract createPollBuildStatus() depends on: a SUCCESSFUL kickoff
-    # (a real configured pid, past every validation gate) must return "log_file"
-    # so the frontend has something to hand to GET /api/produce/status. subprocess.
-    # Popen is mocked so this never actually spawns a build; _product_log_dir()
-    # is redirected to a throwaway temp dir so the (still-real) log file open()
-    # call doesn't touch the repo's data/ tree.
-    pid = "DP1030"  # real, configured planner/sticker-pack pid (see generate_planner_v2._ALL_V2_PIDS / build_sticker_pack.SPEC_MODULES)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
-             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
-            out = server._produce_build_planner({"pid": pid})
-            check(out.get("started") is True, f"a configured pid must actually start, got {out}")
-            check(out.get("log_file") == f"{pid}_build.log", f"planner build must return its exact log_file name, got {out}")
-            check(out.get("os_pid") is not None, f"planner build must return the spawned os_pid, got {out}")
-            server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
-
-            out = server._produce_build_sticker_pack({"pid": pid})
-            check(out.get("started") is True, f"a configured pid must actually start, got {out}")
-            check(out.get("log_file") == f"{pid}_stickers_build.log", f"sticker-pack build must return its exact log_file name, got {out}")
-            server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
-
-            out = server._produce_build_product({"pid": pid})
-            check(out.get("started") is True, f"a configured pid must actually start, got {out}")
-            check(out.get("log_file") == f"{pid}_product_build.log", f"full product build must return its exact log_file name, got {out}")
-            server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
-
-
-def test_build_kickoff_success_path_registers_in_long_running_procs():
-    # createPollBuildStatus() polls GET /api/produce/status, which reads
-    # _LONG_RUNNING_PROCS by the returned os_pid -- confirm the kickoff actually
-    # registers there (not just that it returns a plausible-looking os_pid).
-    pid = "DP1030"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
-             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
-            out = server._produce_build_planner({"pid": pid})
-            os_pid = out.get("os_pid")
-            check(os_pid in server._LONG_RUNNING_PROCS, f"the kicked-off build's os_pid must be registered in _LONG_RUNNING_PROCS, got entry: {server._LONG_RUNNING_PROCS.get(os_pid)}")
-            entry = server._LONG_RUNNING_PROCS.get(os_pid)
-            if entry:
-                check(entry[1] == f"build_planner:{pid}", f"the registered label must identify this build, got {entry[1]!r}")
-            server._LONG_RUNNING_PROCS.pop(os_pid, None)
 
 
 # ── Category-misroute fix (2026-07-22) ────────────────────────────────────
@@ -224,79 +165,6 @@ def test_build_kickoff_success_path_registers_in_long_running_procs():
 # digital_planner's existing pattern) so a genuinely new/uncataloged pid
 # fails fast with the REAL reason instead of being misrouted or spawning a
 # doomed subprocess.
-
-def test_coloring_pages_uncataloged_pid_fails_fast_with_accurate_error():
-    out = server._produce_build_product({"pid": "COLOR01", "category": "coloring_pages"})
-    check("error" in out, f"an uncataloged coloring_pages pid must error, got {out}")
-    check(not out.get("started"), f"must not start a build for an uncataloged pid, got {out}")
-    msg = out.get("error", "").lower()
-    check("catalog" in msg, f"error must name the real reason (catalog), got {out}")
-    check("planner" not in msg and "dp10" not in msg,
-          f"error must NOT be misrouted through the digital_planner branch, got {out}")
-
-
-def test_coloring_pages_existing_pid_starts_cleanly():
-    # A real catalog entry (confirmed present in data/product_catalog.json) --
-    # the pre-flight check must not become a new false-negative for a pid
-    # that genuinely has everything build_coloring_product.py needs.
-    pid = "COLOR_KAWAII_COLORING_PAGES_SET_05"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
-             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
-            out = server._produce_build_product({"pid": pid, "category": "coloring_pages"})
-    check(out.get("started") is True, f"an existing catalog entry must actually start, got {out}")
-    check(out.get("category") == "coloring_pages", f"category must be echoed back, got {out}")
-    server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
-
-
-def test_wall_art_pid_with_no_source_art_fails_fast_with_accurate_error():
-    out = server._produce_build_product({"pid": "WA_NO_SUCH_ART_FILE", "category": "wall_art"})
-    check("error" in out, f"a wall_art pid with no source art must error, got {out}")
-    check(not out.get("started"), f"must not start a build with no source art, got {out}")
-    msg = out.get("error", "").lower()
-    check("source art" in msg, f"error must name the real reason (source art), got {out}")
-    check("planner" not in msg and "dp10" not in msg,
-          f"error must NOT be misrouted through the digital_planner branch, got {out}")
-
-
-def test_wall_art_pid_with_source_art_starts_cleanly():
-    # No real wall_art source JPGs exist in this sandbox (data/digital_products/
-    # is gitignored, ephemeral, machine-local) -- patch generate_print_sizes'
-    # own directory constants to a temp dir holding a fake source file, so
-    # this exercises the real .exists() check, not a mocked shortcut.
-    pid = "WA_TEST_FIXTURE_PID"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp = Path(tmpdir)
-        product_files_dir = tmp / "product_files"
-        upscaled_dir = product_files_dir / "upscaled"
-        product_files_dir.mkdir(parents=True, exist_ok=True)
-        upscaled_dir.mkdir(parents=True, exist_ok=True)
-        (product_files_dir / f"{pid}.jpg").write_bytes(b"not a real jpg, just needs to exist")
-        import generate_print_sizes as gps
-        with patch.object(gps, "PRODUCT_FILES_DIR", product_files_dir), \
-             patch.object(gps, "UPSCALED_DIR", upscaled_dir), \
-             patch.object(server, "_product_log_dir", return_value=tmp), \
-             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
-            out = server._produce_build_product({"pid": pid, "category": "wall_art"})
-    check(out.get("started") is True, f"a pid with real source art must actually start, got {out}")
-    check(out.get("category") == "wall_art", f"category must be echoed back, got {out}")
-    server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
-
-
-def test_explicit_category_prevents_the_original_misroute():
-    # The exact regression from Scott's screenshot, contrasted directly:
-    # omitting `category` (the pre-fix request shape) still falls back to
-    # guessing and misroutes an uncataloged pid into the planner branch --
-    # documenting why the frontend fix (always sending _createOpenCat) is
-    # the real fix, not just the pre-flight checks alone.
-    out_no_category = server._produce_build_product({"pid": "COLOR01"})
-    check("isn't a configured planner" in out_no_category.get("error", ""),
-          f"sanity check: omitting category still guesses digital_planner for an uncataloged pid, got {out_no_category}")
-    out_fixed = server._produce_build_product({"pid": "COLOR01", "category": "coloring_pages"})
-    check("isn't a configured planner" not in out_fixed.get("error", ""),
-          f"with category sent explicitly, must never be misrouted through the planner branch, got {out_fixed}")
-    check("catalog" in out_fixed.get("error", "").lower(),
-          f"with category sent explicitly, must get the accurate coloring_pages-specific error, got {out_fixed}")
 
 
 def run() -> None:

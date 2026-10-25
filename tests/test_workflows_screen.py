@@ -5,16 +5,16 @@ Covers:
 - GET /api/workflows now reports `timeout` and `running` per entry, and
   fixes acronym-unaware title-casing ("Qc Sweep" -> "QC Sweep", "Backup Hub
   Db" -> "Backup Hub DB").
-- POST /api/workflows/{id}/run now uses _rate_limited_auth (generate_
-  coloring_pages spends real gpt-image-1 budget per call -- every other
-  paid-generation endpoint in this codebase already gates on this).
+- POST /api/workflows/{id}/run now uses _rate_limited_auth (a long-running
+  workflow can spend real API budget per call -- every other paid-generation
+  endpoint in this codebase already gates on this).
 - _run_exec_command()'s long_running branch now refuses to start a second
   process for a script that's already running (checked via proc.poll(),
   not just dict membership, since finished procs sit in _LONG_RUNNING_PROCS
   unreaped for up to an hour).
 
 Mocks the narrowest real dependency (subprocess.Popen) so this never spawns
-a real gpt-image-1 generation. Same pattern as
+a real process. Same pattern as
 tests/test_exec_command_output_truncation.py and
 tests/test_health_check_reap.py.
 """
@@ -43,6 +43,23 @@ import main as server  # noqa: E402
 
 _failures: list[str] = []
 
+# No long-running workflow is registered since the digital-art generators were
+# removed (2026-10-25); the single-run guard is generic, so it is tested with
+# two stand-in entries that share one script, as the coloring ones did.
+_SLOW = {
+    "slow_job": {"script": "tools/slow_job.py", "description": "stand-in", "timeout": 30, "long_running": True},
+    "slow_job_quick": {"script": "tools/slow_job.py", "args": ["--quick"], "description": "stand-in",
+                       "timeout": 30, "long_running": True},
+}
+
+
+def _with_slow_jobs(fn):
+    def wrapped():
+        with patch.dict(server._EXEC_COMMANDS, _SLOW):
+            fn()
+    wrapped.__name__ = fn.__name__
+    return wrapped
+
 
 def check(cond: bool, msg: str) -> None:
     if not cond:
@@ -70,31 +87,33 @@ def test_get_workflows_fixes_acronym_title_casing():
           f"expected normal title-casing to still work, got: {by_id['shop_health_check']['name']!r}")
 
 
+@_with_slow_jobs
 def test_get_workflows_reports_running_true_for_a_live_matching_script():
     fake_proc = MagicMock(spec=subprocess.Popen)
     fake_proc.poll.return_value = None  # still running
-    server._LONG_RUNNING_PROCS[999001] = (fake_proc, "generate_coloring_pages", datetime.now(timezone.utc))
+    server._LONG_RUNNING_PROCS[999001] = (fake_proc, "slow_job", datetime.now(timezone.utc))
     try:
         result = asyncio.run(server.get_workflows(_token="test"))
         by_id = {w["id"]: w for w in result["workflows"]}
-        check(by_id["generate_coloring_pages"]["running"] is True,
+        check(by_id["slow_job"]["running"] is True,
               "a live proc for this script's cmd_name should mark it running")
-        # generate_coloring_pages_quick shares the same underlying script and
+        # slow_job_quick shares the same underlying script and
         # should also read as running, since a real conflict exists.
-        check(by_id["generate_coloring_pages_quick"]["running"] is True,
+        check(by_id["slow_job_quick"]["running"] is True,
               "a sibling registry entry using the same script should also read as running")
     finally:
         server._LONG_RUNNING_PROCS.pop(999001, None)
 
 
+@_with_slow_jobs
 def test_get_workflows_reports_running_false_once_process_finished():
     fake_proc = MagicMock(spec=subprocess.Popen)
     fake_proc.poll.return_value = 0  # finished, not yet reaped
-    server._LONG_RUNNING_PROCS[999002] = (fake_proc, "generate_coloring_pages", datetime.now(timezone.utc))
+    server._LONG_RUNNING_PROCS[999002] = (fake_proc, "slow_job", datetime.now(timezone.utc))
     try:
         result = asyncio.run(server.get_workflows(_token="test"))
         by_id = {w["id"]: w for w in result["workflows"]}
-        check(by_id["generate_coloring_pages"]["running"] is False,
+        check(by_id["slow_job"]["running"] is False,
               "a finished (but unreaped) proc must not read as running")
     finally:
         server._LONG_RUNNING_PROCS.pop(999002, None)
@@ -107,17 +126,18 @@ def test_post_workflow_run_endpoint_uses_rate_limited_auth():
     if route is not None:
         deps = [d.call for d in route.dependant.dependencies]
         check(server._rate_limited_auth in deps,
-              f"post_workflow_run must use _rate_limited_auth (generate_coloring_pages spends real "
-              f"gpt-image-1 budget), got deps calling {deps}")
+              f"post_workflow_run must use _rate_limited_auth (a long-running workflow "
+              f"can spend real API budget), got deps calling {deps}")
 
 
+@_with_slow_jobs
 def test_run_exec_command_refuses_to_start_a_duplicate_long_running_script():
     fake_running = MagicMock(spec=subprocess.Popen)
     fake_running.poll.return_value = None  # still running
-    server._LONG_RUNNING_PROCS[999003] = (fake_running, "generate_coloring_pages", datetime.now(timezone.utc))
+    server._LONG_RUNNING_PROCS[999003] = (fake_running, "slow_job", datetime.now(timezone.utc))
     try:
         with patch.object(server.subprocess, "Popen") as mock_popen:
-            result = server._run_exec_command("generate_coloring_pages_quick")
+            result = server._run_exec_command("slow_job_quick")
         check(mock_popen.called is False,
               "must not spawn a second process for the same underlying script while one is already running")
         check(result.get("started") is False, f"expected started=False, got: {result}")
@@ -126,15 +146,16 @@ def test_run_exec_command_refuses_to_start_a_duplicate_long_running_script():
         server._LONG_RUNNING_PROCS.pop(999003, None)
 
 
+@_with_slow_jobs
 def test_run_exec_command_allows_a_second_run_once_the_first_finished():
     fake_finished = MagicMock(spec=subprocess.Popen)
     fake_finished.poll.return_value = 0  # finished, unreaped
-    server._LONG_RUNNING_PROCS[999004] = (fake_finished, "generate_coloring_pages", datetime.now(timezone.utc))
+    server._LONG_RUNNING_PROCS[999004] = (fake_finished, "slow_job", datetime.now(timezone.utc))
     try:
         fake_new_proc = MagicMock(spec=subprocess.Popen)
         fake_new_proc.pid = 999005
         with patch.object(server.subprocess, "Popen", return_value=fake_new_proc) as mock_popen:
-            result = server._run_exec_command("generate_coloring_pages_quick")
+            result = server._run_exec_command("slow_job_quick")
         check(mock_popen.called is True,
               "a finished-but-unreaped prior process must not block a new run of the same script")
         check(result.get("started") is True, f"expected started=True, got: {result}")
@@ -143,10 +164,11 @@ def test_run_exec_command_allows_a_second_run_once_the_first_finished():
         server._LONG_RUNNING_PROCS.pop(999005, None)
 
 
+@_with_slow_jobs
 def test_run_exec_command_unrelated_script_is_unaffected_by_a_running_one():
     fake_running = MagicMock(spec=subprocess.Popen)
     fake_running.poll.return_value = None
-    server._LONG_RUNNING_PROCS[999006] = (fake_running, "generate_coloring_pages", datetime.now(timezone.utc))
+    server._LONG_RUNNING_PROCS[999006] = (fake_running, "slow_job", datetime.now(timezone.utc))
     try:
         with patch.object(server.subprocess, "run") as mock_run:
             mock_run.return_value = subprocess.CompletedProcess(args=["fake"], returncode=0, stdout="ok", stderr="")

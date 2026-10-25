@@ -10,7 +10,7 @@ Findings this covers:
      by literally hiding .env and running the script as a subprocess.
   2. execute_command's chat-tool dispatch never checked requires_approval --
      unlike /api/workflows/{id}/run, which does. A requires_approval command
-     (e.g. backup_digital_products) called from chat would have run
+     (e.g. backup_hub_db) called from chat would have run
      immediately, bypassing the Action Center approval every other mutation
      in this codebase goes through. Fixed to stage via run_script instead.
   3. check_new_orders / send_order_notifications (order_notifier.py, a real
@@ -95,21 +95,21 @@ def test_no_send_command_is_registered_anywhere():
 
 # ── execute_command requires_approval bug fix ───────────────────────────────
 def test_execute_command_stages_a_requires_approval_command():
-    # backup_digital_products is a real, pre-existing requires_approval=True
+    # backup_hub_db is a real, pre-existing requires_approval=True
     # entry -- confirms the chat tool now stages it instead of running it
     # immediately (the bug: this branch used to call _run_exec_command()
     # unconditionally regardless of requires_approval).
-    check(server._EXEC_COMMANDS["backup_digital_products"].get("requires_approval") is True,
-          "sanity check: backup_digital_products must still be requires_approval=True")
+    check(server._EXEC_COMMANDS["backup_hub_db"].get("requires_approval") is True,
+          "sanity check: backup_hub_db must still be requires_approval=True")
     before = len(server.db.list_actions(status="pending"))
-    out = server._execute_agent_tool("execute_command", {"command": "backup_digital_products"})
+    out = server._execute_agent_tool("execute_command", {"command": "backup_hub_db"})
     check(out.get("staged") is True, f"a requires_approval command must stage, not run, got: {out}")
     check(isinstance(out.get("action_id"), int), f"expected a real action_id, got: {out}")
     after = len(server.db.list_actions(status="pending"))
     check(after == before + 1, f"expected exactly one new pending action, before={before} after={after}")
     queued = server.db.get_action(out["action_id"])
     check(queued["type"] == "run_script", f"expected type=run_script, got: {queued['type']}")
-    check(queued["payload"]["command"] == "backup_digital_products",
+    check(queued["payload"]["command"] == "backup_hub_db",
           f"expected the staged payload to carry the command name, got: {queued['payload']}")
 
 
