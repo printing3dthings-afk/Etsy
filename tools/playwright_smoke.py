@@ -1635,19 +1635,11 @@ async def _run_browser_checks() -> None:
                 };
             }""")
             check(planner_fix_sheet.get("open"), "tapping a missing-files planner card should open the fix sheet")
-            check("Regenerate PDF" in planner_fix_sheet.get("buttons", "") and "Regenerate sticker pack" in planner_fix_sheet.get("buttons", ""),
-                  f"a planner missing both PDF and ZIP should offer both regenerate buttons: {planner_fix_sheet}")
+            # (2026-10-25) the digital-art builders are gone (Scott: 3D prints and
+            # 3D print files only), so no card offers a regenerate action any more
+            check("Regenerate" not in planner_fix_sheet.get("buttons", ""),
+                  f"no fix sheet may offer a regenerate action now the digital builders are gone: {planner_fix_sheet}")
             check("Open in Files" in planner_fix_sheet.get("buttons", ""), f"fix sheet must always offer Open in Files: {planner_fix_sheet}")
-
-            # wall_art now has a real generator wired (2026-07-18: /api/produce/print-zip) --
-            # its fix sheet should offer a genuine regenerate button, same tier as planners.
-            wallart_fix_sheet = await page.evaluate("""() => {
-                document.body.classList.remove('product-sheet-open');
-                openProductSheet('WA1001');
-                return document.getElementById('product-sheet-buttons').innerHTML;
-            }""")
-            check("Regenerate print-size ZIP" in wallart_fix_sheet,
-                  f"wall_art missing files should offer the print-zip regenerate action: {wallart_fix_sheet}")
 
             # Categories with no generator wired this round (2026-07-18 scoping decision:
             # svg_bundle/paper_pack/sublimation/etc.) must show the HONEST Etsy-audit state
@@ -1662,34 +1654,6 @@ async def _run_browser_checks() -> None:
             check("flagged for review" in unsupported_fix_sheet,
                   f"a genuinely_missing file_audit verdict should say so plainly, not just stay silent: {unsupported_fix_sheet}")
             check("Open in Files" in unsupported_fix_sheet, f"unsupported-category fix sheet should still offer Open in Files: {unsupported_fix_sheet}")
-
-            # Regenerating a missing-files card removes it from the current view
-            # (2026-07-18 -- Scott reported it kept sitting there red for the
-            # ~2-4 min the background job runs, reading as still unaddressed).
-            # Mock the produce endpoint (never actually kick off a paid AI job in
-            # a test) and auto-accept the cost/time confirm() dialog.
-            async def _mock_build_planner(route):
-                await route.fulfill(status=200, content_type="application/json",
-                                     body='{"pid": "DP1026", "started": true, "message": "Building DP1026 in the background."}')
-            await page.route("**/api/produce/build-planner", _mock_build_planner)
-            page.once("dialog", lambda d: d.accept())
-            regen_result = await page.evaluate("""async () => {
-                document.body.classList.remove('product-sheet-open');
-                openProductSheet('DP1026');
-                const before = _products.some(p => p.id === 'DP1026');
-                let errMsg = null;
-                try { await productRegenerateBuild('DP1026', 'planner'); } catch(e) { errMsg = String(e); }
-                await new Promise(r => setTimeout(r, 200));
-                const stack = document.getElementById('toast-stack');
-                return {before, after: _products.some(p => p.id === 'DP1026'),
-                        sheetOpen: document.body.classList.contains('product-sheet-open'),
-                        errMsg, toastText: stack ? stack.textContent : null};
-            }""")
-            await page.unroute("**/api/produce/build-planner")
-            check(regen_result.get("before") is True, f"DP1026 must exist before regenerating: {regen_result}")
-            check(regen_result.get("after") is False,
-                  f"DP1026 must be removed from _products (and the re-rendered list) once regeneration starts: {regen_result}")
-            check(regen_result.get("sheetOpen") is False, f"the fix sheet should close on success: {regen_result}")
 
             # Review modal -- deliberately NOT mocked. This server process runs from
             # the real repo checkout (cwd=ROOT), so /api/products/DP1030/review hits
@@ -1749,32 +1713,16 @@ async def _run_browser_checks() -> None:
             # modal otherwise intercepts pointer events for unrelated later clicks).
             await page.evaluate("productReviewClose(); document.body.classList.remove('product-sheet-open')")
 
-            # ── Coloring-pages "stage listing photos from pack" button (2026-07-25) --
-            # Scott: COLOR1003 published with zero listing photos (no AI photo pipeline
-            # for this category); the fix stages the product's own real pack pages
-            # instead. Button must appear ONLY for coloring_pages + an existing
-            # listing_id + no photos yet -- never for wall_art (still genuinely
-            # unsupported) and never before a listing exists (nothing to stage
-            # against). Calls _renderProductReview() directly with fake review
-            # objects -- #prm-body/#prm-actions exist statically, no need to open
-            # the modal via network first.
-            color_photo_states = await page.evaluate("""() => {
+            # ── The coloring-pages "stage listing photos" button went with the
+            # digital-art workflows (2026-10-25): it must not render for anything. ──
+            no_color_photo_btn = await page.evaluate("""() => {
                 const base = {has_content: true, content: {title: 't', description: 'd', tags: [], price: 6.99},
                               photos: [], deliverables: [], qc: {verdict: 'pass', message: ''}};
                 _renderProductReview({...base, product_id: 'COLOR1003', category: 'coloring_pages', listing_id: 555});
-                const withListing = document.getElementById('prm-actions').innerHTML;
-                _renderProductReview({...base, product_id: 'COLOR9999', category: 'wall_art', listing_id: 555});
-                const wallArt = document.getElementById('prm-actions').innerHTML;
-                _renderProductReview({...base, product_id: 'COLOR1003', category: 'coloring_pages', listing_id: null});
-                const noListingYet = document.getElementById('prm-body').innerHTML;
-                return {withListing, wallArt, noListingYet};
+                return document.getElementById('prm-actions').innerHTML;
             }""")
-            check("prm-color-photo-btn" in color_photo_states.get("withListing", ""),
-                  f"a coloring_pages product with a real listing_id and no photos must offer the stage-photos button: {color_photo_states}")
-            check("prm-color-photo-btn" not in color_photo_states.get("wallArt", ""),
-                  f"wall_art must NOT get the coloring-pages-specific button: {color_photo_states}")
-            check("publish first" in color_photo_states.get("noListingYet", "").lower(),
-                  f"with no listing_id yet the info text should say publish first, not offer the button: {color_photo_states}")
+            check("prm-color-photo-btn" not in no_color_photo_btn,
+                  f"the removed coloring-pages photo button must not render: {no_color_photo_btn}")
             await page.evaluate("document.body.classList.remove('product-review-open')")
 
             # ── "Etsy Listing" Create-screen tile (2026-07-25) -- Scott: type a
@@ -1880,8 +1828,10 @@ async def _run_browser_checks() -> None:
                   f"the button must disable + show 'Generating…' synchronously before the mocked response resolves: {lookup_and_generate}")
             check("Generated Test Title" in lookup_and_generate["after"].get("bodyHtml", ""),
                   f"after generation the modal must re-render with the real generated title: {lookup_and_generate}")
-            check("Publish to Etsy" in lookup_and_generate["after"].get("actionsHtml", ""),
-                  f"once content exists (and files/QC pass) Publish should now be offered: {lookup_and_generate}")
+            # (2026-10-25) publishing from this screen supported only the digital
+            # categories, all removed; a digital planner must not offer it now
+            check("Publish to Etsy" not in lookup_and_generate["after"].get("actionsHtml", ""),
+                  f"a digital planner must no longer be publishable from the review modal: {lookup_and_generate}")
             check((_captured_generate_body.get("json") or {}).get("engine") == "grok",
                   f"selecting 'grok' in the per-generation picker must reach the POST body: {_captured_generate_body}")
             await page.evaluate("document.body.classList.remove('product-review-open')")
@@ -1960,421 +1910,26 @@ async def _run_browser_checks() -> None:
             # staging/social-posting pipeline that the 2026-07-22 redesign buried
             # in the collapsed Advanced tools disclosure with zero indication it
             # was there (Scott: "I'm also missing my section to make my ai videos").
-            check(tile_grid.get("count") == 9, f"Create screen must show exactly 9 category tiles, got: {tile_grid}")
+            # (2026-10-25) 9 -> 4: the digital tiles went with the digital-art
+            # workflows (Scott: 3D prints and 3D print files only).
+            check(tile_grid.get("count") == 4, f"Create screen must show exactly 4 category tiles, got: {tile_grid}")
             check(set(tile_grid.get("cats", [])) == {
-                "digital_planner", "wall_art", "coloring_pages",
-                "sticker_pack", "svg_3dprint_pack", "sublimation", "3d_print_physical",
-                "etsy_listing_lookup", "product_video",
+                "svg_3dprint_pack", "3d_print_physical", "etsy_listing_lookup", "product_video",
             }, f"unexpected tile category set: {tile_grid}")
             # (2026-08-05) 4 -> 3: 3d_print_physical's tile lost its 'soon' class --
             # it now opens a real physical-product registration form instead of the
             # dead stub (see the physical-product registration Playwright block above).
-            check(tile_grid.get("soonCount") == 3, f"exactly 3 tiles should be 'coming soon', got: {tile_grid}")
+            # (2026-10-25) 3 -> 1: only svg_3dprint_pack is still a coming-soon stub
+            check(tile_grid.get("soonCount") == 1, f"exactly 1 tile should be 'coming soon', got: {tile_grid}")
             check("paper_pack" not in tile_grid.get("cats", []), "paper_pack must never appear as a tile (Scott's explicit exclusion)")
-
-            # Stub _products so the real-category panel's picker has something to
-            # show (loadProducts() itself is covered by the loadProducts-early-return
-            # fix verified separately; this just gives the picker fixture data).
-            # Field is "title" -- matches the REAL /api/products response shape
-            # (main.py's _build_products_status(): "title": p.get("name", "")) --
-            # not "name". An earlier version of this fixture used "name" here,
-            # which silently matched a same-named bug in _createSyncProductPicker()
-            # and would have made that bug invisible to this exact test (caught in
-            # QA review, 2026-07-22).
-            real_panel = await page.evaluate("""() => {
-                _products = [
-                    {id: 'DP1030', title: 'ADHD Planner', category: 'digital_planner'},
-                    {id: 'DP1031', title: 'Evergreen Planner', category: 'digital_planner'},
-                    {id: 'WA1001', title: 'Wall Art One', category: 'wall_art'},
-                ];
-                createOpenCategory('digital_planner');
-                const panel = document.getElementById('create-detail');
-                const picker = document.getElementById('create-pid-select');
-                const dp1030Opt = picker ? [...picker.options].find(o => o.value === 'DP1030') : null;
-                return {
-                    tileOpen: document.querySelector('.create-choice[data-cat="digital_planner"]').classList.contains('open'),
-                    panelHtml: panel ? panel.innerHTML : '',
-                    pickerOptionCount: picker ? picker.options.length : 0,
-                    pickerHasDP1030: !!dp1030Opt,
-                    dp1030OptionText: dp1030Opt ? dp1030Opt.textContent : null,
-                    runBtnPresent: !!document.getElementById('bx-run-btn'),
-                };
-            }""")
-            check(real_panel.get("tileOpen"), f"opening a real category should mark its tile .open: {real_panel}")
-            check("Build this planner" in real_panel.get("panelHtml", ""), f"digital_planner panel should show its plain-language primary label: {real_panel}")
-            check(real_panel.get("pickerOptionCount", 0) >= 3, f"product picker should have the placeholder + 2 DP1030/DP1031 options, got: {real_panel}")
-            check(real_panel.get("pickerHasDP1030"), f"product picker must include DP1030 from the stubbed _products: {real_panel}")
-            check(real_panel.get("dp1030OptionText") == "DP1030 — ADHD Planner",
-                  f"picker option text must show the product's real title, not blank after the dash: {real_panel}")
-            check(real_panel.get("runBtnPresent"), f"the build button (#bx-run-btn) must be present in a real category's panel: {real_panel}")
-
-            # Re-opening the SAME category (with _products unchanged) must not
-            # duplicate picker options -- regression guard for the idempotent-sync fix.
-            reopen_same = await page.evaluate("""() => {
-                createOpenCategory('digital_planner'); // closes it (toggle)
-                createOpenCategory('digital_planner'); // reopens fresh
-                const picker = document.getElementById('create-pid-select');
-                return {pickerOptionCount: picker ? picker.options.length : 0};
-            }""")
-            check(reopen_same.get("pickerOptionCount") == real_panel.get("pickerOptionCount"),
-                  f"reopening a category must not duplicate picker options: {reopen_same} vs first open {real_panel}")
-
-            # Regression guard (QA review, 2026-07-22): typing a free-text code
-            # then switching back to "pick from the list instead" must not leave
-            # that stale code queued in the hidden #bx-pid -- it must resync to
-            # whatever the (visible-again) picker shows.
-            stale_freetext = await page.evaluate("""() => {
-                _createToggleNewCode(true);
-                document.getElementById('bx-pid').value = 'DP9999STALE';
-                _createToggleNewCode(false);
-                return {bxPidValue: document.getElementById('bx-pid').value};
-            }""")
-            check(stale_freetext.get("bxPidValue") != "DP9999STALE",
-                  f"switching back to the picker must clear a stale free-typed code from #bx-pid: {stale_freetext}")
-
-            # Regression guard (QA review, 2026-07-22): createPollBuildStatus()
-            # used a single hardcoded #cd-build-status-box id -- calling it twice
-            # into two DIFFERENT containers (digital_planner's panel legitimately
-            # has up to 4 simultaneous build buttons) used to collide, with the
-            # second call's getElementById silently updating the FIRST box instead
-            # of its own. Call it twice into two distinct elements and confirm
-            # each gets its own independent status box.
-            poll_isolation = await page.evaluate("""() => {
-                const a = document.createElement('div'); a.id = 'pw-poll-test-a';
-                const b = document.createElement('div'); b.id = 'pw-poll-test-b';
-                document.body.appendChild(a); document.body.appendChild(b);
-                createPollBuildStatus(123456, '', a);
-                createPollBuildStatus(654321, '', b);
-                const result = {
-                    aHasOwnBox: a.children.length === 1,
-                    bHasOwnBox: b.children.length === 1,
-                    distinctNodes: a.children[0] !== b.children[0],
-                };
-                a.remove(); b.remove();
-                return result;
-            }""")
-            check(poll_isolation.get("aHasOwnBox") and poll_isolation.get("bHasOwnBox"),
-                  f"each createPollBuildStatus() call must create its own status box in its own outEl: {poll_isolation}")
-            check(poll_isolation.get("distinctNodes"),
-                  f"two concurrent polls must never share the same status box node: {poll_isolation}")
-
-            # Regression guard (QA review, 2026-07-22): wall_art/coloring_pages'
-            # one-tap builds generate no new AI art, so the Advanced "Art style"
-            # engine picker (which the backend never reads for these 2
-            # categories) must not render at all -- a dead control is worse than
-            # no control.
-            # NOTE (2026-07-22): #bx-engine now legitimately exists in the DOM
-            # (hidden) for wall_art/coloring_pages too, as part of the new
-            # "+ new one" new-art sub-panel (see usesNewArtDescription below) --
-            # mere presence is no longer a valid dead-control signal for those
-            # 2 categories, only VISIBILITY is (a user never sees a hidden
-            # element). Digital Planner's is still checked for straightforward
-            # presence since its outer Advanced disclosure, while collapsed, is
-            # not display:none (just a CSS class toggle), so this distinction
-            # doesn't apply there.
-            no_dead_engine = await page.evaluate("""() => {
-                createOpenCategory('wall_art');
-                const waEl = document.getElementById('bx-engine');
-                const wallArtEngineVisible = !!waEl && waEl.offsetParent !== null;
-                createOpenCategory('wall_art'); // close
-                createOpenCategory('coloring_pages');
-                const cEl = document.getElementById('bx-engine');
-                const coloringEngineVisible = !!cEl && cEl.offsetParent !== null;
-                createOpenCategory('coloring_pages'); // close
-                createOpenCategory('digital_planner');
-                const plannerHasEngine = !!document.getElementById('bx-engine');
-                createOpenCategory('digital_planner'); // close
-                return {wallArtEngineVisible, coloringEngineVisible, plannerHasEngine};
-            }""")
-            check(no_dead_engine.get("wallArtEngineVisible") is False,
-                  f"Wall Art's picker-mode (existing-product rebuild) view must not show a visible art-style engine picker: {no_dead_engine}")
-            check(no_dead_engine.get("coloringEngineVisible") is False,
-                  f"Coloring Pages' picker-mode view must not show a visible art-style engine picker: {no_dead_engine}")
-            check(no_dead_engine.get("plannerHasEngine") is True, f"Digital Planner DOES use the engine picker and must still render it: {no_dead_engine}")
-
-            # Regression guard: Scott reported live (2026-07-22) that tapping
-            # "Build these coloring pages" with nothing picked showed "Enter a
-            # planner code first (e.g. DP1030)" -- buildProductRun() is the ONE
-            # shared build button for all 3 real categories, and its empty-pid
-            # message was hardcoded to planner wording regardless of which
-            # category's panel was actually open. Must be category-aware now.
-            wrong_category_error = await page.evaluate("""async () => {
-                createOpenCategory('coloring_pages');
-                document.getElementById('bx-pid').value = '';
-                await buildProductRun();
-                const coloringMsg = document.getElementById('bx-result').innerHTML;
-                createOpenCategory('coloring_pages'); // close
-                createOpenCategory('wall_art');
-                document.getElementById('bx-pid').value = '';
-                await buildProductRun();
-                const wallArtMsg = document.getElementById('bx-result').innerHTML;
-                createOpenCategory('wall_art'); // close
-                return {coloringMsg, wallArtMsg};
-            }""")
-            check("planner" not in wrong_category_error.get("coloringMsg", "").lower() and "DP1030" not in wrong_category_error.get("coloringMsg", ""),
-                  f"Coloring Pages' empty-pid error must not reference planners/DP1030: {wrong_category_error}")
-            # (2026-07-25) Coloring Pages no longer has a typed-code field at
-            # all (Scott: "It should auto generate the code") -- an empty pid
-            # here means the theme was never described, so the message must
-            # point at describing a theme, not at a "COLOR1030"-style code.
-            check("theme" in wrong_category_error.get("coloringMsg", "").lower(),
-                  f"Coloring Pages' empty-pid error should point at describing a theme: {wrong_category_error}")
-            check("planner" not in wrong_category_error.get("wallArtMsg", "").lower() and "DP1030" not in wrong_category_error.get("wallArtMsg", ""),
-                  f"Wall Art's empty-pid error must not reference planners/DP1030: {wrong_category_error}")
-            check("WA1030" in wrong_category_error.get("wallArtMsg", ""),
-                  f"Wall Art's empty-pid error should use its own category example: {wrong_category_error}")
-
-            # Regression guard: Scott's EXACT reported scenario (2026-07-22
-            # follow-up) -- opening Coloring Pages, typing a genuinely new code
-            # via "+ This is a new one", and tapping Build returned "COLOR01
-            # isn't a configured planner (have DP1026...)". Root cause:
-            # buildProductRun() never sent `category` in its POST body, so the
-            # server fell back to guessing from product_catalog.json and
-            # defaulted to digital_planner for any uncataloged pid. This hits
-            # the REAL backend (no mocking) -- the fix's pre-flight check
-            # returns a clean error with no subprocess spawned, so it's fast
-            # and safe to run for real here.
-            misroute_repro = await page.evaluate("""async () => {
-                createOpenCategory('coloring_pages');
-                _createToggleNewCode(true);
-                document.getElementById('bx-pid').value = 'COLOR01';
-                await buildProductRun();
-                const coloringMsg = document.getElementById('bx-result').innerHTML;
-                createOpenCategory('coloring_pages'); // close
-
-                createOpenCategory('wall_art');
-                _createToggleNewCode(true);
-                document.getElementById('bx-pid').value = 'WA_PLAYWRIGHT_NO_SOURCE_ART';
-                await buildProductRun();
-                const wallArtMsg = document.getElementById('bx-result').innerHTML;
-                createOpenCategory('wall_art'); // close
-
-                return {coloringMsg, wallArtMsg};
-            }""")
-            coloring_lc = misroute_repro.get("coloringMsg", "").lower()
-            check("planner" not in coloring_lc and "dp10" not in coloring_lc,
-                  f"Scott's exact repro: a new Coloring Pages code must never be misrouted through the planner branch: {misroute_repro}")
-            check("catalog" in coloring_lc,
-                  f"Coloring Pages' real error for an uncataloged code should name the actual reason (catalog): {misroute_repro}")
-            wallart_lc = misroute_repro.get("wallArtMsg", "").lower()
-            check("planner" not in wallart_lc and "dp10" not in wallart_lc,
-                  f"a new Wall Art code must never be misrouted through the planner branch: {misroute_repro}")
-            check("source art" in wallart_lc,
-                  f"Wall Art's real error for a code with no source file should name the actual reason (source art): {misroute_repro}")
-
-            # Regression guard (2026-07-22, Scott's follow-up: "every action on
-            # this page has to work ... if this doesn't work we don't have a
-            # business"): Digital Planner is a closed set of 9 hardcoded pids,
-            # all already in the picker -- the "+ new one" link can never
-            # succeed there and must not render at all. Wall Art / Coloring
-            # Pages, by contrast, now have a REAL new-art generation path, so
-            # their "+ new one" panels must show the description + engine
-            # controls.
-            new_code_affordances = await page.evaluate("""() => {
-                createOpenCategory('digital_planner');
-                // Scoped to #create-pid-picker-wrap specifically -- the OTHER
-                // .cd-newcode-link ("< pick from the list instead") lives inside
-                // #create-pid-freetext-wrap, which stays in the DOM (just hidden)
-                // for every category per the plan (buildProductRun()/
-                // _createPidSelectChanged() reference #bx-pid unconditionally) --
-                // that one is unreachable dead markup for Digital Planner, not a
-                // regression, so it must not be what this check matches.
-                const plannerHasLink = !!document.querySelector('#create-pid-picker-wrap .cd-newcode-link');
-                createOpenCategory('digital_planner'); // close
-
-                createOpenCategory('wall_art');
-                _createToggleNewCode(true);
-                const wallArtHasDesc = !!document.getElementById('bx-description');
-                const wallArtHasEngineInNewCode = !!document.getElementById('bx-engine');
-                createOpenCategory('wall_art'); // close
-
-                createOpenCategory('coloring_pages');
-                _createToggleNewCode(true);
-                const coloringHasDesc = !!document.getElementById('bx-description');
-                const coloringDescPlaceholder = (document.getElementById('bx-description')||{}).placeholder || '';
-                createOpenCategory('coloring_pages'); // close
-
-                return {plannerHasLink, wallArtHasDesc, wallArtHasEngineInNewCode, coloringHasDesc, coloringDescPlaceholder};
-            }""")
-            check(new_code_affordances.get("plannerHasLink") is False,
-                  f"Digital Planner must never show the '+ new one' link -- it can never succeed: {new_code_affordances}")
-            check(new_code_affordances.get("wallArtHasDesc") is True,
-                  f"Wall Art's new-code panel must show the art-description field: {new_code_affordances}")
-            check(new_code_affordances.get("wallArtHasEngineInNewCode") is True,
-                  f"Wall Art's new-code panel must show an engine picker (real AI generation happens here now): {new_code_affordances}")
-            check(new_code_affordances.get("coloringHasDesc") is True,
-                  f"Coloring Pages' new-code panel must show the subjects-description field: {new_code_affordances}")
-            check("subject" in new_code_affordances.get("coloringDescPlaceholder", "").lower(),
-                  f"Coloring Pages' description placeholder should explain the one-subject-per-line convention: {new_code_affordances}")
-            check("30" in new_code_affordances.get("coloringDescPlaceholder", ""),
-                  f"Coloring Pages' placeholder should promise 30 auto-generated subjects (2026-08-08 bump from 20): {new_code_affordances}")
-
-            # Regression guard (2026-08-08, Scott: "make sure the kids coloring
-            # pages are separate from the adult due to the adult being more
-            # detailed") -- the difficulty picker must appear only for Coloring
-            # Pages, default to "standard", and offer the kids/adult tiers.
-            difficulty_affordances = await page.evaluate("""() => {
-                createOpenCategory('coloring_pages');
-                _createToggleNewCode(true);
-                const diffEl = document.getElementById('bx-difficulty');
-                const coloringHasDifficulty = !!diffEl;
-                const coloringDifficultyDefault = diffEl ? diffEl.value : null;
-                const coloringDifficultyOptions = diffEl
-                    ? Array.from(diffEl.options).map(o => o.value) : [];
-                createOpenCategory('coloring_pages'); // close
-
-                createOpenCategory('wall_art');
-                _createToggleNewCode(true);
-                const wallArtHasDifficulty = !!document.getElementById('bx-difficulty');
-                createOpenCategory('wall_art'); // close
-
-                return {coloringHasDifficulty, coloringDifficultyDefault, coloringDifficultyOptions, wallArtHasDifficulty};
-            }""")
-            check(difficulty_affordances.get("coloringHasDifficulty") is True,
-                  f"Coloring Pages' new-code panel must show a difficulty picker: {difficulty_affordances}")
-            check(difficulty_affordances.get("coloringDifficultyDefault") == "standard",
-                  f"the difficulty picker must default to 'standard' so pre-existing behavior is unchanged: {difficulty_affordances}")
-            check(set(difficulty_affordances.get("coloringDifficultyOptions", [])) == {"standard", "kids", "adult"},
-                  f"the difficulty picker must offer exactly standard/kids/adult: {difficulty_affordances}")
-            check(difficulty_affordances.get("wallArtHasDifficulty") is False,
-                  f"Wall Art has no difficulty concept and must not show the picker: {difficulty_affordances}")
-
-            # Regression guard (2026-08-09, Scott: "let's make grok more for teen
-            # and adult coloring pages. open ai for kids") -- the engine dropdown
-            # must default to grok on load (matches the initial "standard"
-            # difficulty), then flip to openai the moment Kids is picked, and
-            # back to grok for Adult -- via _syncColoringEngineDefault().
-            engine_sync = await page.evaluate("""() => {
-                createOpenCategory('coloring_pages');
-                _createToggleNewCode(true);
-                const diffEl = document.getElementById('bx-difficulty');
-                const engEl = document.getElementById('bx-engine');
-                const initialEngine = engEl.value;
-
-                diffEl.value = 'kids';
-                diffEl.dispatchEvent(new Event('change'));
-                const kidsEngine = engEl.value;
-
-                diffEl.value = 'adult';
-                diffEl.dispatchEvent(new Event('change'));
-                const adultEngine = engEl.value;
-
-                diffEl.value = 'standard';
-                diffEl.dispatchEvent(new Event('change'));
-                const standardEngine = engEl.value;
-                createOpenCategory('coloring_pages'); // close
-                return {initialEngine, kidsEngine, adultEngine, standardEngine};
-            }""")
-            check(engine_sync.get("initialEngine") == "grok",
-                  f"Coloring Pages' engine dropdown must default to grok (matches the initial Standard difficulty): {engine_sync}")
-            check(engine_sync.get("kidsEngine") == "openai",
-                  f"picking Kids difficulty must switch the engine default to openai: {engine_sync}")
-            check(engine_sync.get("adultEngine") == "grok",
-                  f"picking Adult difficulty must switch the engine default back to grok: {engine_sync}")
-            check(engine_sync.get("standardEngine") == "grok",
-                  f"picking Standard difficulty must default the engine to grok: {engine_sync}")
-
-            # Regression guard: switching from "+ new one" back to the picker
-            # must clear a typed description too (not just the pid) -- a
-            # stale description must never silently survive into a rebuild
-            # of an EXISTING product picked afterward.
-            desc_cleared_on_toggle_back = await page.evaluate("""() => {
-                createOpenCategory('wall_art');
-                _createToggleNewCode(true);
-                document.getElementById('bx-description').value = 'a stale leftover description';
-                _createToggleNewCode(false);
-                const val = document.getElementById('bx-description').value;
-                createOpenCategory('wall_art'); // close
-                return {val};
-            }""")
-            check(desc_cleared_on_toggle_back.get("val") == "",
-                  f"switching back to the picker must clear a typed description: {desc_cleared_on_toggle_back}")
-
-            # Real end-to-end: opening Wall Art's "+ new one", typing BOTH a
-            # code and a description, and tapping build must send `description`
-            # in the POST body (mocked network call -- no real AI spend here,
-            # tools/playwright_smoke.py stays a UI-contract check; the real
-            # backend logic is covered by tests/test_produce_qc.py's mocked-
-            # Popen success-path tests).
-            captured_body = {}
-
-            async def _capture_build_request(route):
-                import json as _json
-                captured_body.update(_json.loads(route.request.post_data or "{}"))
-                await route.fulfill(status=200, content_type="application/json",
-                                     body='{"pid": "WA_PW_TEST", "started": true, "os_pid": 424242, '
-                                          '"log_file": "WA_PW_TEST_wallart_build.log", "steps": ["generate art"], '
-                                          '"message": "ok"}')
-            await page.route("**/api/produce/build-product", _capture_build_request)
-            await page.evaluate("""async () => {
-                createOpenCategory('wall_art');
-                _createToggleNewCode(true);
-                document.getElementById('bx-pid').value = 'WA_PW_TEST';
-                document.getElementById('bx-description').value = 'a real description for the request body';
-                await buildProductRun();
-            }""")
-            await page.unroute("**/api/produce/build-product")
-            check(captured_body.get("description") == "a real description for the request body",
-                  f"buildProductRun() must send the typed description in the POST body: {captured_body}")
-            check(captured_body.get("category") == "wall_art", f"got: {captured_body}")
-
-            # Coloring Pages auto-generated code (2026-07-25): Scott: "It
-            # should auto generate the code" -- opening "+ new one" must NOT
-            # show a visible/focusable #bx-pid, and typing only a theme
-            # (never a code) must still successfully kick off a build, with
-            # the server-assigned pid coming back in the response.
-            coloring_pid_field = await page.evaluate("""() => {
-                createOpenCategory('coloring_pages');
-                _createToggleNewCode(true);
-                const el = document.getElementById('bx-pid');
-                const result = {
-                    type: el && el.type,
-                    visible: !!el && el.offsetParent !== null,
-                    hasNote: document.getElementById('create-pid-freetext-wrap').textContent.toLowerCase().includes('automatically'),
-                };
-                createOpenCategory('coloring_pages'); // close
-                return result;
-            }""")
-            check(coloring_pid_field.get("type") == "hidden",
-                  f"Coloring Pages' new-theme panel must never show a typed-code field: {coloring_pid_field}")
-            check(coloring_pid_field.get("visible") is False, f"got: {coloring_pid_field}")
-            check(coloring_pid_field.get("hasNote") is True,
-                  f"the panel should explain the code is auto-assigned: {coloring_pid_field}")
-
-            coloring_captured_body = {}
-
-            async def _capture_coloring_build_request(route):
-                import json as _json
-                coloring_captured_body.update(_json.loads(route.request.post_data or "{}"))
-                await route.fulfill(status=200, content_type="application/json",
-                                     body='{"pid": "COLOR9042", "started": true, "os_pid": 424243, '
-                                          '"log_file": "COLOR9042_coloring_build.log", '
-                                          '"steps": ["coloring pages (new theme)"], "message": "ok"}')
-            await page.route("**/api/produce/build-product", _capture_coloring_build_request)
-            coloring_result_html = await page.evaluate("""async () => {
-                createOpenCategory('coloring_pages');
-                _createToggleNewCode(true);
-                document.getElementById('bx-description').value = 'ocean animals';
-                await buildProductRun();
-                return document.getElementById('bx-result').innerHTML;
-            }""")
-            await page.unroute("**/api/produce/build-product")
-            check(coloring_captured_body.get("pid") == "",
-                  f"the frontend must send an empty pid, letting the server auto-generate it: {coloring_captured_body}")
-            check(coloring_captured_body.get("category") == "coloring_pages", f"got: {coloring_captured_body}")
-            check(coloring_captured_body.get("description") == "ocean animals", f"got: {coloring_captured_body}")
-            check(coloring_captured_body.get("difficulty") == "standard",
-                  f"buildProductRun() must send the difficulty picker's value (defaulting to standard) in the POST body: {coloring_captured_body}")
-            check("COLOR9042" in coloring_result_html,
-                  f"the server-assigned pid must render in the success banner: {coloring_result_html}")
 
             # Coming-soon tiles: never blank, never a dead click -- must show a
             # specific, honest explanation.
             soon_panel = await page.evaluate("""() => {
-                createOpenCategory('sticker_pack');
+                createOpenCategory('svg_3dprint_pack');
                 const panel = document.getElementById('create-detail');
                 return {
-                    tileOpen: document.querySelector('.create-choice[data-cat="sticker_pack"]').classList.contains('open'),
+                    tileOpen: document.querySelector('.create-choice[data-cat="svg_3dprint_pack"]').classList.contains('open'),
                     panelHtml: panel ? panel.innerHTML : '',
                 };
             }""")
@@ -2424,13 +1979,13 @@ async def _run_browser_checks() -> None:
             })""")
             check(refimg.get("categorySelectPresent") and refimg.get("dropzonePresent") and refimg.get("gridPresent"),
                   f"Reference Photos section must render its category picker, dropzone, and grid: {refimg}")
-            check(refimg.get("categoryOptionCount", 0) == 8,
-                  f"category picker should offer the 7 real+coming-soon categories plus 'general', got: {refimg}")
+            check(refimg.get("categoryOptionCount", 0) == 3,
+                  f"category picker should offer the 2 3D categories plus 'general' (2026-10-25), got: {refimg}")
 
             # Leave the panel closed for later checks in this same page session
-            # (_createOpenCat is currently 'sticker_pack' from soon_panel above --
+            # (_createOpenCat is currently 'svg_3dprint_pack' from soon_panel above --
             # calling it again toggles that same panel closed).
-            await page.evaluate("createOpenCategory('sticker_pack'); document.getElementById('create-advanced-toggle').click()")
+            await page.evaluate("createOpenCategory('svg_3dprint_pack'); document.getElementById('create-advanced-toggle').click()")
             await page.unroute("**/api/products", _block_real_products)
 
             # ── Files screen: listing-attachment grouping (2026-07-22) -- Scott's
@@ -3744,10 +3299,10 @@ async def _run_browser_checks() -> None:
                 };
             }""")
             check(mobile_create.get("active") == "screen-create", f"phoneOpenScreen('create') should land on #screen-create: {mobile_create}")
-            check(mobile_create.get("tileCount") == 9, f"mobile Create screen must show all 9 tiles too: {mobile_create}")
+            check(mobile_create.get("tileCount") == 4, f"mobile Create screen must show all 4 tiles too (2026-10-25): {mobile_create}")
 
             mobile_soon_tap = await page.evaluate("""() => {
-                document.querySelector('.create-choice[data-cat="sublimation"]').click();
+                document.querySelector('.create-choice[data-cat="svg_3dprint_pack"]').click();
                 const panel = document.getElementById('create-detail');
                 return {html: panel ? panel.innerHTML : ''};
             }""")
@@ -3755,7 +3310,7 @@ async def _run_browser_checks() -> None:
                   f"tapping a coming-soon tile on mobile must not render a blank panel: {mobile_soon_tap}")
             check("no automatic builder" in mobile_soon_tap.get("html", "").lower(),
                   f"mobile coming-soon panel must give the same honest explanation as desktop: {mobile_soon_tap}")
-            await page.evaluate("document.querySelector('.create-choice[data-cat=\"sublimation\"]').click()")  # close it
+            await page.evaluate("document.querySelector('.create-choice[data-cat=\"svg_3dprint_pack\"]').click()")  # close it
 
             # ── Chat History screen (2026-07-15) — Scott: "I need a option on the
             # list to see the chat box from ask Frank to see his responses."
