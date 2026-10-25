@@ -106,7 +106,7 @@ house lifts off to switch it.
 - The 3MF round-trips through the slicer with all four parts and all four
   extruders addressed.
 - **OBC maker's mark:** inlaid in cream under the step. It reads OBC when you
-  turn the building over with the front toward you (fixed 2026-09-27: it read
+  tip the building back with the front away from you (fixed 2026-09-27: it read
   "ƆBO", and its letters ran together, with 0.39–0.46 mm between them). The
   logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm into the plum
   and filled flush; a groove one layer deep crosses their face, the stripes of

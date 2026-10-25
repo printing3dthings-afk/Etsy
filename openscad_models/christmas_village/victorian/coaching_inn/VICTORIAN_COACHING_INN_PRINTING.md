@@ -115,7 +115,7 @@ headroom).
   0 watch. The gable finials score 3.4, against a watch level of 4.
 - **OBC maker's mark:** inlaid in slate under the snow base in front of the
   door, the same mark as the other buildings, mirrored so it reads OBC with
-  the inn turned over, front toward you. The logo's letters, 4.6 mm tall and
+  the inn tipped back, front away from you. The logo's letters, 4.6 mm tall and
   15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove one
   layer deep crosses their face, the stripes of the logo.
 

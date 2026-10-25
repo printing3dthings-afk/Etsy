@@ -127,9 +127,10 @@ which version the buyer gets.
   - NEXT has its own letter spacing (1.3) and a wider tablet: at the common
     1.12, its X and T stood 0.26 mm apart and would have fused.
 - **OBC maker's mark:** inlaid in cream in the underside, under the middle of
-  the hill. It reads OBC when you turn the hill over with the front toward you
-  (fixed 2026-09-27: it read "ƆBO", and its letters ran together, with
-  0.39–0.46 mm between them). The logo's letters, 4.6 mm tall and 15.9 mm
+  the hill. It reads OBC when you tip the hill back with the front away from you
+  (turned to this on 2026-10-25, after Scott's first cottage print read "ƆᗺO"
+  that way up; on 2026-09-27 its letters were spaced apart, after they had run
+  together with 0.39–0.46 mm between them). The logo's letters, 4.6 mm tall and 15.9 mm
   wide, are cut 0.6 mm into the moss and filled flush; a groove one layer deep
   crosses their face, the stripes of the logo.
 

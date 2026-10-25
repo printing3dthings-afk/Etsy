@@ -103,7 +103,7 @@ over the circle's edge; inside the tower the room runs on up to the pyramid.
   scores 3.2, against a watch level of 4.
 - **OBC maker's mark:** inlaid in slate under the snow base in front of the
   door, the same mark as the other buildings, mirrored so it reads OBC with
-  the tower turned over, front toward you. The logo's letters, 4.6 mm tall and
+  the tower tipped back, front away from you. The logo's letters, 4.6 mm tall and
   15.9 mm wide, are cut 0.6 mm into the white and filled flush; a groove one
   layer deep crosses their face, the stripes of the logo.
 

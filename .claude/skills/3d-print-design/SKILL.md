@@ -7779,12 +7779,20 @@ it — gate, walls, slicer — and three things were still wrong on the plate.
     just the union's.
   - It raised every building's 1st-percentile wall (chapel 1.20 → 1.48,
     bakery and store 1.24 → 1.44).
-- **A maker's mark read from below must be flipped LEFT-TO-RIGHT.** Every
-  Haunted Town mark used `mirror([0, 1, 0])`, a top-to-bottom flip. O, B and
-  C look almost the same flipped that way, so a top view of the section read
-  "OBC" and nothing caught it. Turned over with the front toward you it read
-  "ƆBO". Use `mirror([1, 0, 0])`, and check by drawing the first-layer
-  section as seen from below: x mirrored, front at the bottom.
+- **A maker's mark is read with the piece TIPPED BACK: `mirror([0, 1, 0])`.**
+  *(Corrected 2026-10-25 from a real print. This note used to say the
+  opposite.)* It once said to flip left-to-right, `mirror([1, 0, 0])`, worked
+  out on paper for someone turning a building over side to side. Scott's first
+  matte-white cottage proved it wrong. He tipped the house back to look
+  underneath, front edge away from him, and the mark read "ƆᗺO".
+  - Both mirrors make the mark readable from below. They differ by a
+    half-turn, so pick the one that suits how a person actually turns the
+    piece over.
+  - O, B and C look almost the same either way up. Only the B gives it away:
+    its spine and its bigger bowl.
+  - `brand/obc_mark.scad` now uses `mirror([0, 1, 0])`, and
+    `tests/test_obc_mark_reading.py` reads the real cut section. Technique 4's
+    physically confirmed `mirror([0,1,0])` was right all along.
 - **The plastic between engraved letters must be at least two extrusions
   wide.** At size 5 and default spacing the ridge between letters was
   0.39–0.46 mm — under one bead — so the slicer dropped it and the letters

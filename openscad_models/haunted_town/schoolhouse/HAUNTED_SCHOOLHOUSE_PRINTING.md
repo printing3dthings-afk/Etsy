@@ -104,8 +104,8 @@ with room to spare.
   8 mm tall, slenderness 5.0 against a watch level of 4 and the 17.5 of the
   chapel bar that snapped. The belfry's 3.4 mm corner posts do not register.
 - **OBC maker's mark:** inlaid in cream under the porch deck, the same mark as
-  the other buildings, mirrored so it reads OBC with the building turned over,
-  front toward you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut
+  the other buildings, mirrored so it reads OBC with the building tipped back,
+  front away from you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut
   0.6 mm into the ochre and filled flush; a groove one layer deep crosses
   their face, the stripes of the logo.
 

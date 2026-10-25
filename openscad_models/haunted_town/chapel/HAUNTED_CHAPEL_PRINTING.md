@@ -97,8 +97,8 @@ so the chapel lifts off to switch the light.
     the spire's solid tip; standing on the spire's cut top alone, it had 3 mm².
 - The 3MF slices with all four parts and all four extruders addressed.
 - **OBC maker's mark:** inlaid in cream under the step, the same mark as the
-  other buildings. It reads OBC when you turn the chapel over with the front
-  toward you. The logo's letters, 4.6 mm
+  other buildings. It reads OBC when you tip the chapel back with the front
+  away from you. The logo's letters, 4.6 mm
   tall and 15.9 mm wide, are cut 0.6 mm into the stone grey and filled flush;
   a groove one layer deep crosses their face, the stripes of the logo.
 

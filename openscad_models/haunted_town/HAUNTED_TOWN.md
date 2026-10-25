@@ -79,9 +79,12 @@ What those references do that our first haunted manor did not:
   `../brand/obc_mark.scad`, inlaid in the cream trim colour 0.6 mm into the
   dark body, 4.6 mm tall, every stroke and gap ≥ 2 extrusions, one groove a
   layer deep across the letters for the logo's stripes. Flipped
-  LEFT-TO-RIGHT so it reads OBC with the building turned over, front toward
-  you. A top-to-bottom flip looks almost right on O, B and C and shipped
-  backwards on every building until 2026-09-27. The manor keeps its older
+  top-to-bottom so it reads OBC with the building tipped back, front away
+  from you. On 2026-09-27 it was changed to a left-to-right flip, worked out
+  on paper. Scott's first printed cottage read "ƆᗺO" the way he actually
+  turned it over, so it went back on 2026-10-25. O, B and C look almost the
+  same either way up; tests/test_obc_mark_reading.py reads the B.
+  The manor keeps its older
   engraved mark on the front of its plinth.
 - **Signs have raised letters**, 0.84 mm proud (Scott, 2026-10-07). The
   carved, lined letters before them read poorly on the first one-colour print

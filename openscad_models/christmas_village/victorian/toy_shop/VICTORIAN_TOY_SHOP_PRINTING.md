@@ -105,7 +105,7 @@ headroom): the square shop has two full storeys of wall under its gable.
   finial scores 3.8, against a watch level of 4.
 - **OBC maker's mark:** inlaid in slate under the snow base in front of the
   bay, the same mark as the other buildings, mirrored so it reads OBC with the
-  shop turned over, front toward you. The logo's letters, 4.6 mm tall and 15.9
+  shop tipped back, front away from you. The logo's letters, 4.6 mm tall and 15.9
   mm wide, are cut 0.6 mm into the white and filled flush; a groove one layer
   deep crosses their face, the stripes of the logo.
 

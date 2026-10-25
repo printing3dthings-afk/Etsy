@@ -108,8 +108,8 @@ The series rule is at least 46 mm across and at least 50 mm of headroom.
   finial scores 2.5, against a watch level of 4.
 - **OBC maker's mark:** inlaid in slate under the front of the snow base, in
   the band between the bow's opening and the base's edge. It is the same mark
-  as the cottages, mirrored so it reads OBC with the model turned over, front
-  toward you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm
+  as the cottages, mirrored so it reads OBC with the model tipped back, front
+  away from you. The logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm
   into the white and filled flush; a groove one layer deep crosses their face,
   the stripes of the logo.
 

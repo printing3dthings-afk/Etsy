@@ -109,7 +109,7 @@ Measured on the exported mesh:
   The sign board shares 641 mm² with the wall, the coping 611 mm², each
   window frame about 250 mm², and the parcel string sits in the parcels.
 - **OBC maker's mark:** inlaid in cream under the step. It reads OBC when you
-  turn the building over with the front toward you (fixed 2026-09-27: it read
+  tip the building back with the front away from you (fixed 2026-09-27: it read
   "ƆBO", and its letters ran together, with 0.39–0.46 mm between them). The
   logo's letters, 4.6 mm tall and 15.9 mm wide, are cut 0.6 mm into the brick
   and filled flush; a groove one layer deep crosses their face, the stripes of

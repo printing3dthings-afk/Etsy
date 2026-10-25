@@ -23,6 +23,11 @@
 //   obc_mark_width(h)
 // Both are mirrored to read from below, sit on z = 0 and are centred on the
 // origin; translate them to the spot on the base.
+// They read OBC when the piece is tipped back to look underneath: front edge
+// (-y) away from you. That is how Scott turned his first cottage over, and
+// the old mirror([1, 0, 0]) read "ƆᗺO" that way: right only if you turned
+// the piece side to side instead (2026-10-25). tests/test_obc_mark_reading.py
+// checks it from the real geometry.
 //
 // The letters are Montserrat ExtraBold, the logo's face, set 0.95 apart (the
 // logo's are almost touching; in plastic every gap needs two beads, 0.9). The
@@ -59,11 +64,11 @@ module obc_face2d(h) obc_clean() difference() { obc_solid2d(h); obc_grooves2d(h)
 // cut's met at near-coincident faces and the welded print had open edges
 // round the letters (2026-10-14). Split into colours, the inlay takes the
 // overlap, so the colour boundary does not move.
-module obc_inlay(h, depth = OBC_INLAY) mirror([1, 0, 0]) {
+module obc_inlay(h, depth = OBC_INLAY) mirror([0, 1, 0]) {
     linear_extrude(OBC_GROOVE + 0.01) offset(delta = 0.02) obc_face2d(h);
     translate([0, 0, OBC_GROOVE]) linear_extrude(depth - OBC_GROOVE) offset(delta = 0.02) obc_solid2d(h);
 }
-module obc_cut(h, depth = OBC_INLAY) mirror([1, 0, 0]) translate([0, 0, -0.5]) linear_extrude(depth + 0.5) obc_solid2d(h);
+module obc_cut(h, depth = OBC_INLAY) mirror([0, 1, 0]) translate([0, 0, -0.5]) linear_extrude(depth + 0.5) obc_solid2d(h);
 // as a cutter: the face's bands in the first layer, the whole letters above,
 // so the grooves stay at the face as ridges. Built from the same two shapes as
 // the inlay: subtracting one cleaned outline from the other left slivers of
@@ -74,7 +79,7 @@ module obc_cut(h, depth = OBC_INLAY) mirror([1, 0, 0]) translate([0, 0, -0.5]) l
 // gate's 1.2 floor (the nativity, 2026-10-21).
 // ridges = false cuts the letters whole: with no inlay above them, the ridges
 // are strips one layer thick and the gate reads them as 0.2 mm walls.
-module obc_engrave(h, depth = 0.8, inset = 0, ridges = true) mirror([1, 0, 0]) {
+module obc_engrave(h, depth = 0.8, inset = 0, ridges = true) mirror([0, 1, 0]) {
     if (ridges) {
         translate([0, 0, -0.5]) linear_extrude(0.5 + OBC_GROOVE + 0.01) offset(delta = -inset) obc_face2d(h);
         translate([0, 0, OBC_GROOVE]) linear_extrude(depth - OBC_GROOVE) offset(delta = -inset) obc_solid2d(h);

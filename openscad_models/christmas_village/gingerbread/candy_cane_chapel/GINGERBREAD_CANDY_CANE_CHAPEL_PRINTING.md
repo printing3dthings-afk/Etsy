@@ -99,7 +99,7 @@ is where the room is lowest.
   tip scores 1.4, against a watch level of 4.
 - **OBC maker's mark:** inlaid in chocolate under the snow base in front of
   the tower, the same mark as the other buildings, mirrored so it reads OBC
-  with the chapel turned over, front toward you. The logo's letters, 4.6 mm
+  with the chapel tipped back, front away from you. The logo's letters, 4.6 mm
   tall and 15.9 mm wide, are cut 0.6 mm into the icing white and filled flush;
   a groove one layer deep crosses their face, the stripes of the logo.
 

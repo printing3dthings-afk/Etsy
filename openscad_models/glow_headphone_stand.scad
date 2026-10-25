@@ -298,8 +298,11 @@ module cable_route() {
 }
 
 module brand_mark() {
+    // mirror([0, 0, 1]) only sinks the letters into the base; it does not flip
+    // them, so seen from below they read backwards. mirror([0, 1, 0]) reads
+    // them right when the stand is tipped back (2026-10-25).
     translate([base_len - 16, 0, 0.5])
-        mirror([0, 0, 1])
+        mirror([0, 1, 0]) mirror([0, 0, 1])
             linear_extrude(height = 1.2)
                 text("OnBrandCraftz", size = 5.2, font = "Caveat:style=Bold",
                      halign = "center", valign = "center");
