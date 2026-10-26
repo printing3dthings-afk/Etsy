@@ -2,7 +2,10 @@
 # Export the Standing Heart lantern's parts:
 #   ./build.sh            fast: OpenSCAD 2026 manifold engine, for checking
 #   ./build.sh cgal       the shipping export: OpenSCAD 2021.01 CGAL
-#   ./build.sh union      the gate's one-body union (parts sunk EMB into each other, welded)
+#   ./build.sh union      the gate's one-body union (parts sunk EMB into each other, welded),
+#                         from CGAL parts: the fast engine leaves edges pinched where the
+#                         art and the names step, and the slicer reads them as holes
+#   ./build.sh union fast the same from the fast engine, for a quick look
 # Personalise with -D on the command line, e.g.
 #   NAMES="Ava & Noah" DATE="06.21.2025" ./build.sh cgal
 set -e
@@ -18,7 +21,8 @@ P=()
 case "$1" in
   cgal) cmd=(openscad) ;;
   union)
-    for p in $parts; do "$FAST" --backend=manifold "${P[@]}" -D "part=\"$p\"" -D EMB=0.05 -o "logs/u_$p.stl" $name.scad > "logs/u_$p.log" 2>&1 & done
+    if [ "$2" = fast ]; then U=("$FAST" --backend=manifold --export-format binstl); else U=(openscad); fi
+    for p in $parts; do "${U[@]}" "${P[@]}" -D "part=\"$p\"" -D EMB=0.05 -o "logs/u_$p.stl" $name.scad > "logs/u_$p.log" 2>&1 & done
     wait
     python3 ../../../tools/part_mesh.py union ${name}_union.stl $(for p in $parts; do echo logs/u_$p.stl; done)
     exit ;;

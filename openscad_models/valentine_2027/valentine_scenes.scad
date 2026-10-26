@@ -61,9 +61,13 @@ module couple_lamppost(w, h) intersection() {
 }
 
 // two swans facing, the curves of their necks drawing a heart, on rippled water
-module swans_heart(w, h) intersection() {
+// (a heart over their heads read as a clover with them; left out, 2026-10-26).
+// nw the necks' width; wing cuts a wing line in each body, for where the scene
+// is not built into a pane (the Swan Crown's crown), since in a pane the line
+// above fills it. bh the bodies' height, w * 0.09 if not given.
+module swans_heart(w, h, nw = SW * 1.35, water = true, wing = false, bh = 0) intersection() {
     translate([-w / 2, 0]) square([w, h]);
-    let (hw = w * 0.56, hb = h * 0.24, nw = SW * 1.35) union() {
+    let (hw = w * 0.56, hb = h * 0.24) union() {
         // the necks: the heart's outline; at its cusp the two heads bow in and
         // their beaks touch
         translate([0, hb]) difference() { heart2(hw); offset(delta = -nw) heart2(hw); }
@@ -72,15 +76,61 @@ module swans_heart(w, h) intersection() {
                 hull() { translate([s * hw * 0.03, cz]) circle(nw / 2, $fn = 16); translate([s * (hr + 0.5), cz - hr * 1.6]) circle(hr, $fn = 24); }
                 polygon([[s * 0.4, cz - hr * 1.9], [s * (hr + 0.6), cz - hr * 1.0], [s * (hr + 0.6), cz - hr * 2.3]]);
             }
-        // the bodies, tails up, a wing line each
-        for (s = [-1, 1]) {
-            translate([s * w * 0.21, hb + 2.4]) scale([w * 0.21, 5.2]) circle(1, $fn = 48);
-            polygon([[s * w * 0.30, hb + 0.6], [s * w * 0.45, hb + 9.5], [s * w * 0.41, hb + 3.0], [s * w * 0.34, hb + 0.2]]);
-        }
-        // the water
-        for (k = [0 : 2], i = [0 : 2]) let (u = -w * 0.44 + k * 3 + i * w * 0.30)
-            seg([u, hb - 2.0 - 2.6 * k], [u + w * 0.12, hb - 2.0 - 2.6 * k]);
-        heart_at(0, h * 0.93, w * 0.11);
+        // the bodies, breast to breast where the necks meet, tails up
+        for (s = [-1, 1]) mirror([s < 0 ? 1 : 0, 0]) translate([1.2, hb - 1.0]) swan_body(w * 0.36, bh > 0 ? bh : w * 0.09, wing);
+        // the water: two rows of ripples. Built into the back of a pane, every
+        // line carries a fillet 3.2 mm down the glass (relief_lib art_in), so
+        // the rows sit further apart than that or they run together lit.
+        if (water) for (k = [0 : 1], i = [0 : 2]) let (u = -w * 0.43 + k * 4.5 + i * w * 0.30)
+            seg([u, hb - 6.0 - 5.0 * k], [u + w * 0.11, hb - 6.0 - 5.0 * k]);
+    }
+}
+
+// a swan's body facing -x, breast at the origin, waterline on y = 0, L long, H
+// high at the back. In a pane it stays a plain silhouette: a wing line there
+// fills with the fillet of the line above it and does not show lit
+// (2026-10-26). Where it stands free (wing = true, the Swan Crown's crown) it
+// carries a raised wing arched over its back, feathers cut into it.
+module swan_body(L, H, wing = false) {
+    offset(r = 2.0) offset(delta = -2.0) polygon(wing
+        ? [[2.0, 0], [L * 0.80, 0], [L * 0.98, H * 0.60], [L * 0.86, H * 0.80], [L * 0.50, H * 0.85], [L * 0.15, H * 0.98], [0, H * 0.62]]
+        : [[2.0, 0], [L * 0.80, 0], [L, H * 1.40], [L * 0.90, H * 1.32], [L * 0.68, H * 1.02], [L * 0.38, H * 1.08], [L * 0.14, H * 1.00], [0, H * 0.62]]);
+    if (wing) difference() {
+        offset(r = 1.2) offset(delta = -1.2) polygon([[L * 0.18, H * 0.55], [L * 0.40, H * 1.00], [L * 0.62, H * 1.42],
+            [L * 0.86, H * 1.88], [L * 1.04, H * 2.05], [L * 0.98, H * 1.45], [L * 0.86, H * 0.85], [L * 0.52, H * 0.50]]);
+        // three feather lines, each stopping short of the wing's edges
+        for (k = [0 : 2]) path([[L * (0.42 + 0.15 * k), H * (0.70 + 0.06 * k)], [L * (0.52 + 0.15 * k), H * (1.02 + 0.22 * k)]], 1.4);
+    }
+}
+
+// a swan gliding, facing +x when s = 1, -x when s = -1, its waterline at (x, y)
+module swan_glide(x, y, s = 1) translate([x, y]) mirror([s < 0 ? 1 : 0, 0]) {
+    scale([13, 5]) translate([0, 0.9]) circle(1, $fn = 48);                              // body
+    polygon([[-10.5, 3.2], [-17, 11], [-12.5, 6.5]]);                                    // tail
+    path([[8, 5.5], [12.5, 14.5], [10.5, 22.5], [12.5, 25.5]], SW + 0.6);                // neck
+    translate([13, 26]) circle(2.1, $fn = 20);                                           // head
+    polygon([[14.5, 26.7], [18.2, 25.5], [14.5, 24.8]]);                                 // beak
+}
+
+// a reed clump at x: three stems, a bulrush head on the tallest
+module reeds(x, h) {
+    for (r = [[0, 0.46], [2.2, 0.36], [-2.0, 0.30]]) seg([x + r[0], 4], [x + r[0] * 1.4, h * r[1]]);
+    seg([x, h * 0.46 - 6], [x, h * 0.46], SW + 1.2);
+}
+
+// a pond at night, L long, wrapping a drum: two swans gliding to meet under a
+// heart, reeds, a crescent moon, hearts drifting up and a few stars
+module pond_panorama(L, h) intersection() {
+    translate([-L / 2, 0]) square([L, h]);
+    union() {
+        ground(L, 5.0, 0.8);
+        for (u = [-0.46, -0.42, -0.07, 0.30, 0.34, 0.44]) reeds(u * L, h);
+        swan_glide(-L * 0.22, 4.5, 1);
+        swan_glide(L * 0.10, 4.5, -1);
+        heart_at(-L * 0.06, 34, 9);
+        translate([L * 0.22, h * 0.80]) difference() { circle(7, $fn = 48); translate([3.4, 1.2]) circle(6, $fn = 48); }
+        for (p = [[-0.36, 0.74], [-0.15, 0.88], [0.40, 0.66]]) heart_at(p[0] * L, p[1] * h, 5.5);
+        for (p = [[-0.30, 0.90], [0.05, 0.92], [0.32, 0.88], [-0.44, 0.84]]) dot(p[0] * L, p[1] * h);
     }
 }
 

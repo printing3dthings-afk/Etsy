@@ -78,6 +78,10 @@ def run_checks(d, name, cfg, steps=None):
         for p, _ in objs[i]:
             shown[p] = work / f"shown_{p}.stl"
             part_mesh.to_trimesh(part_mesh.load(str(stl(p))).translate(list(off))).export(shown[p])
+    # a part printed in another pose than it is shown in (the Swan Crown's
+    # crown prints flat and stands in the lid) names its standing mesh here
+    for p, path in cfg.get("shown_mesh", {}).items():
+        shown[p] = d / path
 
     if "parts" in steps:
         txt = ""
@@ -89,7 +93,11 @@ def run_checks(d, name, cfg, steps=None):
         (logs / "parts.txt").write_text(txt)
         print(txt)
     if "gate" in steps:
-        txt = "".join(run([sys.executable, TOOLS / "product_gate.py", d / u]).stdout for u in cfg["unions"])
+        # gate_args: a product whose thin walls are the point (a glow pane) says
+        # so here, with its reason in its own config, rather than the gate's
+        # floor dropping for everything
+        txt = "".join(run([sys.executable, TOOLS / "product_gate.py", *cfg.get("gate_args", []), d / u]).stdout
+                      for u in cfg["unions"])
         (logs / "gate.txt").write_text(txt)
         print(txt)
     if "cost" in steps:
