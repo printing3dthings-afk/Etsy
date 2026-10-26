@@ -152,3 +152,29 @@ module cottage_heart(w, h) intersection() {
         for (k = [0 : 2]) translate([cw * 0.27 + 1.5 * k, 4 + ch + cw * 0.48 + 3.4 * k]) circle(1.2 + 0.3 * k, $fn = 16);
     }
 }
+
+// ---- the chocolate shops' windows (2026-10-26) ------------------------------------------------
+// A shop's display, w x h, built into the back of its pane. Two shelves; on
+// the lower a heart box between piles of truffles, on the upper three wrapped
+// boxes. Lit, every line carries a 3.2 mm fillet down the glass, so the upper
+// shelf sits that far above the tallest thing under it.
+module display(w, h) intersection() {
+    translate([-w / 2, 0]) square([w, h]);
+    union() {
+        translate([-w / 2, 0]) square([w, 1.3]);
+        translate([-w / 2, 10]) square([w, 1.3]);
+        heart_at(0, 1.3 + 2.6, 5.4);
+        for (s = [-1, 1], r = [0 : 2], k = [0 : 2 - r]) dot(s * (w * 0.30) + (k - (2 - r) / 2) * 2.5, 2.4 + r * 2.1, 1.05);
+        for (i = [-1 : 1]) translate([i * w * 0.30, 11.3]) {
+            translate([-1.9, 0]) square([3.8, 2.8]);
+            for (s = [-1, 1]) translate([s * 0.9, 3.4]) circle(0.8, $fn = 12);
+        }
+    }
+}
+// Cupid's arrow through a heart window, w across: a shaft, a head, fletching
+module cupid_arrow(w) rotate(28) {
+    seg([-w * 0.48, 0], [w * 0.40, 0], 1.4);
+    polygon([[w * 0.36, -1.9], [w * 0.52, 0], [w * 0.36, 1.9]]);
+    for (s = [-1, 1]) polygon([[-w * 0.48, 0], [-w * 0.40, 0], [-w * 0.50, s * 2.2], [-w * 0.56, s * 2.2]]);
+}
+
