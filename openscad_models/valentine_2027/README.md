@@ -8,6 +8,25 @@ Started 2026-10-26 from Scott's brief: two main pieces, one stretch, sketches fi
 | Chocolate Shop (main #2, village building) | concepts: `concepts/shop_forms.jpg`, waiting for Scott's pick |
 | Everlasting Rose Dome (stretch) | not started: only after 1 and 2 are test-printed |
 
+## Design rules for every piece (Scott, 2026-10-26)
+
+- **Glow areas thin.** Every window pane and lantern panel is 0.8–0.9 mm,
+  two lines, so it glows properly. Frames and walls round it stay full
+  thickness (1.2 mm or more).
+- **Window scenes go inside, thick.** Anything that sits in a window (the
+  lantern scenes, a shop's chocolate display, as with the Christmas
+  workshop's toys) is built on the back of the pane, 2.5–3 mm in all.
+  Unlit, the pane looks plain; lit, the scene shows as a dark silhouette in
+  the glow. Undersides slope as they leave the pane (relief_lib's art_in), so
+  nothing needs support, and nothing reaches into the tealight's space.
+- **Daylight details stay outside:** names and date, the sign's letters,
+  frames, bars, ribbon and seal are raised on the outside, where they read
+  unlit.
+- Check both: a lit and an unlit render side by side for every piece.
+
+The concept renders below put the scenes on the front of the glass; that is
+the forms only. The real models move every scene inside.
+
 ## Concepts (`concepts/`)
 
 Massing studies to choose a form from, built in Python (manifold3d) and
