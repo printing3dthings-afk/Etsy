@@ -32,6 +32,14 @@ lithophane panel.
 - Lit render, before and v2 (`images/night_before_v2.png`). A render, not a
   photo; the real print showed even less than the "before" render does.
 
+## Lit close-up check (2026-10-26)
+
+`images/clock_closeup_lit_before_v2.png`: the clock face straight on, lit
+from the tealight's place. Measured on the render, face against hands and
+marks: 5.5 : 1 for v2, 4.1 : 1 for the current file. The render flatters:
+it shows the current file's hands, and Scott's real print showed none. The
+print is the real test.
+
 ## Files
 
 - `victorian_clock_tower_v2.scad`, `build.sh` (fast engine, for checking;
