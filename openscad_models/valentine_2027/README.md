@@ -4,9 +4,15 @@ Started 2026-10-26 from Scott's brief: two main pieces, one stretch, sketches fi
 
 | piece | status |
 |---|---|
-| Love Lantern (main #1) | concepts: `concepts/lantern_forms.jpg`, waiting for Scott's pick |
-| Chocolate Shop (main #2, village building) | concepts: `concepts/shop_forms.jpg`, waiting for Scott's pick |
+| Love Lantern: **Standing Heart** (`standing_heart/`) | modelled, gate passed, ready to test-print |
+| Love Lantern: **Swan Crown** (`swan_crown/`) | modelled; drum, lid and crown each slice with no supports; full checks running |
+| Chocolate Shop: **Victorian Bay** (`shops/victorian_bay/`) | modelled; full checks running |
+| Chocolate Shop: **Chocolate Box** (`shops/chocolate_box/`) | modelled; full checks running |
 | Everlasting Rose Dome (stretch) | not started: only after 1 and 2 are test-printed |
+
+Scott picked two of each on 2026-10-26 ("Do 2 of each category that you
+think"). Run any piece's checks with `python3 check_valentine.py <piece>`
+after its `build.sh cgal` and `build.sh union`.
 
 ## Design rules for every piece (Scott, 2026-10-26)
 

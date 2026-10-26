@@ -2,7 +2,7 @@
 """Run the full check set on a built Valentine's piece (2026-10-26). The steps
 live in tools/model_checks.py; this file only describes the pieces.
 
-    python3 check_valentine.py standing_heart [step ...]
+    python3 check_valentine.py standing_heart|swan_crown|shops/victorian_bay|shops/chocolate_box [step ...]
 
 Run <piece>/build.sh cgal and <piece>/build.sh union first. Results land in
 <piece>/logs and <piece>/images.
@@ -23,6 +23,7 @@ sys.path.insert(0, str(HERE.parents[1] / "tools"))
 from model_checks import run_checks  # noqa: E402
 
 RED, WHITE, WINE, GOLD = "#B8323F", "#F4F1EA", "#7A1F2B", "#D4A64A"
+BRICK, SLATE, GINGER, COCOA = "#A8483A", "#3B4048", "#B9783F", "#5A3825"
 PIECES = {
     "standing_heart": dict(
         name="standing_heart_lantern",
@@ -46,6 +47,22 @@ PIECES = {
                 "swan_crown_lantern_crown_union.stl"], light_z=24,
         tags=["_drum", "_lid", "_crown"], tag_labels={"_drum": " (drum)", "_lid": " (lid)", "_crown": " (crown)"},
         shown={1: [0, 0, 85.0]}, shown_mesh={"crown": "swan_crown_lantern_crown_shown.stl"}),
+    "shops/victorian_bay": dict(
+        name="victorian_bay_chocolate_shop",
+        label="Victorian Bay Chocolate Shop",
+        note="A brick chocolate shop for the village: a canted bay display window under a striped awning, "
+             "CHOCOLATES in raised letters, heart windows, a mansard with a heart dormer. Lit, chocolates "
+             "on shelves show in the bay and Cupid's arrows in the side hearts. One piece, matte white.",
+        objects=[[("body", BRICK), ("roof", SLATE), ("trim", WHITE), ("accent", RED), ("glass", WHITE), ("art", COCOA)]],
+        unions=["victorian_bay_chocolate_shop_union.stl"], light_z=20),
+    "shops/chocolate_box": dict(
+        name="chocolate_box_shop",
+        label="Chocolate Box Shop",
+        note="A gingerbread shop that is a box of chocolates: iced edges and drips, heart windows, a lid "
+             "tied with a ribbon and bow, CHOCOLATES over an arched door. Lit, truffles show in the front "
+             "hearts, Cupid's arrows at the sides, hearts at the back. One piece, matte white.",
+        objects=[[("body", GINGER), ("roof", COCOA), ("trim", WHITE), ("accent", RED), ("glass", WHITE), ("art", COCOA)]],
+        unions=["chocolate_box_shop_union.stl"], light_z=20),
 }
 
 
