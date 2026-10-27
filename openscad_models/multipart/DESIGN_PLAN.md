@@ -27,15 +27,27 @@ has seen the forms for that product (CLAUDE.md, new 3D print designs).
 
 ## 19 · Nesting Characters
 
+**Forms, awaiting Scott's pick (2026-10-27):**
+1. **Egg matryoshka, cat-eared:** the classic peanut silhouette, a cat's ears
+   and face on the head, a scarf and paws in relief at the waist seam.
+2. **Owl family:** squat round owls with ear tufts, big eye discs and
+   layered wing feathers, the seam hidden under the wing line.
+3. **Mushroom folk:** each figure a little person under a mushroom cap; the
+   cap is the top half, so every split reads as a cap lifting off.
+4. **Penguin waddle:** tall ovals with a white-belly panel in relief,
+   flippers and feet; the smallest is a chick in a hat.
+5. **Faceted bears:** the same nesting idea in low-poly facets, a modern
+   look that stands apart from round matryoshkas.
+
 - **Form:** 5 figures, about 90, 72, 56, 42 and 30 mm tall, each a rounded
   kawaii body with ears or a hat; the smallest is solid.
 - **Mechanism:** a printed trapezoid thread at each waist (`thread_lib.scad`),
   pitch 3 mm, about one and a half turns, so it closes with a twist and the faces
   line up when tight.
 - **Printing:** the bottom half stands on its flat base, opening up. The top
-  half prints upside down on its rim, and its hollow is a pointed dome
-  inside, steep enough to need no support. Rounded heads stay rounded, since
-  the flat print face is the rim, not the head.
+  half stands on its rim, the right way up, so ears, hats and topknots print
+  as they look; its hollow is a pointed dome inside (40° off vertical at
+  most), so it needs no support. The rim is the flat print face on both.
 - **Detail:** faces and clothing in relief, readable in one colour.
 - **The hard part:** five threads that all close with the faces aligned.
   Solved by starting each thread at the same angle relative to the face.

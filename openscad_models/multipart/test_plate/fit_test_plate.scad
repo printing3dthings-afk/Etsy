@@ -94,6 +94,7 @@ module gear_base(i) let (cd = GCD + GO[i]) {
 
 // ---- detent ---------------------------------------------------------------------------------
 DT = [0.8, 1.0, 1.2]; DR = 15; DN = 12; DDEP = 1.0;
+DTL = ["0.8", "1.0", "1.2"];       // the labels: str(1.0) is "1"
 module detent_wheel() difference() {
     cylinder(r = DR, h = 5, $fn = 96);
     translate([0, 0, -1]) cylinder(d = 5.4, h = 7);
@@ -106,7 +107,7 @@ module detent_wheel() difference() {
 // bend 0.6 mm to pass from one notch to the next
 module detent_base(i) let (t = DT[i], yb = DR + 0.6) {
     // the label goes in the plate's own top: a tab on the plate would bury it
-    difference() { translate([-20, -18, 0]) cube([46, 40, 3]); translate([16, -12, 0]) label(str(t), 3); }
+    difference() { translate([-20, -18, 0]) cube([46, 40, 3]); translate([16, -12, 0]) label(DTL[i], 3); }
     translate([0, 0, 3]) pin();
     translate([-20, yb, 3]) cube([4, 4 + t, 5]);                     // the arm's root
     translate([-16, yb, 3]) cube([19, t, 5]);                         // the arm
