@@ -23,6 +23,11 @@ LIP   = PANE * SH;  // the reveal's sill rises this far across the wall in front
 function fdist(ang) = (ang % 180 == 0) ? D / 2 : W / 2;
 module face(ang, w = 0) rotate([0, 0, ang]) translate([0, -fdist(ang) - w, 0]) rotate([90, 0, 0]) children();
 
+// The walls as a solid block: a building's hollow (its room, ceiling and
+// all) is cut from it. Built from the bare shell, the room's ceiling had
+// nothing under it between where it should start and the walls' top, and the
+// roof's edge hung over the room there (2026-10-26).
+module block() translate([-W / 2, -D / 2, Z0 - 0.01]) cube([W, D, H - Z0 + 0.01]);
 module shell() difference() {
     translate([-W / 2, -D / 2, Z0 - 0.01]) cube([W, D, H - Z0 + 0.01]);
     translate([-W / 2 + T, -D / 2 + T, Z0 - 1]) cube([W - 2 * T, D - 2 * T, H - Z0 + 2]);
@@ -41,7 +46,12 @@ module win_pane(ang) face(ang) translate([0, 0, -T]) linear_extrude(PANE) childr
 // the scene on the pane's back, hidden until lit
 module win_art(ang, emb = 0) face(ang) translate([0, 0, -T + emb]) art_in(ART_D, 4) glow_clean() children();
 // a raised frame round the opening, its underside sloped (glow_out)
-module win_frame(ang, f = 1.4, h = 1.0, emb = 0) face(ang) translate([0, 0, -emb]) glow_out(h, 2) difference() { offset(delta = f) children(); children(); }
+// It rings the opening as it meets the wall's face, LIFT higher than the
+// pane: drawn round the pane's outline, its head hung over the sheared reveal
+// and the slicer propped every window head (2026-10-26).
+LIFT = SH * (T - PANE);
+module win_frame(ang, f = 1.4, h = 1.0, emb = 0) face(ang) translate([0, 0, -emb]) glow_out(h, 2) frame_ring(f) children();
+module frame_ring(f) difference() { offset(delta = f) union() { children(); translate([0, LIFT]) children(); } translate([0, LIFT]) children(); }
 // bars on the glass, in front of it inside the reveal, thick enough to show
 // dark when lit and in relief by day: children(0) the window, children(1) its
 // bars
@@ -52,7 +62,9 @@ module relief(ang, h, emb = 0) face(ang) translate([0, 0, -emb]) glow_out(h, 2) 
 // a sign board with raised letters (the village's sign font)
 SIGN_FONT = "Montserrat:style=Black";
 module sign_board(ang, v, w, h, emb = 0) relief(ang, 1.2, emb) translate([0, v]) offset(r = 0.8) square([w - 1.6, h - 1.6], center = true);
-module sign_letters(ang, txt, v, size, sp = 1.1) face(ang) translate([0, 0, 1.19]) glow_out(1.0, 2)
+// on the board: for the gate's union (emb > 0) the board sinks emb, so the
+// letters sink twice that to stay in it (they floated free, 2026-10-26)
+module sign_letters(ang, txt, v, size, sp = 1.1, emb = 0) face(ang) translate([0, 0, 1.19 - 2 * emb]) glow_out(1.0, 2)
     translate([0, v]) text(txt, size = size, font = SIGN_FONT, halign = "center", valign = "center", spacing = sp);
 
 // a profile in (w out, v up), extruded along u from u0 to u1, in a face's frame

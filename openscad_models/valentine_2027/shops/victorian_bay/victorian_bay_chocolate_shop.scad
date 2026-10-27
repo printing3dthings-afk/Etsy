@@ -58,7 +58,9 @@ module bay_room() intersection() {
         // through the front wall, from where bay2d(-T)'s back edge stops (T
         // in front of the wall: the first build left that strip standing and
         // the bay sat sealed off from the light)
-        translate([-BB + T, YW - T - 0.1, Z0 - 1]) cube([2 * (BB - T), 2 * T + 0.2, BT + 20]);
+        // only as wide as the bay is inside at the wall: wider, it undercut the
+        // ends of the side panes
+        translate([-11, YW - T - 0.1, Z0 - 1]) cube([22, 2 * T + 0.2, BT + 20]);
     }
     multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 1.19, 1, BT - 1 + 1.19 * (BP - T - YW)], [0, 0, 0, 1]]) translate([-100, -100, -200]) cube(200);
 }
@@ -137,7 +139,7 @@ module frames() {
     for (a = [90, 270]) { win_frame(a, emb = EMB) side_heart2d(); win_frame(a, emb = EMB) upper2d(0); }
     win_frame(180, emb = EMB) back_heart2d(); win_frame(180, emb = EMB) upper2d(0);
     // the bay's posts and head, round its panes
-    for (i = [0 : 2]) bface(i) translate([0, 0, -EMB]) glow_out(0.8, 2) difference() { offset(delta = 1.2) bpane2d(i); bpane2d(i); }
+    for (i = [0 : 2]) bface(i) translate([0, 0, -EMB]) glow_out(0.8, 2) frame_ring(1.2) bpane2d(i);
 }
 module bars() {
     for (u = [-13, 13]) win_bars(0, h = 0.8) { upper2d(u); upper_bars(u); }
@@ -150,11 +152,11 @@ module quoins() for (a = [0 : 90 : 270]) for (k = [0 : 6]) let (z = BT + 3 + k *
 DU = 21.5;
 module door() relief(0, 0.7, EMB) translate([DU, 0]) { arch2d(6.4, Z0, Z0 + 20); }
 module door_frame() relief(0, 1.2, EMB) translate([DU, 0]) difference() { offset(delta = 1.2) arch2d(6.4, Z0, Z0 + 20); arch2d(6.4, Z0 - 1, Z0 + 20); }
-module door_heart() face(0) translate([0, 0, 0.69 - EMB]) glow_out(0.6, 2) heart_at(DU, Z0 + 12.5, 3.2);
+module door_heart() face(0) translate([0, 0, 0.69 - 2 * EMB]) glow_out(0.6, 2) heart_at(DU, Z0 + 12.5, 3.2);
 // the sign over the awning
 SV = ZT + 4.8;
 module sign() sign_board(0, SV, 40, 7.4, EMB);
-module letters() sign_letters(0, "CHOCOLATES", SV, 3.7, 1.08);
+module letters() sign_letters(0, "CHOCOLATES", SV, 3.7, 1.08, EMB);
 
 // ---- the scenes in the glass ----------------------------------------------------------------
 module art_all() {
@@ -170,7 +172,7 @@ module panes() { bay_glass(); for (u = [-13, 13]) win_pane(0) upper2d(u);
 module cuts() { for (i = [0 : 2]) bay_cut(i); for (u = [-13, 13]) win_cut(0) upper2d(u);
     for (a = [90, 270]) { win_cut(a) side_heart2d(); win_cut(a) upper2d(0); }
     win_cut(180) back_heart2d(); win_cut(180) upper2d(0); }
-module body_solid() { shell(); translate([0, 0, Z0 - 0.01]) linear_extrude(BT - Z0 + 0.01) bay2d(); }
+module body_solid() { block(); translate([0, 0, Z0 - 0.01]) linear_extrude(BT - Z0 + 0.01) bay2d(); }
 module roof_solid() { roof_outer(); dormer(); chimney(); }
 module hollow() { room(); bay_room(); }
 

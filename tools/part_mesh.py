@@ -75,6 +75,16 @@ def check(paths):
 
 def union(out, paths):
     u = mf.Manifold.batch_boolean([load(p) for p in paths], mf.OpType.Add)
+    # Shells with no volume are leftovers of the weld, where two parts' faces
+    # only touched (the Victorian Bay shop's arrows at their panes' edges,
+    # 2026-10-26): they hold no plastic, but the gate counted each as a
+    # floating body. Dropped, and said so.
+    pieces = u.decompose()
+    keep = [p for p in pieces if p.volume() > 1e-3]
+    if len(keep) < len(pieces):
+        print(f"  dropped {len(pieces) - len(keep)} empty shell(s) left by the weld "
+              f"({sum(p.volume() for p in pieces if p.volume() <= 1e-3):.2e} mm3)")
+        u = mf.Manifold.batch_boolean(keep, mf.OpType.Add)
     t = to_trimesh(u)
     t.export(out)
     print(f"{out}: {u.volume():.1f} mm3, {len(t.faces)} faces, watertight {t.is_watertight}, bodies {len(t.split(only_watertight=False))}")

@@ -114,10 +114,10 @@ module arch2d(w, z0, z1) { translate([-w / 2, z0]) square([w, z1 - z0 - w / 2]);
 DZ = Z0 + 2.2;
 module door() relief(0, 0.7, EMB) arch2d(10, DZ, DZ + 19);
 module door_frame() relief(0, 1.2, EMB) difference() { offset(delta = 1.4) arch2d(10, DZ, DZ + 19); arch2d(10, DZ - 1, DZ + 19); }
-module door_heart() face(0) translate([0, 0, 0.69 - EMB]) glow_out(0.6, 2) heart_at(0, DZ + 12, 4.0);
+module door_heart() face(0) translate([0, 0, 0.69 - 2 * EMB]) glow_out(0.6, 2) heart_at(0, DZ + 12, 4.0);
 SV = 38.5;
 module sign() sign_board(0, SV, 38, 7.0, EMB);
-module letters() sign_letters(0, "CHOCOLATES", SV, 3.6, 1.06);
+module letters() sign_letters(0, "CHOCOLATES", SV, 3.6, 1.06, EMB);
 
 // ---- parts ----------------------------------------------------------------------------------
 DRIFTS = [[W / 2 + 1, -10, 4, 7, 3.0], [-W / 2 - 1, 12, 4, 6, 2.6], [-15, D / 2 + 1, 7, 3.5, 2.6], [17, -D / 2 - 1, 6, 3.5, 2.4]];
@@ -131,7 +131,7 @@ module p_trim() difference() {
     hollow(); mark_cut();
 }
 module p_roof() difference() { union() { lid(); door(); } hollow(); if (EMB == 0) { p_trim(); p_accent(); } }
-module p_body() difference() { shell(); hollow(); cuts(); if (EMB == 0) { p_roof(); p_trim(); p_accent(); } }
+module p_body() difference() { block(); hollow(); cuts(); if (EMB == 0) { p_roof(); p_trim(); p_accent(); } }
 
 if (part == "body") p_body();
 else if (part == "roof") p_roof();
