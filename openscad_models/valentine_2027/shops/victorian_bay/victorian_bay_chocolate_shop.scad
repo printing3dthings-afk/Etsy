@@ -44,8 +44,11 @@ module bface(i, w = 0) let (f = BFACES[i]) translate([f[0][0], f[0][1], 0]) rota
 BG = [Z0 + 4, BT - 3];
 function bpane(i) = i == 0 ? [-BF + 2, BF - 2] : [-BFACES[i][2] + 1.8, BFACES[i][2] - 1.8];
 module bpane2d(i) let (p = bpane(i)) translate([p[0], BG[0]]) square([p[1] - p[0], BG[1] - BG[0]]);
+// The cut stops at the wall's inside face: running 1 mm on, as the plain
+// walls' cuts do, it left a pocket at each back corner where the bay meets the
+// shop's wall, its ceiling over air (2026-10-27)
 module bay_cut(i) bface(i) {
-    translate([0, 0, -T - 1]) linear_extrude(1 + PANE + 0.01) bpane2d(i);
+    translate([0, 0, -T - 0.01]) linear_extrude(PANE + 0.02) bpane2d(i);
     translate([0, 0, -T + PANE]) shear_v() linear_extrude(T - PANE + 1) bpane2d(i);
 }
 module bay_glass() for (i = [0 : 2]) bface(i) translate([0, 0, -T]) linear_extrude(PANE) bpane2d(i);
