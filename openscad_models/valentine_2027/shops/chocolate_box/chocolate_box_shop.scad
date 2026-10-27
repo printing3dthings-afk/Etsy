@@ -45,9 +45,9 @@ module lid() hull() {
 // so it starts down in the walls and the windows stop under it.
 CR = (W / 2 - T) * 1.19;
 ZC = LT - 1.6 - CR;
-module room() hull() {
-    translate([-W / 2 + T, -D / 2 + T, Z0 - 1]) cube([W - 2 * T, D - 2 * T, ZC - Z0 + 1]);
-    translate([0, 0, ZC + CR]) cube(0.01, center = true);
+module room(g = 0) hull() {
+    translate([-W / 2 + T - g, -D / 2 + T - g, Z0 - 1]) cube([W - 2 * T + 2 * g, D - 2 * T + 2 * g, ZC - Z0 + 1]);
+    translate([0, 0, ZC + CR + g]) cube(0.01, center = true);
 }
 
 // ---- windows ---------------------------------------------------------------------------------
@@ -123,7 +123,10 @@ module letters() sign_letters(0, "CHOCOLATES", SV, 3.6, 1.06, EMB);
 DRIFTS = [[W / 2 + 1, -10, 4, 7, 3.0], [-W / 2 - 1, 12, 4, 6, 2.6], [-15, D / 2 + 1, 7, 3.5, 2.6], [17, -D / 2 - 1, 6, 3.5, 2.4]];
 module hollow() room();
 module p_glass() panes();
-module p_art() intersection() { difference() { art_all(); if (EMB == 0) panes(); } if (EMB == 0) hollow(); else union() { hollow(); panes(); } }
+// For the union the art reaches EMB into the walls: clipped exactly at the
+// wall's inside face it met the side windows' sheared reveals edge to edge,
+// and the weld came out with 13 non-manifold edges (2026-10-27).
+module p_art() intersection() { difference() { art_all(); if (EMB == 0) panes(); } if (EMB == 0) hollow(); else union() { room(EMB); panes(); } }
 module p_accent() difference() { union() { ribbon(); bow(); letters(); door_heart(); } if (EMB == 0) { panes(); art_all(); } hollow(); }
 module p_trim() difference() {
     union() { base(DRIFTS); frames(); piping(); drips(); sign(); door_frame(); }
