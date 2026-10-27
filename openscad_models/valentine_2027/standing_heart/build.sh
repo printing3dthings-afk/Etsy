@@ -14,6 +14,8 @@ export OPENSCADPATH="$(cd ../../../assets/openscad_libs && pwd)"
 name=standing_heart_lantern
 parts="frame glass art lip text"
 FAST=${OPENSCAD_FAST:-/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun}
+# the fast engine (OpenSCAD 2026, manifold) when it is there, else the installed one
+FC=("$FAST" --backend=manifold --export-format binstl); [ -x "$FAST" ] || FC=(openscad)
 mkdir -p logs
 P=()
 [ -n "$NAMES" ] && P+=(-D "NAMES=\"$NAMES\"")
@@ -21,12 +23,12 @@ P=()
 case "$1" in
   cgal) cmd=(openscad) ;;
   union)
-    if [ "$2" = fast ]; then U=("$FAST" --backend=manifold --export-format binstl); else U=(openscad); fi
+    if [ "$2" = fast ]; then U=("${FC[@]}"); else U=(openscad); fi
     for p in $parts; do "${U[@]}" "${P[@]}" -D "part=\"$p\"" -D EMB=0.05 -o "logs/u_$p.stl" $name.scad > "logs/u_$p.log" 2>&1 & done
     wait
     python3 ../../../tools/part_mesh.py union ${name}_union.stl $(for p in $parts; do echo logs/u_$p.stl; done)
     exit ;;
-  *) cmd=("$FAST" --backend=manifold); EXP="--export-format binstl" ;;
+  *) cmd=("${FC[@]}"); EXP="" ;;
 esac
 for p in $parts; do
   "${cmd[@]}" "${P[@]}" $EXP -D "part=\"$p\"" -o "${name}_$p.stl" $name.scad > "logs/$p.log" 2>&1 &

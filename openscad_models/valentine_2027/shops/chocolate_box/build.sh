@@ -10,11 +10,13 @@ export OPENSCADPATH="$(cd ../../../../assets/openscad_libs && pwd)"
 name=$(basename "$(ls *.scad)" .scad)
 parts="body roof trim accent glass art"
 FAST=${OPENSCAD_FAST:-/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun}
+# the fast engine (OpenSCAD 2026, manifold) when it is there, else the installed one
+FC=("$FAST" --backend=manifold --export-format binstl); [ -x "$FAST" ] || FC=(openscad)
 mkdir -p logs
 case "$1" in
   cgal) cmd=(openscad); e=0; out() { echo "${name}_$1.stl"; } ;;
   union) cmd=(openscad); e=0.05; out() { echo "logs/u_$1.stl"; } ;;
-  *) cmd=("$FAST" --backend=manifold --export-format binstl); e=0; out() { echo "${name}_$1.stl"; } ;;
+  *) cmd=("${FC[@]}"); e=0; out() { echo "${name}_$1.stl"; } ;;
 esac
 for p in $parts; do
   o=$(out $p)

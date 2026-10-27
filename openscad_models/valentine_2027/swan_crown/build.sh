@@ -13,6 +13,8 @@ export OPENSCADPATH="$(cd ../../../assets/openscad_libs && pwd)"
 name=swan_crown_lantern
 M="python3 ../../../tools/part_mesh.py"
 FAST=${OPENSCAD_FAST:-/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun}
+# the fast engine (OpenSCAD 2026, manifold) when it is there, else the installed one
+FC=("$FAST" --backend=manifold --export-format binstl); [ -x "$FAST" ] || FC=(openscad)
 # from swan_crown_lantern.scad: RI = R - PANE, RP, ZA = ZP + 3; ZN the names' foot
 RI=39.1; RP=44; ZA=20; ZN=0.6
 mkdir -p logs
@@ -20,7 +22,7 @@ P=()
 [ -n "$NAMES" ] && P+=(-D "NAMES=\"$NAMES\"")
 [ -n "$DATE" ] && P+=(-D "DATE=\"$DATE\"")
 e=0; [ "$1" = union ] && e=0.05
-if [ "$1" = cgal ] || { [ "$1" = union ] && [ "$2" != fast ]; }; then cmd=(openscad); else cmd=("$FAST" --backend=manifold --export-format binstl); fi
+if [ "$1" = cgal ] || { [ "$1" = union ] && [ "$2" != fast ]; }; then cmd=(openscad); else cmd=("${FC[@]}"); fi
 for p in frame glass art_flat text_flat lid crown crown_shown; do
   ( "${cmd[@]}" "${P[@]}" -D "part=\"$p\"" -D EMB=$e -o "logs/$p.tmp.stl" $name.scad > "logs/$p.log" 2>&1 && mv "logs/$p.tmp.stl" "logs/$p.stl" ) &
 done
