@@ -126,22 +126,26 @@ module lip() { on_front() translate([0, 0, -EMB]) glow_out(LIP, 2) lip2d(); on_b
 // (measured: "Emma & James" at 6 came out 58 wide, not the 40 first assumed,
 // and ran round the corners); figures and stops about 0.7. A pair too long
 // for 3.6 mm letters on one line breaks after the "&" onto two.
+// The names are spaced 1.08 and the date 1.25 and cleaned with letter_clean
+// (2026-10-27): glow_clean's 0.6 grow filled every counter and ran the date
+// into one shape. Per letter 0.82 became 0.87, and per figure 0.7 became 0.8,
+// for the wider spacing.
 NW = PW - 2 * 6 - 4;
 function sub(s, a, b) = b < a ? "" : chr([for (i = [a : b]) ord(s[i])]);
 AMP = search("&", NAMES);
-ONE = min(6.0, NW / (len(NAMES) * 0.82));
+ONE = min(6.0, NW / (len(NAMES) * 0.87));
 TWO = len(AMP) > 0 && ONE < 3.6;
 N1 = TWO ? sub(NAMES, 0, AMP[0]) : NAMES;
 N2 = TWO ? sub(NAMES, AMP[0] + 2, len(NAMES) - 1) : "";
-NSZ = TWO ? min(4.6, NW / (max(len(N1), len(N2)) * 0.82)) : ONE;
-DSZ = min(TWO ? 3.0 : 3.8, (NW - 8) / (len(DATE) * 0.7));
+NSZ = TWO ? min(4.6, NW / (max(len(N1), len(N2)) * 0.87)) : ONE;
+DSZ = min(TWO ? 3.0 : 3.8, (NW - 8) / (len(DATE) * 0.8));
 module names2d() {
-    module line(t, y, sz, sp = 1) translate([0, y]) offset(r = FAT)
+    module line(t, y, sz, sp = 1.08) translate([0, y]) offset(r = FAT)
         text(t, size = sz, font = FONT, halign = "center", valign = "baseline", spacing = sp);
-    if (TWO) { line(N1, 12.0, NSZ); line(N2, 6.8, NSZ); line(DATE, 2.4, DSZ, 1.08); }
-    else { line(NAMES, 9.6, NSZ); line(DATE, 3.6, DSZ, 1.08); }
+    if (TWO) { line(N1, 12.0, NSZ); line(N2, 6.8, NSZ); line(DATE, 2.4, DSZ, 1.25); }
+    else { line(NAMES, 9.6, NSZ); line(DATE, 3.6, DSZ, 1.25); }
 }
-module text_part() on_front(PD / 2) translate([0, 0, -EMB]) glow_out(1.0, 2) names2d();
+module text_part() on_front(PD / 2) translate([0, 0, -EMB]) glow_out(1.0, 2, lc = true) names2d();
 
 // ---- parts ---------------------------------------------------------------------------------
 // The colour parts stand clear of the body, so the parts check sees them
