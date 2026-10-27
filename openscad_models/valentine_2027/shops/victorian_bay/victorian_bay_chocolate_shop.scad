@@ -55,7 +55,8 @@ module bay_cut(i) bface(i) {
     translate([0, 0, -T - 0.01]) linear_extrude(PANE + 0.02) bpane2d(i);
     translate([0, 0, -T + PANE]) shear_v() linear_extrude(T - PANE + 1) bpane2d(i);
 }
-module bay_glass() for (i = [0 : 2]) bface(i) translate([0, 0, -T]) linear_extrude(PANE) bpane2d(i);
+// grown EMB for the gate's union, as win_pane is (shop_lib)
+module bay_glass() for (i = [0 : 2]) bface(i) translate([0, 0, -T]) linear_extrude(PANE) offset(delta = EMB) bpane2d(i);
 // The bay's inside opens into the shop. Its ceiling rises 1.19 per 1 from
 // the bay's front (just under its top) back through the wall, 50 deg, so it
 // prints from the bay's front wall without support.
@@ -173,9 +174,9 @@ module art_all() {
 
 // ---- parts ----------------------------------------------------------------------------------
 DRIFTS = [[W / 2 + 1, 12, 4, 7, 3.0], [-W / 2 - 1, -8, 4, 6, 2.6], [-14, D / 2 + 1, 7, 3.5, 2.6], [16, D / 2 + 1, 6, 3.5, 2.4]];
-module panes() { bay_glass(); for (u = [-13, 13]) win_pane(0) upper2d(u);
-    for (a = [90, 270]) { win_pane(a) side_heart2d(); win_pane(a) upper2d(0); }
-    win_pane(180) back_heart2d(); win_pane(180) upper2d(0); }
+module panes() { bay_glass(); for (u = [-13, 13]) win_pane(0, EMB) upper2d(u);
+    for (a = [90, 270]) { win_pane(a, EMB) side_heart2d(); win_pane(a, EMB) upper2d(0); }
+    win_pane(180, EMB) back_heart2d(); win_pane(180, EMB) upper2d(0); }
 module cuts() { for (i = [0 : 2]) bay_cut(i); for (u = [-13, 13]) win_cut(0) upper2d(u);
     for (a = [90, 270]) { win_cut(a) side_heart2d(); win_cut(a) upper2d(0); }
     win_cut(180) back_heart2d(); win_cut(180) upper2d(0); }
