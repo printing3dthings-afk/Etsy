@@ -1,0 +1,1 @@
+text("CHOCOLATES", size=3.22, font="Montserrat:style=Black", halign="center", valign="center", spacing=1.25);

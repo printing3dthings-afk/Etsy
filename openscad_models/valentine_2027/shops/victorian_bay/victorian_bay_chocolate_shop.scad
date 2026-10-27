@@ -164,9 +164,11 @@ module door_heart() face(0) translate([0, 0, 0.69 - 2 * EMB]) glow_out(0.6, 2) h
 // the sign over the awning
 SV = ZT + 4.8;
 module sign() sign_board(0, SV, 41.5, 7.4, EMB);
-// 3.2 at 1.25 spacing leaves 0.6 mm between L and A and 0.87 or more between
-// the rest, measured on the glyphs; 3.7 at 1.08 left 0.17 to 0.68
-module letters() sign_letters(0, "CHOCOLATES", SV, 3.2, 1.25, EMB);
+// 3.22 at 1.25 spacing leaves 0.61 mm between L and A and 0.87 or more between
+// the rest, measured on the glyphs; 3.7 at 1.08 left 0.17 to 0.68. Not 3.2:
+// there the stepped relief pinched at the S's top and CGAL exported the
+// part with a four-face edge (3.18 and 3.25 were clean too).
+module letters() sign_letters(0, "CHOCOLATES", SV, 3.22, 1.25, EMB);
 
 // ---- the scenes in the glass ----------------------------------------------------------------
 module art_all() {

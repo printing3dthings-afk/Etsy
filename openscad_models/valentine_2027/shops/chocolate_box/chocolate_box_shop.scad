@@ -117,9 +117,11 @@ module door_frame() relief(0, 1.2, EMB) difference() { offset(delta = 1.4) arch2
 module door_heart() face(0) translate([0, 0, 0.69 - 2 * EMB]) glow_out(0.6, 2) heart_at(0, DZ + 12, 4.0);
 SV = 38.5;
 module sign() sign_board(0, SV, 42, 7.0, EMB);
-// 3.2 at 1.25 spacing leaves 0.6 mm between L and A and 0.87 or more between
-// the rest, measured on the glyphs; 3.6 at 1.06 left 0.11 to 0.58
-module letters() sign_letters(0, "CHOCOLATES", SV, 3.2, 1.25, EMB);
+// 3.22 at 1.25 spacing leaves 0.61 mm between L and A and 0.87 or more between
+// the rest, measured on the glyphs; 3.6 at 1.06 left 0.11 to 0.58. Not 3.2:
+// there the stepped relief pinched at the S's top and CGAL exported the
+// part with a four-face edge (3.18 and 3.25 were clean too).
+module letters() sign_letters(0, "CHOCOLATES", SV, 3.22, 1.25, EMB);
 
 // ---- parts ----------------------------------------------------------------------------------
 DRIFTS = [[W / 2 + 1, -10, 4, 7, 3.0], [-W / 2 - 1, 12, 4, 6, 2.6], [-15, D / 2 + 1, 7, 3.5, 2.6], [17, -D / 2 - 1, 6, 3.5, 2.4]];
