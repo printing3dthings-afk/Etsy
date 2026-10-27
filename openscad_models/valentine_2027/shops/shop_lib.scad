@@ -42,7 +42,10 @@ module win_cut(ang) face(ang) {
     translate([0, 0, -T - 1]) linear_extrude(1 + PANE + 0.01) children();
     translate([0, 0, -T + PANE]) shear_v() linear_extrude(T - PANE + 1) children();
 }
-module win_pane(ang) face(ang) translate([0, 0, -T]) linear_extrude(PANE) children();
+// emb > 0 (the gate's union) grows the pane into the wall round it: drawn to
+// the cut's own outline it met the wall edge to edge, 24 non-manifold edges
+// on the Chocolate Box (2026-10-27)
+module win_pane(ang, emb = 0) face(ang) translate([0, 0, -T]) linear_extrude(PANE) offset(delta = emb) children();
 // the scene on the pane's back, hidden until lit
 module win_art(ang, emb = 0) face(ang) translate([0, 0, -T + emb]) art_in(ART_D, 4) glow_clean() children();
 // a raised frame round the opening, its underside sloped (glow_out)
