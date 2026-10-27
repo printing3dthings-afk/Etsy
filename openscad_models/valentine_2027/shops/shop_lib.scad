@@ -67,7 +67,7 @@ SIGN_FONT = "Montserrat:style=Black";
 module sign_board(ang, v, w, h, emb = 0) relief(ang, 1.2, emb) translate([0, v]) offset(r = 0.8) square([w - 1.6, h - 1.6], center = true);
 // on the board: for the gate's union (emb > 0) the board sinks emb, so the
 // letters sink twice that to stay in it (they floated free, 2026-10-26)
-module sign_letters(ang, txt, v, size, sp = 1.1, emb = 0) face(ang) translate([0, 0, 1.19 - 2 * emb]) glow_out(1.0, 2)
+module sign_letters(ang, txt, v, size, sp = 1.1, emb = 0) face(ang) translate([0, 0, 1.19 - 2 * emb]) glow_out(1.0, 2, lc = true)
     translate([0, v]) text(txt, size = size, font = SIGN_FONT, halign = "center", valign = "center", spacing = sp);
 
 // a profile in (w out, v up), extruded along u from u0 to u1, in a face's frame

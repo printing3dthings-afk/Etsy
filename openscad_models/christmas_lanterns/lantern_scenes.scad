@@ -185,9 +185,15 @@ module portrait(k, w, h) {
 // octagon; plain mitred ones left sharp corners the slicer propped (the hex
 // lantern's stable roof, 2026-10-13).
 module glow_clean() offset(delta = 0.4, chamfer = true) offset(delta = -1.0, chamfer = true) offset(delta = 0.6, chamfer = true) children();
-module glow_out(h, n, sh = SH) let (m = art_n(h, n, sh)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
+// lettering (lc = true) gets a lighter clean: glow_clean's 0.6 grow closes
+// any gap under 1.2 mm, and on the Valentine shops' signs it ran CHOCOLATES's
+// C into its H and its E into its S (2026-10-27). letter_clean closes only
+// gaps under 0.4 and drops only strokes under 0.4.
+module letter_clean() offset(delta = 0.2, chamfer = true) offset(delta = -0.4, chamfer = true) offset(delta = 0.2, chamfer = true) children();
+module glow_out(h, n, sh = SH, lc = false) let (m = art_n(h, n, sh)) for (i = [0 : m - 1]) let (t0 = i == 0 ? -0.01 : i * h / m - 0.01,
         k = ceil(sh * (i + 1) * h / m / 0.2 - 0.05))
-    translate([0, 0, t0]) linear_extrude((i + 1) * h / m - t0) offset(delta = 0.01) intersection_for(j = [0 : k]) translate([0, j * 0.2]) glow_clean() children();
+    translate([0, 0, t0]) linear_extrude((i + 1) * h / m - t0) offset(delta = 0.01) intersection_for(j = [0 : k]) translate([0, j * 0.2])
+        if (lc) letter_clean() children(); else glow_clean() children();
 
 // ---- the drum's panorama, about 251 x 80, wrapping all the way round ---------------------
 // Nothing crosses x = 0 / w except the ground, so the two ends meet cleanly.

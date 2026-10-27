@@ -116,8 +116,10 @@ module door() relief(0, 0.7, EMB) arch2d(10, DZ, DZ + 19);
 module door_frame() relief(0, 1.2, EMB) difference() { offset(delta = 1.4) arch2d(10, DZ, DZ + 19); arch2d(10, DZ - 1, DZ + 19); }
 module door_heart() face(0) translate([0, 0, 0.69 - 2 * EMB]) glow_out(0.6, 2) heart_at(0, DZ + 12, 4.0);
 SV = 38.5;
-module sign() sign_board(0, SV, 38, 7.0, EMB);
-module letters() sign_letters(0, "CHOCOLATES", SV, 3.6, 1.06, EMB);
+module sign() sign_board(0, SV, 42, 7.0, EMB);
+// 3.2 at 1.25 spacing leaves 0.6 mm between L and A and 0.87 or more between
+// the rest, measured on the glyphs; 3.6 at 1.06 left 0.11 to 0.58
+module letters() sign_letters(0, "CHOCOLATES", SV, 3.2, 1.25, EMB);
 
 // ---- parts ----------------------------------------------------------------------------------
 DRIFTS = [[W / 2 + 1, -10, 4, 7, 3.0], [-W / 2 - 1, 12, 4, 6, 2.6], [-15, D / 2 + 1, 7, 3.5, 2.6], [17, -D / 2 - 1, 6, 3.5, 2.4]];
