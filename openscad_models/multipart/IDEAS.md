@@ -15,7 +15,7 @@ joints, about 0.5 mm for snaps), with a fit check before he sees it.
 | 5 | **Hand-Crank Kinetic Toy** | a base, a crank and a train of real gears turning a scene (a cat chasing a fish, a planet round a sun) |
 | 8 | **Articulated Creature Kit** | a kawaii dragon, axolotl or cat in snap-together ball-joint segments, each its own colour; new species over time |
 | 9 | **Candy Dispenser** | a refillable dome on a base: turn the knob and a wheel inside drops one gumball or candy into a little door |
-| — | *fifth: still to pick* | |
+| 19 | **Nesting Characters** | 4–5 kawaii figures, each unscrewing at the waist to hide the next, printed threads; a colour per figure; themed sets later |
 
 ## Not picked yet — kept for later
 
@@ -34,6 +34,9 @@ joints, about 0.5 mm for snaps), with a fit check before he sees it.
 | 14 | Infinity Fidget Cube | eight cubes on printed hinges that fold endlessly; a colour or face per cube |
 | 15 | Kawaii Chess & Checkers Set | character pieces, a folding or tiled board, a sliding-lid box that holds it all |
 | 16 | Rubber-Band Racer Kit | snap-together chassis, axles and wheels, wound with a rubber band; sold in packs to race |
+| 17 | Coin-Munching Bank | set a coin on the tray, press the lever, a character's mouth snaps open and eats it; plug in the base |
+| 18 | Dice Tower with Storage | baffles tumble dice out a door into a tray; a drawer in the base for dice and minis |
+| 20 | Crank Walker | a creature on linkage legs (Strandbeest-style) that walks across the desk as you turn its crank |
 
 Already elsewhere, so left off this list: modular drawers (Soft Frame,
 codex PR #18) and phone docks (Gobble, codex PR #20).
