@@ -68,7 +68,10 @@ module sign_board(ang, v, w, h, emb = 0) relief(ang, 1.2, emb) translate([0, v])
 // on the board: for the gate's union (emb > 0) the board sinks emb, so the
 // letters sink twice that to stay in it (they floated free, 2026-10-26)
 module sign_letters(ang, txt, v, size, sp = 1.1, emb = 0) face(ang) translate([0, 0, 1.19 - 2 * emb]) glow_out(1.0, 2, lc = true)
-    translate([0, v]) text(txt, size = size, font = SIGN_FONT, halign = "center", valign = "center", spacing = sp);
+    // strokes 0.08 bolder each side: at 3.22 the slicer dropped one layer of
+    // C and O at mid-height, where a stroke is 0.58 wide (print_fidelity, 4
+    // flags on each shop); 0.08 clears them and leaves 0.45 between L and A
+    translate([0, v]) offset(delta = 0.08) text(txt, size = size, font = SIGN_FONT, halign = "center", valign = "center", spacing = sp);
 
 // a profile in (w out, v up), extruded along u from u0 to u1, in a face's frame
 module uprism(u0, u1) multmatrix([[0, 0, 1, u0], [0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1]]) linear_extrude(u1 - u0) children();
