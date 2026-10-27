@@ -13,22 +13,24 @@ has seen the forms for that product (CLAUDE.md, new 3D print designs).
   propped.
 - **Fits from a test plate first.** One small plate of coupons, printed on
   Scott's P1S before any product, sets the real numbers: a thread pair, a
-  ball-and-socket pair, a gear pair, a detent wheel and a snap tab, each at
+  ball-and-socket pair, a gear pair, a detent wheel and a bayonet, each at
   three clearances. The products are then drawn at the clearances that worked,
   not at a guess. Starting values: 0.2–0.3 mm for slides, threads and joints,
   about 0.5 mm for snaps (`data/knowledge_base/3d_printing_expertise.md`).
 - **Every gate on every part**: product gate, print fidelity, fragility, the
   slicer finding no supports. Plus a fit check of the parts as assembled: no
   two overlapping, the moving ones turning through their whole travel.
-- **Proven mechanisms, not invented ones.** Gears, threads and hinges come
-  from BOSL2 (vendored), which already gets their geometry right.
+- **Proven mechanisms, not invented ones.** Gears are MCAD's involute gears
+  (installed with OpenSCAD); threads are `thread_lib.scad`, a trapezoid
+  thread with 39° flanks so neither half needs support. The vendored BOSL2 is
+  a subset without its gear and thread modules.
 
 ## 19 · Nesting Characters
 
 - **Form:** 5 figures, about 90, 72, 56, 42 and 30 mm tall, each a rounded
   kawaii body with ears or a hat; the smallest is solid.
-- **Mechanism:** a printed trapezoid thread at each waist (BOSL2), pitch
-  about 2.5 mm, one and a half turns, so it closes with a twist and the faces
+- **Mechanism:** a printed trapezoid thread at each waist (`thread_lib.scad`),
+  pitch 3 mm, about one and a half turns, so it closes with a twist and the faces
   line up when tight.
 - **Printing:** the bottom half stands on its flat base, opening up. The top
   half prints upside down on its rim, and its hollow is a pointed dome
@@ -79,9 +81,11 @@ has seen the forms for that product (CLAUDE.md, new 3D print designs).
 - **Mechanism:** ball-and-socket snap joints, every segment ball on one end
   and socket on the other. The socket is split by slits so it flexes over the
   ball and grips it, posable but not floppy.
-- **Printing:** each segment stands with its ball up and its socket open
-  side down on the plate, so the socket's inside needs no support; the
-  socket's mouth is chamfered so it prints and snaps cleanly.
+- **Printing:** each segment stands on a flat face with its socket opening
+  UP, so the socket's hollow is a cup whose roof is only the short lip above
+  the ball's equator (no support, checked on the test plate). The ball sits
+  on a neck that leaves it at 40° off vertical, steep enough to print. The
+  socket's mouth has a lead-in so it snaps cleanly.
 - **Colour:** alternating segments in two or three colours, belly a third.
 - **Later species reuse the same joint:** axolotl, cat, snake.
 - **The hard part:** the grip. Too loose flops, too tight cracks. Set from
@@ -96,15 +100,15 @@ has seen the forms for that product (CLAUDE.md, new 3D print designs).
   the same ratio (say 36:12 and 35:12 via an idler), so one arm gains on the
   other a little each turn. That's the chase. The crank turns a bevel or
   crown gear into the train.
-- **Printing:** all gears print flat (BOSL2 spur gears, module about 1.5 mm,
-  a little backlash). Shafts are printed pins with snap retainers.
+- **Printing:** all gears print flat (MCAD involute spur gears, module
+  1.5 mm, a little backlash). Shafts are printed pins with snap retainers.
 - **The hard part:** smooth turning with no binding. Gear backlash and
   shaft clearance are set from the test plate.
 
 ## Order
 
-1. **The test plate:** threads, ball joint, gear pair, detent and snap at
-   three clearances. Scott prints it once; every product after uses what
+1. **The test plate** (`test_plate/`, built 2026-10-27): thread, ball
+   joint, gear pair, detent and bayonet at three clearances each. Scott prints it once; every product after uses what
    worked.
 2. **Nesting Characters:** simplest mechanism, fastest win.
 3. **Candy Dispenser.**

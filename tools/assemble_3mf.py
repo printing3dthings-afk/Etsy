@@ -149,7 +149,7 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
     # in a row, off the plate, though they fit one behind the other.
     row = sum(h[0] - l[0] for l, h in zip(lo, hi)) + gap * (len(loaded) - 1)
     col = sum(h[1] - l[1] for l, h in zip(lo, hi)) + gap * (len(loaded) - 1)
-    column = mode != "assembly" and row > _BED_MM
+    column = mode == "plate" and row > _BED_MM
     # Too many for a row OR a column: shelves, left to right, wrapping before
     # the bed's edge (2026-10-21). Six snowflake ornaments 68 x 85 mm went
     # into a column 575 mm long, two thirds of it off the plate.
@@ -170,7 +170,9 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
     for gi, (ms, ns, ex) in enumerate(zip(loaded, names, extruders)):
         o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
         objs.append(o); slic3rs.append(sl); bambus.append(bm)
-        if mode == "assembly":
+        if mode in ("assembly", "placed"):
+            # "placed": the caller has already laid the meshes out on the bed
+            # (2026-10-27, the fit test plate's packer), so they stay put
             items += f'<item objectid="{gi+1}"/>'
         elif shelves:
             items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
