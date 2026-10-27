@@ -36,7 +36,11 @@ BT = 31;            // its top
 YW = -D / 2;        // the front wall's face
 module bay2d(o = 0) offset(delta = o) polygon([[-BB, YW + 0.01], [BB, YW + 0.01], [BF, YW - BP], [-BF, YW - BP]]);
 // the bay's three faces: origin at the face's middle, its outward angle
-BSA = atan2(BB - BF, BP);           // the sides' cant
+// the sides' cant: the turn from the front face's direction to a side's, so
+// atan2(BP, BB - BF). It was atan2(BB - BF, BP), 8.8 deg short: the side panes,
+// frames and cuts stood off their walls, the panes poked into the bay and the
+// slicer propped the pockets at both ends (2026-10-27)
+BSA = atan2(BP, BB - BF);
 BFACES = [[[0, YW - BP], 0, BF], [[(BB + BF) / 2, YW - BP / 2], BSA, norm([BB - BF, BP]) / 2],
           [[-(BB + BF) / 2, YW - BP / 2], -BSA, norm([BB - BF, BP]) / 2]];
 module bface(i, w = 0) let (f = BFACES[i]) translate([f[0][0], f[0][1], 0]) rotate([0, 0, f[1]]) translate([0, -w, 0]) rotate([90, 0, 0]) children();
