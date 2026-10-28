@@ -18,7 +18,7 @@
 // no faster.
 
 include <../thread_lib.scad>
-SH = 1.19;          // relief undersides climb 1.19 per 1 out (50 deg)
+SH = 1.6;           // relief undersides climb 1.6 per 1 out (58 deg): at 50 the slicer propped the paws
 include <../../christmas_village/relief_lib.scad>
 include <../../brand/obc_mark.scad>
 
@@ -96,9 +96,11 @@ module revolve_band(f, z0, z1) let (pts = [for (i = [0 : M]) let (z = z0 + (z1 -
 // cheeks (round the curve) only grazed the surface and came out as slashes.
 // A cut goes in sheared up CSH per 1 in, so its ceiling slopes and prints.
 function ang(xc, zc) = asin(xc / rf(zc));
-CSH = 1.6;                       // a cut's ceiling climbs this per 1 in (58 deg)
+// A cut's ceiling climbs CSH per 1 in (58 deg). It was 1 / CSH, 32 deg, and
+// the slicer propped every eye, cheek and mouth (2026-10-28).
+CSH = 1.6;
 module cut_at(xc, zc, depth) let (r = rf(zc)) rotate([0, 0, ang(xc, zc)])
-    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 1 / CSH, 1, r / CSH], [0, 0, 0, 1]])
+    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, CSH, 1, r * CSH], [0, 0, 0, 1]])
         translate([0, -r - 2, 0]) rotate([-90, 0, 0]) linear_extrude(depth + 4) mirror([0, 1, 0]) children();
 EYE = [0.105, 0.70];             // x, z of each eye's centre (of H)
 module eye2d() scale([0.034 * H, 0.046 * H]) circle(1, $fn = 40);
@@ -174,7 +176,9 @@ module top() difference() {
     // wider than the thread, since a flare past it thinned the rim to 0.44 mm
     // and left the top 4% of its footprint to stand on
     translate([0, 0, ZS - 0.01]) thread_solid(2 * RM, TP, ZF - ZS + 0.01, TDEP, CLR);
-    translate([0, 0, ZS - 0.01]) cylinder(r1 = RM + CLR, r2 = RM - TDEP + CLR, h = TDEP * THREAD_FLANK, $fn = 180);
+    // (0.1 past it: flush with the thread's crest, the cone and the cut met in
+    // a zero-volume sliver on the largest cat that read as non-manifold)
+    translate([0, 0, ZS - 0.01]) cylinder(r1 = RM + CLR + 0.1, r2 = RM - TDEP + CLR, h = (TDEP + 0.1) * THREAD_FLANK, $fn = 180);
     revolve_band(function (z) cav_top(z), ZF - 0.01, H);
     face_cuts();
 }
