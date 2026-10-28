@@ -74,8 +74,8 @@ The parts are colour only, so the renders can show them apart:
   floor is 0.8 mm for this piece (`../../check_valentine.py`), because the
   0.9 mm panes are the point. Every structural wall is 2.4 mm.
 - print fidelity: 0 flagged (`logs/fidelity.txt`). The first run's slice came
-  back corrupt, with moves 70 million mm off the bed. The slicer failed while
-  three checks ran at once, so fidelity was re-run alone, and that slice was
+  back corrupt, with moves 70 million mm off the bed. The cause isn't known
+  (other checks were running at the same time); re-run alone, the slice was
   clean.
 - fragility: 0 high, 0 watch (`logs/fragility.txt`)
 
