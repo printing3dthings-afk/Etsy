@@ -78,8 +78,9 @@ Each of the three prints is checked on its own.
 - **product gate passed on the drum, the lid and the crown** (`logs/gate.txt`):
   watertight, one body each, 0 support moves, 0 overhang perimeters, full
   height, flat base, stable. The wall floor is 0.8 mm for this piece
-  (`../check_valentine.py`), because the 0.9 mm glass is the point. Every
-  structural wall is 1.2 mm or more.
+  (`../check_valentine.py`), because the 0.9 mm glass is the point. Measured
+  wall thickness, 1st percentile / median: drum 0.90 / 1.61 mm (the 0.90 is
+  the glass), lid 3.00 / 13.1 mm, crown 0.97 / 3.97 mm.
 - fragility: 0 high, 0 watch on all three (`logs/fragility.txt`)
 - print fidelity (`logs/fidelity.txt`): lid 0 flagged; drum 1 and crown 6,
   both small, explained and left that way:
