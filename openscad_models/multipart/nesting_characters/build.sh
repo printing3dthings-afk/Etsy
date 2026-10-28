@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Nesting Cats: exports every part (figures 0-3: the bottom, and the top in its
 # four colours; 4: the solid cat in its four colours),
-# checks the fits and writes the 3MF.
+# checks the fits and writes a 3MF per cat.
 #   ./build.sh          everything
 #   ./build.sh parts    only the STLs
 set -euo pipefail
@@ -23,3 +23,14 @@ wait
 grep -l "ERROR\|WARNING" logs/cat*.log && echo "(see the logs above)" || true
 [ "$mode" = parts ] && exit 0
 python3 check_cats.py parts
+# one 3MF per cat, one plate each: the bottom in its body colour beside the top
+# in its four (body, cream, dark, pink); the smallest is one solid in four
+A=../../../tools/assemble_3mf.py
+BODY=(B9A6D6 EFB3C6 A9DCC8 F2C99A A9CDEB)
+for i in 0 1 2 3; do
+    b=${BODY[$i]}
+    python3 $A --plate cat${i}.3mf parts/cat${i}_bottom.stl:#$b + parts/cat${i}_top_body.stl:#$b \
+        parts/cat${i}_top_trim.stl:#F7F1E3 parts/cat${i}_top_dark.stl:#4A2A30 parts/cat${i}_top_pink.stl:#F08FA0
+done
+python3 $A cat4.3mf parts/cat4_solid_body.stl:#${BODY[4]} parts/cat4_solid_trim.stl:#F7F1E3 \
+    parts/cat4_solid_dark.stl:#4A2A30 parts/cat4_solid_pink.stl:#F08FA0
