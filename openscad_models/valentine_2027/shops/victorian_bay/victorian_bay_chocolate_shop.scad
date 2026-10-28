@@ -5,8 +5,9 @@
 // A brick shop on the village's snow base: a canted bay display window under
 // a striped awning, the shelves of chocolates in it built into the back of its
 // glass, so they show only when it is lit; CHOCOLATES in raised letters over
-// the awning; a panelled door beside the bay; heart windows on the sides and
-// back with Cupid's arrows in them, lit; arched upstairs windows with glazing
+// the awning; a panelled door beside the bay; heart windows on the sides
+// with Cupid's arrows in them, lit, and a plain heart window at the back;
+// arched upstairs windows with glazing
 // bars; stone quoins; a slate mansard with a heart dormer and a chimney.
 //
 // One print, matte white, hollow and open underneath over a battery LED
