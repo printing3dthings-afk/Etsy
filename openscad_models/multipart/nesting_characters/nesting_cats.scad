@@ -37,8 +37,9 @@ HS   = [90, 72, 57, 43, 30];   // the two smallest were 45 and 32: with the conc
 CLR  = 0.3;         // the thread's clearance: provisional, from the fit test plate once printed
 TP   = 3; TDEP = 0.8; TL = 5;     // thread pitch, depth, length (thread_lib: 39 deg flanks)
 W    = 1.8;         // the walls
-FL   = 1.8;         // the bottom's floor
-WT   = 1.2;         // the least wall round the thread, either side
+FL   = 2.2;         // the bottom's floor: at 1.8 the 0.8 mm mark left 1.0 under it (product gate, 43 mm cat)
+WT   = 1.45;        // the least wall round the thread, either side: at 1.2 the egg's
+                    // narrowing above the seam left 1.06 to 1.19 (product gate)
 K    = 0.84;        // tan 40: the fastest a down-facing surface may run in per 1 up
 N    = 240;         // profile samples up a figure
 
@@ -86,17 +87,23 @@ module scarf() difference() {
 // which the printer bridges; and above the female thread it opens no faster
 // than K out of the thread's cut. Closed to a point, the hollow had no room
 // for the next cat's head and ears (check_cats, 2026-10-28).
-RB = min(6, 0.1 * H);
+RB = min(3, 0.05 * H);
 // and ROOF under the top. Placed wherever the head was still wide enough, the
 // roof over it came out 1 mm thick (product gate); at 2.3 the slicer propped
 // the largest cat's ceiling, and at 3.5 it bridged it (2026-10-28).
 ROOF = 3.5;
+// The ceiling ends flat at the last sample under ZC. Read between samples past
+// it, the hollow closed over one more sample instead, a cone 85 deg from
+// upright; wherever that fell across a layer line the slicer met it as a ring
+// with nothing in the middle and propped it (910 moves on the 57 mm top, none
+// when the same ceiling sat 0.1 mm off the line, 2026-10-28).
 ZC = min(max([for (k = [0 : N]) if (rf(k * dz) - W >= RB) k * dz]), H - ROOF);
 // Inside the scarf the hollow follows the scarf's outside, not the waist under
 // it: the next cat's head sits at this one's waist (check_cats, 2026-10-28).
 function wall_out(z) = z >= SZ - SA / K && z <= SZ + SB ? max(rf(z), scarf_r(z)) : rf(z);
 function cav_k(k) = k * dz > ZC ? -1 : k * dz > ZC - dz ? RB : min(wall_out(k * dz) - W, cav_k(k + 1) + K * dz);
 CAV = [for (k = [0 : N]) cav_k(k)];
+ZT = floor(ZC / dz) * dz;
 function cav_top(z) = max(lerp(CAV, z), RM + CLR - K * (z - ZF));
 // The bottom's: W inside the egg, closing to the neck's bore at the seam no
 // faster than K.
@@ -116,15 +123,25 @@ module revolve_band(f, z0, z1) let (pts = [for (i = [0 : M]) let (z = z0 + (z1 -
 // skirt under it climbs SH per 1 out so it prints. Cuts straight in from the
 // front only grazed the cheeks round the curve (2026-10-28).
 SINK = 0.6;
-module raised(xc, zc, h) let (r = rf(zc)) rotate([0, 0, asin(xc / r)])
-    translate([0, -r + SINK, 0]) rotate([90, 0, 0]) art_skirt(h + SINK, 2) translate([0, zc]) children();
+module raised(xc, zc, h, s = SINK) let (r = rf(zc)) rotate([0, 0, asin(xc / r)])
+    translate([0, -r + s, 0]) rotate([90, 0, 0]) art_skirt(h + s, 2) translate([0, zc]) children();
+// The face sits on the head's underside, which falls away below it to the
+// waist: sunk SINK, the plane under a detail ended in the air below it, a lip
+// the slicer propped (2,806 moves on the 72 mm top) and a sliver the gate read
+// 0.05 mm thick. Sunk FS, its skirt always reaches the head, and it is cut off
+// FIN inside the egg so it never reaches the hollow (2026-10-28).
+FS = 3; FIN = W - 0.5;
+module face(xc, zc, h) difference() {
+    raised(xc, zc, h, FS) children();
+    revolve_band(function (z) rf(z) - FIN, zc - 0.3 * H, zc + 0.1 * H);
+}
 PR = max(0.7, 0.011 * H);        // how far the face stands out
 module oval(a, b) scale([a * H, b * H]) circle(1, $fn = 48);
 
 // the concept's face, at its places
-module eyes()   for (s = [-1, 1]) raised(s * 0.10 * H, 0.73 * H, PR) oval(0.034, 0.046);
-module nose()   raised(0, 0.68 * H, PR * 0.8) oval(0.024, 0.016);
-module cheeks() for (s = [-1, 1]) raised(s * 0.17 * H, 0.67 * H, PR * 0.7) oval(0.04, 0.026);
+module eyes()   for (s = [-1, 1]) face(s * 0.10 * H, 0.73 * H, PR) oval(0.034, 0.046);
+module nose()   face(0, 0.68 * H, PR * 0.8) oval(0.024, 0.016);
+module cheeks() for (s = [-1, 1]) face(s * 0.17 * H, 0.67 * H, PR * 0.7) oval(0.04, 0.026);
 // paws and the scarf's tail, held inside the belly (see RBELLY)
 module paws()   for (s = [-1, 1]) raised(s * 0.12 * H, 0.40 * H, max(0.8, 0.012 * H)) oval(0.07, 0.05);
 module tail()   raised(0.10 * H, 0.465 * H, max(0.8, 0.012 * H)) rotate(-12) oval(0.045, 0.10);
@@ -144,8 +161,9 @@ module ears() for (s = [-1, 1]) let (th = 34, xb = s * 0.30 * H * sin(th) * 0.92
 MARK = H >= 40;                  // the maker's mark only where 4.4 mm letters fit the foot
 module clip() intersection() { children(); cylinder(r = RBELLY, h = 2 * H, $fn = 180); }
 module trim() clip() { scarf(); paws(); tail(); }
-module dark() clip() { eyes(); nose(); }
-module pink() clip() cheeks();
+FACE = true;        // false only to test what the slicer props
+module dark() if (FACE) clip() { eyes(); nose(); }
+module pink() if (FACE) clip() cheeks();
 
 module bottom() difference() {
     union() {
@@ -164,7 +182,7 @@ module top_hollow() {
     // zero-volume sliver that read as non-manifold; wider, it thinned the rim
     translate([0, 0, ZS - 0.01]) thread_solid(2 * RM, TP, ZF - ZS + 0.01, TDEP, CLR);
     translate([0, 0, ZS - 0.01]) cylinder(r1 = RM + CLR + 0.1, r2 = RM - TDEP + CLR, h = (TDEP + 0.1) * THREAD_FLANK, $fn = 180);
-    revolve_band(function (z) cav_top(z), ZF - 0.01, H);
+    revolve_band(function (z) cav_top(z), ZF - 0.01, ZT);
 }
 // one colour of the top (c), or all of it
 module top(c = "all") difference() {
@@ -174,6 +192,8 @@ module top(c = "all") difference() {
     else if (c == "dark") dark();
     else if (c == "pink") difference() { pink(); dark(); }
     top_hollow();
+    // nothing below the seam: the smallest top's paw skirts reached under its rim
+    translate([0, 0, ZS - H]) cylinder(r = H, h = H, $fn = 60);
 }
 module solid(c = "all") difference() {
     if (c == "all") union() { revolve_band(function (z) rf(z), 0, H); ears(); trim(); dark(); pink(); }
