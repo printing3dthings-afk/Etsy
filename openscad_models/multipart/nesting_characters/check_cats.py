@@ -32,13 +32,23 @@ def load(name):
                                tri_verts=np.asarray(t.faces, np.uint32))), t
 
 
+def colours(stem):
+    """A part in its colours (body, trim, dark, pink), as one solid and one mesh."""
+    ms = [load(p.stem) for p in sorted(D.glob(f"{stem}_*.stl"))]
+    return mf.Manifold.batch_boolean([m for m, _ in ms], mf.OpType.Add), trimesh.util.concatenate([t for _, t in ms])
+
+
+def top(i):
+    return colours(f"cat{i}_top")
+
+
 def closed(i):
     """Figure i as it stands, the top screwed on (the top is exported standing
     on its rim, so it goes back up by the seam's height)."""
     if i == 4:
-        return load("cat4_solid")
+        return colours("cat4_solid")
     b, tb = load(f"cat{i}_bottom")
-    t, tt = load(f"cat{i}_top")
+    t, tt = top(i)
     zs = 0.30 * HS[i]
     return b + t.translate([0, 0, zs]), trimesh.util.concatenate([tb, tt.copy().apply_translation([0, 0, zs])])
 
@@ -56,7 +66,7 @@ def bore(i):
 bad = 0
 for i in range(4):
     b, _ = load(f"cat{i}_bottom")
-    t, _ = load(f"cat{i}_top")
+    t, _ = top(i)
     zs = 0.30 * HS[i]
     # closed, and part way on: turned by a and lifted a / 360 of a pitch (the thread rises with the angle)
     worst = max((b ^ t.rotate([0, 0, a]).translate([0, 0, zs + TP * a / 360])).volume() for a in (0, 90, 180, 360))
