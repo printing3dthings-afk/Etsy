@@ -127,8 +127,15 @@ module revolve_band(f, z0, z1) let (pts = [for (i = [0 : M]) let (z = z0 + (z1 -
 // skirt under it climbs SH per 1 out so it prints. Cuts straight in from the
 // front only grazed the cheeks round the curve (2026-10-28).
 SINK = 0.6;
-module raised(xc, zc, h, s = SINK) let (r = rf(zc)) rotate([0, 0, asin(xc / r)])
-    translate([0, -r + s, 0]) rotate([90, 0, 0]) art_skirt(h + s, 2) translate([0, zc]) children();
+// A face detail also leans with the head (tilt): stood upright on the head's
+// underside, each carried a skirt you could see below it, and the eyes read
+// tall and blocky beside the concept's (render, 2026-10-28). Its skirt climbs
+// that much steeper, so it still climbs SH in the world: leant 17 deg on SH,
+// the nose and cheeks were propped again. The paws stay upright: on the
+// belly's top, leant back, they looked sunk in.
+module raised(xc, zc, h, s = SINK, tilt = false) let (r = rf(zc), g = tilt ? max(0, atan((rf(zc + 1) - rf(zc - 1)) / 2)) : 0)
+    rotate([0, 0, asin(xc / r)]) translate([0, -r, zc]) rotate([g, 0, 0]) translate([0, s, -zc])
+        rotate([90, 0, 0]) art_skirt(h + s, 2, tan(atan(SH) + g)) translate([0, zc]) children();
 // The face sits on the head's underside, which falls away below it to the
 // waist: sunk SINK, the plane under a detail ended in the air below it, a lip
 // the slicer propped (2,806 moves on the 72 mm top) and a sliver the gate read
@@ -136,7 +143,7 @@ module raised(xc, zc, h, s = SINK) let (r = rf(zc)) rotate([0, 0, asin(xc / r)])
 // FIN inside the egg so it never reaches the hollow (2026-10-28).
 FS = 3; FIN = W - 0.5;
 module face(xc, zc, h) difference() {
-    raised(xc, zc, h, FS) children();
+    raised(xc, zc, h, FS, true) children();
     revolve_band(function (z) rf(z) - FIN, zc - 0.3 * H, zc + 0.1 * H);
 }
 PR = max(0.7, 0.011 * H);        // how far the face stands out
