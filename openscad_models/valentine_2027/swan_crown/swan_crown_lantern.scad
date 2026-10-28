@@ -112,7 +112,10 @@ module names2d() {
     if (TWO) { line(N1, 10.4, NSZ); line(N2, 5.4, NSZ); line(DATE, 1.6, DSZ, 1.25); }
     else { line(NAMES, 8.0, NSZ); line(DATE, 2.4, DSZ, 1.25); }
 }
-module text_flat() translate([-PI / 2 * RP, 0, 0]) glow_out(1.0, 2, lc = true) names2d();
+// opened 0.25: a 0.45 hairline in the names dropped for two layers in the
+// slice (print_fidelity, 2026-10-27), so the model drops what will not print;
+// growing the letters instead ran them into each other
+module text_flat() translate([-PI / 2 * RP, 0, 0]) glow_out(1.0, 2, lc = true) offset(delta = 0.25) offset(delta = -0.25) names2d();
 
 // ---- lid ------------------------------------------------------------------------------------
 RL  = R + RO - CO - 0.3;    // inside the collar with 0.3 to spare
@@ -137,7 +140,11 @@ module crown2d() {
     translate([-TW / 2, -TD]) square([TW, TD + 1.0]);
 }
 // its top edges stepped in, a layer at a time, so it reads carved, not cut
-module crown() { linear_extrude(CT - 0.6) crown2d(); for (i = [1 : 3]) translate([0, 0, CT - 0.8 + 0.2 * i]) linear_extrude(0.2) offset(delta = -0.25 * i) crown2d(); }
+// The bevel's steps each come in 0.25; where the swans narrow, a step thins
+// to a sliver the slicer drops (print_fidelity, 6 flags, 2026-10-27), so each
+// step is opened: anything under 0.44 wide goes from the model too.
+module crown() { linear_extrude(CT - 0.6) crown2d(); for (i = [1 : 3]) translate([0, 0, CT - 0.8 + 0.2 * i]) linear_extrude(0.2)
+    offset(delta = 0.22) offset(delta = -0.22) offset(delta = -0.25 * i) crown2d(); }
 // as it stands in the lid, for the renders and the fit check
 module crown_shown() translate([0, CT / 2, ZT + LT + BT - TD]) rotate([90, 0, 0]) translate([0, TD, 0]) crown();
 
