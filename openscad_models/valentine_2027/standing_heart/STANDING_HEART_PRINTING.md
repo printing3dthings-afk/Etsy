@@ -77,8 +77,8 @@ version stopped the hollow at the chords, and the lobe tops showed dark.
 - **product gate passed** (`logs/gate.txt`): watertight, one body, 0 support
   moves, 0 overhang perimeters, full height, flat base, stable. Its wall floor
   is set to 0.8 mm for this piece, in `../check_valentine.py`, because the
-  0.9 mm panes are the point (Scott's glow rule). Every structural wall is
-  1.2 mm or more.
+  0.9 mm panes are the point (Scott's glow rule). Measured wall thickness:
+  1st percentile 0.90 mm (the panes), median 3.97 mm.
 - print fidelity: 0 flagged (`logs/fidelity.txt`)
 - fragility: 0 high, 0 watch (`logs/fragility.txt`)
 

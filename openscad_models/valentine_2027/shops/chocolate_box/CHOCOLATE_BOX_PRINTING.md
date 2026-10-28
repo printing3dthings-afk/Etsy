@@ -69,7 +69,9 @@ The parts are colour only, so the renders can show them apart:
 - **product gate passed** (`logs/gate.txt`): watertight, one body, 0 support
   moves, 0 overhang perimeters, full height, flat base, stable. The wall
   floor is 0.8 mm for this piece (`../../check_valentine.py`), because the
-  0.9 mm panes are the point. Every structural wall is 2.4 mm.
+  0.9 mm panes are the point. The walls are drawn
+  2.4 mm; measured, the 1st percentile is 0.90 mm (the panes) and the median
+  7.01 mm.
 - print fidelity: 0 flagged (`logs/fidelity.txt`)
 - fragility: 0 high, 0 watch (`logs/fragility.txt`)
 
