@@ -860,7 +860,7 @@ module floor_rings() {
     for (c = LIGHTS) translate([c[0], c[1], 0]) rotate_extrude($fn = 128)
         polygon([[lr_i, 0], [ro, 0], [ro, lr_h], [lr_i + 0.6, lr_h], [lr_i, lr_h - 0.6]]);
     for (sx = [-1, 1]) let (c = [sx * 36.5, 9.5]) {
-        spoke([c[0] - sx * (ro - 0.3), c[1]], [sx * 59, c[1]]);          // into the end wall's foot
+        spoke([c[0] + sx * (ro - 0.3), c[1]], [sx * 59, c[1]]);          // into the end wall's foot
         spoke([c[0], c[1] + ro - 0.3], [c[0], 33]);                     // the back wall's
         spoke([c[0], c[1] - ro + 0.3], [c[0], -33]);                    // the front wall's
         spoke(toward(c, LIGHTS[1], ro - 0.3), toward(LIGHTS[1], c, ro - 0.3));   // to the middle ring
