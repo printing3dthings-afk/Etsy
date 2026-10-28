@@ -70,9 +70,27 @@ breaks onto two lines after the "&".
   clean that filled every counter.
 - **The crown's bevel** steps in 0.25 mm a layer for its top three layers.
 
-## Checks
+## Checks (2026-10-28)
 
-Re-running after the 2026-10-28 fixes; results go here when the run finishes.
+Each of the three prints is checked on its own.
+
+- parts closed, no two overlapping (`logs/parts.txt`)
+- **product gate passed on the drum, the lid and the crown** (`logs/gate.txt`):
+  watertight, one body each, 0 support moves, 0 overhang perimeters, full
+  height, flat base, stable. The wall floor is 0.8 mm for this piece
+  (`../check_valentine.py`), because the 0.9 mm glass is the point. Every
+  structural wall is 1.2 mm or more.
+- fragility: 0 high, 0 watch on all three (`logs/fragility.txt`)
+- print fidelity (`logs/fidelity.txt`): lid 0 flagged; drum 1 and crown 6,
+  both small, explained and left that way:
+  - **drum:** one 0.45 mm hairline in the names prints two layers short
+    (0.075 mm³). Removing hairlines from the model thinned the date's 7 until
+    the slicer propped it (317 support moves). Growing the letters instead ran
+    them into each other. A hairline two layers short is the smaller cost.
+  - **crown:** six 0.2–0.3 mm strips along the edges of the bevel's top steps,
+    0.03–0.07 mm³ each, mirrored left and right. Dropping slivers up to
+    0.6 mm wide from the model left all six, so they are the slicer printing
+    those edges a line short, not detail the model claims.
 
 ## Images
 
