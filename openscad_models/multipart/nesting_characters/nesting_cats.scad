@@ -1,7 +1,7 @@
 // Nesting Cats (2026-10-28): the multipart line's first product, form 1 of the
 // five shown to Scott, drawn to match its concept render
 // (concepts/form1_egg_cat.png; Scott: "I want it to look just like this").
-// Five kawaii cats, 90 / 72 / 57 / 45 / 32 mm tall, each unscrewing at the
+// Five kawaii cats, 90 / 72 / 57 / 43 / 30 mm tall, each unscrewing at the
 // belly to hide the next; the smallest is solid.
 //
 // As the concept: the same egg (a round belly and a round head), a thick
@@ -32,7 +32,8 @@ fig  = 0;           // 0 = largest .. 4 = smallest
 part = "top";       // bottom | top | solid (each all colours), or top_<c> / solid_<c>, c = body | trim | dark | pink
                     // | all (assembled, the top screwed on)
 
-HS   = [90, 72, 57, 45, 32];
+HS   = [90, 72, 57, 43, 30];   // the two smallest were 45 and 32: with the concept's head, the 45's
+                                // eyes met the 57's waist and the necks had 0.2 mm to spare
 CLR  = 0.3;         // the thread's clearance: provisional, from the fit test plate once printed
 TP   = 3; TDEP = 0.8; TL = 5;     // thread pitch, depth, length (thread_lib: 39 deg flanks)
 W    = 1.8;         // the walls
@@ -66,9 +67,18 @@ RBELLY = egg(ZS);                // nothing stands out past the belly, or it wou
 // The male thread's outer radius: the top's wall round the female thread is
 // at least WT everywhere up the thread, where the egg already narrows.
 RM = min([for (z = [ZS : 0.25 : ZS + TL + 0.5]) rf(z)]) - WT - CLR;
-WN = 1.3;                       // the neck's wall: at WT the gate read 1.2 on the nose
+WN = 1.4;                       // the neck's wall: at 1.3 the gate read 1.17
 RO = RM - TDEP - WN;            // the neck's bore: the next cat goes through this
 ZF = ZS + TL + 0.4;             // the top of the female thread's cut
+
+// The scarf: the concept's round tube about the waist, its underside a 50 deg
+// cone so it prints; sunk SINK into the wall.
+SZ = 0.555 * H; SA = 0.05 * H; SB = 0.045 * H; SR = egg(SZ) - 0.01 * H;
+function scarf_r(z) = z >= SZ ? SR + SA * sqrt(max(0, 1 - pow((z - SZ) / SB, 2))) : SR + SA - (SZ - z) * K;
+module scarf() difference() {
+    revolve_band(function (z) scarf_r(z), SZ - (SA + 2) / K, SZ + SB);
+    revolve_band(function (z) rf(z) - SINK, SZ - (SA + 2) / K - 1, SZ + SB + 1);
+}
 
 // ---- the hollows -----------------------------------------------------------------------------
 // The top's: W inside the egg, narrowing up no faster than K (from the top
@@ -82,7 +92,10 @@ RB = min(6, 0.1 * H);
 // the largest cat's ceiling, and at 3.5 it bridged it (2026-10-28).
 ROOF = 3.5;
 ZC = min(max([for (k = [0 : N]) if (rf(k * dz) - W >= RB) k * dz]), H - ROOF);
-function cav_k(k) = k * dz > ZC ? -1 : k * dz > ZC - dz ? RB : min(rf(k * dz) - W, cav_k(k + 1) + K * dz);
+// Inside the scarf the hollow follows the scarf's outside, not the waist under
+// it: the next cat's head sits at this one's waist (check_cats, 2026-10-28).
+function wall_out(z) = z >= SZ - SA / K && z <= SZ + SB ? max(rf(z), scarf_r(z)) : rf(z);
+function cav_k(k) = k * dz > ZC ? -1 : k * dz > ZC - dz ? RB : min(wall_out(k * dz) - W, cav_k(k + 1) + K * dz);
 CAV = [for (k = [0 : N]) cav_k(k)];
 function cav_top(z) = max(lerp(CAV, z), RM + CLR - K * (z - ZF));
 // The bottom's: W inside the egg, closing to the neck's bore at the seam no
@@ -116,20 +129,11 @@ module cheeks() for (s = [-1, 1]) raised(s * 0.17 * H, 0.67 * H, PR * 0.7) oval(
 module paws()   for (s = [-1, 1]) raised(s * 0.12 * H, 0.40 * H, max(0.8, 0.012 * H)) oval(0.07, 0.05);
 module tail()   raised(0.10 * H, 0.465 * H, max(0.8, 0.012 * H)) rotate(-12) oval(0.045, 0.10);
 
-// The scarf: the concept's round tube about the waist, its underside a 50 deg
-// cone so it prints; sunk SINK into the wall.
-SZ = 0.555 * H; SA = 0.05 * H; SB = 0.045 * H; SR = egg(SZ) - 0.01 * H;
-function scarf_r(z) = z >= SZ ? SR + SA * sqrt(max(0, 1 - pow((z - SZ) / SB, 2))) : SR + SA - (SZ - z) * K;
-module scarf() difference() {
-    revolve_band(function (z) scarf_r(z), SZ - (SA + 2) / K, SZ + SB);
-    revolve_band(function (z) rf(z) - SINK, SZ - (SA + 2) / K - 1, SZ + SB + 1);
-}
-
 // ---- ears ------------------------------------------------------------------------------------
 // At the concept's place on the head, leaning out as its do, but with the
 // outer edge at 40 deg (the concept's lean 68 and would hang in the air):
 // AT of tilt and AH of taper. Each base sits inside the head.
-AT = 14; AH = 26; EL = 0.17 * H;
+AT = 14; AH = 26; EL = 0.13 * H;   // 0.17 as the concept, the next cat's ear tips met this one's ceiling
 module ears() for (s = [-1, 1]) let (th = 34, xb = s * 0.30 * H * sin(th) * 0.92, zb = (0.74 + 0.26 * cos(th) * 0.92) * H)
     translate([xb, 0, zb]) rotate([0, s * AT, 0]) hull() {
         translate([0, 0, -0.04 * H]) scale([EL * tan(AH), 0.05 * H, 1]) cylinder(r = 1, h = 0.01, $fn = 40);
