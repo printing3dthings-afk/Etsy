@@ -608,7 +608,6 @@ module stack_bore(s) translate([s[0], s[1], -1]) {
         translate([0, 0, tear_z(s) + 1 + (tear_p(s) - s[2] + 2.0) * 1.2]) cylinder(r = s[2] - 2.0, h = 0.01, $fn = 48);
     }
 }
-}
 module stack_col(s) translate([s[0], s[1], -1]) cylinder(r = s[2] + 0.8, h = s[3], $fn = 72);
 module stack_snow(s) translate([s[0], s[1], s[3] - 0.01]) difference() {
     cylinder(r1 = s[2] + 2.2, r2 = s[2] + 1.0, h = 1.6, $fn = 72);
