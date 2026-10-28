@@ -351,13 +351,18 @@ module sign_text() face_at(6, 0, sg_z + sg_h / 2) translate([0, 0, 1.0]) letters
 
 // the rose window: a round pane, its eight spokes and hub drawn on the glass
 rose_z = 62;  rose_r = 7.2;
-module rose_cut() face_at(6, 0, rose_z) translate([0, 0, -wall - 2]) cylinder(r = rose_r, h = wall + bd + 4, $fn = 64);
+module rose_cut() face_at(6, 0, rose_z) {
+    translate([0, 0, -gl_t - 0.2]) cylinder(r = rose_r, h = gl_t + 0.2 + bd + 2, $fn = 64);
+    pocket(-gl_t - 0.2, -wall - 1.2) circle(r = rose_r, $fn = 64);
+}
 module rose_frame() face_at(6, 0, rose_z) relief_up(-0.4, bd + 0.6, 2 * SH) difference() { circle(r = rose_r + 2.4, $fn = 64); circle(r = rose_r - 0.3, $fn = 64); }
 module rose_holes() face_at(6, 0, rose_z) relief_hole(-0.4, -0.25, bd + 3, 2 * SH) circle(r = rose_r + 0.1, $fn = 64);
-module rose_pane() face_at(6, 0, rose_z) translate([0, 0, -wall]) cylinder(r = rose_r + 0.6, h = wall - 0.2, $fn = 64);
+module rose_pane() face_at(6, 0, rose_z) translate([0, 0, -gl_t - 0.2]) cylinder(r = rose_r + 0.6, h = gl_t, $fn = 64);
 module rose2d() { circle(r = 1.6, $fn = 32); for (i = [0 : 7]) rotate(i * 45 + 22.5) translate([2.8, -tw / 2]) square([rose_r - 2.6, tw]); }
 module rose_art() face_at(6, 0, rose_z) {
-    translate([0, 0, -wall]) linear_extrude(wall - 0.2) intersection() { circle(r = rose_r + 0.6, $fn = 64); rose2d(); }
+    translate([0, 0, -gl_t - 0.2]) linear_extrude(gl_t) intersection() { circle(r = rose_r + 0.6, $fn = 64); rose2d(); }
+    // the spokes thickened behind the thin pane, as the toys' lines are
+    translate([0, 0, -gl_t - 0.2]) art_in(wall - gl_t - 0.2, 4) intersection() { circle(r = rose_r - 0.1, $fn = 64); offset(r = 0.3) rose2d(); }
     translate([0, 0, -0.2]) art_skirt(0.4, 2) intersection() { circle(r = rose_r - 0.4, $fn = 64); offset(r = 0.2) rose2d(); }
 }
 
@@ -379,7 +384,18 @@ SCENES = [
     [[["teddy", -5.6], ["gift", 5.6]], [["boat", -5.6], ["drum", 5.6]]],
     [[["horse", 0]], [["gift", -5.6], ["soldier", 5.6]]],
 ];
-recess = 3.5;  pane_t = 1.48;  sh_r = 1.2;
+// the panes 0.84 mm, two lines (Scott, 2026-10-28: the glow was weak; the
+// line's thin-pane spec from the cocoa cafe v2). Each pane keeps its front
+// face where it was, so nothing changes outside; the toys' lines stand art_d
+// behind the thinner pane, 2.6 mm on a line against 0.84.
+recess = 3.5;  pane_t = 0.84;  sh_r = 1.2;
+gl_t = 0.84;   // the other panes (glazed teeth, turrets, rose): their front stays 0.2 behind the face
+// From inside, the wall behind a thinned pane is a pocket. Its ceiling climbs
+// SH per 1 inward, so it prints like the toy windows' sloped heads.
+module pocket(z_glass, z_in) hull() {
+    translate([0, 0, z_glass]) linear_extrude(0.01) children();
+    translate([0, SH * (z_glass - z_in), z_in]) linear_extrude(0.01) children();
+}
 fr_w = 2.6;  fr_t = bd + 0.6;  sill = 3.4;
 module w_outline(w) polygon(arch_pts(w[3], w[4]));
 function w_rise(z) = sh_r * (z + recess);
@@ -473,12 +489,15 @@ module s_bars(w) { translate([-mull / 2, -3]) square([mull, 60]); translate([-20
 module s_frame_outer(w) { hull() { offset(r = fr_w) s_outline(w); translate([0, SH * fr_t]) offset(r = fr_w) s_outline(w); } translate([-w[3] - fr_w - 0.8, -sill]) square([2 * (w[3] + fr_w + 0.8), sill + 1]); }
 module s_keystone(w) translate([0, seg_top(w[3], w[4]) - 1.2 + SH * fr_t]) polygon([[-1.3, 0], [1.3, 0], [1.9, fr_w + 2.6], [-1.9, fr_w + 2.6]]);
 module cler_holes() for (w = CLER) face_at(w[0], w[1], w[2]) relief_hole(-0.4, -0.2, fr_t + 2.4) offset(r = 0.4) s_outline(w);
-module cler_openings() for (w = CLER) face_at(w[0], w[1], w[2]) translate([0, 0, -wall - 2]) linear_extrude(wall + bd + 4) s_outline(w);
+module cler_openings() for (w = CLER) face_at(w[0], w[1], w[2]) {
+    translate([0, 0, -gl_t - 0.2]) linear_extrude(gl_t + 0.2 + bd + 2) s_outline(w);
+    pocket(-gl_t - 0.2, -wall - 1.2) s_outline(w);
+}
 module cler_windows() for (w = CLER) face_at(w[0], w[1], w[2]) {
     relief_up(-0.4, fr_t) { s_frame_outer(w); offset(r = 0.3) s_outline(w); }
     relief_up(-0.4, fr_t + 0.5) s_keystone(w);
     relief_up(-0.4, bd) intersection() { offset(r = 0.6) s_outline(w); s_bars(w); }
-    translate([0, 0, -wall]) linear_extrude(wall - 0.2) offset(r = 0.6) s_outline(w);
+    translate([0, 0, -gl_t - 0.2]) linear_extrude(gl_t) offset(r = 0.6) s_outline(w);
 }
 // on the turrets, facing out from the corner: [turret index, z, half-width, height]
 TWIN = [for (k = [0 : 3], z = [72, 98]) [k, z + (TURS[k][1] > 0 ? 12 : 0), 3.6, 9]];
@@ -486,12 +505,15 @@ function t_ang(k) = atan2(TURS[k][1], TURS[k][0]);
 module t_place(k, z) { p = tpos(TURS[k]); translate([p[0], p[1], z]) rotate([0, 0, t_ang(k) + 90]) rotate([90, 0, 0]) children(); }
 module t_clip(k, r0, r1) intersection() { children(); translate(tpos(TURS[k])) difference() { cylinder(r = r1, h = 300, $fn = 96); translate([0, 0, -1]) cylinder(r = r0, h = 302, $fn = 96); } }
 module tw_outline(w) polygon(seg_pts(w[2], w[3]));
-module twin_openings() for (w = TWIN) t_place(w[0], w[1]) translate([0, 0, -12]) linear_extrude(30) tw_outline(w);
+module twin_openings() for (w = TWIN) t_place(w[0], w[1]) {
+    translate([0, 0, TR - gl_t - 0.2]) linear_extrude(30) tw_outline(w);
+    pocket(TR - gl_t - 0.2, TR - wall - 1.2) tw_outline(w);
+}
 module twin_holes() for (w = TWIN) t_clip(w[0], TR - 0.4, TR + fr_t + 3) t_place(w[0], w[1]) translate([0, 0, TR]) relief_hole(-1.4, -1.2, fr_t + 2.4) offset(r = 0.4) tw_outline(w);
 module twin_frames() for (w = TWIN) t_clip(w[0], TR - 0.4, TR + fr_t) t_place(w[0], w[1]) translate([0, 0, TR]) {
     relief_up(-1.4, fr_t + 0.4) { union() { offset(r = 2.0) tw_outline(w); translate([-w[2] - 2.6, -sill]) square([2 * (w[2] + 2.6), sill + 1]); } offset(r = 0.3) tw_outline(w); }
 }
-module twin_glass() for (w = TWIN) t_clip(w[0], TR - wall + 0.1, TR - 0.2) t_place(w[0], w[1]) translate([0, 0, -2]) linear_extrude(TR + 4) offset(r = 0.6) tw_outline(w);
+module twin_glass() for (w = TWIN) t_clip(w[0], TR - gl_t - 0.2, TR - 0.2) t_place(w[0], w[1]) translate([0, 0, -2]) linear_extrude(TR + 4) offset(r = 0.6) tw_outline(w);
 module twin_bars() for (w = TWIN) t_clip(w[0], TR - 0.4, TR + bd) t_place(w[0], w[1]) translate([0, 0, TR]) relief_up(-1.4, bd + 0.2) intersection() { offset(r = 0.6) tw_outline(w); translate([-mull / 2, -3]) square([mull, 40]); }
 
 // =====================================================================================
@@ -556,8 +578,12 @@ module copings() for (i = [0 : NT - 1]) let (x0 = xi(i)) xz(-Dh - ov, Dh + ov)
 // CHIMNEY STACKS: round brick, a corbelled cap, an evergreen garland
 // =====================================================================================
 STACKS = [[-43.75, 8, 8, 176], [43.75, 8, 9, 192]];   // [x, y, r, top]
-// flues from the floor, one in the middle of each end bay: clear of the
-// tealight's circle in the middle bay and of every window's collar (2026-10-12)
+// one in the middle of each end bay. Until 2026-10-28 each ran down through
+// the hall to the floor as a hollow brick flue: decoration only, and the two
+// solid columns kept the light in the middle bay (Scott's print). The roof's
+// slab carries a stack (its underside climbs 56 deg, and the stack's wall
+// stands on it all round), so now the room takes everything under the
+// ceiling and each stack starts there; its bore still opens into the hall.
 module stack_body(s) translate([s[0], s[1], 0]) {
     rotate_extrude($fn = 72) polygon(brick_ring(s[2], s[3] - 7));
     // the cap's corbel flares 2.2 over 3.0 (36 deg): at 45 the gate's slicer propped it (2026-10-12)
@@ -665,8 +691,20 @@ module hall_room() for (i = [0 : NT - 1]) {
         xz(-60, 60) polygon([[x0 - 1, -5], [x1 + 1, -5], [x1 + 1, zc_bay(i, x1 + 1)], [x0 - 1, zc_bay(i, x0 - 1)]]);
     }
 }
-// the arches through the inside walls: lancets, 24 wide, slopes 56 deg at the crown
-module valley_arches() for (i = [1 : NT - 1]) translate([xi(i) + wall / 2, 0, plinth_h]) rotate([90, 0, 90]) translate([0, 0, -6]) linear_extrude(12) pointed2d(12, 2, 6);   // crown 49.8, under both valleys' ceilings
+// The openings through the inside walls (2026-10-28). Each inside wall
+// carries a roof valley: the lower tooth's slab ends there along a level
+// line 68 mm from the front wall to the back, and the next tooth's glazed
+// face stands on it. With nothing under it that line prints in the air. Till
+// now each wall had a 24 mm lancet, so one tealight lit the middle bay and
+// little else (Scott's print). Now the opening is as wide as the room at the
+// floor and closes to a point under the valley, its sides 38 deg from upright:
+// what is left of each wall is two triangles hanging from the front and back
+// walls, and they carry the valley line from the walls to the middle.
+va_top = 50.6;                           // its point: 0.9 under the valley's ceiling (51.5)
+va_hw  = Dh - wall;                      // as wide as the room
+va_lo  = va_top - va_hw / tan(38);       // 6.7: where its sides reach the walls
+module valley_arches() for (i = [1 : NT - 1]) translate([xi(i) + wall / 2, 0, 0]) rotate([90, 0, 90]) translate([0, 0, -6]) linear_extrude(12)
+    polygon([[-va_hw, -5], [va_hw, -5], [va_hw, va_lo], [0, va_top], [-va_hw, va_lo]]);
 // each inside wall's foot 0.3 thicker, up to the eave: at wall + part_w the
 // window collars' columns stopped 0.1 short of it, a sealed hairline slit down
 // the wall that print_fidelity flagged (2026-10-11). Thickened all the way up,
@@ -698,7 +736,6 @@ module room() difference() {
         gate_way();
     }
     for (w = TOYW) w_collar_col(w);
-    for (s = STACKS) stack_col(s);
     part_shims();
 }
 
@@ -804,7 +841,35 @@ module roof_raw0() {
     rose_art();
 }
 module accent_raw() { wreaths(); for (s = STACKS) garland(s); }
+// =====================================================================================
+// THE FLOOR: three tealights (Scott, 2026-10-28: one never lit the building).
+// The base is open and the lights stand on the table; three rings on the bed,
+// tied to the base, set each one where it lights a bay. Lower the building
+// over the lights and the rings' chamfers centre them. A row of three 46 mm
+// bays needs 138 mm and the hall is 120.6 inside, its corners taken by the
+// turrets; staggered, three circles fit at 42.4 at most, so the rings are
+// 41.6 across (a 38 mm light with 0.6 to spare all round), the middle one to
+// the front under the gatehouse, the end ones to the back.
+// =====================================================================================
+LIGHTS = [[-36.5, 9.5], [0, -13.1], [36.5, 9.5]];
+lr_i = 19.6;  lr_t = 1.2;  lr_h = 1.6;  lr_w = 1.6;
+module spoke(p, q) hull() { translate([p[0], p[1], 0]) cylinder(r = lr_w / 2, h = lr_h, $fn = 16); translate([q[0], q[1], 0]) cylinder(r = lr_w / 2, h = lr_h, $fn = 16); }
+function toward(p, q, d) = p + d * (q - p) / norm(q - p);
+module floor_rings() {
+    ro = lr_i + lr_t;
+    for (c = LIGHTS) translate([c[0], c[1], 0]) rotate_extrude($fn = 128)
+        polygon([[lr_i, 0], [ro, 0], [ro, lr_h], [lr_i + 0.6, lr_h], [lr_i, lr_h - 0.6]]);
+    for (sx = [-1, 1]) let (c = [sx * 36.5, 9.5]) {
+        spoke([c[0] - sx * (ro - 0.3), c[1]], [sx * 59, c[1]]);          // into the end wall's foot
+        spoke([c[0], c[1] + ro - 0.3], [c[0], 33]);                     // the back wall's
+        spoke([c[0], c[1] - ro + 0.3], [c[0], -33]);                    // the front wall's
+        spoke(toward(c, LIGHTS[1], ro - 0.3), toward(LIGHTS[1], c, ro - 0.3));   // to the middle ring
+    }
+    spoke([0, -13.1 + ro - 0.3], [0, 33]);
+    for (sx = [-1, 1]) spoke([sx * 15, -13.1 - sqrt(ro * ro - 225) + 0.3], [sx * 15, -35]);
+}
 module trim_raw() {
+    floor_rings();
     difference() {
         union() {
             base();
