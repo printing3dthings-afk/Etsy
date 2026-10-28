@@ -21,7 +21,7 @@ import numpy as np
 import trimesh
 
 D = Path(sys.argv[1] if len(sys.argv) > 1 else "parts")
-HS = [90, 72, 57, 43, 30]
+HS = [90, 72, 57, 43, 28]
 FL, TP = 1.8, 3.0
 ROOM = 0.3          # the least radial room for a cat going through a neck
 

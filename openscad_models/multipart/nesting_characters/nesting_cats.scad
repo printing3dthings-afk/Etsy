@@ -1,7 +1,7 @@
 // Nesting Cats (2026-10-28): the multipart line's first product, form 1 of the
 // five shown to Scott, drawn to match its concept render
 // (concepts/form1_egg_cat.png; Scott: "I want it to look just like this").
-// Five kawaii cats, 90 / 72 / 57 / 43 / 30 mm tall, each unscrewing at the
+// Five kawaii cats, 90 / 72 / 57 / 43 / 28 mm tall, each unscrewing at the
 // belly to hide the next; the smallest is solid.
 //
 // As the concept: the same egg (a round belly and a round head), a thick
@@ -32,12 +32,14 @@ fig  = 0;           // 0 = largest .. 4 = smallest
 part = "top";       // bottom | top | solid (each all colours), or top_<c> / solid_<c>, c = body | trim | dark | pink
                     // | all (assembled, the top screwed on)
 
-HS   = [90, 72, 57, 43, 30];   // the two smallest were 45 and 32: with the concept's head, the 45's
-                                // eyes met the 57's waist and the necks had 0.2 mm to spare
+HS   = [90, 72, 57, 43, 28];   // the two smallest were 45 and 32: with the concept's head, the 45's
+                                // eyes met the 57's waist and the necks had 0.2 mm to spare; the
+                                // smallest was 30 until the thread wall went to 1.45 (0.10 mm room)
 CLR  = 0.3;         // the thread's clearance: provisional, from the fit test plate once printed
 TP   = 3; TDEP = 0.8; TL = 5;     // thread pitch, depth, length (thread_lib: 39 deg flanks)
 W    = 1.8;         // the walls
-FL   = 2.2;         // the bottom's floor: at 1.8 the 0.8 mm mark left 1.0 under it (product gate, 43 mm cat)
+FL   = 1.8;         // the bottom's floor; 0.4 more put each inner cat's ears into the hollow
+MD   = 0.5;         // the maker's mark's depth: at 0.8 it left 1.0 of floor (product gate, 43 mm cat)
 WT   = 1.45;        // the least wall round the thread, either side: at 1.2 the egg's
                     // narrowing above the seam left 1.06 to 1.19 (product gate)
 K    = 0.84;        // tan 40: the fastest a down-facing surface may run in per 1 up
@@ -104,7 +106,7 @@ function wall_out(z) = z >= SZ - SA / K && z <= SZ + SB ? max(rf(z), scarf_r(z))
 function cav_k(k) = k * dz > ZC ? -1 : k * dz > ZC - dz ? RB : min(wall_out(k * dz) - W, cav_k(k + 1) + K * dz);
 CAV = [for (k = [0 : N]) cav_k(k)];
 ZT = floor(ZC / dz) * dz;
-function cav_top(z) = max(lerp(CAV, z), RM + CLR - K * (z - ZF));
+function cav_top(z) = max(lerp(CAV, z), RM + CLR + 0.1 - K * (z - ZF));
 // The bottom's: W inside the egg, closing to the neck's bore at the seam no
 // faster than K.
 function cav_bot(z) = min(rf(z) - W, RO + K * (ZS - z));
@@ -174,7 +176,7 @@ module bottom() difference() {
     }
     revolve_band(function (z) cav_bot(z), FL, ZS);
     translate([0, 0, ZS - 1]) cylinder(r = RO, h = TL + 2, $fn = 180);
-    if (MARK) obc_engrave(4.4, 0.8, 0.15, ridges = false);
+    if (MARK) obc_engrave(4.4, MD, 0.15, ridges = false);
 }
 module top_hollow() {
     // the female thread, grown CLR all round, and its lead-in at the rim, 0.1
@@ -182,6 +184,9 @@ module top_hollow() {
     // zero-volume sliver that read as non-manifold; wider, it thinned the rim
     translate([0, 0, ZS - 0.01]) thread_solid(2 * RM, TP, ZF - ZS + 0.01, TDEP, CLR);
     translate([0, 0, ZS - 0.01]) cylinder(r1 = RM + CLR + 0.1, r2 = RM - TDEP + CLR, h = (TDEP + 0.1) * THREAD_FLANK, $fn = 180);
+    // and its lead-out under ZF, the same cone: cut off flat, the thread's last
+    // tooth ended in a wedge the gate read down to 0.01 mm (the 43 mm top)
+    translate([0, 0, ZF - (TDEP + 0.1) * THREAD_FLANK]) cylinder(r1 = RM - TDEP + CLR, r2 = RM + CLR + 0.1, h = (TDEP + 0.1) * THREAD_FLANK + 0.01, $fn = 180);
     revolve_band(function (z) cav_top(z), ZF - 0.01, ZT);
 }
 // one colour of the top (c), or all of it
@@ -201,7 +206,7 @@ module solid(c = "all") difference() {
     else if (c == "trim") difference() { trim(); dark(); pink(); }
     else if (c == "dark") dark();
     else if (c == "pink") difference() { pink(); dark(); }
-    if (MARK) obc_engrave(4.4, 0.8, 0.15, ridges = false);
+    if (MARK) obc_engrave(4.4, MD, 0.15, ridges = false);
 }
 
 // printed: the top stands on its rim

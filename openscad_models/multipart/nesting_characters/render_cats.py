@@ -14,7 +14,7 @@ import trimesh
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-HS = [90, 72, 57, 43, 30]
+HS = [90, 72, 57, 43, 28]
 # the concept's five bodies, and its cream, dark and cheek pink
 BODY = ["0.73,0.65,0.84", "0.94,0.70,0.78", "0.66,0.86,0.78", "0.95,0.79,0.60", "0.66,0.80,0.92"]
 COL = {"trim": "0.97,0.95,0.89", "dark": "0.29,0.16,0.19", "pink": "0.94,0.56,0.63"}
