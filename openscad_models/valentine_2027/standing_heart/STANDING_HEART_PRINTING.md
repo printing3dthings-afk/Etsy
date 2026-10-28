@@ -30,7 +30,7 @@ to look at its base. This was checked on the exported geometry, not assumed.
 | layer | 0.2 mm, Bambu's 0.20 Standard on the P1S, 0.4 nozzle |
 | supports | **off**. The slicer finds none to add (gate, below) |
 | plate | textured PEI |
-| time | about 3 h 1 m, 105 g (P1S motion model) |
+| time | about 3 h 0 m, 105 g (P1S motion model) |
 
 The parts are colour only so the renders can show them apart:
 
@@ -50,8 +50,15 @@ Edit the two lines at the top of `standing_heart_lantern.scad`, or pass them in:
     NAMES="Ava & Noah" DATE="06.21.2025" ./build.sh union
 
 The names are sized to the flat of the pedestal's front, measured on Playfair
-Display Bold. A pair too long for 3.6 mm letters breaks onto two lines after
-the "&", so "Alexandria & Maximilian" fits at about 4.3 mm.
+Display grown 0.25 mm, so its hairlines print. A pair too long for 3.6 mm
+letters breaks onto two lines after the "&", so "Alexandria & Maximilian" fits
+at about 4.0 mm.
+
+The names are spaced 1.08 and the date 1.25, and cleaned only of gaps and
+strokes under 0.4 mm (2026-10-27). Until then a heavier clean filled every
+letter's counter and ran the date into one shape: the first renders showed
+the names as solid blobs. Measured on the glyphs, the date now prints as its
+ten characters.
 
 ## How the inside prints (why it looks the way it does)
 
@@ -64,7 +71,7 @@ Above the tent, slots up to 12 mm deep run behind each pane, so the panes stay
 thin all the way up to the lobes' curve and the whole heart glows. The first
 version stopped the hollow at the chords, and the lobe tops showed dark.
 
-## Checks (2026-10-26)
+## Checks (2026-10-27, after the names fix)
 
 - parts closed, no two overlapping (`logs/parts.txt`)
 - **product gate passed** (`logs/gate.txt`): watertight, one body, 0 support
