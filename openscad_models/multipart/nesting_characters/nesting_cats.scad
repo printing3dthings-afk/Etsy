@@ -24,6 +24,7 @@ include <../../brand/obc_mark.scad>
 
 fig  = 0;           // 0 = largest .. 4 = smallest
 part = "top";       // bottom | top | solid | all (assembled, the top screwed on)
+FACE = true;        // the face cut in (false only for testing what the slicer props)
 
 HS   = [90, 72, 57, 45, 32];
 CLR  = 0.3;         // the thread's clearance: provisional, from the fit test plate once printed
@@ -45,7 +46,10 @@ function ell(t, c, h, r) = abs(t - c) >= h ? 0 : r * sqrt(1 - pow((t - c) / h, 2
 function egg(z) = let (t = z / H) H * smax(ell(t, 0.30, 0.44, 0.37), ell(t, 0.74, 0.26, 0.30));
 // the waist filled so the head's underside never overhangs past 40 deg: from
 // the top down, the radius may fall at most K per 1 down
-function fill_k(k) = k >= N ? egg(H) : max(egg(k * dz), fill_k(k + 1) - K * dz);
+// KO, steeper than K: the face is cut into the head's underside, and at 40
+// deg the slicer propped the front of it, under the mouth and cheeks (2026-10-28)
+KO = 0.6;
+function fill_k(k) = k >= N ? egg(H) : max(egg(k * dz), fill_k(k + 1) - KO * dz);
 RF = [for (k = [0 : N]) fill_k(k)];
 // Read between samples, not at the nearest one: sampled again at another
 // spacing, nearest-sample reads came out as a staircase whose steps ran at
@@ -55,7 +59,7 @@ function lerp(A, z) = let (x = min(max(z / dz, 0), N - 0.001), k = floor(x), f =
 function rf(z) = lerp(RF, z);
 
 // the scarf: a band round the neck, its underside climbing at 50 deg
-ZSC = 0.52 * H; SCP = min(1.6, 0.035 * H); SCH = 0.05 * H;
+ZSC = 0.505 * H; SCP = min(1.6, 0.035 * H); SCH = 0.045 * H;
 function scarf(z) = z < ZSC ? max(0, SCP - (ZSC - z) * K) : z < ZSC + SCH ? SCP : max(0, SCP - (z - ZSC - SCH));
 function ro(z) = rf(z) + scarf(z);
 
@@ -94,14 +98,17 @@ module revolve_band(f, z0, z1) let (pts = [for (i = [0 : M]) let (z = z0 + (z1 -
 // The front is -y. Every cut and raised detail is placed at its own spot on
 // the curve, turned to face out there: cut straight in from the front, the
 // cheeks (round the curve) only grazed the surface and came out as slashes.
-// A cut goes in sheared up CSH per 1 in, so its ceiling slopes and prints.
+// A cut goes in sheared down CSH per 1 in, so its ceiling slopes and prints.
 function ang(xc, zc) = asin(xc / rf(zc));
-// A cut's ceiling climbs CSH per 1 in (58 deg). It was 1 / CSH, 32 deg, and
-// the slicer propped every eye, cheek and mouth (2026-10-28).
+// A cut's ceiling falls CSH per 1 in (58 deg), so the cut is open to the
+// face at every layer, deepest at its foot. Climbing in instead, it left a
+// pocket behind a lip thinner than a line, and the slicer propped every eye,
+// cheek and mouth; sliced without the face, the smallest cat needed nothing
+// (2026-10-28).
 CSH = 1.6;
 module cut_at(xc, zc, depth) let (r = rf(zc)) rotate([0, 0, ang(xc, zc)])
-    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, CSH, 1, r * CSH], [0, 0, 0, 1]])
-        translate([0, -r - 2, 0]) rotate([-90, 0, 0]) linear_extrude(depth + 4) mirror([0, 1, 0]) children();
+    multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, -CSH, 1, -r * CSH], [0, 0, 0, 1]])
+        translate([0, -r - 0.5, 0]) rotate([-90, 0, 0]) linear_extrude(depth + 0.5) mirror([0, 1, 0]) children();
 EYE = [0.105, 0.70];             // x, z of each eye's centre (of H)
 module eye2d() scale([0.034 * H, 0.046 * H]) circle(1, $fn = 40);
 module nose2d() polygon([[-0.022 * H, 0.012 * H], [0.022 * H, 0.012 * H], [0, -0.012 * H]]);
@@ -110,31 +117,32 @@ module nose2d() polygon([[-0.022 * H, 0.012 * H], [0.022 * H, 0.012 * H], [0, -0
 module mouth2d() let (r = 0.02 * H, w = max(0.6, 0.012 * H)) for (s = [-1, 1]) translate([s * (r - w / 2), 0])
     difference() { circle(r, $fn = 40); circle(r - w, $fn = 40); translate([-r - 1, 0]) square(2 * r + 2); }
 module cheek2d() scale([0.035 * H, 0.022 * H]) circle(1, $fn = 32);
-module face_cuts() intersection() {
-    union() {
-        for (s = [-1, 1]) cut_at(s * EYE[0] * H, EYE[1] * H, 0.6) translate([0, EYE[1] * H]) eye2d();
-        cut_at(0, 0.655 * H, 0.5) translate([0, 0.655 * H]) nose2d();
-        cut_at(0, 0.625 * H, 0.5) translate([0, 0.625 * H]) mouth2d();
-        for (s = [-1, 1]) cut_at(s * 0.19 * H, 0.64 * H, 0.4) translate([0, 0.64 * H]) cheek2d();
-    }
-    // no deeper than its depth anywhere round the curve
-    difference() { revolve_band(function (z) rf(z) + 2, 0.5 * H, 0.85 * H); revolve_band(function (z) rf(z) - 0.62, 0.5 * H, 0.85 * H); }
+// Each cut runs only its own depth in from the tangent plane at its centre:
+// run 4.6 deep and held by a band round the profile, the steep ceilings
+// climbed 7 mm into the waist and carved the scarf into 0.4 mm slivers on
+// the smallest cat (2026-10-28).
+module face_cuts() if (FACE) {
+    for (s = [-1, 1]) cut_at(s * EYE[0] * H, EYE[1] * H, 0.6) translate([0, EYE[1] * H]) eye2d();
+    cut_at(0, 0.66 * H, 0.5) translate([0, 0.66 * H]) nose2d();
+    cut_at(0, 0.632 * H, 0.5) translate([0, 0.632 * H]) mouth2d();
+    for (s = [-1, 1]) cut_at(s * 0.19 * H, 0.645 * H, 0.4) translate([0, 0.645 * H]) cheek2d();
 }
 // Raised on a plane laid against the surface at (xc, zc), turned to face out
 // there, and sunk into the curve; the 2D shape is drawn centred on xc = 0.
 module raised(xc, zc, h, sink) let (r = rf(zc)) rotate([0, 0, asin(xc / r)])
     translate([0, -r + sink, 0]) rotate([90, 0, 0]) art_skirt(h + sink, 2) children();
+// toes and ear tips no smaller than 0.8 across... 1.6 mm: at 0.015 H the
+// smallest cat's toes were under a millimetre
 module paw2d() {
     scale([0.052 * H, 0.04 * H]) circle(1, $fn = 40);
-    for (a = [-35, 0, 35]) rotate(a) translate([0, 0.04 * H]) circle(0.015 * H, $fn = 24);
+    for (a = [-35, 0, 35]) rotate(a) translate([0, 0.04 * H]) circle(max(0.015 * H, 0.8), $fn = 24);
 }
-module tail2d() polygon([[-0.03 * H, 0], [0.03 * H, 0], [0.04 * H, -0.11 * H],
-    [0.025 * H, -0.098 * H], [0.01 * H, -0.11 * H], [-0.005 * H, -0.098 * H], [-0.02 * H, -0.11 * H]]);
+module tail2d() polygon([[-0.03 * H, 0], [0.03 * H, 0], [0.04 * H, -0.1 * H], [0.01 * H, -0.085 * H], [-0.02 * H, -0.1 * H]]);
 // Paws held up at the chest and the scarf's tail at the side: on the belly,
 // the next cat's paws and tail stood out past its belly and would not pass the
 // neck it goes through (check_cats, 2026-10-28). Every detail is also held
 // inside the belly's radius (RBELLY, in top() and solid()).
-module paws() for (s = [-1, 1]) raised(s * 0.105 * H, 0.465 * H, 0.8, 1.4) translate([0, 0.465 * H]) paw2d();
+module paws() for (s = [-1, 1]) raised(s * 0.105 * H, 0.445 * H, 0.8, 1.4) translate([0, 0.445 * H]) paw2d();
 module tail() raised(0.22 * H, ZSC - 0.05 * H, 0.8, 1.4) translate([0, ZSC]) tail2d();
 
 // ---- ears ------------------------------------------------------------------------------------
@@ -144,7 +152,7 @@ module ears() for (s = [-1, 1]) let (zb = 0.84 * H, xb = s * 0.165 * H)
     translate([xb, 0, zb]) rotate([0, s * 12, 0]) hull() {
         scale([0.09 * H, 0.055 * H, 1]) cylinder(r = 1, h = 0.01, $fn = 40);
         translate([0, 0, -0.08 * H]) scale([0.09 * H, 0.055 * H, 1]) cylinder(r = 1, h = 0.01, $fn = 40);
-        translate([0, 0, 0.17 * H]) sphere(r = 0.016 * H, $fn = 24);
+        translate([0, 0, 0.17 * H]) sphere(r = max(0.016 * H, 0.8), $fn = 24);
     }
 
 // ---- the halves ------------------------------------------------------------------------------
