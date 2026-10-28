@@ -39,8 +39,9 @@ so they still read in one colour.
 - **Don't scale.** The threads are sized in millimetres. A scaled cat won't
   screw onto its own bottom.
 - Rough times, top half only (from the slicer I check with, not Bambu
-  Studio, so the AMS's own colour-change purges will add to it): 3 h 40 min,
-  2 h 55 min, 2 h 20 min, 1 h 50 min, and 1 h 25 min for the solid one.
+  Studio, so the AMS's own colour-change purges will add to it): about
+  3 h 40 min, 2 h 50 min, 2 h 20 min, 1 h 50 min, and 1 h 25 min for the
+  solid one.
   The bottoms are one colour and quicker.
 
 ## Thread clearance: provisional
@@ -70,7 +71,9 @@ floor, and screw the top back on.
     2.31 / 1.11 / 0.60 / 0.84 mm of room all round.
 - **Print fidelity** (`tools/print_fidelity.py`, every colour part): no
   detail dropped, filled in, or printed in the wrong colour above the
-  reporting floor on any of the nine. The largest miss is 0.02 mm³.
+  reporting floor on any of the nine. The as-printed still of the 72 mm top
+  (`images/nesting_cats_72mm_top_as_printed.png`, rendered from the toolpath)
+  shows the face, scarf and paws intact.
 - **Fragility** (`tools/fragility.py`): no slender parts on any of the nine
   (0 high, 0 watch).
 - The maker's mark is engraved 0.5 mm deep under the four largest cats.
@@ -88,10 +91,19 @@ floor, and screw the top back on.
   without support. Seen from the front, it still looks like the concept's
   round scarf.
 - **The eyes, nose, cheeks and paws have flat fronts**, raised on sloped
-  skirts that let them print.
+  skirts that let them print. The nose and cheeks lean back with the head,
+  so their skirts barely show. The eyes and paws stand upright: leant, the
+  slicer needed supports under the eyes, and the paws looked sunk in.
 - **The smallest cat is 28 mm**, not 30. The thicker thread wall the gate
   needed left a 30 mm cat only 0.10 mm of room through the 43 mm cat's neck.
   At 28 it has 0.84.
+
+## Renders
+
+`images/nesting_cats_lineup.png` is the set as in the concept: the largest
+opened, the rest closed. `images/nesting_cats_72mm_*.png` is the 72 mm cat
+from three sides. These are design-review renders from the real parts, not
+listing photos. The 72 mm top is also in the print viewer.
 
 ## Rebuilding
 
