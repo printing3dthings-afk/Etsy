@@ -142,15 +142,17 @@ module raised(xc, zc, h, s = SINK, tilt = false) let (r = rf(zc), g = tilt ? max
 // 0.05 mm thick. Sunk FS, its skirt always reaches the head, and it is cut off
 // FIN inside the egg so it never reaches the hollow (2026-10-28).
 FS = 3; FIN = W - 0.5;
-module face(xc, zc, h) difference() {
-    raised(xc, zc, h, FS, true) children();
+module face(xc, zc, h, tilt = true) difference() {
+    raised(xc, zc, h, FS, tilt) children();
     revolve_band(function (z) rf(z) - FIN, zc - 0.3 * H, zc + 0.1 * H);
 }
 PR = max(0.7, 0.011 * H);        // how far the face stands out
 module oval(a, b) scale([a * H, b * H]) circle(1, $fn = 48);
 
 // the concept's face, at its places
-module eyes()   for (s = [-1, 1]) face(s * 0.10 * H, 0.73 * H, PR) oval(0.034, 0.046);
+// the eyes stand upright: at the head's middle it leans 2 deg, and leant that
+// little, their skirts' steps ran out-and-down and the 57 mm top was propped
+module eyes()   for (s = [-1, 1]) face(s * 0.10 * H, 0.73 * H, PR, false) oval(0.034, 0.046);
 module nose()   face(0, 0.68 * H, PR * 0.8) oval(0.024, 0.016);
 module cheeks() for (s = [-1, 1]) face(s * 0.17 * H, 0.67 * H, PR * 0.7) oval(0.04, 0.026);
 // paws and the scarf's tail, held inside the belly (see RBELLY)
