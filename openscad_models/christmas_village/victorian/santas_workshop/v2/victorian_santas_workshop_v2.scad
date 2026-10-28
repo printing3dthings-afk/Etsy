@@ -590,7 +590,16 @@ module stack_body(s) translate([s[0], s[1], 0]) {
     translate([0, 0, s[3] - 7]) cylinder(r1 = s[2], r2 = s[2] + 2.2, h = 3.0, $fn = 72);
     translate([0, 0, s[3] - 4.0]) cylinder(r = s[2] + 2.2, h = 4.0, $fn = 72);
 }
-module stack_bore(s) translate([s[0], s[1], -1]) cylinder(r = s[2] - 2.0, h = s[3] + 2, $fn = 48);
+// The bore through the roof's slab is a teardrop pointing up the slope. Round,
+// its uphill rim was a round arch built out over the hole a layer at a time,
+// and the slicer propped it on both stacks (2026-10-28: while the flue ran to
+// the floor the tube under it held that rim). Pointed, the rim closes at 38
+// deg from upright. It stops 1 mm under the roof's face at the stack's middle,
+// so above the roof the bore is round as it was.
+module stack_bore(s) translate([s[0], s[1], -1]) {
+    cylinder(r = s[2] - 2.0, h = s[3] + 2, $fn = 48);
+    linear_extrude(z_out(s[0]) - 1 + 1) hull() { circle(r = s[2] - 2.0, $fn = 48); translate([-(s[2] - 2.0) / sin(50), 0]) circle(r = 0.05, $fn = 8); }
+}
 module stack_col(s) translate([s[0], s[1], -1]) cylinder(r = s[2] + 0.8, h = s[3], $fn = 72);
 module stack_snow(s) translate([s[0], s[1], s[3] - 0.01]) difference() {
     cylinder(r1 = s[2] + 2.2, r2 = s[2] + 1.0, h = 1.6, $fn = 72);
