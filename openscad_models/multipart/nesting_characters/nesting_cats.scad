@@ -89,7 +89,9 @@ module scarf() difference() {
 // which the printer bridges; and above the female thread it opens no faster
 // than K out of the thread's cut. Closed to a point, the hollow had no room
 // for the next cat's head and ears (check_cats, 2026-10-28).
-RB = min(3, 0.05 * H);
+RB = min(6, 0.1 * H);
+// (At 3 the bigger cats' ears met the cone below it; with the ceiling truly
+// flat, see ZT, 4 to 6 bridged as cleanly as 3, 2026-10-28.)
 // and ROOF under the top. Placed wherever the head was still wide enough, the
 // roof over it came out 1 mm thick (product gate); at 2.3 the slicer propped
 // the largest cat's ceiling, and at 3.5 it bridged it (2026-10-28).
