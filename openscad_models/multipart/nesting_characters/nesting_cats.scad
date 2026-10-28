@@ -79,8 +79,13 @@ ZF = ZS + TL + 0.4;             // the top of the female thread's cut
 // room for the next cat's head and ears (check_cats, 2026-10-28): the flat
 // ceiling lifts the 40 deg cone's apex by RB / K.
 RB = min(6, 0.1 * H);
-ZC = max([for (k = [0 : N]) if (rf(k * dz) - W >= RB) k * dz]);
-function cav_k(k) = k * dz > ZC ? -1 : k * dz > ZC - dz ? RB : min(rf(k * dz) - W, cav_k(k + 1) + K * dz);
+// and 3.5 under the top. Placed wherever the head was still wide enough, the
+// roof over it came out 1 mm thick (product gate); at 2.3 the slicer propped
+// the largest cat's ceiling, and at 3.5 it bridged it (2026-10-28).
+ROOF = 3.5;
+ZC = min(max([for (k = [0 : N]) if (rf(k * dz) - W >= RB) k * dz]), H - ROOF);
+KC = K;             // how fast the top's hollow may widen per 1 down
+function cav_k(k) = k * dz > ZC ? -1 : k * dz > ZC - dz ? RB : min(rf(k * dz) - W, cav_k(k + 1) + KC * dz);
 CAV = [for (k = [0 : N]) cav_k(k)];
 function cav_top(z) = max(lerp(CAV, z), RM + CLR - K * (z - ZF));
 // The bottom's: W inside the egg, closing to the neck's bore at the seam no
