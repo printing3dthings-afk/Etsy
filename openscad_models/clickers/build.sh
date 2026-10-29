@@ -18,7 +18,7 @@ run() {   # dir scad part [out-suffix] [extra -D]
 }
 if [ $want = all ] || [ $want = tin ]; then
     T=gingerbread_tin F=gingerbread_tin_clicker.scad
-    for p in tin tin_snow lid cookie cookie_icing cookie_red cookie_green tin_print lid_print cookie_print; do run $T $F $p; done
+    for p in tin tin_snow lid lid_holly lid_snow cookie cookie_icing cookie_red cookie_green tin_print lid_print cookie_print; do run $T $F $p; done
     run $T $F cookie cookie_loose "-D sock_fit=0.22"
 fi
 if [ $want = all ] || [ $want = jar ]; then

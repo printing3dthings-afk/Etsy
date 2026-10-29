@@ -21,7 +21,7 @@ S_JAR = 30.0
 CAP = 1.5 + 6.6 + 3.6 - 3.4          # cap underside above S, at rest
 DESIGNS = {
     "tin": ("gingerbread_tin", S_TIN, [
-        ("tin", 0, RED), ("tin_snow", 0, WHITE), ("lid", "S", RED),
+        ("tin", 0, RED), ("tin_snow", 0, WHITE), ("lid", "S", RED), ("lid_holly", "S", GREEN), ("lid_snow", "S", WHITE),
         ("cookie", "C", BROWN), ("cookie_icing", "C", WHITE), ("cookie_red", "C", RED), ("cookie_green", "C", GREEN)]),
     "jar": ("cookie_jar", S_JAR, [
         ("jar", 0, MINT), ("jar_label", 0, WHITE), ("jar_letters", 0, RED), ("top", "S", MINT), ("top_rim", "S", RED),

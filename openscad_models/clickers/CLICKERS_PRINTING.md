@@ -20,13 +20,26 @@ switch's four orientations fits.
 
 | print | colours (AMS slot) | as it sits in the file |
 |---|---|---|
-| the tin | red 1, white snowflakes 2 | on its base |
-| the lid | red 1 | on its floor, which is the switch plate |
-| the cookie | brown 3, white icing 2, red cheeks and gumdrops 1, green gumdrop 4 | face up |
+| the tin | red 1, white snowflakes and dots 2 | on its base |
+| the lid | red 1 (and the holly berries), green holly 3, white snowflakes 2 | on its floor, which is the switch plate |
+| the cookie | brown 4 (and the pupils), white icing 2, red cheeks, bow tie and middle gumdrop 1, green gumdrops 3 | face up |
 
-Four filaments in total, one AMS: red `#B3262E`, white `#F4F1EA`, brown
-`#9A5B2E`, green `#3E8E4A`. In one colour everything still reads, because the
-icing, gumdrops and snowflakes are all raised.
+Four filaments in total, one AMS: red `#B3262E`, white `#F4F1EA`, green
+`#3E8E4A`, brown `#9A5B2E`. In one colour everything still reads, because all
+the detail is raised.
+
+**The detail (second pass, 2026-10-29):**
+- **Cookie:**
+  - Piped icing that's round on top, the way real icing sits. It was flat
+    strips.
+  - Eyes with brown pupils set off-centre, so they glance down at the smile.
+  - A red bow tie, and gumdrops with sloped sides.
+  - A softer baked edge: the top rolls over through 1.4 mm instead of 1.0.
+- **Lid:** holly sprigs with red berries in the two corners above his arms,
+  and four small white snowflakes round him. A 0.4 mm chamfer breaks the
+  nest's edge.
+- **Tin:** a rolled bead round the foot and another round the top edge, like a
+  real tin, and pairs of white dots between the snowflakes.
 
 **Put it together:** push the switch into the lid from above, through the
 cookie-shaped nest, until its clips snap under the plate. Set the lid on the
@@ -90,20 +103,28 @@ his feet sit 1.2 mm below the rim; pressed, he drops 4 mm into the jar.
      in a 60° gable, which leaves the stem's stop where it was.
   3. **The gingerbread man's shoulders sit inside his body.** Bulging out, they
      needed 937 support moves.
-- **Product gate:** the lid, the jar and the top PASS. The tin, the cookie and
+- **Product gate:** the jar and the top PASS. The tin, the lid, the cookie and
   the gingerbread read FAIL on the wall check only. Every span under 1.2 mm
   was traced:
-  - **0.9 mm:** the piped icing lines and the snowflake strokes, two beads
-    wide by design. They are raised detail, not walls.
+  - **0.6–0.9 mm:** the raised detail. That's the snowflake and holly strokes,
+    plus the piped icing, whose rounded tops narrow to 0.58 mm (still over a
+    bead). It's raised detail, not walls.
   - **0.6–0.7 mm:** the socket post, measured at the cross's arm tips. It's the
     standard MX keycap wall; a 9.8k-download FDM keycap measures 0.63.
   - **0.6–1.0 mm:** the islands inside the engraved B of the OBC mark, 0.8 mm
     tall on the floor.
 - **Print fidelity** (`tools/print_fidelity.py`, every colour part). There are
-  no flags on five prints. On the tin there are 20, each 0.04–0.07 mm³: the one
-  layer at the very tip of a snowflake arm, where the round end of a stroke
-  is thinner than a bead. Each arm comes out about 0.2 mm shorter, which you
-  won't see. 1.8 mm³ dropped in all, on a 27 cm³ print.
+  no flags on five prints. On the tin there are 10, each 0.04 mm³: the one top
+  layer at the round tip of each upward snowflake arm, thinner than a bead.
+  Each comes out about 0.2 mm shorter, which you won't see. The first pass of
+  the new detail had 35, where the lower arms ran into the new foot bead; the
+  flakes were resized to clear it.
+- **Two bugs the checks caught in the detail pass:** the cookie's top layer
+  had vanished: the gate counted 11 bodies and the slicer 5,522 support moves.
+  The edge formula took the square root of a number that rounding pushed just
+  below zero, so that layer came out empty. And the lower snowflake arms ran
+  into the foot bead, as above. Both are fixed, and the checks above are on
+  the fixed parts.
 - **Fragility** (`tools/fragility.py`): 0 high, 0 watch on all six.
 - **Maker's mark:** OBC engraved under the tin and the jar. The gaps between
   the letters were opened 0.15 mm so the walls they leave are over the gate's

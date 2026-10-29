@@ -9,7 +9,7 @@ d=$1
 python3 check_clickers.py $d
 case $d in
 tin) D=gingerbread_tin; prints="tin_print lid_print cookie_print"
-     objs=("parts/tin.stl:#B3262E parts/tin_snow.stl:#F4F1EA" "parts/lid.stl:#B3262E"
+     objs=("parts/tin.stl:#B3262E parts/tin_snow.stl:#F4F1EA" "parts/lid.stl:#B3262E parts/lid_holly.stl:#3E8E4A parts/lid_snow.stl:#F4F1EA"
            "parts/cookie.stl:#9A5B2E parts/cookie_icing.stl:#F4F1EA parts/cookie_red.stl:#B3262E parts/cookie_green.stl:#3E8E4A")
      loose="parts/cookie_loose.stl:#9A5B2E parts/cookie_icing.stl:#F4F1EA parts/cookie_red.stl:#B3262E parts/cookie_green.stl:#3E8E4A"
      out=gingerbread_tin_clicker ;;
