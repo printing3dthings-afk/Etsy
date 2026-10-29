@@ -693,8 +693,12 @@ module base() {
     }
 }
 // at y -40 it came 0.2 from the base's edge, at x 40 0.7 from the turret's open floor (2026-10-12)
-module brand_mark() translate([32, -Dh - 3.0, 0]) obc_cut(4.6);       // the letters, cut from the base
-module brand_inlay() translate([32, -Dh - 3.0, 0]) obc_inlay(4.6);    // and filled in the roof's colour
+// The mark engraved, not inlaid (2026-10-28). Inlaid in the roof's colour it
+// is read only in four colours: printed all in matte white, as Scott prints
+// this building, the inlay fills the letters with the same white and the mark
+// is gone. Cut whole (ridges = false), 0.8 deep, as on the line's one-colour
+// pieces; it still reads in four colours, as a recess.
+module brand_mark() translate([32, -Dh - 3.0, 0]) obc_engrave(4.6, 0.8, 0.15, ridges = false);
 
 // =====================================================================================
 // THE ROOM: one space under the three teeth, the turrets and the gatehouse,
@@ -842,8 +846,8 @@ module body_raw() {
     step();
 }
 module turret_cols() for (t = TURS) translate(tpos(t)) translate([0, 0, -1]) cylinder(r = TR + bd, h = 300, $fn = 96);
-// the maker's mark is inlaid in the roof's colour (2026-10-14): ../../../brand/obc_mark.scad
-module roof_raw() { roof_raw0(); brand_inlay(); }
+// the maker's mark: engraved in the base (brand_mark), see there
+module roof_raw() roof_raw0();
 module roof_raw0() {
     difference() {
         union() { for (i = [0 : NT - 1]) { slab(i); slates(i); } }
