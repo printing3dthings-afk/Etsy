@@ -583,7 +583,8 @@ STACKS = [[-43.75, 8, 8, 176], [43.75, 8, 9, 192]];   // [x, y, r, top]
 // solid columns kept the light in the middle bay (Scott's print). The roof's
 // slab carries a stack (its underside climbs 56 deg, and the stack's wall
 // stands on it all round), so now the room takes everything under the
-// ceiling and each stack starts there; its bore still opens into the hall.
+// ceiling and each stack starts there; its bore now opens into the hall (v1's
+// was plugged at the floor by the snow base).
 module stack_body(s) translate([s[0], s[1], 0]) {
     rotate_extrude($fn = 72) polygon(brick_ring(s[2], s[3] - 7));
     // the cap's corbel flares 2.2 over 3.0 (36 deg): at 45 the gate's slicer propped it (2026-10-12)

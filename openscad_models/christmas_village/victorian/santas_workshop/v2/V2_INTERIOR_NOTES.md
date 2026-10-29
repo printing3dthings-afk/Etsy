@@ -16,8 +16,12 @@ unchanged until Scott chooses to swap.
 "flues from the floor"). Inside the hall they did nothing structural. The
 roof's slab carries a stack: its underside climbs 56°, and a stack's wall
 stands on it all round. **Now each stack starts at the roof's underside.**
-Above the roof nothing changed, and the bore still opens into the hall, so the
-chimneys still glow at the top.
+Above the roof nothing changed. One difference in how it lights: on the v1
+print the flues looked solid from underneath (Scott's photo, 2026-10-29),
+because the snow base plugged each one at the floor. Now each bore opens into
+the hall, so the chimney tops will glow faintly. The geometry outside is the
+same. If you'd rather keep them dark, a 1 mm cap inside each chimney is a
+one-line change.
 
 One catch, found on the slice and fixed: with the flue gone, the bore was a
 round hole through the sloped slab. The slab built its uphill rim out over the
