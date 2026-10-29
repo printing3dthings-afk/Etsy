@@ -358,7 +358,7 @@ def _reaches(p, far):
 
 
 # ── the comparison ────────────────────────────────────────────────────────
-def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=False):
+def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=False, resume=False):
     """parts: [(path, '#hex')]. Returns the report dict."""
     workdir = Path(workdir)
     meshes = [(_load(p), c.upper()) for p, c in parts]
@@ -426,7 +426,24 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
 
     events = []          # (kind, tool, z_bottom, h, polygon in model XY, size)
     area_model = defaultdict(float)
+    # Resumable (2026-10-29): Santa's Workshop v2 takes hours, and a cloud
+    # container restart killed it twice, at layers 300 and 600 of 920. With
+    # resume, progress is saved to the work directory every 25 layers and a
+    # rerun on the same G-code and parts carries on from there.
+    ckpt, start = workdir / "progress.pkl", 0
+    sig = (gcode.stat().st_mtime, gcode.stat().st_size,
+           tuple((str(Path(p).resolve()), Path(p).stat().st_mtime, c.upper()) for p, c in parts))
+    if resume and ckpt.exists():
+        import pickle
+        saved = pickle.loads(ckpt.read_bytes())
+        if saved["sig"] == sig:
+            start = saved["next"]
+            events = [e[:4] + (shapely.set_precision(e[4], e[6], mode="pointwise"),) + e[5:6] for e in saved["events"]]
+            area_model.update(saved["area_model"])
+            log(f"resuming at layer {start}/{len(layers)}")
     for li, L in enumerate(layers):
+        if li < start:
+            continue
         h = L["h"] or 0.2
         zc = L["z"] - h / 2 + z0
         printed = {t: shapely.affinity.translate(g, -off[0], -off[1])
@@ -490,7 +507,18 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
                         events.append(("filled", t, zc - h / 2, h, p, _depth(p, all_maybe)))
         if li % 100 == 0:
             log(f"  layer {li}/{len(layers)}")
+        if resume and li % 25 == 24:
+            import pickle
+            tmp = ckpt.with_suffix(".tmp")
+            # each polygon's precision grid with it: pickling drops the grid,
+            # and a resumed run then summarised one sliver 0.01 mm wider
+            tmp.write_bytes(pickle.dumps({"sig": sig, "next": li + 1,
+                                          "events": [e + (shapely.get_precision(e[4]),) for e in events],
+                                          "area_model": dict(area_model)}))
+            tmp.replace(ckpt)
 
+    if resume and ckpt.exists():
+        ckpt.unlink()
     return _summarise(events, area_model, whole, slots, layers), events
 
 
@@ -663,7 +691,12 @@ def main(argv=None):
     ap.add_argument("--zoom-out", help="PNG for --zoom")
     ap.add_argument("--reuse-gcode", action="store_true",
                     help="use the G-code already in --keep instead of slicing again")
+    ap.add_argument("--resume", action="store_true",
+                    help="save progress in --keep every 25 layers, and carry on from it if a run "
+                         "on the same G-code and parts was cut short")
     a = ap.parse_args(argv)
+    if a.resume and not a.keep:
+        ap.error("--resume needs --keep, where the progress is saved")
     parts = []
     for spec in a.part:
         path, _, col = spec.rpartition(":")
@@ -681,7 +714,7 @@ def main(argv=None):
         print(f"layer at z={zc:.2f} drawn to {a.zoom_out or 'zoom.png'}")
         return None
     rep, _ = compare(parts, work, supports=not a.no_supports, layer_height=a.layer_height,
-                     reuse=a.reuse_gcode)
+                     reuse=a.reuse_gcode, resume=a.resume)
     print_report(rep)
     if a.json:
         clean = dict(rep, clusters=[{k: v for k, v in c.items() if k != "_polys"}

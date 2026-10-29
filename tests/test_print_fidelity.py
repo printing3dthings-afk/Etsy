@@ -145,6 +145,46 @@ def test_point_inside_two_overlapping_parts_counts_as_inside():
     check(not solid.contains(out)[0], "a point outside both parts reads inside")
 
 
+def test_a_run_cut_short_resumes_to_the_same_report():
+    # Santa's Workshop v2 (2026-10-29): container restarts killed a multi-hour
+    # run at layers 300 and 600. --resume saves progress every 25 layers, and a
+    # resumed report has to match an uninterrupted one. (Its first version lost
+    # each polygon's precision grid in the pickle and summarised one sliver on
+    # the gingerbread tin 0.01 mm wider. This small block doesn't reproduce
+    # that; it was checked on the tin by hand, identical once fixed.)
+    if not (shutil.which("openscad") and (shutil.which("prusa-slicer") or shutil.which("prusa-slicer-console"))):
+        return
+    td = Path(tempfile.mkdtemp(prefix="fidelity_resume_"))
+    (td / "b.scad").write_text(SCAD)
+    subprocess.run(["openscad", "-o", str(td / "b.stl"), str(td / "b.scad")], check=True, capture_output=True)
+    parts = [(str(td / "b.stl"), "#999999")]
+    clean = lambda rep: [{k: v for k, v in c.items() if k != "_polys"} for c in rep["clusters"]]
+    full, _ = pf.compare(parts, td, log=lambda *a: None)
+
+    class Cut(Exception):
+        pass
+    real, calls = pf.printed_area, [0]
+    def cut_at_30(beads):
+        calls[0] += 1
+        if calls[0] > 30:
+            raise Cut
+        return real(beads)
+    pf.printed_area = cut_at_30
+    try:
+        pf.compare(parts, td, log=lambda *a: None, reuse=True, resume=True)
+        check(False, "the run was meant to be cut short at layer 30")
+    except Cut:
+        pass
+    finally:
+        pf.printed_area = real
+    check((td / "progress.pkl").exists(), "no progress saved before the cut")
+    said = []
+    resumed, _ = pf.compare(parts, td, log=said.append, reuse=True, resume=True)
+    check(any("resuming at layer 25" in m for m in said), f"did not resume from layer 25: {said}")
+    check(clean(resumed) == clean(full), "a resumed run's report differs from an uninterrupted one")
+    check(not (td / "progress.pkl").exists(), "the progress file was left behind after a finished run")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
