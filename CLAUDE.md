@@ -315,6 +315,16 @@ per piece); the 3d-print-design skill has the layout. Commit generated
 images there too: anything left only in a session's scratchpad is lost when
 the container goes.
 
+**Big media is in Git LFS from 2026-10-29.** New or changed PNG/JPG/GIF
+renders, videos and 3MFs under `openscad_models/` (3MFs one folder down), and
+videos under `business/` and `data/`, are stored in LFS (`.gitattributes`).
+Cloud sessions check these out as small pointer files, not the real file, to
+save the download allowance. Before reading one (viewing a render, opening a
+3MF), run `git lfs pull -I <path>`. Pushing needs the `.githooks/pre-push`
+hook, which the SessionStart hook switches on. Nothing the Railway deploy,
+the GitHub Pages viewer, the desktop build or the tests read is in LFS:
+`tests/test_lfs_scope.py` checks it.
+
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)

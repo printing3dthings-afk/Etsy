@@ -1,0 +1,6 @@
+#!/bin/sh
+# Git LFS's own hook (2026-10-29). It lives here, not in .git/hooks, because
+# core.hooksPath points at .githooks; without pre-push, a push would send the
+# LFS pointers and never upload the files they point to.
+command -v git-lfs >/dev/null 2>&1 || { echo >&2 "\nThis repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'post-merge' file in .githooks.\n"; exit 2; }
+git lfs post-merge "$@"

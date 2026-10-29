@@ -1,1 +1,27 @@
 *.bat text eol=crlf
+
+# Git LFS (2026-10-29): big media goes to LFS as it is added or changed from
+# now on. Files already committed stay ordinary until they next change.
+# Scoped to paths nothing deployed reads, because three readers can't follow
+# an LFS pointer:
+#   - Railway builds the server without LFS, so tools/ (the voice model in
+#     tools/api_server/static) stays ordinary;
+#   - the public print viewer (GitHub Pages) can't serve LFS, so tools/viewer/
+#     and data/plate_stills/ stay ordinary;
+#   - the desktop build checks out without LFS, so desktop/ stays ordinary.
+# 3MFs only one folder down: tests read the fixtures at the top of
+# openscad_models/ (label_tile, dumpling_clicker, snap_box, monogram_keychain_J).
+# STLs stay ordinary: every tool reads them, and they are binary now.
+# tests/test_lfs_scope.py checks all of this.
+openscad_models/**/*.png filter=lfs diff=lfs merge=lfs -text
+openscad_models/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+openscad_models/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+openscad_models/**/*.gif filter=lfs diff=lfs merge=lfs -text
+openscad_models/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+openscad_models/**/*.mov filter=lfs diff=lfs merge=lfs -text
+openscad_models/**/*.webm filter=lfs diff=lfs merge=lfs -text
+openscad_models/*/**/*.3mf filter=lfs diff=lfs merge=lfs -text
+business/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+business/**/*.mov filter=lfs diff=lfs merge=lfs -text
+data/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+data/**/*.mov filter=lfs diff=lfs merge=lfs -text
