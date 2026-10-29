@@ -18,6 +18,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+import numpy as np
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 import print_fidelity as pf  # noqa: E402
@@ -183,6 +185,22 @@ def test_a_run_cut_short_resumes_to_the_same_report():
     check(any("resuming at layer 25" in m for m in said), f"did not resume from layer 25: {said}")
     check(clean(resumed) == clean(full), "a resumed run's report differs from an uninterrupted one")
     check(not (td / "progress.pkl").exists(), "the progress file was left behind after a finished run")
+
+
+def test_an_open_mesh_is_refused_not_compared():
+    # Santa's Workshop v2 (2026-10-29): run on its fast-engine meshes, which
+    # are not closed, the tool reported 29% of the model dropped and 665
+    # flags, none of them real. An open mesh has no inside to compare with.
+    import trimesh
+    td = Path(tempfile.mkdtemp(prefix="fidelity_open_"))
+    box = trimesh.creation.box(extents=[10, 10, 10])
+    box.update_faces(np.arange(1, len(box.faces)))      # one face gone: open
+    box.export(td / "open.stl")
+    try:
+        pf.compare([(str(td / "open.stl"), "#999999")], td, log=lambda *a: None)
+        check(False, "an open mesh was compared instead of refused")
+    except RuntimeError as e:
+        check("not closed" in str(e), f"refused, but without saying why: {e}")
 
 
 def run() -> None:

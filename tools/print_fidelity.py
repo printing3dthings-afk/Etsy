@@ -362,6 +362,14 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
     """parts: [(path, '#hex')]. Returns the report dict."""
     workdir = Path(workdir)
     meshes = [(_load(p), c.upper()) for p, c in parts]
+    # An open mesh has no inside, so neither its sections nor the inside test
+    # mean anything. On Santa's Workshop v2's fast-engine meshes (2026-10-29)
+    # the run reported 29% of the model dropped and 665 flags, none of it real:
+    # the biggest "dropped" spots were inside no part at all. Refuse instead.
+    open_parts = [p for (p, _), (m, _) in zip(parts, meshes) if not m.is_watertight]
+    if open_parts:
+        raise RuntimeError("not closed meshes, so there is nothing to compare against: " + ", ".join(open_parts)
+                           + " -- check the closed export (a CGAL union, or part_mesh.py union) instead")
     # One filament per distinct colour, numbered in first-seen order -- the
     # same rule tools/assemble_3mf.py writes into the 3MF it slices.
     slots = {}
@@ -645,6 +653,14 @@ def layer_view(parts, gcode, x, y, z, out, size=16.0, px_per_mm=50):
     finding in this file was confirmed before it was believed."""
     from PIL import Image, ImageDraw
     meshes = [(_load(p), c.upper()) for p, c in parts]
+    # An open mesh has no inside, so neither its sections nor the inside test
+    # mean anything. On Santa's Workshop v2's fast-engine meshes (2026-10-29)
+    # the run reported 29% of the model dropped and 665 flags, none of it real:
+    # the biggest "dropped" spots were inside no part at all. Refuse instead.
+    open_parts = [p for (p, _), (m, _) in zip(parts, meshes) if not m.is_watertight]
+    if open_parts:
+        raise RuntimeError("not closed meshes, so there is nothing to compare against: " + ", ".join(open_parts)
+                           + " -- check the closed export (a CGAL union, or part_mesh.py union) instead")
     slots = {}
     for _, c in meshes:
         slots.setdefault(c, len(slots))
