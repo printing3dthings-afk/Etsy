@@ -95,7 +95,8 @@ window's spokes are thickened behind its pane the same way.
 
 The four colour parts were exported with OpenSCAD 2021's CGAL engine, one at
 a time (two at once ran the container out of memory). The gate's verdict is
-on their CGAL union (`part="union"`, 3 h 33 m), as v1's was.
+on their CGAL union (`part="union"`, about 3.5 hours), as v1's was. It was run
+again after the mark was changed to an engraving, with the same result.
 
 **`product_gate` on the CGAL union:**
 
@@ -105,7 +106,7 @@ on their CGAL union (`part="union"`, 3 h 33 m), as v1's was.
 | watertight, one body, normals agree | yes |
 | supports | **0 support moves, 0 overhang perimeters** |
 | printed height | 193.6 of 193.6 mm |
-| flat base | 76.07 cm², 28.6% of the footprint |
+| flat base | 75.84 cm², 28.5% of the footprint |
 | stable | centre of mass over the base |
 | walls | **1st percentile 0.84 mm: the panes**, median 2.84 |
 
@@ -140,8 +141,10 @@ frames, like the cocoa café v2's.
   7,665 on the listed v1, in the same four places at the same heights. v1's
   CGAL union, like v2's, slices to none. That merge is used only for renders
   and for comparing v1 with v2.
-- **Print fidelity in white** (every detail kept by the slicer): running at
-  the time of writing. It takes most of a day on this building.
+- **Print fidelity in white** (every detail kept by the slicer): still
+  running at the time of writing; it takes most of a day on this building.
+  It started before the mark changed, so it covers everything but the mark.
+  The gate's slice already shows nothing dropped in height and no supports.
 
 ## Renders (white, design review, not photos)
 
@@ -150,7 +153,7 @@ frames, like the cocoa café v2's.
   as-printed views.
 - `images/v2_interior_underside.png`: turned over, looking up into the open
   base. One chamber, no columns, the three rings, the two inside walls'
-  triangles.
+  triangles, and the engraved OBC by the front step.
 - `images/v2_interior_cutaway.png`: cut through the middle bay, seen from the
   left: the right-hand inside wall's opening face on, rings either side, a
   toy window's rocking horse through it.
