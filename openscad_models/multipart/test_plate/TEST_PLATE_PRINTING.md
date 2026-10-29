@@ -48,8 +48,14 @@ sets; their clearance is on the base they sit on.
    click into each of the 12 notches and stay put. Note which click firmly,
    which are too stiff to turn, and which arms crack or barely click.
 5. **Bayonet:** turn the cap over, line its three lugs up with the ring's
-   three openings, push down, and twist about a quarter turn. Note which
-   go in and twist smoothly, which jam, and which feel loose.
+   three openings, push down, and twist **counterclockwise about 24°** to the
+   stop. (This said "about a quarter turn" until 2026-10-29; the slot is only
+   24° long, the angle `check_fits.py` turns it through.) Note which go in and
+   twist smoothly, which jam, and which feel loose.
+
+**The full step-by-step script**, with what good feels like for each and a
+place to record every result as you go (Claude reads them back from there):
+https://claude.ai/artifact/MUj1R6JJRJJHFq3e3q4EFJ
 
 ## What to send back
 
