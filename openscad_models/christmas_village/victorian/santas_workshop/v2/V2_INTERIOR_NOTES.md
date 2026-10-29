@@ -19,6 +19,14 @@ stands on it all round. **Now each stack starts at the roof's underside.**
 Above the roof nothing changed, and the bore still opens into the hall, so the
 chimneys still glow at the top.
 
+One catch, found on the slice and fixed: with the flue gone, the bore was a
+round hole through the sloped slab. The slab built its uphill rim out over the
+hole a layer at a time, a round arch the slicer propped on both stacks.
+Through the slab the bore is now a teardrop pointing up the slope, narrowing
+back to round at 50° before it reaches the roof's face, so the rim closes at
+38°. On a test slab at the same pitch, the round hole needed 3,484 support
+moves and the teardrop needs none. From above, the bore is round as it was.
+
 ## What the inside walls were for, and what replaced them
 
 They do hold the building up. Each one sits under a roof valley. There, the
@@ -74,9 +82,11 @@ longer hall: an exterior change, or two lights instead of three.
 
 All were 1.48 mm, except the turrets' 1.38. **Every pane is now 0.84 mm**,
 two lines, the line's thin-pane spec (the cocoa café v2). Each keeps its front
-face where it was, so nothing changes outside. Behind each, the wall left
-round the thinner pane is a pocket whose head climbs 1.2 per 1 inward, so it
-prints like the toy windows' sloped heads. The toys' lines on the big windows
+face where it was, so nothing changes outside. On the big toy windows the
+collar behind the pane is simply 0.64 shallower. On the glazed teeth, the
+turrets and the rose window, the wall left behind the thinner pane is a pocket
+whose head climbs 1.2 per 1 inward, so it prints like the toy windows' sloped
+heads. The toys' lines on the big windows
 still stand 1.8 mm out of the back of the pane, now 2.64 of plastic on a line
 against 0.84 (was 3.3 against 1.48), so they show darker on the glow. The rose
 window's spokes are thickened behind its pane the same way.
