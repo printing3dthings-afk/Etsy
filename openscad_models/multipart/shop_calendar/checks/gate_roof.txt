@@ -1,0 +1,13 @@
+parts/roof.stl
+  ok    fits_plate: 96.0 x 52.4 x 2.5 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.14mm, median 52.40mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 2.4mm printed of 2.5mm
+  ok    geometry_survives_slicing: printed height 2.4mm vs modelled 2.5mm
+  ok    flat_base: 50.06 cm2 of contact = 99.5% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=1.6mm; 0 layer(s) under the 4.0s cooling threshold; 6046mm2 on the plate; aspect 0.02
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

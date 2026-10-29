@@ -1,0 +1,26 @@
+slicing 2 part(s), 2 filament(s) ...
+135 layers parsed
+  layer 0/135
+  layer 100/135
+
+PRINT FIDELITY  (135 layers, model 32094.3 mm3)
+  dropped (modelled, not printed): 0.24 mm3
+  filled  (printed, not modelled): 0.15 mm3
+  colour  (printed, other filament): 102.07 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       colour  #F4F1EA slot 1    10.049 mm3  z 4.2-24.4 (101 layers)  right at [16.4, -9.5]  0.1 mm wide
+       colour  #F4F1EA slot 1     9.022 mm3  z 4.2-24.4 (100 layers)  left at [-16.3, -9.7]  0.1 mm wide
+       colour  #F4F1EA slot 1     8.721 mm3  z 5.6-23.6 (90 layers)  back at [9.5, 16.4]  0.1 mm wide
+       colour  #F4F1EA slot 1     8.437 mm3  z 5.4-23.8 (92 layers)  front at [-0.1, -19.0]  0.1 mm wide
+       colour  #F4F1EA slot 1     8.008 mm3  z 5.6-23.6 (90 layers)  right at [19.0, 0.2]  0.1 mm wide
+       colour  #F4F1EA slot 1     7.914 mm3  z 4.6-24.4 (98 layers)  back at [-9.4, 16.5]  0.1 mm wide
+       colour  #F4F1EA slot 1     7.393 mm3  z 9.8-24.6 (74 layers)  right at [16.5, 9.4]  0.1 mm wide
+       colour  #F4F1EA slot 1     6.864 mm3  z 6.4-22.4 (80 layers)  back at [0.1, 19.0]  0.1 mm wide
+       colour  #F4F1EA slot 1     6.589 mm3  z 4.8-24.0 (96 layers)  left at [-19.0, -0.6]  0.1 mm wide
+       colour  #F4F1EA slot 1     6.523 mm3  z 5.6-23.2 (88 layers)  front at [-9.1, -16.6]  0.1 mm wide
+       colour  #F4F1EA slot 1     6.480 mm3  z 6.6-22.0 (77 layers)  front at [9.7, -16.3]  0.1 mm wide
+       colour  #F4F1EA slot 1     5.463 mm3  z 6.4-22.4 (80 layers)  left at [-16.4, 9.6]  0.1 mm wide
+       colour  #F4F1EA slot 1     2.332 mm3  z 4.0-10.6 (33 layers)  right at [16.1, 10.0]  0.1 mm wide
+       colour  #F4F1EA slot 1     1.212 mm3  z 16.8-22.4 (28 layers)  left at [-17.3, 8.0]  0.1 mm wide
+       colour  #F4F1EA slot 1     0.728 mm3  z 5.6-10.0 (22 layers)  front at [-11.2, -15.4]  0.1 mm wide
+  ... 105 smaller

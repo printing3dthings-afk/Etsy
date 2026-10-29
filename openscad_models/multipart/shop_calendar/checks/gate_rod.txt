@@ -1,0 +1,13 @@
+parts/rod.stl
+  ok    fits_plate: 12.0 x 12.0 x 91.5 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.50mm, median 7.99mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 91.4mm printed of 91.5mm
+  ok    geometry_survives_slicing: printed height 91.4mm vs modelled 91.5mm
+  ok    flat_base: 1.13 cm2 of contact = 78.4% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 1.6mm widest unsupported span at z=1.6mm; 456 layer(s) under the 4.0s cooling threshold; 165mm2 on the plate; aspect 3.7
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED

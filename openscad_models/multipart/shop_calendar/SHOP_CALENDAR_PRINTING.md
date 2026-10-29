@@ -120,6 +120,17 @@ you roll it on to 01 yourself.
 were rendered in Blender from the real exported parts, assembled, with the
 drums set to THU 29 OCT. They're design-review renders, not photos.
 
+- **Straight on**, every window shows its whole word.
+- **From well off to one side** (the three-quarter view), the window frames
+  hide the ends of the words. The windows splay top and bottom, but not at
+  the sides, which keeps the mullions between them solid. It reads best from
+  the front, as a desk calendar usually is.
+
+`images/day_drum_as_printed.png` is the day drum rendered from its sliced
+toolpath, so it's a picture the printer can actually make: every letter there,
+skirts and all. The drum is also in the print viewer as "Shop Calendar (day
+drum)".
+
 ## Rebuilding
 
 - `./build.sh` exports every part (OpenSCAD's CGAL, about 12 minutes), each
