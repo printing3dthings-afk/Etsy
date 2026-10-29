@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Any ASCII STL being committed is rewritten as binary STL first and re-staged
+# (tools/stl_binary.py: same facets, a fifth of the size). OpenSCAD writes
+# ASCII unless told --export-format binstl, and 283 such files once cost this
+# repo 1.0 GB. Turned on per clone by the SessionStart hook in
+# .claude/settings.json (git config core.hooksPath .githooks).
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+mapfile -d '' staged < <(git diff --cached --name-only --diff-filter=AM -z -- '*.stl' '*.STL' | grep -zv '^data/trash/' || true)
+[ ${#staged[@]} -eq 0 ] && exit 0
+cd "$root"
+python3 tools/stl_binary.py "${staged[@]}" | grep -v '^$' || true
+git add -- "${staged[@]}"

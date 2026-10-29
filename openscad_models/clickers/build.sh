@@ -13,7 +13,7 @@ run() {   # dir scad part [out-suffix] [extra -D]
     mkdir -p $d/parts $d/logs
     [ -s "$out" ] && [ "$out" -nt "$d/$f" ] && [ "$out" -nt clicker_lib.scad ] && return
     echo "  $d $o"
-    openscad -D "part=\"$p\"" $x -o "$out.tmp.stl" "$d/$f" > "$d/logs/$o.log" 2>&1 \
+    openscad --export-format binstl -D "part=\"$p\"" $x -o "$out.tmp.stl" "$d/$f" > "$d/logs/$o.log" 2>&1 \
         && mv "$out.tmp.stl" "$out" || { echo "FAILED $d $o"; tail -3 "$d/logs/$o.log"; }
 }
 if [ $want = all ] || [ $want = tin ]; then
