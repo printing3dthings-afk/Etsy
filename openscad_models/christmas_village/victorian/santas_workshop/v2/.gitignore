@@ -4,3 +4,4 @@
 logs/fidelity_work/
 logs/*.gcode
 *.rendercache
+logs/fidelity_white/
