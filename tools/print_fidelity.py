@@ -258,8 +258,12 @@ class _Solid:
     instead, exactly, by manifold3d: a 2 micron cube at the point, and any
     volume left after intersecting it with the part means inside. It was also
     the slow step -- 1.4 s per ray call on that model, about 14 hours for the
-    whole run -- and this is 19 ms a point. A part manifold3d refuses (not
-    closed) falls back to the ray test, as before."""
+    whole run. A part manifold3d refuses (not closed) falls back to the ray
+    test, as before.
+
+    One boolean per call, not per point: a probe cube for every point, put
+    together, intersected with each part once. Per point it cost 24 ms on
+    Santa's CGAL union, 6,525 of them in the first 25 layers, 40 s a layer."""
 
     def __init__(self, meshes):
         import manifold3d as mf
@@ -276,10 +280,21 @@ class _Solid:
                 self.fallback.append(m)
 
     def contains(self, pts):
-        pts = np.asarray(pts, float)
-        cube = self._mf.Manifold.cube([2e-3] * 3)
-        got = np.array([any((cube.translate(list(q - 1e-3)) ^ s).volume() > 0 for s in self.parts)
-                        for q in pts], bool)
+        pts = np.asarray(pts, float).reshape(-1, 3)
+        got = np.zeros(len(pts), bool)
+        if len(pts) and self.parts:
+            uniq, back = np.unique(np.round(pts, 5), axis=0, return_inverse=True)
+            cube = self._mf.Manifold.cube([2e-3] * 3)
+            probes = self._mf.Manifold.compose([cube.translate(list(q - 1e-3)) for q in uniq])
+            hit = np.zeros(len(uniq), bool)
+            for s in self.parts:
+                for piece in (probes ^ s).decompose():
+                    if piece.volume() <= 0:
+                        continue
+                    bb = np.asarray(piece.bounding_box())
+                    centre = (bb[:3] + bb[3:]) / 2
+                    hit[np.linalg.norm(uniq - centre, axis=1) < 2e-3] = True
+            got = hit[np.asarray(back).reshape(-1)]
         for m in self.fallback:
             got |= m.contains(pts)
         return got
