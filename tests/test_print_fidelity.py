@@ -128,6 +128,23 @@ def test_section_keeps_a_thin_rib_joined_to_its_wall():
         a = pf.section(m, z).intersection(box(5.9, -1.1, 6.1, 0)).area
         check(abs(a - 0.05) < 0.005, f"rib missing from the section at z={z}: {a:.4f} mm2 of 0.05")
 
+def test_point_inside_two_overlapping_parts_counts_as_inside():
+    # Santa's Workshop v2 (2026-10-29): colour parts are exported sunk into
+    # each other, and a ray-count test on their concatenation reads a point
+    # inside both as outside -- 6 to 10 wrong answers in 200. A filled or
+    # dropped miss is confirmed by this test, so it has to be exact.
+    import numpy as np, trimesh
+    a = trimesh.creation.box(extents=[10, 10, 10])
+    b = trimesh.creation.box(extents=[10, 10, 10])
+    b.apply_translation([4, 0, 0])
+    both = [[2.0, 0.0, 0.0]]            # inside a and b
+    one, out = [[-4.0, 0.0, 0.0]], [[20.0, 0.0, 0.0]]
+    solid = pf._Solid([a, b])
+    check(bool(solid.contains(both)[0]), "a point inside two overlapping parts reads outside")
+    check(bool(solid.contains(one)[0]), "a point inside one part reads outside")
+    check(not solid.contains(out)[0], "a point outside both parts reads inside")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

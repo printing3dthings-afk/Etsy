@@ -248,9 +248,47 @@ def section(mesh, z):
     return _valid(unary_union([shapely.make_valid(q) for q in parts if not q.is_empty]))
 
 
+class _Solid:
+    """Inside-the-model test for a set of closed parts (2026-10-29).
+
+    trimesh's contains() counts ray crossings, and colour parts that are sunk
+    into each other (as they are exported, so they weld) break the count: on
+    Santa's Workshop v2 it was wrong for 6 of 200 random points with trimesh's
+    own ray engine and 10 of 200 with Embree. Each part is asked on its own
+    instead, exactly, by manifold3d: a 2 micron cube at the point, and any
+    volume left after intersecting it with the part means inside. It was also
+    the slow step -- 1.4 s per ray call on that model, about 14 hours for the
+    whole run -- and this is 19 ms a point. A part manifold3d refuses (not
+    closed) falls back to the ray test, as before."""
+
+    def __init__(self, meshes):
+        import manifold3d as mf
+        self._mf, self.parts, self.fallback = mf, [], []
+        for m in meshes:
+            tri = np.asarray(m.vertices, np.float64)[np.asarray(m.faces)].reshape(-1, 3)
+            mesh = mf.Mesh(vert_properties=tri.astype(np.float32),
+                           tri_verts=np.arange(len(tri), dtype=np.uint32).reshape(-1, 3))
+            mesh.merge()
+            solid = mf.Manifold(mesh)
+            if solid.status() == mf.Error.NoError and not solid.is_empty():
+                self.parts.append(solid)
+            else:
+                self.fallback.append(m)
+
+    def contains(self, pts):
+        pts = np.asarray(pts, float)
+        cube = self._mf.Manifold.cube([2e-3] * 3)
+        got = np.array([any((cube.translate(list(q - 1e-3)) ^ s).volume() > 0 for s in self.parts)
+                        for q in pts], bool)
+        for m in self.fallback:
+            got |= m.contains(pts)
+        return got
+
+
 def _confirmed(mesh, p, z, inside, n=5):
-    """Ask the mesh directly: is this miss inside the model (dropped) or
-    outside it (filled)? Majority of a few points spread over the region."""
+    """Ask the model directly: is this miss inside it (dropped) or outside it
+    (filled)? Majority of a few points spread over the region. `mesh` is a
+    _Solid, or anything with a contains() of the same shape."""
     pts = [p.representative_point()]
     minx, miny, maxx, maxy = p.bounds
     rng = np.random.default_rng(0)
@@ -333,7 +371,9 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
     for m, c in meshes:
         by_tool[slots[c]].append(m)
     tool_mesh = {t: trimesh.util.concatenate(ms) for t, ms in by_tool.items()}
+    tool_solid = {t: _Solid(ms) for t, ms in by_tool.items()}
     whole = trimesh.util.concatenate([m for m, _ in meshes])
+    whole_solid = _Solid([m for m, _ in meshes])
 
     gcode = workdir / "fidelity.gcode"
     if len(slots) > 1:
@@ -430,7 +470,7 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
                 far = got.buffer(REACH, quad_segs=3)
                 for p in _parts(dropped):
                     if not (p.area >= MIN_AREA and _reaches(p, far)
-                            and _confirmed(m, p, zc, inside=True)):
+                            and _confirmed(tool_solid[t], p, zc, inside=True)):
                         continue
                     missing = _op(shapely.difference, p, grown_got)
                     for q in _parts(missing):
@@ -446,7 +486,7 @@ def compare(parts, workdir, supports=True, log=print, layer_height=None, reuse=F
                 far = all_maybe.buffer(REACH, quad_segs=3)
                 for p in _parts(filled):
                     if (p.area >= MIN_AREA and _reaches(p, far)
-                            and _confirmed(whole, p, zc, inside=False)):
+                            and _confirmed(whole_solid, p, zc, inside=False)):
                         events.append(("filled", t, zc - h / 2, h, p, _depth(p, all_maybe)))
         if li % 100 == 0:
             log(f"  layer {li}/{len(layers)}")
