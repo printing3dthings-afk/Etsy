@@ -1,0 +1,25 @@
+slicing 3 part(s), 3 filament(s) ...
+160 layers parsed
+  layer 0/160
+  layer 100/160
+
+PRINT FIDELITY  (160 layers, model 55264.8 mm3)
+  dropped (modelled, not printed): 2.36 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #F4F1EA slot 2     0.660 mm3  z 10.8-20.2 (47 layers)  left at [-19.8, -14.5]  0.22 mm wide, 0.15 mm deep
+       dropped #F4F1EA slot 2     0.633 mm3  z 10.8-20.2 (47 layers)  right at [19.8, -14.5]  0.22 mm wide, 0.15 mm deep
+       dropped #A9DCC8 slot 1     0.488 mm3  z 10.6-20.4 (49 layers)  left at [-20.0, -14.8]  0.2 mm wide, 0.21 mm deep
+       dropped #A9DCC8 slot 1     0.481 mm3  z 10.6-20.4 (49 layers)  right at [20.0, -14.8]  0.2 mm wide, 0.21 mm deep
+       dropped #B3262E slot 3     0.033 mm3  z 16.6-17.0 (2 layers)  front at [15.1, -20.2]  0.24 mm wide, 0.27 mm deep
+       dropped #B3262E slot 3     0.013 mm3  z 16.6-16.8 (1 layers)  front at [-11.8, -22.3]  0.2 mm wide, 0.23 mm deep
+       dropped #B3262E slot 3     0.011 mm3  z 12.6-12.8 (1 layers)  front at [11.4, -22.5]  0.16 mm wide, 0.2 mm deep
+       dropped #B3262E slot 3     0.010 mm3  z 14.8-15.0 (1 layers)  front at [10.7, -22.8]  0.15 mm wide, 0.2 mm deep
+       dropped #B3262E slot 3     0.009 mm3  z 12.6-12.8 (1 layers)  front at [1.8, -25.1]  0.14 mm wide, 0.18 mm deep
+       dropped #B3262E slot 3     0.009 mm3  z 12.6-12.8 (1 layers)  front at [6.6, -24.3]  0.15 mm wide, 0.18 mm deep
+       dropped #B3262E slot 3     0.004 mm3  z 13.6-14.0 (2 layers)  front at [-0.3, -25.1]  0.08 mm wide, 0.15 mm deep
+       dropped #B3262E slot 3     0.003 mm3  z 12.6-12.8 (1 layers)  front at [4.6, -24.7]  0.1 mm wide, 0.14 mm deep
+       dropped #B3262E slot 3     0.003 mm3  z 13.6-14.0 (2 layers)  front at [-6.2, -24.3]  0.08 mm wide, 0.15 mm deep
+       dropped #B3262E slot 3     0.001 mm3  z 13.8-14.0 (1 layers)  front at [-5.3, -24.5]  0.08 mm wide, 0.13 mm deep
+       dropped #B3262E slot 3     0.001 mm3  z 13.8-14.0 (1 layers)  front at [-11.0, -22.6]  0.07 mm wide, 0.13 mm deep

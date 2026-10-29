@@ -1,0 +1,25 @@
+slicing 2 part(s), 2 filament(s) ...
+63 layers parsed
+  layer 0/63
+
+PRINT FIDELITY  (63 layers, model 26658.9 mm3)
+  dropped (modelled, not printed): 1.79 mm3
+  filled  (printed, not modelled): 0.15 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 20
+  FLAG dropped #F4F1EA slot 2     0.066 mm3  z 2.0-2.2 (1 layers)  back at [-18.4, 24.0]  0.39 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.066 mm3  z 2.0-2.2 (1 layers)  front at [0.8, -30.2]  0.4 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.066 mm3  z 2.0-2.2 (1 layers)  back at [18.4, 24.0]  0.39 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  left at [-28.5, -10.1]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  left at [-29.0, -8.6]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  front at [-0.8, -30.2]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  back at [17.2, 24.9]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  back at [-17.2, 24.9]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  right at [28.5, -10.1]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 2.0-2.2 (1 layers)  right at [29.0, -8.6]  0.39 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.037 mm3  z 10.4-10.6 (1 layers)  front at [-0.7, -30.4]  0.28 mm wide, 0.71 mm deep
+  FLAG dropped #F4F1EA slot 2     0.037 mm3  z 10.4-10.6 (1 layers)  left at [-28.7, -10.1]  0.28 mm wide, 0.72 mm deep
+  FLAG dropped #F4F1EA slot 2     0.037 mm3  z 10.4-10.6 (1 layers)  left at [-29.1, -8.7]  0.28 mm wide, 0.72 mm deep
+  FLAG dropped #F4F1EA slot 2     0.037 mm3  z 10.4-10.6 (1 layers)  back at [-18.4, 24.1]  0.28 mm wide, 0.72 mm deep
+  FLAG dropped #F4F1EA slot 2     0.037 mm3  z 10.4-10.6 (1 layers)  back at [-17.3, 25.0]  0.28 mm wide, 0.72 mm deep
+  ... 137 smaller
