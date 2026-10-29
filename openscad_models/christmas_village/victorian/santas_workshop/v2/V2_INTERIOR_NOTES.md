@@ -127,8 +127,13 @@ frames, like the cocoa café v2's.
   "watch": a 7.2 mm stretch of the middle floor ring between its spokes,
   slenderness 4.4 ("high" starts at 15). It is a 1.6 mm ring on the table
   that carries nothing.
-- **The maker's mark** is where it was under the front step, cut in the base.
-  None of the changes reach it, and the gate's slice prints it.
+- **The maker's mark is now engraved, not inlaid.** It was cut into the base
+  and filled with the roof's slate colour, which reads only in a four-colour
+  print. Printed all in matte white, the fill is white too, so the mark
+  disappears; your current print most likely has no visible mark for that
+  reason. It is now cut whole, 0.8 mm deep, as on the line's one-colour
+  pieces. Seen from underneath with the building tipped toward you, it reads
+  OBC (checked on the exported base). In four colours it shows as a recess.
 - **Supports, the long way round.** Merging the parts with manifold3d (a
   minute, against CGAL's hours) leaves edges shared by four faces where two
   colours only touch. The slicer props those: 7,725 support moves on v2 and
