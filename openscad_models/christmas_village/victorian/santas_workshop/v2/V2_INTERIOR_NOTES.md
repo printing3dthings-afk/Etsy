@@ -93,4 +93,68 @@ window's spokes are thickened behind its pane the same way.
 
 ## Checks on the shipping meshes
 
-(filled in from `ship.sh`, below)
+The four colour parts were exported with OpenSCAD 2021's CGAL engine, one at
+a time (two at once ran the container out of memory). The gate's verdict is
+on their CGAL union (`part="union"`, 3 h 33 m), as v1's was.
+
+**`product_gate` on the CGAL union:**
+
+| check | result |
+|---|---|
+| fits the P1S | 206.0 × 129.0 × 193.6 mm, the same as before |
+| watertight, one body, normals agree | yes |
+| supports | **0 support moves, 0 overhang perimeters** |
+| printed height | 193.6 of 193.6 mm |
+| flat base | 76.07 cm², 28.6% of the footprint |
+| stable | centre of mass over the base |
+| walls | **1st percentile 0.84 mm: the panes**, median 2.84 |
+
+The wall check reads as a FAIL, and the panes are the only reason. They are
+0.84 mm by request, and there are enough of them now that they are the
+thinnest 1% of the building. Every span under 1.2 mm was traced:
+- **0.84:** the panes.
+- **0.75:** a ray crossing a turret's curved glass at an angle. The glass is
+  0.84 through.
+- **Under 0.5:** clips at the edges of brick joints and relief, the same
+  detail v1 shipped with.
+- **1.0–1.1:** the floor rings' height.
+
+No structural wall is under 1.2 mm. The panes are held all round by their
+frames, like the cocoa café v2's.
+
+**Other checks:**
+- **Fragility** (`tools/fragility.py`, all four parts): nothing high. One
+  "watch": a 7.2 mm stretch of the middle floor ring between its spokes,
+  slenderness 4.4 ("high" starts at 15). It is a 1.6 mm ring on the table
+  that carries nothing.
+- **The maker's mark** is where it was under the front step, cut in the base.
+  None of the changes reach it, and the gate's slice prints it.
+- **Supports, the long way round.** Merging the parts with manifold3d (a
+  minute, against CGAL's hours) leaves edges shared by four faces where two
+  colours only touch. The slicer props those: 7,725 support moves on v2 and
+  7,665 on the listed v1, in the same four places at the same heights. v1's
+  CGAL union, like v2's, slices to none. That merge is used only for renders
+  and for comparing v1 with v2.
+- **Print fidelity in white** (every detail kept by the slicer): running at
+  the time of writing. It takes most of a day on this building.
+
+## Renders (white, design review, not photos)
+
+- `images/v2_as_printed_white_{front,three_quarter,top}.png`: rendered from the
+  sliced toolpath in white, outer surfaces only, the same setup as the earlier
+  as-printed views.
+- `images/v2_interior_underside.png`: turned over, looking up into the open
+  base. One chamber, no columns, the three rings, the two inside walls'
+  triangles.
+- `images/v2_interior_cutaway.png`: cut through the middle bay, seen from the
+  left: the right-hand inside wall's opening face on, rings either side, a
+  toy window's rocking horse through it.
+
+## Files
+
+- `victorian_santas_workshop_v2.scad`: the source. Changes are dated
+  2026-10-28 at each place.
+- `victorian_santas_workshop_v2.3mf`: **the one file to print.** Four parts,
+  aligned; in matte white, assign the same filament to all four. Supports off.
+- `build.sh cgal` exports the parts; `ship.sh` runs the checks, 3MF and
+  renders; `render_interior.py` the two interior views.

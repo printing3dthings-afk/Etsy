@@ -1,0 +1,13 @@
+logs/union_cgal.stl
+  ok    fits_plate: 206.0 x 129.0 x 193.6 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.84mm, median 2.84mm (floor 1.2mm); 0.38% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 193.6mm printed of 193.59mm
+  ok    geometry_survives_slicing: printed height 193.6mm vs modelled 193.59mm
+  ok    flat_base: 76.07 cm2 of contact = 28.6% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.1mm widest unsupported span at z=166.0mm; 89 layer(s) under the 4.0s cooling threshold; 9233mm2 on the plate; aspect 0.89
+  note  texture (advisory, never fails the gate): rugosity 1.202 -- genuinely textured, at or above the corpus p50
+PRODUCT GATE FAILED
