@@ -6,999 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20260925-001 date=2026-09-25 kind=file source="openscad_models/haunted_post_office.scad" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-001 · 2026-09-25 · file · `openscad_models/haunted_post_office.scad`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-001__haunted_post_office.scad`
-
-```
-// Haunted Post Office lantern -- building #1 of the Haunted Town series
-// (openscad_models/HAUNTED_TOWN.md), built on the bakery's proven parts
-// (haunted_bakery.scad): same walls, roof, window frames, relief and every
-// gate-tuned margin, so read that file for WHY each of those looks the way it
-// does. A hollow shell lit from inside by a battery LED tealight: open base,
-// true through-cut windows.
-//
-// THE POST OFFICE'S OWN FEATURES: an octagonal corner TURRET under a tall,
-// leaning witch-hat spire; a crooked POST OFFICE sign; parcels tied with
-// string stacked by the wall; a brass mail slot in the door.
-//
-// WHY OCTAGONAL. Every face of an octagon is flat, so the bakery's planar
-// frames, muntins and clapboard carry onto the turret unchanged. On a round
-// tower each of those would have had to be rebuilt on a curve.
-//
-// WHY THE SIGN IS ON THE WALL. A sign hanging from a bracket has a free bottom
-// edge, which is an overhang no angle rescues. It is hung crooked instead.
-//
-// COLOUR PARTS. Render one at a time with -D part="...":
-//   body    walls, plinth, turret walls, gables and battens, eave flare, step
-//   roof    roof slab, shingles, ridge cap, chimney, turret spire and its eave
-//   trim    window and door frames, muntins, door, corner boards, sign board,
-//           the parcels' string
-//   accent  the parcels, the sign's letters, the mail slot
-// Every part is built DISJOINT from the others. The part="chk_*" renders are
-// each pairwise intersection and must come out empty.
-//
-// TEALIGHT. The main room is 72.6 x 50.6 mm clear from the plate to the
-// ceiling, and the base is open: a 38 mm LED tealight drops in with room to
-// spare. The turret's hollow opens into it, so the turret glows too.
-
-include <BOSL2/std.scad>
-include <lattice_lib.scad>
-
-$fa = 2;  $fs = 0.4;
-
-part = "preview";
-
-// ---- body ----------------------------------------------------------------
-W        = 76;              // along X, the front's width
-D        = 54;              // along Y, front (-Y) to back
-wall     = 1.68;            // 4 x 0.42
-sid_d    = 0.84;            // clapboard stands 2 extrusions proud of plan(0)
-corner_r = 1;
-H        = 78;              // top of the side walls, where the eave flare begins
-plinth_h = 8;               // shared by every building in the town
-plinth_o = sid_d + 0.84;    // plinth face, 0.84 proud of the siding
-sid_p    = 4.5;             // clapboard course
-sid_r    = sid_d * tan(58); // height of each board's outward ramp: 58 deg from
-                            // horizontal. 50 was enough for the ramp alone, but
-                            // where a ramp crosses a window's crown the two meet
-                            // at a corner, and corners need 58 (see the roof note below).
-
-SH       = 1.2;             // shear of every raised relief: 1.2 up per 1 out,
-                            // so its underside sits 40 deg from vertical
-
-// ---- roof ----------------------------------------------------------------
-e        = 5;               // eave projection
-er       = e / tan(40);     // ...carried on a flare 40 deg from vertical
-f        = 4;               // fascia height
-b        = D/2 + sid_d;
-be       = b + e;           // eave edge, half-depth
-zf       = H + er + f;      // top of the fascia, where the slope starts
-tr       = 2.52;            // slab thickness, normal to the slope (6 extr.)
-// NO RAKE OVERHANG, and that is a measured decision. Past a gable the roof's
-// underside rises inward at ~50 deg while the rake has to grow outward, and at
-// the corner where those meet the outline moves diagonally -- root 2 faster
-// than either face. Measured on the gate's own slicer: two 50 deg faces
-// meeting at a corner drew 54,002 support moves, 55 deg drew 46,966, and only
-// 58 deg or steeper came out clean. No rake angle rescues a 50 deg roof, so
-// the roof stops 0.3 mm short of each gable face (distinct surfaces, never
-// coplanar) and the gable's top edge shows as a small reveal.
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260925-001 -->
-<!-- TRASH id=20260925-002 date=2026-09-25 kind=file source="openscad_models/haunted_post_office.3mf" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-002 · 2026-09-25 · file · `openscad_models/haunted_post_office.3mf`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-002__haunted_post_office.3mf`
-
-```
-(binary file — see payload copy)
-```
-
-<!-- /TRASH 20260925-002 -->
-<!-- TRASH id=20260925-003 date=2026-09-25 kind=file source="openscad_models/HAUNTED_POST_OFFICE_PRINTING.md" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-003 · 2026-09-25 · file · `openscad_models/HAUNTED_POST_OFFICE_PRINTING.md`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-003__HAUNTED_POST_OFFICE_PRINTING.md`
-
-```
-# Haunted Post Office — printing notes
-
-Building #1 of the Haunted Town series (`HAUNTED_TOWN.md`). It is a hollow
-lantern with an open base, lit from inside by a battery LED tealight. It has
-an octagonal corner turret under a tall witch-hat spire, which leans out
-3.5 mm. 110.7 × 81.5 × 160.1 mm including the chimney, the turret and the
-parcels.
-
-**Print this:** `haunted_post_office.3mf`. It is one object with four parts,
-already aligned. Assign a filament to each part.
-
-| part | what it is | colour in the file |
-|---|---|---|
-| body | walls, plinth, turret walls, gables and battens, eave flare, step | slate teal `#50666B` |
-| roof | roof slab, shingles, ridge cap, chimney, and the turret's spire with its eave and finial | slate `#2B2F38` |
-| trim | window and door frames, muntins, door, corner boards, sign board, the parcels' string | cream `#EFE6D2` |
-| accent | the parcels, the POST OFFICE letters, the brass mail slot | kraft `#D4A96A` |
-
-The per-part `.stl` files are what the assembler consumes and what the gates
-check. They are not the deliverable.
-
-## No supports, and none of the settings below are optional
-
-- **Supports OFF.** Verified: the gate's slicer reports **0 support moves
-  and 0 overhang perimeters**.
-- **Print it standing up, the way it is in the file.**
-- 0.2 mm layers.
-
-## Cost — sliced, not estimated
-
-| version | time | filament | colour changes |
-|---|---|---|---|
-| **single colour** (e.g. for Jessee to paint) | **13 h 56 m** | **~128 g** | 0 |
-| **four colour, AMS** | not reliable here | ~136 g model **+ purge** | **1,285** |
-
-The purge is the real cost of the colour version, the same as the bakery's:
-- **255 g** of purge and wipe tower at PrusaSlicer's 140 mm³ per change;
-- about **560 g** at the 350 mm³ Bambu default, in flush alone.
-
-Bambu Studio sets its own flush for each colour pair, so slice it there for
-the real number before pricing. The four-extruder time estimate overflowed
-here, so no four-colour time is quoted. It is longer than the bakery
-(11 h 52 m) mainly because of the spire.
-
-A listing must say which version the buyer gets: printed in colour, or
-single colour and hand-painted by Jessee.
-
-## The tealight
-
-Measured on the exported mesh: the largest clear circle about the room's
-centre is **50.6 mm across at every height from the table to past 90 mm**.
-The series rule is ≥ 46 mm across and ≥ 60 mm of headroom. Any common LED
-tealight fits (36–38 mm across, 32–45 mm tall). The base is open, and the
-house lifts off to reach the switch.
-
-The turret glows too. A tall pointed arch (7 × 47 mm), cut through the
-turret's wall where it faces into the room, lets the light in. It can't be
-seen from outside.
-
-## Verified before shipping — on the real exported meshes
-
-- `product_gate` **PASSED** on the union:
-  - watertight, one body;
-  - 1st-percentile wall 1.48 mm against the 1.2 mm floor;
-  - 0 supports, 0 overhang perimeters;
-  - printed height 160.0 mm of 160.09 modelled (the finial tip);
-  - 13.43 cm² of bed contact;
-  - centre of mass over the base.
-- `mesh_gate` on each of the four parts:
-  - watertight, consistent winding;
-  - **0 zero-area faces**;
-  - every edge shared by exactly two faces.
-- The roof is two pieces (the main roof and the spire), the trim is 24 and
-  the accent is 12. Each piece was checked for real surface contact with
-  the part it sits on, sampled by area. The spire shares 226 mm² with the
-  turret wall, and the parcels' string shares 314 mm² with the parcels.
-- **The parts are disjoint.** All six pairwise intersections render EMPTY.
-- The union mesh (used only for the gate) carries 113 zero-area faces,
-  every one at z = 84.2 along the eave weld, the same as the bakery. None
-  of the four parts that ship has any.
-- The 3MF round-trips through the slicer with all four extruders addressed.
-- **OBC maker's mark:** engraved 0.8 mm deep under the step, the same mark
-  as the bakery, with strokes ≥ 1.0 mm.
-- **POST OFFICE letters:** size 4.8, a flush inlay. Eroding them by one
- 
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260925-003 -->
-<!-- TRASH id=20260925-004 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_body.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-004 · 2026-09-25 · file · `openscad_models/haunted_post_office_body.stl`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-004__haunted_post_office_body.stl`
-
-```
-solid OpenSCAD_Model
-  facet normal 0 1 -0
-    outer loop
-      vertex 39.68 -5.16 79.816
-      vertex 38.84 -5.16 116.689
-      vertex 39.68 -5.16 116.689
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 38.84 -5.16 116.689
-      vertex 39.68 -5.16 79.816
-      vertex 38.84 -5.16 78.808
-    endloop
-  endfacet
-  facet normal 1 -0 0
-    outer loop
-      vertex 39.68 -6.84 114.705
-      vertex 39.68 -5.16 79.816
-      vertex 39.68 -5.16 116.689
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 -5.16 79.816
-      vertex 39.68 -6.84 114.705
-      vertex 39.68 -6.84 79.816
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 38.84 -6.84 114.705
-      vertex 39.68 -6.84 79.816
-      vertex 39.68 -6.84 114.705
-    endloop
-  endfacet
-  facet normal -0 -1 0
-    outer loop
-      vertex 39.68 -6.84 79.816
-      vertex 38.84 -6.84 114.705
-      vertex 38.84 -6.84 78.808
-    endloop
-  endfacet
-  facet normal 0.768221 0 -0.640184
-    outer loop
-      vertex 39.68 -6.84 79.816
-      vertex 38.84 -5.16 78.808
-      vertex 39.68 -5.16 79.816
-    endloop
-  endfacet
-  facet normal 0.768221 0 -0.640184
-    outer loop
-      vertex 38.84 -5.16 78.808
-      vertex 39.68 -6.84 79.816
-      vertex 38.84 -6.84 78.808
-    endloop
-  endfacet
-  facet normal 0 1 -0
-    outer loop
-      vertex 39.68 0.839999 110.741
-      vertex 38.84 0.839999 121.793
-      vertex 39.68 0.839999 121.793
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 38.84 0.839999 121.793
-      vertex 39.68 0.839999 110.741
-      vertex 38.84 0.839999 109.733
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 -0.839999 121.793
-      vertex 39.68 0.839999 121.793
-      vertex 39.68 0 122.785
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 0.839999 121.793
-      vertex 39.68 -0.839999 121.793
-      vertex 39.68 0.839999 110.741
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 0.839999 110.741
-      vertex 39.68 -0.839999 121.793
-      vertex 39.68 -0.839999 110.741
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 38.84 -0.839999 121.793
-      vertex 39.68 -0.839999 110.741
-      vertex 39.68 -0.839999 121.793
-    endloop
-  endfacet
-  facet normal -0 -1 0
-    outer loop
-      vertex 39.68 -0.839999 110.741
-      vertex 38.84 -0.839999 121.793
-      vertex 38.84 -0.839999 109.733
-    endloop
-  endfacet
-  facet normal 0 1 -0
-    outer loop
-      vertex 39.68 6.84 110.741
-      vertex 38.84 6.84 114.705
-      vertex 39.68 6.84 114.705
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 38.84 6.84 114.705
-      vertex 39.68 6.84 110.741
-      vertex 38.84 6.84 109.733
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 5.16 110.741
-      vertex 39.68 6.84 114.705
-      vertex 39.68 5.16 116.689
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 6.84 114.705
-      vertex 39.68 5.16 110.741
-      vertex 39.68 6.84 110.741
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 38.84 5.16 116.689
-      vertex 39.68 5.16 110.741
-      vertex 39.68 5.16 116.689
-    endloop
-  endfacet
-  facet normal -0 -1 0
-    outer loop
-      vertex 39.68 5.16 110.741
-      vertex 38.84 5.16 116.689
-      vertex 38.84 5.16 109.733
-    endloop
-  endfacet
-  facet normal 0 1 -0
-    outer loop
-      vertex 39.68 12.84 83.9802
-      vertex 38.84 12.84 107.616
-      vertex 39.68 12.84 107.616
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 38.84 12.84 107.616
-      vertex 39.68 12.84 83.9802
-      vertex 38.84 12.84 82.9722
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 11.16 83.9802
-      vertex 39.68 12.84 107.616
-      vertex 39.68 11.16 109.601
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 39.68 12.84 107.616
-      vertex 39.68 11.16 83.9802
-      ve
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260925-004 -->
-<!-- TRASH id=20260925-005 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_roof.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-005 · 2026-09-25 · file · `openscad_models/haunted_post_office_roof.stl`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-005__haunted_post_office_roof.stl`
-
-```
-solid OpenSCAD_Model
-  facet normal 0 1 -0
-    outer loop
-      vertex 38.54 32.84 83.9888
-      vertex 38.18 32.84 88.9588
-      vertex 38.54 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 38.18 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 36.52 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 36.52 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 34.86 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 34.86 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 33.2 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 33.2 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 31.54 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 31.54 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 29.88 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 29.88 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 28.22 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 28.22 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 26.56 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 26.56 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 24.9 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 24.9 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 23.24 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 23.24 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 21.58 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 21.58 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 19.92 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 19.92 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 18.26 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 18.26 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 16.6 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 16.6 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 14.94 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 14.94 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 13.28 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 13.28 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 11.62 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 11.62 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 9.96 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 9.96 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 8.3 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 8.3 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 6.64 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 6.64 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 4.98 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 4.98 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 3.32 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 3.32 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex 1.66 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 1.66 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-      vertex -1.66 32.84 88.9588
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex -38.54 32.84 83.9888
-      vertex -1.66 32.84 88.9588
-      vertex 38.54 32.84 83.9888
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      verte
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260925-005 -->
-<!-- TRASH id=20260925-006 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_trim.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-006 · 2026-09-25 · file · `openscad_models/haunted_post_office_trim.stl`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-006__haunted_post_office_trim.stl`
-
-```
-solid OpenSCAD_Model
-  facet normal 0.138989 0 0.990294
-    outer loop
-      vertex -23.3248 -27.0586 75.6606
-      vertex -23.3647 -28.6142 75.6662
-      vertex -23.3248 -28.6675 75.6606
-    endloop
-  endfacet
-  facet normal 0.155421 -0.000430288 0.987848
-    outer loop
-      vertex -23.3248 -27.0586 75.6606
-      vertex -23.3685 -28.6093 75.6668
-      vertex -23.3647 -28.6142 75.6662
-    endloop
-  endfacet
-  facet normal 0.141072 -1.54381e-05 0.989999
-    outer loop
-      vertex -23.713 -28.1774 75.7159
-      vertex -23.3248 -27.0586 75.6606
-      vertex -23.5248 -27.0238 75.6891
-    endloop
-  endfacet
-  facet normal 0.140979 -0 0.990013
-    outer loop
-      vertex -23.713 -28.1774 75.7159
-      vertex -23.5248 -27.0238 75.6891
-      vertex -23.713 -27.0238 75.7159
-    endloop
-  endfacet
-  facet normal 0.141078 -1.74877e-05 0.989998
-    outer loop
-      vertex -23.3248 -27.0586 75.6606
-      vertex -23.713 -28.1774 75.7159
-      vertex -23.3685 -28.6093 75.6668
-    endloop
-  endfacet
-  facet normal -0.949665 0 0.313266
-    outer loop
-      vertex -29.0867 -28.68 67.9829
-      vertex -29.1121 -27.5433 67.9059
-      vertex -29.1121 -28.68 67.9059
-    endloop
-  endfacet
-  facet normal -0.949665 0 0.313266
-    outer loop
-      vertex -29.1121 -27.5433 67.9059
-      vertex -29.0867 -28.68 67.9829
-      vertex -29.0867 -27.5386 67.9829
-    endloop
-  endfacet
-  facet normal 0.937232 -0 0.348706
-    outer loop
-      vertex -19.3136 -28.68 69.1171
-      vertex -19.2883 -27.4739 69.0491
-      vertex -19.3136 -27.4706 69.1171
-    endloop
-  endfacet
-  facet normal 0.937232 0 0.348706
-    outer loop
-      vertex -19.2883 -27.4739 69.0491
-      vertex -19.3136 -28.68 69.1171
-      vertex -19.2883 -28.68 69.0491
-    endloop
-  endfacet
-  facet normal -0.924585 0 0.380977
-    outer loop
-      vertex -28.2861 -28.68 70.1326
-      vertex -28.3114 -27.424 70.0712
-      vertex -28.3114 -28.68 70.0712
-    endloop
-  endfacet
-  facet normal -0.924585 0 0.380977
-    outer loop
-      vertex -28.3114 -27.424 70.0712
-      vertex -28.2861 -28.68 70.1326
-      vertex -28.2861 -27.4215 70.1326
-    endloop
-  endfacet
-  facet normal -0.981584 6.72681e-05 0.191031
-    outer loop
-      vertex -29.9132 -28.68 65.0142
-      vertex -30.0882 -27.8567 64.1147
-      vertex -30.1187 -27.912 63.958
-    endloop
-  endfacet
-  facet normal -0.981602 -6.60316e-05 0.190938
-    outer loop
-      vertex -29.9132 -28.68 65.0142
-      vertex -30.1187 -27.912 63.958
-      vertex -30.2431 -28.68 63.3182
-    endloop
-  endfacet
-  facet normal -0.981596 0 0.190972
-    outer loop
-      vertex -30.0882 -27.8567 64.1147
-      vertex -29.9132 -28.68 65.0142
-      vertex -29.9132 -27.8567 65.0142
-    endloop
-  endfacet
-  facet normal 0.892774 -0 0.450506
-    outer loop
-      vertex -20.8895 -28.68 72.6518
-      vertex -20.7145 -27.3303 72.305
-      vertex -20.8895 -27.3303 72.6518
-    endloop
-  endfacet
-  facet normal 0.892279 0.000315423 0.451484
-    outer loop
-      vertex -20.7145 -27.3303 72.305
-      vertex -20.8895 -28.68 72.6518
-      vertex -20.6892 -27.3318 72.255
-    endloop
-  endfacet
-  facet normal 0.892763 -3.82556e-05 0.450526
-    outer loop
-      vertex -20.5145 -28.68 71.9087
-      vertex -20.6892 -27.3318 72.255
-      vertex -20.8895 -28.68 72.6518
-    endloop
-  endfacet
-  facet normal 0.892823 0 0.450408
-    outer loop
-      vertex -20.6892 -27.3318 72.255
-      vertex -20.5145 -28.68 71.9087
-      vertex -20.5145 -27.3538 71.9087
-    endloop
-  endfacet
-  facet normal 0.854839 -0 0.518893
-    outer loop
-      vertex -22.0903 -28.68 74.7555
-      vertex -21.9153 -27.2746 74.4672
-      vertex -22.0903 -27.2746 74.7555
-    endloop
-  endfacet
-  facet normal 0.854399 0.000203446 0.519618
-    outer loop
-      vertex -21.9153 -27.2746 74.4672
-      vertex -22.0903 -28.68 74.7555
-      vertex -21.89 -27.2756 74.4256
-    endloop
-  endfacet
-  facet normal 0.854845 -3.23558e-05 0.518884
-    outer loop
-      vertex -21.7153 -28.68 74.1377
-      vertex -21.89 -27.2756 74.4256
-     
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260925-006 -->
-<!-- TRASH id=20260925-007 date=2026-09-25 kind=file source="openscad_models/haunted_post_office_accent.stl" reason="Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128)." -->
-## 20260925-007 · 2026-09-25 · file · `openscad_models/haunted_post_office_accent.stl`
-**Reason:** Superseded 2026-09-25: Scott asked for a one-story post office with a flatter roof and no turret. This is the gated two-story corner-turret version (commit 9e83128).  
-**Payload:** `data/trash/files/20260925-007__haunted_post_office_accent.stl`
-
-```
-solid OpenSCAD_Model
-  facet normal -1 0 0
-    outer loop
-      vertex 14 -35.6 0
-      vertex 14 -31.6 8
-      vertex 14 -31.6 0
-    endloop
-  endfacet
-  facet normal -1 -0 0
-    outer loop
-      vertex 14 -31.6 8
-      vertex 14 -35.6 0
-      vertex 14 -35.6 8
-    endloop
-  endfacet
-  facet normal -1 0 0
-    outer loop
-      vertex 14 -30.6 0
-      vertex 14 -26.6 8
-      vertex 14 -26.6 0
-    endloop
-  endfacet
-  facet normal -1 -0 0
-    outer loop
-      vertex 14 -26.6 8
-      vertex 14 -30.6 0
-      vertex 14 -30.6 8
-    endloop
-  endfacet
-  facet normal 1 -0 0
-    outer loop
-      vertex 24 -35.6 8
-      vertex 24 -31.6 0
-      vertex 24 -31.6 8
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 24 -31.6 0
-      vertex 24 -35.6 8
-      vertex 24 -35.6 0
-    endloop
-  endfacet
-  facet normal 1 -0 0
-    outer loop
-      vertex 24 -30.6 8
-      vertex 24 -26.6 0
-      vertex 24 -26.6 8
-    endloop
-  endfacet
-  facet normal 1 0 0
-    outer loop
-      vertex 24 -26.6 0
-      vertex 24 -30.6 8
-      vertex 24 -30.6 0
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 14 -35.6 0
-      vertex 18.5 -35.6 8
-      vertex 14 -35.6 8
-    endloop
-  endfacet
-  facet normal 0 -1 -0
-    outer loop
-      vertex 18.5 -35.6 8
-      vertex 14 -35.6 0
-      vertex 18.5 -35.6 0
-    endloop
-  endfacet
-  facet normal 0 -1 0
-    outer loop
-      vertex 19.5 -35.6 0
-      vertex 24 -35.6 8
-      vertex 19.5 -35.6 8
-    endloop
-  endfacet
-  facet normal 0 -1 -0
-    outer loop
-      vertex 24 -35.6 8
-      vertex 19.5 -35.6 0
-      vertex 24 -35.6 0
-    endloop
-  endfacet
-  facet normal 0 1 -0
-    outer loop
-      vertex 24 -26.6 0
-      vertex 14 -26.6 8
-      vertex 24 -26.6 8
-    endloop
-  endfacet
-  facet normal 0 1 0
-    outer loop
-      vertex 14 -26.6 8
-      vertex 24 -26.6 0
-      vertex 14 -26.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 14 -35.6 0
-      vertex 18.5 -31.6 0
-      vertex 18.5 -35.6 0
-    endloop
-  endfacet
-  facet normal -0 0 -1
-    outer loop
-      vertex 18.5 -31.6 0
-      vertex 14 -35.6 0
-      vertex 14 -31.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 19.5 -35.6 0
-      vertex 24 -31.6 0
-      vertex 24 -35.6 0
-    endloop
-  endfacet
-  facet normal -0 0 -1
-    outer loop
-      vertex 24 -31.6 0
-      vertex 19.5 -35.6 0
-      vertex 19.5 -31.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 18.5 -30.6 0
-      vertex 14 -30.6 0
-      vertex 18.5 -27.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 19.5 -27.6 0
-      vertex 24 -30.6 0
-      vertex 19.5 -30.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 24 -30.6 0
-      vertex 19.5 -27.6 0
-      vertex 24 -26.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 18.5 -27.6 0
-      vertex 24 -26.6 0
-      vertex 19.5 -27.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 18.5 -27.6 0
-      vertex 14 -26.6 0
-      vertex 24 -26.6 0
-    endloop
-  endfacet
-  facet normal 0 0 -1
-    outer loop
-      vertex 14 -26.6 0
-      vertex 18.5 -27.6 0
-      vertex 14 -30.6 0
-    endloop
-  endfacet
-  facet normal -0 0 1
-    outer loop
-      vertex 15.4564 -35.0614 8
-      vertex 18.5 -35.6 8
-      vertex 18.5 -34.6877 8
-    endloop
-  endfacet
-  facet normal -0 0 1
-    outer loop
-      vertex 14 -31.6 8
-      vertex 15.4564 -35.0614 8
-      vertex 15.0314 -31.6 8
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 15.4564 -35.0614 8
-      vertex 14 -35.6 8
-      vertex 18.5 -35.6 8
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 14 -35.6 8
-      vertex 15.4564 -35.0614 8
-      vertex 14 -31.6 8
-    endloop
-  endfacet
-  facet normal 0 0 1
-    outer loop
-      vertex 24 -31.6 8
-      vertex 23.3967 -34.0864 8
-      vertex 24 -35.6 8
-    endloop
-  endfacet
-  facet normal 0 -0 1
-    outer loop
-      vertex 23.39
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20260925-007 -->
-<!-- TRASH id=20260926-001 date=2026-09-26 kind=snippet source="openscad_models/haunted_bakery.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
-## 20260926-001 · 2026-09-26 · snippet · `openscad_models/haunted_bakery.scad`
-**Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
-**Payload:** `data/trash/files/20260926-001__snippet.txt`
-
-```
-// The letters are a FLUSH inlay in the board's face, in the accent colour --
-// no relief. Raised 1 mm, every horizontal stroke was a sub-bead slab with
-// an underside; inlaid, the colour does the work and the face stays flat.
-module sign_letters() {
-    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t - 0.8])
-        linear_extrude(0.8) text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
-                                 halign = "center", valign = "center", spacing = 1.06);
-}
-```
-
-<!-- /TRASH 20260926-001 -->
-<!-- TRASH id=20260926-002 date=2026-09-26 kind=snippet source="openscad_models/haunted_post_office.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
-## 20260926-002 · 2026-09-26 · snippet · `openscad_models/haunted_post_office.scad`
-**Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
-**Payload:** `data/trash/files/20260926-002__snippet.txt`
-
-```
-module sign_letters() {
-    face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
-        linear_extrude(0.8) text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
-                                 halign = "center", valign = "center", spacing = 1.04);
-}
-```
-
-<!-- /TRASH 20260926-002 -->
-<!-- TRASH id=20260926-003 date=2026-09-26 kind=snippet source="openscad_models/haunted_general_store.scad" reason="Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too" -->
-## 20260926-003 · 2026-09-26 · snippet · `openscad_models/haunted_general_store.scad`
-**Reason:** Sign letters were a flush colour-only inlay; replaced by a carved, lined sign so they show in a one-colour print too  
-**Payload:** `data/trash/files/20260926-003__snippet.txt`
-
-```
-module sign_letters() {
-    on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t - 0.8])
-        linear_extrude(0.8) text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
-                                 halign = "center", valign = "center", spacing = 1.04);
-}
-```
-
-<!-- /TRASH 20260926-003 -->
-<!-- TRASH id=20260926-004 date=2026-09-26 kind=snippet source="openscad_models/haunted_cemetery.scad" reason="Epitaphs were a flush colour-only inlay; replaced by carved, slate-lined lettering" -->
-## 20260926-004 · 2026-09-26 · snippet · `openscad_models/haunted_cemetery.scad`
-**Reason:** Epitaphs were a flush colour-only inlay; replaced by carved, slate-lined lettering  
-**Payload:** `data/trash/files/20260926-004__snippet.txt`
-
-```
-module stone_inlays() {
-    for (s = STONES) intersection() {
-        place_stone(s) stone_body(s);
-        place_stone(s) translate([0, -st_t/2 + lt, 0]) rotate([90, 0, 0]) linear_extrude(lt + 0.01) stone_inlay_2d(s);
-    }
-}
-```
-
-<!-- /TRASH 20260926-004 -->
 <!-- TRASH id=20260930-001 date=2026-09-30 kind=file source="openscad_models/christmas_village/victorian/shop_house/victorian_shop_house.scad" reason="Replaced by the rounded shop-house (Scott, 2026-09-30: not squared). This is the finished, gated square version (commit 16df111)." -->
 ## 20260930-001 · 2026-09-30 · file · `openscad_models/christmas_village/victorian/shop_house/victorian_shop_house.scad`
 **Reason:** Replaced by the rounded shop-house (Scott, 2026-09-30: not squared). This is the finished, gated square version (commit 16df111).  
@@ -2161,7 +1168,6 @@ _xai_breaker = CircuitBreaker("xai_api", db_module=db)
 ```
 
 <!-- /TRASH 20261025-001 -->
-
 <!-- TRASH id=20261025-002 date=2026-10-25 kind=file source="tools/api_server/frank_hud_mockup.py" reason="Before removing the digital-art workflows from Frank (Scott, 2026-10-25: switching to 3D prints and 3D print files). git history keeps it too." -->
 ## 20261025-002 · 2026-10-25 · file · `tools/api_server/frank_hud_mockup.py`
 **Reason:** Before removing the digital-art workflows from Frank (Scott, 2026-10-25: switching to 3D prints and 3D print files). git history keeps it too.  
@@ -2240,7 +1246,6 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 ```
 
 <!-- /TRASH 20261025-002 -->
-
 <!-- TRASH id=20261025-003 date=2026-10-25 kind=file source="tests/test_coloring_listing_photos.py" reason="Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only)." -->
 ## 20261025-003 · 2026-10-25 · file · `tests/test_coloring_listing_photos.py`
 **Reason:** Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only).  
@@ -2350,7 +1355,6 @@ def test_extract_returns_all_pages_when_at_or_under_the_cap():
 ```
 
 <!-- /TRASH 20261025-003 -->
-
 <!-- TRASH id=20261025-004 date=2026-10-25 kind=file source="tests/test_coloring_theme_registry.py" reason="Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only)." -->
 ## 20261025-004 · 2026-10-25 · file · `tests/test_coloring_theme_registry.py`
 **Reason:** Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only).  
@@ -2454,7 +1458,6 @@ def test_record_used_coloring_subjects_appends_one_entry_per_subject():
 ```
 
 <!-- /TRASH 20261025-004 -->
-
 <!-- TRASH id=20261025-005 date=2026-10-25 kind=file source="tests/test_planner_photo_pipeline.py" reason="Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only)." -->
 ## 20261025-005 · 2026-10-25 · file · `tests/test_planner_photo_pipeline.py`
 **Reason:** Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only).  
@@ -2551,7 +1554,6 @@ def test_no_cfg_and_no_hardcoded_entry_returns_empty_not_crash():
 ```
 
 <!-- /TRASH 20261025-005 -->
-
 <!-- TRASH id=20261025-006 date=2026-10-25 kind=file source="tests/test_knowledge_base_expansion.py" reason="Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only)." -->
 ## 20261025-006 · 2026-10-25 · file · `tests/test_knowledge_base_expansion.py`
 **Reason:** Tests for digital-art features removed from Frank (Scott, 2026-10-25: 3D prints and 3D print files only).  
@@ -2651,4 +1653,182 @@ def test_coloring_page_styles_all_specify_closed_outlines():
 ```
 
 <!-- /TRASH 20261025-006 -->
+<!-- TRASH id=20261030-001 date=2026-10-30 kind=snippet source="openscad_models/valentine_2027/mailboxes/love_letter/cupid.scad" reason="Flat stepped cut-out Cupid replaced by a sculpted relief one at Scott's request ('I want the Cupid to have depth'), 2026-10-30" -->
+## 20261030-001 · 2026-10-30 · snippet · `openscad_models/valentine_2027/mailboxes/love_letter/cupid.scad`
+**Reason:** Flat stepped cut-out Cupid replaced by a sculpted relief one at Scott's request ('I want the Cupid to have depth'), 2026-10-30  
+**Payload:** `data/trash/files/20261030-001__snippet.txt`
 
+```
+// Cupid for the Giant Love Letter (2026-10-30). Scott: "make it a little more
+// fun ... a cartoony Cupid that is a separate print that has a slight divot in
+// the front of the envelope that it would set in"; he picked that and heart
+// stickers. A chubby cherub with curls, small white wings and a white wrap
+// (school-appropriate), drawing a red bow with a heart-tipped arrow, aimed up
+// at the child's name.
+//
+// He prints face up, his back flat on the bed. He is a stepped cut-out: each
+// shape stands at its own height in its own colour, the nearer ones taller, so
+// every level edge is on the 0.2 layer grid and the colours change only where
+// the shapes meet. Four filaments: skin, white, red, dark.
+//
+// He sits in a pocket 1.0 deep in the envelope's front and presses onto two
+// diamond pegs standing in it. His holes have crush ribs, so the fit is snug
+// whatever the printer's hole shrinkage; a drop of glue makes it permanent.
+// About 55 x 62, far over the small-parts size.
+//
+// Local frame: x across (he faces +x), y up, z out of the envelope.
+
+
+// ---------- his shapes, in 2D ----------
+HEAD = [2, 41]; HEAD_R = 11.5;
+TORSO = [0, 20];
+AIM = 22;                        // the bow and arrow tilt up toward the name
+PIV = [4, 26];                   // ...about his chest
+module aimed() translate(PIV) rotate(AIM) translate(-PIV) children();
+function aimp(p) = PIV + [[cos(AIM), -sin(AIM)], [sin(AIM), cos(AIM)]] * (p - PIV);
+module capsule(a, b, r) hull() { translate(a) circle(r, $fn = 40); translate(b) circle(r, $fn = 40); }
+module ellipse(c, rx, ry, a = 0) translate(c) rotate(a) scale([rx, ry]) circle(1, $fn = 72);
+
+module c_head() translate(HEAD) circle(HEAD_R, $fn = 96);
+// curls round the top and back of his head, and one on his forehead
+CURLS = [for (a = [72 : 26 : 202]) [HEAD + 10.6 * [cos(a), sin(a)], 3.6]];
+module c_hair() union() {
+    for (c = CURLS) translate(c[0]) circle(c[1], $fn = 40);
+    intersection() { translate(HEAD) circle(HEAD_R + 0.2, $fn = 96); translate(HEAD + [-5.5, 7.5]) circle(9.0, $fn = 80); }
+    translate(HEAD + [4.8, 10.2]) circle(2.6, $fn = 36);
+}
+module c_torso() ellipse(TORSO, 9.8, 11, 0);
+module c_wrap() intersection() {        // his white wrap, round his middle
+    offset(delta = 0.01) c_torso();
+    translate([-20, -10]) square([40, TORSO.y - 2.5 + 10]);
+}
+module c_legs() { ellipse([-4.8, 8.2], 4.2, 5.4, -12); ellipse([5.0, 7.8], 4.2, 5.4, 14); }
+// wings on his back: three feathers each, the upper wing then the lower
+module c_wings() union() {
+    for (f = [[[-9, 31], [-21, 41], 3.6], [[-9, 28], [-24, 33], 3.4], [[-9, 25], [-22, 25], 3.2]]) capsule(f[0], f[1], f[2]);
+}
+module c_wing_lines() for (f = [[[-12, 33.2], [-19, 38.6]], [[-12, 29.6], [-21, 32.0]], [[-12, 26.4], [-20, 25.8]]]) capsule(f[0], f[1], 0.45);
+// the bow hand holds the bow out in front; the other hand draws the string
+BOW_HAND = [19.5, 27]; DRAW_HAND = [4.5, 27.5];
+module c_arms() aimed() { capsule([5.5, 25], BOW_HAND, 2.4); capsule([-3, 25.5], DRAW_HAND, 2.5); }
+BOW_C = [7, 27]; BOW_R = 13.2; BOW_A = 58;
+module c_bow() aimed() difference() {
+    translate(BOW_C) intersection() {
+        difference() { circle(BOW_R + 0.9, $fn = 120); circle(BOW_R - 0.9, $fn = 120); }
+        polygon([[0, 0], [40 * cos(BOW_A), -40 * sin(BOW_A)], [40, 0], [40 * cos(BOW_A), 40 * sin(BOW_A)]]);
+    }
+}
+function bow_tip(s) = BOW_C + BOW_R * [cos(BOW_A), s * sin(BOW_A)];
+module c_string() aimed() { capsule(bow_tip(1), DRAW_HAND, 0.6); capsule(bow_tip(-1), DRAW_HAND, 0.6); }
+module c_heart2d(s) scale(s / 20) translate([0, -2]) union() {
+    rotate(45) square(12, center = true);
+    for (sx = [-1, 1]) translate([sx * 4.25, 4.25]) circle(6, $fn = 60);
+}
+ARROW_TIP = [33, 27];
+module c_shaft() aimed() capsule([0.5, 27.5], ARROW_TIP - [3, 0], 0.8);
+module c_arrowhead() aimed() translate(ARROW_TIP) rotate(-90) c_heart2d(8.5);
+module c_fletch() aimed() for (s = [-1, 1]) polygon([[-1.8, 27.5], [2.4, 27.5], [-0.6, 27.5 + s * 3.0], [-3.4, 27.5 + s * 3.0]]);
+// his face looks along the arrow: eyes, a smile, rosy cheeks
+module c_eyes() for (e = [[4.2, -0.6], [9.6, -0.4]]) ellipse(HEAD + e, 1.3, 1.8);
+module c_shine() for (e = [[4.6, 0.3], [10.0, 0.5]]) translate(HEAD + e) circle(0.45, $fn = 20);
+module c_smile() for (i = [0 : 7]) let (t0 = -30 + i * 10, t1 = t0 + 10)
+    capsule(HEAD + [7, -3.4] + 3.2 * [sin(t0), -cos(t0) * 0.6], HEAD + [7, -3.4] + 3.2 * [sin(t1), -cos(t1) * 0.6], 0.45);
+module c_wrap_heart() translate(TORSO + [1.5, -5.5]) c_heart2d(4.6);
+module c_cheeks() { translate(HEAD + [10.4, -4.4]) circle(1.5, $fn = 30); translate(HEAD + [1.0, -4.8]) circle(1.6, $fn = 30); }
+
+// ---------- the stack: shape, height, colour (0 skin, 1 white, 2 red, 3 dark) ----------
+// a point's column is the colour of the tallest shape over it, at that height
+//         wings bow  str  legs torso wrap arms fletch shaft head head eyes smile shine cheeks hair wrap-heart
+C_H   = [3.0,  3.6, 2.6, 4.6, 5.2,  5.6, 5.8, 6.2,   6.0,  6.0, 6.2, 6.4, 6.4,  6.4,  6.4,   6.8, 6.0];
+C_COL = [1,    3,   3,   0,   0,    1,   0,   2,     3,    2,   0,   3,   3,    1,    2,     3,   2];
+module c_item(i) {
+    if      (i == 0)  c_wings();
+    else if (i == 1)  c_bow();
+    else if (i == 2)  c_string();
+    else if (i == 3)  c_legs();
+    else if (i == 4)  c_torso();
+    else if (i == 5)  c_wrap();
+    else if (i == 6)  c_arms();
+    else if (i == 7)  c_fletch();
+    else if (i == 8)  c_shaft();
+    else if (i == 9)  c_arrowhead();
+    else if (i == 10) c_head();
+    else if (i == 11) c_eyes();
+    else if (i == 12) c_smile();
+    else if (i == 13) c_shine();
+    else if (i == 14) c_cheeks();
+    else if (i == 15) c_hair();
+    else if (i == 16) c_wrap_heart();
+}
+module c_column(i) difference() {
+    c_item(i);
+    for (j = [0 : len(C_H) - 1]) if (j != i && (C_H[j] > C_H[i] || (C_H[j] == C_H[i] && j > i))) c_item(j);
+}
+module cupid_outline() union() for (i = [0 : len(C_H) - 1]) c_item(i);
+// the feathers' lines are grooves 0.4 deep, 0.9 wide, cut into the wings' top
+module wing_grooves() translate([0, 0, C_H[0] - 0.4]) linear_extrude(1) c_wing_lines();
+// his holes take the envelope's pegs; under his head and his middle, where he
+// is thickest
+PEGS = [HEAD + [-2, -1], TORSO + [-1, -5]];
+// A peg is a wedge standing out of the upright wall: flat on top, its
+// underside climbing from the wall at 37 deg, so it grows out of the wall
+// layer by layer. A diamond peg began each one as a sliver in mid-air at its
+// lower point, and the slicer propped both from the bed (2026-10-30).
+PEG_W = 2.4;                     // across
+PEG_L = 2.2;                     // how far it stands from the pocket floor
+PEG_TIP = 1.6;                   // its height at the tip
+PEG_ROOT = PEG_TIP + PEG_L / tan(37);   // and at the wall, 4.5
+// the peg in his frame: x across, y up (top at y = 0), z out from the floor
+module peg_shape(c = 0) hull() {
+    translate([-PEG_W / 2 - c, -PEG_ROOT - c, 0]) cube([PEG_W + 2 * c, PEG_ROOT + 2 * c, 0.01]);
+    translate([-PEG_W / 2 - c, -PEG_TIP - c, PEG_L + c - 0.01]) cube([PEG_W + 2 * c, PEG_TIP + 2 * c, 0.01]);
+}
+// where a peg's top edge sits, for a peg centred on p
+function peg_at(p) = p + [0, PEG_ROOT / 2];
+HOLE_C = 0.25;                   // clearance round the peg; the ribs take it up
+RIB_R = 0.35; RIB_IN = 0.1;      // ribs on the side walls reach 0.1 into the peg
+// His hole is the peg's full root height all the way in, straight-walled:
+// the wedge's 37 deg underside is 53 deg in him, printed face up, and copying
+// it drew 330 support moves (2026-10-30). The peg still sits on the hole's
+// sides (the ribs), its top and its root.
+HOLE = [PEG_W + 2 * HOLE_C, PEG_ROOT + 2 * HOLE_C];
+HOLE_D = PEG_L + HOLE_C;
+ROOF = (HOLE.x / 2) / tan(37);   // a hipped roof at 37 deg on every side
+module cupid_hole() translate([0, HOLE_C - HOLE.y / 2, 0]) difference() {
+    union() {
+        translate([-HOLE.x / 2, -HOLE.y / 2, -0.01]) cube([HOLE.x, HOLE.y, HOLE_D + 0.01]);
+        translate([0, 0, HOLE_D - 0.01]) hull() {
+            translate([-HOLE.x / 2, -HOLE.y / 2, 0]) cube([HOLE.x, HOLE.y, 0.01]);
+            translate([-0.01, -(HOLE.y / 2 - HOLE.x / 2), ROOF]) cube([0.02, HOLE.y - HOLE.x, 0.01]);
+        }
+        // the mouth opens 0.3 against the first layer's squash
+        hull() {
+            translate([-HOLE.x / 2 - 0.3, -HOLE.y / 2 - 0.3, -0.01]) cube([HOLE.x + 0.6, HOLE.y + 0.6, 0.01]);
+            translate([-HOLE.x / 2, -HOLE.y / 2, 0.4]) cube([HOLE.x, HOLE.y, 0.01]);
+        }
+    }
+    // crush ribs, two on each side wall, reaching RIB_IN into the peg
+    for (sx = [-1, 1], y = [HOLE.y / 2 - HOLE_C - PEG_TIP * 0.3, HOLE.y / 2 - HOLE_C - PEG_TIP * 0.8])
+        translate([sx * (PEG_W / 2 + RIB_R - RIB_IN), y, -1]) cylinder(r = RIB_R, h = HOLE_D + ROOF + 2, $fn = 16);
+}
+
+// ---------- the colour parts, as printed ----------
+module cupid_colour(c) difference() {
+    union() for (i = [0 : len(C_H) - 1]) if (C_COL[i] == c) linear_extrude(C_H[i]) c_column(i);
+    for (p = PEGS) translate(peg_at(p)) cupid_hole();
+    wing_grooves();
+}
+module cupid_skin()  cupid_colour(0);
+module cupid_white() cupid_colour(1);
+module cupid_red()   cupid_colour(2);
+module cupid_dark()  cupid_colour(3);
+// merged, for the gate: every shape at full height overlaps the next, so the
+// union closes
+module cupid_print() difference() {
+    union() for (i = [0 : len(C_H) - 1]) linear_extrude(C_H[i]) c_item(i);
+    for (p = PEGS) translate(peg_at(p)) cupid_hole();
+    wing_grooves();
+}
+```
+
+<!-- /TRASH 20261030-001 -->
