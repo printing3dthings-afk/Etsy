@@ -1,0 +1,561 @@
+{
+ "layers": 120,
+ "model_volume_mm3": 38523.5,
+ "dropped_mm3": 0.01,
+ "filled_mm3": 0.51,
+ "colour_mm3": 0.0,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.8,
+    -23.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.8,
+    25.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.026,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.8,
+    -23.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.026,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.0,
+    -23.3
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.025,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.8,
+    26.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.023,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -21.8,
+    -9.1
+   ],
+   "side": "left",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.023,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -20.2,
+    -9.1
+   ],
+   "side": "left",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.023,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.1,
+    25.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.023,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    20.2,
+    -9.1
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.023,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    21.8,
+    -9.1
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -21.8,
+    -9.9
+   ],
+   "side": "left",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -20.2,
+    -9.9
+   ],
+   "side": "left",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.8,
+    -24.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    0.8,
+    -24.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    0.8,
+    26.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    0.8,
+    25.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    20.2,
+    -9.9
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.022,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    21.8,
+    -9.9
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.016,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.0,
+    27.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.012,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -21.0,
+    -8.5
+   ],
+   "side": "left",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.012,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -21.0,
+    -10.5
+   ],
+   "side": "left",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.012,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    0.0,
+    -25.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.012,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    21.0,
+    -8.5
+   ],
+   "side": "right",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.012,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    21.0,
+    -10.5
+   ],
+   "side": "right",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3E8E4A",
+   "tool": 2,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    22.8,
+    23.0
+   ],
+   "layers": 1,
+   "at_xy": [
+    -15.2,
+    21.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3E8E4A",
+   "tool": 2,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    22.8,
+    23.0
+   ],
+   "layers": 1,
+   "at_xy": [
+    15.2,
+    21.4
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#3E8E4A",
+   "tool": 2,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    22.6,
+    22.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -13.1,
+    20.4
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.12,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#3E8E4A",
+   "tool": 2,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    22.6,
+    22.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    13.1,
+    20.4
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.12,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3E8E4A",
+   "tool": 2,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    22.8,
+    23.0
+   ],
+   "layers": 1,
+   "at_xy": [
+    -13.2,
+    20.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.11,
+   "flag": false
+  }
+ ]
+}
