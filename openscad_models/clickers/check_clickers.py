@@ -10,6 +10,8 @@
   meet nothing in the lower print
 - the plate is there: solid just outside the 14 mm cutout, open just inside
 - the socket is open where the stem goes and closed above it
+- the tin's lid screws on (2026-10-30): pulled straight up it hits the tin's
+  thread, so it can't lift off; turned back along the thread it touches nothing
 
     python3 check_clickers.py            both
     python3 check_clickers.py tin|jar
@@ -93,6 +95,25 @@ which = sys.argv[1] if len(sys.argv) > 1 else "all"
 if which in ("all", "tin"):
     S = 1.6 + 5.0 + 3.3 + 0.6
     check("gingerbread_tin", "tin_print", "lid_print", "cookie_print", S, S + 1.5 + 6.8)
+    # the screw lid, against gingerbread_tin_clicker.scad's TH_P (right hand: the
+    # lid rises TH_P a turn as it turns anticlockwise, seen from above)
+    TH_P = 2.7
+    lo = load(str(HERE / "gingerbread_tin" / "parts" / "tin_print.stl"))
+    up = load(str(HERE / "gingerbread_tin" / "parts" / "lid_print.stl")).translate([0, 0, S])
+    for dz in (0.5, 1.0):
+        v = overlap(lo, up.translate([0, 0, dz]))
+        ok = v > 1.0
+        print(f"  {'ok  ' if ok else 'FAIL'}  lid pulled {dz} mm straight up hits the thread: {v:.1f} mm3")
+        if not ok:
+            fails.append(f"lid lifts {dz} mm without the thread holding it")
+    for a in (30, 90, 180, 360, 540):
+        report(f"lid unscrewed {a} deg along the thread", overlap(lo, up.rotate([0, 0, a]).translate([0, 0, a / 360 * TH_P])))
+    # and the control: turned the other way while rising, it does collide, so the
+    # zeros above are the thread's path, not a lid that clears the tin anyway
+    v = overlap(lo, up.rotate([0, 0, -30]).translate([0, 0, 30 / 360 * TH_P]))
+    print(f"  {'ok  ' if v > 1.0 else 'FAIL'}  lid turned 30 deg the wrong way while rising collides: {v:.1f} mm3")
+    if v <= 1.0:
+        fails.append("the unscrew check would pass without a thread")
 if which in ("all", "jar"):
     S = 30.0
     check("cookie_jar", "jar_print", "top_print", "gb_print", S, S + 1.5 + 6.8)

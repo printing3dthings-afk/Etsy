@@ -31,7 +31,7 @@ real keyboard switch, so it sounds and feels like one.
 **Assembly**
 1. Push the switch down into the lid, through the cookie-shaped hole, until it
    snaps in.
-2. Set the lid on the tin.
+2. Screw the lid onto the tin, clockwise, until it stops.
 3. Press the cookie onto the switch.
 
 The cookie sits in a nest shaped like him, so he goes down straight wherever

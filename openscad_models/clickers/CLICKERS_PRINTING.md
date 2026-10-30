@@ -41,10 +41,36 @@ the detail is raised.
 - **Tin:** a rolled bead round the foot and another round the top edge, like a
   real tin, and pairs of white dots between the snowflakes.
 
+**The lid screws on (2026-10-30).** Your first test print clicked fine, but
+the lid sat loose. It now has a thread, about 1.6 turns, and screws down until
+the switch plate sits on the tin exactly where it sat before. The switch, the
+cookie and the nest are unchanged.
+- **Why a screw and not a snap:** a snap ring on a 61 mm tin with a 1.2 mm
+  wall either cracks or lets go. The tin is round, with its snowflakes all the
+  way round, so the lid doesn't need lining up.
+- **The thread:**
+  - 2.7 mm pitch, 0.7 mm deep, 0.2 mm clearance.
+  - Its flanks are 35° from upright, not a standard thread's 60°, so neither
+    part needs support.
+  - Both ends are chamfered so it starts easily.
+- **What I fixed on the way:** my first thread sat 1.4 mm further in. That
+  left only 0.5 mm of lid wall where the cookie's hands and feet reach out in
+  the nest, and the slicer propped it with 750 support moves. The thread now
+  keeps 1.2 mm of wall to the nest and 1.2 mm in the tin's collar outside it.
+  The .scad stops with an error if either gets thinner.
+- **What changed on the outside:**
+  - The tin's collar, which carries the thread, stands 2.4 mm taller, and the
+    lid's sloped band is that much shorter.
+  - The snowflakes moved up 1.6 mm, to stay centred on the taller wall.
+  - The tin and the cookie are the same height overall.
+- **The storage canister isn't affected.** Its closed lid is built on the old
+  lid and still seats on the canister by its cone. I checked it exports
+  identically, 0.07 mm³ apart.
+
 **Put it together:** push the switch into the lid from above, through the
-cookie-shaped nest, until its clips snap under the plate. Set the lid on the
-tin; the switch's legs drop into the tin's well. Press the cookie onto the
-switch's cross. The nest is the cookie's own outline with 0.6 mm to spare, so
+cookie-shaped nest, until its clips snap under the plate. Screw the lid onto
+the tin, clockwise, until it stops; the switch's legs turn freely in the tin's
+round well. Press the cookie onto the switch's cross. The nest is the cookie's own outline with 0.6 mm to spare, so
 it guides him straight down even if you press his head or a foot.
 
 ## Gingerbread Tin Canister (`gingerbread_tin/gingerbread_tin_canister.3mf`)

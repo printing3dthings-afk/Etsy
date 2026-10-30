@@ -6,6 +6,11 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 export OPENSCADPATH="$(cd ../../assets/openscad_libs && pwd)"
+# OPENSCAD=<binary> picks the engine. Since the tin's screw lid (2026-10-30) its
+# tin and lid parts are twisted extrusions, slow under 2021's CGAL; they were
+# exported with OpenSCAD 2026 (--backend=manifold) and cleaned with
+# ../valentine_2027/mailboxes/clean_parts.py.
+OSC=${OPENSCAD:-openscad}
 want=${1:-all}
 run() {   # dir scad part [out-suffix] [extra -D]
     local d=$1 f=$2 p=$3 o=${4:-$3} x=${5:-}
@@ -13,7 +18,7 @@ run() {   # dir scad part [out-suffix] [extra -D]
     mkdir -p $d/parts $d/logs
     [ -s "$out" ] && [ "$out" -nt "$d/$f" ] && [ "$out" -nt clicker_lib.scad ] && return
     echo "  $d $o"
-    openscad --export-format binstl -D "part=\"$p\"" $x -o "$out.tmp.stl" "$d/$f" > "$d/logs/$o.log" 2>&1 \
+    $OSC --export-format binstl -D "part=\"$p\"" $x -o "$out.tmp.stl" "$d/$f" > "$d/logs/$o.log" 2>&1 \
         && mv "$out.tmp.stl" "$out" || { echo "FAILED $d $o"; tail -3 "$d/logs/$o.log"; }
 }
 if [ $want = all ] || [ $want = tin ]; then

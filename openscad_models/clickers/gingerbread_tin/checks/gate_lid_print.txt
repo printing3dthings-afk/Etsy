@@ -3,11 +3,11 @@ parts/lid_print.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  FAIL  min_wall: 1st pct 0.90mm, median 12.30mm (floor 1.2mm); 0.48% below one bead
-  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 13.8mm printed of 13.74mm
+  FAIL  min_wall: 1st pct 0.00mm, median 8.62mm (floor 1.2mm); 3.01% below one bead
+  FAIL  no_unsupported_overhang: slicer: 753 support moves, 0 overhang perimeters, 13.8mm printed of 13.74mm
   ok    geometry_survives_slicing: printed height 13.8mm vs modelled 13.74mm
-  ok    flat_base: 23.73 cm2 of contact = 63.4% of footprint (floor 5%)
+  ok    flat_base: 21.29 cm2 of contact = 56.8% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=11.4mm; 8 layer(s) under the 4.0s cooling threshold; 2894mm2 on the plate; aspect 0.2
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=11.6mm; 15 layer(s) under the 4.0s cooling threshold; 2732mm2 on the plate; aspect 0.2
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
 PRODUCT GATE FAILED

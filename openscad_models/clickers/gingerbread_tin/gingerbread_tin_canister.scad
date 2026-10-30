@@ -102,7 +102,9 @@ module pod() difference() {
     translate([0, 0, S - POD_H]) cylinder(h = POD_H, r1 = POD_R, r2 = SPIG_R, $fn = 240);
     pocket();
 }
-module lid_closed() union() { lid(); pod(); }
+// the clicker's lid as it was before it took a thread (2026-10-30): this lid
+// seats on the canister by its cone, not by a screw
+module lid_closed() union() { lid_seated(); pod(); }
 
 module at_lid() translate([0, 0, LID_S - S]) children();
 module print_frame() translate([0, 0, POD_H - S]) children();

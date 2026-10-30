@@ -4,8 +4,8 @@
 //
 // Three prints and one plate-mount Cherry MX (or clone) switch:
 //   the tin     a cup; its open well takes the switch's body and pins
-//   the lid     sits on the tin; the switch plate is its floor, flat on the
-//               bed, and the cookie's nest is cut down to it
+//   the lid     screws onto the tin; the switch plate is its floor, flat on
+//               the bed, and the cookie's nest is cut down to it
 //   the cookie  prints face up; its underside hides the switch housing and
 //               carries the socket, so nothing hangs in the air
 //
@@ -135,16 +135,74 @@ module cookie_green() { gumdrop(btn_y[0]); gumdrop(btn_y[2]); }
 module cookie() { cookie_gross(); pupils(); }
 
 // ---------- the tin and its lid ----------
-// The tin is a cup with a 1.2 lip round its top (0.6 failed the gate's wall
-// floor); the lid's spigot drops 2 mm inside the lip, then flares out to the
-// lid band at 40 deg (2.0 out over 2.4 up): a square step would be a level
-// ledge all round. A real tin's rolled beads run round its foot and its top
-// edge; the top one climbs out at 40 deg (0.5 over 0.6), the foot one stands
-// on the bed.
+// The lid screws on (Scott, 2026-10-30, after the first test print: "the lid
+// must positively attach ... it currently just sits loose"). A screw rather
+// than a snap: a snap ring on a 61 mm, 1.2 mm wall either cracks or lets go,
+// and the tin is round with its snowflakes all the way round, so the lid needs
+// no lining up. It screws down until its floor, the switch plate, sits on the
+// tin's top face at S, where it sat before; the plate, the switch and the
+// cookie are where they were.
+//
+// The thread: right-hand, single start, 2.7 pitch, 0.7 deep, 0.2 clear all
+// round, 4.4 of engagement (1.6 turns). Its flanks are 35 deg from vertical,
+// not a standard 60 deg thread's 60, so neither the lid's thread nor the
+// tin's prints over air. Drawn as the thread's own cross-section twisted up
+// the axis, which is the helix exactly.
+// Its radius is pinned from both sides. The cookie's hands and feet reach 26.7
+// out in the nest, so the lid's thread root stays 1.2 outside that (27.9): with
+// the root at 27.2 the wall there was 0.5, dropped out of the slice, and drew
+// 750 support moves (2026-10-30). And the tin's collar keeps 1.2 outside the
+// thread it cuts (28.8 to TR).
+TH_P = 2.7; TH_D = 0.7; TH_C = 0.2; TH_H = 4.4; TH_A = 35;
+TH_R = 28.6;                          // the lid thread's crest; its root is TH_R - TH_D
+TH_F = TH_D / tan(TH_A);              // a flank's rise, 1.0
+TH_FLAT = (TH_P - 2 * TH_F) / 2;      // crest and root flats, 0.35
+BORE = TH_R - TH_D + TH_C - 0.1;      // the tin's bore; the thread cut sets its crests
+assert(TH_R - TH_D >= 26.7 + 1.2 - 0.001, "the lid's thread root is too close to the cookie's nest");
+assert(TR - (TH_R + TH_C) >= 1.2 - 0.001, "the tin's collar is too thin outside the thread");
+function th_r(R, u) = let (r0 = R - TH_D)
+    u < TH_FLAT ? r0 :
+    u < TH_FLAT + TH_F ? r0 + TH_D * (u - TH_FLAT) / TH_F :
+    u < 2 * TH_FLAT + TH_F ? R :
+    R - TH_D * (u - 2 * TH_FLAT - TH_F) / TH_F;
+module thread(R, h) linear_extrude(h, twist = -360 * h / TH_P, slices = ceil(h / TH_P * 96), convexity = 4)
+    polygon([for (i = [0 : 359]) let (t = i, u = t / 360 * TH_P) th_r(R, u) * [cos(t), sin(t)]]);
+// the lid's thread: its first 1.14 is chamfered at TH_A so it finds the tin's
+module lid_thread() translate([0, 0, S]) intersection() {
+    thread(TH_R, TH_H);
+    cylinder(h = TH_H, r1 = TH_R - TH_D, r2 = TH_R - TH_D + TH_H * tan(TH_A), $fn = 240);
+}
+// the tin's thread, cut a whole pitch below S so its phase matches the lid's,
+// then clipped at S; its mouth is countersunk at TH_A
+module tin_thread_cut() {
+    intersection() {
+        translate([0, 0, S - TH_P]) thread(TH_R + TH_C, TH_H + TH_P + 0.01);
+        translate([0, 0, S - 0.01]) cylinder(h = TH_H + 0.03, r = TR, $fn = 60);
+    }
+    translate([0, 0, S + TH_H - 1.0 / tan(TH_A)]) cylinder(h = 1.0 / tan(TH_A) + 0.01, r1 = TH_R - TH_D + TH_C, r2 = TH_R - TH_D + TH_C + 1.0, $fn = 240);
+}
+// The tin is a cup whose collar carries the thread. A real tin's rolled beads
+// run round its foot and its top edge; the top one climbs out at 40 deg (0.5
+// over 0.6), the foot one stands on the bed. The collar is 1.8 thick outside
+// the thread.
 module tin_solid() rotate_extrude($fn = 240) polygon([
-    [0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, S - 0.6], [TR + 0.5, S],
-    [TR + 0.5, S + JOINT], [TR - LIP_W, S + JOINT], [TR - LIP_W, S], [0, S]]);
+    [0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, S + TH_H - 0.6], [TR + 0.5, S + TH_H],
+    [BORE, S + TH_H], [BORE, S], [0, S]]);
+// Above the thread the lid flares out to its band at 39 deg, clear of the
+// collar's top: a square step would be a level ledge all round. At 40.0 it
+// sits on the slicer's edge; the old lid's flare was 39.8.
+FL_A = 39;
+FLARE_Z = S + TH_H + 0.2;
+FLARE_TOP = FLARE_Z + (LID_R - (TH_R - TH_D)) / tan(FL_A);
+assert(FLARE_TOP < RIM - 0.8 + 0.16, "the lid's flare runs into its top bead");
 module lid_solid() rotate_extrude($fn = 240) polygon(concat(
+    [[0, S], [TH_R - TH_D, S], [TH_R - TH_D, FLARE_Z], [LID_R, FLARE_TOP]],
+    [for (k = [0 : 4]) let (z = RIM - 0.8 + (k + 1) * 0.16) [LID_R - 0.8 + sqrt(max(0, 0.64 - pow(z - (RIM - 0.8), 2))), z]],
+    [[0, RIM]]));
+// The lid as it was before the thread: a spigot dropping 2 mm inside a lip,
+// then a flare. The storage canister's closed lid is built on it and still
+// seats on the canister this way.
+module lid_solid_seated() rotate_extrude($fn = 240) polygon(concat(
     [[0, S], [SPIG_R, S], [SPIG_R, S + JOINT], [LID_R, S + JOINT + 2.4]],
     [for (k = [0 : 4]) let (z = RIM - 0.8 + (k + 1) * 0.16) [LID_R - 0.8 + sqrt(max(0, 0.64 - pow(z - (RIM - 0.8), 2))), z]],
     [[0, RIM]]));
@@ -159,10 +217,12 @@ module snowflake2d(arm = 3.6) {
 SNOW_N = 10;
 SNOW_ARM = 3.2;
 // Clear of both beads, skirt and all: the foot bead tops out at 1.4, the skirt
-// reaches 1.05 under the lowest arm, the top bead starts at S - 0.6. At arm 3.6
+// reaches 1.05 under the lowest arm, the top bead starts at S + TH_H - 0.6. At arm 3.6
 // the bottom arms ran into the foot bead and were shaved to slivers: 35
 // fidelity flags at z 1.4-2.0 (2026-10-29).
-SNOW_Z = 1.4 + 1.05 + SNOW_ARM + 0.45;
+// Raised 1.6 with the thread's collar (2026-10-30), which put 2.0 more wall
+// above them; 1.6 is whole layers, so every flake prints as it did.
+SNOW_Z = 1.4 + 1.05 + SNOW_ARM + 0.45 + 1.6;
 // Raised flat on a tangent plane, 0.35 inside the wall: across a 7.3 mm flake
 // the wall curves away 0.22, so it meets the wall all round and stands 0.7
 // proud at its middle. The skirt under every stroke climbs SH, so none of it overhangs.
@@ -203,9 +263,10 @@ module nest() {
 // over the gate's 1.2 floor, as on the nativity.
 module tin_mark() translate([0, -19, 0]) obc_engrave(6, depth = 0.8, inset = 0.15, ridges = false);
 
-module tin() difference() { tin_solid(); mx_well_cut(S); tin_mark(); }
+module tin() difference() { tin_solid(); mx_well_cut(S); tin_mark(); tin_thread_cut(); }
 module tin_snow() difference() { tin_snow_raw(); tin_solid(); }
-module lid() union() { difference() { lid_solid(); nest(); mx_plate_cut(S); } lid_berries(); }
+module lid() union() { difference() { union() { lid_solid(); lid_thread(); } nest(); mx_plate_cut(S); } lid_berries(); }
+module lid_seated() union() { difference() { lid_solid_seated(); nest(); mx_plate_cut(S); } lid_berries(); }
 
 module assembly(press = 0) {
     color("#B3262E") tin();
@@ -232,7 +293,7 @@ else if (part == "cookie")       cookie();
 else if (part == "cookie_icing") cookie_icing();
 else if (part == "cookie_red")   cookie_red();
 else if (part == "cookie_green") cookie_green();
-else if (part == "tin_print")    union() { tin(); tin_snow(); }
+else if (part == "tin_print")    union() { tin(); tin_snow_raw(); }   // the raw flakes overlap the wall, so the merge closes
 else if (part == "cookie_print") union() { cookie(); cookie_icing(); cookie_red(); cookie_green(); }
 else if (part == "pressed")      assembly(mx_travel);
 else                             assembly(0);
