@@ -1,6 +1,6 @@
 {
  "layers": 30,
- "model_volume_mm3": 69532.4,
+ "model_volume_mm3": 69518.0,
  "dropped_mm3": 0.0,
  "filled_mm3": 0.0,
  "colour_mm3": 0.02,
@@ -10,15 +10,15 @@
    "kind": "colour",
    "colour": "#D7263D",
    "tool": 3,
-   "volume_mm3": 0.008,
+   "volume_mm3": 0.009,
    "z_mm": [
     3.0,
     4.6
    ],
    "layers": 8,
    "at_xy": [
-    7.3,
-    33.1
+    12.0,
+    32.9
    ],
    "side": "front",
    "max_width_mm": 0.05,
@@ -36,8 +36,8 @@
    ],
    "layers": 8,
    "at_xy": [
-    12.8,
-    33.1
+    6.9,
+    32.9
    ],
    "side": "front",
    "max_width_mm": 0.05,

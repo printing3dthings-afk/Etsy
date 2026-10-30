@@ -3,7 +3,7 @@ love_monster/parts/face_print.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.98mm, median 23.70mm (floor 1.2mm); 0.00% below one bead
+  ok    min_wall: 1st pct 1.84mm, median 22.07mm (floor 1.2mm); 0.00% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 6.0mm printed of 6.0mm
   ok    geometry_survives_slicing: printed height 6.0mm vs modelled 6.0mm
   ok    flat_base: 199.72 cm2 of contact = 90.0% of footprint (floor 5%)
