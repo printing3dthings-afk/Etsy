@@ -5,9 +5,11 @@ to start getting into detail prints." All four kinds: finer village buildings,
 figurines and miniatures, tabletop terrain, small decorative items. Stock
 0.4 mm nozzle only. Sold both ways: as files and as prints made here.
 
-The pilot that uses this standard is the Victorian Santa's Workshop v2
-(`../christmas_village/victorian/santas_workshop/v2/`). Nothing else changes
-until Scott has seen the pilot (CLAUDE.md, "Detail-print method — scope rule").
+The pilot that used this standard is the Victorian Santa's Workshop v2
+(`../christmas_village/victorian/santas_workshop/v2/`). **Scott approved it on
+2026-10-30, so this is now the standard for every new design.** Existing
+designs are reworked to it only after Dec 25, top sellers first (CLAUDE.md,
+"Detail-print method — APPROVED").
 
 ## Where the numbers come from
 

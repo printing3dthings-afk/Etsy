@@ -3964,8 +3964,19 @@ When any API call returns 401 and the refresh endpoint also returns 401:
   Iterating on an already-approved design needs no new approval. See the matching
   standing rule in `.claude/skills/3d-print-design/SKILL.md`.
 
-- **Detail-print method — scope rule (Scott, 2026-10-23).** Scott asked for a
-  step up in fine-detail design. Until he decides otherwise:
+- **Detail-print method — APPROVED (Scott, 2026-10-30: "V2").** He saw the
+  Santa's Workshop v2 pilot and chose it. From now on:
+  - **Every NEW design follows `openscad_models/detail_calibration/
+    DETAIL_STANDARD.md`.** Its measured sizes are the floor for relief,
+    grooves, lettering and joints, alongside the printability rules above.
+  - **Existing designs stay as they are until after Dec 25.** Then rework
+    them starting with the top sellers by Etsy sales data, each one as a v2
+    beside the original, never over it.
+  - **Santa's Workshop v2 is the version to print**
+    (`.../santas_workshop/v2/victorian_santas_workshop_v2.3mf`). The v1 files
+    stay where they are.
+
+  The rule as it stood during the pilot (2026-10-23 to 10-30):
   - **Do NOT rework the existing Christmas designs before the holidays.** They
     are listed, and changing their files now risks breaking live listings.
   - **Pilot the new method on ONE building only: the Victorian Santa's

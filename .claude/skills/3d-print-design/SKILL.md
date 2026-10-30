@@ -86,6 +86,12 @@ thumbnails**. Two requirements follow:
 approaches** — different forms, not variations on one idea — one sentence each,
 *before writing any code*. Scott picks. Then build.
 
+**Detail is sized by `openscad_models/detail_calibration/DETAIL_STANDARD.md`**
+(Scott approved it on 2026-10-30 after the Santa's Workshop v2 pilot). Every
+new design's relief, grooves, lettering and joints use its measured minimums
+on the 0.4 mm nozzle. Don't guess them. Existing designs aren't reworked to it
+before Dec 25.
+
 **Printability is a hard constraint, not a tradeoff:** wall ≥1.2mm, no
 unsupported overhang past 45°, flat base with a real footprint, no floating
 geometry, watertight and manifold. **If a form cannot meet those, discard the

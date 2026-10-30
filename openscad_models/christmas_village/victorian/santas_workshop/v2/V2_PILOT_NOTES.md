@@ -8,6 +8,10 @@ choose to swap in. Nothing here is listed.
 
 The method is `../../../../detail_calibration/DETAIL_STANDARD.md`.
 
+**Decision, 2026-10-30: Scott chose v2.** `victorian_santas_workshop_v2.3mf`
+is now the version to print. The v1 files one folder up stay where they are,
+unchanged. The method is the standard for new designs from here on.
+
 ## What v2 adds
 
 | detail | where | colour | sized by |
