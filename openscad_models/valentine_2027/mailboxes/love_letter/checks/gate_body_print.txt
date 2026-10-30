@@ -1,0 +1,13 @@
+love_letter/parts/body_print.stl
+  ok    fits_plate: 180.0 x 67.8 x 122.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.39mm, median 2.40mm (floor 1.2mm); 0.01% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 122.0mm printed of 122.0mm
+  ok    geometry_survives_slicing: printed height 122.0mm vs modelled 122.0mm
+  ok    flat_base: 107.68 cm2 of contact = 88.2% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.7mm widest unsupported span at z=1.0mm; 0 layer(s) under the 4.0s cooling threshold; 12974mm2 on the plate; aspect 0.64
+  note  texture (advisory, never fails the gate): rugosity 1.022 -- light relief, at or above the corpus p25
+PRODUCT GATE PASSED
