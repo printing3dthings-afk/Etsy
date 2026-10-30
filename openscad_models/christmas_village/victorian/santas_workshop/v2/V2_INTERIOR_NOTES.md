@@ -145,10 +145,22 @@ frames, like the cocoa café v2's.
   7,665 on the listed v1, in the same four places at the same heights. v1's
   CGAL union, like v2's, slices to none. That merge is used only for renders
   and for comparing v1 with v2.
-- **Print fidelity in white** (every detail kept by the slicer): still
-  running at the time of writing; it takes most of a day on this building.
-  It started before the mark changed, so it covers everything but the mark.
-  The gate's slice already shows nothing dropped in height and no supports.
+- **Print fidelity in white** (`tools/print_fidelity.py` on the closed CGAL
+  union, finished 2026-10-30, 968 layers): 7.0 mm³ of 360,099 mm³ not
+  printed, 0.05 mm³ printed that wasn't modelled. **19 flags, none over
+  0.42 mm³, all cosmetic:**
+  - 3 at the rose window. The frame is sheared upward so its underside
+    needs no support. Below the centre, its inner edge feathers out to a
+    point, and the last 0.28 mm of it is too thin to extrude: 0.41, 0.37
+    and 0.07 mm³. The frame, glass and spokes all print.
+  - 16 at the eight turret windows, two per sill. Each sill is a flat strip
+    wrapped onto a round turret, so its ends meet the drum as knife edges.
+    Two layers, 0.22 mm wide, 0.035-0.051 mm³ each. The rest of each
+    sill prints.
+  - This run covers everything but the engraved mark: it started before
+    the mark changed from inlaid to engraved. Earlier runs on the loose
+    part meshes gave nonsense, because those meshes aren't closed. The
+    tool now refuses them, so the CGAL union is the right input.
 
 ## Renders (white, design review, not photos)
 
