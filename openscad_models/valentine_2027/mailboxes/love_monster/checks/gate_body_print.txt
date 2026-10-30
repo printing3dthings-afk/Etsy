@@ -1,0 +1,13 @@
+love_monster/parts/body_print.stl
+  ok    fits_plate: 160.0 x 123.0 x 146.4 mm vs 256 x 256 x 256
+  FAIL  watertight: open edges -- the slicer guesses at the holes
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.00mm, median 2.40mm (floor 1.2mm); 0.26% below one bead
+  FAIL  no_unsupported_overhang: slicer: 30182 support moves, 901 overhang perimeters, 146.4mm printed of 146.41mm
+  ok    geometry_survives_slicing: printed height 146.4mm vs modelled 146.41mm
+  FAIL  flat_base: 0.14 cm2 of contact = 0.1% of footprint (floor 5%)
+  FAIL  stable: centre of mass is 59.7mm from the nearest contact, base reach 40.4mm -- it tips
+  note  risk (uncalibrated, never fails the gate): 164.6mm widest unsupported span at z=7.6mm; 77 layer(s) under the 4.0s cooling threshold; 6304mm2 on the plate; aspect 0.81
+  note  texture (advisory, never fails the gate): rugosity 1.022 -- light relief, at or above the corpus p25
+PRODUCT GATE FAILED

@@ -1,0 +1,13 @@
+love_monster/parts/fur.stl
+  ok    fits_plate: 165.6 x 125.6 x 34.4 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.80mm, median 2.40mm (floor 1.2mm); 0.02% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 34.4mm printed of 34.4mm
+  ok    geometry_survives_slicing: printed height 34.4mm vs modelled 34.4mm
+  ok    flat_base: 199.00 cm2 of contact = 95.7% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=1.6mm; 2 layer(s) under the 4.0s cooling threshold; 23698mm2 on the plate; aspect 0.19
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED
