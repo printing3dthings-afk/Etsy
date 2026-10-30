@@ -1,0 +1,13 @@
+parts/ribbon.stl
+  ok    fits_plate: 79.2 x 79.2 x 15.6 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.60mm, median 1.60mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 15.6mm printed of 15.6mm
+  ok    geometry_survives_slicing: printed height 15.6mm vs modelled 15.6mm
+  ok    flat_base: 14.75 cm2 of contact = 23.5% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 70 layer(s) under the 4.0s cooling threshold; 1872mm2 on the plate; aspect 0.17
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

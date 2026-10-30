@@ -1,0 +1,13 @@
+parts/bow.stl
+  ok    fits_plate: 27.0 x 27.0 x 24.4 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 3.18mm, median 4.42mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 24.4mm printed of 24.44mm
+  ok    geometry_survives_slicing: printed height 24.4mm vs modelled 24.44mm
+  ok    flat_base: 1.03 cm2 of contact = 14.1% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 120 layer(s) under the 4.0s cooling threshold; 161mm2 on the plate; aspect 0.92
+  note  texture (advisory, never fails the gate): rugosity 1.183 -- genuinely textured, at or above the corpus p50
+PRODUCT GATE PASSED

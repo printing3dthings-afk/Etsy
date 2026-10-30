@@ -64,7 +64,7 @@ CH   = 2.0;                 // the channel in the base the glass stands in
 PZ   = z0 - CH;             // the glass's foot, 4.0
 PW   = 2 * (PC - GE - 0.2); // a panel's width, 66.4: 0.2 short of the groove each end
 PH   = TOPZ - 0.2 - PZ;     // its height, 54.44: 0.2 under the top
-LIP  = 1.2;                 // the base's floor stands this far inside the glass
+LIP  = 1.4;                 // the base's lip inside the glass channel: 1.25 thick (1.2 left 1.05)
 
 module rsq(a, h, r = 0.01) linear_extrude(h) offset(r = r) square(2 * a - 2 * r, center = true);
 function fa(k) = 90 * k;
@@ -106,8 +106,19 @@ module base() difference() {
     translate([0, 0, fl]) rsq(PI_ - LIP, z0);
 }
 // the glass's slot: down each post and along the base between them
-module glass_slots() for (k = [0 : 3]) rotate([0, 0, fa(k)])
-    translate([PC - GW / 2, -(PC - GE), PZ]) cube([GW, 2 * (PC - GE), TOPZ]);
+// It stops GTOP under the posts' tops, in a steep peak, so each post is solid
+// under its snap pin: run to the top, the groove left half a millimetre of
+// every pin's foot over open air, and the slicer propped all four from the
+// base (7,488 moves, 2026-10-30). Run higher still, it sliced the pins' barbs.
+// The peak is 20 deg off upright, not 37: in a slot 66 long and 1.5 wide, each
+// 37 deg layer's 0.15 step is a long strip, and the slicer propped those too
+// (7,026 moves).
+GTOP = 2.4; G_A = 20;
+module glass_slots() for (k = [0 : 3]) rotate([0, 0, fa(k)]) translate([PC, 0, 0]) {
+    translate([-GW / 2, -(PC - GE), PZ]) cube([GW, 2 * (PC - GE), TOPZ - GTOP - PZ]);
+    translate([0, 0, TOPZ - GTOP - 0.01]) rotate([90, 0, 0])
+        linear_extrude(2 * (PC - GE), center = true) polygon([[-GW / 2, 0], [GW / 2, 0], [0, (GW / 2) / tan(G_A)]]);
+}
 FR_THROAT = 2.0;            // the top's socket: its throat
 module frame() difference() {
     union() {
@@ -140,11 +151,17 @@ module top() difference() {
 
 // ---- the glass panels (white, the scenes green), drawn flat ---------------------------------
 // x across, y up from the glass's foot, z out of the glass
-module panel_glass(k) translate([-PW / 2, 0, 0]) cube([PW, PH, PT]);
+// its top corners, inside the posts, are cut down to clear the grooves' ends
+module panel_glass(k) difference() {
+    translate([-PW / 2, 0, 0]) cube([PW, PH, PT]);
+    for (sx = [-1, 1]) translate([sx > 0 ? PC - PR - 0.2 : -PW / 2 - 1, TOPZ - GTOP - 0.2 - PZ, -1]) cube([PW / 2 - (PC - PR - 0.2) + 1, 10, PT + 2]);
+}
 // 0.2 above the base's bevel, which tops out at z0: on it, the ground line
-// touched the frame (2026-10-30)
+// touched the frame (2026-10-30). Every stroke 0.3 wider than v1's: printed
+// flat, a scene is a panel's whole top, and the star and flake tips read
+// 0.83-0.99 against the gate's 1.2 floor.
 module panel_art(k) translate([-W / 2, z0 + 0.2 - PZ, PT - 0.01]) linear_extrude(AD + 0.01)
-    glow_clean() intersection() { square([W, HS]); landscape(k, W, HS); }
+    offset(delta = 0.15) glow_clean() intersection() { square([W, HS]); landscape(k, W, HS); }
 module panel_use(k) on_face(fa(k), PI_) translate([0, PZ, 0]) children();
 
 // ---- the lid (green), the ribbon and the bow (red) -----------------------------------------
