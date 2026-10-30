@@ -13,6 +13,10 @@ a child brings to school for the other kids to post their valentines into.
 Each one has the child's name on the front. It's one line at the top of the
 .scad (`NAME = "OLIVIA";`, `NAME = "LIAM";`) and scales to fit.
 
+Times and weights are from PrusaSlicer with the P1S 0.2 mm Standard
+settings, one colour, no colour changes. Bambu Studio's times will differ,
+and colour changes add purge and time.
+
 ## Giant Love Letter (`love_letter/love_letter_mailbox.3mf`)
 
 A big standing envelope: 180 mm across, 62 mm deep, 124 mm tall with the lid.
@@ -20,8 +24,10 @@ It holds 1.2 L.
 
 | print | colours (AMS slot) | as it sits in the file | sliced, one colour |
 |---|---|---|---|
-| the envelope | pink 1, red seal, hearts and postmark 2, white stamp 3, dark "To:" and name 4 | standing on its base | SLICE_BODY |
-| the lid | pink 1 | upside down, on its top | SLICE_LID |
+| the envelope | pink 1, red seal, hearts and postmark 2, white stamp 3, dark "To:" and name 4 | standing on its base | 3 h 38 min, about 162 g |
+| the lid | pink 1 | upside down, on its top | 50 min, about 35 g |
+
+The whole letter is about 4 h 28 min and 197 g of PLA.
 
 Pink `#F6A6C1`, red `#D7263D`, white `#F4F1EA`, dark plum `#3B2A3A`. Both
 prints are on one plate in the 3MF.
@@ -43,9 +49,11 @@ fur on.
 
 | print | file | colours (AMS slot) | as it sits in the file | sliced, one colour |
 |---|---|---|---|---|
-| the body | `love_monster_body.3mf` | lilac 1 | lying on its back | SLICE_MBODY |
-| the face | `love_monster_face.3mf` | lilac 1 (and the arms and feet), white eyes, eye shines and teeth 2, red heart 3, dark pupils and name 4 | flat, face up | SLICE_FACE |
-| the fur cap | `love_monster_fur.3mf` | pink 1 | upside down, on its top | SLICE_FUR |
+| the body | `love_monster_body.3mf` | lilac 1 | lying on its back | 4 h 1 min, about 186 g |
+| the face | `love_monster_face.3mf` | lilac 1 (and the arms and feet), white eyes, eye shines and teeth 2, red heart 3, dark pupils and name 4 | flat, face up | 1 h 24 min, about 56 g |
+| the fur cap | `love_monster_fur.3mf` | pink 1 | upside down, on its top | 2 h 11 min, about 90 g |
+
+The whole monster is about 7 h 37 min and 332 g of PLA.
 
 Lilac `#B79CE0`, white `#F4F1EA`, red `#D7263D`, dark `#2B2433`, pink fur
 `#F58CB4`.
@@ -102,13 +110,14 @@ design's `checks/` folder.
     front corner, where a scallop's edge thins to 0.28 mm and the printer
     rounds it off. It isn't visible.
 - **Fragility:** nothing high and nothing on watch, on all five prints.
-- **Not tested on the printer yet.** Two things I'd watch:
-  - **How the face slides.** It has 0.3 mm clearance each side.
-    - If it's tight, sand the face's edges.
-    - If it's loose, tell me and I'll tighten it.
-  - **The dark name on the letter.** Its letters are spaced wider than the
-    font's own spacing. At normal spacing, the raised letters' sloped sides
-    ran together, and "OLIVIA" read as "OLMIA" in the render.
+- **Not tested on the printer yet.** The one thing I'd watch is how the
+  monster's face slides. It has 0.3 mm clearance each side.
+  - If it's tight, sand the face's edges.
+  - If it's loose, tell me and I'll tighten it.
+- **The names are laid out one letter at a time** (`name_text.scad`). Fredoka
+  draws "IV" as one joined glyph, so typed as one line, "OLIVIA" printed as
+  "OLMIA". Any name works now, in OpenSCAD 2021 as well. Letters outside A–Z,
+  a–z, 0–9 and ` -'.!&` get an average width.
 
 ## Renders
 

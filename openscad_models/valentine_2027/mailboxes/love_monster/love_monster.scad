@@ -28,6 +28,7 @@
 // NAME is the child's name; it scales to fit the heart.
 
 use <../../../brand/obc_mark.scad>
+include <../name_text.scad>
 
 NAME = "LIAM";
 part = "assembly";
@@ -163,9 +164,7 @@ module feet2d() for (s = [-1, 1]) translate([s * 34, WIN_Z + 1]) intersection() 
     scale([1.6, 1]) circle(11, $fn = 90);
     translate([-30, 0]) square([60, 20]);
 }
-function fit_size(s, w, h) = min(h, w / (0.66 * len(s)));
-module name2d() translate([0, HZ + 1]) text(NAME, size = fit_size(NAME, HS * 0.62, 10), font = FONT,
-    halign = "center", valign = "center", spacing = 1.08);
+module name2d() translate([0, HZ + 1]) name_text(NAME, name_fit(NAME, HS * 0.76, 10, 1.08), 1.08);
 
 // Relief raised out of the face, h proud. Printed face up these are plain
 // prisms: nothing to slope. Each colour is cut from the ones in front of it, so

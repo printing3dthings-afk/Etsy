@@ -20,6 +20,7 @@
 SH = 1.2;
 include <../../../christmas_village/relief_lib.scad>
 use <../../../brand/obc_mark.scad>
+include <../name_text.scad>
 
 NAME = "OLIVIA";
 part = "assembly";
@@ -81,11 +82,7 @@ module postmark2d() translate([STAMP_C.x - 36, STAMP_C.y]) {
         for (i = [0 : 23]) let (x0 = -i * 2, x1 = x0 - 2)
             hull() { translate([x0, 1.2 * sin(x0 * 12)]) circle(0.9, $fn = 16); translate([x1, 1.2 * sin(x1 * 12)]) circle(0.9, $fn = 16); }
 }
-// Wider than Fredoka's own spacing: the relief's skirts widen every glyph by
-// its height at the wall, and at 1.1 "OLIVIA" read as "OLMIA" (2026-10-30).
-NSP = 1.3;
-function fit_size(s, w, h) = min(h, w / (0.62 * NSP * len(s)));
-module name2d() translate([4, 50]) text(NAME, size = fit_size(NAME, 128, 20), font = FONT, halign = "center", valign = "center", spacing = NSP);
+module name2d() translate([4, 50]) name_text(NAME, name_fit(NAME, 128, 20, 1.1), 1.1);
 module to2d() translate([-W / 2 + 14, 70]) text("To:", size = 9, font = FONT, valign = "center");
 module line2d() translate([4, 34]) square([126, 1.6], center = true);
 

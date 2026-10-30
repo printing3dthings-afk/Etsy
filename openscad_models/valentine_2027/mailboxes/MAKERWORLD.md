@@ -29,6 +29,7 @@ their cards through the slot in the top. Lift the top off to empty it.
 - Four colours with an AMS: pink, red, white and dark plum. In one colour all
   the detail is still there, because it's all raised.
 - The envelope prints standing on its base and the lid upside down.
+- About 200 g of PLA and 4.5 hours in one colour.
 
 **What's on it**
 - The front is the address side: a stamp, a postmark, "To:" and the name.
@@ -57,6 +58,7 @@ card slot, and he's hugging a heart with your child's name on it.
   - **The face** prints flat, face up. Four colours with an AMS: lilac,
     white, red and dark. It reads in one colour too.
   - **The fur cap** prints upside down.
+- About 330 g of PLA and 7.5 hours in one colour, across the three prints.
 
 **Putting it together**
 1. Slide the face down into the grooves at the front of the body.
