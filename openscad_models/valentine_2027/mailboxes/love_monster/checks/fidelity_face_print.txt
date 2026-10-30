@@ -1,0 +1,11 @@
+slicing 4 part(s), 4 filament(s) ...
+30 layers parsed
+  layer 0/30
+
+PRINT FIDELITY  (30 layers, model 69532.4 mm3)
+  dropped (modelled, not printed): 0.0 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.02 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       colour  #D7263D slot 3     0.008 mm3  z 3.0-4.6 (8 layers)  front at [7.3, 33.1]  0.05 mm wide
+       colour  #D7263D slot 3     0.008 mm3  z 3.0-4.6 (8 layers)  front at [12.8, 33.1]  0.05 mm wide

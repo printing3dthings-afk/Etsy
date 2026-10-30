@@ -76,9 +76,12 @@ module body_use() difference() {
     union() {
         difference() {
             linear_extrude(HB) plan();
-            // the inside, open at the front and the top
+            // the inside, open at the front and the top. Its front corners are
+            // squared back past the rib: rounded, the inner wall curved in by up
+            // to 0.4 where the groove crosses it, and the lip began as a flat ledge
+            // over the groove that the slicer propped (7,333 moves, 2026-10-30).
             translate([0, 0, FLOOR]) linear_extrude(HB) plan(-WALL);
-            translate([-W / 2 + WALL, Y0 - 1, FLOOR]) cube([W - 2 * WALL, WALL + 2, HB]);
+            translate([-W / 2 + WALL, Y0 - 1, FLOOR]) cube([W - 2 * WALL, YR + RO / tan(40) + 2 - Y0, HB]);
         }
         intersection() { union() { lips(); ribs(); } linear_extrude(HB) plan(); }
     }
@@ -124,10 +127,16 @@ module mouth2d() offset(r = -1.2) offset(delta = 1.2) offset(r = 1.5) offset(del
     [for (k = [NT : -1 : 0]) each let (x = -MW / 2 + k * TW)
         k == NT ? [[x, lip(x) + CLEAR + TH]] :
         [[x + TW / 2, lip(x + TW / 2) + CLEAR], [x, lip(x) + CLEAR + TH]]]));
-module teeth2d() difference() {
+// Stopped 1.5 short of the mouth's ends: there the band met the rounded end
+// peaks in white slivers 0.2 wide, which print_fidelity flagged as dropped.
+// (Opening it with offset() instead threw a spike 90 mm up, 2026-10-30.)
+module teeth2d() intersection() {
+    translate([-MW / 2 + 1.5, 0]) square([MW - 3, 200]);
+    difference() {
     polygon(concat([for (i = [0 : 24]) let (x = -MW / 2 + MW * i / 24) [x, lip(x) + CLEAR - 3]],
                    [for (i = [24 : -1 : 0]) let (x = -MW / 2 + MW * i / 24) [x, lip(x) + CLEAR + TH]]));
     mouth2d();
+    }
 }
 // eyes, below the fur's fringe (it hangs to HB - FS - FRINGE = 114)
 EZ = 95; EX = 25; ER = 13;

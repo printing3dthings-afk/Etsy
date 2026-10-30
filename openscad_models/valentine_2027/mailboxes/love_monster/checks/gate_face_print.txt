@@ -1,0 +1,13 @@
+love_monster/parts/face_print.stl
+  ok    fits_plate: 154.6 x 143.6 x 6.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.98mm, median 23.70mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 6.0mm printed of 6.0mm
+  ok    geometry_survives_slicing: printed height 6.0mm vs modelled 6.0mm
+  ok    flat_base: 199.72 cm2 of contact = 90.0% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=2.2mm; 3 layer(s) under the 4.0s cooling threshold; 23821mm2 on the plate; aspect 0.04
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

@@ -1,0 +1,15 @@
+Giant Love Letter
+  body: lowest point z +0.000
+  lid, as printed: lowest point z +0.000
+  lid at rest -0.000 mm3; 0.1 lower 111.1; lifted 0.2 and slid 0.15 0.000
+  a 102 x 70 x 3 envelope down the slot: 0.000 mm3 in the way
+  holds 1.20 L
+Hungry Love Monster
+  body, as printed: lowest point z +0.000
+  face, as printed: lowest point z +0.000
+  fur, as printed: lowest point z +0.000
+  face in its groove 0.000 mm3; sliding up and out 0.000; pushed 0.6 forward 5.5, back 351.7
+  fur cap at rest 0.000 mm3; 0.1 lower 139.4; lifted 0.2 and slid 0.15 0.000
+  a 102 x 70 x 3 envelope into the mouth at z 59.0: 0.000 mm3 in the way
+  (the straight gap through the mouth is 12.0 mm)
+FIT CHECK OK
