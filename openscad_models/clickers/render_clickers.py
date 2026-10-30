@@ -26,11 +26,13 @@ DESIGNS = {
     "jar": ("cookie_jar", S_JAR, [
         ("jar", 0, MINT), ("jar_label", 0, WHITE), ("jar_letters", 0, RED), ("top", "S", MINT), ("top_rim", "S", RED),
         ("gb", "C", BROWN), ("gb_icing", "C", WHITE), ("gb_red", "C", RED)]),
+    # the storage canister with the closed lid on it: its parts are taken already
+    # in place from gingerbread_tin/logs/asm_canister/, which check_canister.py writes
+    "canister": ("gingerbread_tin", None, [
+        ("canister", 0, RED), ("canister_snow", 0, WHITE), ("lid_closed", 0, RED), ("lid_closed_holly", 0, GREEN),
+        ("lid_closed_snow", 0, WHITE), ("cookie", 0, BROWN), ("cookie_icing", 0, WHITE), ("cookie_red", 0, RED),
+        ("cookie_green", 0, GREEN)]),
 }
-# the storage canister with the whole tin clicker seated in its mouth as the lid:
-# the clicker's foot rests on the seat's floor, H - SEAT_D = 46 - 1.6 up
-SEAT_Z = 44.4
-DESIGNS["canister"] = ("gingerbread_tin", S_TIN, [("canister", "floor", RED), ("canister_snow", "floor", WHITE)] + DESIGNS["tin"][2])
 
 ap = argparse.ArgumentParser()
 ap.add_argument("design", choices=DESIGNS)
@@ -41,10 +43,9 @@ d, S, parts = DESIGNS[a.design]
 with tempfile.TemporaryDirectory() as tmp:
     args = []
     for name, at, rgb in parts:
-        z = 0 if at in (0, "floor") else S if at == "S" else S + CAP - (4.0 if a.pressed else 0)
-        if a.design == "canister" and at != "floor":
-            z += SEAT_Z
-        m = trimesh.load(HERE / d / "parts" / f"{name}.stl", force="mesh")
+        z = 0 if at == 0 else S if at == "S" else S + CAP - (4.0 if a.pressed else 0)
+        src = HERE / d / ("logs/asm_canister" if a.design == "canister" else "parts") / f"{name}.stl"
+        m = trimesh.load(src, force="mesh")
         m.apply_translation([0, 0, z])
         out = Path(tmp) / f"{name}.stl"
         m.export(out)
