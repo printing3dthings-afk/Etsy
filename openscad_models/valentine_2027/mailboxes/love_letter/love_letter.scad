@@ -93,9 +93,11 @@ module postmark2d() translate([STAMP_C.x - 36, STAMP_C.y]) {
             hull() { translate([x0, 1.2 * sin(x0 * 12)]) circle(0.9, $fn = 16); translate([x1, 1.2 * sin(x1 * 12)]) circle(0.9, $fn = 16); }
 }
 // The name block moves right to leave the lower left to Cupid.
-module name2d() translate([36, 50]) name_text(NAME, name_fit(NAME, 92, 20, 1.1), 1.1);
+// Kept 4 clear of x = 82, where the face turns into the rounded corner: a line
+// run onto the curve hangs in the air (the slicer propped it, 2026-10-30).
+module name2d() translate([34, 50]) name_text(NAME, name_fit(NAME, 88, 20, 1.1), 1.1);
 module to2d() translate([-12, 72]) text("To:", size = 9, font = FONT, valign = "center");
-module line2d() translate([36, 34]) square([96, 1.6], center = true);
+module line2d() translate([34, 34]) square([92, 1.6], center = true);
 
 // ---------- Cupid's pocket ----------
 // on_front: x across, y up, z out of the envelope's face
@@ -116,7 +118,12 @@ module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
         hull() for (q = [[0, 0], [0, POCKET_D + 0.5], [(POCKET_D + 0.5) / tan(POCKET_A), POCKET_D + 0.5]])
             translate([-0.005, q[0], q[1]]) cube([0.01, 0.01, 0.01]);
     }
-module cupid_pegs() on_front(-POCKET_D - 0.01) translate(CUPID_AT) for (p = PEGS) translate(p) linear_extrude(PEG_L + 0.01) diamond(PEG);
+// each peg starts 0.3 inside the wall behind the pocket floor, so it is one
+// body with it
+module cupid_pegs() on_front(-POCKET_D) translate(CUPID_AT) for (p = PEGS) translate(peg_at(p)) union() {
+    peg_shape();
+    translate([-PEG_W / 2, -PEG_ROOT, -0.3]) cube([PEG_W, PEG_ROOT, 0.31]);
+}
 module at_pocket() on_front(-POCKET_D) translate(CUPID_AT) children();
 
 // ---------- sticker hearts ----------

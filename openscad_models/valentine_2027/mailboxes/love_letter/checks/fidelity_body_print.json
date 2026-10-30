@@ -1,11 +1,68 @@
 {
  "layers": 610,
- "model_volume_mm3": 170161.1,
- "dropped_mm3": 0.36,
- "filled_mm3": 0.24,
+ "model_volume_mm3": 169771.1,
+ "dropped_mm3": 1.16,
+ "filled_mm3": 0.38,
  "colour_mm3": 0.01,
  "flagged": 0,
  "clusters": [
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.379,
+   "z_mm": [
+    88.6,
+    96.6
+   ],
+   "layers": 40,
+   "at_xy": [
+    -56.4,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.18,
+   "depth_mm": 0.21,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.065,
+   "z_mm": [
+    41.0,
+    41.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -37.8,
+    -31.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.28,
+   "depth_mm": 0.35,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.053,
+   "z_mm": [
+    33.6,
+    33.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -33.7,
+    -31.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.26,
+   "depth_mm": 0.32,
+   "flag": false
+  },
   {
    "kind": "filled",
    "colour": "#F6A6C1",
@@ -105,14 +162,14 @@
    "kind": "filled",
    "colour": "#F6A6C1",
    "tool": 1,
-   "volume_mm3": 0.018,
+   "volume_mm3": 0.019,
    "z_mm": [
-    34.6,
-    35.6
+    41.0,
+    42.0
    ],
    "layers": 5,
    "at_xy": [
-    1.6,
+    12.7,
     31.7
    ],
    "side": "back",
@@ -122,16 +179,35 @@
   },
   {
    "kind": "filled",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.019,
+   "z_mm": [
+    100.8,
+    101.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -39.0,
+    33.4
+   ],
+   "side": "back",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.21,
+   "flag": false
+  },
+  {
+   "kind": "filled",
    "colour": "#F6A6C1",
    "tool": 1,
    "volume_mm3": 0.018,
    "z_mm": [
-    41.0,
-    42.2
+    34.6,
+    35.6
    ],
    "layers": 5,
    "at_xy": [
-    12.7,
+    1.6,
     31.7
    ],
    "side": "back",
@@ -162,10 +238,29 @@
    "kind": "dropped",
    "colour": "#D7263D",
    "tool": 2,
-   "volume_mm3": 0.017,
+   "volume_mm3": 0.018,
    "z_mm": [
-    89.2,
-    90.2
+    97.4,
+    97.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    -55.0,
+    -31.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.15,
+   "depth_mm": 0.19,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.018,
+   "z_mm": [
+    101.2,
+    102.2
    ],
    "layers": 4,
    "at_xy": [
@@ -183,8 +278,8 @@
    "tool": 2,
    "volume_mm3": 0.017,
    "z_mm": [
-    101.2,
-    102.2
+    89.2,
+    90.2
    ],
    "layers": 4,
    "at_xy": [
@@ -213,6 +308,25 @@
    "side": "back",
    "max_width_mm": 0.09,
    "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.014,
+   "z_mm": [
+    26.8,
+    27.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -42.0,
+    -30.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.24,
    "flag": false
   },
   {
@@ -425,6 +539,25 @@
    "flag": false
   },
   {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.012,
+   "z_mm": [
+    98.0,
+    98.8
+   ],
+   "layers": 4,
+   "at_xy": [
+    -52.9,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.16,
+   "flag": false
+  },
+  {
    "kind": "filled",
    "colour": "#F6A6C1",
    "tool": 1,
@@ -464,6 +597,25 @@
   },
   {
    "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.01,
+   "z_mm": [
+    13.4,
+    13.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    78.0,
+    -31.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.16,
+   "depth_mm": 0.21,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#3B2A3A",
    "tool": 4,
    "volume_mm3": 0.01,
@@ -473,7 +625,7 @@
    ],
    "layers": 8,
    "at_xy": [
-    -59.0,
+    -12.0,
     -31.6
    ],
    "side": "front",
@@ -502,6 +654,101 @@
   },
   {
    "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.01,
+   "z_mm": [
+    62.6,
+    64.6
+   ],
+   "layers": 10,
+   "at_xy": [
+    54.0,
+    31.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.01,
+   "z_mm": [
+    106.6,
+    106.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -46.2,
+    33.0
+   ],
+   "side": "back",
+   "max_width_mm": 0.15,
+   "depth_mm": 0.2,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.01,
+   "z_mm": [
+    109.6,
+    109.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -39.2,
+    -31.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.15,
+   "depth_mm": 0.2,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    15.6,
+    15.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    33.8,
+    31.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.15,
+   "depth_mm": 0.19,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    16.6,
+    18.4
+   ],
+   "layers": 9,
+   "at_xy": [
+    78.9,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#3B2A3A",
    "tool": 4,
    "volume_mm3": 0.009,
@@ -511,8 +758,27 @@
    ],
    "layers": 8,
    "at_xy": [
-    67.0,
+    84.0,
     -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    33.2,
+    34.8
+   ],
+   "layers": 8,
+   "at_xy": [
+    84.0,
+    -31.0
    ],
    "side": "front",
    "max_width_mm": 0.06,
@@ -559,16 +825,35 @@
   },
   {
    "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    63.8,
+    65.6
+   ],
+   "layers": 9,
+   "at_xy": [
+    73.4,
+    31.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#3B2A3A",
    "tool": 4,
    "volume_mm3": 0.009,
    "z_mm": [
-    72.6,
-    72.8
+    74.6,
+    74.8
    ],
    "layers": 1,
    "at_xy": [
-    -75.6,
+    -11.6,
     -31.2
    ],
    "side": "front",
@@ -582,24 +867,119 @@
    "tool": 4,
    "volume_mm3": 0.009,
    "z_mm": [
-    72.6,
-    72.8
+    74.6,
+    74.8
    ],
    "layers": 1,
    "at_xy": [
-    -68.3,
+    -4.3,
     -31.2
    ],
    "side": "front",
-   "max_width_mm": 0.14,
+   "max_width_mm": 0.15,
    "depth_mm": 0.19,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    98.6,
+    100.4
+   ],
+   "layers": 9,
+   "at_xy": [
+    -72.0,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    100.0,
+    101.8
+   ],
+   "layers": 9,
+   "at_xy": [
+    -52.7,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
    "flag": false
   },
   {
    "kind": "dropped",
    "colour": "#D7263D",
    "tool": 2,
-   "volume_mm3": 0.009,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    17.6,
+    19.2
+   ],
+   "layers": 8,
+   "at_xy": [
+    61.6,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    59.4,
+    61.0
+   ],
+   "layers": 8,
+   "at_xy": [
+    -71.3,
+    31.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    61.4,
+    62.0
+   ],
+   "layers": 3,
+   "at_xy": [
+    55.7,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.008,
    "z_mm": [
     101.6,
     101.8
@@ -612,6 +992,177 @@
    "side": "front",
    "max_width_mm": 0.13,
    "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    107.0,
+    107.6
+   ],
+   "layers": 3,
+   "at_xy": [
+    -48.2,
+    32.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    109.4,
+    111.0
+   ],
+   "layers": 8,
+   "at_xy": [
+    -32.0,
+    32.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    109.8,
+    110.4
+   ],
+   "layers": 3,
+   "at_xy": [
+    -37.2,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    15.0,
+    15.6
+   ],
+   "layers": 3,
+   "at_xy": [
+    78.8,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    16.0,
+    16.6
+   ],
+   "layers": 3,
+   "at_xy": [
+    47.3,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    16.8,
+    17.4
+   ],
+   "layers": 3,
+   "at_xy": [
+    33.2,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    17.2,
+    17.6
+   ],
+   "layers": 2,
+   "at_xy": [
+    34.8,
+    32.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    17.4,
+    18.8
+   ],
+   "layers": 7,
+   "at_xy": [
+    47.4,
+    32.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    18.2,
+    19.6
+   ],
+   "layers": 7,
+   "at_xy": [
+    33.1,
+    32.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
    "flag": false
   },
   {
@@ -673,6 +1224,101 @@
   },
   {
    "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    42.0,
+    42.6
+   ],
+   "layers": 3,
+   "at_xy": [
+    13.4,
+    31.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    58.0,
+    58.6
+   ],
+   "layers": 3,
+   "at_xy": [
+    -71.2,
+    31.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    58.2,
+    59.6
+   ],
+   "layers": 7,
+   "at_xy": [
+    -56.1,
+    31.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    58.4,
+    58.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    -69.6,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    61.0,
+    61.6
+   ],
+   "layers": 3,
+   "at_xy": [
+    54.2,
+    31.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#D7263D",
    "tool": 2,
    "volume_mm3": 0.007,
@@ -726,6 +1372,158 @@
    "side": "front",
    "max_width_mm": 0.13,
    "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    108.6,
+    110.0
+   ],
+   "layers": 7,
+   "at_xy": [
+    -48.4,
+    32.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    112.2,
+    113.6
+   ],
+   "layers": 7,
+   "at_xy": [
+    -50.3,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.006,
+   "z_mm": [
+    15.4,
+    15.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    77.2,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.006,
+   "z_mm": [
+    64.0,
+    65.2
+   ],
+   "layers": 6,
+   "at_xy": [
+    71.8,
+    32.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.006,
+   "z_mm": [
+    98.6,
+    100.0
+   ],
+   "layers": 7,
+   "at_xy": [
+    -70.4,
+    -32.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.006,
+   "z_mm": [
+    100.0,
+    101.4
+   ],
+   "layers": 7,
+   "at_xy": [
+    -54.3,
+    -32.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.006,
+   "z_mm": [
+    111.2,
+    112.4
+   ],
+   "layers": 6,
+   "at_xy": [
+    -37.1,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    17.8,
+    18.8
+   ],
+   "layers": 5,
+   "at_xy": [
+    63.2,
+    -32.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
    "flag": false
   },
   {
@@ -810,17 +1608,188 @@
    "tool": 4,
    "volume_mm3": 0.005,
    "z_mm": [
-    43.2,
-    43.4
+    43.6,
+    43.8
    ],
    "layers": 1,
    "at_xy": [
-    -27.0,
+    6.8,
     -31.1
    ],
    "side": "front",
    "max_width_mm": 0.1,
    "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    62.8,
+    63.8
+   ],
+   "layers": 5,
+   "at_xy": [
+    55.6,
+    32.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    98.8,
+    99.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -54.4,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    107.6,
+    108.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    -46.7,
+    32.9
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    110.4,
+    110.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    -38.8,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    111.4,
+    111.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    -48.7,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    16.2,
+    16.6
+   ],
+   "layers": 2,
+   "at_xy": [
+    61.7,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    16.6,
+    17.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    63.3,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    16.8,
+    17.6
+   ],
+   "layers": 4,
+   "at_xy": [
+    77.4,
+    -32.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    18.4,
+    19.2
+   ],
+   "layers": 4,
+   "at_xy": [
+    34.7,
+    32.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
    "flag": false
   },
   {
@@ -863,21 +1832,40 @@
   },
   {
    "kind": "dropped",
-   "colour": "#F6A6C1",
-   "tool": 1,
+   "colour": "#3B2A3A",
+   "tool": 4,
    "volume_mm3": 0.004,
    "z_mm": [
-    42.2,
-    42.6
+    40.8,
+    41.0
    ],
-   "layers": 2,
+   "layers": 1,
    "at_xy": [
-    13.5,
-    31.6
+    65.5,
+    -31.1
    ],
-   "side": "back",
-   "max_width_mm": 0.09,
-   "depth_mm": 0.13,
+   "side": "front",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    41.2,
+    41.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    79.8,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.17,
    "flag": false
   },
   {
@@ -905,6 +1893,101 @@
    "tool": 2,
    "volume_mm3": 0.004,
    "z_mm": [
+    57.0,
+    57.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -56.1,
+    31.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    57.4,
+    57.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    -57.7,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    58.4,
+    59.2
+   ],
+   "layers": 4,
+   "at_xy": [
+    -57.6,
+    32.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    59.6,
+    60.4
+   ],
+   "layers": 4,
+   "at_xy": [
+    -69.7,
+    32.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    62.8,
+    63.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    71.7,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.004,
+   "z_mm": [
     98.2,
     98.6
    ],
@@ -915,6 +1998,139 @@
    ],
    "side": "front",
    "max_width_mm": 0.08,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    108.0,
+    108.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -32.1,
+    32.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    108.8,
+    109.6
+   ],
+   "layers": 4,
+   "at_xy": [
+    -46.8,
+    33.4
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    109.6,
+    110.4
+   ],
+   "layers": 4,
+   "at_xy": [
+    -33.6,
+    33.4
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    111.0,
+    111.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -50.3,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    111.2,
+    112.0
+   ],
+   "layers": 4,
+   "at_xy": [
+    -38.7,
+    -32.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    16.6,
+    16.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    45.7,
+    32.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    17.6,
+    18.2
+   ],
+   "layers": 3,
+   "at_xy": [
+    45.8,
+    32.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
    "depth_mm": 0.13,
    "flag": false
   },
@@ -939,25 +2155,6 @@
   },
   {
    "kind": "dropped",
-   "colour": "#3B2A3A",
-   "tool": 4,
-   "volume_mm3": 0.003,
-   "z_mm": [
-    40.8,
-    41.0
-   ],
-   "layers": 1,
-   "at_xy": [
-    50.4,
-    -31.1
-   ],
-   "side": "front",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.16,
-   "flag": false
-  },
-  {
-   "kind": "dropped",
    "colour": "#F6A6C1",
    "tool": 1,
    "volume_mm3": 0.003,
@@ -977,16 +2174,35 @@
   },
   {
    "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    53.2,
+    53.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    65.4,
+    31.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#3B2A3A",
    "tool": 4,
    "volume_mm3": 0.003,
    "z_mm": [
-    65.4,
-    65.6
+    67.4,
+    67.6
    ],
    "layers": 1,
    "at_xy": [
-    -71.1,
+    -7.1,
     -31.1
    ],
    "side": "front",
@@ -1000,12 +2216,12 @@
    "tool": 4,
    "volume_mm3": 0.003,
    "z_mm": [
-    65.4,
-    65.6
+    67.4,
+    67.6
    ],
    "layers": 1,
    "at_xy": [
-    -60.1,
+    3.9,
     -31.1
    ],
    "side": "front",
@@ -1030,6 +2246,63 @@
    "side": "front",
    "max_width_mm": 0.1,
    "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    112.4,
+    113.0
+   ],
+   "layers": 3,
+   "at_xy": [
+    -48.8,
+    -32.2
+   ],
+   "side": "front",
+   "max_width_mm": 0.05,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    8.2,
+    8.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    68.7,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    20.4,
+    20.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    -53.0,
+    -32.3
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.12,
    "flag": false
   },
   {
@@ -1133,16 +2406,35 @@
    "tool": 4,
    "volume_mm3": 0.002,
    "z_mm": [
-    41.0,
-    41.2
+    41.4,
+    41.6
    ],
    "layers": 1,
    "at_xy": [
-    31.3,
+    61.8,
     -31.1
    ],
    "side": "front",
    "max_width_mm": 0.07,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    42.4,
+    42.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    -52.0,
+    -32.3
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
    "depth_mm": 0.12,
    "flag": false
   },
@@ -1186,16 +2478,35 @@
   },
   {
    "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    62.4,
+    62.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    73.2,
+    31.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#3B2A3A",
    "tool": 4,
    "volume_mm3": 0.002,
    "z_mm": [
-    65.4,
-    65.6
+    67.4,
+    67.6
    ],
    "layers": 1,
    "at_xy": [
-    -72.8,
+    -8.8,
     -31.1
    ],
    "side": "front",
@@ -1239,6 +2550,44 @@
    "side": "front",
    "max_width_mm": 0.06,
    "depth_mm": 0.12,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    88.6,
+    89.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    -58.9,
+    -31.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    89.6,
+    90.2
+   ],
+   "layers": 3,
+   "at_xy": [
+    -58.1,
+    -31.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
    "flag": false
   },
   {
@@ -1337,6 +2686,44 @@
    "flag": false
   },
   {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    97.2,
+    97.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    -71.9,
+    -31.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    97.6,
+    97.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -70.4,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.07,
+   "depth_mm": 0.12,
+   "flag": false
+  },
+  {
    "kind": "filled",
    "colour": "#D7263D",
    "tool": 2,
@@ -1395,6 +2782,63 @@
   },
   {
    "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    108.6,
+    108.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -33.7,
+    32.9
+   ],
+   "side": "back",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.12,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    13.4,
+    13.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    77.9,
+    -31.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    34.8,
+    35.0
+   ],
+   "layers": 1,
+   "at_xy": [
+    -57.1,
+    -30.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.07,
+   "depth_mm": 0.16,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
    "colour": "#3B2A3A",
    "tool": 4,
    "volume_mm3": 0.001,
@@ -1404,12 +2848,88 @@
    ],
    "layers": 1,
    "at_xy": [
-    -40.0,
+    -5.5,
     -32.0
    ],
    "side": "front",
    "max_width_mm": 0.05,
-   "depth_mm": 0.12,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    89.2,
+    89.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    -60.3,
+    -31.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    97.4,
+    97.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    -55.1,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#D7263D",
+   "tool": 2,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    106.6,
+    106.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -46.2,
+    32.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#F6A6C1",
+   "tool": 1,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    109.6,
+    109.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -39.2,
+    -31.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
    "flag": false
   }
  ]

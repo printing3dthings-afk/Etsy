@@ -1,5 +1,2 @@
   x: 0 slender run(s)
   y: 0 slender run(s)
-  z: 0 slender run(s)
-
-FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 0 watch (>= 4.0), 0 slender runs

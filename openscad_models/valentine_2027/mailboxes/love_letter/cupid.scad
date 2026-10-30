@@ -108,30 +108,53 @@ module cupid_outline() union() for (i = [0 : len(C_H) - 1]) c_item(i);
 module wing_grooves() translate([0, 0, C_H[0] - 0.4]) linear_extrude(1) c_wing_lines();
 // his holes take the envelope's pegs; under his head and his middle, where he
 // is thickest
-PEGS = [HEAD + [-2, -1], TORSO + [-1, -2]];
-PEG = [2.4, 3.2];                // the peg's diamond: across, up. Its faces are
-                                 // 37 deg off upright, so it prints on the wall
+PEGS = [HEAD + [-2, -1], TORSO + [-1, -5]];
+// A peg is a wedge standing out of the upright wall: flat on top, its
+// underside climbing from the wall at 37 deg, so it grows out of the wall
+// layer by layer. A diamond peg began each one as a sliver in mid-air at its
+// lower point, and the slicer propped both from the bed (2026-10-30).
+PEG_W = 2.4;                     // across
 PEG_L = 2.2;                     // how far it stands from the pocket floor
-module diamond(d) polygon([[-d.x / 2, 0], [0, d.y / 2], [d.x / 2, 0], [0, -d.y / 2]]);
-HOLE_C = 0.25;                   // clearance round the peg; the ribs take it up
-RIB_R = 0.35; RIB_IN = 0.1;      // a rib on each face reaches 0.1 into the peg
-module hole2d() difference() {
-    offset(delta = HOLE_C) diamond(PEG);
-    for (sx = [-1, 1], sy = [-1, 1]) let (n = [sx * PEG.y, sy * PEG.x] / norm(PEG))
-        translate([sx * PEG.x / 4, sy * PEG.y / 4] + n * (RIB_R - RIB_IN)) circle(RIB_R, $fn = 16);
+PEG_TIP = 1.6;                   // its height at the tip
+PEG_ROOT = PEG_TIP + PEG_L / tan(37);   // and at the wall, 4.5
+// the peg in his frame: x across, y up (top at y = 0), z out from the floor
+module peg_shape(c = 0) hull() {
+    translate([-PEG_W / 2 - c, -PEG_ROOT - c, 0]) cube([PEG_W + 2 * c, PEG_ROOT + 2 * c, 0.01]);
+    translate([-PEG_W / 2 - c, -PEG_TIP - c, PEG_L + c - 0.01]) cube([PEG_W + 2 * c, PEG_TIP + 2 * c, 0.01]);
 }
-module cupid_hole() {
-    linear_extrude(PEG_L + 0.3) hole2d();
-    // the roof closes at 36 deg instead of a flat ceiling
-    translate([0, 0, PEG_L + 0.3 - 0.01]) linear_extrude(1.6, scale = 0.02) offset(delta = HOLE_C) diamond(PEG);
-    // the mouth opens 0.3 against the first layer's squash
-    hull() { linear_extrude(0.01) offset(delta = HOLE_C + 0.3) diamond(PEG); translate([0, 0, 0.4]) linear_extrude(0.01) offset(delta = HOLE_C) diamond(PEG); }
+// where a peg's top edge sits, for a peg centred on p
+function peg_at(p) = p + [0, PEG_ROOT / 2];
+HOLE_C = 0.25;                   // clearance round the peg; the ribs take it up
+RIB_R = 0.35; RIB_IN = 0.1;      // ribs on the side walls reach 0.1 into the peg
+// His hole is the peg's full root height all the way in, straight-walled:
+// the wedge's 37 deg underside is 53 deg in him, printed face up, and copying
+// it drew 330 support moves (2026-10-30). The peg still sits on the hole's
+// sides (the ribs), its top and its root.
+HOLE = [PEG_W + 2 * HOLE_C, PEG_ROOT + 2 * HOLE_C];
+HOLE_D = PEG_L + HOLE_C;
+ROOF = (HOLE.x / 2) / tan(37);   // a hipped roof at 37 deg on every side
+module cupid_hole() translate([0, HOLE_C - HOLE.y / 2, 0]) difference() {
+    union() {
+        translate([-HOLE.x / 2, -HOLE.y / 2, -0.01]) cube([HOLE.x, HOLE.y, HOLE_D + 0.01]);
+        translate([0, 0, HOLE_D - 0.01]) hull() {
+            translate([-HOLE.x / 2, -HOLE.y / 2, 0]) cube([HOLE.x, HOLE.y, 0.01]);
+            translate([-0.01, -(HOLE.y / 2 - HOLE.x / 2), ROOF]) cube([0.02, HOLE.y - HOLE.x, 0.01]);
+        }
+        // the mouth opens 0.3 against the first layer's squash
+        hull() {
+            translate([-HOLE.x / 2 - 0.3, -HOLE.y / 2 - 0.3, -0.01]) cube([HOLE.x + 0.6, HOLE.y + 0.6, 0.01]);
+            translate([-HOLE.x / 2, -HOLE.y / 2, 0.4]) cube([HOLE.x, HOLE.y, 0.01]);
+        }
+    }
+    // crush ribs, two on each side wall, reaching RIB_IN into the peg
+    for (sx = [-1, 1], y = [HOLE.y / 2 - HOLE_C - PEG_TIP * 0.3, HOLE.y / 2 - HOLE_C - PEG_TIP * 0.8])
+        translate([sx * (PEG_W / 2 + RIB_R - RIB_IN), y, -1]) cylinder(r = RIB_R, h = HOLE_D + ROOF + 2, $fn = 16);
 }
 
 // ---------- the colour parts, as printed ----------
 module cupid_colour(c) difference() {
     union() for (i = [0 : len(C_H) - 1]) if (C_COL[i] == c) linear_extrude(C_H[i]) c_column(i);
-    for (p = PEGS) translate(p) cupid_hole();
+    for (p = PEGS) translate(peg_at(p)) cupid_hole();
     wing_grooves();
 }
 module cupid_skin()  cupid_colour(0);
@@ -142,6 +165,6 @@ module cupid_dark()  cupid_colour(3);
 // union closes
 module cupid_print() difference() {
     union() for (i = [0 : len(C_H) - 1]) linear_extrude(C_H[i]) c_item(i);
-    for (p = PEGS) translate(p) cupid_hole();
+    for (p = PEGS) translate(peg_at(p)) cupid_hole();
     wing_grooves();
 }

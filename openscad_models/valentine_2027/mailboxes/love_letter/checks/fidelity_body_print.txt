@@ -1,1 +1,31 @@
 slicing 4 part(s), 4 filament(s) ...
+610 layers parsed
+  layer 0/610
+  layer 100/610
+  layer 200/610
+  layer 300/610
+  layer 400/610
+  layer 500/610
+  layer 600/610
+
+PRINT FIDELITY  (610 layers, model 169771.1 mm3)
+  dropped (modelled, not printed): 1.16 mm3
+  filled  (printed, not modelled): 0.38 mm3
+  colour  (printed, other filament): 0.01 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #F4F1EA slot 3     0.379 mm3  z 88.6-96.6 (40 layers)  front at [-56.4, -31.1]  0.18 mm wide, 0.21 mm deep
+       filled  #F6A6C1 slot 1     0.065 mm3  z 41.0-41.2 (1 layers)  front at [-37.8, -31.0]  0.28 mm wide, 0.35 mm deep
+       filled  #F6A6C1 slot 1     0.053 mm3  z 33.6-33.8 (1 layers)  front at [-33.7, -31.0]  0.26 mm wide, 0.32 mm deep
+       filled  #F6A6C1 slot 1     0.027 mm3  z 39.8-41.0 (6 layers)  back at [9.6, 31.7]  0.1 mm wide, 0.15 mm deep
+       filled  #F6A6C1 slot 1     0.024 mm3  z 36.4-37.6 (6 layers)  back at [8.2, 31.7]  0.09 mm wide, 0.15 mm deep
+       filled  #F6A6C1 slot 1     0.023 mm3  z 47.4-48.6 (6 layers)  back at [14.5, 31.7]  0.08 mm wide, 0.15 mm deep
+       dropped #D7263D slot 2     0.023 mm3  z 95.0-98.6 (21 layers)  front at [17.0, -31.5]  0.1 mm wide, 0.14 mm deep
+       filled  #F6A6C1 slot 1     0.021 mm3  z 39.8-41.0 (6 layers)  back at [-9.6, 31.7]  0.1 mm wide, 0.14 mm deep
+       filled  #F6A6C1 slot 1     0.019 mm3  z 41.0-42.0 (5 layers)  back at [12.7, 31.7]  0.09 mm wide, 0.14 mm deep
+       filled  #D7263D slot 2     0.019 mm3  z 100.8-101.4 (2 layers)  back at [-39.0, 33.4]  0.14 mm wide, 0.21 mm deep
+       filled  #F6A6C1 slot 1     0.018 mm3  z 34.6-35.6 (5 layers)  back at [1.6, 31.7]  0.09 mm wide, 0.14 mm deep
+       dropped #D7263D slot 2     0.018 mm3  z 95.0-98.6 (18 layers)  front at [42.9, -31.6]  0.06 mm wide, 0.13 mm deep
+       dropped #D7263D slot 2     0.018 mm3  z 97.4-97.8 (2 layers)  front at [-55.0, -31.8]  0.15 mm wide, 0.19 mm deep
+       dropped #D7263D slot 2     0.018 mm3  z 101.2-102.2 (4 layers)  front at [16.8, -31.2]  0.19 mm wide, 0.23 mm deep
+       dropped #D7263D slot 2     0.017 mm3  z 89.2-90.2 (4 layers)  front at [16.8, -31.2]  0.19 mm wide, 0.23 mm deep
+  ... 139 smaller
