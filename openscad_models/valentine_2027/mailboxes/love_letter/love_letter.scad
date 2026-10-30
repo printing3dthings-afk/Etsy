@@ -103,12 +103,19 @@ module on_front(z = 0) translate([0, -D / 2, 0]) rotate([90, 0, 0]) translate([0
 CUPID_AT = [-52, 4];             // his frame's origin on the face: lower left, wings clear of the corner
 POCKET_D = 1.0;                  // leaves 1.4 of the 2.4 wall behind him
 POCKET_A = 37;
-// The pocket is his outline 0.3 larger at its floor. Its walls lean out at
-// POCKET_A on the way to the face, so its top edge is a 37 deg slope, not a
-// 1.0 ceiling over him on an upright wall.
+// The pocket is his outline 0.3 larger, straight down to its floor, except
+// that every edge facing down is swept up at POCKET_A on its way out to the
+// face: otherwise his pocket's top edge is a 1.0 ceiling on an upright wall.
+// The sweep is a Minkowski sum with a thin wedge (at depth z, the outline
+// stretched up by z / tan(POCKET_A)). Shearing the whole outline instead also
+// lifted the pocket's bottom wall into his legs: 29.9 mm3 of overlap
+// (2026-10-30).
 module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
-    multmatrix([[1, 0, 0, 0], [0, 1, 1 / tan(POCKET_A), 0], [0, 0, 1, 0]])
-        translate([0, 0, -0.01]) linear_extrude(POCKET_D + 0.5) offset(r = 0.3) cupid_outline();
+    minkowski() {
+        translate([0, 0, -0.01]) linear_extrude(0.01) offset(r = 0.3) cupid_outline();
+        hull() for (q = [[0, 0], [0, POCKET_D + 0.5], [(POCKET_D + 0.5) / tan(POCKET_A), POCKET_D + 0.5]])
+            translate([-0.005, q[0], q[1]]) cube([0.01, 0.01, 0.01]);
+    }
 module cupid_pegs() on_front(-POCKET_D - 0.01) translate(CUPID_AT) for (p = PEGS) translate(p) linear_extrude(PEG_L + 0.01) diamond(PEG);
 module at_pocket() on_front(-POCKET_D) translate(CUPID_AT) children();
 
