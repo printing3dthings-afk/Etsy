@@ -1,3 +1,3 @@
 slicing 2 part(s), 2 filament(s) ...
-73 layers parsed
-  layer 0/73
+74 layers parsed
+  layer 0/74
