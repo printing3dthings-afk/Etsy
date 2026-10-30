@@ -1,0 +1,9 @@
+The lid's underside sits at z 45.8, the pod's foot at 35.6, the cookie at 54.1
+  lid / canister at rest: 0.010 mm3; 0.1 lower: 17.7 mm3
+  lifted 0.3 and slid 0.15: 0.000 mm3 (it lifts off without binding)
+  cookie / lid: 0.000 mm3
+  switch body / pod: 0.000 mm3
+  switch pins / pod: 0.000 mm3
+  the pod's foot under the cutout: 100.0% solid
+Holds 89 cm3 round the pod (55.2 mm across, 44.4 mm deep at the side, 34.0 under the pod)
+FIT CHECK OK
