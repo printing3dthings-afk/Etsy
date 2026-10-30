@@ -24,7 +24,7 @@ real keyboard switch, so it sounds and feels like one.
 - Four colours if you have an AMS: red, white, brown and green. In one colour
   it still works and still reads, because all the icing and snowflakes are
   raised.
-- About 31 g and an hour in one colour.
+- About 32 g and an hour in one colour.
 - If the cookie won't press onto the switch, print the loose cookie
   (`gingerbread_tin_clicker_loose_cap.3mf`).
 

@@ -1,6 +1,6 @@
 {
  "layers": 69,
- "model_volume_mm3": 21506.2,
+ "model_volume_mm3": 20137.1,
  "dropped_mm3": 0.01,
  "filled_mm3": 0.51,
  "colour_mm3": 0.0,
@@ -86,7 +86,7 @@
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.025,
+   "volume_mm3": 0.026,
    "z_mm": [
     12.8,
     13.0

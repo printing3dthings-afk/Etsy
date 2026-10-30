@@ -2,7 +2,7 @@ slicing 3 part(s), 3 filament(s) ...
 69 layers parsed
   layer 0/69
 
-PRINT FIDELITY  (69 layers, model 21506.2 mm3)
+PRINT FIDELITY  (69 layers, model 20137.1 mm3)
   dropped (modelled, not printed): 0.01 mm3
   filled  (printed, not modelled): 0.51 mm3
   colour  (printed, other filament): 0.0 mm3
@@ -11,7 +11,7 @@ PRINT FIDELITY  (69 layers, model 21506.2 mm3)
        filled  #F4F1EA slot 3     0.031 mm3  z 12.8-13.0 (1 layers)  back at [-0.8, 25.8]  0.14 mm wide, 0.17 mm deep
        filled  #F4F1EA slot 3     0.026 mm3  z 12.8-13.0 (1 layers)  front at [-0.8, -23.8]  0.11 mm wide, 0.17 mm deep
        filled  #F4F1EA slot 3     0.026 mm3  z 12.8-13.0 (1 layers)  front at [0.0, -23.3]  0.11 mm wide, 0.17 mm deep
-       filled  #F4F1EA slot 3     0.025 mm3  z 12.8-13.0 (1 layers)  back at [-0.8, 26.6]  0.11 mm wide, 0.17 mm deep
+       filled  #F4F1EA slot 3     0.026 mm3  z 12.8-13.0 (1 layers)  back at [-0.8, 26.6]  0.11 mm wide, 0.17 mm deep
        filled  #F4F1EA slot 3     0.023 mm3  z 12.8-13.0 (2 layers)  left at [-21.8, -9.1]  0.11 mm wide, 0.17 mm deep
        filled  #F4F1EA slot 3     0.023 mm3  z 12.8-13.0 (2 layers)  left at [-20.2, -9.1]  0.11 mm wide, 0.17 mm deep
        filled  #F4F1EA slot 3     0.023 mm3  z 12.8-13.0 (2 layers)  back at [-0.1, 25.3]  0.11 mm wide, 0.17 mm deep

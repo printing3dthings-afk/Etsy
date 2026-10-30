@@ -173,18 +173,26 @@ his feet sit 1.2 mm below the rim; pressed, he drops 4 mm into the jar.
   It opens the socket 0.1 mm, the same two-step ladder the dumpling clicker
   ships.
 - One colour, from the slicer I check with (Bambu Studio's AMS purges add to
-  these): tin 24 min + lid 22 min + cookie 11 min, about 31 g; jar 27 min + top
+  these): tin 25 min + lid 24 min + cookie 11 min, about 32 g; jar 27 min + top
   16 min + gingerbread 20 min, about 35 g.
 
 ## What was checked before this was pushed
 
 - **Fits, on the exported prints** (`check_clickers.py`). Each cap was checked
   at rest and at 1, 2, 3 and 4 mm of travel against both prints and the switch
-  housing: 0 mm³ of overlap everywhere. The lid's spigot in the tin's lip is
-  0 too, and so is the top's in the jar's. The switch's body, clips and legs
+  housing: 0 mm³ of overlap everywhere. The tin's screwed-down lid is 0
+  too, and so is the jar's top in the jar. The switch's body, clips and legs
   fit in the lower print with 0 overlap. The plate is solid just outside the
   14 mm cutout and open just inside it. The socket is open where the stem goes
   and closed above.
+- **The tin's screw lid (2026-10-30):**
+  - Pulled straight up 0.5 mm, it hits the tin's thread (15.5 mm³), so it
+    can't lift off.
+  - Turned back along the thread through 30–540°, it touches nothing, so it
+    unscrews.
+  - As a control, turned the wrong way while rising, it does collide. So the
+    zeros come from the thread's path, not from a lid that clears the tin
+    anyway.
 - **Supports: none, on all six prints.** That took three fixes, each found by
   the slicer:
   1. **The bases are two prints, split at the switch plate.** First, each base
@@ -203,6 +211,11 @@ his feet sit 1.2 mm below the rim; pressed, he drops 4 mm into the jar.
 - **Product gate:** the jar and the top PASS. The tin, the lid, the cookie and
   the gingerbread read FAIL on the wall check only. Every span under 1.2 mm
   was traced:
+  - **Since the screw lid, 0.0 on the tin and the lid:** the gate's straight
+    rays catch the thread's teeth side-on. It's the thread, not a wall.
+    Outside the thread the readings are the raised detail below. The real
+    walls either side of the thread are held at 1.2 mm by asserts in the
+    .scad.
   - **0.6–0.9 mm:** the raised detail. That's the snowflake and holly strokes,
     plus the piped icing, whose rounded tops narrow to 0.58 mm (still over a
     bead). It's raised detail, not walls.
