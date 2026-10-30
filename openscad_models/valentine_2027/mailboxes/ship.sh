@@ -4,6 +4,7 @@
 # colour part, fragility, the 3MFs. Results land in <design>/checks/.
 #   ./ship.sh            export and check both
 #   ./ship.sh checks     check only (parts already exported)
+#   ONLY="face_print fur" ./ship.sh checks    just those prints' checks
 set -uo pipefail
 cd "$(dirname "$0")"
 T=../../../tools
@@ -20,6 +21,7 @@ fi
 python3 check_mailboxes.py
 check() {   # dir print colour-parts...
     local d=$1 p=$2; shift 2
+    [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $p "* ]] && return
     mkdir -p $d/checks
     echo "== $d gate $p"; python3 $T/product_gate.py $d/parts/$p.stl > $d/checks/gate_$p.txt 2>&1; grep -E "FAIL|support|GATE" $d/checks/gate_$p.txt
     local a=(); for x in "$@"; do a+=(--part "$d/parts/$x"); done
@@ -32,4 +34,11 @@ check love_letter lid lid.stl:#F6A6C1
 check love_monster body body.stl:#B79CE0
 check love_monster face_print face.stl:#B79CE0 face_white.stl:#F4F1EA face_red.stl:#D7263D face_dark.stl:#2B2433
 check love_monster fur fur.stl:#F58CB4
+if [ -z "${ONLY:-}" ]; then
+    A=$(cd ../../../tools && pwd)/assemble_3mf.py
+    (cd love_letter && python3 $A --plate love_letter_mailbox.3mf parts/body.stl:#F6A6C1 parts/body_red.stl:#D7263D parts/body_white.stl:#F4F1EA parts/body_dark.stl:#3B2A3A + parts/lid.stl:#F6A6C1 | tail -1)
+    (cd love_monster && python3 $A love_monster_body.3mf parts/body.stl:#B79CE0 | tail -1 &&
+        python3 $A love_monster_face.3mf parts/face.stl:#B79CE0 parts/face_white.stl:#F4F1EA parts/face_red.stl:#D7263D parts/face_dark.stl:#2B2433 | tail -1 &&
+        python3 $A love_monster_fur.3mf parts/fur.stl:#F58CB4 | tail -1)
+fi
 echo SHIP_DONE

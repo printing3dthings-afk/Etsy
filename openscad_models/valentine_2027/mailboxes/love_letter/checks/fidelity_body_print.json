@@ -1,6 +1,6 @@
 {
  "layers": 610,
- "model_volume_mm3": 170152.0,
+ "model_volume_mm3": 170154.7,
  "dropped_mm3": 0.37,
  "filled_mm3": 0.24,
  "colour_mm3": 0.01,
@@ -663,7 +663,7 @@
    ],
    "layers": 2,
    "at_xy": [
-    47.8,
+    52.2,
     -31.1
    ],
    "side": "front",
@@ -834,7 +834,7 @@
    ],
    "layers": 1,
    "at_xy": [
-    32.6,
+    37.0,
     -31.1
    ],
    "side": "front",
@@ -853,7 +853,7 @@
    ],
    "layers": 1,
    "at_xy": [
-    -24.4,
+    -32.8,
     -31.1
    ],
    "side": "front",
@@ -1138,11 +1138,11 @@
    ],
    "layers": 1,
    "at_xy": [
-    28.7,
+    33.2,
     -31.1
    ],
    "side": "front",
-   "max_width_mm": 0.08,
+   "max_width_mm": 0.07,
    "depth_mm": 0.13,
    "flag": false
   },
@@ -1418,12 +1418,12 @@
    "tool": 4,
    "volume_mm3": 0.001,
    "z_mm": [
-    43.0,
-    43.2
+    44.0,
+    44.2
    ],
    "layers": 1,
    "at_xy": [
-    2.6,
+    -18.6,
     -32.0
    ],
    "side": "front",
@@ -1437,12 +1437,12 @@
    "tool": 4,
    "volume_mm3": 0.001,
    "z_mm": [
-    44.0,
-    44.2
+    50.6,
+    50.8
    ],
    "layers": 1,
    "at_xy": [
-    -14.2,
+    -45.8,
     -32.0
    ],
    "side": "front",

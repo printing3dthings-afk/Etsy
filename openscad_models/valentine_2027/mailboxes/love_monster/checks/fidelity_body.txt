@@ -7,7 +7,7 @@ slicing 1 part(s), 1 filament(s) ...
   layer 400/600
   layer 500/600
 
-PRINT FIDELITY  (600 layers, model 181192.0 mm3)
+PRINT FIDELITY  (600 layers, model 182821.6 mm3)
   dropped (modelled, not printed): 0.0 mm3
   filled  (printed, not modelled): 0.0 mm3
   colour  (printed, other filament): 0.0 mm3

@@ -8,6 +8,8 @@ Started 2026-10-26 from Scott's brief: two main pieces, one stretch, sketches fi
 | Love Lantern: **Swan Crown** (`swan_crown/`) | modelled; drum, lid and crown each slice with no supports; full checks running |
 | Chocolate Shop: **Victorian Bay** (`shops/victorian_bay/`) | modelled; full checks running |
 | Chocolate Shop: **Chocolate Box** (`shops/chocolate_box/`) | modelled; full checks running |
+| Classroom mailbox: **Giant Love Letter** (`mailboxes/love_letter/`) | modelled, all checks pass, 0 supports; see `mailboxes/VALENTINE_MAILBOXES_PRINTING.md` |
+| Classroom mailbox: **Hungry Love Monster** (`mailboxes/love_monster/`) | modelled, three prints, all checks pass, 0 supports; same notes |
 | Everlasting Rose Dome (stretch) | not started: only after 1 and 2 are test-printed |
 
 Scott picked two of each on 2026-10-26 ("Do 2 of each category that you
