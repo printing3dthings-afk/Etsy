@@ -72,6 +72,20 @@ def main():
     print(f"  a 102 x 70 x 3 envelope down the slot: {worst:.3f} mm3 in the way")
     if worst > 0.01:
         fails.append("the letter's slot blocks an envelope")
+    # Cupid in his pocket: only his holes' crush ribs touch the pegs, his back
+    # sits on the pocket floor, and the pegs hold him in place
+    cup = load(str(d / "parts/cupid_print_use.stl"))
+    on_bed("Cupid, as printed", load(str(d / "parts/cupid_print.stl")))
+    rest = ov(body, cup)
+    sink = ov(body, cup.translate([0, 0.1, 0]))          # 0.1 into the wall
+    slide = min(ov(body, cup.translate([dx, 0, dz])) for dx, dz in [(0.6, 0), (-0.6, 0), (0, 0.6), (0, -0.6)])
+    print(f"  Cupid in his pocket: {rest:.2f} mm3 (the crush ribs on the pegs); 0.1 into the wall {sink:.1f}; slid 0.6 any way {slide:.1f}")
+    if not 0.05 < rest < 5:
+        fails.append(f"Cupid's ribs grip {rest:.2f} mm3, expected a little")
+    if sink < 1:
+        fails.append("Cupid does not sit on his pocket's floor")
+    if slide < 1:
+        fails.append("the pegs do not hold Cupid in place")
     inside = box(-200, 200, -200, 200, FLOOR, HB) - body
     inside = inside ^ box(-89, 89, -D / 2 + WALL - 0.1, D / 2 - WALL + 0.1, FLOOR, HB)
     print(f"  holds {inside.volume() / 1e6:.2f} L")

@@ -4,7 +4,12 @@
 // loose parts, no magnets, every edge rounded, and the slot takes a standard
 // kids' valentine in its envelope.
 //
-// Two prints:
+// Made more fun (Scott, 2026-10-30, his picks 1 and 4 of five): a cartoon
+// Cupid, his own print, sits in a pocket on the address side aiming his arrow
+// at the name; and two-tone sticker hearts, raised in the envelope's own
+// colours, front and back. Loose hearts would be small parts, so they're fixed.
+//
+// Three prints:
 //   body  the envelope, a cup printed standing on its base. One face is the
 //         address side (a stamp, a postmark, "To:" and the child's name), the
 //         other the back of an envelope: its bottom flap, its top flap and a
@@ -12,15 +17,20 @@
 //   lid   the top edge of the envelope, with the card slot. Printed upside
 //         down on its top face; a spigot drops 10 mm into the body, so it
 //         sits put but lifts straight off to empty the box.
+//   cupid face up, four colours (cupid.scad); presses onto two pegs in his
+//         pocket.
 //
 //   part = body | body_red | body_white | body_dark | lid
-//          body_print (body + its colours, merged, for the gate) | assembly
+//          cupid | cupid_white | cupid_red | cupid_dark (as printed)
+//          cupid_use, cupid_white_use, ... (in his pocket)
+//          body_print, cupid_print (merged, for the gate) | assembly
 // NAME is the child's name; it scales to fit.
 
 SH = 1.2;
 include <../../../christmas_village/relief_lib.scad>
 use <../../../brand/obc_mark.scad>
 include <../name_text.scad>
+include <cupid.scad>
 
 NAME = "OLIVIA";
 part = "assembly";
@@ -82,21 +92,62 @@ module postmark2d() translate([STAMP_C.x - 36, STAMP_C.y]) {
         for (i = [0 : 23]) let (x0 = -i * 2, x1 = x0 - 2)
             hull() { translate([x0, 1.2 * sin(x0 * 12)]) circle(0.9, $fn = 16); translate([x1, 1.2 * sin(x1 * 12)]) circle(0.9, $fn = 16); }
 }
-module name2d() translate([4, 50]) name_text(NAME, name_fit(NAME, 128, 20, 1.1), 1.1);
-module to2d() translate([-W / 2 + 14, 70]) text("To:", size = 9, font = FONT, valign = "center");
-module line2d() translate([4, 34]) square([126, 1.6], center = true);
+// The name block moves right to leave the lower left to Cupid.
+module name2d() translate([36, 50]) name_text(NAME, name_fit(NAME, 92, 20, 1.1), 1.1);
+module to2d() translate([-12, 72]) text("To:", size = 9, font = FONT, valign = "center");
+module line2d() translate([36, 34]) square([96, 1.6], center = true);
+
+// ---------- Cupid's pocket ----------
+// on_front: x across, y up, z out of the envelope's face
+module on_front(z = 0) translate([0, -D / 2, 0]) rotate([90, 0, 0]) translate([0, 0, z]) children();
+CUPID_AT = [-52, 4];             // his frame's origin on the face: lower left, wings clear of the corner
+POCKET_D = 1.0;                  // leaves 1.4 of the 2.4 wall behind him
+POCKET_A = 37;
+// The pocket is his outline 0.3 larger at its floor. Its walls lean out at
+// POCKET_A on the way to the face, so its top edge is a 37 deg slope, not a
+// 1.0 ceiling over him on an upright wall.
+module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
+    multmatrix([[1, 0, 0, 0], [0, 1, 1 / tan(POCKET_A), 0], [0, 0, 1, 0]])
+        translate([0, 0, -0.01]) linear_extrude(POCKET_D + 0.5) offset(r = 0.3) cupid_outline();
+module cupid_pegs() on_front(-POCKET_D - 0.01) translate(CUPID_AT) for (p = PEGS) translate(p) linear_extrude(PEG_L + 0.01) diamond(PEG);
+module at_pocket() on_front(-POCKET_D) translate(CUPID_AT) children();
+
+// ---------- sticker hearts ----------
+// [centre, size, turn, style]: style 0 a red heart on a white sticker, 1 a pink
+// heart on a red one. The backing stands 0.6, the heart 0.6 on it.
+FRONT_STICKERS = [[[-62, 98], 16, 12, 0], [[-44, 111], 10, -14, 1], [[70, 16], 14, -10, 1]];
+// on the back: and the flap each sits on (its z0)
+BACK_STICKERS  = [[[-64, 62], 16, -10, 0, 0], [[64, 58], 12, 14, 1, 0], [[40, 108], 13, -8, 0, 1.2], [[-40, 17], 11, 10, 1, 0.6]];
+module sticker_heart(st) translate(st[0]) rotate(st[2]) heart2d(st[1]);
+module sticker_back(st) translate(st[0]) rotate(st[2]) offset(r = 1.6) heart2d(st[1]);
+// colour c (0 pink, 1 red, 2 white) of the stickers
+module stickers(c) {
+    for (st = FRONT_STICKERS) {
+        if ((st[3] == 0 && c == 2) || (st[3] == 1 && c == 1)) front(0.6) sticker_back(st);
+        if ((st[3] == 0 && c == 1) || (st[3] == 1 && c == 0)) front(0.6, 0.6) sticker_heart(st);
+    }
+    for (st = BACK_STICKERS) {
+        if ((st[3] == 0 && c == 2) || (st[3] == 1 && c == 1)) back(0.6, st[4]) sticker_back(st);
+        if ((st[3] == 0 && c == 1) || (st[3] == 1 && c == 0)) back(0.6, st[4] + 0.6) sticker_heart(st);
+    }
+}
 
 // The seal rises from the wall itself, through both flaps: it straddles the top
 // flap's point, so raised from the flap it would hang over the lower layers.
 module seal() back(3.2) seal2d();
-module body() difference() {
-    union() {
-        body_shell();
-        back(0.6) bottom_flap2d();
-        back(1.2) top_flap2d();
+module body() union() {
+    difference() {
+        union() {
+            body_shell();
+            back(0.6) bottom_flap2d();
+            back(1.2) top_flap2d();
+            stickers(0);
+        }
+        seal();
+        obc_engrave(6, depth = 0.8, inset = 0.15, ridges = false);
+        cupid_pocket();
     }
-    seal();
-    obc_engrave(6, depth = 0.8, inset = 0.15, ridges = false);
+    cupid_pegs();
 }
 // the colours, each raised from where it sits
 module body_red() {
@@ -104,8 +155,9 @@ module body_red() {
     back(0.8, 3.2) translate([0, TIP_T + 2]) heart2d(17);
     front(0.8, 1.0) translate(STAMP_C) heart2d(17);
     front(0.6) postmark2d();
+    stickers(1);
 }
-module body_white() front(1.0) difference() { stamp2d(); }
+module body_white() { front(1.0) stamp2d(); stickers(2); }
 module body_dark() {
     front(1.0) name2d();
     front(0.8) to2d();
@@ -134,10 +186,26 @@ else if (part == "body_dark")  body_dark();
 else if (part == "body_print") body_print();
 else if (part == "lid")        lid_print();
 else if (part == "lid_use")    lid_use();
+else if (part == "cupid")        cupid_skin();
+else if (part == "cupid_white")  cupid_white();
+else if (part == "cupid_red")    cupid_red();
+else if (part == "cupid_dark")   cupid_dark();
+else if (part == "cupid_print")  cupid_print();
+else if (part == "cupid_use")       at_pocket() cupid_skin();
+else if (part == "cupid_white_use") at_pocket() cupid_white();
+else if (part == "cupid_red_use")   at_pocket() cupid_red();
+else if (part == "cupid_dark_use")  at_pocket() cupid_dark();
+else if (part == "cupid_print_use") at_pocket() cupid_print();
 else {
     color("#F6A6C1") body();
     color("#D7263D") body_red();
     color("#F4F1EA") body_white();
     color("#3B2A3A") body_dark();
     color("#F6A6C1") lid_use();
+    at_pocket() {
+        color("#F9C9A6") cupid_skin();
+        color("#F4F1EA") cupid_white();
+        color("#D7263D") cupid_red();
+        color("#3B2A3A") cupid_dark();
+    }
 }
