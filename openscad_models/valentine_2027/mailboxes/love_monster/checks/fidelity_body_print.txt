@@ -1,32 +1,31 @@
 slicing 4 part(s), 4 filament(s) ...
-732 layers parsed
-  layer 0/732
-  layer 100/732
-  layer 200/732
-  layer 300/732
-  layer 400/732
-  layer 500/732
-  layer 600/732
-  layer 700/732
+700 layers parsed
+  layer 0/700
+  layer 100/700
+  layer 200/700
+  layer 300/700
+  layer 400/700
+  layer 500/700
+  layer 600/700
 
-PRINT FIDELITY  (732 layers, model 222011.0 mm3)
-  dropped (modelled, not printed): 0.14 mm3
-  filled  (printed, not modelled): 0.12 mm3
+PRINT FIDELITY  (700 layers, model 220651.9 mm3)
+  dropped (modelled, not printed): 0.1 mm3
+  filled  (printed, not modelled): 0.11 mm3
   colour  (printed, other filament): 0.0 mm3
   flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
-       dropped #D7263D slot 3     0.020 mm3  z 26.79-27.19 (2 layers)  front at [13.2, -61.5]  0.18 mm wide, 0.22 mm deep
-       dropped #F4F1EA slot 2     0.017 mm3  z 91.39-92.19 (3 layers)  front at [-17.0, -62.6]  0.16 mm wide, 0.2 mm deep
-       dropped #F4F1EA slot 2     0.017 mm3  z 91.39-92.19 (3 layers)  front at [25.0, -62.6]  0.16 mm wide, 0.2 mm deep
-       filled  #B79CE0 slot 1     0.015 mm3  z 11.39-12.19 (4 layers)  front at [24.2, -56.4]  0.06 mm wide, 0.13 mm deep
-       filled  #2B2433 slot 4     0.012 mm3  z 77.19-77.79 (3 layers)  front at [-25.4, -56.4]  0.06 mm wide, 0.13 mm deep
-       filled  #2B2433 slot 4     0.012 mm3  z 77.19-77.79 (3 layers)  front at [16.6, -56.4]  0.06 mm wide, 0.13 mm deep
-       dropped #D7263D slot 3     0.010 mm3  z 22.99-23.39 (2 layers)  front at [-6.6, -61.5]  0.15 mm wide, 0.2 mm deep
-       filled  #F4F1EA slot 2     0.010 mm3  z 75.59-76.19 (3 layers)  front at [14.8, -56.4]  0.05 mm wide, 0.12 mm deep
-       filled  #D7263D slot 3     0.008 mm3  z -1.61--1.01 (2 layers)  front at [-0.6, -56.4]  0.06 mm wide, 0.13 mm deep
-       dropped #2B2433 slot 4     0.007 mm3  z 17.39-17.59 (1 layers)  front at [8.2, -56.6]  0.14 mm wide, 0.18 mm deep
-       dropped #2B2433 slot 4     0.007 mm3  z 17.99-18.19 (1 layers)  front at [-3.5, -56.6]  0.16 mm wide, 0.19 mm deep
-       dropped #2B2433 slot 4     0.006 mm3  z 17.39-17.59 (1 layers)  front at [-6.7, -56.6]  0.14 mm wide, 0.17 mm deep
-       dropped #2B2433 slot 4     0.006 mm3  z 17.59-17.79 (1 layers)  front at [4.3, -56.6]  0.14 mm wide, 0.16 mm deep
-       filled  #2B2433 slot 4     0.006 mm3  z 17.59-17.99 (2 layers)  front at [2.2, -56.4]  0.06 mm wide, 0.13 mm deep
-       dropped #D7263D slot 3     0.006 mm3  z 17.79-18.19 (3 layers)  front at [-6.3, -56.5]  0.08 mm wide, 0.13 mm deep
-  ... 37 smaller
+       filled  #B79CE0 slot 1     0.015 mm3  z 11.4-12.2 (4 layers)  front at [24.2, -56.4]  0.06 mm wide, 0.13 mm deep
+       filled  #2B2433 slot 4     0.012 mm3  z 77.2-77.8 (3 layers)  front at [-25.5, -56.4]  0.06 mm wide, 0.13 mm deep
+       filled  #2B2433 slot 4     0.012 mm3  z 77.2-77.8 (3 layers)  front at [16.5, -56.4]  0.06 mm wide, 0.13 mm deep
+       dropped #D7263D slot 3     0.011 mm3  z 26.8-27.0 (1 layers)  front at [13.2, -61.5]  0.18 mm wide, 0.21 mm deep
+       dropped #D7263D slot 3     0.010 mm3  z 23.0-23.4 (2 layers)  front at [-6.6, -61.5]  0.14 mm wide, 0.2 mm deep
+       filled  #F4F1EA slot 2     0.010 mm3  z 75.6-76.2 (3 layers)  front at [14.8, -56.4]  0.06 mm wide, 0.12 mm deep
+       dropped #2B2433 slot 4     0.007 mm3  z 18.0-18.2 (1 layers)  front at [-3.5, -56.6]  0.16 mm wide, 0.19 mm deep
+       dropped #2B2433 slot 4     0.006 mm3  z 17.4-17.6 (1 layers)  front at [-6.7, -56.6]  0.13 mm wide, 0.15 mm deep
+       dropped #2B2433 slot 4     0.006 mm3  z 17.4-17.6 (1 layers)  front at [8.2, -56.6]  0.14 mm wide, 0.17 mm deep
+       dropped #2B2433 slot 4     0.006 mm3  z 17.4-17.6 (1 layers)  front at [16.9, -56.6]  0.14 mm wide, 0.17 mm deep
+       dropped #2B2433 slot 4     0.006 mm3  z 17.6-17.8 (1 layers)  front at [4.4, -56.6]  0.14 mm wide, 0.16 mm deep
+       dropped #D7263D slot 3     0.006 mm3  z 17.8-18.2 (3 layers)  front at [-6.3, -56.5]  0.08 mm wide, 0.14 mm deep
+       filled  #2B2433 slot 4     0.006 mm3  z 20.2-20.6 (2 layers)  front at [10.6, -56.4]  0.06 mm wide, 0.12 mm deep
+       dropped #F4F1EA slot 2     0.006 mm3  z 91.8-92.2 (2 layers)  front at [-16.9, -62.5]  0.09 mm wide, 0.15 mm deep
+       dropped #F4F1EA slot 2     0.006 mm3  z 91.8-92.2 (2 layers)  front at [25.1, -62.5]  0.09 mm wide, 0.15 mm deep
+  ... 34 smaller

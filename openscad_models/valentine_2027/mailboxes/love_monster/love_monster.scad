@@ -63,10 +63,13 @@ BURY = 3.5;
 // below z = 0, and the slicer stood the whole body on them (30,182 support
 // moves, 0.1% of the base on the plate, 2026-10-30).
 module face(h, z0 = 0) intersection() {
-    translate([0, -B + BURY - z0, 0]) rotate([90, 0, 0]) art_skirt(h + BURY, 1) children();
+    // 2 SH: the heart's sides and the arms run at a slant, and slanted relief eats
+    // SH's 5 deg margin (relief_lib's turret-house note); at SH the slicer propped
+    // them with 17,458 moves (2026-10-30)
+    translate([0, -B + BURY - z0, 0]) rotate([90, 0, 0]) art_skirt(h + BURY, 1, 2 * SH) children();
     translate([-500, -500, 0]) cube(1000);
 }
-module face_on(h, z0) translate([0, -B - z0, 0]) rotate([90, 0, 0]) art_skirt(h, 1) children();
+module face_on(h, z0) translate([0, -B - z0, 0]) rotate([90, 0, 0]) art_skirt(h, 1, 2 * SH) children();
 
 // the mouth: a smile, its top a row of teeth
 MW = 112;                        // across
@@ -78,8 +81,12 @@ TA = 55;                         // their edges climb this steep
 function lip(x) = MZ + SMILE * pow(x / (MW / 2), 2);
 TW = MW / NT;
 TH = TW / 2 * tan(TA);
-// the tooth tips rounded 0.8, for small fingers
-module mouth2d() offset(r = -0.8) offset(delta = 0.8) polygon(concat(
+// The tooth tips are left as drawn points. Rounded 0.8 for small fingers, each
+// tip's underside went flat and the slicer propped all eight from the bed
+// (8,683 moves, 2026-10-30); a point facing down cannot be blunted without
+// that. The 0.4 mm bead rounds the printed tip to about 0.2 anyway, and the
+// teeth are 70 deg wedges, not blades.
+module mouth2d() polygon(concat(
     [for (i = [0 : 24]) let (x = -MW / 2 + MW * i / 24) [x, lip(x)]],
     // right to left: a peak at each tooth boundary, a tip between each pair.
     // (Tips only between inner peaks lost the rightmost tooth, 2026-10-30.)
@@ -175,7 +182,19 @@ module fur_use() difference() {
             translate([-0.6, -0.4, 0]) cube([1.2, 0.8, FS + FRINGE - 3]);
 }
 module fur_print() translate([0, 0, HB + FT]) mirror([0, 0, 1]) fur_use();
-module body_print() union() { body(); body_white(); body_red(); body_dark(); }
+// The merged print for the gate: the same solid, built from overlapping pieces
+// rather than colour parts that only touch. Unioned at touching faces the parts
+// came out with open edges, and the slicer read a floor with holes in it
+// (17,463 support moves, 2026-10-30).
+module body_print() difference() {
+    union() {
+        body_shell(); arms(); face(2.0) feet2d();
+        face(1.6) eyes_white2d(); face(1.0) teeth2d(); face(1.6) heart_big2d();
+        dark(); face_on(0.6, 2.4) shine2d();
+    }
+    mouth_cut();
+    obc_engrave(6, depth = 0.8, inset = 0.15, ridges = false);
+}
 
 if      (part == "body")       body();
 else if (part == "body_white") body_white();
