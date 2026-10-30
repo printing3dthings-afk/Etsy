@@ -1,0 +1,13 @@
+parts/canister_print.stl
+  ok    fits_plate: 61.4 x 61.4 x 47.7 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.90mm, median 2.60mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 47.6mm printed of 47.7mm
+  ok    geometry_survives_slicing: printed height 47.6mm vs modelled 47.7mm
+  ok    flat_base: 28.67 cm2 of contact = 76.0% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.3mm widest unsupported span at z=1.0mm; 8 layer(s) under the 4.0s cooling threshold; 3485mm2 on the plate; aspect 0.65
+  note  texture (advisory, never fails the gate): rugosity 1.149 -- light relief, at or above the corpus p50
+PRODUCT GATE FAILED
