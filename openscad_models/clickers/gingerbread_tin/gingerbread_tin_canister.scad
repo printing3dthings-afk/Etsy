@@ -46,9 +46,12 @@ PA     = 40;                      // its slopes, from vertical
 CH_H   = 1.0;                     // the pocket's chamfer up to the cutout
 POCKET = mx_cutout + 2 * CH_H * tan(PA);   // 15.7 square: room for the clips under the plate
 PDEEP  = well_h;                  // the switch's body and pins, and 0.6 spare
-PFLOOR = 1.2;
-POD_H  = PDEEP + PFLOOR;          // 10.1
-POD_R  = SPIG_R - POD_H * tan(PA);   // 20.1: from the spigot down to the foot
+// 1.3, so the pod lifts the lid a whole 51 layers. At 1.2 (10.1) every detail on
+// top fell half a layer off where the clicker's lid prints it, and the white
+// snowflakes' tips dropped out: 25 fidelity flags to the lid's 0 (2026-10-30).
+PFLOOR = 1.3;
+POD_H  = PDEEP + PFLOOR;          // 10.2
+POD_R  = SPIG_R - POD_H * tan(PA);   // 20.0: from the spigot down to the foot
 
 // the canister
 T      = 46;                      // the face the lid's spigot stands over
