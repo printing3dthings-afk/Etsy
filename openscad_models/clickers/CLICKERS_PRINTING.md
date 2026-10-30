@@ -47,6 +47,77 @@ tin; the switch's legs drop into the tin's well. Press the cookie onto the
 switch's cross. The nest is the cookie's own outline with 0.6 mm to spare, so
 it guides him straight down even if you press his head or a foot.
 
+## Gingerbread Tin Canister (`gingerbread_tin/gingerbread_tin_canister.3mf`)
+
+2026-10-30, your ask: a tin that actually holds things, with the lid as the
+clicker, and the square opening under the lid filled in. 61 mm across and
+60 mm tall with the cookie on. It holds 89 cm³: sweets, paper clips, a
+folded gift card.
+
+**You print two new parts.** The cookie and the switch come off the clicker
+you already printed and go on the new lid. The clicker's tin isn't used.
+
+| print | colours (AMS slot) | as it sits in the file | sliced, one colour |
+|---|---|---|---|
+| the canister | red 1, white snowflakes 2 | on its base | 51 min, 8.7 m, about 26 g |
+| the closed lid | red 1, green holly 3, white snowflakes 2 | on the pod under it | 33 min, 6.4 m, about 19 g |
+| the cookie (only if you need another) | as the clicker's | face up | as the clicker's |
+
+**What's different:**
+- **The canister** is the clicker's tin made tall and hollow: the same rolled
+  beads at the foot and the top, the same lip, and three staggered rows of
+  ten raised snowflakes. The OBC mark is engraved under the base.
+- **The closed lid** is the clicker's lid, unchanged on top, with a pod
+  under the switch plate. The switch's body and legs sit in a closed square
+  pocket, so nothing in the tin reaches the switch, and from below it's solid.
+  The pod's cone drops into the canister's mouth and seats on a matching ring
+  inside it. That ring holds the lid; the lid lifts straight off.
+
+**Put it together:** push the switch into the new lid from above, through the
+cookie-shaped nest, until its clips snap under the plate. Press the cookie
+onto the switch, then set the lid on the canister.
+
+**Checked before it was pushed** (`gingerbread_tin/check_canister.py`, and
+the same tools as the clickers, results in `gingerbread_tin/checks/`):
+- **Fit:**
+  - The lid rests on its seat. 0.1 mm lower it would be 17.7 mm³ into the
+    canister, so it can't drop in.
+  - Lifted 0.3 mm and slid sideways, it touches nothing, so it lifts off
+    without binding.
+  - The cookie clears the lid as on the clicker.
+  - The switch's body and pins clear the pocket, and the pod is solid under
+    the cutout.
+- **Supports: none on either print**, after two fixes the slicer found:
+  1. **A flat 1.0 mm ledge** round the cutout under the plate, for the
+     clips to catch on, was a ceiling: 12,196 support moves. The pocket now
+     closes in at a slope to the cutout instead, so the clips catch on its
+     edge, where the plate is the 1.5 mm they expect.
+  2. **At 45°, the slicer's own threshold**, that slope and the pod's cone
+     still drew 11,524 moves. At 40° from vertical, none.
+- **Product gate:**
+  - The closed lid PASSES.
+  - The canister reads FAIL on the wall check only: the raised snowflakes,
+    0.9 mm strokes, as on the tin.
+- **Print fidelity:**
+  - Closed lid: no flags, the same result as the clicker's lid.
+    - This took a fix. With a 1.2 mm pod floor, the pod lifted the lid 10.1 mm,
+      which is half a layer off. Every detail on top then landed between
+      layers, and the white snowflakes' tips dropped out: 25 flags.
+    - A 1.3 mm floor makes the lift 10.2 mm, a whole 51 layers.
+  - Canister: 30 flags, one per snowflake, 0.07 mm³ each. It's the round tip
+    of each downward arm, which comes out about a quarter-millimetre short;
+    you won't see it. The tin's 10 flags are the same kind, on its upward
+    tips.
+- **Fragility:** 0 high, 0 watch on both.
+- **Not tested on the printer yet.** The clip catch is the one part I'd watch.
+  - If the switch doesn't stay snapped in, a drop of glue under the plate's
+    edge holds it.
+  - Or tell me, and I'll open the pocket.
+
+Renders: `gingerbread_tin/images/canister_{front,three_quarter,top}.png`,
+from the real exported parts, assembled. They're design-review renders, not
+photos.
+
 ## Cookie Jar Peek-a-boo (`cookie_jar/cookie_jar_clicker.3mf`)
 
 50 mm across, 72 mm tall with him popped up.
@@ -139,7 +210,9 @@ photos. For the contest page, photos of the real prints will do better.
 
 ## Rebuilding
 
-`./build.sh [tin|jar]` exports every part (OpenSCAD's CGAL, one at a time).
+`./build.sh [tin|jar]` exports every part (OpenSCAD's CGAL, one at a time),
+the canister and closed lid with the tin. `python3 gingerbread_tin/check_canister.py`
+checks the canister's fits; `python3 render_clickers.py canister --views` renders it.
 `./ship.sh tin|jar` runs the fit check, gate, fidelity and fragility, and
 writes the 3MFs. `python3 render_clickers.py tin|jar --views` renders. The
 STLs aren't committed; the 3MFs hold every part.

@@ -39,6 +39,36 @@ you press.
 
 ---
 
+## Gingerbread Tin Canister (add-on, or its own upload)
+
+**Title:** Gingerbread Tin Canister: Christmas Storage Tin with a Clicker Lid
+
+A Christmas tin that holds things, with a lid you can click. Press the
+gingerbread man on the lid and a real keyboard switch clicks. Lift the lid
+off and the tin holds sweets, clips or a folded gift card (89 cm³).
+
+**What you need**
+- 1 plate-mount Cherry MX switch, or any MX clone. If you printed the
+  Gingerbread Tin Clicker, its switch and cookie move straight over.
+
+**Printing**
+- Two parts, the canister and its closed lid, plus the cookie from the
+  clicker (it's in this file too). PLA, 0.2 mm layers, no supports, the
+  orientation as it opens.
+- Red, white and green on the tin and lid, brown for the cookie. In one
+  colour all the detail still reads, because it's raised.
+- About 45 g and an hour and a half in one colour, not counting the cookie.
+
+**Assembly**
+1. Push the switch into the lid from above, through the cookie-shaped hole,
+   until it snaps in. Underneath, the switch sits in a closed pocket, so
+   nothing in the tin can get into it.
+2. Press the cookie onto the switch.
+3. Set the lid on the tin. It seats on a ring inside the mouth and lifts
+   straight off.
+
+---
+
 ## Cookie Jar Peek-a-boo Clicker
 
 **Title:** Cookie Jar Peek-a-boo Clicker: Gingerbread MX Switch Fidget
