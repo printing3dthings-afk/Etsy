@@ -1,0 +1,13 @@
+parts/leg_front_l.stl
+  ok    fits_plate: 15.1 x 14.5 x 16.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.40mm, median 7.98mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 16.0mm printed of 16.0mm
+  ok    geometry_survives_slicing: printed height 16.0mm vs modelled 16.0mm
+  ok    flat_base: 1.48 cm2 of contact = 67.7% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=2.0mm; 79 layer(s) under the 4.0s cooling threshold; 212mm2 on the plate; aspect 0.58
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED

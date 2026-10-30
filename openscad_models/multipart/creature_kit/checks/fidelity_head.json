@@ -1,0 +1,29 @@
+{
+ "layers": 163,
+ "model_volume_mm3": 37501.8,
+ "dropped_mm3": 0.0,
+ "filled_mm3": 0.0,
+ "colour_mm3": 0.0,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "dropped",
+   "colour": "#F4B2C5",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    31.4,
+    31.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.0,
+    -4.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.05,
+   "depth_mm": 0.14,
+   "flag": false
+  }
+ ]
+}

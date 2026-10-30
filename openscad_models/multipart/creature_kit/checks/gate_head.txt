@@ -1,0 +1,13 @@
+parts/head.stl
+  ok    fits_plate: 50.0 x 34.0 x 32.6 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.59mm, median 31.53mm (floor 1.2mm); 0.15% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 32.6mm printed of 32.6mm
+  ok    geometry_survives_slicing: printed height 32.6mm vs modelled 32.6mm
+  ok    flat_base: 9.20 cm2 of contact = 54.1% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=30.6mm; 122 layer(s) under the 4.0s cooling threshold; 1172mm2 on the plate; aspect 0.57
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED
