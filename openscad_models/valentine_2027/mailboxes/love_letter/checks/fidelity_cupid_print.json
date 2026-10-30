@@ -1,0 +1,409 @@
+{
+ "layers": 34,
+ "model_volume_mm3": 7368.9,
+ "dropped_mm3": 0.72,
+ "filled_mm3": 0.41,
+ "colour_mm3": 0.04,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "filled",
+   "colour": "#F9C9A6",
+   "tool": 1,
+   "volume_mm3": 0.407,
+   "z_mm": [
+    0.0,
+    5.8
+   ],
+   "layers": 29,
+   "at_xy": [
+    10.4,
+    31.2
+   ],
+   "side": "right",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.114,
+   "z_mm": [
+    0.0,
+    6.0
+   ],
+   "layers": 30,
+   "at_xy": [
+    27.2,
+    35.7
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.112,
+   "z_mm": [
+    0.0,
+    6.0
+   ],
+   "layers": 30,
+   "at_xy": [
+    26.7,
+    37.1
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.089,
+   "z_mm": [
+    0.0,
+    3.0
+   ],
+   "layers": 15,
+   "at_xy": [
+    1.2,
+    40.9
+   ],
+   "side": "back",
+   "max_width_mm": 0.19,
+   "depth_mm": 0.23,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.068,
+   "z_mm": [
+    0.0,
+    3.6
+   ],
+   "layers": 18,
+   "at_xy": [
+    18.5,
+    35.2
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.065,
+   "z_mm": [
+    0.0,
+    3.6
+   ],
+   "layers": 18,
+   "at_xy": [
+    20.1,
+    31.3
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.047,
+   "z_mm": [
+    0.0,
+    0.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    1.3,
+    41.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.36,
+   "depth_mm": 0.43,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#F9C9A6",
+   "tool": 1,
+   "volume_mm3": 0.044,
+   "z_mm": [
+    0.0,
+    6.2
+   ],
+   "layers": 31,
+   "at_xy": [
+    -5.4,
+    39.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.06,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 3,
+   "volume_mm3": 0.043,
+   "z_mm": [
+    0.0,
+    0.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.3,
+    16.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.32,
+   "depth_mm": 0.39,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.042,
+   "z_mm": [
+    0.0,
+    0.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -1.3,
+    41.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.31,
+   "depth_mm": 0.38,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 2,
+   "volume_mm3": 0.042,
+   "z_mm": [
+    0.4,
+    2.6
+   ],
+   "layers": 11,
+   "at_xy": [
+    0.5,
+    12.9
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F9C9A6",
+   "tool": 1,
+   "volume_mm3": 0.039,
+   "z_mm": [
+    0.0,
+    2.6
+   ],
+   "layers": 13,
+   "at_xy": [
+    1.2,
+    40.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.22,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 3,
+   "volume_mm3": 0.014,
+   "z_mm": [
+    5.2,
+    6.2
+   ],
+   "layers": 5,
+   "at_xy": [
+    -4.4,
+    27.4
+   ],
+   "side": "left",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.2,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 2,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    4.0,
+    4.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.8,
+    14.3
+   ],
+   "side": "front",
+   "max_width_mm": 0.12,
+   "depth_mm": 0.16,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    5.4,
+    5.8
+   ],
+   "layers": 2,
+   "at_xy": [
+    6.8,
+    41.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.1,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 2,
+   "volume_mm3": 0.007,
+   "z_mm": [
+    4.0,
+    4.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.8,
+    15.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.16,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    0.4,
+    0.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    6.8,
+    41.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.11,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 3,
+   "volume_mm3": 0.005,
+   "z_mm": [
+    5.8,
+    6.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    -2.2,
+    21.9
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.2,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.004,
+   "z_mm": [
+    5.8,
+    6.0
+   ],
+   "layers": 1,
+   "at_xy": [
+    1.2,
+    27.3
+   ],
+   "side": "left",
+   "max_width_mm": 0.12,
+   "depth_mm": 0.16,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    5.8,
+    6.0
+   ],
+   "layers": 1,
+   "at_xy": [
+    1.7,
+    25.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 2,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    5.2,
+    5.6
+   ],
+   "layers": 2,
+   "at_xy": [
+    -9.5,
+    17.5
+   ],
+   "side": "front",
+   "max_width_mm": 0.05,
+   "depth_mm": 0.15,
+   "flag": false
+  }
+ ]
+}

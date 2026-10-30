@@ -1,0 +1,25 @@
+slicing 4 part(s), 4 filament(s) ...
+34 layers parsed
+  layer 0/34
+
+PRINT FIDELITY  (34 layers, model 7368.9 mm3)
+  dropped (modelled, not printed): 0.72 mm3
+  filled  (printed, not modelled): 0.41 mm3
+  colour  (printed, other filament): 0.04 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       filled  #F9C9A6 slot 1     0.407 mm3  z 0.0-5.8 (29 layers)  right at [10.4, 31.2]  0.08 mm wide, 0.14 mm deep
+       dropped #3B2A3A slot 4     0.114 mm3  z 0.0-6.0 (30 layers)  right at [27.2, 35.7]  0.11 mm wide, 0.15 mm deep
+       dropped #3B2A3A slot 4     0.112 mm3  z 0.0-6.0 (30 layers)  right at [26.7, 37.1]  0.11 mm wide, 0.15 mm deep
+       dropped #3B2A3A slot 4     0.089 mm3  z 0.0-3.0 (15 layers)  back at [1.2, 40.9]  0.19 mm wide, 0.23 mm deep
+       dropped #3B2A3A slot 4     0.068 mm3  z 0.0-3.6 (18 layers)  right at [18.5, 35.2]  0.11 mm wide, 0.15 mm deep
+       dropped #3B2A3A slot 4     0.065 mm3  z 0.0-3.6 (18 layers)  right at [20.1, 31.3]  0.11 mm wide, 0.15 mm deep
+       dropped #3B2A3A slot 4     0.047 mm3  z 0.0-0.2 (1 layers)  back at [1.3, 41.8]  0.36 mm wide, 0.43 mm deep
+       colour  #F9C9A6 slot 1     0.044 mm3  z 0.0-6.2 (31 layers)  back at [-5.4, 39.7]  0.06 mm wide
+       dropped #D7263D slot 3     0.043 mm3  z 0.0-0.2 (1 layers)  front at [0.3, 16.0]  0.32 mm wide, 0.39 mm deep
+       dropped #3B2A3A slot 4     0.042 mm3  z 0.0-0.2 (1 layers)  back at [-1.3, 41.8]  0.31 mm wide, 0.38 mm deep
+       dropped #F4F1EA slot 2     0.042 mm3  z 0.4-2.6 (11 layers)  front at [0.5, 12.9]  0.11 mm wide, 0.15 mm deep
+       dropped #F9C9A6 slot 1     0.039 mm3  z 0.0-2.6 (13 layers)  back at [1.2, 40.8]  0.13 mm wide, 0.22 mm deep
+       dropped #D7263D slot 3     0.014 mm3  z 5.2-6.2 (5 layers)  left at [-4.4, 27.4]  0.09 mm wide, 0.2 mm deep
+       dropped #F4F1EA slot 2     0.009 mm3  z 4.0-4.4 (2 layers)  front at [-0.8, 14.3]  0.12 mm wide, 0.16 mm deep
+       dropped #3B2A3A slot 4     0.008 mm3  z 5.4-5.8 (2 layers)  back at [6.8, 41.8]  0.11 mm wide, 0.1 mm deep
+  ... 6 smaller

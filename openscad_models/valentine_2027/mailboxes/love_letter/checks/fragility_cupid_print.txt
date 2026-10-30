@@ -1,0 +1,16 @@
+  x: 1 slender run(s)
+  y: 1 slender run(s)
+unrecoverable polygon
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/dist-packages/trimesh/path/polygons.py", line 576, in paths_to_polygons
+    polygons[i] = repair_invalid(polygon, scale)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/trimesh/path/polygons.py", line 706, in repair_invalid
+    rings = polygon.exterior.buffer(distance).interiors
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MultiPolygon' object has no attribute 'interiors'
+  z: 0 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 0 watch (>= 4.0), 2 slender runs
+        along x    7.2 mm long  ~3.56 mm2 (thinnest 3.56)  slenderness 3.8  at [np.float64(13.4), np.float64(22.3), np.float64(1.3)]
+        along y    8.8 mm long  ~6.59 mm2 (thinnest 6.48)  slenderness 3.4  at [np.float64(19.1), np.float64(25.7), np.float64(1.8)]

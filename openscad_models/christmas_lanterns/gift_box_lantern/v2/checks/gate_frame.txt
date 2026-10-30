@@ -1,0 +1,13 @@
+parts/frame.stl
+  ok    fits_plate: 75.6 x 75.6 x 62.9 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  FAIL  no_floating_geometry: 9 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.98mm, median 2.40mm (floor 1.2mm); 0.45% below one bead
+  FAIL  no_unsupported_overhang: slicer: 12636 support moves, 0 overhang perimeters, 62.8mm printed of 62.86mm
+  ok    geometry_survives_slicing: printed height 62.8mm vs modelled 62.86mm
+  ok    flat_base: 56.29 cm2 of contact = 98.5% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 6.2mm widest unsupported span at z=1.0mm; 467 layer(s) under the 4.0s cooling threshold; 6773mm2 on the plate; aspect 0.71
+  note  texture (advisory, never fails the gate): rugosity 1.433 -- genuinely textured, at or above the corpus p75
+PRODUCT GATE FAILED
