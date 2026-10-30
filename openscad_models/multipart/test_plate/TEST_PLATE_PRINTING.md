@@ -57,6 +57,12 @@ sets; their clearance is on the base they sit on.
 place to record every result as you go (Claude reads them back from there):
 https://claude.ai/artifact/MUj1R6JJRJJHFq3e3q4EFJ
 
+**For MakerWorld (2026-10-30):** `guide/Fit_Test_Plate_Guide.pdf` is the same
+testing as a 9-page visual guide for anyone who downloads the plate. It has
+renders of each pair apart and put together, the steps, how to judge each fit,
+a results sheet, and how to use the numbers. Rebuild it with
+`python3 guide/render_guide.py && python3 guide/build_guide.py`.
+
 ## What to send back
 
 One line per mechanism is enough, e.g.:

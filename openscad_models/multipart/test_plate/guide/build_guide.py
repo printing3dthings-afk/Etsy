@@ -73,19 +73,20 @@ def crop(path, pad=0.04):
     out = HERE.parent / "logs" / "guide" / (Path(path).stem + "_crop.jpg")
     out.parent.mkdir(parents=True, exist_ok=True)
     # the studio renders come out pale; stretch them to full range for print
-    ImageOps.autocontrast(im.crop(box), cutoff=0.4).save(out, quality=90)
+    ImageOps.autocontrast(im.crop(box), cutoff=0.4, preserve_tone=True).save(out, quality=90)
     return out
 
 
-def image_in(c, path, x, y, w, h, round_=8):
-    """Fits an image inside the box (x, y bottom-left), centred, on a panel."""
+def image_in(c, path, x, y, w, h, round_=8, top=0):
+    """Fits an image inside the box (x, y bottom-left), centred, on a panel,
+    leaving `top` points clear above it for a caption."""
     c.setFillColor(PANEL)
     c.roundRect(x, y, w, h, round_, stroke=0, fill=1)
     r = ImageReader(str(path))
     iw, ih = r.getSize()
-    s = min((w - 12) / iw, (h - 12) / ih)
+    s = min((w - 12) / iw, (h - top - 12) / ih)
     dw, dh = iw * s, ih * s
-    c.drawImage(r, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh)
+    c.drawImage(r, x + (w - dw) / 2, y + (h - top - dh) / 2, dw, dh)
 
 
 def pill(c, x, y, text, col, size=8.5, fg=white):
@@ -184,22 +185,23 @@ def overview(c):
     c.setFillColor(INK)
     c.setFont("Head", 24)
     c.drawString(M, H - 76, "What's on the plate")
-    para(c, "Each colour below is one mechanism: three pairs, one at each clearance. In every pair "
-            "<b>one part changes and the other is the same in all three</b>. The part that changes carries "
-            "its clearance, engraved on a little tab or in its base. Some fixed parts carry a matching label too, just to keep pairs together.", M, H - 90, W - 2 * M, LEDE)
+    lh = para(c, "Each colour below is one mechanism: three pairs, one at each clearance. In every pair "
+                 "<b>one part changes and the other is the same in all three</b>. The part that changes carries "
+                 "its clearance, engraved on a little tab or in its base. Some fixed parts carry a matching "
+                 "label too, just to keep pairs together.", M, H - 90, W - 2 * M, LEDE)
     key = crop(IMG / "plate_key.png", 0.02)
-    image_in(c, key, M, H - 452, W - 2 * M, 316)
+    image_in(c, key, M, H - 462, W - 2 * M, 362 - lh - 12)
 
     # the key's table
     y = H - 476
-    cols = [M, M + 92, M + 262, M + 382]
+    cols = [M, M + 88, M + 240, M + 352]
     c.setFont("BodyB", 8.4)
     c.setFillColor(MUTED)
     for x, t in zip(cols, ["Mechanism", "The part that changes", "Its labels", "What the number means"]):
         c.drawString(x, y, t)
-    rows = [("thread", "Thread", "the octagonal nut", "0.2 · 0.3 · 0.4", "gap all round the thread, mm"),
-            ("ball", "Ball joint", "the split socket", "0.4 · 0.6 · 0.8", "how much narrower the mouth is than the ball"),
-            ("gears", "Gears", "the pear-shaped base", "+0 · +0.15 · +0.3", "extra space between the gear centres"),
+    rows = [("thread", "Thread", "the octagonal nut", "0.2 · 0.3 · 0.4", "gap all round the thread"),
+            ("ball", "Ball joint", "the split socket", "0.4 · 0.6 · 0.8", "mouth this much under the ball"),
+            ("gears", "Gears", "the pear-shaped base", "+0 · +0.15 · +0.3", "extra gap between gear centres"),
             ("detent", "Detent", "the square base", "0.8 · 1.0 · 1.2", "thickness of the spring arm"),
             ("bayonet", "Bayonet", "the cap with lugs", "0.2 · 0.3 · 0.4", "gap round the lugs")]
     y -= 8
@@ -280,8 +282,8 @@ def mech_page(c, n, k, title, tests, label_note, steps, verdicts, tip, apart_cap
     # the pictures: apart, then together
     iy, ih = H - 412, 250
     iw = (W - 2 * M - 46) / 2
-    image_in(c, crop(IMG / f"{k}_apart.png"), M, iy, iw, ih)
-    image_in(c, crop(IMG / f"{k}_together.png"), W - M - iw, iy, iw, ih)
+    image_in(c, crop(IMG / f"{k}_apart.png"), M, iy, iw, ih, top=36)
+    image_in(c, crop(IMG / f"{k}_together.png"), W - M - iw, iy, iw, ih, top=36)
     arrow(c, M + iw + 9, W - M - iw - 9, iy + ih / 2, col)
     for x, cap in ((M, apart_cap), (W - M - iw, together_cap)):
         c.setFont("BodyB", 9)
@@ -369,8 +371,12 @@ def results(c):
         y -= block + 4
     c.setStrokeColor(LINE)
     c.line(M, y, W - M, y)
-    para(c, "Printer, filament and settings, so the numbers mean something later: "
-            "________________________________________________", M, y - 14, W - 2 * M, SMALL)
+    c.setFont("Body", 8.4)
+    c.setFillColor(MUTED)
+    c.drawString(M, y - 22, "Printer, filament and settings, so the numbers mean something later:")
+    c.setStrokeColor(LINE)
+    c.setLineWidth(0.6)
+    c.line(M + 300, y - 24, W - M, y - 24)
     footer(c, 8)
 
 
