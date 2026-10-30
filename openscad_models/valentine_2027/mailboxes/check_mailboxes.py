@@ -35,6 +35,13 @@ def ov(a, b):
     return (a ^ b).volume()
 
 
+def on_bed(name, m):
+    z0 = m.bounding_box()[2]
+    print(f"  {name}: lowest point z {z0:+.3f}")
+    if abs(z0) > 0.01:
+        fails.append(f"{name} reaches below the bed (z {z0:.2f})")
+
+
 def cap_fit(name, body, cap):
     rest, low = ov(body, cap), ov(body, cap.translate([0, 0, -0.1]))
     lift = max(ov(body, cap.translate([dx, dy, 0.2])) for dx, dy in [(0.15, 0), (-0.15, 0), (0, 0.15), (0, -0.15)])
@@ -54,6 +61,8 @@ def main():
     HB, D, WALL, FLOOR = num(s, "HB"), num(s, "D"), num(s, "WALL"), num(s, "FLOOR")
     body, lid = load(str(d / "parts/body_print.stl")), load(str(d / "parts/lid_use.stl"))
     print("Giant Love Letter")
+    on_bed("body", body)
+    on_bed("lid, as printed", load(str(d / "parts/lid.stl")))
     cap_fit("lid", body, lid)
     # the envelope, upright (102 across, 3 thick), pushed down through the slot
     # from above the lid to the floor
@@ -73,6 +82,8 @@ def main():
     HB, B, MZ, CLEAR = num(s, "HB"), num(s, "B"), num(s, "MZ"), num(s, "CLEAR")
     body, fur = load(str(d / "parts/body_print.stl")), load(str(d / "parts/fur_use.stl"))
     print("Hungry Love Monster")
+    on_bed("body", body)
+    on_bed("fur cap, as printed", load(str(d / "parts/fur.stl")))
     cap_fit("fur cap", body, fur)
     # the envelope lying flat (102 across, 70 deep, 3 thick), fed into the mouth
     # at the height of the straight gap's middle, from outside to fully inside

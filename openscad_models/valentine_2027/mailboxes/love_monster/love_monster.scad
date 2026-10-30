@@ -59,7 +59,13 @@ module body_shell() difference() {
 // (the superellipse at |x| = 56), so art stands on a plane BURY inside the
 // wall at y = -B + BURY and comes out h proud at the middle.
 BURY = 3.5;
-module face(h, z0 = 0) translate([0, -B + BURY - z0, 0]) rotate([90, 0, 0]) art_skirt(h + BURY, 1) children();
+// Clipped at the bed: the skirts under the feet and the heart's point ran 6.4 mm
+// below z = 0, and the slicer stood the whole body on them (30,182 support
+// moves, 0.1% of the base on the plate, 2026-10-30).
+module face(h, z0 = 0) intersection() {
+    translate([0, -B + BURY - z0, 0]) rotate([90, 0, 0]) art_skirt(h + BURY, 1) children();
+    translate([-500, -500, 0]) cube(1000);
+}
 module face_on(h, z0) translate([0, -B - z0, 0]) rotate([90, 0, 0]) art_skirt(h, 1) children();
 
 // the mouth: a smile, its top a row of teeth
