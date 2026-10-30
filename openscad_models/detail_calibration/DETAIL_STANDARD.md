@@ -131,6 +131,20 @@ matters.
    smaller than a layer needs the bead-level probe (`measure_coupon.py` shows
    the method), because the fidelity tool calls it a tie.
 
+10. **Lettering is 3 mm tall on the 0.4 nozzle; 2 mm only on a face printed
+    upward** (added 2026-10-30, measured: `text_test/`, `FINE_DETAIL_RESEARCH.md`).
+    Below that the letters blob or lose strokes. A 0.2 mm nozzle reads cleanly
+    from 1.5 mm.
+
+11. **Every separate small shape is at least 0.8 mm across** on the 0.4
+    nozzle: a dot, a pupil, a berry, a rivet, or a colour island. On a top face
+    0.4 and 0.6 mm dots are not shrunk, they are dropped.
+
+12. **The nozzle sets the smallest shape; the layer height sets the smallest
+    step.** 0.08 mm layers on the 0.4 nozzle changed nothing for letters or
+    dots. Pick the layer height for what climbs (rule 4), and use variable
+    layer height to put fine layers only there.
+
 ## Working fast enough to iterate
 
 OpenSCAD 2021.01's CGAL engine took 1–3 hours per part on the workshop. A

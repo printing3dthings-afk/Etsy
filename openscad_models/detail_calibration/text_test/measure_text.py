@@ -58,7 +58,7 @@ def model_section(mesh, z):
     s = mesh.section(plane_origin=[0, 0, z], plane_normal=[0, 0, 1])
     if s is None:
         return None
-    p, _ = s.to_planar(to_2D=np.eye(4))
+    p, _ = s.to_2D(to_2D=np.eye(4))
     return unary_union(list(p.polygons_full))
 
 
@@ -111,7 +111,7 @@ def main():
             virtual_printer.slice_model(HERE / "text_coupon.stl", g, supports=False, extra=extra)
         out[name] = measure(g, mesh)
         print(name, "done", flush=True)
-    (HERE / "logs" / "measured_text.json").write_text(json.dumps(out, indent=1))
+    (HERE / "measured_text.json").write_text(json.dumps(out, indent=1))
     keys = list(next(iter(out.values())))
     print(f"{'feature':24s}" + "".join(f"{n[:22]:>24s}" for n in out))
     for k in keys:
