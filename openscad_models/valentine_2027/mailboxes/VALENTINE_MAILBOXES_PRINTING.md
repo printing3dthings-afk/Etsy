@@ -95,13 +95,13 @@ design's `checks/` folder.
   - The ledge laps the face by 2.5 mm, down from 3.5, to keep its slope at
     40°.
 - **Print fidelity:**
-  - LETTER_FID
+  - The letter: no flags on the envelope (all four colours) or on the lid.
   - The monster face: no flags.
-  - The monster body: MBODY_FID
+  - The monster body: no flags.
   - The fur cap has one flag, 0.7 mm³. It's on the inside of the fringe at a
     front corner, where a scallop's edge thins to 0.28 mm and the printer
     rounds it off. It isn't visible.
-- **Fragility:** FRAG
+- **Fragility:** nothing high and nothing on watch, on all five prints.
 - **Not tested on the printer yet.** Two things I'd watch:
   - **How the face slides.** It has 0.3 mm clearance each side.
     - If it's tight, sand the face's edges.
