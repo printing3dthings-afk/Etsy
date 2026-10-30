@@ -72,10 +72,12 @@ W = {
  ("victorian", "santas_workshop"): dict(
     tag="santa workshop",
     hook="The village's centrepiece: a toy factory that is also a castle, laid in brick all over, its sawtooth roofs and seven big windows glowing with toys.",
-    feat=["Raised brick all over, staggered joints on every wall, turret and chimney, under three sawtooth roofs of raised slates, each tall face glazed with three lights",
-          "Seven big arched windows, each with its own toys raised on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit from inside, the toys show dark against the glow",
-          "Four round turrets under snow-capped cones, a crenellated gatehouse with wreathed doors under a raised SANTA'S WORKSHOP sign and a rose window",
-          "Two brick chimney stacks with garlands, a NORTH POLE sign on its pole, a snow base with drifts"]),
+    feat=["Raised brick all over, staggered joints on every wall, turret and chimney, under three sawtooth roofs of raised slates, each slate jointed on its own and each tall face glazed with three lights",
+          "Seven big arched windows framed in stone voussoirs, each with its own toys raised on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit from inside, the toys show dark against the glow",
+          "Four round turrets under snow-capped cones on rings of corbel brackets, a crenellated gatehouse with a cornice on dentils, planked and wreathed doors under a raised SANTA'S WORKSHOP sign, and a rose window",
+          "Two brick chimney stacks with garlands, a NORTH POLE sign on its pole, a snow base with drifts",
+          "One open hall inside, with a ring on the floor for each of the three tealights, one in each bay"],
+    lights=3),
  ("victorian", "clock_tower"): dict(
     hook="A square clock tower rising out of a round drum, with a clock face set at ten past ten on every side.",
     tag="clock tower decor",
@@ -173,15 +175,33 @@ def box(size) -> str:
 
 def title_for(style: str, slug: str) -> str:
     lead = B[(style, slug)]["lead"].replace(" STL 3MF", "")
-    return f"{lead}, {TAIL[style]}"
+    tail = TAIL[style]
+    if W[(style, slug)].get("lights", 1) > 1:
+        tail = tail.replace("LED Tealight Included", f"{W[(style, slug)]['lights']} LED Tealights Included")
+    return f"{lead}, {tail}"
+
+
+def lit(w: dict, then: str = "") -> str:
+    n = w.get("lights", 1)
+    words = "one battery LED tealight" if n == 1 else f"{ {2: 'two', 3: 'three'}[n]} battery LED tealights"
+    return f"{words} {then}" if then else words
+
+
+def lighting(w: dict) -> str:
+    if w.get("lights", 1) == 1:
+        return ("The building is hollow with an open base. Switch on the tealight, set the building over it, "
+                "and it glows through every window. Any battery tealight up to 38 mm across and 45 mm tall fits.")
+    return ("The building is hollow with an open base. Switch on the tealights, stand them on the table and "
+            "lower the building over them: rings on its floor centre one in each bay, and every window glows. "
+            "Any battery tealight up to 38 mm across and 45 mm tall fits.")
 
 
 def description(w: dict, f: dict, label: str) -> str:
     sx, sy, sz = f["size"]
     feats = "\n".join(f"• {x}" for x in w["feat"])
-    return f"""{w['hook']} This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with a battery LED tealight to light it. Part of the OnBrandCraftz {label} Christmas village.
+    return f"""{w['hook']} This is the finished building, 3D printed in white and shipped unpainted, ready for you to paint, with {lit(w, 'to light it')}. Part of the OnBrandCraftz {label} Christmas village.
 
-⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and one battery LED tealight. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
+⚠️ WHAT ARRIVES: one 3D printed building in plain white, unpainted, and {lit(w)}. Photos marked "shown painted" show a copy painted by hand, to show what it can look like. Want one painted for you? Send a message before ordering.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 THE BUILDING
@@ -197,7 +217,7 @@ def description(w: dict, f: dict, label: str) -> str:
 ━━━━━━━━━━━━━━━━━━━━━━━━
 💡 LIGHTING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-The building is hollow with an open base. Switch on the tealight, set the building over it, and it glows through every window. Any battery tealight up to 38 mm across and 45 mm tall fits. Battery lights only, never a candle with a flame.
+{lighting(w)} Battery lights only, never a candle with a flame.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 PAINTING
@@ -220,7 +240,7 @@ Q: Is it painted?
 A: No. It ships plain white, ready to paint. Painted photos are marked "shown painted".
 
 Q: Is the light included?
-A: Yes, one battery LED tealight comes with every building.
+A: Yes, {lit(w)} come{'s' if w.get('lights', 1) == 1 else ''} with every building.
 
 Q: Can I order one painted, or in a colour?
 A: Send a message before ordering and we'll see what we can do.

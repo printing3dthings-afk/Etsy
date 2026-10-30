@@ -32,6 +32,10 @@ STYLES = {
                                     "cocoa_cafe", "santas_workshop", "cookie_clock_tower"]),
 }
 PARTS = ["body", "roof", "trim", "accent"]
+# A building whose version to sell lives in a subfolder (Scott chose the Santa's
+# Workshop v2 on 2026-10-30). The buyer's files keep the plain name, so a
+# re-download looks the same and only the model inside changes.
+VERSIONS = {("victorian", "santas_workshop"): dict(sub="v2", stem="victorian_santas_workshop_v2", lights=3)}
 CONTACT = "Printing3dthings@outlook.com"
 
 LICENSE = """OnBrandCraftz -- licence for these 3D print files
@@ -49,8 +53,10 @@ You may not:
 
 
 def building_facts(style: str, slug: str) -> dict:
-    d = VILLAGE / style / slug
+    v = VERSIONS.get((style, slug), {})
+    d = VILLAGE / style / slug / v.get("sub", "")
     name = f"{style}_{slug}"
+    stem = v.get("stem", name)
     notes = next(d.glob("*_PRINTING.md")).read_text()
     title = notes.splitlines()[0].lstrip("# ").split(" — ")[0].strip()
     m = re.search(r"^\| \*\*single colour[^|]*\| \*\*([^*]+)\*\* \| \*\*([^*]+)\*\* \|", notes, re.M)
@@ -64,14 +70,28 @@ def building_facts(style: str, slug: str) -> dict:
         if not r:
             raise SystemExit(f"{name}: no colour row for {part} in its notes")
         colours[part] = (r.group(1).strip(), r.group(2).strip(), r.group(3))
-    stls = [d / f"{name}_{p}.stl" for p in PARTS]
-    for f in stls + [d / f"{name}.3mf"]:
+    stls = [d / f"{stem}_{p}.stl" for p in PARTS]
+    for f in stls + [d / f"{stem}.3mf"]:
         if not f.exists():
             raise SystemExit(f"missing {f}")
     bounds = trimesh.util.concatenate([trimesh.load(f) for f in stls]).bounds
     size = bounds[1] - bounds[0]
     return dict(dir=d, name=name, title=title, time=time, grams=grams.group(1) if grams else None,
-                colours=colours, size=size, stls=stls, threemf=d / f"{name}.3mf")
+                colours=colours, size=size, stls=stls, threemf=d / f"{stem}.3mf", lights=v.get("lights", 1))
+
+
+def lighting(b: dict) -> str:
+    if b["lights"] == 1:
+        text = ("The building is hollow with an open base. Set it over a battery LED tealight up to "
+                "about 38 mm across and 45 mm tall (tealight not included), and lift the building "
+                "off to switch it on.")
+    else:
+        n = {2: "two", 3: "three"}[b["lights"]]
+        text = (f"The building is hollow with an open base and lights with {n} battery LED "
+                "tealights, each up to about 38 mm across and 45 mm tall (tealights not included). "
+                "Stand them on the table and lower the building over them: rings on its floor "
+                "centre one in each bay. Lift the building off to switch them on.")
+    return textwrap.fill(text + " Use only battery LED lights, never a candle with a flame.", 76)
 
 
 def readme(b: dict, style_label: str) -> str:
@@ -111,10 +131,7 @@ For a one-colour print, set all four parts to the same filament. White
 prints are ready to paint.
 
 LIGHTING
-The building is hollow with an open base. Set it over a battery LED tealight
-up to about 38 mm across and 45 mm tall (tealight not included), and lift
-the building off to switch it on. Use only battery LED lights, never a
-candle with a flame.
+{lighting(b)}
 
 LICENCE
 Personal use only; see LICENSE.txt.
@@ -127,8 +144,8 @@ def add_building(z: zipfile.ZipFile, b: dict, style_label: str, prefix: str = ""
     z.write(b["threemf"], f"{prefix}{b['name']}.3mf")
     # Binary STL (2026-10-08): OpenSCAD writes ASCII, about five times larger,
     # which put both village bundles over Etsy's 20 MB per-file limit.
-    for s in b["stls"]:
-        z.writestr(f"{prefix}stl/{s.name}", trimesh.load(s, process=False).export(file_type="stl"))
+    for part, s in zip(PARTS, b["stls"]):
+        z.writestr(f"{prefix}stl/{b['name']}_{part}.stl", trimesh.load(s, process=False).export(file_type="stl"))
     z.writestr(f"{prefix}README.txt", readme(b, style_label))
 
 

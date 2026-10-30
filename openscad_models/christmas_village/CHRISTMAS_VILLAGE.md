@@ -21,6 +21,12 @@ of 2026-10-10.
   building** (Scott, 2026-10-08). The listing says so; the download listings
   say a tealight is not included and give the size that fits (up to about
   38 mm across and 45 mm tall).
+- **The Victorian Santa's Workshop sells as v2 from 2026-10-30** (Scott chose
+  it). Its inside is one hall lit by three tealights, so **a printed one ships
+  with three** (Scott, 2026-10-30), and its download says three fit. The
+  download ZIP keeps its old filename with v2 inside; see
+  `listings/SANTA_V2_FILES_LISTING_UPDATE.md`. With v2's larger meshes the
+  Victorian bundle splits into three ZIPs instead of two.
 
 **Signs have raised letters** (2026-10-07): INN, SANTA'S WORKSHOP, TOYS,
 SWEETS and COCOA. Flush inlays were colour alone and vanish on a one-colour

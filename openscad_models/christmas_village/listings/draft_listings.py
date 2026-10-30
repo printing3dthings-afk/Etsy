@@ -73,10 +73,11 @@ B = {
     tag="santa workshop stl",
     lead="Victorian Santa's Workshop STL 3MF, Christmas Village",
     hook="The village's centrepiece: a toy factory that is also a castle, its sawtooth roofs and seven big windows glowing with toys.",
-    feat=["Laid in brick all over, staggered joints on every wall, turret and chimney, under three sawtooth slate roofs whose tall faces are glazed so the roofline glows",
-          "Seven big arched windows, each with its own toys on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit, the toys show dark against the glow, even printed in one colour",
-          "Four round turrets under snowy slate cones, a crenellated gatehouse with wreathed doors under a SANTA'S WORKSHOP sign and a rose window",
-          "Two garlanded brick chimney stacks, a candy-striped NORTH POLE sign, a snow base with drifts"]),
+    feat=["Laid in brick all over, staggered joints on every wall, turret and chimney, under three sawtooth slate roofs whose tall faces are glazed so the roofline glows; every slate has its own joints",
+          "Seven big arched windows with stone voussoirs, each with its own toys on the glass: rocking horses, trains, teddies, drums, sailboats, soldiers, jacks-in-the-box, gifts; lit, the toys show dark against the glow, even printed in one colour",
+          "Four round turrets under snowy slate cones on rings of corbel brackets, a crenellated gatehouse with a cornice on dentils, planked and wreathed doors under a SANTA'S WORKSHOP sign, and a rose window",
+          "Two garlanded brick chimney stacks, a candy-striped NORTH POLE sign, a snow base with drifts"],
+    lights=3),
  ("victorian", "clock_tower"): dict(
     tag="clock tower stl",
     lead="Victorian Christmas Village Clock Tower STL 3MF",
@@ -165,6 +166,23 @@ def title_for(b: dict, style: str) -> str:
     return f"{b['lead']}, {tail}"
 
 
+def lantern(b: dict) -> str:
+    if b.get("lights", 1) == 1:
+        return "• Hollow lantern with an open base: set it over a battery LED tealight and it glows through every window"
+    return f"• Hollow lantern with an open base: set it over {WORDS[b['lights']]} battery LED tealights and it glows through every window"
+
+
+def fits(b: dict) -> str:
+    if b.get("lights", 1) == 1:
+        return "Fits a battery LED tealight up to about 38 mm across and 45 mm tall (not included)."
+    return (f"Lights with {WORDS[b['lights']]} battery LED tealights, each up to about 38 mm across and 45 mm tall "
+            "(not included). Stand them on the table and lower the building over them: rings on its floor "
+            "centre one in each bay.")
+
+
+WORDS = {2: "two", 3: "three"}
+
+
 def description(b: dict, f: dict, label: str) -> str:
     w, d, h = f["size"]
     feats = "\n".join(f"• {x}" for x in b["feat"])
@@ -176,7 +194,7 @@ def description(b: dict, f: dict, label: str) -> str:
 🏠 THE BUILDING
 ━━━━━━━━━━━━━━━━━━━━━━━━
 {feats}
-• Hollow lantern with an open base: set it over a battery LED tealight and it glows through every window
+{lantern(b)}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT YOU GET
@@ -198,7 +216,7 @@ def description(b: dict, f: dict, label: str) -> str:
 ━━━━━━━━━━━━━━━━━━━━━━━━
 💡 LIGHTING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Fits a battery LED tealight up to about 38 mm across and 45 mm tall (not included). Battery LED lights only, never a flame.
+{fits(b)} Battery LED lights only, never a flame.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 ❓ FAQ
