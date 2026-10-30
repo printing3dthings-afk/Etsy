@@ -31,6 +31,11 @@ HOW NOTHING IS LOST, in order:
     python tools/rewrite_history.py --workdir ~/etsy-rewrite            # dry run: everything but the push
     python tools/rewrite_history.py --workdir ~/etsy-rewrite --push     # the real thing
 
+Dry run, 2026-10-30, on a full copy taken that day: 2,142 old copies stripped,
+all 17 branches' files identical by tree hash, every commit kept, 4,022 MB ->
+2,585 MB packed. Most of what remains is files really on the branches today
+(the production branch still carries the old text STLs, for one).
+
 Before --push: make sure no Claude or Codex session is working on the repo.
 After it: every existing clone must be re-cloned (or `git fetch origin` then
 `git reset --hard origin/<branch>`, which discards local changes). Railway
