@@ -15,12 +15,15 @@
 //          assembly
 // The closed lid exports standing on its pod, which is how it prints.
 //
-// The pod's underside is a 45 deg cone, so the lid prints on the pod's flat
-// foot with nothing hanging. The pocket is square and straight-walled: the
-// switch is square, and a straight wall leaves only a 1.0 ledge under the
-// plate for its clips to catch on. A round pocket clearing the switch's corners
-// (the tin's well, r 12) leaves a 5 mm ceiling there, which the slicer propped
-// (clicker_lib.scad's note). The lid seats on a 45 deg ring inside the mouth.
+// The pod's underside is a cone 40 deg from vertical, so the lid prints on the
+// pod's flat foot with nothing hanging. At 45 deg, the slicer's own threshold,
+// the cone and the pocket's chamfer drew 11,524 support moves (2026-10-30).
+// The pocket is square, as the switch is, and closes in at the same slope to the
+// cutout just under the plate, where the clips catch. A round pocket clearing
+// the switch's corners (the tin's well, r 12) leaves a 5 mm ceiling under the
+// plate, which the slicer propped (clicker_lib.scad's note); a flat 1.0 ledge
+// round the cutout drew 12,196 moves. The lid's cone seats on a matching ring inside the
+// canister's mouth.
 
 SH = 1.2;
 include <../../christmas_village/relief_lib.scad>
@@ -39,11 +42,13 @@ TR     = 30.0;
 SPIG_R = TR - LIP_W - JOINT_CLR;  // 28.6
 
 // the pod under the lid
-POCKET = mx_cutout + 2 * 1.0;     // 16 square: 1.0 round the cutout for the clips
+PA     = 40;                      // its slopes, from vertical
+CH_H   = 1.0;                     // the pocket's chamfer up to the cutout
+POCKET = mx_cutout + 2 * CH_H * tan(PA);   // 15.7 square: room for the clips under the plate
 PDEEP  = well_h;                  // the switch's body and pins, and 0.6 spare
 PFLOOR = 1.2;
 POD_H  = PDEEP + PFLOOR;          // 10.1
-POD_R  = SPIG_R - POD_H;          // 18.5: 45 deg from the spigot down to the foot
+POD_R  = SPIG_R - POD_H * tan(PA);   // 20.1: from the spigot down to the foot
 
 // the canister
 T      = 46;                      // the face the lid's spigot stands over
@@ -53,14 +58,14 @@ SEAT   = TR - LIP_W;              // 28.8, the lip's inside
 FLOOR  = 1.6;
 FIL    = 3;                       // the inside's foot is rounded, so a finger scoops it clean
 // The lid's cone (r SPIG_R at its underside) meets the seat's cone (r SEAT at
-// T) when its underside is SEAT - SPIG_R = 0.2 below T.
-LID_S  = T - (SEAT - SPIG_R);
+// T, the same slope) when its underside is 0.2 / tan(PA) = 0.24 below T.
+LID_S  = T - (SEAT - SPIG_R) / tan(PA);
 echo(str("CANISTER lid underside ", LID_S, " cookie rest ", LID_S - S + CZ,
          " pod foot ", LID_S - POD_H, " top ", T + LIP_H));
 
 module canister_solid() rotate_extrude($fn = 240) polygon(concat(
     [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, T - 0.6], [TR + 0.5, T],
-     [TR + 0.5, T + LIP_H], [SEAT, T + LIP_H], [SEAT, T], [RIN, T - (SEAT - RIN)]],
+     [TR + 0.5, T + LIP_H], [SEAT, T + LIP_H], [SEAT, T], [RIN, T - (SEAT - RIN) / tan(PA)]],
     [for (k = [0 : 12]) let (a = 90 * k / 12) [RIN - FIL + FIL * cos(a), FLOOR + FIL - FIL * sin(a)]],
     [[0, FLOOR]]));
 
@@ -78,13 +83,16 @@ module canister() difference() { canister_solid(); canister_mark(); }
 module canister_snow() difference() { canister_snow_raw(); canister_solid(); }
 
 // the closed lid, in the clicker's frame (its underside at S)
-// The pocket's top 1.0 closes in at 45 deg to the cutout's own 14 at the plate.
+// The pocket's top CH_H closes in at PA to the cutout's own 14 at the plate.
 // Flat, that 1.0 ledge under the plate was a ceiling round the cutout: 12,196
 // support moves in the slicer (2026-10-30). The clips' hooks catch on its edge,
 // where the plate is the 1.5 they expect.
 module pocket() {
-    translate([-POCKET / 2, -POCKET / 2, S - PDEEP]) cube([POCKET, POCKET, PDEEP - 1.0 + 0.01]);
-    translate([0, 0, S - 1.0]) linear_extrude(1.3, scale = (POCKET - 2.6) / POCKET) square(POCKET, center = true);
+    translate([-POCKET / 2, -POCKET / 2, S - PDEEP]) cube([POCKET, POCKET, PDEEP - CH_H + 0.01]);
+    // carried 0.3 past the plate's underside on the same slope, so it meets the
+    // cutout exactly at S
+    translate([0, 0, S - CH_H]) linear_extrude(CH_H + 0.3, scale = (mx_cutout - 0.6 * tan(PA)) / POCKET)
+        square(POCKET, center = true);
 }
 // the cone ends at the lid's underside, r SPIG_R at S, so the two only share a face
 module pod() difference() {
