@@ -42,7 +42,8 @@ CH = [10, 12];                   // the back corners' chamfer, across x and alon
                                  // lying on its back it climbs 12 for every 10 out,
                                  // 40 deg off upright
 // the front: a lip, the face's groove, a rib behind it
-LIPT = 4.4; LO = 3.5;            // the lip's depth and how far it laps the face (38 deg)
+LIPT = 4.4; LO = 2.5;            // the lip's depth and how far it laps the face: after its
+                                 // 1.4 land it tapers 2.5 over 3.0, 40 deg
 PT = 3.0; C = 0.3;               // the face's thickness; clearance each side
 RO = 3.0;                        // how far the rib behind the face stands in
 Y0 = -D / 2;                     // the front
@@ -81,7 +82,7 @@ module body_use() difference() {
             // to 0.4 where the groove crosses it, and the lip began as a flat ledge
             // over the groove that the slicer propped (7,333 moves, 2026-10-30).
             translate([0, 0, FLOOR]) linear_extrude(HB) plan(-WALL);
-            translate([-W / 2 + WALL, Y0 - 1, FLOOR]) cube([W - 2 * WALL, YR + RO / tan(40) + 2 - Y0, HB]);
+            translate([-W / 2 + WALL, Y0 - 1, FLOOR]) cube([W - 2 * WALL, YR + LAND + RO / tan(40) + 2 - Y0, HB]);
         }
         intersection() { union() { lips(); ribs(); } linear_extrude(HB) plan(); }
     }
@@ -94,12 +95,16 @@ module body_use() difference() {
 }
 // Lip and rib as wedges: each grows out of the wall over its depth on the side
 // away from the bed, when the body lies on its back.
+// Each keeps its full depth w0 for LAND before it tapers: a wedge that tapers
+// straight from its face ends in a knife edge, and the gate measured it at
+// 0.92 (1st pct) against a 1.2 floor (2026-10-30).
+LAND = 1.4;
 module wedge_x(s, y0, y1, w0, w1) hull() {     // on a side wall, s = -1 or 1; w = how far in
-    translate([s > 0 ? W / 2 - WALL - w0 : -W / 2 + WALL - 0.01, y0, FLOOR - 0.01]) cube([w0 + 0.01, 0.01, HB - FLOOR + 0.01]);
+    for (y = [y0, y0 + LAND - 0.01]) translate([s > 0 ? W / 2 - WALL - w0 : -W / 2 + WALL - 0.01, y, FLOOR - 0.01]) cube([w0 + 0.01, 0.01, HB - FLOOR + 0.01]);
     translate([s > 0 ? W / 2 - WALL - w1 : -W / 2 + WALL - 0.01, y1 - 0.01, FLOOR - 0.01]) cube([w1 + 0.01, 0.01, HB - FLOOR + 0.01]);
 }
 module wedge_z(y0, y1, w0, w1) hull() {        // on the floor
-    translate([-W / 2 + WALL - 0.01, y0, FLOOR - 0.01]) cube([W - 2 * WALL + 0.02, 0.01, w0 + 0.01]);
+    for (y = [y0, y0 + LAND - 0.01]) translate([-W / 2 + WALL - 0.01, y, FLOOR - 0.01]) cube([W - 2 * WALL + 0.02, 0.01, w0 + 0.01]);
     translate([-W / 2 + WALL - 0.01, y1 - 0.01, FLOOR - 0.01]) cube([W - 2 * WALL + 0.02, 0.01, w1 + 0.01]);
 }
 module lips() {
@@ -107,8 +112,8 @@ module lips() {
     wedge_z(Y0, Y0 + LIPT, LO, 0);
 }
 module ribs() {
-    for (s = [-1, 1]) wedge_x(s, YR, YR + RO / tan(40), RO, 0);
-    wedge_z(YR, YR + RO / tan(40), RO, 0);
+    for (s = [-1, 1]) wedge_x(s, YR, YR + LAND + RO / tan(40), RO, 0);
+    wedge_z(YR, YR + LAND + RO / tan(40), RO, 0);
 }
 
 // ---------------- the face, drawn flat: x across, z up, relief toward +e ----------------
