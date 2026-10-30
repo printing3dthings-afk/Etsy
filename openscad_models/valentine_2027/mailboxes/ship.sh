@@ -10,7 +10,7 @@ T=../../../tools
 export OPENSCADPATH="$(cd ../../../assets/openscad_libs && pwd)"
 FAST=${OPENSCAD_FAST:-/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun}
 L="body body_red body_white body_dark body_print lid lid_use"
-M="body body_white body_red body_dark body_print fur fur_use"
+M="body body_use face face_white face_red face_dark face_print face_use face_white_use face_red_use face_dark_use fur fur_use"
 if [ "${1:-}" != checks ]; then
     for p in $L; do (cd love_letter && "$FAST" --backend=manifold --export-format binstl -D "part=\"$p\"" -o parts/$p.stl love_letter.scad > logs/$p.log 2>&1) & done; wait
     for p in $M; do (cd love_monster && "$FAST" --backend=manifold --export-format binstl -D "part=\"$p\"" -o parts/$p.stl love_monster.scad > logs/$p.log 2>&1) & done; wait
@@ -29,6 +29,7 @@ check() {   # dir print colour-parts...
 }
 check love_letter body_print body.stl:#F6A6C1 body_red.stl:#D7263D body_white.stl:#F4F1EA body_dark.stl:#3B2A3A
 check love_letter lid lid.stl:#F6A6C1
-check love_monster body_print body.stl:#B79CE0 body_white.stl:#F4F1EA body_red.stl:#D7263D body_dark.stl:#2B2433
+check love_monster body body.stl:#B79CE0
+check love_monster face_print face.stl:#B79CE0 face_white.stl:#F4F1EA face_red.stl:#D7263D face_dark.stl:#2B2433
 check love_monster fur fur.stl:#F58CB4
 echo SHIP_DONE

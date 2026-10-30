@@ -76,21 +76,32 @@ def main():
     inside = inside ^ box(-89, 89, -D / 2 + WALL - 0.1, D / 2 - WALL + 0.1, FLOOR, HB)
     print(f"  holds {inside.volume() / 1e6:.2f} L")
 
-    # the monster
+    # the monster: body, face (slid into its groove) and fur cap
     d = HERE / "love_monster"
     s = (d / "love_monster.scad").read_text()
-    HB, B, MZ, CLEAR = num(s, "HB"), num(s, "B"), num(s, "MZ"), num(s, "CLEAR")
-    body, fur = load(str(d / "parts/body_print.stl")), load(str(d / "parts/fur_use.stl"))
+    HB, MZ, CLEAR = num(s, "HB"), num(s, "MZ"), num(s, "CLEAR")
+    body = load(str(d / "parts/body_use.stl"))
+    face = mf.Manifold.batch_boolean([load(str(d / f"parts/{p}_use.stl")) for p in ("face", "face_white", "face_red", "face_dark")],
+                                     mf.OpType.Add)
+    fur = load(str(d / "parts/fur_use.stl"))
     print("Hungry Love Monster")
-    on_bed("body", body)
-    on_bed("fur cap, as printed", load(str(d / "parts/fur.stl")))
-    cap_fit("fur cap", body, fur)
+    for p in ("body", "face", "fur"):
+        on_bed(f"{p}, as printed", load(str(d / f"parts/{p}.stl")))
+    rest = ov(body, face)
+    out = max(ov(body, face.translate([0, 0, z])) for z in (5, 30, 80, 150))
+    fwd, back = ov(body, face.translate([0, -0.6, 0])), ov(body, face.translate([0, 0.6, 0]))
+    print(f"  face in its groove {rest:.3f} mm3; sliding up and out {out:.3f}; pushed 0.6 forward {fwd:.1f}, back {back:.1f}")
+    if rest > 0.05 or out > 0.05:
+        fails.append("the face does not slide freely in its groove")
+    if fwd < 1 or back < 1:
+        fails.append("the groove does not hold the face")
+    whole = mf.Manifold.batch_boolean([body, face], mf.OpType.Add)
+    cap_fit("fur cap", whole, fur)
     # the envelope lying flat (102 across, 70 deep, 3 thick), fed into the mouth
     # at the height of the straight gap's middle, from outside to fully inside
     zc = MZ + 3 + (CLEAR - 3) / 2           # corners 3 higher; the gap is CLEAR - 3 straight
     card = box(-51, 51, 0, 70, zc - 1.5, zc + 1.5)
-    worst = max(ov(body, card.translate([0, y, 0])) + ov(fur, card.translate([0, y, 0]))
-                for y in [-B - 80, -B - 40, -B - 10, -B + 10])
+    worst = max(ov(whole, card.translate([0, y, 0])) for y in [-140, -100, -70, -50, -20])
     print(f"  a 102 x 70 x 3 envelope into the mouth at z {zc:.1f}: {worst:.3f} mm3 in the way")
     if worst > 0.01:
         fails.append("the monster's mouth blocks an envelope")
