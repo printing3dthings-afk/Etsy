@@ -5,10 +5,15 @@
 //
 // Two prints, and the clicker's own cookie and switch move over unchanged:
 //   the canister     the clicker's red tin made tall and hollow, with the same
-//                    lip at its mouth, so the lid sits on it as on the tin
+//                    threaded collar at its mouth, so the lid screws on as on
+//                    the tin
 //   the closed lid   the clicker's lid with a pod under its plate: the switch's
 //                    body and pins sit in a closed pocket, so nothing in the
 //                    canister reaches the switch and the square isn't open
+//
+// The lid screws on (Scott, 2026-11-03: "the gingerbread big tin needs the
+// screw on top like the little one"). Same thread as the clicker's tin; the
+// lid screws down until its floor sits on a ring inside the canister's mouth.
 //
 //   part = canister | canister_snow | canister_print
 //          lid_closed | lid_closed_holly | lid_closed_snow | lid_closed_print
@@ -22,8 +27,7 @@
 // cutout just under the plate, where the clips catch. A round pocket clearing
 // the switch's corners (the tin's well, r 12) leaves a 5 mm ceiling under the
 // plate, which the slicer propped (clicker_lib.scad's note); a flat 1.0 ledge
-// round the cutout drew 12,196 moves. The lid's cone seats on a matching ring inside the
-// canister's mouth.
+// round the cutout drew 12,196 moves.
 
 SH = 1.2;
 include <../../christmas_village/relief_lib.scad>
@@ -39,7 +43,9 @@ S      = 1.6 + well_h;            // the lid's underside, in the clicker's frame
 P      = S + mx_plate_t;
 CZ     = mx_cap_z(P);
 TR     = 30.0;
-SPIG_R = TR - LIP_W - JOINT_CLR;  // 28.6
+// and its thread (2026-10-30)
+TH_H = 4.4; TH_R = 28.6; TH_D = 0.7; TH_C = 0.2;
+BORE = TH_R - TH_D + TH_C - 0.1;   // 28.0, the collar's bore
 
 // the pod under the lid
 PA     = 40;                      // its slopes, from vertical
@@ -51,24 +57,26 @@ PDEEP  = well_h;                  // the switch's body and pins, and 0.6 spare
 // snowflakes' tips dropped out: 25 fidelity flags to the lid's 0 (2026-10-30).
 PFLOOR = 1.3;
 POD_H  = PDEEP + PFLOOR;          // 10.2
-POD_R  = SPIG_R - POD_H * tan(PA);   // 20.0: from the spigot down to the foot
+// the ring inside the mouth the lid's floor stops on, and the pod passes
+// through it with 0.3 to spare
+STOP   = 26.0;
+POD_TOP = STOP - 0.3;
+POD_R  = POD_TOP - POD_H * tan(PA);  // 17.1: from under the lid down to the foot
 
 // the canister
-T      = 46;                      // the face the lid's spigot stands over
-LIP_H  = 1.7;                     // 0.3 under the spigot's 2.0, so the lid's flare clears it
-RIN    = 27.6;                    // inside: 2.4 of wall below the seat
-SEAT   = TR - LIP_W;              // 28.8, the lip's inside
+T      = 46;                      // the face the lid's floor sits on
+RIN    = 27.6;                    // inside: 2.4 of wall below the collar
 FLOOR  = 1.6;
 FIL    = 3;                       // the inside's foot is rounded, so a finger scoops it clean
-// The lid's cone (r SPIG_R at its underside) meets the seat's cone (r SEAT at
-// T, the same slope) when its underside is 0.2 / tan(PA) = 0.24 below T.
-LID_S  = T - (SEAT - SPIG_R) / tan(PA);
+LID_S  = T;                       // screwed down, its floor on the ring
 echo(str("CANISTER lid underside ", LID_S, " cookie rest ", LID_S - S + CZ,
-         " pod foot ", LID_S - POD_H, " top ", T + LIP_H));
+         " pod foot ", LID_S - POD_H, " top ", T + TH_H));
 
 module canister_solid() rotate_extrude($fn = 240) polygon(concat(
-    [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, T - 0.6], [TR + 0.5, T],
-     [TR + 0.5, T + LIP_H], [SEAT, T + LIP_H], [SEAT, T], [RIN, T - (SEAT - RIN) / tan(PA)]],
+    // the collar carries the thread to T + TH_H, its rolled bead at the top; inside,
+    // the ring the lid stops on leans in from the wall at PA, so it prints
+    [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, T + TH_H - 0.6], [TR + 0.5, T + TH_H],
+     [BORE, T + TH_H], [BORE, T], [STOP, T], [RIN, T - (RIN - STOP) / tan(PA)]],
     [for (k = [0 : 12]) let (a = 90 * k / 12) [RIN - FIL + FIL * cos(a), FLOOR + FIL - FIL * sin(a)]],
     [[0, FLOOR]]));
 
@@ -82,7 +90,7 @@ module canister_snow_raw() for (r = [0 : len(ROWS) - 1], i = [0 : 9]) let (a = 9
     on_cwall(a, ROWS[r], 1.05) rotate((i + r) % 2 * 30) snowflake2d(ARM);
 
 module canister_mark() translate([0, -19, 0]) obc_engrave(6, depth = 0.8, inset = 0.15, ridges = false);
-module canister() difference() { canister_solid(); canister_mark(); }
+module canister() difference() { canister_solid(); canister_mark(); translate([0, 0, T - S]) tin_thread_cut(); }
 module canister_snow() difference() { canister_snow_raw(); canister_solid(); }
 
 // the closed lid, in the clicker's frame (its underside at S)
@@ -97,21 +105,20 @@ module pocket() {
     translate([0, 0, S - CH_H]) linear_extrude(CH_H + 0.3, scale = (mx_cutout - 0.6 * tan(PA)) / POCKET)
         square(POCKET, center = true);
 }
-// the cone ends at the lid's underside, r SPIG_R at S, so the two only share a face
+// the cone ends at the lid's underside, r POD_TOP at S, so the two only share a face
 module pod() difference() {
-    translate([0, 0, S - POD_H]) cylinder(h = POD_H, r1 = POD_R, r2 = SPIG_R, $fn = 240);
+    translate([0, 0, S - POD_H]) cylinder(h = POD_H, r1 = POD_R, r2 = POD_TOP, $fn = 240);
     pocket();
 }
-// the clicker's lid as it was before it took a thread (2026-10-30): this lid
-// seats on the canister by its cone, not by a screw
-module lid_closed() union() { lid_seated(); pod(); }
+// the clicker's threaded lid with the pod under it
+module lid_closed() union() { lid(); pod(); }
 
 module at_lid() translate([0, 0, LID_S - S]) children();
 module print_frame() translate([0, 0, POD_H - S]) children();
 
 if      (part == "canister")         canister();
 else if (part == "canister_snow")    canister_snow();
-else if (part == "canister_print")   union() { canister(); canister_snow(); }
+else if (part == "canister_print")   union() { canister(); canister_snow_raw(); }   // the raw flakes overlap the wall, so the merge closes
 else if (part == "lid_closed")       print_frame() lid_closed();
 else if (part == "lid_closed_holly") print_frame() lid_holly();
 else if (part == "lid_closed_snow")  print_frame() lid_snow();

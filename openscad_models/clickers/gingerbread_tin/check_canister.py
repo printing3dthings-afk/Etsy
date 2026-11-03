@@ -2,8 +2,10 @@
 """The canister and its closed lid (2026-10-30), measured on the exported
 prints, each moved to where it sits (positions from the .scad's echo):
 
-- the lid rests on the seat inside the canister's mouth: it touches, and
-  pressed 0.1 lower it would be inside the canister, so it can't drop in
+- the lid screws on (2026-11-03): screwed down it rests on the ring inside the
+  canister's mouth, touching nothing, and 0.1 lower it would be into the ring;
+  pulled straight up it hits the thread; turned back along the thread it
+  touches nothing, and turned the wrong way while rising it collides
 - the cookie and the lid at rest: no overlap, as on the clicker
 - the switch in the pod: its body and its pins clear the pocket; the pod's foot
   is solid under the cutout. (The clips' hooks sit on the pocket's 45 deg
@@ -64,10 +66,23 @@ def main():
         fails.append(f"lid overlaps the canister {rest:.2f} mm3")
     if low < 1.0:
         fails.append("nothing holds the lid up: it drops into the canister")
-    lifted_side = (can ^ lid.translate([0.15, 0, 0.3])).volume()
-    print(f"  lifted 0.3 and slid 0.15: {lifted_side:.3f} mm3 (it lifts off without binding)")
-    if lifted_side > 0.05:
-        fails.append("the lid binds in the lip")
+    # the thread, as gingerbread_tin_clicker.scad's TH_P: right hand, the lid rises
+    # TH_P a turn as it turns anticlockwise seen from above
+    TH_P = 2.7
+    for dz in (0.5, 1.0):
+        v = (can ^ lid.translate([0, 0, dz])).volume()
+        print(f"  pulled {dz} straight up: {v:.1f} mm3 (the thread holds it)")
+        if v < 1.0:
+            fails.append(f"the lid lifts {dz} without the thread holding it")
+    for a in (30, 90, 180, 360, 540):
+        v = (can ^ lid.rotate([0, 0, a]).translate([0, 0, a / 360 * TH_P])).volume()
+        print(f"  unscrewed {a} deg along the thread: {v:.3f} mm3")
+        if v > 0.05:
+            fails.append(f"the lid binds unscrewing at {a} deg")
+    v = (can ^ lid.rotate([0, 0, -30]).translate([0, 0, 30 / 360 * TH_P])).volume()
+    print(f"  turned 30 deg the wrong way while rising: {v:.1f} mm3 (collides, so the zeros are the thread's path)")
+    if v < 1.0:
+        fails.append("the unscrew check would pass without a thread")
     c = (cookie ^ lid).volume()
     print(f"  cookie / lid: {c:.3f} mm3")
     if c > 0.01:

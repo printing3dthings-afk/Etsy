@@ -1,0 +1,1 @@
+SPIG_R = TR - LIP_W - JOINT_CLR; // the lid's spigot, inside the tin's lip

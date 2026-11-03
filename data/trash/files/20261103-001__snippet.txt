@@ -1,0 +1,7 @@
+// The lid as it was before the thread: a spigot dropping 2 mm inside a lip,
+// then a flare. The storage canister's closed lid is built on it and still
+// seats on the canister this way.
+module lid_solid_seated() rotate_extrude($fn = 240) polygon(concat(
+    [[0, S], [SPIG_R, S], [SPIG_R, S + JOINT], [LID_R, S + JOINT + 2.4]],
+    [for (k = [0 : 4]) let (z = RIM - 0.8 + (k + 1) * 0.16) [LID_R - 0.8 + sqrt(max(0, 0.64 - pow(z - (RIM - 0.8), 2))), z]],
+    [[0, RIM]]));

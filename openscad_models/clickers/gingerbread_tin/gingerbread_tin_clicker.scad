@@ -39,7 +39,6 @@ RIM    = CZ + CT - 2.2;         // the tin's lid: the cookie stands 2.2 proud
                                 // at rest and sits 1.8 below it pressed
 TR     = 30.0;                  // tin radius
 LID_R  = TR + 0.6;              // the lid band stands 0.6 proud
-SPIG_R = TR - LIP_W - JOINT_CLR; // the lid's spigot, inside the tin's lip
 NEST   = 0.6;                   // clearance round the cookie
 ICE    = 0.8;                   // icing proud of the cookie: four layers
 ICE_W  = 1.2;                   // a piped line: three beads at its foot
@@ -199,13 +198,6 @@ module lid_solid() rotate_extrude($fn = 240) polygon(concat(
     [[0, S], [TH_R - TH_D, S], [TH_R - TH_D, FLARE_Z], [LID_R, FLARE_TOP]],
     [for (k = [0 : 4]) let (z = RIM - 0.8 + (k + 1) * 0.16) [LID_R - 0.8 + sqrt(max(0, 0.64 - pow(z - (RIM - 0.8), 2))), z]],
     [[0, RIM]]));
-// The lid as it was before the thread: a spigot dropping 2 mm inside a lip,
-// then a flare. The storage canister's closed lid is built on it and still
-// seats on the canister this way.
-module lid_solid_seated() rotate_extrude($fn = 240) polygon(concat(
-    [[0, S], [SPIG_R, S], [SPIG_R, S + JOINT], [LID_R, S + JOINT + 2.4]],
-    [for (k = [0 : 4]) let (z = RIM - 0.8 + (k + 1) * 0.16) [LID_R - 0.8 + sqrt(max(0, 0.64 - pow(z - (RIM - 0.8), 2))), z]],
-    [[0, RIM]]));
 
 module snowflake2d(arm = 3.6) {
     circle(0.9, $fn = 20);
@@ -266,7 +258,6 @@ module tin_mark() translate([0, -19, 0]) obc_engrave(6, depth = 0.8, inset = 0.1
 module tin() difference() { tin_solid(); mx_well_cut(S); tin_mark(); tin_thread_cut(); }
 module tin_snow() difference() { tin_snow_raw(); tin_solid(); }
 module lid() union() { difference() { union() { lid_solid(); lid_thread(); } nest(); mx_plate_cut(S); } lid_berries(); }
-module lid_seated() union() { difference() { lid_solid_seated(); nest(); mx_plate_cut(S); } lid_berries(); }
 
 module assembly(press = 0) {
     color("#B3262E") tin();
