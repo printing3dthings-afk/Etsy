@@ -1,0 +1,13 @@
+parts/lid_closed_print.stl
+  ok    fits_plate: 61.2 x 61.2 x 23.9 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.00mm, median 11.68mm (floor 1.2mm); 3.36% below one bead
+  FAIL  no_unsupported_overhang: slicer: 9349 support moves, 261 overhang perimeters, 24.0mm printed of 23.94mm
+  ok    geometry_survives_slicing: printed height 24.0mm vs modelled 23.94mm
+  ok    flat_base: 9.23 cm2 of contact = 24.6% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 10.7mm widest unsupported span at z=10.4mm; 7 layer(s) under the 4.0s cooling threshold; 3435mm2 on the plate; aspect 0.31
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE FAILED
