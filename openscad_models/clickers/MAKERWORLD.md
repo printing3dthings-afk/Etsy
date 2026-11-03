@@ -44,8 +44,8 @@ you press.
 **Title:** Gingerbread Tin Canister: Christmas Storage Tin with a Clicker Lid
 
 A Christmas tin that holds things, with a lid you can click. Press the
-gingerbread man on the lid and a real keyboard switch clicks. Lift the lid
-off and the tin holds sweets, clips or a folded gift card (89 cm³).
+gingerbread man on the lid and a real keyboard switch clicks. Unscrew the
+lid and the tin holds sweets, clips or a folded gift card (90 cm³).
 
 **What you need**
 - 1 plate-mount Cherry MX switch, or any MX clone. If you printed the
@@ -64,8 +64,7 @@ off and the tin holds sweets, clips or a folded gift card (89 cm³).
    until it snaps in. Underneath, the switch sits in a closed pocket, so
    nothing in the tin can get into it.
 2. Press the cookie onto the switch.
-3. Set the lid on the tin. It seats on a ring inside the mouth and lifts
-   straight off.
+3. Screw the lid onto the tin, clockwise, until it stops.
 
 ---
 

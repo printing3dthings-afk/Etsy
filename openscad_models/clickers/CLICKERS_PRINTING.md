@@ -77,7 +77,7 @@ it guides him straight down even if you press his head or a foot.
 
 2026-10-30, your ask: a tin that actually holds things, with the lid as the
 clicker, and the square opening under the lid filled in. 61 mm across and
-60 mm tall with the cookie on. It holds 89 cm³: sweets, paper clips, a
+60 mm tall with the cookie on. It holds 90 cm³: sweets, paper clips, a
 folded gift card.
 
 **You print two new parts.** The cookie and the switch come off the clicker
@@ -85,45 +85,55 @@ you already printed and go on the new lid. The clicker's tin isn't used.
 
 | print | colours (AMS slot) | as it sits in the file | sliced, one colour |
 |---|---|---|---|
-| the canister | red 1, white snowflakes 2 | on its base | 51 min, 8.7 m, about 26 g |
-| the closed lid | red 1, green holly 3, white snowflakes 2 | on the pod under it | 33 min, 6.4 m, about 19 g |
+| the canister | red 1, white snowflakes 2 | on its base | about 27 g |
+| the closed lid | red 1, green holly 3, white snowflakes 2 | on the pod under it | about 19 g |
 | the cookie (only if you need another) | as the clicker's | face up | as the clicker's |
 
 **What's different:**
 - **The canister** is the clicker's tin made tall and hollow: the same rolled
-  beads at the foot and the top, the same lip, and three staggered rows of
-  ten raised snowflakes. The OBC mark is engraved under the base.
+  beads at the foot and the top, the same threaded collar, and three
+  staggered rows of ten raised snowflakes. The OBC mark is engraved under the
+  base.
 - **The closed lid** is the clicker's lid, unchanged on top, with a pod
   under the switch plate. The switch's body and legs sit in a closed square
   pocket, so nothing in the tin reaches the switch, and from below it's solid.
-  The pod's cone drops into the canister's mouth and seats on a matching ring
-  inside it. That ring holds the lid; the lid lifts straight off.
+  **It screws on (2026-11-03), like the clicker's lid,** with the same
+  thread, about 1.6 turns. It screws down until the pod's cone meets a
+  matching cone in the canister's mouth.
 
 **Put it together:** push the switch into the new lid from above, through the
 cookie-shaped nest, until its clips snap under the plate. Press the cookie
-onto the switch, then set the lid on the canister.
+onto the switch, then screw the lid onto the canister, clockwise, until it
+stops.
 
 **Checked before it was pushed** (`gingerbread_tin/check_canister.py`, and
 the same tools as the clickers, results in `gingerbread_tin/checks/`):
 - **Fit:**
-  - The lid rests on its seat. 0.1 mm lower it would be 17.7 mm³ into the
-    canister, so it can't drop in.
-  - Lifted 0.3 mm and slid sideways, it touches nothing, so it lifts off
-    without binding.
+  - Screwed down, the lid rests on its cone. 0.1 mm lower it would be 5.6 mm³
+    into the canister, so it stops there.
+  - Pulled straight up 0.5 mm, it hits the thread (15.5 mm³), so it can't lift
+    off.
+  - Turned back along the thread through 30–540°, it touches nothing.
+  - As a control, turned the wrong way while rising, it collides.
   - The cookie clears the lid as on the clicker.
   - The switch's body and pins clear the pocket, and the pod is solid under
     the cutout.
-- **Supports: none on either print**, after two fixes the slicer found:
+- **Supports: none on either print**, after three fixes the slicer found:
   1. **A flat 1.0 mm ledge** round the cutout under the plate, for the
      clips to catch on, was a ceiling: 12,196 support moves. The pocket now
      closes in at a slope to the cutout instead, so the clips catch on its
      edge, where the plate is the 1.5 mm they expect.
   2. **At 45°, the slicer's own threshold**, that slope and the pod's cone
      still drew 11,524 moves. At 40° from vertical, none.
-- **Product gate:**
-  - The closed lid PASSES.
-  - The canister reads FAIL on the wall check only: the raised snowflakes,
-    0.9 mm strokes, as on the tin.
+  3. **The screw lid's stop (2026-11-03).** I first stopped the lid on a flat
+     ring inside the mouth. To pass through that ring, the pod had to be
+     2.2 mm narrower than the lid. The lid prints standing on its pod, so its
+     floor overhung all round: 9,349 support moves. Now the pod's cone runs up
+     to the lid's edge, as before, and stops in a matching cone in the mouth.
+- **Product gate:** both read FAIL on the wall check only.
+  - The thread's teeth, seen side-on by the gate's straight rays, as on the
+    clicker's tin and lid.
+  - On the canister, the raised snowflakes' 0.9 mm strokes too.
 - **Print fidelity:**
   - Closed lid: no flags, the same result as the clicker's lid.
     - This took a fix. With a 1.2 mm pod floor, the pod lifted the lid 10.1 mm,
