@@ -1,8 +1,8 @@
 {
  "layers": 120,
- "model_volume_mm3": 38523.5,
+ "model_volume_mm3": 32847.5,
  "dropped_mm3": 0.01,
- "filled_mm3": 0.51,
+ "filled_mm3": 0.7,
  "colour_mm3": 0.0,
  "flagged": 0,
  "clusters": [
@@ -17,6 +17,158 @@
    ],
    "layers": 1,
    "at_xy": [
+    -21.8,
+    -9.9
+   ],
+   "side": "left",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -20.2,
+    -9.1
+   ],
+   "side": "left",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.0,
+    27.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.8,
+    26.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.8,
+    25.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.0,
+    25.3
+   ],
+   "side": "back",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.8,
+    26.6
+   ],
+   "side": "back",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.0,
+    -23.3
+   ],
+   "side": "front",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
     0.8,
     -23.8
    ],
@@ -36,6 +188,101 @@
    ],
    "layers": 1,
    "at_xy": [
+    0.8,
+    -24.6
+   ],
+   "side": "front",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.0,
+    -25.1
+   ],
+   "side": "front",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -0.8,
+    -23.8
+   ],
+   "side": "front",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    20.2,
+    -9.9
+   ],
+   "side": "right",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.031,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    21.8,
+    -9.1
+   ],
+   "side": "right",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.03,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
     -0.8,
     25.8
    ],
@@ -48,208 +295,18 @@
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.026,
+   "volume_mm3": 0.03,
    "z_mm": [
     23.0,
     23.2
    ],
    "layers": 1,
-   "at_xy": [
-    -0.8,
-    -23.8
-   ],
-   "side": "front",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.026,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 1,
-   "at_xy": [
-    0.0,
-    -23.3
-   ],
-   "side": "front",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.025,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 1,
-   "at_xy": [
-    -0.8,
-    26.6
-   ],
-   "side": "back",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.023,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -21.8,
-    -9.1
-   ],
-   "side": "left",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.023,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -20.2,
-    -9.1
-   ],
-   "side": "left",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.023,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -0.1,
-    25.3
-   ],
-   "side": "back",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.023,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    20.2,
-    -9.1
-   ],
-   "side": "right",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.023,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    21.8,
-    -9.1
-   ],
-   "side": "right",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.022,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -21.8,
-    -9.9
-   ],
-   "side": "left",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.022,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -20.2,
-    -9.9
-   ],
-   "side": "left",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.022,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
    "at_xy": [
     -0.8,
     -24.6
    ],
    "side": "front",
-   "max_width_mm": 0.11,
+   "max_width_mm": 0.14,
    "depth_mm": 0.17,
    "flag": false
   },
@@ -257,18 +314,18 @@
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.022,
+   "volume_mm3": 0.029,
    "z_mm": [
     23.0,
     23.2
    ],
-   "layers": 2,
+   "layers": 1,
    "at_xy": [
-    0.8,
-    -24.6
+    -21.0,
+    -10.4
    ],
-   "side": "front",
-   "max_width_mm": 0.11,
+   "side": "left",
+   "max_width_mm": 0.12,
    "depth_mm": 0.17,
    "flag": false
   },
@@ -276,56 +333,18 @@
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.022,
+   "volume_mm3": 0.029,
    "z_mm": [
     23.0,
     23.2
    ],
-   "layers": 2,
+   "layers": 1,
    "at_xy": [
-    0.8,
-    26.6
-   ],
-   "side": "back",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.022,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    0.8,
-    25.8
-   ],
-   "side": "back",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.17,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.022,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    20.2,
+    -20.2,
     -9.9
    ],
-   "side": "right",
-   "max_width_mm": 0.11,
+   "side": "left",
+   "max_width_mm": 0.13,
    "depth_mm": 0.17,
    "flag": false
   },
@@ -333,17 +352,74 @@
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.022,
+   "volume_mm3": 0.029,
    "z_mm": [
     23.0,
     23.2
    ],
-   "layers": 2,
+   "layers": 1,
+   "at_xy": [
+    21.0,
+    -10.4
+   ],
+   "side": "right",
+   "max_width_mm": 0.12,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.029,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
    "at_xy": [
     21.8,
     -9.9
    ],
    "side": "right",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.021,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -21.8,
+    -9.1
+   ],
+   "side": "left",
+   "max_width_mm": 0.1,
+   "depth_mm": 0.17,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 3,
+   "volume_mm3": 0.021,
+   "z_mm": [
+    23.0,
+    23.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -20.9,
+    -8.6
+   ],
+   "side": "left",
    "max_width_mm": 0.11,
    "depth_mm": 0.17,
    "flag": false
@@ -352,114 +428,38 @@
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.016,
+   "volume_mm3": 0.021,
    "z_mm": [
     23.0,
     23.2
    ],
-   "layers": 2,
+   "layers": 1,
    "at_xy": [
-    -0.0,
-    27.1
-   ],
-   "side": "back",
-   "max_width_mm": 0.09,
-   "depth_mm": 0.15,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.012,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -21.0,
-    -8.5
-   ],
-   "side": "left",
-   "max_width_mm": 0.08,
-   "depth_mm": 0.14,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.012,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    -21.0,
-    -10.5
-   ],
-   "side": "left",
-   "max_width_mm": 0.08,
-   "depth_mm": 0.14,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.012,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    0.0,
-    -25.2
-   ],
-   "side": "front",
-   "max_width_mm": 0.08,
-   "depth_mm": 0.14,
-   "flag": false
-  },
-  {
-   "kind": "filled",
-   "colour": "#F4F1EA",
-   "tool": 3,
-   "volume_mm3": 0.012,
-   "z_mm": [
-    23.0,
-    23.2
-   ],
-   "layers": 2,
-   "at_xy": [
-    21.0,
-    -8.5
+    20.2,
+    -9.1
    ],
    "side": "right",
-   "max_width_mm": 0.08,
-   "depth_mm": 0.14,
+   "max_width_mm": 0.1,
+   "depth_mm": 0.17,
    "flag": false
   },
   {
    "kind": "filled",
    "colour": "#F4F1EA",
    "tool": 3,
-   "volume_mm3": 0.012,
+   "volume_mm3": 0.021,
    "z_mm": [
     23.0,
     23.2
    ],
-   "layers": 2,
+   "layers": 1,
    "at_xy": [
-    21.0,
-    -10.5
+    21.1,
+    -8.6
    ],
    "side": "right",
-   "max_width_mm": 0.08,
-   "depth_mm": 0.14,
+   "max_width_mm": 0.11,
+   "depth_mm": 0.17,
    "flag": false
   },
   {
@@ -478,7 +478,7 @@
    ],
    "side": "back",
    "max_width_mm": 0.09,
-   "depth_mm": 0.14,
+   "depth_mm": 0.13,
    "flag": false
   },
   {
@@ -554,7 +554,7 @@
    ],
    "side": "back",
    "max_width_mm": 0.08,
-   "depth_mm": 0.11,
+   "depth_mm": 0.12,
    "flag": false
   }
  ]

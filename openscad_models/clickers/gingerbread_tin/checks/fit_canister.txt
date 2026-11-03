@@ -1,9 +1,16 @@
-The lid's underside sits at z 45.8, the pod's foot at 35.6, the cookie at 54.1
-  lid / canister at rest: 0.010 mm3; 0.1 lower: 17.7 mm3
-  lifted 0.3 and slid 0.15: 0.000 mm3 (it lifts off without binding)
+The lid's underside sits at z 46.0, the pod's foot at 35.8, the cookie at 54.3
+  lid / canister at rest: 0.000 mm3; 0.1 lower: 28.7 mm3
+  pulled 0.5 straight up: 15.5 mm3 (the thread holds it)
+  pulled 1.0 straight up: 34.6 mm3 (the thread holds it)
+  unscrewed 30 deg along the thread: 0.000 mm3
+  unscrewed 90 deg along the thread: 0.000 mm3
+  unscrewed 180 deg along the thread: 0.000 mm3
+  unscrewed 360 deg along the thread: 0.000 mm3
+  unscrewed 540 deg along the thread: 0.000 mm3
+  turned 30 deg the wrong way while rising: 13.4 mm3 (collides, so the zeros are the thread's path)
   cookie / lid: 0.000 mm3
   switch body / pod: 0.000 mm3
   switch pins / pod: 0.000 mm3
   the pod's foot under the cutout: 100.0% solid
-Holds 89 cm3 round the pod (55.2 mm across, 44.4 mm deep at the side, 34.0 under the pod)
+Holds 93 cm3 round the pod (55.2 mm across, 44.4 mm deep at the side, 34.2 under the pod)
 FIT CHECK OK

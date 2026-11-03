@@ -13,7 +13,10 @@
 //
 // The lid screws on (Scott, 2026-11-03: "the gingerbread big tin needs the
 // screw on top like the little one"). Same thread as the clicker's tin; the
-// lid screws down until its floor sits on a ring inside the canister's mouth.
+// lid screws down until its pod's cone meets a matching cone in the canister's
+// mouth. A flat ring inside the mouth for the lid's floor to stop on made the
+// pod 2.2 narrower than the lid, and the lid, printed on its pod, hung its
+// floor over air: 9,349 support moves (2026-11-03).
 //
 //   part = canister | canister_snow | canister_print
 //          lid_closed | lid_closed_holly | lid_closed_snow | lid_closed_print
@@ -57,26 +60,23 @@ PDEEP  = well_h;                  // the switch's body and pins, and 0.6 spare
 // snowflakes' tips dropped out: 25 fidelity flags to the lid's 0 (2026-10-30).
 PFLOOR = 1.3;
 POD_H  = PDEEP + PFLOOR;          // 10.2
-// the ring inside the mouth the lid's floor stops on, and the pod passes
-// through it with 0.3 to spare
-STOP   = 26.0;
-POD_TOP = STOP - 0.3;
-POD_R  = POD_TOP - POD_H * tan(PA);  // 17.1: from under the lid down to the foot
+POD_TOP = TH_R - TH_D;            // 27.9: the pod's cone runs right up to the lid's edge
+POD_R  = POD_TOP - POD_H * tan(PA);  // 19.3: from under the lid down to the foot
 
 // the canister
 T      = 46;                      // the face the lid's floor sits on
 RIN    = 27.6;                    // inside: 2.4 of wall below the collar
 FLOOR  = 1.6;
 FIL    = 3;                       // the inside's foot is rounded, so a finger scoops it clean
-LID_S  = T;                       // screwed down, its floor on the ring
+LID_S  = T;                       // screwed down, its pod's cone on the mouth's
 echo(str("CANISTER lid underside ", LID_S, " cookie rest ", LID_S - S + CZ,
          " pod foot ", LID_S - POD_H, " top ", T + TH_H));
 
 module canister_solid() rotate_extrude($fn = 240) polygon(concat(
-    // the collar carries the thread to T + TH_H, its rolled bead at the top; inside,
-    // the ring the lid stops on leans in from the wall at PA, so it prints
+    // the collar carries the thread to T + TH_H, its rolled bead at the top; under
+    // it the mouth is the pod's own cone, so the lid stops there
     [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, T + TH_H - 0.6], [TR + 0.5, T + TH_H],
-     [BORE, T + TH_H], [BORE, T], [STOP, T], [RIN, T - (RIN - STOP) / tan(PA)]],
+     [BORE, T + TH_H], [BORE, T], [POD_TOP, T], [RIN, T - (POD_TOP - RIN) / tan(PA)]],
     [for (k = [0 : 12]) let (a = 90 * k / 12) [RIN - FIL + FIL * cos(a), FLOOR + FIL - FIL * sin(a)]],
     [[0, FLOOR]]));
 
