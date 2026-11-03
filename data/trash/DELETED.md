@@ -1538,3 +1538,14 @@ SPIG_R = TR - LIP_W - JOINT_CLR; // the lid's spigot, inside the tin's lip
 
 <!-- /TRASH 20261103-003 -->
 
+<!-- TRASH id=20261103-004 date=2026-11-03 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/images/cupid_white_preview_angle.png" reason="Cupid preview angle render of the superseded draft; replaced by the top view and the side-by-side with the reference" -->
+## 20261103-004 · 2026-11-03 · file · `openscad_models/valentine_2027/mailboxes/love_letter/images/cupid_white_preview_angle.png`
+**Reason:** Cupid preview angle render of the superseded draft; replaced by the top view and the side-by-side with the reference  
+**Payload:** `data/trash/files/20261103-004__cupid_white_preview_angle.png`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261103-004 -->
+
