@@ -94,7 +94,17 @@ def _import(path):
     bpy.context.view_layer.objects.active = fresh[0]
     if len(fresh) > 1:
         bpy.ops.object.join()
-    return bpy.context.view_layer.objects.active
+    o = bpy.context.view_layer.objects.active
+    # Smooth only across edges under 30 deg (2026-11-03). Blender 4.0's STL
+    # import smooths across every edge, so a large flat face triangulated as a
+    # fan rendered as radial streaks (the flat Cupid charm's head and body);
+    # fine curved facets still blend, sharp edges and flat faces stay flat.
+    if hasattr(o.data, "use_auto_smooth"):
+        for p in o.data.polygons:
+            p.use_smooth = True
+        o.data.use_auto_smooth = True
+        o.data.auto_smooth_angle = math.radians(30)
+    return o
 
 built = []
 for idx, (path, rgb) in enumerate(parts):

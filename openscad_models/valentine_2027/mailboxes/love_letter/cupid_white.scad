@@ -1,122 +1,143 @@
-// Cupid, white, after Scott's reference (2026-11-03): the classic cherub
-// archer in profile, mid-flight, back leg kicked out, wing swept up behind, a
-// tall bow held out at arm's length with the string drawn to his cheek. Drawn
-// fresh in that pose, not traced.
+// Cupid, white: a flat cut-out charm (2026-11-03).
 //
-// One piece (Scott, on the first draft built from separate rounded parts: "Make
-// it all one piece and just make it a 3d part but flat on the bottom side. It
-// doesn't look good."), then in the style of a cut-out pendant he sent: a flat
-// piece with crisp, softly rounded edges, its detail cut in as fine lines
-// rather than modelled: where the wing, arm and legs lie on the body, the
-// feathers, the hairline, the eye. A heart tips the arrow.
+// Scott, on the first sculpted draft: "Make it all one piece and just make it a
+// 3d part but flat on the bottom side. It doesn't look good." He then sent a
+// gold cut-out Cupid pendant as the look he wants. What makes that pendant read
+// is its silhouette: a flat face, crisp edges, and every detail shown as a gap
+// cut right through (between the wing and the head, the arms and the chest, the
+// legs), never as lines scratched into the face. The second draft scratched its
+// detail in and looked scarred; this one cuts it through.
+//
+// Drawn fresh in that style, not traced: a chubby cherub side-on, flying, with
+// a feathered wing, both hands on a small bow and a heart-tipped arrow.
 //
 // PREVIEW: nothing on the envelope uses this yet.
 //
-// Laid out on a 0.081 mm grid, x across with him facing +x, y up.
+// Millimetres, him facing +x, y up, his feet at y 0.
 
-$fn = 48;
-S = 0.081;
-function M(p) = [(p.x - 80) * S, (1360 - p.y) * S];          // grid to mm
-module C(p, r) translate(M(p)) circle(r * S);                 // a circle on the grid
-module cap(a, b, ra, rb = -1) hull() { C(a, ra); C(b, rb < 0 ? ra : rb); }
-module ellg(p, rx, ry, a = 0) translate(M(p)) rotate(a) scale([rx * S, ry * S]) circle(1);
+$fn = 64;
+THICK = 3.0;      // the charm's thickness, flat face and flat back
+EDGE  = 0.4;      // the top edge's round-over; the pendant's edges are crisp
+GAP   = 0.8;      // a cut-through gap: two beads wide, so it prints open
+LINE  = 1.2;      // the thinnest member (bowstring, bow tips): three beads
 
-// ---------- his shapes, in 2D ----------
-HC = [420, 768]; HR = 108;
-CURLS = [[338, 808], [330, 745], [350, 700], [392, 672], [440, 664], [484, 680], [350, 852]];
-FORELOCK = [512, 688];
+module cap(a, b, ra, rb = -1) hull() { translate(a) circle(ra); translate(b) circle(rb < 0 ? ra : rb); }
+module chain(pts, r) for (i = [0 : len(pts) - 2]) cap(pts[i], pts[i + 1], r[i], r[i + 1]);
+
+// ---------- the parts ----------
+HC = [27, 44]; HR = 8.6;                      // a big round head, a third of him
 module head2d() union() {
-    C(HC, HR);
-    C([528, 815], 20);                 // the nose
-    C([480, 850], 42);                 // the cheek
-    C([462, 878], 24);                 // the chin
+    translate(HC) circle(HR);
+    translate([36.9, 43.0]) circle(1.4);     // his nose
+    translate([33.0, 38.9]) circle(3.6);     // a full cheek
+    translate([30.0, 36.2]) circle(2.6);     // the chin
 }
+// three soft curls over the top and back of his head, and one at the front
 module hair2d() union() {
-    for (c = CURLS) C(c, 34);
-    intersection() { C(HC, HR + 2); C([390, 735], 95); }
-    hull() { C(FORELOCK, 20); C([540, 676], 9); }      // a curl flicked up over his brow
+    for (a = [82, 122, 162]) translate(HC + (HR - 1.2) * [cos(a), sin(a)]) circle(3.2);
+    translate([33.0, 50.8]) circle(2.2);                              // a curl on his brow
+    cap([33.6, 51.6], [36.2, 51.8], 1.2, 0.9);                        // flicked forward
 }
-module torso2d() union() { ellg([335, 1005], 122, 128, -15); C([400, 1045], 72); }
-WING_A = [[120, 742], 28, [245, 838], 40];
-WING_B = [[148, 818], 34, [268, 862], 44];
-WING_C = [[192, 895], 32, [292, 905], 42];
-module lobe(w) hull() { C(w[0], w[1]); C(w[2], w[3]); }
-// held clear of his curls: the wing meets his back below them, with a notch
-module covert2d() hull() { C([300, 880], 44); C([250, 830], 30); C([190, 775], 18); }
-module wing2d() union() { lobe(WING_A); lobe(WING_B); lobe(WING_C); covert2d(); }
-module bow_arm2d() union() { cap([420, 945], [700, 945], 30, 23); C([712, 940], 28); }
-module draw_arm2d() union() { cap([420, 915], [498, 893], 31, 27); C([505, 893], 27); }
-module back_leg2d() union() { cap([270, 1110], [165, 1165], 54, 46); cap([165, 1165], [105, 1215], 42, 32); C([98, 1228], 30); }
-module front_leg2d() union() { cap([360, 1110], [395, 1225], 62, 46); cap([395, 1225], [375, 1300], 46, 34); cap([370, 1318], [440, 1335], 30, 22); }
-// the figure: every part in one outline, its inside corners filleted 2.0 and
-// its outside ones rounded 1.2, so the parts run into each other
-module figure2d() offset(r = 0.8) offset(r = -0.8) offset(r = -1.2) offset(r = 1.2) union() {
-    head2d(); hair2d(); torso2d(); wing2d(); bow_arm2d(); draw_arm2d(); back_leg2d(); front_leg2d();
+// a chubby body leaning into the shot
+module body2d() union() {
+    translate([24, 25.5]) rotate(-18) scale([7.8, 10.2]) circle(1);
+    translate([28.0, 22.8]) circle(5.8);      // the belly
 }
-// the bow, its string and the arrow
-BOW_C = [370, 915]; BOW_R = 350; BOW_A = 45.6;
+// the wing, swept up and back from his shoulder: a smooth top edge, four
+// feathers fanned under it with notches between their tips
+// [root, its radius, tip, its radius]: the top one is the leading edge
+FEATHERS = [[[20.0, 38.0], 3.4, [6.0, 50.2], 2.7],
+            [[19.0, 36.0], 3.1, [2.6, 43.6], 2.4],
+            [[19.2, 33.8], 2.8, [4.4, 35.8], 2.1]];
+module wing2d() for (f = FEATHERS) cap(f[0], f[2], f[1], f[3]);
+// both arms forward at the shoulder: the near one out to the bow's grip, the
+// far one drawing the string back to his cheek
+GRIP = [42.6, 31.0];
+NOCK = [35.4, 32.2];
+module arms2d() union() {
+    chain([[26, 32.6], [33, 30.8], [GRIP.x - 1.6, GRIP.y]], [3.1, 2.3, 2.0]);
+    translate([GRIP.x - 1.4, GRIP.y]) circle(2.4);                   // the bow hand
+    chain([[27.5, 30.4], [32, 33.4], [NOCK.x - 0.6, NOCK.y]], [2.6, 2.3, 2.0]);
+    translate([NOCK.x - 0.4, NOCK.y]) circle(2.1);                   // the drawing hand
+}
+// legs trailing as he flies: the near knee under his belly, its shin folded
+// back and the foot pointed down; the far leg out behind, its knee bent the
+// way a knee bends (shin rising), the foot pointed on past it. (The first cut
+// bent the far knee the wrong way and turned the near foot back to front:
+// Scott, "legs backwards".)
+module legs2d() union() { legs2d_near(); legs2d_far(); }
+module legs2d_far() union() {
+    chain([[21.6, 15.6], [13.6, 11.2], [7.4, 11.4]], [4.4, 3.2, 2.3]);
+    cap([7.4, 11.4], [3.8, 10.2], 2.2, 1.7);
+}
+
+// ---------- the bow, its string and the arrow ----------
+BOW_H = 15.5;                 // half its height
+BOW_S = 5.2;                  // how far the grip bows out past the tips
+BOW_R = (BOW_H * BOW_H + BOW_S * BOW_S) / (2 * BOW_S);
+BOW_C = [GRIP.x + 1.2 - BOW_R, GRIP.y];
+BOW_A = asin(BOW_H / BOW_R);
 function bow_pt(t) = BOW_C + BOW_R * [cos(t), sin(t)];
 module bow2d() union() {
     for (i = [0 : 15]) let (t0 = -BOW_A + i * 2 * BOW_A / 16, t1 = t0 + 2 * BOW_A / 16,
-            w0 = 15 - 4 * abs(t0) / BOW_A, w1 = 15 - 4 * abs(t1) / BOW_A)
+            w0 = 1.1 + 0.45 * (1 - abs(t0) / BOW_A), w1 = 1.1 + 0.45 * (1 - abs(t1) / BOW_A))
         cap(bow_pt(t0), bow_pt(t1), w0, w1);
-    for (s = [-1, 1]) C(bow_pt(s * BOW_A), 16);
+    // its tips curl forward, as a recurve's do
+    for (s = [-1, 1]) let (p = bow_pt(s * BOW_A)) cap(p, p + [2.2, s * 0.9], 1.1, 0.9);
 }
-module string2d() for (s = [-1, 1]) cap(bow_pt(s * BOW_A), [505, 890], 7.5);
-// the arrow, a heart at its tip pointing on
-module heart2d(s) scale(s / 20) translate([0, -2]) union() {
+module string2d() for (s = [-1, 1]) cap(bow_pt(s * BOW_A), NOCK, LINE / 2);
+module heart2d(w) scale(w / 20) translate([0, -2]) union() {
     rotate(45) square(12, center = true);
-    for (sx = [-1, 1]) translate([sx * 4.25, 4.25]) circle(6, $fn = 60);
+    for (sx = [-1, 1]) translate([sx * 4.25, 4.25]) circle(6, $fn = 48);
 }
+ARROW_Y = NOCK.y - 0.6;
 module arrow2d() union() {
-    cap([500, 890], [780, 890], 10);
-    translate(M([800, 890])) rotate(90) heart2d(7.0);     // its point leads
-}
-module tackle2d() offset(r = 0.5) offset(r = -0.5) union() { bow2d(); string2d(); arrow2d(); }
-
-// ---------- one shape: the outline inflated, flat behind ----------
-// At height z the outline is drawn in by rise(z), a quarter round of radius rr
-// rising to h; every level is on the 0.2 grid.
-function rise(z, h, rr) = rr * (1 - sqrt(max(0, 1 - (z / h) * (z / h))));
-module inflate(h, rr) for (z = [0.2 : 0.2 : h + 0.001])
-    translate([0, 0, -0.01]) linear_extrude(z + 0.01) offset(delta = -rise(z, h, rr)) children();
-FIG_H = 3.0; FIG_R = 0.8;        // a flat piece 3.0 thick, its top edge rounded over 0.8
-TACK_H = 3.0; TACK_R = 0.6;      // the bow, string and arrow in the same plane
-module body3d() union() {
-    inflate(FIG_H, FIG_R) figure2d();
-    inflate(TACK_H, TACK_R) tackle2d();
+    cap([NOCK.x, ARROW_Y], [55.0, ARROW_Y], 0.75);
+    translate([57.4, ARROW_Y]) rotate(-90) heart2d(6.4);           // the heart leads
 }
 
-// ---------- the carved lines ----------
-// A few strokes, placed by hand as an illustrator would: where the feathers
-// lie on each other, the hairline and ear, the closed eye, the arm's edge on
-// his chest and where his legs part. 0.8 wide, 0.6 into the surface wherever
-// it runs. (Lines taken from every edge of every part made loops and scribbles.)
-module stroke(pts, w = 4.6) for (i = [0 : len(pts) - 2]) cap(pts[i], pts[i + 1], w);
-module lines2d() union() {
-    // the wing: its edge on his back, and three cuts between its feathers
-    stroke([[300, 905], [318, 870], [322, 830]]);
-    stroke([[150, 790], [210, 810], [262, 832]]);
-    stroke([[165, 852], [222, 862], [275, 870]]);
-    stroke([[200, 912], [245, 902], [290, 895]]);
-    stroke([[502, 700], [470, 724], [445, 765], [432, 812], [418, 858]]);   // the hairline
-    for (i = [0 : 5]) let (t0 = 200 + i * 24, t1 = t0 + 24)       // a closed, smiling eye
-        cap([494 + 15 * cos(t0), 784 + 9 * sin(t0)], [494 + 15 * cos(t1), 784 + 9 * sin(t1)], 4.5);
-    stroke([[430, 978], [478, 972], [522, 966]]);                  // the bow arm's edge on his chest
-    stroke([[425, 925], [470, 912], [500, 905]]);                  // the drawing arm's
-    stroke([[352, 1112], [338, 1170], [340, 1235]]);               // where his legs part
-    stroke([[300, 1120], [262, 1135]]);                            // the back leg's crease
+// ---------- the gaps ----------
+// A gap is the thin band just outside one part, cut through whatever lies
+// behind it, but only where a mask allows, so the part stays joined to him
+// at its root (a gap all the way round would set it loose).
+module band(g = GAP) difference() { offset(delta = g) children(); children(); }
+module gaps2d() union() {
+    // the wing from the back of his head
+    intersection() { band() union() { head2d(); hair2d(); } translate([8, 36]) square([17, 14]); }
+    // the near arm from his chest and belly, open at the armpit
+    intersection() { band() arms2d(); translate([27.5, 20]) square([12, 10.2]); }
+    // the near leg from his belly and the far leg
+    intersection() { band() legs2d_near(); translate([18, 4]) square([9.4, 14.6]); }
 }
-module carved() difference() {
-    body3d();
-    difference() {
-        translate([0, 0, -1]) linear_extrude(20) lines2d();
-        translate([0, 0, -1.0]) body3d();     // cut 1.0 into the surface
+module legs2d_near() union() {
+    chain([[27.8, 18.5], [31.0, 10.6], [26.6, 4.6]], [5.0, 3.4, 2.4]);
+    cap([26.6, 4.6], [25.4, 1.4], 2.2, 1.6);
+}
+
+// the whole outline: inside corners filled 0.7 so the parts run together,
+// the gaps cut, then outside corners eased 0.3
+// (closed 0.25 after the cut: a gap's mask could leave a speck of a hole where
+// it ended, and the slicer wrapped perimeters round it and left a void in the
+// head, 23.7 mm3, 2026-11-03)
+module cupid2d() offset(r = 0.3) offset(r = -0.3) offset(r = -0.25) offset(r = 0.25) difference() {
+    offset(r = -0.7) offset(r = 0.7) union() {
+        head2d(); hair2d(); body2d(); wing2d(); arms2d(); legs2d();
+        bow2d(); string2d(); arrow2d();
     }
+    gaps2d();
 }
 
-module cupid_white() intersection() {
-    carved();
-    translate([-50, -50, 0]) cube([200, 200, 40]);
+// ---------- the charm ----------
+// The string and the arrow's shaft are under 1.6 wide; rounded over they would
+// be a single bead on top (the gate's min wall, 0.87, 2026-11-03), so they
+// stay square-edged to the top.
+module slender2d() intersection() { cupid2d(); union() { string2d(); cap([NOCK.x + 2, ARROW_Y], [55.0, ARROW_Y], 0.75); } }
+// Flat back, flat face; only the face's edge rounds over, EDGE in, on the 0.2
+// layer grid.
+function rise(z) = EDGE * (1 - sqrt(max(0, 1 - pow((z - (THICK - EDGE)) / EDGE, 2))));
+module cupid_white() union() {
+    linear_extrude(THICK - EDGE + 0.01) cupid2d();
+    for (z = [THICK - EDGE + 0.2 : 0.2 : THICK + 0.001])
+        translate([0, 0, z - 0.21]) linear_extrude(0.21) union() { offset(delta = -rise(z)) cupid2d(); slender2d(); }
 }
 cupid_white();
