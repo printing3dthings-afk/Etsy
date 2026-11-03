@@ -46,10 +46,13 @@ module hair2d() union() {
     C([344, 200], 34); C([316, 262], 26);
     shape([[528, 178], [562, 158], [594, 160], [606, 176], [592, 190], [560, 196]]);
 }
-// His back curves out into a round bottom that sits over the far thigh. Drawn
-// as a straight back first, it read as a flat slab (Scott circled it).
+// His back comes down close under the wing, then rounds out low into his
+// bottom over the far thigh, as on the pendant. Scott circled this twice: a
+// straight back read as a slab, and the first round bottom bulged out too far
+// and too high (2026-11-03: 30-50 px wider than the pendant at y 490-590).
 TORSO = [[360, 412], [440, 420], [500, 470], [508, 560], [482, 640], [420, 690],
-         [320, 712], [252, 708], [206, 676], [190, 618], [206, 556], [246, 504], [296, 462]];
+         [320, 712], [252, 710], [212, 690], [204, 652], [214, 616], [244, 588],
+         [282, 560], [304, 524], [310, 488]];
 // the near arm from the shoulder down to the elbow and out to his fist on the
 // bow's grip; it runs 2 mm under the arrow, as the pendant's forearm does
 NEAR_ARM = [[372, 468], [450, 498], [530, 512], [640, 514], [720, 504], [754, 506],
