@@ -5,12 +5,10 @@
 //
 // One piece (Scott, on the first draft built from separate rounded parts: "Make
 // it all one piece and just make it a 3d part but flat on the bottom side. It
-// doesn't look good."). His whole silhouette is one outline, its joints
-// filleted so the parts run into each other, inflated into one smooth shape:
-// the wide parts rise to 6 mm, the thin ones stay low, and it is flat behind.
-// Shallow carved lines on that one surface show where the arm crosses the
-// body, the hairline, the feathers and the legs, which is how a one-colour
-// figure reads.
+// doesn't look good."), then in the style of a cut-out pendant he sent: a flat
+// piece with crisp, softly rounded edges, its detail cut in as fine lines
+// rather than modelled: where the wing, arm and legs lie on the body, the
+// feathers, the hairline, the eye. A heart tips the arrow.
 //
 // PREVIEW: nothing on the envelope uses this yet.
 //
@@ -26,13 +24,18 @@ module ellg(p, rx, ry, a = 0) translate(M(p)) rotate(a) scale([rx * S, ry * S]) 
 // ---------- his shapes, in 2D ----------
 HC = [420, 768]; HR = 108;
 CURLS = [[338, 808], [330, 745], [350, 700], [392, 672], [440, 664], [484, 680], [350, 852]];
+FORELOCK = [512, 688];
 module head2d() union() {
     C(HC, HR);
     C([528, 815], 20);                 // the nose
     C([480, 850], 42);                 // the cheek
     C([462, 878], 24);                 // the chin
 }
-module hair2d() union() { for (c = CURLS) C(c, 34); intersection() { C(HC, HR + 2); C([390, 735], 95); } }
+module hair2d() union() {
+    for (c = CURLS) C(c, 34);
+    intersection() { C(HC, HR + 2); C([390, 735], 95); }
+    hull() { C(FORELOCK, 20); C([540, 676], 9); }      // a curl flicked up over his brow
+}
 module torso2d() union() { ellg([335, 1005], 122, 128, -15); C([400, 1045], 72); }
 WING_A = [[120, 742], 28, [245, 838], 40];
 WING_B = [[148, 818], 34, [268, 862], 44];
@@ -47,7 +50,7 @@ module back_leg2d() union() { cap([270, 1110], [165, 1165], 54, 46); cap([165, 1
 module front_leg2d() union() { cap([360, 1110], [395, 1225], 62, 46); cap([395, 1225], [375, 1300], 46, 34); cap([370, 1318], [440, 1335], 30, 22); }
 // the figure: every part in one outline, its inside corners filleted 2.0 and
 // its outside ones rounded 1.2, so the parts run into each other
-module figure2d() offset(r = 1.2) offset(r = -1.2) offset(r = -2.0) offset(r = 2.0) union() {
+module figure2d() offset(r = 0.8) offset(r = -0.8) offset(r = -1.2) offset(r = 1.2) union() {
     head2d(); hair2d(); torso2d(); wing2d(); bow_arm2d(); draw_arm2d(); back_leg2d(); front_leg2d();
 }
 // the bow, its string and the arrow
@@ -60,9 +63,14 @@ module bow2d() union() {
     for (s = [-1, 1]) C(bow_pt(s * BOW_A), 16);
 }
 module string2d() for (s = [-1, 1]) cap(bow_pt(s * BOW_A), [505, 890], 7.5);
+// the arrow, a heart at its tip pointing on
+module heart2d(s) scale(s / 20) translate([0, -2]) union() {
+    rotate(45) square(12, center = true);
+    for (sx = [-1, 1]) translate([sx * 4.25, 4.25]) circle(6, $fn = 60);
+}
 module arrow2d() union() {
-    cap([500, 890], [775, 890], 10);
-    polygon([M([765, 852]), M([848, 890]), M([765, 928])]);
+    cap([500, 890], [780, 890], 10);
+    translate(M([800, 890])) rotate(90) heart2d(7.0);     // its point leads
 }
 module tackle2d() offset(r = 0.5) offset(r = -0.5) union() { bow2d(); string2d(); arrow2d(); }
 
@@ -72,8 +80,8 @@ module tackle2d() offset(r = 0.5) offset(r = -0.5) union() { bow2d(); string2d()
 function rise(z, h, rr) = rr * (1 - sqrt(max(0, 1 - (z / h) * (z / h))));
 module inflate(h, rr) for (z = [0.2 : 0.2 : h + 0.001])
     translate([0, 0, -0.01]) linear_extrude(z + 0.01) offset(delta = -rise(z, h, rr)) children();
-FIG_H = 6.0; FIG_R = 5.5;        // the figure: 6 tall where it is wide, rounding over 5.5
-TACK_H = 2.6; TACK_R = 1.3;      // the bow, string and arrow: low rounded rods
+FIG_H = 3.0; FIG_R = 0.8;        // a flat piece 3.0 thick, its top edge rounded over 0.8
+TACK_H = 3.0; TACK_R = 0.6;      // the bow, string and arrow in the same plane
 module body3d() union() {
     inflate(FIG_H, FIG_R) figure2d();
     inflate(TACK_H, TACK_R) tackle2d();
@@ -84,25 +92,26 @@ module body3d() union() {
 // lie on each other, the hairline and ear, the closed eye, the arm's edge on
 // his chest and where his legs part. 0.8 wide, 0.6 into the surface wherever
 // it runs. (Lines taken from every edge of every part made loops and scribbles.)
-module stroke(pts, w = 5) for (i = [0 : len(pts) - 2]) cap(pts[i], pts[i + 1], w);
+module stroke(pts, w = 4.6) for (i = [0 : len(pts) - 2]) cap(pts[i], pts[i + 1], w);
 module lines2d() union() {
-    stroke([[160, 812], [200, 828], [255, 848]]);                  // feather over feather
-    stroke([[195, 885], [235, 884], [282, 888]]);
-    stroke([[258, 842], [290, 870], [305, 905]]);                  // the upper wing's edge
+    // the wing: its edge on his back, and three cuts between its feathers
+    stroke([[300, 905], [318, 870], [322, 830]]);
+    stroke([[150, 790], [210, 810], [262, 832]]);
+    stroke([[165, 852], [222, 862], [275, 870]]);
+    stroke([[200, 912], [245, 902], [290, 895]]);
     stroke([[502, 700], [470, 724], [445, 765], [432, 812], [418, 858]]);   // the hairline
-    for (i = [0 : 7]) let (t0 = 70 + i * 28, t1 = t0 + 28)       // the ear
-        cap([452 + 15 * cos(t0), 818 + 18 * sin(t0)], [452 + 15 * cos(t1), 818 + 18 * sin(t1)], 4.5);
     for (i = [0 : 5]) let (t0 = 200 + i * 24, t1 = t0 + 24)       // a closed, smiling eye
         cap([494 + 15 * cos(t0), 784 + 9 * sin(t0)], [494 + 15 * cos(t1), 784 + 9 * sin(t1)], 4.5);
-    stroke([[438, 974], [478, 970], [520, 966]]);                  // the arm's edge on his chest
+    stroke([[430, 978], [478, 972], [522, 966]]);                  // the bow arm's edge on his chest
+    stroke([[425, 925], [470, 912], [500, 905]]);                  // the drawing arm's
     stroke([[352, 1112], [338, 1170], [340, 1235]]);               // where his legs part
-    C([418, 1062], 7);                                              // a navel
+    stroke([[300, 1120], [262, 1135]]);                            // the back leg's crease
 }
 module carved() difference() {
     body3d();
     difference() {
         translate([0, 0, -1]) linear_extrude(20) lines2d();
-        translate([0, 0, -0.6]) body3d();     // keep everything more than 0.6 under the surface
+        translate([0, 0, -1.0]) body3d();     // cut 1.0 into the surface
     }
 }
 
