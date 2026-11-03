@@ -8049,3 +8049,60 @@ each found by the gate or a slicer test, not by reading the code:
   killed the union, so the gate measured an old file and reported a
   failure that was not there. Render the parts, then the union alone, and
   delete the old union first so a failed render cannot pass as a result.
+
+## Technique 83 — Characters: a fixed order of work, a measured check at every step (2026-11-04, Valentine Cupid)
+
+Four rounds of the flat white Cupid went to Scott with faults he had to
+catch by eye: clutter (lines scratched into the face), a knee folded the
+wrong way ("legs backwards"), the bow running into the face, and a back that
+a "fix" made bulge further. Each is a basic drawing rule that was skipped,
+and each had a number that would have caught it. The research behind this
+is `reports/Better 3D character design.md`; the checks are
+`tools/silhouette_check.py` (tests: `tests/test_silhouette_check.py`).
+
+**The order. Do not skip ahead to detail.**
+1. Brief: what it is, one emotion, the product, its true size in mm.
+2. References: several, logged with where they came from. Never trace or
+   height-map one image (copyright, and Etsy's original-design rule).
+3. 4–5 black-filled silhouettes of different forms; Scott picks one.
+4. Skeleton as named parameters: head count (chibi 2.5–3 heads; real infant
+   about 4), joint points, which way he faces. Echo every knee and elbow:
+   `echo("JOINT", "near leg", "knee", M(hip), M(knee), M(ankle), 1);`
+5. Big masses only. The black fill must read.
+6. Open the negative space: parts either overlap clearly or stand at least
+   1.5 mm apart (the drafts Scott faulted overlapped 1.2–1.3 mm; the ones he
+   accepted cleared 1.7–1.9 mm). Bridges and members at least 1.2 mm.
+7. Mid-size forms, measured against the reference, not judged by eye.
+8. Smooth the outline: each part one curve through a few points (BOSL2
+   `smooth_path`), not circles hulled together.
+9. Small detail last, and only above DETAIL_STANDARD. "Say it, or don't":
+   detail that does not show in the silhouette goes.
+10. The print gates, then `silhouette_check.py` (CLAUDE.md step 4d).
+11. The same review images every round: silhouette, mirror, 180 px
+    thumbnail, overlay on the last version (`--sheet`).
+12. Number each note Scott gives, measure it before touching it, change only
+    that region, show before and after from the same camera. If a round has
+    as many notes as the last, the big shapes are wrong: back to step 5.
+
+**Build limbs from their joints, not from free points.** A leg drawn as a
+free list of outline points let a knee fold backwards twice. In the Cupid,
+`leg_pts(hip, knee, ankle, toe, radii)` draws the outline from the skeleton:
+the shin's front straight, the calf bulging behind (straight against curve),
+a teardrop thigh, the foot pointed on past the ankle. Two traps it hit:
+- The crease behind a sharply bent knee, set at 0.85 of the knee radius,
+  folded into a hook. At 1.5 it reads as a soft crease.
+- A trailing leg whose hip sat high ran its top edge straight on from the
+  back and lost the round bottom. Set the hip low, under the near thigh, and
+  give it its own round (`C(FAR_HIP, r)`) so the gap cut between the legs has
+  material behind it.
+
+**A union or offset can only add.** `hull()`, `minkowski()` and a closing
+(`offset(r=-R) offset(r=R)`) fill concave places; none pulls a bulge in. So
+"smoothing" a lumpy back makes it bigger, which is what happened to the
+Cupid. Move the points, and check the change with `--against`.
+
+**What the checks do not catch.** An outline "wobble" score and a count of
+cut-through slots were tried and did not separate the drafts Scott faulted
+from the ones he accepted, so neither is a gate. A bulge is caught only by
+measuring against the version before. Appeal is still Scott's call: the
+checks remove the faults he should never have to point out.

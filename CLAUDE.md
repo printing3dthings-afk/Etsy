@@ -3942,6 +3942,14 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      that print fine and snap in the hand -- the class of the chapel's first
      window bars, which it flags on the as-printed chapel and passes once
      glazed. Every FLAG is thickened, joined to something, or explained.
+  4d. For a character, a flat charm or a relief, run `tools/silhouette_check.py`
+     (2026-11-04, after four Cupid rounds Scott had to catch by eye): knees and
+     elbows that bend backwards (from the .scad's JOINT echoes), parts that
+     must read apart running into each other (`--apart`, e.g. bow and face),
+     near-touches, thin members, specks, a twinned pose, engraved clutter.
+     After any feedback, run it `--against` the version he saw, so a change is
+     measured, not eyeballed, and send the `--sheet` review images. The order
+     of work it serves is the 3d-print-design skill's Technique 83.
   5. Render three views (`tools/blender_render.py --views`, plus `--front=+y` if the model's front faces +Y) and show him before
      anything is called done. For anything whose detail matters, also show
      the as-printed still (`tools/as_printed.py` on the fidelity slice): it is

@@ -15,6 +15,12 @@
 // pointed down. The only detail is three gaps cut through: the wing behind his
 // head, under his arm, between his legs. Our own drawing, not traced.
 //
+// Redone 2026-11-04 through the character workflow (3d-print-design skill,
+// Technique 83): the legs are built from their joints, the wing's coverts bend
+// at the wrist, the nose is a small button, and tools/silhouette_check.py
+// passes it (knees and elbow bend the right way, the bow 1.87 mm clear of his
+// face, no near-touches, nothing under 1.2 mm).
+//
 // PREVIEW: nothing on the envelope uses this yet.
 //
 // Drawn on a 900 px grid, y down as on paper, him facing +x; M() turns it into
@@ -38,7 +44,7 @@ module C(p, r) translate(M(p)) circle(r * S);
 // ---------- him ----------
 // the head in profile: crown, forehead, a dip at the eye, a button nose, lips,
 // a round chin, then under the jaw and round the back of the skull
-HEAD = [[448, 148], [520, 160], [570, 200], [592, 250], [584, 292], [600, 318],
+HEAD = [[448, 148], [520, 160], [570, 200], [592, 250], [584, 292], [595, 318],
         [584, 340], [570, 382], [536, 406], [490, 412],
         [420, 404], [350, 368], [312, 300], [318, 228], [362, 172]];
 // two curls on the back of his head and one rolled forward over his brow
@@ -62,15 +68,49 @@ NEAR_ARM = [[372, 468], [450, 498], [530, 512], [640, 514], [720, 504], [754, 50
 NOCK = [560, 462];
 FAR_ARM = [[430, 426], [500, 430], [548, 436], [580, 446], [594, 466], [588, 494],
            [566, 512], [532, 516], [500, 500], [455, 470]];
-// legs: a round thigh, the knee, the shin folded back, a pointed foot
-NEAR_LEG = [[462, 604], [492, 680], [482, 752], [456, 798], [392, 842], [334, 880],
-            [326, 906], [324, 948], [306, 962], [286, 950], [270, 914], [256, 876],
-            [274, 852], [322, 814], [362, 784], [372, 736], [356, 690], [384, 636]];
-FAR_LEG = [[272, 664], [204, 700], [152, 726], [106, 752], [72, 768], [48, 770],
-           [32, 792], [28, 830], [38, 858], [58, 850], [72, 826], [94, 812],
-           [132, 804], [172, 794], [232, 772], [300, 760], [362, 770], [384, 724], [352, 690]];
+// ---------- legs, built from their joints ----------
+// Each leg is drawn from its skeleton (hip, knee, ankle, toe) rather than as
+// free points, so the knee can only bend the way a knee does, and the draw
+// follows the rule set against curve: the shin's front is straight, the calf
+// bulges behind, the thigh is a teardrop from a round hip, and the foot points
+// on past the ankle. Free-drawn legs folded a knee backwards twice in the
+// drafts ("legs backwards", 2026-11-03); tools/silhouette_check.py checks the
+// JOINT echoes below.
+function unitv(v) = v / norm(v);
+function lnorm(v) = let (u = unitv(v)) [-u.y, u.x];
+function toward(n, ref) = n * ref >= 0 ? n : -n;
+function lerp(a, b, t) = a + (b - a) * t;
+// r = [hip, knee, calf, ankle, toe] radii, in grid px
+function leg_pts(hip, knee, ankle, toe, r) =
+    let (front = knee - (hip + ankle) / 2,
+         nt = toward(lnorm(knee - hip), front), ns = toward(lnorm(ankle - knee), front),
+         nk = unitv(nt + ns), ds = unitv(ankle - knee), df = unitv(toe - ankle),
+         nf = toward(lnorm(toe - ankle), ns))
+    [hip + nt * r[0], lerp(hip, knee, 0.55) + nt * r[0] * 0.8, knee + nk * r[1],
+     lerp(knee, ankle, 0.5) + ns * (r[3] + r[1]) / 2, ankle + ns * r[3],
+     toe + nf * r[4], toe + df * r[4], toe - nf * r[4], ankle - ns * r[3] - ds * r[3] * 0.3,
+     // the crease behind the knee, kept shallow: at 0.85 r a sharply bent knee
+     // folded into a hook (2026-11-04)
+     lerp(knee, ankle, 0.4) - ns * r[2], knee - nk * r[1] * 1.5,
+     lerp(hip, knee, 0.45) - nt * r[0] * 0.95, hip - nt * r[0]];
+// the near leg: knee forward under his belly, shin folded back, foot pointed down
+NEAR_HIP = [405, 665]; NEAR_KNEE = [440, 772]; NEAR_ANKLE = [318, 866]; NEAR_TOE = [300, 950];
+// the far leg trailing behind, a gentle bend at the knee, foot pointed back
+// Its hip sits low and right, under the near thigh: higher, its top edge ran
+// straight on from his back and the round bottom was lost.
+FAR_HIP = [300, 725]; FAR_KNEE = [168, 770]; FAR_ANKLE = [82, 796]; FAR_TOE = [36, 850];
+module near_leg2d() shape(leg_pts(NEAR_HIP, NEAR_KNEE, NEAR_ANKLE, NEAR_TOE, [62, 40, 44, 22, 14]));
+// with the round of its hip, which the near thigh overlaps: the gap cut along
+// the near thigh's back shows against it
+module far_leg2d() union() { shape(leg_pts(FAR_HIP, FAR_KNEE, FAR_ANKLE, FAR_TOE, [50, 38, 36, 22, 14])); C(FAR_HIP, 50); }
+echo("JOINT", "near leg", "knee", M(NEAR_HIP), M(NEAR_KNEE), M(NEAR_ANKLE), 1);
+echo("JOINT", "far leg", "knee", M(FAR_HIP), M(FAR_KNEE), M(FAR_ANKLE), 1);
+echo("JOINT", "bow arm", "elbow", M([372, 476]), M([505, 542]), M([728, 532]), 1);
 // the wing: four feathers fanned from behind his shoulder, each full in the
-// middle and tapering to a soft point, so the trailing edge scallops
+// middle and tapering to a soft point, so the trailing edge scallops; over
+// their roots the coverts, whose leading edge bends out at the wrist, the cue
+// that makes a wing read as a wing and not a fan (bird anatomy, research
+// 2026-11-04)
 W_ROOT = [330, 432];
 // The leading feather is the broadest; the three under it are slimmer, so the
 // notches between their rounded tips run a third of the way in.
@@ -79,7 +119,9 @@ FEATHERS = [[[104, 196], 46], [[94, 292], 32], [[116, 378], 30], [[176, 452], 30
 module feather(tip, w) let (d = unit(tip - W_ROOT), n = [-d.y, d.x], m = W_ROOT + (tip - W_ROOT) * 0.5)
     shape([W_ROOT + n * w, m + n * w, tip - d * 6 + n * w * 0.55, tip + d * 14, tip - d * 6 - n * w * 0.55,
            m - n * w, W_ROOT - n * w, W_ROOT - d * w * 0.8]);
-module wing2d() for (f = FEATHERS) feather(f[0], f[1]);
+COVERTS = [[340, 420], [300, 350], [242, 290], [170, 236], [108, 196], [132, 252],
+           [192, 318], [262, 398], [320, 450]];
+module wing2d() union() { for (f = FEATHERS) feather(f[0], f[1]); shape(COVERTS); }
 
 // ---------- the bow, its string and the arrow ----------
 // A D-shaped bow held by its grip, well clear in front of his face: the upper
@@ -114,7 +156,7 @@ module box(a, b) translate(M([a.x, b.y])) square([(b.x - a.x) * S, (b.y - a.y) *
 module gaps2d() union() {
     intersection() { band() shape(HEAD); box([290, 300], [384, 420]); }         // the wing behind his head
     intersection() { band() shape(NEAR_ARM); box([380, 528], [560, 600]); }     // under his arm
-    intersection() { band() shape(NEAR_LEG); box([296, 680], [384, 800]); }     // his legs apart
+    intersection() { band() near_leg2d(); box([290, 680], [392, 800]); }        // his legs apart
 }
 
 // the outline: where parts meet, filled 0.5 so they flow into each other; the
@@ -122,7 +164,7 @@ module gaps2d() union() {
 module cupid2d() offset(r = 0.3) offset(r = -0.3) offset(r = -0.25) offset(r = 0.25) difference() {
     offset(r = -0.5) offset(r = 0.5) union() {
         shape(HEAD); hair2d(); shape(TORSO); wing2d();
-        shape(NEAR_ARM); shape(FAR_ARM); shape(NEAR_LEG); shape(FAR_LEG);
+        shape(NEAR_ARM); shape(FAR_ARM); near_leg2d(); far_leg2d();
         bow2d(); string2d(); arrow2d();
     }
     gaps2d();
@@ -141,4 +183,9 @@ module cupid_white() union() {
     for (z = [THICK - EDGE + 0.2 : 0.2 : THICK + 0.001])
         translate([0, 0, z - 0.21]) linear_extrude(0.21) union() { offset(delta = -rise(z)) cupid2d(); slender2d(); }
 }
-cupid_white();
+// part: "charm" to print; "head" and "bow" for tools/silhouette_check.py's
+// --apart check that the bow stays clear of his face
+part = "charm";
+if (part == "charm") cupid_white();
+else if (part == "head") linear_extrude(THICK) union() { shape(HEAD); hair2d(); }
+else if (part == "bow") linear_extrude(THICK) union() { bow2d(); string2d(); }
