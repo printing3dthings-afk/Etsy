@@ -9,7 +9,7 @@
 // So every part is now one smooth outline drawn through a few points
 // (BOSL2's smooth_path), the way vector art is drawn, not circles hulled
 // together, which left lumps and knuckles wherever two met. Same pose as the
-// pendant: a big round head in profile, a wing of five feathers swept up
+// pendant: a big round head in profile, a wing of four feathers swept up
 // behind, both arms out level, the bow held well clear of his face, the near
 // knee forward with its shin folded back, the far leg trailing, both feet
 // pointed down. The only detail is three gaps cut through: the wing behind his
@@ -46,8 +46,10 @@ module hair2d() union() {
     C([344, 200], 34); C([316, 262], 26);
     shape([[528, 178], [562, 158], [594, 160], [606, 176], [592, 190], [560, 196]]);
 }
+// His back curves out into a round bottom that sits over the far thigh. Drawn
+// as a straight back first, it read as a flat slab (Scott circled it).
 TORSO = [[360, 412], [440, 420], [500, 470], [508, 560], [482, 640], [420, 690],
-         [320, 712], [240, 690], [212, 620], [228, 540], [280, 466]];
+         [320, 712], [252, 708], [206, 676], [190, 618], [206, 556], [246, 504], [296, 462]];
 // the near arm from the shoulder down to the elbow and out to his fist on the
 // bow's grip; it runs 2 mm under the arrow, as the pendant's forearm does
 NEAR_ARM = [[372, 468], [450, 498], [530, 512], [640, 514], [720, 504], [754, 506],
@@ -64,12 +66,13 @@ NEAR_LEG = [[462, 604], [492, 680], [482, 752], [456, 798], [392, 842], [334, 88
 FAR_LEG = [[272, 664], [204, 700], [152, 726], [106, 752], [72, 768], [48, 770],
            [32, 792], [28, 830], [38, 858], [58, 850], [72, 826], [94, 812],
            [132, 804], [172, 794], [232, 772], [300, 760], [362, 770], [384, 724], [352, 690]];
-// the wing: five feathers fanned from behind his shoulder, each full in the
+// the wing: four feathers fanned from behind his shoulder, each full in the
 // middle and tapering to a soft point, so the trailing edge scallops
 W_ROOT = [330, 432];
-// The leading feather is the broadest; the four under it are slimmer, so the
+// The leading feather is the broadest; the three under it are slimmer, so the
 // notches between their rounded tips run a third of the way in.
-FEATHERS = [[[104, 196], 46], [[94, 292], 32], [[116, 378], 30], [[168, 446], 28], [[238, 494], 26]];
+// (A fifth, lowest feather ended on his back and left a kink there.)
+FEATHERS = [[[104, 196], 46], [[94, 292], 32], [[116, 378], 30], [[176, 452], 30]];
 module feather(tip, w) let (d = unit(tip - W_ROOT), n = [-d.y, d.x], m = W_ROOT + (tip - W_ROOT) * 0.5)
     shape([W_ROOT + n * w, m + n * w, tip - d * 6 + n * w * 0.55, tip + d * 14, tip - d * 6 - n * w * 0.55,
            m - n * w, W_ROOT - n * w, W_ROOT - d * w * 0.8]);
