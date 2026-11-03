@@ -8,6 +8,6 @@ love_letter/parts/lid.stl
   ok    geometry_survives_slicing: printed height 12.4mm vs modelled 12.4mm
   ok    flat_base: 95.04 cm2 of contact = 85.2% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=1.6mm; 0 layer(s) under the 4.0s cooling threshold; 11476mm2 on the plate; aspect 0.06
+  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=1.6mm; 0 layer(s) under the 4.0s cooling threshold; 11478mm2 on the plate; aspect 0.06
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
 PRODUCT GATE PASSED

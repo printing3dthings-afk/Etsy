@@ -1,13 +1,13 @@
 love_letter/parts/cupid_print.stl
-  ok    fits_plate: 62.0 x 52.6 x 6.8 mm vs 256 x 256 x 256
+  ok    fits_plate: 64.0 x 53.5 x 17.0 mm vs 256 x 256 x 256
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.37mm, median 8.10mm (floor 1.2mm); 0.00% below one bead
-  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 6.8mm printed of 6.8mm
-  ok    geometry_survives_slicing: printed height 6.8mm vs modelled 6.8mm
-  ok    flat_base: 13.98 cm2 of contact = 42.8% of footprint (floor 5%)
-  ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 3.8mm widest unsupported span at z=1.8mm; 3 layer(s) under the 4.0s cooling threshold; 1738mm2 on the plate; aspect 0.09
+  ok    min_wall: 1st pct 1.37mm, median 13.32mm (floor 1.2mm); 0.09% below one bead
+  FAIL  no_unsupported_overhang: slicer: 16105 support moves, 1540 overhang perimeters, 17.0mm printed of 16.96mm
+  ok    geometry_survives_slicing: printed height 17.0mm vs modelled 16.96mm
+  FAIL  flat_base: 0.01 cm2 of contact = 0.0% of footprint (floor 5%)
+  FAIL  stable: centre of mass is 10.7mm from the nearest contact, base reach 0.7mm -- it tips
+  note  risk (uncalibrated, never fails the gate): 27.7mm widest unsupported span at z=6.8mm; 33 layer(s) under the 4.0s cooling threshold; 3250mm2 on the plate; aspect 0.19
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
-PRODUCT GATE PASSED
+PRODUCT GATE FAILED

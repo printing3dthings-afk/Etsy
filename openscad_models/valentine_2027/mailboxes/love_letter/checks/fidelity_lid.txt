@@ -2,7 +2,7 @@ slicing 1 part(s), 1 filament(s) ...
 62 layers parsed
   layer 0/62
 
-PRINT FIDELITY  (62 layers, model 32372.7 mm3)
+PRINT FIDELITY  (62 layers, model 32368.8 mm3)
   dropped (modelled, not printed): 0.0 mm3
   filled  (printed, not modelled): 0.0 mm3
   colour  (printed, other filament): 0.0 mm3
