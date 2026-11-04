@@ -20,32 +20,37 @@ PEG_W = 2.4;                     // across
 PEG_L = 1.4;                     // how far it stands from the pocket floor
 PEG_TIP = 1.6;                   // its height at the tip
 PEG_ROOT = PEG_TIP + PEG_L / tan(37);   // and at the wall, 3.5
-module peg_shape(c = 0) hull() {
-    translate([-PEG_W / 2 - c, -PEG_ROOT - c, 0]) cube([PEG_W + 2 * c, PEG_ROOT + 2 * c, 0.01]);
-    translate([-PEG_W / 2 - c, -PEG_TIP - c, PEG_L + c - 0.01]) cube([PEG_W + 2 * c, PEG_TIP + 2 * c, 0.01]);
+// One crush rib down each side of the peg, reaching RIB_IN into his hole's
+// wall. A ridge, not a round: it lies along the peg, so on the upright
+// envelope its underside climbs at 37 deg and its top is flat.
+RIB_OUT = 0.45; RIB_IN = RIB_OUT - 0.25;   // 0.2 into the hole's wall (HOLE_C is 0.25)
+RIB_Y = -1.2;                    // its foot, below the peg's flat top
+module peg_shape(c = 0) union() {
+    hull() {
+        translate([-PEG_W / 2 - c, -PEG_ROOT - c, 0]) cube([PEG_W + 2 * c, PEG_ROOT + 2 * c, 0.01]);
+        translate([-PEG_W / 2 - c, -PEG_TIP - c, PEG_L + c - 0.01]) cube([PEG_W + 2 * c, PEG_TIP + 2 * c, 0.01]);
+    }
+    for (sx = [-1, 1]) scale([sx, 1, 1]) translate([PEG_W / 2 - 0.01, 0, 0])
+        linear_extrude(PEG_L) polygon([[0, RIB_Y], [RIB_OUT + 0.01, RIB_Y + RIB_OUT / tan(37)], [0, RIB_Y + RIB_OUT / tan(37)]]);
 }
 // where a peg's top edge sits, for a peg centred on p
 function peg_at(p) = p + [0, PEG_ROOT / 2];
 
-HOLE_C = 0.25;                   // clearance round the peg; the ribs take it up
-RIB_R = 0.35; RIB_IN = 0.1;      // ribs on the side walls reach 0.1 into the peg
+HOLE_C = 0.25;                   // clearance round the peg; its ribs take it up
 // The hole is the peg's full root height all the way in, straight-walled: the
 // wedge's 37 deg underside would be 53 deg in him, printed face up. Its
 // ceiling is flat, a 2.9 bridge: the hipped roof the 10-thick Cupid's holes
-// had rises 1.9 and would come out through a 3.0 charm.
+// had rises 1.9 and would come out through a 3.0 charm. No ribs in the hole:
+// in a 3 mm charm its 0.7 ribs were enough of him to fail the wall gate (1st
+// percentile 1.01 against 1.2, 2026-11-04), so the ribs are on the peg.
 HOLE = [PEG_W + 2 * HOLE_C, PEG_ROOT + 2 * HOLE_C];
 HOLE_D = PEG_L + HOLE_C;
-module cupid_hole() translate([0, HOLE_C - HOLE.y / 2, 0]) difference() {
-    union() {
-        translate([-HOLE.x / 2, -HOLE.y / 2, -0.01]) cube([HOLE.x, HOLE.y, HOLE_D + 0.01]);
-        // the mouth opens 0.3 against the first layer's squash
-        hull() {
-            translate([-HOLE.x / 2 - 0.3, -HOLE.y / 2 - 0.3, -0.01]) cube([HOLE.x + 0.6, HOLE.y + 0.6, 0.01]);
-            translate([-HOLE.x / 2, -HOLE.y / 2, 0.4]) cube([HOLE.x, HOLE.y, 0.01]);
-        }
+module cupid_hole() translate([0, HOLE_C - HOLE.y / 2, 0]) union() {
+    translate([-HOLE.x / 2, -HOLE.y / 2, -0.01]) cube([HOLE.x, HOLE.y, HOLE_D + 0.01]);
+    // the mouth opens 0.3 against the first layer's squash
+    hull() {
+        translate([-HOLE.x / 2 - 0.3, -HOLE.y / 2 - 0.3, -0.01]) cube([HOLE.x + 0.6, HOLE.y + 0.6, 0.01]);
+        translate([-HOLE.x / 2, -HOLE.y / 2, 0.4]) cube([HOLE.x, HOLE.y, 0.01]);
     }
-    // crush ribs, two on each side wall, reaching RIB_IN into the peg
-    for (sx = [-1, 1], y = [HOLE.y / 2 - HOLE_C - PEG_TIP * 0.3, HOLE.y / 2 - HOLE_C - PEG_TIP * 0.8])
-        translate([sx * (PEG_W / 2 + RIB_R - RIB_IN), y, -1]) cylinder(r = RIB_R, h = HOLE_D + 2, $fn = 16);
 }
 module cupid_holes() for (p = PEGS) translate(peg_at(p)) cupid_hole();

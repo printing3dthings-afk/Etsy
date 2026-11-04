@@ -196,6 +196,8 @@ module cupid_white() difference() {
 // that the bow stays clear of his face
 part = "charm";
 if (part == "charm") cupid_white();
-else if (part == "outline") cupid2d();
+// the outline for his pocket is filled in round the bow: the openings inside
+// it, cut into the pocket, left the envelope open-edged (2026-11-04)
+else if (part == "outline") union() { cupid2d(); hull() { bow2d(); string2d(); } }
 else if (part == "head") linear_extrude(THICK) union() { shape(HEAD); hair2d(); }
 else if (part == "bow") linear_extrude(THICK) union() { bow2d(); string2d(); }
