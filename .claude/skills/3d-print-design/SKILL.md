@@ -8106,3 +8106,63 @@ cut-through slots were tried and did not separate the drafts Scott faulted
 from the ones he accepted, so neither is a gate. A bulge is caught only by
 measuring against the version before. Appeal is still Scott's call: the
 checks remove the faults he should never have to point out.
+
+## Technique 84 — Chubby figurines as distance fields, made printable by construction (2026-11-04, Kawaii Cow)
+
+OpenSCAD's `union()` always creases where two round solids meet. The Kawaii
+Cow (`openscad_models/kawaii_cow/cow.py`) is built instead from distance
+fields joined with smooth-min (`tools/sdf_figure.py`), meshed by marching
+cubes at 0.25 mm and coloured by manifold3d booleans, so the colours tile
+the body exactly. Tests: `tests/test_sdf_figure.py`. Needs scikit-image.
+
+**The pose is the support plan.** Decide what holds each hanging part up
+before drawing it: her muzzle rests on the heart, the heart stands on its tip
+in her lap, her hooves rest on her feet. An ellipsoid that touches the plate
+keeps its centre no higher than 0.64 of its height radius, so its side meets
+the plate at 40 deg or less.
+
+**`self_support()` grows a cone under every overhang**, tangent to a round
+form at the chosen angle (33 here; 37 left too little margin for voxel and
+facet noise against the slicer's 45). Two traps it hit:
+- Re-thresholding each layer to whole pixels before eroding it made every
+  cone 45 deg, not 37, whatever angle was asked (12,222 support moves). The
+  cone has to be carried as a continuous field.
+- A cone only works where it reaches something. One that shrinks to a point
+  in mid-air (under a 5 mm gap, under the tip of a drooping ear) is a drip
+  the slicer props from the plate. Close the gap (the cow's pad behind the
+  heart) or change the part.
+
+**Thin parts need their outline made printable in their own plane.** A
+2.6 mm ear leaf's cone erodes through it from both faces in 2 mm.
+`support_rows()` fills under the leaf's lower edge in the leaf's plane, and
+ears point UP (55 deg): drooping, an ear's tip is its lowest point and prints
+first, in mid-air. An ellipse's lowest point sits beside its root, not at
+it, so root the leaf inside the head. Set the ear's angle in the world: under
+a 7 deg head tilt one ear stood at 48 deg and the other at 62.
+
+**Measure the slicer's way.** The slicer adds 1 deg to its threshold and
+props anything flatter than 44 deg; the cow's first ear grew 0.21 mm per
+0.2 mm layer (46 deg), which a coarse area filter missed. When the slicer
+props something the mesh looks fine at, map its support moves back onto
+the model (`tools/support_map.py model.stl --layers --plot out.png`): every
+case here had a real cause (a crevice closing over 0.8 mm up,
+a slot, a drip).
+
+**Four bugs that were the tool's, not the design's:**
+- A union of fields is not a distance inside it: the heart read about zero
+  along the line where its lobes meet its V, and its puffy face folded
+  there. `exact2d()` measures the shape with an EDT instead.
+- A groove's depth test inverted (`-(y + a)` for `y + a`) cut a 0.96 mm slot
+  through the whole leg and body: min wall 0.54 and a ceiling to prop.
+- Copying a deep field value into the layer just above the plate
+  (`base_prism`) made marching cubes put the bottom at z = -0.13; the slicer
+  lifted the figure 0.13 mm and the maker's mark's grooves came out as holes
+  with 151 overhang perimeters. Cap such copies by the base cut's own value.
+- A base widened by 0.3 mm to beat elephant-foot compensation failed min
+  wall (a 1 mm lip) and did not move the supports. The real cause was a
+  crevice, filled with a low cushion.
+
+**Colour regions** are skins: a region field intersected with "within 1.2 mm
+of the surface", priority black > red > pink > white. Keep a fifth colour out
+of a one-AMS design: the cow's heart went red so it would not merge with the
+pink muzzle resting on it, and the horns went white with black tips.

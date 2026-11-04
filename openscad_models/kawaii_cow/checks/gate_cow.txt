@@ -1,0 +1,13 @@
+parts/cow.stl
+  ok    fits_plate: 51.2 x 57.5 x 65.7 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.61mm, median 37.91mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 65.6mm printed of 65.69mm
+  ok    geometry_survives_slicing: printed height 65.6mm vs modelled 65.69mm
+  ok    flat_base: 20.33 cm2 of contact = 69.1% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=19.2mm; 190 layer(s) under the 4.0s cooling threshold; 2518mm2 on the plate; aspect 0.94
+  note  texture (advisory, never fails the gate): rugosity 1.018 -- light relief, at or above the corpus p25
+PRODUCT GATE PASSED
