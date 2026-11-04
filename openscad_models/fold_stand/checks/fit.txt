@@ -4,23 +4,23 @@
   ok    pin: lowest point z +0.000
 == the clicks
   ok    open    0 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
-  ok    open   13 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
-  ok    open   25 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
-  ok    open   37 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
-  ok    open   49 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
-  ok    open   61 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
-  ok    open  6.5 deg, between stops: the ridges ride up on the pins (0.31 mm3)
-  ok    open 19.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
-  ok    open 31.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
-  ok    open 43.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
-  ok    open 55.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
-  ok    the plates never meet from 0 to 61 deg (worst 0.000 mm3)
+  ok    open   24 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
+  ok    open   36 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
+  ok    open   48 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
+  ok    open   60 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
+  ok    open   72 deg: the ridges sit in their notches, nothing touches (0.000 mm3)
+  ok    open 12.0 deg, between stops: the ridges ride up on the pins (0.36 mm3)
+  ok    open 30.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
+  ok    open 42.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
+  ok    open 54.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
+  ok    open 66.0 deg, between stops: the ridges ride up on the pins (0.28 mm3)
+  ok    the plates never meet from 0 to 72 deg (worst 0.000 mm3)
   ok    a pin turned 4 deg hits the front plate's barrel: keyed
   ok    the pins in the front plate's barrels: 0.000 mm3
 == stance, with a 200 g phone on the lip
-  ok    open   13 deg: the phone leans at 79.0 deg to the table; feet  24 mm apart; on a free hinge it stands where the feet grip at mu 0.07 or more
-  ok    open   25 deg: the phone leans at 73.0 deg to the table; feet  46 mm apart; on a free hinge it stands where the feet grip at mu 0.17 or more
-  ok    open   37 deg: the phone leans at 67.0 deg to the table; feet  67 mm apart; on a free hinge it stands where the feet grip at mu 0.26 or more
-  ok    open   49 deg: the phone leans at 61.0 deg to the table; feet  87 mm apart; on a free hinge it stands where the feet grip at mu 0.36 or more
-  ok    open   61 deg: the phone leans at 55.0 deg to the table; feet 107 mm apart; on a free hinge it stands where the feet grip at mu 0.47 or more
+  ok    open   24 deg: the phone leans at 80.9 deg to the table; feet  44 mm apart; on a free hinge it stands where the feet grip at mu 0.13 or more
+  ok    open   36 deg: the phone leans at 74.9 deg to the table; feet  65 mm apart; on a free hinge it stands where the feet grip at mu 0.23 or more
+  ok    open   48 deg: the phone leans at 68.9 deg to the table; feet  86 mm apart; on a free hinge it stands where the feet grip at mu 0.33 or more
+  ok    open   60 deg: the phone leans at 62.9 deg to the table; feet 105 mm apart; on a free hinge it stands where the feet grip at mu 0.45 or more
+  ok    open   72 deg: the phone leans at 56.9 deg to the table; feet 124 mm apart; on a free hinge it stands where the feet grip at mu 0.57 or more
 FIT CHECK OK

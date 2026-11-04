@@ -80,10 +80,16 @@ F = to_trimesh(front)
 B0 = to_trimesh(back0)
 mF, mB = F.volume * PLA, B0.volume * PLA
 axis = np.array([0.0, AF])
-# the phone: on the lip, leaning on the front plate's outer face (z = T = 4 in its
-# frame), its centre half its length up the plate from the lip, half its thickness out
-lip_y = -V["LF"] + 8.0
-phone_c = np.array([lip_y + PHONE_L / 2, 4.0 + PHONE_T / 2])
+# the phone: its foot in the lip's corner on the front plate's outer face (z = T = 4
+# in its frame), its back resting on the hinge barrel, which stands proud of the plate,
+# so it stands a few degrees steeper than the plate; its centre half its length up from
+# the lip and half its thickness out from its back
+lip = np.array([-V["LF"] + 8.0, 4.0])
+to_c = np.array([0.0, AF]) - lip
+tilt = math.atan2(to_c[1], to_c[0]) + math.asin(V["RK"] / np.linalg.norm(to_c))
+d_ph = np.array([math.cos(tilt), math.sin(tilt)])
+n_ph = np.array([-math.sin(tilt), math.cos(tilt)])
+phone_c = lip + d_ph * PHONE_L / 2 + n_ph * PHONE_T / 2
 for a in STOPS[1:]:
     B = B0.copy()
     B.apply_transform(trimesh.transformations.rotation_matrix(math.radians(a), [1, 0, 0], [0, 0, AF]))
@@ -108,8 +114,8 @@ for a in STOPS[1:]:
     def P(yz):
         return R2 @ (np.asarray(yz) - foot_f)
     fF, fB, apex = P(foot_f), P(foot_b), P(axis)
-    d_plate = R2 @ np.array([1.0, 0.0])            # the front plate's own direction
-    lean = math.degrees(math.atan2(abs(d_plate[1]), abs(d_plate[0])))
+    d_p = R2 @ d_ph                                 # the phone's own direction
+    lean = math.degrees(math.atan2(abs(d_p[1]), abs(d_p[0])))
     gF, gB, gP = P(F.center_mass[1:]), P(B.center_mass[1:]), P(phone_c)
     WP = PHONE_G
     WF = mF + WP                                    # the phone rides on the front plate

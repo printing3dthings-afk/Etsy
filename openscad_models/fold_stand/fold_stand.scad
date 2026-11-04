@@ -19,7 +19,7 @@
 use <../brand/obc_mark.scad>
 
 part = "all";
-ANG = 25;                   // the opening shown in "all" and back_use
+ANG = 36;                   // the opening shown in "all" and back_use
 $fn = 96;
 
 // ---- sizes -------------------------------------------------------------------------------------
@@ -41,8 +41,10 @@ AR = T + AF;                // and over the back plate's outer face: folded, the
 K1 = 14; K2 = W - 14;       // the front plate's barrels: x 0..K1 and K2..W
 XG = 0.4;                   // between barrels
 // ---- the clicks --------------------------------------------------------------------------------
-STOPS = [0, 13, 25, 37, 49, 61];        // the openings it clicks at: folded, then five that
-                                        // lean a phone at about 80, 74, 68, 62 and 56 deg
+STOPS = [0, 24, 36, 48, 60, 72];        // the openings it clicks at: folded, then five that
+                                        // lean a phone at about 81, 75, 69, 63 and 57 deg. A
+                                        // phone rests on the barrel, 7 deg steeper than the
+                                        // plate: the stops were first set from the plate
 NOTCH = 0.35;               // the notches' depth, 90 deg V: 10 deg wide on the pin, 12 apart
 BLADE_T = 2.0; TONGUE_L = 12; SLOT = 0.8;
 RIDGE_L = 4;
