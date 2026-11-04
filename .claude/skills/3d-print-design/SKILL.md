@@ -8166,3 +8166,31 @@ a slot, a drip).
 of the surface", priority black > red > pink > white. Keep a fifth colour out
 of a one-AMS design: the cow's heart went red so it would not merge with the
 pink muzzle resting on it, and the horns went white with black tips.
+
+**Teacup Bear additions (2026-11-04, `openscad_models/teacup_bear/`):**
+- **Cut holes exactly, after meshing.** A teardrop hole cut in the field
+  comes out of marching cubes with its edges and point softened by a voxel,
+  and the slicer propped it: 1,083 support moves on a plain 3.2 mm plate whose
+  exact cut needs none. `sf.teardrop_prism()` plus `export_parts(cuts=...)`.
+  Its arc must stop where the roof touches it (`roof` deg above level); a
+  first draft ran it on to 90 - roof and that stretch was a ceiling.
+- **Keep sharp holes out of `self_support()`.** Their point looks like a
+  ceiling under solid plastic, each filled layer props the next, and 2 mm of
+  the point filled flat.
+- **Ask the slicer, then bisect.** When `support_map.py --layers` finds
+  nothing past 44 deg but the slicer still props, slice variants (with and
+  without a feature, the feature on a plain plate, made by OpenSCAD vs by
+  the field) until one passes. Threshold sweeps (`support-material-threshold`
+  30/40/45) show whether it is a slope at all.
+- **A thin part's fill must be allowed to land on what is under it.** The
+  handle's in-plane fill was held to the cup, which narrows downward, and
+  stopped 0.5 mm above the saucer: give `upright_leaf` the saucer too.
+- **Colour regions by place, not by exclusion.** "Above the tea and not
+  cup" also took in support grown round the handle: 219 tan slivers. Tan is
+  her own shapes, inside the rim above the tea, and above the rim.
+- **Two regions of one filament** at different priorities: keys
+  `pink_face` (wins over her tan) and `pink_cup` (loses to her paws on the
+  rim) both export as pink.
+- **Colour in height bands.** Cup and saucer cream with one pink band and
+  heart, bear tan above, brown and pink in the face band: far fewer
+  filament changes than the cow, whose four colours ran her whole height.

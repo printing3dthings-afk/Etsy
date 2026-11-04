@@ -294,3 +294,140 @@ def overhang_report(m, angle=40.0, floor=0.3):
     c = m.triangles_center
     bad = (n[:, 2] < -np.sin(np.radians(angle))) & (c[:, 2] > floor)
     return float(m.area_faces[bad].sum()), c[bad]
+
+
+# ---------- shared by every figure (first the cow, then the teacup bear) ----------
+
+
+def upright_leaf(g, inside_fn, y0, half, body_fn=None, angle=37.0, ref=4, keep_into_body=2.0, round_r=None):
+    """A thin part standing in the vertical x-z plane at y = y0 (an ear, a cup
+    handle), made printable in its own plane, then given +-half thickness
+    with a round rim.
+
+    inside_fn(X, Z) -> bool mask of the part's outline. body_fn(X, Z), if
+    given, is the bool mask of what it grows from in that plane (the head, the
+    cup): the in-plane fill under the part may land on it, which a fill of
+    the part alone cannot (it shrinks to a point in mid-air). Of the body only
+    a band keep_into_body mm deep is kept, so the slab does not stand proud of
+    the body's own curved surface.
+    """
+    from scipy.ndimage import distance_transform_edt as edt
+
+    xs, zs = g.axes[0], g.axes[2]
+    FX, FZ = np.meshgrid(*fine_axes(xs, zs, ref), indexing="ij")
+    part = inside_fn(FX, FZ)
+    body = body_fn(FX, FZ) if body_fn is not None else np.zeros_like(part)
+    held = support_rows(part | body, g.step / ref, g.step / ref, angle)
+    if body.any():
+        deep = edt(body) * (g.step / ref) > keep_into_body
+        held &= ~deep
+    d2 = exact2d(None, xs, zs, refine=ref, inside=held)
+    d2 = np.broadcast_to(d2[:, None, :], g.X.shape)
+    return puffy(d2, g.Y - y0, half, half if round_r is None else round_r)
+
+
+FAST_OPENSCAD = "/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun"
+
+
+def obc_mark_meshes(h, at, workdir):
+    """The OBC maker's mark (openscad_models/brand/obc_mark.scad) as manifolds:
+    {'inlay': ..., 'cut': ...}, cap height h, centred at `at` (x, y) on z = 0,
+    reading from below. Needs OpenSCAD with the manifold backend."""
+    import os
+    import shutil
+    import subprocess
+    import trimesh
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    exe = os.environ.get("OPENSCAD_FAST", FAST_OPENSCAD)
+    if not Path(exe).exists():
+        exe = shutil.which("openscad")
+    env = dict(os.environ, OPENSCADPATH=str(root / "assets" / "openscad_libs"))
+    workdir = Path(workdir)
+    scad = workdir / "_mark.scad"
+    out = {}
+    for part in ("inlay", "cut"):
+        scad.write_text(f'use <{root / "openscad_models" / "brand" / "obc_mark.scad"}>\n'
+                        f'{"obc_inlay" if part == "inlay" else "obc_cut"}({h});\n')
+        f = workdir / f"_mark_{part}.stl"
+        subprocess.run([exe, "--backend=manifold", "-o", str(f), str(scad)], check=True, capture_output=True, env=env)
+        m = trimesh.load(f, force="mesh")
+        f.unlink()
+        m.apply_translation([at[0], at[1], 0])
+        out[part] = to_manifold(m)
+    scad.unlink()
+    return out
+
+
+def export_parts(g, d, regions, priority, rest, out, stem, mark=None, mark_colour=None, cuts=()):
+    """Mesh the figure, cut it into colour parts and write them.
+
+    regions: {colour: field}, applied in `priority` order (earlier wins);
+    a key "colour_what" is a second region of that colour. Whatever no region
+    claims is `rest`. mark: obc_mark_meshes() output, cut
+    from every part and inlaid in mark_colour. cuts: exact manifolds cut from
+    everything after meshing (teardrop_prism()). Writes <stem>_<colour>.stl
+    and <stem>.stl (the union, for the gate). Returns {colour: mm3}.
+    """
+    import trimesh
+    from pathlib import Path
+
+    out = Path(out)
+    whole = mesh(g, d)
+    M = to_manifold(whole)
+    parts, taken = {}, None
+    for key in priority:
+        # "pink_face" and "pink_cup" are both pink: two regions of one
+        # filament at different priorities
+        name = key.split("_")[0]
+        V = to_manifold(mesh(g, regions[key]))
+        part = M ^ V
+        if taken is not None:
+            part = part - taken
+        taken = V if taken is None else taken + V
+        parts[name] = parts[name] + part if name in parts else part
+    rem = M - taken if taken is not None else M
+    # `rest` may also be a region (the bear's cream muzzle and her cream cup)
+    parts[rest] = parts[rest] + rem if rest in parts else rem
+    for c in cuts:
+        M = M - c
+        for name in parts:
+            parts[name] = parts[name] - c
+    if mark is not None:
+        for name in parts:
+            parts[name] = parts[name] - mark["cut"]
+        parts[mark_colour] = parts[mark_colour] + mark["inlay"]
+        M = M - mark["cut"] + mark["inlay"]
+    stats = {}
+    for name, part in parts.items():
+        m = from_manifold(part)
+        # booleans leave zero-volume sheets where two colours' faces coincide
+        keep = [b for b in m.split(only_watertight=False) if abs(b.volume) > 0.05]
+        m = trimesh.util.concatenate(keep)
+        m.export(out / f"{stem}_{name}.stl")
+        stats[name] = round(float(m.volume), 1)
+        print(f"  {name}: {m.volume:.0f} mm3, {len(keep)} bodies")
+    whole = from_manifold(M)
+    whole.export(out / f"{stem}.stl")
+    print(f"  whole: {len(whole.faces)} faces, watertight {whole.is_watertight}, {whole.extents.round(1)} mm")
+    return stats
+
+
+def teardrop_prism(cx, cz, r, roof, y0=0.0, length=10.0, n=96):
+    """An exact horizontal teardrop hole along y, point up, its roof `roof`
+    deg from upright, as a manifold to pass to export_parts(cuts=...).
+
+    A hole cut in the field instead comes out of marching cubes with its
+    sharp edges and point softened by a voxel, and the slicer propped it:
+    1,083 support moves on a plain 3.2 mm plate whose exact cut needs none
+    (the Teacup Bear's handle, 2026-11-04). The arc stops where the roof
+    touches it, `roof` deg above level; running on past that it is a ceiling.
+    """
+    import manifold3d as mf
+    a = np.radians(roof)
+    apex = cz + r / np.sin(a)
+    angs = np.linspace(np.pi - a, 2 * np.pi + a, n)
+    pts = [(cx + r * np.cos(t), cz + r * np.sin(t)) for t in angs] + [(cx, apex)]
+    return (mf.Manifold.extrude(mf.CrossSection([pts]), length)
+            .translate([0, 0, -length / 2]).rotate([90, 0, 0]).translate([0, y0, 0]))

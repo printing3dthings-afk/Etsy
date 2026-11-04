@@ -12,6 +12,10 @@ defects found building the Kawaii Cow (2026-11-04).
 - a thin upright leaf (an ear) can't be held up by 3-D cones, which erode
   through it from both faces; support_rows() makes its outline printable in
   its own plane.
+- the Teacup Bear's handle hole: cut in the field, marching cubes softened its
+  edges and the slicer propped it; teardrop_prism() cuts it exactly. Its arc
+  must stop where the roof touches it: run on to 90 - roof deg it is a
+  ceiling (a first draft did, and drew 841 support moves).
 """
 import sys
 from pathlib import Path
@@ -114,6 +118,26 @@ def test_support_rows_holds_up_a_leaf():
         if below.any():
             raw_worst = max(raw_worst, us[below].min() - us[here].min(), us[here].max() - us[below].max())
     check(raw_worst > lim, f"the raw leaf should overhang (worst {raw_worst:.3f}), or this test proves nothing")
+
+
+def test_teardrop_hole_never_ceilings():
+    from shapely.geometry import Polygon
+    roof = 28.0
+    P = sf.teardrop_prism(0.0, 10.0, 3.4, roof, length=4.0)
+    m = sf.from_manifold(P)
+    # its section in the x-z plane, at y = 0
+    sec = m.section(plane_origin=[0, 0, 0], plane_normal=[0, 1, 0])
+    poly = Polygon(max(sec.discrete, key=len)[:, [0, 2]])
+    zs = np.arange(10.0, poly.bounds[3], 0.05)
+    widths = []
+    for z in zs:
+        line = poly.intersection(Polygon([(-9, z), (9, z), (9, z + 1e-4), (-9, z + 1e-4)]))
+        widths.append(line.bounds[2] - line.bounds[0] if not line.is_empty else 0.0)
+    shrink = -np.diff(widths) / 2 / 0.05          # per side, per mm of height
+    worst = float(shrink.max())
+    check(worst <= np.tan(np.radians(roof)) + 0.05,
+          f"above its middle the hole should close no faster than tan({roof}) = "
+          f"{np.tan(np.radians(roof)):.3f} a side per mm; it closes {worst:.3f} somewhere (a ceiling)")
 
 
 def run() -> None:
