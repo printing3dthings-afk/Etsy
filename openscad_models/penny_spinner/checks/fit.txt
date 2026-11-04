@@ -1,0 +1,27 @@
+== on the bed
+  ok    crown: lowest point z +0.000
+  ok    base: lowest point z +0.000
+  ok    stem: lowest point z +0.000
+== crown, base and stem
+  ok    crown on the base: 0.000 mm3
+  ok    crown 0.1 lower is into the base: 185.65 mm3
+  ok    stem through the crown: -0.000 mm3
+  ok    stem in the base: 0.010 mm3
+  ok    stem 0.1 lower: its collar is on the crown's hub: 9.42 mm3
+  ok    stem pulled 0.5 up: the barb catches in the base: 0.17 mm3
+  ok    stem pulled 1.0 up: the barb catches in the base: 1.44 mm3
+  ok    stem turned 6 deg: its hex hits the crown: 1.75 mm3
+  ok    stem turned 6 deg: its hex hits the base: 0.44 mm3
+== the pennies
+  ok    16 pennies in their pockets: 0.000 mm3
+  ok    the top penny lifted 1.0 hits the window's bevel: 3.36 mm3
+  ok    a penny pushed 0.5 out hits the pocket: 3.58 mm3
+  ok    window 15.0 across against a penny's 19.05: a 2.03 mm lip
+== balance and lean
+  ok    empty: centre of mass 0.0069 mm off the axis
+  note  solid PLA body 55 g (less as printed, with infill); 16 pennies 40 g
+  note  one pre-1982 penny (3.11 g) among the rest moves the centre 0.178 mm off the axis
+  note  spin inertia: body 301 g cm2 (solid), pennies 327 g cm2: the pennies make it 2.1 times the empty top's
+  note  centre of mass 17.1 mm above the tip empty, 17.3 with pennies
+  ok    it leans 19.5 deg before its rim touches the table
+FIT CHECK OK

@@ -21,6 +21,12 @@ from part_mesh import load, to_trimesh  # noqa: E402
 for p in sys.argv[1:]:
     m = load(p)
     comps = [c for c in m.decompose() if abs(c.volume()) >= 0.01]
+    # A shell of negative volume is a sealed void: adding it back fills it
+    # in. That is how a snap socket that only touched its recess vanished from
+    # the Penny Spinner's base, the volume going UP by the socket's (2026-11-04).
+    for c in comps:
+        if c.volume() < 0:
+            print(f"WARNING {p}: a sealed void of {-c.volume():.2f} mm3 is filled in -- a cut that only touches?")
     out = mf.Manifold.batch_boolean(comps, mf.OpType.Add) if len(comps) > 1 else comps[0]
     tm = to_trimesh(out)
     # zero-area faces go only if the mesh stays closed without them: on the fur

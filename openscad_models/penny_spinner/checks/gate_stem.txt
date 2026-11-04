@@ -1,0 +1,13 @@
+parts/stem.stl
+  ok    fits_plate: 14.0 x 14.0 x 38.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.32mm, median 8.00mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 38.0mm printed of 38.03mm
+  ok    geometry_survives_slicing: printed height 38.0mm vs modelled 38.03mm
+  ok    flat_base: 0.53 cm2 of contact = 26.9% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.1mm widest unsupported span at z=16.6mm; 188 layer(s) under the 4.0s cooling threshold; 92mm2 on the plate; aspect 1.75
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED
