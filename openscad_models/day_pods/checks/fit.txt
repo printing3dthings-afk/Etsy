@@ -1,0 +1,26 @@
+== on the bed
+  ok    pod: lowest point z +0.000
+  ok    stand: lowest point z +0.000
+  ok    coupon: lowest point z +0.000
+  ok    lid_0: lowest point z +0.000
+  ok    lid_1: lowest point z +0.000
+  ok    lid_2: lowest point z +0.000
+  ok    lid_3: lowest point z +0.000
+  ok    lid_4: lowest point z +0.000
+  ok    lid_5: lowest point z +0.000
+  ok    lid_6: lowest point z +0.000
+== the lid in its pod
+  ok    lid shut: 0.000 mm3
+  ok    lid lifted 0.5 hits the walls' caps: 2.11 mm3
+  ok    lid pushed 0.5 sideways hits its groove: 19.83 mm3
+  ok    lid pushed 0.5 back hits the back wall: 20.56 mm3
+  ok    lid slid 1.0 forward: its ridge meets the front wall (the click): 0.54 mm3
+  ok    lid slid 6 forward: past the click, it slides free: 0.000 mm3
+== pods on the stand
+  ok    seven pods on the stand: -0.000 mm3
+  ok    a pod 0.1 lower is into the base: it rests on it: 104.40 mm3
+  ok    a pod pulled 0.5 forward: the dovetail holds it: 2.72 mm3
+  ok    a pod pushed 0.5 sideways hits its rail: 8.62 mm3
+  ok    a pod lifted the rail's height comes off: 0.000 mm3
+  ok    neighbouring pods do not touch: 0.000 mm3
+FIT CHECK OK

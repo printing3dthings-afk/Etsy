@@ -1,0 +1,23 @@
+slicing 1 part(s), 1 filament(s) ...
+95 layers parsed
+  layer 0/95
+
+PRINT FIDELITY  (95 layers, model 39833.5 mm3)
+  dropped (modelled, not printed): 3.35 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  left at [-95.5, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  left at [-103.7, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  right at [103.7, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  right at [95.5, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [70.5, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [62.3, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [37.3, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [29.1, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [4.1, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [-4.1, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [-29.1, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [-37.3, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [-62.3, 14.8]  0.1 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.239 mm3  z 3.0-19.0 (80 layers)  back at [-70.5, 14.8]  0.1 mm wide, 0.21 mm deep

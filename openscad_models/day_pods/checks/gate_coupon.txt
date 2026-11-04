@@ -1,0 +1,13 @@
+parts/coupon.stl
+  ok    fits_plate: 110.8 x 41.0 x 7.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 6 bodies, expected 6
+  ok    min_wall: 1st pct 1.65mm, median 3.36mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 7.0mm printed of 7.0mm
+  ok    geometry_survives_slicing: printed height 7.0mm vs modelled 7.0mm
+  ok    flat_base: 35.78 cm2 of contact = 78.8% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=1.6mm; 0 layer(s) under the 4.0s cooling threshold; 4380mm2 on the plate; aspect 0.06
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

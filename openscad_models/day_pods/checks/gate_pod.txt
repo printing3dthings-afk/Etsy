@@ -1,0 +1,13 @@
+parts/pod.stl
+  ok    fits_plate: 32.0 x 33.4 x 22.4 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.40mm, median 3.00mm (floor 1.2mm); 0.14% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 22.4mm printed of 22.4mm
+  ok    geometry_survives_slicing: printed height 22.4mm vs modelled 22.4mm
+  ok    flat_base: 10.44 cm2 of contact = 97.7% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 102 layer(s) under the 4.0s cooling threshold; 1299mm2 on the plate; aspect 0.49
+  note  texture (advisory, never fails the gate): rugosity 1.06 -- light relief, at or above the corpus p25
+PRODUCT GATE PASSED
