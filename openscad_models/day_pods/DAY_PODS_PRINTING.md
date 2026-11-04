@@ -121,6 +121,8 @@ In `images/`:
 - `day_pods_{front,three_quarter,top}.png`: the week on its stand.
 - `day_pods_wednesday.png`: Wednesday lifted off, its lid slid half open.
 - `day_pods_prints.png`: the pods and lids as they lie on the plate.
+- `day_pods_pod_as_printed.png`: a pod rendered from its sliced toolpath, so it
+  shows what the printer lays down.
 
 These are design-review renders from the real exported parts, not photos.
 
