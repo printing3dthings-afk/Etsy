@@ -1629,3 +1629,357 @@ module wing() translate(WING_AT) rotate(WING_TILT) translate(-WING_AT) union() {
 
 <!-- /TRASH 20261104-001 -->
 
+<!-- TRASH id=20261104-002 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.json" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
+## 20261104-002 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.json`
+**Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
+**Payload:** `data/trash/files/20261104-002__fidelity_cupid_print.json`
+
+```
+{
+ "layers": 34,
+ "model_volume_mm3": 7368.9,
+ "dropped_mm3": 0.72,
+ "filled_mm3": 0.41,
+ "colour_mm3": 0.04,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "filled",
+   "colour": "#F9C9A6",
+   "tool": 1,
+   "volume_mm3": 0.407,
+   "z_mm": [
+    0.0,
+    5.8
+   ],
+   "layers": 29,
+   "at_xy": [
+    10.4,
+    31.2
+   ],
+   "side": "right",
+   "max_width_mm": 0.08,
+   "depth_mm": 0.14,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.114,
+   "z_mm": [
+    0.0,
+    6.0
+   ],
+   "layers": 30,
+   "at_xy": [
+    27.2,
+    35.7
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.112,
+   "z_mm": [
+    0.0,
+    6.0
+   ],
+   "layers": 30,
+   "at_xy": [
+    26.7,
+    37.1
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.089,
+   "z_mm": [
+    0.0,
+    3.0
+   ],
+   "layers": 15,
+   "at_xy": [
+    1.2,
+    40.9
+   ],
+   "side": "back",
+   "max_width_mm": 0.19,
+   "depth_mm": 0.23,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.068,
+   "z_mm": [
+    0.0,
+    3.6
+   ],
+   "layers": 18,
+   "at_xy": [
+    18.5,
+    35.2
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.065,
+   "z_mm": [
+    0.0,
+    3.6
+   ],
+   "layers": 18,
+   "at_xy": [
+    20.1,
+    31.3
+   ],
+   "side": "right",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.047,
+   "z_mm": [
+    0.0,
+    0.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    1.3,
+    41.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.36,
+   "depth_mm": 0.43,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#F9C9A6",
+   "tool": 1,
+   "volume_mm3": 0.044,
+   "z_mm": [
+    0.0,
+    6.2
+   ],
+   "layers": 31,
+   "at_xy": [
+    -5.4,
+    39.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.06,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 3,
+   "volume_mm3": 0.043,
+   "z_mm": [
+    0.0,
+    0.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    0.3,
+    16.0
+   ],
+   "side": "front",
+   "max_width_mm": 0.32,
+   "depth_mm": 0.39,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.042,
+   "z_mm": [
+    0.0,
+    0.2
+   ],
+   "layers": 1,
+   "at_xy": [
+    -1.3,
+    41.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.31,
+   "depth_mm": 0.38,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 2,
+   "volume_mm3": 0.042,
+   "z_mm": [
+    0.4,
+    2.6
+   ],
+   "layers": 11,
+   "at_xy": [
+    0.5,
+    12.9
+   ],
+   "side": "front",
+   "max_width_mm": 0.11,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F9C9A6",
+   "tool": 1,
+   "volume_mm3": 0.039,
+   "z_mm": [
+    0.0,
+    2.6
+   ],
+   "layers": 13,
+   "at_xy": [
+    1.2,
+    40.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.13,
+   "depth_mm": 0.22,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#D7263D",
+   "tool": 3,
+   "volume_mm3": 0.014,
+   "z_mm": [
+    5.2,
+    6.2
+   ],
+   "layers": 5,
+   "at_xy": [
+    -4.4,
+    27.4
+   ],
+   "side": "left",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.2,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 2,
+   "volume_mm3": 0.009,
+   "z_mm": [
+    4.0,
+    4.4
+   ],
+   "layers": 2,
+   "at_xy": [
+    -0.8,
+    14.3
+   ],
+   "side": "front",
+   "max_width_mm": 0.12,
+   "depth_mm": 0.16,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#3B2A3A",
+   "tool": 4,
+   "volume_mm3": 0.008,
+   "z_mm": [
+    5.4,
+    5.8
+   ],
+   
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20261104-002 -->
+
+<!-- TRASH id=20261104-003 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.txt" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
+## 20261104-003 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.txt`
+**Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
+**Payload:** `data/trash/files/20261104-003__fidelity_cupid_print.txt`
+
+```
+Traceback (most recent call last):
+  File "/home/user/Etsy/openscad_models/valentine_2027/mailboxes/../../../tools/print_fidelity.py", line 772, in <module>
+    main()
+  File "/home/user/Etsy/openscad_models/valentine_2027/mailboxes/../../../tools/print_fidelity.py", line 747, in main
+    rep, _ = compare(parts, work, supports=not a.no_supports, layer_height=a.layer_height,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/Etsy/openscad_models/valentine_2027/mailboxes/../../../tools/print_fidelity.py", line 386, in compare
+    raise RuntimeError("not closed meshes, so there is nothing to compare against: " + ", ".join(open_parts)
+RuntimeError: not closed meshes, so there is nothing to compare against: love_letter/parts/cupid.stl, love_letter/parts/cupid_dark.stl -- check the closed export (a CGAL union, or part_mesh.py union) instead
+```
+
+<!-- /TRASH 20261104-003 -->
+
+<!-- TRASH id=20261104-004 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/fragility_cupid_print.txt" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
+## 20261104-004 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/fragility_cupid_print.txt`
+**Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
+**Payload:** `data/trash/files/20261104-004__fragility_cupid_print.txt`
+
+```
+  x: 1 slender run(s)
+  y: 1 slender run(s)
+  z: 0 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 1 watch (>= 4.0), 2 slender runs
+  WATCH along x    7.6 mm long  ~2.01 mm2 (thinnest 2.01)  slenderness 5.4  at [np.float64(13.6), np.float64(22.2), np.float64(0.8)]
+        along y    8.8 mm long  ~5.2 mm2 (thinnest 4.9)  slenderness 3.9  at [np.float64(19.1), np.float64(25.6), np.float64(1.2)]
+```
+
+<!-- /TRASH 20261104-004 -->
+
+<!-- TRASH id=20261104-005 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/gate_cupid_print.txt" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
+## 20261104-005 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/gate_cupid_print.txt`
+**Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
+**Payload:** `data/trash/files/20261104-005__gate_cupid_print.txt`
+
+```
+love_letter/parts/cupid_print.stl
+  ok    fits_plate: 64.0 x 53.5 x 17.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.37mm, median 13.32mm (floor 1.2mm); 0.09% below one bead
+  FAIL  no_unsupported_overhang: slicer: 16105 support moves, 1540 overhang perimeters, 17.0mm printed of 16.96mm
+  ok    geometry_survives_slicing: printed height 17.0mm vs modelled 16.96mm
+  FAIL  flat_base: 0.01 cm2 of contact = 0.0% of footprint (floor 5%)
+  FAIL  stable: centre of mass is 10.7mm from the nearest contact, base reach 0.7mm -- it tips
+  note  risk (uncalibrated, never fails the gate): 27.7mm widest unsupported span at z=6.8mm; 33 layer(s) under the 4.0s cooling threshold; 3250mm2 on the plate; aspect 0.19
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE FAILED
+```
+
+<!-- /TRASH 20261104-005 -->
+

@@ -119,11 +119,14 @@ module cupid_outline() import("cupid_white_outline.dxf");
 // POCKET_A on the way out to the face: otherwise it is a 1.0 ceiling on an
 // upright wall. Shearing the whole outline instead also lifted the pocket's
 // bottom wall into his legs: 29.9 mm3 of overlap (2026-10-30).
-// The climb is ten steps of 0.1, each the outline raised by its depth /
-// tan(POCKET_A): a 0.1 ledge prints like a slope. It was a Minkowski sum with
-// a thin wedge, which left a hairline pinch somewhere on the pocket floor in
-// nearly every export, a different place each time (2026-11-04).
-POCKET_STEP = 0.1;
+// The climb is twenty steps of 0.05, each the outline raised by its depth /
+// tan(POCKET_A). It was a Minkowski sum with a thin wedge, which left a
+// hairline pinch somewhere on the pocket floor in nearly every export, a
+// different place each time (2026-11-04). Steps of 0.1 rise 0.13 each, so a
+// 0.2 layer took one or two: 0.2 of overhang on some layers, and the slicer
+// propped the pocket's whole top edge (10,044 support moves). At 0.05 no layer
+// overhangs more than 0.15, as a true 37 deg slope does.
+POCKET_STEP = 0.05;
 module pocket2d() offset(r = 0.3) offset(r = -1.5) offset(r = 1.5) cupid_outline();
 module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
     for (z = [0 : POCKET_STEP : POCKET_D - 0.001])

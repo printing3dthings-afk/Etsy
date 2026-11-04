@@ -22,24 +22,37 @@ and colour changes add purge and time.
 A big standing envelope: 180 mm across, 62 mm deep, 124 mm tall with the lid.
 It holds 1.2 L.
 
-| print | colours (AMS slot) | as it sits in the file | sliced, one colour |
-|---|---|---|---|
-| the envelope | pink 1, red seal, hearts and postmark 2, white stamp 3, dark "To:" and name 4 | standing on its base | 3 h 38 min, about 162 g |
-| the lid | pink 1 | upside down, on its top | 50 min, about 35 g |
+| print | file | colours (AMS slot) | as it sits in the file | sliced, one colour |
+|---|---|---|---|---|
+| the envelope | `love_letter_mailbox.3mf` | pink 1, red seal, hearts and postmark 2, white stamp 3, dark "To:" and name 4 | standing on its base | 3 h 53 min, about 161 g |
+| the lid | `love_letter_mailbox.3mf` | pink 1 | upside down, on its top | 51 min, about 35 g |
+| Cupid | `love_letter_cupid.3mf` | white 1 | flat, face up | 10 min, about 4 g |
 
-The whole letter is about 4 h 28 min and 197 g of PLA.
+The whole letter is about 4 h 54 min and 200 g of PLA.
 
-Pink `#F6A6C1`, red `#D7263D`, white `#F4F1EA`, dark plum `#3B2A3A`. Both
-prints are on one plate in the 3MF.
+Pink `#F6A6C1`, red `#D7263D`, white `#F4F1EA`, dark plum `#3B2A3A`. The
+envelope and lid share one plate. Cupid has his own 3MF: he's one white
+filament, so he can go on any plate that prints white.
 
 **What's on it:**
 - **The address side:** a white stamp with a perforated edge and a red heart,
   a red wavy postmark, "To:", the child's name and an underline.
+- **Cupid,** in a pocket at the lower left, aiming his arrow at the name.
+  He's a flat white charm, 60 × 56 mm and 3 mm thick, and presses onto two
+  pegs in a 1 mm deep pocket shaped like him. Each peg has a crush rib down
+  both sides, so he snaps in snug and pulls back out. He doesn't come off
+  in a child's hands by accident, and he isn't glued, so he can be put back.
+- **Sticker hearts,** raised in the envelope's own colours: red on a white
+  sticker, or pink on a red one. Three on the front, four on the back. They're
+  part of the envelope, not loose pieces.
 - **The back:** the envelope's bottom flap and its top flap overlapping, and a
   red heart wax seal where they meet.
 - **The lid:** the top edge of the envelope, with a 118 × 11 mm slot. Its
   spigot drops 10 mm into the envelope, so it sits put and lifts straight off
   to empty it.
+
+**Put it together:** press Cupid into his pocket, pegs first, until he sits
+flat. To take him out, get a fingernail under his edge and lift.
 
 ## Hungry Love Monster (three 3MFs in `love_monster/`)
 
@@ -80,6 +93,11 @@ design's `checks/` folder.
     into the body, so it can't drop in. Lifted 0.2 mm and slid 0.15 mm, it
     touches nothing, so it lifts off cleanly. The envelope passes through the
     slot all the way to the floor without touching plastic.
+  - **Cupid:** in his pocket, the only contact is the pegs' crush ribs in his
+    holes (0.11 mm³: a press fit, not a jam). His back sits on the pocket
+    floor, since 0.1 mm deeper would be 110 mm³ into the wall. Slid 0.6 mm
+    in any direction, he hits the pegs or the pocket's edge (1.9 mm³), so he
+    can't wander.
   - **Monster:**
     - The face slides down its groove and back out touching nothing.
     - Pushed 0.6 mm forward, the ledge stops it. Pushed 0.6 mm back, the rib
@@ -87,14 +105,14 @@ design's `checks/` folder.
     - The fur cap rests on the rim and lifts off cleanly, like the letter's lid.
     - The envelope goes in through the mouth, lying flat, all the way inside.
       The straight gap through the grin is 12 mm.
-- **Supports: none on any of the five prints.** These fixes got them there:
+- **Supports: none on any of the six prints.** These fixes got them there:
   1. **The face as its own flat print** (above).
   2. **The monster body's inner front corners:** they were rounded, which
      made the ledge over the face's groove start as a flat 0.4 mm shelf. The
      slicer propped it with 7,333 moves. Squared, none.
   3. **Every slope at 40°** from upright, not 45°. At exactly 45° the slicer
      still props a surface.
-- **Product gate: all five pass.**
+- **Product gate: all six pass.**
   - The monster body first failed the wall check: 0.92 mm against the 1.2 mm
     floor. The ledge and the rib that hold the face each tapered to a knife
     edge.
@@ -103,15 +121,21 @@ design's `checks/` folder.
   - The ledge laps the face by 2.5 mm, down from 3.5, to keep its slope at
     40°.
 - **Print fidelity:**
-  - The letter: no flags on the envelope (all four colours) or on the lid.
+  - The letter: no flags on the envelope (all four colours), the lid or Cupid.
   - The monster face: no flags.
   - The monster body: no flags.
   - The fur cap has one flag, 0.7 mm³. It's on the inside of the fringe at a
     front corner, where a scallop's edge thins to 0.28 mm and the printer
     rounds it off. It isn't visible.
-- **Fragility:** nothing high and nothing on watch, on all five prints.
-- **Not tested on the printer yet.** The one thing I'd watch is how the
-  monster's face slides. It has 0.3 mm clearance each side.
+- **Fragility:** nothing high on any of the six prints. Cupid has three on
+  watch: his bow and his arrow, about 11 mm long and 4–5 mm² across. They're
+  a third of the way to where the chapel's window bar snapped, and he's
+  pressed in from the front, never pulled by them.
+- **Not tested on the printer yet.** Two things I'd watch:
+  - How firmly Cupid presses in. Each rib reaches 0.2 mm into his hole. If
+    he's too stiff to press in, tell me and I'll take that down. If he falls
+    out, I'll take it up.
+  - How the monster's face slides. It has 0.3 mm clearance each side.
   - If it's tight, sand the face's edges.
   - If it's loose, tell me and I'll tighten it.
 - **The names are laid out one letter at a time** (`name_text.scad`). Fredoka
@@ -121,7 +145,7 @@ design's `checks/` folder.
 
 ## Renders
 
-- `love_letter/images/letter_{front,three_quarter,top,back}.png`
+- `love_letter/images/letter_{front,three_quarter,top,back,apart}.png` and `cupid.png`
 - `love_monster/images/monster_{front,three_quarter,top,apart}.png`
 
 They're made from the real exported parts, assembled. They're design-review

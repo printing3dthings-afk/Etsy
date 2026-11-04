@@ -17,22 +17,28 @@ A big standing envelope for the school Valentine's swap. Classmates post
 their cards through the slot in the top. Lift the top off to empty it.
 
 **Made for school**
-- No small or loose parts, no magnets, no glue.
+- No small parts, no magnets, no glue. Cupid is the one separate piece, a
+  60 mm charm.
 - Rounded everywhere hands go.
 - The slot takes a standard kids' valentine in its envelope (2.75 × 4 in),
   even one with a sticker or a flat lollipop inside.
 - Holds about 1.2 litres of cards.
 
 **Printing**
-- Two parts on one plate: the envelope and its lid. PLA, 0.2 mm layers, no
-  supports, as the file opens.
+- Three parts, all PLA at 0.2 mm layers, no supports, as the files open:
+  - **The envelope and its lid** on one plate. The envelope prints standing
+    on its base, the lid upside down.
+  - **Cupid** in his own file. He's a flat white charm, printed face up in
+    one colour, in about 10 minutes.
 - Four colours with an AMS: pink, red, white and dark plum. In one colour all
   the detail is still there, because it's all raised.
-- The envelope prints standing on its base and the lid upside down.
-- About 200 g of PLA and 4.5 hours in one colour.
+- About 200 g of PLA and 5 hours in one colour.
 
 **What's on it**
 - The front is the address side: a stamp, a postmark, "To:" and the name.
+- Cupid sits in a pocket at the lower left, aiming his arrow at the name.
+  He presses onto two pegs and snaps in snug, with no glue.
+- Sticker hearts on the front and back, printed in, not loose.
 - The back has the envelope's flaps and a heart wax seal.
 
 180 × 62 × 124 mm.
