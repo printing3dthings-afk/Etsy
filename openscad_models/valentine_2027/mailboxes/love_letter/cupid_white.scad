@@ -21,12 +21,14 @@
 // passes it (knees and elbow bend the right way, the bow 1.87 mm clear of his
 // face, no near-touches, nothing under 1.2 mm).
 //
-// PREVIEW: nothing on the envelope uses this yet.
+// He sits in a pocket on the Giant Love Letter's front, pressed onto two
+// short pegs (cupid_peg.scad); he prints face up, one white filament.
 //
 // Drawn on a 900 px grid, y down as on paper, him facing +x; M() turns it into
 // millimetres, y up, his toes at y 0.
 
 include <BOSL2/std.scad>
+include <cupid_peg.scad>
 
 $fn = 64;
 S = 0.068;                                    // 900 px across: 61 mm
@@ -178,14 +180,22 @@ module slender2d() intersection() { cupid2d(); union() { string2d(); shaft2d(); 
 // Flat back, flat face; only the face's edge rounds over, EDGE in, on the 0.2
 // layer grid.
 function rise(z) = EDGE * (1 - sqrt(max(0, 1 - pow((z - (THICK - EDGE)) / EDGE, 2))));
-module cupid_white() union() {
-    linear_extrude(THICK - EDGE + 0.01) cupid2d();
-    for (z = [THICK - EDGE + 0.2 : 0.2 : THICK + 0.001])
-        translate([0, 0, z - 0.21]) linear_extrude(0.21) union() { offset(delta = -rise(z)) cupid2d(); slender2d(); }
+// with the two holes in his back for the envelope's pegs (cupid_peg.scad)
+module cupid_white() difference() {
+    union() {
+        linear_extrude(THICK - EDGE + 0.01) cupid2d();
+        for (z = [THICK - EDGE + 0.2 : 0.2 : THICK + 0.001])
+            translate([0, 0, z - 0.21]) linear_extrude(0.21) union() { offset(delta = -rise(z)) cupid2d(); slender2d(); }
+    }
+    cupid_holes();
 }
-// part: "charm" to print; "head" and "bow" for tools/silhouette_check.py's
-// --apart check that the bow stays clear of his face
+// part: "charm" to print; "outline", his 2D outline, which ship.sh exports
+// as cupid_white_outline.svg for the envelope to cut his pocket from (the
+// envelope cannot include this file: BOSL2's front() and back() would replace
+// its own); "head" and "bow" for tools/silhouette_check.py's --apart check
+// that the bow stays clear of his face
 part = "charm";
 if (part == "charm") cupid_white();
+else if (part == "outline") cupid2d();
 else if (part == "head") linear_extrude(THICK) union() { shape(HEAD); hair2d(); }
 else if (part == "bow") linear_extrude(THICK) union() { bow2d(); string2d(); }

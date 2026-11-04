@@ -13,11 +13,10 @@ HERE = Path(__file__).resolve().parent
 R = HERE.parents[2] / "tools" / "blender_render.py"
 PINK, RED, WHITE, DARK = "0.96,0.65,0.76", "0.84,0.15,0.24", "0.96,0.95,0.92", "0.23,0.16,0.23"
 LILAC, FUR, PUPIL = "0.72,0.61,0.88", "0.96,0.55,0.71", "0.17,0.14,0.2"
-SKIN = "0.98,0.79,0.65"
-CUPID = [("cupid_use", SKIN, 0), ("cupid_white_use", WHITE, 0), ("cupid_red_use", RED, 0), ("cupid_dark_use", DARK, 0)]
+CUPID = [("cupid_use", WHITE, 0)]
 LETTER = ("love_letter", [("body", PINK, 0), ("body_red", RED, 0), ("body_white", WHITE, 0), ("body_dark", DARK, 0),
                           ("lid_use", PINK, 0)] + CUPID)
-CUPID_ALONE = ("love_letter", [("cupid", SKIN, 0), ("cupid_white", WHITE, 0), ("cupid_red", RED, 0), ("cupid_dark", DARK, 0)])
+CUPID_ALONE = ("love_letter", [("cupid", WHITE, 0)])
 MONSTER = ("love_monster", [("body_use", LILAC, 0), ("face_use", LILAC, 0), ("face_white_use", WHITE, 0),
                             ("face_red_use", RED, 0), ("face_dark_use", PUPIL, 0), ("fur_use", FUR, 0)])
 

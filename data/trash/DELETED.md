@@ -1549,3 +1549,83 @@ SPIG_R = TR - LIP_W - JOINT_CLR; // the lid's spigot, inside the tin's lip
 
 <!-- /TRASH 20261103-004 -->
 
+<!-- TRASH id=20261104-001 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/cupid.scad" reason="The sculpted four-colour Cupid, replaced on the envelope by the flat white charm cupid_white.scad that Scott chose (2026-11-04); its peg and hole block moved to cupid_peg.scad, shortened for a 3 mm charm" -->
+## 20261104-001 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/cupid.scad`
+**Reason:** The sculpted four-colour Cupid, replaced on the envelope by the flat white charm cupid_white.scad that Scott chose (2026-11-04); its peg and hole block moved to cupid_peg.scad, shortened for a 3 mm charm  
+**Payload:** `data/trash/files/20261104-001__cupid.scad`
+
+```
+// Cupid for the Giant Love Letter (2026-10-30). Scott: "make it a little more
+// fun ... a cartoony Cupid that is a separate print that has a slight divot in
+// the front of the envelope that it would set in"; then, on the first one, a
+// flat stepped cut-out: "I want the Cupid to have depth to it. Make its
+// features stick out ... Fix the wings also and make him look better."
+//
+// So he is sculpted relief: a domed head and belly, round arms and legs,
+// puffy curls, cheeks, a nose and an ear on the curve of his face, and a
+// feathered wing, a rounded upper wing with four long feathers fanning back
+// from it. He draws a bow with a heart-tipped arrow, aimed up at the name,
+// and wears a white wrap (school-appropriate) with a little heart on it.
+//
+// He prints face up, his back flat on the bed. Every shape that reaches his
+// outline rises straight from the bed to its dome (col()), and every small
+// feature sits on the curve of what is under it, so nothing hangs over air.
+// Four filaments: skin, white, red, dark. Each colour is its shapes minus
+// the shapes in front of them, so the colour parts never overlap.
+//
+// He sits in a pocket 1.0 deep in the envelope's front and presses onto two
+// wedge pegs standing in it; his holes have crush ribs. About 55 x 60 and
+// 10 tall, far over the small-parts size.
+//
+// Local frame: x across (he faces +x), y up, z out of the envelope.
+
+$fn = 36;
+HEAD = [2, 41]; HEAD_R = 11.5; HEAD_Z0 = 2.0; HEAD_RZ = 7.6;   // the head: top at 9.6
+TORSO = [0, 20];
+AIM = 22;                        // the bow and arrow tilt up toward the name
+PIV = [4, 26];                   // ...about his chest
+function aimp(p) = PIV + [[cos(AIM), -sin(AIM)], [sin(AIM), cos(AIM)]] * (p - PIV);
+function p3(p, z) = [p.x, p.y, z];
+
+// ---------- building blocks ----------
+// a shape and everything under it down to the bed: a dome on a straight
+// column, so it never overhangs. Children must be convex.
+module col() hull() { children(); linear_extrude(0.01) projection() children(); }
+module ell(c, r) translate(c) scale(r) sphere(1, $fn = 48);           // an ellipsoid
+module caps(a, b, ra, rb = -1) hull() {                               // a rounded rod
+    translate(a) sphere(ra);
+    translate(b) sphere(rb < 0 ? ra : rb);
+}
+// the head's surface height over a point, for things set on the face
+function head_z(p) = let (d = norm(p - HEAD) / HEAD_R) HEAD_Z0 + HEAD_RZ * sqrt(max(0, 1 - d * d));
+
+// ---------- the wing: three rows of flat, overlapping feathers ----------
+// Each feather is a pillow: its outline at full height with softly rounded
+// edges, terraced on the 0.2 layer grid, so it prints as drawn. Where two
+// feathers meet their rounded edges leave a crease between them. Back to
+// front: long flight feathers, shorter ones over their roots, then the
+// scalloped upper wing, the tallest. (Round rods read as fingers, 2026-10-30.)
+module pillow(h, rr) for (z = [0.2 : 0.2 : h + 0.001]) let (u = z - (h - rr), inset = u <= 0 ? 0 : rr - sqrt(max(0, rr * rr - u * u)))
+    translate([0, 0, -0.01]) linear_extrude(z + 0.01) offset(delta = -inset) children();
+module feather2d(a, b, ra, rb) hull() { translate(a) circle(ra); translate(b) circle(rb); }
+FLIGHT = [   // root, tip, root radius, tip radius: tips touching, as on a real wing
+    [[-12, 36], [-26.5, 40.5], 3.2, 2.6],
+    [[-13, 32.5], [-28.5, 35.2], 3.2, 2.7],
+    [[-13, 29], [-28, 29.6], 3.1, 2.7],
+    [[-12, 26], [-25.5, 24.0], 3.0, 2.6],
+    [[-9.5, 24], [-21, 18.8], 2.9, 2.5]];
+SECONDARY = [
+    [[-9, 36], [-19.5, 39.6], 3.2, 2.5],
+    [[-9.5, 32.5], [-21, 34.0], 3.2, 2.6],
+    [[-9.5, 29], [-20.5, 28.8], 3.1, 2.5],
+    [[-8.5, 26], [-18, 23.6], 3.0, 2.4]];
+// the wing sweeps up and back from his shoulder, a cherub's wing
+WING_AT = [-6, 32]; WING_TILT = -32;
+module wing() translate(WING_AT) rotate(WING_TILT) translate(-WING_AT) union() {
+    for (f = FLIGHT) pillow(1.6, 1.0) feather2d(f[0], f[1], f[2], f[3]);
+    for (f = SECONDARY) pillow(2.4, 1.2) feather2d
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20261104-001 -->
+

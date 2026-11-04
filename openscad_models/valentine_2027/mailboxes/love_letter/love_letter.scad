@@ -17,24 +17,27 @@
 //   lid   the top edge of the envelope, with the card slot. Printed upside
 //         down on its top face; a spigot drops 10 mm into the body, so it
 //         sits put but lifts straight off to empty the box.
-//   cupid face up, four colours (cupid.scad); presses onto two pegs in his
-//         pocket.
+//   cupid a flat white charm (cupid_white.scad, which ship.sh exports to
+//         parts/cupid.stl), face up, one filament; presses onto two short
+//         pegs in his pocket (cupid_peg.scad).
 //
 //   part = body | body_red | body_white | body_dark | lid
-//          cupid | cupid_white | cupid_red | cupid_dark (as printed)
-//          cupid_use, cupid_white_use, ... (in his pocket)
-//          body_print, cupid_print (merged, for the gate) | assembly
+//          cupid_use (the charm in his pocket)
+//          body_print (merged, for the gate) | assembly
 // NAME is the child's name; it scales to fit.
 
 SH = 1.2;
 include <../../../christmas_village/relief_lib.scad>
 use <../../../brand/obc_mark.scad>
 include <../name_text.scad>
-include <cupid.scad>
+include <cupid_peg.scad>
 
 NAME = "OLIVIA";
 part = "assembly";
 $fa = 2; $fs = 0.3;
+// The sculpted Cupid's file, included here until 2026-11-04, set $fn = 36
+// for the whole envelope; kept, so the envelope's own curves are unchanged.
+$fn = 36;
 
 W = 180; D = 62; R = 8;          // the envelope's face, its thickness, its corner radius
 HB = 122;                        // the body's height; the lid adds LT on top
@@ -102,10 +105,16 @@ module line2d() translate([34, 34]) square([92, 1.6], center = true);
 // ---------- Cupid's pocket ----------
 // on_front: x across, y up, z out of the envelope's face
 module on_front(z = 0) translate([0, -D / 2, 0]) rotate([90, 0, 0]) translate([0, 0, z]) children();
-CUPID_AT = [-52, 4];             // his frame's origin on the face: lower left, wings clear of the corner
+// his frame's origin on the face: lower left, his far foot 3 inside the flat
+// of the face (it turns into the corner at x = -82), his arrow's heart 6
+// short of the name block, aimed at it
+CUPID_AT = [-79, 6];
 POCKET_D = 1.0;                  // leaves 1.4 of the 2.4 wall behind him
 POCKET_A = 37;
-// The pocket is his outline 0.3 larger, straight down to its floor, except
+// his outline, exported from cupid_white.scad by ship.sh
+module cupid_outline() import("cupid_white_outline.dxf");
+// The pocket is his outline 0.3 larger, its cut-through gaps closed (each
+// would leave a 0.2 sliver of wall in the pocket), straight down to its floor, except
 // that every edge facing down is swept up at POCKET_A on its way out to the
 // face: otherwise his pocket's top edge is a 1.0 ceiling on an upright wall.
 // The sweep is a Minkowski sum with a thin wedge (at depth z, the outline
@@ -114,7 +123,7 @@ POCKET_A = 37;
 // (2026-10-30).
 module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
     minkowski() {
-        translate([0, 0, -0.01]) linear_extrude(0.01) offset(r = 0.3) cupid_outline();
+        translate([0, 0, -0.01]) linear_extrude(0.01) offset(r = 0.3) offset(r = -1) offset(r = 1) cupid_outline();
         hull() for (q = [[0, 0], [0, POCKET_D + 0.5], [(POCKET_D + 0.5) / tan(POCKET_A), POCKET_D + 0.5]])
             translate([-0.005, q[0], q[1]]) cube([0.01, 0.01, 0.01]);
     }
@@ -200,26 +209,12 @@ else if (part == "body_dark")  body_dark();
 else if (part == "body_print") body_print();
 else if (part == "lid")        lid_print();
 else if (part == "lid_use")    lid_use();
-else if (part == "cupid")        cupid_skin();
-else if (part == "cupid_white")  cupid_white();
-else if (part == "cupid_red")    cupid_red();
-else if (part == "cupid_dark")   cupid_dark();
-else if (part == "cupid_print")  cupid_print();
-else if (part == "cupid_use")       at_pocket() cupid_skin();
-else if (part == "cupid_white_use") at_pocket() cupid_white();
-else if (part == "cupid_red_use")   at_pocket() cupid_red();
-else if (part == "cupid_dark_use")  at_pocket() cupid_dark();
-else if (part == "cupid_print_use") at_pocket() cupid_print();
+else if (part == "cupid_use")  at_pocket() import("parts/cupid.stl");
 else {
     color("#F6A6C1") body();
     color("#D7263D") body_red();
     color("#F4F1EA") body_white();
     color("#3B2A3A") body_dark();
     color("#F6A6C1") lid_use();
-    at_pocket() {
-        color("#F9C9A6") cupid_skin();
-        color("#F4F1EA") cupid_white();
-        color("#D7263D") cupid_red();
-        color("#3B2A3A") cupid_dark();
-    }
+    at_pocket() color("#F4F1EA") import("parts/cupid.stl");
 }
