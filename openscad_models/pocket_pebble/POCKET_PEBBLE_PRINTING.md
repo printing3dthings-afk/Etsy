@@ -13,7 +13,8 @@ latch.
 - **A hinge at the back.**
   - Three knuckles turn on two pins: two on the base, one on the lid.
   - Each knuckle stands on a buttress, so the hinge reads as a spine down the
-    pebble's back.
+    pebble's back. Inside the base, the buttresses stand as two short ribs on
+    the back wall.
   - Open, the lid lies back at about 165°, nearly flat.
 - **A latch at the front.** A tongue hangs inside the lid, and a bump on it
   clicks under a lip inside the base. Shut, it stays shut in a pocket.
