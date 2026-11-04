@@ -138,6 +138,8 @@ In `images/`:
 - `gift_box_v2_{front,three_quarter,top}.png`: assembled.
 - `gift_box_v2_exploded.png`: pulled apart in the order it goes together.
 - `gift_box_v2_prints.png`: the nine prints as they lie on the plate.
+- `gift_box_v2_frame_as_printed.png`: the frame rendered from its sliced
+  toolpath, so it shows what the printer lays down, snap pins included.
 
 These are design-review renders from the real exported parts, not photos.
 
