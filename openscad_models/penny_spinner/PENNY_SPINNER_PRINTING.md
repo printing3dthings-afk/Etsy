@@ -129,6 +129,8 @@ In `images/`:
 - `penny_spinner_{front,three_quarter,top}.png`: assembled with 16 pennies.
 - `penny_spinner_exploded.png`: pulled apart in the order it goes together.
 - `penny_spinner_prints.png`: the three prints as they lie on the plate.
+- `penny_spinner_crown_as_printed.png`: the crown rendered from its sliced
+  toolpath, so it shows what the printer lays down.
 
 These are design-review renders from the real exported parts, not photos. The
 pennies are plain copper discs.
