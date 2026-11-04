@@ -1,0 +1,28 @@
+slicing 4 part(s), 4 filament(s) ...
+329 layers parsed
+  layer 0/329
+  layer 100/329
+  layer 200/329
+  layer 300/329
+
+PRINT FIDELITY  (329 layers, model 51486.9 mm3)
+  dropped (modelled, not printed): 1.36 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.08 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #C68E5E slot 2     0.453 mm3  z 41.4-47.8 (32 layers)  front at [5.5, -13.8]  0.29 mm wide, 0.31 mm deep
+       dropped #C68E5E slot 2     0.428 mm3  z 41.4-48.4 (34 layers)  front at [-4.1, -13.6]  0.27 mm wide, 0.33 mm deep
+       dropped #C68E5E slot 2     0.073 mm3  z 50.6-51.2 (3 layers)  front at [-4.9, -12.4]  0.4 mm wide, 0.24 mm deep
+       dropped #F6A6C1 slot 4     0.060 mm3  z 55.6-58.0 (12 layers)  right at [11.3, -4.5]  0.14 mm wide, 0.19 mm deep
+       dropped #C68E5E slot 2     0.053 mm3  z 47.6-50.4 (14 layers)  front at [-4.1, -13.3]  0.14 mm wide, 0.21 mm deep
+       dropped #C68E5E slot 2     0.041 mm3  z 46.4-49.2 (14 layers)  front at [6.2, -13.3]  0.13 mm wide, 0.17 mm deep
+       dropped #F6A6C1 slot 4     0.034 mm3  z 42.0-42.2 (1 layers)  right at [10.9, -8.8]  0.34 mm wide, 0.36 mm deep
+       dropped #C68E5E slot 2     0.021 mm3  z 26.0-26.2 (1 layers)  right at [19.6, 0.0]  0.29 mm wide, 0.2 mm deep
+       dropped #C68E5E slot 2     0.021 mm3  z 26.0-26.2 (1 layers)  left at [-19.6, -0.0]  0.29 mm wide, 0.2 mm deep
+       dropped #F6A6C1 slot 4     0.018 mm3  z 59.8-62.0 (10 layers)  left at [-12.0, -2.4]  0.08 mm wide, 0.14 mm deep
+       dropped #4A2E22 slot 3     0.016 mm3  z 49.2-50.2 (5 layers)  front at [9.0, -12.7]  0.12 mm wide, 0.16 mm deep
+       colour  #C68E5E slot 2     0.015 mm3  z 27.6-27.8 (3 layers)  right at [18.1, -7.6]  0.02 mm wide
+       dropped #F6A6C1 slot 4     0.014 mm3  z 42.0-42.2 (1 layers)  front at [10.0, -9.7]  0.22 mm wide, 0.25 mm deep
+       dropped #F6A6C1 slot 4     0.012 mm3  z 58.2-59.0 (3 layers)  left at [-11.2, -2.3]  0.1 mm wide, 0.18 mm deep
+       dropped #F6A6C1 slot 4     0.011 mm3  z 57.6-59.0 (6 layers)  right at [16.6, -2.4]  0.08 mm wide, 0.13 mm deep
+  ... 46 smaller

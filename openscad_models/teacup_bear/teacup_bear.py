@@ -59,7 +59,9 @@ HEAD = ((0, -1, 48), (15, 13, 13.5))
 MUZZLE = ((0, -12.4, 44.8), (5.4, 3.3, 4.0))
 NOSE = ((0, -15.5, 46.6), (2.1, 1.3, 1.5))
 EYE = ((6.2, -12.4, 49.5), (1.9, 1.2, 2.4))                # x mirrored
-SHINE = ((6.8, -13.4, 50.4), 0.75)
+# r 1.0: at 0.75 only a 0.6 mm dot reached the eye's surface and the slicer
+# dropped it (fidelity flags; DETAIL_STANDARD rule 11 wants 0.8 across)
+SHINE = ((6.9, -13.3, 50.5), 1.0)
 BLUSH = ((10.5, -10.0, 45.0), 2.3)
 EAR = ((11.5, -1.0, 59.5), 5.2, 1.4)                        # centre (x mirrored), radius, half-thickness
 INNER_EAR = 3.0

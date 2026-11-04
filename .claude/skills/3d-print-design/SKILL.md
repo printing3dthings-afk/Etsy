@@ -8192,5 +8192,10 @@ pink muzzle resting on it, and the horns went white with black tips.
   `pink_face` (wins over her tan) and `pink_cup` (loses to her paws on the
   rim) both export as pink.
 - **Colour in height bands.** Cup and saucer cream with one pink band and
-  heart, bear tan above, brown and pink in the face band: far fewer
-  filament changes than the cow, whose four colours ran her whole height.
+  heart, bear tan above, brown and pink in the face band: 315 filament
+  changes in PrusaSlicer's count against the cow's 595, whose four colours
+  ran her whole height. About half, not a few dozen: the cup's pink band,
+  heart and the tea still share layers with the cream.
+- **Check a white shine reaches the surface at 0.8 mm or more.** A 1.5 mm
+  shine ball sunk in a domed eye left a 0.6 mm dot on the surface, and
+  print_fidelity flagged it as dropped; 2 mm prints whole.
