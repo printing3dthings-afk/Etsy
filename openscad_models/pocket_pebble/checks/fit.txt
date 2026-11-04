@@ -1,0 +1,48 @@
+== on the bed
+  ok    base: lowest point z +0.000
+  ok    lid: lowest point z +0.000
+  ok    pin: lowest point z +0.000
+== shut
+  ok    lid and base: 0.000 mm3
+  ok    pins and base: 0.000 mm3
+  ok    pins and lid: 0.000 mm3
+== opening
+  ok    the lid swings clear of the base to 165 deg (its back meets the base's at 166 deg)
+  ok    the pins turn freely in the lid's knuckle to the stop (worst 0.000 mm3)
+  ok    a pin turned 4 deg hits the base's knuckle: keyed
+  ok    pushed 0.5 past home, a pin's key meets the lid's knuckle: it stops there
+== the latch: how far the tongue's tip bends in as the lid lifts
+         0.0 deg  0.00 mm  
+         0.5 deg  0.07 mm  #
+         1.0 deg  0.34 mm  #######
+         1.5 deg  0.60 mm  ############
+         2.0 deg  0.68 mm  ##############
+         2.5 deg  0.57 mm  ###########
+         3.0 deg  0.30 mm  ######
+         3.5 deg  0.03 mm  #
+         4.0 deg  0.03 mm  #
+         4.5 deg  0.00 mm  
+         5.0 deg  0.00 mm  
+         5.5 deg  0.00 mm  
+         6.0 deg  0.00 mm  
+         6.5 deg  0.00 mm  
+         7.0 deg  0.00 mm  
+         7.5 deg  0.00 mm  
+         8.0 deg  0.00 mm  
+         8.5 deg  0.00 mm  
+         9.0 deg  0.00 mm  
+         9.5 deg  0.00 mm  
+        10.0 deg  0.00 mm  
+        10.5 deg  0.00 mm  
+        11.0 deg  0.00 mm  
+        11.5 deg  0.00 mm  
+        12.0 deg  0.00 mm  
+        12.5 deg  0.00 mm  
+        13.0 deg  0.00 mm  
+        13.5 deg  0.00 mm  
+        14.0 deg  0.00 mm  
+  ok    shut, the tongue rests unbent
+  ok    lifting, it bends in up to 0.68 mm to pass the lip: the click
+  ok    past 4.5 deg it is free
+
+FIT CHECK OK
