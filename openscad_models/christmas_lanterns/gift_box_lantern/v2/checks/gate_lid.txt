@@ -3,7 +3,7 @@ parts/lid.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 2.25mm, median 14.00mm (floor 1.2mm); 0.13% below one bead
+  ok    min_wall: 1st pct 2.25mm, median 14.00mm (floor 1.2mm); 0.00% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 19.8mm printed of 19.82mm
   ok    geometry_survives_slicing: printed height 19.8mm vs modelled 19.82mm
   ok    flat_base: 49.71 cm2 of contact = 87.0% of footprint (floor 5%)

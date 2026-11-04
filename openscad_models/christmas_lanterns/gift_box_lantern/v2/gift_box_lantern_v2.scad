@@ -46,7 +46,7 @@ fl   = 2.4;                 // the floor
 H    = 58;                  // the glass, as seen
 zr   = z0 + H;              // the rail's top: the lid sits here
 RO   = 2.8;                 // the base band, the rail and the lid, out past the glass
-PR   = 3.4;                 // the corner posts' radius (3.2 on v1): room round the snap socket
+PR   = 3.6;                 // the corner posts' radius (3.2 on v1): 1.2 of wall round the snap socket
 W    = 60;  HS = 52;        // a scene: between the posts, under the rail
 AD   = 1.6;                 // the scenes, out of the glass
 LH   = 14;  LR = 3;         // the lid, and its corners' radius
@@ -72,10 +72,19 @@ module on_face(a, d) rotate([0, 0, a]) translate([d, 0, 0]) rotate([90, 0, 90]) 
 CORNERS = [for (x = [-1, 1], y = [-1, 1]) [x * PC, y * PC]];
 
 // ---- the snap pin and its socket ----------------------------------------------------------
-// A pin 3.0 across, split by a 1.0 slot that runs 2.0 down into what it stands
-// on, so each prong flexes over about 4 mm. The barb stands 0.4 proud and
-// squeezes 0.25 through the throat: 2.2% strain in PLA, a firm click.
-SP_D = 3.0; SP_SLIT = 1.0; SP_SLIT_IN = 2.0; SP_B = 0.4;
+// A pin 3.4 across, split by a 1.0 slot that runs 3.0 down into what it stands
+// on, so each prong is 1.2 thick (three beads) and flexes over about 5 mm. The
+// barb stands 0.4 proud and squeezes 0.25 through the throat: 1.7% strain in
+// PLA, a firm click. At 3.0 across the prongs were 1.0 and failed the wall
+// floor, and the slicer dropped the sharp edges where the slot met the round
+// (2026-11-04); the slot's ends now flare, a 0.4 chamfer on each prong's edge.
+SP_D = 3.4; SP_SLIT = 1.0; SP_SLIT_IN = 3.0; SP_B = 0.4; SP_FL = 0.4;
+module slit2d(len) let (w = SP_SLIT / 2, r = SP_D / 2) union() {
+    translate([-w, -len / 2]) square([SP_SLIT, len]);
+    for (s = [-1, 1]) polygon([[-w, s * (r - SP_FL - 0.3)], [w, s * (r - SP_FL - 0.3)],
+                              [w + SP_FL + 0.4, s * (r + 0.1)], [w + SP_FL + 0.4, s * len / 2],
+                              [-w - SP_FL - 0.4, s * len / 2], [-w - SP_FL - 0.4, s * (r + 0.1)]]);
+}
 // throat: the length of the narrow part of the socket the barb passes
 module snap_pin(throat) let (r = SP_D / 2, c = throat + 0.1, f = SP_B / tan(37), top = c + f + 0.4 + 1.2)
     difference() {
@@ -83,9 +92,9 @@ module snap_pin(throat) let (r = SP_D / 2, c = throat + 0.1, f = SP_B / tan(37),
             [0, -0.01], [r, -0.01], [r, c],      // the shaft
             [r + SP_B, c + f],                   // the barb's catch, 37 deg off upright
             [r + SP_B, c + f + 0.4],
-            [r - 0.5, top],                      // the lead-in
+            [r - 0.3, top],                      // the lead-in
             [0, top]]);
-        translate([-SP_SLIT / 2, -5, -SP_SLIT_IN]) cube([SP_SLIT, 10, top + SP_SLIT_IN + 1]);
+        translate([0, 0, -SP_SLIT_IN]) linear_extrude(top + SP_SLIT_IN + 1) slit2d(10);
     }
 function snap_top(throat) = throat + 0.1 + SP_B / tan(37) + 1.6;
 // the slot the pin's prongs flex into, cut into what the pin stands on
@@ -101,8 +110,11 @@ module snap_socket(throat) let (rt = SP_D / 2 + SK_T, rc = SP_D / 2 + SP_B + 0.2
 function socket_top(throat) = throat + 1.0 + (SP_D / 2 + SP_B + 0.2) / tan(37);
 
 // ---- the frame (green) --------------------------------------------------------------------
+// the band's top bevel is 1.2 (1.5 on v1): at 1.5 it left 1.15 of wall
+// outside the glass's channel (2026-11-04)
+BEV = 1.2;
 module base() difference() {
-    union() { rsq(P + RO, z0 - 1.5, LR); translate([0, 0, z0 - 1.5]) hull() { rsq(P + RO, 0.01, LR); translate([0, 0, 1.5]) rsq(P + RO - 1.5, 0.01, LR); } }
+    union() { rsq(P + RO, z0 - BEV, LR); translate([0, 0, z0 - BEV]) hull() { rsq(P + RO, 0.01, LR); translate([0, 0, BEV]) rsq(P + RO - BEV, 0.01, LR); } }
     translate([0, 0, fl]) rsq(PI_ - LIP, z0);
 }
 // the glass's slot: down each post and along the base between them
@@ -113,7 +125,9 @@ module base() difference() {
 // The peak is 20 deg off upright, not 37: in a slot 66 long and 1.5 wide, each
 // 37 deg layer's 0.15 step is a long strip, and the slicer propped those too
 // (7,026 moves).
-GTOP = 2.4; G_A = 20;
+// It stops a wall's width under the pin's slot (the slot's foot met the
+// peak's top in a 0.1 sliver when GTOP was 2.4, 2026-11-04).
+G_A = 20; GTOP = SP_SLIT_IN + 1.2 + (GW / 2) / tan(G_A);
 module glass_slots() for (k = [0 : 3]) rotate([0, 0, fa(k)]) translate([PC, 0, 0]) {
     translate([-GW / 2, -(PC - GE), PZ]) cube([GW, 2 * (PC - GE), TOPZ - GTOP - PZ]);
     translate([0, 0, TOPZ - GTOP - 0.01]) rotate([90, 0, 0])
@@ -154,14 +168,17 @@ module top() difference() {
 // its top corners, inside the posts, are cut down to clear the grooves' ends
 module panel_glass(k) difference() {
     translate([-PW / 2, 0, 0]) cube([PW, PH, PT]);
-    for (sx = [-1, 1]) translate([sx > 0 ? PC - PR - 0.2 : -PW / 2 - 1, TOPZ - GTOP - 0.2 - PZ, -1]) cube([PW / 2 - (PC - PR - 0.2) + 1, 10, PT + 2]);
+    let (cx = PC - sqrt(PR * PR - PT * PT / 4) - 0.15)   // the post's face, at the glass, less 0.15
+    for (sx = [-1, 1]) translate([sx > 0 ? cx : -PW / 2 - 1, TOPZ - GTOP - 0.2 - PZ, -1]) cube([PW / 2 - cx + 1, 10, PT + 2]);
 }
 // 0.2 above the base's bevel, which tops out at z0: on it, the ground line
 // touched the frame (2026-10-30). Every stroke 0.3 wider than v1's: printed
 // flat, a scene is a panel's whole top, and the star and flake tips read
 // 0.83-0.99 against the gate's 1.2 floor.
+// Every point (star tips, eaves, the moon's horns, the spire) is rounded to
+// 0.6, then grown 0.15: a point stood 1.6 proud at a fraction of a bead wide.
 module panel_art(k) translate([-W / 2, z0 + 0.2 - PZ, PT - 0.01]) linear_extrude(AD + 0.01)
-    offset(delta = 0.15) glow_clean() intersection() { square([W, HS]); landscape(k, W, HS); }
+    offset(delta = 0.15) offset(r = 0.6) offset(r = -0.6) glow_clean() intersection() { square([W, HS]); landscape(k, W, HS); }
 module panel_use(k) on_face(fa(k), PI_) translate([0, PZ, 0]) children();
 
 // ---- the lid (green), the ribbon and the bow (red) -----------------------------------------

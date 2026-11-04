@@ -3,11 +3,11 @@
   z: 8 slender run(s)
 
 FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 0 watch (>= 4.0), 8 slender runs
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(-35.1), np.float64(-35.1), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(-33.7), np.float64(-33.7), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(-35.1), np.float64(33.7), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(-33.7), np.float64(35.1), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(33.7), np.float64(-35.1), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(35.1), np.float64(-33.7), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(33.7), np.float64(33.7), np.float64(60.8)]
-        along z    4.0 mm long  ~2.05 mm2 (thinnest 1.08)  slenderness 2.8  at [np.float64(35.1), np.float64(35.1), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(-35.2), np.float64(-35.2), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(-33.6), np.float64(-33.6), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(-35.2), np.float64(33.6), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(-33.6), np.float64(35.2), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(33.6), np.float64(-35.2), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(35.2), np.float64(-33.6), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(33.6), np.float64(33.6), np.float64(60.8)]
+        along z    4.0 mm long  ~2.58 mm2 (thinnest 2.1)  slenderness 2.5  at [np.float64(35.2), np.float64(35.2), np.float64(60.8)]

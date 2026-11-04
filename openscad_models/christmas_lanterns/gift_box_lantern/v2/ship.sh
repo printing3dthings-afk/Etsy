@@ -11,14 +11,14 @@ export OPENSCADPATH="$(cd ../../../../assets/openscad_libs && pwd)"
 FAST=${OPENSCAD_FAST:-/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun}
 F=gift_box_lantern_v2.scad
 PARTS="frame top lid ribbon bow top_use lid_use ribbon_use bow_use"
-for k in 0 1 2 3; do PARTS="$PARTS panel_$k panel_glass_$k panel_art_$k panel_${k}_use"; done
+for k in 0 1 2 3; do PARTS="$PARTS panel_$k panel_glass_$k panel_art_$k panel_${k}_use panel_glass_${k}_use panel_art_${k}_use"; done
 mkdir -p parts logs checks
 if [ "${1:-}" != checks ]; then
     for p in $PARTS; do "$FAST" --backend=manifold --export-format binstl -D "part=\"$p\"" -o parts/$p.stl $F > logs/$p.log 2>&1 & done; wait
     grep -l "WARNING\|ERROR" logs/*.log && echo "(warnings above)"
     python3 ../../../valentine_2027/mailboxes/clean_parts.py $(for p in $PARTS; do echo parts/$p.stl; done) | grep -v "^parts/.*watertight True" || true
 fi
-python3 check_v2.py
+python3 check_v2.py | tee checks/fit.txt
 check() {   # print colour-parts...
     local p=$1; shift
     echo "== gate $p"; python3 $T/product_gate.py parts/$p.stl > checks/gate_$p.txt 2>&1; grep -E "FAIL|support|GATE" checks/gate_$p.txt

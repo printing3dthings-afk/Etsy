@@ -1,0 +1,45 @@
+== on the bed
+  ok    frame: lowest point z +0.000
+  ok    top: lowest point z +0.000
+  ok    lid: lowest point z +0.000
+  ok    ribbon: lowest point z +0.000
+  ok    bow: lowest point z +0.000
+  ok    panel_0: lowest point z +0.000
+  ok    panel_1: lowest point z +0.000
+  ok    panel_2: lowest point z +0.000
+  ok    panel_3: lowest point z +0.000
+== the glass in the frame
+  ok    panel 0 in its grooves: 0.000 mm3
+  ok    panel 0 pushed 0.5 out hits the groove: 119.86 mm3
+  ok    panel 0 pushed 0.5 in hits the groove: 119.86 mm3
+  ok    panel 0 under the top: 0.000 mm3
+  ok    panel 0 lifted 0.5 hits the top: 22.10 mm3
+  ok    panel 1 in its grooves: 0.000 mm3
+  ok    panel 1 pushed 0.5 out hits the groove: 119.86 mm3
+  ok    panel 1 pushed 0.5 in hits the groove: 119.86 mm3
+  ok    panel 1 under the top: 0.000 mm3
+  ok    panel 1 lifted 0.5 hits the top: 22.10 mm3
+  ok    panel 2 in its grooves: 0.000 mm3
+  ok    panel 2 pushed 0.5 out hits the groove: 119.86 mm3
+  ok    panel 2 pushed 0.5 in hits the groove: 119.86 mm3
+  ok    panel 2 under the top: 0.000 mm3
+  ok    panel 2 lifted 0.5 hits the top: 22.10 mm3
+  ok    panel 3 in its grooves: 0.000 mm3
+  ok    panel 3 pushed 0.5 out hits the groove: 119.86 mm3
+  ok    panel 3 pushed 0.5 in hits the groove: 119.86 mm3
+  ok    panel 3 under the top: 0.000 mm3
+  ok    panel 3 lifted 0.5 hits the top: 22.10 mm3
+== the top on the posts
+  ok    top at rest: 0.027 mm3
+  ok    top 0.1 lower is into the posts: 11.28 mm3
+  ok    top pulled 0.5 up: the barbs catch: 0.49 mm3
+  ok    top pulled 1.0 up: the barbs catch: 4.12 mm3
+== the lid, the ribbon and the bow
+  ok    lid on the top: 0.000 mm3
+  ok    ribbon on the lid: 0.000 mm3
+  ok    ribbon clear of the top: 0.000 mm3
+  ok    bow on the ribbon and the pin: 0.007 mm3
+  ok    bow pulled 0.5 up: the barb catches: 0.12 mm3
+  ok    bow pulled 1.0 up: the barb catches: 1.03 mm3
+  ok    ribbon lifted 0.5: the bow holds it: 52.49 mm3
+FIT CHECK OK
