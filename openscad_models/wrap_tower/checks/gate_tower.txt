@@ -1,0 +1,13 @@
+parts/tower.stl
+  ok    fits_plate: 73.2 x 73.2 x 48.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.23mm, median 5.95mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 48.0mm printed of 48.0mm
+  ok    geometry_survives_slicing: printed height 48.0mm vs modelled 48.0mm
+  ok    flat_base: 23.91 cm2 of contact = 44.6% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=47.2mm; 0 layer(s) under the 4.0s cooling threshold; 2958mm2 on the plate; aspect 0.56
+  note  texture (advisory, never fails the gate): rugosity 2.455 -- heavily textured, at or above the corpus p90
+PRODUCT GATE PASSED

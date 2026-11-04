@@ -1,0 +1,13 @@
+parts/tray.stl
+  ok    fits_plate: 112.0 x 112.0 x 10.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.11mm, median 2.72mm (floor 1.2mm); 0.14% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 10.0mm printed of 10.0mm
+  ok    geometry_survives_slicing: printed height 10.0mm vs modelled 10.0mm
+  ok    flat_base: 97.71 cm2 of contact = 77.9% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 6.6mm widest unsupported span at z=1.0mm; 1 layer(s) under the 4.0s cooling threshold; 11680mm2 on the plate; aspect 0.08
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

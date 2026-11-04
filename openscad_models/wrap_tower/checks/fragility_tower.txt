@@ -1,0 +1,17 @@
+  x: 6 slender run(s)
+  y: 6 slender run(s)
+  z: 0 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 0 watch (>= 4.0), 12 slender runs
+        along x    8.0 mm long  ~5.33 mm2 (thinnest 4.8)  slenderness 3.5  at [np.float64(-0.2), np.float64(-35.6), np.float64(1.5)]
+        along x    8.0 mm long  ~5.33 mm2 (thinnest 4.8)  slenderness 3.5  at [np.float64(-0.2), np.float64(35.6), np.float64(1.5)]
+        along y    8.0 mm long  ~5.33 mm2 (thinnest 4.8)  slenderness 3.5  at [np.float64(-35.6), np.float64(-0.2), np.float64(1.5)]
+        along y    8.0 mm long  ~5.33 mm2 (thinnest 4.8)  slenderness 3.5  at [np.float64(35.6), np.float64(-0.2), np.float64(1.5)]
+        along x    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(-24.6), np.float64(-25.9), np.float64(1.5)]
+        along x    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(-24.6), np.float64(25.9), np.float64(1.5)]
+        along x    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(24.6), np.float64(-25.9), np.float64(1.5)]
+        along x    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(24.6), np.float64(25.9), np.float64(1.5)]
+        along y    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(-25.9), np.float64(-24.6), np.float64(1.5)]
+        along y    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(25.9), np.float64(-24.6), np.float64(1.5)]
+        along y    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(-25.9), np.float64(24.6), np.float64(1.5)]
+        along y    3.2 mm long  ~6.76 mm2 (thinnest 6.57)  slenderness 1.2  at [np.float64(25.9), np.float64(24.6), np.float64(1.5)]

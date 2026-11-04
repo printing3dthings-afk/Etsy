@@ -1,0 +1,6 @@
+  pieces in every cell of every tube: 0.000 mm3 in the way
+  a piece pushed 3 mm out towards its window: 114.4 mm3 into the tower (it can't leave)
+  a piece's diagonal 17.46 mm against the bore 17.00: it can't turn on edge
+  tower in the tray: at rest 0.000 mm3; 0.1 lower 239.1; slid 1 mm any way 51.7 (held by the recess)
+  six pieces stand 42 mm in a 48 mm tube; a seventh would stand +1 mm above the rim
+FIT CHECK OK
