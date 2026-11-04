@@ -139,6 +139,9 @@ In `images/`:
 - `fold_stand_side.png`: the A from the side, without the phone.
 - `fold_stand_folded.png`: folded flat.
 - `fold_stand_prints.png`: the plates and pins as they lie on the plate.
+- `fold_stand_front_as_printed.png`: the front plate rendered from its sliced
+  toolpath, so it shows what the printer lays down. The faint diagonal line
+  on its top face is where the slicer's top layer changes direction.
 
 These are design-review renders from the real exported parts, not photos.
 

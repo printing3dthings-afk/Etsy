@@ -8,6 +8,6 @@ parts/back.stl
   ok    geometry_survives_slicing: printed height 20.4mm vs modelled 20.4mm
   ok    flat_base: 78.60 cm2 of contact = 91.4% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=3.2mm; 50 layer(s) under the 4.0s cooling threshold; 9418mm2 on the plate; aspect 0.16
+  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=3.2mm; 51 layer(s) under the 4.0s cooling threshold; 9418mm2 on the plate; aspect 0.16
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
 PRODUCT GATE PASSED

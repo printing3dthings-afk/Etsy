@@ -117,8 +117,9 @@ module back() difference() {
     tongue_cut(XB0 + END + TONGUE_L, -1);
     tongue_cut(XB1 - END - TONGUE_L, 1);
     // the mark on the inner face, which prints facing up: engraved into the face on the
-    // bed, its letters' roofs were bridges the slicer propped (2026-11-04)
-    translate([W / 2, -LR / 2, T]) mirror([0, 0, 1]) mirror([1, 0, 0]) obc_engrave(7, depth = 0.8, inset = 0.15, ridges = false);
+    // bed, its letters' roofs were bridges the slicer propped (2026-11-04). The library
+    // draws it to read from below; mirrored back in y it reads from above, hinge at the top
+    translate([W / 2, -LR / 2, T]) mirror([0, 0, 1]) mirror([0, 1, 0]) obc_engrave(7, depth = 0.8, inset = 0.15, ridges = false);
 }
 module back_ridges() { ridge(XB0 + END + TONGUE_L, -1); ridge(XB1 - END - TONGUE_L, 1); }
 module back_full() union() { back(); back_ridges(); }
