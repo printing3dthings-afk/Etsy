@@ -2,11 +2,9 @@ slicing 1 part(s), 1 filament(s) ...
 15 layers parsed
   layer 0/15
 
-PRINT FIDELITY  (15 layers, model 3689.1 mm3)
-  dropped (modelled, not printed): 0.17 mm3
+PRINT FIDELITY  (15 layers, model 3686.3 mm3)
+  dropped (modelled, not printed): 0.0 mm3
   filled  (printed, not modelled): 0.0 mm3
   colour  (printed, other filament): 0.0 mm3
   flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
-       dropped #F4F1EA slot 1     0.084 mm3  z 0.0-0.2 (2 layers)  left at [23.4, 26.3]  0.32 mm wide, 0.38 mm deep
-       dropped #F4F1EA slot 1     0.042 mm3  z 0.0-0.2 (1 layers)  left at [20.8, 25.9]  0.31 mm wide, 0.38 mm deep
-       dropped #F4F1EA slot 1     0.042 mm3  z 0.0-0.2 (1 layers)  back at [27.3, 47.5]  0.31 mm wide, 0.38 mm deep
+  no misses above the reporting floor

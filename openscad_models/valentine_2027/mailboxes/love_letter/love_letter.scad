@@ -114,7 +114,9 @@ POCKET_A = 37;
 // his outline, exported from cupid_white.scad by ship.sh
 module cupid_outline() import("cupid_white_outline.dxf");
 // The pocket is his outline 0.3 larger, its cut-through gaps closed (each
-// would leave a 0.2 sliver of wall in the pocket), straight down to its floor, except
+// would leave a 0.2 sliver of wall in the pocket) and its inside corners
+// rounded 1.5 (at 1.0 the sweep folded on itself in the notch by his curl, an
+// edge of four faces, 2026-11-04), straight down to its floor, except
 // that every edge facing down is swept up at POCKET_A on its way out to the
 // face: otherwise his pocket's top edge is a 1.0 ceiling on an upright wall.
 // The sweep is a Minkowski sum with a thin wedge (at depth z, the outline
@@ -123,7 +125,7 @@ module cupid_outline() import("cupid_white_outline.dxf");
 // (2026-10-30).
 module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
     minkowski() {
-        translate([0, 0, -0.01]) linear_extrude(0.01) offset(r = 0.3) offset(r = -1) offset(r = 1) cupid_outline();
+        translate([0, 0, -0.01]) linear_extrude(0.01) offset(r = 0.3) offset(r = -1.5) offset(r = 1.5) cupid_outline();
         hull() for (q = [[0, 0], [0, POCKET_D + 0.5], [(POCKET_D + 0.5) / tan(POCKET_A), POCKET_D + 0.5]])
             translate([-0.005, q[0], q[1]]) cube([0.01, 0.01, 0.01]);
     }

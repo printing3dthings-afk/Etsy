@@ -3,7 +3,7 @@ love_letter/parts/body_print.stl
   FAIL  watertight: open edges -- the slicer guesses at the holes
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.39mm, median 2.40mm (floor 1.2mm); 0.00% below one bead
+  ok    min_wall: 1st pct 1.39mm, median 2.40mm (floor 1.2mm); 0.01% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 122.0mm printed of 122.0mm
   ok    geometry_survives_slicing: printed height 122.0mm vs modelled 122.0mm
   ok    flat_base: 107.68 cm2 of contact = 88.2% of footprint (floor 5%)
