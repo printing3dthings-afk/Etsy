@@ -115,20 +115,19 @@ POCKET_A = 37;
 module cupid_outline() import("cupid_white_outline.dxf");
 // The pocket is his outline 0.3 larger, its cut-through gaps closed (each
 // would leave a 0.2 sliver of wall in the pocket) and its inside corners
-// rounded 1.5 (at 1.0 the sweep folded on itself in the notch by his curl, an
-// edge of four faces, 2026-11-04), straight down to its floor, except
-// that every edge facing down is swept up at POCKET_A on its way out to the
-// face: otherwise his pocket's top edge is a 1.0 ceiling on an upright wall.
-// The sweep is a Minkowski sum with a thin wedge (at depth z, the outline
-// stretched up by z / tan(POCKET_A)). Shearing the whole outline instead also
-// lifted the pocket's bottom wall into his legs: 29.9 mm3 of overlap
-// (2026-10-30).
+// rounded 1.5, straight down to its floor, except that its top edge climbs at
+// POCKET_A on the way out to the face: otherwise it is a 1.0 ceiling on an
+// upright wall. Shearing the whole outline instead also lifted the pocket's
+// bottom wall into his legs: 29.9 mm3 of overlap (2026-10-30).
+// The climb is ten steps of 0.1, each the outline raised by its depth /
+// tan(POCKET_A): a 0.1 ledge prints like a slope. It was a Minkowski sum with
+// a thin wedge, which left a hairline pinch somewhere on the pocket floor in
+// nearly every export, a different place each time (2026-11-04).
+POCKET_STEP = 0.1;
+module pocket2d() offset(r = 0.3) offset(r = -1.5) offset(r = 1.5) cupid_outline();
 module cupid_pocket() on_front(-POCKET_D) translate(CUPID_AT)
-    minkowski() {
-        translate([0, 0, -0.01]) linear_extrude(0.01) offset(r = 0.3) offset(r = -1.5) offset(r = 1.5) cupid_outline();
-        hull() for (q = [[0, 0], [0, POCKET_D + 0.5], [(POCKET_D + 0.5) / tan(POCKET_A), POCKET_D + 0.5]])
-            translate([-0.005, q[0], q[1]]) cube([0.01, 0.01, 0.01]);
-    }
+    for (z = [0 : POCKET_STEP : POCKET_D - 0.001])
+        translate([0, z / tan(POCKET_A), z - (z == 0 ? 0.01 : 0)]) linear_extrude(POCKET_D + 0.5 - z + (z == 0 ? 0.01 : 0)) pocket2d();
 // each peg starts 0.3 inside the wall behind the pocket floor, so it is one
 // body with it
 module cupid_pegs() on_front(-POCKET_D) translate(CUPID_AT) for (p = PEGS) translate(peg_at(p)) union() {
