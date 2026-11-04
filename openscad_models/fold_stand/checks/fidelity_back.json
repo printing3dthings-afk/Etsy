@@ -1,0 +1,143 @@
+{
+ "layers": 102,
+ "model_volume_mm3": 38270.3,
+ "dropped_mm3": 0.09,
+ "filled_mm3": 0.02,
+ "colour_mm3": 0.0,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.044,
+   "z_mm": [
+    19.0,
+    19.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    46.7,
+    0.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.15,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.041,
+   "z_mm": [
+    19.0,
+    19.2
+   ],
+   "layers": 2,
+   "at_xy": [
+    29.3,
+    0.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.14,
+   "depth_mm": 0.12,
+   "flag": false
+  },
+  {
+   "kind": "filled",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.016,
+   "z_mm": [
+    17.4,
+    17.6
+   ],
+   "layers": 2,
+   "at_xy": [
+    16.4,
+    6.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.15,
+   "depth_mm": 0.19,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    17.4,
+    17.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    60.0,
+    6.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.02,
+   "depth_mm": 0.43,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    18.4,
+    19.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    16.4,
+    4.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    18.4,
+    19.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    59.6,
+    4.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#F4F1EA",
+   "tool": 1,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    17.4,
+    17.6
+   ],
+   "layers": 1,
+   "at_xy": [
+    15.8,
+    6.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.02,
+   "depth_mm": 0.25,
+   "flag": false
+  }
+ ]
+}
