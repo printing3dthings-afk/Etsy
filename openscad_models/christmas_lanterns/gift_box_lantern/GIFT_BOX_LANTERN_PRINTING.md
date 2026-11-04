@@ -48,6 +48,9 @@ and the lid, each standing as it prints. Assign a filament to each colour.
 
 Three filaments. In one colour, white is the one that glows.
 
+**No AMS?** `v2/` is the same lantern in nine one-colour prints that snap
+together with no glue: `v2/GIFT_BOX_LANTERN_V2_PRINTING.md`.
+
 ## Settings that are not optional
 
 - **Supports OFF.** Neither piece needs any: 0 support moves, 0 overhang
