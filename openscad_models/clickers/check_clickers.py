@@ -18,6 +18,7 @@
 
 Overlaps are mm3. Heights mirror clicker_lib.scad and the two .scad files.
 """
+import re
 import sys
 from pathlib import Path
 
@@ -97,7 +98,7 @@ if which in ("all", "tin"):
     check("gingerbread_tin", "tin_print", "lid_print", "cookie_print", S, S + 1.5 + 6.8)
     # the screw lid, against gingerbread_tin_clicker.scad's TH_P (right hand: the
     # lid rises TH_P a turn as it turns anticlockwise, seen from above)
-    TH_P = 2.7
+    TH_P = float(re.search(r"TH_P = ([\d.]+)", (HERE / "gingerbread_tin" / "gingerbread_tin_clicker.scad").read_text()).group(1))
     lo = load(str(HERE / "gingerbread_tin" / "parts" / "tin_print.stl"))
     up = load(str(HERE / "gingerbread_tin" / "parts" / "lid_print.stl")).translate([0, 0, S])
     for dz in (0.5, 1.0):
@@ -108,6 +109,16 @@ if which in ("all", "tin"):
             fails.append(f"lid lifts {dz} mm without the thread holding it")
     for a in (30, 90, 180, 360, 540):
         report(f"lid unscrewed {a} deg along the thread", overlap(lo, up.rotate([0, 0, a]).translate([0, 0, a / 360 * TH_P])))
+    # how far the lid can tip where its teeth come in (reported, not gated: this
+    # tin has no guide ring, as its lid prints on its floor; the canister's does)
+    TH_H = float(re.search(r"TH_H = ([\d.]+)", (HERE / "gingerbread_tin" / "gingerbread_tin_clicker.scad").read_text()).group(1))
+    def tipped(t):
+        return up.rotate([0, 0, TH_H / TH_P * 360]).translate([0, 0, TH_H - (S + TH_H)]).rotate([t, 0, 0]).translate([0, 0, S + TH_H])
+    lo_t, hi_t = 0.0, 8.0
+    for _ in range(14):
+        m = (lo_t + hi_t) / 2
+        lo_t, hi_t = (lo_t, m) if overlap(lo, tipped(m)) > 0.05 else (m, hi_t)
+    print(f"  note  where the teeth come in the lid can tip {lo_t:.2f} deg (no guide ring here)")
     # and the control: turned the other way while rising, it does collide, so the
     # zeros above are the thread's path, not a lid that clears the tin anyway
     v = overlap(lo, up.rotate([0, 0, -30]).translate([0, 0, 30 / 360 * TH_P]))

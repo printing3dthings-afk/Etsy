@@ -18,6 +18,15 @@
 // pod 2.2 narrower than the lid, and the lid, printed on its pod, hung its
 // floor over air: 9,349 support moves (2026-11-03).
 //
+// The guide ring (Scott, 2026-11-05: the threads would break if the lid went on
+// crooked). Under the lid a smooth ring, as tall as the pod, drops into a smooth
+// bore in the mouth, 0.15 clear all round, and is in it the whole way before the
+// lid's teeth reach the canister's: on a 57 mm lid only a long guide holds it
+// square, as a short one tips across its own diameter. Screwed down, the ring
+// stands on a shelf at the foot of the bore: that is the lid's stop now, and the
+// pod no longer touches the mouth. The thread is deeper and coarser (see the
+// clicker's file) and the collar's top follows the lid's flare, 0.2 under it.
+//
 //   part = canister | canister_snow | canister_print
 //          lid_closed | lid_closed_holly | lid_closed_snow | lid_closed_print
 //          assembly
@@ -45,9 +54,9 @@ $fa = 2; $fs = 0.3;
 S      = 1.6 + well_h;            // the lid's underside, in the clicker's frame
 P      = S + mx_plate_t;
 CZ     = mx_cap_z(P);
-TR     = 30.0;
+TR     = 30.5;
 // and its thread (2026-10-30)
-TH_H = 4.4; TH_R = 28.6; TH_D = 0.7; TH_C = 0.2;
+TH_H = 4.4; TH_R = 29.1; TH_D = 1.2; TH_C = 0.2;
 BORE = TH_R - TH_D + TH_C - 0.1;   // 28.0, the collar's bore
 
 // the pod under the lid
@@ -68,21 +77,28 @@ T      = 46;                      // the face the lid's floor sits on
 RIN    = 27.6;                    // inside: 2.4 of wall below the collar
 FLOOR  = 1.6;
 FIL    = 3;                       // the inside's foot is rounded, so a finger scoops it clean
-LID_S  = T;                       // screwed down, its pod's cone on the mouth's
+LID_S  = T;                       // screwed down, its ring on the shelf
+// the guide ring under the lid, and the bore and shelf in the mouth it runs in
+RING_O = BORE - 0.15;             // 27.85: 0.15 clear of the bore and the thread's crests
+RING_T = 1.6;
+RING_H = POD_H;                   // to the pod's foot, so the lid still prints on the bed
+SHELF_R = RING_O - RING_T - 0.25; // 26.0: the ring stands on 1.35 of shelf
 echo(str("CANISTER lid underside ", LID_S, " cookie rest ", LID_S - S + CZ,
          " pod foot ", LID_S - POD_H, " top ", T + TH_H));
 
 module canister_solid() rotate_extrude($fn = 240) polygon(concat(
-    // the collar carries the thread to T + TH_H, its rolled bead at the top; under
-    // it the mouth is the pod's own cone, so the lid stops there
-    [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, T + TH_H - 0.6], [TR + 0.5, T + TH_H],
-     [BORE, T + TH_H], [BORE, T], [POD_TOP, T], [RIN, T - (POD_TOP - RIN) / tan(PA)]],
+    // the collar carries the thread, its top following the lid's flare; under it
+    // the mouth is a smooth bore down to the shelf the ring stops on, whose
+    // underside slopes back to the wall at PA
+    [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, collar_top(TR, T)],
+     [BORE, collar_top(BORE, T)], [BORE, T - RING_H], [SHELF_R, T - RING_H],
+     [RIN, T - RING_H - (RIN - SHELF_R) / tan(PA)]],
     [for (k = [0 : 12]) let (a = 90 * k / 12) [RIN - FIL + FIL * cos(a), FLOOR + FIL - FIL * sin(a)]],
     [[0, FLOOR]]));
 
 // snowflakes raised on the wall as on the tin: three staggered rows of ten,
-// clear of both beads with their skirts (foot bead tops out at 1.4, top bead
-// starts at T - 0.6)
+// clear of the foot bead with their skirts (it tops out at 1.4) and of the
+// collar's thread above T
 ROWS = [11.5, 23.5, 35.5];
 ARM  = 3.4;
 module on_cwall(a, z, h) rotate([0, 0, a]) translate([TR - 0.35, 0, z]) rotate([90, 0, 90]) art_skirt(h, 1) children();
@@ -110,8 +126,13 @@ module pod() difference() {
     translate([0, 0, S - POD_H]) cylinder(h = POD_H, r1 = POD_R, r2 = POD_TOP, $fn = 240);
     pocket();
 }
-// the clicker's threaded lid with the pod under it
-module lid_closed() union() { lid(); pod(); }
+// the guide ring, its top in the lid's floor
+module ring() translate([0, 0, S - RING_H]) difference() {
+    cylinder(h = RING_H + 0.01, r = RING_O, $fn = 240);
+    translate([0, 0, -0.01]) cylinder(h = RING_H + 0.1, r = RING_O - RING_T, $fn = 240);
+}
+// the clicker's threaded lid with the pod and the guide ring under it
+module lid_closed() union() { lid(); pod(); ring(); }
 
 module at_lid() translate([0, 0, LID_S - S]) children();
 module print_frame() translate([0, 0, POD_H - S]) children();

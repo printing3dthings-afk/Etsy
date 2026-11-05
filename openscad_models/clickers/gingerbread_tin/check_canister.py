@@ -2,10 +2,14 @@
 """The canister and its closed lid (2026-10-30), measured on the exported
 prints, each moved to where it sits (positions from the .scad's echo):
 
-- the lid screws on (2026-11-03): screwed down it rests on the ring inside the
-  canister's mouth, touching nothing, and 0.1 lower it would be into the ring;
-  pulled straight up it hits the thread; turned back along the thread it
-  touches nothing, and turned the wrong way while rising it collides
+- the lid screws on (2026-11-03): screwed down its guide ring rests on the
+  shelf in the canister's mouth, touching nothing, and 0.1 lower it would be
+  into the shelf; pulled straight up it hits the thread; turned back along the
+  thread it touches nothing, and turned the wrong way while rising it collides
+- the guide (2026-11-05): raised to where its teeth meet the canister's, the
+  most the lid can tip before the ring meets the bore, against the tip it
+  takes to start a whole tooth out (the pitch across the thread's diameter)
+- the seam: how far the lid's flare stands over the collar's top
 - the cookie and the lid at rest: no overlap, as on the clicker
 - the switch in the pod: its body and its pins clear the pocket; the pod's foot
   is solid under the cutout. (The clips' hooks sit on the pocket's 45 deg
@@ -16,7 +20,7 @@ Also writes every part, moved into place, to logs/asm_canister/ for the renders.
 
     python3 check_canister.py
 """
-import re, sys
+import math, re, sys
 from pathlib import Path
 
 import manifold3d as mf
@@ -68,7 +72,8 @@ def main():
         fails.append("nothing holds the lid up: it drops into the canister")
     # the thread, as gingerbread_tin_clicker.scad's TH_P: right hand, the lid rises
     # TH_P a turn as it turns anticlockwise seen from above
-    TH_P = 2.7
+    CLK = (HERE / "gingerbread_tin_clicker.scad").read_text()
+    TH_P, TH_H, TH_R = (float(re.search(rf"{k} = ([\d.]+)", CLK).group(1)) for k in ("TH_P", "TH_H", "TH_R"))
     for dz in (0.5, 1.0):
         v = (can ^ lid.translate([0, 0, dz])).volume()
         print(f"  pulled {dz} straight up: {v:.1f} mm3 (the thread holds it)")
@@ -83,6 +88,37 @@ def main():
     print(f"  turned 30 deg the wrong way while rising: {v:.1f} mm3 (collides, so the zeros are the thread's path)")
     if v < 1.0:
         fails.append("the unscrew check would pass without a thread")
+    # the guide: the lid raised along the thread until its teeth are just at the
+    # canister's, then tipped about its floor's centre; the most it tips clear
+    def tipped(t, dz):
+        a = dz / TH_P * 360
+        return lid.rotate([0, 0, a]).translate([0, 0, dz - (lid_s + dz)]).rotate([t, 0, 0]).translate([0, 0, lid_s + dz])
+    dz0 = TH_H
+    lo_t, hi_t = 0.0, 8.0
+    if (can ^ tipped(0, dz0)).volume() > 0.05:
+        fails.append("the lid touches the canister untipped where its teeth come in")
+    for _ in range(14):
+        m = (lo_t + hi_t) / 2
+        if (can ^ tipped(m, dz0)).volume() > 0.05:
+            hi_t = m
+        else:
+            lo_t = m
+    skip = math.degrees(math.atan(TH_P / (2 * TH_R)))
+    print(f"  where the teeth come in, the ring lets the lid tip {lo_t:.2f} deg; starting a tooth out takes {skip:.2f}")
+    if lo_t > skip / 2:
+        fails.append(f"the lid can tip {lo_t:.2f} deg, over half the {skip:.2f} that starts it a tooth out")
+    # the seam over the collar: the lid's flare's underside over the collar's top
+    # along a few radii outside the thread, upright, and square to the 39 deg
+    # slope they share
+    FL_A = float(re.search(r"FL_A = ([\d.]+)", CLK).group(1))
+    seam = []
+    for r in (29.6, 30.0, 30.4):
+        probe = mf.Manifold.cylinder(30, 0.002, 0.002, 8).translate([r, 0, lid_s])
+        seam.append((lid ^ probe).bounding_box()[2] - (can ^ probe).bounding_box()[5])
+    print("  seam over the collar's top at r 29.6 / 30.0 / 30.4: " + " / ".join(f"{g:.2f}" for g in seam)
+          + f" upright, {min(seam) * math.sin(math.radians(FL_A)):.2f} square to the slope")
+    if not 0.15 <= min(seam) * math.sin(math.radians(FL_A)) <= max(seam) * math.sin(math.radians(FL_A)) <= 0.3:
+        fails.append(f"the seam is {min(seam):.2f}-{max(seam):.2f} upright, not a hairline")
     c = (cookie ^ lid).volume()
     print(f"  cookie / lid: {c:.3f} mm3")
     if c > 0.01:
