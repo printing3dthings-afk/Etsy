@@ -173,8 +173,42 @@ def _texture_advisory(m):
                     "p75 1.235, p90 1.477 -- see SKILL.md Technique 52"}
 
 
+def wall_skipper(parts=(), bands=()):
+    """The regions a caller declares the 1.2 wall floor does not measure.
+
+    DECLARED, NEVER INFERRED (2026-11-05, gingerbread tin and canister). The
+    floor exists for walls. Three things on a print are thin for other reasons,
+    and each is checked by something that does measure it:
+      parts   raised colour detail exported as its own part (snowflakes, holly,
+              icing): its strokes are DETAIL_STANDARD sizes, and print_fidelity
+              checks each colour part at bead scale
+      bands   (r0, r1, z0, z1) annuli about the print's z axis: a thread's teeth,
+              whose axial width runs from the root to a crest flat by design and
+              whose strength is the root's; a switch standard's socket post,
+              whose size the switch fixes
+    A span is left out when its midpoint lies inside a declared part (within
+    0.1 mm) or inside a band. Everything else on the print, the structure, is
+    still held to the floor, and the report says how many spans were left out.
+    """
+    if not parts and not bands:
+        return None
+    meshes = [trimesh.load(p, force="mesh") for p in parts]
+
+    def skip(mids):
+        out = np.zeros(len(mids), dtype=bool)
+        r = np.hypot(mids[:, 0], mids[:, 1])
+        for r0, r1, z0, z1 in bands:
+            out |= (r >= r0) & (r <= r1) & (mids[:, 2] >= z0) & (mids[:, 2] <= z1)
+        for rm in meshes:
+            todo = np.flatnonzero(~out)
+            if len(todo):
+                out[todo] = rm.nearest.signed_distance(mids[todo]) > -0.1
+        return out
+    return skip
+
+
 def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
-         bridge_max=10.0):
+         bridge_max=10.0, wall_skip=None):
     m = trimesh.load(path, force="mesh")
     checks = []
     # ADVISORIES NEVER FAIL THE GATE, deliberately. The thresholds behind them
@@ -196,14 +230,16 @@ def gate(path, wall_min=1.2, overhang_limit=45.0, bodies=1, min_base_frac=0.05,
     n = int(m.body_count)
     add("no_floating_geometry", n == bodies, f"{n} bodies, expected {bodies}")
 
-    w = wall_thickness(path)
+    w = wall_thickness(path, skip=wall_skip)
     if "error" in w:
         add("min_wall", False, w["error"])
     else:
         # the 1st percentile, not the raw min: one grazing span is not a wall
         add("min_wall", w["p1"] >= wall_min,
             f"1st pct {w['p1']:.2f}mm, median {w['median']:.2f}mm "
-            f"(floor {wall_min}mm); {100*w['frac_below_nozzle']:.2f}% below one bead")
+            f"(floor {wall_min}mm); {100*w['frac_below_nozzle']:.2f}% below one bead"
+            + (f"; {w['skipped']} spans in declared detail, thread or socket regions not counted"
+               if wall_skip is not None else ""))
 
     # OVERHANG IS ASKED OF THE SLICER, NOT INFERRED. The geometric version below
     # is a fallback for when prusa-slicer is missing, and it is demonstrably
@@ -305,9 +341,16 @@ def _cli():
                          "from a drooping flare.")
     ap.add_argument("-c", "--bodies", type=int, default=1)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--wall-skip-part", action="append", default=[], metavar="STL",
+                    help="raised colour detail, in the print's own frame, left out of the "
+                         "wall floor (print_fidelity checks it); see wall_skipper()")
+    ap.add_argument("--wall-skip-band", action="append", default=[], metavar="R0,R1,Z0,Z1",
+                    help="an annulus about z left out of the wall floor: thread teeth, a "
+                         "switch socket; see wall_skipper()")
     a = ap.parse_args()
+    skip = wall_skipper(a.wall_skip_part, [tuple(float(v) for v in b.split(",")) for b in a.wall_skip_band])
     try:
-        res = gate(a.mesh, a.wall, a.overhang, a.bodies, bridge_max=a.bridge)
+        res = gate(a.mesh, a.wall, a.overhang, a.bodies, bridge_max=a.bridge, wall_skip=skip)
     except Exception as exc:
         print(f"FAIL  could not load {a.mesh}: {exc}", file=sys.stderr)
         raise SystemExit(2)

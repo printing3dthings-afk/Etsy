@@ -37,9 +37,9 @@ CZ     = mx_cap_z(P);           // cookie underside at rest, 15.5
 CT     = cav_h + cap_floor;     // cookie thickness, 6.2
 RIM    = CZ + CT - 2.2;         // the tin's lid: the cookie stands 2.2 proud
                                 // at rest and sits 1.8 below it pressed
-TR     = 30.5;                  // tin radius: 30.0 until the thread deepened (2026-11-05)
-LID_R  = 30.6;                  // the lid's band. It stood 0.6 proud of a 30.0 tin; over the
-                                // 30.5 tin it runs on flush from the seam, and its flare keeps
+TR     = 30.6;                  // tin radius: 30.0 until the thread deepened (2026-11-05)
+LID_R  = TR + 0.1;              // the lid's band. It stood 0.6 proud of a 30.0 tin; over this
+                                // tin it runs on 0.1 proud from the seam, and its flare keeps
                                 // to the height the cookie leaves it
 NEST   = 0.6;                   // clearance round the cookie
 ICE    = 0.8;                   // icing proud of the cookie: four layers
@@ -149,22 +149,23 @@ module cookie() { cookie_gross(); pupils(); }
 // 2026-11-05, after printing the canister: "if you twist the lid on wrong the
 // threads will break"): each tooth is now 3.7 thick at its root against 2.4, and
 // 1.2 tall against 0.7, so a crooked start has more tooth to bear on and needs
-// near twice the tilt to jump one. The tooth grows outward, so the tin is 0.5
+// near twice the tilt to jump one. The tooth grows outward, so the tin is 0.6
 // wider all round. Its flanks are 35 deg from vertical,
 // not a standard 60 deg thread's 60, so neither the lid's thread nor the
 // tin's prints over air. Drawn as the thread's own cross-section twisted up
 // the axis, which is the helix exactly.
 // Its radius is pinned from both sides. The cookie's hands and feet reach 26.7
-// out in the nest, so the lid's thread root stays 1.2 outside that (27.9): with
-// the root at 27.2 the wall there was 0.5, dropped out of the slice, and drew
-// 750 support moves (2026-10-30). And the tin's collar keeps 1.2 outside the
-// thread it cuts (28.8 to TR).
+// out in the nest, so the lid's thread root stays outside that: with the root at
+// 27.2 the wall there was 0.5, dropped out of the slice, and drew 750 support
+// moves (2026-10-30). At exactly 1.2 (27.9) the gate's rays read it at 1.1 where
+// the nest's outline is faceted, so it keeps 1.3 (2026-11-05). And the tin's
+// collar keeps 1.2 outside the thread it cuts.
 TH_P = 4.0; TH_D = 1.2; TH_C = 0.2; TH_H = 4.4; TH_A = 35;
-TH_R = 29.1;                          // the lid thread's crest; its root is TH_R - TH_D
+TH_R = 29.2;                          // the lid thread's crest; its root is TH_R - TH_D, 28.0
 TH_F = TH_D / tan(TH_A);              // a flank's rise, 1.71
 TH_FLAT = (TH_P - 2 * TH_F) / 2;      // crest and root flats, 0.29
 BORE = TH_R - TH_D + TH_C - 0.1;      // the tin's bore; the thread cut sets its crests
-assert(TH_R - TH_D >= 26.7 + 1.2 - 0.001, "the lid's thread root is too close to the cookie's nest");
+assert(TH_R - TH_D >= 26.7 + 1.3 - 0.001, "the lid's thread root is too close to the cookie's nest");
 assert(TR - (TH_R + TH_C) >= 1.2 - 0.001, "the tin's collar is too thin outside the thread");
 function th_r(R, u) = let (r0 = R - TH_D)
     u < TH_FLAT ? r0 :
@@ -200,13 +201,20 @@ FLARE_TOP = FLARE_Z + (LID_R - (TH_R - TH_D)) / tan(FL_A);
 // at the outside (Scott, 2026-11-05: "I want it to touch it or have the smallest
 // gap"). The lid stops on its floor, not on this, so the seam is the same however
 // a print runs.
+// Its outer edge is flat, CFLAT across: run out to the wall, the slope met it at a
+// 39 deg knife edge under 1.2 for its top 1.5, which the product gate read as the
+// thinnest wall on the tin (2026-11-05). Flat, the seam stays 0.2 to there and
+// opens to 1.9 at the outside, where Scott's first print showed 3.4.
 SEAM = 0.2;
-function collar_top(r, base) = base + TH_H + 0.2 + (r - (TH_R - TH_D)) / tan(FL_A) - SEAM / sin(FL_A);
+CFLAT = 1.3;
+function collar_top(r, base) = base + TH_H + 0.2 + (min(r, TR - CFLAT) - (TH_R - TH_D)) / tan(FL_A) - SEAM / sin(FL_A);
 // The tin is a cup whose collar carries the thread; a rolled bead at its foot
-// stands on the bed. The collar is 1.2 thick outside the thread.
+// stands on the bed, 1.25 tall at its edge, so it is a wall rather than a fin
+// (0.8 there read 0.8 to the gate, 2026-11-05). The collar is 1.2 thick outside
+// the thread.
 module tin_solid() rotate_extrude($fn = 240) polygon([
-    [0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, collar_top(TR, S)],
-    [BORE, collar_top(BORE, S)], [BORE, S], [0, S]]);
+    [0, 0], [TR + 0.5, 0], [TR + 0.5, 1.25], [TR, 1.4], [TR, collar_top(TR, S)],
+    [TR - CFLAT, collar_top(TR, S)], [BORE, collar_top(BORE, S)], [BORE, S], [0, S]]);
 assert(FLARE_TOP < RIM - 0.8 + 0.16, "the lid's flare runs into its top bead");
 module lid_solid() rotate_extrude($fn = 240) polygon(concat(
     [[0, S], [TH_R - TH_D, S], [TH_R - TH_D, FLARE_Z], [LID_R, FLARE_TOP]],

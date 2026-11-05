@@ -193,7 +193,7 @@ def gate(path, expected_components=1, check_overhang=False,
             "bbox_mm": [round(e, 2) for e in ext]}
 
 
-def wall_thickness(path, samples=64, nozzle=0.42):
+def wall_thickness(path, samples=64, nozzle=0.42, skip=None):
     """Real through-material wall thickness, by ray casting.
 
     WHY NOT Blender's 3D-Print Toolbox thickness check (which tools/print_check.py
@@ -209,18 +209,27 @@ def wall_thickness(path, samples=64, nozzle=0.42):
     This casts a grid of rays along all three axes and measures each SOLID SPAN
     (consecutive entry/exit pairs), so a hollow shell reports its wall rather
     than its outside dimension.
+
+    skip, if given, takes an (N, 3) array of span midpoints and returns which to
+    leave out: declared regions whose thinness is set by something other than a
+    wall (a thread's teeth, a standard's socket, raised colour detail checked at
+    bead scale by print_fidelity). Off by default; a caller that uses it says
+    what it skipped and why, and the count comes back as "skipped".
     """
-    sp = _wall_spans(_load(path), samples)
+    counted = [0]
+    sp = _wall_spans(_load(path), samples, skip, counted)
     if not sp.size:
         return {"error": "no ray hit the mesh"}
-    return {"samples": int(sp.size), "min": float(sp.min()),
+    return {"samples": int(sp.size), "skipped": counted[0], "min": float(sp.min()),
             "p1": float(np.percentile(sp, 1)), "median": float(np.median(sp)),
             "frac_below_nozzle": float((sp < nozzle).mean()),
             "frac_below_2x": float((sp < 2 * nozzle).mean()), "nozzle": nozzle}
 
 
-def _wall_spans(m, samples=64):
-    """Every solid span along a grid of axis-aligned rays, as an array."""
+def _wall_spans(m, samples=64, skip=None, counted=None):
+    """Every solid span along a grid of axis-aligned rays, as an array. With
+    skip, spans whose midpoint it marks are dropped before measuring, and their
+    number is added to counted[0]."""
     spans = []
     for axis in range(3):
         u, v = [a for a in range(3) if a != axis]
@@ -284,6 +293,11 @@ def _wall_spans(m, samples=64):
                 mids = np.array([(a[1] + a[3]) / 2 for a in cand])
                 inside = np.concatenate([m.contains(mids[a:a + 256]) for a in range(0, len(mids), 256)])
                 pairs.extend(a for a, k in zip(cand, inside) if k)
+        if skip is not None and pairs:
+            out = np.asarray(skip(np.array([(a[1] + a[3]) / 2 for a in pairs])), dtype=bool)
+            if counted is not None:
+                counted[0] += int(out.sum())
+            pairs = [a for a, k in zip(pairs, out) if not k]
         spans.extend(_true_thickness(m, pairs))
     return np.array(spans)
 

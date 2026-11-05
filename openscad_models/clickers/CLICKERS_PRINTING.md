@@ -49,7 +49,13 @@ changed.
 
 - **The gap:** the collar's top was flat, under the lid's sloping underside,
   so the gap opened to 3.4 mm at the outside. Now the collar's top slopes with
-  the lid, 0.2 mm under it all the way out: a hairline.
+  the lid, 0.2 mm under it, out to a 1.3 mm flat at its outer edge, where the
+  line shows about 1.9 mm.
+  - **Why the flat:** run all the way out, the slope met the outside wall at a
+    39° knife edge, under 1.2 mm for its top 1.5 mm. It was a real thin spot,
+    and the product gate failed it. A 0.2 mm seam can only reach the outside
+    on a knife edge: the lid can't print the flat underside that would close
+    it. You chose the blunt edge.
   - **The stop:** the lid still stops on its floor, so the seam is the same
     however a print runs.
   - **The bead:** the rolled bead round the tin's top edge is gone. The lid's
@@ -58,8 +64,10 @@ changed.
 - **The thread:** 4.0 mm pitch and 1.2 mm deep, where it was 2.7 and 0.7.
   - Each tooth is 3.7 mm thick at its root against 2.4, and 1.2 mm tall
     against 0.7.
-  - The teeth grow outward, so the tin is 0.5 mm wider all round: 62 mm
+  - The teeth grow outward, so the tin is 0.6 mm wider all round: 62 mm
     across.
+  - The lid's wall between the cookie's nest and the thread root is 1.3 mm,
+    0.1 over the floor, so the gate doesn't read the faceted nest at 1.1.
   - It's 1.1 turns now, against 1.6. The lid is the same height: the cookie
     sets it.
 - **No guide ring on this tin:** its lid prints standing on its floor, so a
@@ -73,6 +81,51 @@ changed.
   - Turned back along the thread through 30–540°, it touches nothing.
   - The gate and fidelity read as before: 0 supports, the same known wall
     readings and snowflake tips.
+
+**The wall gate (2026-11-05).** After the seam rework all five prints read
+FAIL on the product gate's 1.2 mm wall check. Every span under 1.2 mm was traced
+to where it is (`wall_regions.py`, the regions; `../../tools/product_gate.py`,
+`wall_skipper()`, the rule).
+
+- **Real thin spots, now fixed in the geometry:**
+  - **the collar's 39° knife edge** (tin and canister): now a 1.3 mm flat, as
+    above;
+  - **the foot bead:** it was 0.8 mm tall at its edge, now 1.25;
+  - **the canister's shelf tip:** a knife edge, now a 1.2 mm face;
+  - **the canister's floor:** 0.8 mm over the OBC mark engraved under it, now
+    2.0 mm thick, which leaves 1.2 over the mark;
+  - **the lid wall:** by the cookie's nest, now 1.3, as above.
+- **Not walls, so declared to the gate.** The gate leaves out a span only when
+  its midpoint is inside one of these, and says how many it left out. Each
+  has its own check:
+  - **The raised colour detail.** Snowflakes, holly, icing, gumdrops and
+    cheeks are each their own colour part. Their 0.6–1.0 mm strokes are the
+    detail standard's sizes, not walls, and print fidelity checks every one
+    at bead scale.
+  - **The thread's teeth**, from crest to root over the thread's height. A
+    tooth's axial width runs from 3.7 mm at its root to a 0.29 mm crest flat
+    by design, and it's as strong as its root. The collar's wall outside the
+    root (1.2 mm, held by an assert) and the lid's wall inside it (1.3 mm) are
+    not in the band, and the gate still measures them.
+  - **The cookie's switch socket post.** It's 5.6 mm across to ride into the
+    MX switch's stem opening, round the standard 4.1 mm cross, so its wall at
+    the arm tips is 0.6–0.7 mm. The switch fixes that, as on every MX keycap
+    (a 9.8k-download FDM keycap measures 0.63), and it's the post on your
+    working clicker.
+- **What's left is the structure, and all five prints pass it:** the 1st
+  percentile reads 1.23 mm (tin), 1.49 (lid), 1.80 (cookie), 1.21 (canister)
+  and 1.30 (closed lid).
+  - The tin's and canister's margins are slim because the collar's wall
+    outside the thread root is a designed 1.2 mm, and it's measured.
+- **Two side fixes on the way, both in the canister's switch pocket:**
+  - The pocket's sloped top used to meet the plate cutout on exactly the same
+    line. One export pinched that edge between four faces, so the lid wasn't
+    watertight. Another left a 0.97 mm sliver of void under the plate, which
+    the slicer propped with 539 support moves.
+  - The slope now stops 0.05 mm short of the plate, and nothing coincides.
+- **The tool:** `test_product_gate_wall_skip.py` checks that a declared region
+  leaves out only what it declares. Without any, the gate's numbers are the
+  same as before.
 
 **The lid screws on (2026-10-30).** Your first test print clicked fine, but
 the lid sat loose. It now has a thread, about 1.6 turns, and screws down until
@@ -186,10 +239,11 @@ the same tools as the clickers, results in `gingerbread_tin/checks/`):
   4. **The guide ring (2026-11-05)** is as tall as the pod, so the lid prints
      standing on both, still with 0 supports. The shelf it stops on has a
      sloped underside.
-- **Product gate:** both read FAIL on the wall check only.
-  - The thread's teeth, seen side-on by the gate's straight rays, as on the
-    clicker's tin and lid.
-  - On the canister, the raised snowflakes' 0.9 mm strokes too.
+- **Product gate (2026-11-05): both PASS**, with the thread's teeth and the
+  raised snowflakes and holly declared, as for the clicker's tin above.
+  - Before that, both read FAIL on the wall check. Part of it was real: the
+    collar's knife edge, the shelf's tip, and the floor over the mark. Those
+    are now fixed.
 - **Print fidelity:**
   - Closed lid: no flags, the same result as the clicker's lid.
     - This took a fix. With a 1.2 mm pod floor, the pod lifted the lid 10.1 mm,
@@ -274,9 +328,11 @@ his feet sit 1.2 mm below the rim; pressed, he drops 4 mm into the jar.
      in a 60° gable, which leaves the stem's stop where it was.
   3. **The gingerbread man's shoulders sit inside his body.** Bulging out, they
      needed 937 support moves.
-- **Product gate:** the jar and the top PASS. The tin, the lid, the cookie and
-  the gingerbread read FAIL on the wall check only. Every span under 1.2 mm
-  was traced:
+- **Product gate:** the jar and the top PASS. Since 2026-11-05 the tin, the
+  lid and the cookie PASS too, with their thread, socket and raised detail
+  declared ("The wall gate" above); the gingerbread still reads FAIL on the
+  wall check only. Every span under 1.2 mm was traced (the tin's and lid's
+  readings below are from before 2026-11-05):
   - **Since the screw lid, 0.0 on the tin and the lid:** the gate's straight
     rays catch the thread's teeth side-on. It's the thread, not a wall.
     Outside the thread the readings are the raised detail below. The real

@@ -54,10 +54,11 @@ $fa = 2; $fs = 0.3;
 S      = 1.6 + well_h;            // the lid's underside, in the clicker's frame
 P      = S + mx_plate_t;
 CZ     = mx_cap_z(P);
-TR     = 30.5;
+TR     = 30.6;
 // and its thread (2026-10-30)
-TH_H = 4.4; TH_R = 29.1; TH_D = 1.2; TH_C = 0.2;
-BORE = TH_R - TH_D + TH_C - 0.1;   // 28.0, the collar's bore
+TH_H = 4.4; TH_R = 29.2; TH_D = 1.2; TH_C = 0.2;
+BORE = TH_R - TH_D + TH_C - 0.1;   // 28.1, the collar's bore
+CFLAT = 1.3;                       // the collar's flat outer edge, as the clicker sets it
 
 // the pod under the lid
 PA     = 40;                      // its slopes, from vertical
@@ -69,20 +70,21 @@ PDEEP  = well_h;                  // the switch's body and pins, and 0.6 spare
 // snowflakes' tips dropped out: 25 fidelity flags to the lid's 0 (2026-10-30).
 PFLOOR = 1.3;
 POD_H  = PDEEP + PFLOOR;          // 10.2
-POD_TOP = TH_R - TH_D;            // 27.9: the pod's cone runs right up to the lid's edge
+POD_TOP = TH_R - TH_D;            // 28.0: the pod's cone runs right up to the lid's edge
 POD_R  = POD_TOP - POD_H * tan(PA);  // 19.3: from under the lid down to the foot
 
 // the canister
 T      = 46;                      // the face the lid's floor sits on
 RIN    = 27.6;                    // inside: 2.4 of wall below the collar
-FLOOR  = 1.6;
+FLOOR  = 2.0;                     // 1.2 over the mark engraved 0.8 under it: at 1.6 the gate
+                                  // read 0.8 there (2026-11-05)
 FIL    = 3;                       // the inside's foot is rounded, so a finger scoops it clean
 LID_S  = T;                       // screwed down, its ring on the shelf
 // the guide ring under the lid, and the bore and shelf in the mouth it runs in
-RING_O = BORE - 0.15;             // 27.85: 0.15 clear of the bore and the thread's crests
+RING_O = BORE - 0.15;             // 27.95: 0.15 clear of the bore and the thread's crests
 RING_T = 1.6;
 RING_H = POD_H;                   // to the pod's foot, so the lid still prints on the bed
-SHELF_R = RING_O - RING_T - 0.25; // 26.0: the ring stands on 1.35 of shelf
+SHELF_R = RING_O - RING_T - 0.25; // 26.1: the ring stands on 1.35 of shelf
 echo(str("CANISTER lid underside ", LID_S, " cookie rest ", LID_S - S + CZ,
          " pod foot ", LID_S - POD_H, " top ", T + TH_H));
 
@@ -90,9 +92,13 @@ module canister_solid() rotate_extrude($fn = 240) polygon(concat(
     // the collar carries the thread, its top following the lid's flare; under it
     // the mouth is a smooth bore down to the shelf the ring stops on, whose
     // underside slopes back to the wall at PA
-    [[0, 0], [TR + 0.5, 0], [TR + 0.5, 0.8], [TR, 1.4], [TR, collar_top(TR, T)],
-     [BORE, collar_top(BORE, T)], [BORE, T - RING_H], [SHELF_R, T - RING_H],
-     [RIN, T - RING_H - (RIN - SHELF_R) / tan(PA)]],
+    // the bead at the foot and the collar's flat outer edge as on the clicker's tin;
+    // the shelf's tip stands 1.2 tall rather than coming to a knife edge, which the
+    // gate read at 0.0 (2026-11-05)
+    [[0, 0], [TR + 0.5, 0], [TR + 0.5, 1.25], [TR, 1.4], [TR, collar_top(TR, T)],
+     [TR - CFLAT, collar_top(TR, T)], [BORE, collar_top(BORE, T)], [BORE, T - RING_H],
+     [SHELF_R, T - RING_H], [SHELF_R, T - RING_H - 1.2],
+     [RIN, T - RING_H - 1.2 - (RIN - SHELF_R) / tan(PA)]],
     [for (k = [0 : 12]) let (a = 90 * k / 12) [RIN - FIL + FIL * cos(a), FLOOR + FIL - FIL * sin(a)]],
     [[0, FLOOR]]));
 
@@ -116,10 +122,17 @@ module canister_snow() difference() { canister_snow_raw(); canister_solid(); }
 // where the plate is the 1.5 they expect.
 module pocket() {
     translate([-POCKET / 2, -POCKET / 2, S - PDEEP]) cube([POCKET, POCKET, PDEEP - CH_H + 0.01]);
-    // carried 0.3 past the plate's underside on the same slope, so it meets the
-    // cutout exactly at S
-    translate([0, 0, S - CH_H]) linear_extrude(CH_H + 0.3, scale = (mx_cutout - 0.6 * tan(PA)) / POCKET)
+    // up the same slope to 0.05 under the plate, where it is 0.04 wider than the
+    // cutout the plate cut carries down through it. It was carried 0.3 past the
+    // plate's underside to meet the cutout exactly at S; on 2026-11-05 two exports
+    // of that coincidence came out broken, one with an edge pinched between four
+    // faces (not watertight), one with a 0.97 sliver of void under the plate the
+    // slicer propped (539 moves). Ending it short, nothing coincides, and the
+    // cutout's own square carries on up through the pod's top, which the plate cut
+    // in lid() never reaches: the pod is added after it.
+    translate([0, 0, S - CH_H]) linear_extrude(CH_H - 0.05, scale = (POCKET - 2 * (CH_H - 0.05) * tan(PA)) / POCKET)
         square(POCKET, center = true);
+    translate([-mx_cutout / 2, -mx_cutout / 2, S - CH_H]) cube([mx_cutout, mx_cutout, CH_H + 0.3]);
 }
 // the cone ends at the lid's underside, r POD_TOP at S, so the two only share a face
 module pod() difference() {
