@@ -36,6 +36,24 @@ What the split buys:
   round its face.
 - **Shaped detail instead of only colour:** a forelock of three curls,
   longer horns, deeper nostrils, and a tail tuft in locks.
+- **Grooved limb joints (2026-11-05).** You looked at the body in one colour
+  in Bambu Handy and said "I need more defined separation of body parts".
+  Her arm, leg and foot had melted into one lump.
+  - A V-groove, 1.4 mm wide at the surface and 1.1 mm deep, now runs along
+    each join: arm to body, arm to thigh, thigh to belly
+    (`tools/sdf_figure.py`, `joined()`). It throws a shadow line you can see
+    in plain white.
+  - The smooth blends stay. Underneath they are the structure that holds her
+    limbs up. Tightening them instead left her forearms hanging over air,
+    and the slicer propped them with 2,000 to 4,000 support moves over four
+    tries.
+  - The grooves are cut only where the surface faces sideways or up, and
+    only behind the heart. Under her hooves, and out through her feet's
+    fronts beside the heart, they opened ceilings the slicer propped. Those
+    joins are hidden by the heart and the black hooves anyway.
+  - A deeper groove (1.5 mm) put 253 support moves in her, so 1.1 mm is it.
+  - See `images/cow_v2_body_grooves_grey.png` for before and after in one
+    colour.
 
 ## File
 

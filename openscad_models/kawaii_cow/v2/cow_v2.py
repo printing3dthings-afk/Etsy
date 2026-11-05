@@ -69,6 +69,8 @@ LAP_TOP = 21.0        # print mm: in front of the heart's back, nothing of her a
 COLLAR_R = 1.9        # print mm: the collar's tube radius
 COLLAR_END = 2.5      # print mm: its two ends stop this far behind her front, rounded
 CLR = 0.2             # print mm: gap between nesting faces (head in collar, heart in lap)
+# the groove cut along each limb's seam (sf.joined): half-width, depth (mm)
+LIMB_GROOVE = (0.7, 1.1)       # 0.9 x 1.5 tried: its sideways grooves' ceilings put 253 support moves in her
 PEG_CLR = 0.15        # print mm: peg in socket, a glued fit
 # the neck peg: a cylinder with a flat, so the head goes on one way only
 NECK_PEG = dict(r=3.0, h=6.0, flat=2.0)
@@ -347,15 +349,26 @@ class Cow2:
         g = self.A
         body = sf.smin(self.ell(g, *v1.BELLY), self.ell(g, *v1.SQUISH), 6 * S)
         body = sf.smin(body, self.ell(g, *v1.CHEST), 6 * S)
+        # Limbs meet her body, and her arms her legs, with a groove cut along
+        # each join (sf.joined): Scott, 2026-11-05, on this body printed in
+        # one colour, "I need more defined separation of body parts". The
+        # blends stay as v1's: they are the structure under her limbs. Only
+        # behind the heart's back: in front, beside the heart, the grooves
+        # between hoof and foot ran out through the feet's fronts and opened
+        # notches the slicer propped (1,515 moves), where the heart and the
+        # black hooves hide the joins anyway
+        groove_zone = (heart_pose()[1][1] + CLR) - g.Y
         for s in (1, -1):
             m = np.array([s, 1, 1], np.float32)
             leg = self.stick(g, np.asarray(v1.HIP) * m, np.asarray(v1.ANKLE) * m, *v1.LEG_R)
             foot = self.ell(g, np.asarray(v1.FOOT[0]) * m, v1.FOOT[1], sf.rot("z", -v1.FOOT[2] * s))
-            body = sf.smin(body, sf.smin(leg, foot, 3 * S), 5 * S)
+            body = sf.joined(body, sf.smin(leg, foot, 3 * S), 5 * S, LIMB_GROOVE, groove_zone)
+        for s in (1, -1):
+            m = np.array([s, 1, 1], np.float32)
             sh, el, ha = (np.asarray(p) * m for p in (v1.SHOULDER, v1.ELBOW, v1.HAND))
             r_el = sum(v1.ARM_R) / 2
             arm = sf.smin(self.stick(g, sh, el, v1.ARM_R[0], r_el), self.stick(g, el, ha, r_el, v1.ARM_R[1]), 1.5 * S)
-            body = sf.smin(body, arm, 3.0 * S)
+            body = sf.joined(body, arm, 3.0 * S, LIMB_GROOVE, groove_zone)
         tail = np.minimum(self.stick(g, *v1.TAIL[0], v1.TAIL_R, v1.TAIL_R), self.stick(g, *v1.TAIL[1], v1.TAIL_R, v1.TAIL_R))
         tuft = None
         for c, r, yaw in TAIL_LOCKS:

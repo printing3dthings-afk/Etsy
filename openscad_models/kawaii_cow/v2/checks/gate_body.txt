@@ -3,11 +3,11 @@ parts/body.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.65mm, median 28.00mm (floor 1.2mm); 0.03% below one bead
+  ok    min_wall: 1st pct 1.50mm, median 27.93mm (floor 1.2mm); 0.04% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 38.4mm printed of 38.62mm
   ok    geometry_survives_slicing: printed height 38.4mm vs modelled 38.62mm
-  ok    flat_base: 19.97 cm2 of contact = 78.9% of footprint (floor 5%)
+  ok    flat_base: 19.96 cm2 of contact = 78.9% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=27.0mm; 87 layer(s) under the 4.0s cooling threshold; 2482mm2 on the plate; aspect 0.55
-  note  texture (advisory, never fails the gate): rugosity 1.095 -- light relief, at or above the corpus p50
+  note  risk (uncalibrated, never fails the gate): 3.8mm widest unsupported span at z=22.8mm; 85 layer(s) under the 4.0s cooling threshold; 2482mm2 on the plate; aspect 0.55
+  note  texture (advisory, never fails the gate): rugosity 1.105 -- light relief, at or above the corpus p50
 PRODUCT GATE PASSED

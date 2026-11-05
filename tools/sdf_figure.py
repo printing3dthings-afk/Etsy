@@ -43,6 +43,45 @@ def smax(a, b, k):
     return -smin(-a, -b, k)
 
 
+def joined(a, b, k, groove=(0.7, 1.1), where=None):
+    """a and b blended by k, with a V-groove cut along their seam so they
+    read as two parts that meet, not one melted shape. groove = (half-width
+    at the surface, depth) in mm: a V on the bisector between the two parts
+    (|a - b| small), from the blended surface in to `depth`.
+
+    Scott, 2026-11-05, on the Kawaii Cow v2 body in one colour: "I need more
+    defined separation of body parts". Joined with smin at 3-6 mm, her arm,
+    leg and foot read as one lump with a shallow dip; the colour skins were
+    all that told them apart.
+
+    The blend is kept and the groove cut into it, not the blend made tight:
+    tightened to 0.6 mm, the blends that had been the structure under her
+    limbs were gone, her forearms hung over air, and the support cones grown
+    under them ended in keels the slicer propped (2,000-4,000 moves in four
+    tries). A groove that opens downward is filled back by self_support() run
+    after, and a sideways one's upper wall is cut back to ANGLE, so only
+    grooves the printer can make survive (DETAIL_STANDARD rule 7).
+
+    where: a field; the groove is cut only where it is negative (the cow's
+    feet: run out through their fronts beside the heart, the grooves opened
+    notches whose ceilings the slicer propped)."""
+    u = smin(a, b, k)
+    w, depth = groove
+    v = np.abs(a - b) - w * np.clip(1.0 + u / depth, 0.0, 1.0)
+    cut = np.maximum(v, -(u + depth))
+    # only where the surface faces sideways or up: under the cow's hooves the
+    # groove cut through the web that held them up, and the cones regrown
+    # there ended in keels (684 support moves). Seams facing down are not
+    # seen, and are left as the blend.
+    gx, gy, gz = np.gradient(u)
+    up = gz / np.maximum(np.sqrt(gx * gx + gy * gy + gz * gz), 1e-6)
+    del gx, gy, gz
+    cut = np.where(up > -0.25, cut, 1.0)
+    if where is not None:
+        cut = np.maximum(cut, where)
+    return np.maximum(u, -cut)
+
+
 def rot(axis, deg):
     """Rotation matrix about 'x', 'y' or 'z'."""
     c, s = np.cos(np.radians(deg)), np.sin(np.radians(deg))

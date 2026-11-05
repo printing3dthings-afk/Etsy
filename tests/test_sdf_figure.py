@@ -140,6 +140,33 @@ def test_teardrop_hole_never_ceilings():
           f"{np.tan(np.radians(roof)):.3f} a side per mm; it closes {worst:.3f} somewhere (a ceiling)")
 
 
+def test_joined_grooves_the_seam_on_top_only():
+    """2026-11-05, Scott on the cow v2 body in one colour: "I need more
+    defined separation of body parts". joined() keeps the blend (the
+    structure under a limb) and cuts a V along the seam, but only where the
+    surface faces sideways or up, and only where `where` allows: grooves
+    under her hooves and out through her feet's fronts opened ceilings the
+    slicer propped."""
+    g = sf.Grid((-12, -6, -10), (12, 6, 10), 0.2)
+    a = sf.ellipsoid(g, np.array([-4.5, 0, 0], np.float32), np.array([5, 5, 5], np.float32))
+    b = sf.ellipsoid(g, np.array([4.5, 0, 0], np.float32), np.array([5, 5, 5], np.float32))
+    blend = sf.smin(a, b, 3.0)
+    j = sf.joined(a, b, 3.0, (0.7, 1.1))
+    zs = g.axes[2]
+    ix, iy = np.argmin(abs(g.axes[0])), np.argmin(abs(g.axes[1]))
+    col_b, col_j = blend[ix, iy, :], j[ix, iy, :]
+    top_b, top_j = zs[col_b < 0].max(), zs[col_j < 0].max()
+    bot_b, bot_j = zs[col_b < 0].min(), zs[col_j < 0].min()
+    check(top_b - top_j > 0.8, f"the seam's top should be grooved about 1.1 deep: {top_b:.2f} -> {top_j:.2f}")
+    check(abs(bot_b - bot_j) < 0.25, f"the seam's underside must keep the blend: {bot_b:.2f} -> {bot_j:.2f}")
+    # away from the seam, nothing changes
+    ia = np.argmin(abs(g.axes[0] + 6.0))
+    check(np.array_equal(blend[ia] < 0, j[ia] < 0), "joined() changed the parts away from their seam")
+    # where says no: no groove
+    n = sf.joined(a, b, 3.0, (0.7, 1.1), where=np.ones_like(a))
+    check(np.array_equal(n < 0, blend < 0), "where=positive everywhere must leave the plain blend")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
