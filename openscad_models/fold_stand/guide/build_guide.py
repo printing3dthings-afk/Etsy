@@ -60,13 +60,14 @@ def _box(a, thresh=30):
     return np.abs(a - corner).sum(axis=2) > thresh
 
 
-def crop(name, pad=0.04):
+def crop(name, pad=0.04, thresh=30, pady=0.0):
     """A render cropped to the parts and their shadow, contrast stretched for print."""
     im = Image.open(IMG / f"{name}.png").convert("RGB")
-    ys, xs = np.nonzero(_box(np.asarray(im).astype(int)))
+    ys, xs = np.nonzero(_box(np.asarray(im).astype(int), thresh))
     x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
     p = int(pad * max(x1 - x0, y1 - y0))
-    box = (max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))
+    q = p + int(pady * (y1 - y0))
+    box = (max(0, x0 - p), max(0, y0 - q), min(im.width, x1 + p), min(im.height, y1 + q))
     out = TMP / f"{name}_crop.jpg"
     out.parent.mkdir(parents=True, exist_ok=True)
     # the studio renders come out pale; a full autocontrast turns the lilac blue-violet, so
@@ -234,9 +235,12 @@ def angles(c):
          M, H - 90, W - 2 * M, LEDE)
 
     # the five stops, one render, one scale: label each stand under its own feet
-    path = crop("stops", 0.02)
-    y_top = H - 150
-    dx, dy, dw, dh = image_in(c, path, M, y_top - 210, W - 2 * M, 210)
+    # the floor's horizon differs from the corners too: crop on the parts alone
+    path = crop("stops", 0.03, thresh=110, pady=0.15)
+    y_top = H - 146
+    iw0, ih0 = Image.open(path).size
+    bh = (W - 2 * M - 12) * ih0 / iw0 + 12
+    dx, dy, dw, dh = image_in(c, path, M, y_top - bh, W - 2 * M, bh)
     a = _box(np.asarray(Image.open(path).convert("RGB")).astype(int), 40)
     cols = a.any(axis=0)
     runs, start = [], None
@@ -248,7 +252,7 @@ def angles(c):
             start = None
     runs = sorted(sorted(runs, key=lambda r: r[1] - r[0])[-5:])
     iw = Image.open(path).width
-    ly = y_top - 210 - 20
+    ly = y_top - bh - 20
     for (r0, r1), (n, lean) in zip(runs, STOPS):
         cx = dx + (r0 + r1) / 2 / iw * dw
         c.setFillColor(ACCENT)

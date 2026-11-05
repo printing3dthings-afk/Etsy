@@ -146,3 +146,14 @@ In `images/`:
 These are design-review renders from the real exported parts, not photos.
 
 Rebuild everything with `./ship.sh`, then `python3 render_stand.py`.
+
+## How-to guide
+
+`guide/Fold_Stand_Guide.pdf` (2026-11-05), four pages:
+1. the stand and what's in the bag;
+2. putting it together: fold the plates, then push in the pins;
+3. the five angles side by side, putting a phone on and the charging slot;
+4. folding it away, and what to do if something's not right.
+
+Its pictures are renders of the real parts (`guide/render_guide.py`), not
+photos. Rebuild with `python3 guide/render_guide.py && python3 guide/build_guide.py`.
