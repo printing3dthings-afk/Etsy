@@ -1,0 +1,41 @@
+  ok    stands alone: no include, use or import
+  ok    exposes NAME only, default OLIVIA (['NAME'])
+== OLIVIA
+  ok    renders under OpenSCAD 2021 (CGAL) in 16.4 s
+  ok    in under 30 s
+  ok    one closed body
+  ok    volume 169567.90 mm3 against the shipped 169579.96 (-12.06)
+  ok    bounding box [180.   67.8 122. ] against [180.   67.8 122. ]
+  ok    where they differ at all: 49.8 mm3, 0.029% of the body
+        added: name 15.9, front relief 2.4, back relief 0.2, elsewhere 0.2, pocket 0.2
+        left out: name 17.7, pocket 5.3, back relief 4.9, front relief 3.0, elsewhere 0.0
+  ok    Cupid in his pocket overlaps the new body 0.11 mm3, the shipped one 0.11 (his pegs in their holes)
+== MAXIMILIAN
+  ok    renders under OpenSCAD 2021 (CGAL) in 24.2 s
+  ok    in under 30 s
+  ok    one closed body
+  ok    volume 169319.32 mm3 against the shipped 169330.25 (-10.93)
+  ok    bounding box [180.   67.8 122. ] against [180.   67.8 122. ]
+  ok    where they differ at all: 34.3 mm3, 0.020% of the body
+        added: name 8.7, front relief 2.4, back relief 0.2, elsewhere 0.2, pocket 0.2
+        left out: name 9.3, pocket 5.3, back relief 4.9, front relief 3.0, elsewhere 0.0
+== Ana
+  ok    renders under OpenSCAD 2021 (CGAL) in 16.8 s
+  ok    in under 30 s
+  ok    one closed body
+  ok    volume 169346.97 mm3 against the shipped 169358.22 (-11.24)
+  ok    bounding box [180.   67.8 122. ] against [180.   67.8 122. ]
+  ok    where they differ at all: 36.5 mm3, 0.022% of the body
+        added: name 9.7, front relief 2.4, back relief 0.2, elsewhere 0.2, pocket 0.2
+        left out: name 10.6, pocket 5.3, back relief 4.9, front relief 3.0, elsewhere 0.0
+== MARY-JO
+  ok    renders under OpenSCAD 2021 (CGAL) in 20.9 s
+  ok    in under 30 s
+  ok    one closed body
+  ok    volume 169378.63 mm3 against the shipped 169390.14 (-11.50)
+  ok    bounding box [180.   67.8 122. ] against [180.   67.8 122. ]
+  ok    where they differ at all: 62.6 mm3, 0.037% of the body
+        added: name 22.6, front relief 2.4, back relief 0.2, elsewhere 0.2, pocket 0.2
+        left out: name 23.8, pocket 5.3, back relief 4.9, front relief 3.0, elsewhere 0.0
+
+CUSTOMIZER CHECK OK

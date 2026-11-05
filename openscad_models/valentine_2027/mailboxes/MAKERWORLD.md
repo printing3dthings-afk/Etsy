@@ -43,6 +43,18 @@ their cards through the slot in the top. Lift the top off to empty it.
 
 180 × 62 × 124 mm.
 
+**The name customizer (2026-11-05):** attach
+`love_letter/customizer/love_letter_customizer.scad` as the Parametric Model
+Maker file. NAME is its only setting (default OLIVIA), and it renders the
+envelope's body with the name on it.
+- **It stands alone:** no includes or imports. It needs only the Fredoka
+  SemiBold font, for the name. "To:" and the OBC mark are already built into
+  the body, so they need no font.
+- **It renders in time:** about 16 s under OpenSCAD 2021's CGAL engine (24 s
+  for a ten-letter name) and under a second with Manifold. The earlier files
+  timed out because the body alone took about 66 minutes under CGAL.
+- **How:** see `love_letter/customizer/NOTES.md`.
+
 ---
 
 ## Hungry Love Monster Valentine Mailbox
