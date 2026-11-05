@@ -79,6 +79,16 @@ real numbers before pricing.
 | filament incl. purge | 147.5 g | 100.6 g |
 | time | 16.9 h | 10.8 h |
 
+**Bambu Studio itself, 0.12 mm Fine, PLA Basic, all five prints on one
+plate** (`tools/bambu_slice.py`):
+- 18 h 49 min, no support.
+- 260 g including Bambu's purge, which is heavy:
+  - white 101 g, black 40 g, red 49 g, pink 71 g
+  - the five parts are 72 cm³, 89 g if printed solid, so most of the rest is purge
+- I have no Bambu slice of v1 to compare against.
+- If the purge is too much, print the heart on its own plate. Every layer
+  where it stands beside the body costs a red change.
+
 The saving comes from the split. The heart is one colour, so it needs no
 changes at all. The ears need 7 each. v1's four colours ran her whole height.
 
