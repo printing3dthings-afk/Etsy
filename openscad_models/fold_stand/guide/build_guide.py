@@ -69,7 +69,10 @@ def crop(name, pad=0.04):
     box = (max(0, x0 - p), max(0, y0 - p), min(im.width, x1 + p), min(im.height, y1 + p))
     out = TMP / f"{name}_crop.jpg"
     out.parent.mkdir(parents=True, exist_ok=True)
-    ImageOps.autocontrast(im.crop(box), cutoff=0.4, preserve_tone=True).save(out, quality=90)
+    # the studio renders come out pale; a full autocontrast turns the lilac blue-violet, so
+    # stretch them only halfway
+    im = im.crop(box)
+    Image.blend(im, ImageOps.autocontrast(im, cutoff=0.3, preserve_tone=True), 0.5).save(out, quality=90)
     return out
 
 
