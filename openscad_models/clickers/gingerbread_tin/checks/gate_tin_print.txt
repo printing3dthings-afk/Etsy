@@ -1,13 +1,13 @@
 parts/tin_print.stl
-  ok    fits_plate: 62.3 x 62.4 x 18.0 mm vs 256 x 256 x 256
+  ok    fits_plate: 62.5 x 62.6 x 16.4 mm vs 256 x 256 x 256
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  FAIL  min_wall: 1st pct 0.00mm, median 10.49mm (floor 1.2mm); 3.06% below one bead
-  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 17.8mm printed of 17.99mm
-  ok    geometry_survives_slicing: printed height 17.8mm vs modelled 17.99mm
-  ok    flat_base: 29.63 cm2 of contact = 76.2% of footprint (floor 5%)
+  ok    min_wall: 1st pct 1.23mm, median 16.37mm (floor 1.2mm); 0.00% below one bead; 1101 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 16.4mm printed of 16.39mm
+  ok    geometry_survives_slicing: printed height 16.4mm vs modelled 16.39mm
+  ok    flat_base: 29.83 cm2 of contact = 76.2% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 4.2mm widest unsupported span at z=1.0mm; 8 layer(s) under the 4.0s cooling threshold; 3604mm2 on the plate; aspect 0.24
+  note  risk (uncalibrated, never fails the gate): 4.2mm widest unsupported span at z=1.0mm; 2 layer(s) under the 4.0s cooling threshold; 3616mm2 on the plate; aspect 0.22
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
-PRODUCT GATE FAILED
+PRODUCT GATE PASSED

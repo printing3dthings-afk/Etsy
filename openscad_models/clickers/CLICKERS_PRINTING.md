@@ -49,8 +49,10 @@ changed.
 
 - **The gap:** the collar's top was flat, under the lid's sloping underside,
   so the gap opened to 3.4 mm at the outside. Now the collar's top slopes with
-  the lid, 0.2 mm under it, out to a 1.3 mm flat at its outer edge, where the
-  line shows about 1.9 mm.
+  the lid, 0.2 mm under it, to a 1.3 mm flat at its outer edge. The line you
+  see at the outside measures 1.86 mm on the canister.
+  - Inside the flat, the slope is mostly the thread's run-out: the groove and
+    its lead-in cut it.
   - **Why the flat:** run all the way out, the slope met the outside wall at a
     39° knife edge, under 1.2 mm for its top 1.5 mm. It was a real thin spot,
     and the product gate failed it. A 0.2 mm seam can only reach the outside
@@ -77,7 +79,7 @@ changed.
   - Starting it a whole tooth out takes 3.9°.
 - **Checked:**
   - Screwed down, nothing touches.
-  - Pulled straight up 0.5 mm it hits the thread (31.9 mm³).
+  - Pulled straight up 0.5 mm it hits the thread (32.0 mm³).
   - Turned back along the thread through 30–540°, it touches nothing.
   - The gate and fidelity read as before: 0 supports, the same known wall
     readings and snowflake tips.
@@ -164,13 +166,14 @@ it guides him straight down even if you press his head or a foot.
 
 2026-10-30, your ask: a tin that actually holds things, with the lid as the
 clicker, and the square opening under the lid filled in. 62 mm across and
-60 mm tall with the cookie on. It holds 88 cm³: sweets, paper clips, a
+60 mm tall with the cookie on. It holds 86 cm³: sweets, paper clips, a
 folded gift card.
 
 **Changed after your print (2026-11-05):**
 
-- **Seam and thread:** the lid sits on a 0.2 mm hairline seam and screws on a
-  deeper, coarser thread, as on the clicker's tin above.
+- **Seam and thread:** the seam closes from 3.4 mm to 1.86 at the outside,
+  and the lid screws on a deeper, coarser thread, as on the clicker's tin
+  above.
 - **The guide ring:** a smooth ring, 10 mm tall, under the lid drops into a
   smooth bore in the mouth before the lid's teeth reach the canister's.
   - **Why so long:** on a 57 mm lid a short guide tips across its own
@@ -212,13 +215,13 @@ stops.
 the same tools as the clickers, results in `gingerbread_tin/checks/`):
 - **Fit (2026-11-05):**
   - Screwed down, the lid's ring rests on the shelf, touching nothing else.
-    0.1 mm lower it would be 27.2 mm³ into the shelf, so it stops there.
-  - Pulled straight up 0.5 mm, it hits the thread (31.9 mm³), so it can't lift
+    0.1 mm lower it would be 27.3 mm³ into the shelf, so it stops there.
+  - Pulled straight up 0.5 mm, it hits the thread (32.0 mm³), so it can't lift
     off.
   - Where its teeth come in, the ring lets it tip 0.9°; starting a tooth out
     takes 3.9°.
-  - The seam over the collar is 0.31 mm upright, 0.20 mm square to the
-    slope, at every radius measured.
+  - The seam over the collar's flat edge is 0.50 mm at its inner end and
+    1.86 mm at the outside, the line you see.
   - Turned back along the thread through 30–540°, it touches nothing.
   - As a control, turned the wrong way while rising, it collides.
   - The cookie clears the lid as on the clicker.

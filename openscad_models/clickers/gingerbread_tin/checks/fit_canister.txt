@@ -1,18 +1,18 @@
 The lid's underside sits at z 46.0, the pod's foot at 35.8, the cookie at 54.3
-  lid / canister at rest: 0.000 mm3; 0.1 lower: 27.2 mm3
-  pulled 0.5 straight up: 31.9 mm3 (the thread holds it)
-  pulled 1.0 straight up: 89.4 mm3 (the thread holds it)
+  lid / canister at rest: 0.000 mm3; 0.1 lower: 27.3 mm3
+  pulled 0.5 straight up: 32.0 mm3 (the thread holds it)
+  pulled 1.0 straight up: 89.8 mm3 (the thread holds it)
   unscrewed 30 deg along the thread: 0.000 mm3
   unscrewed 90 deg along the thread: 0.000 mm3
   unscrewed 180 deg along the thread: 0.000 mm3
   unscrewed 360 deg along the thread: 0.000 mm3
   unscrewed 540 deg along the thread: 0.000 mm3
-  turned 30 deg the wrong way while rising: 57.1 mm3 (collides, so the zeros are the thread's path)
-  where the teeth come in, the ring lets the lid tip 0.93 deg; starting a tooth out takes 3.93
-  seam over the collar's top at r 29.6 / 30.0 / 30.4: 0.31 / 0.31 / 0.31 upright, 0.20 square to the slope
+  turned 30 deg the wrong way while rising: 57.3 mm3 (collides, so the zeros are the thread's path)
+  where the teeth come in, the ring lets the lid tip 0.93 deg; starting a tooth out takes 3.92
+  seam over the collar's flat edge: 0.50 at its inner end, 1.86 at the outside (the line you see)
   cookie / lid: 0.000 mm3
   switch body / pod: 0.000 mm3
   switch pins / pod: 0.000 mm3
   the pod's foot under the cutout: 100.0% solid
-Holds 88 cm3 round the pod (55.2 mm across, 44.4 mm deep at the side, 34.2 under the pod)
+Holds 86 cm3 round the pod (55.2 mm across, 44.0 mm deep at the side, 33.8 under the pod)
 FIT CHECK OK

@@ -9,7 +9,8 @@ prints, each moved to where it sits (positions from the .scad's echo):
 - the guide (2026-11-05): raised to where its teeth meet the canister's, the
   most the lid can tip before the ring meets the bore, against the tip it
   takes to start a whole tooth out (the pitch across the thread's diameter)
-- the seam: how far the lid's flare stands over the collar's top
+- the seam: the gap over the collar's flat outer edge, from its inner end to
+  the outside wall, where the line shows (about 1.8; it was 3.4)
 - the cookie and the lid at rest: no overlap, as on the clicker
 - the switch in the pod: its body and its pins clear the pocket; the pod's foot
   is solid under the cutout. (The clips' hooks sit on the pocket's 45 deg
@@ -107,18 +108,30 @@ def main():
     print(f"  where the teeth come in, the ring lets the lid tip {lo_t:.2f} deg; starting a tooth out takes {skip:.2f}")
     if lo_t > skip / 2:
         fails.append(f"the lid can tip {lo_t:.2f} deg, over half the {skip:.2f} that starts it a tooth out")
-    # the seam over the collar: the lid's flare's underside over the collar's top
-    # along a few radii outside the thread, upright, and square to the 39 deg
-    # slope they share
+    # the seam over the collar: the lid's flare's underside over the collar's
+    # sloped top, upright and square to the 39 deg slope they share, on the slope
+    # (inside the collar's flat outer edge, TR - CFLAT); and how far it opens at
+    # the outside, over the flat, by design (2026-11-05: the slope run out to the
+    # wall was a knife edge)
     FL_A = float(re.search(r"FL_A = ([\d.]+)", CLK).group(1))
-    seam = []
-    for r in (29.6, 30.0, 30.4):
-        probe = mf.Manifold.cylinder(30, 0.002, 0.002, 8).translate([r, 0, lid_s])
-        seam.append((lid ^ probe).bounding_box()[2] - (can ^ probe).bounding_box()[5])
-    print("  seam over the collar's top at r 29.6 / 30.0 / 30.4: " + " / ".join(f"{g:.2f}" for g in seam)
-          + f" upright, {min(seam) * math.sin(math.radians(FL_A)):.2f} square to the slope")
-    if not 0.15 <= min(seam) * math.sin(math.radians(FL_A)) <= max(seam) * math.sin(math.radians(FL_A)) <= 0.3:
-        fails.append(f"the seam is {min(seam):.2f}-{max(seam):.2f} upright, not a hairline")
+    TRc, CFLAT = num("TR"), num("CFLAT")
+    def gap(r):
+        # the collar's top at r, then the lid's underside directly above it (below
+        # the collar's top the lid's thread teeth are in the probe's way)
+        top = (can ^ mf.Manifold.cylinder(30, 0.002, 0.002, 8).translate([r, 0, lid_s])).bounding_box()[5]
+        above = mf.Manifold.cylinder(20, 0.002, 0.002, 8).translate([r, 0, top + 0.001])
+        return (lid ^ above).bounding_box()[2] - top
+    # Inside the flat the collar's top is the thread's run-out (the groove and the
+    # lead-in countersink cut it), so the seam is read over the flat: from its
+    # inner end, where the lid's flare comes down to it, to the outside wall,
+    # where the line shows.
+    # (its inner end measured 0.15 out, past the groove's root at TR - CFLAT + 0.1)
+    inner, edge = gap(TRc - CFLAT + 0.15), gap(TRc - 0.05)
+    print(f"  seam over the collar's flat edge: {inner:.2f} at its inner end, {edge:.2f} at the outside (the line you see)")
+    if inner > 0.6:
+        fails.append(f"the lid's flare stands {inner:.2f} over the flat's inner end")
+    if edge > 2.0:
+        fails.append(f"the seam opens to {edge:.2f} at the outside")
     c = (cookie ^ lid).volume()
     print(f"  cookie / lid: {c:.3f} mm3")
     if c > 0.01:

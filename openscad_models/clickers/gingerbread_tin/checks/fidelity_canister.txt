@@ -1,27 +1,27 @@
 slicing 2 part(s), 2 filament(s) ...
-267 layers parsed
-  layer 0/267
-  layer 100/267
-  layer 200/267
+259 layers parsed
+  layer 0/259
+  layer 100/259
+  layer 200/259
 
-PRINT FIDELITY  (267 layers, model 31064.5 mm3)
-  dropped (modelled, not printed): 3.68 mm3
-  filled  (printed, not modelled): 2.4 mm3
+PRINT FIDELITY  (259 layers, model 32809.0 mm3)
+  dropped (modelled, not printed): 3.53 mm3
+  filled  (printed, not modelled): 0.59 mm3
   colour  (printed, other filament): 0.0 mm3
   flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 30
-  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 7.8-8.4 (2 layers)  back at [-17.6, 25.2]  0.38 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  back at [-18.6, 24.5]  0.38 mm wide, 0.57 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  front at [0.6, -30.7]  0.37 mm wide, 0.57 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.4 (2 layers)  front at [-0.6, -30.7]  0.36 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.4 (2 layers)  right at [29.0, -10.1]  0.38 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.4 (2 layers)  back at [18.6, 24.5]  0.38 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  back at [17.6, 25.2]  0.37 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.0 (1 layers)  left at [-30.7, -0.6]  0.37 mm wide, 0.57 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.0 (1 layers)  left at [-30.7, 0.6]  0.37 mm wide, 0.57 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.4 (2 layers)  front at [-10.1, -29.0]  0.38 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.4 (2 layers)  back at [-8.9, 29.4]  0.37 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.4 (2 layers)  right at [24.5, -18.6]  0.38 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.0 (1 layers)  right at [25.2, -17.6]  0.37 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.4 (2 layers)  right at [25.2, 17.6]  0.37 mm wide, 0.56 mm deep
-  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 31.8-32.0 (1 layers)  back at [-18.6, 24.5]  0.38 mm wide, 0.57 mm deep
-  ... 347 smaller
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 7.8-8.4 (2 layers)  back at [-17.6, 25.3]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 7.8-8.4 (2 layers)  back at [18.6, 24.6]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 19.8-20.4 (2 layers)  back at [-8.9, 29.5]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 19.8-20.4 (2 layers)  right at [24.6, -18.6]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 19.8-20.4 (2 layers)  right at [25.3, 17.6]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 31.8-32.4 (2 layers)  back at [-17.6, 25.3]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 31.8-32.4 (2 layers)  right at [29.1, -10.1]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.065 mm3  z 31.8-32.4 (2 layers)  back at [18.6, 24.6]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  left at [-29.5, -8.9]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  back at [-18.6, 24.6]  0.38 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.4 (2 layers)  front at [-0.6, -30.8]  0.36 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  front at [0.6, -30.8]  0.37 mm wide, 0.57 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.4 (2 layers)  right at [29.1, -10.1]  0.38 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 7.8-8.0 (1 layers)  right at [29.5, -8.9]  0.37 mm wide, 0.56 mm deep
+  FLAG dropped #F4F1EA slot 2     0.064 mm3  z 19.8-20.0 (1 layers)  left at [-30.8, -0.6]  0.37 mm wide, 0.57 mm deep
+  ... 325 smaller
