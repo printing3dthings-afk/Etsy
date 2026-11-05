@@ -1,0 +1,23 @@
+  ok    body: one closed body (1), 41252 mm3, [44.4 56.9 38.6] mm as printed
+  ok    head: one closed body (1), 24427 mm3, [39.5 37.2 43.9] mm as printed
+  ok    ear_r: one closed body (1), 317 mm3, [20.   9.   2.6] mm as printed
+  ok    ear_l: one closed body (1), 317 mm3, [20.   9.   2.6] mm as printed
+  ok    heart: one closed body (1), 5752 mm3, [28.8 27.8 12. ] mm as printed
+  ok    body and head overlap 0.00 mm3
+  ok    body and ear_r overlap 0.00 mm3
+  ok    body and ear_l overlap 0.00 mm3
+  ok    body and heart overlap 0.00 mm3
+  ok    head and ear_r overlap 0.00 mm3
+  ok    head and ear_l overlap 0.00 mm3
+  ok    head and heart overlap 0.00 mm3
+  ok    ear_r and ear_l overlap 0.00 mm3
+  ok    ear_r and heart overlap 0.00 mm3
+  ok    ear_l and heart overlap 0.00 mm3
+  ok    neck peg 154 mm3 above her neck, 154 of it inside the head
+  ok    the heart's back rests on her: 70% of it within 0.35 mm of her
+  ok    ear_r: 42 mm3 of its root inside the head
+  ok    ear_l: 45 mm3 of its root inside the head
+  ok    neck peg gap: median 0.15, 5th pct 0.15 mm (PEG_CLR 0.15)
+  assembled: [66.3 57.6 71.9] mm (w x d x h)
+
+COW V2 FIT OK
