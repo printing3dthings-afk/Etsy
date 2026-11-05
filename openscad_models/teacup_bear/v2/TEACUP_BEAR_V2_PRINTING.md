@@ -74,6 +74,11 @@ All from the same PrusaSlicer P1S slice and the viewer's motion model, at
 | filament incl. purge | 96.9 g | 88.3 g |
 | time | 9.3 h | 9.4 h |
 
+**Bambu Studio itself, 0.12 mm Fine, PLA Basic, all three prints on one
+plate** (`tools/bambu_slice.py`):
+- 16 h 0 min, no support.
+- 194 g including Bambu's purge: cream 67 g, brown 9 g, pink 62 g, tan 58 g.
+
 **The split doesn't save colour changes here, unlike the cow.** v1 already
 kept its colours to height bands. v2's head still needs all four colours.
 The gain is the look, not the print.
