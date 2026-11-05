@@ -39,7 +39,13 @@ What the split buys:
 
 ## File
 
-`kawaii_cow_v2.3mf`: all five prints on one plate. The AMS slots:
+All five prints on one plate, in two files of the same parts:
+- **`kawaii_cow_v2_bambu.3mf`, for Bambu Studio.** It is written the way
+  `tools/bambu_slice.py` writes its slices. Bambu Studio 2.8 reads only the
+  first part of each object in the shop's usual 3MF layout.
+- **`kawaii_cow_v2.3mf`, for PrusaSlicer and the shop's checks.**
+
+The AMS slots, the same in both:
 
 | slot | colour | hex |
 |---|---|---|
@@ -70,8 +76,8 @@ real numbers before pricing.
 | | v1 (one piece) | v2 (five prints) |
 |---|---|---|
 | filament changes | 595 | 347 |
-| filament incl. purge | 147.5 g | 101 g |
-| time | 16.9 h | 10.9 h |
+| filament incl. purge | 147.5 g | 100.6 g |
+| time | 16.9 h | 10.8 h |
 
 The saving comes from the split. The heart is one colour, so it needs no
 changes at all. The ears need 7 each. v1's four colours ran her whole height.
@@ -109,10 +115,21 @@ All were cut or removed after the slicer propped them:
 
 ## Fixed in the shared tools on the way
 
-`tools/virtual_printer.py`'s junk check now catches `inf` and `nan`
-coordinates. The body's first three-colour slice had 339 wipe-tower moves to
-`Yinf`. The check only looked for numbers, so it kept that slice as good.
-There is a regression test in `tests/test_virtual_printer_junk.py`.
+- **`tools/virtual_printer.py`**: its junk check now catches `inf` and `nan`
+  coordinates.
+  - The body's first three-colour slice had 339 wipe-tower moves to `Yinf`.
+    The check only looked for numbers, so it kept that slice as good.
+  - Regression test: `tests/test_virtual_printer_junk.py`.
+- **`tools/assemble_3mf.py --plate`**: it now puts each object's place on the
+  plate into its vertices.
+  - It used to put the place on the object's `<item>` as a transform.
+    PrusaSlicer 2.7 applies that transform only to an object's FIRST colour
+    part.
+  - On this plate the head's pink and black, and each ear's pink, sliced 50
+    to 140 mm away from their white.
+  - Single-colour objects never showed it. Any multi-colour object made with
+    `--plate` before today may have the same fault in PrusaSlicer.
+  - Regression test: `tests/test_assemble_3mf.py`.
 
 ## Honest read
 

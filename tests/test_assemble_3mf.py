@@ -177,6 +177,37 @@ def test_a_plate_entry_may_itself_be_multipart():
         check(len(c[0]) == 2, f"the bun must keep its 2 parts, got {c[0]}")
 
 
+def test_a_second_objects_parts_stay_in_register():
+    """2026-11-05: an object's place on the plate was a transform on its
+    <item>, and PrusaSlicer 2.7 moved only the object's first volume by it.
+    On the Kawaii Cow v2 plate the head's pink and black and each ear's pink
+    printed 50-140 mm from their white. The offset is now in the vertices:
+    no item carries a transform, and a second object's small part still sits
+    inside its big one."""
+    import re
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        first = [(_cube("a_big", 20, td), "#111111")]
+        second = [(_cube("b_big", 20, td), "#222222"), (_cube("b_small", 4, td), "#333333")]
+        out = Path(td) / "plate.3mf"
+        assemble_3mf.assemble(out, [first, second], "plate")
+        with zipfile.ZipFile(out) as z:
+            model = z.read("3D/3dmodel.model").decode()
+            cfg = z.read("Metadata/Slic3r_PE_model.config").decode()
+        check("transform=" not in model, "a plate item still carries a transform")
+        body = re.findall(r'<object id="2"[^>]*>(.*?)</object>', model, re.S)[0]
+        v = np.array(re.findall(r'<vertex x="([-\d.]+)" y="([-\d.]+)" z="([-\d.]+)"', body), float)
+        t = np.array(re.findall(r'<triangle v1="(\d+)" v2="(\d+)" v3="(\d+)"', body), int)
+        obj2 = re.findall(r'<object id="2"[^>]*>(.*?)</object>', cfg, re.S)[0]
+        (lo0, hi0), (lo1, hi1) = [tuple(map(int, r)) for r in re.findall(r'firstid="(\d+)" lastid="(\d+)"', obj2)]
+        big = v[t[lo0:hi0 + 1].ravel()]
+        small = v[t[lo1:hi1 + 1].ravel()]
+        check(np.all(small.min(0) >= big.min(0) - 1e-6) and np.all(small.max(0) <= big.max(0) + 1e-6),
+              f"the second object's small part {small.min(0)}..{small.max(0)} left its big part "
+              f"{big.min(0)}..{big.max(0)}")
+        check(big.min(0)[0] >= 10 + 6.0 - 1e-6, f"the second object is not 6 mm clear of the first (x 10): x from {big.min(0)[0]}")
+
+
 def _extruders(path):
     import re
     with zipfile.ZipFile(path) as z:

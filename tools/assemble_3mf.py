@@ -168,26 +168,34 @@ def assemble(out_path: Path, groups: list[list[tuple[Path, str]]],
                   f"shelves; the P1S has {_BED_MM:.0f}. Split them over two plates.", file=sys.stderr)
     y = 0.0
     for gi, (ms, ns, ex) in enumerate(zip(loaded, names, extruders)):
-        o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
-        objs.append(o); slic3rs.append(sl); bambus.append(bm)
+        # Each object's place on the plate is baked into its vertices, not
+        # put on its <item> as a transform (2026-11-05). PrusaSlicer 2.7
+        # applied an item's transform to an object's FIRST volume only: on the
+        # Kawaii Cow v2 plate the head's pink and black, and each ear's pink,
+        # printed where the object stood before it was moved, 50-140 mm away
+        # from their white. Single-colour objects never showed it.
         if mode in ("assembly", "placed"):
             # "placed": the caller has already laid the meshes out on the bed
             # (2026-10-27, the fit test plate's packer), so they stay put
-            items += f'<item objectid="{gi+1}"/>'
+            dx, dy = 0.0, 0.0
         elif shelves:
-            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
-                      f'{spots[gi][0]:.4f} {spots[gi][1]:.4f} 0"/>')
+            dx, dy = spots[gi]
         elif column:
-            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
-                      f'{-lo[gi][0]:.4f} {y - lo[gi][1]:.4f} 0"/>')
+            dx, dy = float(-lo[gi][0]), float(y - lo[gi][1])
             y += float(hi[gi][1] - lo[gi][1]) + gap
         else:
             w = float(max(m.bounds[1][0] for m in ms) - min(m.bounds[0][0] for m in ms))
-            if items:
+            if gi:
                 x += gap + w / 2.0
-            items += (f'<item objectid="{gi+1}" transform="1 0 0 0 1 0 0 0 1 '
-                      f'{x:.4f} 0 0"/>')
+            dx, dy = x, 0.0
             x += w / 2.0
+        if dx or dy:
+            ms = [m.copy() for m in ms]
+            for m in ms:
+                m.apply_translation([dx, dy, 0.0])
+        o, sl, bm = _object_xml(gi + 1, ms, ns, ex)
+        objs.append(o); slic3rs.append(sl); bambus.append(bm)
+        items += f'<item objectid="{gi+1}"/>'
 
     model = (f'<?xml version="1.0" encoding="UTF-8"?>\n'
              f'<model unit="millimeter" xml:lang="en-US" xmlns="{_NS}">'
