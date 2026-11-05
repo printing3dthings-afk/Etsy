@@ -1,0 +1,24 @@
+slicing 3 part(s), 3 filament(s) ...
+219 layers parsed
+
+PRINT FIDELITY  (219 layers, model 24428.4 mm3)
+  dropped (modelled, not printed): 0.93 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #F4F1EA slot 1     0.326 mm3  z 6.2-15.6 (47 layers)  front at [11.2, -16.3]  0.19 mm wide, 0.22 mm deep
+       dropped #F4F1EA slot 1     0.277 mm3  z 7.4-15.6 (41 layers)  left at [-10.8, -14.7]  0.19 mm wide, 0.22 mm deep
+       dropped #F4F1EA slot 1     0.044 mm3  z 21.2-21.4 (1 layers)  front at [10.4, -19.2]  0.3 mm wide, 0.42 mm deep
+       dropped #F4F1EA slot 1     0.039 mm3  z 26.8-29.0 (11 layers)  left at [-14.4, -4.6]  0.13 mm wide, 0.19 mm deep
+       dropped #F4F1EA slot 1     0.034 mm3  z 17.2-20.2 (14 layers)  front at [-4.7, -18.8]  0.1 mm wide, 0.2 mm deep
+       dropped #2B2433 slot 2     0.027 mm3  z 30.6-31.2 (3 layers)  left at [-9.0, 0.7]  0.19 mm wide, 0.2 mm deep
+       dropped #F4F1EA slot 1     0.018 mm3  z 15.4-17.2 (9 layers)  front at [7.6, -18.9]  0.1 mm wide, 0.15 mm deep
+       dropped #F6A6C1 slot 3     0.017 mm3  z 1.6-1.8 (1 layers)  front at [-5.1, -14.6]  0.22 mm wide, 0.17 mm deep
+       dropped #2B2433 slot 2     0.017 mm3  z 30.8-31.2 (2 layers)  left at [-9.7, -6.3]  0.16 mm wide, 0.2 mm deep
+       dropped #2B2433 slot 2     0.016 mm3  z 30.8-31.4 (2 layers)  left at [-7.5, -7.3]  0.18 mm wide, 0.13 mm deep
+       dropped #F6A6C1 slot 3     0.013 mm3  z 1.6-1.8 (1 layers)  front at [-6.2, -16.3]  0.21 mm wide, 0.18 mm deep
+       dropped #F4F1EA slot 1     0.011 mm3  z 23.2-23.4 (1 layers)  front at [-7.4, -19.0]  0.2 mm wide, 0.21 mm deep
+       dropped #2B2433 slot 2     0.011 mm3  z 30.6-30.8 (1 layers)  left at [-10.5, -5.4]  0.16 mm wide, 0.21 mm deep
+       dropped #F4F1EA slot 1     0.010 mm3  z 2.6-3.4 (4 layers)  left at [-6.8, -13.6]  0.11 mm wide, 0.19 mm deep
+       dropped #F4F1EA slot 1     0.009 mm3  z 23.2-23.4 (1 layers)  front at [-6.4, -19.3]  0.18 mm wide, 0.19 mm deep
+  ... 19 smaller

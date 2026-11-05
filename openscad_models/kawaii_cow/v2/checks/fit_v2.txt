@@ -1,4 +1,4 @@
-  ok    body: one closed body (1), 41252 mm3, [44.4 56.9 38.6] mm as printed
+  ok    body: one closed body (1), 41211 mm3, [44.4 56.9 38.6] mm as printed
   ok    head: one closed body (1), 24427 mm3, [39.5 37.2 43.9] mm as printed
   ok    ear_r: one closed body (1), 317 mm3, [20.   9.   2.6] mm as printed
   ok    ear_l: one closed body (1), 317 mm3, [20.   9.   2.6] mm as printed

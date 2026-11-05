@@ -67,6 +67,7 @@ SHOULDER = 11.0       # print mm: the radius her shoulders round over to the col
 FRONT_GAP = 1.0       # print mm: see body()
 LAP_TOP = 21.0        # print mm: in front of the heart's back, nothing of her above this (her arms end under it)
 COLLAR_R = 1.9        # print mm: the collar's tube radius
+COLLAR_END = 2.5      # print mm: its two ends stop this far behind her front, rounded
 CLR = 0.2             # print mm: gap between nesting faces (head in collar, heart in lap)
 PEG_CLR = 0.15        # print mm: peg in socket, a glued fit
 # the neck peg: a cylinder with a flat, so the head goes on one way only
@@ -398,8 +399,10 @@ class Cow2:
         body = np.maximum(body, g.Z - NECK_Z)
         # the collar: a tube on her shoulders round the head's footprint
         collar = np.sqrt((d2 - COLLAR_R) ** 2 + (g.Z - NECK_Z) ** 2) - COLLAR_R
-        # not over the heart's top: there it was a 1 mm3 speck between lobes and chin
-        collar = np.maximum(collar, front - g.Y)
+        # its ends: rounded, COLLAR_END behind her front. Over the heart's top
+        # it was a 1 mm3 speck, and cut flat at her front plane its ends were
+        # ragged half-tubes beside the chin in the front view
+        collar = sf.smax(collar, front + COLLAR_END - g.Y, COLLAR_R)
         self.collar = collar
         body = np.minimum(body, collar)
         # the hoof clefts, as v1

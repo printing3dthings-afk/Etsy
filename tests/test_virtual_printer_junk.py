@@ -66,6 +66,16 @@ def test_persistent_junk_is_refused():
     check(runs == 3, f"it must give up after 3 tries, ran {runs}")
 
 
+def test_infinite_coordinates_are_junk():
+    # 2026-11-05: the Kawaii Cow v2 body's slice had 339 wipe-tower moves to
+    # "Yinf"; the number-only pattern skipped them and the slice was kept
+    td = Path(tempfile.mkdtemp(prefix="vp_inf_"))
+    g = td / "g.gcode"
+    g.write_text("G1 X181.250 Yinf\nG1 X-inf Y10\nG1 Xnan Y2\nG1 X10 Y10 ; infill\n;TYPE:Solid infill\n")
+    n = vp.off_bed_moves(g)
+    check(n == 3, f"inf, -inf and nan coordinates are 3 junk moves, counted {n}")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

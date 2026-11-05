@@ -29,6 +29,7 @@ HONEST LIMITS -- say these out loud rather than implying the sim is the printer:
 """
 from __future__ import annotations
 
+import math
 import re
 import shutil
 import subprocess
@@ -177,7 +178,10 @@ def slice_model(mesh_path, gcode_path, supports=True, extra=None, timeout=1800):
         "this G-code is not a real plate")
 
 
-_XY = re.compile(r"([XY])([-+]?\d*\.?\d+)")
+# inf and nan too (2026-11-05): the Kawaii Cow v2's three-colour body came out
+# of the default wipe tower with 339 moves to "Yinf", which the number-only
+# pattern never saw, so the junk slice was returned as good
+_XY = re.compile(r"([XY])([-+]?(?:inf|nan|\d*\.?\d+))", re.I)
 
 
 def off_bed_moves(path, limit=400.0):
@@ -187,7 +191,8 @@ def off_bed_moves(path, limit=400.0):
         for line in fh:
             if line.startswith(("G0 ", "G1 ")):
                 for _, v in _XY.findall(line.split(";", 1)[0]):
-                    if abs(float(v)) > limit:
+                    f = float(v)
+                    if not math.isfinite(f) or abs(f) > limit:
                         n += 1
                         break
     return n
