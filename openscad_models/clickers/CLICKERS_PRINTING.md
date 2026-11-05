@@ -16,7 +16,7 @@ switch's four orientations fits.
 
 ## Gingerbread Tin (`gingerbread_tin/gingerbread_tin_clicker.3mf`)
 
-61 mm across, 26 mm tall with the cookie on.
+62 mm across, 26 mm tall with the cookie on.
 
 | print | colours (AMS slot) | as it sits in the file |
 |---|---|---|
@@ -38,12 +38,46 @@ the detail is raised.
 - **Lid:** holly sprigs with red berries in the two corners above his arms,
   and four small white snowflakes round him. A 0.4 mm chamfer breaks the
   nest's edge.
-- **Tin:** a rolled bead round the foot and another round the top edge, like a
-  real tin, and pairs of white dots between the snowflakes.
+- **Tin:** a rolled bead round the foot, like a real tin, and pairs of white
+  dots between the snowflakes. (It had a second bead round the top edge until
+  the seam change below.)
+
+**Stronger thread and a hairline seam (2026-11-05).** After you printed the
+canister you asked for the lid to sit with the smallest gap, and for threads
+that won't break if the lid goes on crooked. This tin and the canister both
+changed.
+
+- **The gap:** the collar's top was flat, under the lid's sloping underside,
+  so the gap opened to 3.4 mm at the outside. Now the collar's top slopes with
+  the lid, 0.2 mm under it all the way out: a hairline.
+  - **The stop:** the lid still stops on its floor, so the seam is the same
+    however a print runs.
+  - **The bead:** the rolled bead round the tin's top edge is gone. The lid's
+    band now carries on flush from the seam, where it used to stand 0.6 mm
+    proud.
+- **The thread:** 4.0 mm pitch and 1.2 mm deep, where it was 2.7 and 0.7.
+  - Each tooth is 3.7 mm thick at its root against 2.4, and 1.2 mm tall
+    against 0.7.
+  - The teeth grow outward, so the tin is 0.5 mm wider all round: 62 mm
+    across.
+  - It's 1.1 turns now, against 1.6. The lid is the same height: the cookie
+    sets it.
+- **No guide ring on this tin:** its lid prints standing on its floor, so a
+  ring under it can't print, and there's no height to spare above the floor
+  without sinking the cookie.
+  - Without one, the lid can tip 3.1° where its teeth come in.
+  - Starting it a whole tooth out takes 3.9°.
+- **Checked:**
+  - Screwed down, nothing touches.
+  - Pulled straight up 0.5 mm it hits the thread (31.9 mm³).
+  - Turned back along the thread through 30–540°, it touches nothing.
+  - The gate and fidelity read as before: 0 supports, the same known wall
+    readings and snowflake tips.
 
 **The lid screws on (2026-10-30).** Your first test print clicked fine, but
 the lid sat loose. It now has a thread, about 1.6 turns, and screws down until
-the switch plate sits on the tin exactly where it sat before. The switch, the
+the switch plate sits on the tin exactly where it sat before. (The thread
+below is as it was then; see above for the 2026-11-05 thread.) The switch, the
 cookie and the nest are unchanged.
 - **Why a screw and not a snap:** a snap ring on a 61 mm tin with a 1.2 mm
   wall either cracks or lets go. The tin is round, with its snowflakes all the
@@ -76,30 +110,45 @@ it guides him straight down even if you press his head or a foot.
 ## Gingerbread Tin Canister (`gingerbread_tin/gingerbread_tin_canister.3mf`)
 
 2026-10-30, your ask: a tin that actually holds things, with the lid as the
-clicker, and the square opening under the lid filled in. 61 mm across and
-60 mm tall with the cookie on. It holds 90 cm³: sweets, paper clips, a
+clicker, and the square opening under the lid filled in. 62 mm across and
+60 mm tall with the cookie on. It holds 88 cm³: sweets, paper clips, a
 folded gift card.
+
+**Changed after your print (2026-11-05):**
+
+- **Seam and thread:** the lid sits on a 0.2 mm hairline seam and screws on a
+  deeper, coarser thread, as on the clicker's tin above.
+- **The guide ring:** a smooth ring, 10 mm tall, under the lid drops into a
+  smooth bore in the mouth before the lid's teeth reach the canister's.
+  - **Why so long:** on a 57 mm lid a short guide tips across its own
+    diameter. A long one keeps the lid square: it can tip only 0.9° where the
+    teeth come in, against the 3.9° that starts it a tooth out. So it can't
+    cross-thread.
+  - **The stop:** screwed down, the ring stands on a shelf at the foot of the
+    bore, and the pod no longer touches the mouth.
+- **In section:** `gingerbread_tin/images/canister_seam_section.png` shows the
+  seam, the teeth and the ring cut through.
 
 **You print two new parts.** The cookie and the switch come off the clicker
 you already printed and go on the new lid. The clicker's tin isn't used.
 
 | print | colours (AMS slot) | as it sits in the file | sliced, one colour |
 |---|---|---|---|
-| the canister | red 1, white snowflakes 2 | on its base | about 27 g |
-| the closed lid | red 1, green holly 3, white snowflakes 2 | on the pod under it | about 19 g |
+| the canister | red 1, white snowflakes 2 | on its base | about 29 g, 58 min |
+| the closed lid | red 1, green holly 3, white snowflakes 2 | on the pod and the guide ring under it | about 22 g, 37 min |
 | the cookie (only if you need another) | as the clicker's | face up | as the clicker's |
 
 **What's different:**
 - **The canister** is the clicker's tin made tall and hollow: the same rolled
-  beads at the foot and the top, the same threaded collar, and three
+  bead at the foot, the same threaded collar, and three
   staggered rows of ten raised snowflakes. The OBC mark is engraved under the
   base.
 - **The closed lid** is the clicker's lid, unchanged on top, with a pod
   under the switch plate. The switch's body and legs sit in a closed square
   pocket, so nothing in the tin reaches the switch, and from below it's solid.
   **It screws on (2026-11-03), like the clicker's lid,** with the same
-  thread, about 1.6 turns. It screws down until the pod's cone meets a
-  matching cone in the canister's mouth.
+  thread. Since 2026-11-05 it screws down until its guide ring stands on the
+  shelf in the canister's mouth.
 
 **Put it together:** push the switch into the new lid from above, through the
 cookie-shaped nest, until its clips snap under the plate. Press the cookie
@@ -108,11 +157,15 @@ stops.
 
 **Checked before it was pushed** (`gingerbread_tin/check_canister.py`, and
 the same tools as the clickers, results in `gingerbread_tin/checks/`):
-- **Fit:**
-  - Screwed down, the lid rests on its cone. 0.1 mm lower it would be 5.6 mm³
-    into the canister, so it stops there.
-  - Pulled straight up 0.5 mm, it hits the thread (15.5 mm³), so it can't lift
+- **Fit (2026-11-05):**
+  - Screwed down, the lid's ring rests on the shelf, touching nothing else.
+    0.1 mm lower it would be 27.2 mm³ into the shelf, so it stops there.
+  - Pulled straight up 0.5 mm, it hits the thread (31.9 mm³), so it can't lift
     off.
+  - Where its teeth come in, the ring lets it tip 0.9°; starting a tooth out
+    takes 3.9°.
+  - The seam over the collar is 0.31 mm upright, 0.20 mm square to the
+    slope, at every radius measured.
   - Turned back along the thread through 30–540°, it touches nothing.
   - As a control, turned the wrong way while rising, it collides.
   - The cookie clears the lid as on the clicker.
@@ -128,8 +181,11 @@ the same tools as the clickers, results in `gingerbread_tin/checks/`):
   3. **The screw lid's stop (2026-11-03).** I first stopped the lid on a flat
      ring inside the mouth. To pass through that ring, the pod had to be
      2.2 mm narrower than the lid. The lid prints standing on its pod, so its
-     floor overhung all round: 9,349 support moves. Now the pod's cone runs up
-     to the lid's edge, as before, and stops in a matching cone in the mouth.
+     floor overhung all round: 9,349 support moves. Then the pod's cone ran up
+     to the lid's edge and stopped in a matching cone in the mouth.
+  4. **The guide ring (2026-11-05)** is as tall as the pod, so the lid prints
+     standing on both, still with 0 supports. The shelf it stops on has a
+     sloped underside.
 - **Product gate:** both read FAIL on the wall check only.
   - The thread's teeth, seen side-on by the gate's straight rays, as on the
     clicker's tin and lid.
