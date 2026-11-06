@@ -92,3 +92,42 @@ shared.
 - **The inlay is cut a fixed 0.6 mm into the dome, measured straight
   down,** so it stays three layers deep across the whole curve and sits
   flush with it.
+
+## MakerWorld customizer (2026-11-06)
+
+**Upload `pmm/name_ornament_pmm.scad`.** It replaces the first one, which
+failed on 2026-11-05 in two ways:
+- **No name in the web preview.**
+  - The name was set in Dancing Script, which isn't installed on MakerWorld's
+    Parametric Model Maker (PMM).
+  - With an unknown font, OpenSCAD draws no text, and gives no error.
+- **Handy's cloud slice failed.**
+  - The ornament was centred on (0, 0). In a 3MF that point is the plate's
+    corner, so three quarters of the ornament hung off the plate.
+  - Bambu Studio fails the same file the same way: "no object is fully inside
+    the print volume".
+
+The new file is built from `name_ornament.scad` by `pmm/build_pmm.py`:
+- **The name is in Lobster,** a connected script on PMM's font list
+  (`tools/pmm_fonts.json`). It is sized from Lobster's own measured letter
+  widths: as large as fits 60 mm across, at most 12 mm.
+- **The year stays in Montserrat ExtraBold,** which PMM has.
+- **One file,** with the OBC mark inlined.
+- **Centred on a 256 mm plate,** with two colour settings (the ornament, and
+  the name).
+
+**Checked with `tools/pmm_check.py`** (`pmm/check_pmm.txt`):
+- Olivia, Jessee, Mia, Christopher, MARY-JO and Zoë each render in 0.5–0.9 s.
+  PMM gives up at about 10 s.
+- Each one sits on the plate and draws in the name colour.
+- Jessee slices exactly as exported, with nothing moved: 42 min, 17.6 g, no
+  supports.
+
+`pmm/pmm_preview_jessee_christopher.jpg` is a design-review render, not a
+photo.
+
+**Acceptance test (Benson):**
+1. Upload `pmm/name_ornament_pmm.scad` as the model's PMM file.
+2. Type a name and press Generate. The preview should show the ornament with
+   the name.
+3. In Bambu Handy, customize and print with the cloud slice. It should slice.

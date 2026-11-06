@@ -1,5 +1,56 @@
 # Giant Love Letter: the MakerWorld name customizer
 
+## Upload this: `love_letter_pmm.scad` (2026-11-06)
+
+**Every earlier customizer timed out on MakerWorld,** including
+`love_letter_customizer.scad` below, so they are all replaced by this one. It
+was rebuilt to fit MakerWorld's Parametric Model Maker (PMM) from the start, by
+`build_pmm.py` from `love_letter.scad`:
+
+- **Fast:**
+  - **2.3–2.7 s** per name on Manifold, which PMM's backend uses. PMM gives up
+    at about 10 s.
+  - The shipped body took 17.5 s, 16.8 s of it Cupid's pocket: twenty steps
+    cut from a 3,752-point outline.
+  - The outline is now embedded, simplified at 0.02 mm and grown 0.02 mm, to
+    411 points.
+  - So it is never smaller than the shipped pocket, at most 0.08 mm bigger.
+  - Cupid still overlaps the body by exactly 0.11 mm³, his pegs in their holes.
+- **Fonts PMM has:**
+  - Fredoka isn't installed on PMM, so on MakerWorld the name and "To:" drew
+    nothing.
+  - Both are now **Nunito ExtraBold**, the nearest rounded face on PMM's list
+    (`tools/pmm_fonts.json`).
+  - The name is laid out a letter at a time from Nunito's measured widths,
+    as the shipped design does with Fredoka.
+- **One file:** its four libraries are inlined. PMM reads only the uploaded
+  .scad.
+- **On the plate:**
+  - It is centred on a 256 mm plate (x 38–218, y 95–163).
+  - A 3MF's origin is the plate's corner, so a model on (0, 0) hangs off it.
+- **Four colour settings:** the envelope, the red, the white and the name.
+  Each is a hex `// color` parameter.
+
+The lid and Cupid don't change with the name. They're separate prints, not in
+this file.
+
+**Checked with `tools/pmm_check.py`** (`check_pmm.txt`):
+- the names OLIVIA, Ana, MARY-JO, MAXIMILIAN and Jessee all render in time,
+  on the plate, and draw in the name colour;
+- OLIVIA slices in Bambu Studio exactly as exported, with nothing moved: 6 h
+  45 min, 162 g, 0 supports.
+
+`pmm_preview_jessee.jpg` is a design-review render of the address side with a
+name, not a photo.
+
+**Acceptance test (Benson):**
+1. Upload `love_letter_pmm.scad` as the model's PMM file.
+2. Enter a name and press Generate. The preview should show the envelope with
+   the name on the address side.
+3. In Bambu Handy, customize and print with the cloud slice. It should slice.
+
+## The first customizer, `love_letter_customizer.scad` (2026-11-05, replaced)
+
 `love_letter_customizer.scad` is the file to attach to the MakerWorld model as
 its Parametric Model Maker file.
 - **The setting:** NAME is the only one (default `OLIVIA`). The default render
