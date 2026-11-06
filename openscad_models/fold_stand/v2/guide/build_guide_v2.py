@@ -299,9 +299,9 @@ def fold_and_help(c):
     para(c, "Lift the phone off and push the leg flat against the front plate. It clicks shut and locks, so "
             "it stays folded in a bag or a pocket: 80 × 113 × 20 mm. Pinch the buttons to open it again.",
          M, H - 90, W - 2 * M - 10, LEDE)
-    image_in(c, crop("folded"), M, H - 400, W - 2 * M, 270)
+    image_in(c, crop("folded"), M, H - 410, W - 2 * M, 262)
 
-    y = H - 432
+    y = H - 440
     heading(c, "If something's not right", y, 15)
     y -= 14
     items = [

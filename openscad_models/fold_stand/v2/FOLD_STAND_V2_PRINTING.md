@@ -127,6 +127,17 @@ is how far the blade has to bend.
   - If they stay in, the return slope (`CONE`) is too shallow for your PLA.
   - If they're too stiff, it's too steep.
 
+## How-to guide
+
+`guide/Fold_Stand_v2_Guide.pdf`, four pages, with renders of the v2 parts:
+1. the stand and what's in the bag;
+2. putting it together: the pins now click in, and the heads are buttons;
+3. pinch, open past, push back to the click; the five angles side by side;
+4. folding it away, and what to do if something's not right (and why not to
+   glue a pin).
+
+Rebuild with `python3 guide/render_guide_v2.py && python3 guide/build_guide_v2.py`.
+
 ## Renders
 
 In `images/`. These are design-review renders of the real parts, not photos.
