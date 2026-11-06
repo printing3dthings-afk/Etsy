@@ -1,0 +1,43 @@
+== on the bed
+  ok    front: lowest point z +0.000
+  ok    back: lowest point z +0.000
+  ok    pin: lowest point z +0.000
+== the ratchet (the ridge's lift off the pin, mm; the blade bends this far)
+  ok    at    0 deg it seats: lift 0.10 (the preload is 0.10)
+  ok      opening from 0: within 0.75 deg it needs 0.55, the full face: LOCKED
+  ok      folding from 0: 0.75 deg on it needs only 0.14, up the ramp
+  ok    at   24 deg it seats: lift 0.10 (the preload is 0.10)
+  ok      opening from 24: within 0.75 deg it needs 0.54, the full face: LOCKED
+  ok      folding from 24: 0.75 deg on it needs only 0.14, up the ramp
+  ok    at   36 deg it seats: lift 0.10 (the preload is 0.10)
+  ok      opening from 36: within 0.75 deg it needs 0.54, the full face: LOCKED
+  ok      folding from 36: 0.75 deg on it needs only 0.14, up the ramp
+  ok    at   48 deg it seats: lift 0.10 (the preload is 0.10)
+  ok      opening from 48: within 0.75 deg it needs 0.55, the full face: LOCKED
+  ok      folding from 48: 0.75 deg on it needs only 0.14, up the ramp
+  ok    at   60 deg it seats: lift 0.10 (the preload is 0.10)
+  ok      opening from 60: within 0.75 deg it needs 0.55, the full face: LOCKED
+  ok      folding from 60: 0.75 deg on it needs only 0.14, up the ramp
+  ok    at   72 deg it seats: lift 0.10 (the preload is 0.10)
+  ok      opening from 72: within 0.75 deg it needs 0.54, the full face: LOCKED
+  ok      folding from 72: 0.75 deg on it needs only 0.14, up the ramp
+  ok    folding 24 -> 0: rides over at 0.55, then drops in: the click
+  ok    folding 36 -> 24: rides over at 0.55, then drops in: the click
+  ok    folding 48 -> 36: rides over at 0.55, then drops in: the click
+  ok    folding 60 -> 48: rides over at 0.55, then drops in: the click
+  ok    folding 72 -> 60: rides over at 0.54, then drops in: the click
+  ok    buttons pressed: lift 0.81-0.82 at every angle, above the crests (0.55): turns FREE
+  ok      0.2 mm back out from pressed the lift falls 0.82 -> 0.70: the blade pushes it back
+  ok    pulled 1-2 mm outward the ridge must lift 1.15 up the wall: the pin stays in
+  ok    the plates never meet from 0 to 72 deg (worst 0.000 mm3)
+  ok    a pin turned 4 deg hits the front plate's barrel: keyed
+  ok    the pins at rest in the front plate's barrels: 0.000 mm3
+  ok    pressed, the heads stop on the barrels' ends: -0.000 mm3
+  ok    pressed, the two pins don't meet in the middle (2 bodies)
+== stance, with a 200 g phone on the lip
+  ok    open   24 deg: the phone leans at 80.9 deg to the table; feet  44 mm apart; on a free hinge it stands where the feet grip at mu 0.13 or more
+  ok    open   36 deg: the phone leans at 74.9 deg to the table; feet  65 mm apart; on a free hinge it stands where the feet grip at mu 0.23 or more
+  ok    open   48 deg: the phone leans at 68.9 deg to the table; feet  86 mm apart; on a free hinge it stands where the feet grip at mu 0.33 or more
+  ok    open   60 deg: the phone leans at 62.9 deg to the table; feet 105 mm apart; on a free hinge it stands where the feet grip at mu 0.45 or more
+  ok    open   72 deg: the phone leans at 56.9 deg to the table; feet 124 mm apart; on a free hinge it stands where the feet grip at mu 0.57 or more
+FIT CHECK OK
