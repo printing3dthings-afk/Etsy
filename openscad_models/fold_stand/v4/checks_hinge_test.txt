@@ -1,0 +1,12 @@
+== the plate's print
+  ok   the prop and the plate print apart
+  ok   least gap 0.40
+  ok   the prop swings out behind the plate to 135 deg untouched; the short test slot stops it at -144
+  ok   pushed 1 mm left, a cone stops it
+  ok   pushed 1 mm right, a cone stops it
+== the pivot
+  ok   turns 0-90 in the lugs untouched
+  ok   0-85 deg, lifted 2 mm it hits the lugs: captured
+  ok   at 145 deg it lifts out untouched (0.000 mm3)
+
+HINGE TEST OK

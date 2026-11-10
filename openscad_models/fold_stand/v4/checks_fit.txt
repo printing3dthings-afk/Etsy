@@ -1,0 +1,34 @@
+== the plate's print: the prop in its slot
+  ok   prop and plate are apart (0.000 mm3)
+  ok   least gap prop to plate 0.40 (0.4 at its sides, 0.45 at the cones)
+  ok   it swings out behind the plate from folded to -164 deg (working -111 to -160) without touching; the slot's end stops it at -164 deg
+  ok   pushed 1 mm left, a cone stops it (294.5 mm3)
+  ok   pushed 1 mm right, a cone stops it (294.5 mm3)
+== at each angle
+  ok   80 deg: no overlap (plate/base 0.000, prop/base 0.000, prop/plate 0.000)
+  ok   80 deg: gaps plate-base 0.39, prop-base 0.40 (foot in notch 19.5)
+  ok   80 deg: the foot's centre at y 19.52 z 6.00
+  ok   75 deg: no overlap (plate/base 0.000, prop/base 0.000, prop/plate 0.000)
+  ok   75 deg: gaps plate-base 0.39, prop-base 0.40 (foot in notch 30.1)
+  ok   75 deg: the foot's centre at y 30.13 z 6.00
+  ok   70 deg: no overlap (plate/base 0.000, prop/base 0.000, prop/plate 0.000)
+  ok   70 deg: gaps plate-base 0.39, prop-base 0.40 (foot in notch 40.5)
+  ok   70 deg: the foot's centre at y 40.51 z 6.00
+  ok   65 deg: no overlap (plate/base 0.000, prop/base 0.000, prop/plate 0.000)
+  ok   65 deg: gaps plate-base 0.39, prop-base 0.40 (foot in notch 50.6)
+  ok   65 deg: the foot's centre at y 50.58 z 6.00
+  ok   60 deg: no overlap (plate/base 0.000, prop/base 0.000, prop/plate 0.000)
+  ok   60 deg: gaps plate-base 0.39, prop-base 0.40 (foot in notch 60.3)
+  ok   60 deg: the foot's centre at y 60.29 z 6.00
+  ok   55 deg: no overlap (plate/base 0.000, prop/base 0.000, prop/plate 0.000)
+  ok   55 deg: gaps plate-base 0.39, prop-base 0.40 (foot in notch 69.5)
+  ok   55 deg: the foot's centre at y 69.54 z 6.00
+== folded
+  ok   plate and prop lie on the base without overlap (0.000, 0.000 mm3); plate's back 0.30 over it at the least
+  folded height 33.9 mm, footprint 87 x 148 mm
+== the pivot twist-lock
+  ok   the plate turns from 0 to 90 deg in its lugs without touching the base
+  ok   from folded to 85 deg, lifted 2 mm up the slots it hits the lugs: captured
+  ok   at 145 deg it lifts 15 mm out of the slots untouched (max 0.000 mm3): how it goes on
+
+V4 CHECK OK
