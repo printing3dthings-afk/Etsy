@@ -3972,6 +3972,21 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      link (printing3dthings-afk.github.io/Etsy) redeploys on its own. A
      design that is not a tested print yet still goes in, and its note
      says so.
+  7. **A PDF guide for anything with moving parts or parts to assemble**
+     (Scott, 2026-11-10: "Any print that has moving parts or parts that need
+     assembled, create a pdf for it."). This includes test prints, not only
+     finished products.
+     - **What it covers:**
+       - what's in the box, and which part is which;
+       - putting it together, step by step;
+       - using it: angles, folding, opening;
+       - how to test it, and what to report back if something's wrong.
+     - **Every picture is a render of the real exported parts**, posed as the
+       check script poses them, and labelled "design-review renders, not photos".
+     - **Where it goes:** `<product>/guide/` with its render and build scripts, in
+       the style of `fold_stand/guide/` (render_guide.py, build_guide.py).
+     - **It's part of done:** the product isn't finished, and isn't sent to Scott,
+       without it.
 
   **Printability is a hard constraint, not a tradeoff.** Minimum wall 1.2mm, no
   unsupported overhang past 45°, flat base with a real footprint, no floating
