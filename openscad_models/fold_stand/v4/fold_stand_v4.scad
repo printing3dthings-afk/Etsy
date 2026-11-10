@@ -148,7 +148,9 @@ module base() {
         union() {
             rounded_slab(-BW / 2, BW / 2, -BASE_FRONT, BASE_BACK, BASE_T, COUPON ? 3 : 8);
             for (s = [-1, 1]) translate([s * (W / 2 + LUG_GAP + LUG_T / 2), 0, 0]) yz(LUG_T)
-                polygon([[-8, BASE_T - 0.01], [8, BASE_T - 0.01], [8, LUG_TOP - 3], [5, LUG_TOP], [-5, LUG_TOP], [-8, LUG_TOP - 3]]);
+                // from the bed, not the floor: with the floor ending 8.5 in front, its rounded
+                // corners fell inside the lugs and left their corners over air (858 support moves)
+                polygon([[-8, 0], [8, 0], [8, LUG_TOP - 3], [5, LUG_TOP], [-5, LUG_TOP], [-8, LUG_TOP - 3]]);
             if (!COUPON) {
                 scale([PROP_W + 20, 1, 1]) xbar([[NOTCH_Y[0] - 7, BASE_T - 0.01], [NOTCH_Y[0] - 5.5, NOTCH_Z],
                     [NOTCH_Y[5] + 5.5, NOTCH_Z], [NOTCH_Y[5] + 7, BASE_T - 0.01]]);
