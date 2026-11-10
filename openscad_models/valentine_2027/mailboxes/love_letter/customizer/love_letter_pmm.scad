@@ -458,9 +458,10 @@ module lid_print() translate([0, 0, HB + LT]) mirror([0, 0, 1]) lid_use();
 
 module body_print() union() { body(); body_red(); body_white(); body_dark(); }
 
-// ---- what MakerWorld exports: four colours, centred on a 256 mm plate ----
-// (a 3MF's origin is the plate's corner: on (0, 0) the body would hang off it)
-PLATE_CENTRE = [128, 128];
+// ---- what MakerWorld exports: four colours, centred on (0, 0) ----
+// (PMM's preview centres the plate on the origin; its export arranges the
+// model onto the plate. At (128, 128) it showed off the plate's corner.)
+PLATE_CENTRE = [0, 0];
 translate([PLATE_CENTRE[0], PLATE_CENTRE[1], 0]) {
     color(ENVELOPE_COLOUR) body();
     color(RED_COLOUR) body_red();
