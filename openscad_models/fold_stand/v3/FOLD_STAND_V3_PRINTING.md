@@ -112,8 +112,10 @@ Tell me what you find before I build anything else on these joints.
   shelf's chin. That edge is now a teardrop underneath, 35° off vertical, and
   the chin leans out at 35°.
 
-**Print fidelity and fragility:** the results are in `checks/`.
-- The base has 0 fidelity flags and 0 fragile members.
+**Print fidelity:** 0 flags on all three. Nothing modelled is lost, and nothing
+is filled in.
+
+**Fragility:** nothing slender on any part.
 
 ## Renders
 
