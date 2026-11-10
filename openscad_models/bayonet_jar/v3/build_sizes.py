@@ -97,7 +97,7 @@ def check_size(d, h):
 def main():
     PARTS.mkdir(exist_ok=True)
     if "--check" not in sys.argv:
-        with ThreadPoolExecutor(4) as ex:
+        with ThreadPoolExecutor(2) as ex:
             for p in ex.map(lambda a: export(*a), jobs()):
                 print("  exported", p.name, flush=True)
     fails = []
