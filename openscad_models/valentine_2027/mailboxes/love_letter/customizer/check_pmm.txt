@@ -1,11 +1,11 @@
-PMM check of love_letter_pmm.scad (34,314 bytes)
+PMM check of love_letter_pmm.scad (34,371 bytes)
 - fonts not on PMM: none
 - imports/includes PMM can't resolve: none
 - with NAME empty, area by colour: #F6A6C1 131,471 mm², #D7263D 3,075 mm², #F4F1EA 1,390 mm², #3B2A3A 457 mm²
-- 'OLIVIA': 2.7 s; x 38.0..218.0, y 95.2..163.0, z 0.00..122.0; the text adds 1,015 mm² in its colour; 0 warnings
-  sliced as exported (Bambu Studio, no arranging): 6h 44m 45s, 162.39 g, support sections 0
-- 'Ana': 2.3 s; x 38.0..218.0, y 95.2..163.0, z 0.00..122.0; the text adds 731 mm² in its colour; 0 warnings
-- 'MARY-JO': 2.3 s; x 38.0..218.0, y 95.2..163.0, z 0.00..122.0; the text adds 873 mm² in its colour; 0 warnings
-- 'MAXIMILIAN': 2.5 s; x 38.0..218.0, y 95.2..163.0, z 0.00..122.0; the text adds 815 mm² in its colour; 0 warnings
-- 'Jessee': 2.4 s; x 38.0..218.0, y 95.2..163.0, z 0.00..122.0; the text adds 1,164 mm² in its colour; 0 warnings
+- 'OLIVIA': 3.0 s; x -90.0..90.0, y -32.8..35.0, z 0.00..122.0; the text adds 1,015 mm² in its colour; 0 warnings
+  sliced as exported (Bambu Studio, arranged as PMM does): 6h 42m 26s, 162.39 g, support sections 0
+- 'Ana': 3.1 s; x -90.0..90.0, y -32.8..35.0, z 0.00..122.0; the text adds 731 mm² in its colour; 0 warnings
+- 'MARY-JO': 3.2 s; x -90.0..90.0, y -32.8..35.0, z 0.00..122.0; the text adds 873 mm² in its colour; 0 warnings
+- 'MAXIMILIAN': 3.1 s; x -90.0..90.0, y -32.8..35.0, z 0.00..122.0; the text adds 815 mm² in its colour; 0 warnings
+- 'Jessee': 3.3 s; x -90.0..90.0, y -32.8..35.0, z 0.00..122.0; the text adds 1,164 mm² in its colour; 0 warnings
 RESULT: PASS
