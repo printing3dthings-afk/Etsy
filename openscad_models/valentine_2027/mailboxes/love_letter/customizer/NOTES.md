@@ -26,8 +26,11 @@ was rebuilt to fit MakerWorld's Parametric Model Maker (PMM) from the start, by
 - **One file:** its four libraries are inlined. PMM reads only the uploaded
   .scad.
 - **On the plate:**
-  - It is centred on a 256 mm plate (x 38–218, y 95–163).
-  - A 3MF's origin is the plate's corner, so a model on (0, 0) hangs off it.
+  - It is centred on (0, 0), where PMM's preview centres the plate, and
+    PMM's export arranges it onto the plate.
+  - Corrected 2026-11-10: it had been moved to (128, 128) on a wrong reading
+    that a 3MF's origin is the plate's corner. Scott's preview of the Name
+    Ornament, placed the same way, showed it off the plate's corner.
 - **Four colour settings:** the envelope, the red, the white and the name.
   Each is a hex `// color` parameter.
 

@@ -8,10 +8,13 @@ empty plate, and cloud slicing in Handy failed. Two faults, both fixed here
 - Dancing Script isn't installed on PMM, so the name drew nothing. The name
   is Lobster now, a connected script PMM has; the year stays Montserrat
   ExtraBold, which PMM has.
-- The ornament was centred on (0, 0), the plate's corner in a 3MF: three
-  quarters of it hung off the plate. It's centred on the plate now.
+- The ornament is centred on (0, 0), where PMM's preview centres the plate.
+  (2026-11-06 to 11-10 it sat at (128, 128), from a wrong reading of the
+  slice failure, and showed off the plate's corner in Scott's preview.)
 
-    python3 build_pmm.py && python3 check_pmm.py
+    python3 build_pmm.py && python3 ../../../../tools/pmm_check.py name_ornament_pmm.scad \
+        --param NAME --values Olivia Jessee Mia Christopher MARY-JO Zoë --slice Jessee \
+        --report check_pmm.txt
 """
 import re
 import sys
@@ -57,8 +60,9 @@ NAME_COLOUR = "#F4F1EA"; // color
 '''
 
 FOOTER = '''
-// ---- what MakerWorld exports: two colours, centred on a 256 mm plate ----
-// (a 3MF's origin is the plate's corner: on (0, 0) the ornament hung off it)
+// ---- what MakerWorld exports: two colours, centred on (0, 0) ----
+// (PMM's preview centres the plate on the origin; its export arranges the
+// model onto the plate. At (128, 128) it showed off the plate's corner.)
 PLATE_CENTRE = [%d, %d];
 translate([PLATE_CENTRE[0], PLATE_CENTRE[1], 0]) {
     color(ORNAMENT_COLOUR) body();

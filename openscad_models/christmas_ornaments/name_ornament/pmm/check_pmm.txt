@@ -1,12 +1,12 @@
-PMM check of name_ornament_pmm.scad (10,289 bytes)
+PMM check of name_ornament_pmm.scad (10,348 bytes)
 - fonts not on PMM: none
 - imports/includes PMM can't resolve: none
 - with NAME empty, area by colour: #C62F3A 11,177 mm², #F4F1EA 137 mm²
-- 'Olivia': 0.5 s; x 88.0..168.0, y 88.0..176.0, z 0.00..13.0; the text adds 232 mm² in its colour; 0 warnings
-- 'Jessee': 0.6 s; x 88.0..168.0, y 88.0..176.0, z 0.00..13.0; the text adds 215 mm² in its colour; 0 warnings
-  sliced as exported (Bambu Studio, no arranging): 42m 18s, 17.60 g, support sections 0
-- 'Mia': 0.8 s; x 88.0..168.0, y 88.0..176.0, z 0.00..13.0; the text adds 166 mm² in its colour; 0 warnings
-- 'Christopher': 0.9 s; x 88.0..168.0, y 88.0..176.0, z 0.00..13.0; the text adds 296 mm² in its colour; 0 warnings
-- 'MARY-JO': 0.5 s; x 88.0..168.0, y 88.0..176.0, z 0.00..13.0; the text adds 324 mm² in its colour; 0 warnings
-- 'Zoë': 0.5 s; x 88.0..168.0, y 88.0..176.0, z 0.00..13.0; the text adds 119 mm² in its colour; 0 warnings
+- 'Olivia': 0.6 s; x -40.0..40.0, y -40.0..48.0, z 0.00..13.0; the text adds 232 mm² in its colour; 0 warnings
+- 'Jessee': 0.7 s; x -40.0..40.0, y -40.0..48.0, z 0.00..13.0; the text adds 215 mm² in its colour; 0 warnings
+  sliced as exported (Bambu Studio, arranged as PMM does): 42m 20s, 17.58 g, support sections 0
+- 'Mia': 0.5 s; x -40.0..40.0, y -40.0..48.0, z 0.00..13.0; the text adds 166 mm² in its colour; 0 warnings
+- 'Christopher': 0.7 s; x -40.0..40.0, y -40.0..48.0, z 0.00..13.0; the text adds 296 mm² in its colour; 0 warnings
+- 'MARY-JO': 0.7 s; x -40.0..40.0, y -40.0..48.0, z 0.00..13.0; the text adds 324 mm² in its colour; 0 warnings
+- 'Zoë': 0.6 s; x -40.0..40.0, y -40.0..48.0, z 0.00..13.0; the text adds 119 mm² in its colour; 0 warnings
 RESULT: PASS

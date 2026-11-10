@@ -7,15 +7,15 @@
 For each value of the parameter:
 - **render time** with a Manifold build of OpenSCAD (PMM's backend; its
   generator gives up after about 10 s, so anything over LIMIT_S fails);
-- **on the plate:** the whole model inside a 256 mm plate, from z = 0;
+- **on the plate:** the whole model inside a 256 mm plate centred on the
+  origin (PMM's preview), from z = 0;
 - **the text draws:** some colour has more surface with the value than with
   the parameter empty (an inlay is flush, so volume can't show it). An unknown
   font draws nothing, and this is what catches it;
 - the file's **fonts** are all in PMM's runtime list, and it **imports** nothing.
 
-`--slice` slices the exported colour 3MF exactly as it comes out, with Bambu
-Studio and `--arrange 0`, so nothing is moved: the stand-in for Handy's cloud
-slice. A model off the plate fails here, as it failed in Handy.
+`--slice` slices the exported colour 3MF with Bambu Studio, auto-arranged as
+PMM's 3MF export does: the stand-in for Handy's cloud slice.
 """
 import argparse
 import os
@@ -64,14 +64,14 @@ def colour_areas(model_3mf):
 
 
 def raw_slice(model_3mf, out):
-    """Bambu Studio on the 3MF as PMM writes it: no arranging, the default filament."""
+    """Bambu Studio on the 3MF, auto-arranged as PMM's export does, the default filament."""
     bs.ensure_installed()
     with tempfile.TemporaryDirectory(prefix="pmm_slice_") as td:
         work = Path(td)
         settings, filaments = bs.write_profiles(work, "standard", ["#C62F3A", "#F4F1EA", "#3B2A3A", "#D7263D"])
         outdir = work / "out"
         outdir.mkdir()
-        cmd = bs._cmd() + ["--slice", "0", "--arrange", "0", "--load-settings", settings,
+        cmd = bs._cmd() + ["--slice", "0", "--arrange", "1", "--load-settings", settings,
                            "--load-filaments", filaments, "--outputdir", str(outdir),
                            "--export-3mf", Path(out).name, str(model_3mf)]
         r = subprocess.run(cmd, capture_output=True, text=True, env=dict(os.environ, LC_ALL="C.UTF-8"), timeout=3600)
@@ -114,7 +114,8 @@ def main():
             # the text's colour: the one whose area grows most with the value
             dv = max(av.get(c, 0) - a0.get(c, 0) for c in av)
             lo, hi = m.bounds
-            on = lo[0] >= 0 and lo[1] >= 0 and hi[0] <= PLATE and hi[1] <= PLATE and abs(lo[2]) < 1e-3
+            h = PLATE / 2
+            on = lo[0] >= -h and lo[1] >= -h and hi[0] <= h and hi[1] <= h and abs(lo[2]) < 1e-3
             warn = [ln for ln in log.splitlines() if "WARNING" in ln]
             ok = secs <= LIMIT_S and on and dv > 20.0 and not warn
             say(f"- {v!r}: {secs:.1f} s; x {lo[0]:.1f}..{hi[0]:.1f}, y {lo[1]:.1f}..{hi[1]:.1f}, "
@@ -127,7 +128,7 @@ def main():
             if v in a.slice:
                 good, s = raw_slice(m3, work / "sliced.gcode.3mf")
                 if good:
-                    say(f"  sliced as exported (Bambu Studio, no arranging): {s.get('time')}, "
+                    say(f"  sliced as exported (Bambu Studio, arranged as PMM does): {s.get('time')}, "
                         f"{s.get('filament_g')} g, support sections {s.get('support_lines')}")
                     if s.get("support_lines"):
                         fails.append(f"{v} support")

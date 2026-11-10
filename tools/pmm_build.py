@@ -13,10 +13,13 @@ PMM file this shop writes now follows them:
    Dancing Script nor Fredoka is installed on PMM. `check_fonts()` fails a
    file whose fonts aren't in PMM's runtime list (fonts-0.8.0.json, saved
    beside this as pmm_fonts.json).
-3. **On the plate.** PMM keeps the model's coordinates, and a 3MF's origin is
-   the plate's front-left corner: a model centred on (0, 0) hangs three
-   quarters off the plate, out of the preview and unsliceable. `PLATE_CENTRE`
-   is the middle of a 256 mm plate (P1S, X1, A1).
+3. **On the plate: centred on (0, 0).** PMM's preview draws the plate centred
+   on the origin, and its 3MF export auto-arranges the model onto the plate
+   in Bambu Studio. Corrected 2026-11-10 from Scott's phone screenshot: this
+   rule used to say the origin was the plate's front-left corner and moved
+   every model to (128, 128), which put the ornament off the plate's corner
+   in the preview. That was read from a raw `--arrange 0` slice, which is not
+   what PMM does.
 4. **Fast.** PMM's generator gives up after about 10 s (forum reports; PMM's
    backend is an OpenSCAD build with Manifold, staff-confirmed 2025-03).
    `time_render()` renders with a Manifold build of OpenSCAD.
@@ -35,7 +38,7 @@ ROOT = Path(__file__).resolve().parent.parent
 LIBS = ROOT / "assets" / "openscad_libs"
 FONTS_JSON = Path(__file__).resolve().parent / "pmm_fonts.json"
 FAST = os.environ.get("OPENSCAD_FAST", "openscad")
-PLATE_CENTRE = (128, 128)
+PLATE_CENTRE = (0, 0)   # see rule 3
 
 _INC = re.compile(r"^\s*(include|use)\s*<([^>]+)>\s*;?\s*$")
 # libraries PMM bundles itself: leave these includes alone

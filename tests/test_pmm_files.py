@@ -1,8 +1,10 @@
 """The shop's MakerWorld customizers stay PMM-safe (2026-11-06).
 
 Both failed in production on 2026-11-05: the Name Ornament drew no name
-(Dancing Script isn't on PMM) and hung off the plate (centred on the 3MF's
-corner), and the Love Letter timed out. These checks need no OpenSCAD, so they
+(Dancing Script isn't on PMM) and its cloud slice failed, and the Love Letter
+timed out. On 2026-11-10 Scott's preview showed the ornament off the plate's
+corner: it had been moved to (128, 128) on a wrong reading that a 3MF's origin
+is the plate's corner. PMM's preview centres the plate on (0, 0). These checks need no OpenSCAD, so they
 run anywhere; tools/pmm_check.py does the render, time and slice checks.
 """
 import re
@@ -57,8 +59,9 @@ def test_parameters_come_first_and_colours_are_hex():
 def test_centred_on_the_plate():
     for f in FILES:
         s = f.read_text()
-        check(re.search(r"PLATE_CENTRE = \[128, 128\];\ntranslate\(\[PLATE_CENTRE\[0\], PLATE_CENTRE\[1\], 0\]\)", s)
-              is not None, f"{f.name}: the export must be centred on the plate, not the 3MF's corner")
+        check(re.search(r"PLATE_CENTRE = \[0, 0\];\ntranslate\(\[PLATE_CENTRE\[0\], PLATE_CENTRE\[1\], 0\]\)", s)
+              is not None, f"{f.name}: the export must be centred on (0, 0), where PMM's preview centres the plate "
+                           "(at (128, 128) it showed off the plate's corner)")
 
 
 def run() -> None:

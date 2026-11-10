@@ -15,7 +15,7 @@ love_letter_customizer.scad, still here) wrote the fixed envelope out as a
   They're Nunito ExtraBold, the nearest rounded face PMM has, laid out a
   letter at a time from its own measured advances, as the shipped design is.
 - **One file:** the four libraries it includes are inlined.
-- **On the plate:** centred on a 256 mm plate, not on the 3MF's corner.
+- **On the plate:** centred on (0, 0), where PMM's preview centres the plate.
 
 The lid and Cupid don't change with the name: they're separate prints, not
 in this file, as before.
@@ -76,8 +76,9 @@ NAME_COLOUR = "#3B2A3A"; // color
 '''
 
 FOOTER = '''
-// ---- what MakerWorld exports: four colours, centred on a 256 mm plate ----
-// (a 3MF's origin is the plate's corner: on (0, 0) the body would hang off it)
+// ---- what MakerWorld exports: four colours, centred on (0, 0) ----
+// (PMM's preview centres the plate on the origin; its export arranges the
+// model onto the plate. At (128, 128) it showed off the plate's corner.)
 PLATE_CENTRE = [%d, %d];
 translate([PLATE_CENTRE[0], PLATE_CENTRE[1], 0]) {
     color(ENVELOPE_COLOUR) body();
