@@ -1,0 +1,17 @@
+== mouth with 0.2 clearance
+  ok   screwed home, the cones seat: 0.05 short 0.00 mm3, 0.1 past 37.3 mm3
+  ok   pulled straight up 1.0: the teeth hit (145.8 mm3), so it is held by the thread; axial play 0.29
+  ok   open gap at the teeth: least 0.15 (flanks C cos 35 = 0.16) -- under the 0.3 rule: this is the tight variant
+  ok   unscrews: turned back 90..720 deg along the thread it touches nothing
+== mouth with 0.3 clearance
+  ok   screwed home, the cones seat: 0.05 short 0.00 mm3, 0.1 past 35.1 mm3
+  ok   pulled straight up 1.0: the teeth hit (109.0 mm3), so it is held by the thread; axial play 0.43
+  ok   open gap at the teeth: least 0.23 (flanks C cos 35 = 0.25)
+  ok   unscrews: turned back 90..720 deg along the thread it touches nothing
+== mouth with 0.4 clearance
+  ok   screwed home, the cones seat: 0.05 short 0.00 mm3, 0.1 past 32.9 mm3
+  ok   pulled straight up 1.0: the teeth hit (75.3 mm3), so it is held by the thread; axial play 0.57
+  ok   open gap at the teeth: least 0.31 (flanks C cos 35 = 0.33)
+  ok   unscrews: turned back 90..720 deg along the thread it touches nothing
+
+JAR THREAD COUPON OK

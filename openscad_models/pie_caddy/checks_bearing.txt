@@ -1,0 +1,7 @@
+  ok   drum and base don't touch (0.000 mm3)
+  ok   least gap drum to base 0.55 (the post in its bore, and the drum over the rim)
+  ok   balls don't cut the channel (0.000 mm3; they sit on its floor)
+  ok   balls clear the channel's walls by 0.29 each side
+  ok   the drum floats 2.0 over the base's top
+
+BEARING COUPON OK
