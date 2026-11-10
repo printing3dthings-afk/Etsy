@@ -3950,6 +3950,15 @@ When any API call returns 401 and the refresh endpoint also returns 401:
      After any feedback, run it `--against` the version he saw, so a change is
      measured, not eyeballed, and send the `--sheet` review images. The order
      of work it serves is the 3d-print-design skill's Technique 83.
+  4e. **Anything that moves, clicks, locks, snaps, holds an angle or takes a load**
+     (Scott, 2026-11-10, after the Fold Stand failed twice: "You need to learn more
+     modeling engineering"): follow `data/knowledge_base/mechanism_engineering_handbook.md`
+     section 7 BEFORE modelling it -- a requirement in numbers, a concept from the
+     handbook's ranked list, hand calculations in `tools/mechanism_budget.py` (strain,
+     engagement >= 3x the tolerance stack's RSS and deeper than its worst case, open gaps
+     >= 0.3, holding torque), a failure-mode table, and a <30-minute coupon of the
+     critical joint that Scott prints and tests before the full product is built around
+     it. The geometric gates above prove a model prints, not that a mechanism works.
   5. Render three views (`tools/blender_render.py --views`, plus `--front=+y` if the model's front faces +Y) and show him before
      anything is called done. For anything whose detail matters, also show
      the as-printed still (`tools/as_printed.py` on the fidelity slice): it is

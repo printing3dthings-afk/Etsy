@@ -5,6 +5,13 @@ description: "Real technique for designing genuinely printable 3D models in Open
 
 # 3D Print Design — OpenSCAD, For Real Printable Models
 
+> **MECHANISMS FIRST READ (2026-11-10):** anything that moves, clicks, locks, snaps,
+> holds an angle or carries a load follows
+> `data/knowledge_base/mechanism_engineering_handbook.md` and is sized with
+> `tools/mechanism_budget.py` before it is modelled. The Fold Stand failed twice with
+> every geometric check passing: its 0.45 mm ratchet sat inside a 0.75 mm worst-case
+> error stack. In FDM, functional engagements are millimetres, not tenths. Coupon first.
+
 **Before doing anything in Blender** — a hollow shell, a scattered surface
 pattern, an organic form, any Boolean — read
 `.claude/skills/3d-print-design/BLENDER_REFERENCE.md`. Every claim in it was
