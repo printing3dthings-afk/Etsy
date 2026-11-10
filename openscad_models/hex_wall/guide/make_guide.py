@@ -67,10 +67,10 @@ def renders():
     render([(save(tile), TILE), (save(m1), MOD), (save(m2), MOD)], "parts.png", -20, 50)
     tile_up = load("tile").apply_transform(UPRIGHT)
     above = load("module_0.2").apply_transform(UPRIGHT @ hung(40))
-    render([(save(tile_up), TILE), (save(above), MOD)], "ready.png", 210, 15)
+    render([(save(tile_up), TILE), (save(above), MOD)], "ready.png", -30, 12)
     on = load("module_0.2").apply_transform(UPRIGHT @ hung())
-    render([(save(tile_up), TILE), (save(on), MOD)], "hung.png", 210, 15)
-    render([(save(tile_up), TILE), (save(on), MOD)], "hung_side.png", 270, 5)
+    render([(save(tile_up), TILE), (save(on), MOD)], "hung.png", -30, 12)
+    render([(save(tile_up), TILE), (save(on), MOD)], "hung_side.png", 90, 8)
 
 
 def cards():
