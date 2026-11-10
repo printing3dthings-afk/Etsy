@@ -1,0 +1,45 @@
+== each print, as it lies on the bed
+  ok   base: 76.0 x 165.0 x 7.0 mm, on the bed, watertight
+  ok   plate: 76.0 x 123.0 x 23.9 mm, on the bed, watertight
+  ok   prop: 71.0 x 6.0 x 20.0 mm, on the bed, watertight
+== posed at each angle (nominal: every joint centred in its clearance)
+ 80 deg, foot in the notch at y 27.2
+  ok   no overlap: plate/base 0.000, prop/base 0.000, prop/plate 0.000 mm3
+  ok   plate to base: open gap 0.48 (tongue in its groove)
+  ok   prop to base: open gap 0.40 (foot in its notch)
+  ok   prop to plate away from the nose: open gap 0.40 (nearest at y 13.6 z 67.1)
+  ok   the nose bears in the pocket's top corner (gap -0.000)
+ 75 deg, foot in the notch at y 38.3
+  ok   no overlap: plate/base 0.000, prop/base 0.000, prop/plate 0.000 mm3
+  ok   plate to base: open gap 0.35 (tongue in its groove)
+  ok   prop to base: open gap 0.40 (foot in its notch)
+  ok   prop to plate away from the nose: open gap 0.40 (nearest at y 18.5 z 64.7)
+  ok   the nose bears in the pocket's top corner (gap 0.001)
+ 70 deg, foot in the notch at y 49.0
+  ok   no overlap: plate/base 0.000, prop/base 0.000, prop/plate 0.000 mm3
+  ok   plate to base: open gap 0.32 (tongue in its groove)
+  ok   prop to base: open gap 0.40 (foot in its notch)
+  ok   prop to plate away from the nose: open gap 0.40 (nearest at y 23.9 z 64.1)
+  ok   the nose bears in the pocket's top corner (gap 0.001)
+ 65 deg, foot in the notch at y 59.4
+  ok   no overlap: plate/base 0.000, prop/base 0.000, prop/plate 0.001 mm3
+  ok   plate to base: open gap 0.32 (tongue in its groove)
+  ok   prop to base: open gap 0.40 (foot in its notch)
+  ok   prop to plate away from the nose: open gap 0.40 (nearest at y 29.0 z 62.4)
+  ok   the nose bears in the pocket's top corner (gap -0.001)
+ 60 deg, foot in the notch at y 69.4
+  ok   no overlap: plate/base 0.000, prop/base 0.000, prop/plate 0.000 mm3
+  ok   plate to base: open gap 0.32 (tongue in its groove)
+  ok   prop to base: open gap 0.40 (foot in its notch)
+  ok   prop to plate away from the nose: open gap 0.40 (nearest at y 33.9 z 59.5)
+  ok   the nose bears in the pocket's top corner (gap 0.001)
+ 55 deg, foot in the notch at y 78.8
+  ok   no overlap: plate/base 0.000, prop/base 0.000, prop/plate 0.000 mm3
+  ok   plate to base: open gap 0.32 (tongue in its groove)
+  ok   prop to base: open gap 0.40 (foot in its notch)
+  ok   prop to plate away from the nose: open gap 0.64 (nearest at y 38.8 z 56.2)
+  ok   the nose bears in the pocket's top corner (gap 0.001)
+== the plate turning in its groove, with the prop out
+  ok   turns freely from 54 to 90 deg; with the prop out it falls back to 20 deg before it meets the base
+
+V3 CHECK OK
