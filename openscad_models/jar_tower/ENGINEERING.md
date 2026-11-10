@@ -64,6 +64,17 @@ tooth root area 959 mm2 x Z-shear ~14 MPa -> strips at ~13.2 kN
 
 - One spigot and three mouths, at the real 72 mm.
 - The mouths have 0.2, 0.3 and 0.4 clearance: 1, 2 and 3 notches on their rims.
+  - The notches are 0.5 deep. At 0.8 they left 1.1 mm between a notch and the
+    thread's groove.
+  - The flat rim outside the countersink is 1.3 wide. At 1.0 the rim was only
+    1.0 thick at its top.
+- About 33 min and 13.6 g, with no supports. All four rings pass the product
+  gate.
+- **Product gate:** the thread's teeth are declared to its wall check, as on the
+  gingerbread tin.
+  - That's the band from crest to root.
+  - A tooth runs from 3.7 mm at its root to a 0.29 mm flat at its crest by
+    design.
 
 **What to check:**
 1. The spigot screws into each mouth by hand and stops on the cone.

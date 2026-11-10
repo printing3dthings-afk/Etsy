@@ -31,6 +31,12 @@ module base() {
             cylinder(h = CH_D + 1, r = RING_R + CH_W / 2);
             translate([0, 0, -1]) cylinder(h = CH_D + 3, r = RING_R - CH_W / 2);
         }
+        // hollow inside the channel's inner wall, down to a 1.6 floor, round the post:
+        // it carries nothing and was a third of the print (open on top: no overhang)
+        translate([0, 0, 1.6]) difference() {
+            cylinder(h = RIM, r = RING_R - CH_W / 2 - 2);
+            cylinder(h = RIM, r = POST_R + 2);
+        }
         // a chamfer on the post's top so the drum finds it
         translate([0, 0, RIM + LIFT + TOP_T + BOSS_H - 2]) difference() {
             cylinder(h = 2, r = POST_R + 1);

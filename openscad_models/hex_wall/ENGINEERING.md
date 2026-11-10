@@ -23,25 +23,43 @@ modules that hang on them. It follows the handbook's section 7.
   way round:**
   - **The rail:** it stands up from the tile as the tile prints on its back,
     leaning out at 30°. That's a printable overhang.
-  - **The slot:** it prints into the module's back as the module prints on its
-    back. It narrows toward the bed, so it has no overhang, and its ceiling is
-    a 15 mm bridge.
+  - **The slot:** it prints as the module lies on its back. It narrows toward
+    the bed, so it has no overhang.
+  - **It's a window right through the module,** so you see the tile's rail
+    through it. It has no ceiling, so nothing prints over air.
+  - With a ceiling (a slot cut only into the back), the bridge always had a
+    free edge at the slot's open end. The slicer printed that as overhang
+    perimeters, however the end was shaped. I tried a straight end and an
+    entry funnel.
+  - **The mouth rises straight for 1.2 mm before the flank leans out.** Run
+    from the back face, the flank left a 60° wedge of lip that the gate read
+    at 0.2–0.4.
+  - The hook sits above the window, on a taller (58 mm) module.
   - **The other way round:** a tab on the module would need the module printed
     face-down. That's impossible with a hook on its front, and a slot in the
     tile would need its lips printed over air.
 - **Rank 1 in handbook section 5:** a geometric lock. Nothing flexes, so
   nothing wears.
+- **The hook's root sinks 2.4 into the module.** At 0.5 the tilted bar's end
+  stood 1.75 proud on its low side, and the slicer propped that 50° ledge with
+  157 support moves.
 
 ## 3. Hand calculations
 
 ```
-clearance 0.2: each lip overlaps 1.53, RSS 0.32, worst 0.60, ratio 4.8 -> ok
-clearance 0.3: each lip overlaps 1.43, RSS 0.32, worst 0.60, ratio 4.5 -> ok
+clearance 0.2: each lip overlaps 1.36, RSS 0.32, worst 0.60, ratio 4.3 -> ok
+clearance 0.3: each lip overlaps 1.26, RSS 0.32, worst 0.60, ratio 4.0 -> ok
 a 2 kg bag on a hook 40 out, x3: 2354 N mm; the top of a 30 tall tab pulls out with 78 N on 2 lips x 30 long; stress 0.77 MPa vs Z strength ~28
 ```
 
-- **Engagement:** 4.5 to 4.8 times the RSS, and deeper than the worst case.
+- **Engagement:** 4.0 to 4.3 times the RSS, and deeper than the worst case.
   The stack counts the droop of both overhanging flanks.
+- **The rail is 3.5 tall.** Its flanks stop 0.8 short of the top and stand
+  straight for it.
+  - Run to the top, the flanks met it at a 60° edge, which the product gate
+    read as 0.13 thick.
+  - Blunting it at a 3 mm height would have cut the margin to 3.0 times, right
+    at the rule's limit. At 3.5 mm it's back to 4.
 - **Strength:** with a 2 kg bag, × 3, the rail's lips see under 1 MPa. Their
   layers hold about 28.
 - **The weak point is the wall plug, not the print.** Each tile should go on a
@@ -56,12 +74,14 @@ a 2 kg bag on a hook 40 out, x3: 2354 N mm; the top of a 30 tall tab pulls out w
 | knocked off the wall | very low | it must lift 34 mm before it can come forward |
 | rail's lips snap | very low | under 1 MPa against 28 |
 | tile pulls off the wall | depends on the wall | screws into studs or anchors; tape for light loads only |
-| slot's bridged ceiling sags | low, harmless | 15 mm span; the rail never touches the ceiling (0.2–0.3 gap) |
+| the window shows the rail | certain | by design; on the finished modules it can be a feature, or covered |
 
 ## 5. The test print (`hang_coupon.scad`, `hex_wall_hang_test.3mf`)
 
 - A strip of tile with the real rail and one countersunk screw hole.
 - Two hook modules, with slots 0.2 and 0.3 clear: 1 and 2 notches.
+- About 33 min and 10 g, with no supports. All three parts pass the product
+  gate.
 
 **What to check:**
 1. Each module slides down onto the rail and sits flat.

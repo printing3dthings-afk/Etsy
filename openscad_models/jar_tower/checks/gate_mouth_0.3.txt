@@ -1,0 +1,13 @@
+jar_tower/parts/mouth_0.3.stl
+  ok    fits_plate: 72.0 x 72.0 x 12.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.37mm, median 2.72mm (floor 1.2mm); 0.00% below one bead; 733 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 12.0mm printed of 12.0mm
+  ok    geometry_survives_slicing: printed height 12.0mm vs modelled 12.0mm
+  ok    flat_base: 6.71 cm2 of contact = 12.9% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 2 layer(s) under the 4.0s cooling threshold; 939mm2 on the plate; aspect 0.14
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

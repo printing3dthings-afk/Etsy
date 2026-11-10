@@ -17,7 +17,7 @@ TH_H = 7;                   // the spigot's teeth; the top 1.7 run into the seat
 SP_IN = TH_R - TH_D - 2.0;  // the spigot's bore: 2.0 wall inside the thread root
 TA = tan(TH_A);
 H_MOUTH = 12;
-CS = 1.0;                   // the flat rim left outside the countersink
+CS = 1.3;                   // the flat rim left outside the countersink: at 1.0 the rim was 1.0 thick at its top
 $fn = 180;
 
 TH_F = TH_D / TA;
@@ -57,7 +57,8 @@ module mouth(C, notches) difference() {
     // the countersink runs on down at TH_A to the crests: the spigot's last turn blends
     // into its seat cone, so the mouth's top teeth are cut to the same cone, C out
     translate([0, 0, H_MOUTH - CS_DEPTH - TH_D / TA]) cylinder(h = CS_DEPTH + TH_D / TA + 0.01, r1 = TH_R - TH_D + C, r2 = CS_R);
-    for (k = [1 : notches]) rotate(k * 8) translate([R_OUT, 0, H_MOUTH - 3]) cube([1.6, 1.2, 7], center = true);
+    // 0.5 deep: at 0.8 they left 1.1 between a notch and the thread's groove (2026-11-10)
+    for (k = [1 : notches]) rotate(k * 8) translate([R_OUT, 0, H_MOUTH - 3]) cube([1.0, 1.2, 7], center = true);
 }
 
 // seated: the spigot's cone lands on the countersink; its phase follows the thread

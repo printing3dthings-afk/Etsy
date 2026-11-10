@@ -1,14 +1,14 @@
 == module with 0.2 clearance
-  ok   hung on the rail: overlap 0.000 mm3
+  ok   hung on the rail: overlap -0.000 mm3
   ok   gap at the dovetail's flanks 0.17 (C cos 30 = 0.17); the back on the tile's face and the slot's end on the rail's are the designed contacts
-  ok   pulled 1 mm straight off the wall it hits the rail's lips (51.3 mm3)
-  ok   lifted 6 mm, it still can't come off forward (51.3 mm3)
+  ok   pulled 1 mm straight off the wall it hits the rail's lips (29.9 mm3)
+  ok   lifted 6 mm, it still can't come off forward (29.9 mm3)
   ok   lifted clear of the rail it comes off (0.000 mm3)
 == module with 0.3 clearance
-  ok   hung on the rail: overlap -0.000 mm3
+  ok   hung on the rail: overlap 0.000 mm3
   ok   gap at the dovetail's flanks 0.26 (C cos 30 = 0.26); the back on the tile's face and the slot's end on the rail's are the designed contacts
-  ok   pulled 1 mm straight off the wall it hits the rail's lips (37.7 mm3)
-  ok   lifted 6 mm, it still can't come off forward (37.7 mm3)
+  ok   pulled 1 mm straight off the wall it hits the rail's lips (18.7 mm3)
+  ok   lifted 6 mm, it still can't come off forward (18.7 mm3)
   ok   lifted clear of the rail it comes off (0.000 mm3)
 
 HANG COUPON OK

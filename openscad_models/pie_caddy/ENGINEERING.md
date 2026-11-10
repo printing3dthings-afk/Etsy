@@ -64,6 +64,10 @@ centre post: 0.4 radial gap; post height into the bore 8 mm, RSS 0.18
 - The real channel and post, at 80 mm across.
 - It needs 27 airsoft BBs, 6 mm. Any brand will do: a bag of thousands is a
   few dollars.
+- About 50 min and 19 g, with no supports. Both parts pass the product gate.
+  - That's over the 30-minute target: the 80 mm base is most of it.
+  - Hollowing its middle didn't shorten it, so it stays a real-size channel
+    rather than a smaller one that wouldn't test the same thing.
 
 **What to check:**
 1. Drop the BBs into the channel, then set the top on.
