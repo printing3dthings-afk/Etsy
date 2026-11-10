@@ -48,7 +48,9 @@ def crop(path, pad=30):
     mask = np.abs(a - bg).sum(axis=2) > 40
     ys, xs = np.where(mask)
     box = (max(xs.min() - pad, 0), max(ys.min() - pad, 0), min(xs.max() + pad, im.width), min(ys.max() + pad, im.height))
-    return im.crop(box)
+    im = im.crop(box)
+    # the studio renders come out grey; lift them halfway to full contrast (as the v1 guide)
+    return Image.blend(im, ImageOps.autocontrast(im, cutoff=1), 0.5)
 
 
 def fit(im, w, h):
@@ -60,8 +62,10 @@ class Card:
         self.im = Image.new("RGB", (W, 6000), "white")
         self.d = ImageDraw.Draw(self.im)
         self.y = 60
-        self.d.text((60, self.y), title, font=H1, fill=ACCENT)
-        self.y += 84
+        for line in wrap(self.d, title, H1, W - 120):
+            self.d.text((60, self.y), line, font=H1, fill=ACCENT)
+            self.y += 78
+        self.y += 6
         for line in wrap(self.d, sub, BODY, W - 120):
             self.d.text((60, self.y), line, font=BODY, fill=MUTED)
             self.y += 42
@@ -108,9 +112,11 @@ class Card:
         self.y = top + hgt + 36
 
     def save(self, path):
-        self.d.text((60, self.y), "Design-review renders of the real test-print parts, not photos. "
-                    "Colours are only to tell the parts apart.", font=SMALL, fill=MUTED)
-        self.im.crop((0, 0, W, self.y + 70)).save(path, quality=92)
+        for line in wrap(self.d, "Design-review renders of the real test-print parts, not photos. "
+                         "Colours are only to tell the parts apart.", SMALL, W - 120):
+            self.d.text((60, self.y), line, font=SMALL, fill=MUTED)
+            self.y += 34
+        self.im.crop((0, 0, W, self.y + 40)).save(path, quality=92)
 
 
 def main():
@@ -120,6 +126,8 @@ def main():
         "!Base (white here): a round groove at one end, six round notches along the middle.",
         "!Plate (purple), shown upside down: the phone shelf is at one end, the pocket on its back.",
         "!Prop (pink): one end thick (the foot), one end thin (the top).",
+        "The big open windows in the base and the plate only save plastic on this test piece. "
+        "The pocket is the small one near the plate's end.",
     ], crop(IMG / "parts.png"))
     c.step(2, "Drop the plate into the groove", [
         "Groove nearest you, notches running away from you.",
@@ -137,13 +145,15 @@ def main():
     c.save(IMG / "Fold_Stand_v3_Test_1_Assemble.jpg")
 
     t = Card("Fold Stand v3: test it", "Six notches, six angles. Try each one with your phone on it.")
-    strip = Image.new("RGB", (W - 120, 900), "white")
+    cw = (W - 120) // 3
+    pics = [fit(crop(IMG / f"angle_{th}.png", 10), cw - 20, 400) for th in (80, 75, 70, 65, 60, 55)]
+    ph = max(p.height for p in pics)
+    ch = ph + 70
+    strip = Image.new("RGB", (W - 120, 2 * ch), "white")
     sd = ImageDraw.Draw(strip)
-    cw, ch = (W - 120) // 3, 450
-    for i, th in enumerate([80, 75, 70, 65, 60, 55]):
-        p = fit(crop(IMG / f"angle_{th}.png", 10), cw - 20, ch - 60)
+    for i, (th, p) in enumerate(zip((80, 75, 70, 65, 60, 55), pics)):
         x, y = (i % 3) * cw, (i // 3) * ch
-        strip.paste(p, (x + (cw - p.width) // 2, y + (ch - 60 - p.height)))
+        strip.paste(p, (x + (cw - p.width) // 2, y + (ph - p.height)))
         lab = f"notch {i + 1}: {th} deg"
         sd.text((x + (cw - sd.textlength(lab, font=BODYB)) / 2, y + ch - 52), lab, font=BODYB, fill=INK)
     t.step(1, "Each notch, with your phone on", [
@@ -151,7 +161,7 @@ def main():
         "Lift the phone, move the prop to the next notch, put the phone back. It should be easy.",
         "It is only 30 mm wide, so it can rock side to side; the real stand is 76 wide. "
         "What matters is that the angle holds.",
-    ], strip, pic_h=900)
+    ], strip, pic_h=2 * ch)
     t.box("Good", [
         "The plate drops into the groove and rocks freely.",
         "The thin end sits snug up in the top of the pocket.",

@@ -79,7 +79,7 @@ def main():
     render(posed(65, phone=True), "step3_phone.png", 30, 15)
     # 5. the six notches, side on
     for th in ANGLES:
-        render(posed(th), f"angle_{th}.png", 90, 3, res=700)
+        render(posed(th), f"angle_{th:.0f}.png", 90, 3, res=700)
     for f in TMP.glob("_g_*.stl"):
         f.unlink()
 
