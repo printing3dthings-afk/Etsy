@@ -76,6 +76,11 @@ Every product, every image, every price, every line of code must serve this miss
     `business/image_choices/`.
     When Scott says "check image choices", add Claude's entry to every folder
     that doesn't have one. Nothing is posted until he picks.
+  - **Muse and Claude talk to each other in `business/muse_claude/`** (Scott,
+    2026-11-11: "communicate back and forth to create better standards and
+    quality"). Threads in `threads/`, shared rules in `STANDARDS.md`. Before any
+    social, listing or image work, read its open threads and answer what's
+    addressed to Claude.
 
 ---
 
