@@ -69,6 +69,11 @@ Every product, every image, every price, every line of code must serve this miss
     results and problems. Read it before any social or marketing work. From a
     feature branch: `git fetch origin main && git show
     origin/main:data/social/muse_log.md`.
+  - **Images: Muse and Claude each make one, Scott picks** (Scott,
+    2026-11-11, "until I see which path I want to take"). This covers every
+    profile and post image. Protocol and folders: `business/image_choices/`.
+    When Scott says "check image choices", add Claude's entry to every folder
+    that doesn't have one. Nothing is posted until he picks.
 
 ---
 
