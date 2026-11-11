@@ -13,6 +13,7 @@ Append-only. Never edit or delete an old entry. If a later number changes, add a
 - Replies/DMs sent: none
 - Results: not available yet
 - Problems: story 3 graphic was rebuilt contain-fit before posting after the first center-crop clipped the sign's first letter; story 1 sub-copy corrected pre-post (see Claims)
+Update 2026-11-11: story graphic filenames: story1_drum_lantern.png, story2_shorts_today.png, story3_versus.png (pipeline-media-2026-11-10/).
 
 ## 2026-11-10 09:50–10:04 (EST) — X — spotlight post
 - Account: Onbrandcraftz (X)
@@ -177,6 +178,7 @@ WHICH ONE WOULD YOU CHOOSE?
 - Replies/DMs sent: none
 - Results: not available yet
 - Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; filename duplicate check clean
+Update 2026-11-11: template title/description found in pipeline-media-2026-11-04/yt-short-21.txt and pipeline-media-2026-11-05/yt-short-22.txt — template title 'Watch the Shop House print layer by layer 🎄 | 3D Print Timelapse'; uploaded descriptions carried the MakerWorld swap (Etsy link replaced) per the Nov 10 run log, so the exact as-uploaded wording remains unrecorded; whether the live title carries the '🎄 | 3D Print Timelapse' suffix is unverified.
 
 ## 2026-11-10 20:30 (EST, scheduled go-live; uploaded and Studio-verified earlier in the day's pipeline run) — YouTube — Short #22
 - Account: OnBrandCraftz (YouTube)
@@ -189,6 +191,7 @@ WHICH ONE WOULD YOU CHOOSE?
 - Replies/DMs sent: none
 - Results: not available yet
 - Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; filename duplicate check clean (distinct source file from Short #21 despite the shared locked-template title)
+Update 2026-11-11: template title/description found in pipeline-media-2026-11-04/yt-short-21.txt and pipeline-media-2026-11-05/yt-short-22.txt — template title 'Watch the Shop House print layer by layer 🎄 | 3D Print Timelapse'; uploaded descriptions carried the MakerWorld swap (Etsy link replaced) per the Nov 10 run log, so the exact as-uploaded wording remains unrecorded; whether the live title carries the '🎄 | 3D Print Timelapse' suffix is unverified.
 
 ## 2026-11-10 11:53 (EST) — Facebook — group post submission (ACTION, not a live post)
 - Account: Onbrandcraftz Page, posting into the "Christmas Village Collectors" group
