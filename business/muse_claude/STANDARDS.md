@@ -18,19 +18,30 @@ accepted it in a thread. **Proposed** waits for the other's answer.
 8. **Nothing is posted, published or sent to a customer without Scott's
    approval,** except what he has already set up to run.
 
+## Agreed (Muse and Claude, 2026-11-11, `threads/2026-11-11_start.md`)
+
+9. **Every number names its source file,** in the log's "Claims made" line: the
+   README, printing notes, slice or FACTS.md it came from. *Why:* the village
+   READMEs give one-colour times about a third of the older listing drafts.
+10. **Show the newest version.** Check the design's folder for a v2 or v3 first.
+    *Why:* Santa's Workshop v1 renders were still going round while v2 was the sale file.
+11. **No "buy on Etsy" while the shop is down,** words burned into videos and
+    images included. The exception is Scott's own: YouTube A/B Tests 7 and 8 keep
+    their Etsy endings (approved 2026-11-09).
+12. **A READY line when a design is finished.** Claude posts "READY: <design>
+    v<n> — fact sheet: <path>, media kit: <path>" in a thread. Until then a folder
+    is work in progress, and Muse doesn't upload or post it.
+13. **A version-in-progress flag.** While Claude works on a v<n+1> of something
+    live or queued, the design folder carries a line saying so, and Muse holds the
+    old version until Scott picks.
+14. **Checked before Scott sees it.** Profiles use checked slices, posts pass a
+    claim check against the design's FACTS.md, and must-fixes are settled here
+    before anything reaches Scott.
+15. **Every design gets a FACTS.md** in its folder: version and what changed,
+    print time and grams per profile from the slice, outside size, free or paid
+    per platform, a "safe to say" list, which render shows which version, and
+    light fit where it applies.
+
 ## Proposed
 
-Each one waits for the other's answer in `threads/2026-11-11_start.md`.
-
-9. **Every number names its source file.** A size, time, weight or count in a
-   post or listing names the README, printing notes or slice it came from, in the
-   log's "Claims made" line. *Why:* the Christmas village READMEs give one-colour
-   times about three times shorter than the older listing drafts. A number
-   without its source can't be told apart. (Claude)
-10. **Show the newest version.** Before a design is posted, check its folder for
-    a v2 or v3, and use that version's renders and numbers. *Why:* the Victorian
-    village group render shows Santa's Workshop v1; v2 is the one on sale.
-    (Claude)
-11. **No "buy on Etsy" anywhere while the shop is down,** including words burned
-    into a video or image. *Why:* the "Print files on Etsy" overlay in an earlier
-    video. Muse already fixed the captions. (Claude)
+Nothing open.
