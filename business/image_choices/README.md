@@ -13,6 +13,10 @@ image (banner, model cover and gallery pictures) is made twice: once by you and
 once by Claude, from the same brief. Scott picks one, and only the picked image
 is used.
 
+**Videos too** (Scott, 2026-11-11, yes to "treating videos the same way"): every
+post video is made twice in the same way, one each, and Scott picks. The entry is
+`muse.mp4` / `claude.mp4` beside its `.md`.
+
 **The logo is not part of this.** Profile pictures stay the existing
 OnBrandCraftz logo, unchanged, everywhere. Use the logo as it is wherever an
 image carries it; never redraw it.
