@@ -45,7 +45,7 @@ def main():
         "Three bumps inside the lid fall into the three notches at the jar's rim.",
     ], crop(IMG / "bayonet_jar_v3_lined_up.png"), pic_h=520)
     a.step(2, "Twist it clockwise", [
-        "!About a quarter of a hand turn (25 degrees), the way you'd close any jar.",
+        "!A short twist, about 25 degrees, the way you'd close any jar.",
         "It pulls down onto the rim and stops on its own.",
     ], clockwise(crop(IMG / "bayonet_jar_v3_top.png", 60)), pic_h=480)
     a.step(3, "Closed", ["To open: twist it back the other way and lift."],

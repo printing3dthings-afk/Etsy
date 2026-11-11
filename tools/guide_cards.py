@@ -55,8 +55,10 @@ def crop(path, pad=30):
     ys, xs = np.where(mask)
     box = (max(xs.min() - pad, 0), max(ys.min() - pad, 0), min(xs.max() + pad, im.width), min(ys.max() + pad, im.height))
     im = im.crop(box)
-    # the studio renders come out grey; lift them halfway to full contrast (as the v1 guide)
-    return Image.blend(im, ImageOps.autocontrast(im, cutoff=1), 0.5)
+    # the studio renders come out grey; lift them halfway to full contrast (as the v1 guide).
+    # preserve_tone stretches brightness only: per channel, a gold render came out
+    # orange on a teal floor (Bayonet Jar v3 guide, 2026-11-11)
+    return Image.blend(im, ImageOps.autocontrast(im, cutoff=1, preserve_tone=True), 0.5)
 
 
 def fit(im, w, h):
