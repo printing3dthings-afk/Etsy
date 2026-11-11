@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#141b2e">
+<meta name="description" content="OnBrandCraftz — shop, free 3D print files, and social links in one place.">
+<link rel="icon" href="data:,">
+<title>OnBrandCraftz Links</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3efe6;
+    --bg-deep:#e9e2d3;
+    --surface:#ffffff;
+    --surface-2:#fffaf0;
+    --ink:#171e30;
+    --muted:#5d687c;
+    --line:#ddd3ba;
+    --gold:#b8911f;
+    --gold-bright:#d4af37;
+    --gold-ink:#171e30;
+    --navy:#1a2233;
+    --navy-2:#232d44;
+    --shadow:0 1px 2px rgba(23,30,48,.06),0 10px 28px rgba(23,30,48,.08);
+    --radius:18px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121826;
+      --bg-deep:#0e1320;
+      --surface:#1c2538;
+      --surface-2:#232d44;
+      --ink:#f6f1de;
+      --muted:#a3adc0;
+      --line:#2e3a56;
+      --gold:#d4af37;
+      --gold-bright:#e6c65a;
+      --shadow:0 1px 2px rgba(0,0,0,.25),0 12px 30px rgba(0,0,0,.28);
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(900px 420px at 50% -80px, color-mix(in srgb, var(--gold-bright) 16%, transparent), transparent 65%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
+    color:var(--ink);
+    min-height:100dvh;
+  }
+  a{-webkit-tap-highlight-color:transparent}
+  .wrap{max-width:520px;margin:0 auto;padding:28px 18px 36px}
+
+  /* Header */
+  .brand{text-align:center;padding:10px 6px 6px}
+  .mark{
+    width:76px;height:76px;margin:0 auto 14px;border-radius:50%;
+    display:grid;place-items:center;
+    background:var(--navy);
+    border:2px solid var(--gold-bright);
+    box-shadow:0 0 0 6px color-mix(in srgb, var(--gold-bright) 14%, transparent), var(--shadow);
+    color:var(--gold-bright);
+    font-family:"Chakra Petch",system-ui,sans-serif;font-weight:700;letter-spacing:.06em;font-size:19px;line-height:1;
+  }
+  .mark small{display:block;font-size:9px;letter-spacing:.22em;margin-top:4px;color:#cbd3e2;font-weight:600}
+  h1{
+    font-family:"Chakra Petch",system-ui,sans-serif;
+    font-size:30px;line-height:1.05;letter-spacing:.01em;margin:0;font-weight:700;
+  }
+  h1 .gold{color:var(--gold)}
+  .tagline{margin:10px auto 0;max-width:36ch;font-size:15.5px;line-height:1.5;color:var(--muted)}
+  .tagline strong{color:var(--ink);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+  .chip{
+    font-size:12.5px;font-weight:600;letter-spacing:.02em;
+    padding:7px 11px;border-radius:999px;border:1px solid var(--line);
+    background:color-mix(in srgb, var(--surface) 82%, transparent);color:var(--muted);
+  }
+
+  /* Android / texting note — recipient-facing, factual */
+  .note{
+    margin:22px 0 4px;display:flex;gap:11px;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px;box-shadow:var(--shadow);
+  }
+  .note svg{flex:0 0 auto;margin-top:1px;color:var(--gold)}
+  .note p{margin:0;font-size:13.5px;line-height:1.5;color:var(--muted)}
+  .note p strong{color:var(--ink)}
+
+  /* Sections */
+  section{margin-top:26px}
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 2px 10px}
+  h2{
+    font-family:"Chakra Petch",system-ui,sans-serif;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold);margin:0;font-weight:700;
+  }
+  .section-head span{font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .list{display:grid;gap:10px}
+
+  .link{
+    display:flex;align-items:center;gap:14px;
+    min-height:64px;padding:13px 14px 13px 13px;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    text-decoration:none;color:var(--ink);box-shadow:var(--shadow);
+  }
+  .link:active{transform:scale(.99)}
+  .link:focus-visible{outline:3px solid var(--gold-bright);outline-offset:2px}
+  @media (hover:hover){ .link:hover{border-color:color-mix(in srgb, var(--gold-bright) 55%, var(--line))} }
+
+  .icon{
+    width:44px;height:44px;flex:0 0 44px;border-radius:12px;display:grid;place-items:center;
+    background:var(--navy);color:#fff;
+  }
+  .icon svg{width:22px;height:22px;display:block}
+  .icon.gold-bg{background:var(--gold-bright);color:var(--navy)}
+  .icon.rust{background:#c1502e}
+  .icon.teal{background:#14635d}
+  .icon.plum{background:#3b2f4a}
+  .text{min-width:0;flex:1}
+  .label{display:block;font-size:16.5px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
+  .desc{display:block;font-size:13.5px;line-height:1.4;color:var(--muted);margin-top:2px}
+  .url{display:block;font-size:12px;color:var(--muted);opacity:.85;margin-top:2px;word-break:break-all}
+  .disc{display:block;font-size:11.5px;line-height:1.4;color:var(--muted);opacity:.8;margin-top:4px;font-style:italic}
+  .code{font-weight:700;color:var(--ink);letter-spacing:.04em;background:color-mix(in srgb, var(--gold-bright) 22%, transparent);padding:1px 6px;border-radius:6px}
+  .arrow{flex:0 0 auto;color:var(--muted);display:grid;place-items:center;width:28px;height:28px}
+  .arrow svg{width:18px;height:18px}
+
+  /* Featured Etsy */
+  .link.featured{
+    background:linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+    border-color:color-mix(in srgb, var(--gold-bright) 55%, transparent);
+    color:#f8f3df;min-height:76px;padding:16px;
+  }
+  .link.featured .desc,.link.featured .url{color:#b9c1d3}
+  .link.featured .label{font-size:18px}
+  .link.featured .arrow{color:var(--gold-bright)}
+  .badge{
+    display:inline-block;vertical-align:2px;margin-left:8px;
+    font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+    background:var(--gold-bright);color:var(--navy);padding:3px 7px;border-radius:999px;white-space:nowrap;
+  }
+
+  footer{margin-top:30px;text-align:center}
+  footer p{margin:0;font-size:12.5px;line-height:1.6;color:var(--muted)}
+  footer .foot-brand{font-family:"Chakra Petch",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;font-size:11px;color:var(--muted)}
+
+  @media (max-width:360px){
+    .wrap{padding-left:14px;padding-right:14px}
+    h1{font-size:27px}
+    .label{font-size:16px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .link:active{transform:none}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="brand">
+    <div class="mark" aria-hidden="true"><div>OBC<small>CRAFTZ</small></div></div>
+    <h1>OnBrand<span class="gold">Craftz</span></h1>
+    <p class="tagline"><strong>3D-printed miniature villages &amp; print files.</strong><br>Christmas village, Haunted Town, fairy houses — and the files to print your own.</p>
+    <div class="chips" aria-label="Highlights">
+      <span class="chip">Tea-light villages — windows glow</span>
+      <span class="chip">Free files on MakerWorld</span>
+    </div>
+  </header>
+
+  <div class="note" role="note">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5S12 2 12 2 9.5 7.5 8 9.5 5 13 5 15a7 7 0 0 0 7 7Z" stroke="currentColor" stroke-width="1.7"/><path d="M12 22a3 3 0 0 0 3-3c0-1.2-.6-2.3-1.2-3.2C13 14.6 12 13 12 13s-1 1.6-1.8 2.8C9.6 16.7 9 17.8 9 19a3 3 0 0 0 3 3Z" fill="currentColor" opacity=".9"/></svg>
+    <p><strong>Opening this from a text?</strong> Just tap any link below — each one opens in your browser or its app. No file to download, works on Android &amp; iPhone.</p>
+  </div>
+
+  <!-- FREE GUIDE -->
+  <section aria-labelledby="guide-h">
+    <div class="section-head"><h2 id="guide-h">Free Guide</h2><span>Join the email list</span></div>
+    <div class="list">
+      <a class="link featured" href="https://onbrandcraftz.kit.com/aa78d8eea3" target="_blank" rel="noopener">
+        <span class="icon gold-bg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5.5" width="18" height="13" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 7 12 13l8.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="text">
+          <span class="label">Free Christmas Village Setup Guide — join the email list <span class="badge">Free</span></span>
+          <span class="desc">Get the free 7-page guide + first word on new free buildings. One email a week.</span>
+          <span class="url">onbrandcraftz.kit.com</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- SUPPORT / TIP JAR -->
+  <section aria-labelledby="support-h">
+    <div class="section-head"><h2 id="support-h">Support</h2><span>Tips &amp; direct payments</span></div>
+    <div class="list">
+      <a class="link featured" href="https://www.paypal.me/OnBrandCraftz" target="_blank" rel="noopener">
+        <span class="icon gold-bg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 3.5c0 5.4-7.5 10-7.5 10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        <span class="text">
+          <span class="label">Support / Tip Jar <span class="badge">PayPal</span></span>
+          <span class="desc">Tips keep the tea lights on — if a free file made your shelf happy, chip in here. Also the easy way to pay us directly.</span>
+          <span class="url">paypal.me/OnBrandCraftz</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- SHOP -->
+  <section aria-labelledby="shop-h">
+    <div class="section-head"><h2 id="shop-h">Shop</h2><span>Buy files &amp; prints</span></div>
+    <div class="list">
+      <a class="link featured" href="https://www.etsy.com/shop/OnBrandCraftz" target="_blank" rel="noopener">
+        <span class="icon gold-bg" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v3.2h-2.1V7H8.4v4h5.2v2.6H8.4V17h8.6v-1.4h2V19H5V5Z" fill="currentColor"/></svg></span>
+        <span class="text">
+          <span class="label">Etsy Shop <span class="badge">Start here</span></span>
+          <span class="desc">Christmas village files &amp; the full collection</span>
+          <span class="url">etsy.com/shop/OnBrandCraftz</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://store.sunlu.com?sca_ref=12677122.LlK7OJoLBg&utm_source=sunluaffiliate&utm_medium=sunluaffiliate&utm_campaign=sunluaffiliate" target="_blank" rel="noopener sponsored">
+        <span class="icon teal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8v3M12 17.2v3M3.8 12h3M17.2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text">
+          <span class="label">SUNLU Filament &amp; Dryers — Shop via our link</span>
+          <span class="desc">Filament &amp; filament dryers — use code <span class="code">LLK7OJOLBG</span></span>
+          <span class="url">store.sunlu.com</span>
+          <span class="disc">Affiliate link — we earn a small commission at no extra cost to you.</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://overture3d.com/?aff=303&utm_source=affiliate&utm_medium=referral" target="_blank" rel="noopener sponsored">
+        <span class="icon plum" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8v3M12 17.2v3M3.8 12h3M17.2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text">
+          <span class="label">Overture — Matte PLA we print with</span>
+          <span class="desc">From THE MATTE STANDARD, our Overture series — the matte PLA our shop standard is built on.</span>
+          <span class="url">overture3d.com</span>
+          <span class="disc">Affiliate link — we earn a small commission at no extra cost to you.</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.awin1.com/cread.php?awinmid=95665&awinaffid=3141013&ued=https%3A%2F%2Fstore.biqu.equipment%2F" target="_blank" rel="noopener sponsored">
+        <span class="icon rust" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6M6 6l1.8 1.8M16.2 16.2 18 18M18 6l-1.8 1.8M7.8 16.2 6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text">
+          <span class="label">BIQU / BigTreeTech — Printer Parts &amp; Upgrades</span>
+          <span class="desc">Hotends, build plates &amp; printer upgrades from BIQU and BigTreeTech.</span>
+          <span class="url">store.biqu.equipment</span>
+          <span class="disc">Affiliate link — we earn a small commission at no extra cost to you.</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ON AMAZON -->
+  <section aria-labelledby="amazon-h">
+    <div class="section-head"><h2 id="amazon-h">On Amazon</h2><span>Filament we actually buy</span></div>
+    <div class="list">
+      <a class="link" href="https://www.amazon.com/s?k=SUNLU+PLA+filament&tag=onbrandcraftz-20" target="_blank" rel="noopener sponsored">
+        <span class="icon teal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8v3M12 17.2v3M3.8 12h3M17.2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text">
+          <span class="label">SUNLU filament on Amazon</span>
+          <span class="desc">The SUNLU PLA we run in the shop, bought on Amazon.</span>
+          <span class="url">amazon.com</span>
+          <span class="disc">Affiliate link — we earn a small commission at no extra cost to you.</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.amazon.com/s?k=Overture+PLA+filament&tag=onbrandcraftz-20" target="_blank" rel="noopener sponsored">
+        <span class="icon plum" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8v3M12 17.2v3M3.8 12h3M17.2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text">
+          <span class="label">Overture filament on Amazon</span>
+          <span class="desc">Overture matte PLA — our shop standard, from Amazon.</span>
+          <span class="url">amazon.com</span>
+          <span class="disc">Affiliate link — we earn a small commission at no extra cost to you.</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.amazon.com/s?k=Elegoo+PLA+filament&tag=onbrandcraftz-20" target="_blank" rel="noopener sponsored">
+        <span class="icon rust" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.8v3M12 17.2v3M3.8 12h3M17.2 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text">
+          <span class="label">Elegoo filament on Amazon</span>
+          <span class="desc">Elegoo PLA we keep on hand, from Amazon.</span>
+          <span class="url">amazon.com</span>
+          <span class="disc">Affiliate link — we earn a small commission at no extra cost to you.</span>
+        </span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </div>
+    <p style="margin:10px 2px 0;font-size:12px;line-height:1.5;color:var(--muted)">As an Amazon Associate I earn from qualifying purchases.</p>
+  </section>
+
+  <!-- FREE FILES -->
+  <section aria-labelledby="files-h">
+    <div class="section-head"><h2 id="files-h">Free Files &amp; Membership</h2><span>Print your own</span></div>
+    <div class="list">
+      <a class="link" href="https://makerworld.com/en/@P3DT" target="_blank" rel="noopener">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M4 7.5 12 12l8-4.5M12 12v9" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        <span class="text"><span class="label">MakerWorld</span><span class="desc">Free print files — @P3DT, Printing3DThings</span><span class="url">makerworld.com/en/@P3DT</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.printables.com/@OnBrandCraft_5593078" target="_blank" rel="noopener">
+        <span class="icon teal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 8V3h10v5M7 17H4V8h16v9h-3M7 14h10v7H7v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+        <span class="text"><span class="label">Printables</span><span class="desc">Free print files — same designs, another home</span><span class="url">printables.com/@OnBrandCraft_5593078</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.patreon.com/OnBrandCraftz" target="_blank" rel="noopener">
+        <span class="icon rust" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h2.8v16H4V4Zm11.2 0c3 0 5 2.1 5 4.9 0 2.9-2 5-5 5a5.2 5.2 0 0 1-3.4-1.3v-3.4a3.3 3.3 0 1 0 3.4-3.3V4Z"/></svg></span>
+        <span class="text"><span class="label">Patreon</span><span class="desc">Files + licence to sell prints</span><span class="url">patreon.com/OnBrandCraftz</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- SOCIAL -->
+  <section aria-labelledby="social-h">
+    <div class="section-head"><h2 id="social-h">Follow Along</h2><span>Timelapses &amp; new drops</span></div>
+    <div class="list">
+      <a class="link" href="https://www.youtube.com/@onbrandcraftz" target="_blank" rel="noopener">
+        <span class="icon rust" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 8.2a2.6 2.6 0 0 0-1.8-1.9C17.6 6 12 6 12 6s-5.6 0-7.2.3A2.6 2.6 0 0 0 3 8.2 27 27 0 0 0 2.7 12 27 27 0 0 0 3 15.8a2.6 2.6 0 0 0 1.8 1.9c1.6.3 7.2.3 7.2.3s5.6 0 7.2-.3a2.6 2.6 0 0 0 1.8-1.9A27 27 0 0 0 21.3 12 27 27 0 0 0 21 8.2ZM10 15.2V8.8L15.5 12 10 15.2Z"/></svg></span>
+        <span class="text"><span class="label">YouTube</span><span class="desc">Print timelapses &amp; 3D Printing, Explained</span><span class="url">youtube.com/@onbrandcraftz</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.tiktok.com/@onbrandcraftz" target="_blank" rel="noopener">
+        <span class="icon plum" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 3c.4 2.1 1.8 3.6 4.1 3.9v3c-1.6 0-3-.5-4.1-1.3v6.1c0 3.5-2.4 5.8-5.6 5.8A5.4 5.4 0 0 1 5.5 15c0-3.2 2.6-5.6 6-5.4v3.1c-1.6-.3-2.9.8-2.9 2.3 0 1.3 1 2.3 2.3 2.3 1.5 0 2.6-1.1 2.6-2.9V3h3.1Z"/></svg></span>
+        <span class="text"><span class="label">TikTok</span><span class="desc">Short prints, reveals &amp; village builds</span><span class="url">tiktok.com/@onbrandcraftz</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.instagram.com/onbrandcraftz2026" target="_blank" rel="noopener">
+        <span class="icon plum" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.8" stroke="currentColor" stroke-width="1.9"/><circle cx="17.2" cy="6.8" r="1.15" fill="currentColor"/></svg></span>
+        <span class="text"><span class="label">Instagram</span><span class="desc">Daily posts, carousels &amp; village photos</span><span class="url">instagram.com/onbrandcraftz2026</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.facebook.com/profile.php?id=61595553412715" target="_blank" rel="noopener">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 8.5V6.8c0-.8.5-1 .9-1H17V3h-2.8C11.7 3 11 4.8 11 6.6v1.9H8.5V12H11v9h3v-9h2.6l.4-3.5H14Z"/></svg></span>
+        <span class="text"><span class="label">Facebook Page</span><span class="desc">OnBrandCraftz — posts &amp; updates</span><span class="url">facebook.com — OnBrandCraftz</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.facebook.com/groups/1488065163368472" target="_blank" rel="noopener">
+        <span class="icon teal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8.5" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19c.6-2.8 2.8-4.2 5.5-4.2s4.9 1.4 5.5 4.2M16 5.6a3.2 3.2 0 0 1 0 5.9M17.8 15c1.4.6 2.4 1.9 2.8 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+        <span class="text"><span class="label">Facebook Group — OnBrandCraftz Makers</span><span class="desc">Community for buyers &amp; makers — share your prints</span><span class="url">facebook.com/groups — OnBrandCraftz Makers</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://www.pinterest.com/printing3dthings/" target="_blank" rel="noopener">
+        <span class="icon rust" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 0 0-3.3 17.4c-.1-.8-.2-2 .1-2.9l1.2-4.9s-.3-.6-.3-1.5c0-1.4.8-2.4 1.8-2.4.9 0 1.3.6 1.3 1.4 0 .9-.6 2.2-.9 3.4-.2 1 .5 1.9 1.6 1.9 1.9 0 3.3-2 3.3-4.8 0-2.5-1.8-4.3-4.4-4.3a4.6 4.6 0 0 0-4.8 4.6c0 .9.4 1.9.8 2.4.1.1.1.2.1.3l-.3 1.2c0 .2-.2.2-.4.1-1.2-.6-2-2.4-2-3.9 0-3.2 2.3-6.1 6.7-6.1 3.5 0 6.2 2.5 6.2 5.8 0 3.5-2.2 6.3-5.3 6.3-1 0-2-.5-2.3-1.2l-.6 2.4c-.2.9-.8 2-1.2 2.6A9 9 0 1 0 12 3Z"/></svg></span>
+        <span class="text"><span class="label">Pinterest</span><span class="desc">Village ideas &amp; print inspiration</span><span class="url">pinterest.com/printing3dthings</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+
+      <a class="link" href="https://x.com/OnBrandCraftz" target="_blank" rel="noopener">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.7 3H21l-7.3 8.3L22.2 21h-6.7l-5.2-6.3L4.3 21H1l7.8-8.9L1.5 3h6.9l4.7 5.7L17.7 3Zm-1.2 16h1.9L7 4.9H5L16.5 19Z"/></svg></span>
+        <span class="text"><span class="label">X (Twitter)</span><span class="desc">@OnBrandCraftz</span><span class="url">x.com/OnBrandCraftz</span></span>
+        <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p class="foot-brand">OnBrandCraftz</p>
+    <p style="margin-top:6px">Designs print on any 3D printer.<br>Villages are hollow for battery tea lights — windows glow from within.</p>
+    <p style="margin-top:10px">Updated Nov 9, 2026</p>
+  </footer>
+
+</main>
+</body>
+</html>
