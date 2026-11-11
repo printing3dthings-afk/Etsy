@@ -90,8 +90,11 @@ Every product, every image, every price, every line of code must serve this miss
     a READY line and a `FACTS.md` per finished design, a version-in-progress flag,
     and claims checked before Scott sees anything.
   - **The Etsy repo is PUBLIC** (checked 2026-11-11). Nothing about Scott's money
-    or private life goes in it, on any branch. The daily finance meeting he asked
-    for waits on a private home.
+    or private life goes in it, on any branch. The **daily finance meeting**
+    (business and personal, Scott 2026-11-11) lives in his PRIVATE repo
+    `printing3dthings-afk/etsy-store`, folder `finance/`, run at 8:43 pm by the
+    same scheduled task. Figures come only from Scott or real statements, never
+    guessed; no account numbers; nothing paid, moved or signed up for.
 
 ---
 
