@@ -11,7 +11,7 @@ that a phone keeps; the street starts inside it and runs on to the right.
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -26,12 +26,28 @@ STREET = ["gingerbread_cottage", "victorian_coaching_inn", "gingerbread_candy_ca
 
 
 def cutout(name):
-    """The building and its contact shadow, trimmed to what the transparent render holds."""
+    """The building and its contact shadow, trimmed to what the transparent render holds,
+    with the same contrast lift as the store pictures (render_covers.crop), measured on
+    the building alone so the empty pixels don't skew it."""
     im = Image.open(CUTOUTS / f"{name}.png").convert("RGBA")
     a = np.asarray(im)[:, :, 3]
-    ys, xs = np.where(a > 8)
-    im = im.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
-    return im.convert("RGB"), im.getchannel("A")
+    # the shadow catcher leaves a faint shadow over the whole frame, so trim to the
+    # building itself plus a margin, and fade the shadow out across that margin
+    ys, xs = np.where(a > 250)
+    pad = int(0.06 * (ys.max() - ys.min()))
+    box = (max(xs.min() - pad, 0), ys.min(), min(xs.max() + pad, im.width - 1) + 1, min(ys.max() + pad, im.height - 1) + 1)
+    im = im.crop(box)
+    h, w = im.height, im.width
+    fx = np.clip(np.minimum(np.arange(w), w - 1 - np.arange(w)) / pad, 0, 1)
+    fy = np.clip((h - 1 - np.arange(h)) / pad, 0, 1)
+    fade = np.minimum(fx[None, :], fy[:, None])
+    alpha_a = np.asarray(im.getchannel("A")).astype(float)
+    # below ~50 the shadow is only the floor's faint tint, which reads as a pale panel
+    alpha_a = np.where(alpha_a > 250, alpha_a, np.clip((alpha_a - 50) / 200, 0, 1) * 250 * fade)
+    rgb, alpha = im.convert("RGB"), Image.fromarray(alpha_a.astype("uint8"))
+    solid = alpha.point(lambda v: 255 if v > 250 else 0)
+    rgb = Image.blend(rgb, ImageOps.autocontrast(rgb, cutoff=1, preserve_tone=True, mask=solid), 0.5)
+    return rgb, alpha
 
 
 def main():
