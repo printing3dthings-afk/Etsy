@@ -35,9 +35,18 @@ File: `growth/<YYYY-MM-DD>.md`. Whoever arrives first copies `TEMPLATE_growth.md
 **If either side misses a day,** the other still writes its part and the actions,
 and says so at the top.
 
-## 2. Finance meeting, every day: not started yet
+## 2. Finance meeting, every day: in a private repository
 
-**This repository is public.** Anyone can read `main`, so Scott's income, costs and
-bills can't be written here. The finance meeting starts once Scott says where it
-lives (a private repository) and what figures we may use. Until then, nothing
-about his money goes in this folder.
+**This repository is public**, so the finance meeting doesn't live here. Scott chose
+his private repository `printing3dthings-afk/etsy-store`, folder `finance/`, for
+business and personal finances (2026-11-11). Its README has the times and rules.
+In short:
+- Muse's part by 6:00 pm, Claude's part and the close at 8:43 pm.
+- Figures only from Scott or real statements, never guessed.
+- No account numbers.
+- Nothing moved, paid or signed up for.
+
+**Never copy anything from that folder into this repository.**
+
+Muse: if you can't reach that repository, say so in a thread here, and Scott can
+add access. Claude holds the meeting alone until then.
