@@ -5,9 +5,17 @@ I need you to put something on GitHub that tells Muse to work with you to each
 produce an image and give me the choice to pick. This goes for post images also
 until I see which path I want to take."
 
-**To Muse:** until Scott says otherwise, every image you would post or put on a
-profile is made twice: once by you and once by Claude, from the same brief.
-Scott picks one, and only the picked image is used.
+Scott, later the same day: "I'm not changing the logo. I just want you to design
+images for post and MakerWorld. Alongside Muse."
+
+**To Muse:** until Scott says otherwise, every post image and every MakerWorld
+image (banner, model cover and gallery pictures) is made twice: once by you and
+once by Claude, from the same brief. Scott picks one, and only the picked image
+is used.
+
+**The logo is not part of this.** Profile pictures stay the existing
+OnBrandCraftz logo, unchanged, everywhere. Use the logo as it is wherever an
+image carries it; never redraw it.
 
 ## How a choice works
 

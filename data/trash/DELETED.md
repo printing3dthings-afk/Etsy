@@ -6,576 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20261007-001 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/bakery/haunted_bakery.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
-## 20261007-001 · 2026-10-07 · snippet · `openscad_models/haunted_town/bakery/haunted_bakery.scad`
-**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
-**Payload:** `data/trash/files/20261007-001__snippet.txt`
-
-```
-// The letters are CARVED 0.6 into the board and lined with the accent part
-// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
-// or a slicer that put every part on one filament, lost the sign entirely.
-// The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
-// recess drew 1,528 support moves on a test block, the sheared one none.
-lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
-module sign_text() text("BAKERY", size = 5.2, font = "Montserrat:style=Black",
-                        halign = "center", valign = "center", spacing = 1.06);
-module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
-// 2D: the part of the letters whose whole climb of h above it stays inside
-// them, sampled every lt_step. The same steps for every slab, so each deeper
-// slab lies inside the one in front of it and no cut can close over a pocket.
-module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
-// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
-// slabs rather than sheared copies of one prism: the copies' sides lay in
-// shared planes and left zero-area faces.
-module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
-    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
-// The letters and the board's hole are cut from the SAME placed cutter, so
-// their faces are one computation (placed as one already-cut solid, the
-// cemetery's linings came out a rounding error off their holes).
-module sign_carve() sign_at() sign_carve_local();
-module sign_letters() difference() {
-    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
-    sign_carve();
-}
-```
-
-<!-- /TRASH 20261007-001 -->
-<!-- TRASH id=20261007-002 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/post_office/haunted_post_office.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
-## 20261007-002 · 2026-10-07 · snippet · `openscad_models/haunted_town/post_office/haunted_post_office.scad`
-**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
-**Payload:** `data/trash/files/20261007-002__snippet.txt`
-
-```
-// The letters are CARVED 0.6 into the board and lined with the accent part
-// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
-// or a slicer that put every part on one filament, lost the sign entirely.
-// The cut's ceilings rise outward at 58 deg -- a straight-cut 0.6
-// recess drew 1,528 support moves on a test block, the sheared one none.
-lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
-module sign_text() text("POST OFFICE", size = 4.4, font = "Montserrat:style=Black",
-                        halign = "center", valign = "center", spacing = 1.04);
-module sign_at() face_tf(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
-// 2D: the part of the letters whose whole climb of h above it stays inside
-// them, sampled every lt_step. The same steps for every slab, so each deeper
-// slab lies inside the one in front of it and no cut can close over a pocket.
-module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
-// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
-// slabs rather than sheared copies of one prism: the copies' sides lay in
-// shared planes and left zero-area faces.
-module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
-    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
-// The letters and the board's hole are cut from the SAME placed cutter, so
-// their faces are one computation (placed as one already-cut solid, the
-// cemetery's linings came out a rounding error off their holes).
-module sign_carve() sign_at() sign_carve_local();
-module sign_letters() difference() {
-    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
-    sign_carve();
-}
-```
-
-<!-- /TRASH 20261007-002 -->
-<!-- TRASH id=20261007-003 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/general_store/haunted_general_store.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
-## 20261007-003 · 2026-10-07 · snippet · `openscad_models/haunted_town/general_store/haunted_general_store.scad`
-**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
-**Payload:** `data/trash/files/20261007-003__snippet.txt`
-
-```
-// The letters are CARVED 0.6 into the board and lined with the accent part
-// (2026-09-26). As a flush inlay they were colour alone: a one-colour print,
-// or a slicer that put every part on one filament, lost the sign entirely.
-// The cut's ceilings rise outward at 61 deg, 58 plus the front's forward lean, -- a straight-cut 0.6
-// recess drew 1,528 support moves on a test block, the sheared one none.
-lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(61);  lt_n = 8;
-// Spacing 1.06, not 1.04 (2026-09-26): at 1.04 the carve's stepped ceilings
-// left a knife edge where CGAL joined the lining to the board, and the union
-// failed the watertight gate. Nudging the sign, the step (0.19 drew supports
-// under every letter: only 0.2 steps sit on the layers) or a proud lining all
-// just moved it; 1.06 closed it, and MERCANTILE is 51.5 of the board's 56 mm.
-module sign_text() text("MERCANTILE", size = 5.2, font = "Montserrat:style=Black",
-                        halign = "center", valign = "center", spacing = 1.06);
-module sign_at() on_face(1, sg_u, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0.3, fr_t]) children();
-// 2D: the part of the letters whose whole climb of h above it stays inside
-// them, sampled every lt_step. The same steps for every slab, so each deeper
-// slab lies inside the one in front of it and no cut can close over a pocket.
-module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
-// The cut, in lt_n slabs, each as deep as its ceiling allows. Built from 2D
-// slabs rather than sheared copies of one prism: the copies' sides lay in
-// shared planes and left zero-area faces.
-module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
-    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
-// The letters and the board's hole are cut from the SAME placed cutter, so
-// their faces are one computation (placed as one already-cut solid, the
-// cemetery's linings came out a rounding error off their holes).
-module sign_carve() sign_at() sign_carve_local();
-module sign_letters() difference() {
-    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
-    sign_carve();
-}
-```
-
-<!-- /TRASH 20261007-003 -->
-<!-- TRASH id=20261007-004 date=2026-10-07 kind=snippet source="openscad_models/haunted_town/undertaker/haunted_undertaker.scad" reason="Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print." -->
-## 20261007-004 · 2026-10-07 · snippet · `openscad_models/haunted_town/undertaker/haunted_undertaker.scad`
-**Reason:** Haunted Town sign letters changed from carved-and-lined to raised (Scott, 2026-10-07): the carve read poorly on the one-colour post office print.  
-**Payload:** `data/trash/files/20261007-004__snippet.txt`
-
-```
-// carved 0.6 into the board and lined with the accent (the bakery's method)
-lt_open = 0.6;  lt_depth = 1.1;  lt_step = 0.2;  lt_k = tan(58);  lt_n = 8;
-module sign_text() text("UNDERTAKER", size = 4.0, font = "Montserrat:style=Black",
-                        halign = "center", valign = "center", spacing = 1.06);
-module sign_at() face_tf(1, 0, sg_z) rotate([0, 0, sg_tilt]) translate([0, 0, fr_t]) children();
-module sign_climb(h) intersection_for(j = [0 : ceil(h / lt_step)]) translate([0, -j * lt_step]) sign_text();
-module sign_carve_local() for (i = [0 : lt_n - 1]) let (t0 = i * lt_open / lt_n, t1 = t0 + lt_open / lt_n)
-    translate([0, 0, -t1]) linear_extrude(t1 - (i == 0 ? -0.01 : t0)) sign_climb(lt_k * t1);
-module sign_carve() sign_at() sign_carve_local();
-module sign_letters() difference() {
-    sign_at() translate([0, 0, -lt_depth]) linear_extrude(lt_depth) sign_text();
-    sign_carve();
-}
-```
-
-<!-- /TRASH 20261007-004 -->
-<!-- TRASH id=20261007-005 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-005 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-005__snippet.txt`
-
-```
-// the sign: a brick-red board on the plaster, INN inlaid white and flush
-```
-
-<!-- /TRASH 20261007-005 -->
-<!-- TRASH id=20261007-006 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-006 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/coaching_inn/victorian_coaching_inn.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-006__snippet.txt`
-
-```
-module sign_text() intersection() {
-    sign_board();
-    nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
-        text("INN", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
-}
-```
-
-<!-- /TRASH 20261007-006 -->
-<!-- TRASH id=20261007-007 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-007 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-007__snippet.txt`
-
-```
-// the sign: a slate board, SANTA'S / WORKSHOP inlaid white and flush
-```
-
-<!-- /TRASH 20261007-007 -->
-<!-- TRASH id=20261007-008 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-008 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/santas_workshop/victorian_santas_workshop.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-008__snippet.txt`
-
-```
-module sign_text() intersection() {
-    sign_board();
-    nf(3, dr_u, sg_z + sg_h / 2) translate([0, 0, 0.2]) linear_extrude(2)
-        for (l = [["SANTA'S", 2.6], ["WORKSHOP", -2.6]]) translate([0, l[1]])
-            text(l[0], size = 3.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.0);
-}
-```
-
-<!-- /TRASH 20261007-008 -->
-<!-- TRASH id=20261007-009 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/victorian/toy_shop/victorian_toy_shop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-009 · 2026-10-07 · snippet · `openscad_models/christmas_village/victorian/toy_shop/victorian_toy_shop.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-009__snippet.txt`
-
-```
-// the letters, raised on the fascia
-module toys() bplace(1, (by_g[1] + by_t) / 2 + 0.2) relief_up(-0.4, 0.6)
-```
-
-<!-- /TRASH 20261007-009 -->
-<!-- TRASH id=20261007-010 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/gingerbread/sweet_shop/gingerbread_sweet_shop.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-010 · 2026-10-07 · snippet · `openscad_models/christmas_village/gingerbread/sweet_shop/gingerbread_sweet_shop.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-010__snippet.txt`
-
-```
-// SWEETS round the front, over the shop's ridge, inlaid flush: raised, every
-// level stroke (the E's arms, the T's bar) came to a knife edge under its
-// sloped underside, down to 0.01 mm
-module sweets() intersection() {
-    difference() { cylinder(r = T(0)[0] + 0.01, h = 100, $fn = FNC); cylinder(r = T(0)[0] - 0.6, h = 100, $fn = FNC); }
-    cyl_relief(T(0)[0], 270, 56.2, 12.5, 0.6) translate([0, 0, -1.5]) linear_extrude(2)
-        text("SWEETS", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
-}
-```
-
-<!-- /TRASH 20261007-010 -->
-<!-- TRASH id=20261007-011 date=2026-10-07 kind=snippet source="openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad" reason="Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print." -->
-## 20261007-011 · 2026-10-07 · snippet · `openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad`
-**Reason:** Christmas village signs changed to raised letters (Scott, 2026-10-07): flush inlays vanish on a one-colour print.  
-**Payload:** `data/trash/files/20261007-011__snippet.txt`
-
-```
-module cocoa_text() press(270, 55.8)
-    text("COCOA", size = 4.4, font = "Montserrat:style=Black", halign = "center", valign = "center", spacing = 1.08);
-```
-
-<!-- /TRASH 20261007-011 -->
-<!-- TRASH id=20261008-001 date=2026-10-08 kind=snippet source="victorian_santas_workshop.scad" reason="Toy window art given relief so a white print shows it (2026-10-08)." -->
-## 20261008-001 · 2026-10-08 · snippet · `victorian_santas_workshop.scad`
-**Reason:** Toy window art given relief so a white print shows it (2026-10-08).  
-**Payload:** `data/trash/files/20261008-001__snippet.txt`
-
-```
-module bw_art() nf(3, BW_u, BW_z) translate([0, 0, -recess - pane_t]) linear_extrude(pane_t) pane_art2d();
-```
-
-<!-- /TRASH 20261008-001 -->
-<!-- TRASH id=20261008-002 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/candy_cane_chapel/gingerbread_candy_cane_chapel.scad" reason="Crook's raised rings removed: an 11 mm rod leaning to 40 deg; the rings needed 1,413 support moves even clipped clear of base and tip (2026-10-08)" -->
-## 20261008-002 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/candy_cane_chapel/gingerbread_candy_cane_chapel.scad`
-**Reason:** Crook's raised rings removed: an 11 mm rod leaning to 40 deg; the rings needed 1,413 support moves even clipped clear of base and tip (2026-10-08)  
-**Payload:** `data/trash/files/20261008-002__snippet.txt`
-
-```
-module cr_at_g(i, d) let (p = cr_pts(i)) translate([TC[0] + p[0], TC[1], cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
-module crook_g(d) for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
-// Climbing 2 SH per 1 out, not SH: on stripes tilted 28 deg, SH alone left the
-// slicer propping a test column's (the turret house, 2026-10-08); twice that
-// sliced clean. And clear of the tip's end cap, which faces down past the rod.
-module crook_stripes_up() for (k = [0 : 1]) intersection() {
-    difference() { crook_g((k + 1) * 0.15); crook_g(k * 0.15); }
-    crook_stripes();
-    translate([0, 0, 2 * SH * (k + 1) * 0.15]) crook_stripes();
-    translate([-100, -100, 0]) cube([200, 200, cr_z0 + cr_pts(cr_n)[1] - cr_r(cr_n)]);
-}
-```
-
-<!-- /TRASH 20261008-002 -->
-<!-- TRASH id=20261008-003 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/turret_house/gingerbread_turret_house.scad" reason="Turret spire's raised rings removed, as the chapel crook's: a bent candy-cane rod leaning to 40 deg (2026-10-08)" -->
-## 20261008-003 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/turret_house/gingerbread_turret_house.scad`
-**Reason:** Turret spire's raised rings removed, as the chapel crook's: a bent candy-cane rod leaning to 40 deg (2026-10-08)  
-**Payload:** `data/trash/files/20261008-003__snippet.txt`
-
-```
-module sp_at_g(i, d) let (p = sp_pts(i)) translate([tx + p[0] * cos(tc_ang), ty + p[0] * sin(tc_ang), sp_z0 + p[1]]) sphere(r = sp_r(i) + d, $fn = 24);
-module spire_g(d) for (i = [0 : sp_n - 1]) hull() { sp_at_g(i, d); sp_at_g(i + 1, d); }
-module spire_stripes_up() for (k = [0 : 1]) lean() intersection() {
-    difference() { spire_g((k + 1) * 0.15); spire_g(k * 0.15); }
-    stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
-    translate([0, 0, 2 * SH * (k + 1) * 0.15]) stripe_slabs([tx, ty], sp_z0 + 1, sp_z0 + 12, 2.2, 0.9, 28);
-    translate([-100, -100, 0]) cube([200, 200, sp_z0 + sp_pts(sp_n)[1] - sp_r(sp_n)]);
-}
-```
-
-<!-- /TRASH 20261008-003 -->
-<!-- TRASH id=20261008-004 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/candy_cane_chapel/gingerbread_candy_cane_chapel.scad" reason="Chapel tower's raised spiral bands (wall, inner and swept spire): sliced on the old chapel they needed ~21,000 support moves (outer) and ~56,000 (with inner) at every lower edge; steeper climb, 0.1 steps, a lower top and clipping to outside the nave did not clear them (2026-10-08)" -->
-## 20261008-004 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/candy_cane_chapel/gingerbread_candy_cane_chapel.scad`
-**Reason:** Chapel tower's raised spiral bands (wall, inner and swept spire): sliced on the old chapel they needed ~21,000 support moves (outer) and ~56,000 (with inner) at every lower edge; steeper climb, 0.1 steps, a lower top and clipping to outside the nave did not clear them (2026-10-08)  
-**Payload:** `data/trash/files/20261008-004__snippet.txt`
-
-```
-module tower_prof2d() {
-    polygon([[rti - 0.3, plinth_h - 0.5], [rt, plinth_h - 0.5], [rt, R_zc(RS, rt) + 0.6], [rti - 0.3, R_zc(RS, rti - 0.3) + 0.6]]);
-    R_full(RS, kv0s);
-}
-module tower_shell(t0, t1) at_tc() rotate_extrude($fn = FNT) difference() {
-    intersection() { offset(delta = t1) tower_prof2d(); translate([0, plinth_h]) square([100, 300]); }
-    offset(delta = t0) tower_prof2d();
-    R_room(RS);
-}
-// 0.05 on into the wall: one that ends at the wall's face only touches it, and
-// the union can keep the face between (the coaching inn, 2026-10-08)
-module tower_in_shell(t0, t1) at_tc() rotate_extrude($fn = FNT)
-    translate([rti - t1, plinth_h]) square([t1 - t0 + 0.05, RS[0] - 1 - plinth_h]);
-// A band raised t its stripe moved up SH * t: the stripe narrowed by the angle
-// that climb turns through, so its upper edge (in angle) is the one that steps.
-// Built narrowed rather than as the stripe intersected with a raised copy of
-// itself: the two copies' twisted facets crossed, and left 1,838 crumbs of
-// band up the spire and round the door (2026-10-08).
-function st_climb(t) = st_w - 360 * SH * t / st_P;
-// the straight wall's bands stop under the eave's flare (st_zw); the spire's
-// are swept (spire_bands)
-st_zw = 87.9;
-module stripe_bands() {
-    zt = R_top(RS, 0) + 1;
-    for (i = [0 : 1]) intersection() {
-        tower_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2));
-        translate([-100, -100, 0]) cube([200, 200, st_zw]);
-    }
-    spire_bands();
-    difference() {
-        for (i = [0 : 2]) intersection() { tower_in_shell(i * 0.2, (i + 1) * 0.2); helix(plinth_h - 1, zt, st_climb((i + 1) * 0.2)); }
-        // through the doorway, the inner bands stop at its edge, the cut over
-        // its head climbing SH per 1 into the room
-        cyl_relief(rt, dth, plinth_h, door_a + 2.4) relief_hole(-wall, -wall - 1.2, 0.5, -SH) offset(delta = 0.2) polygon(arch_pts(door_a, door_h));
-    }
-}
-// No band over the door and the windows: there it stood as a skin over their
-// frames, the door's leaf and the panes. It stops at each frame's edge, and
-// the frame below holds up whatever runs over a head.
-module tower_frames_clear() {
-    tw_frames(); door_frame();
-    for (w = TW) cyl_relief(rt, w[0], w[1], tframe_U(w)) translate([0, 0, -1]) linear_extrude(3) offset(r = fr_w) win_outline(tw(w));
-    cyl_relief(rt, dth, plinth_h, door_a + fr_w + 1.2) translate([0, 0, -1]) linear_extrude(3) offset(r = fr_w) polygon(arch_pts(door_a, door_h));
-}
-// THE SPIRE'S BANDS, swept along its profile rather than cut from a shell: a
-// 0.2 mm shell on the 68 deg spire, cut by the twisted prism's facets, came
-// apart into 1,274 crumbs (2026-10-08). Each band is one solid from the eave's
-// edge to below the crook: its inner face 0.05 inside the spire, its outer
-// 0.4 out along the profile's normal, and its upper edge in angle trimmed by
-// the climb, so that side slopes SH up per 1 out like every band below it.
-sp_h = 0.4;  sp_n = 110;  sp_J = 8;
-function sp_v(i) = RS[5] - 0.2 - (RS[5] - 1.6) * i / (sp_n - 1);
-function sp_p(i) = [sp_v(i), R_top(RS, sp_v(i))];
-function sp_nrm(i) = let (a = sp_p(max(i - 1, 0)), b = sp_p(min(i + 1, sp_n - 1)), t = (b - a) / norm(b - a)) [t[1], -t[0]];
-function sp_last() = max([for (i = [0 : sp_n - 1]) if (sp_p(i)[1] < cr_z0 - 1) i]);
-function sp_pt(i, j, s) = let (q = sp_p(i) + sp_nrm(i) * (s == 0 ? -0.05 : sp_h),
-        a = 360 * (q[1] - (plinth_h - 1)) / st_P + j / sp_J * (s == 0 ? st_w : st_climb(sp_h)))
-    [q[0] * cos(a), q[0] * sin(a), q[1]];
-module spire_band() let (N = sp_last() + 1, J = sp_J, id = function (i, j, s) (i * (J + 1) + j) * 2 + s)
-    polyhedron([for (i = [0 : N - 1], j = [0 : J], s = [0 : 1]) sp_pt(i, j, s)], concat(
-        [for (i = [0 : N - 2], j = [0 : J - 1]) [id(i, j, 1), id(i + 1, j, 1), id(i + 1, j + 1, 1), id(i, j + 1, 1)]],
-        [for (i = [0 : N - 2], j = [0 : J - 1]) [id(i, j + 1, 0), id(i + 1, j + 1, 0), id(i + 1, j, 0), id(i, j, 0)]],
-        [for (i = [0 : N - 2]) [id(i, 0, 0), id(i + 1, 0, 0), id(i + 1, 0, 1), id(i, 0, 1)]],
-        [for (i = [0 : N - 2]) [id(i, J, 1), id(i + 1, J, 1), id(i + 1, J, 0), id(i, J, 0)]],
-        [for (j = [0 : J - 1]) [id(0, j, 0), id(0, j, 1), id(0, j + 1, 1), id(0, j + 1, 0)]],
-        [for (j = [0 : J - 1]) [id(N - 1, j + 1, 0), id(N - 1, j + 1, 1), id(N - 1, j, 1), id(N - 1, j, 0)]]));
-module spire_bands() at_tc() for (k = [0 : st_n - 1]) rotate(k * 360 / st_n) spire_band();
-// where the tower's wall is cut away inside the nave (its doorway), no band
-module stripe_relief() difference() { stripe_bands(); difference() { nave_room(); turret_partition(); } tower_frames_clear(); }
-```
-
-<!-- /TRASH 20261008-004 -->
-<!-- TRASH id=20261008-005 date=2026-10-08 kind=snippet source="openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad" reason="Cottage canes' raised stripes removed: trimmed to a narrow cane's flat front they left slivers (0.04-0.89 mm spans) and the 1st-percentile wall at 1.19 mm (2026-10-08)" -->
-## 20261008-005 · 2026-10-08 · snippet · `openscad_models/christmas_village/gingerbread/cottage/gingerbread_cottage.scad`
-**Reason:** Cottage canes' raised stripes removed: trimmed to a narrow cane's flat front they left slivers (0.04-0.89 mm spans) and the 1st-percentile wall at 1.19 mm (2026-10-08)  
-**Payload:** `data/trash/files/20261008-005__snippet.txt`
-
-```
-module cane_stripes_up() sclip(Rw, fr_t + 0.81) for (s = [-1, 1]) srelief(Rw, s * cane_s, plinth_h, cane_R * 2 + cane_w + 0.6)
-    translate([0, 0, fr_t + 0.5]) art_skirt(0.3, 2) w12() intersection() { top_face(fr_t + 0.8) cane2d(-s); stripes2d(); }
-```
-
-<!-- /TRASH 20261008-005 -->
-<!-- TRASH id=20261009-001 date=2026-10-09 kind=snippet source="tools/viewer/app.js" reason="Replaced by the fetch-and-parse loader (plates read as data, real progress); the <script> path survives as loadJobScriptTag for file://" -->
-## 20261009-001 · 2026-10-09 · snippet · `tools/viewer/app.js`
-**Reason:** Replaced by the fetch-and-parse loader (plates read as data, real progress); the <script> path survives as loadJobScriptTag for file://  
-**Payload:** `data/trash/files/20261009-001__snippet.txt`
-
-```javascript
-function loadJob(id) {
-  if (id === currentId && JOB) { return; }
-  currentId = id;
-  loading.hidden = false;
-  loading.firstChild.textContent = 'Loading ' +
-    (INDEX.filter(function (j) { return j.id === id; })[0] || {name:id}).name;
-  paintJobList();
-  setPlaying(false);
-  var s = document.createElement('script');
-  s.setAttribute('data-job', id);
-  s.src = 'jobs/' + id + '.js';
-  s.onerror = function () {
-    loading.innerHTML = '<div style="text-align:center;color:var(--bad)">' +
-      'Could not load jobs/' + id + '.js</div>';
-  };
-  document.body.appendChild(s);
-}
-```
-
-<!-- /TRASH 20261009-001 -->
-<!-- TRASH id=20261009-002 date=2026-10-09 kind=snippet source="openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad" reason="Cocoa cafe: mug windows' inner thickening (art_in) overhung on the curved inner wall; the slicer propped it from the mug floor (gate 2026-10-09)" -->
-## 20261009-002 · 2026-10-09 · snippet · `openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad`
-**Reason:** Cocoa cafe: mug windows' inner thickening (art_in) overhung on the curved inner wall; the slicer propped it from the mug floor (gate 2026-10-09)  
-**Payload:** `data/trash/files/20261009-002__snippet.txt`
-
-```
-    cyl_relief(MRi, w[0], w[1], w[2] + 2.2, 0.6) art_in(0.8, 4) mw2d(w);
-```
-
-<!-- /TRASH 20261009-002 -->
-<!-- TRASH id=20261009-003 date=2026-10-09 kind=snippet source="openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad" reason="Cocoa cafe: stirrer stripe relief on the tilted cane needed supports; stripes left to paint" -->
-## 20261009-003 · 2026-10-09 · snippet · `openscad_models/christmas_village/gingerbread/cocoa_cafe/gingerbread_cocoa_cafe.scad`
-**Reason:** Cocoa cafe: stirrer stripe relief on the tilted cane needed supports; stripes left to paint  
-**Payload:** `data/trash/files/20261009-003__snippet.txt`
-
-```
-module st_at_g(i, d) let (p = st_pts(i)) rotate(st_th) translate([st_r0 + p[0], 0, st_z0 + p[1]]) sphere(r = 1.9 + d, $fn = 24);
-module stirrer_g(d) for (i = [0 : st_n - 1]) hull() { st_at_g(i, d); st_at_g(i + 1, d); }
-module stirrer_stripes_up() for (k = [0 : 1]) intersection() {
-    difference() { stirrer_g((k + 1) * 0.15); stirrer_g(k * 0.15); }
-    stirrer_stripes();
-    translate([0, 0, SH * (k + 1) * 0.15]) stirrer_stripes();
-}
-    stirrer_stripes_up();
-```
-
-<!-- /TRASH 20261009-003 -->
-<!-- TRASH id=20261009-004 date=2026-10-09 kind=snippet source="openscad_models/christmas_village/gingerbread/cookie_clock_tower/gingerbread_cookie_clock_tower.scad" reason="Cookie clock tower: stripe relief on the tilted cane needed 4,638 support moves on a fresh union (2026-10-09); stripes left to paint" -->
-## 20261009-004 · 2026-10-09 · snippet · `openscad_models/christmas_village/gingerbread/cookie_clock_tower/gingerbread_cookie_clock_tower.scad`
-**Reason:** Cookie clock tower: stripe relief on the tilted cane needed 4,638 support moves on a fresh union (2026-10-09); stripes left to paint  
-**Payload:** `data/trash/files/20261009-004__snippet.txt`
-
-```
-module cr_at_g(i, d) let (p = cr_pts(i)) translate([p[0], 0, cr_z0 + p[1]]) sphere(r = cr_r(i) + d, $fn = 24);
-module cane_g(d) {
-    translate([0, 0, z_co(0) - 3]) cylinder(r = 1.9 + d, h = cn_z0 + cn_h - z_co(0) + 3, $fn = 24);
-    for (i = [0 : cr_n - 1]) hull() { cr_at_g(i, d); cr_at_g(i + 1, d); }
-}
-module cane_slabs(dz) for (z = [cn_z0 + 1.0 : 2.4 : cr_z0 + cr_L + 2]) translate([0, 0, z + dz]) rotate([0, -28, 0]) cube([20, 20, 1.0], center = true);
-// above the cone's cap only: below it the rod is buried in the icing
-module cane_stripes_up() for (k = [0 : 1]) intersection() {
-    difference() { cane_g((k + 1) * 0.15); cane_g(k * 0.15); }
-    cane_slabs(0);
-    cane_slabs(SH * (k + 1) * 0.15);
-    translate([-50, -50, cn_z0]) cube([100, 100, 100]);
-}
-    cane_stripes_up();
-```
-
-<!-- /TRASH 20261009-004 -->
-<!-- TRASH id=20261010-001 date=2026-10-10 kind=snippet source="tools/viewer/app.js" reason="buildEnvironment's softbox room: every panel sat beyond r128 PMREM fromScene's far plane (100) and never rendered; replaced by the captured Poly Haven studio with a uniform-dark placeholder" -->
-## 20261010-001 · 2026-10-10 · snippet · `tools/viewer/app.js`
-**Reason:** buildEnvironment's softbox room: every panel sat beyond r128 PMREM fromScene's far plane (100) and never rendered; replaced by the captured Poly Haven studio with a uniform-dark placeholder  
-**Payload:** `data/trash/files/20261010-001__snippet.txt`
-
-```javascript
-// ── environment ────────────────────────────────────────────────────────────
-// The thing that actually makes metal look like metal. Without an environment
-// map a MeshStandardMaterial with metalness 0.9 has nothing to reflect and
-// renders nearly black -- which is the classic "I switched to PBR and it got
-// worse" failure. This builds a small studio by hand (overhead softbox, cool
-// fill from one side, warm bounce from below) and runs it through PMREM so
-// rough surfaces get a properly blurred version of it.
-function buildEnvironment() {
-  var pmrem = new THREE.PMREMGenerator(renderer);
-  var room = new THREE.Scene();
-  room.background = new THREE.Color(lin(0x0b0d12));
-
-  function panel(w, h, d, color, intensity, x, y, z, rx, ry) {
-    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshBasicMaterial({color: lin(color)}));
-    m.material.color.multiplyScalar(intensity);
-    m.position.set(x, y, z);
-    if (rx) { m.rotation.x = rx; }
-    if (ry) { m.rotation.y = ry; }
-    room.add(m);
-    return m;
-  }
-
-  // First pass at these numbers had a 1.5-intensity cool fill and it turned
-  // the whole machine powder blue -- an environment map lights EVERYTHING, so
-  // a tint that looks like a tasteful accent in isolation becomes the colour
-  // of the product. Warm key, restrained cool, and a dark back wall so metal
-  // has something black to reflect: without a dark region in the environment,
-  // polished surfaces have no contrast and read as flat grey plastic.
-  panel(600, 10, 420, 0xfff2de, 2.2,    0,  360,   40, 0, 0);   // key softbox
-  panel(10, 460, 420, 0xa8c0e0, 0.45, -420,  60,    0, 0, 0);   // cool fill
-  panel(10, 460, 420, 0xffcfa0, 0.30,  420,  40,    0, 0, 0);   // warm kicker
-  panel(600, 10, 420, 0x5a6270, 0.18,   0, -300,    0, 0, 0);   // floor bounce
-  panel(600, 460, 10, 0x05070b, 1.0,    0,   40, -360, 0, 0);   // back wall
-
-  envRT = pmrem.fromScene(room, 0.5);
-  scene.environment = envRT.texture;
-  room.traverse(function (o) {
-    if (o.geometry) { o.geometry.dispose(); }
-    if (o.material) { o.material.dispose(); }
-  });
-  pmrem.dispose();
-}
-```
-
-<!-- /TRASH 20261010-001 -->
-<!-- TRASH id=20261010-002 date=2026-10-10 kind=snippet source="tools/viewer/virtual_p1s.html" reason="View-options popover CSS and the stacked phone layout, replaced by stage camera tools, tabbed rails and the app-style phone layout (Scott, 2026-10-10: too much scrolling)" -->
-## 20261010-002 · 2026-10-10 · snippet · `tools/viewer/virtual_p1s.html`
-**Reason:** View-options popover CSS and the stacked phone layout, replaced by stage camera tools, tabbed rails and the app-style phone layout (Scott, 2026-10-10: too much scrolling)  
-**Payload:** `data/trash/files/20261010-002__snippet.txt`
-
-```html
-/* ── view menu ────────────────────────────────────── */
-.viewbtns button[aria-pressed="true"]{background:#241a0f;color:var(--amber-soft)}
-.viewmenu{position:relative}
-.viewmenu summary{list-style:none;padding:7px 10px;border:1px solid var(--line-hi);border-radius:3px;
-  background:var(--rail);font-size:11.5px;cursor:pointer;color:var(--dim)}
-.viewmenu summary::-webkit-details-marker{display:none}
-.viewmenu summary::after{content:' +';color:var(--amber-soft)}
-.viewmenu[open] summary::after{content:' −'}
-.viewmenu .viewbtns{position:absolute;right:0;bottom:calc(100% + 8px);z-index:8;width:420px;
-  padding:6px;background:var(--panel);border:1px solid var(--line-hi);border-radius:4px;
-  box-shadow:0 14px 34px rgba(0,0,0,.48)}
-.viewbtns{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);
-  flex-wrap:wrap;min-width:0}
-.speeds{flex-wrap:wrap;min-width:0}
-.viewbtns button{padding:6px 10px;background:var(--rail);font-size:11.5px}
-.viewbtns button:hover{color:var(--amber)}
-@media (max-width:1180px){
-  /* Source order puts both rails before the viewport; on a phone the print
-     itself has to come first, so the narrow layout re-places by area. */
-  #app{grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"h" "s" "f" "l" "r";
-    grid-template-rows:auto 56vh auto auto auto;height:auto}
-  header{grid-area:h} #stage{grid-area:s} footer{grid-area:f}
-  #left{grid-area:l} #right{grid-area:r}
-  aside{max-height:none;overflow:visible}
-  #jobs{max-height:none}
-  #stage{min-height:340px}
-  header{padding:8px 14px;gap:8px}
-  header h1{font-size:15px}
-  /* The subtitle is explanatory, not operational; on a phone it costs
-     ~50px of the 3D viewport for nothing. */
-  header .sub{display:none}
-  #buildchip{font-size:10px}
-  .scrub{order:5;flex-basis:100%;min-width:0}
-
-  /* The transport is the only control you use continuously, and the page is
-     ~2700px tall on a phone -- letting it scroll away means scrolling back up
-     to pause. Pinned, with the last rail padded so nothing hides under it. */
-  footer{position:sticky;bottom:0;z-index:6;
-    box-shadow:0 -10px 22px rgba(0,0,0,.5)}
-  #right{padding-bottom:72px}
-
-  /* Thumb-sized targets. Measured at 22-29px before this; 44 is the floor. */
-  .leg{min-height:44px;padding:4px 6px}
-  .modeswap button{padding:13px 4px}
-  .speeds button,.viewbtns button{padding:13px 11px;font-size:11px}
-  .viewbtns,.speeds{flex:1 1 100%}
-  /* The new controls, sized for a thumb. The view menu drops out of its
-     popover and becomes an inline block, because a 420px popover anchored to
-     the bottom of a phone viewport has nowhere to go. */
-  .viewmenu{flex:1 1 100%}
-  .viewmenu summary{padding:13px 11px;text-align:center}
-  .viewmenu .viewbtns{position:static;width:auto;margin-top:5px;box-shadow:none}
-  .header-actions{width:100%;order:5}
-  .shellbtn{flex:1;justify-content:center;min-height:40px}
-  .layernav{flex:1 1 100%}
-  .layernav button{flex:1;height:44px}
-  .layernav label{flex:2;justify-content:center;height:44px}
-  .plate-tools{grid-template-columns:minmax(0,1fr) 112px}
-  .jobfav{width:40px;height:40px;font-size:19px}
-  .job{padding-right:50px}
-  /* Collapsing a rail is a desktop affordance: at this width the rails are
-     stacked sections of one scrolling page, and hiding one just removes
-     content with no space reclaimed. The buttons stay for Copy view / Help. */
-  #app.left-collapsed,#app.right-collapsed,#app.left-collapsed.right-collapsed{
-    grid-template-columns:minmax(0,1fr)}
-  #app.left-collapsed #left,#app.right-collapsed #right{display:block}
-  .tbtn{width:46px;height:46px}
-  .tabs button{padding:15px 4px}
-  select,input[type=number]{padding:12px 9px}
-  input[type=range]{height:44px}
-  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-8px}
-  input[type=range]::-moz-range-thumb{width:18px;height:18px}
-  .mat td{padding:9px 6px 9px 0}
-  .kv td{padding:7px 0}
-  #hint{font-size:10px}
-}
-```
-
-<!-- /TRASH 20261010-002 -->
 <!-- TRASH id=20261014-001 date=2026-10-14 kind=file source="openscad_models/christmas_village/accessories/horse_sleigh/HORSE_SLEIGH_LEFT_OUT.md" reason="Superseded: the horse sleigh was built after all (split horse, 2026-10-14); see HORSE_SLEIGH_PRINTING.md" -->
 ## 20261014-001 · 2026-10-14 · file · `openscad_models/christmas_village/accessories/horse_sleigh/HORSE_SLEIGH_LEFT_OUT.md`
 **Reason:** Superseded: the horse sleigh was built after all (split horse, 2026-10-14); see HORSE_SLEIGH_PRINTING.md  
@@ -1515,7 +945,6 @@ module lid_solid_seated() rotate_extrude($fn = 240) polygon(concat(
 ```
 
 <!-- /TRASH 20261103-001 -->
-
 <!-- TRASH id=20261103-002 date=2026-11-03 kind=snippet source="openscad_models/clickers/gingerbread_tin/gingerbread_tin_clicker.scad" reason="The pre-thread seated lid, kept for the canister until the canister also took the thread (Scott, 2026-11-03)" -->
 ## 20261103-002 · 2026-11-03 · snippet · `openscad_models/clickers/gingerbread_tin/gingerbread_tin_clicker.scad`
 **Reason:** The pre-thread seated lid, kept for the canister until the canister also took the thread (Scott, 2026-11-03)  
@@ -1526,7 +955,6 @@ module lid_seated() union() { difference() { lid_solid_seated(); nest(); mx_plat
 ```
 
 <!-- /TRASH 20261103-002 -->
-
 <!-- TRASH id=20261103-003 date=2026-11-03 kind=snippet source="openscad_models/clickers/gingerbread_tin/gingerbread_tin_clicker.scad" reason="The pre-thread seated lid, kept for the canister until the canister also took the thread (Scott, 2026-11-03)" -->
 ## 20261103-003 · 2026-11-03 · snippet · `openscad_models/clickers/gingerbread_tin/gingerbread_tin_clicker.scad`
 **Reason:** The pre-thread seated lid, kept for the canister until the canister also took the thread (Scott, 2026-11-03)  
@@ -1537,7 +965,6 @@ SPIG_R = TR - LIP_W - JOINT_CLR; // the lid's spigot, inside the tin's lip
 ```
 
 <!-- /TRASH 20261103-003 -->
-
 <!-- TRASH id=20261103-004 date=2026-11-03 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/images/cupid_white_preview_angle.png" reason="Cupid preview angle render of the superseded draft; replaced by the top view and the side-by-side with the reference" -->
 ## 20261103-004 · 2026-11-03 · file · `openscad_models/valentine_2027/mailboxes/love_letter/images/cupid_white_preview_angle.png`
 **Reason:** Cupid preview angle render of the superseded draft; replaced by the top view and the side-by-side with the reference  
@@ -1548,7 +975,6 @@ SPIG_R = TR - LIP_W - JOINT_CLR; // the lid's spigot, inside the tin's lip
 ```
 
 <!-- /TRASH 20261103-004 -->
-
 <!-- TRASH id=20261104-001 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/cupid.scad" reason="The sculpted four-colour Cupid, replaced on the envelope by the flat white charm cupid_white.scad that Scott chose (2026-11-04); its peg and hole block moved to cupid_peg.scad, shortened for a 3 mm charm" -->
 ## 20261104-001 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/cupid.scad`
 **Reason:** The sculpted four-colour Cupid, replaced on the envelope by the flat white charm cupid_white.scad that Scott chose (2026-11-04); its peg and hole block moved to cupid_peg.scad, shortened for a 3 mm charm  
@@ -1628,7 +1054,6 @@ module wing() translate(WING_AT) rotate(WING_TILT) translate(-WING_AT) union() {
 ```
 
 <!-- /TRASH 20261104-001 -->
-
 <!-- TRASH id=20261104-002 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.json" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
 ## 20261104-002 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.json`
 **Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
@@ -1923,7 +1348,6 @@ module wing() translate(WING_AT) rotate(WING_TILT) translate(-WING_AT) union() {
 ```
 
 <!-- /TRASH 20261104-002 -->
-
 <!-- TRASH id=20261104-003 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.txt" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
 ## 20261104-003 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/fidelity_cupid_print.txt`
 **Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
@@ -1942,7 +1366,6 @@ RuntimeError: not closed meshes, so there is nothing to compare against: love_le
 ```
 
 <!-- /TRASH 20261104-003 -->
-
 <!-- TRASH id=20261104-004 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/fragility_cupid_print.txt" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
 ## 20261104-004 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/fragility_cupid_print.txt`
 **Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
@@ -1959,7 +1382,6 @@ FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 1 watch
 ```
 
 <!-- /TRASH 20261104-004 -->
-
 <!-- TRASH id=20261104-005 date=2026-11-04 kind=file source="openscad_models/valentine_2027/mailboxes/love_letter/checks/gate_cupid_print.txt" reason="checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid" -->
 ## 20261104-005 · 2026-11-04 · file · `openscad_models/valentine_2027/mailboxes/love_letter/checks/gate_cupid_print.txt`
 **Reason:** checks of the sculpted 10 mm Cupid (cupid_print), replaced by the flat white charm checked as cupid  
@@ -1982,4 +1404,140 @@ PRODUCT GATE FAILED
 ```
 
 <!-- /TRASH 20261104-005 -->
+<!-- TRASH id=20261111-001 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/REQUEST.md" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
+## 20261111-001 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/REQUEST.md`
+**Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
+**Payload:** `data/trash/files/20261111-001__REQUEST.md`
+
+```
+# MakerWorld profile picture (@P3DT)
+
+- **Where:** the MakerWorld profile picture. It shows as a small circle beside
+  every model, comment and the profile header.
+- **Size:** 1000 × 1000 px, square. MakerWorld crops it to a circle, so nothing
+  important goes in the corners. MakerWorld doesn't publish a size; this is a
+  safe square for a circle crop.
+- **Must show:** the OnBrandCraftz identity, readable at about 40 px.
+- **Text:** only the mark (OBC / OnBrandCraftz). No slogans; they're unreadable
+  at that size.
+- **Needed:** now.
+```
+
+<!-- /TRASH 20261111-001 -->
+
+<!-- TRASH id=20261111-002 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude.md" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
+## 20261111-002 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude.md`
+**Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
+**Payload:** `data/trash/files/20261111-002__claude.md`
+
+```
+# Claude's entry: the OBC mark
+
+- **What it is:** the OBC mark from the links page (`business/links/`): a navy disc
+  with a gold ring, OBC in gold, and CRAFTZ under it.
+- **Why this one:** it's the same letters, in the same typeface family
+  (Montserrat), as the mark inlaid under the prints. A buyer who finds OBC under
+  a print sees the same thing on the profile.
+- **Size:** 1000 × 1000. Everything sits inside the circle crop.
+  `claude_preview.png` shows it cropped to a circle at 160, 80 and 40 px. OBC
+  still reads at 40.
+- **Sources:** no outside images. Fonts from `assets/fonts/`.
+- **Rebuild:** `python3 claude_make.py`.
+```
+
+<!-- /TRASH 20261111-002 -->
+
+<!-- TRASH id=20261111-003 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude.png" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
+## 20261111-003 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude.png`
+**Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
+**Payload:** `data/trash/files/20261111-003__claude.png`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261111-003 -->
+
+<!-- TRASH id=20261111-004 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude_make.py" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
+## 20261111-004 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude_make.py`
+**Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
+**Payload:** `data/trash/files/20261111-004__claude_make.py`
+
+```
+#!/usr/bin/env python3
+"""Claude's entry for the MakerWorld profile picture: the OBC mark from the links
+page (navy disc, gold ring, OBC over CRAFTZ), in Montserrat ExtraBold, the face of
+the OBC mark inlaid under the prints. Drawn at 4x and scaled down for clean edges.
+
+    python3 claude_make.py      (writes claude.png, and claude_preview.png at real sizes)
+"""
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+HERE = Path(__file__).resolve().parent
+FONTS = HERE.parents[2] / "assets" / "fonts"
+NAVY, NAVY2, GOLD, PALE = (26, 34, 51), (35, 45, 68), (212, 175, 55), (203, 211, 226)
+S = 4000  # drawn at 4x, saved at 1000
+
+
+def font(name, size):
+    return ImageFont.truetype(str(FONTS / name), size)
+
+
+def centred(d, y, text, f, fill, spacing=0):
+    w = sum(d.textlength(c, font=f) for c in text) + spacing * (len(text) - 1)
+    x = (S - w) / 2
+    for c in text:
+        d.text((x, y), c, font=f, fill=fill)
+        x += d.textlength(c, font=f) + spacing
+
+
+def main():
+    im = Image.new("RGB", (S, S), NAVY)
+    d = ImageDraw.Draw(im)
+    # a soft lighter centre, so the disc doesn't read as a flat hole at small sizes
+    for i in range(60):
+        r = S * 0.5 * (1 - i / 60)
+        t = i / 60
+        c = tuple(int(NAVY[k] + (NAVY2[k] - NAVY[k]) * t) for k in range(3))
+        d.ellipse([S / 2 - r, S / 2 - r, S / 2 + r, S / 2 + r], fill=c)
+    # the gold ring sits inside the circle crop with a margin
+    m, w = S * 0.08, S * 0.035
+    d.ellipse([m, m, S - m, S - m], outline=GOLD, width=int(w))
+    big = font("Montserrat-ExtraBold.ttf", int(S * 0.25))
+    small = font("Montserrat-ExtraBold.ttf", int(S * 0.075))
+    bb = d.textbbox((0, 0), "OBC", font=big)
+    centred(d, S * 0.45 - (bb[3] - bb[1]) / 2 - bb[1], "OBC", big, GOLD, spacing=S * 0.01)
+    centred(d, S * 0.62, "CRAFTZ", small, PALE, spacing=S * 0.018)
+    out = im.resize((1000, 1000), Image.LANCZOS)
+    out.save(HERE / "claude.png")
+    # how it reads where MakerWorld shows it: circle-cropped at 160, 80 and 40 px
+    prev = Image.new("RGB", (420, 180), (245, 245, 245))
+    x = 10
+    mask_full = Image.new("L", (1000, 1000), 0)
+    ImageDraw.Draw(mask_full).ellipse([0, 0, 999, 999], fill=255)
+    for size in (160, 80, 40):
+        a = out.resize((size, size), Image.LANCZOS)
+        prev.paste(a, (x, (180 - size) // 2), mask_full.resize((size, size), Image.LANCZOS))
+        x += size + 30
+    prev.save(HERE / "claude_preview.png")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+<!-- /TRASH 20261111-004 -->
+
+<!-- TRASH id=20261111-005 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude_preview.png" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
+## 20261111-005 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude_preview.png`
+**Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
+**Payload:** `data/trash/files/20261111-005__claude_preview.png`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261111-005 -->
 
