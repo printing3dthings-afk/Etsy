@@ -49,6 +49,20 @@ Every product, every image, every price, every line of code must serve this miss
 - **Owner email**: Printing3dthings@outlook.com
 - **Niche**: Digital planners, kawaii sticker packs, printable digital products, 3D printed physical products
 - **Brand aesthetic**: Kawaii illustrated, pastel colors, cute/fun but polished
+- **Channels** (Scott, 2026-11-11; all linked from `business/links/OnBrandCraftz_Links.html`).
+  Each takes a different kind of content, which is why designs need to work as
+  more than one listing photo:
+  - **Selling:** the Etsy shop.
+  - **Free files:** MakerWorld (@P3DT) and Printables.
+  - **Membership:** Patreon.
+  - **Email list:** Kit (onbrandcraftz.kit.com), with the free Christmas Village Setup
+    Guide.
+  - **Video:** YouTube (@onbrandcraftz), for timelapses and explainers; TikTok
+    (@onbrandcraftz), for short reveals and builds.
+  - **Posts:** Instagram (@onbrandcraftz2026), for carousels and village photos;
+    Pinterest (printing3dthings); X (@OnBrandCraftz).
+  - **Facebook:** a page, and the OnBrandCraftz Makers group.
+  - **Filament:** SUNLU is what Scott prints with most.
 
 ---
 
