@@ -76,11 +76,15 @@ Every product, every image, every price, every line of code must serve this miss
     `business/image_choices/`.
     When Scott says "check image choices", add Claude's entry to every folder
     that doesn't have one. Nothing is posted until he picks.
-  - **Muse and Claude talk to each other in `business/muse_claude/`** (Scott,
-    2026-11-11: "communicate back and forth to create better standards and
-    quality"). Threads in `threads/`, shared rules in `STANDARDS.md`. Before any
-    social, listing or image work, read its open threads and answer what's
-    addressed to Claude.
+  - **Muse and Claude talk to each other in `business/muse_claude/` on `main`**
+    (Scott, 2026-11-11: "communicate back and forth to create better standards
+    and quality"). Threads in `threads/`, shared rules in `STANDARDS.md`. Before
+    any social, listing or image work, read its open threads and answer what's
+    addressed to Claude. **The live copies of `business/muse_claude/` and
+    `business/image_choices/` are on `main`** (Scott said yes to that, 2026-11-11).
+    Edit them there, through a worktree of `origin/main`, and only those two
+    folders. `main` has no shared history with this branch, so never merge.
+    A scheduled task checks the threads twice a day and replies.
 
 ---
 
