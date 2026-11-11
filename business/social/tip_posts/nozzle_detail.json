@@ -1,0 +1,14 @@
+{
+  "headline": [["What a 0.4 mm nozzle", "white"], ["can really print", "gold"]],
+  "sub": "Measured on our own detail test, not guessed.",
+  "tips": [
+    {"title": "Lines up the wall hold", "text": "A 0.4 mm groove running up a wall kept its depth at every layer height we tried.", "picture": "groove_up"},
+    {"title": "Heights snap to layers", "text": "At 0.2 mm layers, a 0.3 mm groove printed 0.4. Draw heights in 0.2 steps.", "picture": "snap"},
+    {"title": "Too small gets bigger", "text": "A 0.1 mm groove printed as a whole 0.2 mm layer: twice the size drawn.", "picture": "grow"},
+    {"title": "Small domes are stairs", "text": "A 1 mm dome is just 5 layers at 0.2 mm. Facet it, or print finer.", "picture": "stairs"},
+    {"title": "Letters 3 mm tall", "text": "Smaller, and letters blob or lose strokes on a 0.4 nozzle.", "picture": "letters"},
+    {"title": "Dots 0.8 mm across", "text": "On a top face, smaller dots aren't shrunk. They're dropped.", "picture": "dots"}
+  ],
+  "cta": "SAVE THIS FOR YOUR NEXT DETAIL PRINT",
+  "source": "Source: OnBrandCraftz detail tests on a 0.4 mm nozzle, measured from the sliced toolpath."
+}
