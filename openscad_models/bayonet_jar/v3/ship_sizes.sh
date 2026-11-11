@@ -4,14 +4,16 @@
 set -u
 cd "$(dirname "$0")"
 T=../../../tools
-G="#E8B33A"; L="#F2C85B"
+G="#E8B33A"; L="$G"   # one filament: two colours made the AMS swap every layer
 mkdir -p checks logs/slices
+if [ "${1:-}" != "--no-gates" ]; then
 : > checks/gates.txt
 for p in parts/lid_D*.stl parts/base_D*.stl; do
   n=$(basename "$p" .stl)
   python3 $T/product_gate.py "$p" > "checks/gate_$n.txt" 2>&1
   echo "$n: $(grep -E 'FAIL|GATE' "checks/gate_$n.txt" | tr '\n' ' ')" >> checks/gates.txt
 done
+fi
 : > checks/slices.txt
 for d in 40 50 65 80; do for h in 30 45 70 100; do
   s=D${d}_H${h}
