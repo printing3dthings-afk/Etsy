@@ -50,10 +50,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--still", type=int, help="render just this frame")
     ap.add_argument("--frames", type=int, default=300)
-    ap.add_argument("--samples", type=int, default=32)
+    ap.add_argument("--samples", type=int, default=16)
     ap.add_argument("--flakes", type=int, default=700)
     ap.add_argument("--size", type=int, default=1080, help="width; height is 16:9 of it")
     ap.add_argument("--no-haze", action="store_true")
+    ap.add_argument("--to", type=int, help="stop after this frame (for timing)")
     a = ap.parse_args()
     frames_dir = HERE / "frames"
     frames_dir.mkdir(exist_ok=True)
@@ -68,7 +69,7 @@ def main():
                 paths.append([str(Path(td) / s), col])
             bl.append({**b, "parts": paths})
         cfg = {"buildings": bl, "frames": a.frames, "samples": a.samples, "flakes": a.flakes,
-               "size": [a.size, a.size * 16 // 9], "haze": not a.no_haze,
+               "size": [a.size, a.size * 16 // 9], "haze": not a.no_haze, **({"to": a.to} if a.to else {}),
                "look_from": [[0.03, -0.78, 0.24], [0.0, 0.0, 0.06]],
                "look_to": [[-0.01, -0.55, 0.13], [0.0, 0.0, 0.055]],
                "out": str(frames_dir / ("still.png" if a.still else "f_"))}
@@ -80,8 +81,8 @@ def main():
                            capture_output=True, text=True)
         if "SCENE_OK" not in r.stdout:
             sys.exit(r.stdout[-3000:] + r.stderr[-3000:])
-    if a.still:
-        print("wrote", frames_dir / "still.png")
+    if a.still or a.to:
+        print("wrote", frames_dir)
         return
     lab = HERE / "label.png"
     label_png(lab)

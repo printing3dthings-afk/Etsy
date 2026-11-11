@@ -193,7 +193,7 @@ nt = world.node_tree
 vol = nt.nodes.new("ShaderNodeVolumeScatter")
 vol.inputs["Density"].default_value = 0.12
 vol.inputs["Color"].default_value = (0.35, 0.42, 0.65, 1)
-if cfg.get("haze", True):
+if cfg.get("haze", False):  # no visible gain in tests, and slow
     nt.links.new(vol.outputs[0], nt.nodes["World Output"].inputs["Volume"])
 bpy.ops.object.light_add(type="SUN", rotation=(math.radians(60), 0, math.radians(-150)))
 moon = bpy.context.active_object
@@ -211,7 +211,7 @@ fill.rotation_euler = (math.radians(58), 0, 0)
 # ---- falling snow: small soft flakes, each falling at its own speed ----
 flake = mat("flake", (0.9, 0.93, 1.0), emit=(0.85, 0.9, 1.0), strength=0.35)
 rnd = random.Random(7)
-bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=1)
+bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1)
 proto = bpy.context.active_object
 proto.data.materials.append(flake)
 for i in range(cfg["flakes"]):
@@ -263,8 +263,7 @@ ee.bloom_threshold = 0.9
 ee.bloom_intensity = 0.06
 ee.bloom_radius = 5.0
 ee.use_soft_shadows = True
-ee.shadow_cube_size = "2048"
-ee.use_volumetric_lights = True
+ee.shadow_cube_size = "1024"
 ee.volumetric_end = 40.0
 ee.light_threshold = 0.0005
 ee.use_gtao = True
