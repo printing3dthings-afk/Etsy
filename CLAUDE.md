@@ -63,6 +63,12 @@ Every product, every image, every price, every line of code must serve this miss
     Pinterest (printing3dthings); X (@OnBrandCraftz).
   - **Facebook:** a page, and the OnBrandCraftz Makers group.
   - **Filament:** SUNLU is what Scott prints with most.
+  - **Muse posts everything** (Scott's posting agent). It logs each post to
+    `data/social/muse_log.md` on `main`, one entry per post, append-only.
+    Fields: link, product, media, exact caption, links, claims made, replies,
+    results and problems. Read it before any social or marketing work. From a
+    feature branch: `git fetch origin main && git show
+    origin/main:data/social/muse_log.md`.
 
 ---
 
