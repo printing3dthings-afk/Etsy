@@ -1,0 +1,13 @@
+parts/base_D65_H30.stl
+  ok    fits_plate: 65.0 x 65.0 x 30.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.80mm, median 3.13mm (floor 1.2mm); 0.00% below one bead
+  FAIL  no_unsupported_overhang: slicer: 8917 support moves, 100 overhang perimeters, 30.0mm printed of 30.0mm
+  ok    geometry_survives_slicing: printed height 30.0mm vs modelled 30.0mm
+  ok    flat_base: 31.91 cm2 of contact = 75.5% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 10.8mm widest unsupported span at z=0.8mm; 69 layer(s) under the 4.0s cooling threshold; 4377mm2 on the plate; aspect 0.35
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE FAILED

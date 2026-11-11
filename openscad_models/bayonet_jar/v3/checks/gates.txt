@@ -4,3 +4,13 @@ lid_D65:   FAIL  no_unsupported_overhang: slicer: 1064 support moves, 38 overhan
 lid_D80:   FAIL  no_unsupported_overhang: slicer: 886 support moves, 36 overhang perimeters, 19.0mm printed of 19.0mm PRODUCT GATE FAILED 
 base_D40_H100:   FAIL  no_unsupported_overhang: slicer: 13462 support moves, 85 overhang perimeters, 100.0mm printed of 100.0mm PRODUCT GATE FAILED 
 base_D40_H30:   FAIL  no_unsupported_overhang: slicer: 5260 support moves, 88 overhang perimeters, 30.0mm printed of 30.0mm PRODUCT GATE FAILED 
+base_D40_H45:   FAIL  no_unsupported_overhang: slicer: 6993 support moves, 88 overhang perimeters, 45.0mm printed of 45.0mm PRODUCT GATE FAILED 
+base_D40_H70:   FAIL  no_unsupported_overhang: slicer: 9901 support moves, 85 overhang perimeters, 70.0mm printed of 70.0mm PRODUCT GATE FAILED 
+base_D50_H100:   FAIL  no_unsupported_overhang: slicer: 19654 support moves, 99 overhang perimeters, 100.0mm printed of 100.0mm PRODUCT GATE FAILED 
+base_D50_H30:   FAIL  no_unsupported_overhang: slicer: 7059 support moves, 99 overhang perimeters, 30.0mm printed of 30.0mm PRODUCT GATE FAILED 
+base_D50_H45:   FAIL  no_unsupported_overhang: slicer: 9757 support moves, 99 overhang perimeters, 45.0mm printed of 45.0mm PRODUCT GATE FAILED 
+base_D50_H70:   FAIL  no_unsupported_overhang: slicer: 14281 support moves, 99 overhang perimeters, 70.0mm printed of 70.0mm PRODUCT GATE FAILED 
+base_D65_H100:   FAIL  no_unsupported_overhang: slicer: 24587 support moves, 100 overhang perimeters, 100.0mm printed of 100.0mm PRODUCT GATE FAILED 
+base_D65_H30:   FAIL  no_unsupported_overhang: slicer: 8917 support moves, 100 overhang perimeters, 30.0mm printed of 30.0mm PRODUCT GATE FAILED 
+base_D65_H45:   FAIL  no_unsupported_overhang: slicer: 12280 support moves, 100 overhang perimeters, 45.0mm printed of 45.0mm PRODUCT GATE FAILED 
+base_D65_H70:   FAIL  no_unsupported_overhang: slicer: 17953 support moves, 100 overhang perimeters, 70.0mm printed of 70.0mm PRODUCT GATE FAILED 
