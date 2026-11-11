@@ -116,14 +116,15 @@ def diagram(kind, w, h):
                 d.rectangle([x0, top, x1, base], outline=col, width=lw)
             d.text(((x0 + x1) / 2, base + 22), lab, font=BOLD(36), fill=col, anchor="mt")
     elif kind == "grow":          # a hairline groove becomes a whole layer
-        x0, x1, base = W * 0.12, W * 0.88, H * 0.8
-        step = H * 0.2
+        fs = int(min(40, H * 0.16))   # labels scale with the tile, so a short reel tile keeps them inside
+        x0, x1, base = W * 0.12, W * 0.88, H * 0.92
+        step = (base - fs * 1.3) / 4
         layers(x0, x1, base, 3, step)
         y = base - 2 * step
         d.rectangle([W * 0.2, y - step * 0.5, W * 0.45, y], outline=WHITE, width=3)
         d.rectangle([W * 0.55, y - step, W * 0.8, y], outline=GOLD2, width=lw)
-        d.text((W * 0.325, y - step * 0.5 - 40), "0.1", font=BOLD(40), fill=WHITE, anchor="mm")
-        d.text((W * 0.675, y - step - 40), "0.2", font=BOLD(40), fill=GOLD2, anchor="mm")
+        d.text((W * 0.325, y - step * 0.5 - fs * 0.25), "0.1", font=BOLD(fs), fill=WHITE, anchor="mb")
+        d.text((W * 0.675, y - step - fs * 0.25), "0.2", font=BOLD(fs), fill=GOLD2, anchor="mb")
     elif kind == "stairs":        # a dome drawn smooth, printed as five stacked rings
         cx, base, r = W * 0.5, H * 0.86, H * 0.62
         d.arc([cx - r, base - r, cx + r, base + r], 180, 360, fill=WHITE, width=4)
@@ -133,11 +134,13 @@ def diagram(kind, w, h):
             hw = math.sqrt(max(r * r - ((i + 0.5) * r / n) ** 2, 0))  # each ring as wide as the dome at its middle
             d.rectangle([cx - hw, y0, cx + hw, y0 + r / n - 4], outline=GOLD2, width=lw)
     elif kind == "letters":       # a 3 mm letter beside a too-small blob
-        d.text((W * 0.33, H * 0.5), "A", font=HEAD(int(H * 0.72)), fill=GOLD2, anchor="mm")
-        d.text((W * 0.72, H * 0.62), "a", font=HEAD(int(H * 0.26)), fill=(110, 112, 118), anchor="mm")
-        d.line([W * 0.6, H * 0.2, W * 0.86, H * 0.86], fill=(200, 70, 60), width=8)
-        d.line([W * 0.08, H * 0.92, W * 0.58, H * 0.92], fill=WHITE, width=4)
-        d.text((W * 0.33, H * 0.92 + 8), "3 mm", font=BOLD(36), fill=WHITE, anchor="mt")
+        fs = int(min(36, H * 0.15))
+        rule = H - fs * 1.4
+        d.text((W * 0.33, rule / 2), "A", font=HEAD(int(rule * 0.8)), fill=GOLD2, anchor="mm")
+        d.text((W * 0.72, rule * 0.62), "a", font=HEAD(int(rule * 0.3)), fill=(110, 112, 118), anchor="mm")
+        d.line([W * 0.6, rule * 0.2, W * 0.86, rule * 0.92], fill=(200, 70, 60), width=8)
+        d.line([W * 0.08, rule, W * 0.58, rule], fill=WHITE, width=4)
+        d.text((W * 0.33, rule + fs * 0.25), "3 mm", font=BOLD(fs), fill=WHITE, anchor="mt")
     elif kind == "dots":          # a row of dots: big ones stay, tiny ones vanish
         sizes = [0.30, 0.22, 0.15, 0.08]
         x = W * 0.12
@@ -168,12 +171,14 @@ def card(spec, size, show=None, t_in=None):
     ImageDraw.Draw(glow).ellipse([W * 0.1, -H * 0.12, W * 0.9, H * 0.28], fill=(52, 40, 14))
     im = Image.blend(im, glow.filter(ImageFilter.GaussianBlur(120)), 0.9)
     d = ImageDraw.Draw(im)
-    top = 250 if tall else 40          # the reel keeps clear of the apps' top bar
+    # the reel keeps everything between y 225 and 1440: TikTok/Reels put their top
+    # bar above that and the caption and buttons in the bottom quarter below it
+    top = 225 if tall else 40
     lg = logo(66)
     im.paste(lg, ((W - lg.width) // 2, top), lg)
     y = top + 80
     for line, col in spec["headline"]:
-        f = HEAD(118 if not tall else 132)
+        f = HEAD(118 if not tall else 122)
         d.text((W / 2, y), line, font=f, fill=GOLD2 if col == "gold" else WHITE, anchor="mt")
         y += f.size * 0.86
     d.text((W / 2, y + 8), spec["sub"], font=BODY(34), fill=WHITE, anchor="mt")
@@ -186,7 +191,7 @@ def card(spec, size, show=None, t_in=None):
     rows = math.ceil(len(tips) / cols)
     gx, gap = 36, 16
     cw = (W - 2 * gx - gap * (cols - 1)) / cols
-    bottom = H - (390 if tall else 170)
+    bottom = H - (630 if tall else 170)
     ch = (bottom - y - gap * (rows - 1)) / rows
     for i, t in enumerate(tips[:n]):
         c, r = i % cols, i // cols
@@ -205,7 +210,7 @@ def card(spec, size, show=None, t_in=None):
         for ln in lines:
             td.text((92, ty), ln, font=tf, fill=WHITE)
             ty += tf.size + 6
-        bf = BODY(20 if not tall else 23)
+        bf = BODY(20 if not tall else 21)
         body = wrap(td, t["text"], bf, cw - 36)
         lh = bf.size + 7
         by = ch - 16 - lh * len(body)
@@ -220,12 +225,12 @@ def card(spec, size, show=None, t_in=None):
             tile.putalpha(tile.getchannel("A").point(lambda v: v * alpha // 255))
         im.paste(tile, (int(x0), int(y0 + dy)), tile)
     # call to action and source
-    cy = bottom + (40 if tall else 22)
+    cy = bottom + (20 if tall else 22)
     d.rounded_rectangle([gx, cy, W - gx, cy + 84], radius=18, fill=GOLD)
     d.text((W / 2, cy + 44), spec["cta"], font=HEAD(58), fill=BG, anchor="mm")
     sf = BODY(21)
     for k2, ln in enumerate(wrap(d, spec["source"], sf, W - 2 * gx)):
-        d.text((W / 2, cy + 102 + k2 * 28), ln, font=sf, fill=SOFT, anchor="mt")
+        d.text((W / 2, cy + (96 if tall else 102) + k2 * 28), ln, font=sf, fill=SOFT, anchor="mt")
     return im
 
 
