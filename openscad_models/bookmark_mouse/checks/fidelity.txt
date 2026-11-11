@@ -1,0 +1,25 @@
+slicing 4 part(s), 4 filament(s) ...
+18 layers parsed
+  layer 0/18
+
+PRINT FIDELITY  (18 layers, model 5800.1 mm3)
+  dropped (modelled, not printed): 1.73 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.01 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -137.1]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -133.5]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -130.5]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -126.9]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -128.3]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -124.7]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -126.1]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -122.5]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -120.3]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -123.9]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -117.3]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -113.7]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -115.1]  0.12 mm wide, 0.25 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-8.9, -111.5]  0.12 mm wide, 0.24 mm deep
+       dropped #D2B48C slot 1     0.008 mm3  z 1.2-1.6 (2 layers)  front at [-11.9, -112.9]  0.12 mm wide, 0.25 mm deep
+  ... 206 smaller

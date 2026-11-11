@@ -1,0 +1,6 @@
+Bambu Studio slice (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20 mm Standard, shop retail settings.
+
+ladder mouse, AMS (tan #D2B48C, grey #9A9AA2, pink #F2A0B4, black #222222):
+  1h 20m 29s, 18 layers, 0 support lines
+  filament: tan 7.50 g, grey 4.85 g, pink 2.50 g, black 0.43 g (15.3 g)
+  Most of the time is colour changes: the face's pink and black are the top three layers.

@@ -1,0 +1,13 @@
+parts/ladder_mouse_print.stl
+  ok    fits_plate: 42.3 x 175.8 x 3.6 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.45mm, median 2.60mm (floor 1.2mm); 0.00% below one bead; 4165 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 3.6mm printed of 3.6mm
+  ok    geometry_survives_slicing: printed height 3.6mm vs modelled 3.6mm
+  ok    flat_base: 24.51 cm2 of contact = 32.9% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=2.2mm; 3 layer(s) under the 4.0s cooling threshold; 3165mm2 on the plate; aspect 0.02
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

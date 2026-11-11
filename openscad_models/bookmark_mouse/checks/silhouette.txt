@@ -1,0 +1,6 @@
+  OK    gaps      no near-touches
+  OK    thin      nothing under 1.2 mm
+  OK    specks    one clean piece
+  OK    twinning  mirror IoU 0.77
+  OK    clutter   0 small cut-throughs, 1 engraved marks
+SILHOUETTE CHECK PASSED
