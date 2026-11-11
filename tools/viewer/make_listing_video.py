@@ -28,14 +28,17 @@ import tempfile
 import time
 from pathlib import Path
 
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+# /opt/pw-browsers/chromium is the container's stable link to whatever build is
+# installed; the build-numbered path went stale when 1194 became 1243 (2026-11-11).
+CHROME = next((c for c in ("/opt/pw-browsers/chromium",
+                           "/opt/pw-browsers/chromium-1194/chrome-linux/chrome") if Path(c).exists()), "")
 FPS = 30   # VID_FPS in app.js
 
 
-def render(url, job, seconds, hold, fmt, scale, detail, frm=None, to=None):
+def render(url, job, seconds, hold, fmt, scale, detail, frm=None, to=None, facing=None):
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
-        kw = {"executable_path": CHROME} if Path(CHROME).exists() else {}
+        kw = {"executable_path": CHROME} if CHROME else {}
         b = p.chromium.launch(args=["--use-gl=angle", "--use-angle=swiftshader",
                                     "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"], **kw)
         pg = b.new_page(viewport={"width": 1280, "height": 900})
@@ -44,15 +47,15 @@ def render(url, job, seconds, hold, fmt, scale, detail, frm=None, to=None):
         name = pg.evaluate("window.__viewer.getJob().raw.name")
         print(f"{job}: loaded {name!r}", flush=True)
         t0 = time.time()
-        b64 = pg.evaluate("""async ([fmt, s, sc, h, a, b, d]) => {
+        b64 = pg.evaluate("""async ([fmt, s, sc, h, a, b, d, fc]) => {
             const blob = await window.__viewer.makeVideo(fmt, s, sc,
-                {plate: true, caption: false, hold: h, from: a, to: b, detail: d});
+                {plate: true, caption: false, hold: h, from: a, to: b, detail: d, facing: fc});
             if (!blob) { return null; }
             const buf = new Uint8Array(await blob.arrayBuffer());
             let bin = '';
             for (let i = 0; i < buf.length; i += 32768) { bin += String.fromCharCode.apply(null, buf.subarray(i, i + 32768)); }
             return btoa(bin);
-        }""", [fmt, seconds, scale, hold, frm, to, detail])
+        }""", [fmt, seconds, scale, hold, frm, to, detail, facing])
         b.close()
     if not b64:
         sys.exit(f"{job}: the page made no video")
@@ -84,6 +87,9 @@ def main():
     ap.add_argument("--detail", default="high", choices=["fast", "high", "ultra"],
                     help="the page steps itself down to fast headless unless told")
     ap.add_argument("--chunk", type=int, default=60, help="frames per saved piece")
+    ap.add_argument("--facing", type=float, default=None,
+                    help="centre the turn on this side, degrees from the part (-90 = front); "
+                         "default: away from the purge tower")
     ap.add_argument("--work", default=None, help="where the pieces are kept (default: a temp dir)")
     a = ap.parse_args()
     n = round(max(2, min(60, a.seconds)) * FPS)
@@ -95,7 +101,7 @@ def main():
         piece = work / f"{a.job}_{i0:04d}_{i1:04d}.mp4"
         if not piece.exists():
             tmp = piece.with_suffix(".part")
-            tmp.write_bytes(render(a.url, a.job, a.seconds, a.hold, a.format, a.size / 1080, a.detail, i0, i1))
+            tmp.write_bytes(render(a.url, a.job, a.seconds, a.hold, a.format, a.size / 1080, a.detail, i0, i1, a.facing))
             if blank(tmp):
                 tmp.unlink()
                 sys.exit(f"{a.job}: frames {i0}-{i1} came out black -- check the disk and the GPU process")

@@ -5003,6 +5003,10 @@ function vidRun(f, seconds, codec, opts) {
     // spent its middle looking at the tower (2026-10-22)
     var tw = towerCentre(JOB);
     if (tw) { cam.theta = Math.atan2(tw[1] - cam.ty, tw[0] - cam.tx) + Math.PI - VID_ORBIT / 2; }
+    // or centred on a side given in degrees (camera direction from the part, -90 =
+    // the front, where face-up lettering reads the right way up). Without a tower
+    // the OBC sign's turn ended behind it, the logo upside down (2026-11-11).
+    if (opts.facing != null) { cam.theta = opts.facing * Math.PI / 180 - VID_ORBIT / 2; }
   } else {
     setPartOnly(true);
   }
