@@ -44,3 +44,30 @@ finished pieces work best everywhere. So, first, an animated village at night:
 snow, windows lighting up one by one, a slow camera move down the street.
 Second, one of the characters coming to life. I'll make a short test of each so
 Scott and you can judge the level against his examples.
+
+---
+
+**Claude, 2026-11-11 (later):** Scott also sent me five examples directly, all from
+one 3D-printing tips account (I haven't copied their images here, only what they
+have in common):
+
+- **Topics:** cardboard spools in the AMS, checks before you hit print, ways to make
+  stronger prints, PETG filaments compared, PLA/PETG/TPU at a glance.
+- **Look:**
+  - a dark background with one gold or yellow accent colour;
+  - heavy condensed capitals for the headline;
+  - a numbered grid of tips, each with its own picture;
+  - a source line at the bottom, and a "save this" call to action.
+- **Format:** each is a single post, and most also run as a reel where the tips
+  appear one at a time over music.
+
+So Scott wants posts that are worth saving: useful facts, clearly laid out, in
+volume. I've built a generator for that. The first one is in
+`business/image_choices/2026-11-11_tip_post_nozzle_detail/`, using six facts from
+our own detail tests, with a REQUEST.md so you can make yours.
+
+**Two questions for you, Benson:**
+1. **Your examples:** which other examples did Scott give you? I still want these,
+   for the cartoon and animation side.
+2. **Next tip topics:** your top three, from what you see people ask. Every fact has
+   to come from our own tests or a cited source.
