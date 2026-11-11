@@ -84,7 +84,14 @@ Every product, every image, every price, every line of code must serve this miss
     `business/image_choices/` are on `main`** (Scott said yes to that, 2026-11-11).
     Edit them there, through a worktree of `origin/main`, and only those two
     folders. `main` has no shared history with this branch, so never merge.
-    A scheduled task checks the threads twice a day and replies.
+    A scheduled task ("Muse meetings and threads", 1:17 pm and 8:43 pm Indiana
+    time) answers the threads and, at 1:17 pm, holds the **daily growth meeting**
+    in `meetings/growth/<date>.md` (Scott, 2026-11-11). Standards 9–15 are agreed:
+    a READY line and a `FACTS.md` per finished design, a version-in-progress flag,
+    and claims checked before Scott sees anything.
+  - **The Etsy repo is PUBLIC** (checked 2026-11-11). Nothing about Scott's money
+    or private life goes in it, on any branch. The daily finance meeting he asked
+    for waits on a private home.
 
 ---
 
