@@ -204,3 +204,203 @@ Update 2026-11-11: template title/description found in pipeline-media-2026-11-04
 - Replies/DMs sent: none
 - Results: not available yet — post is pending group admin approval, NOT live
 - Problems: none — awaiting admin approval
+
+## 2026-11-11 morning (EST, exact time not recorded in run log) — Instagram — Stories x3
+- Account: @onbrandcraftz2026
+- Link: media 17917810647556463 / 18111750563234832 / 18117629162032614 (story permalinks not recorded in run log)
+- Product: Gift Box Lantern teaser / Shorts today (Sweet Shop #23 + #24) / Versus Day 13 teaser
+- Media: story1_gift_box.png (Gift Box Lantern colour render) | story2_shorts_today.png (Sweet Shop hero) | story3_versus.png (real lit Cookie Clock Tower photo — Day 13's hero)
+- Caption: not recorded in run log (story graphics; all 3 graphics visually verified before posting)
+- Links in the post: none recorded in run log; no affiliate links
+- Claims made: Gift Box Lantern story carries the swap wording "Our village files are on MakerWorld" — deliberately NO per-file "free" claim; the Gift Box Lantern's free status on MakerWorld is not verified in local records
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — clean CLI receipts (EXIT 0 x3)
+
+## 2026-11-11 09:50–09:53 (EST) — X — spotlight post
+- Account: Onbrandcraftz (X)
+- Link: https://x.com/Onbrandcraftz/status/2120530076626530377
+- Product: Gift Box Lantern (Etsy listing ID 4600522437 exists in the registry, but no Etsy link was used — shop down)
+- Media: gift_box_lantern_colour_three_quarter.png (colour render)
+- Caption: 3D printed Christmas village — the present that lights up 🎄 The Gift Box Lantern is a present-shaped lantern: bow lid on top, village scenes glowing through every side. Our village files are on MakerWorld — link in bio https://makerworld.com/en/@P3DT #3dprinting #christmasvillage
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: "Our village files are on MakerWorld" — deliberately NO per-file "free" claim; the Gift Box Lantern's free status on MakerWorld is not verified in local records
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — full text posted with both hashtags kept (7 characters to spare); duplicate check clean over all 15 profile posts; MakerWorld link verified clickable on viewer check; no Etsy link (shop down, CTA swap applied)
+
+## 2026-11-11 (EST, exact time not recorded in run log) — Instagram — Versus Day 13 reel (video)
+- Account: @onbrandcraftz2026
+- Link: media 18125736127723153 (permalink not recorded in run log)
+- Product: Bambu Lab Textured PEI Plate vs Dual-Texture PEI Plate (third-party products in a Versus deal matchup — not our design; no Etsy link)
+- Media: vs-bambu-plates-video.mp4 (92.6s/91.2s IG/FB cuts, Ronan voiceover, on-screen keyword "textured PEI plate" pill from frame 1, music "Nouvelle Noel" by Kevin MacLeod; hero = real lit Cookie Clock Tower studio photos)
+- Caption: textured PEI plate: Bambu Textured $15.99 vs Dual-Texture $17.49 — a dollar fifty. That's the whole fight: one textured plate, or one plate with two faces? 💚
+
+Checked this morning, Nov 11, on the Bambu Lab US store (never Amazon): Textured PEI Plate $15.99 (list $19.99). Dual-Texture PEI Plate $17.49 (list $24.99). The dual puts a different texture on each face — flip it for a different finish: textured one side, smooth + matte the other (store page).
+
+Head-to-head: textured takes price and textured grip on both faces. Dual takes the second finish, the smooth face and the bigger saving — 3–2 dual-texture.
+
+Send this to the maker whose spare plate is still in the plastic.
+
+Day 12 — Lay it flat vs stand it up is on our profile · Day 14 lands here tomorrow, same time
+
+Sources: Bambu Lab US store product pages, checked Nov 11, 2026.
+
+Music: Nouvelle Noel by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TexturedPEI #BambuLab #3DPrinting #BuildPlate #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: prices re-verified the morning of Nov 11 on the Bambu Lab US store — Textured PEI Plate $15.99 (list $19.99), Dual-Texture PEI Plate $17.49 (list $24.99), gap $1.50; head-to-head score 3–2 to Dual-texture
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — read-back verified live; navigation comment not posted (IG CLI cannot comment; series navigation is carried in the caption)
+
+## 2026-11-11 12:18 (EST) — Facebook — Versus Day 13 reel (video)
+- Account: Onbrandcraftz Page
+- Link: post 122112610251518447 (permalink not recorded in run log)
+- Product: Bambu Lab Textured PEI Plate vs Dual-Texture PEI Plate (third-party products in a Versus deal matchup — not our design; no Etsy link)
+- Media: vs-bambu-plates-video.mp4 (92.6s/91.2s IG/FB cuts, Ronan voiceover, on-screen keyword "textured PEI plate" pill from frame 1, music "Nouvelle Noel" by Kevin MacLeod; hero = real lit Cookie Clock Tower studio photos)
+- Caption: textured PEI plate: Bambu Textured $15.99 vs Dual-Texture $17.49 — a dollar fifty. That's the whole fight 💚
+
+Checked Nov 11 on the Bambu Lab US store (never Amazon): Textured $15.99 (list $19.99). Dual-Texture $17.49 (list $24.99). Flip the dual for a second finish: textured one side, smooth + matte the other.
+
+Head-to-head: textured takes price + grip both faces. Dual takes the second finish — 3–2 dual-texture.
+
+Send this to the maker whose spare plate is still in the plastic.
+
+Day 12 — Lay it flat vs stand it up is on our profile · Day 14 lands here tomorrow, same time
+
+Sources: Bambu Lab US store, checked Nov 11, 2026.
+
+Music: Nouvelle Noel by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TexturedPEI #BambuLab #3DPrinting #BuildPlate #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: prices re-verified the morning of Nov 11 on the Bambu Lab US store — Textured PEI Plate $15.99 (list $19.99), Dual-Texture PEI Plate $17.49 (list $24.99), gap $1.50; head-to-head score 3–2 to Dual-texture
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: a duplicate FB reel (post 122112610293518447) was posted by a service-restart race and DELETED the same day; keeper is 122112610251518447. Full record: the attempt-1 write (10:02 EST) was killed mid-run by a service restart, later attempts were blocked by the connector write-lock (feed read-backs 10:34–12:09 EST confirmed absence), and at 12:18 EST three queued writes landed in one burst — keeper reel copy A (122112610251518447, 12:18:33), duplicate reel copy B (122112610293518447, 12:18:35) and the carousel (122112610389518447, 12:18:37). Duplicate copy B was deleted via Meta Business Suite (12:20–12:23 EST), its permalink verified non-public; keeper verified live + Public, owner = Onbrandcraftz Page — exactly one Day 13 reel and one Day 13 carousel on the Page at run end. Navigation comment not posted (FB CLI posts as Scott personally — hard rule; series navigation is carried in the caption)
+
+## 2026-11-11 (EST, exact time not recorded in run log) — Instagram — Versus Day 13 carousel (5 slides, E-009 save-only closing)
+- Account: @onbrandcraftz2026
+- Link: media 17914099296558243 (permalink not recorded in run log)
+- Product: Bambu Lab Textured PEI Plate vs Dual-Texture PEI Plate (third-party products in a Versus deal matchup — not our design; no Etsy link)
+- Media: 5 slides (green-line locked identity; slide 2 is a photo-led second cover "ONE PLATE. TWO FACES."; Cookie Clock Tower lit studio photos as hero)
+- Caption: SWIPE ➡️ textured PEI plate deal: Bambu Textured $15.99 vs Dual-Texture $17.49 — checked Nov 11 on the Bambu Lab US store.
+
+Slide 3 is the head-to-head — textured takes price and grip on both faces; dual takes the second finish, the smooth face and the bigger saving, 3–2 dual. Slide 4 is the split verdict: one finish forever, or flip it?
+
+One material, one finish, forever → Textured at $15.99. Ever want a smoother finish without a second plate → Dual-Texture at $17.49 — a second finish for $1.50.
+
+Send this to the maker whose spare plate is still in the plastic.
+
+Day 12 — Lay it flat vs stand it up is on our profile · Day 14 lands here tomorrow, same time
+
+Sources: Bambu Lab US store product pages, checked Nov 11, 2026. Dual: "Two Textures (Textured and Smooth) in One Plate."
+
+Music: Nouvelle Noel by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TexturedPEI #BambuLab #3DPrinting #BuildPlate #MakerCommunity
+
+Save this for your next filament run
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: prices re-verified the morning of Nov 11 on the Bambu Lab US store — Textured PEI Plate $15.99 (list $19.99), Dual-Texture PEI Plate $17.49 (list $24.99), gap $1.50; head-to-head score 3–2 to Dual-texture
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — read-back verified live. Note: this carousel is the E-009 Arm A run (single-CTA test, approved Nov 9) — standard 5-slide carousel with NO E-007 video slide, closing slide SAVE ONLY ("Save this for your next filament run"); logged in experiments.md under E-009, 72h read due Sat Nov 14
+
+## 2026-11-11 12:18 (EST) — Facebook — Versus Day 13 carousel (5 slides, E-009 save-only closing)
+- Account: Onbrandcraftz Page
+- Link: post 122112610389518447 (permalink not recorded in run log)
+- Product: Bambu Lab Textured PEI Plate vs Dual-Texture PEI Plate (third-party products in a Versus deal matchup — not our design; no Etsy link)
+- Media: 5 slides (green-line locked identity; slide 2 is a photo-led second cover "ONE PLATE. TWO FACES."; Cookie Clock Tower lit studio photos as hero)
+- Caption: SWIPE ➡️ textured PEI plate deal: Bambu Textured $15.99 vs Dual-Texture $17.49 — checked Nov 11, Bambu Lab US store.
+
+Slide 3: head-to-head — textured takes price + grip both faces; dual takes the second finish, smooth face, bigger saving — 3–2 dual. Slide 4: the split verdict.
+
+One finish forever → Textured $15.99. Smoother finish without a second plate → Dual-Texture $17.49.
+
+Send this to the maker whose spare plate is still in the plastic.
+
+Day 12 — Lay it flat vs stand it up is on our profile · Day 14 lands here tomorrow, same time
+
+Sources: Bambu Lab US store, checked Nov 11, 2026.
+
+Music: Nouvelle Noel by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TexturedPEI #BambuLab #3DPrinting #BuildPlate #MakerCommunity
+
+Save this for your next filament run
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: prices re-verified the morning of Nov 11 on the Bambu Lab US store — Textured PEI Plate $15.99 (list $19.99), Dual-Texture PEI Plate $17.49 (list $24.99), gap $1.50; head-to-head score 3–2 to Dual-texture
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — the attempt-1 carousel write was held by the same connector write-lock as the reel and landed server-side at 12:18:37 EST in the same burst; read-back verified single copy, live + Public, owner = Onbrandcraftz Page, caption verbatim. Note: this carousel is the E-009 Arm A run (single-CTA test, approved Nov 9) — standard 5-slide carousel with NO E-007 video slide, closing slide SAVE ONLY ("Save this for your next filament run"); logged in experiments.md under E-009, 72h read due Sat Nov 14. Navigation comment not posted (FB CLI posts as Scott personally — hard rule; series navigation is carried in the caption)
+
+## 2026-11-11 (EST, exact time not recorded in run log) — TikTok — Versus Day 13 video
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7706962617050451214
+- Product: Bambu Lab Textured PEI Plate vs Dual-Texture PEI Plate (third-party products in a Versus deal matchup — not our design; no Etsy link)
+- Media: vs-bambu-plates-tiktok.mp4 (keyword "textured PEI plate" spoken 0.3–2.36s + on-screen text, Ronan voiceover, music "Nouvelle Noel" by Kevin MacLeod; hero = real lit Cookie Clock Tower studio photos)
+- Caption: textured PEI plate: Bambu Textured $15.99 vs Dual-Texture $17.49 — a dollar fifty. That's the whole fight: one textured plate, or one plate with two faces? 💚
+
+Checked this morning, Nov 11, on the Bambu Lab US store (never Amazon): Textured PEI Plate $15.99 (list $19.99). Dual-Texture PEI Plate $17.49 (list $24.99). The dual puts a different texture on each face — flip it for a different finish: textured one side, smooth + matte the other (store page).
+
+Head-to-head: textured takes price and textured grip on both faces. Dual takes the second finish, the smooth face and the bigger saving — 3–2 dual-texture.
+
+Send this to the maker whose spare plate is still in the plastic.
+
+Day 12 — Lay it flat vs stand it up is on our profile · Day 14 lands here tomorrow, same time
+
+Sources: Bambu Lab US store product pages, checked Nov 11, 2026.
+
+Music: Nouvelle Noel by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TexturedPEI #BambuLab #3DPrinting #BuildPlate #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: prices re-verified the morning of Nov 11 on the Bambu Lab US store — Textured PEI Plate $15.99 (list $19.99), Dual-Texture PEI Plate $17.49 (list $24.99), gap $1.50; head-to-head score 3–2 to Dual-texture
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — LIVE, Everyone/public (Studio count 79→80), copyright + content checks "No issues found", Ronan voiceover audible on playback check, caption verbatim
+
+## 2026-11-11 14:30 (EST, scheduled go-live; uploaded and Studio-verified earlier in the day's pipeline run) — YouTube — Short #23
+- Account: OnBrandCraftz (YouTube)
+- Link: https://youtube.com/shorts/ptu6a07lT9o
+- Product: Sweet Shop (white)
+- Media: youtube_short_draft_2026-11-06_sweet_shop_white.mp4 (720x1280; music "Deck the Halls B" by Kevin MacLeod per the run log)
+- Caption: not recorded word-for-word in run log (locked template; description carries the MakerWorld swap in place of the Etsy link, per the run log)
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: the source footage itself carries the queue-original burned-in overlay "Print files on Etsy - OnBrandCraftz" (true of all 30 queue videos); the description carries the MakerWorld swap because the Etsy shop is down
+- Replies/DMs sent: none
+- Results: scheduled, not yet live at log time (scheduled go-live today 2:30 PM EST; uploaded and Studio-verified earlier in the run)
+- Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; filename duplicate check clean (the Oct 26 Sweet Shop Short is a different source file)
+
+## 2026-11-11 20:30 (EST, scheduled go-live; uploaded and Studio-verified earlier in the day's pipeline run) — YouTube — Short #24
+- Account: OnBrandCraftz (YouTube)
+- Link: https://youtube.com/shorts/yNerqBMUWLw
+- Product: Sweet Shop (colour)
+- Media: youtube_short_draft_2026-11-07_sweet_shop_color.mp4 (720x1280; music "Jingle Bells (Calm)" by Kevin MacLeod per the run log)
+- Caption: not recorded word-for-word in run log (locked template; description carries the MakerWorld swap in place of the Etsy link, per the run log)
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: the source footage itself carries the queue-original burned-in overlay "Print files on Etsy - OnBrandCraftz" (true of all 30 queue videos); the description carries the MakerWorld swap because the Etsy shop is down
+- Replies/DMs sent: none
+- Results: scheduled, not yet live at log time (scheduled go-live today 8:30 PM EST; uploaded and Studio-verified earlier in the run)
+- Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; filename duplicate check clean (distinct source filename from Short #23 despite the shared locked-template title)
+
+## 2026-11-11 ~16:43 (EST, scheduled Wednesday slot) — 3D Printing, Explained — Lesson 005 HELD (ACTION, not a post)
+- Account: @onbrandcraftz2026 (no post made)
+- Link: none — nothing posted
+- Product: Explained Lesson 005 "Why our windows are 0.8 mm thin" (approved by Scott Nov 8)
+- Media: not built — the lesson's slide-2 coupon photo has not arrived
+- Caption: none — nothing posted
+- Links in the post: none
+- Claims made: none
+- Replies/DMs sent: none
+- Results: not posted — HELD
+- Problems: held for the slide-2 coupon photo (Scott's bench session — 3 window coupons at 0.8 / 1.6 / 2.4 mm against one battery tea light); the photo was not in the workspace at run time (newest files are Nov 10). Per the draft's own guidance the lesson is held rather than shipped without the coupon photo; its E-007 video-slide run moves with it. The lesson stays ready the moment the photo lands
