@@ -1,0 +1,12 @@
+slicing 1 part(s), 1 filament(s) ...
+225 layers parsed
+  layer 0/225
+  layer 100/225
+  layer 200/225
+
+PRINT FIDELITY  (225 layers, model 23495.6 mm3)
+  dropped (modelled, not printed): 0.01 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #E8B33A slot 1     0.014 mm3  z 0.0-0.6 (3 layers)  right at [2.6, -0.2]  0.13 mm wide, 0.28 mm deep

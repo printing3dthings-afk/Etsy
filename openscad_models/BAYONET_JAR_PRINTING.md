@@ -1,5 +1,8 @@
 # Bayonet twist-lock jar — how to print it
 
+**v3 is in `bayonet_jar/v3/` (2026-11-11):** closes clockwise, 16 sizes. This file
+is v2, the one printed.
+
 Two parts, one plate. 50mm across, 45mm tall closed. `bayonet_jar.3mf` has
 both already laid out and coloured.
 

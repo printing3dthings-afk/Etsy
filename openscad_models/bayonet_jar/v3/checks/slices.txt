@@ -1,1 +1,17 @@
 D40_H30: "support_lines": 0 "time": "55m 14s "filament_g": "21.09 
+D40_H45: "support_lines": 0 "time": "1h 6m 0s "filament_g": "25.40 
+D40_H70: "support_lines": 0 "time": "1h 22m 52s "filament_g": "32.59 
+D40_H100: "support_lines": 0 "time": "1h 43m 43s "filament_g": "41.22 
+D50_H30: "support_lines": 0 "time": "1h 16m 12s "filament_g": "28.42 
+D50_H45: "support_lines": 0 "time": "1h 30m 11s "filament_g": "33.71 
+D50_H70: "support_lines": 0 "time": "1h 53m 46s "filament_g": "42.54 
+D50_H100: "support_lines": 0 "time": "2h 22m 15s "filament_g": "53.13 
+D65_H30: "support_lines": 0 "time": "1h 47m 48s "filament_g": "40.76 
+D65_H45: "support_lines": 0 "time": "2h 5m 19s "filament_g": "47.79 
+D65_H70: "support_lines": 0 "time": "2h 35m 4s "filament_g": "59.52 
+D65_H100: "support_lines": 0 "time": "3h 10m 29s "filament_g": "73.59 
+D80_H30: "support_lines": 0 "time": "2h 23m 54s "filament_g": "55.69 
+D80_H45: "support_lines": 0 "time": "2h 46m 12s "filament_g": "64.32 
+D80_H70: "support_lines": 0 "time": "3h 22m 40s "filament_g": "78.71 
+D80_H100: "support_lines": 0 "time": "4h 7m 55s "filament_g": "95.97 
+SHIP_DONE
