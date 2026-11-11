@@ -1,0 +1,9 @@
+Bambu Studio slices (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20 mm Standard, shop retail settings.
+
+plaque, AMS (black #1A1A1E + gold #D4A63A): 2h 23m 4s, 43.93 g black + 10.60 g gold, 37 layers, 0 support lines
+plaque, one spool, pause at 5.0 mm:          2h 19m 18s plus the swap, 53.23 g, 1 pause, 0 support lines
+base, black:                                 1h 35m 37s, 46.55 g, 0 support lines
+
+note: bambu_slice's "only slots [2] used" warning on the AMS slice is a false alarm. The plate
+G-code starts on slot 1 (black, loaded by the start code with no M620 swap) and swaps to slot 2
+(gold) once, at line 49367, just before Z 5.2, the first gold layer. Checked 2026-11-11.

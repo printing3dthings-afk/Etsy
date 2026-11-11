@@ -1,0 +1,65 @@
+{
+ "height_over_width": 0.37472,
+ "stripes": [
+  {
+   "top": 0.1039,
+   "bottom": 0.1098,
+   "darkness": 0.558
+  },
+  {
+   "top": 0.1529,
+   "bottom": 0.1627,
+   "darkness": 0.742
+  },
+  {
+   "top": 0.2,
+   "bottom": 0.2137,
+   "darkness": 0.801
+  },
+  {
+   "top": 0.249,
+   "bottom": 0.2588,
+   "darkness": 0.785
+  },
+  {
+   "top": 0.4863,
+   "bottom": 0.4922,
+   "darkness": 0.573
+  },
+  {
+   "top": 0.5333,
+   "bottom": 0.5451,
+   "darkness": 0.732
+  },
+  {
+   "top": 0.5824,
+   "bottom": 0.5961,
+   "darkness": 0.829
+  },
+  {
+   "top": 0.6314,
+   "bottom": 0.6431,
+   "darkness": 0.821
+  },
+  {
+   "top": 0.7941,
+   "bottom": 0.798,
+   "darkness": 0.562
+  },
+  {
+   "top": 0.8392,
+   "bottom": 0.8529,
+   "darkness": 0.685
+  },
+  {
+   "top": 0.8882,
+   "bottom": 0.9039,
+   "darkness": 0.835
+  },
+  {
+   "top": 0.9373,
+   "bottom": 0.9549,
+   "darkness": 0.893
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+overlap, standing sign with base: 0.0000 mm3
+plaque's lowest point above the slot floor's nominal height: -0.35 mm
+slot gap 0.50 mm over 10 mm depth -> leans 10.9 deg (8 drawn + 2.9)
+slot gap 0.25 mm over 10 mm depth -> leans 9.4 deg (8 drawn + 1.4)
+centre of mass: y +1.0 (base from -23.0 to 23.0), z 25.0 mm
+tips backwards past 41 deg, forwards past 44 deg
+plaque: 182.0 x 88.2 x 5.0 mm
+letters: 149.9 x 56.3 x 2.4 mm
+base: 196.0 x 46.0 x 14.0 mm
+FIT: PASS
