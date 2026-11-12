@@ -84,3 +84,23 @@ centre post: 0.4 radial gap; post height into the bore 8 mm, RSS 0.18
 
 The pie drum itself, at 150 mm with a 120 mm bearing, once the test print spins
 well.
+
+## 7. Printed balls instead of airsoft BBs (2026-11-12)
+
+Scott asked to print the 6 mm balls (`printed_bb.scad`, `printed_bbs_fine_0.12mm.gcode.3mf`,
+`Printed_BB_Guide.pdf`).
+- **30 balls, 6.0 mm**, each standing on a flat 0.4 mm deep, 3.0 mm across. A full
+  sphere's lowest layers would step out past the one below and sag; above this flat the
+  steps are 0.30, 0.28, 0.16 mm, under one 0.42 bead.
+- **Sliced at 0.12 mm layers:** 27 min 29 s and 3.79 g on Bambu Studio, no supports
+  (0.2 mm: 16 min 52 s, rounder at 0.12).
+- **Checks:** product gate PASS (30 bodies, 0 support moves), print fidelity 0 misses,
+  fragility 0.
+- **Size:** about 6.1 mm across as sliced (outer-wall extent plus one bead), in the
+  6.6 mm channel: 0.2 or more each side.
+- **What they cost against airsoft BBs**, which are round to a few hundredths:
+  - the flat: a ball lying on it is 5.6 tall and carries nothing until it rolls off;
+  - the layer seam up one side, which is the main bump (sanding takes it down);
+  - layer rings, 0.12 mm.
+  So this run tests printed balls as much as the bearing. If it rumbles, try airsoft
+  BBs before blaming the channel.
