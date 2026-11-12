@@ -1,0 +1,4 @@
+Bambu Studio slice (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20 mm Standard, shop retail settings.
+
+gear heart test (two bars, one gear pair, one colour): 36m 51s, 101 layers, 9.09 g, 0 support lines
+Over the handbook's 30 min for a coupon: the posts stand 20 mm tall at their real size (101 layers).

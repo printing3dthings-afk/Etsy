@@ -1,0 +1,13 @@
+  x: 0 slender run(s)
+  y: 0 slender run(s)
+  z: 8 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 8 watch (>= 4.0), 8 slender runs
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(-2.1), np.float64(0.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(2.1), np.float64(0.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(-2.1), np.float64(34.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(2.1), np.float64(34.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(19.1), np.float64(0.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(23.3), np.float64(0.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(19.3), np.float64(34.0), np.float64(8.2)]
+  WATCH along z   13.2 mm long  ~6.4 mm2 (thinnest 5.87)  slenderness 5.2  at [np.float64(23.5), np.float64(34.0), np.float64(8.2)]

@@ -1,0 +1,21 @@
+GEAR HEART BUDGET (handbook section 7; values from mechanism_budget.PROCESS)
+
+layout: heart scale 3.111, loop of 14 gears (even: turns), closes to -0.0000 mm; module 1.5, +0.3 on every centre distance
+  gears span 126.4 x 116.1 mm (P1S plate 256)
+  15 meshes, each at its pitch distance + 0.3: checked
+  gears that don't mesh: tips at least 2.27 apart (need 1.0)
+
+mesh: +0.3 centre distance = 0.22 mm backlash; the stack that can close it: worst 0.40, RSS 0.20 -> free at RSS, binds only if every error lines up
+  hub play 0.35 each side lets a gear drift up to 0.70; driving pushes meshing gears apart, so play opens the mesh rather than closing it
+
+snap: two prongs 1.6 thick x 4.0 wide, corners on a 7.0 circle, slot 2.54; flexing length 13.5 (the post rises from a pocket 6.5 deep: plate 8.0 thick)
+  bent 0.9 going on: strain 1.19 % vs once-only 1.40 % -> ok; 3.9 N each prong
+  vs the repeated-flexing limit 0.80 %: over: fine to put on once, not to take on and off often
+  the slot 2.54 closes 1.8 going on, 0.74 to spare
+  barb engagement 0.9: RSS 0.29, worst 0.55, ratio 3.1 -> ok
+  push-on force with a 30 deg lead-in: about 11 N
+  pull-off force with its 37 deg underside: about 14 N (not self-locking; a square underside would be, but can't print)
+  -> ok: needs >= 10 N so a gear isn't pulled off by turning or brushing it
+  hub running gap 0.35 less the worst case closing it = 0.10 -> turns
+
+PASS: build the coupon

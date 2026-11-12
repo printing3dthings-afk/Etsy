@@ -1,0 +1,4 @@
+GEAR HEART COUPON FIT CHECK (exported parts, assembled pose)
++0.20: ok    rest clear True; turned together 2 teeth: no collision; backlash 0.19 / 0.19 mm at the pitch circle (meshes both ways); lifts 0.40 mm before the barb catches; spins on its post clear
++0.40: ok    rest clear True; turned together 2 teeth: no collision; backlash 0.27 / 0.27 mm at the pitch circle (meshes both ways); lifts 0.40 mm before the barb catches; spins on its post clear
+PASS
