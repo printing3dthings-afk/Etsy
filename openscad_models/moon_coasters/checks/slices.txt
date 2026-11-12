@@ -1,0 +1,15 @@
+Bambu Studio slices (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20 mm Standard, shop retail settings.
+Colours: navy #1F2A4A (slot 1), cream #F2E6C8 (slot 2), slate #5C6680 (slot 3).
+
+coasters, plate 1 (waxing crescent + first quarter): 2h 1m 57s, 24 layers, 0 support lines
+  navy 33.75 g, cream 3.62 g, slate 3.60 g
+coasters, plate 2 (waxing gibbous + full moon):      2h 3m 4s, 24 layers, 0 support lines
+  navy 33.75 g, cream 5.56 g, slate 1.66 g
+rack (base + arch panel, one plate):                  2h 2m 22s, 80 layers, 0 support lines
+  navy 41.10 g, cream 3.18 g
+
+whole set: about 6 h 7 m, 126 g (navy 108.6, cream 12.4, slate 5.3)
+
+Why two coaster plates, not one 2 x 2: bambu_slice lays objects in a row (four 92 mm
+coasters need 404 mm), and a 190 mm square leaves little room for the colour-change
+prime tower. Each 3MF here is exactly what was sliced.

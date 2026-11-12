@@ -1,0 +1,5 @@
+# render and fit-check poses, regenerated from moon_coasters.scad (up to 14 MB each)
+parts/guide/
+parts/placed/
+parts/asm_*.stl
+parts/row_*.stl

@@ -1,0 +1,20 @@
+MOON COASTERS FIT CHECK (exported parts, coasters dropped 0.4 mm onto their cradles)
+  ok    panel overlaps base: 0.0000 mm3
+  ok    coaster 0 overlaps base (resting on its cradle): 0.0000 mm3
+  ok    coaster 0 rests on its cradle: closest 0.000 mm
+  ok    coaster 0 lifts clear of the base: 0.0000 mm3 after 0.2 up
+  ok    coaster 1 overlaps base (resting on its cradle): 0.0000 mm3
+  ok    coaster 1 rests on its cradle: closest 0.000 mm
+  ok    coaster 1 lifts clear of the base: 0.0000 mm3 after 0.2 up
+  ok    coaster 2 overlaps base (resting on its cradle): 0.0000 mm3
+  ok    coaster 2 rests on its cradle: closest 0.000 mm
+  ok    coaster 2 lifts clear of the base: 0.0000 mm3 after 0.2 up
+  ok    coaster 3 overlaps base (resting on its cradle): 0.0000 mm3
+  ok    coaster 3 rests on its cradle: closest 0.000 mm
+  ok    coaster 3 lifts clear of the base: 0.0000 mm3 after 0.2 up
+  ok    coasters 0/1 apart: 3.20 mm
+  ok    coasters 1/2 apart: 3.20 mm
+  ok    coasters 2/3 apart: 3.20 mm
+  ok    front coaster to the panel: 3.20 mm
+  ok    front coaster cannot fall through the window: 274.3 mm3 of panel in the way when pushed 3.7 mm forward
+PASS

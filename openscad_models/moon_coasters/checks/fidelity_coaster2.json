@@ -1,0 +1,48 @@
+{
+ "layers": 24,
+ "model_volume_mm3": 28814.7,
+ "dropped_mm3": 0.11,
+ "filled_mm3": 0.0,
+ "colour_mm3": 0.0,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "dropped",
+   "colour": "#5C6680",
+   "tool": 3,
+   "volume_mm3": 0.055,
+   "z_mm": [
+    3.4,
+    4.0
+   ],
+   "layers": 3,
+   "at_xy": [
+    -2.8,
+    -28.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.22,
+   "depth_mm": 0.11,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#5C6680",
+   "tool": 3,
+   "volume_mm3": 0.055,
+   "z_mm": [
+    3.4,
+    4.0
+   ],
+   "layers": 3,
+   "at_xy": [
+    -2.8,
+    28.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.22,
+   "depth_mm": 0.12,
+   "flag": false
+  }
+ ]
+}

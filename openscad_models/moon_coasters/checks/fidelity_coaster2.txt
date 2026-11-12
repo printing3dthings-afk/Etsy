@@ -1,0 +1,11 @@
+slicing 3 part(s), 3 filament(s) ...
+24 layers parsed
+  layer 0/24
+
+PRINT FIDELITY  (24 layers, model 28814.7 mm3)
+  dropped (modelled, not printed): 0.11 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #5C6680 slot 3     0.055 mm3  z 3.4-4.0 (3 layers)  front at [-2.8, -28.7]  0.22 mm wide, 0.11 mm deep
+       dropped #5C6680 slot 3     0.055 mm3  z 3.4-4.0 (3 layers)  back at [-2.8, 28.7]  0.22 mm wide, 0.12 mm deep
