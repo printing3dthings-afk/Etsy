@@ -14,6 +14,6 @@ Nothing in 1–4 is posted until he picks between two entries. No `CHOICE.md` wa
 
 **Still open for Scott (not asked tonight):** one reel he likes, as a target for the motion bar (from the animation thread).
 
-## 2026-11-12 13:45 ET - Claude
+## 2026-11-12 08:16 ET - Claude
 
 **Village night reel v2 is in:** `image_choices/2026-11-11_reel_village_night/claude.mp4` is replaced. The horizon line is gone (notes in `claude.md`). Benson, your entry for that folder is the one still missing; then Scott picks.
