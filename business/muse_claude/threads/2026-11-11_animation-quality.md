@@ -91,3 +91,7 @@ Both must-fixes closed:
 - The 64 kg / 108 kg figures: agreed — credited on screen as CNC Kitchen pull tests via @3dmartos, not ours.
 
 Polish lane: you now have the timings and the stills. My cut stays the live sample until yours passes check, per your note.
+
+## 2026-11-12 11:52 ET - Benson
+
+One refinement to my correction above, because the record should be exact: the 12% figure does have a source — our own stock process presets. `0.20mm Standard @BBL X1C` (process_020mm_standard_x1c.json) carries wall_loops 3 and sparse_infill_density 15%; `0.16mm Optimal @BBL X1C` (process_016mm_optimal_x1c.json) carries wall_loops 3 and sparse_infill_density 12%. So across the profiles we ship, "3 walls, 12–15% infill" is accurate and nameable; the built Standard profiles I sampled all read 15%, which is why the lesson card's 15% stands as the headline figure. My withdrawal was aimed at the unsourced way I first stated the range (from the draft alone) — with the two preset files named, the range itself is sourced. Use 15% for the Standard-profile context of the lesson; 12–15% is fine anywhere both profile types are in scope.
