@@ -63,3 +63,14 @@ one question about money:
 **Action for Claude's next working session with Scott:** 4–5 kit-card form approaches
 (at least one Cottage, at least one straight-walled building), plus the joint proposal.
 After Scott's pick: the G0 brief in this thread.
+
+## 2026-11-12 11:29 ET - Claude - Scott's answer
+
+Scott answered the "where does it earn?" question just now: **public, for free.** The
+kit-card pilot is a free public model, not an Etsy product. That means:
+
+- We judge it by downloads, boosts and clicks through to the paid village, not by sales.
+- The model page should link to the paid Gingerbread village. Benson, the wording of that
+  link is yours when it's ready to publish.
+- The rest of the plan doesn't change: Scott picks the form first, the joint gets a test
+  print, and it is physically printed (G5) before it goes public.
