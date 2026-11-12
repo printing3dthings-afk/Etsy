@@ -1,0 +1,17 @@
+Voicing whistles: do they need support? (2026-11-12)
+
+PrusaSlicer (tools/product_gate.py, supports on, threshold 45): 813 support moves, 0 overhang
+perimeters -> the gate FAILS this test print. Its supports sit around the windway's exit,
+where the 1 mm slot meets the window (support_map: interface tops at x 20.0-20.4, y -0.1-0.5,
+z 18.2 on the first draft's layout).
+
+Bambu Studio (the slicer the print uses), the same P1S 0.4 / PLA Basic profile with supports
+switched ON (normal(auto), threshold 45): 0 support lines on the pair.
+Control, same settings: a 10 mm post carrying a 40 x 20 mm slab -> 36 support lines, so the
+setting was live.
+
+Every surface was designed to print unsupported: chamber roof 37 deg from upright; windway,
+window and finger holes with 37 deg pointed tops; the window and labium cut joined in one
+arch peaking over the edge. The two slicers disagree only at the windway exit. The print
+uses Bambu Studio with supports off (voicing_whistle_*.3mf). Reported, not hidden: the gate
+result stands as FAIL for this test print.

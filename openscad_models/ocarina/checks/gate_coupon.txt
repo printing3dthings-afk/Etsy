@@ -1,0 +1,13 @@
+parts/voicing_coupon.stl
+  ok    fits_plate: 46.4 x 43.6 x 31.7 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 2 bodies, expected 2
+  ok    min_wall: 1st pct 1.55mm, median 3.99mm (floor 1.2mm); 0.62% below one bead; 781 spans in declared detail, thread or socket regions not counted
+  FAIL  no_unsupported_overhang: slicer: 813 support moves, 0 overhang perimeters, 31.6mm printed of 31.68mm
+  ok    geometry_survives_slicing: printed height 31.6mm vs modelled 31.68mm
+  ok    flat_base: 17.45 cm2 of contact = 86.2% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 9.1mm widest unsupported span at z=5.6mm; 48 layer(s) under the 4.0s cooling threshold; 2223mm2 on the plate; aspect 0.52
+  note  texture (advisory, never fails the gate): rugosity 1.086 -- light relief, at or above the corpus p50
+PRODUCT GATE FAILED

@@ -1,0 +1,23 @@
+OCARINA ACOUSTIC BUDGET (Alto C, 12 holes, A4-F6), from priors (not measured)
+window term 4.30 mm, hole end correction k 1.60, wall 2.4 mm, c 350.0 m/s
+chamber volume for A4 = 440 Hz with every hole closed: 68.9 cm3
+
+hole          opens  target Hz  diameter mm
+subhole 1     B4         493.9         2.32  <-- under 3.0: draw 3.0 through a 4.7 mm deep hole (a 2.3 mm collar)
+subhole 2     C5         523.3         1.67  <-- under 3.0: draw 3.0 through a 9.6 mm deep hole (a 7.2 mm collar)
+right pinky   D5         587.3         2.90  <-- under 3.0: draw 3.0 through a 2.6 mm deep hole (a 0.2 mm collar)
+right ring    E5         659.3         3.39
+right middle  F5         698.5         2.40  <-- under 3.0: draw 3.0 through a 4.3 mm deep hole (a 1.9 mm collar)
+right index   G5         784.0         4.31
+left ring     A5         880.0         5.09
+left middle   B5         987.8         6.04
+left index    C6        1046.5         4.14
+left thumb    D6        1174.7         7.88
+right thumb   E6        1318.5         9.47
+left pinky    F6        1396.9         6.30
+
+voicing whistle (voicing_coupon.scad), chamber 6.9 cm3, holes 5.0 and 8.0 mm:
+  predicted from these constants: closed 1387 Hz, one hole 1863 Hz, both 2521 Hz
+
+TARGETS, NOT MEASURED: the full instrument is a tuning draft until a print is checked
+against a tuner. Hole sizes move by tenths of a millimetre after that check.

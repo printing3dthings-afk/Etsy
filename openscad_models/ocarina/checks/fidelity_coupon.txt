@@ -1,0 +1,14 @@
+slicing 1 part(s), 1 filament(s) ...
+158 layers parsed
+  layer 0/158
+  layer 100/158
+
+PRINT FIDELITY  (158 layers, model 25726.1 mm3)
+  dropped (modelled, not printed): 2.83 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 4
+  FLAG dropped #999999 slot 1     1.403 mm3  z 6.43-18.4 (59 layers)  back at [23.7, 24.9]  0.27 mm wide, 0.9 mm deep
+  FLAG dropped #999999 slot 1     1.401 mm3  z 6.43-18.4 (59 layers)  front at [23.7, 0.1]  0.27 mm wide, 0.9 mm deep
+  FLAG dropped #999999 slot 1     0.012 mm3  z 6.71-6.8 (1 layers)  front at [23.7, 0.1]  0.27 mm wide, 0.9 mm deep
+  FLAG dropped #999999 slot 1     0.012 mm3  z 6.71-6.8 (1 layers)  back at [23.7, 24.9]  0.27 mm wide, 0.9 mm deep
