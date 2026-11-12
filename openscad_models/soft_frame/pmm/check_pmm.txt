@@ -1,0 +1,14 @@
+PMM check of soft_frame_label_pmm.scad (3,608 bytes)
+- fonts not on PMM: none
+- imports/includes PMM can't resolve: none
+- with LABEL_TEXT empty, area by colour: #F4F1EA 765 mm²
+- 'Screws': 0.1 s; x -15.6..15.6, y -5.6..5.6, z 0.00..0.8; the text adds 54 mm² in its colour; 0 warnings
+  sliced as exported (Bambu Studio, arranged as PMM does): 2m 40s, 0.44 g, support sections 0
+- 'Batteries & Cables': 0.1 s; x -15.6..15.6, y -5.6..5.6, z 0.00..0.8; the text adds 35 mm² in its colour; 0 warnings
+- 'SD cards': 0.1 s; x -15.6..15.6, y -5.6..5.6, z 0.00..0.8; the text adds 47 mm² in its colour; 0 warnings
+- 'Tea': 0.1 s; x -15.6..15.6, y -5.6..5.6, z 0.00..0.8; the text adds 27 mm² in its colour; 0 warnings
+- 'Washi tape / stickers': 0.1 s; x -15.6..15.6, y -5.6..5.6, z 0.00..0.8; the text adds 33 mm² in its colour; 0 warnings
+  sliced as exported (Bambu Studio, arranged as PMM does): 2m 40s, 0.44 g, support sections 0
+- 'Pens': 0.1 s; x -15.6..15.6, y -5.6..5.6, z 0.00..0.8; the text adds 39 mm² in its colour; 0 warnings
+RESULT: PASS
+- 'Q' (one letter) also drew: 16 mm² of text colour, under this check's 20 mm² 'did any text draw' floor, which is set for names; not a fault.
