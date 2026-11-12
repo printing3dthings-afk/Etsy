@@ -1,0 +1,5 @@
+OTTER JOINT: DO THE PINS PRINT APART? (toolpaths of the fidelity slice)
+gap 0.30: ok    pin and ring separate on 50 of 50 layers; narrowest printed air gap 0.27 mm
+gap 0.35: ok    pin and ring separate on 50 of 50 layers; narrowest printed air gap 0.33 mm
+gap 0.45: ok    pin and ring separate on 50 of 50 layers; narrowest printed air gap 0.43 mm
+PASS

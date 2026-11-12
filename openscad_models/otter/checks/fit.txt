@@ -1,0 +1,5 @@
+OTTER JOINT COUPON FIT CHECK (exported parts, moved as rigid bodies)
+gap 0.30: ok    rest overlap 0.0000 mm3, closest 0.30 mm; free swing +19.5 / -19.5 deg (stops by 20.0 / 20.0); lift catches at 0.50 mm; pull catches at 0.45 mm
+gap 0.35: ok    rest overlap 0.0000 mm3, closest 0.35 mm; free swing +20.0 / -20.0 deg (stops by 20.5 / 20.5); lift catches at 0.60 mm; pull catches at 0.50 mm
+gap 0.45: ok    rest overlap 0.0000 mm3, closest 0.45 mm; free swing +21.5 / -21.5 deg (stops by 22.0 / 22.0); lift catches at 0.75 mm; pull catches at 0.65 mm
+PASS

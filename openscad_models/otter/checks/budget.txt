@@ -1,0 +1,34 @@
+OTTER JOINT BUDGET (handbook section 7; values from mechanism_budget.PROCESS)
+requirement: +/-15 deg a joint, survives 20 N at 15 mm, print in place, no hardware
+
+gap 0.30 normal (0.38 across the cones)
+  pin waist r 4.00, bulge r 5.50, cones 1.99 tall at 37 deg
+  ring bore r 5.80 at the bulge, outside r 7.80 (joint 15.6 across)
+  C slot a wedge, half-angle 41.2 deg: 5.67 wide at the waist (fin 3.2 wide, +/-15 deg)
+  sideways retention 1.17: RSS 0.17, worst 0.30, ratio 6.7 -> ok
+  vertical retention 1.20 (bulge minus gap): RSS 0.29, worst 0.55, ratio 4.2 -> ok
+  running gap 0.30 less the worst case 0.25 closing it = 0.05 -> open (handbook: >= 0.3 drawn, as here, ok)
+  first layer: gap 0.30 + 0.45 chamfer each side - elephant's foot 0.30 = 0.90 -> ok
+  fin bending: 20 N at 15 mm = 300 N mm on a 3.2 x 10.0 section (Z 17.1 mm3): 18 MPa vs 45/2 = 22 -> ok
+
+gap 0.35 normal (0.44 across the cones)
+  pin waist r 4.00, bulge r 5.50, cones 1.99 tall at 37 deg
+  ring bore r 5.85 at the bulge, outside r 7.85 (joint 15.7 across)
+  C slot a wedge, half-angle 41.6 deg: 5.78 wide at the waist (fin 3.2 wide, +/-15 deg)
+  sideways retention 1.11: RSS 0.17, worst 0.30, ratio 6.4 -> ok
+  vertical retention 1.15 (bulge minus gap): RSS 0.29, worst 0.55, ratio 4.0 -> ok
+  running gap 0.35 less the worst case 0.25 closing it = 0.10 -> open (handbook: >= 0.3 drawn, as here, ok)
+  first layer: gap 0.35 + 0.45 chamfer each side - elephant's foot 0.30 = 0.95 -> ok
+  fin bending: 20 N at 15 mm = 300 N mm on a 3.2 x 10.0 section (Z 17.1 mm3): 18 MPa vs 45/2 = 22 -> ok
+
+gap 0.45 normal (0.56 across the cones)
+  pin waist r 4.00, bulge r 5.50, cones 1.99 tall at 37 deg
+  ring bore r 5.95 at the bulge, outside r 7.95 (joint 15.9 across)
+  C slot a wedge, half-angle 42.4 deg: 6.00 wide at the waist (fin 3.2 wide, +/-15 deg)
+  sideways retention 1.00: RSS 0.17, worst 0.30, ratio 5.8 -> ok
+  vertical retention 1.05 (bulge minus gap): RSS 0.29, worst 0.55, ratio 3.7 -> ok
+  running gap 0.45 less the worst case 0.25 closing it = 0.20 -> open (handbook: >= 0.3 drawn, as here, ok)
+  first layer: gap 0.45 + 0.45 chamfer each side - elephant's foot 0.30 = 1.05 -> ok
+  fin bending: 20 N at 15 mm = 300 N mm on a 3.2 x 10.0 section (Z 17.1 mm3): 18 MPa vs 45/2 = 22 -> ok
+
+PASS: every variant meets the rules
