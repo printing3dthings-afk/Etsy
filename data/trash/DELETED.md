@@ -2087,3 +2087,62 @@ When you answer, add your entry below this one.
 
 <!-- /TRASH 20261111-017 -->
 
+<!-- TRASH id=20261112-001 date=2026-11-12 kind=file source="openscad_models/otter/checks/islands.txt" reason="gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)" -->
+## 20261112-001 · 2026-11-12 · file · `openscad_models/otter/checks/islands.txt`
+**Reason:** gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)  
+**Payload:** `data/trash/files/20261112-001__islands.txt`
+
+```
+  layers parsed: 1277  z 0.20 .. 10.00
+   z=   0.20  islands=  1  areas=[np.float64(107.46)]
+   z=   0.40  islands=  1  areas=[np.float64(60.18)]
+   z=   0.60  islands=  1  areas=[np.float64(3.76)]
+   z=   0.80  islands=  1  areas=[np.float64(87.02)]
+   z=   1.40  islands=  1  areas=[np.float64(83.9)]
+   z=   1.80  islands=  1  areas=[np.float64(61.1)]
+   z=   2.20  islands=  1  areas=[np.float64(28.91)]
+   z=   2.60  islands=  1  areas=[np.float64(13.57)]
+   z=   3.20  islands=  1  areas=[np.float64(32.57)]
+   z=   3.60  islands=  1  areas=[np.float64(7.68)]
+   z=   4.00  islands=  1  areas=[np.float64(46.39)]
+   z=   4.60  islands=  1  areas=[np.float64(5.79)]
+   z=   5.20  islands=  1  areas=[np.float64(26.75)]
+   z=   5.60  islands=  1  areas=[np.float64(7.58)]
+   z=   6.20  islands=  1  areas=[np.float64(66.62)]
+   z=   6.60  islands=  1  areas=[np.float64(20.61)]
+   z=   7.20  islands=  1  areas=[np.float64(86.91)]
+   z=   7.60  islands=  1  areas=[np.float64(5.7)]
+   z=   8.00  islands=  1  areas=[np.float64(21.77)]
+   z=   8.40  islands=  1  areas=[np.float64(23.97)]
+   z=   8.80  islands=  1  areas=[np.float64(38.1)]
+   z=   9.20  islands=  1  areas=[np.float64(54.78)]
+   z=   9.40  islands=  1  areas=[np.float64(85.08)]
+   z=   9.60  islands=  1  areas=[np.float64(36.09)]
+   z=   9.80  islands=  1  areas=[np.float64(85.09)]
+   z=  10.00  islands=  1  areas=[np.float64(32.09)]
+```
+
+<!-- /TRASH 20261112-001 -->
+
+<!-- TRASH id=20261112-002 date=2026-11-12 kind=file source="openscad_models/otter/checks/joint0_z2.0.png" reason="gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)" -->
+## 20261112-002 · 2026-11-12 · file · `openscad_models/otter/checks/joint0_z2.0.png`
+**Reason:** gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)  
+**Payload:** `data/trash/files/20261112-002__joint0_z2.0.png`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261112-002 -->
+
+<!-- TRASH id=20261112-003 date=2026-11-12 kind=file source="openscad_models/otter/checks/joint0_z5.0.png" reason="gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)" -->
+## 20261112-003 · 2026-11-12 · file · `openscad_models/otter/checks/joint0_z5.0.png`
+**Reason:** gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)  
+**Payload:** `data/trash/files/20261112-003__joint0_z5.0.png`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261112-003 -->
+
