@@ -55,6 +55,8 @@ def main():
     ap.add_argument("--size", type=int, default=1080, help="width; height is 16:9 of it")
     ap.add_argument("--no-haze", action="store_true")
     ap.add_argument("--to", type=int, help="stop after this frame (for timing)")
+    ap.add_argument("--fade", type=float, nargs=2, default=[0.6, 2.5], metavar=("FROM", "TO"),
+                    help="metres from the centre over which the snow fades into the horizon colour")
     a = ap.parse_args()
     frames_dir = HERE / "frames"
     frames_dir.mkdir(exist_ok=True)
@@ -69,7 +71,7 @@ def main():
                 paths.append([str(Path(td) / s), col])
             bl.append({**b, "parts": paths})
         cfg = {"buildings": bl, "frames": a.frames, "samples": a.samples, "flakes": a.flakes,
-               "size": [a.size, a.size * 16 // 9], "haze": not a.no_haze, **({"to": a.to} if a.to else {}),
+               "size": [a.size, a.size * 16 // 9], "haze": not a.no_haze, "fade_from": a.fade[0], "fade_to": a.fade[1], **({"to": a.to} if a.to else {}),
                "look_from": [[0.03, -0.78, 0.24], [0.0, 0.0, 0.06]],
                "look_to": [[-0.01, -0.55, 0.13], [0.0, 0.0, 0.055]],
                "out": str(frames_dir / ("still.png" if a.still else "f_"))}

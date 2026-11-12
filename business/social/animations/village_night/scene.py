@@ -170,8 +170,33 @@ for b in cfg["buildings"]:
 
 # ---- snow ground, sky, moon ----
 # a hair below the bases: flush, the lights leaked under them across the snow
-bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 0, -0.0003))
-bpy.context.active_object.data.materials.append(mat("snow", (0.82, 0.86, 0.95), rough=0.85))
+HORIZON = (0.022, 0.03, 0.06)   # the sky's colour at the horizon (the ramp's first stop below)
+# 400 m, so its far edge sits on the true horizon: at 60 m the edge showed as a thin
+# bright line a few pixels under it, even with the snow faded to the sky's colour.
+bpy.ops.mesh.primitive_plane_add(size=400, location=(0, 0, -0.0003))
+snow = mat("snow", (0.82, 0.86, 0.95), rough=0.85)
+# The moonlit snow ran out at the plane's edge as a lighter band against the dark sky
+# (the v1 reel's hard horizon line). Fade it with distance into an unlit emission of the
+# sky's own horizon colour, so ground and sky are the same colour where they meet.
+sn = snow.node_tree
+geo = sn.nodes.new("ShaderNodeNewGeometry")
+dist = sn.nodes.new("ShaderNodeVectorMath")
+dist.operation = "LENGTH"
+fade = sn.nodes.new("ShaderNodeMapRange")
+fade.interpolation_type = "SMOOTHSTEP"
+fade.inputs["From Min"].default_value = cfg.get("fade_from", 0.9)
+fade.inputs["From Max"].default_value = cfg.get("fade_to", 4.0)
+sky = sn.nodes.new("ShaderNodeEmission")
+sky.inputs["Color"].default_value = (*HORIZON, 1)
+sky.inputs["Strength"].default_value = 1.0
+mix = sn.nodes.new("ShaderNodeMixShader")
+sn.links.new(geo.outputs["Position"], dist.inputs[0])
+sn.links.new(dist.outputs["Value"], fade.inputs["Value"])
+sn.links.new(fade.outputs["Result"], mix.inputs["Fac"])
+sn.links.new(sn.nodes["Principled BSDF"].outputs["BSDF"], mix.inputs[1])
+sn.links.new(sky.outputs["Emission"], mix.inputs[2])
+sn.links.new(mix.outputs["Shader"], sn.nodes["Material Output"].inputs["Surface"])
+bpy.context.active_object.data.materials.append(snow)
 world = bpy.data.worlds.new("night")
 sc.world = world
 world.use_nodes = True
@@ -181,7 +206,7 @@ tc = nt0.nodes.new("ShaderNodeTexCoord")
 sep = nt0.nodes.new("ShaderNodeSeparateXYZ")
 ramp = nt0.nodes.new("ShaderNodeValToRGB")
 ramp.color_ramp.elements[0].position = 0.0
-ramp.color_ramp.elements[0].color = (0.022, 0.03, 0.06, 1)
+ramp.color_ramp.elements[0].color = (*HORIZON, 1)
 ramp.color_ramp.elements[1].position = 0.35
 ramp.color_ramp.elements[1].color = (0.004, 0.006, 0.02, 1)
 nt0.links.new(tc.outputs["Generated"], sep.inputs[0])
@@ -241,6 +266,7 @@ sc.camera = cam
 cam.data.lens = 35
 cam.data.sensor_fit = "VERTICAL"
 cam.data.clip_start = 0.005
+cam.data.clip_end = 1000  # past the snow plane's 200 m edge
 c = cam.constraints.new("TRACK_TO")
 c.target, c.track_axis, c.up_axis = target, "TRACK_NEGATIVE_Z", "UP_Y"
 for f, (pos, look) in ((1, cfg["look_from"]), (FRAMES, cfg["look_to"])):
