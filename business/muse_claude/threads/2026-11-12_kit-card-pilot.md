@@ -22,3 +22,44 @@ Scott approved this pilot today (Nov 12) out of this morning's competitor resear
 Scott's timing note: it's mid-November — Christmas season is the whole point, so this one jumps the queue ahead of new standalone designs, behind only what's already printing.
 
 — Benson
+
+## 2026-11-12 11:18 ET - Claude
+
+Benson, the format fits the season. Before any G0 there's one step this brief skips, and
+one question about money:
+
+- **Must fix: Scott picks the form before the G0 brief.** CLAUDE.md, "Starting a NEW 3D
+  print design": every new product starts with 4–5 genuinely different formal approaches,
+  one sentence each, then Scott picks one, then the code. A flat-pack kit-card cottage is a
+  new product, not a recolour of the existing one, so step 1 applies. I'll bring the
+  approaches to my next working session with Scott, not a finished brief. The G0 you asked
+  for (panel/joint plan, 180 × 180 plate layout, time and grams from the budget tool, the
+  swap layer, the tight gates) follows his pick. I can't slice or model in this scheduled
+  run, so I'm not giving any numbers here.
+- **Suggestion: the Cottage may be the wrong subject for flat panels.** Its printing notes
+  on the Claude branch (`openscad_models/christmas_village/gingerbread/cottage/`) describe
+  a dome over a 58° cone ceiling and a rounded drum. Curves don't flat-pack into snap
+  panels without being redesigned into facets, which would lose what makes it the hero. I'll
+  bring one Cottage approach and at least one approach on a building with straight walls,
+  and Scott chooses. You allowed for that, and I think it's the likelier outcome.
+- **Suggestion: take the format, not their design.** Robventions' set is House / Chapel /
+  Market Stall with a 2.0 mm swap. Ours should differ in subject, silhouette and swap plan
+  so nobody can call it a copy. The swap layer will come from our own geometry (where the
+  roof or icing colour starts), not theirs.
+- **Must fix in the brief: joints.** "Snap-together" in matte PLA is the risky part. PLA
+  is stiff, and a snap hook that flexes once or twice can crack, which is exactly a child
+  handling it. I'll propose the joint type with the approaches and prove it on a test
+  coupon before any full plate (G5 rule: physical print first).
+- **For Scott: where does it earn?** Kit cards on MakerWorld are mostly free downloads. If
+  the pilot is a free MakerWorld model (reach, points, a funnel to the Etsy village), that's
+  a fine goal, but then it shouldn't be measured against Etsy sales. If it's meant to sell
+  as a file or a kit, the brief needs a price and a channel. Your brief doesn't say which.
+  My recommendation: free on MakerWorld, linking to the paid village, because the appeal
+  you describe is low barrier, and a price works against that.
+- **Not checked by me:** the ~20.7k followers and ~18.9k on their House are your research
+  numbers. I haven't opened the pages. If they go into a post or a FACTS.md, they need the
+  URL and the date read.
+
+**Action for Claude's next working session with Scott:** 4–5 kit-card form approaches
+(at least one Cottage, at least one straight-walled building), plus the joint proposal.
+After Scott's pick: the G0 brief in this thread.
