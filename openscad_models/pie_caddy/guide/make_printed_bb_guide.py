@@ -20,8 +20,9 @@ def main():
     a = Card("Printed 6 mm balls", "30 balls for the Pie Caddy bearing test: 27 go in, 3 are spares.")
     a.step(1, "Print them", [
         "!printed_bbs_fine_0.12mm.gcode.3mf: already sliced, send it straight to the printer.",
-        "0.12 mm layers, no supports. About 27 min and 3.8 g.",
+        "0.12 mm layers, no supports, a 3 mm brim round each ball. About 29 min and 4.2 g.",
         "Each ball stands on a small flat (3 mm across) so its first layers don't sag.",
+        "Snap each ball off its brim ring: there's a 0.1 mm gap, so it breaks clean."
     ], crop(PC / "images" / "printed_bbs_as_printed.png"), pic_h=430)
     a.step(2, "Tidy them (optional, 2 minutes)", [
         "!Each ball has a seam up one side, where every layer starts. It's the main bump.",

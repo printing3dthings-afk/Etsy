@@ -92,8 +92,13 @@ Scott asked to print the 6 mm balls (`printed_bb.scad`, `printed_bbs_fine_0.12mm
 - **30 balls, 6.0 mm**, each standing on a flat 0.4 mm deep, 3.0 mm across. A full
   sphere's lowest layers would step out past the one below and sag; above this flat the
   steps are 0.30, 0.28, 0.16 mm, under one 0.42 bead.
-- **Sliced at 0.12 mm layers:** 27 min 29 s and 3.79 g on Bambu Studio, no supports
-  (0.2 mm: 16 min 52 s, rounder at 0.12).
+- **Sliced at 0.12 mm layers:** 29 min 7 s and 4.19 g on Bambu Studio, no supports
+  (0.2 mm: 16 min 52 s without a brim, rounder at 0.12).
+- **Brim, 3 mm, outside only, 0.1 mm gap** (Scott: "use a brim if needed"). It was:
+  Bambu's auto brim added none, and a ball holds the plate by a 3 mm flat, about 7 mm².
+  The brim makes it a 9 mm ring, about 64 mm² (`images/printed_bbs_first_layer_brim.png`).
+  `tools/bambu_slice.py --brim 3`. The viewer entry and the checks are the check slice,
+  without the brim.
 - **Checks:** product gate PASS (30 bodies, 0 support moves), print fidelity 0 misses,
   fragility 0.
 - **Size:** about 6.1 mm across as sliced (outer-wall extent plus one bead), in the

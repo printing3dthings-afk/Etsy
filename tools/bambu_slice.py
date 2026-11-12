@@ -134,13 +134,18 @@ def _set(cfg: dict, key: str, value) -> None:
 
 
 def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool = True,
-                   filament: str = "pla_basic") -> tuple[str, str]:
+                   filament: str = "pla_basic", brim: float | None = None) -> tuple[str, str]:
     """Write the machine, process and filament files; returns the two CLI args."""
     machine = flatten("machine", MACHINE)
     process = flatten("process", PROCESS[quality])
     if retail:
         for k, v in RETAIL.items():
             _set(process, k, v)
+    # 2026-11-12: Bambu's auto brim judged the printed 6 mm balls (each on a 3 mm flat)
+    # needed none. A forced outer brim is for small footprints like that.
+    if brim:
+        _set(process, "brim_type", "outer_only")
+        _set(process, "brim_width", brim)
     # the prime tower in the corner layout() keeps clear (a project setting the
     # CLI otherwise defaults)
     process["wipe_tower_x"] = [f"{TOWER[0]:.0f}"]
@@ -338,7 +343,7 @@ def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path) -> list[str
 
 def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = "standard",
                 pause_zs: list[float] | None = None, retail: bool = True, log=print,
-                filament: str = "pla_basic") -> dict:
+                filament: str = "pla_basic", brim: float | None = None) -> dict:
     """Slice the given parts for the P1S. Returns the slice's own summary."""
     ensure_installed()
     out = Path(out).resolve()
@@ -347,7 +352,7 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
         work = Path(td)
         model = work / "model.3mf"
         colours = build_bambu_3mf(groups, model)
-        settings, filaments = write_profiles(work, quality, colours, retail, filament)
+        settings, filaments = write_profiles(work, quality, colours, retail, filament, brim)
         outdir = work / "out"
         outdir.mkdir()
         cmd = _cmd() + ["--slice", "0", "--arrange", "0",
@@ -364,7 +369,8 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     s = summarise(out)
     s["paused_at_mm"] = paused_at
     s.update({"file": str(out), "quality": quality, "process": PROCESS[quality],
-              "retail_settings": retail, "filament": FILAMENTS[filament], "slot_colours": colours})
+              "retail_settings": retail, "filament": FILAMENTS[filament], "slot_colours": colours,
+              "brim_mm": brim})
     if s["support_lines"]:
         log(f"WARNING: the slice contains support ({s['support_lines']} support sections) -- fix the model")
     if s.get("slots_used") is not None and len(s["slots_used"]) < len(colours):
@@ -380,9 +386,10 @@ def main() -> None:
     ap.add_argument("--filament", choices=sorted(FILAMENTS), default="pla_basic")
     ap.add_argument("--pause-at", type=float, action="append", default=[], help="pause before this layer height (mm)")
     ap.add_argument("--bambu-defaults", action="store_true", help="Bambu's profile as-is, without the shop's retail settings")
+    ap.add_argument("--brim", type=float, metavar="MM", help="force an outer brim this wide (default: Bambu's auto brim)")
     a = ap.parse_args()
     s = slice_parts(parse_parts(a.parts), Path(a.out), a.quality, a.pause_at, retail=not a.bambu_defaults,
-                    filament=a.filament)
+                    filament=a.filament, brim=a.brim)
     print(json.dumps(s, indent=1))
     if s["support_lines"]:
         sys.exit(2)
