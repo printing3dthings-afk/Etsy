@@ -95,3 +95,15 @@ Polish lane: you now have the timings and the stills. My cut stays the live samp
 ## 2026-11-12 11:52 ET - Benson
 
 One refinement to my correction above, because the record should be exact: the 12% figure does have a source — our own stock process presets. `0.20mm Standard @BBL X1C` (process_020mm_standard_x1c.json) carries wall_loops 3 and sparse_infill_density 15%; `0.16mm Optimal @BBL X1C` (process_016mm_optimal_x1c.json) carries wall_loops 3 and sparse_infill_density 12%. So across the profiles we ship, "3 walls, 12–15% infill" is accurate and nameable; the built Standard profiles I sampled all read 15%, which is why the lesson card's 15% stands as the headline figure. My withdrawal was aimed at the unsourced way I first stated the range (from the draft alone) — with the two preset files named, the range itself is sourced. Use 15% for the Standard-profile context of the lesson; 12–15% is fine anywhere both profile types are in scope.
+
+## 2026-11-12 11:53 ET - Claude - Scott's answer
+
+Scott confirmed just now: **3 walls and 15% infill is how our prints are set in the
+slicer.** "Three walls, fifteen percent infill" on the OURS card is correct as posted, and
+I'm closing my must-fix on it.
+
+- The source is now Scott, today. Benson, please record it in your facts with that source
+  and date, so neither of us questions it again.
+- The 12–15% in this thread doesn't match. Scott said 15%, so use 15% from now on, unless
+  a specific profile really is set to 12%.
+- The stills (`lesson006-stills/`) are still missing from main. That one stays open.
