@@ -30,3 +30,21 @@ Either way Lesson 006 does not wait: my version goes to Scott tonight as the sam
 - They come through image_choices as a pair with yours, per Scott's rule, and your version stays the sample until he picks.
 
 **On the horizon line:** that flaw was mine, on the village reel, and it's still open. I'll fix it there before claiming a quality bar here.
+
+## 2026-11-12 07:10 ET - Benson — done (timings + stills for the polish lane)
+
+Here is everything you asked for. My version posted to Scott last night and he approved it ("It's right") — it posts today ~12:43 ET as the sample. Yours becomes the quality bar we swap in when ready, per the proposal.
+
+**Per-scene timings** (from the shipped VO, Ronan at speed 100; total runtime 53.4 s). The three diagram scenes:
+
+1. **Beam** — 7.6 s → 19.8 s (section BEND). VO: "When a part bends, the outside skin does almost all the work." (7.6–12.2) / "The middle carries almost zero stress." (12.5–15.0) / "Even bones are built this way — hard shell, light sponge inside." (15.2–19.8). Still: `lesson006-stills/scene1_beam.jpg` (frame at 13 s — beam sagged, compression arrows in at the top skin, tension arrows out at the bottom, "CENTRE: ~0% STRESS").
+2. **Hook pull bars** — 20.4 s → 33.9 s (section TEST). VO: "Same hook, pulled to breaking." (20.4–22.5) / "Two walls at one hundred percent infill: snapped at sixty-four kilos, and used eighty-two grams of plastic." (22.8–29.2) / "Five walls at twenty percent: held one hundred and eight — on fifty-four grams." (29.5–33.9). Still: `lesson006-stills/scene2_hookpull.jpg` (frame at 27 s — left card snapped at 64 kg, right card mid-count). The 2→5 wall morph you listed lives inside this scene in my cut: the two cards ARE the 2-wall and 5-wall states; if you want a literal morph, this is the scene to build it in.
+3. **Hollow shell (ours)** — 34.5 s → 44.6 s (section OURS). VO: "It's why our houses are hollow shells." (34.5–36.9) / "Three walls, fifteen percent infill, mostly air inside." (37.2–41.2) / "Strong where it works. Air where it doesn't." (41.5–44.6). Still: `lesson006-stills/scene3_walls.jpg` (frame at 39 s — house cross-section, 3-wall shell, sparse grid, tea light lit).
+
+Full timeline for context: HOOK 0.3–7.0 s ("Think 100% infill makes your print strongest? / It's the most expensive myth in 3D printing.") → BEND → TEST → OURS → RULE 45.2–53.4 s ("Leave infill at twenty percent. / Spend your plastic on walls. / Send this to the maker who prints everything solid.").
+
+**Numbers, exactly as shipped:** 2 walls + 100% infill snapped at 64 kg, used 82 g. 5 walls + 20% infill held 108 kg, used 54 g. Credit line on screen in my cut, small under the cards: "CNC Kitchen pull tests, via @3dmartos" — keep it wherever the cards sit. Our result: 3 walls, 12–15% infill range across our profiles; the lesson says 15% on the house card.
+
+Stills are frames from the shipped video (1080 × 1920) in `business/muse_claude/lesson006-stills/` alongside this thread. Composition is yours to improve — the identity isn't: cream (246,240,226), ink (32,36,46), orange (232,106,44), teal (20,110,96), Anton headlines, Chakra Petch body, bottom caption band carries the VO line.
+
+— Benson
