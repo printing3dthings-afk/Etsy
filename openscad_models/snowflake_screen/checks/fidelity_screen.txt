@@ -1,0 +1,25 @@
+slicing 2 part(s), 2 filament(s) ...
+30 layers parsed
+  layer 0/30
+
+PRINT FIDELITY  (30 layers, model 70803.3 mm3)
+  dropped (modelled, not printed): 0.9 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.13 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #9CC7E0 slot 1     0.059 mm3  z 5.4-6.0 (2 layers)  left at [57.3, 50.2]  0.26 mm wide, 0.12 mm deep
+       dropped #9CC7E0 slot 1     0.059 mm3  z 5.4-6.0 (2 layers)  back at [79.3, 53.0]  0.26 mm wide, 0.17 mm deep
+       dropped #9CC7E0 slot 1     0.059 mm3  z 5.4-6.0 (2 layers)  back at [77.7, 65.8]  0.26 mm wide, 0.11 mm deep
+       dropped #9CC7E0 slot 1     0.058 mm3  z 5.4-6.0 (2 layers)  back at [55.7, 53.0]  0.26 mm wide, 0.17 mm deep
+       dropped #9CC7E0 slot 1     0.058 mm3  z 5.4-6.0 (2 layers)  back at [55.7, 63.0]  0.26 mm wide, 0.17 mm deep
+       dropped #9CC7E0 slot 1     0.058 mm3  z 5.4-6.0 (2 layers)  right at [69.1, 45.3]  0.27 mm wide, 0.15 mm deep
+       dropped #9CC7E0 slot 1     0.058 mm3  z 5.4-6.0 (2 layers)  back at [65.9, 70.7]  0.26 mm wide, 0.15 mm deep
+       dropped #9CC7E0 slot 1     0.058 mm3  z 5.4-6.0 (2 layers)  back at [69.1, 70.7]  0.26 mm wide, 0.14 mm deep
+       dropped #9CC7E0 slot 1     0.057 mm3  z 5.4-6.0 (2 layers)  left at [65.9, 45.3]  0.26 mm wide, 0.14 mm deep
+       dropped #9CC7E0 slot 1     0.057 mm3  z 5.4-6.0 (2 layers)  back at [57.3, 65.8]  0.26 mm wide, 0.11 mm deep
+       dropped #9CC7E0 slot 1     0.057 mm3  z 5.4-6.0 (2 layers)  right at [77.7, 50.2]  0.26 mm wide, 0.11 mm deep
+       dropped #9CC7E0 slot 1     0.057 mm3  z 5.4-6.0 (2 layers)  back at [79.3, 63.0]  0.26 mm wide, 0.18 mm deep
+       dropped #9CC7E0 slot 1     0.014 mm3  z 5.4-6.0 (2 layers)  front at [79.1, 10.3]  0.15 mm wide, 0.1 mm deep
+       dropped #9CC7E0 slot 1     0.014 mm3  z 5.4-6.0 (2 layers)  front at [80.6, 13.0]  0.15 mm wide, 0.1 mm deep
+       dropped #9CC7E0 slot 1     0.014 mm3  z 5.4-6.0 (2 layers)  front at [79.1, 15.7]  0.15 mm wide, 0.1 mm deep
+  ... 45 smaller

@@ -1,0 +1,3 @@
+Bambu Studio slice (tools/bambu_slice.py, --quality standard, P1S 0.4, Bambu PLA Basic), 2026-11-12
+snowflake hinge test (coupon): blue #9CC7E0
+  layers 30, support_lines 0, time 23m 56s, filament 7.49 g

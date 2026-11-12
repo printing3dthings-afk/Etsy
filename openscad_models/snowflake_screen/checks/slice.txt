@@ -1,0 +1,5 @@
+SNOWFLAKE SCREEN HINGE: DO THE PARTS PRINT APART? (toolpaths)
+bore 2.0: ok    apart on 30 of 30 layers
+bore 2.3: ok    apart on 30 of 30 layers
+PASS
+control: the same coupon at a 0.05 mm gap and clearance is caught as FUSED on every layer

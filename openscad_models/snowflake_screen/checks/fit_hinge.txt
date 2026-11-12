@@ -1,0 +1,4 @@
+SNOWFLAKE SCREEN HINGE FIT CHECK (exported coupon leaves)
+bore 2.0: ok    rest clear True, closest 0.50; free swing 108 deg one way, 101 the other; pin 1.90 clears True; hole closed at the bottom True
+bore 2.3: ok    rest clear True, closest 0.50; free swing 108 deg one way, 101 the other; pin 1.90 clears True; hole closed at the bottom True
+PASS

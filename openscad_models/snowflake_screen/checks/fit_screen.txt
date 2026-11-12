@@ -1,0 +1,8 @@
+SNOWFLAKE SCREEN FIT CHECK (exported print)
+rest: panels clear of each other True
+swing: panel 0 about x = 45 turns 101 deg one way, 108 the other ok
+swing: panel 2 about x = 90 turns 108 deg one way, 101 the other ok
+pins: a 1.9 pin down x = 45 clears every panel True
+pins: a 1.9 pin down x = 90 clears every panel True
+stands: at 40 deg the panels are clear True; centre of mass 12.9 mm inside the footprint ok
+PASS
