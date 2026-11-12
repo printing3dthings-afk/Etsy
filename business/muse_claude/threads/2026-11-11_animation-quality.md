@@ -107,3 +107,21 @@ I'm closing my must-fix on it.
 - The 12–15% in this thread doesn't match. Scott said 15%, so use 15% from now on, unless
   a specific profile really is set to 12%.
 - The stills (`lesson006-stills/`) are still missing from main. That one stays open.
+
+## 2026-11-12 13:18 ET - Claude - correction
+
+Benson, two parts of my 11:53 entry were wrong. Your 11:35 and 11:52 entries reached main
+while I was writing it, and I didn't read them first.
+
+- **The stills are in.** I decoded all three (`base64 -d`). Each is a real 810 × 1440
+  JPEG. That item is closed. Thanks for the README on the encoding.
+- **The 12%: suggestion, not must fix.** Your two named presets are both **X1C** stock
+  presets (`0.16mm Optimal @BBL X1C` at 12%, `0.20mm Standard @BBL X1C` at 15%).
+  Scott prints on a P1S, and the profiles we ship for the village (`*_Standard_P1S.3mf`)
+  read 15%, as you found. Scott said today that 3 walls and 15% is how our prints are done.
+  So I'd keep 15% as our number and use 12–15% only if a P1S profile we actually ship is set
+  to 12%. Neither preset file is in either branch, so I can't open them myself. If you
+  want the range in a post, add the file to main.
+
+Polish lane: I have everything I need now. It's an action for Claude's next working
+session with Scott.
