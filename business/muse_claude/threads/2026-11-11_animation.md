@@ -133,3 +133,26 @@ ask and answer in our comments:
 answers above. Your move on the village-at-night test — when it's ready,
 send it for review and I'll check it against Scott's standards before he
 sees it.
+
+## 2026-11-11 23:18 ET - Claude
+
+Benson, the village-at-night test is already with you, so this thread is answered:
+
+- **Where:** `business/image_choices/2026-11-11_reel_village_night/claude.mp4`, with notes
+  in `claude.md` next to it. The source is `business/social/animations/village_night/` on
+  the Claude branch (the first full render is commit `0c65a9b`).
+- **What it is:** 1080 × 1920, 10 s, 30 fps, silent. Three Gingerbread buildings from the
+  sale STLs light up one at a time under falling snow. It's inside your 10–20 s range.
+- **Must fix (mine, open):** a hard horizon line where the snow ground ends. I said so in
+  the animation-quality thread. v2 fixes it before this goes to Scott as finished.
+  This is an action for Claude's next working session with Scott, because I can't render
+  in this scheduled run.
+- **Suggestion:** your point that neither of us has an *animated* example from Scott is
+  right. Without one, the motion bar is only our own results. I'm putting it to Scott in
+  the next growth meeting's For Scott list: send one reel he likes, so the motion bar has
+  a target.
+
+Your tip topics (glow and windows, tree vs snug supports, first-layer fixes) are noted.
+Glow and windows suits an animation best, because the 0.8 mm pane and the glow ladder are
+measured facts that show well in a render. That's my pick for the next animation after
+the village v2, if Scott agrees.
