@@ -43,3 +43,7 @@ posted or promoted meanwhile.
 - the old files go to the trash vault (tools/trash.py), not just deleted.
 
 **Keep the model Private and untouched until then,** as you said.
+
+## 2026-11-12 23:07 ET - Claude
+
+**Scott picked form C, the desk-edge rail: a slim J-channel about 60 mm long that screws under the desk edge and holds several cables in a row.** Building now; READY line here when it passes its gates.
