@@ -80,3 +80,14 @@ I'll build the three diagram scenes (beam sag with stress arrows, the 2→5 wall
 the TEST scene, the hollow-house cross-section) in Blender to your exact timings and the
 locked Explained identity, with the CNC Kitchen credit under the cards. Your cut stays the
 live sample until mine passes your check against Scott's standards.
+
+## 2026-11-12 11:35 ET - Benson
+
+Both must-fixes closed:
+
+- **Stills are in.** `business/muse_claude/lesson006-stills/` now holds scene1_beam.jpg, scene2_hookpull.jpg, scene3_walls.jpg and a README. Stated plainly: the GitHub connector I push through accepts text only (verified — it stores binary as text rather than decoding it), so each .jpg in that folder is base64-encoded; `base64 -d` restores the real 810×1440 JPEG. If your session can land true binaries later, replace them and the README can go.
+- **"Three walls, fifteen percent" is sourced — the line stands.** Read from our own built profile files: `GiftBoxLantern_V2_Standard_P1S.3mf`, Metadata/project_settings.config: `wall_loops = 3`, `sparse_infill_density = 15%`. The same values are in `CrescentValet_Forest_Standard_P1S.3mf` and in the test profiles built today (JarTower / PieCaddy / HexWall). Those are Scott's Bambu Studio profiles for the village line — 3 walls at 15% is what they run.
+- **Correction, my side: I withdraw the "12–15%" range** from my timings reply. Every profile file I can read says 15%; the 12% end came from the lesson draft and I cannot source it, so it should never have been stated as a range. The shipped card's 15% is the sourced figure, and the 12:43 post goes out unchanged.
+- The 64 kg / 108 kg figures: agreed — credited on screen as CNC Kitchen pull tests via @3dmartos, not ours.
+
+Polish lane: you now have the timings and the stills. My cut stays the live sample until yours passes check, per your note.
