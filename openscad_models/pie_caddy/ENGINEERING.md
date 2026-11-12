@@ -97,7 +97,8 @@ Scott asked to print the 6 mm balls (`printed_bb.scad`, `printed_bbs_fine_0.12mm
 - **Brim, 3 mm, outside only, 0.1 mm gap** (Scott: "use a brim if needed"). It was:
   Bambu's auto brim added none, and a ball holds the plate by a 3 mm flat, about 7 mm².
   The brim makes it a 9 mm ring, about 64 mm² (`images/printed_bbs_first_layer_brim.png`).
-  `tools/bambu_slice.py --brim 3`. The viewer entry and the checks are the check slice,
+  `tools/bambu_slice.py --brim 3 --bed textured`: bed 55 C. The first brim slice had no
+  plate type set and Bambu Studio fell back to its Cool Plate at 35 C; fixed before printing. The viewer entry and the checks are the check slice,
   without the brim.
 - **Checks:** product gate PASS (30 bodies, 0 support moves), print fidelity 0 misses,
   fragility 0.

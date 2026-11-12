@@ -60,6 +60,9 @@ FILAMENTS = {"pla_basic": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
 
 # CLAUDE.md "Production Quality Settings" -- the shop's own retail standard.
 # "Customers only see the outside": the outer wall is slowed and printed first.
+BEDS = {"textured": "Textured PEI Plate", "smooth": "High Temp Plate", "cool": "Cool Plate",
+        "engineering": "Engineering Plate"}
+
 RETAIL = {
     "outer_wall_speed": 50,
     "outer_wall_acceleration": 5000,
@@ -134,13 +137,17 @@ def _set(cfg: dict, key: str, value) -> None:
 
 
 def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool = True,
-                   filament: str = "pla_basic", brim: float | None = None) -> tuple[str, str]:
+                   filament: str = "pla_basic", brim: float | None = None,
+                   bed: str = "textured") -> tuple[str, str]:
     """Write the machine, process and filament files; returns the two CLI args."""
     machine = flatten("machine", MACHINE)
     process = flatten("process", PROCESS[quality])
     if retail:
         for k, v in RETAIL.items():
             _set(process, k, v)
+    # 2026-11-12: with no plate type set, Bambu Studio sliced for its Cool Plate, bed
+    # 35 C. Scott's plates are PEI, where PLA wants 55 (textured and smooth alike).
+    _set(process, "curr_bed_type", BEDS[bed])
     # 2026-11-12: Bambu's auto brim judged the printed 6 mm balls (each on a 3 mm flat)
     # needed none. A forced outer brim is for small footprints like that.
     if brim:
@@ -343,7 +350,7 @@ def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path) -> list[str
 
 def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = "standard",
                 pause_zs: list[float] | None = None, retail: bool = True, log=print,
-                filament: str = "pla_basic", brim: float | None = None) -> dict:
+                filament: str = "pla_basic", brim: float | None = None, bed: str = "textured") -> dict:
     """Slice the given parts for the P1S. Returns the slice's own summary."""
     ensure_installed()
     out = Path(out).resolve()
@@ -352,7 +359,7 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
         work = Path(td)
         model = work / "model.3mf"
         colours = build_bambu_3mf(groups, model)
-        settings, filaments = write_profiles(work, quality, colours, retail, filament, brim)
+        settings, filaments = write_profiles(work, quality, colours, retail, filament, brim, bed)
         outdir = work / "out"
         outdir.mkdir()
         cmd = _cmd() + ["--slice", "0", "--arrange", "0",
@@ -370,7 +377,7 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     s["paused_at_mm"] = paused_at
     s.update({"file": str(out), "quality": quality, "process": PROCESS[quality],
               "retail_settings": retail, "filament": FILAMENTS[filament], "slot_colours": colours,
-              "brim_mm": brim})
+              "brim_mm": brim, "bed": BEDS[bed]})
     if s["support_lines"]:
         log(f"WARNING: the slice contains support ({s['support_lines']} support sections) -- fix the model")
     if s.get("slots_used") is not None and len(s["slots_used"]) < len(colours):
@@ -387,9 +394,10 @@ def main() -> None:
     ap.add_argument("--pause-at", type=float, action="append", default=[], help="pause before this layer height (mm)")
     ap.add_argument("--bambu-defaults", action="store_true", help="Bambu's profile as-is, without the shop's retail settings")
     ap.add_argument("--brim", type=float, metavar="MM", help="force an outer brim this wide (default: Bambu's auto brim)")
+    ap.add_argument("--bed", choices=sorted(BEDS), default="textured", help="the build plate (sets the bed temperature)")
     a = ap.parse_args()
     s = slice_parts(parse_parts(a.parts), Path(a.out), a.quality, a.pause_at, retail=not a.bambu_defaults,
-                    filament=a.filament, brim=a.brim)
+                    filament=a.filament, brim=a.brim, bed=a.bed)
     print(json.dumps(s, indent=1))
     if s["support_lines"]:
         sys.exit(2)

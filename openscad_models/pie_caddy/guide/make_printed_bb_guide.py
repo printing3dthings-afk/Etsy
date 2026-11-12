@@ -21,6 +21,7 @@ def main():
     a.step(1, "Print them", [
         "!printed_bbs_fine_0.12mm.gcode.3mf: already sliced, send it straight to the printer.",
         "0.12 mm layers, no supports, a 3 mm brim round each ball. About 29 min and 4.2 g.",
+        "Sliced for a PEI plate (textured or smooth), bed 55 \u00b0C.",
         "Each ball stands on a small flat (3 mm across) so its first layers don't sag.",
         "Snap each ball off its brim ring: there's a 0.1 mm gap, so it breaks clean."
     ], crop(PC / "images" / "printed_bbs_as_printed.png"), pic_h=430)
