@@ -1,0 +1,25 @@
+slicing 1 part(s), 1 filament(s) ...
+29 layers parsed
+  layer 0/29
+
+PRINT FIDELITY  (29 layers, model 8378.7 mm3)
+  dropped (modelled, not printed): 40.13 mm3
+  filled  (printed, not modelled): 42.64 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #999999 slot 1    14.496 mm3  z 0.0-2.4 (12 layers)  front at [4.9, -33.9]  0.21 mm wide, 0.31 mm deep
+       dropped #999999 slot 1    10.693 mm3  z 0.0-2.4 (12 layers)  right at [97.0, 2.2]  0.19 mm wide, 0.29 mm deep
+       filled  #999999 slot 1    10.474 mm3  z 0.0-2.4 (12 layers)  right at [96.9, 18.0]  0.15 mm wide, 0.22 mm deep
+       filled  #999999 slot 1    10.347 mm3  z 0.0-2.4 (12 layers)  back at [14.9, 20.8]  0.16 mm wide, 0.22 mm deep
+       filled  #999999 slot 1     8.768 mm3  z 0.0-1.4 (7 layers)  back at [-42.9, 38.5]  0.16 mm wide, 0.22 mm deep
+       dropped #999999 slot 1     7.805 mm3  z 0.0-1.4 (7 layers)  left at [-39.4, 16.4]  0.18 mm wide, 0.25 mm deep
+       filled  #999999 slot 1     7.470 mm3  z 0.0-2.4 (12 layers)  left at [-9.4, 9.2]  0.16 mm wide, 0.22 mm deep
+       dropped #999999 slot 1     1.678 mm3  z 2.4-5.8 (17 layers)  right at [108.4, 7.1]  0.19 mm wide, 0.28 mm deep
+       filled  #999999 slot 1     1.548 mm3  z 2.4-5.8 (17 layers)  right at [108.4, 13.1]  0.16 mm wide, 0.22 mm deep
+       dropped #999999 slot 1     1.306 mm3  z 1.4-2.4 (4 layers)  front at [16.1, -28.4]  0.11 mm wide, 0.17 mm deep
+       filled  #999999 slot 1     1.285 mm3  z 1.6-2.4 (3 layers)  front at [18.0, -31.8]  0.12 mm wide, 0.17 mm deep
+       dropped #999999 slot 1     1.177 mm3  z 2.4-4.4 (10 layers)  left at [21.0, -1.6]  0.18 mm wide, 0.24 mm deep
+       dropped #999999 slot 1     1.174 mm3  z 2.4-4.4 (10 layers)  right at [88.5, 8.4]  0.18 mm wide, 0.24 mm deep
+       filled  #999999 slot 1     1.085 mm3  z 2.4-4.6 (11 layers)  right at [88.5, 11.8]  0.15 mm wide, 0.22 mm deep
+       filled  #999999 slot 1     0.986 mm3  z 2.4-4.4 (10 layers)  back at [21.0, 1.8]  0.16 mm wide, 0.22 mm deep
+  ... 8 smaller

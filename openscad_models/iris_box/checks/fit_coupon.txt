@@ -1,0 +1,4 @@
+IRIS COUPON FIT CHECK (exported parts, assembled at 13 ring angles)
+clearance 0.40: ok    overlap through the sweep 0.0000 mm3; closest approach 0.39 mm; 2 deg past open / closed the tongue hits the groove's end (3.88 / 3.88 mm3); blade swing 48.6 deg
+clearance 0.55: ok    overlap through the sweep 0.0000 mm3; closest approach 0.50 mm; 2 deg past open / closed the tongue hits the groove's end (3.43 / 3.43 mm3); blade swing 48.6 deg
+PASS

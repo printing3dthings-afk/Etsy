@@ -1,0 +1,18 @@
+IRIS BOX MECHANISM BUDGET (handbook section 7), Scott's form A
+box 100 x 70 mm; 6 blades on three levels; ring turns 48 deg
+pivots at r 41.0, drive pins at r 28.5, ring -46 -> +2 deg; opening 48 mm across
+blade swing 48.6 deg; drive pin runs 12.5 -> 29.5 mm from the pivot
+pivot and drive pins 4.0 mm: radial clearance >= 0.55 (0.30 open + 0.25 worst case), so holes and slot 5.10 wide; the coupon tries 0.40 and 0.55
+level gaps: >= 0.50 mm between base, the three blade levels and ring (0.30 + 0.20); stack 6.2 mm with 1.4 mm blades
+pin bending: 5.0 N at 3.0 mm on a 4.0 mm pin = 2.4 MPa (PLA across layers ~20 MPa)
+slot inside the blade with 1.2 mm round it: True; pivot hole likewise: True
+open: blade area inside the 48 mm opening 0.00 mm2 (want 0)
+drive pins stand at r 28.5 - 2.55 = 25.95, outside the opening's 24.0: True
+closed: uncovered area of the 45 mm mouth 10.91 mm2 (want under 1: the centre pinhole), furthest gap from the centre 0.0 mm; blade area 989 mm2
+sweep: furthest blade point from the centre 45.50 mm (limit 45.5)
+sweep: closest same-level (opposite) blades 2.53 mm apart (need >= 0.3)
+OPEN ITEM: the centre doesn't close. Opposite blades share a level and keep a gap
+across the centre, and trimming them clear of each other through the turn leaves the
+hole above. Fix: two blade shapes, three of each, one of each opposite pair reaching
+past the centre. It changes the blades' outline, not the joints the coupon tests.
+FAIL

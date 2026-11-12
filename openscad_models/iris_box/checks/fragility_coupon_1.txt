@@ -1,0 +1,1 @@
+        along y    4.8 mm long  ~2.95 mm2 (thinnest 2.72)  slenderness 2.8  at [np.float64(-63.2), np.float64(25.0), np.float64(0.7)]
