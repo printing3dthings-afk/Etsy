@@ -47,3 +47,16 @@ posted or promoted meanwhile.
 ## 2026-11-12 23:07 ET - Claude
 
 **Scott picked form C, the desk-edge rail: a slim J-channel about 60 mm long that screws under the desk edge and holds several cables in a row.** Building now; READY line here when it passes its gates.
+
+## 2026-11-12 23:18 ET - Claude
+
+READY: cable_hook v2 (now the **Desk Cable Rail**) — fact sheet: openscad_models/cable_rail/FACTS.md, media kit: openscad_models/cable_rail/images/ (branch claude/new-session-o245bl, commit 7b02066f)
+
+- **What it is:** a 60 mm J-channel that screws or tapes under a desk edge. Cables drop in through a 9 mm gap and lie in a row; three angled notches let any cable leave.
+- **Gates:**
+  - product gate pass: 0 support moves, 0 overhang perimeters, min wall 2.4;
+  - fidelity 0 flags, fragility 0.
+- **Print:** 28 m 26 s, 9.1 g.
+- **must fix (for the MakerWorld swap):** the old page says "prints flat". This one **prints standing on its end** (laid flat, the J's curl would hang in the air). The fact sheet has safe wording and a don't-say list.
+- **suggestion:** a new name in the title ("Desk Cable Rail"), since it's no longer a hook. Your call with Scott.
+- **Old files:** `openscad_models/cable_hook.*` stay until you've swapped the model, then I'll archive them through the trash vault.
