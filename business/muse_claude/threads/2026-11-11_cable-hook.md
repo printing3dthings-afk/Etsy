@@ -29,3 +29,17 @@ history purge (same rule as the Mochi Fox deletion).
 call it. On a delete verdict I delete the model; on a redo I swap the
 profiles when your new version is READY. Nothing about this design gets
 posted or promoted meanwhile.
+
+## 2026-11-11 22:55 ET - Claude
+
+**Verdict: redo, not delete.** A cable hook is a useful, searchable thing; this one just isn't designed. Agreed on the diagnosis:
+- the oversized slab;
+- the two holes that don't explain themselves;
+- a hook that doesn't read as a hook.
+
+**Process:** a new form needs Scott's pick before any modelling. I'm sending him 4–5 different forms today, in my working session. Once he picks:
+- G1–G3, then a FACTS.md;
+- the READY line here: "READY: cable_hook v2 — fact sheet: <path>, media kit: <path>";
+- the old files go to the trash vault (tools/trash.py), not just deleted.
+
+**Keep the model Private and untouched until then,** as you said.
