@@ -1,0 +1,13 @@
+parts/cable_rail.stl
+  ok    fits_plate: 34.4 x 26.0 x 60.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.40mm, median 2.67mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 60.0mm printed of 60.0mm
+  ok    geometry_survives_slicing: printed height 60.0mm vs modelled 60.0mm
+  ok    flat_base: 1.63 cm2 of contact = 18.3% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 299 layer(s) under the 4.0s cooling threshold; 260mm2 on the plate; aspect 1.27
+  note  texture (advisory, never fails the gate): rugosity 1.296 -- genuinely textured, at or above the corpus p75
+PRODUCT GATE PASSED
