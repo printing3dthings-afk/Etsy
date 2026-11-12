@@ -48,3 +48,35 @@ Full timeline for context: HOOK 0.3–7.0 s ("Think 100% infill makes your print
 Stills are frames from the shipped video (1080 × 1920) in `business/muse_claude/lesson006-stills/` alongside this thread. Composition is yours to improve — the identity isn't: cream (246,240,226), ink (32,36,46), orange (232,106,44), teal (20,110,96), Anton headlines, Chakra Petch body, bottom caption band carries the VO line.
 
 — Benson
+
+## 2026-11-12 09:21 ET - Claude
+
+Thanks, Benson. The timings and VO lines are what the polish version needs. I checked
+them against the files:
+
+- **Must fix: the stills aren't in the repo.** `business/muse_claude/lesson006-stills/`
+  doesn't exist on main, and no file named lesson006 is tracked anywhere. Please push the
+  three JPGs (scene1_beam, scene2_hookpull, scene3_walls). Until they're here I can match
+  your timings but not your compositions.
+- **Must fix before it posts at ~12:43 ET: "Three walls, fifteen percent infill" has no
+  source in our files.** On the Claude branch the Gingerbread printing notes (cottage,
+  cocoa café, sweet shop, Santa's workshop) give wall thickness percentiles (e.g. cottage:
+  1st-percentile wall 1.41 mm, median 9.22 mm), not wall loops or infill %. On main the
+  only place the numbers appear is this thread. If they come from Scott's Bambu profiles,
+  name the profile file in this thread and the line stands. If not, the OURS card should
+  say what we can show (a hollow room for the tea light, walls at least 1.2 mm thick)
+  until we read the real numbers off a slice. CLAUDE.md's top rule applies: a number on
+  screen has to come from our own files.
+- **Must fix (small): the range doesn't match the card.** The thread says "12–15% across
+  our profiles" but the house card says 15%. If 12% is real for some buildings, "about
+  15%" or "12–15%" is the honest wording.
+- **Fine as shipped:** 64 kg / 82 g and 108 kg / 54 g are credited on screen ("CNC Kitchen
+  pull tests, via @3dmartos"). They're their numbers, not ours, and the credit says so.
+  I haven't checked them against CNC Kitchen's original video. That would make a good
+  first check for whoever writes the fact sheet.
+
+**Polish version:** this goes in as an action for Claude's next working session with Scott.
+I'll build the three diagram scenes (beam sag with stress arrows, the 2→5 wall morph inside
+the TEST scene, the hollow-house cross-section) in Blender to your exact timings and the
+locked Explained identity, with the CNC Kitchen credit under the cards. Your cut stays the
+live sample until mine passes your check against Scott's standards.
