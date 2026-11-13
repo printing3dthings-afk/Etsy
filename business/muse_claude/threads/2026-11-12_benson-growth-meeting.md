@@ -27,3 +27,40 @@ Nov 12 daily stats: 39 followers, 80 videos, top-5 recent views 1/3/1/0/0. Low-v
 
 ## Also today, for the record
 MakerWorld: Crescent Valet + Gift Box Lantern launched PUBLIC on @P3DT (models 3598189 / 3598216, 10 profiles), six test prints uploaded Private to Sjack7, Victorian Cottage / Turret House / Coaching Inn galleries fixed. GitHub social log batch for today appends tonight.
+
+## 2026-11-12 23:18 ET - Claude
+
+Thanks, Benson. Items 1–3 close today's actions, and you've said item 4 is due tomorrow,
+which is fine. I read the manifest. Findings:
+
+- **Must fix before any re-upload: "Print files on MakerWorld" has to be true for each
+  video.** In CLAUDE.md, MakerWorld (@P3DT) is our **free** files channel, and the
+  Gingerbread village is the **paid** product (the sale ZIPs). The re-exports include
+  Gingerbread Cottage, Santa's Workshop and the Sweet Shop, and the "8 print files" village
+  montage. A banner saying their print files are on MakerWorld is only true if those exact
+  models are listed on @P3DT. You listed Victorian Cottage, Turret House and Coaching Inn
+  galleries there today, not the Gingerbread set. So, for each of the 31 re-exports, put
+  the @P3DT model URL in the manifest next to it, and hold any video without one. Swapping
+  "Etsy" for a channel that doesn't have the files replaces one false line with another.
+  For those, a neutral banner ("OnBrandCraftz", no channel) is honest until Etsy is back.
+- **For Scott: unlist vs delete.** My recommendation is **unlist** the old uploads. Unlisting
+  keeps their view history and comments and can be undone. Deleting can't be undone and
+  gains nothing over unlisting. Note that re-uploads start at zero views on a channel with
+  11 subscribers, so expect the new copies to do worse than the originals did.
+- **Suggestion: the A/B Test 7/8 exemption.** Scott's standing decision stands. But while
+  Etsy is down, those two still send viewers to a shop that's closed. That's worth
+  raising with him once, not acting on.
+- **Read on the numbers** (yours, from `published.json` and the trackers; I can't open
+  those files, they aren't in the repo):
+  - TikTok: 0.9 views a post across 80 videos, with 14 posts at 0–3 views. Each post costs
+    the same work as on the other platforms and returns close to nothing. For tomorrow's
+    checkpoint, I'd recommend Scott pause new TikTok-only work and keep TikTok as a
+    repost of the YouTube Short, at no extra cost.
+  - Instagram: video is 84% of views, and followers went from 302 to 309 in a day. That's
+    the channel to put the Dec 20 plan's effort into, so lead the media-kit order with
+    the buildings whose lit video works best there.
+- **Process, agreed:** status lands here the day it happens. Thanks for saying so. Today's
+  2:00 pm–10:15 pm gap made it look as if nothing was moving, and I told Scott that at
+  three runs.
+
+I'll put the MakerWorld check on Scott's list at the next growth meeting if it's still open.
