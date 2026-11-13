@@ -87,9 +87,48 @@ tooth root area 959 mm2 x Z-shear ~14 MPa -> strips at ~13.2 kN
 - pulled straight up 1 mm, the teeth hold it;
 - turned back two full turns, it touches nothing on the way out.
 
-## 6. Next
+## 6. Scott's pick: 0.2 (2026-11-13)
 
-The full tower, once you've told me which clearance you liked:
-- the jars, with the cone seam styled as a reveal line;
-- a cap;
-- a foot, so the bottom jar doesn't stand on its own teeth.
+He printed the test: "Number 1 again is the best". So every joint is the 0.2 mouth, the
+snug one. The hand calculation above flagged its flank gap (0.16) as under the 0.3 rule;
+the real print settles it, as the test was meant to.
+
+## 7. The tower (`jar_tower.scad`, `check_tower.py`)
+
+- **Jar:** 64 mm tall, the test's spigot at the bottom and the 0.2 mouth at the top, a
+  1.6 mm floor and a 2.4 mm wall. About 153 ml inside.
+  - Its inside rises from the floor up the spigot's bore, out along a 35° cone (2.4 mm
+    from the seat cone outside), up the wall, and in along another cone to the mouth's
+    crests. No ledge anywhere is over air, so it prints standing on its teeth with no
+    supports, as the test spigot did.
+- **Cap:** a spigot with a closed top and 24 grip grooves round its side. Prints upside
+  down. The grooves end in a 37° slope rather than a flat roof: flat, they drew 4,407
+  support moves.
+- **Foot:** the 0.2 mouth on a skirt that flares 5 mm past the jars at the bed, with a lip
+  2 mm tall.
+- **Tower:** foot + 4 jars + cap stands 247.7 mm. Fewer jars works the same way.
+
+**Checked on the exported parts (`check_tower.py`, `checks/fit_tower.txt`)**, at each of
+jar on jar, jar on foot and cap on jar:
+- seated: 0.05 mm short of home nothing touches, 0.1 past the cones overlap;
+- held: pulled straight up 1 mm, the teeth hit;
+- open gap at the teeth when home: 0.15 mm at the least;
+- unscrews: turned back 90° to 720°, it touches nothing.
+
+**Gates, all three parts:** product gate PASS, print fidelity 0 dropped and 0 filled,
+fragility 0 slender runs. The wall check needs the thread declared (as on the test), and
+on the foot also the band where the skirt meets the thread:
+- that band's thin readings are all chords 5.5 to 10 mm long through solid wall, from the
+  skirt cone to a thread flank. Their faces are 115° apart, so the gate re-measures each
+  along the flank's normal at the groove's edge and gets ~0. Print fidelity on the same
+  part drops nothing.
+
+**Mesh fixes on the way (2026-11-13):**
+- The jar came out as 7 bodies: a root cylinder 0.01 off the thread's own root, then a
+  crest bore that coincided with the thread, both left zero-volume slivers. Both removed.
+- The cavity's top cone ended exactly on the mouth's bore edge: coincident faces, an open
+  mesh. It now ends 0.1 inside the crests, 0.3 lower.
+- Rotating the cap 180° in OpenSCAD broke its mesh; it's flipped in Python instead.
+
+**Slices** (Bambu Studio, P1S 0.4, PLA Basic, standard 0.20, Textured PEI 55 °C, no
+supports): see `PRINTING.md`.
