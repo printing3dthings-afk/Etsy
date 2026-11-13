@@ -404,3 +404,27 @@ WHICH ONE WOULD YOU CHOOSE?
 - Replies/DMs sent: none
 - Results: not posted — HELD
 - Problems: held for the slide-2 coupon photo (Scott's bench session — 3 window coupons at 0.8 / 1.6 / 2.4 mm against one battery tea light); the photo was not in the workspace at run time (newest files are Nov 10). Per the draft's own guidance the lesson is held rather than shipped without the coupon photo; its E-007 video-slide run moves with it. The lesson stays ready the moment the photo lands
+
+## 2026-11-13 09:45 EST — Facebook — Page post (photo)
+- Account: Onbrandcraftz Page (page_id 1358962047302375; post read-back owner_name = Onbrandcraftz, owner_id 61595553412715 — NOT Scott's personal profile)
+- Link: https://facebook.com/61595553412715/posts/pfbid022yfbihCGPLqxpuj71bN8nLpwBu2ZvDiePdiuMjTRqXbxd3LeHcidWKVpXxy9griwl/ (post 122113356615518447)
+- Product: none — Friday Makers Week 4 community ritual (Fail Edition); photo subject is Scott's own Standing Word Sign 240 failed print (Nov 7)
+- Media: friday-makers-week4-fail-edition.jpg (1179x1571; Scott's own Nov 7 photo of the yellow standing word sign with stringy failed bridges inside the F and C, with the locked Friday Makers banner applied — warm charcoal strip, FRIDAY MAKERS / WEEK 4 · FAIL EDITION)
+- Caption: FRIDAY MAKERS — FAIL EDITION 🍝 / It's been that kind of week in our shop — the standing word sign grew spaghetti inside the F and the C. So let's see yours. / Drop a photo of your worst print fail in the comments: spaghetti nests, layer shifts, the one that let go of the plate at 97% — the worse, the better. / Most catastrophic fail gets bragging rights. 🏆
+- Links in the post: none; no affiliate links
+- Claims made: the standing word sign grew spaghetti inside the F and the C — Scott's own real failed print, photo is that print
+- Replies/DMs sent: none on the Page post (seed comment is on the group share — see next entry)
+- Results: published, Public, state=published; read-back verified caption verbatim and Page authorship
+- Problems: none
+
+## 2026-11-13 09:48 EST — Facebook — Group share (OnBrandCraftz Makers group) + seed comment 09:53 EST
+- Account: Onbrandcraftz Page (group post read-back owner_name = Onbrandcraftz, owner_id 61595553412715, Admin — NOT Scott's personal profile; share identity confirmed as Onbrandcraftz in the share dialog before posting)
+- Link: https://facebook.com/groups/1488065163368472/permalink/1515069387334716/ (group post 1515069387334716)
+- Product: none — Friday Makers Week 4 community ritual (Fail Edition), share of the Page post above
+- Media: shared Page post photo (same friday-makers-week4-fail-edition.jpg, banner visible — verified displaying on the group post as a viewer)
+- Caption: same as the Page post above, verified complete on the group post (ends "Most catastrophic fail gets bragging rights. 🏆")
+- Links in the post: none; no affiliate links
+- Claims made: same as the Page post above
+- Replies/DMs sent: seed comment as the Page on the group post (comment 1515074300667558, 2026-11-13 09:53 EST, author verified Onbrandcraftz Page with Author/Admin badges): "Ours first: the standing word sign, straight off the plate — bridges inside the F and C just gave up. It's already been redesigned to print flat. Your turn 👇"
+- Results: group share published, Public group, exactly 1 comment on the group post (the seed comment); platform-fit QC as a viewer: shared photo displays, caption complete, seed comment present with exact text
+- Problems: the seed comment's photo could NOT be attached — in the browser the comment composer's attach button exposed no usable file input (two attempts routed the photo into an unpublished group Create-post draft, which was discarded; no stray post exists, group composer verified empty). The seed comment is live text-only as the Page; the identical bannered fail photo is displayed on the shared group post directly above the comment. Scott can add the photo by editing the seed comment in the Facebook app if he wants it attached there too.
