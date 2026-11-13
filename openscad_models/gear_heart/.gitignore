@@ -1,0 +1,3 @@
+*.rendercache
+__pycache__/
+poses/

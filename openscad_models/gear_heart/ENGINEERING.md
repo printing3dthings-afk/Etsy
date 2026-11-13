@@ -6,8 +6,10 @@ mechanism process (`data/knowledge_base/mechanism_engineering_handbook.md`, sect
 7): the parts are calculated and test-printed **before** the heart is built.
 
 **Status:**
-- The test print is ready: `gear_heart_test.3mf`, about 37 min.
-- **The heart itself waits for Scott's test results.**
+- **Test done (2026-11-13):** Scott printed `gear_heart_test.3mf` and picked bar 1,
+  "+0.20" on the centre distance ("Number 1"). The heart uses it.
+- **The heart is built:** `gear_heart_plate.3mf` and `gear_heart_gears.3mf`, with
+  `Gear_Heart_Guide.pdf`. Not printed yet. Section 7.
 
 ## 1. Requirement
 - **One knob turns them all:** every gear turns together, smoothly, from the knob in
@@ -108,3 +110,50 @@ and 0.27 at +0.40.
    - the backplate hollowed underneath, so the 8 mm needed for the posts doesn't
      cost a solid slab.
    - **Check:** turning all 15 gears at once, across the whole loop.
+
+## 7. The heart (2026-11-13)
+
+**Centre distance +0.20 (Scott's pick).** The budget's stack (0.20 RSS, 0.40 worst)
+calls +0.20 "may bind"; the test print, the real mesh on his P1S, outranks it, and the
+budget now says so (`TESTED_OK` in `gear_budget.py`). Each mesh hangs on its own two
+posts in one plate, so errors don't add up round the loop. Backlash 0.15 mm.
+
+**The ring's teeth had to close, not just its distances.** Going round a closed ring
+of gears, each mesh fixes the next gear's angle. With the bottom gear at the heart
+curve's point, the top gear came back 2.10 mm out of phase (pitch 4.71, backlash 0.15):
+the last gear couldn't go on, or the ring would lock. The first design check closed
+the distances only. Now `gear_budget.py` solves the bottom gear's place on the axis
+(1.59 mm up) so the phase error is 0.0000 mm, keeps every non-meshing pair clear, and
+writes each gear's phase into `layout.json`.
+- The first version of the phase propagation had a sign backwards (the tooth's offset
+  from the line of centres). Its own closure check agreed with it, because it copied
+  the formula; the geometric check on the real gear shapes found every side mesh
+  overlapping by 2 to 6.6 mm2. Fixed; the error at the curve's point is 2.10 with the
+  right sign (2.02 with the wrong one).
+
+**Layout.** 14 gears round the heart plus the knob gear, 126.7 x 114.8 mm, scale 3.122.
+
+**Knob.** A round ribbed grip, 18 mm across, with a raised heart on top, on the centre
+gear. It stays inside the 9.5 mm the top gear's tips leave (a 24 mm heart knob swept
+over them, level with its underside). The post's head needs a 10.7 mm hole: in a heart
+knob it broke through the narrow half (min wall 0.83), so the grip is round and the
+hole ends in a 37 deg pointed roof. Grip grooves run out through the top (stopped short,
+their flat tops drew 6,124 support moves).
+
+**Checks (`checks/`).**
+- Fit (`check_heart.py`, on the exported gears and plate, `fit_heart.txt`): the ring
+  closes; the knob turned two teeth in 1 deg steps with all 15 gears at their ratios,
+  no overlap at any step, smallest tooth gap 0.132 mm; each of the 15 meshes collides
+  when turned 1.5 deg against itself (really meshing); non-meshing gears 2.55 mm apart
+  at the closest; the knob clears the top gear in 3D; nothing touches the plate.
+- Product gate: plate pass (1 body, min wall 1.40); gears pass (15 bodies, min wall 1.30,
+  0 support moves).
+- Print fidelity: 0 flags on both.
+- Fragility: gears 0. Plate 0 high, 20 watch: the posts' prongs, meant to flex (the
+  test print's were the same).
+- Bambu Studio (PEI plate, 55 C): plate 2 h 15 m, 40.5 g; gears 1 h 49 m, 26.6 g.
+  No supports.
+
+**Not checked by printing yet:** the whole heart. The parts that move are the tested
+ones (posts, washers, +0.20 meshes); what's new is the layout, the knob and the
+heart cut-outs, all checked above on the exported parts.

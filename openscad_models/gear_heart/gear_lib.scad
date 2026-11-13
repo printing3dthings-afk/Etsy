@@ -35,7 +35,7 @@ module gear(m, z, t, bore, holes = 4) difference() {
     linear_extrude(t) gear2d(m, z);
     translate([0, 0, -1]) cylinder(d = bore, h = t + 2, $fn = 48);
     let (r_in = bore / 2 + 2.4, r_out = g_rf(m, z) - 2.0, hd = r_out - r_in)
-        if (hd >= 2.4) for (k = [0 : holes - 1]) rotate(k * 360 / holes + 45)
+        if (holes > 0 && hd >= 2.4) for (k = [0 : holes - 1]) rotate(k * 360 / holes + 45)
             translate([(r_in + r_out) / 2, 0, -1]) cylinder(d = hd, h = t + 2, $fn = 32);
 }
 

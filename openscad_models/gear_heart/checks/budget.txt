@@ -1,11 +1,13 @@
 GEAR HEART BUDGET (handbook section 7; values from mechanism_budget.PROCESS)
 
-layout: heart scale 3.111, loop of 14 gears (even: turns), closes to -0.0000 mm; module 1.5, +0.3 on every centre distance
-  gears span 126.4 x 116.1 mm (P1S plate 256)
-  15 meshes, each at its pitch distance + 0.3: checked
-  gears that don't mesh: tips at least 2.27 apart (need 1.0)
+layout: heart scale 3.122, loop of 14 gears (even: turns), closes to -0.0000 mm; module 1.5, +0.2 on every centre distance
+  gears span 126.7 x 114.8 mm (P1S plate 256)
+  teeth round the loop: the bottom gear sits +1.59 mm along the axis from the heart's point, so the ring closes with a phase error of -0.0000 mm (backlash 0.15); at the curve's own point it was 2.10 mm and would have locked
+  15 meshes, each at its pitch distance + 0.2: checked
+  gears that don't mesh: tips at least 2.22 apart (need 1.0)
 
-mesh: +0.3 centre distance = 0.22 mm backlash; the stack that can close it: worst 0.40, RSS 0.20 -> free at RSS, binds only if every error lines up
+mesh: +0.2 centre distance = 0.15 mm backlash; the stack that can close it: worst 0.40, RSS 0.20 -> MAY BIND, binds only if every error lines up
+  -> printed and picked by Scott: gear_heart_test.3mf, bar 1 (one notch), 2026-11-13: meshed better than +0.40; the measured result stands over the stack
   hub play 0.35 each side lets a gear drift up to 0.70; driving pushes meshing gears apart, so play opens the mesh rather than closing it
 
 snap: two prongs 1.6 thick x 4.0 wide, corners on a 7.0 circle, slot 2.54; flexing length 13.5 (the post rises from a pocket 6.5 deep: plate 8.0 thick)
@@ -18,4 +20,4 @@ snap: two prongs 1.6 thick x 4.0 wide, corners on a 7.0 circle, slot 2.54; flexi
   -> ok: needs >= 10 N so a gear isn't pulled off by turning or brushing it
   hub running gap 0.35 less the worst case closing it = 0.10 -> turns
 
-PASS: build the coupon
+PASS: build it

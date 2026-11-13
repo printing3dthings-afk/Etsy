@@ -34,7 +34,8 @@ from mechanism_budget import PROCESS, cantilever, engagement, mating_force  # no
 # ---- the gears ----
 MOD = 1.5            # mm; teeth 4.7 mm apart at the pitch circle, big enough to read and print
 PA = 20.0            # pressure angle, deg
-DC = 0.30            # centre distance added to every mesh (backlash); the coupon tries 0.15/0.30/0.45
+DC = 0.20            # centre distance added to every mesh. Scott, 2026-11-13, from the test: "Number 1" (+0.20)
+TESTED_OK = {0.20: "gear_heart_test.3mf, bar 1 (one notch), 2026-11-13: meshed better than +0.40"}
 SIDE = [16, 12]      # teeth on the outline gears, alternating, starting next to the top gear
 TOP_Z = 20           # the gear in the heart's top dip: big, so its neighbours clear each other across it
 BOTTOM_Z = 16        # the gear at the heart's point
@@ -84,7 +85,7 @@ def heart(t, s):
     return (s * x, s * y)
 
 
-def march(s, zs):
+def march(s, zs, dy=0.0):
     """Place gears along the right half of the heart from the top dip, each at its
     meshing distance from the last. Returns their centres and the leftover: the
     distance still to the point gear minus the distance it needs."""
@@ -98,20 +99,20 @@ def march(s, zs):
             lo, hi = (mid, hi) if d < need else (lo, mid)
         t = (lo + hi) / 2
         pts.append(heart(t, s))
-    bottom = heart(math.pi, s)
+    bottom = (heart(math.pi, s)[0], heart(math.pi, s)[1] + dy)
     need = MOD * (zs[-2] + zs[-1]) / 2 + DC
     return pts + [bottom], math.dist(pts[-1], bottom) - need
 
 
-def layout():
+def layout(dy=0.0):
     zs = [TOP_Z] + [SIDE[i % 2] for i in range(PER_SIDE)] + [BOTTOM_Z]
     lo, hi = 1.0, 10.0
     for _ in range(80):                           # scale the heart until the loop closes
         mid = (lo + hi) / 2
-        _, res = march(mid, zs)
+        _, res = march(mid, zs, dy)
         lo, hi = (mid, hi) if res < 0 else (lo, mid)
     s = (lo + hi) / 2
-    right, res = march(s, zs)
+    right, res = march(s, zs, dy)
     gears = [{"name": "top", "z": zs[0], "at": right[0]}]
     for i in range(1, len(zs) - 1):
         gears.append({"name": f"right{i}", "z": zs[i], "at": right[i]})
@@ -122,6 +123,76 @@ def layout():
     knob_y = top[1] - (MOD * (TOP_Z + KNOB_Z) / 2 + DC)
     gears.append({"name": "knob", "z": KNOB_Z, "at": (0.0, knob_y)})
     return s, res, gears
+
+
+def _wrap(a, period):
+    return (a + period / 2) % period - period / 2
+
+
+def phases(gears):
+    """Each gear's rotation (the angle of one tooth) when every mesh is centred, set
+    round the loop from the top gear (a tooth pointing straight up), and the error the
+    loop closes with, in mm at the top gear's pitch circle.
+
+    2026-11-13: the layout closed the loop's distances but nobody checked its teeth.
+    Going round a closed ring of gears, each mesh fixes the next gear's angle; back at
+    the start the top gear came out 2.10 mm off (pitch 4.71, backlash 0.15): the last
+    gear couldn't go on, or the ring would lock. layout() now takes the bottom gear's
+    offset along the axis, and solve_dy() picks the one that closes the teeth too."""
+    by = {g["name"]: g for g in gears}
+    loop = ["top"] + [f"right{i}" for i in range(1, PER_SIDE + 1)] + ["bottom"] + \
+           [f"left{i}" for i in range(PER_SIDE, 0, -1)] + ["top"]
+    ph = {"top": math.pi / 2}
+    err = None
+
+    def next_phase(a, b, pa):
+        (ax, ay), (bx, by_) = by[a]["at"], by[b]["at"]
+        al = math.atan2(by_ - ay, bx - ax)
+        # a's nearest tooth sits at al - d_a: d_a is the line's angle past the tooth. Rolling
+        # carries that offset across, mirrored, so b's gap sits at al + pi + (ra/rb) d_a.
+        # (2026-11-13: the first version had this sign the other way; every mesh with a
+        # non-zero offset came out overlapping in check_heart.py, by 2 to 6.6 mm2.)
+        d_a = _wrap(al - pa, 2 * math.pi / by[a]["z"])
+        d_b = (r_pitch(by[a]["z"]) / r_pitch(by[b]["z"])) * d_a
+        return al + math.pi + d_b - math.pi / by[b]["z"]          # b's gap faces it
+    for a, b in zip(loop, loop[1:]):
+        nb = next_phase(a, b, ph[a])
+        if b == "top":
+            err = _wrap(nb - ph["top"], 2 * math.pi / TOP_Z) * r_pitch(TOP_Z)
+        else:
+            ph[b] = nb
+    ph["knob"] = next_phase("top", "knob", ph["top"])
+    return {k: math.degrees(v) % 360 for k, v in ph.items()}, err
+
+
+def _tips_clear(gears):
+    """Gears that don't mesh keep TIP_CLEAR between tips: a root that closes the teeth
+    by shrinking the heart can overlap its gears."""
+    ms = {frozenset((a["name"], b["name"])) for a, b in meshes(gears)}
+    return all(math.dist(a["at"], b["at"]) - r_tip(a["z"]) - r_tip(b["z"]) >= TIP_CLEAR
+               for i, a in enumerate(gears) for b in gears[i + 1:] if frozenset((a["name"], b["name"])) not in ms)
+
+
+def solve_dy():
+    """The bottom gear's offset along the axis, nearest zero, that closes the loop's
+    teeth with every non-meshing pair still clear (scanned, then bisected on the
+    error's sign change)."""
+    f = lambda dy: phases(layout(dy)[2])[1]
+    best = None
+    prev_dy, prev = None, None
+    for i in range(0, 601):
+        dy = -15 + i * 0.05
+        e = f(dy)
+        if prev is not None and prev * e < 0 and abs(prev - e) < 1.0:     # a real crossing, not the wrap
+            lo, hi = prev_dy, dy
+            for _ in range(50):
+                mid = (lo + hi) / 2
+                lo, hi = (mid, hi) if f(mid) * f(lo) > 0 else (lo, mid)
+            r = (lo + hi) / 2
+            if _tips_clear(layout(r)[2]) and (best is None or abs(r) < abs(best)):
+                best = r
+        prev_dy, prev = dy, e
+    return best
 
 
 def meshes(gears):
@@ -136,7 +207,11 @@ def meshes(gears):
 def main():
     lines = ["GEAR HEART BUDGET (handbook section 7; values from mechanism_budget.PROCESS)", ""]
     ok = True
-    s, res, gears = layout()
+    dy = solve_dy()
+    s, res, gears = layout(dy)
+    ph, perr = phases(gears)
+    for g in gears:
+        g["phase"] = ph[g["name"]]
     xs = [g["at"][0] for g in gears]
     ys = [g["at"][1] for g in gears]
     loop = 2 + 2 * PER_SIDE
@@ -145,6 +220,10 @@ def main():
     span_x = max(x + r_tip(g["z"]) for x, g in zip(xs, gears)) - min(x - r_tip(g["z"]) for x, g in zip(xs, gears))
     span_y = max(y + r_tip(g["z"]) for y, g in zip(ys, gears)) - min(y - r_tip(g["z"]) for y, g in zip(ys, gears))
     lines.append(f"  gears span {span_x:.1f} x {span_y:.1f} mm (P1S plate 256)")
+    lines.append(f"  teeth round the loop: the bottom gear sits {dy:+.2f} mm along the axis from the heart's point, "
+                 f"so the ring closes with a phase error of {perr:+.4f} mm (backlash {2 * DC * math.tan(math.radians(PA)):.2f}); "
+                 f"at the curve's own point it was 2.10 mm and would have locked")
+    ok &= abs(perr) < 0.02
     ok &= loop % 2 == 0 and abs(res) < 0.01 and span_x < 240 and span_y < 240
     pairs = meshes(gears)
     for a, b in pairs:
@@ -176,7 +255,14 @@ def main():
     lines.append(f"mesh: +{DC} centre distance = {backlash:.2f} mm backlash; the stack that can close it: worst "
                  f"{e['worst_case']:.2f}, RSS {e['rss']:.2f} -> {'free at RSS' if DC > e['rss'] else 'MAY BIND'}, "
                  f"{'free at worst case' if DC >= e['worst_case'] else 'binds only if every error lines up'}")
-    ok &= DC > e["rss"]
+    # 2026-11-13: the test print settled it. Scott printed the coupon's +0.20 and +0.40
+    # bars and picked +0.20 ("Number 1"): it meshed better on his P1S. The stack above is
+    # a prior; a real print of the real mesh outranks it. Each mesh hangs on its own two
+    # posts in one plate, so errors don't add up round the loop.
+    if DC in TESTED_OK:
+        lines.append(f"  -> printed and picked by Scott: {TESTED_OK[DC]}; the measured result stands over the stack")
+    else:
+        ok &= DC > e["rss"]
     lines.append(f"  hub play {BORE_GAP} each side lets a gear drift up to {2 * BORE_GAP:.2f}; driving pushes meshing "
                  f"gears apart, so play opens the mesh rather than closing it")
 
@@ -220,13 +306,13 @@ def main():
                  f"{'turns' if free > 0 else 'MAY RUB'}")
     ok &= free > 0
     lines.append("")
-    lines.append("PASS: build the coupon" if ok else "FAIL: change the design before modelling")
+    lines.append("PASS: build it" if ok else "FAIL: change the design before modelling")
     text = "\n".join(lines)
     print(text)
     (HERE / "checks").mkdir(exist_ok=True)
     (HERE / "checks" / "budget.txt").write_text(text + "\n")
-    (HERE / "layout.json").write_text(json.dumps({"scale": s, "module": MOD, "pa": PA, "dc": DC,
-                                                  "gears": gears}, indent=1))
+    (HERE / "layout.json").write_text(json.dumps({"scale": s, "module": MOD, "pa": PA, "dc": DC, "bottom_dy": dy,
+                                                  "phase_error_mm": perr, "gears": gears}, indent=1))
 
 
 if __name__ == "__main__":
