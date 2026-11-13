@@ -1,8 +1,9 @@
+parts/snowflake_screen_screen.stl
   ok    fits_plate: 135.0 x 90.0 x 6.0 mm vs 256 x 256 x 256
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 3 bodies, expected 3
-  ok    min_wall: 1st pct 1.73mm, median 41.12mm (floor 1.2mm); 0.00% below one bead
+  ok    min_wall: 1st pct 1.80mm, median 41.12mm (floor 1.2mm); 0.00% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 6.0mm printed of 6.0mm
   ok    geometry_survives_slicing: printed height 6.0mm vs modelled 6.0mm
   ok    flat_base: 117.46 cm2 of contact = 96.7% of footprint (floor 5%)

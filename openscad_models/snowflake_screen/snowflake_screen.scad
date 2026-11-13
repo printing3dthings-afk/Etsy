@@ -25,7 +25,7 @@
 //   bore = the pin hole's drawn diameter; the coupon tries COUPON_BORES
 
 part = "screen";
-bore = 2.15;
+bore = 2.0;    // Scott, 2026-11-13, from the hinge test: "Mark 1 felt better" (one notch = 2.0)
 $fn = 64;
 
 use <../brand/obc_mark.scad>

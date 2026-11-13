@@ -7,7 +7,7 @@ Every number is from this folder's checks; the source is on each line.
   which stays where it is: it fails the product gate (24,094 support moves, min wall
   1.19) and its MakerWorld page says "supports off".
 - **Not printed yet.** Every image is a render.
-- **The hinge has a test print** (`snowflake_hinge_test.3mf`) for Scott to try first.
+- **The hinge test is done:** Scott printed it and picked the 2.0 mm hole (2026-11-13). The screen uses it.
 
 ## What it is
 A three-panel folding screen for a desk or shelf: ice-blue panels, each with a white
@@ -19,7 +19,7 @@ with the side panels turned back.
 | what | value | source |
 |---|---|---|
 | Panels | three, 45 × 90 × 6 mm; 135 × 90 mm laid flat | `snowflake_screen.scad` |
-| Hinges | 9 knuckles each, 0.5 mm gaps; pins 1.75 mm filament, 88 mm long | `snowflake_screen.scad` |
+| Hinges | 9 knuckles each, 0.5 mm gaps; 2.0 mm pin holes; pins 1.75 mm filament, 88 mm long | `snowflake_screen.scad` |
 | Hinge swing | 101° one way, 108° the other, from flat | `checks/fit_screen.txt` |
 | Standing | wings at 40°, centre of mass 12.9 mm inside the footprint | `checks/fit_screen.txt` |
 | Print | 2 h 10 m; blue 40.7 g, white 2.1 g; 30 layers, 0 support lines | `checks/slice_screen.txt` |

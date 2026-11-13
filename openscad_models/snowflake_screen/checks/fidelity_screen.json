@@ -1,6 +1,6 @@
 {
  "layers": 30,
- "model_volume_mm3": 70803.3,
+ "model_volume_mm3": 70889.4,
  "dropped_mm3": 0.9,
  "filled_mm3": 0.0,
  "colour_mm3": 0.13,
@@ -326,7 +326,7 @@
    ],
    "side": "front",
    "max_width_mm": 0.15,
-   "depth_mm": 0.11,
+   "depth_mm": 0.1,
    "flag": false
   },
   {

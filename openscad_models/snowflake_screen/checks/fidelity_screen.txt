@@ -2,7 +2,7 @@ slicing 2 part(s), 2 filament(s) ...
 30 layers parsed
   layer 0/30
 
-PRINT FIDELITY  (30 layers, model 70803.3 mm3)
+PRINT FIDELITY  (30 layers, model 70889.4 mm3)
   dropped (modelled, not printed): 0.9 mm3
   filled  (printed, not modelled): 0.0 mm3
   colour  (printed, other filament): 0.13 mm3

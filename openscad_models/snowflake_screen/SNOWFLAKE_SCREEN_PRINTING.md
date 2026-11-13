@@ -46,8 +46,9 @@ Studio's own slice (`checks/slice_*.txt`).
   - Which one he prefers: a hinge that holds its angle, or one that swings freely.
   - Whether either pin wouldn't go in.
   - Whether either hinge printed stuck.
-- **The screen is drawn at 2.15 mm,** between the two. It changes to whichever he
-  picks.
+- **Scott's pick, 2026-11-13: the 2.0 mm hole** ("Mark 1 felt better"). The screen
+  was drawn at 2.15 between the two while it waited; it is 2.0 now, re-checked and
+  re-sliced (gate, fit, fidelity, fragility all pass; 2 h 10 m, 40.7 g blue, 2.1 g white).
 
 ## Checks (`checks/`)
 - **Product gate:** pass on the screen and on the test. 0 support moves, 0 overhang
