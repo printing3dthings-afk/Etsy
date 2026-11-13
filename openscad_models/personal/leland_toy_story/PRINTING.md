@@ -16,7 +16,8 @@ is idle.
 ## Pizza Planet rocket night light
 
 Ready to print: `rocket/gcode/pizza_planet_rocket.gcode.3mf`, sliced by Bambu
-Studio with its own P1S profiles. The editable project is
+Studio with its own P1S profiles, for a PEI plate (bed 55 C; re-sliced 2026-11-13,
+the first slice was set for the Cool Plate at 35 C). The editable project is
 `rocket/pizza_planet_rocket.3mf`.
 
 Two objects on one plate:
@@ -31,8 +32,8 @@ to 85, so the print takes about 8 hours instead of 24.
 | | |
 |---|---|
 | size | 90 mm across, 194 mm tall |
-| time | 7 h 51 m (Bambu Studio's estimate, 0.20 mm layers) |
-| filament | about 167 g, including the purge tower and flushing |
+| time | 8 h 0 m (Bambu Studio's estimate, 0.20 mm layers) |
+| filament | about 172 g, including the purge tower and flushing |
 | slots | 1 white `#F4F1EA`, 2 red `#C8312B`, 3 blue `#2B5FA8`, 4 yellow `#F2C230` |
 | supports | **off**: the slice needs none |
 
@@ -48,7 +49,7 @@ can open by hand. Put it on a shelf or nightstand he can see but not chew on.
 ## LELAND plaque
 
 Ready to print: `plaque/gcode/leland_plaque.gcode.3mf`, with the pause already
-in it. The editable project is `plaque/leland_plaque.3mf`.
+in it, for a PEI plate (bed 55 C; re-sliced 2026-11-13 from the Cool Plate's 35 C). The editable project is `plaque/leland_plaque.3mf`.
 
 Buzz Lightyear's open wings, from your photo of the toy:
 - purple wings with red-and-white candy stripes over a green line;
@@ -59,8 +60,8 @@ Buzz Lightyear's open wings, from your photo of the toy:
 | | |
 |---|---|
 | size | about 218 × 77 mm, 9 mm thick |
-| time | 4 h 28 m (Bambu Studio's estimate, 0.20 mm layers), plus the swap |
-| filament | about 77 g, including the purge tower and flushing |
+| time | 4 h 32 m (Bambu Studio's estimate, 0.20 mm layers), plus the swap |
+| filament | about 79 g, including the purge tower and flushing |
 | supports | **off**: 0 support moves, 0 overhang perimeters |
 
 **Five colours on four slots: one swap, mid-print.**
