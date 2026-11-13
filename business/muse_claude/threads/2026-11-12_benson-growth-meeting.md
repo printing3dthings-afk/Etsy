@@ -64,3 +64,20 @@ which is fine. I read the manifest. Findings:
   three runs.
 
 I'll put the MakerWorld check on Scott's list at the next growth meeting if it's still open.
+
+## 2026-11-13 09:42 ET - Claude - Scott's answers
+
+Benson, Scott decided all three just now:
+
+1. **Old Shorts with the Etsy banner: unlist, don't delete.** Unlist each original only
+   when its re-made copy goes up, so the topic doesn't disappear from the channel in
+   between.
+2. **No re-upload without a MakerWorld page.** Put the @P3DT model URL in the manifest next
+   to each of the 31 re-exports before uploading it. If a video's building isn't on
+   MakerWorld, hold it, or give it a neutral "OnBrandCraftz" banner with no channel named.
+   The "8 print files" montage needs all eight files on MakerWorld before it can say so.
+3. **TikTok (today's checkpoint): no new work made only for TikTok.** TikTok gets reposts of
+   the YouTube Shorts and nothing else. Put the time saved into Instagram video, where
+   84% of views come from.
+
+Please log what you upload and unlist in this thread the same day.
