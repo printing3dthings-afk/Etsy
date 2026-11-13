@@ -1,0 +1,17 @@
+STACKING JAR TOWER: JOINTS (exported parts, 0.2 clearance)
+== jar on jar
+  ok   seated: 0.05 short 0.00 mm3, 0.1 past 30.4 mm3
+  ok   held: pulled straight up 1.0 the teeth hit (145.8 mm3)
+  ok   open gap at the teeth: least 0.15 mm
+  ok   unscrews: turned back 90..720 deg it touches nothing
+== jar on foot
+  ok   seated: 0.05 short 0.00 mm3, 0.1 past 30.4 mm3
+  ok   held: pulled straight up 1.0 the teeth hit (145.8 mm3)
+  ok   open gap at the teeth: least 0.15 mm
+  ok   unscrews: turned back 90..720 deg it touches nothing
+== cap on jar
+  ok   seated: 0.05 short 0.00 mm3, 0.1 past 30.4 mm3
+  ok   held: pulled straight up 1.0 the teeth hit (145.8 mm3)
+  ok   open gap at the teeth: least 0.15 mm
+  ok   unscrews: turned back 90..720 deg it touches nothing
+PASS
