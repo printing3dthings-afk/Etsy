@@ -3,11 +3,11 @@ parts/tower_cap.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.60mm, median 4.89mm (floor 1.2mm); 0.00% below one bead; 235 spans in declared detail, thread or socket regions not counted
-  FAIL  no_unsupported_overhang: slicer: 4407 support moves, 28 overhang perimeters, 18.2mm printed of 18.14mm
+  ok    min_wall: 1st pct 1.60mm, median 4.90mm (floor 1.2mm); 0.00% below one bead; 235 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 18.2mm printed of 18.14mm
   ok    geometry_survives_slicing: printed height 18.2mm vs modelled 18.14mm
   ok    flat_base: 40.56 cm2 of contact = 78.2% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 20 layer(s) under the 4.0s cooling threshold; 5748mm2 on the plate; aspect 0.19
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 0 layer(s) under the 4.0s cooling threshold; 4878mm2 on the plate; aspect 0.21
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
-PRODUCT GATE FAILED
+PRODUCT GATE PASSED

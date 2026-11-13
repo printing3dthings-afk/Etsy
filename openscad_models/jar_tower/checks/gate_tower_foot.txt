@@ -3,11 +3,11 @@ parts/tower_foot.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  FAIL  min_wall: 1st pct 0.06mm, median 3.00mm (floor 1.2mm); 1.01% below one bead; 397 spans in declared detail, thread or socket regions not counted
+  ok    min_wall: 1st pct 1.38mm, median 3.00mm (floor 1.2mm); 0.00% below one bead; 3463 spans in declared detail, thread or socket regions not counted
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 15.0mm printed of 15.0mm
   ok    geometry_survives_slicing: printed height 15.0mm vs modelled 15.0mm
   ok    flat_base: 52.80 cm2 of contact = 78.5% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=2.2mm; 1 layer(s) under the 4.0s cooling threshold; 6330mm2 on the plate; aspect 0.16
+  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=2.2mm; 2 layer(s) under the 4.0s cooling threshold; 6330mm2 on the plate; aspect 0.16
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
-PRODUCT GATE FAILED
+PRODUCT GATE PASSED

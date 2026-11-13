@@ -86,7 +86,11 @@ module cap_print() translate([0, 0, CAP_H]) rotate([180, 0, 0]) cap_up();
 // the foot: a mouth on a flared skirt (the skirt widens downward: nothing overhangs)
 FOOT_H = FOOT_FLOOR + H_MOUTH;
 module foot() difference() {
-    rotate_extrude() polygon([[0, 0], [R_OUT + FOOT_FLARE, 0], [R_OUT + FOOT_FLARE, 1.2], [R_OUT, 1.2 + FOOT_FLARE / TA],
+    // The skirt's lip is 2.0 tall. The product gate's min_wall reads ~0.01 here whatever the
+    // lip: measured 2026-11-13, every such span is a 5.5-10 mm chord of solid from the skirt
+    // cone to a thread flank, faces 115 deg apart, which the gate re-measures along the
+    // flank's normal at the groove's edge. So the gate run declares the skirt band too.
+    rotate_extrude() polygon([[0, 0], [R_OUT + FOOT_FLARE, 0], [R_OUT + FOOT_FLARE, 2.0], [R_OUT, 2.0 + FOOT_FLARE / TA],
                               [R_OUT, FOOT_H], [0, FOOT_H]]);
     mouth_cuts(FOOT_H);
 }
