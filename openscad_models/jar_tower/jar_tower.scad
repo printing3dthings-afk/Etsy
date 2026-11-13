@@ -38,13 +38,14 @@ Z3 = MOUTH_Z - 1 - (R_IN - CREST) / TA;
 module cavity() rotate_extrude() polygon([[0, FLOOR], [SP_IN, FLOOR], [SP_IN, Z1], [R_IN, Z2], [R_IN, Z3],
                                           [CREST, MOUTH_Z - 1 + 0.01], [0, MOUTH_Z - 1 + 0.01]]);
 
-// the spigot's outside: the root cylinder and teeth with their lead-in, the seat cone
+// the spigot's outside: the teeth with their lead-in (thread() is solid from the axis),
+// the seat cone. A root cylinder 0.01 off the thread's own root made sliver faces and
+// an open mesh (2026-11-13).
 module spigot_outside(top) union() {
     intersection() {
         thread(TH_R, TH_H);
         cylinder(h = TH_H, r1 = TH_R - TH_D + 0.01, r2 = TH_R - TH_D + TH_H * TA);
     }
-    cylinder(h = SEAT_Z, r = TH_R - TH_D + 0.01);
     rotate_extrude() polygon([[0, Z_OUT0 - 0.01], [TH_R - TH_D, Z_OUT0], [R_OUT, CONE_TOP], [R_OUT, top], [0, top]]);
 }
 // the mouth's cuts at the top of a part whose rim is at h (the coupon's, moved up)
