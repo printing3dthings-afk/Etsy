@@ -1,0 +1,8 @@
+CAPPED JOINT TEST: TOOLPATH SEPARATION (PrusaSlicer fidelity slice)
+model-to-bed offset [128. 111.]
+cap gap 0.30: apart on 93 of 93 layers with both parts
+  narrowest printed air gap 0.28 mm at z 1.0
+cap gap 0.40: apart on 93 of 93 layers with both parts
+  narrowest printed air gap 0.28 mm at z 1.4
+PASS
+control: the same test at a 0.05 mm cap gap reads FUSED on 36 of 93 layers, every one in the cap's zone (z 10.4 up), so this check can see a fused cap

@@ -10,7 +10,10 @@ around it.
 - **The joint test is done (2026-11-13):** Scott printed `otter_joint_test.3mf` and
   said "Number 1 was best": the **0.30 mm gap**, the tightest of the three. The otter
   uses it, with the 4.0 mm waist and the 41.2° slot from the 0.30 row below.
-- **Next: forms for the otter's look,** then the otter built around this joint.
+- **Look:** Scott picked form A, the classic flexi (2026-11-13). The first draft showed
+  every joint on top as a ring in a pit; Scott: hide the joints, and more
+  cartoony-realistic detail. So the joint gets a cap (section 7 below), and the cap
+  has its own test print first: `otter_capped_joint_test.3mf`, about 40 min.
 
 ## 1. Requirement
 - **Print in place:** the otter comes off the plate already jointed. No hardware, no glue.
@@ -89,3 +92,59 @@ around it.
    - forms first, per the character workflow (Technique 83).
 3. **What will be calculated, tested and not:** stated in the otter's notes, as the
    handbook requires.
+
+## 7. The capped joint (2026-11-13): hiding the joint
+
+**Requirement.** Seen from above, a joint shows as a thin circle, not a ring in a pit.
+Everything else as before: print in place, +/-15 deg or more, the same tug.
+
+**Concept (`cap_joint.scad`).**
+- Below 10 mm it is the joint Scott tested and picked, unchanged: 0.30 mm gap, 4.0
+  waist, 1.5 bulge, 37 deg cones, 41.2 deg slot.
+- Above that, the pin carries on up into a cap, radius 9.6, that covers the ring, the
+  disc round it, the arc gap and the slot. Its underside is a cone at 37 deg from
+  upright, widening as it rises, over a matching countersink in the ring's segment.
+- That is the same kind of interface as the pin's own bulge cones, which printed free at
+  0.30. There is no flat roof over a moving part anywhere: the slot runs up through the
+  cap's zone, so the cap hangs over air above the fin.
+- Above the cone the cap is upright for 1.2 mm, in a hole 0.5 wider. The body round a
+  joint is 18.6 mm tall.
+
+**Numbers.**
+| | 0.30 cap gap | 0.40 cap gap | rule |
+|---|---|---|---|
+| smallest gap between the parts (exported, 40,000 samples) | 0.29 | 0.30 | >= 0.25 |
+| swing before touching | +/-19.5 deg | +/-19.5 | >= 15 |
+| lift before catching | 0.50 mm | 0.50 | catches, < 1.5 |
+| printed apart (toolpaths, all layers) | 93 of 93 | 93 of 93 | all |
+| narrowest printed air gap | 0.28 | 0.28 | open |
+
+**Changed on the numbers before printing.** The ring's disc kept a lip between the
+countersink and its edge, which thinned to nothing up the cone: the product gate read
+0.88 mm. Above the height where it would be under 1.2 mm (13.4 mm up) it is cut away
+wherever the disc stands alone (`disc_trim()`); the cap's cone hangs over air there.
+Gate after: min wall 1.65.
+
+**Failure modes, new ones only.**
+| failure | how likely | what prevents it | what the test print shows |
+|---|---|---|---|
+| cap fused to the countersink | low | 37 deg cone at 0.30 normal, like the bulge's; toolpaths apart on all 93 layers; control at 0.05 reads fused on 36 layers, all in the cap's zone | does it swing after a few wiggles? |
+| cap scrapes as it turns | medium | the cone's first layers sag most; a 0.40 version beside it | which notch turns more freely |
+| circle seam too visible | medium | 0.5 mm upright gap round the cap's top | how the top looks |
+
+**Checks run (`checks/`).** Fit (`check_cap_coupon.py`, `fit_cap.txt`); toolpath
+separation with its control (`check_cap_slice.py`, `slice_cap.txt`); product gate pass,
+4 bodies, min wall 1.65; fragility 0; Bambu Studio 40 min 8 s, 14.6 g, no supports, PEI
+plate at 55 C.
+
+**Print fidelity: one flag, explained.** 1.7 mm3 dropped at 16.2-16.4 mm, on the hidden
+underside where the cap's cone meets the V cut beside the back block. Out of sight under
+the cap and not load-bearing.
+
+**Over the 30-minute target (40 min):** the joint is 18.6 mm tall at its real size, and
+the two cap gaps are the fallback if 0.30 sticks.
+
+**Next.** Scott prints it. Then the otter, round whichever cap gap he picks, with the
+cartoony-realistic detail: a sculpted head with a raised muzzle and nose, round eyes,
+cheek fluff and ears; arms holding a 3D shell; fur strokes; webbed feet with toe beans;
+a thick tapering tail.

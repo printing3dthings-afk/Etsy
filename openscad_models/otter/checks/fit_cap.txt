@@ -1,0 +1,10 @@
+CAPPED JOINT TEST: FIT CHECK (exported parts)
+cap gap 0.30: ok
+  rest: overlap 0.0000 mm3; smallest gap between the parts 0.29 mm (40,000 samples)
+  swing: touches at +19.5 / -19.5 deg (need >= 15 each way)
+  lift: catches after 0.50 mm up; down: catches after 0.5 mm (the plate stops it first in use)
+cap gap 0.40: ok
+  rest: overlap 0.0000 mm3; smallest gap between the parts 0.30 mm (40,000 samples)
+  swing: touches at +19.5 / -19.5 deg (need >= 15 each way)
+  lift: catches after 0.50 mm up; down: catches after 0.5 mm (the plate stops it first in use)
+PASS
