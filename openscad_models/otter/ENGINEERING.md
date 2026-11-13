@@ -7,8 +7,10 @@ section 7): the joint is calculated and test-printed **before** the otter is bui
 around it.
 
 **Status:**
-- The test print is ready: `otter_joint_test.3mf`, about 28 min.
-- **The otter itself waits for Scott's test results.**
+- **The joint test is done (2026-11-13):** Scott printed `otter_joint_test.3mf` and
+  said "Number 1 was best": the **0.30 mm gap**, the tightest of the three. The otter
+  uses it, with the 4.0 mm waist and the 41.2° slot from the 0.30 row below.
+- **Next: forms for the otter's look,** then the otter built around this joint.
 
 ## 1. Requirement
 - **Print in place:** the otter comes off the plate already jointed. No hardware, no glue.
@@ -79,8 +81,8 @@ around it.
 - **Bambu Studio:** 28 min 13 s, 8.4 g, no supports.
 
 ## 6. Next
-1. **Scott prints `otter_joint_test.3mf`** and tells me which gap feels best, and whether
-   any stuck, flopped or came apart (`Otter_Joint_Test_Guide.pdf`).
+1. ~~**Scott prints `otter_joint_test.3mf`**~~ Done, 2026-11-13: "Number 1 was best"
+   (0.30 mm gap).
 2. **Then the otter:**
    - a chubby body lying on its back with a shell on its tummy;
    - eight segments built around the chosen joint;
