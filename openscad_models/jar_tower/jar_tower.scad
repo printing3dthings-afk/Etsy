@@ -34,9 +34,11 @@ CAP_GRIP = 24;      // grooves round the cap's side
 Z_OUT0 = SEAT_Z - TH_D / TA;               // the seat cone's foot, outside
 Z1 = Z_OUT0 + (WALL - 2.0) / TA;           // the inner cone's foot: 2.4 across from it
 Z2 = Z1 + (R_IN - SP_IN) / TA;
-Z3 = MOUTH_Z - 1 - (R_IN - CREST) / TA;
+// The cone ends 0.1 inside the crests, 0.3 below the mouth's bore: ending exactly on the
+// bore's edge, at its radius, made coincident faces and an open mesh (2026-11-13).
+Z3 = MOUTH_Z - 1.3 - (R_IN - CREST + 0.1) / TA;
 module cavity() rotate_extrude() polygon([[0, FLOOR], [SP_IN, FLOOR], [SP_IN, Z1], [R_IN, Z2], [R_IN, Z3],
-                                          [CREST, MOUTH_Z - 1 + 0.01], [0, MOUTH_Z - 1 + 0.01]]);
+                                          [CREST - 0.1, MOUTH_Z - 1.3], [CREST - 0.1, MOUTH_Z + 2], [0, MOUTH_Z + 2]]);
 
 // the spigot's outside: the teeth with their lead-in (thread() is solid from the axis),
 // the seat cone. A root cylinder 0.01 off the thread's own root made sliver faces and
@@ -49,9 +51,13 @@ module spigot_outside(top) union() {
     rotate_extrude() polygon([[0, Z_OUT0 - 0.01], [TH_R - TH_D, Z_OUT0], [R_OUT, CONE_TOP], [R_OUT, top], [0, top]]);
 }
 // the mouth's cuts at the top of a part whose rim is at h (the coupon's, moved up)
+// (No crest bore: thread() is solid from the axis to its root, which is the crest radius,
+// so a bore there only coincided with it and left zero-volume slivers in the jar's mesh.)
 module mouth_cuts(h) translate([0, 0, h - H_MOUTH]) {
-    translate([0, 0, -1]) cylinder(h = H_MOUTH + 2, r = TH_R - TH_D + CL);
-    translate([0, 0, H_MOUTH - CS_DEPTH_C - TH_H - TH_P]) thread(TH_R + CL, TH_H + TH_P + 0.01);
+    // run 1 mm on past the thread's old top, into the countersink: stopping where the cone
+    // reaches the groove's outer radius left a ring of zero-thickness flaps (the product
+    // gate read 0.01 mm walls at the foot's rim; print fidelity dropped nothing)
+    translate([0, 0, H_MOUTH - CS_DEPTH_C - TH_H - TH_P]) thread(TH_R + CL, TH_H + TH_P + 1);
     translate([0, 0, H_MOUTH - CS_DEPTH_C - TH_D / TA]) cylinder(h = CS_DEPTH_C + TH_D / TA + 0.01, r1 = TH_R - TH_D + CL, r2 = CS_R);
 }
 CS_DEPTH_C = (CS_R - (TH_R + CL)) / TA;
@@ -68,8 +74,12 @@ CAP_H = CONE_TOP + CAP_BODY;
 module cap_up() difference() {
     spigot_outside(CAP_H);
     translate([0, 0, -1]) cylinder(r = SP_IN, h = CAP_H - FLOOR + 1);
-    for (k = [0 : CAP_GRIP - 1]) rotate(k * 360 / CAP_GRIP)
-        translate([R_OUT - 0.6, -0.5, CONE_TOP + 1.2]) cube([2, 1.0, CAP_BODY]);       // grip grooves, open at the top
+    // grip grooves, open at the top; their lower end slopes out at 37 deg, so upside down
+    // on the plate it isn't a flat ceiling (that drew 4,407 support moves)
+    for (k = [0 : CAP_GRIP - 1]) rotate(k * 360 / CAP_GRIP) hull() {
+        translate([R_OUT - 0.6, -0.5, CONE_TOP + 1.2 + 0.6 / tan(37)]) cube([2, 1.0, CAP_BODY]);
+        translate([R_OUT, -0.5, CONE_TOP + 1.2]) cube([1.4, 1.0, 0.01]);
+    }
 }
 module cap_print() translate([0, 0, CAP_H]) rotate([180, 0, 0]) cap_up();
 
