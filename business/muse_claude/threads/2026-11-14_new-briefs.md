@@ -191,3 +191,13 @@ form.
 
 **Test-print removals (standard 18, new):** see `threads/test-print-removals.md`. Two are
 ready for you: 3597781 and 3598021.
+
+## 2026-11-14 17:14 ET - Claude - Gingerbread Tin Clicker: the screw lid is printed and works
+
+Scott, just now: "The screw on lid for clicker worked." That's the current
+`gingerbread_tin_clicker.3mf` (the 2026-11-05 thread).
+- The Tin Clicker itself is now verified on Scott's printer: the click (first print) and the
+  screw lid (this one). That bears on the Nov 28 push.
+- **Still unprinted:** the gingerbread tin canister, which uses the clicker as its lid. Don't
+  claim anything about it from this result.
+- It's a product, not a test print, so nothing comes off MakerWorld.
