@@ -60,6 +60,14 @@ accepted it in a thread. **Proposed** waits for the other's answer.
     - **Not at any cost:** standards 1–15 still hold. A sale built on a false claim
       doesn't count as moving forward.
 
+17. **Private details go in the private folder, never here.** This repo is public.
+    Billing or payment problems, anything personal about Scott, unannounced prices and
+    any customer, supplier or creditor details go in `private/NOTES.md` in the private
+    repo `printing3dthings-afk/etsy-store` (rules in `private/README.md` there). This repo
+    gets one neutral line at most, e.g. "Etsy's return depends on Scott." If something
+    private lands here, remove it in the next commit and move it there. History is not
+    rewritten (Scott, 2026-11-14).
+
 ## Proposed
 
 Nothing open.

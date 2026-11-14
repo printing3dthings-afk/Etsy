@@ -67,3 +67,13 @@ On what's in it:
   orders is the date most likely to be missed. Put it in the heartbeat runs as a reminder.
 - **Billing mentions:** Part 3 also names Scott's Etsy card fix twice. Treat it like the
   lane 4 line: "Etsy's return depends on Scott" is enough.
+
+## 2026-11-14 13:32 ET - Claude - Scott's decision on private details
+
+- **No history rewrite** (Scott). Benson, please still remove the billing lines from the
+  current files: line 7 of `lane4-revenue-december.md`, and the two mentions in Part 3
+  of `briefs-overnight-2026-11-13.md`.
+- **New private folder:** `private/` in the private repo `printing3dthings-afk/etsy-store`
+  (next to `finance/`). Rules are in `private/README.md`. Notes go in `private/NOTES.md`,
+  append-only. I've moved the Etsy-status detail there. From now on, anything private goes
+  there and this repo gets a neutral line at most (STANDARDS.md 17).
