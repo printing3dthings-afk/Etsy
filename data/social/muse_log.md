@@ -977,3 +977,371 @@ Print files on MakerWorld — @P3DT, link in bio. No supports, matte PLA.
 - Replies/DMs sent: none
 - Results: 31 replacements published Public and verified; 31 old versions unlisted and verified Unlisted; items 1/2/4 (gw0BjZq1ws0, heVd8jTiOXg, wuK1OXnQrO8) needed nothing — their old videos had already been removed by the uploader; exempt A/B test sources Bc68l19QgtA + 2QV4FzlatvA untouched; nothing deleted anywhere
 - Problems: item 19 (Victorian Cottage colour, STTivUKNg3g → b6RF5wR96sw) finished in a follow-up run 23:17–23:21 EST after its first upload attempt hit a file-grant rejection. Unlist persistence lesson: items 3, 5 and 34 first appeared Unlisted but reverted to Public on a fresh load — the visibility dialog's Done button alone does not persist the change, the details-form Save click does; all three were redone with a Save click and verified Unlisted on fresh loads, items 6 and 33 spot-checked as controls. Run-table items 12, 13, 20, 21 and 25 may carry a one-line-break difference after "at home!" in the description; content, links, music and hashtags are correct. Note: ~/workspace/social/published.json still carries the OLD video IDs for these — reconcile on the next pipeline refresh. The new Compilation Pilot Short (run-table item 35, DZkcYRT_hRU) is logged separately above as the pilot's YouTube leg
+## 2026-11-13 05:43 (EST) — Instagram — Story (Shorts Today Townhouse, native link sticker)
+- Account: @onbrandcraftz2026
+- Link: no story permalink recorded in run log; media 18011985173776704
+- Product: Townhouse (YouTube Short https://youtube.com/shorts/JCLaM8rjK64)
+- Media: Shorts Today Townhouse story card (approved draft e1076fc1; exact filename not recorded in run log), with a native Instagram link sticker
+- Caption: not recorded word-for-word in run log (story graphic; sticker text "WATCH ON YOUTUBE")
+- Links in the post: native link sticker to https://youtube.com/shorts/JCLaM8rjK64 (not an affiliate link)
+- Claims made: none recorded in run log
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — published on @onbrandcraftz2026; this was the first promo Story under the Link Sticker Standard (native sticker to the exact video, no "LINK IN BIO" band)
+
+## 2026-11-13 09:52 (EST) — Instagram — Stories x3
+- Account: @onbrandcraftz2026
+- Link: media 18173443234473523 (Bandstand spotlight teaser) / 17908273923671676 (Compilation Pilot 001 promo) / 18115338410162626 (Versus Day 15 teaser); story permalinks not recorded in run log
+- Product: Bandstand / Compilation Pilot 001 (E-011) / Versus Day 15 (Bambu PETG HF vs Inland PETG)
+- Media: story1_bandstand.png / story2_compilation.png / story3_versus.png (pipeline-media-2026-11-13/); all 3 graphics visually verified before posting
+- Caption: not recorded in run log (story graphics)
+- Links in the post: story 1 native link sticker to https://makerworld.com/en/@P3DT; story 2 native link sticker to https://youtube.com/shorts/DZkcYRT_hRU; story 3 link not recorded in run log; no affiliate links
+- Claims made: Bandstand story carries the MakerWorld CTA under the Etsy-down swap — deliberately NO per-file "free" claim (the Bandstand's free status on MakerWorld is not verified in local records); Versus story states the two prices checked that morning
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — all 3 stories published on @onbrandcraftz2026
+
+## 2026-11-13 10:00 (EST) — X — spotlight post
+- Account: Onbrandcraftz (X)
+- Link: https://x.com/Onbrandcraftz/status/2121256139253747873
+- Product: Bandstand
+- Media: victorian_bandstand_colour_three_quarter.png (colour render)
+- Caption: 3D printed Christmas village — the village square gets its music 🎄 The Bandstand is an open-air bandstand for the square: white columns, wreaths on every post, a snow-capped roof. Our village files are on MakerWorld — link in bio https://makerworld.com/en/@P3DT #3dprinting
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: "Our village files are on MakerWorld" — deliberately NO per-file "free" claim; the Bandstand's free status on MakerWorld is not verified in local records
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — posted text is the fallback version with "#christmasvillage" dropped because the full version measured ~283 weighted characters, over X's 280 limit; MakerWorld link verified clickable on viewer check; no Etsy link (shop down, CTA swap applied)
+
+## 2026-11-13 10:23 (EST) — Facebook — Versus Day 15 reel (video)
+- Account: Onbrandcraftz Page
+- Link: https://facebook.com/reel/2523055648184281/ (post 122113363239518447)
+- Product: Bambu PETG HF vs Inland PETG (third-party filament products in a Versus deal matchup — not our design; hero visual is our Candy Cane Chapel cover, captioned UNLIT)
+- Media: vs-petg-hf-inland-video.mp4 (105.2s, Ronan voiceover, music "Dance of the Sugar Plum Fairy" by Kevin MacLeod; frame-1 on-screen keyword pill "PETG filament")
+- Caption: PETG filament — Bambu PETG HF $15.99 vs Inland PETG $11.99, 1 kg each. Is HF worth $4? 💚
+
+Prices checked Nov 13, 2026. Bambu page: up to 2× standard PETG speed* (*depends on model/geometry), RFID AMS params, outdoor/water/UV resistance, dry first. Inland (Micro Center, in stock): 49 MPa, 230–250°C, no RFID.
+
+Inland takes price ($4/kg). Bambu takes speed, RFID + outdoor. 3–2 Bambu — if you'll use the speed. Village files free on MakerWorld: https://makerworld.com/en/@P3DT
+
+Send this to the maker whose PETG lives outside all summer.
+
+Day 14 — Matte vs Standard is on our profile · Day 16 tomorrow — sealed box vs open shelf
+
+Sources: Bambu US store + Micro Center SKU 715532, Nov 13, 2026.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#PETG #PETGFilament #3DPrinting #ChristmasVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link); incompetech.com appears in the music credit as text
+- Claims made: prices re-verified the morning of Nov 13 — Bambu PETG HF $15.99 on the Bambu US store and Inland PETG Green $11.99 (in stock, Micro Center SKU 715532); Bambu speed claim is "up to 2× standard PETG" with Bambu's model/geometry asterisk; Inland 49 MPa tensile and 230–250°C; head-to-head score 3–2 Bambu
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none on this leg — receipt state=published, caption verbatim, and the Page post list read-back showed exactly one copy under the Onbrandcraftz Page
+
+## 2026-11-13 10:29 (EST) — Instagram — Versus Day 15 carousel (5 slides)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/p/Dfr8bELiSfg/ (media 18021416201957200)
+- Product: Bambu PETG HF vs Inland PETG (third-party filament products in a Versus deal matchup — not our design; hero visual is our Candy Cane Chapel cover, captioned UNLIT)
+- Media: slide-1.png through slide-5.png (5 slides; prices date-stamped Nov 13, 2026 on slides 1/3/4)
+- Caption: SWIPE ➡️ PETG filament — Bambu PETG HF $15.99 vs Inland PETG $11.99, 1 kg each. Prices checked Nov 13, 2026. Is HF worth four dollars?
+
+Slide 3 is the head-to-head — Inland takes price ($4/kg saved) and value; Bambu takes speed (up to 2× standard PETG*, *depends on model/geometry), RFID setup and outdoor resistance. 3–2 Bambu. Slide 4 is the split verdict.
+
+Budget, planters, outdoor bits → Inland. Bambu profiles + HF speed → Bambu PETG HF. Our village files are free on MakerWorld — link in bio.
+
+Send this to the maker whose PETG lives outside all summer.
+
+Day 14 — Matte PLA vs Standard PLA is on our profile · Day 16 lands here tomorrow, same time — sealed box vs open shelf storage
+
+Sources: Bambu US store PETG HF page + Micro Center Inland PETG Green page (SKU 715532), both checked Nov 13, 2026.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#PETG #PETGFilament #3DPrinting #ChristmasVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none in the post itself ("link in bio" points to MakerWorld @P3DT); incompetech.com appears in the music credit as text; no affiliate links
+- Claims made: same price and product claims as the Facebook reel entry above; slide 3 is the head-to-head and slide 4 is the split verdict
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: carousel audio could NOT be attached through instagram-cli (no audio parameter exists on that route) — "Dance of the Sugar Plum Fairy" is credited in the caption only and the gap was flagged under the Carousel Music Standard
+
+## 2026-11-13 10:35 (EST) — Facebook — Versus Day 15 carousel (5 slides)
+- Account: Onbrandcraftz Page
+- Link: https://facebook.com/61595553412715/posts/pfbid0chjGbu9mr5fQazAQY6vx8WkS5ngqDxPQMCCXD8tJcjAMBxoccFVxHHGMSAixxugTl/ (post 122113365099518447)
+- Product: Bambu PETG HF vs Inland PETG (third-party filament products in a Versus deal matchup — not our design; hero visual is our Candy Cane Chapel cover, captioned UNLIT)
+- Media: slide-1.png through slide-5.png (5 slides; prices date-stamped Nov 13, 2026 on slides 1/3/4)
+- Caption: SWIPE ➡️ PETG filament — Bambu PETG HF $15.99 vs Inland PETG $11.99, 1 kg each. Prices checked Nov 13, 2026. Is HF worth $4?
+
+Slide 3: head-to-head — Inland takes price + value; Bambu takes speed (up to 2×*), RFID + outdoor resistance. 3–2 Bambu. Slide 4: the split verdict.
+
+Budget, planters, outdoor bits → Inland. Bambu profiles + HF speed → Bambu HF. Village files free on MakerWorld: https://makerworld.com/en/@P3DT
+
+Send this to the maker whose PETG lives outside all summer.
+
+Day 14 — Matte vs Standard is on our profile · Day 16 tomorrow — sealed box vs open shelf
+
+Sources: Bambu US store + Micro Center SKU 715532, Nov 13, 2026. *Speed depends on model/geometry (Bambu page).
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#PETG #PETGFilament #3DPrinting #ChristmasVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link); incompetech.com appears in the music credit as text
+- Claims made: same price and product claims as the Facebook reel entry above; slide 3 is the head-to-head and slide 4 is the split verdict
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: carousel audio could NOT be attached through facebook-cli (no audio parameter exists on that route) — "Dance of the Sugar Plum Fairy" is credited in the caption only and the gap was flagged under the Carousel Music Standard; Page post list read-back showed exactly one copy under the Onbrandcraftz Page
+
+## 2026-11-13 ~11:07 (EST) — Instagram — Versus Day 15 reel (video)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/reel/Dfr-P-5BCD7/
+- Product: Bambu PETG HF vs Inland PETG (third-party filament products in a Versus deal matchup — not our design; hero visual is our Candy Cane Chapel cover, captioned UNLIT)
+- Media: vs-petg-hf-inland-video.mp4 (105.2s, Ronan voiceover, music "Dance of the Sugar Plum Fairy" by Kevin MacLeod; cover work/ig-reel-cover.jpg)
+- Caption: PETG filament — Bambu PETG HF $15.99 vs Inland PETG $11.99, 1 kg each. Is HF worth four dollars? 💚
+
+Prices checked Nov 13, 2026. Bambu's own page: PETG HF is designed for speed — up to 2× standard PETG* (*depends on model size/geometry), RFID auto-parameters for the AMS, outdoor/water/UV resistance, dry before use. Inland at Micro Center: in stock, 49 MPa tensile, 230–250°C — no RFID, no HF claim.
+
+Head-to-head: Inland takes price, $4 a kilo. Bambu takes speed, RFID setup and outdoor resistance. 3–2 Bambu — only if you'll use what the $4 buys. Our village files are free on MakerWorld — link in bio.
+
+Send this to the maker whose PETG lives outside all summer.
+
+Day 14 — Matte PLA vs Standard PLA is on our profile · Day 16 lands here tomorrow, same time — sealed box vs open shelf storage
+
+Sources: Bambu US store PETG HF page + Micro Center Inland PETG Green page (SKU 715532), both checked Nov 13, 2026.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#PETG #PETGFilament #3DPrinting #ChristmasVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none in the post itself ("link in bio" points to MakerWorld @P3DT); incompetech.com appears in the music credit as text; no affiliate links
+- Claims made: same price and product claims as the Facebook reel entry above
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: instagram-cli failed 4 times with the identical HTTP 500 finalize error (updateMediaBuilder 2207027) — the original file three times and a 48 kHz stereo + faststart diagnostic re-encode once; feed read-backs confirmed zero landings, the file was valid (Facebook published it unchanged), and the reel was then posted through the Instagram website and verified live with the caption verbatim and cover applied. Music rotation deviation, documented in the run report: "Dance of the Sugar Plum Fairy" repeated from Day 9 because every proven TikTok-clean festive alternative had already run Nov 10–12
+
+## 2026-11-13 ~11:07 (EST) — TikTok — Versus Day 15 video
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7707680868818488589
+- Product: Bambu PETG HF vs Inland PETG (third-party filament products in a Versus deal matchup — not our design; hero visual is our Candy Cane Chapel cover, captioned UNLIT)
+- Media: vs-petg-hf-inland-video.mp4 (the IG/FB video as-is, 105.2s, Ronan voiceover, music "Dance of the Sugar Plum Fairy" by Kevin MacLeod)
+- Caption: PETG filament — Bambu PETG HF $15.99 vs Inland PETG $11.99, 1 kg each. Is HF worth four dollars? 💚
+
+Prices checked Nov 13, 2026. Bambu's own page: PETG HF is designed for speed — up to 2× standard PETG* (*depends on model size/geometry), RFID auto-parameters for the AMS, outdoor/water/UV resistance, dry before use. Inland at Micro Center: in stock, 49 MPa tensile, 230–250°C — no RFID, no HF claim.
+
+Head-to-head: Inland takes price, $4 a kilo. Bambu takes speed, RFID setup and outdoor resistance. 3–2 Bambu — only if you'll use what the $4 buys. Our village files are free on MakerWorld — link in bio.
+
+Send this to the maker whose PETG lives outside all summer.
+
+Day 14 — Matte PLA vs Standard PLA is on our profile · Day 16 lands here tomorrow, same time — sealed box vs open shelf storage
+
+Sources: Bambu US store PETG HF page + Micro Center Inland PETG Green page (SKU 715532), both checked Nov 13, 2026.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#PETG #PETGFilament #3DPrinting #ChristmasVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none in the post itself ("link in bio" points to MakerWorld @P3DT); incompetech.com appears in the music credit as text; no affiliate links
+- Claims made: same price and product claims as the Facebook reel entry above
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — crossposted as-is through TikTok Studio under Scott's Nov 13 crosspost-only decision and verified public with the caption verbatim
+
+## 2026-11-14 09:03 (EST) — Facebook — Page engager invite (ACTION)
+- Account: Onbrandcraftz Page
+- Link: none — an invite sent from the desktop Professional Dashboard has no post permalink
+- Product: none — Page audience action (Engagement → Invite people → Invite people who reacted)
+- Media: none
+- Caption: none — no post was made
+- Links in the post: none
+- Claims made: none
+- Replies/DMs sent: one Page follower invite sent to Justin Carey, who had reacted to the Oct 30 "Tea light vs LED puck" post; this was not a DM
+- Results: Facebook confirmed "Invite sent" and the list then read "No people to invite yet"; Page followers were still 9 at the check (invite pending acceptance)
+- Problems: no auto-invite toggle exists; the mobile-web Business Suite, Creator Dashboard and Page Settings expose no engager-invite tool, and their "Invite friends" routes require Scott's personal profile, so they were NOT used. The engager-invite tool was found only on the desktop Professional Dashboard
+
+## 2026-11-14 09:56 (EST) — Instagram — Stories x3
+- Account: @onbrandcraftz2026
+- Link: media 18116827742145763 (Carolers spotlight teaser) / 18107514596199738 (Weekend Makers promo) / 18149684857568683 (Versus Day 16 teaser); story permalinks not recorded in run log
+- Product: Carolers / Weekend Makers (Facebook community post) / Versus Day 16 (sealed box + desiccant vs open shelf)
+- Media: story1_carolers.png / story2_weekend_makers.png / story3_versus.png (pipeline-media-2026-11-14/); all 3 graphics visually verified before posting
+- Caption: not recorded in run log (story graphics)
+- Links in the post: story 1 native link sticker "FILES ON MAKERWORLD" to https://makerworld.com/en/@P3DT; stories 2–3 links not recorded in run log; no affiliate links
+- Claims made: Carolers story carries the MakerWorld CTA under the Etsy-down swap — deliberately NO per-file "free" claim (the Carolers' free status on MakerWorld is not verified in local records)
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — own-stories read-back verified exactly 3 live; no "LINK IN BIO" band on the stickered story
+
+## 2026-11-14 10:09 (EST) — Facebook — Weekend Makers community post (Page post)
+- Account: Onbrandcraftz Page
+- Link: https://facebook.com/61595553412715/posts/pfbid02r7XJuK7c6oVPehtHD9Xx2LUMPavNvQjwCzn3HtJmeBnqUm1ZsouTF96exZh6j6gUl/ (post 122113637277518447)
+- Product: none — Saturday Weekend Makers community post
+- Media: text-only post (no media attached)
+- Caption: Weekend check-in, makers 🎄👇
+
+What's on your build plate right now?
+
+A finished village building. A print caught mid-layer. A paint job halfway done. All of it counts — that's what this group is for.
+
+Drop a photo in the OnBrandCraftz Makers group this weekend and tell us what you're making:
+https://www.facebook.com/groups/1488065163368472
+
+Printing a village? Painting one? Still picking your first building? I want to see it. 🎄
+
+Our village files are on MakerWorld — link in bio: https://makerworld.com/en/@P3DT
+
+Send this to the maker who always has something on the plate.
+
+— OnBrandCraftz
+YouTube: https://www.youtube.com/@onbrandcraftz | TikTok: https://www.tiktok.com/@onbrandcraftz
+
+#3DPrinting #ChristmasVillage #MakerCommunity
+- Links in the post: https://www.facebook.com/groups/1488065163368472, https://makerworld.com/en/@P3DT, https://www.youtube.com/@onbrandcraftz and https://www.tiktok.com/@onbrandcraftz (none are affiliate links)
+- Claims made: "Our village files are on MakerWorld"
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — receipt state=published, text verbatim, read-back Public under the Onbrandcraftz Page (page 1358962047302375 / profile 61595553412715), exactly one copy
+
+## 2026-11-14 10:14 (EST) — X — spotlight post
+- Account: Onbrandcraftz (X)
+- Link: https://x.com/Onbrandcraftz/status/2121622901367660782
+- Product: Carolers
+- Media: victorian_carolers_colour_three_quarter.png (colour render)
+- Caption: 3D printed Christmas village — the Carolers join the village 🎄 Four carol singers with songbooks beside a lamppost: top hats, a bonnet and a little singer in front. Our village files are on MakerWorld — link in bio https://makerworld.com/en/@P3DT #3dprinting #christmasvillage
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: "Our village files are on MakerWorld" — deliberately NO per-file "free" claim; the Carolers' free status on MakerWorld is not verified in local records
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — duplicate check clean (newest prior X post was the Nov 13 Bandstand spotlight); image displays and the MakerWorld link was verified clickable on the viewer check; no Etsy link and no Pinterest pin (shop down, CTA swap applied)
+
+## 2026-11-14 10:17 (EST) — Facebook — Weekend Makers group share (OnBrandCraftz Makers group)
+- Account: Onbrandcraftz Page
+- Link: https://www.facebook.com/groups/1488065163368472/posts/1516291620545826
+- Product: none — share of the Saturday Weekend Makers Page post above into the OnBrandCraftz Makers group
+- Media: shared Page post (the Page post itself is text-only)
+- Caption: same as the Page post above; no extra share text was added
+- Links in the post: same as the Page post above; no affiliate links
+- Claims made: same as the Page post above
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — the share identity was verified as "Onbrandcraftz" in the share dialog before posting, and the group feed read-back showed the post authored by "Onbrandcraftz · Admin", not Scott's personal profile
+
+## 2026-11-14 10:09 (EST) — Facebook — Versus Day 16 reel (video)
+- Account: Onbrandcraftz Page
+- Link: https://facebook.com/reel/1803943070874003/ (post 122113637331518447)
+- Product: filament storage — sealed box + desiccant vs open shelf (question matchup, no prices; hero visual is our real lit Gingerbread Cottage studio photo)
+- Media: vs-sealed-shelf-video.mp4 (86.7s, Ronan voiceover, music "Christmas Rap" by Kevin MacLeod; frame-1 on-screen keyword pill "filament storage")
+- Caption: filament storage — sealed box + desiccant vs open shelf. You dried it. Then you left it on the shelf. 💚
+
+Our rule (SPEC 002): dry PLA 45–50°C, 4–6 hours, then store sealed with desiccant under 20% humidity. Shelf spools re-absorb room moisture — crackle and stringing come back. Our observed result. 3–2 sealed.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker with nine open spools and a stringing problem.
+
+Day 15 — PETG deal is on our profile · Day 17 lands here tomorrow, same time
+
+Sources: Maker's Blueprint SPEC 002; moisture signs are ours.
+
+Music: Christmas Rap by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#FilamentStorage #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link); incompetech.com appears in the music credit as text
+- Claims made: our shop rule from Maker's Blueprint SPEC 002 — dry PLA at 45–50°C for 4–6 hours, then store sealed with desiccant under 20% humidity; open-shelf spools re-absorb room moisture and the crackle/stringing signs return (labelled our observed result); head-to-head score 3–2 sealed
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — receipt state=published, caption verbatim, and Page read-back placed the post under the Onbrandcraftz Page (page 1358962047302375 / profile 61595553412715); no navigation comment was posted (navigation is in the caption; facebook-cli comments post as Scott personally)
+
+## 2026-11-14 10:10 (EST) — Instagram — Versus Day 16 reel (video)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/reel/Dfufk92Dl8N/ (media 18101999495388181)
+- Product: filament storage — sealed box + desiccant vs open shelf (question matchup, no prices; hero visual is our real lit Gingerbread Cottage studio photo)
+- Media: vs-sealed-shelf-video.mp4 (86.7s, Ronan voiceover, music "Christmas Rap" by Kevin MacLeod; frame-1 on-screen keyword pill "filament storage")
+- Caption: filament storage — sealed box + desiccant vs open shelf. You dried it. Then you left it on the shelf. Day 6's fight isn't over. 💚
+
+Our shop rule (Maker's Blueprint SPEC 002): dry PLA at 45–50°C for 4–6 hours, then store sealed with desiccant under 20% humidity. Open-shelf spools re-absorb room moisture between prints — that's why the crackle-and-string signs come back on spools that were fine last month. Our observed result.
+
+Head-to-head: sealed takes humidity control, stays dry and keeps stringing away. Shelf takes grab-and-go and the spool on the printer this week. 3–2 sealed — drying without sealed storage is mopping with the tap running.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker with nine open spools and a stringing problem.
+
+Day 15 — PETG deal is on our profile · Day 17 lands here tomorrow, same time
+
+Sources: Maker's Blueprint SPEC 002 (our shop rule); moisture signs are our observed result.
+
+Music: Christmas Rap by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#FilamentStorage #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none in the post itself ("link in bio" points to MakerWorld @P3DT); incompetech.com appears in the music credit as text; no affiliate links
+- Claims made: same shop-rule and observed-result claims as the Facebook reel entry above; head-to-head score 3–2 sealed
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — read-back verified a public reel with the caption verbatim under @onbrandcraftz2026; no carousel today (Saturday is not a Tue/Fri carousel day) and no navigation comment was posted
+
+## 2026-11-14 10:28 (EST) — TikTok — Versus Day 16 video (remastered TikTok cut)
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7708049189661461774
+- Product: filament storage — sealed box + desiccant vs open shelf (question matchup, no prices; hero visual is our real lit Gingerbread Cottage studio photo)
+- Media: vs-sealed-shelf-tiktok.mp4 (TikTok cut, 83.0s, Ronan voiceover identical to the IG/FB cut, music bed "Deck the Halls A" by Kevin MacLeod; spoken keyword "Filament storage?" at 0.3–1.8s and the frame-1 on-screen keyword pill)
+- Caption: filament storage — sealed box + desiccant vs open shelf. You dried it. Then you left it on the shelf. Day 6's fight isn't over. 💚
+
+Our shop rule (Maker's Blueprint SPEC 002): dry PLA at 45–50°C for 4–6 hours, then store sealed with desiccant under 20% humidity. Open-shelf spools re-absorb room moisture between prints — that's why the crackle-and-string signs come back on spools that were fine last month. Our observed result.
+
+Head-to-head: sealed takes humidity control, stays dry and keeps stringing away. Shelf takes grab-and-go and the spool on the printer this week. 3–2 sealed — drying without sealed storage is mopping with the tap running.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker with nine open spools and a stringing problem.
+
+Day 15 — PETG deal is on our profile · Day 17 lands here tomorrow, same time
+
+Sources: Maker's Blueprint SPEC 002 (our shop rule); moisture signs are our observed result.
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#FilamentStorage #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none in the post itself ("link in bio" points to MakerWorld @P3DT); incompetech.com appears in the music credit as text; no affiliate links
+- Claims made: same shop-rule and observed-result claims as the Facebook reel entry above; head-to-head score 3–2 sealed
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: the first TikTok upload was DISCARDED unpublished at 10:19 EST — TikTok's copyright check matched the original "Christmas Rap" bed across 00:00–01:22; TikTok Studio verified the post count was unchanged (85) and nothing published. Only the TikTok cut was remastered, swapping the bed to "Deck the Halls A" with the Ronan voiceover identical; the retry passed the copyright check ("No issues found"), was Everyone/public, and the voiceover was audible on the playback check. The live IG/FB versions keep "Christmas Rap" and were not changed
+
+## 2026-11-14 13:05 (EST) — Thangs — Victorian Cottage model publish (ACTION)
+- Account: OnBrandCraftz (Thangs; printing3dthings@outlook.com)
+- Link: https://thangs.com/designer/OnBrandCraftz/3d-model/Victorian%20Cottage-1652869
+- Product: Victorian Cottage
+- Media: "Victorian Cottage model file.3mf" (the file already stored in My Thangs → All Files; it was NOT re-uploaded) + 6 photos in order — photo-01-cover-colour-render.png (primary; marked Render), photo-02.jpg, photo-03.jpg, photo-04.jpg, photo-05.jpg, photo-06.jpg (marked Photo)
+- Caption: # Victorian Cottage
+
+A round brick drum under a steep slate cone with snow on its crown and icicles under the eave: the cottage that anchors our Victorian Christmas village. The flat front rises into a gable with a scalloped bargeboard and a gothic lancet window, a wreath hangs on the round-arched door with a garland over it, and sash windows with evergreen window boxes run round the drum under a tall chimney at the back. It matches the scale and style of the rest of our Victorian Christmas village.
+
+The cottage is hollow inside, open at the base, and sized for a standard battery tea light — set one inside and every glazed window glows. It prints with no supports on any FDM printer. The photos show our own print in matte white PLA; leave it white or paint it your way. (The first image is a colour render of the design, showing one way it can look painted.)
+
+🖨 PRINT GUIDE
+• Filament: PLA or PLA Matte, 1.75 mm. Matte white gives the signature village look; any colour works.
+• Layer height: 0.20 mm Standard, or 0.16 mm for a finer finish. Ready-made profiles are on the MakerWorld listing.
+• Supports: NONE — every design is made to print clean with supports off.
+• Lighting: the building is hollow inside and sized for a standard battery LED tea light (flameless only — never a real flame).
+• From Bambu Handy: open the model, pick a profile, and send it to your printer.
+• On any other printer: download the files and slice as usual with the settings above.
+• Every profile is sliced and checked in Bambu Studio before it goes up. Questions about a print? Message me any time.
+
+SELL PRINTS OF THIS DESIGN: A commercial licence is included with the Village Merchant membership on Patreon (OnBrandCraftz) — sell unlimited physical prints while your membership is active. The digital files themselves may never be sold or shared.
+- Links in the post: none — the description names Patreon (OnBrandCraftz) for the commercial licence but carries no URL; no affiliate links
+- Claims made: the cottage is hollow and sized for a standard battery tea light; it prints with no supports on any FDM printer; a commercial licence is included with the Village Merchant membership on Patreon and the digital files may never be sold or shared
+- Replies/DMs sent: none
+- Results: published Public and Free at 13:05:26 EST (Thangs showed "Well done, OnBrandCraftz! 'Victorian Cottage' has been published to Thangs"); the public profile then showed exactly one model card with the colour-render cover, 0 followers, 0 following, 0 downloads and 0 likes at verification. Category: Holidays & Winter; FDM checked
+- Problems: the required CC BY-NC-ND 4.0 licence could NOT be applied — no licence is shown on the public model page. The model editor's "Select a license" offered only "Add new license...", which never opened a creation form, and neither Settings nor "Manage my store" showed a Licenses section in the verified session. The licence still needs to be created and selected in the model editor. Separately, the editor's "No support necessary" checkbox reverted to unchecked after each Save; the description still states "Supports: NONE". No Bundle was opted into (Memberships, Digital Downloads and Prints all "Not set up") and Stripe/payout settings were not touched
