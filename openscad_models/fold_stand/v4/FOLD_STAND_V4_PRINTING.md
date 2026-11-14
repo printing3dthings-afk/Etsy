@@ -2,8 +2,8 @@
 
 2026-11-10. v1, v2 and v3 are untouched; this sits beside them.
 
-**Print the hinge test first.** It's both new joints at their real size, on a short
-plate. The guide, `guide/Fold_Stand_v4_Guide.pdf`, covers the hinge test and then the
+**The hinge test is printed and works (Scott, 2026-11-14: "It works well").** It's
+both new joints at their real size, on a short plate. The guide, `guide/Fold_Stand_v4_Guide.pdf`, covers the hinge test and then the
 full stand: putting it together, using it, folding it, and what to tell me.
 
 ## Why v4
@@ -47,7 +47,7 @@ Bambu Studio, P1S 0.4, 0.20 mm Standard, PLA Basic:
 
 | print | file | colour | time | filament |
 |---|---|---|---|---|
-| hinge test (print this first) | `fold_stand_v4_hinge_test.3mf` | one colour | 30 min | 9.8 g |
+| hinge test (printed, works) | `fold_stand_v4_hinge_test.3mf` | one colour | 30 min | 9.8 g |
 | base | `fold_stand_v4_base.3mf` | white `#F4F1EA` | 1 h 43 min | 38.1 g |
 | plate and prop | `fold_stand_v4_plate.3mf` | lilac `#B79CE0` | 1 h 40 min | 41.6 g |
 
@@ -58,6 +58,10 @@ Bambu Studio, P1S 0.4, 0.20 mm Standard, PLA Basic:
 - **The pins** print on the plate's side edges, on the bed. A 35° flank replaces the
   part of the pin that would have overhung.
 - **The lugs' bores** have 35° teardrop flanks up to their slots, so they print too.
+
+**Printer-ready (Bambu Studio, Textured PEI at 55 °C):** `checks/fold_stand_v4_base.gcode.3mf`
+and `checks/fold_stand_v4_plate.gcode.3mf`. The plate's file keeps the prop inside its
+slot, as one object; don't split it in Bambu Studio.
 
 ## Testing the hinge test
 
@@ -89,7 +93,8 @@ Tell me what you find before you print the full stand.
   145°;
 - pushed 1 mm sideways, a cone stops the prop.
 
-**Not tested on the printer yet:** both new joints. That's what the hinge test is for.
+**Tested on the printer:** both new joints, on the hinge test (2026-11-14, "It works
+well"). The full stand itself isn't printed yet.
 
 ## Gates (`checks/`)
 

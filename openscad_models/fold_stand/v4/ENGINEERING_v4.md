@@ -131,4 +131,8 @@ notch: rear wall 3.0 high: ratio 15.0, worst 0.40 -> ok
   - the cones stop a 1 mm sideways shift.
 - **`check_hinge_test.py`:** the same checks on the test print's own parts.
 
-**Not tested on the printer:** both new joints. Print the hinge test first.
+**Tested on the printer (2026-11-14):** Scott printed the hinge test: "It works well."
+Both new joints did what they should: the prop swings out of the plate on its cones, and
+the plate drops onto the lugs at 145° and turns locked in from flat to upright. The full
+stand is sliced next (`checks/fold_stand_v4_base.gcode.3mf`,
+`checks/fold_stand_v4_plate.gcode.3mf`).
