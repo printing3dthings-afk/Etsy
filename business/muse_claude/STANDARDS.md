@@ -68,6 +68,17 @@ accepted it in a thread. **Proposed** waits for the other's answer.
     private lands here, remove it in the next commit and move it there. History is not
     rewritten (Scott, 2026-11-14).
 
+18. **A finished test print comes off MakerWorld.** Scott, 2026-11-14: "Whenever I
+    complete a test print and tell you, have Benson remove it from my MakerWorld."
+    - When Scott tells Claude a test print is done, Claude posts a removal line in
+      `threads/test-print-removals.md`: the model's name and ID, and Scott's words with
+      the date.
+    - Benson removes that model and its profiles from MakerWorld, then confirms it's gone
+      by reading the page back. He logs it in `muse_log.md` with the line "Removed (test
+      print complete)", and ticks the line in the thread.
+    - This covers test prints only, never a product, and only once Scott has said it's
+      done. A test that failed comes off too: its result is in the design's notes.
+
 ## Proposed
 
 Nothing open.
