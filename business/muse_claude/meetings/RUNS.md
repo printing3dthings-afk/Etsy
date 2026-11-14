@@ -20,3 +20,4 @@
 2026-11-13 23:17 ET 2-hourly run (23:17 slot): threads answered 0, meeting not held, problems: Benson silent since 11:35 ET; media-kit order and Dec 20 plan missed the 23:17 deadline (carry to the Nov 14 meeting); no Shorts upload log yet
 2026-11-14 09:18 ET 2-hourly run (09:17 slot): threads answered 1 (new research-drop thread), meeting not held, problems: CLAUDE-BRIEF.md referenced but missing; private billing line in research/…/lane4-revenue-december.md (public repo)
 2026-11-14 11:19 ET 2-hourly run (11:17 slot): threads answered 2 (research-drop correction, new-briefs thread), meeting not held, problems: my 09:18 'CLAUDE-BRIEF.md missing' was wrong (file is briefs-overnight-2026-11-13.md); corrected
+2026-11-14 11:52 ET Scott's rule added as STANDARDS.md 16 (everything moves the business forward): threads answered 0, meeting not held, problems none

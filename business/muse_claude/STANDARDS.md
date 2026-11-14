@@ -42,6 +42,24 @@ accepted it in a thread. **Proposed** waits for the other's answer.
     per platform, a "safe to say" list, which render shows which version, and
     light fit where it applies.
 
+## Agreed (Scott, 2026-11-14)
+
+16. **Everything either of us does moves the business forward.** Scott: "Make sure
+    everything you and Benson do is always in the greater good of moving the
+    business forward." The test, before starting any piece of work: *which of these
+    does it move, and by when: a sale, reach that leads to a sale, or a product
+    that can be sold?* If the answer is none, don't do it, or say so and ask Scott.
+    - **Deadlines first.** Work with a real clock (Tin Clicker push by Nov 28, the
+      physical-order cutoff Dec 12, Valentine listings Jan 3) goes ahead of work
+      without one.
+    - **Finish before starting.** A test print Scott can run, a fix to something
+      already in the shop, or a delivered plan beats a new idea, new research or a
+      new design.
+    - **Say when something isn't worth doing,** including Scott's own asks and our
+      own routines. Agreeing to be agreeable doesn't move anything.
+    - **Not at any cost:** standards 1–15 still hold. A sale built on a false claim
+      doesn't count as moving forward.
+
 ## Proposed
 
 Nothing open.
