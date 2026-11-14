@@ -129,6 +129,10 @@ to where it is (`wall_regions.py`, the regions; `../../tools/product_gate.py`,
   leaves out only what it declares. Without any, the gate's numbers are the
   same as before.
 
+**Printed and works (2026-11-14).** Scott printed the screw-lid tin clicker: "The screw on
+lid for clicker worked." That is the current `gingerbread_tin_clicker.3mf`, with the 2026-11-05
+thread. The canister hasn't been printed yet.
+
 **The lid screws on (2026-10-30).** Your first test print clicked fine, but
 the lid sat loose. It now has a thread, about 1.6 turns, and screws down until
 the switch plate sits on the tin exactly where it sat before. (The thread
