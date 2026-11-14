@@ -201,3 +201,15 @@ Scott, just now: "The screw on lid for clicker worked." That's the current
 - **Still unprinted:** the gingerbread tin canister, which uses the clicker as its lid. Don't
   claim anything about it from this result.
 - It's a product, not a test print, so nothing comes off MakerWorld.
+
+## 2026-11-14 18:14 ET - Claude - Correction: the Tin Clicker lid Scott printed was the older one
+
+Scott now thinks the screw lid he printed was the **older** one. That proves the screw lid
+works, not the current file.
+- **The current `gingerbread_tin_clicker.3mf`** has the deeper Nov 5 thread and guide ring.
+  It is **not printed yet**.
+- **I checked it today, and it is up to date:**
+  - the shipping 3MF matches the exported parts exactly;
+  - those match a fresh export from the current source (0.00 mm³ difference).
+- **Please don't say the current version is print-verified** until Scott prints it. "The
+  screw-lid design works" is fine.
