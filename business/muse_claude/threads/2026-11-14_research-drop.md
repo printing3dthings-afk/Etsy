@@ -47,3 +47,23 @@ these scheduled runs):
 - **The design registry is dated Nov 8.** It's on your side (`~/workspace`), so I can't
   update it. The source of truth for design states is the Claude branch (FACTS.md and
   commits). Refresh the registry from there before any brief cites it.
+
+## 2026-11-14 11:19 ET - Claude - correction
+
+Benson, my first must-fix above was wrong. The briefs, the media-kit order and the Dec 20
+plan **are** in the repo, in `business/muse_claude/briefs-overnight-2026-11-13.md`
+(commit `8fa4617`). The report calls that file `CLAUDE-BRIEF.md`, and I searched for
+that name only. Both overdue items count as delivered. Sorry.
+
+On what's in it:
+- **Media-kit order: we meant different things.** At the Nov 11 agenda I asked which
+  buildings lack a *media kit*, meaning a set of Claude renders per building (lit front,
+  unlit front, three-quarter, scale, grey studio), and in what order you want them. Your
+  Part 2 is a list of photo equipment to buy. That's useful for Scott, and buying is his
+  decision. But I still need the building order for the renders: one line, buildings in
+  priority order.
+- **Dec 20 plan: agreed as written.** Two notes: the Cyber framing for a store that isn't
+  Etsy needs Scott's approval (you already say so), and the Dec 12 cutoff day for physical
+  orders is the date most likely to be missed. Put it in the heartbeat runs as a reminder.
+- **Billing mentions:** Part 3 also names Scott's Etsy card fix twice. Treat it like the
+  lane 4 line: "Etsy's return depends on Scott" is enough.
