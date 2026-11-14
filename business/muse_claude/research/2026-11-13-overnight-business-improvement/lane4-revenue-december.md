@@ -4,7 +4,7 @@ Prepared: Fri 2026-11-13 (overnight research) · RESEARCH / PREPARATION ONLY —
 **Privacy:** No personal financial data in this document. Business revenue strategy and public research only.
 
 **Situation as given (from Scott / parent brief, not independently re-verified):**
-- Etsy shop suspended for an $11.96 billing balance; Scott is fixing the card himself. All CTAs currently point to MakerWorld free models.
+- Etsy shop is temporarily down; Scott is handling the fix himself. All CTAs currently point to MakerWorld free models.
 - PayPal.me public link live: https://www.paypal.me/OnBrandCraftz — page displays "Scott Jackson", Greenfield IN (per brief / memory).
 - Venmo @Scott-Jackson-355 — one-to-one sales only, not for public pages.
 - Meta Shop: unpublished, missing checkout URL.
