@@ -1,0 +1,6 @@
+Gear heart clip test v2: tools/print_fidelity.py on each part, P1S 0.4, 0.20 mm (2026-11-14)
+base   dropped 0.02 mm3, filled 0.00 mm3, flagged 0
+pins   dropped 0.08 mm3, filled 0.01 mm3, flagged 0  (all at the 1/2/3 variant dimples, 0.17 wide)
+gears  dropped 0.00 mm3, filled 0.00 mm3, flagged 0
+The barbs' crests print in full: nothing dropped at them.
+whole plate (one mesh): dropped 0.1 mm3, filled 0.01 mm3, flagged 0

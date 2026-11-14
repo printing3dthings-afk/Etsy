@@ -1,0 +1,20 @@
+GEAR HEART CLIPS V2: TEST PRINT FIT (exported parts)
+== pin 1 (barb 0.45)
+  ok   seated in the base: 0.000 mm3
+  ok   gear on its washer: 0.000 mm3 with the pin, 0.000 with the base
+  ok   gear lifted 1.0 hits the barbs: 2.8 mm3 (held)
+  ok   pin lifted 0.46 meets the pocket's roof: it can't pull up through the plate (end play 0.46, gear end play 0.81)
+  ok   gear turned through 360 deg: at most 0.000 mm3 (spins free)
+== pin 2 (barb 0.55)
+  ok   seated in the base: 0.000 mm3
+  ok   gear on its washer: 0.000 mm3 with the pin, -0.000 with the base
+  ok   gear lifted 1.0 hits the barbs: 3.5 mm3 (held)
+  ok   pin lifted 0.46 meets the pocket's roof: it can't pull up through the plate (end play 0.46, gear end play 0.81)
+  ok   gear turned through 360 deg: at most 0.000 mm3 (spins free)
+== pin 3 (barb 0.65)
+  ok   seated in the base: 0.000 mm3
+  ok   gear on its washer: 0.000 mm3 with the pin, 0.000 with the base
+  ok   gear lifted 1.0 hits the barbs: 4.2 mm3 (held)
+  ok   pin lifted 0.46 meets the pocket's roof: it can't pull up through the plate (end play 0.46, gear end play 0.81)
+  ok   gear turned through 360 deg: at most 0.000 mm3 (spins free)
+PASS

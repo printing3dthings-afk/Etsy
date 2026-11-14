@@ -1,0 +1,16 @@
+OLD SNAP POST (printed upright, the prong's bend across the layers)
+  prong 1.6 x 4.0, 13.5 long, barb 0.9: strain 1.19 %
+  limit across layers, one snap: 1.4 % x 0.55 = 0.77 %  -> 154% of it: FAIL (Scott's snapped)
+
+NEW PIN (printed on its side, the prong's bend along the layers)
+  prong 2.3 -> 1.9 thick (tapered), 4.8 wide, 13.15 long; strain coefficient 1.30
+  barb 0.45: strain 0.78 % (one snap 1.4, repeated 0.8: ok); push-on 18 N for both prongs; engagement 2.5 x RSS (under 3x)
+  barb 0.55: strain 0.95 % (one snap 1.4, repeated 0.8: ok once); push-on 22 N for both prongs; engagement 3.1 x RSS (ok)
+  barb 0.65: strain 1.12 % (one snap 1.4, repeated 0.8: ok once); push-on 26 N for both prongs; engagement 3.6 x RSS (ok)
+  catch face square: it self-locks (1 - mu tan 90 < 0), so the gear can't be pulled off;
+  squeeze the two prongs together to take one off.
+
+  shank in the plate: double-D, 7.0 x 4.8, in a 7.7 hole (0.35 a side, as the old post)
+  head: a bar 10.5 x 4.8 x 2.4 in a pocket 11.0 x 5.3 under the plate, its roof pitched
+  at 55 deg (it prints with no support); it can't turn, so the gear turns on the pin,
+  and it can't pull up through the 7.7 hole.

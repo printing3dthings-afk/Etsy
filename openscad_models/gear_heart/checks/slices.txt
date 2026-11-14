@@ -2,3 +2,6 @@ Bambu Studio slice (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20
 
 gear heart test (two bars, one gear pair, one colour): 36m 51s, 101 layers, 9.09 g, 0 support lines
 Over the handbook's 30 min for a coupon: the posts stand 20 mm tall at their real size (101 layers).
+
+gear heart clip test v2 (base with three bosses, three pins lying on their sides, three gears, one colour, 2026-11-14): 37m 22s, 45 layers, 8.75 g, 0 support lines
+Over the handbook's 30 min: it is three full-size bosses, pins and gears, so the fit is the heart's own.

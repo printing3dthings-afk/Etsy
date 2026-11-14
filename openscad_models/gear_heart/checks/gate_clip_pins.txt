@@ -1,0 +1,13 @@
+parts/clip/pins.stl
+  ok    fits_plate: 34.5 x 17.5 x 4.8 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 3 bodies, expected 3
+  ok    min_wall: 1st pct 1.23mm, median 2.05mm (floor 1.2mm); 0.03% below one bead; 5178 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 4.8mm printed of 4.8mm
+  ok    geometry_survives_slicing: printed height 4.8mm vs modelled 4.8mm
+  ok    flat_base: 1.80 cm2 of contact = 29.8% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 18 layer(s) under the 4.0s cooling threshold; 268mm2 on the plate; aspect 0.1
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED

@@ -157,3 +157,62 @@ their flat tops drew 6,124 support moves).
 **Not checked by printing yet:** the whole heart. The parts that move are the tested
 ones (posts, washers, +0.20 meshes); what's new is the layout, the knob and the
 heart cut-outs, all checked above on the exported parts.
+
+## 8. Clips v2: the axle pin (2026-11-14, Brief E)
+
+**What failed.** Scott printed the whole heart (2026-11-13): it meshes and turns, but "the
+clips the gears go on need to be much stronger", and one post snapped. The posts stood up
+out of the plate, so pushing a gear over the barb bent each prong at its root ACROSS the
+layers. By `clip_budget.py` (`checks/clip_budget.txt`): 1.19 % strain against about 0.77 %
+that PLA holds that way (1.4 % x 0.55): 154 % of it. The fracture was predictable from the
+numbers; the test print's posts were the same and survived only because they went on once.
+
+**The change.** A separate pin, printed lying on its side, so its prongs bend in the print
+plane, along the layers (`pin_lib.scad`):
+- shank a double-D (the 3.5 round with flats 4.8 apart, the faces it prints on), 0.35 a
+  side in the gear's unchanged 7.7 bore;
+- two prongs either side of a slot that widens 2.4 -> 3.2 from a rounded root, so they
+  taper 2.3 -> 1.9 thick, 13.15 long;
+- a barb with a square catch (it prints flat, so it hangs over nothing) and a 30 deg
+  lead-in. The square catch self-locks: the gear can't be pulled off; pinch the barbs to
+  take the pin out;
+- a head bar, 10.5 x 4.8 x 2.4, in a pocket in the plate's bed face. It can't turn, so the
+  gear turns on the pin, and it can't pull up through the hole. The pocket's roof is
+  pitched at 55 deg: flat it drew 1,165 support moves in the gate's slicer, and 45 and 50
+  still drew some; 55, 60 and 70 drew none. 55 keeps the ridge 1.6 under the boss top.
+
+| barb | strain (once 1.4 %, repeated 0.8 %) | push-on | engagement (needs 3 x RSS) |
+|---|---|---|---|
+| 0.45 | 0.78 % ok | 18 N | 2.5 x (under) |
+| **0.55** (design) | 0.95 % ok once | 22 N | 3.1 x ok |
+| 0.65 | 1.12 % ok once | 26 N | 3.6 x ok |
+
+"Once" is right for this product: a gear goes on once, and a pin comes out only for a
+repair. The bosses go to r 7.0 to hold the head's pocket. The gears, washers and +0.20
+meshes don't change.
+
+**The test print** (`clip_coupon.scad`, `gear_heart_clip_test.3mf`): one bar with three of
+the heart's bosses (8 tall, a washer, the pin's hole and pocket), three pins (barb 0.45,
+0.55, 0.65; 1, 2, 3 dimples on the head; 1, 2, 3 grooves on the bar's front edge under the
+boss each goes in) and three of the heart's 12-tooth gears. Guide:
+`Gear_Heart_Clip_Test_Guide.pdf`.
+
+**Checks (`checks/`).**
+- Fit (`check_clip.py`, `fit_clip.txt`, on the exported parts), all three: the pin seats
+  touching nothing; the gear on its washer touches nothing; the gear lifted 1.0 hits the
+  barbs (2.8 / 3.5 / 4.2 mm3); the pin's head meets the pocket's roof at 0.46 lift (the
+  gear's end play 0.81 with AX_PLAY); the gear turned 360 deg about its pin touches nothing.
+- Product gate: base pass (min wall 1.23, 0 support moves); gears pass; pins pass with a
+  declared band (`--wall-skip-part parts/clip/gate_skip.stl`: the bed and top faces,
+  0.3 deep, 5,178 of 28,439 spans). Undeclared, the pins read 1.04 at the 1st percentile:
+  the gate's rays skimming the face where the D's round meets its flat, which is the first
+  and last layer of a 2.3-thick prong, not a wall. The slice prints it in full.
+- Print fidelity (`fidelity_clip.txt`): 0 flags on all three; the pins drop 0.08 mm3, all
+  at the 0.17-wide dimples. The barbs' crests print.
+- Fragility (`fragility_clip.txt`): 0 high, 0 watch.
+- Bambu Studio: 37 min 22 s, 45 layers, 8.75 g, no supports. Over the handbook's 30 min
+  because the bosses, pins and gears are the heart's own size.
+
+**Next.** Scott prints it and reports which barb went on and held best and whether any
+prong whitened. Then the heart plate gets r 7.0 bosses with `pin_hole()` in place of its
+posts, and the pins go on the gears plate.
