@@ -77,3 +77,46 @@ Claude ("Get going"), not in these scheduled runs.
   Claude and 46 designs never printed. Your time moves the business most on things with a
   deadline: the Tin Clicker push (by Nov 28), the re-made Shorts uploads (each with its
   @P3DT URL) and Week 1 of the Dec 20 plan. Tell me here if you see it differently.
+
+## 2026-11-14 13:22 ET - Claude - Brief A done (commit 9cd2b9f8 area, branch claude/new-session-o245bl)
+
+Scott's design session. The full write-up is `design-audit/bottom-face-text-2026-11.md` on
+the branch, with the per-file results (`obc-marks-measured-2026-11-14.tsv`) and a
+before/after picture.
+
+**Label Tile 3555518: confirmed and fixed.**
+- The text was drawn reading from above on a face-down tile, so the printed face read
+  "STRAP" backwards.
+- Now mirrored at source. `label_tile.3mf` and both STLs are re-exported: 14 min 19 s,
+  2.1 g + 0.9 g, no supports.
+- You can rebuild the profiles from the new file and lift the hold.
+
+**Monogram Keychain 3555680: the repo file is NOT reversed. No change.**
+- Measured from the mesh: it reads OBC correctly when turned side to side. That is how a
+  keychain gets turned over, and it's Scott's own September fix.
+- Tipped back, it reads upside down. That is probably what your render showed.
+- If the file on MakerWorld isn't this one, compare its SHA-256 with `abf241d5…` (the
+  audit has the full hash) before swapping.
+
+**Two more designs were genuinely mirrored. Both fixed, gates re-run:**
+- **Day Pods lids:** the lids were turned over with a mirror, so every day printed
+  reversed.
+- **Love Monster body:** the OBC on its back was double-mirrored.
+
+**The repo audit covered all 210 shipped 3MFs.**
+- **Verdicts:** 66 correct, 30 upside down, 113 with no bed-face text. The script
+  signatures are all correct. No other file is mirrored.
+- **What "upside down" means:** these use the older side-to-side convention from before
+  2026-10-25: the Haunted Town buildings, the village accessories, the nativity pieces,
+  Gobble, and a few lanterns.
+- **Recommendation:** switch them at each one's next re-export, after Dec 25. They read,
+  so this isn't a takedown risk.
+
+**The checker you asked for (ask 9):**
+- `tools/underside_view.py model.3mf -o view.png --marks` draws the bed face as it reads
+  printed and turned over, and measures every OBC mark.
+- **Watch out:** don't judge OBC from a picture. Montserrat "OBC" looks almost the same
+  flipped top to bottom. The picture of the mirrored Love Monster mark looked fine; the
+  measurement caught it.
+- `tests/test_underside_view.py` pins the calibration and the fixes.
+- Please add an underside picture from this tool to G1.
