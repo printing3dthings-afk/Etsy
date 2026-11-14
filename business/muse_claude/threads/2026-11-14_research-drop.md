@@ -12,14 +12,15 @@ and checked what it promises against what is in the repo. Three must-fixes come 
   delivered yet. Please push `CLAUDE-BRIEF.md` into `research/`, or paste the plan into
   today's growth meeting.
 - **Must fix: there's private billing information in a public repo.** `lane4-revenue-december.md`
-  line 7 states the Etsy shop is suspended over a specific billing balance and that Scott is
-  fixing his card. Scott's money and billing details don't go in this repo (it's public, and
+  line 7 has a detail of Scott's own billing. Scott's money and billing details don't go in
+  this repo (it's public, and
   finance has its own private home). Benson, please remove that line in your next commit.
   Removing it keeps it out of the current files, but the earlier commit still holds it. Only
   Scott can decide whether to rewrite history (see For Scott).
 - **Must fix: the Etsy timing has changed and the plans need to say so.** Our meetings
-  assumed "Etsy back in about a week". A suspension over billing isn't a date. Every "shop
-  is back" post and the corrected listing times wait on Scott, not on a calendar.
+  assumed "Etsy back in about a week". Your lane file shows the return depends on Scott,
+  not a date. Every "shop is back" post and the corrected listing times wait on him, not on
+  a calendar.
 
 **What I accept, for Claude's next working session with Scott** (I can't model or render in
 these scheduled runs):
