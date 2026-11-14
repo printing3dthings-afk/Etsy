@@ -1,0 +1,25 @@
+slicing 5 part(s), 5 filament(s) ...
+89 layers parsed
+  layer 0/89
+
+PRINT FIDELITY  (89 layers, model 23775.1 mm3)
+  dropped (modelled, not printed): 27.09 mm3
+  filled  (printed, not modelled): 0.75 mm3
+  colour  (printed, other filament): 17.95 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #F2EDE2 slot 5    16.264 mm3  z 0.0-10.4 (51 layers)  front at [-3.3, -16.9]  0.09 mm wide, 0.17 mm deep
+       colour  #F2EDE2 slot 5     6.756 mm3  z 0.0-5.0 (41 layers)  front at [1.0, -16.7]  0.05 mm wide
+       dropped #111111 slot 1     5.222 mm3  z 0.0-5.0 (25 layers)  front at [-0.4, -27.6]  0.11 mm wide, 0.18 mm deep
+       colour  #E0A800 slot 2     4.402 mm3  z 1.6-3.6 (10 layers)  front at [1.0, -6.6]  0.07 mm wide
+       colour  #111111 slot 1     4.102 mm3  z 0.0-5.0 (25 layers)  front at [3.4, -6.2]  0.1 mm wide
+       dropped #F2EDE2 slot 5     2.840 mm3  z 0.2-5.4 (26 layers)  right at [38.1, -9.8]  0.07 mm wide, 0.13 mm deep
+       colour  #E0A800 slot 2     1.866 mm3  z 1.6-3.6 (10 layers)  front at [-0.3, -25.5]  0.07 mm wide
+       dropped #F2EDE2 slot 5     1.842 mm3  z 0.0-5.0 (25 layers)  right at [27.7, -12.8]  0.08 mm wide, 0.15 mm deep
+       colour  #111111 slot 1     0.390 mm3  z 1.6-5.0 (17 layers)  left at [-24.4, -9.2]  0.1 mm wide
+       colour  #F2EDE2 slot 5     0.205 mm3  z 3.4-5.0 (8 layers)  right at [21.8, -13.9]  0.05 mm wide
+       filled  #111111 slot 1     0.161 mm3  z 10.6-11.4 (4 layers)  left at [-25.0, -11.0]  0.06 mm wide, 0.12 mm deep
+       filled  #111111 slot 1     0.150 mm3  z 1.6-3.0 (6 layers)  back at [-0.0, 29.9]  0.06 mm wide, 0.12 mm deep
+       dropped #111111 slot 1     0.126 mm3  z 10.6-11.4 (8 layers)  front at [12.1, -13.5]  0.06 mm wide, 0.12 mm deep
+       colour  #E7A976 slot 3     0.122 mm3  z 4.4-4.6 (1 layers)  right at [13.4, -5.1]  0.05 mm wide
+       dropped #111111 slot 1     0.101 mm3  z 0.0-5.0 (25 layers)  right at [23.5, -13.7]  0.11 mm wide, 0.17 mm deep
+  ... 34 smaller

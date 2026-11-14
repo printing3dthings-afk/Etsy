@@ -17,22 +17,26 @@ from PIL import ImageFont
 HERE = Path(__file__).resolve().parent
 FONT = HERE.parents[1] / "fonts" / "PlayfairDisplay-Bold.ttf"
 TEXT = "TROPHY RACK"
-SIZE = 7.0                      # OpenSCAD size: caps ~6.9 mm tall (rule 10 wants 3+)
+SIZE = 6.0                      # OpenSCAD size: caps ~5.9 mm tall, as on the photo (rule 10 wants 3+)
 XSCALE = 0.82                   # letters narrowed: the photo's face is more condensed than Playfair
 EM = 13.56 * SIZE / 10          # mm per em
-TRACK = 0.25                    # extra space between letters, mm
-HALF = 6.2                      # the banner's half-height
-X0, X1 = -43.0, 43.0            # the banner's tips
-TAIL = 3.2                      # depth of the swallowtail notch
+TRACK = 0.65                    # extra space between letters, mm
+HALF = 5.0                      # the front band's half-height
+BAND = (-30.5, 31.0)            # the front band's ends
+# the tails, folded behind the band's ends: (inner x, outer x, offset at the inner end,
+# how fast they climb outward), as on the photo where the left tail kicks up-left
+TAILS = [(-27.0, -44.0, 0.6, 0.12), (27.5, 44.0, 0.3, 0.0)]
+TAIL_HALF = 4.4
+NOTCH = 3.0                     # depth of the swallowtail notch
 
 
 def centre(x):
     """The banner's centreline: rising to the right, bowed a little, as on the photo."""
-    return -14.0 + 0.10 * x + 0.0012 * x * x
+    return -12.0 + 0.12 * x + 0.0012 * x * x
 
 
 def slope(x):
-    return 0.10 + 0.0024 * x
+    return 0.12 + 0.0024 * x
 
 
 def normal(x):
@@ -40,18 +44,36 @@ def normal(x):
     return -math.sin(a), math.cos(a)
 
 
-def outline():
-    xs = [X0 + (X1 - X0) * i / 60 for i in range(61)]
+def strip(x0, x1, half, off=lambda x: 0.0, notch=0.0, n=40):
+    """A band along the centreline from x0 to x1 (either order), shifted by off(x) along
+    the normal; with notch, the x1 end is a swallowtail."""
+    xs = [x0 + (x1 - x0) * i / n for i in range(n + 1)]
     top, bot = [], []
     for x in xs:
         nx, ny = normal(x)
-        y = centre(x)
-        top.append((x + nx * HALF, y + ny * HALF))
-        bot.append((x - nx * HALF, y - ny * HALF))
-    # swallowtail notches at both tips
-    rx, ry = X1 - TAIL, centre(X1 - TAIL)
-    lx, ly = X0 + TAIL, centre(X0 + TAIL)
-    return top + [(rx, ry)] + bot[::-1] + [(lx, ly)]
+        y, o = centre(x), off(x)
+        top.append((x + nx * (o + half), y + ny * (o + half)))
+        bot.append((x + nx * (o - half), y + ny * (o - half)))
+    pts = top
+    if notch:
+        xm = x1 - notch * (1 if x1 > x0 else -1)
+        nx, ny = normal(xm)
+        pts = pts + [(xm + nx * off(x1), centre(xm) + ny * off(x1))]
+    pts = pts + bot[::-1]
+    # keep it counter-clockwise for OpenSCAD's sake (either works, but be consistent)
+    area = sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1]))
+    return pts if area > 0 else pts[::-1]
+
+
+def outline():
+    return strip(*BAND, HALF)
+
+
+def tails():
+    out = []
+    for xi, xo, o0, k in TAILS:
+        out.append(strip(xi, xo, TAIL_HALF, off=lambda x, xi=xi, o0=o0, k=k: o0 + k * abs(x - xi), notch=NOTCH))
+    return out
 
 
 def letters():
@@ -68,7 +90,7 @@ def letters():
         return x
     # centre the word on the banner by arc length
     xs, x = [], None
-    lo, hi = -40.0, 0.0
+    lo, hi = -30.0, 0.0
     for _ in range(40):
         mid = (lo + hi) / 2
         end = arc_x(mid, total)
@@ -92,6 +114,7 @@ def main():
     pts = outline()
     lines = ["// written by make_banner.py: do not edit", f'FONT = "Playfair Display";', f"SIZE = {SIZE};", f"XSCALE = {XSCALE};",
              "BANNER = [" + ", ".join(f"[{x:.3f}, {y:.3f}]" for x, y in pts) + "];",
+             "TAILS = [" + ", ".join("[" + ", ".join(f"[{x:.3f}, {y:.3f}]" for x, y in t) + "]" for t in tails()) + "];",
              "LETTERS = [" + ", ".join(f'["{c}", {x:.3f}, {y:.3f}, {a:.2f}]' for c, x, y, a in letters()) + "];"]
     (HERE / "banner_data.scad").write_text("\n".join(lines) + "\n")
     print(f"{len(pts)} outline points, {len(letters())} letters")
