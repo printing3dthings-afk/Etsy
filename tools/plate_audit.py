@@ -45,6 +45,10 @@ EXCLUDE = (0.0, 0.0, 18.0, 28.0)   # P1S bed_exclude_area, front-left corner
 
 SKIRT = "Skirt/Brim"
 WIPE = "Wipe tower"
+# The machine's own start/end G-code. Bambu Studio's purge line is drawn in exactly the
+# reserved front-left corner, on purpose; read through tools/bambu_gcode.py (2026-11-14)
+# it is tagged Custom and was failing three plates as "the part" reaching into the corner.
+MACHINE = "Custom"
 # The part's own outline. Centring has to be judged against this and not
 # against every extrusion on the plate: support material only grows on the
 # overhanging side, so part-plus-supports sits 1-3 mm off the outline's
@@ -79,7 +83,8 @@ def audit(path: Path) -> dict:
     present = set(int(t) for t in np.unique(polys[:, 0]))
     skirt = {i for i in present if types[i] == SKIRT}
     wipe = {i for i in present if types[i] == WIPE}
-    part = present - skirt - wipe
+    machine = {i for i in present if types[i] == MACHINE}
+    part = present - skirt - wipe - machine
     outline = {i for i in present if types[i] in OUTLINE}
 
     out = {

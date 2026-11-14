@@ -1,0 +1,3 @@
+ "support_lines": 0,
+ "time": "1h 1m 26s",
+ "filament_g": "15.90,4.33",

@@ -1,0 +1,16 @@
+ZERO-GAP JOINT TEST: FIT (exported parts)
+== turntable 1 (0.30 air, no sleeve)
+  rotor/ring as modelled: 0.000 mm3
+  rotor lifted 0.5 hits the ring: 7.2 mm3 (held in)
+  rotor turned 37 deg against the ring: 0.000 mm3 (free)
+== turntable 2 (0.45 sleeve, no air)
+  rotor/ring as modelled: 0.000 mm3
+  sleeve against rotor/ring: 0.000 / 0.018 mm3 (touching, not overlapping)
+  rotor lifted 0.5 hits the sleeve and ring: 32.8 mm3 (held in)
+  rotor turned 37 deg against the ring: 0.000 mm3 (free)
+== turntable 3 (0.45 sleeve + 0.10 air)
+  rotor/ring as modelled: 0.000 mm3
+  sleeve against rotor/ring: 0.000 / 0.000 mm3 (touching, not overlapping)
+  rotor lifted 0.5 hits the sleeve and ring: 28.0 mm3 (held in)
+  rotor turned 37 deg against the ring: 0.000 mm3 (free)
+PASS

@@ -8206,3 +8206,43 @@ pink muzzle resting on it, and the horns went white with black tips.
 - **Check a white shine reaches the surface at 0.8 mm or more.** A 1.5 mm
   shine ball sunk in a domed eye left a 0.6 mm dot on the surface, and
   print_fidelity flagged it as dropped; 2 mm prints whole.
+
+## Technique 85 — Read Bambu's own toolpath, and use what only the slicer can draw (2026-11-14)
+
+Scott asked for designs nobody else is doing, with flawless detail. Two things changed how
+that work can be checked; the ledger is `data/knowledge_base/fdm_only_techniques.md`.
+
+**1. Check the slicer Scott actually uses.**
+- `tools/bambu_gcode.py` turns a Bambu Studio slice into the tagged G-code our readers
+  understand. Before it, a Bambu slice read as one layer, and its G2/G3 arcs (3,635 on one
+  coupon) were skipped.
+- Now `print_fidelity`, `as_printed` and the viewer can run on Bambu's own toolpath.
+- `bambu_slice.py --set key=value` sets any process setting; `--object-set N:key=value`
+  sets one object's.
+- When a design depends on a slicer feature (fuzzy skin, vase mode, ironing, modifiers),
+  check Bambu's slice, not PrusaSlicer's guess at it.
+
+**2. Texture that lives in the toolpath, not the mesh.** Bambu's fuzzy skin noise types
+(classic, perlin, billow, ridgedmulti, voronoi) render from the toolpath as:
+- **classic:** stucco;
+- **Perlin:** wood grain;
+- **Voronoi:** cobblestone.
+
+It needs no modelled detail, so it can't fall under the detail floor.
+- **Bonding:** outer bead centres at most 0.81 mm from the wall behind, the same for every
+  noise type.
+- **For a wall that takes load,** keep it to 0.3 deep.
+- **Never on a mating face:** it moves the outline.
+
+**3. Vase mode with slits.**
+- A 0.001 mm slit is part of the outline, so a vase-mode wall runs into it and back: a
+  double-wall rib inside one continuous wall.
+- Bambu needs `slice_closing_radius=0`, or the slit is closed.
+- Measured: 316 mm of wall per layer against 124 without slits; six spokes visible in the
+  layer plot.
+- It gives fast, seamless, rim-heavy wheels and ribbed shades.
+- The slit leaves a fine line where it meets the outside.
+
+**What this does NOT prove:** none of it is printed yet. The samplers in
+`openscad_models/technique_samplers/` are what Scott prints. A listing claims a texture or
+a strength only after he has.

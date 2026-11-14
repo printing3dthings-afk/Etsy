@@ -56,7 +56,10 @@ PROCESS = {
 }
 FILAMENTS = {"pla_basic": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
              # the village builds print in matte white (Scott, 2026-10-24)
-             "pla_matte": "Bambu PLA Matte @BBL P1S 0.4 nozzle"}
+             "pla_matte": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+             # Bambu's support material that doesn't bond to PLA (Scott has it, 2026-11-14):
+             # the second material for zero-gap two-material joints
+             "support_pla": "Bambu Support For PLA @BBL X1C"}
 
 # CLAUDE.md "Production Quality Settings" -- the shop's own retail standard.
 # "Customers only see the outside": the outer wall is slowed and printed first.
@@ -138,7 +141,8 @@ def _set(cfg: dict, key: str, value) -> None:
 
 def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool = True,
                    filament: str = "pla_basic", brim: float | None = None,
-                   bed: str = "textured") -> tuple[str, str]:
+                   bed: str = "textured", extra: dict | None = None,
+                   slot_filaments: dict[int, str] | None = None) -> tuple[str, str]:
     """Write the machine, process and filament files; returns the two CLI args."""
     machine = flatten("machine", MACHINE)
     process = flatten("process", PROCESS[quality])
@@ -153,6 +157,10 @@ def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool
     if brim:
         _set(process, "brim_type", "outer_only")
         _set(process, "brim_width", brim)
+    # --set key=value (2026-11-14): any process setting by its Bambu Studio name, for
+    # testing a slicer feature (fuzzy skin noise, spiral vase, interlocking beams) from here
+    for k, v in (extra or {}).items():
+        _set(process, k, v)
     # the prime tower in the corner layout() keeps clear (a project setting the
     # CLI otherwise defaults)
     process["wipe_tower_x"] = [f"{TOWER[0]:.0f}"]
@@ -164,7 +172,7 @@ def write_profiles(workdir: Path, quality: str, colours: list[str], retail: bool
     process_f.write_text(json.dumps(process, indent=1))
     fils = []
     for i, c in enumerate(colours or ["#F4F1EA"]):
-        f = flatten("filament", FILAMENTS[filament])
+        f = flatten("filament", FILAMENTS[(slot_filaments or {}).get(i + 1, filament)])
         f["from"] = "system"
         _set(f, "filament_colour", c.upper())
         p = workdir / f"filament_{i + 1}.json"
@@ -290,7 +298,8 @@ def layout(groups: list[list[tuple[Path, str]]]) -> list[tuple[float, float, flo
     return out
 
 
-def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path) -> list[str]:
+def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path,
+                    object_settings: dict[int, dict[str, str]] | None = None) -> list[str]:
     """A 3MF the way Bambu Studio reads multi-part objects: each part its own
     mesh object, each printed object a component object over its parts, and
     Metadata/model_settings.config giving every part its filament slot.
@@ -328,8 +337,11 @@ def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path) -> list[str
         dx, dy, dz = places[gi]
         build.append(f'<item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 {dx:.4f} {dy:.4f} {dz:.4f}" printable="1"/>')
         first = g[0][0].stem
+        # --object-set (2026-11-14): settings for this object only, as Bambu Studio
+        # stores a per-object override (one texture per swatch on a sampler plate)
+        own = "".join(f'<metadata key="{k}" value="{v}"/>' for k, v in (object_settings or {}).get(gi + 1, {}).items())
         settings.append(f'<object id="{oid}"><metadata key="name" value="{first}"/>'
-                        f'<metadata key="extruder" value="{slots[g[0][1]]}"/>' + "".join(part_cfg) + "</object>")
+                        f'<metadata key="extruder" value="{slots[g[0][1]]}"/>' + own + "".join(part_cfg) + "</object>")
     model = ('<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" '
              'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">'
              f'<resources>{"".join(res)}</resources><build>{"".join(build)}</build></model>')
@@ -350,7 +362,9 @@ def build_bambu_3mf(groups: list[list[tuple[Path, str]]], out: Path) -> list[str
 
 def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = "standard",
                 pause_zs: list[float] | None = None, retail: bool = True, log=print,
-                filament: str = "pla_basic", brim: float | None = None, bed: str = "textured") -> dict:
+                filament: str = "pla_basic", brim: float | None = None, bed: str = "textured",
+                extra: dict | None = None, object_settings: dict | None = None,
+                slot_filaments: dict | None = None) -> dict:
     """Slice the given parts for the P1S. Returns the slice's own summary."""
     ensure_installed()
     out = Path(out).resolve()
@@ -358,8 +372,8 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     with tempfile.TemporaryDirectory(prefix="bambu_slice_") as td:
         work = Path(td)
         model = work / "model.3mf"
-        colours = build_bambu_3mf(groups, model)
-        settings, filaments = write_profiles(work, quality, colours, retail, filament, brim, bed)
+        colours = build_bambu_3mf(groups, model, object_settings)
+        settings, filaments = write_profiles(work, quality, colours, retail, filament, brim, bed, extra, slot_filaments)
         outdir = work / "out"
         outdir.mkdir()
         cmd = _cmd() + ["--slice", "0", "--arrange", "0",
@@ -385,6 +399,16 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     return s
 
 
+def _object_sets(items: list[str]) -> dict[int, dict[str, str]]:
+    """--object-set N:KEY=VALUE, as {N: {KEY: VALUE}}."""
+    out: dict[int, dict[str, str]] = {}
+    for it in items:
+        n, _, kv = it.partition(":")
+        k, _, v = kv.partition("=")
+        out.setdefault(int(n), {})[k] = v
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("parts", nargs="+", help='mesh.stl:#RRGGBB per part; "+" starts a new object')
@@ -395,9 +419,17 @@ def main() -> None:
     ap.add_argument("--bambu-defaults", action="store_true", help="Bambu's profile as-is, without the shop's retail settings")
     ap.add_argument("--brim", type=float, metavar="MM", help="force an outer brim this wide (default: Bambu's auto brim)")
     ap.add_argument("--bed", choices=sorted(BEDS), default="textured", help="the build plate (sets the bed temperature)")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                    help="any process setting by its Bambu Studio name, e.g. fuzzy_skin=external")
+    ap.add_argument("--slot-filament", action="append", default=[], metavar="N:KIND",
+                    help=f"a different filament in AMS slot N (slots follow the colours' order): {', '.join(FILAMENTS)}")
+    ap.add_argument("--object-set", action="append", default=[], metavar="N:KEY=VALUE",
+                    help="a setting for object N only (1 = the first, objects split by +)")
     a = ap.parse_args()
     s = slice_parts(parse_parts(a.parts), Path(a.out), a.quality, a.pause_at, retail=not a.bambu_defaults,
-                    filament=a.filament, brim=a.brim, bed=a.bed)
+                    filament=a.filament, brim=a.brim, bed=a.bed,
+                    extra=dict(kv.split("=", 1) for kv in a.set), object_settings=_object_sets(a.object_set),
+                    slot_filaments={int(n): k for n, k in (x.split(":", 1) for x in a.slot_filament)})
     print(json.dumps(s, indent=1))
     if s["support_lines"]:
         sys.exit(2)
