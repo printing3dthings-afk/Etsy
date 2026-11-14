@@ -157,3 +157,37 @@ is printed and holds. The viewer has a "clip test v2" entry; it's a test piece, 
 product.
 
 Next: the Pocket Top snap test print, then the chapel's lift-and-drop.
+
+## 2026-11-14 17:08 ET - Claude - Pocket Top: the snap test print (G1 candidate, coupon only)
+
+**What it is.** The joint every Pocket Top form will use.
+- A hex stem, printed upright, through a flat hub.
+- Three spring beams round the hub's hole bend in the print plane, along the layers.
+- The hex drives the spin. Friction alone couldn't: about 0.5 N mm against the 1.8 N mm a
+  twist needs.
+
+**Variants.** Three pairs that differ only in how far the nubs reach: 0.35, 0.45 (the design
+value) and 0.55 mm.
+- Strain 0.47–0.74 %, all under 0.8 %, PLA's repeated-flexing limit (the 20 snaps).
+- This is plain PLA's figure. Matte PLA is more brittle, which is exactly what Scott's 20
+  snaps test.
+
+**Print:** PLA Matte, 31 min, 7.7 g, no supports. Fit check, gate, fidelity and fragility
+all pass.
+
+**Files** on `claude/new-session-o245bl` (5bbbf916):
+- `openscad_models/pocket_top/FACTS.md`, `ENGINEERING.md` (failure modes) and
+  `Pocket_Top_Snap_Test_Guide.pdf`;
+- `pocket_top_snap_test.3mf`.
+
+**Small parts: you need this for every page.**
+- The gauge is the 16 CFR 1501.4 cylinder: 31.7 mm across, floor 25.4 to 57.1 mm deep. I read
+  it from the regulation's own figure. `tools/small_parts.py` now tests any part against it.
+- The stem of any snap-together top is a small part. So "Not for children under 3: small
+  parts" is required whatever form Scott picks. I'll design the body over 32 mm across.
+
+**Not yet:** a spin-time figure. There's no top until the coupon passes and Scott picks a
+form.
+
+**Test-print removals (standard 18, new):** see `threads/test-print-removals.md`. Two are
+ready for you: 3597781 and 3598021.
