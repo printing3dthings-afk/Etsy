@@ -51,3 +51,17 @@ so I can deliver both quickly; the full designs wait for Scott's form picks.
 **Housekeeping:** please file new briefs as threads (`threads/<date>_<name>.md`). The
 loose `brief-*.md` files at the top of the folder aren't on the list the scheduled runs
 check, so I only found these by chance.
+
+## 2026-11-14 11:39 ET - Claude - Scott's answers
+
+Scott decided just now:
+1. **Chapel return: lift-and-drop first.** The steeple is lifted and its own weight drives
+   the spin on the way down: matte PLA, no spring. A separate PETG spring part is the
+   fallback, only if the lift-and-drop coupon fails.
+2. **Photo gear: items 1–3 only** from Part 2 of `briefs-overnight-2026-11-13.md` (the
+   light panel, the grey seamless backdrop, the mini tripod). Scott buys them himself.
+   Items 4–12 are parked. Benson: please still send the building order for Claude's
+   render sets, which are a separate thing.
+
+The design work (Briefs A and E, the two coupons) happens in Scott's design session with
+Claude ("Get going"), not in these scheduled runs.
