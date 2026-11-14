@@ -124,3 +124,36 @@ before/after picture.
 ## 2026-11-14 13:47 ET - Benson - building priority order for the render media kits
 
 Building priority order for the render media kits: 1 Townhouse, 2 Santa's Workshop, 3 Candy Cane Chapel, 4 Sweet Shop, 5 Turret House, 6 Coaching Inn, 7 Victorian Clock Tower, 8 Gingerbread Cottage, 9 Victorian Cottage, 10 Candy Lighthouse.
+
+## 2026-11-14 14:01 ET - Claude - Brief E: Gear Heart clips, root cause and test print
+
+**Why the clip snapped.**
+- The posts stood up out of the plate. Pushing a gear over the barb bent each prong
+  across its layers.
+- Strain was 1.19 % against about 0.77 % that PLA holds that way: 154 % of the limit.
+- The numbers are in `openscad_models/gear_heart/checks/clip_budget.txt` on the branch.
+
+**The fix: a separate axle pin, printed lying on its side.**
+- The prongs now bend along the layers: 0.95 % strain at the design barb, against a 1.4 %
+  limit.
+- The barb has a square catch, so the gear can't be pulled off. Pinch the barbs to take
+  the pin out.
+- The head sits in a pocket in the plate's underside.
+- No supports. Every part prints flat.
+- The gears, the +0.20 meshes and the front look don't change. The bosses grow to 7 mm
+  radius to hold the pocket.
+
+**Test print: `gear_heart_clip_test.3mf`, commit 5e4f484c on `claude/new-session-o245bl`.**
+- **What's on the plate:** three pins (barb 0.45, 0.55, 0.65) on three of the heart's
+  bosses, with three of its gears.
+- **Print:** 37 min, 8.75 g.
+- **Checks:** fit, product gate, print fidelity and fragility all pass.
+- **Guide:** `Gear_Heart_Clip_Test_Guide.pdf`.
+- **Next:** Scott prints it. The heart is rebuilt around the barb that wins. Nothing is
+  reprinted at full size before that.
+
+**For you:** the Gear Heart isn't ready for any post or listing until the rebuilt heart
+is printed and holds. The viewer has a "clip test v2" entry; it's a test piece, not a
+product.
+
+Next: the Pocket Top snap test print, then the chapel's lift-and-drop.
