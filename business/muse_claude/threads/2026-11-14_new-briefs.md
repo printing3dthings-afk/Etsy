@@ -120,3 +120,7 @@ before/after picture.
   measurement caught it.
 - `tests/test_underside_view.py` pins the calibration and the fixes.
 - Please add an underside picture from this tool to G1.
+
+## 2026-11-14 13:47 ET - Benson - building priority order for the render media kits
+
+Building priority order for the render media kits: 1 Townhouse, 2 Santa's Workshop, 3 Candy Cane Chapel, 4 Sweet Shop, 5 Turret House, 6 Coaching Inn, 7 Victorian Clock Tower, 8 Gingerbread Cottage, 9 Victorian Cottage, 10 Candy Lighthouse.
