@@ -91,8 +91,11 @@ module body_use() difference() {
     translate([-W / 2 + WALL - 0.01, Y0 + LIPT, FLOOR]) cube([W - 2 * WALL + 0.02, PT + 2 * C, HB]);
     // the window
     translate([-WIN_X, Y0 - 1, WIN_Z]) cube([2 * WIN_X, LIPT + 2, HB]);
-    // the maker's mark, engraved into the back, which prints on the bed
-    translate([0, D / 2, HB / 2]) rotate([90, 0, 0]) mirror([1, 0, 0]) obc_engrave(10, depth = 0.8, inset = 0.15, ridges = false);
+    // the maker's mark, engraved into the back, which prints on the bed. Turned 180, not
+    // mirrored: the extra mirror([1, 0, 0]) undid the library's own and the mark read
+    // backwards from behind (Brief A, 2026-11-14; tools/underside_view.py measured it, and
+    // seen from behind standing up it now reads OBC, B's spine left, bigger bowl down).
+    translate([0, D / 2, HB / 2]) rotate([90, 0, 0]) rotate([0, 0, 180]) obc_engrave(10, depth = 0.8, inset = 0.15, ridges = false);
 }
 // Lip and rib as wedges: each grows out of the wall over its depth on the side
 // away from the bed, when the body lies on its back.

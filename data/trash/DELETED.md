@@ -6,146 +6,6 @@
 > out of the fenced block below). Byte-exact copies also live in
 > `data/trash/files/`.
 
-<!-- TRASH id=20261014-001 date=2026-10-14 kind=file source="openscad_models/christmas_village/accessories/horse_sleigh/HORSE_SLEIGH_LEFT_OUT.md" reason="Superseded: the horse sleigh was built after all (split horse, 2026-10-14); see HORSE_SLEIGH_PRINTING.md" -->
-## 20261014-001 · 2026-10-14 · file · `openscad_models/christmas_village/accessories/horse_sleigh/HORSE_SLEIGH_LEFT_OUT.md`
-**Reason:** Superseded: the horse sleigh was built after all (split horse, 2026-10-14); see HORSE_SLEIGH_PRINTING.md  
-**Payload:** `data/trash/files/20261014-001__HORSE_SLEIGH_LEFT_OUT.md`
-
-```
-# Horse sleigh — left out (2026-10-13)
-
-Scott circled the horse sleigh from the second batch of accessory studies
-with one condition: "If the horse and carriage can't look better then leave
-them out." They are left out. This folder keeps the attempt so it is not
-repeated blind.
-
-## Why
-
-A horse standing on four legs has two things that hang in the air: its belly
-between the legs, and its head held out in front of its neck. At village
-scale, with no supports, both have to be closed off:
-
-- **The belly** can be closed into a point between the legs, if the legs
-  splay fore and aft: they meet the body close together and stand apart.
-  That part works, Dala-horse fashion.
-- **The head** is the problem. Its muzzle is the lowest point of a shape held
-  out in front, an island the slicer must prop. The only printable cure is to
-  carry the jaw straight down into the chest, as a chess knight's is. That
-  turns head, throat and neck into one thick column, and the horse loses the
-  one line that makes it read as a horse.
-
-Two passes (`horse_study.scad`, renders in `images/`, from OpenSCAD's preview,
-not a print) came out as a toy cow and then a llama. Neither is better than
-the study it was meant to improve on.
-
-## What would change the answer
-
-- **Supports.** With tree supports under the muzzle and belly, a proper horse
-  prints; the shop's standard is no supports on anything sold, so that is
-  Scott's call.
-- **The sleigh alone.** A red sleigh piled with presents, waiting in the
-  snow, prints without support (runners sunk in snow, the dash leaning
-  forward under 40 degrees). Not built: Scott's "leave them out" covered both.
-```
-
-<!-- /TRASH 20261014-001 -->
-<!-- TRASH id=20261014-002 date=2026-10-14 kind=file source="openscad_models/christmas_lanterns/lantern_mesh.py" reason="Moved to tools/part_mesh.py (identical code, generic docstring) when the village accessories became its second user" -->
-## 20261014-002 · 2026-10-14 · file · `openscad_models/christmas_lanterns/lantern_mesh.py`
-**Reason:** Moved to tools/part_mesh.py (identical code, generic docstring) when the village accessories became its second user  
-**Payload:** `data/trash/files/20261014-002__lantern_mesh.py`
-
-```
-#!/usr/bin/env python3
-"""Mesh steps the lanterns need that OpenSCAD 2021 does badly (2026-10-13).
-
-    lantern_mesh.py check part.stl ...              each part closed; every pair disjoint
-    lantern_mesh.py union out.stl part.stl ...      one body, for product_gate
-    lantern_mesh.py wrap flat.stl out.stl --radius R --z Z [--minus m.stl ...]
-
-check and union use manifold3d. CGAL took 3.5 hours to union Santa's
-workshop's four parts and would not union imported STLs at all; manifold
-does both in seconds and refuses an open mesh rather than guessing.
-
-wrap bends a relief built flat (x along a face, y up, z out of it) round a
-cylinder: x becomes the angle x / radius, y height above --z, z the distance
-out from --radius. The flat mesh is subdivided first so its long triangles
-follow the curve, and anything named by --minus is cut from the result, so a
-relief wrapped a hair into its glass comes out touching it, not inside it.
-"""
-import argparse, itertools, math, sys
-import numpy as np
-import trimesh
-import manifold3d as mf
-
-
-def to_manifold(m: trimesh.Trimesh, name: str) -> mf.Manifold:
-    # From the raw triangle soup, merged by manifold itself: CGAL writes two
-    # solids that touch along a line as one edge shared by four faces, which
-    # trimesh's own vertex merge turns into a non-manifold mesh manifold refuses.
-    tri = np.asarray(m.vertices, np.float64)[np.asarray(m.faces)].reshape(-1, 3)
-    mesh = mf.Mesh(vert_properties=tri.astype(np.float32), tri_verts=np.arange(len(tri), dtype=np.uint32).reshape(-1, 3))
-    mesh.merge()
-    out = mf.Manifold(mesh)
-    if out.status() != mf.Error.NoError:
-        sys.exit(f"{name}: manifold3d refuses it ({out.status()}) -- not a closed mesh")
-    return out
-
-
-def to_trimesh(m: mf.Manifold) -> trimesh.Trimesh:
-    g = m.to_mesh()
-    t = trimesh.Trimesh(np.asarray(g.vert_properties)[:, :3], np.asarray(g.tri_verts), process=True)
-    # Drop sheets that enclose nothing. The drum's welded union came back with
-    # thirteen two-triangle back-to-back slivers beside its one real body, each
-    # sharing an edge with it, so the body read as open (2026-10-13).
-    cc = trimesh.graph.connected_components(t.face_adjacency, nodes=np.arange(len(t.faces)), min_len=1)
-    keep = [c for c in cc if len(c) > 4 or abs(t.submesh([c], append=True).volume) > 1e-6]
-    if len(keep) < len(cc):
-        t = t.submesh(keep, append=True)
-    return t
-
-
-def load(path: str) -> mf.Manifold:
-    return to_manifold(trimesh.load(path, force="mesh"), path)
-
-
-def check(paths):
-    ok = True
-    ms = {}
-    for p in paths:
-        t = trimesh.load(p, force="mesh")
-        ms[p] = to_manifold(t, p)
-        print(f"  {'ok  ' if t.is_watertight else 'OPEN'}  {p}: {ms[p].volume():.1f} mm3, {len(t.faces)} faces")
-        ok &= t.is_watertight
-    for a, b in itertools.combinations(paths, 2):
-        # parts that only touch come back with float32 noise: the hex lantern's
-        # art, built on its glass's face, read 0.06 mm3 over ~1500 mm2 of contact
-        v = (ms[a] ^ ms[b]).volume()
-        if v > 0.1:
-            ok = False
-            print(f"  OVERLAP {a} / {b}: {v:.3f} mm3")
-    print("PARTS OK: closed, no two overlap" if ok else "PARTS FAIL")
-    return ok
-
-
-def union(out, paths):
-    u = mf.Manifold.batch_boolean([load(p) for p in paths], mf.OpType.Add)
-    t = to_trimesh(u)
-    t.export(out)
-    print(f"{out}: {u.volume():.1f} mm3, {len(t.faces)} faces, watertight {t.is_watertight}, bodies {len(t.split(only_watertight=False))}")
-
-
-def wrap(flat, out, radius, z, minus, step):
-    # Weld first: where two pieces of the stepped relief touch along a line (the
-    # drum's snowman, at its waist), the line stays a four-face edge through any
-    # boolean, and trimesh -- and so product_gate -- reads the part as open. A
-    # copy shifted 0.003 mm across the face turns each such line into a sliver
-    # of overlap, and the union closes it (2026-10-13).
-    m0 = to_manifold(trimesh.load(flat, force="mesh"), flat)
-    m0
-… (truncated in ledger; full copy in payload)
-```
-
-<!-- /TRASH 20261014-002 -->
 <!-- TRASH id=20261025-001 date=2026-10-25 kind=file source="tools/api_server/main.py" reason="Before removing the digital-art workflows from Frank (Scott, 2026-10-25: switching to 3D prints and 3D print files). git history keeps it too." -->
 ## 20261025-001 · 2026-10-25 · file · `tools/api_server/main.py`
 **Reason:** Before removing the digital-art workflows from Frank (Scott, 2026-10-25: switching to 3D prints and 3D print files). git history keeps it too.  
@@ -1424,7 +1284,6 @@ PRODUCT GATE FAILED
 ```
 
 <!-- /TRASH 20261111-001 -->
-
 <!-- TRASH id=20261111-002 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude.md" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
 ## 20261111-002 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude.md`
 **Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
@@ -1446,7 +1305,6 @@ PRODUCT GATE FAILED
 ```
 
 <!-- /TRASH 20261111-002 -->
-
 <!-- TRASH id=20261111-003 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude.png" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
 ## 20261111-003 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude.png`
 **Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
@@ -1457,7 +1315,6 @@ PRODUCT GATE FAILED
 ```
 
 <!-- /TRASH 20261111-003 -->
-
 <!-- TRASH id=20261111-004 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude_make.py" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
 ## 20261111-004 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude_make.py`
 **Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
@@ -1529,7 +1386,6 @@ if __name__ == "__main__":
 ```
 
 <!-- /TRASH 20261111-004 -->
-
 <!-- TRASH id=20261111-005 date=2026-11-11 kind=file source="business/image_choices/2026-11-11_makerworld_avatar/claude_preview.png" reason="Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it." -->
 ## 20261111-005 · 2026-11-11 · file · `business/image_choices/2026-11-11_makerworld_avatar/claude_preview.png`
 **Reason:** Scott 2026-11-11: 'I'm not changing the logo.' Profile picture stays his existing logo; no choice folder for it.  
@@ -1540,7 +1396,6 @@ if __name__ == "__main__":
 ```
 
 <!-- /TRASH 20261111-005 -->
-
 <!-- TRASH id=20261111-006 date=2026-11-11 kind=file source="business/muse_claude/README.md" reason="Moved to main (Scott 2026-11-11, yes to main); main holds the live copy." -->
 ## 20261111-006 · 2026-11-11 · file · `business/muse_claude/README.md`
 **Reason:** Moved to main (Scott 2026-11-11, yes to main); main holds the live copy.  
@@ -1613,7 +1468,6 @@ Scott can say "check with Muse" to Claude, or "check with Claude" to Muse.
 ```
 
 <!-- /TRASH 20261111-006 -->
-
 <!-- TRASH id=20261111-007 date=2026-11-11 kind=file source="business/muse_claude/STANDARDS.md" reason="Moved to main (Scott 2026-11-11, yes to main); main holds the live copy." -->
 ## 20261111-007 · 2026-11-11 · file · `business/muse_claude/STANDARDS.md`
 **Reason:** Moved to main (Scott 2026-11-11, yes to main); main holds the live copy.  
@@ -1659,7 +1513,6 @@ Each one waits for the other's answer in `threads/2026-11-11_start.md`.
 ```
 
 <!-- /TRASH 20261111-007 -->
-
 <!-- TRASH id=20261111-008 date=2026-11-11 kind=file source="business/muse_claude/threads/2026-11-11_start.md" reason="Moved to main (Scott 2026-11-11, yes to main); main holds the live copy." -->
 ## 20261111-008 · 2026-11-11 · file · `business/muse_claude/threads/2026-11-11_start.md`
 **Reason:** Moved to main (Scott 2026-11-11, yes to main); main holds the live copy.  
@@ -1697,7 +1550,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-008 -->
-
 <!-- TRASH id=20261111-009 date=2026-11-11 kind=file source="fonts/DancingScript-Bold.ttf" reason="Muse found it 2026-11-11: an HTML page (GitHub's) saved as .ttf; it blocked the Name Ornament customiser. Replaced with a real static Bold instanced from fonts/DancingScript.ttf." -->
 ## 20261111-009 · 2026-11-11 · file · `fonts/DancingScript-Bold.ttf`
 **Reason:** Muse found it 2026-11-11: an HTML page (GitHub's) saved as .ttf; it blocked the Name Ornament customiser. Replaced with a real static Bold instanced from fonts/DancingScript.ttf.  
@@ -1743,7 +1595,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-009 -->
-
 <!-- TRASH id=20261111-010 date=2026-11-11 kind=file source="fonts/Cinzel-Regular.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-010 · 2026-11-11 · file · `fonts/Cinzel-Regular.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -1789,7 +1640,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-010 -->
-
 <!-- TRASH id=20261111-011 date=2026-11-11 kind=file source="fonts/CormorantGaramond-Bold.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-011 · 2026-11-11 · file · `fonts/CormorantGaramond-Bold.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -1835,7 +1685,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-011 -->
-
 <!-- TRASH id=20261111-012 date=2026-11-11 kind=file source="fonts/CormorantGaramond-BoldItalic.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-012 · 2026-11-11 · file · `fonts/CormorantGaramond-BoldItalic.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -1881,7 +1730,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-012 -->
-
 <!-- TRASH id=20261111-013 date=2026-11-11 kind=file source="fonts/CormorantGaramond-Italic.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-013 · 2026-11-11 · file · `fonts/CormorantGaramond-Italic.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -1927,7 +1775,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-013 -->
-
 <!-- TRASH id=20261111-014 date=2026-11-11 kind=file source="fonts/DancingScript-Regular.woff2" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-014 · 2026-11-11 · file · `fonts/DancingScript-Regular.woff2`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -1948,7 +1795,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-014 -->
-
 <!-- TRASH id=20261111-015 date=2026-11-11 kind=file source="fonts/IMFellEnglish-Regular.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-015 · 2026-11-11 · file · `fonts/IMFellEnglish-Regular.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -1994,7 +1840,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-015 -->
-
 <!-- TRASH id=20261111-016 date=2026-11-11 kind=file source="fonts/Oswald-Bold.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-016 · 2026-11-11 · file · `fonts/Oswald-Bold.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -2040,7 +1885,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-016 -->
-
 <!-- TRASH id=20261111-017 date=2026-11-11 kind=file source="fonts/PlayfairDisplay-Italic.ttf" reason="A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL)." -->
 ## 20261111-017 · 2026-11-11 · file · `fonts/PlayfairDisplay-Italic.ttf`
 **Reason:** A saved GitHub web page under a font name (found 2026-11-11 after Benson's Dancing Script report). Replaced with the real font from google/fonts (OFL).  
@@ -2086,7 +1930,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261111-017 -->
-
 <!-- TRASH id=20261112-001 date=2026-11-12 kind=file source="openscad_models/otter/checks/islands.txt" reason="gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)" -->
 ## 20261112-001 · 2026-11-12 · file · `openscad_models/otter/checks/islands.txt`
 **Reason:** gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)  
@@ -2123,7 +1966,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261112-001 -->
-
 <!-- TRASH id=20261112-002 date=2026-11-12 kind=file source="openscad_models/otter/checks/joint0_z2.0.png" reason="gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)" -->
 ## 20261112-002 · 2026-11-12 · file · `openscad_models/otter/checks/joint0_z2.0.png`
 **Reason:** gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)  
@@ -2134,7 +1976,6 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261112-002 -->
-
 <!-- TRASH id=20261112-003 date=2026-11-12 kind=file source="openscad_models/otter/checks/joint0_z5.0.png" reason="gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)" -->
 ## 20261112-003 · 2026-11-12 · file · `openscad_models/otter/checks/joint0_z5.0.png`
 **Reason:** gcode_probe --scan output from the otter joint coupon: it splits a layer at every z-hop and saw one object at a time, so it read 1 island per layer; superseded by check_slice.py (checks/slice.txt)  
@@ -2145,4 +1986,36 @@ When you answer, add your entry below this one.
 ```
 
 <!-- /TRASH 20261112-003 -->
+<!-- TRASH id=20261114-001 date=2026-11-14 kind=file source="openscad_models/label_tile.3mf" reason="Brief A 2026-11-14: tile text was not mirrored and printed reversed on the bed face; replaced by the fixed export" -->
+## 20261114-001 · 2026-11-14 · file · `openscad_models/label_tile.3mf`
+**Reason:** Brief A 2026-11-14: tile text was not mirrored and printed reversed on the bed face; replaced by the fixed export  
+**Payload:** `data/trash/files/20261114-001__label_tile.3mf`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261114-001 -->
+
+<!-- TRASH id=20261114-002 date=2026-11-14 kind=file source="openscad_models/label_tile_body.stl" reason="Brief A 2026-11-14: tile text was not mirrored and printed reversed on the bed face; replaced by the fixed export" -->
+## 20261114-002 · 2026-11-14 · file · `openscad_models/label_tile_body.stl`
+**Reason:** Brief A 2026-11-14: tile text was not mirrored and printed reversed on the bed face; replaced by the fixed export  
+**Payload:** `data/trash/files/20261114-002__label_tile_body.stl`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261114-002 -->
+
+<!-- TRASH id=20261114-003 date=2026-11-14 kind=file source="openscad_models/label_tile_text.stl" reason="Brief A 2026-11-14: tile text was not mirrored and printed reversed on the bed face; replaced by the fixed export" -->
+## 20261114-003 · 2026-11-14 · file · `openscad_models/label_tile_text.stl`
+**Reason:** Brief A 2026-11-14: tile text was not mirrored and printed reversed on the bed face; replaced by the fixed export  
+**Payload:** `data/trash/files/20261114-003__label_tile_text.stl`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261114-003 -->
 

@@ -162,9 +162,15 @@ module label_plate() {
     }
 }
 
+// MIRRORED, because the tile prints text face DOWN: the face on the bed is the one that
+// is read, and seen from that side the geometry is reversed left-right. Drawn reading
+// correctly from above (as it was until 2026-11-14), the printed tile read "STRAP"
+// backwards. Verified with tools/underside_view.py, which draws the bed face as it
+// will be read.
 module label_2d() {
-    text(label, size = label_size, font = label_font,
-         halign = "center", valign = "center");
+    mirror([1, 0, 0])
+        text(label, size = label_size, font = label_font,
+             halign = "center", valign = "center");
 }
 
 // The slot: a T in horizontal section. A narrow mouth between the two lips at

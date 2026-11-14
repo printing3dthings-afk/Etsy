@@ -8,6 +8,6 @@ love_monster/parts/body.stl
   ok    geometry_survives_slicing: printed height 120.0mm vs modelled 120.0mm
   ok    flat_base: 202.71 cm2 of contact = 86.8% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 9.2mm widest unsupported span at z=1.0mm; 0 layer(s) under the 4.0s cooling threshold; 24161mm2 on the plate; aspect 0.75
+  note  risk (uncalibrated, never fails the gate): 9.2mm widest unsupported span at z=1.0mm; 0 layer(s) under the 4.0s cooling threshold; 24160mm2 on the plate; aspect 0.75
   note  texture (advisory, never fails the gate): rugosity 1.469 -- genuinely textured, at or above the corpus p75
 PRODUCT GATE PASSED

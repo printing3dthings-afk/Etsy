@@ -127,3 +127,12 @@ In `images/`:
 These are design-review renders from the real exported parts, not photos.
 
 Rebuild everything with `./ship.sh`, then `python3 render_pods.py`.
+
+
+## Lids v2 (2026-11-14): the days read the right way round
+
+`lid_print()` turned each lid over with `mirror([0, 0, 1])`, which makes a mirror image, so
+every day engraved into the face that prints on the bed came out reversed (Brief A). It is
+now `rotate([0, 180, 0])`, a real turn. `day_pods_lids.3mf` is re-exported. Lids 0 and 3
+re-checked: product gate PASS, print fidelity 0 flags, fragility 0. Same lids, same fit,
+same print time. The underside as printed is in `images/day_pods_lids_underside.png`.

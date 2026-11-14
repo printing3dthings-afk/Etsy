@@ -149,7 +149,10 @@ module coupon() for (j = [0 : 2]) translate([j * 38 - 38, 0, 0]) {
 
 // ---- plates ------------------------------------------------------------------------------------------
 module pods_plate() for (i = [0 : N - 1]) translate([((i % 4) - 1.5) * (W_OUT + 6), (floor(i / 4) - 0.5) * (D_OUT + 6), 0]) pod_use();
-module lid_print(k) translate([0, 0, LT]) mirror([0, 0, 1]) lid_use(k);
+// Turned over, not mirrored: mirror([0, 0, 1]) made each printed lid the MIRROR IMAGE of
+// the designed one, so its day, engraved into the face that prints on the bed, read
+// backwards ("SU" as a reversed "US"). Brief A, 2026-11-14, found by tools/underside_view.py.
+module lid_print(k) translate([0, 0, LT]) rotate([0, 180, 0]) lid_use(k);
 module lids_plate() for (k = [0 : N - 1]) translate([((k % 4) - 1.5) * (2 * B + 6), (floor(k / 4) - 0.5) * (LID_L + 6), 0]) lid_print(k);
 
 assert(W_OUT / 2 - (B + CLR) >= 1.2, "the side wall outside the lid's groove is under 1.2");

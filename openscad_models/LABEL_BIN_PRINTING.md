@@ -94,6 +94,14 @@ opening by 2.0mm each, so the 63.6mm tile cannot pass back out through the
 60.0mm mouth — **retained by 1.80mm per side**. Verified: a seated tile
 intersects the bin at **EMPTY**.
 
+## Label tile v2 (2026-11-14): the text reads the right way round
+
+The tile prints text face down, and until today its text was drawn reading from above, so
+the printed face read "STRAP" backwards (Brief A). The tile's text is now mirrored at
+source (`label_2d()`), and `label_tile.3mf` and its two STLs are re-exported: 14 min 19 s,
+2.1 g + 0.9 g, no supports. The bin itself was never affected. The underside as printed is
+in `label_tile_underside.png`; the audit is in `design-audit/bottom-face-text-2026-11.md`.
+
 ## The label
 
 The point of the design. A printed bin normally gets a peel-off sticker; this

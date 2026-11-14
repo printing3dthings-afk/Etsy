@@ -150,3 +150,13 @@ design's `checks/` folder.
 
 They're made from the real exported parts, assembled. They're design-review
 renders, not photos.
+
+
+## Love Monster body v2 (2026-11-14): the back mark reads the right way round
+
+The OBC engraved into the monster's back (the face on the bed) carried an extra
+`mirror([1, 0, 0])` that undid the library's own, so it read backwards from behind
+(Brief A). It is now turned 180° instead. Seen from behind, standing up, it reads OBC.
+`love_monster_body.3mf` is re-exported. Fit check OK, product gate PASS, print fidelity
+0 dropped, fragility 0. The volume is unchanged, so the print time and weight stay as
+above.
