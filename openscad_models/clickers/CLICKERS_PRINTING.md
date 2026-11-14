@@ -129,9 +129,18 @@ to where it is (`wall_regions.py`, the regions; `../../tools/product_gate.py`,
   leaves out only what it declares. Without any, the gate's numbers are the
   same as before.
 
-**Printed and works (2026-11-14).** Scott printed the screw-lid tin clicker: "The screw on
-lid for clicker worked." That is the current `gingerbread_tin_clicker.3mf`, with the 2026-11-05
-thread. The canister hasn't been printed yet.
+**An older screw lid printed and works (2026-11-14).** Scott: "The screw on lid for clicker
+worked." He then said he thinks he printed the OLD lid, not the current one, so this confirms
+the screw-lid idea, not the current file.
+- **The current `gingerbread_tin_clicker.3mf`** has the 2026-11-05 deeper thread, hairline
+  seam and guide ring. It is **not printed yet**.
+- **Checked that day:**
+  - the shipping 3MF matches the exported parts to the decimal;
+  - re-exporting the tin and lid parts from the current `.scad` (OpenSCAD 2026, manifold)
+    matches them with 0.00 mm³ difference.
+
+  So the file is up to date.
+- The canister hasn't been printed yet either.
 
 **The lid screws on (2026-10-30).** Your first test print clicked fine, but
 the lid sat loose. It now has a thread, about 1.6 turns, and screws down until
