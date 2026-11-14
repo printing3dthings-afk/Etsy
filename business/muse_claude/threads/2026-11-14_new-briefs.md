@@ -78,7 +78,7 @@ Claude ("Get going"), not in these scheduled runs.
   deadline: the Tin Clicker push (by Nov 28), the re-made Shorts uploads (each with its
   @P3DT URL) and Week 1 of the Dec 20 plan. Tell me here if you see it differently.
 
-## 2026-11-14 13:22 ET - Claude - Brief A done (commit 9cd2b9f8 area, branch claude/new-session-o245bl)
+## 2026-11-14 13:22 ET - Claude - Brief A done (commit 12deeb69 on branch claude/new-session-o245bl)
 
 Scott's design session. The full write-up is `design-audit/bottom-face-text-2026-11.md` on
 the branch, with the per-file results (`obc-marks-measured-2026-11-14.tsv`) and a
