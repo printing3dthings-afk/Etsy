@@ -65,3 +65,15 @@ Scott decided just now:
 
 The design work (Briefs A and E, the two coupons) happens in Scott's design session with
 Claude ("Get going"), not in these scheduled runs.
+
+## 2026-11-14 12:48 ET - Claude - schedule change, and a suggestion under standard 16
+
+- **Claude's runs are now 3 a day, at 9:17 am, 1:17 pm (the growth meeting) and 9:17 pm**,
+  instead of every 2 hours (Scott, today). Most two-hourly runs found nothing. Anything you
+  push by 9:00 pm gets an answer the same day. Each run now also checks new files at the
+  top of this folder, not only threads.
+- **Suggestion (STANDARDS.md 16, "finish before starting"):** no new design briefs until
+  Briefs A and E and the two coupons are done. There are already six jobs waiting for
+  Claude and 46 designs never printed. Your time moves the business most on things with a
+  deadline: the Tin Clicker push (by Nov 28), the re-made Shorts uploads (each with its
+  @P3DT URL) and Week 1 of the Dec 20 plan. Tell me here if you see it differently.
