@@ -690,3 +690,290 @@ Update 2026-11-12 (evening): replaced the same night in the Etsy-overlay swap �
 - Results: scheduled, not yet live at log time (scheduled go-live today 8:30 PM EST; uploaded and Studio-verified earlier in the run)
 - Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; duplicate check clean (distinct source filename from Short #25 despite the shared locked-template title; thumbnails verified distinct white vs colour)
 Update 2026-11-12 (evening): replaced the same night in the Etsy-overlay swap — new version https://youtube.com/shorts/5gMGJMFnzqA published Public with the MakerWorld banner; this version unlisted and verified. See the swap entry (2026-11-12 22:17–23:21 — YouTube — Shorts Etsy-overlay swap).
+## 2026-11-12 13:26 (EST) — Instagram — 3D Printing, Explained — Lesson 006 reel (video)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/reel/DfpsGOfiQlA/ (media 17965217487239774)
+- Product: Explained Lesson 006 "100% infill is a myth" (teaching post; no Etsy link)
+- Media: lesson006_animated_v1.mp4 (animated lesson, 53.4s, original audio)
+- Caption: Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 35% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted
+- Links in the post: none in the caption ("Full lesson on YouTube — link in bio"); no affiliate links
+- Claims made: CNC Kitchen pull-test figures as broken down by @3dmartos — 2 walls at 100% infill snapped at 64 kg using 82 g of filament; 5 walls at 20% infill held 108 kg using 54 g (68% stronger on 35% less plastic); our own settings stated as ours: 3 walls at 12–15% infill, village houses hollow shells on purpose
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: the first attempt was interrupted by a service restart; feed-verified absence before the single re-publish — read-back: Public, original audio 53.4s, should_mute_audio=false, caption verbatim
+
+## 2026-11-12 13:27 (EST) — Instagram — 3D Printing, Explained — Lesson 006 carousel (6 slides)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/p/DfpsP22CVgw/ (media 18081055427723727)
+- Product: Explained Lesson 006 "100% infill is a myth" (teaching post; no Etsy link)
+- Media: 6 slides (edu006_slide01-06.png)
+- Caption: Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 35% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted
+- Links in the post: none in the caption; no affiliate links
+- Claims made: same sourced figures as the reel entry (CNC Kitchen via @3dmartos: 64 kg / 82 g vs 108 kg / 54 g); our settings stated as ours (3 walls, 12–15% infill)
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — read-back: Public, caption verbatim
+
+## 2026-11-12 13:45 (EST) — Facebook — 3D Printing, Explained — Lesson 006 video (Page reel)
+- Account: Onbrandcraftz Page (state=published)
+- Link: https://facebook.com/reel/3000206530372188/ (post 122113079229518447)
+- Product: Explained Lesson 006 "100% infill is a myth" (teaching post; no Etsy link)
+- Media: lesson006_animated_v1.mp4 (animated lesson, 53.4s, original audio)
+- Caption: Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 35% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted
+- Links in the post: none in the caption; no affiliate links
+- Claims made: same sourced figures as the IG reel entry (CNC Kitchen via @3dmartos); our settings stated as ours
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — state=published, caption verbatim on read-back
+
+## 2026-11-12 13:46 (EST) — Facebook — 3D Printing, Explained — Lesson 006 carousel (Page, 6 slides)
+- Account: Onbrandcraftz Page (state=published)
+- Link: https://facebook.com/61595553412715/posts/pfbid0YE8tEvWPGk2dXdB9RsfMecZzwegUyN6uiWh8Lw1A6AQqPKwdgDeKJVMM7zM14Fbfl/ (post 122113079601518447)
+- Product: Explained Lesson 006 "100% infill is a myth" (teaching post; no Etsy link)
+- Media: 6 slides (edu006_slide01-06.png)
+- Caption: Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 35% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted
+- Links in the post: none in the caption; no affiliate links
+- Claims made: same sourced figures as the IG reel entry (CNC Kitchen via @3dmartos); our settings stated as ours
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — state=published, 6 media, caption verbatim on read-back
+
+## 2026-11-12 13:45 (EST) — TikTok — 3D Printing, Explained — Lesson 006 video
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7707357904554200333
+- Product: Explained Lesson 006 "100% infill is a myth" (teaching post; no Etsy link)
+- Media: lesson006_animated_v1.mp4 (animated lesson, 53.4s, original audio)
+- Caption: Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 35% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted
+- Links in the post: none in the caption; no affiliate links
+- Claims made: same sourced figures as the IG reel entry (CNC Kitchen via @3dmartos); our settings stated as ours
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — Everyone/public, copyright + content checks "No issues found", audio not muted, viewer playback verified
+
+## 2026-11-12 13:46 (EST) — YouTube — 3D Printing, Explained — Lesson 006 Short
+- Account: OnBrandCraftz (YouTube)
+- Link: https://youtube.com/shorts/yEE85FspaRU
+- Product: Explained Lesson 006 "100% infill is a myth" (teaching post)
+- Media: lesson006_animated_v1.mp4 (animated lesson, 53.4s)
+- Caption: Title: "100% Infill Is a Myth — 3D Printing, Explained | Lesson 006" — description carries the lesson caption with the MakerWorld link (per the posting log; the full as-posted description wording was not separately recorded)
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: same sourced figures as the IG reel entry (CNC Kitchen via @3dmartos); our settings stated as ours
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — public, published immediately, not made for kids, copyright + community checks clean, viewer playback with audio verified
+
+## 2026-11-12 17:20 (EST) — Instagram — Maker's Blueprint — SPEC 006 "Nozzle Math" reel (video)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/reel/DfqiGBTib4K/ (media 17922412581462136)
+- Product: Maker's Blueprint SPEC 006 "Nozzle Math" (teaching post; no Etsy link per the series rule)
+- Media: spec006_nozzle_math_v1.mp4 (75.6s animated explainer, Ronan voiceover, original audio)
+- Caption: full caption text not preserved in local records — the caption source file was held in /tmp and cleared by the service restart mid-run (see Problems); the posting log confirms the caption as posted was verbatim with the send cue + 5 hashtags, read-back verified. YouTube title (verbatim): "Maker's Blueprint SPEC 006 — Nozzle Math: 0.2, 0.4 or 0.6 mm?"
+- Links in the post: none recorded; no affiliate links
+- Claims made: nozzle-size teaching content (0.2 / 0.4 / 0.6 mm); no sales claims
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: attempt 1 (16:43–16:50 EST) was killed by a service restart mid-publish — feed read-back confirmed NO SPEC 006 post had landed; the retry landed with an EMPTY caption because the /tmp caption file had been cleared in the restart; the caption was immediately restored verbatim via edit-post and read-back verified Public with the full caption. Approved by Scott before posting ("I like it")
+
+## 2026-11-12 17:25 (EST) — Facebook — Maker's Blueprint — SPEC 006 "Nozzle Math" reel (Page)
+- Account: Onbrandcraftz Page (read-back owner = Onbrandcraftz Page profile 61595553412715 / page 1358962047302375 — NOT Scott's personal profile)
+- Link: https://facebook.com/reel/1622350939097803/ (post 122113159737518447)
+- Product: Maker's Blueprint SPEC 006 "Nozzle Math" (teaching post; no Etsy link per the series rule)
+- Media: spec006_nozzle_math_v1.mp4 (75.6s animated explainer, Ronan voiceover, original audio)
+- Caption: same caption as the IG entry (verbatim with send cue + 5 hashtags per the posting log; full text not preserved in local records — see the IG entry)
+- Links in the post: none recorded; no affiliate links
+- Claims made: nozzle-size teaching content (0.2 / 0.4 / 0.6 mm); no sales claims
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — state=published, caption verbatim on read-back
+
+## 2026-11-12 17:40 (EST) — TikTok — Maker's Blueprint — SPEC 006 "Nozzle Math" video
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7707478931435195662
+- Product: Maker's Blueprint SPEC 006 "Nozzle Math" (teaching post; no Etsy link per the series rule)
+- Media: spec006_nozzle_math_v1.mp4 (75.6s animated explainer, Ronan voiceover)
+- Caption: same caption as the IG entry (verbatim with send cue + 5 hashtags per the posting log; full text not preserved in local records — see the IG entry)
+- Links in the post: none recorded; no affiliate links
+- Claims made: nozzle-size teaching content (0.2 / 0.4 / 0.6 mm); no sales claims
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — Everyone/public, comments allowed, copyright + content checks "No issues found", viewer playback verified with audible voiceover, caption verbatim; duplicate check in TikTok Studio found no SPEC 006
+
+## 2026-11-12 17:48 (EST) — YouTube — Maker's Blueprint — SPEC 006 "Nozzle Math" Short
+- Account: OnBrandCraftz (YouTube)
+- Link: https://www.youtube.com/shorts/JzSVSszEGgw
+- Product: Maker's Blueprint SPEC 006 "Nozzle Math" (teaching post; no Etsy link per the series rule)
+- Media: spec006_nozzle_math_v1.mp4 (75.6s animated explainer, Ronan voiceover)
+- Caption: Title: "Maker's Blueprint SPEC 006 — Nozzle Math: 0.2, 0.4 or 0.6 mm?" — description = the post caption verbatim (per the posting log; full caption text not preserved in local records — see the IG entry)
+- Links in the post: none recorded; no affiliate links
+- Claims made: nozzle-size teaching content (0.2 / 0.4 / 0.6 mm); no sales claims
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — public, published immediately, not made for kids, copyright + community checks "No issues found", viewer playback verified with audio; duplicate check in Studio found no SPEC 006
+
+## 2026-11-12 23:00 (EST) — Instagram — Compilation Pilot 001 (E-011) reel (video)
+- Account: @onbrandcraftz2026
+- Link: https://www.instagram.com/reel/DfquLacibQf/ (media 17886326430523359)
+- Product: Compilation Pilot 001 "7 houses, one village" — numbered ASMR compilation: Santa's Workshop, Gingerbread Cottage, Turret House, Victorian Cottage, Sweet Shop, Coaching Inn, Cookie Clock Tower
+- Media: compilation-pilot-001-7-houses-one-village.mp4 (60.0s, 1080×1920, cleaned P1S printer-ASMR bed only — no music, no voiceover)
+- Caption: 3D printed Christmas village — seven houses, one printer, zero music, just the printer singing. 🎄 Every house is hollow for a battery tea light, so the whole street glows.
+
+1 — Santa's Workshop
+2 — Gingerbread Cottage
+3 — Turret House (hand-painted)
+4 — Victorian Cottage
+5 — Sweet Shop
+6 — Coaching Inn
+7 — Cookie Clock Tower
+
+Send this to the friend whose mantel is still empty — their village starts with one house. 🎁
+
+Tell me your favourite number in the comments 👇
+
+Print files on MakerWorld — @P3DT, link in bio. No supports, matte PLA.
+
+#3DPrinting #ChristmasVillage #3DPrinted #TeaLight #MakerWorld
+- Links in the post: none in the caption ("Print files on MakerWorld — @P3DT, link in bio"); no affiliate links; NO Etsy link (shop down)
+- Claims made: every house is hollow for a battery tea light (true of the village designs); print files on MakerWorld @P3DT; no supports, matte PLA
+- Replies/DMs sent: none
+- Results: not available yet — E-011 read points 48h (Sat Nov 14 ~11 PM EST) and 72h (Sun Nov 15 ~11 PM EST): views, average watch time, sends+follows per 1,000, comment count vs the regular-reel baseline (≈98 views / ≈6.5s avg watch)
+- Problems: none — caption byte-verified on read-back, original audio not muted. Known build deviation (logged in experiments.md under E-011): segments 3 (Turret House) and 6 (Coaching Inn) end on finished-but-unlit photos — no lit photo of either building exists in the workspace; the other five segments end on true lit shots. New format, approved by Scott Nov 12 ("Looks good")
+
+## 2026-11-12 23:02 (EST) — Facebook — Compilation Pilot 001 (E-011) reel (Page)
+- Account: Onbrandcraftz Page (author verified as the Page — page_id 1358962047302375 / profile 61595553412715 — before AND after)
+- Link: https://facebook.com/reel/1124154476908987/ (post 122113178331518447)
+- Product: Compilation Pilot 001 "7 houses, one village" — numbered ASMR compilation (same seven buildings as the IG entry)
+- Media: compilation-pilot-001-7-houses-one-village.mp4 (60.0s, 1080×1920, printer-ASMR bed only)
+- Caption: 3D printed Christmas village — seven houses, one printer, zero music, just the printer singing. 🎄 Every house is hollow for a battery tea light, so the whole street glows.
+
+1 — Santa's Workshop
+2 — Gingerbread Cottage
+3 — Turret House (hand-painted)
+4 — Victorian Cottage
+5 — Sweet Shop
+6 — Coaching Inn
+7 — Cookie Clock Tower
+
+Send this to the friend whose mantel is still empty — their village starts with one house. 🎁
+
+Tell me your favourite number in the comments 👇
+
+Print files on MakerWorld — @P3DT, link in bio. No supports, matte PLA.
+
+#3DPrinting #ChristmasVillage #3DPrinted #TeaLight #MakerWorld
+- Links in the post: none in the caption; no affiliate links; NO Etsy link (shop down)
+- Claims made: same as the IG entry (tea-light-hollow village houses; files on MakerWorld @P3DT)
+- Replies/DMs sent: none
+- Results: not available yet — E-011 read points shared with the IG entry
+- Problems: none — state=published, Public, caption byte-verified on read-back
+
+## 2026-11-12 23:06 (EST) — TikTok — Compilation Pilot 001 (E-011) video
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7707502158710623502
+- Product: Compilation Pilot 001 "7 houses, one village" — numbered ASMR compilation (same seven buildings as the IG entry)
+- Media: compilation-pilot-001-7-houses-one-village.mp4 (60.0s, 1080×1920, printer-ASMR bed only)
+- Caption: 3D printed Christmas village — seven houses, one printer, zero music, just the printer singing. 🎄 Every house is hollow for a battery tea light, so the whole street glows.
+
+1 — Santa's Workshop
+2 — Gingerbread Cottage
+3 — Turret House (hand-painted)
+4 — Victorian Cottage
+5 — Sweet Shop
+6 — Coaching Inn
+7 — Cookie Clock Tower
+
+Send this to the friend whose mantel is still empty — their village starts with one house. 🎁
+
+Tell me your favourite number in the comments 👇
+
+Print files on MakerWorld — @P3DT, link in bio. No supports, matte PLA.
+
+#3DPrinting #ChristmasVillage #3DPrinted #TeaLight #MakerWorld
+- Links in the post: none in the caption; no affiliate links; NO Etsy link (shop down)
+- Claims made: same as the IG entry (tea-light-hollow village houses; files on MakerWorld @P3DT)
+- Replies/DMs sent: none
+- Results: not available yet — E-011 read points shared with the IG entry
+- Problems: none — published Public via the live-browser route (the posting worker has no TikTok CLI route); viewer-verified playback + original sound + caption intact. TikTok Studio briefly showed "Only me / Content under review" on publish; it cleared to Everyone within about a minute (the normal pattern)
+
+## 2026-11-12 23:16 (EST) — YouTube — Compilation Pilot 001 (E-011) Short
+- Account: OnBrandCraftz (YouTube)
+- Link: https://youtube.com/shorts/DZkcYRT_hRU
+- Product: Compilation Pilot 001 "7 houses, one village" — numbered ASMR compilation (same seven buildings as the IG entry)
+- Media: compilation-pilot-001-7-houses-one-village.mp4 (60.0s, 1080×1920, printer-ASMR bed only)
+- Caption: Title: "7 Houses, One Village — 3D Printed Christmas Village" — description = the pilot caption (see the IG entry) followed by the MakerWorld link https://makerworld.com/en/@P3DT on its own line
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: same as the IG entry (tea-light-hollow village houses; files on MakerWorld @P3DT)
+- Replies/DMs sent: none
+- Results: not available yet — E-011 read points shared with the IG entry
+- Problems: none — published Public in the same Studio session as the Shorts overlay swap (item 35 of that run's table); verified in its own editor (title, caption, MakerWorld link, not made for kids, Public)
+
+## 2026-11-12 22:17–23:21 (EST) — YouTube — Shorts Etsy-overlay swap (ACTION, 34 Shorts)
+- Account: OnBrandCraftz (YouTube)
+- Link: full 35-row run table (old ID → new ID/URL) in the local run record: your_files/shorts-reexport-2026-11-12/upload-results.md
+- Product: the 31 previously published Shorts whose video image carried the burned-in "Print files on Etsy - OnBrandCraftz" banner (of 50 published Shorts checked, 34 carried the banner; 2 exempt, 14 clean)
+- Media: re-exported files — the banner repainted in its own band colours at the same position/weight/style, text now "Print files on MakerWorld - OnBrandCraftz"; nothing else changed; audio bit-identical, durations identical on all 35 outputs (31 replacements + 4 unposted drafts pre-fixed)
+- Caption: each replacement carries its old video's title verbatim; descriptions copied with Etsy link/shop references replaced by https://makerworld.com/en/@P3DT (run-table items 20–25 already carried MakerWorld wording and were copied verbatim; items 33/34 retain the #etsyshop hashtag, their print-files lines now point to MakerWorld)
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: none new — same videos, corrected banner and link only
+- Replies/DMs sent: none
+- Results: 31 replacements published Public and verified; 31 old versions unlisted and verified Unlisted; items 1/2/4 (gw0BjZq1ws0, heVd8jTiOXg, wuK1OXnQrO8) needed nothing — their old videos had already been removed by the uploader; exempt A/B test sources Bc68l19QgtA + 2QV4FzlatvA untouched; nothing deleted anywhere
+- Problems: item 19 (Victorian Cottage colour, STTivUKNg3g → b6RF5wR96sw) finished in a follow-up run 23:17–23:21 EST after its first upload attempt hit a file-grant rejection. Unlist persistence lesson: items 3, 5 and 34 first appeared Unlisted but reverted to Public on a fresh load — the visibility dialog's Done button alone does not persist the change, the details-form Save click does; all three were redone with a Save click and verified Unlisted on fresh loads, items 6 and 33 spot-checked as controls. Run-table items 12, 13, 20, 21 and 25 may carry a one-line-break difference after "at home!" in the description; content, links, music and hashtags are correct. Note: ~/workspace/social/published.json still carries the OLD video IDs for these — reconcile on the next pipeline refresh. The new Compilation Pilot Short (run-table item 35, DZkcYRT_hRU) is logged separately above as the pilot's YouTube leg
