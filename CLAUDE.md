@@ -76,6 +76,11 @@ Every product, every image, every price, every line of code must serve this miss
     `business/image_choices/`.
     When Scott says "check image choices", add Claude's entry to every folder
     that doesn't have one. Nothing is posted until he picks.
+  - **Finished test prints come off MakerWorld** (Scott, 2026-11-14: "Whenever I
+    complete a test print and tell you, have Benson remove it from my MakerWorld").
+    When Scott reports a test print done, add a line to
+    `business/muse_claude/threads/test-print-removals.md` on main (model name, ID,
+    his words). Benson removes it. Standard 18 in `STANDARDS.md`.
   - **Muse and Claude talk to each other in `business/muse_claude/` on `main`**
     (Scott, 2026-11-11: "communicate back and forth to create better standards
     and quality"). Threads in `threads/`, shared rules in `STANDARDS.md`. Before

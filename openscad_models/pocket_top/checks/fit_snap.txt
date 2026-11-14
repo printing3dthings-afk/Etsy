@@ -1,0 +1,23 @@
+POCKET TOP SNAP TEST: FIT (exported geometry, each pair at the origin)
+== pair 1 (reach 0.35)
+  ok   seated, the hub's body clear: 0.000 mm3
+  ok   seated, the nubs press the groove's floor by the preload: 0.15 mm3 (0.05 deep at each nub's middle)
+  ok   turned 6 deg it is still free (0.00 mm3); turned 10 deg the hex bears on the hub: 0.07 mm3 (it drives)
+  ok   pulled 1.0 out by its grip, it hits the nubs: 0.91 mm3 (held)
+  ok   pushed 0.1 further, the grip's shoulder meets the hub: 3.50 mm3 (it stops)
+  ok   on the way in, the hex bends each nub out by 0.35 (reach 0.35)
+== pair 2 (reach 0.45)
+  ok   seated, the hub's body clear: 0.000 mm3
+  ok   seated, the nubs press the groove's floor by the preload: 0.14 mm3 (0.05 deep at each nub's middle)
+  ok   turned 6 deg it is still free (0.00 mm3); turned 10 deg the hex bears on the hub: 0.07 mm3 (it drives)
+  ok   pulled 1.0 out by its grip, it hits the nubs: 0.98 mm3 (held)
+  ok   pushed 0.1 further, the grip's shoulder meets the hub: 3.31 mm3 (it stops)
+  ok   on the way in, the hex bends each nub out by 0.45 (reach 0.45)
+== pair 3 (reach 0.55)
+  ok   seated, the hub's body clear: -0.000 mm3
+  ok   seated, the nubs press the groove's floor by the preload: 0.14 mm3 (0.05 deep at each nub's middle)
+  ok   turned 6 deg it is still free (0.00 mm3); turned 10 deg the hex bears on the hub: 0.07 mm3 (it drives)
+  ok   pulled 1.0 out by its grip, it hits the nubs: 0.99 mm3 (held)
+  ok   pushed 0.1 further, the grip's shoulder meets the hub: 3.04 mm3 (it stops)
+  ok   on the way in, the hex bends each nub out by 0.55 (reach 0.55)
+PASS

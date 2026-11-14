@@ -1,0 +1,5 @@
+SMALL PART  parts/hubs.stl body 1: fits the cylinder, its top 26.5 mm below the rim
+SMALL PART  parts/hubs.stl body 2: fits the cylinder, its top 26.5 mm below the rim
+SMALL PART  parts/hubs.stl body 3: fits the cylinder, its top 26.5 mm below the rim
+SMALL PART  parts/stem_1.stl: fits the cylinder, its top 40.5 mm below the rim
+16 CFR 1501.4 cylinder (31.7 mm bore, 25.4-57.1 mm slanted floor); geometric search, not a certification.

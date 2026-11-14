@@ -1,0 +1,29 @@
+== hubs
+PRINT FIDELITY  (17 layers, model 6744.0 mm3)
+  dropped (modelled, not printed): 0.0 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+  no misses above the reporting floor
+== stem_1
+PRINT FIDELITY  (52 layers, model 334.3 mm3)
+  dropped (modelled, not printed): 0.0 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+  no misses above the reporting floor
+== stem_2
+PRINT FIDELITY  (52 layers, model 323.5 mm3)
+  dropped (modelled, not printed): 9.18 mm3
+  filled  (printed, not modelled): 7.82 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #999999 slot 1     5.526 mm3  z 2.4-10.4 (40 layers)  front at [36.0, -28.0]  0.19 mm wide, 0.27 mm deep
+       filled  #999999 slot 1     4.670 mm3  z 2.4-9.6 (35 layers)  back at [36.0, -23.8]  0.17 mm wide, 0.23 mm deep
+== stem_3
+PRINT FIDELITY  (52 layers, model 312.6 mm3)
+  dropped (modelled, not printed): 0.0 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+  no misses above the reporting floor

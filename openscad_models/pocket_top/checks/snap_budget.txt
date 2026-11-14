@@ -1,0 +1,13 @@
+POCKET TOP SNAP: hex stem through a flat hub, three in-plane spring beams
+  beam 1.3 thick x 3.4 wide x 12.0 long, constant section, bending in the print plane
+  limits (printed PLA, XY): one snap 1.4 %, repeated 0.8 % (the brief asks for 20 snaps: the repeated limit applies)
+  reach 0.35: strain 0.47 % (ok for repeated); push on 7.8 N, pull off 4.1 N; engagement 2.5 x RSS (under 3x); held in the groove 0.07 %
+  reach 0.45: strain 0.61 % (ok for repeated); push on 10.0 N, pull off 5.3 N; engagement 3.2 x RSS (ok); held in the groove 0.07 %
+  reach 0.55: strain 0.74 % (ok for repeated); push on 12.2 N, pull off 6.4 N; engagement 3.9 x RSS (ok); held in the groove 0.07 %
+  It comes apart by pulling, more easily than it goes on: the catch flank is 30 deg from the
+  axis so the upright stem prints it without support. Meant to come apart; see FACTS.md.
+
+WHY THE STEM IS A HEX
+  spinning the body up to 25 rev/s in a 0.05 s twist needs about 1.8 N mm;
+  the nubs' grip passes on about 0.47 N mm. A round stem would spin inside the body,
+  so the hex drives it, and the nubs only hold and centre it.
