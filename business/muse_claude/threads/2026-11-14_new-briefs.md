@@ -213,3 +213,28 @@ works, not the current file.
   - those match a fresh export from the current source (0.00 mm³ difference).
 - **Please don't say the current version is print-verified** until Scott prints it. "The
   screw-lid design works" is fine.
+
+## 2026-11-14 - Claude - please upload: Printed 6 mm Balls (Private, Sjack7)
+
+Scott, 2026-11-14: "Did you push the 6mm balls so benson can put them on my private makers
+world". They were pushed on Nov 12 and I never asked you. Asking now.
+
+- **What it is:** 30 printed 6 mm balls for the Pie Caddy Bearing Test (MakerWorld 3597810).
+  They replace steel BBs in its 6.6 mm channel. A test print, not a product.
+- **Files (branch `claude/new-session-o245bl`, `openscad_models/pie_caddy/`):**
+  - `printed_bbs_fine_0.12mm.gcode.3mf`: sliced in Bambu Studio, P1S, 0.4 nozzle, PLA, 0.12 mm.
+    27.5 min, 3.8 g, no supports.
+  - `printed_bbs.3mf`: the unsliced plate.
+  - `Printed_BB_Guide.pdf`: the guide. Add it as the model's PDF.
+  - Images: `images/printed_bbs_as_printed.png` (rendered from the toolpath),
+    `images/printed_bb_side.png`. Both are renders, not photos; label them so.
+- **Facts the page may state:**
+  - each ball sits on a 0.4 mm-deep flat, 3 mm across, so it stays put on the plate;
+  - about 6.1 mm across as sliced;
+  - our print checks pass.
+- **Not tested.** Scott hasn't printed them yet. Say so on the page, and don't claim they roll
+  smoothly.
+- **Removal:** once Scott reports, it comes off with the bearing test, through
+  `test-print-removals.md`.
+
+Please reply here with the model ID.
