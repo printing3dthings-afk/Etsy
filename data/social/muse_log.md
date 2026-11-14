@@ -428,3 +428,265 @@ WHICH ONE WOULD YOU CHOOSE?
 - Replies/DMs sent: seed comment as the Page on the group post (comment 1515074300667558, 2026-11-13 09:53 EST, author verified Onbrandcraftz Page with Author/Admin badges): "Ours first: the standing word sign, straight off the plate — bridges inside the F and C just gave up. It's already been redesigned to print flat. Your turn 👇"
 - Results: group share published, Public group, exactly 1 comment on the group post (the seed comment); platform-fit QC as a viewer: shared photo displays, caption complete, seed comment present with exact text
 - Problems: the seed comment's photo could NOT be attached — in the browser the comment composer's attach button exposed no usable file input (two attempts routed the photo into an unpublished group Create-post draft, which was discarded; no stray post exists, group composer verified empty). The seed comment is live text-only as the Page; the identical bannered fail photo is displayed on the shared group post directly above the comment. Scott can add the photo by editing the seed comment in the Facebook app if he wants it attached there too.
+## 2026-11-11 (EST, exact time not recorded) — MakerWorld — gallery photo swaps x5 (ACTION)
+- Account: Sjack7 (Private library)
+- Link: MakerWorld models 3511813 (Mini Lanterns) / 3490436 (Coaching Inn) / 3490082 (Cocoa Cafe) / 3497288 (Carolers) / 3499813 (Steam Train) — all Private
+- Product: Mini Lanterns, Coaching Inn, Cocoa Cafe, Carolers, Steam Train (Christmas village designs)
+- Media: real-print photos swapped into the model galleries — Mini Lanterns 8 photos, Coaching Inn 5, Cocoa Cafe 4, Carolers 5, Steam Train 4 (Scott's Nov 11 real-print photo set, christmas-village-print-photos-2026-11-11/)
+- Caption: none — gallery photo swap only
+- Links in the post: none
+- Claims made: none — the photos are the real prints
+- Replies/DMs sent: none
+- Results: new real-print photo sets live on all five Private models
+- Problems: none
+Update 2026-11-12: Coaching Inn cover corrected — the 4:3 landscape rebuild (cleaned/coaching-inn-cover-4x3.jpg) swapped into the cover slot; model still Private, its other photos and 4 profiles untouched.
+
+## 2026-11-12 (EST, exact time not recorded) — MakerWorld — gallery photo swaps x2 (ACTION)
+- Account: Sjack7 (Private library)
+- Link: MakerWorld models 3489328 (Victorian Cottage) / 3490387 (Turret House) — both Private
+- Product: Victorian Cottage, Turret House
+- Media: 5 real-print photos each — Victorian Cottage = Scott's roundhouse photos (the white round tower house); Turret House = the paintedhouse photos (the painted turret house); identity pair confirmed by Scott
+- Caption: none — gallery photo swap only
+- Links in the post: none
+- Claims made: none — the photos are the real prints
+- Replies/DMs sent: none
+- Results: real-print photo sets live on both Private models
+- Problems: none
+
+## 2026-11-12 (EST, exact time not recorded) — MakerWorld — model takedown + re-upload (ACTION)
+- Account: Sjack7 (Private library)
+- Link: old model 3561122 (removed); new model 3595571 "Projection Sundial — Sunlight Prints the Hour" (Private)
+- Product: Projection Sundial — flat plate 248×50×6mm, hours 9 AM–3 PM as dot-matrix through-holes, latitude 35°
+- Media: corrected 4:3 cover; profiles 4118967 (Standard) + 4119003 (Optimized), both Private
+- Caption: none recorded here — the model was re-uploaded with clearer presentation (title, gallery and profile descriptions saying what the file prints)
+- Links in the post: none
+- Claims made: none
+- Replies/DMs sent: none
+- Results: new model 3595571 live Private, both profiles Private, corrected cover live
+- Problems: the original model 3561122 was taken down by MakerWorld for "[Inconsistent model information]" — even though it was Private (Private models get takedowns too); taken-down models have no Edit option and an appeal gets exactly one 300-character submission, so per Scott's direction ("Delete and re-upload it with clearer presentation") the model was deleted and re-uploaded
+
+## 2026-11-12 morning (EST) — MakerWorld — wrong-account launches, corrected same morning (ACTION)
+- Account: Sjack7 (launched in error) — public launches belong on @P3DT only
+- Link: Crescent Valet (Sjack7 model 3550539) / Gift Box Lantern (Sjack7 model 3514225)
+- Product: Crescent Valet, Gift Box Lantern
+- Media: n/a — visibility change only
+- Caption: none
+- Links in the post: none
+- Claims made: none
+- Replies/DMs sent: none
+- Results: both models flipped back to Private the same morning, all 10 profiles re-checked; the Sjack7 originals remain Private
+- Problems: the two launches went public on the private-library account by mistake; Scott caught it and they were corrected the same morning. Account rule restated: public launches live on @P3DT ONLY — Sjack7 is the private library, never flip a Sjack7 model public as a launch
+
+## 2026-11-12 (EST, exact time not recorded) — MakerWorld — two public launches (@P3DT)
+- Account: @P3DT "Printing3DThings" (public)
+- Link: https://makerworld.com/en/models/3598189-crescent-valet / https://makerworld.com/en/models/3598216-gift-box-lantern
+- Product: Crescent Valet / Gift Box Lantern
+- Media: professional covers + galleries (public cover standard)
+- Caption: model descriptions live on the model pages (not recorded word-for-word here)
+- Links in the post: none
+- Claims made: none recorded
+- Replies/DMs sent: none
+- Results: both models PUBLIC with all 5 profiles each PUBLIC and verified; @P3DT public page verified: 18 models live, covers present, no Private profiles
+- Problems: none at run end — Scott signed in to @P3DT himself for the launch session (the Secure Vault holds only the Sjack7 login per domain)
+
+## 2026-11-12 (EST, exact time not recorded) — MakerWorld — six test-print uploads (ACTION)
+- Account: Sjack7 (Private library)
+- Link: MakerWorld models 3597781 (Jar Tower Thread Test) / 3597810 (Pie Caddy Bearing Test) / 3597829 (Hex Wall Hang Test) / 3598021 (Gear Heart Test) / 3598362 (Otter Joint Test) / 3598379 (Snowflake Hinge Test) — all Private, models AND profiles verified Private
+- Product: six Claude test prints (thread, bearing, wall-hang, gear-mesh, joint and hinge tests)
+- Media: per-test gallery/profile imagery showing the exact test part each profile prints
+- Caption: none — test uploads awaiting Scott's physical verdicts
+- Links in the post: none
+- Claims made: none
+- Replies/DMs sent: none
+- Results: all six live Private; Sjack7 Published Models now 108
+- Problems: none — Scott's print verdicts still owed (thread clearance, bearing spin, slot fit, gear mesh, joint movement, hinge hole per test)
+
+## 2026-11-12 09:58 (EST) — Instagram — Stories x3
+- Account: @onbrandcraftz2026
+- Link: no story permalink; media IDs 18086126447707309 (Hex Lantern teaser) / 17916567105506917 (Shorts today) / 18136411186793194 (Versus Day 14 teaser)
+- Product: Hex Lantern (story 1), Townhouse (story 2 — YouTube Shorts #25/#26), Townhouse (story 3 — Versus Day 14)
+- Media: story1_hex_lantern.png / story2_shorts_today.png / story3_versus.png (pipeline-media-2026-11-12/); all 3 graphics visually verified before posting
+- Caption: not recorded in run log (on-graphic story copy)
+- Links in the post: MakerWorld CTA under the Etsy-down swap; exact link stickers not recorded in run log; no affiliate links
+- Claims made: none — no per-file "free" claim for the Hex Lantern (its free status on MakerWorld is not verified in local records)
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: story 3 graphic was rebuilt twice before posting — the Versus bank's Day 14 "hero" file is a printables.com screenshot of Twisted Creations' painted Townhouse make (full phone UI chrome), rejected on sight; the story uses the professional cover's real white Townhouse house crop, no UI
+
+## 2026-11-12 10:00–10:06 (EST) — X — spotlight post
+- Account: Onbrandcraftz (X)
+- Link: https://x.com/Onbrandcraftz/status/2120895444645523781
+- Product: Hex Lantern (Etsy listing ID 4600526003 exists in the registry, but no Etsy link was used — shop down)
+- Media: hex_lantern_colour_three_quarter.png (colour render)
+- Caption: 3D printed Christmas village — six sides of glow 🎄 The Hex Lantern is a six-sided carriage lantern: a different village scene on every face, all lit by one tea light. Our village files are on MakerWorld — link in bio https://makerworld.com/en/@P3DT #3dprinting #christmasvillage
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: "Our village files are on MakerWorld" — deliberately NO per-file "free" claim; the Hex Lantern's free status on MakerWorld is not verified in local records
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: none — full text posted with both hashtags kept (9 characters to spare); duplicate check clean over all 16 prior profile posts; MakerWorld link verified clickable on viewer check; profile post count 16→17
+
+## 2026-11-12 10:16 (EST) — Instagram — Versus Day 14 reel (video)
+- Account: @onbrandcraftz2026
+- Link: media 17917483641543277 (permalink not recorded in run log)
+- Product: Matte PLA vs standard PLA (question matchup — Overture's published figures + our observed result; no Etsy link)
+- Media: vs-matte-standard-video.mp4 (Ronan voiceover, on-screen keyword pill "matte PLA" in frame 1, music "Deck the Halls B" by Kevin MacLeod; hero = the professional cover's real matte-white Townhouse, captioned on-screen "OUR TOWNHOUSE — MATTE WHITE, UNPAINTED")
+- Caption: matte PLA vs standard PLA — same plastic family. One looks printed. One looks finished. 💚
+
+Overture's own matte page: a frosted, gloss-free finish whose texture "conceals layer lines". The trade is in their FAQ — matte layer adhesion 10.9 MPa vs standard PLA at 38.9 MPa, nearly 3.5×. Our observed result: our village houses print in matte white and leave the bench looking complete, unpainted.
+
+Head-to-head: matte takes finish, hidden layer lines and ready-unpainted. Standard takes adhesion and load-bearing. 3–2 matte — for anything meant to be looked at.
+
+Send this to the maker still sanding layer lines that matte never shows.
+
+Day 13 — Bambu plates is on our profile · Day 15 lands here tomorrow, same time
+
+Sources: Overture Matte PLA product page + FAQ (read Oct 31, 2026); village result is our own, labelled as ours.
+
+Music: Deck the Halls B by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: Overture Matte PLA page + FAQ figures (read Oct 31, 2026) — matte layer adhesion 10.9 MPa vs standard PLA 38.9 MPa, nearly 3.5×; matte's frosted texture "conceals layer lines" (Overture's wording); our observed result, labelled as ours: village houses print in matte white and leave the bench looking complete, unpainted; head-to-head score 3–2 to Matte
+- Replies/DMs sent: none — the series navigation comment was NOT posted (instagram-cli cannot create top-level comments); navigation is in the caption
+- Results: not available yet
+- Problems: none — read-back verified live. Hero honesty note: the Versus bank's Day 14 hero file is a printables.com screenshot of a painted community make — rejected and used NOWHERE in this matchup; the painted make was left out entirely
+
+## 2026-11-12 11:28 (EST) — Facebook — Versus Day 14 reel (video)
+- Account: Onbrandcraftz Page (post read-back owner = Onbrandcraftz Page — NOT Scott's personal profile)
+- Link: post 122113028439518447 (permalink not recorded in run log)
+- Product: Matte PLA vs standard PLA (question matchup; no Etsy link)
+- Media: vs-matte-standard-video.mp4 (same cut as IG; Ronan voiceover, music "Deck the Halls B" by Kevin MacLeod; hero = the professional cover's real matte-white Townhouse)
+- Caption: matte PLA vs standard PLA — same plastic family. One looks printed. One looks finished. 💚
+
+Overture's matte page: frosted, gloss-free finish that "conceals layer lines". Their FAQ trade: matte adhesion 10.9 MPa vs standard PLA 38.9 MPa — nearly 3.5×. Our result: village houses in matte white leave the bench looking complete, unpainted.
+
+Matte takes finish + ready-unpainted; standard takes strength. 3–2 matte for anything meant to be looked at.
+
+Send this to the maker still sanding layer lines that matte never shows.
+
+Day 13 — Bambu plates is on our profile · Day 15 lands here tomorrow, same time
+
+Sources: Overture Matte PLA page + FAQ (Oct 31, 2026); village result is ours.
+
+Music: Deck the Halls B by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: Overture Matte PLA page + FAQ figures (read Oct 31, 2026) — matte layer adhesion 10.9 MPa vs standard PLA 38.9 MPa; head-to-head score 3–2 to Matte; village result labelled as ours
+- Replies/DMs sent: none — the series navigation comment was NOT posted (facebook-cli comments post under Scott's personal profile, never the Page); navigation is in the caption
+- Results: not available yet
+- Problems: attempts 1–3 hit a service-restart kill, a disappeared session and the connector write-lock (feed read-backs at 10:37 / 10:44 / 11:18 EST each confirmed NO Day 14 post had landed — no blind retry); the locked write landed server-side at 11:28 EST in the same burst as the carousel; parent feed read-back (11:30 EST) confirmed exactly ONE Day 14 reel, Public, caption verbatim — no duplicate
+
+## 2026-11-12 10:38 (EST) — Instagram — Versus Day 14 carousel (5 slides, E-009 Arm B keyword-comment closing)
+- Account: @onbrandcraftz2026
+- Link: media 17959286832297083 (permalink not recorded in run log)
+- Product: Matte PLA vs standard PLA (question matchup; no Etsy link)
+- Media: 5 slides (green-line locked identity; hero = the professional cover's real matte-white Townhouse); standard carousel with NO E-007 video slide, per the E-009 arm design
+- Caption: SWIPE ➡️ matte PLA vs standard PLA — the finish fight. Same plastic family. One looks printed. One looks finished.
+
+Slide 3 is the head-to-head — matte takes finish, hidden layer lines and ready-unpainted; standard takes layer adhesion (38.9 vs 10.9 MPa, Overture's own FAQ) and load-bearing. 3–2 matte. Slide 4 is the split verdict.
+
+Decor, villages, gifts → matte. Brackets, jigs, load-bearing → standard PLA.
+
+Send this to the maker still sanding layer lines that matte never shows.
+
+Day 13 — Bambu plates is on our profile · Day 15 lands here tomorrow, same time
+
+Sources: Overture Matte PLA product page + FAQ (read Oct 31, 2026); village result is our own, labelled as ours.
+
+Music: Deck the Halls B by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+Comment VILLAGE and we'll DM you the free MakerWorld link
+- Links in the post: none in the post itself; the closing line offers the MakerWorld link by DM (https://makerworld.com/en/@P3DT, sent by hand from the Social Dashboard queue); no affiliate links
+- Claims made: Overture FAQ figures — standard PLA layer adhesion 38.9 MPa vs matte 10.9 MPa; head-to-head score 3–2 to Matte; village result labelled as ours
+- Replies/DMs sent: none at post time — "Comment VILLAGE" replies are Benson's manual DM/link sends from the Social Dashboard queue
+- Results: not available yet — E-009 Arm B read point 72h (Sun Nov 15): comments + VILLAGE-keyword comments + DM-link deliveries vs the stacked-bar episodes and vs Arm A (Day 13)
+- Problems: none — read-back verified live. Note: this carousel is the E-009 Arm B run (single-CTA test, approved Nov 9) — slide 5 and the caption close on "Comment VILLAGE and we'll DM you the free MakerWorld link" ONLY, no save line / question bar / follow ask; it ran on a Thursday under the FORMAT RATIO exception because the experiment arm specifies the day
+
+## 2026-11-12 11:28 (EST) — Facebook — Versus Day 14 carousel (5 slides, E-009 Arm B keyword-comment closing)
+- Account: Onbrandcraftz Page
+- Link: https://facebook.com/61595553412715/posts/pfbid02fg4XmFasYHchn6zuuT8VqvGHPjmHemLhtJAZYdoXDyHqfbnaBWU4PXeSZP2ui1SHl/ (post 122113028487518447)
+- Product: Matte PLA vs standard PLA (question matchup; no Etsy link)
+- Media: 5 slides (green-line locked identity; hero = the professional cover's real matte-white Townhouse); no E-007 video slide
+- Caption: SWIPE ➡️ matte PLA vs standard PLA — the finish fight. One looks printed. One looks finished.
+
+Slide 3: head-to-head — matte takes finish, hidden layer lines, ready-unpainted; standard takes adhesion (38.9 vs 10.9 MPa, Overture FAQ) + load-bearing. 3–2 matte. Slide 4: the split verdict.
+
+Decor, villages, gifts → matte. Brackets, jigs → standard PLA.
+
+Send this to the maker still sanding layer lines that matte never shows.
+
+Day 13 — Bambu plates is on our profile · Day 15 lands here tomorrow, same time
+
+Sources: Overture Matte PLA page + FAQ (Oct 31, 2026); village result is ours.
+
+Music: Deck the Halls B by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+Comment VILLAGE and we'll DM you the free MakerWorld link
+- Links in the post: none in the post itself; the closing line offers the MakerWorld link by DM (https://makerworld.com/en/@P3DT, sent by hand from the Social Dashboard queue); no affiliate links
+- Claims made: Overture FAQ figures — standard PLA layer adhesion 38.9 MPa vs matte 10.9 MPa; head-to-head score 3–2 to Matte; village result labelled as ours
+- Replies/DMs sent: none at post time — "Comment VILLAGE" replies are Benson's manual DM/link sends from the Social Dashboard queue; the series navigation comment was NOT posted (facebook-cli comments post under Scott's personal profile, never the Page)
+- Results: not available yet — E-009 Arm B read point 72h (Sun Nov 15), shared with the IG carousel
+- Problems: attempt 1 was held at the connector user-confirmation card with no result receipt; the confirmed write landed at 11:28 EST; Page post list read-back confirmed single copy, Public, owner = Onbrandcraftz Page, caption verbatim. Note: E-009 Arm B run (see the IG carousel entry)
+
+## 2026-11-12 11:45 (EST) — TikTok — Versus Day 14 video
+- Account: @onbrandcraftz (TikTok)
+- Link: https://www.tiktok.com/@onbrandcraftz/video/7707326240293686541
+- Product: Matte PLA vs standard PLA (question matchup; no Etsy link)
+- Media: vs-day14-tiktok-v2.mp4 (remastered cut, "Silent Night" bed; keyword "Matte PLA?" spoken 0.3–2.58s + on-screen keyword pill in frame 1, Ronan voiceover, −15.33 LUFS; hero = the professional cover's real matte-white Townhouse)
+- Caption: matte PLA vs standard PLA — same plastic family. One looks printed. One looks finished. 💚
+
+Overture's own matte page: a frosted, gloss-free finish whose texture "conceals layer lines". The trade is in their FAQ — matte layer adhesion 10.9 MPa vs standard PLA at 38.9 MPa, nearly 3.5×. Our observed result: our village houses print in matte white and leave the bench looking complete, unpainted.
+
+Head-to-head: matte takes finish, hidden layer lines and ready-unpainted. Standard takes adhesion and load-bearing. 3–2 matte — for anything meant to be looked at.
+
+Send this to the maker still sanding layer lines that matte never shows.
+
+Day 13 — Bambu plates is on our profile · Day 15 lands here tomorrow, same time
+
+Sources: Overture Matte PLA product page + FAQ (read Oct 31, 2026); village result is our own, labelled as ours.
+
+Music: Deck the Halls B by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?
+- Links in the post: none (incompetech.com appears in the music credit as text); no affiliate links
+- Claims made: Overture Matte PLA page + FAQ figures (read Oct 31, 2026) — matte layer adhesion 10.9 MPa vs standard PLA 38.9 MPa, nearly 3.5×; head-to-head score 3–2 to Matte; village result labelled as ours
+- Replies/DMs sent: none
+- Results: not available yet
+- Problems: attempt 1 (11:31–11:37 EST) was DISCARDED on TikTok's copyright guard — the "Deck the Halls B" bed melody matched three commercial recordings across the whole video and only Remove/Replace was offered; the upload was discarded per the mute-guard, Studio verified 80 posts unchanged, nothing published. Remastered with a "Silent Night" bed (TikTok-clean on Days 6 + 10) and re-posted clean: LIVE, Everyone/public (brief review flag cleared, the normal pattern), Studio count 80→81, copyright + content checks "No issues found", Ronan voiceover audible on playback check, caption verbatim. Caption note: the text above is the build's caption file; the posted caption's music line was updated to the "Silent Night" bed to match the remaster — the exact replacement wording was not separately recorded. This is the third melody-match discard in the series (after Days 6/8) — public-domain carol melodies keep matching commercial recordings, so TikTok beds are picked from the proven-clean list (Silent Night, Nouvelle Noel, Up on a Housetop)
+
+## 2026-11-12 14:30 (EST, scheduled go-live; uploaded and Studio-verified earlier in the day's pipeline run) — YouTube — Short #25
+- Account: OnBrandCraftz (YouTube)
+- Link: https://youtube.com/shorts/oUKzp8xg8Sw
+- Product: Townhouse (white)
+- Media: youtube_short_draft_2026-11-08_townhouse_white.mp4 (720x1280, 5.33s; music "Deck the Halls B" by Kevin MacLeod)
+- Caption: not recorded word-for-word in run log (locked template; description carries the MakerWorld swap in place of the Etsy link, per the run log)
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: the source footage itself carries the queue-original burned-in overlay "Print files on Etsy - OnBrandCraftz" (true of all 30 queue videos); the description carries the MakerWorld swap because the Etsy shop is down
+- Replies/DMs sent: none
+- Results: scheduled, not yet live at log time (scheduled go-live today 2:30 PM EST; uploaded and Studio-verified earlier in the run)
+- Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; duplicate check clean (no Townhouse Short existed)
+Update 2026-11-12 (evening): replaced the same night in the Etsy-overlay swap — new version https://youtube.com/shorts/JCLaM8rjK64 published Public with the MakerWorld banner; this version unlisted and verified. See the swap entry (2026-11-12 22:17–23:21 — YouTube — Shorts Etsy-overlay swap).
+
+## 2026-11-12 20:30 (EST, scheduled go-live; uploaded and Studio-verified earlier in the day's pipeline run) — YouTube — Short #26
+- Account: OnBrandCraftz (YouTube)
+- Link: https://youtube.com/shorts/98S25Cf4dSE
+- Product: Townhouse (colour)
+- Media: youtube_short_draft_2026-11-09_townhouse_color.mp4 (720x1280, 5.33s; music "Up on a Housetop" by Kevin MacLeod)
+- Caption: not recorded word-for-word in run log (locked template; description carries the MakerWorld swap in place of the Etsy link, per the run log)
+- Links in the post: https://makerworld.com/en/@P3DT (not an affiliate link)
+- Claims made: the source footage itself carries the queue-original burned-in overlay "Print files on Etsy - OnBrandCraftz" (true of all 30 queue videos); the description carries the MakerWorld swap because the Etsy shop is down
+- Replies/DMs sent: none
+- Results: scheduled, not yet live at log time (scheduled go-live today 8:30 PM EST; uploaded and Studio-verified earlier in the run)
+- Problems: burned-in "Print files on Etsy" overlay remains in the video image itself (standing condition, flagged in the run log); Studio checks "No issues found"; duplicate check clean (distinct source filename from Short #25 despite the shared locked-template title; thumbnails verified distinct white vs colour)
+Update 2026-11-12 (evening): replaced the same night in the Etsy-overlay swap — new version https://youtube.com/shorts/5gMGJMFnzqA published Public with the MakerWorld banner; this version unlisted and verified. See the swap entry (2026-11-12 22:17–23:21 — YouTube — Shorts Etsy-overlay swap).
