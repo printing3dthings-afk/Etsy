@@ -3,7 +3,7 @@ parts/union.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 2.06mm, median 9.56mm (floor 1.2mm); 0.01% below one bead; 507 spans in declared detail, thread or socket regions not counted
+  ok    min_wall: 1st pct 2.06mm, median 9.55mm (floor 1.2mm); 0.01% below one bead; 509 spans in declared detail, thread or socket regions not counted
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 17.8mm printed of 17.88mm
   ok    geometry_survives_slicing: printed height 17.8mm vs modelled 17.88mm
   ok    flat_base: 32.90 cm2 of contact = 55.7% of footprint (floor 5%)

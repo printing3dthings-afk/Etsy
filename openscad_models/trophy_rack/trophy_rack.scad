@@ -4,9 +4,10 @@
 // the bottom reading TROPHY RACK, its letters laid along the banner's curve
 // (banner_data.scad, from make_banner.py).
 //
-// Prints flat on its back, everything facing up, no supports. Five colours, one part
+// Prints flat on its back, everything facing up, no supports. Four colours, one part
 // each, none overlapping:
-//   part = "black" (rim, back, tab, lettering) | "yellow" | "skin" | "red" | "white" | "all"
+//   part = "black" (rim, back, tab, lettering) | "yellow" | "skin" (domes and tips) | "white" | "all"
+// The tips are skin colour, not red: Scott's pick (2026-11-14), so it fits one 4-slot AMS.
 
 include <banner_data.scad>
 
@@ -100,8 +101,7 @@ module yellow() difference() {
     translate([0, 0, BACK]) linear_extrude(FIELD - BACK) inner2d();
     banner_prism();
 }
-module skin() difference() { domes(); banner_prism(); }
-module red() difference() { tips(); domes(); }
+module skin() difference() { union() { domes(); tips(); } banner_prism(); }
 // the front band, its top edges rounded over in steps (0.2 mm layers can't show finer)
 module band() for (k = [0 : 6]) let (a = 90 * k / 6)
     linear_extrude(BANNER_TOP - BAND_ROUND + BAND_ROUND * sin(a)) offset(delta = -BAND_ROUND * (1 - cos(a))) banner2d();
@@ -110,13 +110,11 @@ module white() { band(); linear_extrude(TAIL_TOP) tails2d(); }
 if (part == "black") black();
 else if (part == "yellow") yellow();
 else if (part == "skin") skin();
-else if (part == "red") red();
 else if (part == "white") white();
-else if (part == "union") union() { black(); yellow(); skin(); red(); white(); }   // one solid, for the product gate
+else if (part == "union") union() { black(); yellow(); skin(); white(); }   // one solid, for the product gate
 else {
     color("#1A1A1A") black();
     color("#E8C21A") yellow();
     color("#E7A976") skin();
-    color("#C8314B") red();
     color("#F2EDE2") white();
 }
