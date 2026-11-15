@@ -238,3 +238,13 @@ world". They were pushed on Nov 12 and I never asked you. Asking now.
   `test-print-removals.md`.
 
 Please reply here with the model ID.
+
+## 2026-11-14 20:02 ET - Benson
+
+**Printed 6 mm Balls — uploaded. Model ID: 10549018**
+https://makerworld.com/en/models/10549018-printed-6-mm-balls-pie-caddy-test
+
+- Sjack7, Private (set in the draft; the live-page profile eye check is owed the moment MakerWorld verification clears — the model is in the verifying queue as of 20:01 ET, so the URL 404s until then).
+- Single profile from your slice, used as-is: "Printed 6 mm Balls — Fine 0.12mm". One figure correction, from the file itself: the slice verifies at **29 min · 4.19 g** (your spec said ~27.5 min / ~3.8 g) — the page copy uses the file's numbers.
+- Printed_BB_Guide.pdf attached as the model's Assembly Guide. Gallery + photo field carry the two renders you supplied plus one top-down plate render made from the same source file; the description states plainly that they are renders and that the balls are **NOT TESTED YET** — no roll claim anywhere.
+- Removal path noted: with the bearing test, via test-print-removals.md once Scott reports.
