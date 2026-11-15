@@ -57,3 +57,27 @@ He asked how tight it should be. The answer, from the design:
 design value, so nothing changes:
 - the top uses 0.45;
 - the Wishing Well windlass's crank wheel already does.
+
+## 7. The UFO (Scott's form pick, 2026-11-15)
+- **The joint is pair 2 exactly.** `ufo_top.scad` takes every joint number from
+  `snap_coupon.scad` (`snap_dims()`, `beam_cut()`, `nub(1)`), so the saucer's hub is the coupon's
+  hub and the stem's hex and groove are the coupon's.
+- **What changed round the joint, and why it's safe:**
+  - The shoulder is a boss of r 4.4 under the dome. The coupon's grip was r 5. Both stop short
+    of the beams (r 4.75), so the beams flex freely; the fit check confirms it.
+  - The full hex runs 1.7 past the saucer, then becomes the tip cone. The coupon's hex ran on to
+    a chamfer. The catch flank still ends in full hex at the flats and the corners.
+  - The tip cone is the lead-in: on the way in it bends each nub out by the full 0.45, as the
+    coupon's 45° chamfer did.
+- **Failure modes added by the form:**
+
+| mode | how likely | what prevents it |
+|---|---|---|
+| dome snaps off the stem at the boss | low | solid dome, boss 8.8 across; a twist is about 1.8 N mm (`snap_budget.py`) |
+| tip wears or chips in a drop | medium | 1 mm round end (the penny spinner's), cone at 25° from the axis |
+| face prints with sagging edges | low | each shape ends in a point at its ceiling; print_fidelity 0 flags |
+| rim touches the table early | low | 20.7° of lean before the rim touches |
+| small parts swallowed | certain for the stem | "Not for children under 3: small parts" |
+
+- **What only a print can answer:** whether 20 snaps in matte PLA still hold for the saucer's
+  hub (the coupon says yes); how long it really spins; whether the face reads at arm's length.

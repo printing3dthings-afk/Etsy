@@ -1,0 +1,13 @@
+== ufo_saucer
+  z: 0 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 3 watch (>= 4.0), 3 slender runs
+  WATCH along y   11.6 mm long  ~4.42 mm2 (thinnest 4.42)  slenderness 5.5  at [np.float64(5.4), np.float64(6.4), np.float64(1.7)]
+  WATCH along x   10.8 mm long  ~5.1 mm2 (thinnest 5.1)  slenderness 4.8  at [np.float64(-7.6), np.float64(1.8), np.float64(1.7)]
+  WATCH along x    9.2 mm long  ~5.1 mm2 (thinnest 5.1)  slenderness 4.1  at [np.float64(2.8), np.float64(-7.9), np.float64(1.7)]
+== ufo_stem
+  x: 0 slender run(s)
+  y: 0 slender run(s)
+  z: 0 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 0 watch (>= 4.0), 0 slender runs

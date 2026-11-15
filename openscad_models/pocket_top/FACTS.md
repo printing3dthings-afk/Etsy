@@ -1,3 +1,97 @@
+# Pocket Top: the UFO, FACTS (2026-11-15)
+
+Scott picked form 1 of five (2026-11-15): a UFO saucer with a little dome and a kawaii face.
+It's built on the snap he tested and liked best: pair 2, reach 0.45. The coupon's FACTS
+follow below, unchanged.
+
+Status: **designed and checked, not printed.** Nothing about it has been measured on a print:
+not the fit, not the spin. Not for children under 3: small parts.
+
+## What it is
+- **Two parts.** The brief allows three; the dome and the stem print as one, so there's one
+  joint, the tested one.
+  - **Saucer** (`parts/ufo_saucer.stl`): printed flat, top face up. 34 mm across, 3.4 thick
+    (the tested hub's thickness), with nine raised lights round the rim and a 45° chamfer on
+    its top edge. The tested hub sits in the middle unchanged: hex hole, three spring beams,
+    nubs.
+  - **Stem** (`parts/ufo_stem.stl`): printed upside down, the dome's flat top on the bed.
+    The dome is 12.9 across and 7.0 tall; its flat top (6.4 across) is the knob you twirl.
+    Then the tested hex and groove, and a cone to a 1 mm round tip.
+- **The face:** two droplet eyes and a small v mouth, engraved 0.5 deep on the dome's front.
+  Each shape ends in a point at the bottom (in use), because that edge prints as a ceiling;
+  rounder shapes made the slicer add support under them.
+- **Snap together:** push the stem's hex into the face of the saucer that was up on the
+  printer, the same way round as the coupon.
+
+## The brief's budget (Bambu Studio's own slice, PLA Matte, 0.20 Standard, Bambu's settings)
+| print | time | filament |
+|---|---|---|
+| **one plate, one colour (the product)** | **9 min 29 s** | **3.25 g** |
+| saucer alone | 6 min 1 s | 2.60 g |
+| stem alone | 5 min 8 s | 0.74 g |
+
+- Two colours means two plates: about 11 min 9 s. That is over the brief's 10 minutes, so
+  one colour is the default and two-tone is an option for Scott to call.
+- **Where the budget bit (FACTS for Benson):**
+  - A 37 mm saucer with a raised ring of portholes sliced at 13 min and 5.1 g.
+  - The ring and its holes cost 1 min 50 s. Nine studs cost 14 s.
+  - Each 0.5 mm of saucer radius costs about 7 s.
+  - Sunken panels and open windows between the beams made it *slower*, not faster: every
+    new edge is more wall to print.
+- The slice files: `ufo_top.gcode.3mf` (the plate), `checks/ufo_saucer.gcode.3mf`,
+  `checks/ufo_stem.gcode.3mf`; numbers in `checks/slice_*.json`.
+
+## Checks (all on the exported parts)
+- **Fit** (`check_ufo.py` -> `checks/fit_ufo.txt`): PASS.
+  - Seated, the saucer's body clears the stem, and the nubs press the groove's floor by the
+    preload only.
+  - Pushed further, only the boss under the dome meets the saucer, out to r 4.40. The beams
+    start at 4.75, so nothing presses on them as they snap.
+  - It turns about 6° free, then the hex drives. Pulled 1 mm, it meets the nubs.
+  - On the way in, the tip and hex bend each nub out by 0.45, its reach.
+- **Balance:** the centre of mass is 0.004 mm off the spin axis, 8.7 mm above the tip.
+  - It leans 20.7° before the saucer's rim touches the table.
+- **Product gate** (`checks/gate_ufo_*.txt`): both PASS, 0 support moves.
+  - The stem's engraved face is declared detail, a band over the dome's middle. On the
+    dome's slope its recess edges are corner clips, not walls.
+  - The same stem without its face has no span under 1.2 mm anywhere (measured 2026-11-15),
+    so the band hides nothing else.
+- **print_fidelity** (`checks/fidelity_ufo.txt`): 0 flags on both parts. The face and the
+  lights print as drawn.
+- **Fragility** (`checks/fragility_ufo.txt`): 0 high.
+  - The saucer's 3 "watch" are the spring beams, which bend by design, as on the coupon.
+- **Small parts** (`checks/small_parts_ufo.txt`, 16 CFR 1501.4 cylinder):
+  - the saucer never fits (by 1.2 mm at best: borderline by the tool's own caution);
+  - **the stem is a small part.**
+  - "Not for children under 3: small parts" goes on the page and in the guide.
+
+## Spin: an estimate, not a measurement (`checks/spin_estimate.txt`)
+- **The model:**
+  - air drag on a 34 mm disc;
+  - friction at the 1 mm tip;
+  - the spin below which a top can't stay up: about 9 turns a second for this one.
+- **Result:** from a firm finger twist (assumed 15 to 30 turns a second, not measured), about
+  **14 to 59 s**.
+- **The spread:** it comes mostly from the launch speed and from how much extra drag the dome,
+  lights and slots add.
+- **What limits it:** air drag for most of the spin; tip friction near the end. The mass is
+  set by the budget, and only 0.74 g of it is in the stem.
+- **The brief's 30 s:** reachable from a firm twist in this model.
+  - It is a target, not a claim. "Ours spun N seconds" waits for Scott's timed spin of a print.
+
+## Images (`images/`, design-review renders, not photos)
+- `ufo_front.png`, `ufo_three_quarter.png`, `ufo_top.png`: assembled, one colour.
+- `ufo_exploded.png`: the stem lifted off the saucer.
+- `ufo_plate.png`: the two parts as they lie on the plate.
+- `ufo_two_colour.png`: the two-plate option.
+- `ufo_as_printed.png`: rendered from the toolpath of the checks' slice of the plate.
+
+## Rebuild
+`make_ufo.sh` (exports, slices, gates), then `check_ufo.py`, `make_ufo_images.py` and
+`make_ufo_guide.py`.
+
+---
+
 # Pocket Top: snap test print, FACTS (2026-11-14)
 
 Status: **G1 candidate (coupon only).** The top's form is not chosen yet: Scott picks it from
