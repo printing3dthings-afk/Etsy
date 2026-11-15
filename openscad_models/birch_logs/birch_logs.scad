@@ -110,14 +110,14 @@ module dash_row(L, z0, rowh, n, seed) {
         dash(L, a[k], z, ln[k], h);
 }
 
-// a birch "eye": the dark chevron over a branch scar. Two bars 14 long and 1.6 thick in a
-// shallow inverted V, apex at z, and the scar under it.
+// a birch "eye": the dark chevron over a branch scar, two bars 14 long and 1.6 thick in a
+// shallow inverted V, apex at z. (A block for the scar under it made the eye read as a
+// little house with a roof, in the toolpath render.)
 EYE_L = 14;
 EYE_A = 14;
 module eye(L, t, z) rotate(t) {
     for (sgn = [-1, 1]) translate([0, sgn * EYE_L / 2 * cos(EYE_A), z - EYE_L / 2 * sin(EYE_A)])
         rotate([sgn * -EYE_A, 0, 0]) translate([0, -EYE_L / 2, -0.8]) cube([L[0] * 1.2, EYE_L, 1.6]);
-    translate([0, -3, z - 3.6]) cube([L[0] * 1.2, 6, 1.6]);
 }
 
 module mark_shapes(L) {
@@ -151,9 +151,11 @@ module top_face(L) {
 module rings(L) {
     R = L[0] * TAPER;
     sp = rands(2.6, 3.8, 12, L[2] * 3);
-    translate([1.6, -1.1, L[1] - RING_D]) linear_extrude(RING_D + 1)
-        for (k = [0 : 11]) let (rho = WELL_R + 3.4 + k * 3.1 + sp[k] - 3.2)
-            if (rho * TAPER + 2.0 < R - BARK - 0.8)   // 2.0: the pith offset, so no ring runs into the bark
+    // The first ring starts 6 mm out: at 3.4, with the pith 1.9 off-centre and the outline's
+    // lumps, one grazed the well and left a 0.3 mm sliver of tan (print_fidelity, tall log).
+    translate([1.0, -0.7, L[1] - RING_D]) linear_extrude(RING_D + 1)
+        for (k = [0 : 11]) let (rho = WELL_R + 6.0 + k * 3.1 + sp[k] - 3.2)
+            if (rho * TAPER + 1.3 < R - BARK - 0.8)   // 1.3: the pith offset, so no ring runs into the bark
                 difference() {
                     scale(TAPER) polygon(outline(rho, L[2] + k * 3));          // each ring wanders its own way
                     scale(TAPER) polygon(outline(rho - RING_W, L[2] + k * 3));
