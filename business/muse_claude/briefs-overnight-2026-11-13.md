@@ -96,7 +96,7 @@ Format per PIPELINE.md §1: outcome, context, exact deliverable, acceptance chec
 
 ## Part 3 — December 20 plan draft (owed to the Nov 13 growth meeting)
 
-**Goal:** by Dec 20, OnBrandCraftz has (1) a working non-Etsy checkout for files + physical prints, (2) captured the Cyber + early-December Christmas window without missing the shipping cutoff, and (3) closed the Tin Clicker contest cleanly — with Etsy restored as primary if/when Scott's card fix lands.
+**Goal:** by Dec 20, OnBrandCraftz has (1) a working non-Etsy checkout for files + physical prints, (2) captured the Cyber + early-December Christmas window without missing the shipping cutoff, and (3) closed the Tin Clicker contest cleanly — with Etsy restored as primary if/when the shop reopens.
 
 **Key dates:** Nov 23–Dec 1 Etsy "Cyber Specials" 25% off — CONDITIONAL on Etsy reopening; if still suspended, the same framing runs on the new store ("Etsy is temporarily down — same sale, here"; copy is a new pattern, needs Scott's approval) · **Nov 29 Click Into Celebration closes (corrected date)** — final Tin Clicker push lands BEFORE, results/thank-you post after · ~Dec 12 Christmas physical-order cutoff · Dec 20 assessment.
 
@@ -106,7 +106,7 @@ Format per PIPELINE.md §1: outcome, context, exact deliverable, acceptance chec
 - **Week 4 (Dec 9–15) — Cutoff discipline.** Dec 12: physical CTAs come down the same day (queued/owned content swapped to digital-only versions by Benson; live-post edits flagged to Scott same day). Pivot copy: "Missed the post? The file prints tonight." Digital is 100% of the push Dec 13–15. Colour-Your-Own stays OUT unless its existing gates (marker test + photos) have cleared.
 - **Week 5 (Dec 16–20) — Close-out + January setup.** Last digital push Dec 16–18, sales copy winds down Dec 19–20. Dec 20 assessment from platform-owned numbers only: sales by channel, best buildings, what the bridge earned vs what Etsy-down cost — no estimates. January prep drafted: Valentine timeline (listings Jan 3), Meta Shop as infrastructure, keep-or-retire the bridge store decided on the Dec 20 numbers.
 
-**Split — Benson alone:** research, store/catalogue drafts, copy drafts in proven patterns, proven-format posting + live verification, CTA/cutoff swaps, social log, Dec 20 numbers pack. **Scott only:** platform choice, payment connections/credentials, Etsy billing fix (already his), Frank one-taps, new-offer/copy approvals, print-capacity and cutoff calls, and anything publishing his name/address (Printables Store — recommendation: don't).
+**Split — Benson alone:** research, store/catalogue drafts, copy drafts in proven patterns, proven-format posting + live verification, CTA/cutoff swaps, social log, Dec 20 numbers pack. **Scott only:** platform choice, payment connections/credentials, the Etsy shop fix (already his), Frank one-taps, new-offer/copy approvals, print-capacity and cutoff calls, and anything publishing his name/address (Printables Store — recommendation: don't).
 
 *— End of brief. Full lane research sits with Benson; ask for any lane file by number.*
 
