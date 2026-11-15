@@ -3,7 +3,7 @@
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.99mm, median 3.50mm (floor 1.2mm); 0.17% below one bead
+  ok    min_wall: 1st pct 2.00mm, median 3.52mm (floor 1.2mm); 0.04% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 90.0mm printed of 90.0mm
   ok    geometry_survives_slicing: printed height 90.0mm vs modelled 90.0mm
   ok    flat_base: 8.50 cm2 of contact = 14.3% of footprint (floor 5%)

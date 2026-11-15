@@ -1,3 +1,120 @@
+Geometries in cache: 26
+Geometry cache size in bytes: 567784
+CGAL Polyhedrons in cache: 5
+CGAL cache size in bytes: 6536576
+Total rendering time: 0:00:04.127
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     2062
+   Halfedges:    6186
+   Edges:        3093
+   Halffacets:   2070
+   Facets:       1035
+   Volumes:         2
+Geometries in cache: 31
+Geometry cache size in bytes: 790936
+CGAL Polyhedrons in cache: 5
+CGAL cache size in bytes: 8402560
+Total rendering time: 0:00:07.114
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     2756
+   Halfedges:    8268
+   Edges:        4134
+   Halffacets:   2766
+   Facets:       1383
+   Volumes:         2
+Geometries in cache: 36
+Geometry cache size in bytes: 1014728
+CGAL Polyhedrons in cache: 5
+CGAL cache size in bytes: 10284160
+Total rendering time: 0:00:08.201
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     3456
+   Halfedges:   10368
+   Edges:        5184
+   Halffacets:   3466
+   Facets:       1733
+   Volumes:         2
+Geometries in cache: 235
+Geometry cache size in bytes: 486008
+CGAL Polyhedrons in cache: 50
+CGAL cache size in bytes: 17404056
+Total rendering time: 0:00:11.196
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     4022
+   Halfedges:   12066
+   Edges:        6033
+   Halffacets:   4126
+   Facets:       2063
+   Volumes:        27
+Geometries in cache: 295
+Geometry cache size in bytes: 558488
+CGAL Polyhedrons in cache: 62
+CGAL cache size in bytes: 21233936
+Total rendering time: 0:00:13.840
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     4942
+   Halfedges:   14826
+   Edges:        7413
+   Halffacets:   5098
+   Facets:       2549
+   Volumes:        40
+Geometries in cache: 405
+Geometry cache size in bytes: 690408
+CGAL Polyhedrons in cache: 84
+CGAL cache size in bytes: 27273320
+Total rendering time: 0:00:16.613
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     6254
+   Halfedges:   18764
+   Edges:        9382
+   Halffacets:   6428
+   Facets:       3214
+   Volumes:        45
+Geometries in cache: 250
+Geometry cache size in bytes: 924488
+CGAL Polyhedrons in cache: 53
+CGAL cache size in bytes: 31589640
+Total rendering time: 0:00:23.637
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     5822
+   Halfedges:   18762
+   Edges:        9381
+   Halffacets:   7128
+   Facets:       3564
+   Volumes:         2
+Geometries in cache: 310
+Geometry cache size in bytes: 996968
+CGAL Polyhedrons in cache: 65
+CGAL cache size in bytes: 36649552
+Total rendering time: 0:00:27.286
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     6742
+   Halfedges:   21522
+   Edges:       10761
+   Halffacets:   8048
+   Facets:       4024
+   Volumes:         2
+Geometries in cache: 420
+Geometry cache size in bytes: 1128888
+CGAL Polyhedrons in cache: 87
+CGAL cache size in bytes: 44449448
+Total rendering time: 0:00:34.238
+   Top level object is a 3D object:
+   Simple:        yes
+   Vertices:     8054
+   Halfedges:   25460
+   Edges:       12730
+   Halffacets:   9354
+   Facets:       4677
+   Volumes:         2
 {
  "plate_gcode": "Metadata/plate_1.gcode",
  "layers": 600,
@@ -8,9 +125,9 @@
   2,
   3
  ],
- "time": "13h 41m 0s",
- "filament_g": "292.95,15.54,9.09",
- "filament_mm": "92269.00,4893.98,2863.31",
+ "time": "13h 37m 38s",
+ "filament_g": "292.67,15.49,9.23",
+ "filament_mm": "92179.36,4880.32,2906.29",
  "paused_at_mm": [],
  "file": "/home/user/Etsy/openscad_models/birch_logs/birch_logs_trio.gcode.3mf",
  "quality": "standard",
