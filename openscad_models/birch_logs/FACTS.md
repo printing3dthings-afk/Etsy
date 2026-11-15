@@ -34,10 +34,10 @@ re-slice, or send it straight to the printer.
 
 - **Settings:** PLA Matte, 0.4 nozzle, 0.20 mm layers, textured PEI, supports off. Perlin fuzzy
   skin 0.3 mm deep, points 0.6 apart, scale 3.
-- **Time and filament:** **13 h 41 min, 318 g** in all:
-  - 293 g ivory white (bark);
+- **Time and filament:** **13 h 38 min, 317 g** in all:
+  - 292.7 g ivory white (bark);
   - 15.5 g charcoal (marks);
-  - 9.1 g tan (cut face).
+  - 9.2 g tan (cut face).
 - **Colour changes: 113.** About 69 g of the total is purge into the prime tower.
 - **Why the marks are in rows:** every layer with charcoal in it costs a colour change and its
   purge, however little charcoal it holds. So all the marks sit in the same height bands on all
@@ -53,13 +53,19 @@ re-slice, or send it straight to the printer.
 - **Product gate:** PASS on each log as one solid (`gate_log0..2.txt`).
   - watertight, one body, no supports, flat base, stable;
   - thinnest wall 1.9–2.0 mm (floor 1.2).
-- **Print fidelity:** short log, 0 flags. Middle and tall: `fidelity_log1/2.txt`.
-- **Fragility:** `fragility_log2.txt`.
+- **Print fidelity:** all three logs, 0 flags (`fidelity_log0..2.txt`).
+  - A first version flagged one thing on the tall log: a growth ring grazed the well and left a
+    0.3 mm sliver of tan. The rings now start 6 mm out from the well.
+- **Fragility:** tall log (the most slender), 0 slender runs (`fragility_log2.txt`).
 
 ## Images (`images/`)
 - `trio_model.png` is a design-review render of the model. It has no bark texture, because the
   texture only exists in the toolpath.
 - The `trio_as_printed_*` views are rendered from Bambu Studio's toolpath, fuzzy skin included.
+  - Their cut faces render dark: that's the renderer's known fault on Bambu top surfaces. The
+    slice prints them tan (checked in the G-code: the top layers' top infill is slot 3).
+  - The eyes once had a block for the branch scar under the chevron. In this render it read
+    as a little house roof, so it was removed.
 - **Both are renders, not photos.**
 
 ## Not known until it's printed

@@ -1,62 +1,24 @@
 {
  "layers": 600,
- "model_volume_mm3": 157774.5,
- "dropped_mm3": 0.23,
+ "model_volume_mm3": 157806.0,
+ "dropped_mm3": 0.05,
  "filled_mm3": 0.0,
  "colour_mm3": 0.01,
- "flagged": 1,
+ "flagged": 0,
  "clusters": [
   {
    "kind": "dropped",
    "colour": "#C9A877",
    "tool": 3,
-   "volume_mm3": 0.14,
+   "volume_mm3": 0.031,
    "z_mm": [
     119.6,
     120.0
    ],
    "layers": 2,
    "at_xy": [
-    -20.3,
-    -1.0
-   ],
-   "side": "left",
-   "max_width_mm": 0.32,
-   "depth_mm": 0.8,
-   "flag": true
-  },
-  {
-   "kind": "dropped",
-   "colour": "#C9A877",
-   "tool": 3,
-   "volume_mm3": 0.034,
-   "z_mm": [
-    119.6,
-    120.0
-   ],
-   "layers": 2,
-   "at_xy": [
-    -2.7,
-    20.1
-   ],
-   "side": "back",
-   "max_width_mm": 0.12,
-   "depth_mm": 0.65,
-   "flag": false
-  },
-  {
-   "kind": "dropped",
-   "colour": "#C9A877",
-   "tool": 3,
-   "volume_mm3": 0.032,
-   "z_mm": [
-    119.6,
-    120.0
-   ],
-   "layers": 2,
-   "at_xy": [
-    21.3,
-    -23.9
+    23.5,
+    -24.4
    ],
    "side": "front",
    "max_width_mm": 0.11,
@@ -67,19 +29,19 @@
    "kind": "dropped",
    "colour": "#C9A877",
    "tool": 3,
-   "volume_mm3": 0.022,
+   "volume_mm3": 0.018,
    "z_mm": [
     119.6,
     120.0
    ],
    "layers": 2,
    "at_xy": [
-    7.8,
-    -30.6
+    6.7,
+    -32.9
    ],
    "side": "front",
-   "max_width_mm": 0.11,
-   "depth_mm": 0.6,
+   "max_width_mm": 0.1,
+   "depth_mm": 0.59,
    "flag": false
   },
   {
@@ -99,6 +61,44 @@
    "side": "right",
    "max_width_mm": 0.07,
    "depth_mm": 0.07,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#C9A877",
+   "tool": 3,
+   "volume_mm3": 0.003,
+   "z_mm": [
+    119.6,
+    120.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    6.1,
+    23.8
+   ],
+   "side": "back",
+   "max_width_mm": 0.07,
+   "depth_mm": 0.15,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#C9A877",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    119.6,
+    120.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    6.4,
+    24.9
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.14,
    "flag": false
   },
   {
