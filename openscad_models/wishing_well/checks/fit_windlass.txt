@@ -1,0 +1,26 @@
+WISHING WELL WINDLASS COUPON: FIT (exported geometry, assembled as in use)
+== the cradles
+  ok   far post 0.40: seated, the axle clears it (0.000 mm3)
+  ok   far post 0.40: the journal lifted 2.4 meets the catch (8.72 mm3): it snaps
+  ok   far post 0.55: seated, the axle clears it (0.000 mm3)
+  ok   far post 0.55: the journal lifted 2.4 meets the catch (12.15 mm3): it snaps
+  ok   far post 0.70: seated, the axle clears it (0.000 mm3)
+  ok   far post 0.70: the journal lifted 2.4 meets the catch (15.53 mm3): it snaps
+  ok   crank post 0.55: seated, the axle clears it (0.000 mm3)
+== the hub on the hex
+  ok   the wheel's hub clears the hex and collar (0.000 mm3)
+  ok   the nubs press the groove's floor by the preload (0.14 mm3)
+== ratchet and pawl (seen from outside the crank side; clockwise = negative about +X)
+  ok   seated, the pawl clears the wheel (0.000 mm3)
+  ok   the pawl clears its post and pin (0.000 mm3)
+  ok   the wheel turned 2 deg clockwise drives a tooth into the pawl: 1.40 mm3 (blocked)
+  ok   self-locking: a tooth pressed 0.8 deg into the pawl overlaps 0.11 mm3; with the pawl lifted 2 deg it overlaps more, 0.46: the load pulls the pawl in
+  ok   counter-clockwise, the ramps lift the pawl at most 7.5 deg, then it drops back into the next gap (clicks every 15.00 deg)
+== which way the twine goes
+  the pawl blocks clockwise; the bucket must pull clockwise (negative about +X):
+  twine hanging from the drum's +Y side (right, seen from outside the crank side) pulls
+  -R W about +X, clockwise: so tie the twine to leave the drum on the pawl's side,
+  and wind it up counter-clockwise (the handle's top moving away from the pawl's side)
+== the handle's sweep
+  ok   the handle peg's whole turn clears the pawl, pin and post (0.000 mm3 worst)
+PASS

@@ -1,0 +1,31 @@
+WISHING WELL WINDLASS: hand calculations (mechanism handbook section 7)
+
+1. REQUIREMENT
+  bucket up to 20 g on a drum of radius 5.0: 0.98 N mm; held with x3: 2.94 N mm
+  a firm crank push 5.0 N at the handle (radius 12.5) must not lift the axle out of its cradles
+  cycles: hundreds of turns; the snaps are pressed in once (and a few times on test)
+
+2. WHY A RATCHET
+  plain bearing friction: mu 0.45 x (20 + 3) g x r 3.0 = 0.30 N mm vs the load's 0.98: it unwinds
+
+3. THE CRADLE SNAP (fingers bend in the print plane)
+  narrowing 0.40: strain 0.76 % (once 1.4 %, repeated 0.8 %), ok to press in; finger force 4.4 N
+      press in (30 deg lead-in): 12 N; pull out (catch at 60 deg): 89 N; crank lift 5.0 N
+  narrowing 0.55: strain 1.05 % (once 1.4 %, repeated 0.8 %), ok to press in; finger force 6.1 N
+      press in (30 deg lead-in): 17 N; pull out (catch at 55 deg): 63 N; crank lift 5.0 N
+  narrowing 0.70: strain 1.34 % (once 1.4 %, repeated 0.8 %), ok to press in; finger force 7.8 N
+      press in (30 deg lead-in): 22 N; pull out (catch at 50 deg): 55 N; crank lift 5.0 N
+  catch 0.55 (the design value) vs the XY stack: worst 0.30, 3x RSS 0.52: ok
+  running clearance 0.25 radial: journal and cradle are both drawn in XY (+/-0.10 each)
+
+4. THE RATCHET AND PAWL
+  wheel radius 17.0, 32 teeth, 1.6 tall, pitch 3.34 (handbook: >= 1 tall, >= 2.5 pitch, wheel >= 25-30 across): ok
+  pawl tip 1.25 into a 1.6 tooth vs the stack between pawl and tooth: worst 0.95, 3x RSS 1.15: ok
+  holding: positive lock (the pawl stops the tooth); 2.94 N mm is nothing to a tooth 1.6 x 3 mm
+
+5. TURNING IT
+  winding the full bucket up: (0.98 + 0.30) / 12.5 = 0.10 N at the handle
+  the hex (5 across flats) carries 62 N mm at most; the Pocket Top hex bears after 6.6 deg of free play
+
+VERDICT: build the coupon. Scott's test decides the cradle narrowing, and his Pocket Top
+result decides the crank's hub joint.
