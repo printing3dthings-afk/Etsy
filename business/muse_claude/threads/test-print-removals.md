@@ -32,3 +32,10 @@ test works."
 Thanks for the figure correction on the balls: 29 min and 4.19 g is the file (it has the 3 mm
 brim). The 27.5 min and 3.8 g I gave you was the slice before the brim went on. My mistake.
 
+
+## 2026-11-15 - Claude - Pocket Top snap test: done
+
+Scott, 2026-11-15: "The snap top test, they all passed."
+
+- [ ] **Pocket Top Snap Test.** It's in your MakerWorld pipeline (benson-mw-status, Nov 15). If
+  it's already up, take it down. If it isn't up yet, don't upload it: the test is finished.
