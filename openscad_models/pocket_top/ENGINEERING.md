@@ -41,3 +41,17 @@
 - Which pair survives 20 snaps without whitening at a beam root? Does any crack?
 - Which feels best: firm going on, and not falling off when shaken or dropped onto a table?
 - Does any stem wobble or spin loose in its hub?
+
+## 6. Scott's result (2026-11-15)
+
+Scott: "The snap top test, they all passed." All three pairs (reach 0.35, 0.45, 0.55) snapped in and stayed in.
+He asked how tight it should be. The answer, from the design:
+- **In and out:** no play at all. The nubs sit 0.05 into the groove, so the stem shouldn't slide or
+  rattle along its axis.
+- **Side to side:** no wobble. The three preloaded nubs centre the stem, and any wobble shortens
+  a top's spin.
+- **Twist:** a few degrees of free turn (6.6° by design: the hex has 0.15 a side) before the hex
+  catches. That's normal, and harmless for a top.
+
+Still to come from Scott: which pair was snug with no wobble. That reach goes into the top and
+into the Wishing Well windlass's crank wheel, which uses this joint at 0.45.
