@@ -1,1 +1,17 @@
 slicing 3 part(s), 3 filament(s) ...
+450 layers parsed
+  layer 0/450
+  layer 100/450
+  layer 200/450
+  layer 300/450
+  layer 400/450
+
+PRINT FIDELITY  (450 layers, model 114505.2 mm3)
+  dropped (modelled, not printed): 0.09 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #C9A877 slot 3     0.040 mm3  z 89.6-90.0 (2 layers)  back at [4.1, 28.5]  0.12 mm wide, 0.6 mm deep
+       dropped #EDE8DC slot 1     0.024 mm3  z 8.2-8.6 (2 layers)  back at [14.2, 35.3]  0.17 mm wide, 0.11 mm deep
+       dropped #C9A877 slot 3     0.023 mm3  z 89.6-90.0 (2 layers)  back at [-5.9, 27.3]  0.1 mm wide, 0.58 mm deep
+       colour  #EDE8DC slot 1     0.001 mm3  z 27.4-27.6 (1 layers)  front at [-17.4, -32.2]  0.01 mm wide
