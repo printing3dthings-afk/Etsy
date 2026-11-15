@@ -124,3 +124,36 @@ test works."
 - MakerWorld: the bearing test (3597810) and the printed balls (10549018) go on the removal
   list (`business/muse_claude/threads/test-print-removals.md` on main).
 
+
+## 9. The full caddy (2026-11-15): `pie_caddy.scad`
+
+Built on the tested bearing (section 8), scaled from a 60 mm ball ring to 100 mm. The
+channel, the post and the clearances are the test's.
+
+- **The drum, 150 mm across.** Six wedge wells, their heights climbing 45 → 115 mm round the
+  drum (a spiral of slices), round a centre well 122 tall.
+  - The outer wall is fluted like a pie dish: 48 scallops, 1.2 deep. They're vertical
+    detail, so they print exactly and cost no extra time.
+  - The base is fluted to match.
+  - Walls are 1.6 (four beads) and the floor is 3.
+  - The post goes 11 mm into the drum (the test's went 9), under a bore with a 37° roof.
+  - The first render, with 10 mm steps and a plain wall, read as a cylinder; hence the
+    14 mm steps and the flutes.
+- **The base, 120 mm across.** 46 BBs on a 100 mm ring, in the tested 6.6 mm channel.
+- **Fit** (`check_caddy.py` → `checks/fit_caddy.txt`): PASS.
+  - Nothing touches. The balls clear the channel walls by 0.29 each side, as on the test.
+    The drum floats 2.0 over the base. The post's play is 0.55.
+  - Pushed sideways by that play, the drum still clears the base.
+  - **Centre of mass:** the empty drum's sits 5.6 mm off the axis, from the stepped walls.
+    That doesn't affect turning. With the requirement's 1 kg all in one well, it moves to
+    37 mm out, still inside the 50 mm ball ring, so the drum can't tip off the balls.
+- **Gates:**
+  - product gate, both parts pass;
+  - print_fidelity, 0 flags on both;
+  - fragility, nothing slender.
+- **Slices** (Bambu Studio, PLA Matte, retail settings, no supports; the base irons its
+  channel floor):
+  - drum: 8 h 42 min, 206 g;
+  - base: 1 h 36 min, 36 g.
+- **Not yet printed at full size.** Untested: the drum's 150 mm bed face over a 100 mm
+  ring, and whether 115 mm walls stay true. `make_caddy.sh` rebuilds it.

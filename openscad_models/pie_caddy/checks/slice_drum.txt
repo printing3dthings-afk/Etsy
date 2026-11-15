@@ -1,0 +1,22 @@
+WARNING: 1 colours given, only slots [] used in the G-code
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 610,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "time": "8h 41m 40s",
+ "filament_g": "206.06",
+ "filament_mm": "64900.87",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/pie_caddy/pie_caddy_drum.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#E8B98A"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate"
+}

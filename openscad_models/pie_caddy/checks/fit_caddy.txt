@@ -1,0 +1,10 @@
+PIE DRUM CADDY: FIT (exported parts, seated on 46 balls)
+  ok   drum and base don't touch (0.000 mm3)
+  ok   least gap drum to base 0.55 (the post in its bore, the drum over the rim)
+  ok   balls don't cut the channel (0.000 mm3; they sit on its floor)
+  ok   balls clear the channel's walls by 0.29 each side (the test print's 0.29)
+  ok   the drum floats 2.0 over the base's top
+  ok   pushed 0.50 sideways (the post's play), the drum still clears the base
+  ok   the ball ring lies well inside the drum's floor
+  ok   empty, the drum's centre of mass is 5.6 off the axis (its stepped walls; no torque about a vertical axis, so it doesn't affect turning). With 1 kg in one well 45 out, 37: inside the ball ring (50), so it can't tip off the balls
+PASS
