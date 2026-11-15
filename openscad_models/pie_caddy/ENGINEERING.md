@@ -83,7 +83,7 @@ centre post: 0.4 radial gap; post height into the bore 8 mm, RSS 0.18
 ## 6. Next
 
 The pie drum itself, at 150 mm with a 120 mm bearing, once the test print spins
-well.
+well. **It did (section 8): the drum is unblocked.**
 
 ## 7. Printed balls instead of airsoft BBs (2026-11-12)
 
@@ -110,3 +110,17 @@ Scott asked to print the 6 mm balls (`printed_bb.scad`, `printed_bbs_fine_0.12mm
   - layer rings, 0.12 mm.
   So this run tests printed balls as much as the bearing. If it rumbles, try airsoft
   BBs before blaming the channel.
+
+## 8. Scott's test result (2026-11-15): it works
+
+Scott, 2026-11-15: "6mm bb's worked. When I print the actual I'll use real bb's though. So the
+test works."
+- The bearing test ran on the printed 6 mm balls (section 7), and it worked.
+- **The real caddy uses real 6 mm airsoft BBs.** That's the case the channel was drawn for
+  (section 5). Printed balls carry a flat and a layer seam that real BBs don't, so a bearing
+  that turns on printed balls has margin on real ones.
+- The channel and post at their tested sizes are what the drum is built on: 6.6 mm channel,
+  0.29 each side.
+- MakerWorld: the bearing test (3597810) and the printed balls (10549018) go on the removal
+  list (`business/muse_claude/threads/test-print-removals.md` on main).
+
