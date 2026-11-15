@@ -262,6 +262,8 @@ def parse_parts(args: list[str]) -> list[list[tuple[Path, str]]]:
 
 BED = 256.0
 TOWER = (205.0, 205.0)        # prime tower's corner: the back right, out of the objects' way
+EXCLUDE = (18.0, 28.0)        # the P1S's bed_exclude_area, front left (the purge corner): an object
+                              # placed there fails the slice (2026-11-15, the windlass test plate)
 TOWER_SIZE = 35 + 2 * 3 + 6   # width, brim each side, and room for it to grow
 GAP = 12.0
 
@@ -269,11 +271,12 @@ GAP = 12.0
 def _layout_rows(boxes) -> list[tuple[float, float, float]]:
     """More than one row, when one won't fit (2026-11-15: three birch logs 72-86 mm across
     needed 256 mm in a row). Rows fill front to back, each centred across the plate; the
-    back row ends left of the prime tower's corner."""
+    front row stays right of the keep-out corner and the back row left of the prime tower."""
     rows, cur, used = [], [], 0.0
     for i, (lo, hi) in enumerate(boxes):
         w = hi[0] - lo[0]
-        if cur and used + GAP + w > BED - 2 * GAP:
+        room = BED - 2 * GAP - (EXCLUDE[0] if not rows else 0)   # the front row loses the keep-out corner
+        if cur and used + GAP + w > room:
             rows.append(cur)
             cur, used = [], 0.0
         used += (GAP if cur else 0) + w
@@ -289,6 +292,10 @@ def _layout_rows(boxes) -> list[tuple[float, float, float]]:
         widths = [boxes[i][1][0] - boxes[i][0][0] for i in r]
         total = sum(widths) + GAP * (len(r) - 1)
         x = (BED - total) / 2
+        if y < EXCLUDE[1] + GAP:                       # the front row: clear of the purge corner
+            x = max(x, EXCLUDE[0] + GAP)
+            if x + total > BED - GAP:
+                raise ValueError("the front row runs into the P1S's front-left keep-out area")
         if y + depth > TOWER[1] - GAP:                 # level with the tower: stay left of it
             x = min(x, TOWER[0] - GAP - total)
             if x < GAP:

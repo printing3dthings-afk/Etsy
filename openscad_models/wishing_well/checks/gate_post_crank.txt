@@ -6,8 +6,8 @@ openscad_models/wishing_well/parts/post_crank.stl
   ok    min_wall: 1st pct 1.30mm, median 8.00mm (floor 1.2mm); 0.00% below one bead
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 17.2mm printed of 17.23mm
   ok    geometry_survives_slicing: printed height 17.2mm vs modelled 17.23mm
-  ok    flat_base: 5.20 cm2 of contact = 41.4% of footprint (floor 5%)
+  ok    flat_base: 5.18 cm2 of contact = 41.2% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=7.2mm; 77 layer(s) under the 4.0s cooling threshold; 682mm2 on the plate; aspect 0.27
+  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=7.2mm; 77 layer(s) under the 4.0s cooling threshold; 680mm2 on the plate; aspect 0.27
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
 PRODUCT GATE PASSED

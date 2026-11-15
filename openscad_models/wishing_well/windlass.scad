@@ -111,6 +111,9 @@ module post2d(e, hc, pawl) {
                 translate([P[0], hc + P[1]]) circle(r = 4.6, $fn = 48);
             }
         }
+        // the variant's mark: 1, 2 or 3 notches in the post's left edge for a catch of 0.40, 0.55
+        // or 0.70 (upright cuts through the thickness: they hang over nothing)
+        for (k = [0 : round((e - 0.25) / 0.15) - 1]) translate([-POST_W / 2 - 0.01, TEN_H + 2.5 + k * 2.2]) square([1.0, 0.9]);
         // the journal's seat, and the slots that free the fingers
         translate([0, hc]) circle(r = RC, $fn = 96);
         for (s = [-1, 1]) {
@@ -280,7 +283,8 @@ module bucket() {
 }
 
 // ---- the test base ----------------------------------------------------------------------------
-SPAN_C = 24;             // the coupon's posts, inner faces apart (the well's will be wider)
+SPAN_C = 12;             // the coupon's posts, inner faces apart (the well's will be wider; 24 put the
+                         // test print at 1 h 16 min)
 HC_C = 26;               // the coupon's axle centre above the tenon foot (22 put the wheel's
                          // rim on the base)
 BASE_T = TEN_H;
@@ -288,8 +292,8 @@ module base(span = SPAN_C) {
     xs = span / 2 + FT / 2;
     difference() {
         union() {
-            translate([-xs - 10, -6, 0]) cube([2 * xs + 20, 12, BASE_T]);
-            for (s = [-1, 1]) translate([s * xs - 6, -22, 0]) cube([12, 44, BASE_T]);
+            translate([-xs - 6, -5, 0]) cube([2 * xs + 12, 10, BASE_T]);
+            for (s = [-1, 1]) translate([s * xs - 6, -18, 0]) cube([12, 36, BASE_T]);
         }
         for (s = [-1, 1]) translate([s * xs - FT / 2 - 0.15, -TEN_W / 2 - 0.15, -1]) cube([FT + 0.3, TEN_W + 0.3, BASE_T + 2]);
     }

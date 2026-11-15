@@ -19,7 +19,7 @@ WISHING WELL WINDLASS: hand calculations (mechanism handbook section 7)
   running clearance 0.25 radial: journal and cradle are both drawn in XY (+/-0.10 each)
 
 4. THE RATCHET AND PAWL
-  wheel radius 17.0, 32 teeth, 1.6 tall, pitch 3.34 (handbook: >= 1 tall, >= 2.5 pitch, wheel >= 25-30 across): ok
+  wheel radius 17.0, 24 teeth, 1.6 tall, pitch 4.45 (handbook: >= 1 tall, >= 2.5 pitch, wheel >= 25-30 across): ok
   pawl tip 1.25 into a 1.6 tooth vs the stack between pawl and tooth: worst 0.95, 3x RSS 1.15: ok
   holding: positive lock (the pawl stops the tooth); 2.94 N mm is nothing to a tooth 1.6 x 3 mm
 

@@ -1,0 +1,22 @@
+WARNING: 1 colours given, only slots [] used in the G-code
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 185,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "time": "46m 27s",
+ "filament_g": "17.03",
+ "filament_mm": "5364.42",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/wishing_well/windlass_test.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": false,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#C49A6C"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate"
+}

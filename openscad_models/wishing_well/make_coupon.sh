@@ -21,5 +21,10 @@ done
 # so the tooth ring is left out of the wall floor, as thread teeth are
 python3 tools/product_gate.py $D/parts/wheel.stl --wall-skip-band 15.2,17.2,-1,4 > $D/checks/gate_wheel.txt 2>&1 || true
 python3 $D/check_windlass.py > /dev/null
+openscad -o $D/parts/coupon_plate.stl -D "part=\"coupon\"" $D/windlass.scad
+python3 tools/fragility.py $D/parts/coupon_plate.stl > $D/checks/fragility.txt 2>&1 || true
+C="#C49A6C"; P=$D/parts
+# a function test, not a product: Bambu's own speeds (--bambu-defaults), not the retail outer walls
+python3 tools/bambu_slice.py $P/base.stl:$C + $P/post_crank.stl:$C + $P/post_far_040.stl:$C + $P/post_far_070.stl:$C + $P/axle.stl:$C + $P/wheel.stl:$C + $P/pawl.stl:$C + $P/bucket.stl:$C -o $D/windlass_test.gcode.3mf --filament pla_matte --bambu-defaults > $D/checks/slice.txt 2>&1
 grep -H "PRODUCT GATE" $D/checks/gate_*.txt
 tail -n 1 $D/checks/fit_windlass.txt

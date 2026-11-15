@@ -28,7 +28,7 @@ import trimesh
 
 HERE = Path(__file__).resolve().parent
 OS = "/tmp/claude-0/-home-user-Etsy/d6e7a036-e991-5b99-8baf-18b52486dbea/scratchpad/oscad/squashfs-root/AppRun"
-SPAN, FT, HC = 24.0, 8.0, 26.0
+SPAN, FT, HC = 12.0, 8.0, 26.0
 P = (11.0, 20.5)
 out, fails = [], []
 
