@@ -1,20 +1,20 @@
 POCKET TOP UFO: SPIN ESTIMATE (a model, not a measurement)
-  mass 3.48 g (sliced: saucer 2.60, stem 0.88); spin inertia 412 g mm2
-  centre of mass 8.0 mm above the tip; it can't stay up below 53 rad/s (8.4 turns a second)
+  mass 3.34 g (sliced: saucer 2.60, stem 0.74); spin inertia 410 g mm2
+  centre of mass 8.7 mm above the tip; it can't stay up below 56 rad/s (8.9 turns a second)
   the tip's contact patch about 0.041 mm across
   air drag: a free disc 34 mm across, laminar, both faces (Cochran's 3.87/sqrt(Re)); the
   dome, the lights and the slots add drag the model leaves out, so it's run at 1x and 2x.
 
   launch (turns/s)  tip friction mu  drag  -> spins for
-                10              0.2   1.0x ->    10 s
-                10              0.4   2.0x ->     5 s
-                15              0.2   1.0x ->    32 s
-                15              0.4   2.0x ->    16 s
-                20              0.2   1.0x ->    46 s
-                20              0.4   2.0x ->    23 s
-                30              0.2   1.0x ->    63 s
-                30              0.4   2.0x ->    31 s
+                10              0.2   1.0x ->     7 s
+                10              0.4   2.0x ->     3 s
+                15              0.2   1.0x ->    29 s
+                15              0.4   2.0x ->    14 s
+                20              0.2   1.0x ->    42 s
+                20              0.4   2.0x ->    21 s
+                30              0.2   1.0x ->    59 s
+                30              0.4   2.0x ->    30 s
 
-  A good finger twist (assumed 15 to 30 turns a second, not measured) gives about 16 to 63 s.
+  A good finger twist (assumed 15 to 30 turns a second, not measured) gives about 14 to 59 s.
   What limits it: air drag on the saucer for most of the spin; the 1 mm tip's friction near the end.
   The brief's 30 s is reachable from a firm twist in this model. Scott's timed spin decides it.

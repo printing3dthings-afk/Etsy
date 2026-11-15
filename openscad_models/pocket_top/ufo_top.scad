@@ -3,9 +3,9 @@
 // (snap_coupon.scad): pair 2, reach 0.45, "felt the best".
 //
 //   saucer  printed FLAT, top face up. The tested hub (hex hole, three spring beams in the
-//           print plane), unchanged, inside a 38 mm saucer. Ten raised lights round its rim.
+//           print plane), unchanged, inside a 34 mm saucer. Nine raised lights round its rim.
 //   stem    printed UPSIDE DOWN, its dome's flat top on the bed. The dome (the twirl knob,
-//           hollow, with the face), the tested hex and groove, and the spinning tip, all one
+//           solid, with the face), the tested hex and groove, and the spinning tip, all one
 //           part. The dome's sides start at 37 deg from upright and steepen toward its rim,
 //           so it prints inverted with no support. Only a small boss in its middle touches the
 //           saucer, clear of the spring beams, as the coupon's grip did.
@@ -37,16 +37,16 @@ FOOT = 0.4;                 // elephant's-foot chamfer
 
 // ---- the stem, in its print position: the dome's top on the bed --------------------------
 TOP_R = 3.2;                // the dome's flat top: the knob you twirl
-TOP_CH = 0.5;
+TOP_CH = 0.5;               // its edge on the bed: 0.5 up, 0.3 in (31 deg from upright; at
+TOP_IN = 0.3;               // 45 deg the gate's slicer propped it)
 A0 = 37;                    // the dome's slope from upright at its top...
 A1 = 22;                    // ...and at its rim
-SLANT = 7.5;                // the dome's side, along its surface
-CAB_WALL = 2.2;             // measured across (horizontally); 1.7 to 2.0 square to the surface
-CAB_TOP = 1.4;              // the dome's top plate
-COL_R = 3.0;                // the hex's column inside the dome
+SLANT = 6.6;                // the dome's side, along its surface
 BOSS_R = 4.4;               // the shoulder ring that bears on the saucer (beams start at 4.75)
 GAP = 0.4;                  // the dome's rim stands this far off the saucer
-HEX_PAST = 1.0;             // the full hex runs this far past the saucer's underside
+HEX_PAST = 1.7;             // the full hex runs this far past the saucer's underside, so the
+                            // groove's catch flank (it ends 0.84 past it at the hex's flats,
+                            // 1.52 at its corners) is whole all round, as on the coupon
 TIP_L = 4.6;                // then the tip: a cone to a 1 mm round end
 TIP_R = 1.0;
 
@@ -54,38 +54,36 @@ kr = (A0 - A1) / SLANT * PI / 180;
 function dome_r(s) = TOP_R + (cos(A0 - (A0 - A1) * s / SLANT) - cos(A0)) / kr;
 function dome_z(s) = TOP_CH + (sin(A0) - sin(A0 - (A0 - A1) * s / SLANT)) / kr;
 function dome_a(s) = A0 - (A0 - A1) * s / SLANT;
+DOME_BAND = 0.8;            // an upright band round the dome's rim: the side meeting the rim
+                            // face at 68 deg left an edge the gate read as a 0.5 wall
 CAB_R = dome_r(SLANT);
-CAB_H = dome_z(SLANT);
+CAB_H = dome_z(SLANT) + DOME_BAND;
 S0 = CAB_H + GAP;           // the shoulder: the saucer's top face sits here
 
-// the dome's outline, from the bed up: chamfer, curved side, then down the inside
-function dome_outer() = concat([[0, 0], [TOP_R - TOP_CH, 0]],
-    [for (k = [0 : 24]) [dome_r(SLANT * k / 24), dome_z(SLANT * k / 24)]], [[0, CAB_H]]);
+// the dome's outline, from the bed up: chamfer, the curved side, the band
+function dome_outer() = concat([[0, 0], [TOP_R - TOP_IN, 0]],
+    [for (k = [0 : 24]) [dome_r(SLANT * k / 24), dome_z(SLANT * k / 24)]], [[CAB_R, CAB_H], [0, CAB_H]]);
 
+// Solid: a hollow saved 0.1 g, and its walls, the column inside it and the boss between them
+// left knife edges and a sealed void (2026-11-15)
 module dome() difference() {
     rotate_extrude($fn = 160) polygon(dome_outer());
-    // the hollow: the outline moved in CAB_WALL, from the top plate up, round the column
-    rotate_extrude($fn = 160) polygon(concat(
-        [[COL_R, CAB_TOP]],
-        [for (k = [0 : 24]) let (s = SLANT * k / 24, z = dome_z(s))
-            if (z >= CAB_TOP) [max(dome_r(s) - CAB_WALL, COL_R), z]],
-        [[CAB_R - CAB_WALL, CAB_H + 1], [COL_R, CAB_H + 1]]));
     face();
 }
 
 // ---- the face: eyes and a little mouth, engraved 0.5 square to the dome -------------------
 FACE_S = 3.0;               // where on the dome's side (along it) the face is centred
 EYE_DX = 2.2;               // each eye's centre, round the dome from the middle
-EYE_W = 2.0;
-EYE_H = 2.6;
+EYE_W = 1.7;
+EYE_H = 1.7 / 2 + 1.7 / 2 / sin(25);   // 2.86: the point sets it
 MOUTH_DY = 2.5;             // the mouth, below the eyes (in use)
-MOUTH_W = 1.6;
+MOUTH_W = 1.5;
 GROOVE = 0.5;
 DEPTH = 0.5;
 
 // a 2D shape in the face's frame (x round the dome, y down it in use), cut DEPTH into the dome
 // and swept straight out, horizontally. Each shape comes to a point at its bottom (in use),
-// the side that prints as a ceiling, so no ceiling hangs past 37 deg.
+// the side that prints as a ceiling.
 module face_cut(s, ang) {
     r = dome_r(s); z = dome_z(s); a = dome_a(s);
     n = [cos(a), 0, -sin(a)];                // outward normal, in the (x = radial, z) plane
@@ -94,19 +92,26 @@ module face_cut(s, ang) {
     rotate(ang) multmatrix([[u[0] * 0, u[0], 1, c[0]], [1, 0, 0, c[1]], [0, u[2], 0, c[2]], [0, 0, 0, 1]])
         linear_extrude(4) children();
 }
-module teardrop2d(w, h) hull() {
-    translate([0, -h / 2 + w / 2]) circle(d = w, $fn = 32);
-    translate([0, h / 2]) square([0.01, 0.01], center = true);
+// an eye: a round top (in use) drawn to a point at its bottom, its sides 25 deg either side of
+// straight down. The bottom prints as a ceiling, and a blunter point (39 deg on a 2.0 x 2.6 eye)
+// put the gate's slicer under it.
+POINT = 25;
+module teardrop2d(w) hull() {
+    circle(d = w, $fn = 32);
+    translate([0, w / 2 / sin(POINT)]) square([0.01, 0.01], center = true);
 }
-module vee2d(w, t) for (sx = [-1, 1]) hull() {
-    translate([0, 0]) circle(d = t, $fn = 16);
-    translate([sx * w / 2, -w / 2 * tan(55)]) circle(d = t, $fn = 16);
+// the mouth: a small v, its legs 65 deg from level, cut as one chevron so its bottom is a point
+module vee2d(w, t) {
+    h = w / 2 * tan(90 - POINT);
+    d = t / sin(POINT);                      // the chevron's thickness, measured straight up
+    t2 = t / sin(90 - POINT);                // its width across the top of each leg
+    polygon([[0, 0], [w / 2, -h], [w / 2 - t2, -h], [0, -d], [-w / 2 + t2, -h], [-w / 2, -h]]);
 }
 module face() {
     FRONT = -90;                             // faces -y, like every product's front
     for (sx = [-1, 1]) {
         s = FACE_S; r = dome_r(s);
-        face_cut(s, FRONT + sx * EYE_DX / r * 180 / PI) teardrop2d(EYE_W, EYE_H);
+        face_cut(s, FRONT + sx * EYE_DX / r * 180 / PI) translate([0, -EYE_H / 2 + EYE_W / 2]) teardrop2d(EYE_W);
     }
     face_cut(FACE_S + MOUTH_DY, FRONT) vee2d(MOUTH_W, GROOVE);
 }
@@ -119,10 +124,7 @@ module stem() {
     difference() {
         union() {
             dome();
-            // the column from the top plate to the shoulder, flaring at 37 deg to the boss
-            cylinder(r = COL_R, h = S0 - (BOSS_R - COL_R) / tan(37));
-            translate([0, 0, S0 - (BOSS_R - COL_R) / tan(37) - 0.01])
-                cylinder(r1 = COL_R, r2 = BOSS_R, h = (BOSS_R - COL_R) / tan(37) + 0.01);
+            translate([0, 0, CAB_H - 0.01]) cylinder(r = BOSS_R, h = GAP + 0.01);    // the boss
             // the tested hex, through the saucer, then the tip
             translate([0, 0, S0 - 0.01]) linear_extrude(tip0 - S0 + 0.01) hex2d(S);
             translate([0, 0, tip0 - 0.01]) hull() {

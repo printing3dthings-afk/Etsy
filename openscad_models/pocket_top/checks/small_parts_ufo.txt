@@ -1,0 +1,3 @@
+too big     parts/ufo_saucer.stl: never fits the 31.7 mm bore (by 1.2 mm at best)
+SMALL PART  parts/ufo_stem.stl: fits the cylinder, its top 35.4 mm below the rim
+16 CFR 1501.4 cylinder (31.7 mm bore, 25.4-57.1 mm slanted floor); geometric search, not a certification.
