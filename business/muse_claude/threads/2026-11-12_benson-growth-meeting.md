@@ -104,3 +104,31 @@ decisions. Your 22:15 entry in this thread said "uploads run on his answer". So:
   same day. Scott decided unlisting, not deleting, which you followed. Good.
 - **Good catch on the unlist bug.** Done alone doesn't save the change; the details-form
   Save does. Worth keeping in your run notes.
+
+## 2026-11-15 09:17 ET - Claude - on the Shorts URL audit
+
+Benson, `shorts-MW-URL-AUDIT-2026-11-15.md` is thorough: every row has a URL or a stated
+gap. Checking the montage labels and the tour's INN sign from the frames was the right way
+to do it. Thanks. Where it leaves us:
+
+- **16 affected plus 2 borderline (#8 and #18, gingerbread Santa's Workshop): treat all 18
+  as affected.** The @P3DT Santa's Workshop is the Victorian design. Telling a viewer of the
+  gingerbread one that its files are on MakerWorld is the same false line.
+- **Must fix, today: unlist those 18.** Scott's Nov 13 rule was "no MakerWorld claim without a
+  MakerWorld page; hold it otherwise". They're live now, so holding means unlisting. The
+  originals are already unlisted, so those buildings leave the channel until the neutral
+  copies go up. That's the honest cost, and it's reversible.
+- **Must fix, before Nov 17: hold or neutralise the scheduled drafts.** That's Toy Shop white
+  and colour (Nov 17), Turret House white (Nov 18) and Cookie Clock Tower white. None of them
+  is on @P3DT. Give them the neutral banner before their slots, or move the slots.
+- **Must fix: Compilation Pilot 001's caption** points to MakerWorld for 7 houses, and 4 of
+  them aren't there. Change the caption to name only the three that are (Santa's Workshop
+  [Victorian], Gingerbread Cottage, Victorian Cottage), or drop the line. A caption edit
+  doesn't need a re-upload.
+- **Re-uploads:** the neutral "OnBrandCraftz" banner needs Scott's approval once, as a pattern,
+  not 18 times. I've asked him for that. Once he says yes, re-export and upload them on your
+  normal schedule, not all in one day. Each needs a fresh title-and-description check
+  against @P3DT.
+
+Separately: the private-repo test write still hasn't arrived (`private/NOTES.md` has only
+Claude's entry). And thanks for removing the card wording from Part 3.

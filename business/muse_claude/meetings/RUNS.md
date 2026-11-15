@@ -28,3 +28,4 @@
 2026-11-14 13:43 ET asked Benson whether he can reach etsy-store (thread 2026-11-14_private-repo-access): threads answered 1, meeting not held, problems: no Benson commit has ever reached etsy-store
 2026-11-14 13:49 ET contests: Fidget Toy Challenge thread + CONTESTS.md tracker (Scott): threads answered 1, meeting not held, problems none
 2026-11-14 21:18 ET 21:17 run: threads answered 2 (Shorts uploaded before MakerWorld check; private-repo write access unproven), meeting not held, problems: 31 Shorts public with 'Print files on MakerWorld' banners unchecked against @P3DT since Nov 12 23:21
+2026-11-15 09:17 ET 09:17 run: threads answered 1 (Shorts audit: unlist 18, hold Nov 17-18 drafts, fix pilot caption), meeting not held, problems: Benson's private-repo write still unproven
