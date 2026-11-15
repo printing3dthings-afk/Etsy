@@ -53,5 +53,7 @@ He asked how tight it should be. The answer, from the design:
 - **Twist:** a few degrees of free turn (6.6° by design: the hex has 0.15 a side) before the hex
   catches. That's normal, and harmless for a top.
 
-Still to come from Scott: which pair was snug with no wobble. That reach goes into the top and
-into the Wishing Well windlass's crank wheel, which uses this joint at 0.45.
+**Scott's pick: pair 2, reach 0.45** (2026-11-15: "Number 2 felt the best"). That's the
+design value, so nothing changes:
+- the top uses 0.45;
+- the Wishing Well windlass's crank wheel already does.

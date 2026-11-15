@@ -71,7 +71,7 @@ round the windlass.
 | won't press in | low for 0.55 | 30° lead-in; 17 N |
 | pawl slips under load | low | self-locking geometry (fit check), 1.25 deep against a 0.95 worst-case stack |
 | pawl misses teeth when winding fast | medium | gravity only; the test checks for missed clicks |
-| wheel pulls off the hex | depends on the Pocket Top test | same joint |
+| wheel pulls off the hex | low | same joint as the Pocket Top: Scott's test passed all three, and he picked 0.45, the value used here (2026-11-15) |
 | twine slips on the drum | low | knotted through a cross hole |
 | small parts swallowed | certain for the pawl and bucket | "Not for children under 3: small parts" |
 
