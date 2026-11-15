@@ -266,6 +266,41 @@ TOWER_SIZE = 35 + 2 * 3 + 6   # width, brim each side, and room for it to grow
 GAP = 12.0
 
 
+def _layout_rows(boxes) -> list[tuple[float, float, float]]:
+    """More than one row, when one won't fit (2026-11-15: three birch logs 72-86 mm across
+    needed 256 mm in a row). Rows fill front to back, each centred across the plate; the
+    back row ends left of the prime tower's corner."""
+    rows, cur, used = [], [], 0.0
+    for i, (lo, hi) in enumerate(boxes):
+        w = hi[0] - lo[0]
+        if cur and used + GAP + w > BED - 2 * GAP:
+            rows.append(cur)
+            cur, used = [], 0.0
+        used += (GAP if cur else 0) + w
+        cur.append(i)
+    rows.append(cur)
+    depths = [max(boxes[i][1][1] - boxes[i][0][1] for i in r) for r in rows]
+    if sum(depths) + GAP * (len(rows) + 1) > BED:
+        raise ValueError(f"the objects need {sum(depths) + GAP * (len(rows) + 1):.0f} mm front to back; "
+                         f"the P1S plate is {BED:.0f}")
+    out = [None] * len(boxes)
+    y = GAP
+    for r, depth in zip(rows, depths):
+        widths = [boxes[i][1][0] - boxes[i][0][0] for i in r]
+        total = sum(widths) + GAP * (len(r) - 1)
+        x = (BED - total) / 2
+        if y + depth > TOWER[1] - GAP:                 # level with the tower: stay left of it
+            x = min(x, TOWER[0] - GAP - total)
+            if x < GAP:
+                raise ValueError("the back row runs into the prime tower")
+        for i, w in zip(r, widths):
+            lo, hi = boxes[i]
+            out[i] = (x - lo[0], y + depth / 2 - (lo[1] + hi[1]) / 2, -lo[2])
+            x += w + GAP
+        y += depth + GAP
+    return out
+
+
 def layout(groups: list[list[tuple[Path, str]]]) -> list[tuple[float, float, float]]:
     """Where each object goes: in a row across the middle of the plate, each
     standing on the bed, the prime tower left in the back-right corner.
@@ -285,7 +320,7 @@ def layout(groups: list[list[tuple[Path, str]]]) -> list[tuple[float, float, flo
     widths = [hi[0] - lo[0] for lo, hi in boxes]
     total = sum(widths) + GAP * (len(widths) - 1)
     if total > BED - 2 * GAP:
-        raise ValueError(f"the objects need {total:.0f} mm in a row; the P1S plate is {BED:.0f}")
+        return _layout_rows(boxes)
     x = (BED - total) / 2
     out = []
     for (lo, hi), w in zip(boxes, widths):

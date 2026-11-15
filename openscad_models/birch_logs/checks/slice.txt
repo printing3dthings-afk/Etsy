@@ -1,0 +1,27 @@
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 600,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [
+  1,
+  2,
+  3
+ ],
+ "time": "13h 41m 0s",
+ "filament_g": "292.95,15.54,9.09",
+ "filament_mm": "92269.00,4893.98,2863.31",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/birch_logs/birch_logs_trio.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#EDE8DC",
+  "#2B2A28",
+  "#C9A877"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate"
+}

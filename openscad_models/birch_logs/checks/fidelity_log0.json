@@ -1,0 +1,124 @@
+{
+ "layers": 300,
+ "model_volume_mm3": 77784.1,
+ "dropped_mm3": 0.01,
+ "filled_mm3": 0.0,
+ "colour_mm3": 0.0,
+ "flagged": 0,
+ "clusters": [
+  {
+   "kind": "dropped",
+   "colour": "#EDE8DC",
+   "tool": 1,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    17.2,
+    17.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    -14.7,
+    -30.9
+   ],
+   "side": "front",
+   "max_width_mm": 0.09,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#C9A877",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    59.6,
+    60.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    -14.3,
+    15.1
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#C9A877",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    59.6,
+    60.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    -13.9,
+    14.7
+   ],
+   "side": "back",
+   "max_width_mm": 0.05,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "dropped",
+   "colour": "#C9A877",
+   "tool": 3,
+   "volume_mm3": 0.002,
+   "z_mm": [
+    59.6,
+    60.0
+   ],
+   "layers": 2,
+   "at_xy": [
+    -13.4,
+    15.2
+   ],
+   "side": "back",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.13,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#2B2A28",
+   "tool": 2,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    17.2,
+    17.4
+   ],
+   "layers": 1,
+   "at_xy": [
+    -14.3,
+    -29.7
+   ],
+   "side": "front",
+   "max_width_mm": 0.06,
+   "depth_mm": 0.06,
+   "flag": false
+  },
+  {
+   "kind": "colour",
+   "colour": "#EDE8DC",
+   "tool": 1,
+   "volume_mm3": 0.001,
+   "z_mm": [
+    48.6,
+    48.8
+   ],
+   "layers": 1,
+   "at_xy": [
+    -14.0,
+    -29.9
+   ],
+   "side": "front",
+   "max_width_mm": 0.01,
+   "depth_mm": 0.01,
+   "flag": false
+  }
+ ]
+}

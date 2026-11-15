@@ -1,0 +1,17 @@
+slicing 3 part(s), 3 filament(s) ...
+300 layers parsed
+  layer 0/300
+  layer 100/300
+  layer 200/300
+
+PRINT FIDELITY  (300 layers, model 77784.1 mm3)
+  dropped (modelled, not printed): 0.01 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #EDE8DC slot 1     0.002 mm3  z 17.2-17.4 (1 layers)  front at [-14.7, -30.9]  0.09 mm wide, 0.13 mm deep
+       dropped #C9A877 slot 3     0.002 mm3  z 59.6-60.0 (2 layers)  back at [-14.3, 15.1]  0.06 mm wide, 0.13 mm deep
+       dropped #C9A877 slot 3     0.002 mm3  z 59.6-60.0 (2 layers)  back at [-13.9, 14.7]  0.05 mm wide, 0.13 mm deep
+       dropped #C9A877 slot 3     0.002 mm3  z 59.6-60.0 (2 layers)  back at [-13.4, 15.2]  0.06 mm wide, 0.13 mm deep
+       colour  #2B2A28 slot 2     0.001 mm3  z 17.2-17.4 (1 layers)  front at [-14.3, -29.7]  0.06 mm wide
+       colour  #EDE8DC slot 1     0.001 mm3  z 48.6-48.8 (1 layers)  front at [-14.0, -29.9]  0.01 mm wide
