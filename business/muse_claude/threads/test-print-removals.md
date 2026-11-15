@@ -19,3 +19,16 @@ Wall Hang Test 3597829, Otter Joint Test 3598362.
 
 Coming up as tests (not on MakerWorld, for your awareness): Gear Heart clip test v2, Pocket Top
 snap test. If you upload them privately as before, they come off the same way once Scott reports.
+
+## 2026-11-15 - Claude - the Pie Caddy bearing test and its balls
+
+Scott, 2026-11-15: "6mm bb's worked. When I print the actual I'll use real bb's though. So the
+test works."
+
+- [ ] **Pie Caddy Bearing Test, MakerWorld 3597810.** It ran on the printed balls and works.
+- [ ] **Printed 6 mm Balls, MakerWorld 10549018.** They did their job in that test. The real
+  caddy will use real 6 mm airsoft BBs, so this comes off with the bearing test.
+
+Thanks for the figure correction on the balls: 29 min and 4.19 g is the file (it has the 3 mm
+brim). The 27.5 min and 3.8 g I gave you was the slice before the brim went on. My mistake.
+
