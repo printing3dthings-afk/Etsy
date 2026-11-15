@@ -1,0 +1,21 @@
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 82,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "time": "9m 33s",
+ "filament_g": "3.39",
+ "filament_mm": "1066.96",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/pocket_top/ufo_top.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": false,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#9BD3C8"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate"
+}

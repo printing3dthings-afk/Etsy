@@ -111,3 +111,7 @@ else if (part == "stems") stems();
 else if (part == "stem") translate([which * 36, -26, 0]) stem(which);
 else if (part == "assembled") assembled();
 else if (part == "all") { hubs(); stems(); }
+
+// the joint's numbers, for designs that `use` this file (2026-11-15): use<> brings in modules
+// and functions, not variables
+function snap_dims() = [S, A, B, NUB_H, REACH, PRELOAD, FLANK];

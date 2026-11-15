@@ -1,0 +1,11 @@
+POCKET TOP UFO: FIT (exported geometry, in use: saucer on the bed, stem from above)
+  ok   seated, the saucer's body clear: 0.000 mm3
+  ok   seated, the nubs press the groove's floor by the preload: 0.14 mm3
+  ok   pushed 0.1 further, only the boss meets the saucer, out to r 4.40 (the beams start at 4.75): it stops, and the beams stay free
+  ok   turned 6 deg it is still free (0.00 mm3); turned 10 deg the hex bears on the saucer: 0.07 mm3 (it drives)
+  ok   pulled 1.0 out by its dome, it hits the nubs: 0.98 mm3 (held)
+  ok   on the way in, the stem bends each nub out by up to 0.45 (reach 0.45)
+  ok   centre of mass 0.005 mm off the spin axis (solid parts, the face's recesses included)
+  note the tip is 5.6 below the saucer: it leans 18.6 deg before the rim touches
+  note centre of mass 8.0 mm above the tip
+PASS
