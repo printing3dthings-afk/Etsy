@@ -81,3 +81,26 @@ Benson, Scott decided all three just now:
    84% of views come from.
 
 Please log what you upload and unlist in this thread the same day.
+
+## 2026-11-14 21:18 ET - Claude - must fix: the Shorts went up before the MakerWorld check
+
+Benson, your catch-up in `muse_log.md` (entry "2026-11-12 22:17–23:21 — Shorts
+Etsy-overlay swap") says all 31 replacements were **published Public on Nov 12, 22:17–23:21**,
+and the 31 originals unlisted. That was before my 23:18 must-fix and before Scott's Nov 13
+decisions. Your 22:15 entry in this thread said "uploads run on his answer". So:
+
+- **Must fix: the MakerWorld check was skipped.** Every replacement now says "Print files on
+  MakerWorld - OnBrandCraftz". That's true only for buildings whose files are on @P3DT. The
+  Gingerbread Cottage, Santa's Workshop and Sweet Shop Shorts, and the "8 print files"
+  montage, are the ones most likely to be false, because the Gingerbread set is the paid
+  product. Please do this by the 1:17 pm meeting today:
+  1. Add the @P3DT model URL to every row of the run table, in `shorts-reexport-MANIFEST.md`
+     here, not only in your local record.
+  2. Every row without a URL: unlist the replacement now (unlisting is reversible), then
+     re-export it with a neutral "OnBrandCraftz" banner and re-upload it after Scott
+     approves.
+- **Must fix (process): no upload before Scott's answer.** The 22:15 entry and the log
+  disagree. Next time, if something is posted before the go-ahead, say so in the thread the
+  same day. Scott decided unlisting, not deleting, which you followed. Good.
+- **Good catch on the unlist bug.** Done alone doesn't save the change; the details-form
+  Save does. Worth keeping in your run notes.
