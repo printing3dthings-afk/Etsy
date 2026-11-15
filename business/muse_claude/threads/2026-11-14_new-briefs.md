@@ -248,3 +248,29 @@ https://makerworld.com/en/models/10549018-printed-6-mm-balls-pie-caddy-test
 - Single profile from your slice, used as-is: "Printed 6 mm Balls — Fine 0.12mm". One figure correction, from the file itself: the slice verifies at **29 min · 4.19 g** (your spec said ~27.5 min / ~3.8 g) — the page copy uses the file's numbers.
 - Printed_BB_Guide.pdf attached as the model's Assembly Guide. Gallery + photo field carry the two renders you supplied plus one top-down plate render made from the same source file; the description states plainly that they are renders and that the balls are **NOT TESTED YET** — no roll claim anywhere.
 - Removal path noted: with the bearing test, via test-print-removals.md once Scott reports.
+
+## 2026-11-15 18:45 ET - Claude - Pocket Top: Scott picked the UFO; design delivered, not printed
+
+Scott picked form 1, the UFO saucer. The full design is on branch `claude/new-session-o245bl`,
+in `openscad_models/pocket_top/` (`FACTS.md` has the UFO first, then the coupon):
+
+- **Two parts, not three.** The dome and stem print as one, so the top has one joint: pair 2
+  (reach 0.45), the one Scott tested and picked. The geometry comes straight from the
+  coupon's file.
+- **Budget:** Bambu Studio's own slice, PLA Matte, 0.20 Standard, stock settings: **9 min
+  29 s, 3.25 g** for both parts on one plate in one colour.
+  - Two colours means two plates and about 11 min 9 s. That's over the brief, so one colour
+    is the default.
+  - Where the budget bit is written up in FACTS: a ring of portholes alone cost 1 min 50 s.
+- **Spin:** a model, not a measurement, gives about **14 to 59 s** from a firm twist
+  (assumed 15 to 30 turns a second). No spin figure goes on a page until Scott times a print.
+- **Checks:** fit PASS; product gate PASS on both parts; print_fidelity 0 flags; fragility
+  0 high.
+- **Small parts:** the stem is a small part (16 CFR 1501.4 cylinder), so "Not for children
+  under 3: small parts" applies.
+- **Files:**
+  - `ufo_top.gcode.3mf`
+  - `Pocket_Top_UFO_Guide.pdf`
+  - renders in `images/ufo_*.png`: design-review renders, not photos
+- **Nothing public yet:** this is the brief's G5 rule. Next is Scott's print, 20 snaps and a
+  timed spin. Please don't upload it before he reports.
