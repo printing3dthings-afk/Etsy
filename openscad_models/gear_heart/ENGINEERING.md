@@ -222,3 +222,39 @@ posts, and the pins go on the gears plate.
 strain, inside the 1.4 % one-time limit and over the 0.8 % repeated one, so a pin goes in
 once and comes out only for a repair, as the table above assumes. Whether any prong
 whitened isn't reported yet. The heart v2 uses 0.65 (section 9).
+
+## 9. The heart v2: clip-v2 pins (2026-11-16)
+
+**What changed.** The fifteen snap posts are gone. Each gear turns on a clip-v2 axle pin with
+the 0.65 barb, Scott's pick from the clip test. In `heart.scad`:
+- the bosses are r 7.0 (as on the clip test), each with `pin_hole()` (the 7.7 hole and the
+  head's pocket, its roof at 55°) and `pin_washer()`;
+- the knob's hole is sized to the pin: r 5.1, round the 0.65 barbs, with the same 37° pointed
+  roof above the pin's top;
+- the fifteen pins print on the gears plate, lying on their sides in two columns beside the
+  gears. Below the gears, the plate was 192 mm deep and Bambu Studio's layout couldn't place it.
+
+The gears, washers, +0.20 meshes, layout and phases are unchanged. The v1 files
+(`gear_heart_plate.3mf`, `gear_heart_gears.3mf`) are kept as they were; they carry the
+posts that snapped.
+
+**Checks (`checks/`, on the exported parts).**
+- Fit (`check_heart.py`, `fit_heart.txt`): PASS.
+  - Everything from section 7 still holds: the ring closes, all fifteen gears turn two knob
+    teeth with no overlap (smallest gap 0.132), every mesh engages, non-meshing gears stay
+    2.55 apart, and the knob clears the top gear.
+  - New, the pins: all fifteen seat in the plate touching nothing. No gear touches its pin,
+    at rest or turned. Each gear lifted 1.0 hits its pin's barbs (at least 4.17 mm³: held).
+- Product gate:
+  - plate PASS (0 support moves);
+  - gears and pins PASS (30 bodies), with the pins' bed and top faces declared, 0.3 deep
+    (`parts/heart_gate_skip.stl`, as on the clip test).
+- Print fidelity: plate 0 flags (`fidelity_heart_plate_v2.txt`); gears and pins in
+  `fidelity_heart_gears_v2.txt`.
+- Fragility: `fragility_heart_v2.txt`.
+- Bambu Studio (P1S 0.4, PLA Basic, 0.20 Standard, shop retail settings, textured PEI):
+  - plate 1 h 54 m 51 s, 34.78 g (v1 2 h 15 m, 40.5 g: the posts are gone);
+  - gears and pins 2 h 19 m 48 s, 33.18 g (v1 1 h 49 m, 26.6 g).
+
+**Not checked by printing yet:** the v2 heart as a whole. Its pin, boss, washer and gear
+are the clip test's, which Scott printed. His pick was 0.65, by feel.
