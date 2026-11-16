@@ -39,13 +39,11 @@ def main():
         "!The heart-hole gear goes on the boss in the top dip. The knob gear goes in the middle.",
         "Then work down both sides from the top: a 16-tooth gear, then a 12, then a 16, and so on.",
         "The 16-tooth gear at the bottom point goes on last. Its teeth line up with both sides.",
-    ], crop(IMG / "heart_v2_top.png"), pic_h=400)
+    ], crop(IMG / "heart_v2_top.png"), pic_h=330)
     b.step(4, "Pin each gear from underneath", [
-        "!Set the gear on its boss, its teeth slipped into its neighbour's.",
-        "Hold the plate up, push a pin up through the hole from underneath, prongs first, through the boss and the gear.",
-        "Turn the pin's head to line up with its slot and press until the hooks click over the gear's top.",
-        "The head sits in its slot under the plate, so the pin can't turn: the gear turns on it.",
-    ], crop(IMG / "heart_v2_underside.png"), pic_h=400)
+        "!Set the gear on its boss, its teeth in its neighbour's. From underneath, push a pin up through the hole, prongs first.",
+        "Line the pin's head up with its slot and press until the hooks click over the gear. The pin can't turn; the gear turns on it.",
+    ], crop(IMG / "heart_v2_underside.png"), pic_h=330)
     c = Card("Gear Heart v2: turning it, and what to check", "")
     c.step(5, "Turn the knob", [
         "!Every gear turns together, each the opposite way to its neighbours.",

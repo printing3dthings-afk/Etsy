@@ -43,5 +43,7 @@ together. Scott's form 9A. Engineering: ENGINEERING.md (section 9 for v2).
 - `heart_v2_plate.png`: the plate print.
 - `heart_v2_gears_plate.png`: the gears and pins print.
 - `heart_v2_underside.png`: the pins' heads in their pockets.
+- `heart_v2_plate_as_printed.png`, `heart_v2_gears_as_printed.png`: rendered from the
+  toolpath of the checks' slices.
 
 Not for children under 3: small parts.
