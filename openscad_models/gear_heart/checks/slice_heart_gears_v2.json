@@ -1,0 +1,21 @@
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 94,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "time": "2h 19m 48s",
+ "filament_g": "33.18",
+ "filament_mm": "10947.54",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/gear_heart/checks/heart_gears_v2.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#C94F6D"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate"
+}

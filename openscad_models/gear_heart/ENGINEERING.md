@@ -216,3 +216,9 @@ boss each goes in) and three of the heart's 12-tooth gears. Guide:
 **Next.** Scott prints it and reports which barb went on and held best and whether any
 prong whitened. Then the heart plate gets r 7.0 bosses with `pin_hole()` in place of its
 posts, and the pins go on the gears plate.
+
+**Scott's result (2026-11-16).** He printed the clip test (P1S, textured PEI, 36 min, 10 g,
+"Success") and reported: "Number 3 seems to feel the best." Clip 3 is the 0.65 barb: 1.12 %
+strain, inside the 1.4 % one-time limit and over the 0.8 % repeated one, so a pin goes in
+once and comes out only for a repair, as the table above assumes. Whether any prong
+whitened isn't reported yet. The heart v2 uses 0.65 (section 9).

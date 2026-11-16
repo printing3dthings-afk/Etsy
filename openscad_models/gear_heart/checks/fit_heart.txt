@@ -5,5 +5,6 @@ turn: knob through 45.0 deg in 1 deg steps, all 15 gears at their ratios: larges
 engaged: each of 15 meshes collides when one gear is turned 1.5 deg either way against the other -> ok
 clear: gears that don't mesh stay 2.55 mm apart at the closest, through the turn -> ok
 knob: knob gear and its heart against the top gear in 3D, through the turn: overlap 0.0000 mm3 -> ok
-plate: all gears against the plate, posts and washers at rest: overlap 0.0000 mm3 -> ok
+plate: all gears against the plate (v2, pin holes) and washers at rest: overlap -0.0000 mm3 -> ok
+pins: 15 pins seat in the plate touching nothing (0.0000 mm3); no gear touches its pin at rest (0.0000) or turned (0.0000); each gear lifted 1.0 hits its barbs (least 4.17 mm3: held); the knob is gear 14, so its pin is in that count too -> ok
 PASS

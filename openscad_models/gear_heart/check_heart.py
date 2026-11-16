@@ -9,7 +9,10 @@ each in its own frame) placed as heart.scad places them, and the exported plate:
   engaged  each mesh, turned back past its backlash, does collide: it really meshes
   clear    gears that don't mesh never come within 1 mm, at any step
   knob     the knob (above the centre gear) never touches the top gear, in 3D
-  plate    no gear touches the plate, the posts or the washers' rims, at rest
+  plate    no gear touches the plate or the washers' rims, at rest
+  pins     (v2, 2026-11-16) the fifteen axle pins (barb 0.65, Scott's pick) seat in the plate
+           touching nothing; no gear touches its pin, at rest or turned; each gear lifted
+           1.0 hits its pin's barbs (held); the knob clears its pin's top
 
     python3 check_heart.py      (writes checks/fit_heart.txt)
 """
@@ -113,11 +116,24 @@ def main():
     ok &= knob_hit < 1e-3
     out.append(f"knob: knob gear and its heart against the top gear in 3D, through the turn: overlap "
                f"{knob_hit:.4f} mm3 -> {'ok' if knob_hit < 1e-3 else 'FAIL'}")
-    plate = M(trimesh.load(HERE / "parts" / "heart_plate.stl"))
+    plate = M(trimesh.load(HERE / "parts" / "heart_plate_v2.stl"))
     pl = sum((plate ^ posed3d(i, 0)).volume() for i in range(n))
     ok &= pl < 1e-3
-    out.append(f"plate: all gears against the plate, posts and washers at rest: overlap {pl:.4f} mm3 "
+    out.append(f"plate: all gears against the plate (v2, pin holes) and washers at rest: overlap {pl:.4f} mm3 "
                f"-> {'ok' if pl < 1e-3 else 'FAIL'}")
+    # the pins, each a separate body in parts/heart_pins_posed.stl, in the plate's frame
+    pins = trimesh.load(HERE / "parts" / "heart_pins_posed.stl").split(only_watertight=True)
+    pin_at = [min(pins, key=lambda p: np.hypot(*(p.centroid[:2] - np.array(g["at"])))) for g in gears]
+    seat = (plate ^ M(trimesh.util.concatenate(pins))).volume()
+    rest = max((M(pin_at[i]) ^ posed3d(i, 0)).volume() for i in range(n))
+    turned = max((M(pin_at[i]) ^ posed3d(i, t)).volume() for i in range(n) for t in (7.0, 13.0))
+    held = min((M(pin_at[i]) ^ posed3d(i, 0).translate([0, 0, 1.0])).volume() for i in range(n))
+    pins_ok = len(pins) == n and seat < 1e-3 and rest < 1e-3 and turned < 1e-3 and held > 1.0
+    ok &= pins_ok
+    out.append(f"pins: {len(pins)} pins seat in the plate touching nothing ({seat:.4f} mm3); no gear touches its "
+               f"pin at rest ({rest:.4f}) or turned ({turned:.4f}); each gear lifted 1.0 hits its barbs "
+               f"(least {held:.2f} mm3: held); the knob is gear {knob}, so its pin is in that count too "
+               f"-> {'ok' if pins_ok else 'FAIL'}")
     out.append("PASS" if ok else "FAIL")
     text = "\n".join(out)
     print(text)
