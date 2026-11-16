@@ -16,6 +16,8 @@ love_letter_customizer.scad, still here) wrote the fixed envelope out as a
   letter at a time from its own measured advances, as the shipped design is.
 - **One file:** the four libraries it includes are inlined.
 - **On the plate:** centred on (0, 0), where PMM's preview centres the plate.
+  The MakerWorld profile must have Auto Arrangement on, or the printed file
+  lands off the plate (tools/pmm_build.py, rule 3).
 
 The lid and Cupid don't change with the name: they're separate prints, not
 in this file, as before.
@@ -77,8 +79,8 @@ NAME_COLOUR = "#3B2A3A"; // color
 
 FOOTER = '''
 // ---- what MakerWorld exports: four colours, centred on (0, 0) ----
-// (PMM's preview centres the plate on the origin; its export arranges the
-// model onto the plate. At (128, 128) it showed off the plate's corner.)
+// (PMM's preview centres the plate on the origin. Its export keeps these
+// coordinates unless the profile's Auto Arrangement is on: tools/pmm_build.py, rule 3.)
 PLATE_CENTRE = [%d, %d];
 translate([PLATE_CENTRE[0], PLATE_CENTRE[1], 0]) {
     color(ENVELOPE_COLOUR) body();

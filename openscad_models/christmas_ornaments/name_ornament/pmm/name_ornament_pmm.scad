@@ -173,8 +173,8 @@ module inlay() {
 module body() difference() { union() { dome(); loop(); } inlay(); obc_cut(MARK_H); }
 
 // ---- what MakerWorld exports: two colours, centred on (0, 0) ----
-// (PMM's preview centres the plate on the origin; its export arranges the
-// model onto the plate. At (128, 128) it showed off the plate's corner.)
+// (PMM's preview centres the plate on the origin. Its export keeps these
+// coordinates unless the profile's Auto Arrangement is on: tools/pmm_build.py, rule 3.)
 PLATE_CENTRE = [0, 0];
 translate([PLATE_CENTRE[0], PLATE_CENTRE[1], 0]) {
     color(ORNAMENT_COLOUR) body();

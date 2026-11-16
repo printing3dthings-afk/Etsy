@@ -26,8 +26,11 @@ was rebuilt to fit MakerWorld's Parametric Model Maker (PMM) from the start, by
 - **One file:** its four libraries are inlined. PMM reads only the uploaded
   .scad.
 - **On the plate:**
-  - It is centred on (0, 0), where PMM's preview centres the plate, and
-    PMM's export arranges it onto the plate.
+  - It is centred on (0, 0), where PMM's preview centres the plate.
+  - **The MakerWorld profile must have Auto Arrangement on, for every plate.**
+    Without it, PMM's export keeps the raw coordinates, and (0, 0) is the
+    plate's front-left corner: the print lands off the plate (Scott,
+    2026-11-16). `tools/pmm_build.py`, rule 3.
   - Corrected 2026-11-10: it had been moved to (128, 128) on a wrong reading
     that a 3MF's origin is the plate's corner. Scott's preview of the Name
     Ornament, placed the same way, showed it off the plate's corner.
@@ -48,9 +51,13 @@ name, not a photo.
 
 **Acceptance test (Benson):**
 1. Upload `love_letter_pmm.scad` as the model's PMM file.
-2. Enter a name and press Generate. The preview should show the envelope with
+2. In the profile configuration (top right of the model's edit page), turn
+   **Auto Arrangement** on for every plate, then Upload to save.
+3. Enter a name and press Generate. The preview should show the envelope with
    the name on the address side.
-3. In Bambu Handy, customize and print with the cloud slice. It should slice.
+4. Open the generated file: the envelope sits on the plate, not hanging off
+   its corner.
+5. In Bambu Handy, customize and print with the cloud slice. It should slice.
 
 ## The first customizer, `love_letter_customizer.scad` (2026-11-05, replaced)
 

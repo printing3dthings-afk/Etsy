@@ -13,13 +13,19 @@ PMM file this shop writes now follows them:
    Dancing Script nor Fredoka is installed on PMM. `check_fonts()` fails a
    file whose fonts aren't in PMM's runtime list (fonts-0.8.0.json, saved
    beside this as pmm_fonts.json).
-3. **On the plate: centred on (0, 0).** PMM's preview draws the plate centred
-   on the origin, and its 3MF export auto-arranges the model onto the plate
-   in Bambu Studio. Corrected 2026-11-10 from Scott's phone screenshot: this
-   rule used to say the origin was the plate's front-left corner and moved
-   every model to (128, 128), which put the ornament off the plate's corner
-   in the preview. That was read from a raw `--arrange 0` slice, which is not
-   what PMM does.
+3. **On the plate: centred on (0, 0), and the profile's Auto Arrangement ON.**
+   PMM's preview draws the plate centred on the origin. The 3MF it generates
+   for printing keeps the model's raw coordinates, in which the plate's origin
+   is its front-left corner, UNLESS the profile's "Auto Arrangement" is on;
+   then Bambu Studio arranges the model onto the plate. Auto Arrangement is a
+   per-plate setting in the creator's profile configuration (MakerWorld,
+   model edit page, profile configuration button; Bambu's PMM v0.10.0
+   announcement, forum.bambulab.com/t/144618). With it off, no single position
+   works for both: (128, 128) printed on the plate but previewed off its
+   corner (Scott, 2026-11-10); (0, 0) previews right but prints off the plate
+   (Scott, 2026-11-16, "It puts the print off the plate when customizing").
+   So the file stays centred on (0, 0) and the profile must have Auto
+   Arrangement on: a MakerWorld setting, not something the .scad can fix.
 4. **Fast.** PMM's generator gives up after about 10 s (forum reports; PMM's
    backend is an OpenSCAD build with Manifold, staff-confirmed 2025-03).
    `time_render()` renders with a Manifold build of OpenSCAD.

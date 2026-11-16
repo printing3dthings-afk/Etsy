@@ -11,6 +11,9 @@ empty plate, and cloud slicing in Handy failed. Two faults, both fixed here
 - The ornament is centred on (0, 0), where PMM's preview centres the plate.
   (2026-11-06 to 11-10 it sat at (128, 128), from a wrong reading of the
   slice failure, and showed off the plate's corner in Scott's preview.)
+- At (0, 0) the printed file lands off the plate (Scott, 2026-11-16) unless
+  the MakerWorld profile has Auto Arrangement on, per plate. That is a
+  profile setting, not code: tools/pmm_build.py, rule 3.
 
     python3 build_pmm.py && python3 ../../../../tools/pmm_check.py name_ornament_pmm.scad \
         --param NAME --values Olivia Jessee Mia Christopher MARY-JO Zoë --slice Jessee \
@@ -61,8 +64,8 @@ NAME_COLOUR = "#F4F1EA"; // color
 
 FOOTER = '''
 // ---- what MakerWorld exports: two colours, centred on (0, 0) ----
-// (PMM's preview centres the plate on the origin; its export arranges the
-// model onto the plate. At (128, 128) it showed off the plate's corner.)
+// (PMM's preview centres the plate on the origin. Its export keeps these
+// coordinates unless the profile's Auto Arrangement is on: tools/pmm_build.py, rule 3.)
 PLATE_CENTRE = [%d, %d];
 translate([PLATE_CENTRE[0], PLATE_CENTRE[1], 0]) {
     color(ORNAMENT_COLOUR) body();
