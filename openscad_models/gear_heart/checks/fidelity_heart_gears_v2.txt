@@ -1,3 +1,10 @@
 slicing 1 part(s), 1 filament(s) ...
 94 layers parsed
   layer 0/94
+
+PRINT FIDELITY  (94 layers, model 37327.6 mm3)
+  dropped (modelled, not printed): 0.01 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #999999 slot 1     0.006 mm3  z 17.4-18.8 (7 layers)  back at [72.0, 101.5]  0.06 mm wide, 0.13 mm deep

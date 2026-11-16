@@ -28,6 +28,8 @@ together. Scott's form 9A. Engineering: ENGINEERING.md (section 9 for v2).
   - no gear rubs its pin;
   - each gear lifted 1 mm is held by its pin's barbs.
 - **Product gate:** both prints pass, 0 support moves.
+- **print_fidelity:** 0 flags on both.
+- **Fragility:** 0 high and 0 watch on both.
 - **Pins:** each goes in once, and comes out only for a repair: pinch the barbs together and
   push the pin down. The 0.65 barb's strain is inside the one-time limit, not the repeated one.
 

@@ -249,9 +249,10 @@ posts that snapped.
   - plate PASS (0 support moves);
   - gears and pins PASS (30 bodies), with the pins' bed and top faces declared, 0.3 deep
     (`parts/heart_gate_skip.stl`, as on the clip test).
-- Print fidelity: plate 0 flags (`fidelity_heart_plate_v2.txt`); gears and pins in
-  `fidelity_heart_gears_v2.txt`.
-- Fragility: `fragility_heart_v2.txt`.
+- Print fidelity: 0 flags on both (`fidelity_heart_plate_v2.txt`,
+  `fidelity_heart_gears_v2.txt`).
+- Fragility (`fragility_heart_v2.txt`): 0 high and 0 watch on both. v1's plate had 20
+  "watch", all of them the posts' prongs.
 - Bambu Studio (P1S 0.4, PLA Basic, 0.20 Standard, shop retail settings, textured PEI):
   - plate 1 h 54 m 51 s, 34.78 g (v1 2 h 15 m, 40.5 g: the posts are gone);
   - gears and pins 2 h 19 m 48 s, 33.18 g (v1 1 h 49 m, 26.6 g).
