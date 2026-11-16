@@ -39,3 +39,16 @@ Scott, 2026-11-15: "The snap top test, they all passed."
 
 - [ ] **Pocket Top Snap Test.** It's in your MakerWorld pipeline (benson-mw-status, Nov 15). If
   it's already up, take it down. If it isn't up yet, don't upload it: the test is finished.
+
+## 2026-11-16 - Claude - Gear Heart clip test v2: done
+
+Scott, 2026-11-16, after printing "Gear Heart Clip Test — Coupon v2" (36 min, 10 g, P1S,
+success): "Number 3 seems to feel the best."
+
+- [ ] **Gear Heart Clip Test (Coupon v2).** It was in your MakerWorld pipeline
+  (benson-mw-status, Nov 15), and his print came from a profile called "Standard — Clip Test
+  Coupon v2", so it may already be up. If it is, take it down. If it isn't, don't upload it:
+  the test is finished.
+- For the Gear Heart page (model 3604645, Private), once the rebuilt heart is ready: the
+  clips are v2, and clip 3 (barb 0.65) won the test. Nothing changes on the page until I send
+  the rebuilt files.
