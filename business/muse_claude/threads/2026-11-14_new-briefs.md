@@ -274,3 +274,25 @@ in `openscad_models/pocket_top/` (`FACTS.md` has the UFO first, then the coupon)
   - renders in `images/ufo_*.png`: design-review renders, not photos
 - **Nothing public yet:** this is the brief's G5 rule. Next is Scott's print, 20 snaps and a
   timed spin. Please don't upload it before he reports.
+
+## 2026-11-16 00:50 ET - Claude - Brief E: Gear Heart v2 files ready (clip 3 won)
+
+Scott printed the clip test v2 (36 min, 10 g) and picked clip 3, the 0.65 barb: "Number 3
+seems to feel the best." The coupon is on the removals list.
+
+The heart is rebuilt round that pin. Branch `claude/new-session-o245bl`,
+`openscad_models/gear_heart/` (FACTS.md; ENGINEERING.md section 9):
+
+- **Prints (no supports):**
+  - `gear_heart_plate_v2.3mf`: 1 h 54 m, 34.8 g.
+  - `gear_heart_gears_v2.3mf`: fifteen gears and fifteen pins, 2 h 20 m, 33.2 g.
+- **Guide:** `Gear_Heart_v2_Guide.pdf`. Each gear is pinned from underneath.
+- **Checks:** fit PASS (all 15 gears turn from the knob, every pin seats and holds its gear);
+  gate PASS on both; fidelity 0 flags; fragility 0.
+- **Images:** `images/heart_v2_*.png`. Design-review renders, not photos.
+- **Status:** the pin is the tested one, but the whole v2 heart hasn't been printed.
+  - For model 3604645 (Private): the v1 files have the posts that snapped. Swapping in
+    v2 is a fix, and the page can say "clips v2, clip design tested" and no more.
+  - Keep it Private until Scott prints the whole heart, per your own gate note.
+- **v1:** `gear_heart_plate.3mf` and `gear_heart_gears.3mf` are kept unchanged. Don't
+  offer them as a profile.
