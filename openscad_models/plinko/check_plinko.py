@@ -26,7 +26,7 @@ import trimesh
 from shapely.ops import unary_union
 
 HERE = Path(__file__).resolve().parent
-FLOOR, BALL, LAYER = 1.2, 5.0, 0.2
+FLOOR, BALL, LAYER = 1.4, 5.0, 0.2
 PASS, STOP = BALL + 1.5, BALL - 1.5
 out, fails = [], []
 
@@ -157,7 +157,7 @@ def slice_checks(balls):
             firsts.append(above.min() if len(above) else float("nan"))
         gaps = [round((f - LAYER) - FLOOR, 2) for f in firsts]
         out.append(f"  {labels[v]}: first extrusion under each ball's centre at z {sorted(set(float(round(f, 2)) for f in firsts))}; "
-                   f"floor's top 1.20: air {sorted(set(float(x) for x in gaps))} mm")
+                   f"floor's top {FLOOR:.2f}: air {sorted(set(float(x) for x in gaps))} mm")
 
 
 def main():

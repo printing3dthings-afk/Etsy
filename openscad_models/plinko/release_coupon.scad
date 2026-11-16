@@ -25,12 +25,12 @@ BALL = 5.0;
 TIP = BALL / 2 * sqrt(2);          // the 45 deg point, below the ball's centre
 FLOATS = [0.2, 0.4, 0];            // 0: printed onto the floor through NECK
 NECK = 0.6;
-FLOOR = 1.2;
+FLOOR = 1.4;                       // the board's back. At exactly 1.2 the gate read it a hair under its 1.2 floor
 LAT_GAP = 0.6;
 D = 0.4 + BALL / 2 + TIP + LAT_GAP;   // inside depth: the tallest ball plus the lattice gap (7.04)
-LAT_T = 1.0;
-LAT_BAR = 1.2;
-LAT_OPEN = 3.2;
+LAT_T = 1.2;                       // six layers: at 1.0 the gate read every bar as a sub-1.2 wall
+LAT_BAR = 1.4;                     // at 1.2 the gate read the bars as just under its 1.2 floor
+LAT_OPEN = 3.0;
 WALL = 1.6;
 
 // the hourglass, inside. Every gap a ball meets is a pass (>= 6.5, square to the surfaces)
@@ -66,10 +66,16 @@ module outline2d() union() {
     for (y = P_Y) translate([P_X, y]) square([P + 2 * WALL, P + 2 * WALL], center = true);
 }
 module voids2d() { hg_void2d(); for (y = P_Y) translate([P_X, y]) square([P, P], center = true); }
-// bars across each void (level in use), P or W long, resting on the walls, pegs and tapers
-module lattice_open2d() intersection() {
-    voids2d();
-    for (k = [-7 : 7]) translate([0, k * (LAT_BAR + LAT_OPEN)]) square([200, LAT_OPEN], center = true);
+// bars across each void (level in use), crossed by upright ribs (x = -6.5, 0, 6.5 in the
+// hourglass, the middle of each pocket), so no bar spans more than about 6.5: a bar across the
+// full 26 read slenderness 20 in fragility.py, past the 15 at which the chapel's bar snapped
+RIBS = [-6.5, 0, 6.5];
+module lattice_open2d() difference() {
+    intersection() {
+        voids2d();
+        for (k = [-7 : 7]) translate([0, k * (LAT_BAR + LAT_OPEN)]) square([200, LAT_OPEN], center = true);
+    }
+    for (x = concat(RIBS, [P_X])) translate([x, 0]) square([LAT_BAR, 200], center = true);
 }
 
 module body() difference() {
@@ -82,9 +88,9 @@ module body() difference() {
         translate([0, 0, FLOOR + D - 0.01]) linear_extrude(LAT_T + 0.01) difference() { outline2d(); lattice_open2d(); }
     }
     // the variants' notches: upright grooves in the outside walls, beside each
-    for (k = [0 : 1]) translate([(k - 0.5) * 2 - 0.45, -HG_H / 2 - 1, -1]) cube([0.9, 1.6, Z_TOP + 2]);   // hourglass: 2
+    for (k = [0 : 1]) translate([(k - 0.5) * 2.4 - 0.45, -HG_H / 2 - 1, -1]) cube([0.9, 1.6, Z_TOP + 2]);   // hourglass: 2
     for (n = [1, 3]) let (y = n == 1 ? P_Y[0] : P_Y[1])
-        for (k = [0 : n - 1]) translate([P_X + P / 2 + WALL - 0.6, y + (k - (n - 1) / 2) * 2 - 0.45, -1]) cube([1.6, 0.9, Z_TOP + 2]);
+        for (k = [0 : n - 1]) translate([P_X + P / 2 + WALL - 0.6, y + (k - (n - 1) / 2) * 2.4 - 0.45, -1]) cube([1.6, 0.9, Z_TOP + 2]);
     // a 0.4 chamfer at the foot (elephant's foot)
     // (in 0.1 steps: the outline is an L, so a scaled extrusion can't make it)
     for (k = [0 : 3]) translate([0, 0, k * 0.1 - 0.01]) linear_extrude(0.11)

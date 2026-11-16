@@ -4,12 +4,12 @@ SNOWFALL PLINKO TEST PRINT: FIT (exported geometry)
   ok   variant 3 (0.6 neck): 4 balls joined to the floor only through their necks (0.012 mm3 overlap: the necks' 0.01 into the floor)
   ok   the lattice's underside 0.60 above the tallest ball (>= 0.6)
   ok   balls printed 1.80 apart at the closest (>= 0.6)
-  ok   lattice openings at most 3.20 across (a ball is 5.0): none gets out
+  ok   lattice openings at most 3.00 across (a ball is 5.0): none gets out
   ok   hourglass at mid-depth: every gap a ball meets is a pass (>= 6.5) or a stop (<= 3.5); largest left-over sliver 0.12 mm2 (corners leave ~0.1)
   ok   a 5 mm ball's centre can go from one end of the hourglass to the other (1 region(s) a ball's centre can reach)
   ok   and a 6.5 ball could too: the path has no gap under 6.5
 SLICE (Bambu Studio, PLA Matte, 0.20): air under each ball
-  0.2 float: first extrusion under each ball's centre at z [1.8]; floor's top 1.20: air [0.4] mm
-  0.4 float: first extrusion under each ball's centre at z [2.0]; floor's top 1.20: air [0.6] mm
-  0.6 neck: first extrusion under each ball's centre at z [1.4]; floor's top 1.20: air [0.0] mm
+  0.2 float: first extrusion under each ball's centre at z [2.0]; floor's top 1.40: air [0.4] mm
+  0.4 float: first extrusion under each ball's centre at z [2.2]; floor's top 1.40: air [0.6] mm
+  0.6 neck: first extrusion under each ball's centre at z [1.6]; floor's top 1.40: air [0.0] mm
 PASS

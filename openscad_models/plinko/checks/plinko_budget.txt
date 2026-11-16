@@ -5,8 +5,8 @@ ball: 5.0 across, 6.04 tall as printed (point 3.54 below its centre)
   variant float 0.4: the point hangs 2 layer(s) of air above the floor, over the handbook's 0.3 open gap. Its first layers print over air and drop; a shake or a poke frees it. The test print decides
   variant neck 0.6: the point printed onto the floor; it snaps at about 14 N in pure tension, but a sideways poke at the ball's centre (3.5 above the neck) bends it: about 0.30 N breaks it. A toothpick through the lattice
   ok   lattice 0.6 above the tallest ball (>= 0.3, and its bars are bridges that sag ~0.1-0.2)
-  ok   lattice openings 3.2 <= 3.5: no ball gets out
-  ok   lattice bars 1.2 wide (3 beads)
+  ok   lattice openings 3.0 <= 3.5: no ball gets out
+  ok   lattice bars 1.4 wide (3 beads)
   ok   balls printed 0.8 from each other and from every wall and peg (>= 0.3)
 every gap in the board is either a stop (<= 3.5) or a pass (>= 6.5); none between, where a ball could wedge. The fit check measures them on the model
 PASS

@@ -1,0 +1,21 @@
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 48,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "time": "24m 41s",
+ "filament_g": "11.03",
+ "filament_mm": "3473.26",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/plinko/checks/release_coupon.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": false,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#F4F1EA"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate"
+}

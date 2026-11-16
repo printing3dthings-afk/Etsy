@@ -1,0 +1,30 @@
+  x: 38 slender run(s)
+  y: 18 slender run(s)
+  z: 2 slender run(s)
+
+FRAGILITY  0 high (slenderness >= 15.0, where the chapel's bar snapped), 28 watch (>= 4.0), 58 slender runs
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(10.0), np.float64(-19.8), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(10.0), np.float64(-15.4), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(10.0), np.float64(15.4), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(10.0), np.float64(19.8), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(18.4), np.float64(-19.8), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(18.4), np.float64(-15.4), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(18.4), np.float64(-11.0), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(18.4), np.float64(11.0), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(18.4), np.float64(15.4), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(18.4), np.float64(19.8), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(26.0), np.float64(-19.8), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(26.0), np.float64(-15.4), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(26.0), np.float64(-11.0), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(26.0), np.float64(11.0), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(26.0), np.float64(15.4), np.float64(9.0)]
+  WATCH along x    6.0 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.6  at [np.float64(26.0), np.float64(19.8), np.float64(9.0)]
+  WATCH along x    5.6 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.3  at [np.float64(-10.2), np.float64(-19.8), np.float64(9.0)]
+  WATCH along x    5.6 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.3  at [np.float64(-10.2), np.float64(-15.4), np.float64(9.0)]
+  WATCH along x    5.6 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.3  at [np.float64(-10.2), np.float64(15.4), np.float64(9.0)]
+  WATCH along x    5.6 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.3  at [np.float64(-10.2), np.float64(19.8), np.float64(9.0)]
+  WATCH along x    5.2 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.0  at [np.float64(-3.2), np.float64(-15.4), np.float64(9.0)]
+  WATCH along x    5.2 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.0  at [np.float64(-3.2), np.float64(-6.6), np.float64(9.0)]
+  WATCH along x    5.2 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.0  at [np.float64(-3.2), np.float64(6.6), np.float64(9.0)]
+  WATCH along x    5.2 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.0  at [np.float64(-3.2), np.float64(15.4), np.float64(9.0)]
+  WATCH along x    5.2 mm long  ~1.7 mm2 (thinnest 1.7)  slenderness 4.0  at [np.float64(3.2), np.float64(-15.4), np.float64(9.0)]
