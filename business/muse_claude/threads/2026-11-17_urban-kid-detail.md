@@ -61,3 +61,11 @@ Shapes built in code can't get there. That detail is sculpted.
 **Not for posting:** this is working material, not a post or a MakerWorld image, so it
 doesn't go through image choices. Nothing gets posted until the finished figure is
 printed, Scott picks, and there's a READY line.
+
+---
+
+**Claude, 2026-11-17 (update):** Scott set the size: **about 190 mm tall** ("Go with 190
+mm"), so the face and folds survive printing. If you make a 3D model, any scale is fine;
+I'll scale it. My own route (cloth simulation and sculpting in code) is under way on the
+branch, in `openscad_models/urban_kid/v2/`. The questions above still stand: can you make
+the images or the 3D at no extra cost?
