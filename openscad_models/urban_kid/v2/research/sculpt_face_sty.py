@@ -6,8 +6,9 @@ is young (round face, big eyes, short nose, small mouth), which a designer-toy
 teen needs. This gives him his expression and the detail Scott's references
 have. Scott, on the first pass's sleepy smirk: "Maybe a devilish smile or smirk.
 A fun up to no good look." So:
-  - a wide closed-lip grin, both corners pulled up and back, his left higher,
-    dimples at both ends and smile lines from the nose past the corners;
+  - a sly, lopsided closed-lip smile (then "Grin bigger like a sly smile"): his
+    left corner pulled far up and back into a deep dimple and smile line, his
+    right only a little;
   - cheeks lifted, pushing the lower lids up: the sly squint of a grin that
     means it;
   - upper lids a little lowered (scheming, not sleepy);
@@ -64,25 +65,29 @@ def main(src, dst):
         s.move(F(X(side, 0.052), 0.615), 0.03, (side * 0.004, -0.002, -0.002))
     s.move(F(CX, 0.600), 0.022, (0, -0.004, -0.004))
 
-    # ---- the grin: both corners up and back, his left higher, the mouth a little wider ----
-    s.move(F(CX + MOUTH_HW, MOUTH_Z), 0.021, (0.0042, 0.0030, 0.0095))
-    s.move(F(CX - MOUTH_HW, MOUTH_Z), 0.020, (-0.0034, 0.0024, 0.0066))
-    # the cheeks lifted and full over the corners (the left more)
-    for side, up in ((1, 0.0040), (-1, 0.0030)):
-        s.move(F(X(side, 0.042), 0.656), 0.024, (side * 0.0010, -0.0030, up))
-        s.draw(F(X(side, 0.042), 0.680), 0.015, 0.0014)
-    # the lip line: cut, curving up to both corners
-    line = [F(CX - MOUTH_HW - 0.005, MOUTH_Z + 0.0068), F(CX - 0.013, MOUTH_Z + 0.0016), F(CX, MOUTH_Z + 0.0002),
-            F(CX + 0.013, MOUTH_Z + 0.0020), F(CX + MOUTH_HW + 0.005, MOUTH_Z + 0.0100)]
+    # ---- the sly smile (Scott: "Grin bigger like a sly smile"): lopsided. His left
+    # corner pulled far up and back into a deep dimple, his right only a little ----
+    s.move(F(CX + MOUTH_HW, MOUTH_Z), 0.026, (0.0060, 0.0040, 0.0150))
+    s.move(F(CX + MOUTH_HW + 0.008, MOUTH_Z + 0.012), 0.022, (0.0024, 0.0020, 0.0035))
+    s.move(F(CX - MOUTH_HW, MOUTH_Z), 0.020, (-0.0030, 0.0020, 0.0040))
+    # the cheek bunched hard over the high corner, the other barely lifted
+    s.move(F(X(1, 0.042), 0.660), 0.026, (0.0015, -0.0045, 0.0065))
+    s.draw(F(X(1, 0.044), 0.684), 0.016, 0.0026)
+    s.move(F(X(-1, 0.042), 0.656), 0.022, (-0.0010, -0.0020, 0.0020))
+    # the lip line: nearly level on his right, sweeping up to his left
+    line = [F(CX - MOUTH_HW - 0.004, MOUTH_Z + 0.0035), F(CX - 0.010, MOUTH_Z + 0.0006), F(CX, MOUTH_Z + 0.0010),
+            F(CX + 0.012, MOUTH_Z + 0.0040), F(CX + 0.021, MOUTH_Z + 0.0095), F(CX + 0.027, MOUTH_Z + 0.0130)]
+    # (run on to z + 0.0165 the line hooked straight up at its end, like a scar)
     s.crease(line, 0.0055, 0.0042, pinch=0.35)      # 0.0040 wide read as a scratch
-    # the upper lip's soft border, following the grin
-    s.stroke([F(CX - 0.018, MOUTH_Z + 0.0075), F(CX - 0.006, MOUTH_Z + 0.0060), F(CX, MOUTH_Z + 0.0055),
-              F(CX + 0.006, MOUTH_Z + 0.0062), F(CX + 0.019, MOUTH_Z + 0.0095)], 0.0035, 0.0010)
-    # dimples at both ends, and smile lines from beside the nose past each corner
-    for side, dz, dep in ((1, 0.0085, 0.0030), (-1, 0.0060, 0.0022)):
-        s.dots([F(X(side, MOUTH_HW + 0.006), MOUTH_Z + dz)], 0.0060, dep)
-        s.stroke([F(X(side, 0.019), 0.6745), F(X(side, 0.027), 0.663), F(X(side, 0.031), 0.650),
-                  F(X(side, 0.030), MOUTH_Z - 0.002)], 0.0065, -(dep * 0.7))
+    # the upper lip's soft border, following it
+    s.stroke([F(CX - 0.018, MOUTH_Z + 0.0055), F(CX - 0.006, MOUTH_Z + 0.0060), F(CX, MOUTH_Z + 0.0062),
+              F(CX + 0.010, MOUTH_Z + 0.0090), F(CX + 0.020, MOUTH_Z + 0.0160)], 0.0035, 0.0010)
+    # the dimple at the high corner deep, a hint at the other; smile lines, his left's deep
+    s.dots([F(CX + 0.032, MOUTH_Z + 0.0155)], 0.0065, 0.0034)
+    s.dots([F(CX - MOUTH_HW - 0.006, MOUTH_Z + 0.0040)], 0.0050, 0.0016)
+    s.stroke([F(X(1, 0.019), 0.6745), F(X(1, 0.029), 0.6665), F(X(1, 0.037), 0.6580), F(X(1, 0.038), 0.6500)],
+             0.0070, -0.0030)
+    s.stroke([F(X(-1, 0.019), 0.6745), F(X(-1, 0.026), 0.663), F(X(-1, 0.029), 0.650)], 0.0060, -0.0012)
 
     # ---- eyes narrowed by the grin: upper lids a little down, lower lids pushed up ----
     for side, c in EYES.items():
@@ -94,8 +99,9 @@ def main(src, dst):
         for dx, dz, dy in ((-0.010, -0.0030, -0.0008), (0.0, -0.0045, -0.0010), (0.010, -0.0050, -0.0010)):
             s.move(F(ex + side * dx, LID_UP - 0.0005), 0.016, (0, dy, dz))
         # the lower lid pushed up by the cheek, most at its outer half (the squint)
+        squint = 1.4 if side == 1 else 1.0          # more on the smile's high side
         for dx, dz in ((-0.008, 0.0022), (0.002, 0.0034), (0.011, 0.0040)):
-            s.move(F(ex + side * dx, LID_LO + 0.0004), 0.014, (0, -0.0010, dz))
+            s.move(F(ex + side * dx, LID_LO + 0.0004), 0.014, (0, -0.0010, dz * squint))
         # the lid's fold above: a crease following the lid, and the lid made full
         fold = [F(ex + side * dx, LID_UP + 0.0085 - 0.6 * dx * dx / 0.016) for dx in np.linspace(-0.016, 0.016, 7)]
         s.crease(fold, 0.0042, 0.0016, pinch=0.3)

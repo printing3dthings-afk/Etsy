@@ -123,3 +123,11 @@ Lessons, each from a broken render:
 - **The renderer caches by settings, not by file contents,** so re-rendering the same path
   showed the old picture: `crop_render.py` passes `--no-cache` now. It also deletes its
   ~100 MB crop meshes; left behind, they filled the disk.
+
+## Bigger, sly smile (Scott: "Grin bigger like a sly smile.")
+`images/face_sly_smile.png`. Lopsided:
+- his left corner pulled far up and back (about 2.5 mm printed) into a deep dimple and
+  smile line, the cheek bunched over it, and that eye squinted more;
+- his right corner only a little up.
+
+Run on too far up, the lip line hooked at its end like a scar: it now stops short.
