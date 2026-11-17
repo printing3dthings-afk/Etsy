@@ -6,7 +6,8 @@ Built 2026-10-26 from Scott's Valentine's 2027 brief. Form 1 of five
 A heart standing in a pedestal, over a battery LED tealight:
 
 - **the heart**: its front and back are 0.9 mm panes, so they glow. Built into
-  the back of the front pane is a couple under a lamppost in falling snow,
+  the back of the front pane is a couple under a lamppost in falling snow
+  (redrawn 2026-11-17, below),
   with a heart over them. Built into the back of the back pane are two swans
   whose necks draw a heart. Unlit, both faces look plain. Lit, the scenes show
   dark on the glow, the way a lithophane does. A raised outline runs round
@@ -30,7 +31,7 @@ to look at its base. This was checked on the exported geometry, not assumed.
 | layer | 0.2 mm, Bambu's 0.20 Standard on the P1S, 0.4 nozzle |
 | supports | **off**. The slicer finds none to add (gate, below) |
 | plate | textured PEI |
-| time | about 3 h 0 m, 105 g (P1S motion model) |
+| time | about 3 h 4 m, 104.8 g (P1S motion model, 2026-11-17) |
 
 The parts are colour only so the renders can show them apart:
 
@@ -92,3 +93,26 @@ version stopped the hollow at the chords, and the lobe tops showed dark.
 
 How dark the scenes read on a real print depends on the filament and the
 light. The first test print is the real check.
+
+## The couple, redrawn (2026-11-17)
+
+Scott's verdict on the first pair (2026-10-30, the G3 review): flat round-head cutouts.
+They are redrawn in `../valentine_scenes.scad` (`couple_lamppost`, `man_profile`,
+`woman_profile`); `images/couple_v2_before_after.png` sets the two side by side, drawn
+and lit (design-review renders, not photos).
+
+- **Two profiles face to face,** foreheads close: nose, lips and chin carry the read.
+- **Him:** a long coat with a belted waist, a scarf blown back, short swept hair, shoes.
+- **Her:** long hair down her back, a fitted top and a flared skirt, on tiptoe with one
+  foot kicked up behind.
+- **Their hands are joined** between them, the heart over their heads; bigger than before
+  (62% of the scene's height, was 50%), standing where the heart is wider.
+- **Every detail runs sideways.** Lit, the art smears 3.2 mm downwards (`art_in`), so a
+  gap under a feature fills and one beside it doesn't. The faces are side by side for that
+  reason.
+- **The line's drawing rules, measured on the scene:** no stroke under 1.3 mm and no gap
+  under 1.6 mm. The old scene had three thin strokes (the lamp's 1.1 mm bars) and a narrow
+  gap between the figures; the new one has none. The lamp's bars are now over 1.3 mm.
+- **On the exported lantern:** the product gate passes (0 support moves); print fidelity
+  flags nothing for review (on the front pane, nothing over 0.09 mm wide is lost); fragility
+  0. Time 3 h 4 m and 104.8 g, about what it was.

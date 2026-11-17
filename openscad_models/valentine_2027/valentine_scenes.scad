@@ -25,39 +25,88 @@ module dot(x, y, r = 0.9) translate([x, y]) circle(r, $fn = 16);
 module ground(w, y, amp = 1.0) polygon(concat([for (i = [0 : 40]) let (u = -w / 2 + w * i / 40)
     [u, y + amp * sin(u / w * 540)]], [[w / 2, 0], [-w / 2, 0]]));
 
-// a standing person, feet at (x, y), s tall
-module figure(x, y, s, dress = false) translate([x, y]) {
-    translate([0, s * 0.89]) circle(s * 0.11, $fn = 32);
-    translate([-s * 0.045, s * 0.70]) square([s * 0.09, s * 0.11]);
-    if (dress) polygon([[-s * 0.21, 0], [s * 0.21, 0], [s * 0.08, s * 0.73], [-s * 0.08, s * 0.73]]);
-    else {
-        polygon([[-s * 0.14, s * 0.38], [s * 0.14, s * 0.38], [s * 0.12, s * 0.75], [-s * 0.12, s * 0.75]]);
-        for (k = [-1, 1]) seg([k * s * 0.065, 0.5], [k * s * 0.055, s * 0.40], max(SW, s * 0.10));
-    }
-}
-
 module lamppost(x, y, h) translate([x, y]) {
     seg([0, 0], [0, h * 0.82], SW + 0.4);
     polygon([[-2.4, 0], [2.4, 0], [1.2, 3.5], [-1.2, 3.5]]);
     difference() {   // the lamp's glass left open, so it glows in the dark post
         polygon([[-3.4, h * 0.82], [3.4, h * 0.82], [4.2, h * 0.95], [-4.2, h * 0.95]]);
-        translate([-2.0, h * 0.84]) square([4.0, h * 0.09]);
+        translate([-1.8, h * 0.82 + SW + 0.2]) square([3.6, h * 0.13 - 2 * SW - 0.4]);   // every bar over SW (the top and bottom were 0.02 h, 1.1 mm)
     }
     polygon([[-4.6, h * 0.95], [4.6, h * 0.95], [0, h]]);
 }
 
-// a couple under a lamppost in falling snow, a heart over them
+// a couple under a lamppost in falling snow, a heart over them. Redrawn 2026-11-17 (Scott,
+// 2026-10-30: "remodelled with real detail"; the first pair read as round-head cutouts):
+// two profiles face to face, so nose, lips and chin carry the read; his long coat and
+// blown scarf, her long hair and flared skirt, on tiptoe, one foot kicked up behind;
+// their hands joined. Every detail runs sideways: lit, the art smears 3.2 mm downwards
+// (art_in), so a gap under a feature fills, and one beside it doesn't.
 module couple_lamppost(w, h) intersection() {
     translate([-w / 2, 0]) square([w, h]);
-    let (s = h * 0.50) union() {
+    let (s = h * 0.62, g = 5.6) union() {
         ground(w, 6.0, 1.0);
-        lamppost(w * 0.27, 5.0, h * 0.86);
-        figure(-w * 0.12, 5.6, s);
-        figure(w * 0.05, 5.6, s * 0.94, dress = true);
-        seg([-w * 0.12 + s * 0.13, 5.6 + s * 0.55], [w * 0.05 - s * 0.11, 5.6 + s * 0.55]);   // holding hands
-        heart_at(-w * 0.035, 5.6 + s * 1.24, w * 0.15);
-        for (p = [[-0.36, 0.84], [-0.26, 0.64], [0.40, 0.70], [0.10, 0.93], [-0.40, 0.42], [0.39, 0.40]]) dot(p[0] * w, p[1] * h);
+        lamppost(w * 0.29, 5.0, h * 0.92);
+        translate([-w * 0.095, g]) man_profile(s);
+        translate([w * 0.080, g]) mirror([1, 0]) woman_profile(s * 0.95);
+        heart_at(0, g + s * 1.13, w * 0.13);
+        for (p = [[-0.40, 0.86], [-0.30, 0.62], [0.42, 0.62], [0.16, 0.97], [-0.43, 0.40], [0.18, 0.80], [-0.18, 0.98]]) dot(p[0] * w, p[1] * h);
     }
+}
+
+// a man in profile facing +x, feet at the origin, s tall: long coat, scarf blown back,
+// one arm reaching forward to hold a hand
+module man_profile(s) offset(r = -0.8) offset(r = 0.8) offset(r = 0.35) offset(delta = -0.35) scale([s, s]) {
+    // trousers, one shape: a notch between the legs closed into a hole where the shoes meet
+    polygon([[-0.074, 0.03], [0.066, 0.03], [0.052, 0.33], [-0.068, 0.33]]);
+    // shoes: the front one pointing forward, the back one behind; sunk 0.04 into the ground,
+    // whose wave left a 0.4 mm sliver of light under them
+    translate([-0.098, -0.04]) square([0.200, 0.045]);
+    polygon([[0.006, 0], [0.105, 0], [0.104, 0.022], [0.072, 0.040], [0.012, 0.040]]);
+    polygon([[-0.098, 0], [0.010, 0], [0.010, 0.030], [-0.020, 0.040], [-0.082, 0.040], [-0.100, 0.020]]);   // meets the front shoe: a slit between them filled
+    // the coat, knee length, flaring a little at the hem
+    polygon([[-0.108, 0.30], [0.092, 0.30], [0.062, 0.50], [0.066, 0.56], [0.080, 0.70], [0.058, 0.762],
+             [0.010, 0.785], [-0.058, 0.772], [-0.088, 0.725], [-0.082, 0.56], [-0.074, 0.50]]);
+    // the belt line: a notch at the waist, front and back
+    polygon([[0.060, 0.505], [0.080, 0.522], [0.064, 0.540]]);
+    // scarf: wrapped high round the neck, its tail blown back
+    polygon([[-0.050, 0.745], [0.050, 0.760], [0.052, 0.815], [-0.040, 0.812]]);
+    polygon([[-0.045, 0.805], [-0.010, 0.792], [-0.075, 0.730], [-0.118, 0.700], [-0.140, 0.716], [-0.098, 0.752]]);
+    // the near arm, down and forward to the joined hands
+    hull() { translate([0.030, 0.700]) circle(0.042, $fn = 24); translate([0.160, 0.530]) circle(0.030, $fn = 24); }
+    // head in profile: crown, brow, nose, lips, chin
+    polygon([[-0.050, 0.835], [-0.068, 0.885], [-0.060, 0.935], [-0.025, 0.972], [0.025, 0.978], [0.060, 0.955],
+             [0.074, 0.925], [0.080, 0.905], [0.112, 0.874], [0.084, 0.862], [0.090, 0.851], [0.082, 0.842],
+             [0.088, 0.832], [0.078, 0.814], [0.045, 0.806], [0.030, 0.790], [-0.020, 0.790]]);
+    // hair: short, swept up at the front
+    polygon([[-0.072, 0.875], [-0.070, 0.935], [-0.040, 0.978], [0.010, 0.995], [0.055, 0.988], [0.080, 0.965],
+             [0.076, 0.945], [0.040, 0.950], [-0.020, 0.930], [-0.050, 0.880]]);
+}
+
+// a woman in profile facing +x, feet at the origin, s tall: long hair down her back,
+// fitted top, flared skirt; on tiptoe, her back foot kicked up behind
+module woman_profile(s) offset(r = -0.8) offset(r = 0.8) offset(r = 0.35) offset(delta = -0.35) scale([s, s]) {
+    // the standing leg, on tiptoe, sunk into the ground as his shoes are
+    translate([-0.008, -0.04]) square([0.040, 0.045]);
+    polygon([[-0.006, 0.000], [0.034, 0.000], [0.030, 0.050], [0.026, 0.27], [-0.026, 0.27], [-0.018, 0.060]]);
+    // the back leg, bent at the knee, foot up behind
+    hull() { translate([-0.020, 0.240]) circle(0.030, $fn = 24); translate([-0.150, 0.300]) circle(0.025, $fn = 24); }
+    polygon([[-0.150, 0.276], [-0.205, 0.300], [-0.200, 0.330], [-0.150, 0.325]]);
+    // the skirt, flared from the waist
+    polygon([[-0.125, 0.235], [0.115, 0.235], [0.050, 0.540], [-0.055, 0.540]]);
+    // fitted top
+    polygon([[-0.058, 0.530], [0.050, 0.530], [0.062, 0.660], [0.050, 0.720], [0.012, 0.745], [-0.048, 0.740],
+             [-0.068, 0.690]]);
+    // the near arm, forward and down to the joined hands
+    hull() { translate([0.022, 0.680]) circle(0.036, $fn = 24); translate([0.140, 0.545]) circle(0.027, $fn = 24); }
+    // neck and head in profile: a smaller nose, a lifted chin
+    polygon([[-0.022, 0.730], [0.030, 0.730], [0.040, 0.790], [-0.010, 0.800]]);
+    polygon([[-0.050, 0.810], [-0.064, 0.860], [-0.056, 0.905], [-0.020, 0.940], [0.025, 0.945], [0.058, 0.925],
+             [0.070, 0.895], [0.074, 0.875], [0.098, 0.852], [0.076, 0.842], [0.082, 0.831], [0.075, 0.823],
+             [0.080, 0.812], [0.068, 0.796], [0.035, 0.790], [0.020, 0.778], [-0.020, 0.780]]);
+    // long hair: over the crown and down her back past the shoulders
+    polygon([[0.040, 0.930], [0.064, 0.915], [0.040, 0.958], [-0.010, 0.972], [-0.060, 0.950], [-0.085, 0.900],
+             [-0.098, 0.820], [-0.108, 0.720], [-0.120, 0.640], [-0.080, 0.630], [-0.058, 0.700], [-0.045, 0.790],
+             [-0.040, 0.870], [-0.010, 0.920]]);
 }
 
 // two swans facing, the curves of their necks drawing a heart, on rippled water
