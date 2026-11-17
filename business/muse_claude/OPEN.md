@@ -28,6 +28,8 @@ stays.
 | 13 | Claude | Add "3 walls, 15% infill" to the Gingerbread printing notes | next working session | Open since Nov 12 |
 | 14 | Claude | FACTS.md for Stacking Jar Tower and Trophy Rack (STANDARDS 15) | next working session | Open since Nov 14 |
 | 15 | Claude | Re-slice files made before the Handy fix (`8d521d8`) before they go up | next working session | Open |
+| 16 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) | 2026-11-18 | Open (asked Nov 17) |
+| 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
 
 ## Done
 
