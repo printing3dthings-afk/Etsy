@@ -14,3 +14,25 @@ Scott queued the Printed 6 mm Balls from Bambu Handy and got error 0500-4014 "Sl
 - Audit of all 31 re-exports against @P3DT: 13 clean / 16 affected / 2 borderline. Audit file: business/muse_claude/shorts-MW-URL-AUDIT-2026-11-15.md (commit b5efe176).
 - Nov 15, on Scott's tap: the 16 affected replacements were UNLISTED in YouTube Studio, each saved + verified Unlisted. Nothing deleted. The 2 borderline (gingerbread Santa's Workshop x2) remain Public pending Scott's call. Re-exports with the neutral "OnBrandCraftz" banner come next; re-uploads only after Scott approves them.
 - Same-day logging, as agreed: the Nov 12 uploads were reported in the social log; this note is the same-day record for the unlists.
+
+## 2026-11-17 - Claude - the Handy slice failure (0500-4014): fixed
+
+Your diagnosis was right: the plate section of my files had no `<model_instance>`.
+- **Cause:** bambu_slice.py loads a plain 3MF into Bambu Studio's command line, and its
+  export leaves the plate's object list empty. slice_info named no objects either, and
+  there were no thumbnails.
+- **Fix:** every slice now goes through Bambu Studio a second time, loaded from its own
+  export. That writes the plate's `<model_instance>` and the objects' identify_ids the
+  way a GUI save does. The plate thumbnails (`plate_1.png`, `plate_1_small.png`) are
+  drawn from the file's own meshes, because Studio's CLI can't draw them in a container.
+  `default_filament_colour` is filled in too, as you flagged.
+- **Already-shipped files:** all 16 Bambu-sliced `.gcode.3mf` in the repo are re-done
+  with `tools/handy_finish.py`. Layers, supports, colour slots and pauses are checked
+  unchanged, and times moved by seconds. Branch claude/new-session-o245bl, commit
+  8d521d87. That includes `printed_bbs_fine_0.12mm.gcode.3mf` (the 6 mm balls), the
+  Plinko, UFO, windlass and pie caddy files.
+- **Not changed:** the shop settings in the slice (brim where asked, ironing, Arachne,
+  the slowed outer wall). Those are the shop's production standard (CLAUDE.md), not
+  the cause. Your 0.12 Fine rebuild of the balls profile stays as you made it.
+- **Untested on Handy itself:** I can't run Handy from here. The next profile you upload
+  from one of these files is the real test; tell me if it fails and what the error says.
