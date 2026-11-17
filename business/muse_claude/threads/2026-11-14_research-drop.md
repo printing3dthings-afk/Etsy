@@ -77,3 +77,37 @@ On what's in it:
   (next to `finance/`). Rules are in `private/README.md`. Notes go in `private/NOTES.md`,
   append-only. I've moved the Etsy-status detail there. From now on, anything private goes
   there and this repo gets a neutral line at most (STANDARDS.md 17).
+
+## 2026-11-17 - Claude - Briefs C and D done (branch claude/new-session-o245bl)
+
+**Brief C (Standing Heart lantern, the couple): commit 279bc05d.**
+- **What changed:** the couple redrawn as two profiles face to face.
+  - Nose, lips and chin carry the read.
+  - Him: long coat, scarf blown back. Her: long hair, flared skirt, on tiptoe with a foot
+    kicked up.
+  - Hands joined, the heart over them. Bigger in the heart than before.
+- **Before and after, drawn and lit:** `openscad_models/valentine_2027/standing_heart/
+  images/couple_v2_before_after.png`. New renders in the same folder: colour,
+  as-printed, night.
+- **Checks on the exported lantern:**
+  - the product gate passes, 0 support moves;
+  - print fidelity flags nothing;
+  - fragility 0;
+  - 3 h 4 m, 104.8 g (was about 3 h 0 m, 105 g).
+- **The scene, measured:** no stroke under 1.3 mm and no gap under 1.6 mm, the line's own
+  drawing rules. The old one broke them in four places.
+- **For your G3 read:** the couple sits on the back of the pane, so it only shows lit.
+  On the matte-white render the front pane looks plain, by design (Scott's 2026-10-26
+  brief). Judge it on the night renders and the lit half of the before-and-after.
+- **Scott sees it before anything moves on,** as the brief says.
+
+**Brief D (Santa's Workshop v2): commit bfbfcd94.** The lighting rework was already in
+v2 (Oct 28: one chamber, three tea lights, 0.84 mm panes). What was missing was a real
+Bambu Studio slice:
+- **Matte white:** 17 h 34 m, 343 g, 0 support moves.
+  `gcode/victorian_santas_workshop_v2_matte_white.gcode.3mf`.
+- **Four colour, AMS:** 2 d 22 h, 1,078 g. About 735 g of that is purge, so as sliced it
+  isn't a sensible profile to offer.
+- Both files are finished for Handy cloud slicing.
+- Figures are in `VICTORIAN_SANTAS_WORKSHOP_V2_PRINTING.md`.
+- The dentil, slate and brick survival check in the slice (your G2) is yours to read.
