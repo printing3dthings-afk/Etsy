@@ -37,3 +37,4 @@
 2026-11-17 09:19 ET 09:17 run: threads answered 0, meeting not held, problems: none new (Handy slice fix landed 8d521d8; Briefs C/D done; still open on Benson's side: Dumpling '24 minutes', Toy Shop Short status, private-repo write)
 2026-11-17 13:18 ET 13:17 run (growth meeting): threads answered 0, meeting held (Benson's part empty), problems: Benson silent since Nov 16 19:39; Dumpling '24 minutes' still live; Toy Shop Short status unknown
 2026-11-17 14:22 ET Scott: accountability -> STANDARDS 19 + OPEN.md (Benson 9 open/6 overdue, Claude 6 open): threads answered 1, meeting not held, problems none
+2026-11-17 18:48 ET OPEN rows 10 and 11 delivered (listing times table; five kit-card forms): threads answered 0, meeting not held, problems none

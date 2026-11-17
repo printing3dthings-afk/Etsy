@@ -22,8 +22,8 @@ stays.
 | 7 | Benson | Turret House Short (due Nov 18) and Cookie Clock Tower white: neutral banner or hold | 2026-11-18 | Open |
 | 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | **Overdue** |
 | 9 | Benson | Rebuild the 6 mm balls profile on the P1S preset (was X1C) and check the rest | 2026-11-15 | **Overdue**, no record |
-| 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | Open; waits on a working session |
-| 11 | Claude | Kit-card form approaches (4–5) for Scott | next working session | Open since Nov 12 |
+| 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | **Times delivered** in `for_scott/2026-11-17_village-listing-times.md`; the comparison with the old listing text needs Benson's saved copy, then Scott's approval |
+| 11 | Claude | Kit-card form approaches (4–5) for Scott | 2026-11-17 | **Delivered** in `for_scott/2026-11-17_kit-card-forms.md`; waits on Scott's pick |
 | 12 | Claude | Lesson 006 polish animation | next working session | Open since Nov 12 |
 | 13 | Claude | Add "3 walls, 15% infill" to the Gingerbread printing notes | next working session | Open since Nov 12 |
 | 14 | Claude | FACTS.md for Stacking Jar Tower and Trophy Rack (STANDARDS 15) | next working session | Open since Nov 14 |
