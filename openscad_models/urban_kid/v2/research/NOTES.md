@@ -108,3 +108,18 @@ Still to do:
 - the irises barely read under the lids;
 - hair under the cap;
 - setting the head into the figure at 190 mm.
+
+## The devilish grin (Scott: "Maybe a devilish smile or smirk. A fun up to no good look.")
+`images/face_devilish_pass1.png`. What changed:
+- **Mouth:** a wide closed-lip grin, both corners up (his left higher), dimples, smile lines.
+- **Eyes:** cheeks lifted into a squint; eyes glancing sideways.
+- **Brows:** a V, flicked up at the outer ends.
+
+Lessons, each from a broken render:
+- **The base mesh's eyes are layered** (a cornea dome over a sunken iris). Carved, they
+  were a crater beside a blister. Each is now a plain ball, turned 17 deg, with the iris
+  ringed and the pupil dished 0.0085 deep (about 1.2 mm printed).
+- **Brow inner ends drawn toward the middle bunched into a knob:** they now only go down.
+- **The renderer caches by settings, not by file contents,** so re-rendering the same path
+  showed the old picture: `crop_render.py` passes `--no-cache` now. It also deletes its
+  ~100 MB crop meshes; left behind, they filled the disk.

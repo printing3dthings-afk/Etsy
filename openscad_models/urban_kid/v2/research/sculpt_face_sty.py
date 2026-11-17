@@ -4,12 +4,17 @@ The realistic head read as a neutral adult however it was sculpted
 (sculpt_face.py, research/NOTES.md). 'Head - Stylized' from the same CC0 bundle
 is young (round face, big eyes, short nose, small mouth), which a designer-toy
 teen needs. This gives him his expression and the detail Scott's references
-have:
-  - heavy, sleepy upper lids over the eyes (half-lidded, unimpressed);
-  - brows low and level, drawn down at the inner ends, his left one cocked;
-  - a smirk: his left mouth corner pulled up and back into a dimple, the cheek
-    lifted over it; his right corner flat;
-  - a cut lip line, the upper lip's border, a fuller lower lip, the philtrum;
+have. Scott, on the first pass's sleepy smirk: "Maybe a devilish smile or smirk.
+A fun up to no good look." So:
+  - a wide closed-lip grin, both corners pulled up and back, his left higher,
+    dimples at both ends and smile lines from the nose past the corners;
+  - cheeks lifted, pushing the lower lids up: the sly squint of a grin that
+    means it;
+  - upper lids a little lowered (scheming, not sleepy);
+  - brows in a V: inner ends low and close, outer ends flicked up, his left
+    cocked higher;
+  - eyes glancing to his left, as if checking nobody's looking;
+  - a cut lip line, the upper lip's border, fuller lips, the philtrum;
   - a stronger jaw and chin than the base child's, for a teen;
   - irises ringed and pupils drilled in the eyeballs.
 
@@ -59,68 +64,82 @@ def main(src, dst):
         s.move(F(X(side, 0.052), 0.615), 0.03, (side * 0.004, -0.002, -0.002))
     s.move(F(CX, 0.600), 0.022, (0, -0.004, -0.004))
 
-    # ---- heavy upper lids: the lid's edge drawn down over the eye, most at the outer corner ----
+    # ---- the grin: both corners up and back, his left higher, the mouth a little wider ----
+    s.move(F(CX + MOUTH_HW, MOUTH_Z), 0.021, (0.0042, 0.0030, 0.0095))
+    s.move(F(CX - MOUTH_HW, MOUTH_Z), 0.020, (-0.0034, 0.0024, 0.0066))
+    # the cheeks lifted and full over the corners (the left more)
+    for side, up in ((1, 0.0040), (-1, 0.0030)):
+        s.move(F(X(side, 0.042), 0.656), 0.024, (side * 0.0010, -0.0030, up))
+        s.draw(F(X(side, 0.042), 0.680), 0.015, 0.0014)
+    # the lip line: cut, curving up to both corners
+    line = [F(CX - MOUTH_HW - 0.005, MOUTH_Z + 0.0068), F(CX - 0.013, MOUTH_Z + 0.0016), F(CX, MOUTH_Z + 0.0002),
+            F(CX + 0.013, MOUTH_Z + 0.0020), F(CX + MOUTH_HW + 0.005, MOUTH_Z + 0.0100)]
+    s.crease(line, 0.0055, 0.0042, pinch=0.35)      # 0.0040 wide read as a scratch
+    # the upper lip's soft border, following the grin
+    s.stroke([F(CX - 0.018, MOUTH_Z + 0.0075), F(CX - 0.006, MOUTH_Z + 0.0060), F(CX, MOUTH_Z + 0.0055),
+              F(CX + 0.006, MOUTH_Z + 0.0062), F(CX + 0.019, MOUTH_Z + 0.0095)], 0.0035, 0.0010)
+    # dimples at both ends, and smile lines from beside the nose past each corner
+    for side, dz, dep in ((1, 0.0085, 0.0030), (-1, 0.0060, 0.0022)):
+        s.dots([F(X(side, MOUTH_HW + 0.006), MOUTH_Z + dz)], 0.0060, dep)
+        s.stroke([F(X(side, 0.019), 0.6745), F(X(side, 0.027), 0.663), F(X(side, 0.031), 0.650),
+                  F(X(side, 0.030), MOUTH_Z - 0.002)], 0.0065, -(dep * 0.7))
+
+    # ---- eyes narrowed by the grin: upper lids a little down, lower lids pushed up ----
     for side, c in EYES.items():
         ex = c[0]
         # grabbed AT the lid's edge, so the edge moves most and the skin above it
         # stretches. Grabbed on the skin above, the skin moved further than the
         # edge and folded over it in a drip (the three brushes overlap, so these
         # deltas sum to about twice their size at the edge)
-        for dx, dz, dy in ((-0.010, -0.0050, -0.0010), (0.0, -0.0075, -0.0014), (0.010, -0.0085, -0.0014)):
-            p = F(ex + side * dx, LID_UP - 0.0005)
-            s.move(p, 0.016, (0, dy, dz))
+        for dx, dz, dy in ((-0.010, -0.0030, -0.0008), (0.0, -0.0045, -0.0010), (0.010, -0.0050, -0.0010)):
+            s.move(F(ex + side * dx, LID_UP - 0.0005), 0.016, (0, dy, dz))
+        # the lower lid pushed up by the cheek, most at its outer half (the squint)
+        for dx, dz in ((-0.008, 0.0022), (0.002, 0.0034), (0.011, 0.0040)):
+            s.move(F(ex + side * dx, LID_LO + 0.0004), 0.014, (0, -0.0010, dz))
         # the lid's fold above: a crease following the lid, and the lid made full
         fold = [F(ex + side * dx, LID_UP + 0.0085 - 0.6 * dx * dx / 0.016) for dx in np.linspace(-0.016, 0.016, 7)]
         s.crease(fold, 0.0042, 0.0016, pinch=0.3)
         s.stroke([F(ex + side * dx, LID_UP + 0.0035) for dx in np.linspace(-0.012, 0.014, 6)], 0.004, 0.0012)
-        # the lower lid: a soft rim (a furrow under it too aged him)
-        s.stroke([F(ex + side * dx, LID_LO - 0.0025) for dx in np.linspace(-0.012, 0.012, 6)], 0.003, 0.0008)
+        # the lower lid's rim, and a little laugh line at the outer corner
+        s.stroke([F(ex + side * dx, LID_LO - 0.0020) for dx in np.linspace(-0.012, 0.012, 6)], 0.003, 0.0010)
+        s.stroke([F(ex + side * 0.020, 0.7240), F(ex + side * 0.027, 0.7190)], 0.0035, -0.0010)
 
-    # ---- brows: low and level, inner ends drawn down; his left (+x) cocked up at its outer end ----
-    for side in (1, -1):
-        s.move(F(X(side, 0.020), 0.762), 0.016, (-side * 0.0012, -0.0016, -0.0050))
-        s.stroke([F(X(side, 0.012), 0.760), F(X(side, 0.032), 0.764), F(X(side, 0.056), 0.761)], 0.0100, 0.0045)
-    s.move(F(X(1, 0.050), 0.764), 0.016, (0, -0.0005, 0.0045))
-    s.stroke([F(CX, 0.752), F(CX + 0.0015, 0.764)], 0.0045, -0.0015)          # the furrow between them
+    # ---- brows in a V: inner ends low and close, outer ends flicked up, his left cocked ----
+    for side, outer in ((1, 0.0070), (-1, 0.0045)):
+        s.move(F(X(side, 0.013), 0.759), 0.013, (0, -0.0016, -0.0050))   # drawn in toward the middle too, they bunched into a knob
+        s.move(F(X(side, 0.052), 0.763), 0.016, (side * 0.0008, -0.0005, outer))
+        s.stroke([F(X(side, 0.010), 0.755), F(X(side, 0.030), 0.763), F(X(side, 0.054), 0.769)], 0.0100, 0.0045)
+    s.stroke([F(CX, 0.748), F(CX + 0.0008, 0.762)], 0.0065, -0.0022)            # one soft crease between them
 
-    # ---- the smirk ----
-    L, R = np.array([CX + MOUTH_HW, 0, MOUTH_Z]), np.array([CX - MOUTH_HW, 0, MOUTH_Z])
-    s.move(F(L[0], MOUTH_Z), 0.024, (0.0022, 0.0016, 0.0050))                  # his left corner up, back
-    s.move(F(X(1, 0.046), 0.652), 0.022, (0.0010, -0.0020, 0.0028))           # the cheek lifted over it
-    s.move(F(R[0], MOUTH_Z), 0.012, (-0.0008, 0.0006, -0.0006))               # his right corner flat
-    # the lip line: cut, following the smirk up at his left
-    line = [F(CX - MOUTH_HW - 0.002, MOUTH_Z - 0.0005), F(CX - 0.010, MOUTH_Z + 0.0002), F(CX, MOUTH_Z + 0.0004),
-            F(CX + 0.011, MOUTH_Z + 0.0016), F(CX + MOUTH_HW + 0.002, MOUTH_Z + 0.0048)]
-    s.crease(line, 0.0055, 0.0040, pinch=0.35)      # 0.0040 wide read as a scratch
-    # the upper lip's soft border, and its shadow side above the slit
-    s.stroke([F(CX - 0.017, MOUTH_Z + 0.0035), F(CX - 0.006, MOUTH_Z + 0.0062), F(CX, MOUTH_Z + 0.0055),
-              F(CX + 0.006, MOUTH_Z + 0.0068), F(CX + 0.018, MOUTH_Z + 0.0075)], 0.0035, 0.0010)
-    # the dimple at the smirk's end, and a short fold rising from it
-    s.dots([F(CX + MOUTH_HW + 0.005, MOUTH_Z + 0.0068)], 0.0060, 0.0026)
-    s.stroke([F(CX + MOUTH_HW + 0.007, MOUTH_Z + 0.004), F(CX + 0.031, MOUTH_Z + 0.013), F(CX + 0.030, 0.664)],
-             0.0055, -0.0018)
     # the philtrum's two ridges; a fuller lower lip
     for side in (1, -1):
         s.stroke([F(X(side, 0.0040), MOUTH_Z + 0.0050), F(X(side, 0.0034), 0.6630)], 0.0030, 0.0007)
-    s.draw(F(CX + 0.001, MOUTH_Z - 0.0085), 0.0140, 0.0032)
-    s.draw(F(CX, MOUTH_Z + 0.0060), 0.0120, 0.0016)                             # the upper lip, fuller
+    s.draw(F(CX + 0.001, MOUTH_Z - 0.0085), 0.0140, 0.0014)       # the lower lip: stretched by the grin, not pouting
     s.stroke([F(CX - 0.012, 0.6205), F(CX, 0.6185), F(CX + 0.012, 0.6205)], 0.0060, -0.0014)   # under the lower lip
-    # ---- eyes: iris ring and drilled pupil, looking ahead and a touch to his left ----
-    s.active = eye
-    for side, c in EYES.items():
-        look = np.array([0.18, -1.0, -0.04])
-        look /= np.linalg.norm(look)
-        front = c + EYE_R * look
-        e1 = np.cross(look, [0, 0, 1.0])
-        e1 /= np.linalg.norm(e1)
-        e2 = np.cross(e1, look)
-        ring = [front + 0.0145 * (np.cos(a) * e1 + np.sin(a) * e2) - look * 0.0028
-                for a in np.linspace(0, 2 * np.pi, 49)]
-        s.crease(ring, 0.0045, 0.0030, pinch=0.2)
-        s.draw(front, 0.0130, -0.0030)
-        s.dots([front], 0.0062, 0.0080)
+    # ---- eyes: new eyeballs, not the base mesh's. Its eyes are layered (a clear
+    # cornea dome over a sunken iris) for rendering; carved for a print they came
+    # out a crater beside a blister. A plain ball each, glancing to his left, the
+    # iris ringed and the pupil dished deep, so it prints as a shadow ----
     s.active = None
-    out = s.mesh()
+    head = s.mesh()
+    keep = ~eye
+    remap = -np.ones(len(head.vertices), int)
+    remap[keep] = np.arange(keep.sum())
+    fk = keep[head.faces].all(1)
+    head = trimesh.Trimesh(head.vertices[keep], remap[head.faces[fk]], process=False)
+    th = np.radians(17.0)
+    look = np.array([np.sin(th), -np.cos(th), 0.0])
+    balls = []
+    for side, c in EYES.items():
+        b = trimesh.creation.icosphere(subdivisions=6, radius=EYE_R)
+        P = np.asarray(b.vertices)
+        u = P / np.linalg.norm(P, axis=1)[:, None]
+        ang = np.degrees(np.arccos(np.clip(u @ look, -1, 1)))
+        cut = np.exp(-((ang - 21.0) / 2.4) ** 2) * 0.0026 + np.clip(1.0 - (ang / 8.5) ** 2, 0, 1) ** 1.5 * 0.0085
+        cut -= np.clip(1.0 - (ang / 19.0) ** 2, 0, 1) * 0.0012 * (ang > 8.5)    # the iris a touch domed
+        b.vertices = c + P - cut[:, None] * u
+        balls.append(b)
+    out = trimesh.util.concatenate([head] + balls)
     out.export(dst)
     print("sculpted", dst, len(out.vertices))
 

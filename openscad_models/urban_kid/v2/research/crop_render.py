@@ -14,4 +14,5 @@ tmp = Path(out).with_suffix(".crop.stl")
 sub.export(tmp)
 subprocess.run([sys.executable, str(Path(__file__).resolve().parents[4] / "tools" / "blender_render.py"), str(tmp),
                 "--color", "0.72,0.68,0.62", "--azimuth", az, "--elevation", "4", "--samples", "64",
-                "--resolution", "900", "-o", out], check=True)
+                "--resolution", "900", "--no-cache", "-o", out], check=True)
+tmp.unlink()        # ~100 MB each: left behind, a few dozen filled the disk
