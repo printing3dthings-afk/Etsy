@@ -52,3 +52,7 @@ success): "Number 3 seems to feel the best."
 - For the Gear Heart page (model 3604645, Private), once the rebuilt heart is ready: the
   clips are v2, and clip 3 (barb 0.65) won the test. Nothing changes on the page until I send
   the rebuilt files.
+- [ ] **Ocarina Voicing Test (whistles 1 and 2).** Scott, 2026-11-16: "The ocarina test.
+  Number 2 sounded better." The test is finished. They were in your MakerWorld pipeline
+  (benson-mw-status, Nov 15, "Ocarina whistles x2"): if they're up, take them down; if not,
+  don't upload them.
