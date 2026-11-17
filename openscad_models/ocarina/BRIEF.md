@@ -84,7 +84,7 @@ Found while making the voicing test pass its checks:
   - The gate's PrusaSlicer adds 813 support moves around the windway exit.
   - The gate result stands as FAIL for this test print. Details in `checks/slicers.txt`.
 
-## Test result (Scott, 2026-11-17)
+## Test result (Scott, 2026-11-16)
 - **Whistle 2 sounded better** ("The ocarina test. Number 2 sounded better"). So the
   ocarina's windway is **1.3 mm** high (`WHS[1]`), with everything else as on the whistles.
 - **Still needed:** whistle 2's three tuner readings (all covered, small hole open, both
