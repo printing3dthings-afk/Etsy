@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 import time
 from pathlib import Path
@@ -390,8 +389,6 @@ class Kid:
             cuff_c = el + 0.72 * (ha - el)
             ax = (ha - el) / np.linalg.norm(ha - el)
             along = (g.X - cuff_c[0]) * ax[0] + (g.Y - cuff_c[1]) * ax[1] + (g.Z - cuff_c[2]) * ax[2]
-            if os.environ.get('KID_NO_ARMS'):
-                continue
             # the seam grooved only above the elbow: along the forearm it faces down onto
             # the belly, and the cones refilling it left slivers the slicer propped
             d = sf.joined(d, arm, 3.0, (0.6, 1.0), where=(el[2] + 1.0) - g.Z)
@@ -419,7 +416,7 @@ class Kid:
         # into the chest at their lower end. A cord standing proud to its tip
         # (round, then flat with an aglet, then with a wedge under it) left a
         # tip in mid-air that the slicer propped every time (2026-11-17)
-        for s in (() if os.environ.get("KID_NO_STRINGS") else (1, -1)):
+        for s in (1, -1):
             a, b = v3(s * 7.6, CHEST_Y - 0.25, 64.8), v3(s * 8.6, CHEST_Y + 0.95, 56.4)
             d = sf.smin(d, sf.stick(g, a, b, 0.95, 0.95), 0.4)
             d = groove(d, (g.Z - 58.6) - 0.12 * s * (g.X - s * 8.4), 0.25, 0.35,

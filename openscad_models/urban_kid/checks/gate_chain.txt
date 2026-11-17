@@ -3,11 +3,11 @@ parts/chain.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 1.60mm, median 3.20mm (floor 1.2mm); 0.00% below one bead; 4726 spans in declared detail, thread or socket regions not counted
+  ok    min_wall: 1st pct 1.60mm, median 3.01mm (floor 1.2mm); 0.00% below one bead; 4525 spans in declared detail, thread or socket regions not counted
   ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 2.6mm printed of 2.6mm
   ok    geometry_survives_slicing: printed height 2.6mm vs modelled 2.6mm
-  ok    flat_base: 1.27 cm2 of contact = 71.1% of footprint (floor 5%)
+  ok    flat_base: 1.28 cm2 of contact = 71.2% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 12 layer(s) under the 4.0s cooling threshold; 190mm2 on the plate; aspect 0.1
+  note  risk (uncalibrated, never fails the gate): 3.1mm widest unsupported span at z=1.2mm; 12 layer(s) under the 4.0s cooling threshold; 192mm2 on the plate; aspect 0.1
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
 PRODUCT GATE PASSED

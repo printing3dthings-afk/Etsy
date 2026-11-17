@@ -12,7 +12,7 @@ T = 1.6;              // the chain's thickness
 W = 2.0;              // its width
 LINK = 1.4;           // a groove across it every LINK mm: a curb chain
 GROOVE = 0.45;        // the grooves' width (DETAIL_STANDARD: >= 0.4)
-G_DEEP = 0.35;        // ... and depth: 1.25 left under each, over the 1.2 wall floor
+G_DEEP = 0.28;        // ... and depth: 1.32 left under each, over the 1.2 wall floor
 P_W = 13.8;           // the nameplate
 P_H = 7.0;
 P_R = 2.0;            // its corners
@@ -49,7 +49,10 @@ module nameplate() {
     }
     letters();
     // the bail: a ring joining it to the chain
-    translate([0, (P_C[1] + P_H / 2 + BAIL[1]) / 2]) cylinder(r = 1.6, h = T);
+    // (set 0.6 into the plate: meeting its edge at a tangent, it left two 0.2 mm
+    // slivers of gap the silhouette check failed)
+    translate([0, P_C[1] + P_H / 2 + 1.0]) cylinder(r = 1.6, h = T);
+    translate([0, P_C[1] + P_H / 2 + 1.0]) linear_extrude(T) seg2d([0, 0], BAIL - [0, P_C[1] + P_H / 2 + 1.0], W);
 }
 module detail() {
     letters();

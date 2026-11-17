@@ -1,0 +1,6 @@
+  OK    gaps      no near-touches
+  OK    thin      nothing under 1.2 mm
+  OK    specks    one clean piece
+  FAIL  twinning  outline matches its own mirror image (IoU 1.00 > 0.9): stiff and symmetric; turn it to a 3/4 or profile view, vary one side
+  OK    clutter   0 small cut-throughs, 2 engraved marks
+SILHOUETTE CHECK FAILED (1)

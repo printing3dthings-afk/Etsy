@@ -1,13 +1,13 @@
 {
- "hoodie": {
-  "colour": "red",
-  "mm3": 20153.3,
+ "chain": {
+  "colour": "gold",
+  "mm3": 272.2,
   "watertight": true,
   "bodies": 1,
   "print_extent": [
-   44.3,
-   27.3,
-   35.4
+   14.0,
+   12.8,
+   2.6
   ]
  }
 }

@@ -2053,3 +2053,14 @@ module couple_lamppost(w, h) intersection() {
 
 <!-- /TRASH 20261117-001 -->
 
+<!-- TRASH id=20261117-002 date=2026-11-17 kind=file source="openscad_models/urban_kid/checks/joints_shoe_r.stl" reason="experiment: joint regions tried as a wall-skip for the sneaker; the real thin spot was the heel tab, since removed" -->
+## 20261117-002 · 2026-11-17 · file · `openscad_models/urban_kid/checks/joints_shoe_r.stl`
+**Reason:** experiment: joint regions tried as a wall-skip for the sneaker; the real thin spot was the heel tab, since removed  
+**Payload:** `data/trash/files/20261117-002__joints_shoe_r.stl`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20261117-002 -->
+

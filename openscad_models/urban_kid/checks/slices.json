@@ -1,0 +1,128 @@
+{
+ "black": {
+  "plate_gcode": "Metadata/plate_1.gcode",
+  "layers": 150,
+  "support_lines": 0,
+  "pauses": 0,
+  "slots_used": [],
+  "time": "46m 14s",
+  "filament_g": "14.17",
+  "filament_mm": "4674.87",
+  "paused_at_mm": [],
+  "file": "/home/user/Etsy/openscad_models/urban_kid/gcode/urban_kid_black_cap_base_pin.gcode.3mf",
+  "quality": "fine",
+  "process": "0.12mm Fine @BBL X1C",
+  "retail_settings": true,
+  "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+  "slot_colours": [
+   "#1C1C1F"
+  ],
+  "brim_mm": null,
+  "bed": "Textured PEI Plate"
+ },
+ "charcoal": {
+  "plate_gcode": "Metadata/plate_1.gcode",
+  "layers": 293,
+  "support_lines": 0,
+  "pauses": 0,
+  "slots_used": [],
+  "time": "28m 21s",
+  "filament_g": "6.21",
+  "filament_mm": "2049.24",
+  "paused_at_mm": [],
+  "file": "/home/user/Etsy/openscad_models/urban_kid/gcode/urban_kid_charcoal_pants.gcode.3mf",
+  "quality": "fine",
+  "process": "0.12mm Fine @BBL X1C",
+  "retail_settings": true,
+  "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+  "slot_colours": [
+   "#45474C"
+  ],
+  "brim_mm": null,
+  "bed": "Textured PEI Plate"
+ },
+ "gold": {
+  "plate_gcode": "Metadata/plate_1.gcode",
+  "layers": 21,
+  "support_lines": 0,
+  "pauses": 0,
+  "slots_used": [],
+  "time": "2m 52s",
+  "filament_g": "0.39",
+  "filament_mm": "129.68",
+  "paused_at_mm": [],
+  "file": "/home/user/Etsy/openscad_models/urban_kid/gcode/urban_kid_gold_chain.gcode.3mf",
+  "quality": "fine",
+  "process": "0.12mm Fine @BBL X1C",
+  "retail_settings": true,
+  "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+  "slot_colours": [
+   "#D9A32E"
+  ],
+  "brim_mm": null,
+  "bed": "Textured PEI Plate"
+ },
+ "red": {
+  "plate_gcode": "Metadata/plate_1.gcode",
+  "layers": 294,
+  "support_lines": 0,
+  "pauses": 0,
+  "slots_used": [],
+  "time": "29m 57s",
+  "filament_g": "8.23",
+  "filament_mm": "2715.99",
+  "paused_at_mm": [],
+  "file": "/home/user/Etsy/openscad_models/urban_kid/gcode/urban_kid_red_hoodie.gcode.3mf",
+  "quality": "fine",
+  "process": "0.12mm Fine @BBL X1C",
+  "retail_settings": true,
+  "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+  "slot_colours": [
+   "#C21D21"
+  ],
+  "brim_mm": null,
+  "bed": "Textured PEI Plate"
+ },
+ "skin": {
+  "plate_gcode": "Metadata/plate_1.gcode",
+  "layers": 255,
+  "support_lines": 0,
+  "pauses": 0,
+  "slots_used": [],
+  "time": "30m 43s",
+  "filament_g": "11.92",
+  "filament_mm": "3933.81",
+  "paused_at_mm": [],
+  "file": "/home/user/Etsy/openscad_models/urban_kid/gcode/urban_kid_skin_head.gcode.3mf",
+  "quality": "fine",
+  "process": "0.12mm Fine @BBL X1C",
+  "retail_settings": true,
+  "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+  "slot_colours": [
+   "#DCA37A"
+  ],
+  "brim_mm": null,
+  "bed": "Textured PEI Plate"
+ },
+ "white": {
+  "plate_gcode": "Metadata/plate_1.gcode",
+  "layers": 106,
+  "support_lines": 0,
+  "pauses": 0,
+  "slots_used": [],
+  "time": "13m 38s",
+  "filament_g": "2.54",
+  "filament_mm": "838.96",
+  "paused_at_mm": [],
+  "file": "/home/user/Etsy/openscad_models/urban_kid/gcode/urban_kid_white_sneakers.gcode.3mf",
+  "quality": "fine",
+  "process": "0.12mm Fine @BBL X1C",
+  "retail_settings": true,
+  "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+  "slot_colours": [
+   "#EDEDE8"
+  ],
+  "brim_mm": null,
+  "bed": "Textured PEI Plate"
+ }
+}
