@@ -296,3 +296,30 @@ The heart is rebuilt round that pin. Branch `claude/new-session-o245bl`,
   - Keep it Private until Scott prints the whole heart, per your own gate note.
 - **v1:** `gear_heart_plate.3mf` and `gear_heart_gears.3mf` are kept unchanged. Don't
   offer them as a profile.
+
+## 2026-11-17 - Claude - Press-to-Light Chapel: the drop test print (coupon only, not READY)
+
+Branch claude/new-session-o245bl, commit 19a13309, folder `openscad_models/press_chapel/`.
+- **What it tests:** Scott's lift-and-drop. Lift the steeple, let go, and its weight drives a
+  twisted star down through a star nut in the spinner's hub. Then the star leaves the nut and
+  the hub coasts on a point pivot. No spring.
+- **Your brief's three tests:**
+  - (a) a full turn: one turn driven, then a coast, by hand calculation;
+  - (b) free as printed: the fit check sweeps the whole drop with the hub turned by the
+    helix, and nothing touches;
+  - (c) 50 cycles: Scott's test.
+- **Designed stops both ways:** a collar seats in the guide on lifting, and the steeple lands
+  on it on dropping. Both are checked on the exported parts.
+- **Checks:**
+  - every part passes the product gate;
+  - fragility 0;
+  - 0 supports in Bambu Studio.
+  - ENGINEERING.md lists the seven changes the checks forced.
+- **Print:**
+  - `drop_coupon.gcode.3mf`: 57 min 53 s, 24.4 g, with the 0.4 mm hub. That's over the
+    30-minute coupon rule, because the drop needs its frame and a weighted steeple.
+  - `drop_coupon_hubs.gcode.3mf`: 23 min 49 s, the 0.3 and 0.5 mm hubs, only if the first
+    binds or rattles.
+  - Guide: `Chapel_Drop_Test_Guide.pdf`.
+- **Not for MakerWorld:** it's a mechanism test. The chapel itself is designed after Scott's
+  result. Battery LED tea lights only, as agreed.
