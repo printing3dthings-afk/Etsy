@@ -1,5 +1,9 @@
 # Urban Kid v2: research notes (2026-11-17)
 
+**Size, decided (Scott, 2026-11-17: "Go with 190 mm").** v2 is v1 scaled 1.625x, about
+190 mm tall. Designs stay in v1's frame and units; fields are built on grids seen through
+`kid.Scaled`, so every print rule (grooves, overhangs, walls) applies at the real size.
+
 Scott asked for much more realistic detail and showed four sculpted MakerWorld figures as
 the bar: ZKULL TOKYO, Sitting Kratos, the guitar pair, and the Hulk. "Look at the clothes and
 the facial details." Two routes are running, both on his say-so:
@@ -72,6 +76,3 @@ The pants are the clear win: `images/cloth_pants_and_hoodie.png`, the grey part.
   - a younger head shape (rounder cheeks, shorter nose);
   - a much stronger smirk and lids;
   - the head scaled up as v1's was.
-- **Scale:** at 117 mm the face is about 30 mm and lid-level detail is near the nozzle's
-  limit. The reference figures print larger. A v2 at about 190 mm (1.6x) would let the
-  detail survive printing.
