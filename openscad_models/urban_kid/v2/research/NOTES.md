@@ -84,3 +84,27 @@ elbow compression, shoulder-to-pocket tension, hem gathers, back drapes.
 - Strokes falling into the gap between forearm and body still punch holes.
 - Verdict: worse than v1. Cloth folds need the shape of the garment to change round
   them (a fold is the whole sleeve buckling), which surface strokes can't do.
+
+## The face moved to the stylized CC0 head (`sculpt_face_sty.py`)
+`images/face_stylized_pass1.png`. 'Head - Stylized' from the same CC0 bundle is young (round
+face, big eyes, short nose), which the realistic head never was however it was sculpted.
+On it:
+- heavy, half-closed upper lids;
+- brows drawn down with a furrow between them;
+- a smirk up at his left with a dimple;
+- fuller lips;
+- carved irises.
+
+Lessons, each from a broken render:
+- **Find the eyeballs by mesh connection, not distance.** Picked by distance, the
+  lids' inner rims were frozen too, and the lids tore into a "drip".
+- **Grab a lid at its edge.** Grabbed above the edge, the skin moved further than the
+  edge and folded over it.
+- **The slit is at z 0.640, not 0.666.** The base mesh's densest crease at 0.666 is
+  under the nose: the first lip line landed there.
+
+Still to do:
+- the smirk's corner kinks;
+- the irises barely read under the lids;
+- hair under the cap;
+- setting the head into the figure at 190 mm.
