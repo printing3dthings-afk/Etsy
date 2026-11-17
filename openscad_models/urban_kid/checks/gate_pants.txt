@@ -1,0 +1,13 @@
+parts/pants.stl
+  ok    fits_plate: 35.9 x 22.9 x 35.2 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 4.80mm, median 16.62mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 35.2mm printed of 35.23mm
+  ok    geometry_survives_slicing: printed height 35.2mm vs modelled 35.23mm
+  ok    flat_base: 4.17 cm2 of contact = 50.7% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=27.2mm; 167 layer(s) under the 4.0s cooling threshold; 584mm2 on the plate; aspect 0.73
+  note  texture (advisory, never fails the gate): rugosity 1.09 -- light relief, at or above the corpus p50
+PRODUCT GATE PASSED

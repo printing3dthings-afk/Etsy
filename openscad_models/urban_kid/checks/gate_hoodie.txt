@@ -1,0 +1,13 @@
+parts/hoodie.stl
+  ok    fits_plate: 44.3 x 27.3 x 35.4 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.60mm, median 22.47mm (floor 1.2mm); 0.04% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 35.4mm printed of 35.39mm
+  ok    geometry_survives_slicing: printed height 35.4mm vs modelled 35.39mm
+  ok    flat_base: 3.50 cm2 of contact = 29.0% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=27.2mm; 168 layer(s) under the 4.0s cooling threshold; 500mm2 on the plate; aspect 0.74
+  note  texture (advisory, never fails the gate): rugosity 1.033 -- light relief, at or above the corpus p25
+PRODUCT GATE PASSED

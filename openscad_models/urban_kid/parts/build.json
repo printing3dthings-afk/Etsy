@@ -1,0 +1,13 @@
+{
+ "hoodie": {
+  "colour": "red",
+  "mm3": 20153.3,
+  "watertight": true,
+  "bodies": 1,
+  "print_extent": [
+   44.3,
+   27.3,
+   35.4
+  ]
+ }
+}

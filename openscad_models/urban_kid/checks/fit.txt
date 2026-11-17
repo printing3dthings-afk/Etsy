@@ -1,0 +1,61 @@
+  ok    base: one closed body (1), 12232 mm3
+  ok    shoe_r: one closed body (1), 1853 mm3
+  ok    shoe_l: one closed body (1), 1853 mm3
+  ok    pants: one closed body (1), 13184 mm3
+  ok    hoodie: one closed body (1), 20153 mm3
+  ok    head: one closed body (1), 34360 mm3
+  ok    cap: one closed body (1), 15078 mm3
+  ok    chain: one closed body (1), 272 mm3
+  ok    pin stood in its sockets, 142 mm3
+  ok    base and shoe_r overlap 0.000 mm3
+  ok    base and shoe_l overlap 0.000 mm3
+  ok    base and pants overlap 0.000 mm3
+  ok    base and hoodie overlap 0.000 mm3
+  ok    base and head overlap 0.000 mm3
+  ok    base and cap overlap 0.000 mm3
+  ok    base and chain overlap 0.000 mm3
+  ok    base and pin overlap 0.000 mm3
+  ok    shoe_r and shoe_l overlap 0.000 mm3
+  ok    shoe_r and pants overlap -0.000 mm3
+  ok    shoe_r and hoodie overlap 0.000 mm3
+  ok    shoe_r and head overlap 0.000 mm3
+  ok    shoe_r and cap overlap 0.000 mm3
+  ok    shoe_r and chain overlap 0.000 mm3
+  ok    shoe_r and pin overlap 0.000 mm3
+  ok    shoe_l and pants overlap -0.000 mm3
+  ok    shoe_l and hoodie overlap 0.000 mm3
+  ok    shoe_l and head overlap 0.000 mm3
+  ok    shoe_l and cap overlap 0.000 mm3
+  ok    shoe_l and chain overlap 0.000 mm3
+  ok    shoe_l and pin overlap 0.000 mm3
+  ok    pants and hoodie overlap 0.000 mm3
+  ok    pants and head overlap 0.000 mm3
+  ok    pants and cap overlap 0.000 mm3
+  ok    pants and chain overlap 0.000 mm3
+  ok    pants and pin overlap 0.000 mm3
+  ok    hoodie and head overlap -0.000 mm3
+  ok    hoodie and cap overlap 0.000 mm3
+  ok    hoodie and chain overlap 0.000 mm3
+  ok    hoodie and pin overlap 0.000 mm3
+  ok    head and cap overlap 0.000 mm3
+  ok    head and chain overlap 0.000 mm3
+  ok    head and pin overlap 0.000 mm3
+  ok    cap and chain overlap 0.000 mm3
+  ok    cap and pin overlap 0.000 mm3
+  ok    chain and pin overlap 0.000 mm3
+  ok    shoe_r stands on base at z 5.00: its bottom 5.00, base's section there 2298 mm2
+  ok    shoe_l stands on base at z 5.00: its bottom 5.00, base's section there 2298 mm2
+  ok    pants stands on shoe_r at z 12.00: its bottom 12.00, shoe_r's section there 152 mm2
+  ok    hoodie stands on pants at z 40.00: its bottom 40.00, pants's section there 420 mm2
+  ok    head stands on hoodie at z 68.00: its bottom 68.00, hoodie's section there 632 mm2
+  ok    cap stands on head at z 98.72: its bottom 98.72, head's section there 1277 mm2
+  ok    base peg 1: 48 of 61 mm3 inside the part it holds
+  ok    base peg 2: 48 of 61 mm3 inside the part it holds
+  ok    shoe_r peg 1: 75 of 90 mm3 inside the part it holds
+  ok    shoe_l peg 1: 75 of 90 mm3 inside the part it holds
+  ok    pants peg 1: 152 of 176 mm3 inside the part it holds
+  ok    pants peg 2: 152 of 176 mm3 inside the part it holds
+  ok    hoodie peg 1: 176 of 205 mm3 inside the part it holds
+  ok    pin: 71 mm3 in the head, 71 in the cap
+  ok    the chain's back on his chest: 98% within 0.2 mm (glue face)
+RESULT: PASS
