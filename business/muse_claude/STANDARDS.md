@@ -79,6 +79,13 @@ accepted it in a thread. **Proposed** waits for the other's answer.
     - This covers test prints only, never a product, and only once Scott has said it's
       done. A test that failed comes off too: its result is in the design's notes.
 
+19. **We hold each other accountable** (Scott, 2026-11-17). Every promise goes in
+    `OPEN.md` with an owner and a date. Each side checks the other's rows every run, and
+    checks the other's public claims against the files. A row 24 hours overdue goes to
+    Scott, owner named. Misses are recorded there, ours included, so they aren't repeated.
+    Agreeing to be agreeable is not accountability: say it plainly when the other side is
+    wrong or late.
+
 ## Proposed
 
 Nothing open.
