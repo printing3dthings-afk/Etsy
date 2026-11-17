@@ -1,0 +1,98 @@
+== base
+parts/base.stl
+  ok    fits_plate: 60.0 x 18.0 x 8.9 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.00mm, median 3.38mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 8.8mm printed of 8.85mm
+  ok    geometry_survives_slicing: printed height 8.8mm vs modelled 8.85mm
+  ok    flat_base: 10.16 cm2 of contact = 94.1% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=1.6mm; 34 layer(s) under the 4.0s cooling threshold; 1300mm2 on the plate; aspect 0.12
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED
+== arch
+parts/arch.stl
+  ok    fits_plate: 52.0 x 84.8 x 12.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 3.56mm, median 5.96mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 12.0mm printed of 12.0mm
+  ok    geometry_survives_slicing: printed height 12.0mm vs modelled 12.0mm
+  ok    flat_base: 9.38 cm2 of contact = 21.3% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.7mm widest unsupported span at z=5.2mm; 29 layer(s) under the 4.0s cooling threshold; 1250mm2 on the plate; aspect 0.12
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED
+== steeple
+parts/steeple.stl
+  ok    fits_plate: 14.0 x 14.0 x 46.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.84mm, median 14.00mm (floor 1.2mm); 0.00% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 45.8mm printed of 46.0mm
+  ok    geometry_survives_slicing: printed height 45.8mm vs modelled 46.0mm
+  ok    flat_base: 1.67 cm2 of contact = 85.2% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 4.3mm widest unsupported span at z=10.2mm; 228 layer(s) under the 4.0s cooling threshold; 244mm2 on the plate; aspect 1.71
+  note  texture: not measurable -- too few usable cross-sections to measure
+PRODUCT GATE PASSED
+== hub_1
+parts/hub_1.stl
+  ok    fits_plate: 34.0 x 34.0 x 38.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.60mm, median 2.29mm (floor 1.2mm); 0.27% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 38.0mm printed of 38.0mm
+  ok    geometry_survives_slicing: printed height 38.0mm vs modelled 38.0mm
+  ok    flat_base: 7.91 cm2 of contact = 68.4% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.1mm widest unsupported span at z=3.6mm; 182 layer(s) under the 4.0s cooling threshold; 1007mm2 on the plate; aspect 0.81
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED
+== hub_2
+parts/hub_2.stl
+  ok    fits_plate: 34.0 x 34.0 x 38.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.60mm, median 2.29mm (floor 1.2mm); 0.27% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 38.0mm printed of 38.0mm
+  ok    geometry_survives_slicing: printed height 38.0mm vs modelled 38.0mm
+  ok    flat_base: 7.90 cm2 of contact = 68.3% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.1mm widest unsupported span at z=3.6mm; 182 layer(s) under the 4.0s cooling threshold; 1006mm2 on the plate; aspect 0.81
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED
+== hub_3
+parts/hub_3.stl
+  ok    fits_plate: 34.0 x 34.0 x 38.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.60mm, median 2.29mm (floor 1.2mm); 0.16% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 38.0mm printed of 38.0mm
+  ok    geometry_survives_slicing: printed height 38.0mm vs modelled 38.0mm
+  ok    flat_base: 7.89 cm2 of contact = 68.3% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.1mm widest unsupported span at z=3.6mm; 182 layer(s) under the 4.0s cooling threshold; 1005mm2 on the plate; aspect 0.81
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED
+== shaft
+parts/shaft.stl
+  ok    fits_plate: 9.0 x 9.0 x 87.7 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.24mm, median 4.60mm (floor 1.2mm); 0.31% below one bead; 412 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 87.6mm printed of 87.68mm
+  ok    geometry_survives_slicing: printed height 87.6mm vs modelled 87.68mm
+  ok    flat_base: 0.21 cm2 of contact = 26.1% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 438 layer(s) under the 4.0s cooling threshold; 50mm2 on the plate; aspect 4.57
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED

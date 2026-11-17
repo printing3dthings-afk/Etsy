@@ -1,0 +1,18 @@
+PRESS-TO-LIGHT CHAPEL: THE LIFT-AND-DROP DRIVE (hand calculations, before modelling)
+helix: 24.0 mm a turn; at the teeth's middle (r 2.58) 56.0 deg from level
+  printing: shaft tips (r 3.15) lean 39.5 deg from upright (<= 45): PASS
+  printing: nut slots (r 3.65) lean 43.7 deg from upright (<= 45): PASS
+  printing: bore under the nut (r 3.75) lean 44.5 deg from upright (<= 45): PASS
+weight driving it: 101 mN (10.2 g); the spinner 41 mN (measured on the exported parts)
+  mu 0.45 (design): drive torque 129 uN.m, pivot friction 22, net 107 (5.9x)
+      driven 1.00 turns; leaving the nut at 9.1 turns/s; coast on the pivot alone up to 9 turns (an upper bound: rubbing the rod adds friction)
+  mu 0.55 (worst): drive torque 107 uN.m, pivot friction 27, net 80 (4.0x)
+      driven 1.00 turns; leaving the nut at 7.8 turns/s; coast on the pivot alone up to 6 turns (an upper bound: rubbing the rod adds friction)
+  drive vs friction, worst case at least 2x: PASS
+
+ENGAGEMENT: star tips into the nut's teeth, radially, per clearance (3x RSS and worst case)
+  clearance 0.3: overlap 0.85 mm, needs 0.54 (3x RSS 0.18, worst 0.25): PASS
+  clearance 0.4: overlap 0.75 mm, needs 0.54 (3x RSS 0.18, worst 0.25): PASS
+  clearance 0.5: overlap 0.65 mm, needs 0.54 (3x RSS 0.18, worst 0.25): PASS
+  open gap: the smallest clearance 0.3 >= 0.3: PASS
+RESULT: PASS

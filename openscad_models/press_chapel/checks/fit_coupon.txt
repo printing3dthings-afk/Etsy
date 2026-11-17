@@ -1,0 +1,10 @@
+PRESS-TO-LIGHT CHAPEL DROP TEST PRINT: FIT (exported geometry)
+  ok   hub 1 (clearance 0.3): through the whole drop, turned by the helix, the shaft never touches it (largest overlap 0.0000 mm3); nothing touches the frame (0.0000 mm3)
+  ok   hub 2 (clearance 0.4): through the whole drop, turned by the helix, the shaft never touches it (largest overlap 0.0000 mm3); nothing touches the frame (0.0000 mm3)
+  ok   hub 3 (clearance 0.5): through the whole drop, turned by the helix, the shaft never touches it (largest overlap 0.0000 mm3); nothing touches the frame (0.0000 mm3)
+  ok   control: the hub turned the wrong way at drop 4 does collide (17.10 mm3), so the sweep can see a bad helix
+  ok   at rest (drop 30.0) the star is out of the nut: hub 1 turns a full turn touching nothing (largest overlap 0.0000 mm3)
+  ok   lift stop: 0.4 above the top, the collar is into the guide's mouth (0.12 mm3)
+  ok   drop stop: 0.4 below rest, the steeple is into the guide's top (54.83 mm3)
+MASSES (the steeple printed solid): steeple 8.01 g, shaft 2.24 g, hub 4.21 g, hub inertia 2.65e-07 kg m2  -> checks/masses.json
+PASS
