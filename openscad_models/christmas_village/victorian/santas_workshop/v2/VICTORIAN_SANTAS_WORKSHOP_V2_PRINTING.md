@@ -28,16 +28,24 @@ one-colour print.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers, 0.4 mm nozzle.
 
-## Cost — sliced, not estimated
+## Cost — sliced in Bambu Studio (2026-11-17)
 
-| version | time | filament |
-|---|---|---|
-| **single colour** | **15 h 34 m** | **119.9 m, about 358 g** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 358 g of model **+ purge** |
+| version | file | time | filament |
+|---|---|---|---|
+| **matte white, one colour** | `gcode/victorian_santas_workshop_v2_matte_white.gcode.3mf` | **17 h 34 m** | **108.0 m, 343 g** |
+| **four colour, AMS** | `gcode/victorian_santas_workshop_v2_four_colour.gcode.3mf` | **2 d 22 h 4 m** | **339 m, 1,078 g** (561 brick, 193 slate, 305 white, 19 green) |
 
-Single colour, supports off, the closed CGAL union sliced 2026-10-29 and timed
-with the P1S motion model (the viewer's clock, the same way as the original's
-15 h 40 m). Grams are PLA at 1.24 g/cm³.
+Both: Bambu Studio 2.8, the P1S 0.4 nozzle, 0.20 Standard with the shop's production
+settings, PLA Matte, textured PEI, supports off. **0 support moves in either.** 968
+layers. Both files are finished for Bambu Handy's cloud slicing (`tools/handy_finish.py`).
+
+**Four colour costs more than three times the plastic of the model.** The model is about
+343 g; the other ~735 g is purge, because most of the 968 layers change colour four
+times. As sliced it is not a sensible profile to offer. Fewer colour changes (trim and
+roof only, say), or flushing into infill, would bring it down; neither is done here.
+
+The figures before this (15 h 34 m, about 358 g, 2026-10-29) were the P1S motion model's
+estimate on the CGAL union, not a Bambu Studio slice. The slice is the one to quote.
 
 ## Lighting
 

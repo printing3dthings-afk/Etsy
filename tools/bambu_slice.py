@@ -535,7 +535,7 @@ def thumbnail(parts, size: int) -> bytes:
     img[ok, :3] = np.clip(C[hit[ok]] * shade[hit[ok], None], 0, 255)
     img[ok, 3] = 255
     buf = io.BytesIO()
-    Image.fromarray(img.reshape(size, size, 4), "RGBA").save(buf, "PNG")
+    Image.fromarray(img.reshape(size, size, 4)).save(buf, "PNG")
     return buf.getvalue()
 
 
