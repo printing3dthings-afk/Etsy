@@ -28,6 +28,12 @@ Arachne walls, precise wall, aligned seam, avoid crossing walls, ironing on
 top surfaces. Supports stay OFF: every model here is designed support-free and
 checked to be, and a support the slicer decides to add is a defect to fix in
 the model, not something to print around.
+
+HANDY (2026-11-17). Every slice is passed through Bambu Studio a second time from
+its own project file, and given plate thumbnails (`finish_for_handy`), so the plate
+lists its objects as a GUI-saved file does. Without that, Bambu Handy's cloud slicer
+failed on our files (0500-4014, Benson, 2026-11-15). tools/handy_finish.py does the
+same to a file sliced before this.
 """
 from __future__ import annotations
 
@@ -427,7 +433,12 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
         if r.returncode != 0 or not made.exists():
             tail = "\n".join((r.stdout + r.stderr).splitlines()[-25:])
             raise RuntimeError(f"Bambu Studio slice failed (exit {r.returncode}):\n{tail}")
-        shutil.move(str(made), out)
+        first = summarise(made)
+        finish_for_handy(made, out, work)
+        again = summarise(out)
+        if (first["layers"], first["support_lines"], first.get("slots_used")) != \
+                (again["layers"], again["support_lines"], again.get("slots_used")):
+            raise RuntimeError(f"the second Bambu Studio pass sliced differently: {first} vs {again}")
     paused_at = add_pauses(out, pause_zs) if pause_zs else []
     s = summarise(out)
     s["paused_at_mm"] = paused_at
@@ -439,6 +450,140 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     if s.get("slots_used") is not None and len(s["slots_used"]) < len(colours):
         log(f"WARNING: {len(colours)} colours given, only slots {s['slots_used']} used in the G-code")
     return s
+
+
+def _mat(t: str):
+    import numpy as np
+    v = [float(x) for x in t.split()]
+    return np.array([v[0:3] + [0], v[3:6] + [0], v[6:9] + [0], v[9:12] + [1]])   # 3MF: p' = [p 1] M
+
+
+def plate_parts(gcode_3mf: Path) -> list:
+    """The meshes on a Bambu project's plate, placed, with their filament colours: from the
+    file itself, so a file sliced earlier can be finished without its source parts."""
+    import xml.etree.ElementTree as ET
+    import numpy as np
+    import trimesh
+    ns = {"m": "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"}
+    P = "{http://schemas.microsoft.com/3dmanufacturing/production/2015/06}path"
+    with zipfile.ZipFile(gcode_3mf) as z:
+        root = ET.fromstring(z.read("3D/3dmodel.model"))
+        cfg = json.loads(z.read("Metadata/project_settings.config"))
+        ms = ET.fromstring(z.read("Metadata/model_settings.config"))
+        meshes = {}
+        for name in z.namelist():
+            if name.startswith("3D/Objects/") and name.endswith(".model"):
+                for o in ET.fromstring(z.read(name)).iter(f"{{{ns['m']}}}object"):
+                    mesh = o.find("m:mesh", ns)
+                    if mesh is None:
+                        continue
+                    v = np.array([[float(e.get(k)) for k in "xyz"] for e in mesh.find("m:vertices", ns)])
+                    t = np.array([[int(e.get(k)) for k in ("v1", "v2", "v3")] for e in mesh.find("m:triangles", ns)])
+                    meshes[("/" + name, o.get("id"))] = (v, t)
+    colours = cfg.get("filament_colour") or ["#F4F1EA"]
+    extruder = {}
+    for o in ms.iter("object"):
+        own = next((m.get("value") for m in o.findall("metadata") if m.get("key") == "extruder"), "1")
+        for p in o.iter("part"):
+            e = next((m.get("value") for m in p.findall("metadata") if m.get("key") == "extruder"), own)
+            extruder[(o.get("id"), p.get("id"))] = int(e)
+    objs = {o.get("id"): o for o in root.find("m:resources", ns).findall("m:object", ns)}
+    parts = []
+    for item in root.find("m:build", ns).findall("m:item", ns):
+        oid = item.get("objectid")
+        top = _mat(item.get("transform", "1 0 0 0 1 0 0 0 1 0 0 0"))
+        comps = objs[oid].find("m:components", ns)
+        for c in (comps if comps is not None else []):
+            v, t = meshes[(c.get(P), c.get("objectid"))]
+            M = _mat(c.get("transform", "1 0 0 0 1 0 0 0 1 0 0 0")) @ top
+            vv = np.c_[v, np.ones(len(v))] @ M
+            col = colours[min(extruder.get((oid, c.get("objectid")), 1), len(colours)) - 1]
+            parts.append((trimesh.Trimesh(vv[:, :3], t, process=False), col))
+    return parts
+
+
+def thumbnail(parts, size: int) -> bytes:
+    """A plate thumbnail like the one Bambu Studio's GUI saves: the objects from the front,
+    looking down, shaded in their filament colours. The CLI can't draw one in a container
+    (its OpenGL window fails to open, 2026-11-17), so this ray-casts the real meshes, one
+    ray per pixel."""
+    import io
+    import numpy as np
+    import trimesh
+    from PIL import Image
+    meshes, cols = [], []
+    for m, colour in parts:
+        meshes.append(m)
+        cols.append(np.repeat([[int(colour[i:i + 2], 16) for i in (1, 3, 5)]], len(m.faces), 0))
+    mesh, C = trimesh.util.concatenate(meshes), np.concatenate(cols).astype(float)
+    az, el = np.radians(-30), np.radians(35)              # from the front left, looking down
+    view = np.array([np.sin(az) * np.cos(el), -np.cos(az) * np.cos(el), np.sin(el)])   # towards the camera
+    right = np.array([np.cos(az), np.sin(az), 0.0])
+    up = np.cross(view, right)
+    pts = mesh.vertices
+    u, v = pts @ right, pts @ up
+    half = 0.55 * max(u.max() - u.min(), v.max() - v.min())
+    cu, cv = (u.max() + u.min()) / 2, (v.max() + v.min()) / 2
+    gx, gy = np.meshgrid(np.linspace(-half, half, size), np.linspace(half, -half, size))
+    far = (pts @ view).max() + 10
+    origins = (cu + gx.ravel())[:, None] * right + (cv + gy.ravel())[:, None] * up + far * view
+    hit = mesh.ray.intersects_first(origins, np.tile(-view, (len(origins), 1)))
+    light = np.array([-0.4, -0.6, 0.7]) / np.linalg.norm([-0.4, -0.6, 0.7])
+    shade = 0.45 + 0.55 * np.clip(mesh.face_normals @ light, 0, 1)
+    img = np.zeros((size * size, 4), np.uint8)
+    ok = hit >= 0
+    img[ok, :3] = np.clip(C[hit[ok]] * shade[hit[ok], None], 0, 255)
+    img[ok, 3] = 255
+    buf = io.BytesIO()
+    Image.fromarray(img.reshape(size, size, 4), "RGBA").save(buf, "PNG")
+    return buf.getvalue()
+
+
+def finish_for_handy(made: Path, out: Path, work: Path) -> None:
+    """Pass the slice through Bambu Studio once more, from its own project file, and add
+    the plate thumbnails. Benson, 2026-11-15: Bambu Handy's cloud slicer rejected our files
+    (0500-4014, the 6 mm balls). The first pass loads a plain 3MF, and its export puts no
+    <model_instance> on the plate, so the plate lists no objects; slice_info names none,
+    and there are no thumbnails. Loaded back from its own export, Bambu Studio writes the
+    plate's objects and their identify_ids, as a file saved from the GUI has (checked
+    2026-11-17 on the Plinko test print: the same G-code apart from progress lines)."""
+    project = work / "project.3mf"
+    with zipfile.ZipFile(made) as zin, zipfile.ZipFile(project, "w", zipfile.ZIP_DEFLATED) as zout:
+        for it in zin.infolist():
+            if re.fullmatch(r"Metadata/plate_\d+\.gcode(\.md5)?", it.filename):
+                continue                                   # the first pass's G-code
+            data = zin.read(it.filename)
+            if it.filename == "Metadata/project_settings.config":
+                cfg = json.loads(data)
+                cfg["default_filament_colour"] = list(cfg.get("filament_colour", []))   # was [""] (Benson's note)
+                data = json.dumps(cfg, indent=4).encode()
+            zout.writestr(it, data)
+    outdir = work / "out2"
+    outdir.mkdir()
+    r = subprocess.run(_cmd() + ["--slice", "0", "--outputdir", str(outdir), "--export-3mf", "final.gcode.3mf",
+                                 str(project)], capture_output=True, text=True,
+                       env=dict(os.environ, LC_ALL="C.UTF-8"), timeout=3600, cwd=work)   # it writes result.json to its cwd
+    final = outdir / "final.gcode.3mf"
+    if r.returncode != 0 or not final.exists():
+        tail = "\n".join((r.stdout + r.stderr).splitlines()[-25:])
+        raise RuntimeError(f"Bambu Studio's second pass failed (exit {r.returncode}):\n{tail}")
+    with zipfile.ZipFile(final) as z:
+        items = [(it, z.read(it.filename)) for it in z.infolist()]
+    names = {it.filename for it, _ in items}
+    settings = next(b for it, b in items if it.filename == "Metadata/model_settings.config").decode()
+    if "<model_instance>" not in settings:
+        raise RuntimeError("the second pass still put no <model_instance> on the plate")
+    parts = plate_parts(final)
+    thumbs = {"Metadata/plate_1.png": thumbnail(parts, 512),
+              "Metadata/plate_1_small.png": thumbnail(parts, 128)}
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
+        for it, data in items:
+            if it.filename == "[Content_Types].xml" and b'Extension="png"' not in data:
+                data = data.replace(b"</Types>", b'<Default Extension="png" ContentType="image/png"/></Types>')
+            zout.writestr(it, data)
+        for name, data in thumbs.items():
+            if name not in names:
+                zout.writestr(name, data)
 
 
 def _object_sets(items: list[str]) -> dict[int, dict[str, str]]:
