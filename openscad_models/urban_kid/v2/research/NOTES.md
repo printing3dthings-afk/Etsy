@@ -76,3 +76,11 @@ The pants are the clear win: `images/cloth_pants_and_hoodie.png`, the grey part.
   - a younger head shape (rounder cheeks, shorter nose);
   - a much stronger smirk and lids;
   - the head scaled up as v1's was.
+
+## Sculpted folds on v1's hoodie, first try (`../folds.py`, `../hoodie_v2.py`)
+`images/hoodie_sculpted_folds_try1.png`. Folds placed as strokes on the distance field:
+elbow compression, shoulder-to-pocket tension, hem gathers, back drapes.
+- At 0.5 mm they didn't read at all; at 2.2x they read as cuts and stubs, not cloth.
+- Strokes falling into the gap between forearm and body still punch holes.
+- Verdict: worse than v1. Cloth folds need the shape of the garment to change round
+  them (a fold is the whole sleeve buckling), which surface strokes can't do.
