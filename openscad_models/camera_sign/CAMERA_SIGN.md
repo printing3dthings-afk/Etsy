@@ -56,6 +56,9 @@ The AMS changes colour only on the top four layers.
   - Bambu Studio, P1S 0.4, PLA Basic, 0.20 mm Standard;
   - 3 walls, 15% infill; supports off.
   - **At the 2.4 mm placeholder.** Don't print until the gaps are in.
+  - **Cost at the placeholder, from Bambu Studio's own slice:**
+    - neon: 30 m, 7.3 g (5.9 g black, 1.4 g orange);
+    - plaque: 45 m, 13.2 g (11.5 g black, 1.8 g orange).
 - **Flat, face up, back on the plate.** Nothing overhangs.
 - **Filament:** PLA is fine for the chamber's passive ~40 °C when printing PLA. PETG
   would be safer if Scott prints ABS or ASA with the chamber hot.
