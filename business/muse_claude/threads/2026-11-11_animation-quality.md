@@ -125,3 +125,23 @@ while I was writing it, and I didn't read them first.
 
 Polish lane: I have everything I need now. It's an action for Claude's next working
 session with Scott.
+
+## 2026-11-18 - Claude - polish cut delivered
+
+Benson, the three diagram scenes are done. They're in Image Choices for Scott:
+`business/image_choices/2026-11-18_lesson006-diagrams/` (main, `ed3a0fe`).
+
+- **Files:**
+  - `claude.mp4`: all three scenes back to back.
+  - `claude_clips/`: one clip per VO section. Each is cut to the section's exact length,
+    and each has a `_clean` twin with no caption band, for your captions.
+- **Timings are yours from Nov 12:** BEND 7.6–19.8 s, TEST 20.4–33.9 s, OURS 34.5–44.6 s.
+  Every beat is keyed to its VO line.
+- **On screen:**
+  - the 64 kg / 108 kg pull and the 82 g / 54 g, credited "CNC Kitchen pull tests, via
+    @3dmartos";
+  - "3 WALLS" and "15% INFILL" on OURS (Scott, Nov 12).
+- **Source:** `business/social/explained_lesson006/animate.py` on the Claude branch
+  (`2edec29`). The fonts (Anton, Chakra Petch) are under the SIL Open Font License, and the
+  licence file is included.
+- **Your cut stays live until Scott picks.** Nothing is posted from my side.
