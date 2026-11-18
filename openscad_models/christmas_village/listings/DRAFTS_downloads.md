@@ -40,7 +40,7 @@ A round brick cottage under a snowy slate cone, with a little gable over its wre
 • Size: 67 × 67 × 95 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 4 h 31 m, about 40 g of PLA (sliced estimate)
+• One colour: about 1 h 51 m, about 42 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -112,7 +112,7 @@ A rounded Victorian shop with a bow window downstairs and a jettied timber-frame
 • Size: 83 × 69 × 122 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 6 h 41 m, about 62 g of PLA (sliced estimate)
+• One colour: about 2 h 55 m, about 65 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -184,7 +184,7 @@ A two-storey brick toy shop with TOYS raised on its bay window, and a round towe
 • Size: 81 × 75 × 126 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 8 h 21 m, about 75 g of PLA (sliced estimate)
+• One colour: about 3 h 44 m, about 79 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -256,7 +256,7 @@ The tallest building in the village: a brick church with a rose window, a square
 • Size: 79 × 93 × 164 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 9 h 02 m, about 81 g of PLA (sliced estimate)
+• One colour: about 4 h 03 m, about 85 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -328,7 +328,7 @@ A long two-storey coaching inn with a pointed carriage archway right through one
 • Size: 97 × 69 × 111 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 8 h 43 m, about 86 g of PLA (sliced estimate)
+• One colour: about 4 h 02 m, about 95 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -400,7 +400,7 @@ A tall, narrow three-storey townhouse with a round bow window running up its who
 • Size: 65 × 76 × 122 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 8 h 03 m, about 74 g of PLA (sliced estimate)
+• One colour: about 3 h 35 m, about 76 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -472,7 +472,7 @@ The village's centrepiece: a toy factory that is also a castle, its sawtooth roo
 • Size: 206 × 129 × 194 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 15 h 32 m, about 388 g of PLA (sliced estimate)
+• One colour: about 19 h 31 m, about 397 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -544,7 +544,7 @@ A square brick clock tower rising out of a round brick drum, with a big clock fa
 • Size: 67 × 67 × 160 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 6 h 10 m, about 57 g of PLA (sliced estimate)
+• One colour: about 2 h 43 m, about 61 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -616,7 +616,7 @@ A gingerbread cottage shaped like a cupcake: a fluted drum under a chocolate dom
 • Size: 69 × 69 × 86 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 4 h 52 m, about 49 g of PLA (sliced estimate)
+• One colour: about 2 h 13 m, about 51 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -688,7 +688,7 @@ A swooping gingerbread house with a leaning turret and a candy-cane spire bent o
 • Size: 81 × 73 × 113 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 5 h 56 m, about 55 g of PLA (sliced estimate)
+• One colour: about 2 h 41 m, about 58 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -760,7 +760,7 @@ A gingerbread chapel with a round tower striped red in a spiral like a candy can
 • Size: 68 × 84 × 132 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 6 h 36 m, about 61 g of PLA (sliced estimate)
+• One colour: about 3 h 06 m, about 65 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -832,7 +832,7 @@ A three-tier layer cake with a cherry on top and a little gingerbread sweet shop
 • Size: 67 × 77 × 114 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 5 h 28 m, about 50 g of PLA (sliced estimate)
+• One colour: about 2 h 44 m, about 53 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -904,7 +904,7 @@ A tower shaped like a hot-cocoa mug, piled with whipped cream and marshmallows, 
 • Size: 69 × 77 × 97 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 4 h 33 m, about 44 g of PLA (sliced estimate)
+• One colour: about 2 h 09 m, about 46 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -976,7 +976,7 @@ The village's centrepiece: a gingerbread toy factory that is also a castle, its 
 • Size: 206 × 129 × 192 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 11 h 56 m, about 350 g of PLA (sliced estimate)
+• One colour: about 16 h 37 m, about 361 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -1048,7 +1048,7 @@ A tower stacked from three thick gingerbread cookies, with a big frosted-cookie 
 • Size: 67 × 67 × 141 mm
 • Supports OFF: every overhang is shaped to print without them
 • Print standing up as it sits in the file, 0.2 mm layers
-• One colour: about 5 h 01 m, about 50 g of PLA (sliced estimate)
+• One colour: about 2 h 43 m, about 56 g of PLA (Bambu Studio slice, 3 walls, 15% infill)
 • Four colours with an AMS: the parts are set up already; slice it for your own time and purge
 • Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle
 
@@ -1099,14 +1099,14 @@ The whole OnBrandCraftz Victorian Christmas village: all 8 buildings as 3D print
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏘️ THE 8 BUILDINGS
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Victorian Cottage: 67 × 67 × 95 mm, about 4 h 31 m in one colour
-• Victorian Shop-House: 83 × 69 × 122 mm, about 6 h 41 m in one colour
-• Victorian Toy Shop: 81 × 75 × 126 mm, about 8 h 21 m in one colour
-• Victorian Church: 79 × 93 × 164 mm, about 9 h 02 m in one colour
-• Victorian Coaching Inn: 97 × 69 × 111 mm, about 8 h 43 m in one colour
-• Victorian Townhouse: 65 × 76 × 122 mm, about 8 h 03 m in one colour
-• Victorian Santa's Workshop: 206 × 129 × 194 mm, about 15 h 32 m in one colour
-• Victorian Clock Tower: 67 × 67 × 160 mm, about 6 h 10 m in one colour
+• Victorian Cottage: 67 × 67 × 95 mm, about 1 h 51 m in one colour
+• Victorian Shop-House: 83 × 69 × 122 mm, about 2 h 55 m in one colour
+• Victorian Toy Shop: 81 × 75 × 126 mm, about 3 h 44 m in one colour
+• Victorian Church: 79 × 93 × 164 mm, about 4 h 03 m in one colour
+• Victorian Coaching Inn: 97 × 69 × 111 mm, about 4 h 02 m in one colour
+• Victorian Townhouse: 65 × 76 × 122 mm, about 3 h 35 m in one colour
+• Victorian Santa's Workshop: 206 × 129 × 194 mm, about 19 h 31 m in one colour
+• Victorian Clock Tower: 67 × 67 × 160 mm, about 2 h 43 m in one colour
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT YOU GET
@@ -1149,13 +1149,13 @@ The whole OnBrandCraftz Gingerbread Christmas village: all 7 buildings as 3D pri
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏘️ THE 7 BUILDINGS
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Gingerbread Cottage: 69 × 69 × 86 mm, about 4 h 52 m in one colour
-• Gingerbread Turret House: 81 × 73 × 113 mm, about 5 h 56 m in one colour
-• Gingerbread Candy Cane Chapel: 68 × 84 × 132 mm, about 6 h 36 m in one colour
-• Gingerbread Sweet Shop: 67 × 77 × 114 mm, about 5 h 28 m in one colour
-• Gingerbread Cocoa Café: 69 × 77 × 97 mm, about 4 h 33 m in one colour
-• Gingerbread Santa's Workshop: 206 × 129 × 192 mm, about 11 h 56 m in one colour
-• Gingerbread Cookie Clock Tower: 67 × 67 × 141 mm, about 5 h 01 m in one colour
+• Gingerbread Cottage: 69 × 69 × 86 mm, about 2 h 13 m in one colour
+• Gingerbread Turret House: 81 × 73 × 113 mm, about 2 h 41 m in one colour
+• Gingerbread Candy Cane Chapel: 68 × 84 × 132 mm, about 3 h 06 m in one colour
+• Gingerbread Sweet Shop: 67 × 77 × 114 mm, about 2 h 44 m in one colour
+• Gingerbread Cocoa Café: 69 × 77 × 97 mm, about 2 h 09 m in one colour
+• Gingerbread Santa's Workshop: 206 × 129 × 192 mm, about 16 h 37 m in one colour
+• Gingerbread Cookie Clock Tower: 67 × 67 × 141 mm, about 2 h 43 m in one colour
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT YOU GET

@@ -38,14 +38,14 @@ The whole OnBrandCraftz Victorian Christmas village: all 8 buildings as 3D print
 DIGITAL DOWNLOAD: 3D print files only. No physical item is shipped and no tealight is included. You need a 3D printer.
 
 THE 8 BUILDINGS
-• Victorian Cottage: 67 × 67 × 95 mm, about 1 h 33 m in one colour
-• Victorian Shop-House: 83 × 69 × 122 mm, about 2 h 19 m in one colour
-• Victorian Toy Shop: 81 × 75 × 126 mm, about 2 h 59 m in one colour
-• Victorian Church: 79 × 93 × 164 mm, about 3 h 17 m in one colour
-• Victorian Coaching Inn: 97 × 69 × 111 mm, about 3 h 07 m in one colour
-• Victorian Townhouse: 65 × 76 × 122 mm, about 2 h 53 m in one colour
-• Victorian Santa's Workshop: 206 × 129 × 194 mm, about 15 h 34 m in one colour
-• Victorian Clock Tower: 67 × 67 × 160 mm, about 2 h 12 m in one colour
+• Victorian Cottage: 67 × 67 × 95 mm, about 1 h 51 m in one colour
+• Victorian Shop-House: 83 × 69 × 122 mm, about 2 h 55 m in one colour
+• Victorian Toy Shop: 81 × 75 × 126 mm, about 3 h 44 m in one colour
+• Victorian Church: 79 × 93 × 164 mm, about 4 h 03 m in one colour
+• Victorian Coaching Inn: 97 × 69 × 111 mm, about 4 h 02 m in one colour
+• Victorian Townhouse: 65 × 76 × 122 mm, about 3 h 35 m in one colour
+• Victorian Santa's Workshop: 206 × 129 × 194 mm, about 19 h 31 m in one colour
+• Victorian Clock Tower: 67 × 67 × 160 mm, about 2 h 43 m in one colour
 
 WHAT YOU GET
 • One ZIP, one folder per building
@@ -85,13 +85,13 @@ The whole OnBrandCraftz Gingerbread Christmas village: all 7 buildings as 3D pri
 DIGITAL DOWNLOAD: 3D print files only. No physical item is shipped and no tealight is included. You need a 3D printer.
 
 THE 7 BUILDINGS
-• Gingerbread Cottage: 69 × 69 × 86 mm, about 1 h 53 m in one colour
-• Gingerbread Turret House: 81 × 73 × 113 mm, about 2 h 17 m in one colour
-• Gingerbread Candy Cane Chapel: 68 × 84 × 132 mm, about 2 h 34 m in one colour
-• Gingerbread Sweet Shop: 67 × 77 × 114 mm, about 2 h 06 m in one colour
-• Gingerbread Cocoa Café: 69 × 77 × 97 mm, about 1 h 40 m in one colour
-• Gingerbread Santa's Workshop: 206 × 129 × 192 mm, about 11 h 56 m in one colour
-• Gingerbread Cookie Clock Tower: 67 × 67 × 141 mm, about 1 h 48 m in one colour
+• Gingerbread Cottage: 69 × 69 × 86 mm, about 2 h 13 m in one colour
+• Gingerbread Turret House: 81 × 73 × 113 mm, about 2 h 41 m in one colour
+• Gingerbread Candy Cane Chapel: 68 × 84 × 132 mm, about 3 h 06 m in one colour
+• Gingerbread Sweet Shop: 67 × 77 × 114 mm, about 2 h 44 m in one colour
+• Gingerbread Cocoa Café: 69 × 77 × 97 mm, about 2 h 09 m in one colour
+• Gingerbread Santa's Workshop: 206 × 129 × 192 mm, about 16 h 37 m in one colour
+• Gingerbread Cookie Clock Tower: 67 × 67 × 141 mm, about 2 h 43 m in one colour
 
 WHAT YOU GET
 • One ZIP, one folder per building
@@ -122,8 +122,15 @@ Questions: Printing3dthings@outlook.com
   buyer also gets. The older Etsy drafts in
   `openscad_models/christmas_village/listings/DRAFTS_downloads.md` give one-colour
   times about three times longer (cottage 4 h 31 m against the README's 1 h 33 m).
-  The READMEs were built later, on 2026-10-30, so they're the ones used. The
-  live Etsy listings may carry the old times; fix them when the shop is back.
+- **Times, corrected 2026-11-18:** the times above are now Bambu Studio's own one-colour
+  slice at Scott's settings, 3 walls and 15% infill. The slices are committed beside each
+  building's printing notes.
+  - The READMEs' times came from the in-house checking slicer at 2 walls, and were
+    15-34% short.
+  - **The READMEs inside the ZIPs still carry those old times.** Rebuild the ZIPs before
+    these go up.
+  - The live Etsy listings may carry the even older times; fix them when the shop is
+    back.
 - **The files:** the ZIPs are the Etsy bundle parts joined, byte for byte apart
   from one README line (`build_store_kit.py` checks it).
 - **The pictures:** rendered from the STLs inside those ZIPs, in each README's

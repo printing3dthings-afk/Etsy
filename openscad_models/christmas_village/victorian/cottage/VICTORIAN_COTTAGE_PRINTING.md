@@ -48,15 +48,21 @@ pane. The tealight glows through the panes.
   0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
+- **3 walls, 15% infill:** Scott's slicer settings (2026-11-12, "3 walls and 15% infill
+  is how our prints are set in the slicer").
 
 ## Cost — sliced, not estimated
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **1 h 33 m** | **13.5 m, 40 g** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 40 g of model **+ purge** |
+| **single colour** | **1 h 51 m** | **41.8 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 42 g of model **+ purge** |
 
-Single colour, supports off, timed with the P1S motion model (the viewer's
+**Single colour, from Bambu Studio's own slice at Scott's settings** (3 walls, 15% infill, P1S, PLA Basic, 0.20 mm Standard, supports off; 2026-11-18). The file is `victorian_cottage_one_colour.gcode.3mf` in this folder, and it opens in Bambu Handy.
+
+**Superseded:** 1 h 33 m and 13.5 m, 40 g, from the in-house checking slicer at 2 walls. That was 16% under Bambu Studio's time at Scott's settings.
+
+The superseded figure was single colour, supports off, timed with the P1S motion model (the viewer's
 clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight

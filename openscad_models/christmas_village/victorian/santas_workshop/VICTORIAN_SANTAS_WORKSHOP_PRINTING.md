@@ -69,15 +69,21 @@ parts, already aligned. Assign a filament to each part.
 - **Supports OFF.** The slice of the four parts together needs none: 0 support moves and 0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
+- **3 walls, 15% infill:** Scott's slicer settings (2026-11-12, "3 walls and 15% infill
+  is how our prints are set in the slicer").
 
 ## Cost — sliced, not estimated
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **15 h 40 m** | **130.1 m, 388 g** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 388 g of model **+ purge** |
+| **single colour** | **19 h 31 m** | **396.6 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 397 g of model **+ purge** |
 
-Single colour, supports off, timed with the P1S motion model (the viewer's
+**Single colour, from Bambu Studio's own slice at Scott's settings** (3 walls, 15% infill, P1S, PLA Basic, 0.20 mm Standard, supports off; 2026-11-18). The file is `victorian_santas_workshop_one_colour.gcode.3mf` in this folder, and it opens in Bambu Handy.
+
+**Superseded:** 15 h 40 m and 130.1 m, 388 g, from the in-house checking slicer at 2 walls. That was 20% under Bambu Studio's time at Scott's settings.
+
+The superseded figure was single colour, supports off, timed with the P1S motion model (the viewer's
 clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## Verified before shipping — on the real exported meshes

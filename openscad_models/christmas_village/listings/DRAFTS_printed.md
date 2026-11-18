@@ -6,14 +6,15 @@ Drafts only. Nothing is published; each goes to the Action Center for Scott's ap
 
 - Filament: the drafts say white PLA. Change it if the white is PETG or anything else.
 - Tealight: are batteries included, and is it a flicker LED? The drafts say 'battery LED tealight' and nothing more.
-- Processing time: the drafts leave it as [PROCESSING]. Print time is 4.5-10 h a building plus packing.
+- Processing time: the drafts leave it as [PROCESSING]. Print time at Scott's settings (3 walls, 15% infill, Bambu Studio's own slice, 2026-11-18) is about 2-4 h a building, and 16-20 h for a Santa's Workshop, plus packing.
+- Prices: the printed prices were set against the old print times, which were 1.3-2.5x these. The two Santa's Workshops are now the longest prints by far at $39.99. Scott's call whether to reprice.
 - Shipping: box sizes and weights are estimates from the model plus 20 mm of padding; weigh one packed box.
 - Photos: the painted photos must be of these buildings, labelled 'shown painted'. The first photo should be the white print, lit.
 
 
 ## Victorian Cottage — printed
 
-**Price:** $29.99 (print time 4 h 31 m) · **Box:** 5 × 5 × 6 in (estimate)
+**Price:** $29.99 (print time 1 h 51 m) · **Box:** 5 × 5 × 6 in (estimate)
 
 **Title** (111 chars): Victorian Christmas Village Cottage, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -55,7 +56,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 4 h 31 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 1 h 51 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -90,7 +91,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Shop-House — printed
 
-**Price:** $34.99 (print time 6 h 41 m) · **Box:** 5 × 5 × 7 in (estimate)
+**Price:** $34.99 (print time 2 h 55 m) · **Box:** 5 × 5 × 7 in (estimate)
 
 **Title** (114 chars): Victorian Christmas Village Shop House, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -132,7 +133,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 6 h 41 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 55 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -167,7 +168,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Toy Shop — printed
 
-**Price:** $39.99 (print time 8 h 21 m) · **Box:** 5 × 5 × 7 in (estimate)
+**Price:** $39.99 (print time 3 h 44 m) · **Box:** 5 × 5 × 7 in (estimate)
 
 **Title** (112 chars): Victorian Christmas Village Toy Shop, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -209,7 +210,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 8 h 21 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 3 h 44 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -244,7 +245,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Church — printed
 
-**Price:** $39.99 (print time 9 h 02 m) · **Box:** 5 × 6 × 9 in (estimate)
+**Price:** $39.99 (print time 4 h 03 m) · **Box:** 5 × 6 × 9 in (estimate)
 
 **Title** (110 chars): Victorian Christmas Village Church, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -286,7 +287,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 9 h 02 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 4 h 03 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -321,7 +322,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Coaching Inn — printed
 
-**Price:** $39.99 (print time 8 h 43 m) · **Box:** 6 × 5 × 6 in (estimate)
+**Price:** $39.99 (print time 4 h 02 m) · **Box:** 6 × 5 × 6 in (estimate)
 
 **Title** (116 chars): Victorian Christmas Village Coaching Inn, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -363,7 +364,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 8 h 43 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 4 h 02 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -398,7 +399,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Townhouse — printed
 
-**Price:** $39.99 (print time 8 h 03 m) · **Box:** 5 × 5 × 7 in (estimate)
+**Price:** $39.99 (print time 3 h 35 m) · **Box:** 5 × 5 × 7 in (estimate)
 
 **Title** (113 chars): Victorian Christmas Village Townhouse, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -440,7 +441,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 8 h 03 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 3 h 35 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -475,7 +476,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Santa's Workshop — printed
 
-**Price:** $39.99 (print time 15 h 32 m) · **Box:** 10 × 7 × 10 in (estimate)
+**Price:** $39.99 (print time 19 h 31 m) · **Box:** 10 × 7 × 10 in (estimate)
 
 **Title** (121 chars): Victorian Santa's Workshop, Christmas Village, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -517,7 +518,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 15 h 32 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 19 h 31 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -552,7 +553,7 @@ Design © OnBrandCraftz.
 
 ## Victorian Clock Tower — printed
 
-**Price:** $34.99 (print time 6 h 10 m) · **Box:** 5 × 5 × 8 in (estimate)
+**Price:** $34.99 (print time 2 h 43 m) · **Box:** 5 × 5 × 8 in (estimate)
 
 **Title** (115 chars): Victorian Christmas Village Clock Tower, 3D Printed Tealight House, Unpainted White to Paint, LED Tealight Included
 
@@ -594,7 +595,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 6 h 10 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 43 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -629,7 +630,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Cottage — printed
 
-**Price:** $29.99 (print time 4 h 52 m) · **Box:** 5 × 5 × 5 in (estimate)
+**Price:** $29.99 (print time 2 h 13 m) · **Box:** 5 × 5 × 5 in (estimate)
 
 **Title** (109 chars): Gingerbread Christmas Village Cupcake House, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -671,7 +672,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 4 h 52 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 13 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -706,7 +707,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Turret House — printed
 
-**Price:** $34.99 (print time 5 h 56 m) · **Box:** 5 × 5 × 7 in (estimate)
+**Price:** $34.99 (print time 2 h 41 m) · **Box:** 5 × 5 × 7 in (estimate)
 
 **Title** (108 chars): Gingerbread Christmas Village Turret House, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -748,7 +749,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 5 h 56 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 41 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -783,7 +784,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Candy Cane Chapel — printed
 
-**Price:** $34.99 (print time 6 h 36 m) · **Box:** 5 × 5 × 7 in (estimate)
+**Price:** $34.99 (print time 3 h 06 m) · **Box:** 5 × 5 × 7 in (estimate)
 
 **Title** (113 chars): Gingerbread Christmas Village Candy Cane Chapel, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -825,7 +826,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 6 h 36 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 3 h 06 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -860,7 +861,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Sweet Shop — printed
 
-**Price:** $34.99 (print time 5 h 28 m) · **Box:** 5 × 5 × 7 in (estimate)
+**Price:** $34.99 (print time 2 h 44 m) · **Box:** 5 × 5 × 7 in (estimate)
 
 **Title** (106 chars): Gingerbread Christmas Village Sweet Shop, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -902,7 +903,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 5 h 28 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 44 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -937,7 +938,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Cocoa Café — printed
 
-**Price:** $29.99 (print time 4 h 33 m) · **Box:** 5 × 5 × 6 in (estimate)
+**Price:** $29.99 (print time 2 h 09 m) · **Box:** 5 × 5 × 6 in (estimate)
 
 **Title** (117 chars): Gingerbread Christmas Cocoa Cafe, Christmas Village, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -979,7 +980,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 4 h 33 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 09 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -1014,7 +1015,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Santa's Workshop — printed
 
-**Price:** $39.99 (print time 11 h 56 m) · **Box:** 10 × 7 × 10 in (estimate)
+**Price:** $39.99 (print time 16 h 37 m) · **Box:** 10 × 7 × 10 in (estimate)
 
 **Title** (113 chars): Gingerbread Santa's Workshop, Christmas Village, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -1056,7 +1057,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 11 h 56 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 16 h 37 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 
@@ -1091,7 +1092,7 @@ Design © OnBrandCraftz.
 
 ## Gingerbread Cookie Clock Tower — printed
 
-**Price:** $29.99 (print time 5 h 01 m) · **Box:** 5 × 5 × 8 in (estimate)
+**Price:** $29.99 (print time 2 h 43 m) · **Box:** 5 × 5 × 8 in (estimate)
 
 **Title** (114 chars): Gingerbread Christmas Village Cookie Clock Tower, 3D Printed Tealight House, White to Paint, LED Tealight Included
 
@@ -1133,7 +1134,7 @@ The building is hollow with an open base. Switch on the tealight, set the buildi
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 MADE TO ORDER
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Printed for your order (about 5 h 01 m on the printer), checked, and packed in a padded box
+• Printed for your order (about 2 h 43 m on the printer), checked, and packed in a padded box
 • Ships within [PROCESSING]; free shipping in the US
 • Fine layer lines are part of 3D printing and show on close inspection
 

@@ -56,6 +56,8 @@ louvres stand on the pane. The tealight glows through the panes.
   0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
+- **3 walls, 15% infill:** Scott's slicer settings (2026-11-12, "3 walls and 15% infill
+  is how our prints are set in the slicer").
 - It is 164 mm tall on a 79 × 93 mm base. The gate finds its centre of mass
   over the base, but the spire is its tallest, slimmest part: give the plate a
   clean first layer, and slow the last few millimetres if your printer shakes
@@ -65,10 +67,14 @@ louvres stand on the pane. The tealight glows through the panes.
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **3 h 17 m** | **27.2 m, 81 g** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 81 g of model **+ purge** |
+| **single colour** | **4 h 3 m** | **85.2 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 85 g of model **+ purge** |
 
-Single colour, supports off, timed with the P1S motion model (the viewer's
+**Single colour, from Bambu Studio's own slice at Scott's settings** (3 walls, 15% infill, P1S, PLA Basic, 0.20 mm Standard, supports off; 2026-11-18). The file is `victorian_church_one_colour.gcode.3mf` in this folder, and it opens in Bambu Handy.
+
+**Superseded:** 3 h 17 m and 27.2 m, 81 g, from the in-house checking slicer at 2 walls. That was 19% under Bambu Studio's time at Scott's settings.
+
+The superseded figure was single colour, supports off, timed with the P1S motion model (the viewer's
 clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight

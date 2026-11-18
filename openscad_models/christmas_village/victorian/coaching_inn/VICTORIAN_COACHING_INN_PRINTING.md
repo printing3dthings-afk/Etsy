@@ -55,15 +55,21 @@ stand on the pane. The upper floor's casements are inlaid in the plaster.
   0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
+- **3 walls, 15% infill:** Scott's slicer settings (2026-11-12, "3 walls and 15% infill
+  is how our prints are set in the slicer").
 
 ## Cost — sliced, not estimated
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **3 h 7 m** | **29.7 m, 89 g** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 89 g of model **+ purge** |
+| **single colour** | **4 h 2 m** | **95.2 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 95 g of model **+ purge** |
 
-Single colour, supports off, timed with the P1S motion model (the viewer's
+**Single colour, from Bambu Studio's own slice at Scott's settings** (3 walls, 15% infill, P1S, PLA Basic, 0.20 mm Standard, supports off; 2026-11-18). The file is `victorian_coaching_inn_one_colour.gcode.3mf` in this folder, and it opens in Bambu Handy.
+
+**Superseded:** 3 h 7 m and 29.7 m, 89 g, from the in-house checking slicer at 2 walls. That was 23% under Bambu Studio's time at Scott's settings.
+
+The superseded figure was single colour, supports off, timed with the P1S motion model (the viewer's
 clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight
