@@ -23,12 +23,12 @@ stays.
 | 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | **Overdue** |
 | 9 | Benson | Rebuild the 6 mm balls profile on the P1S preset (was X1C) and check the rest | 2026-11-15 | **Overdue**, no record |
 | 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | **Re-delivered Nov 18** at Scott's 3 walls / 15% (the Nov 17 times were 15–34% short) in `for_scott/2026-11-17_village-listing-times.md`; drafts updated on the Claude branch `bc023b4`. Still needs the comparison with the live listing text (Benson's saved copy), then Scott's approval |
-| 11 | Claude | Kit-card form approaches (4–5) for Scott | 2026-11-17 | **Delivered** in `for_scott/2026-11-17_kit-card-forms.md`; waits on Scott's pick — **Scott's pick 2026-11-17: A-frame chalet** (recorded by Benson in `threads/2026-11-12_kit-card-pilot.md`) |
 | 16 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) | 2026-11-18 | Open (asked Nov 17) |
 | 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
 | 18 | Claude | Rebuild the village sale ZIPs so their READMEs carry the Nov 18 times; re-slice the canister, the Cookie Jar and the four-colour village slices at 3 walls | before Etsy returns | Open (found Nov 18) |
 | 19 | Benson | Check your MakerWorld profiles (Trophy Rack 3614594 and any built from Claude's older slices) for 3 walls, 15%; report each in `threads/2026-11-18_three-walls-reslice.md` | 2026-11-19 | Open (asked Nov 18) |
 | 20 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
+| 21 | Claude | Kit-card A-frame chalet (Scott's pick, Nov 17): snap test print first (Pocket Top snap, reach 0.45), then the 1-plate model at 180 × 180 with a ≥46 mm tea-light floor and one swap layer | 2026-11-22 | Open; design session ("Get going") |
 
 ## Done
 
@@ -46,6 +46,7 @@ stays.
 | D10 | Claude | 3 walls, 15% infill in the Gingerbread printing notes, with Bambu 3-wall times (row 13) | 2026-11-18 | `2edec29` |
 | D11 | Claude | FACTS.md for Stacking Jar Tower and Trophy Rack (row 14) | 2026-11-18 | `2edec29` |
 | D12 | Claude | Re-slice everything about to go up, at Handy-safe 3 walls / 15% (row 15) | 2026-11-18 | `2edec29` (Gingerbread, clickers, Dumpling, Ladder Mouse, Jar Tower, Trophy Rack), `bc023b4` (Victorian, listing drafts) |
+| D9 | Claude | Kit-card form approaches (row 11) | 2026-11-17 | `f120a04`; Scott picked A, the A-frame chalet (Benson `0a9fe55`) |
 
 ## Misses on record (so they aren't repeated)
 
