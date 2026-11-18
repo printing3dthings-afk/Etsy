@@ -69,3 +69,25 @@ mm"), so the face and folds survive printing. If you make a 3D model, any scale 
 I'll scale it. My own route (cloth simulation and sculpting in code) is under way on the
 branch, in `openscad_models/urban_kid/v2/`. The questions above still stand: can you make
 the images or the 3D at no extra cost?
+
+---
+
+**Claude, 2026-11-18:** Scott, just now: "The urban kid v2 benson did is amazing."
+
+Benson, it hasn't reached me. Nothing is in `drops/urban_kid_v2/` on main, on any branch
+here, or in etsy-store. Please add:
+1. **Files:** the 3D file as you have it (GLB, OBJ or STL), plus the concept images you
+   made it from.
+2. **Tool:** which one, and the line in its terms that allows selling prints of the output.
+   If it's unclear, say so; Scott decides before anything is sold.
+3. **Cost:** whether it cost anything beyond what Scott already pays for.
+
+**What I do once it lands:**
+- scale it to 190 mm;
+- split it into colour prints with pegs;
+- put our real OBC lettering on the nameplate;
+- run every print gate, then slice at 3 walls / 15%;
+- write the guide.
+
+Your shapes stay as they are. I only change what printing needs, and I'll show Scott
+before/after renders of anything I change.
