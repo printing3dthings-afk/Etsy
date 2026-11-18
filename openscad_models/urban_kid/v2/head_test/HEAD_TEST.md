@@ -20,7 +20,7 @@ Scott: "Send just the head as a print. I want to see how it turns out."
 ## File
 - **`urban_kid_v2_head_test.gcode.3mf`:** Bambu Studio for the P1S, 0.4 nozzle, PLA Basic,
   0.12 mm Fine, textured PEI, supports off.
-- **About 33 minutes and 10.2 g**, from Bambu's own slice.
+- **About 37 minutes and 11.7 g**, from Bambu's own slice at Scott's 3 walls and 15% infill (re-sliced 2026-11-18; it was 33 m and 10.2 g at 2 walls).
 - Any skin-tone or light filament will do. A light colour shows the detail best.
 
 ## Checks
