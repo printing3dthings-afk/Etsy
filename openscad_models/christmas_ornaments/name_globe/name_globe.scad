@@ -61,11 +61,21 @@ module base2d() {
     translate([0, BASE_Y0]) polygon([[-BASE_W0 / 2, 0], [BASE_W0 / 2, 0], [BASE_W1 / 2, BASE_H - LIP_H], [-BASE_W1 / 2, BASE_H - LIP_H]]);
     translate([-LIP_W / 2, BASE_Y0 + BASE_H - LIP_H]) square([LIP_W, LIP_H]);
 }
-module rim2d() translate([0, GY]) difference() { circle(r = GR, $fn = 192); circle(r = GRI, $fn = 192); }
 LOOP_RO = 4.6; LOOP_RI = 2.2;
-module loop2d() translate([0, GY + GR + LOOP_RO - 1.6]) difference() { circle(r = LOOP_RO, $fn = 48); circle(r = LOOP_RI, $fn = 48); }
-module frame2d() { rim2d(); loop2d(); base2d(); }
-module glass2d() difference() { translate([0, GY]) circle(r = GRI, $fn = 192); base2d(); }
+// inside corners filled to a 1.2 mm radius: where the rim meets the base's lip
+// they made a wedge of air too thin to print open (silhouette check, 2026-11-18)
+// The glass's hole is cut after, so the frame's inner edge, the glass and the
+// scene's edge are one circle: a filleted copy of it left hairline slivers.
+module frame2d() difference() {
+    offset(r = -1.2, $fn = 24) offset(delta = 1.2) {
+        translate([0, GY]) circle(r = GR, $fn = 192);
+        translate([0, GY + GR + LOOP_RO - 1.6]) circle(r = LOOP_RO, $fn = 48);
+        base2d();
+    }
+    translate([0, GY]) circle(r = GRI, $fn = 192);
+    translate([0, GY + GR + LOOP_RO - 1.6]) circle(r = LOOP_RI, $fn = 48);
+}
+module glass2d() translate([0, GY]) circle(r = GRI, $fn = 192);
 
 // anything narrower than 1.2 mm (two beads) taken off, and sharp tips rounded at
 // 0.6 mm: a star's point or a holly spike otherwise runs down to nothing
@@ -74,7 +84,7 @@ module star2d(r, k = 0.47) polygon([for (i = [0 : 9]) let (a = 90 + 36 * i, rr =
 // the scene, in globe coordinates (0, 0 = the globe's centre)
 module cottage2d() difference() {
     union() {
-        translate([-8, -6]) square([16, 11]);                                   // walls
+        translate([-8, -9]) square([16, 14]);                                   // walls, down into the drift
         polygon([[-11, 4], [11, 4], [0, 13.5]]);                                // roof
         translate([4.2, 7]) square([3.2, 7]);                                   // chimney
     }
@@ -84,20 +94,19 @@ module cottage2d() difference() {
 }
 module tree2d(h = 24) {
     for (i = [0 : 2]) let (w = [15, 12, 8.5][i], y = h * [0, 0.3, 0.56][i]) translate([0, y]) polygon([[-w / 2, 0], [w / 2, 0], [0, h * 0.44]]);
-    translate([-1.5, -3]) square([3, 3.2]);                                     // trunk
-    translate([0, h + 1.2]) star2d(3.2);
+    translate([0, h + 0.4]) star2d(3.2);                                        // on the tip, no gap under it
 }
 // the snow on the ground: a soft drift across the bottom of the glass
 module drift2d() polygon(concat([[GRI, -GRI], [-GRI, -GRI]],
     [for (i = [0 : 40]) let (x = -GRI + 2 * GRI * i / 40) [x, -15 + 2.6 * sin(1.3 * x * 6) + 1.6 * cos(x * 11)]]));
 SNOW = [[-21, 10], [-6, 21], [2, 24], [9, 19], [-20, 1], [-11, 9], [-3, 15], [21, 5], [3, 8],
-        [-23, -6], [22, -4], [-9, 25.5], [16, 17], [6, 14], [-17, 17]];
+        [-23, -6], [22, -4], [-8, 23.5], [16, 17], [6, 14], [-17, 17]];
 module scene2d() open12() intersection() {
-    circle(r = GRI - 0.01, $fn = 192);
+    circle(r = GRI, $fn = 192);      // the rim's own inner edge: 0.01 short left a gap
     union() {
         drift2d();
         translate([-6.5, -11.2]) cottage2d();
-        translate([12.5, -12.6]) tree2d();
+        translate([12.5, -16.2]) tree2d();   // its lowest tier sunk into the drift
         for (p = SNOW) translate(p) circle(r = 1.1, $fn = 20);
         translate([-13.5, 17.5]) difference() { circle(r = 4.5, $fn = 48); translate([2.2, 1.3]) circle(r = 4.1, $fn = 48); }   // the moon
     }
@@ -106,7 +115,7 @@ module scene2d() open12() intersection() {
 module frame() linear_extrude(T) frame2d();
 module glass() linear_extrude(GLASS) glass2d();
 module snow() {
-    translate([0, 0, GLASS]) linear_extrude(T - GLASS) difference() { translate([0, GY]) scene2d(); base2d(); }
+    translate([0, GY, GLASS]) linear_extrude(T - GLASS) scene2d();
     translate([0, 0, T]) linear_extrude(RAISE) words2d();
 }
 MARK_H = 5.0;

@@ -58,7 +58,7 @@ module words2d() { name2d(); year2d(); }
 module outline2d() {
     offset(r = OUTLINE) offset(r = 1.2) offset(delta = -1.2) offset(r = 1.2) words2d();   // gaps under 2.4 closed
     intersection() {
-        translate([-RO, NAME_Y - 0.12 * NAME_SIZE - 1.4]) square([2 * RO, 2.8]);
+        translate([-RO, NAME_Y - 0.12 * NAME_SIZE - 1.7]) square([2 * RO, 3.4]);   // 3.4: at 2.8 the fragility check put it on watch
         circle(r = RI + 1);
     }
 }
@@ -76,24 +76,38 @@ module sprig(p, n = 9, len_ = 4.6, w = 1.3, stem = 1.7, t0 = 0.12, t1 = 0.94) {
     for (i = [0 : 15]) seg(bez(p, i / 16), bez(p, (i + 1) / 16), stem);
     for (i = [0 : n - 1]) let (t = t0 + (t1 - t0) * i / (n - 1), c = bez(p, t),
                                d = unit(bez(p, t + 0.01) - bez(p, t - 0.01)), nn = [-d[1], d[0]])
-        for (s = [-1, 1]) seg(c, c + len_ * (0.7 * d + 0.71 * s * nn) * (1 - 0.3 * t), w);
+        for (s = [-1, 1]) let (v = 0.7 * d + 0.71 * s * nn,
+                               // needles on the inside of the curve, toward the ornament's
+                               // middle, fan together; shorter there, so the air between
+                               // them stays wide enough to print (2026-11-18)
+                               inner = v * c < 0 ? 0.6 : 1)
+            seg(c, c + len_ * inner * v * (1 - 0.3 * t), w);
 }
 // anything narrower than 1.2 mm (two beads) taken off, and sharp tips rounded at
 // 0.6 mm: a star's point or a holly spike otherwise runs down to nothing
 module open12() offset(r = 0.6, $fn = 16) offset(delta = -0.6) children();
+// and the roots of the V's where a needle, a stem or a star's arm meet filled to
+// 0.45 mm: narrower than 0.8 they print closed anyway, as a ragged wedge
+module close09() offset(r = -0.45, $fn = 16) offset(delta = 0.45) children();
 STAR_R = 8.5;
-STAR_Y = RI - STAR_R + 1.6;          // its top point runs into the ring
+// the boughs reach down to the name's ends: a short name (Mia, Zoë) left them
+// hanging in the air at a fixed 23 mm (2026-11-18)
+BOUGH_X = min(23, max(13, NAME_SIZE * name_w(NAME, len(NAME)) / 2 - 1));
+// its top point runs 3.2 mm into the ring: rounding the point (open12) takes ~1.9 off
+STAR_Y = RI - STAR_R + 3.2;
 // a holly leaf from the origin along +x: a pointed oval with spiked edges
 module holly2d(L = 15, W = 7.5, k = 3)
     polygon(concat(
         [for (i = [0 : 2 * k]) let (s = i / (2 * k), w = (i % 2 ? 0.62 : 1) * W / 2 * sin(180 * s)) [L * s, w]],
         [for (i = [2 * k - 1 : -1 : 1]) let (s = i / (2 * k), w = (i % 2 ? 0.62 : 1) * W / 2 * sin(180 * s)) [L * s, -w]]));
-HOLLY_Y = YEAR_Y - 10.5;
-module motifs2d() open12() {
+HOLLY_Y = YEAR_Y - 9.2;      // the top berry runs into the year's outline
+module motifs2d() open12() close09() {
     // the star, and two pine boughs from it down to the name: a tree's canopy
     translate([0, STAR_Y]) star2d(STAR_R);
     for (m = [0, 1]) mirror([m, 0]) {
-        sprig([[-2.5, STAR_Y - 2], [-15, STAR_Y - 1], [-25, NAME_Y + 0.5 * NAME_SIZE]], n = 10, len_ = 5.6, w = 1.3, stem = 2.0, t0 = 0.08, t1 = 0.86);
+        // six needle pairs, not eight: at eight the needles stood 0.47 mm apart and
+        // would print webbed (silhouette check, 2026-11-18)
+        sprig([[-0.5, STAR_Y - 1], [-0.6 * BOUGH_X, STAR_Y - 1], [-BOUGH_X, NAME_Y + 0.35 * NAME_SIZE]], n = 6, len_ = 5.6, w = 1.4, stem = 2.0, t0 = 0.24, t1 = 0.72);   // needles clear of the star and the name
         // small stars caught on the ring, either side
         for (a = [148, 212]) translate([RI * cos(a), RI * sin(a)] * 0.96) rotate(a - 90) star2d(3.8, 0.5);
     }
