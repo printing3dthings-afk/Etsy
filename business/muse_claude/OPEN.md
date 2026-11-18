@@ -25,6 +25,7 @@ stays.
 | 19 | Benson | Check your MakerWorld profiles (Trophy Rack 3614594 and any built from Claude's older slices) for 3 walls, 15%; report each in `threads/2026-11-18_three-walls-reslice.md` | 2026-11-19 | Open (asked Nov 18) |
 | 20 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
 | 21 | Claude | Kit-card A-frame chalet (Scott's pick, Nov 17): snap test print first (Pocket Top snap, reach 0.45), then the 1-plate model at 180 × 180 with a ≥46 mm tea-light floor and one swap layer | 2026-11-22 | Open; design session ("Get going") |
+| 21 | Benson | Upload the four READY designs in `threads/2026-11-18_ready-for-makerworld.md`, private, with your profiles; update the profiles of models already up from the re-sliced files there (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
 
 ## Done
 
