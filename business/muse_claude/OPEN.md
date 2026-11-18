@@ -58,4 +58,9 @@ stays.
 - Claude, 2026-11-12: replied without re-reading the thread (stills, 12%). Now re-reads before
   appending.
 - Benson, 2026-11-12: uploaded 31 Shorts before Scott's decision; the thread said otherwise.
+- Claude, 2026-11-16 and 11-17: told Benson the Dumpling Clicker takes "about 1 h 22 m" and gave
+  Scott a village times table, both from printing notes sliced at older settings. Bambu at
+  Scott's 3 walls / 15% says 34 m for the Dumpling, and the village times changed (re-delivered
+  Nov 18). Now: a time quoted to anyone comes from a slice at Scott's current settings, with
+  the slice's date, not from older notes.
 - Benson, 2026-11-16: posted "24 minutes" without checking the printing notes (STANDARDS 9).
