@@ -91,6 +91,52 @@ Found while making the voicing test pass its checks:
   open). They set the chamber volume and the 12 hole sizes; without them the budget runs on
   priors and the tuning print has further to move.
 
+## Whistle 2's tuner readings (Scott's screen recording, 2026-11-18)
+- **The recording has no sound.** An iPhone screen recording leaves the microphone off
+  unless it's switched on. The numbers below are read off the tuner app's own display, four
+  frames a second.
+- **Three steady notes,** each taken as the middle of its readings while it sounded (the
+  repeated value the app holds afterwards is left out):
+
+  | order | readings (Hz) | middle | note |
+  |---|---|---|---|
+  | 1st (8.0–10.5 s) | 1452–1489 | **1472 Hz** | F#6, about -13 cents |
+  | 2nd (13.5–15.5 s) | 1923–1999 | **1976 Hz** | B6, about -5 cents |
+  | 3rd (16.5–20.0 s) | 1683–1810 | **1768 Hz** | A6, about +11 cents |
+
+  The readings wander ±20 cents within a note, which is breath pressure.
+
+- **Which holes, read from the physics:**
+  - The 1st note is the lowest, so it's all closed.
+  - The 2nd is the highest and the 3rd is between, but opening a hole can only raise the
+    pitch. So the 3rd can't be "both open" after the 2nd.
+  - The reading that fits is closed, then the 8 mm hole alone, then the 5 mm hole alone:
+    - the 5 mm note gives the window term (4.84 mm) and k (3.17);
+    - those then predict the 8 mm hole alone at **1962 Hz, 12 cents from the 1976
+      measured.**
+  - Read as the guide's order (closed, small, both), the third note misses the model by
+    180 cents.
+  - **Scott to confirm,** and if he can, one more note with both holes open. The model
+    predicts about 2190 Hz.
+- **What it means:**
+  - **k is about 3.2, twice the literature's 1.5–1.7.** Each hole raises the pitch less
+    than assumed. That could be the teardrop holes, or a finger hovering close over an
+    open hole, which lowers the note.
+  - **With k 3.2, the 12-hole Alto C needs a 77.6 cm3 chamber.** Its three highest holes
+    come out too big for a finger:
+    - left thumb 14.1 mm;
+    - right thumb 17.5 mm;
+    - left pinky 10.9 mm.
+  - **Not modelled yet, on purpose.** First confirm the readings, then pick the fix:
+    1. **Retest with fingers lifted well clear.** If k drops toward 1.6, the holes shrink
+       back into range.
+    2. **A narrower voicing window.** That lowers the window term, and with it every hole
+       and the chamber, at some cost in volume.
+    3. **Fewer holes,** a 10-hole range that drops the top notes.
+- `python3 ocarina_budget.py --coupon 1472 1768 1976` gives the table above. The middle
+  number is the 5 mm hole and the last is the check, so the script's "both" check line
+  doesn't apply to this reading.
+
 ## Next, after the readings
 1. Run the budget with the measured notes; pick the windway height.
 2. Model the ocarina: the sweet-potato form lying on its edge, flat-bottomed where it meets
