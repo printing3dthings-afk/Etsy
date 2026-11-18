@@ -2,6 +2,7 @@
 
 2026-11-14. Scott's photos of a Mardi Gras bead pendant, reproduced as closely as printing
 allows. For Scott's own use; not a shop product, so it has no listing and no viewer entry.
+Facts: `FACTS.md`.
 
 ## What it is
 
@@ -18,20 +19,21 @@ allows. For Scott's own use; not a shop product, so it has no listing and no vie
 
 ## Printing
 
-Bambu Studio, P1S 0.4, PLA Basic, 0.20 mm Standard, Textured PEI at 55 °C, no supports.
+Bambu Studio, P1S 0.4, PLA Basic, 0.20 mm Standard, Textured PEI at 55 °C, no supports,
+3 walls and 15% infill (Scott's settings). Re-sliced 2026-11-18; opens in Bambu Handy.
 It prints flat on its back.
 
 | file | what |
 |---|---|
-| `checks/trophy_rack.gcode.3mf` | printer-ready: 2 h 54 min, about 47 g |
+| `checks/trophy_rack.gcode.3mf` | printer-ready: 2 h 58 min, 50.1 g |
 | `trophy_rack.3mf` | the model, to slice yourself |
 
 | AMS slot | colour | filament |
 |---|---|---|
-| 1 | black `#1A1A1A` | 9.4 g |
-| 2 | yellow `#E8C21A` | 4.9 g |
-| 3 | skin `#E7A976` | 12.2 g |
-| 4 | cream `#F2EDE2` | 20.4 g |
+| 1 | black `#1A1A1A` | 10.1 g |
+| 2 | yellow `#E8C21A` | 5.2 g |
+| 3 | skin `#E7A976` | 13.2 g |
+| 4 | cream `#F2EDE2` | 21.8 g |
 
 ## Checks (`checks/`)
 

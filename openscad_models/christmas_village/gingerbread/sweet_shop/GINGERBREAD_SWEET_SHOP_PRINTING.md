@@ -49,15 +49,21 @@ pane. The tealight glows through the panes.
   0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
+- **3 walls, 15% infill:** Scott's slicer settings (2026-11-12, "3 walls and 15% infill
+  is how our prints are set in the slicer").
 
 ## Cost — sliced, not estimated
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **2 h 6 m** | **16.9 m, 50 g** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 50 g of model **+ purge** |
+| **single colour** | **2 h 44 m** | **52.5 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 52 g of model **+ purge** |
 
-Single colour, supports off, timed with the P1S motion model (the viewer's
+**Single colour, from Bambu Studio's own slice at Scott's settings** (3 walls, 15% infill, P1S, PLA Basic, 0.20 mm Standard, supports off; 2026-11-18). The file is `gingerbread_sweet_shop_one_colour.gcode.3mf` in this folder, and it opens in Bambu Handy. The same slice at 2 walls is 2 h 30 m, 47.5 g.
+
+**Superseded:** 2 h 6 m and 16.9 m, 50 g, from the in-house checking slicer at 2 walls. That was 23% under Bambu Studio's time at Scott's settings.
+
+The superseded figure was single colour, supports off, timed with the P1S motion model (the viewer's
 clock), re-sliced 2026-10-15 with the inlaid mark.
 
 ## The tealight

@@ -17,8 +17,8 @@ the edge."
 ## Printing
 - `ladder_mouse_bookmark.3mf`: one object, four parts, for an AMS: tan, grey, pink
   and black.
-- Flat on the plate, face up, no supports. About **1 h 20 m and 15.3 g** in Bambu
-  Studio (`checks/slices.txt`). Most of the time is colour changes in the top layers.
+- Flat on the plate, face up, no supports. About **1 h 22 m and 16.3 g** in Bambu
+  Studio at Scott's 3 walls and 15% infill (`checks/slices.txt`, re-sliced 2026-11-18). Most of the time is colour changes in the top layers.
 - Smooth PEI plate for PLA.
 
 ## Checks (`checks/`)

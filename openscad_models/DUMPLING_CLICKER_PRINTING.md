@@ -101,6 +101,22 @@ MX-clones fit too.
 
 ## Real print cost — sliced, not estimated
 
+**Bambu Studio's own slice at Scott's settings** (2026-11-18): wall loops 3, sparse
+infill 15% ("3 walls and 15% infill is how our prints are set in the slicer", Scott,
+2026-11-12). P1S, PLA Basic, 0.20 mm Standard. Both files open in Bambu Handy.
+
+| | time | filament | file |
+|---|---|---|---|
+| **one colour, bun + basket** | **34 m** | **12.1 g** | `dumpling_clicker_slices/dumpling_clicker_one_colour.gcode.3mf` |
+| four colour, AMS, bun + basket | 4 h 30 m | 64.2 g (white 23.4, black 6.0, pink 8.5, tan 26.3) | `dumpling_clicker_slices/dumpling_clicker_ams.gcode.3mf` |
+
+- The four-colour time is nearly all filament changes: the face spans about 37 layers, and
+  every one swaps colour.
+- The bun's catchlights are the bun's white here, so the face fits four AMS slots.
+
+**Older figures, superseded** by the table above. These came from the in-house checking
+slicer at 2 walls:
+
 | | time | filament | cost @ $20/kg |
 |---|---|---|---|
 | bun | 36m 58s | 5.26 g | $0.11 |

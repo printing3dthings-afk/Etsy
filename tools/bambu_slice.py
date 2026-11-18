@@ -82,6 +82,11 @@ RETAIL = {
     "reduce_crossing_wall": 1,
     "ironing_type": "top",
     "enable_support": 0,
+    # Scott, 2026-11-12: "3 walls and 15% infill is how our prints are set in the
+    # slicer." Bambu's stock process is 2 walls, so until 2026-11-18 every slice
+    # this made (and every time and weight quoted from one) was a 2-wall print.
+    "wall_loops": 3,
+    "sparse_infill_density": "15%",
 }
 
 

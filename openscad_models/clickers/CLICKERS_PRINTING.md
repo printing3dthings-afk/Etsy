@@ -308,9 +308,25 @@ his feet sit 1.2 mm below the rim; pressed, he drops 4 mm into the jar.
   `gingerbread_tin_clicker_loose_cap.3mf` or `cookie_jar_clicker_loose_cap.3mf`.
   It opens the socket 0.1 mm, the same two-step ladder the dumpling clicker
   ships.
-- One colour, from the slicer I check with (Bambu Studio's AMS purges add to
-  these): tin 25 min + lid 24 min + cookie 11 min, about 32 g; jar 27 min + top
-  16 min + gingerbread 20 min, about 35 g.
+- **Wall loops 3, sparse infill 15%:** Scott's own slicer settings (2026-11-12, "3 walls
+  and 15% infill is how our prints are set in the slicer").
+- **Gingerbread Tin, Bambu Studio's own slice at those settings** (2026-11-18, P1S, PLA
+  Basic, 0.20 mm Standard):
+  - **one colour:** all three prints on one plate, **1 h 33 m, 35.3 g**
+    (`gingerbread_tin/checks/tin_clicker_one_colour.gcode.3mf`);
+  - **four colour, AMS:** purges included. Each file opens in Bambu Handy.
+
+    | print | time | filament | file |
+    |---|---|---|---|
+    | tin | 2 h 3 m | 39.2 g (red 23.9, white 15.3) | `gingerbread_tin/checks/tin_ams.gcode.3mf` |
+    | lid | 1 h 1 m | 21.3 g (red 17.9, white 1.3, green 2.0) | `gingerbread_tin/checks/lid_ams.gcode.3mf` |
+    | cookie | 45 m | 12.8 g (brown 7.5, white 1.5, red 1.4, green 2.4) | `gingerbread_tin/checks/cookie_ams.gcode.3mf` |
+
+- **Older figures, superseded:** tin 25 min + lid 24 min + cookie 11 min, about 32 g.
+  They came from the in-house checking slicer at 2 walls, not Bambu Studio at Scott's
+  settings.
+- **Cookie Jar, one colour, from that older slicer at 2 walls:** jar 27 min + top
+  16 min + gingerbread 20 min, about 35 g. Not yet re-sliced at 3 walls.
 
 ## What was checked before this was pushed
 

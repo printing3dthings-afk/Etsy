@@ -59,13 +59,19 @@ parts, already aligned. Assign a filament to each part.
 - **Supports OFF.** The slice of the four parts together needs none: 0 support moves and 0 overhang perimeters.
 - **Print it standing up, as it sits in the file.**
 - 0.2 mm layers.
+- **3 walls, 15% infill:** Scott's slicer settings (2026-11-12, "3 walls and 15% infill
+  is how our prints are set in the slicer").
 
 ## Cost — sliced, not estimated
 
 | version | time | filament |
 |---|---|---|
-| **single colour** | **11 h 56 m** | **282 cm³, about 350 g of PLA** |
-| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 350 g of model **+ purge**; 2,343 filament changes |
+| **single colour** | **16 h 37 m** | **361.4 g** |
+| **four colour, AMS** | slice in Bambu Studio for the real time and purge | about 361 g of model **+ purge**; 2,343 filament changes |
+
+**Single colour, from Bambu Studio's own slice at Scott's settings** (3 walls, 15% infill, P1S, PLA Basic, 0.20 mm Standard, supports off; 2026-11-18). The file is `gingerbread_santas_workshop_one_colour.gcode.3mf` in this folder, and it opens in Bambu Handy. The same slice at 2 walls is 15 h 11 m, 325.0 g.
+
+**Superseded:** 11 h 56 m and 282 cm³, about 350 g of PLA, from the in-house checking slicer at 2 walls. That was 28% under Bambu Studio's time at Scott's settings.
 
 ## Verified before shipping — on the real exported meshes
 

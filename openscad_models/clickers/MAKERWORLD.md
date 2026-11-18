@@ -24,7 +24,7 @@ real keyboard switch, so it sounds and feels like one.
 - Four colours if you have an AMS: red, white, brown and green. In one colour
   it still works and still reads, because all the icing and snowflakes are
   raised.
-- About 32 g and an hour in one colour.
+- About 35 g and an hour and a half in one colour (Bambu Studio, 3 walls, 15% infill).
 - If the cookie won't press onto the switch, print the loose cookie
   (`gingerbread_tin_clicker_loose_cap.3mf`).
 

@@ -1,6 +1,9 @@
-Bambu Studio slice (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20 mm Standard, shop retail settings.
+Bambu Studio slice (tools/bambu_slice.py), P1S 0.4 nozzle, Bambu PLA Basic, 0.20 mm Standard, shop retail settings,
+wall loops 3, sparse infill 15% (Scott's settings, 2026-11-12). Re-sliced 2026-11-18 (Handy-safe output, 8d521d8).
 
 ladder mouse, AMS (tan #D2B48C, grey #9A9AA2, pink #F2A0B4, black #222222):
-  1h 20m 29s, 18 layers, 0 support lines
-  filament: tan 7.50 g, grey 4.85 g, pink 2.50 g, black 0.43 g (15.3 g)
+  1h 22m, 0 support lines
+  filament: tan 7.88 g, grey 5.18 g, pink 2.72 g, black 0.46 g (16.25 g)
   Most of the time is colour changes: the face's pink and black are the top three layers.
+
+Superseded (2026-11-11, 2 walls, before the Handy fix): 1h 20m 29s, 15.3 g.

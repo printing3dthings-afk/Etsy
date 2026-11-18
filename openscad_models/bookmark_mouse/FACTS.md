@@ -17,8 +17,8 @@ it, peeking over the top.
 | Overall | 42 × 176 mm | `checks/gate.txt` |
 | Ladder (inside the book) | 24 mm wide, 140 mm long, 1.6 mm thick | `ladder_mouse.scad` |
 | Mouse (above the book) | 3.0 mm thick, hands 3.6 | `ladder_mouse.scad` |
-| Print, AMS, four colours | 1 h 20 m; tan 7.50 g, grey 4.85 g, pink 2.50 g, black 0.43 g | `checks/slices.txt` |
-| Settings | 0.2 mm layers, supports off, P1S 0.4 nozzle, Bambu PLA Basic profile | `checks/slices.txt` |
+| Print, AMS, four colours | 1 h 22 m, 16.3 g: tan 7.88 g, grey 5.18 g, pink 2.72 g, black 0.46 g | `checks/slices.txt` |
+| Settings | 0.2 mm layers, 3 walls, 15% infill (Scott's), supports off, P1S 0.4 nozzle, Bambu PLA Basic | `checks/slices.txt` |
 | Checks | product gate, print fidelity (0 flags), fragility (0 high), silhouette: all pass | `checks/` |
 
 ## Free or paid, per platform
