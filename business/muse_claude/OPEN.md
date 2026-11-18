@@ -13,15 +13,11 @@ stays.
 
 | # | Owner | Commitment | Due | Status / evidence |
 |---|---|---|---|---|
-| 1 | Benson | Fix "24 minutes" for the Dumpling Clicker in both vote posts (file: ~1 h 22 m), with Scott's approval | 2026-11-17 | **Overdue** (asked Nov 16 13:20). **Claude, Nov 18: the 1 h 22 m I gave was wrong too.** Bambu's slice is 34 m; use "about 35 minutes in one colour" (`threads/2026-11-18_three-walls-reslice.md`) |
-| 2 | Benson | Toy Shop Short (due Nov 17): record whether it was held, neutralised or posted; unlist it if it carries the MakerWorld banner | 2026-11-17 | **Overdue** (asked Nov 15) |
-| 3 | Benson | Tin Clicker contest video draft to Scott (Fidget Toy + Spotlight lanes) | 2026-11-18 | Open |
-| 4 | Benson | Test write to `private/NOTES.md` in etsy-store, or the error | 2026-11-15 | **Overdue** (asked Nov 14, again Nov 15) |
-| 5 | Benson | Confirm contest rules in `CONTESTS.md` and keep it current weekly | 2026-11-18 | Open (unchanged since Nov 14) |
-| 6 | Benson | Building order for Claude's render sets | 2026-11-14 | **Overdue** (asked Nov 14) |
-| 7 | Benson | Turret House Short (due Nov 18) and Cookie Clock Tower white: neutral banner or hold | 2026-11-18 | Open |
-| 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | **Overdue** |
-| 9 | Benson | Rebuild the 6 mm balls profile on the P1S preset (was X1C) and check the rest | 2026-11-15 | **Overdue**, no record |
+| 1 | Benson | Fix "24 minutes" for the Dumpling Clicker in both vote posts, with Scott's approval | 2026-11-17 | Fix prepared. Both live posts verified Nov 18 still carry "24 minutes"; caption edit to "about 35 minutes in one colour" (Bambu slice 34 m, `threads/2026-11-18_three-walls-reslice.md`) awaits Scott's approval — the row's own condition. Benson edits + verifies live on approval (accountability reply Nov 18) |
+| 3 | Benson | Tin Clicker contest video draft to Scott (Fidget Toy + Spotlight lanes) | 2026-11-18 | Draft delivered to Scott Nov 17 (personalised-hook lead post, both lanes). Posting awaits Scott's caption approval + the 10-second click clip (accountability reply Nov 18) |
+| 4 | Benson | Test write to `private/NOTES.md` in etsy-store, or the error | 2026-11-15 | Blocked on Scott's go-ahead, by design (recorded Nov 14–15): Benson will not write into the private repo on Claude's say-so alone. Goes in the same day Scott approves (accountability reply Nov 18) |
+| 5 | Benson | Confirm contest rules in `CONTESTS.md` and keep it current weekly | 2026-11-18 | Rules re-confirmed Nov 18 (Fidget + Click Into Celebration + MakerWorld general terms; Printmas still unverified). Weekly check continues (accountability reply Nov 18) |
+| 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | IG caption fixed + verified live Nov 18 (names only Santa's Workshop, Gingerbread Cottage, Victorian Cottage). FB reel caption edit pending — Page browser route, main session (accountability reply Nov 18) |
 | 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | **Re-delivered Nov 18** at Scott's 3 walls / 15% (the Nov 17 times were 15–34% short) in `for_scott/2026-11-17_village-listing-times.md`; drafts updated on the Claude branch `bc023b4`. Still needs the comparison with the live listing text (Benson's saved copy), then Scott's approval |
 | 16 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) | 2026-11-18 | Open (asked Nov 17) |
 | 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
@@ -47,6 +43,10 @@ stays.
 | D11 | Claude | FACTS.md for Stacking Jar Tower and Trophy Rack (row 14) | 2026-11-18 | `2edec29` |
 | D12 | Claude | Re-slice everything about to go up, at Handy-safe 3 walls / 15% (row 15) | 2026-11-18 | `2edec29` (Gingerbread, clickers, Dumpling, Ladder Mouse, Jar Tower, Trophy Rack), `bc023b4` (Victorian, listing drafts) |
 | D13 | Claude | Kit-card form approaches (row 11) | 2026-11-17 | `f120a04`; Scott picked A, the A-frame chalet (Benson `0a9fe55`) |
+| D17 | Benson | Rebuild the 6 mm balls profile on the P1S preset (was X1C) and check the rest | 2026-11-18 | v2 profile (corrected recipe, P1S printer identity verified from the file) live on model 3614130 since Nov 15; library identity check done under row 19 |
+| D16 | Benson | Turret House Short (due Nov 18) and Cookie Clock Tower white: neutral banner or hold | 2026-11-18 | All neutral banner, scheduled Nov 18: Turret white H5_G60DngME, Turret colour kVjVzU4oQkg, Cookie Clock Tower white F8HBb2_zE2o |
+| D15 | Benson | Building order for Claude's render sets | 2026-11-18 | Sent 2026-11-14 13:47 ET in `threads/2026-11-14_new-briefs.md` (10-building priority order); row closed Nov 18 |
+| D14 | Benson | Toy Shop Short: record whether held, neutralised or posted | 2026-11-18 | Neutralised (approved neutral banner) + published Nov 17: white sNiWiJK-Qa8, colour qNOMSDTeUGw; accountability reply Nov 18 + youtube-shorts-draft-log 2026-11-17 |
 
 ## Misses on record (so they aren't repeated)
 
