@@ -90,6 +90,21 @@ RETAIL = {
 }
 
 
+# Scott, 2026-11-18, for the Urban Kid: "a split print and a solid one piece with tree
+# supports". A figure posed as a person (chin, elbows, cap brim) can't be printed whole
+# without support, so `--supports tree` is the one deliberate exception to the
+# supports-off rule above. Organic trees reach round the figure from the plate and
+# break away cleanly; 0.2 mm gap and two interface layers under each overhang.
+TREE_SUPPORTS = {
+    "enable_support": 1,
+    "support_type": "tree(auto)",
+    "support_style": "tree_organic",
+    "support_threshold_angle": 30,
+    "support_top_z_distance": 0.2,
+    "support_interface_top_layers": 2,
+}
+
+
 def ensure_installed() -> None:
     """Install Bambu Studio from Flathub if this container doesn't have it."""
     if not (FLATPAK_APP / "bin/bambu-studio").exists():
@@ -246,6 +261,18 @@ def summarise(gcode_3mf: Path) -> dict:
            "pauses": len(re.findall(r"^M400 U1", g, re.M)),
            # every filament the G-code loads: M620 S<n>A is Bambu's AMS change
            "slots_used": sorted({int(n) + 1 for n in re.findall(r"^M620 S(\d+)A", g, re.M)})}
+    # Grams of support: Bambu extrudes relative (M83), so the E of every move inside a
+    # Support feature block is filament length; 1.75 mm PLA at 1.24 g/cm³.
+    e_sup, in_sup = 0.0, False
+    if out["support_lines"]:
+        for line in g.splitlines():
+            if line.startswith("; FEATURE:"):
+                in_sup = line.startswith("; FEATURE: Support")
+            elif in_sup and line[:3] in ("G1 ", "G2 ", "G3 "):
+                m = re.search(r" E([\d.]+)", line)
+                if m:
+                    e_sup += float(m.group(1))
+    out["support_g"] = round(e_sup * 3.14159 * 0.875 ** 2 * 1.24 / 1000, 1)
     for key, pat in (("time", r"total estimated time: ([^\n;]+)"),
                      ("filament_g", r"total filament weight \[g\] : ([\d.,]+)"),
                      ("filament_mm", r"total filament length \[mm\] : ([\d.,]+)")):
@@ -417,9 +444,11 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
                 pause_zs: list[float] | None = None, retail: bool = True, log=print,
                 filament: str = "pla_basic", brim: float | None = None, bed: str = "textured",
                 extra: dict | None = None, object_settings: dict | None = None,
-                slot_filaments: dict | None = None) -> dict:
+                slot_filaments: dict | None = None, supports: str | None = None) -> dict:
     """Slice the given parts for the P1S. Returns the slice's own summary."""
     ensure_installed()
+    if supports == "tree":
+        extra = {**TREE_SUPPORTS, **(extra or {})}
     out = Path(out).resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="bambu_slice_") as td:
@@ -450,7 +479,8 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
     s.update({"file": str(out), "quality": quality, "process": PROCESS[quality],
               "retail_settings": retail, "filament": FILAMENTS[filament], "slot_colours": colours,
               "brim_mm": brim, "bed": BEDS[bed]})
-    if s["support_lines"]:
+    s["supports"] = supports or "off"
+    if s["support_lines"] and not supports:
         log(f"WARNING: the slice contains support ({s['support_lines']} support sections) -- fix the model")
     if s.get("slots_used") is not None and len(s["slots_used"]) < len(colours):
         log(f"WARNING: {len(colours)} colours given, only slots {s['slots_used']} used in the G-code")
@@ -611,6 +641,7 @@ def main() -> None:
     ap.add_argument("--bambu-defaults", action="store_true", help="Bambu's profile as-is, without the shop's retail settings")
     ap.add_argument("--brim", type=float, metavar="MM", help="force an outer brim this wide (default: Bambu's auto brim)")
     ap.add_argument("--bed", choices=sorted(BEDS), default="textured", help="the build plate (sets the bed temperature)")
+    ap.add_argument("--supports", choices=["tree"], help="print with organic tree supports (a figure printed whole)")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                     help="any process setting by its Bambu Studio name, e.g. fuzzy_skin=external")
     ap.add_argument("--slot-filament", action="append", default=[], metavar="N:KIND",
@@ -621,9 +652,10 @@ def main() -> None:
     s = slice_parts(parse_parts(a.parts), Path(a.out), a.quality, a.pause_at, retail=not a.bambu_defaults,
                     filament=a.filament, brim=a.brim, bed=a.bed,
                     extra=dict(kv.split("=", 1) for kv in a.set), object_settings=_object_sets(a.object_set),
-                    slot_filaments={int(n): k for n, k in (x.split(":", 1) for x in a.slot_filament)})
+                    slot_filaments={int(n): k for n, k in (x.split(":", 1) for x in a.slot_filament)},
+                    supports=a.supports)
     print(json.dumps(s, indent=1))
-    if s["support_lines"]:
+    if s["support_lines"] and not a.supports:
         sys.exit(2)
 
 
