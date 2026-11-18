@@ -137,6 +137,36 @@ Found while making the voicing test pass its checks:
   number is the 5 mm hole and the last is the check, so the script's "both" check line
   doesn't apply to this reading.
 
+### Retest, with sound (Scott's second recording, 2026-11-18)
+- **Measured from the audio this time,** ten readings a second, each note taken as the
+  middle of its steady part:
+  - closed **1478 Hz**;
+  - then **2125 Hz**;
+  - then **1822 Hz**.
+- **The same order fits again:** closed, the 8 mm hole, then the 5 mm hole.
+- **Each hole fitted on its own:**
+  - the 5 mm gives k **2.53**, the 8 mm gives k **2.12**;
+  - one k for both is 61 cents off on the 8 mm note;
+  - the window term is **4.88 mm**, the same as the first recording (4.84).
+- **k fell from 3.2 to 2.1–2.5 with the fingers lifted clear.** So the first recording's
+  fingers were pulling the notes down. It's still above the literature's 1.6.
+- **What it means for the ocarina:**
+  - **At k 2.3 and this window, the chamber is 78 cm3,** and two holes are still too big
+    for a finger: left thumb 11.1 mm, right thumb 13.5 mm.
+  - **A narrower voicing window fixes it.** Hole size scales with the window term:
+
+    | window term | chamber | largest hole | too big for a finger |
+    |---|---|---|---|
+    | 4.88 mm (this whistle) | 78 cm3 | 13.5 mm | both thumbs |
+    | 4.0 mm | 64 cm3 | 11.4 mm | right thumb |
+    | 3.5 mm | 56 cm3 | 10.1 mm | none |
+
+  - **The window term is measured, not drawn.** A narrower window needs one more whistle to
+    measure it, with the same windway (1.3 mm, whistle 2) and the window and labium about
+    30% narrower. The cost is a slightly quieter instrument.
+- **Proposed next print:** that whistle, about 25 min and 10 g, read the same way. Then the
+  ocarina is modelled.
+
 ## Next, after the readings
 1. Run the budget with the measured notes; pick the windway height.
 2. Model the ocarina: the sweet-potato form lying on its edge, flat-bottomed where it meets
