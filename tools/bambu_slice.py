@@ -470,8 +470,11 @@ def slice_parts(groups: list[list[tuple[Path, str]]], out: Path, quality: str = 
         first = summarise(made)
         finish_for_handy(made, out, work)
         again = summarise(out)
-        if (first["layers"], first["support_lines"], first.get("slots_used")) != \
-                (again["layers"], again["support_lines"], again.get("slots_used")):
+        # Tree supports are grown afresh on each pass and come out slightly different
+        # (2026-11-18: 1,611 vs 1,587 support sections on the Urban Kid), so with
+        # supports on only the layers and colours must match; the file kept is the second.
+        keys = ("layers", "slots_used") if supports else ("layers", "support_lines", "slots_used")
+        if [first.get(k) for k in keys] != [again.get(k) for k in keys]:
             raise RuntimeError(f"the second Bambu Studio pass sliced differently: {first} vs {again}")
     paused_at = add_pauses(out, pause_zs) if pause_zs else []
     s = summarise(out)
