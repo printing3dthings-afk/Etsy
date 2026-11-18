@@ -36,6 +36,21 @@ SETS = {
         label="Personalised Name Ornament",
         note="A domed ornament, flat behind, with a name and the year inlaid flush in a second colour "
              "under a star. The sample name is Olivia."),
+    # 2026-11-18: Scott's two picks to replace the dome
+    "name_ring": dict(
+        name="name_ring", parts=[("frame", RED), ("accent", WHITE)],
+        # the raised name and motif tops are colour detail: print_fidelity checks them
+        gate_args=["--wall-skip-part", str(HERE / "name_ring" / "name_ring_accent.stl")],
+        label="Openwork Name Ornament",
+        note="A flat open ring: the name and year raised on their own outline across the middle, "
+             "a star and pine boughs above, holly below, open between so the tree's lights show "
+             "through. The sample name is Olivia."),
+    "name_globe": dict(
+        name="name_globe", parts=[("frame", RED), ("glass", "#2F4B7C"), ("snow", WHITE)],
+        gate_args=["--wall-skip-part", str(HERE / "name_globe" / "name_globe_snow.stl")],
+        label="Snow Globe Name Ornament",
+        note="A flat snow globe on its base: a cottage, a tree, a moon and snow on night-blue glass, "
+             "and the name and year raised on the base. The sample name is Olivia."),
 }
 
 def plate_steps(key, steps):
@@ -100,7 +115,9 @@ if __name__ == "__main__":
     if "parts" in S:
         run_checks(d, S["name"], dict(label=S["label"], note=S["note"], objects=[S["parts"]],
                                       unions=[f"{S['name']}_union.stl"],
-                                      source=f"christmas_ornaments/{key}/{S['name']}.3mf"), sys.argv[2:] or None)
+                                      source=f"christmas_ornaments/{key}/{S['name']}.3mf",
+                                      **({"gate_args": S["gate_args"]} if "gate_args" in S else {})),
+                   sys.argv[2:] or None)
         sys.exit()
     PLATE = ("pfidelity", "pas_printed", "pviewer")
     if any(st in PLATE for st in sys.argv[2:]):
