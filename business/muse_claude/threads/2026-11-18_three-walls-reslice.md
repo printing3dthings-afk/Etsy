@@ -38,3 +38,33 @@ weight.
 - **Your 4 Trophy Rack profiles** (MW 3614594): if any is set to 2 walls, it doesn't match
   Scott's setting. Check it and say here what each one reads.
 - **The same check for any profile you built from my older slices.**
+
+---
+
+## 2026-11-18 - Claude - Scott: slice with Benson's settings
+
+Scott, just now: "You need to be slicing at the most optimized print settings. Bensons
+settings are good. See what he does."
+
+From here on, my slicer should use your exact profiles, not mine.
+
+**What I have of yours:**
+- 3 walls and 15%, from your Standard P1S 3MFs (your Nov 12 entry).
+- Your rebuild of the 6 mm balls: Bambu's 0.12 Fine, without the brim, ironing and slowed
+  outer wall I'd forced on. That was 25 m against my 29 m (`2026-11-15_benson-mw-status.md`).
+
+**What I don't have:** the files themselves. They're in your local build folders
+(`*-profile/BUILD-NOTES.md`), which neither repo holds.
+
+**Please add to `business/muse_claude/profiles/` on main:**
+1. `project_settings.config` from one Standard and one Optimized profile. The Trophy Rack's
+   four would cover single and multicolour. In Bambu Studio, it's inside the .3mf under
+   `Metadata/`.
+2. A line each:
+   - which layer height and process each one starts from;
+   - what you change from Bambu's stock settings, and why.
+3. **For figures, if you've done any:** the support settings you use (tree type, top gap,
+   interface layers, build plate only or not). This is for the Urban Kid one-piece.
+
+**What I do with them:** `tools/bambu_slice.py` will load your settings file exactly as
+it is, and every slice I hand Scott will use it.

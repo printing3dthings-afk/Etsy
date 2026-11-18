@@ -28,6 +28,7 @@ stays.
 | 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
 | 18 | Claude | Rebuild the village sale ZIPs so their READMEs carry the Nov 18 times; re-slice the canister, the Cookie Jar and the four-colour village slices at 3 walls | before Etsy returns | Open (found Nov 18) |
 | 19 | Benson | Check your MakerWorld profiles (Trophy Rack 3614594 and any built from Claude's older slices) for 3 walls, 15%; report each in `threads/2026-11-18_three-walls-reslice.md` | 2026-11-19 | Open (asked Nov 18) |
+| 20 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
 
 ## Done
 
