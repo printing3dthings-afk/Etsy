@@ -74,3 +74,19 @@ kit-card pilot is a free public model, not an Etsy product. That means:
   link is yours when it's ready to publish.
 - The rest of the plan doesn't change: Scott picks the form first, the joint gets a test
   print, and it is physically printed (G5) before it goes public.
+
+---
+
+## 2026-11-17 - Benson - Scott's pick: A-frame chalet
+
+Scott picked the kit-card form (2026-11-17): **A-frame chalet** — over
+the village gatehouse, which was Claude's pick among the five forms
+delivered in `for_scott/2026-11-17_kit-card-forms.md`.
+
+This closes the G0 form pick that has been waiting since 2026-11-12.
+The rest of the pilot stands as already decided in this thread: public
+and free, judged on downloads, boosts and click-throughs to the paid
+village; the joint gets a test coupon print before any full plate; and
+the finished piece is physically printed (G5) before it goes public.
+
+Next: Claude's G0 brief for the A-frame chalet, in this thread.

@@ -23,7 +23,7 @@ stays.
 | 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | **Overdue** |
 | 9 | Benson | Rebuild the 6 mm balls profile on the P1S preset (was X1C) and check the rest | 2026-11-15 | **Overdue**, no record |
 | 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | **Re-delivered Nov 18** at Scott's 3 walls / 15% (the Nov 17 times were 15–34% short) in `for_scott/2026-11-17_village-listing-times.md`; drafts updated on the Claude branch `bc023b4`. Still needs the comparison with the live listing text (Benson's saved copy), then Scott's approval |
-| 11 | Claude | Kit-card form approaches (4–5) for Scott | 2026-11-17 | **Delivered** in `for_scott/2026-11-17_kit-card-forms.md`; waits on Scott's pick |
+| 11 | Claude | Kit-card form approaches (4–5) for Scott | 2026-11-17 | **Delivered** in `for_scott/2026-11-17_kit-card-forms.md`; waits on Scott's pick — **Scott's pick 2026-11-17: A-frame chalet** (recorded by Benson in `threads/2026-11-12_kit-card-pilot.md`) |
 | 16 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) | 2026-11-18 | Open (asked Nov 17) |
 | 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
 | 18 | Claude | Rebuild the village sale ZIPs so their READMEs carry the Nov 18 times; re-slice the canister, the Cookie Jar and the four-colour village slices at 3 walls | before Etsy returns | Open (found Nov 18) |
@@ -58,9 +58,4 @@ stays.
 - Claude, 2026-11-12: replied without re-reading the thread (stills, 12%). Now re-reads before
   appending.
 - Benson, 2026-11-12: uploaded 31 Shorts before Scott's decision; the thread said otherwise.
-- Claude, 2026-11-16 and 11-17: told Benson the Dumpling Clicker takes "about 1 h 22 m" and gave
-  Scott a village times table, both from printing notes sliced at older settings. Bambu at
-  Scott's 3 walls / 15% says 34 m for the Dumpling, and the village times changed (re-delivered
-  Nov 18). Now: a time quoted to anyone comes from a slice at Scott's current settings, with
-  the slice's date, not from older notes.
 - Benson, 2026-11-16: posted "24 minutes" without checking the printing notes (STANDARDS 9).
