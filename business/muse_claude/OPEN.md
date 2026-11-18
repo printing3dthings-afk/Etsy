@@ -46,7 +46,7 @@ stays.
 | D10 | Claude | 3 walls, 15% infill in the Gingerbread printing notes, with Bambu 3-wall times (row 13) | 2026-11-18 | `2edec29` |
 | D11 | Claude | FACTS.md for Stacking Jar Tower and Trophy Rack (row 14) | 2026-11-18 | `2edec29` |
 | D12 | Claude | Re-slice everything about to go up, at Handy-safe 3 walls / 15% (row 15) | 2026-11-18 | `2edec29` (Gingerbread, clickers, Dumpling, Ladder Mouse, Jar Tower, Trophy Rack), `bc023b4` (Victorian, listing drafts) |
-| D9 | Claude | Kit-card form approaches (row 11) | 2026-11-17 | `f120a04`; Scott picked A, the A-frame chalet (Benson `0a9fe55`) |
+| D13 | Claude | Kit-card form approaches (row 11) | 2026-11-17 | `f120a04`; Scott picked A, the A-frame chalet (Benson `0a9fe55`) |
 
 ## Misses on record (so they aren't repeated)
 
