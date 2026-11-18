@@ -75,3 +75,15 @@ The name is as large as fits 46 mm across the base, at most 11 mm.
   left hairline gaps.
 - The cottage's walls and the tree's lowest tier are sunk into the drift, and the
   tree's star sits on its tip. Each left a sliver of blue too thin to print.
+
+## Test print (Scott, 2026-11-18: "Both")
+Print `gcode/name_globe_three_colour.gcode.3mf`. Load red in AMS slot 1, blue in slot 2
+and white in slot 3.
+
+**What to look at:**
+- **The name and year:** are the white letters solid and crisp on the base?
+- **The scene:** are the cottage's windows and door clean openings showing the blue? Are
+  the snow dots round?
+- **The glass:** is the 1.2 mm disc flat and firm, and joined to the rim all the way round?
+- **The back:** does OBC read correctly when you turn it over on its loop?
+- **Report:** a photo of the front and one of the back.

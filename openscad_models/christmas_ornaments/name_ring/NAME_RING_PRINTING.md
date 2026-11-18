@@ -83,3 +83,15 @@ is as large as fits 60 mm across, at most 15 mm.
 - The needles on the inside of each bough's curve are shorter, so the air between
   them stays printable.
 - The bar is 3.4 mm wide. At 2.8 the fragility check put it on watch.
+
+## Test print (Scott, 2026-11-18: "Both")
+Print `gcode/name_ring_two_colour.gcode.3mf`. Load red in AMS slot 1 and white in slot 2.
+
+**What to look at:**
+- **The name and year:** are the white letters solid and crisp? Is every stroke there,
+  including the 2's base and the i's dots?
+- **The pine needles:** do they print as separate needles, or webbed?
+- **The holly:** do the red veins show through the white?
+- **The star:** does its top point join the ring?
+- **The back:** does OBC read correctly when you turn it over on its loop?
+- **Report:** a photo of the front and one of the back.
