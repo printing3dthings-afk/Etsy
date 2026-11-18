@@ -1,0 +1,13 @@
+/home/user/Etsy/openscad_models/urban_kid/v2/head_test/urban_kid_v2_head_test.stl
+  ok    fits_plate: 41.0 x 49.2 x 31.1 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.66mm, median 27.29mm (floor 1.2mm); 0.30% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 31.0mm printed of 31.08mm
+  ok    geometry_survives_slicing: printed height 31.0mm vs modelled 31.08mm
+  ok    flat_base: 12.42 cm2 of contact = 61.5% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.8mm widest unsupported span at z=22.4mm; 125 layer(s) under the 4.0s cooling threshold; 1562mm2 on the plate; aspect 0.51
+  note  texture (advisory, never fails the gate): rugosity 1.056 -- light relief, at or above the corpus p25
+PRODUCT GATE FAILED
