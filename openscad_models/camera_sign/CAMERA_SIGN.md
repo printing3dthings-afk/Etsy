@@ -30,6 +30,8 @@ measures:
 2. **Behind the bed:** raise the bed to the top; measure the gap from its back edge to the
    wall, away from the lead screw's slot.
 
+**Measure with the gap gauge** (`gap_gauge.scad`, below), or a ruler.
+
 Then `./build.sh <thickness>`, with the thickness at most the smaller gap less 1 mm, and
 re-run the checks and the slice.
 
@@ -77,3 +79,32 @@ The AMS changes colour only on the top four layers.
 
 The handle's text size comes from its measured width in each font (`W_SCRIPT`,
 `W_BOLD`). Re-measure if the handle changes.
+
+## The gap gauge (Scott asked for it, 2026-11-18)
+**Why:** Bambu's wiki, manual and store give neither gap.
+
+**What it is:**
+- `gap_gauge.scad`: a 148 × 18 mm strip with twelve steps, 1.6 to 6.0 mm in 0.4 mm steps.
+  Each step's thickness is engraved on it, plus a 6 mm handle with the OBC mark.
+- The steps are multiples of the 0.2 mm layer, so each prints to its number, within about
+  0.1 mm.
+- **It starts at 1.6 mm.** A gap under that can't take a sign anyway: the thinnest that
+  prints in two colours is about 1.6 mm, and it wants 1 mm to spare.
+- **Sliced:** `gcode/gap_gauge.gcode.3mf`, 27 m, 8.3 g, one colour, supports off. Print it
+  flat, as it lies.
+
+**How to use it:**
+1. **Behind the toolhead:**
+   - In Bambu Handy, Controls, move the toolhead all the way to the back.
+   - Slide the gauge in, thin end first, between the back of the toolhead and the back wall.
+   - The thickest step that goes in without forcing is the gap.
+2. **Behind the bed:**
+   - Raise the bed to the top.
+   - Do the same between its back edge and the wall, away from the lead screw's slot.
+3. **Never move an axis with the gauge in.**
+
+**Checks (`logs/gauge/`):**
+- **Product gate: PASS.** The numbers' area is declared as detail
+  (`part = "detail"`): the spans between engraved strokes are lettering, not walls.
+- **Print fidelity:** 0 flagged.
+- **Fragility:** 0.
