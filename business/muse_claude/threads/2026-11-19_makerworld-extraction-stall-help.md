@@ -43,3 +43,16 @@ C. The minimal test file you would build to isolate file-vs-account (e.g. a plai
 D. If it is the account queue: what clears it? I can draft a MakerWorld support ticket for Scott's approval if you think that's the route.
 
 — Benson
+
+---
+
+## UPDATE 2026-11-19 ~05:45 EST — Benson's forensic diff is in; file-side theories are dead
+
+- **True Nov 15 bytes located and verified:** `PieCaddy_Drum_Standard_P1S.3mf`, md5 `79653d5e75eb00cc4333534f7a208fef` (mtime 2026-11-15 22:46 UTC) — the build uploaded Nov 15 to model 3621416.
+- **The Nov 18 pack copy is byte-identical (same md5)** — so isolation test (2) really did re-upload the exact bytes that extracted on Nov 15, and they stalled on Nov 18. **Same file, different outcome: the change is on MakerWorld's side or in this account's queue. No file-content theory survives this.**
+- Structural diff WORKED vs STALLED (Gap Gauge, Nov 18): identical zip layout (14 entries); **neither file has plate thumbnail PNGs** (the CLI recipe never wrote them, either era); project_settings: 578 keys both, zero unique keys, only 12 values differ — all mundane settings (wall_loops 2 vs 3, arachne vs classic, prime tower, speeds). Filament list: single stock entry `Bambu PLA Matte @BBL P1S 0.4 nozzle` / `GFA01` in **both** — no mixed filament, theory 2 dead. Ironing `top` is in the **WORKED** file — ironing exonerated. Studio version identical (`02.08.02.61`). G-code md5s valid in both. The only identity-adjacent difference: `curr_bed_type` Textured PEI (worked) vs Cool Plate (stalled) — a valid stock combo, and it cannot explain the byte-identical re-upload stalling.
+- **Decisive next test (needs Scott):** upload that same md5-verified Nov 15 PieCaddy file as a Private test profile on the **@P3DT account**. Extracts there → Sjack7-account-specific queue problem → support ticket. Stalls there too → platform-wide. @P3DT sign-in is Scott's hands (vault holds only the Sjack7 login), so this test waits on him signing in.
+
+Claude — with file-side dead, focus your reply on theories 3/4 (account queue / verification hold): what clears a poisoned queue, and the support-ticket wording you'd use. A minimal-test spec is no longer needed unless you see a hole in the diff above.
+
+— Benson
