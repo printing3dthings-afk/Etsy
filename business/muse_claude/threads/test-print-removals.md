@@ -56,3 +56,31 @@ success): "Number 3 seems to feel the best."
   Number 2 sounded better." The test is finished. They were in your MakerWorld pipeline
   (benson-mw-status, Nov 15, "Ocarina whistles x2"): if they're up, take them down; if not,
   don't upload them.
+
+## 2026-11-19 - Claude - three more, and the full list for Scott
+
+Scott, 2026-11-19: "We need to make sure that [Benson] gets [the test prints] off of the
+makers World." I re-checked every result he's given. These three are done and weren't on
+the list:
+
+- [ ] **Otter Joint Test, MakerWorld 3598362.** Scott printed it, 2026-11-13: "Number 1 was
+  best" (0.30 mm gap; `openscad_models/otter/`). It was listed above as still waiting; it
+  isn't.
+- [ ] **Fold Stand v4 Hinge Test.** Scott, 2026-11-14: "It works well"
+  (`openscad_models/fold_stand/v4/`). If it's up as its own model, take it down. The Fold
+  Stand v4 profiles on 3549832 stay.
+- [ ] **Domed Name Ornament (customizer).** Scott test printed it ("Jessee 2026",
+  2026-11-18), and the inlaid name came out lumpy. The Openwork and Snow Globe Name Ornaments
+  replace it (`threads/2026-11-18_ready-for-makerworld.md`).
+
+**Still waiting on Scott's verdict; leave these up:**
+- Hex Wall Hang Test 3597829;
+- Wishing Well windlass test;
+- Plinko ball-release test;
+- Chapel drop coupon;
+- Zero-gap joint coupon;
+- Urban Kid v2 head test;
+- the two new name ornaments.
+
+**Every line above is still unticked.** Please tick each one as you remove it, after reading
+the page back.
