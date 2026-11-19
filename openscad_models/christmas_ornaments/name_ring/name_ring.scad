@@ -105,9 +105,9 @@ module motifs2d() open12() close09() {
     // the star, and two pine boughs from it down to the name: a tree's canopy
     translate([0, STAR_Y]) star2d(STAR_R);
     for (m = [0, 1]) mirror([m, 0]) {
-        // six needle pairs, not eight: at eight the needles stood 0.47 mm apart and
-        // would print webbed (silhouette check, 2026-11-18)
-        sprig([[-0.5, STAR_Y - 1], [-0.6 * BOUGH_X, STAR_Y - 1], [-BOUGH_X, NAME_Y + 0.35 * NAME_SIZE]], n = 6, len_ = 5.6, w = 1.4, stem = 2.0, t0 = 0.24, t1 = 0.72);   // needles clear of the star and the name
+        // four long needle pairs (Scott, 2026-11-19: fewer, so they read as pine, not a
+        // garland of stubs); at eight the needles stood 0.47 mm apart and printed webbed
+        sprig([[-0.5, STAR_Y - 1], [-0.6 * BOUGH_X, STAR_Y - 1], [-BOUGH_X, NAME_Y + 0.35 * NAME_SIZE]], n = 4, len_ = 8.5, w = 1.6, stem = 2.2, t0 = 0.24, t1 = 0.72);   // needles clear of the star and the name
         // small stars caught on the ring, either side
         for (a = [148, 212]) translate([RI * cos(a), RI * sin(a)] * 0.96) rotate(a - 90) star2d(3.8, 0.5);
     }
