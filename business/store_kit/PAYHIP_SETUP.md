@@ -127,8 +127,10 @@ Questions: Printing3dthings@outlook.com
   building's printing notes.
   - The READMEs' times came from the in-house checking slicer at 2 walls, and were
     15-34% short.
-  - **The READMEs inside the ZIPs still carry those old times.** Rebuild the ZIPs before
-    these go up.
+  - **The READMEs inside the ZIPs carry the new times** (rebuilt 2026-11-19 with
+    `openscad_models/christmas_village/downloads/build_downloads.py`, then
+    `build_store_kit.py`; all 22 ZIPs validate). The ZIPs are build output and gitignored:
+    rebuild them where they're uploaded from.
   - The live Etsy listings may carry the even older times; fix them when the shop is
     back.
 - **The files:** the ZIPs are the Etsy bundle parts joined, byte for byte apart

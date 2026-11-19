@@ -59,11 +59,15 @@ def building_facts(style: str, slug: str) -> dict:
     stem = v.get("stem", name)
     notes = next(d.glob("*_PRINTING.md")).read_text()
     title = notes.splitlines()[0].lstrip("# ").split(" — ")[0].strip()
-    m = re.search(r"^\| \*\*single colour[^|]*\| \*\*([^*]+)\*\* \| \*\*([^*]+)\*\* \|", notes, re.M)
+    # "single colour" in the building notes; Santa's Workshop v2's table names the
+    # matte-white "one colour" row and adds a file column (2026-11-18)
+    m = re.search(r"^\| \*\*[^|*]*(?:single|one) colour[^|]*\|(?: `[^`]*` \|)? \*\*([^*]+)\*\* \| \*\*([^*]+)\*\* \|",
+                  notes, re.M)
     if not m:
         raise SystemExit(f"{name}: no single-colour cost row in its notes")
     time, fil = m.group(1).strip(), m.group(2).strip()
-    grams = re.search(r"about (\d+) g", fil)
+    # "about 40 g" in the older notes; "51.2 g" since the 3-wall Bambu re-slice (2026-11-18)
+    grams = re.search(r"(\d+(?:\.\d+)?) g", fil)
     colours = {}
     for part in PARTS:
         r = re.search(rf"^\| {part} \| (.+?) \| ([^|`]+?) `(#[0-9A-Fa-f]{{6}})` \|", notes, re.M)
@@ -99,7 +103,7 @@ def readme(b: dict, style_label: str) -> str:
     rows = "\n".join(f"  {p}: {c[1]} {c[2]}\n" + textwrap.fill(c[0], 76, initial_indent="    ",
                                                                 subsequent_indent="    ")
                      for p, c in b["colours"].items())
-    grams = f", about {b['grams']} g of PLA" if b["grams"] else ""
+    grams = f", about {round(float(b['grams']))} g of PLA" if b["grams"] else ""
     return f"""{b['title']} -- 3D print files
 OnBrandCraftz Christmas Village, {style_label} style
 
@@ -120,9 +124,10 @@ PRINT SETTINGS THAT MATTER
 - Designed and sliced for a Bambu Lab P1S with a 0.4 mm nozzle.
 
 TIME AND FILAMENT
-In one colour: {b['time']}{grams} (sliced estimate, 0.2 mm layers). Four
-colours add colour changes and purge: slice it in your own slicer for the
-real figure.
+In one colour: {b['time']}{grams}.
+Sliced in Bambu Studio: 0.2 mm layers, 3 walls, 15% infill.
+Four colours add colour changes and purge: slice it in your own slicer for
+the real figure.
 
 COLOURS
 The four parts and the colours they are set to in the 3MF:
