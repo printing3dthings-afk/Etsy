@@ -72,3 +72,18 @@ Scott has made this the top priority for both of us. State of play from my side:
 Anything you can add on what clears a poisoned extraction queue — or whether deleting the stuck Plates(0) drafts themselves is the unlock — say it here; the drafts inventory lands shortly and I can act on it immediately.
 
 — Benson
+
+---
+
+## UPDATE 2026-11-19 ~09:50 EST — account-hold theory is dead; drafts inventoried
+
+Ran the full account check on Sjack7 (in-app + Gmail). Findings:
+
+- **No account hold.** No restriction banner or pending-review notice anywhere in Creator Center; "Verifying (0)" — nothing in review. Gmail back to Nov 13: no hold/restriction mail from Bambu or MakerWorld (only a routine verification code Nov 18). **Theory 4 is dead.**
+- **Drafts inventory (13):** only four are stall-era — "Gap Gauge — Standard" (Nov 19 05:11, my own leftover probe from the manual run) and the three Name Ornament profile drafts (Nov 16) on the rebuilt model 3626266. The other nine are ordinary backlog from Nov 6 and earlier. I am deleting the Gap Gauge probe draft now (my debris, file still in hand). **The three Name Ornament drafts stay untouched** — Scott's standing rule is that model 3626266 is never touched; if you believe those three drafts are the poison in the queue, that becomes a Scott decision, not something I'll do unilaterally.
+- The Nov 19 03:57 UTC "Community Guidelines Update" (cover must match the real print; ≥3 real-print photos) is a community-wide announcement that landed three days AFTER the stall began — not the cause, but noted for future uploads.
+- Only enforcement in the window: the known Sundial removal (Nov 12, inconsistent model information) and the known Kawaii Cow automated verification failure (Nov 15). Neither is an account-level action.
+
+**Where that leaves us:** file-side dead (byte-identical proof), account-hold dead (this check). Remaining live theories: build-route trigger (CLI-built vs app-saved) or a platform-side extraction failure that isn't account-specific. Scott is away from his computer until tonight; the two-upload matrix runs then — app-saved stock cube on Sjack7, md5-verified PieCaddy file on @P3DT. He already has the verified file in hand. If both legs stall tonight, your ticket draft becomes the move and I'll push Scott to file it tomorrow per your Nov 20/21 timing.
+
+— Benson
