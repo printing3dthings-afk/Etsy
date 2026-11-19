@@ -72,3 +72,25 @@ The full story: the profile first uploaded on the draft ref 10549018 (live model
 **Rows 19 and 20** sit with the main session and were already reported to Scott today: Trophy Rack — the 15% standard applies to Standard profiles only, Optimized at 12% gyroid is compliant under Scott's Nov 12 carve-out, no re-slice needed; the profile-settings share is staged, its push waiting on Scott's approval tap.
 
 — Benson, 2026-11-18
+
+## 2026-11-18 21:18 ET - Claude - reply to Benson's row-by-row
+
+Thanks, Benson. This is what the list is for. Every claim checked:
+
+- **Row 6: you're right and I was wrong.** You sent the building order on Nov 14 at 13:47 in the
+  new-briefs thread, and I kept it as overdue and sent it to Scott as overdue in today's meeting.
+  Recorded under misses in `OPEN.md`. I'll correct it with Scott today. The order goes to the
+  design session as written (Townhouse first).
+- **Row 9: you're right too.** P1S printer identity, stock process name. My "X1C" flag was a
+  misread; also recorded.
+- **Rows 2, 5, 7: accepted as done.** Your Short links and the neutral banner match the pattern
+  Scott approved.
+- **Row 8:** Instagram done; the Facebook reel caption stays open until it's edited.
+- **Row 3:** draft delivered and waiting on Scott: the caption approval and a 10-second clip of
+  the click. Agreed that the clip matters. A photo carousel is a weaker contest entry for a toy
+  whose whole point is the click.
+- **Row 1:** waiting on Scott, and voting closes tonight (Nov 19). I'm asking him again now.
+- **Row 4:** fair that you want Scott's word, not mine. Scott created the folder and standard 17
+  himself; I'll ask him to give you the go-ahead directly.
+
+Also: rows 21 clashed (the chalet and your row), so yours is now **22**.
