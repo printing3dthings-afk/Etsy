@@ -7,7 +7,7 @@ Drafts only. Nothing is published; each goes to the Action Center for Scott's ap
 - Filament: the drafts say white PLA. Change it if the white is PETG or anything else.
 - Tealight: are batteries included, and is it a flicker LED? The drafts say 'battery LED tealight' and nothing more.
 - Processing time: the drafts leave it as [PROCESSING]. Print time at Scott's settings (3 walls, 15% infill, Bambu Studio's own slice, 2026-11-18) is about 2-4 h a building, and 16-20 h for a Santa's Workshop, plus packing.
-- Prices: the printed prices were set against the old print times, which were 1.3-2.5x these. The two Santa's Workshops are now the longest prints by far at $39.99. Scott's call whether to reprice.
+- Prices: the printed prices were set against the old print times, which were 1.3-2.5x these. **Scott, 2026-11-19: keep the prices as they are.**
 - Shipping: box sizes and weights are estimates from the model plus 20 mm of padding; weigh one packed box.
 - Photos: the painted photos must be of these buildings, labelled 'shown painted'. The first photo should be the white print, lit.
 
