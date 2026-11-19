@@ -57,7 +57,7 @@ lid and the tin holds sweets, clips or a folded gift card (90 cm³).
   orientation as it opens.
 - Red, white and green on the tin and lid, brown for the cookie. In one
   colour all the detail still reads, because it's raised.
-- About 45 g and an hour and a half in one colour, not counting the cookie.
+- About 65 g and 2 h 40 m in one colour, canister, lid and cookie together (Bambu Studio, 3 walls, 15% infill).
 
 **Assembly**
 1. Push the switch into the lid from above, through the cookie-shaped hole,
@@ -84,7 +84,7 @@ clicks, on a real keyboard switch.
   no supports, the orientation as it opens. He prints standing up.
 - Four colours if you have an AMS: mint, white, red and brown. In one colour
   the raised COOKIES lettering and icing still read.
-- About 35 g and an hour in one colour.
+- About 37 g and 1 h 20 m in one colour (Bambu Studio, 3 walls, 15% infill).
 - If he won't press onto the switch, print the loose one
   (`cookie_jar_clicker_loose_cap.3mf`).
 

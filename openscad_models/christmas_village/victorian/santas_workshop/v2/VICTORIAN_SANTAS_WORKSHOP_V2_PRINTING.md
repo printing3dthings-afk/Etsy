@@ -33,11 +33,11 @@ one-colour print.
 | version | file | time | filament |
 |---|---|---|---|
 | **matte white, one colour** | `gcode/victorian_santas_workshop_v2_matte_white.gcode.3mf` | **19 h 8 m** | **375.3 g** |
-| **four colour, AMS** | `gcode/victorian_santas_workshop_v2_four_colour.gcode.3mf` | **2 d 22 h 4 m** | **339 m, 1,078 g** (561 brick, 193 slate, 305 white, 19 green) |
+| **four colour, AMS** | `gcode/victorian_santas_workshop_v2_four_colour.gcode.3mf` | **2 d 23 h 2 m** | **1,107 g** (575.6 brick, 206.3 slate, 306.0 white, 19.4 green) |
 
 - **Matte white is at Scott's settings, 3 walls and 15% infill** (2026-11-12). It was re-sliced 2026-11-18, and the file opens in Bambu Handy.
   - At 2 walls it was 17 h 34 m and 343 g; that's superseded.
-- **The four-colour slice is still at 2 walls.** At 3 walls it will be somewhat longer. Re-slice it before quoting it.
+- **Four colour, re-sliced at 3 walls 2026-11-19.** It was 2 d 22 h 4 m and 1,078 g at 2 walls; that's superseded. It opens in Bambu Handy.
 
 Both: Bambu Studio 2.8, the P1S 0.4 nozzle, 0.20 Standard with the shop's production
 settings, PLA Matte, textured PEI, supports off. **0 support moves in either.** 968

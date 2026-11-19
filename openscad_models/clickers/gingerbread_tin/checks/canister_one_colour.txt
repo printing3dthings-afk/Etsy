@@ -1,0 +1,24 @@
+WARNING: 1 colours given, only slots [] used in the G-code
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 259,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "support_g": 0.0,
+ "time": "2h 40m 30s",
+ "filament_g": "65.00",
+ "filament_mm": "21448.14",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/clickers/gingerbread_tin/checks/canister_one_colour.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#C8843E"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate",
+ "supports": "off"
+}

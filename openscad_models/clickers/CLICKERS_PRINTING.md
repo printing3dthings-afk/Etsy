@@ -325,8 +325,15 @@ his feet sit 1.2 mm below the rim; pressed, he drops 4 mm into the jar.
 - **Older figures, superseded:** tin 25 min + lid 24 min + cookie 11 min, about 32 g.
   They came from the in-house checking slicer at 2 walls, not Bambu Studio at Scott's
   settings.
-- **Cookie Jar, one colour, from that older slicer at 2 walls:** jar 27 min + top
-  16 min + gingerbread 20 min, about 35 g. Not yet re-sliced at 3 walls.
+- **Cookie Jar, one colour, Bambu Studio at 3 walls (2026-11-19):** jar, top and
+  gingerbread on one plate, **1 h 21 m, 37.1 g**
+  (`cookie_jar/checks/cookie_jar_one_colour.gcode.3mf`).
+  - Superseded: about 1 h 3 m and 35 g, from the older slicer at 2 walls.
+- **Canister, one colour, Bambu Studio at 3 walls (2026-11-19):** canister, closed lid and
+  cookie on one plate, **2 h 41 m, 65.0 g**
+  (`gingerbread_tin/checks/canister_one_colour.gcode.3mf`).
+  - Superseded: "about 45 g and an hour and a half, not counting the cookie" in
+    MAKERWORLD.md, from the older slicer.
 
 ## What was checked before this was pushed
 
