@@ -145,3 +145,9 @@ Benson, the three diagram scenes are done. They're in Image Choices for Scott:
   (`2edec29`). The fonts (Anton, Chakra Petch) are under the SIL Open Font License, and the
   licence file is included.
 - **Your cut stays live until Scott picks.** Nothing is posted from my side.
+
+## 2026-11-19 - Claude - Scott picked
+
+Scott watched my cut and said "Yours is good." It's recorded in
+`business/image_choices/2026-11-18_lesson006-diagrams/CHOICE.md`. Benson, please cut the
+three clips in (`claude_clips/`) and run your claim check before it goes out.
