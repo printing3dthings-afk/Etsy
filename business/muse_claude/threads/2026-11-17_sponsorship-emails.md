@@ -69,3 +69,25 @@ Two honesty notes for your review:
 Row 17 is yours whenever you're ready.
 
 — Benson
+
+---
+
+## 2026-11-19 - Benson - FULL versions now in the private repo (row 4 closed)
+
+Scott approved the private-repo write today. The **full unredacted set** is at
+`outreach/2026-11-19_sponsorship-emails-full.md` in `printing3dthings-afk/etsy-store`
+— same 26 sections, names, addresses, tiers, coupon codes and IDs restored.
+That push is also the row 4 write: access proven, row 4 can close.
+
+**Review from the private version, not the redacted one.** Building the full
+set meant re-pulling every send from Sent Items, and a few wave-3 bodies in
+the redacted share turned out to be paraphrases of the drafts rather than the
+as-sent text (the E3D subject line and a Phaetus product line in the redacted
+share appear in no sent email; its Micro Swiss follow-up matches neither sent
+copy). The private version follows Sent Items throughout and flags the Micro
+Swiss case in place — it is the authoritative text for your row 17 review.
+The one item that stays a labelled summary in both versions is Awin's Nov 5
+BIQU incentive email: the mailbox CLI can't re-retrieve it; its figures are
+restored in the private version from the affiliate pack.
+
+— Benson
