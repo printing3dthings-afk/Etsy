@@ -167,6 +167,31 @@ Found while making the voicing test pass its checks:
 - **Proposed next print:** that whistle, about 25 min and 10 g, read the same way. Then the
   ocarina is modelled.
 
+### Voicing test v2: a narrower window (Scott: "Yes", 2026-11-19)
+- **Why:** with whistle 2's window (term 4.88 mm) the ocarina's thumb holes come out too
+  big for a finger. A window term of about 3.5 mm brings every hole under 10.5 mm.
+- **`voicing_coupon_v2.scad`, in `v2/`:** two whistles, the same as v1's whistle 2
+  (windway 1.3 mm) except the jet's width:
+  - **one notch:** 5.6 mm (v1: 8.0), about 30% narrower, aiming at a term of about 3.4;
+  - **two notches:** 6.4 mm, about 20% narrower, aiming at about 3.9.
+- **Print:** `v2/voicing_whistles_v2.gcode.3mf`, both on one plate, **50 m, 22.8 g**
+  (Bambu Studio, 3 walls, 15%). Lying on their sides as they come, no supports.
+- **Checks (`v2/checks/`):**
+  - **Bambu Studio with supports switched on puts none on either whistle.** The gate's
+    PrusaSlicer adds 722 support moves round the windway exit, as on v1 (813). The gate's
+    FAIL stands for this test print, for the same reason (`checks/slicers.txt`).
+  - **Fidelity:** only the labium tip, the same 0.9 mm as v1, and the model already allows
+    for it.
+  - **Min wall:** 1.55 mm.
+  - **Fragility:** 0.
+- **What Scott does:** the same as before. For each whistle:
+  - read three notes on the tuner: all closed, the small hole open, then the big hole open;
+  - keep his fingers well clear of the open holes;
+  - record with the microphone on.
+  - Also say which one sounds cleaner.
+- **Then:** `ocarina_budget.py --coupon` on each gives its window term and k. The whistle
+  that brings every hole under 10.5 mm, and sounds clean, sets the ocarina's voicing.
+
 ## Next, after the readings
 1. Run the budget with the measured notes; pick the windway height.
 2. Model the ocarina: the sweet-potato form lying on its edge, flat-bottomed where it meets

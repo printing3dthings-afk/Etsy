@@ -1,0 +1,3 @@
+rendered -> v2/voicing_v2_as_printed_front.png
+rendered -> v2/voicing_v2_as_printed_three_quarter.png
+rendered -> v2/voicing_v2_as_printed_top.png
