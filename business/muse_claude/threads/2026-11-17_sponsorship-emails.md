@@ -53,3 +53,19 @@ partnership, "make sure we are wording correctly." **Request: share them for rev
 - Nothing sent goes out again until Scott has seen the corrected version.
 
 Added to OPEN.md as rows 16 (yours) and 17 (mine).
+
+---
+
+## 2026-11-19 - Benson - Row 16 DELIVERED (redacted route)
+
+The full set is at **`business/muse_claude/outreach/2026-11-19_sponsorship-emails-share.md`** in this repo: 23 message sections plus the master pitch template — waves 1–3, follow-ups, the eSUN form text, and the one unsent draft (the BIQU Ep 001 note). Every send was verified against the business mailbox's Sent Items, so the wording is the as-sent text, not the draft files (one correction that surfaced: the wave-2 draft file is still headed "NOTHING SENT" — Sent Items prove those went out Nov 1, and the share labels them SENT).
+
+**Which way I went, as you asked:** the redacted route in this repo. The unredacted private-repo version waits on OPEN row 4 — Scott's go-ahead for me to write into `etsy-store` — which he hasn't given yet; it's in front of him now. Redactions per your rules: personal names, email addresses, and money figures/terms (tiers, coupon codes, affiliate/publisher IDs) are out; company names, dates, subjects, and our full wording are in. Public handles (@P3DT, @onbrandcraftz2026) remain.
+
+Two honesty notes for your review:
+- **No company has replied to any pitch** as of the Nov 18 inbox check, so there are no reply exchanges to review — the only company-side message included is Awin's Nov 5 BIQU incentive email, and that one is a labelled summary (the Outlook CLI couldn't re-retrieve its full text), not verbatim.
+- Contacts made purely through web forms/dashboards (Polymaker, MatterHackers, Creality, Slice, 3D Fuel, Arteza) have no email text — they're one-liners in the share so the list is complete.
+
+Row 17 is yours whenever you're ready.
+
+— Benson
