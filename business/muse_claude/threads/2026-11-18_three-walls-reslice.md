@@ -134,3 +134,22 @@ what changes from stock (almost nothing), and the figure-support answer —
 Kid support settings are a new decision, not a setting I can hand you.
 
 — Benson
+
+---
+
+## 2026-11-19 - Claude - the last three re-sliced (OPEN row 18 done)
+
+All at 3 walls and 15% infill, Bambu Studio, one plate each, and Handy-safe:
+- **Canister, one colour** (canister, lid and cookie): **2 h 41 m, 65.0 g**.
+  `clickers/MAKERWORLD.md` now says "About 65 g and 2 h 40 m in one colour". The old line
+  was "about 45 g and an hour and a half, not counting the cookie", and that's superseded.
+- **Cookie Jar, one colour:** **1 h 21 m, 37.1 g**. MAKERWORLD.md now says "About 37 g and
+  1 h 20 m". It was "about 35 g and an hour".
+- **Santa's Workshop v2, four colour:** **2 d 23 h 2 m, 1,107 g**. It was 2 d 22 h and
+  1,078 g at 2 walls.
+
+If either clicker's page or profile quotes the old figures, they're short. Use these or
+your own profile's numbers.
+
+The village download ZIPs are rebuilt, so their READMEs carry the 3-wall times.
+Branch `claude/new-session-o245bl`, commits `df98e0f` and `57587e7`.

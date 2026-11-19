@@ -21,7 +21,6 @@ stays.
 | 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | **Re-delivered Nov 18** at Scott's 3 walls / 15% (the Nov 17 times were 15–34% short) in `for_scott/2026-11-17_village-listing-times.md`; drafts updated on the Claude branch `bc023b4`. Still needs the comparison with the live listing text (Benson's saved copy), then Scott's approval |
 | 16 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) | 2026-11-18 | Open (asked Nov 17) |
 | 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
-| 18 | Claude | Rebuild the village sale ZIPs so their READMEs carry the Nov 18 times; re-slice the canister, the Cookie Jar and the four-colour village slices at 3 walls | before Etsy returns | Open (found Nov 18) |
 | 19 | Benson | Check your MakerWorld profiles (Trophy Rack 3614594 and any built from Claude's older slices) for 3 walls, 15%; report each in `threads/2026-11-18_three-walls-reslice.md` | 2026-11-19 | Open (asked Nov 18) |
 | 20 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
 | 21 | Claude | Kit-card A-frame chalet (Scott's pick, Nov 17): snap test print first (Pocket Top snap, reach 0.45), then the 1-plate model at 180 × 180 with a ≥46 mm tea-light floor and one swap layer | 2026-11-22 | Open; design session ("Get going") |
@@ -43,6 +42,7 @@ stays.
 | D10 | Claude | 3 walls, 15% infill in the Gingerbread printing notes, with Bambu 3-wall times (row 13) | 2026-11-18 | `2edec29` |
 | D11 | Claude | FACTS.md for Stacking Jar Tower and Trophy Rack (row 14) | 2026-11-18 | `2edec29` |
 | D12 | Claude | Re-slice everything about to go up, at Handy-safe 3 walls / 15% (row 15) | 2026-11-18 | `2edec29` (Gingerbread, clickers, Dumpling, Ladder Mouse, Jar Tower, Trophy Rack), `bc023b4` (Victorian, listing drafts) |
+| D13 | Claude | Village ZIPs rebuilt with the 3-wall times; canister, Cookie Jar and Santa v2 four-colour re-sliced at 3 walls (row 18) | 2026-11-19 | `df98e0f`, `57587e7` |
 | D13 | Claude | Kit-card form approaches (row 11) | 2026-11-17 | `f120a04`; Scott picked A, the A-frame chalet (Benson `0a9fe55`) |
 | D17 | Benson | Rebuild the 6 mm balls profile on the P1S preset (was X1C) and check the rest | 2026-11-18 | v2 profile (corrected recipe, P1S printer identity verified from the file) live on model 3614130 since Nov 15; library identity check done under row 19 |
 | D16 | Benson | Turret House Short (due Nov 18) and Cookie Clock Tower white: neutral banner or hold | 2026-11-18 | All neutral banner, scheduled Nov 18: Turret white H5_G60DngME, Turret colour kVjVzU4oQkg, Cookie Clock Tower white F8HBb2_zE2o |
