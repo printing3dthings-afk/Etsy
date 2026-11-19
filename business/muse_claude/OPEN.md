@@ -13,18 +13,18 @@ stays.
 
 | # | Owner | Commitment | Due | Status / evidence |
 |---|---|---|---|---|
-| 1 | Benson | Fix "24 minutes" for the Dumpling Clicker in both vote posts, with Scott's approval | 2026-11-17 | Fix prepared. Both live posts verified Nov 18 still carry "24 minutes"; caption edit to "about 35 minutes in one colour" (Bambu slice 34 m, `threads/2026-11-18_three-walls-reslice.md`) awaits Scott's approval — the row's own condition. Benson edits + verifies live on approval (accountability reply Nov 18) |
 | 3 | Benson | Tin Clicker contest video draft to Scott (Fidget Toy + Spotlight lanes) | 2026-11-18 | Draft delivered to Scott Nov 17 (personalised-hook lead post, both lanes). Posting awaits Scott's caption approval + the 10-second click clip (accountability reply Nov 18) |
-| 4 | Benson | Test write to `private/NOTES.md` in etsy-store, or the error | 2026-11-15 | Blocked on Scott's go-ahead, by design (recorded Nov 14–15): Benson will not write into the private repo on Claude's say-so alone. Goes in the same day Scott approves (accountability reply Nov 18) |
 | 5 | Benson | Confirm contest rules in `CONTESTS.md` and keep it current weekly | 2026-11-18 | Rules re-confirmed Nov 18 (Fidget + Click Into Celebration + MakerWorld general terms; Printmas still unverified). Weekly check continues (accountability reply Nov 18) |
 | 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | IG caption fixed + verified live Nov 18 (names only Santa's Workshop, Gingerbread Cottage, Victorian Cottage). FB reel caption edit pending — Page browser route, main session (accountability reply Nov 18) |
 | 10 | Claude | Corrected one-colour print times for the village listings, for Scott's approval | before Etsy returns | **Re-delivered Nov 18** at Scott's 3 walls / 15% (the Nov 17 times were 15–34% short) in `for_scott/2026-11-17_village-listing-times.md`; drafts updated on the Claude branch `bc023b4`. Still needs the comparison with the live listing text (Benson's saved copy), then Scott's approval |
-| 16 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) | 2026-11-18 | Open (asked Nov 17) |
-| 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 1 run after they arrive | Open |
-| 19 | Benson | Check your MakerWorld profiles (Trophy Rack 3614594 and any built from Claude's older slices) for 3 walls, 15%; report each in `threads/2026-11-18_three-walls-reslice.md` | 2026-11-19 | Open (asked Nov 18) |
-| 20 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
+| 17 | Claude | Review each of those emails for wording and claims; suggested corrections | 2026-11-19 13:17 run | Emails arrived Nov 19 morning; reviewing from the private full version (Benson: the redacted share has some paraphrased bodies). Review lands at the 1:17 pm run |
 | 21 | Claude | Kit-card A-frame chalet (Scott's pick, Nov 17): snap test print first (Pocket Top snap, reach 0.45), then the 1-plate model at 180 × 180 with a ≥46 mm tea-light floor and one swap layer | 2026-11-22 | Open; design session ("Get going") |
-| 22 | Benson | Upload the four READY designs in `threads/2026-11-18_ready-for-makerworld.md`, private, with your profiles; update the profiles of models already up from the re-sliced files there (Scott, Nov 18) | 2026-11-19 | Open (asked Nov 18) |
+| 22 | Benson | Upload the four READY designs in `threads/2026-11-18_ready-for-makerworld.md`, private, with your profiles; update the profiles of models already up from the re-sliced files there (Scott, Nov 18) | 2026-11-19 | Models up Nov 18 (3642709, 3642721, 3642728, Private). Five profiles and all profile swaps blocked by the MakerWorld extraction stall since Nov 16, outside Benson's control; no miss while it lasts. Test plan in `threads/2026-11-19_makerworld-extraction-stall-help.md` |
+| 23 | Claude | Reconcile Trophy Rack figures: FACTS.md 2 h 58 m / 50.1 g vs Benson's Multicolour Standard profile 2 h 07 m / 32.7 g; correct FACTS.md | 2026-11-21 | Open; design session (asked Nov 19) |
+| 24 | Benson | Check whether the Fidget Toy Challenge entry needs a working print profile and whether the live Tin Clicker has one | 2026-11-20 | Open (asked Nov 19, extraction thread) |
+| 25 | Benson | Run the extraction test matrix with Scott (Studio app cube on Sjack7; Nov 15 file on @P3DT); delete stuck Plates (0) profiles; watch reads status only, no re-uploads | 2026-11-20 | Open (asked Nov 19); support ticket for Scott Nov 21 if still stalled, Nov 20 if the contest needs it |
+| 26 | Benson | Cut Scott's Lesson 006 clips in and run the claim check | 2026-11-20 | Open (asked Nov 19, animation-quality thread) |
+| 27 | Benson | Take down the three finished test prints (Otter Joint Test 3598362, Fold Stand v4 Hinge Test, Domed Name Ornament) and tick each after reading the page back | 2026-11-20 | Open (Scott, Nov 19, `threads/test-print-removals.md`) |
 
 ## Done
 
@@ -48,6 +48,11 @@ stays.
 | D16 | Benson | Turret House Short (due Nov 18) and Cookie Clock Tower white: neutral banner or hold | 2026-11-18 | All neutral banner, scheduled Nov 18: Turret white H5_G60DngME, Turret colour kVjVzU4oQkg, Cookie Clock Tower white F8HBb2_zE2o |
 | D15 | Benson | Building order for Claude's render sets | 2026-11-18 | Sent 2026-11-14 13:47 ET in `threads/2026-11-14_new-briefs.md` (10-building priority order); row closed Nov 18 |
 | D14 | Benson | Toy Shop Short: record whether held, neutralised or posted | 2026-11-18 | Neutralised (approved neutral banner) + published Nov 17: white sNiWiJK-Qa8, colour qNOMSDTeUGw; accountability reply Nov 18 + youtube-shorts-draft-log 2026-11-17 |
+| D18 | Benson | Fix "24 minutes" for the Dumpling Clicker in both vote posts, with Scott's approval (row 1) | 2026-11-18 | Both vote posts read "About 35 minutes in one colour", IG and FB read back live, Scott approved (`ed79b5c`) |
+| D19 | Benson | Test write to `private/NOTES.md` in etsy-store, or the error (row 4) | 2026-11-19 | Scott approved; Benson wrote `outreach/` in etsy-store (`24aa52c`) |
+| D20 | Benson | Share every sponsorship/partnership email, sent or draft, with replies (`threads/2026-11-17_sponsorship-emails.md`) (row 16) | 2026-11-19 | Redacted share `outreach/2026-11-19_sponsorship-emails-share.md` (`09c07ff`); full as-sent set in etsy-store (`24aa52c`), which is the authoritative version |
+| D21 | Benson | Check your MakerWorld profiles (Trophy Rack 3614594 and any built from Claude's older slices) for 3 walls, 15%; report each in `threads/2026-11-18_three-walls-reslice.md` (row 19) | 2026-11-19 | Read from the shipped files; Pie Drum Caddy found at 2 walls (`ed79b5c`) |
+| D22 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) (row 20) | 2026-11-19 | `profiles/`: four Trophy Rack configs + README (`ed79b5c`) |
 
 ## Misses on record (so they aren't repeated)
 

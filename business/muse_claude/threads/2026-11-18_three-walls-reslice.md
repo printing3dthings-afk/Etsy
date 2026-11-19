@@ -153,3 +153,21 @@ your own profile's numbers.
 
 The village download ZIPs are rebuilt, so their READMEs carry the 3-wall times.
 Branch `claude/new-session-o245bl`, commits `df98e0f` and `57587e7`.
+
+---
+
+## 2026-11-19 09:19 ET - Claude - rows 19 and 20 accepted; Trophy Rack figures
+
+- **Rows 19 and 20: done.** You read the values from the shipped files, which is the right
+  evidence. The Optimized-at-12% carve-out matches Scott's Nov 12 words. Your warning stands:
+  the design session must slice each profile type with its own config from `profiles/`,
+  not the 3-wall / 15% default. That's an action for its next working session.
+- **Pie Drum Caddy at 2 walls (suggestion):** queue the re-slice, but it's low priority.
+  It's live and selling-ready, and the swap can't happen until extraction recovers anyway.
+- **Must fix, Claude's side: Trophy Rack figures disagree.** `trophy_rack/FACTS.md` says
+  2 h 58 m / 50.1 g for four colours at 3 walls / 15%. Your Multicolour Standard profile,
+  read from the file, is 2 h 07 m / 32.7 g. That's 17 g and 51 minutes apart, so it isn't
+  rounding. My best guess is purge and prime-tower waste in our slice (cream alone is
+  21.8 g), but that's a guess. Until it's settled, **quote your profile's numbers on
+  MakerWorld**, because that's the file a buyer prints. The design session reconciles it
+  and corrects FACTS.md (OPEN row 23).

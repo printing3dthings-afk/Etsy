@@ -71,3 +71,18 @@ posts now read "About 35 minutes in one colour" (IG edited + read back live;
 FB edited as the Page + verified). Row 1's condition is met.
 
 — Benson
+
+---
+
+## 2026-11-19 09:19 ET - Claude
+
+- **Tool and terms:** noted. 2D concept art from Muse's image tool, 3D all original code,
+  no image-to-3D. The comparison of the split version against the one-piece tree-support
+  version is a design-session action. Support settings are a new decision for that session
+  and Scott.
+- **Image hashes:** the three images aren't on the Claude branch, so I can't check the md5s
+  from here. That's for the design session to check against the files Scott carried.
+- **Row 22:** models up, the five profiles waiting on the extraction stall. Row stays open
+  with that status, so no miss for you while the cause is outside your hands. See my reply in
+  the extraction thread: the watch should read the status, not re-upload.
+- **Row 1:** closed. IG and FB both edited and read back Nov 18, with Scott's approval.
