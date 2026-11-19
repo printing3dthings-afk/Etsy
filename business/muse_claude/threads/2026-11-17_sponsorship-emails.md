@@ -91,3 +91,63 @@ BIQU incentive email: the mailbox CLI can't re-retrieve it; its figures are
 restored in the private version from the affiliate pack.
 
 — Benson
+
+---
+
+## 2026-11-19 13:20 ET - Claude - row 17: review of every email
+
+I read the full as-sent set in the private repo. Section names below match it; no names,
+addresses or terms are repeated here. Nobody has replied yet, so the useful work is fixing what
+goes out *next*: follow-ups, the BIQU note, and new pitches. Nothing below asks for anything to
+be re-sent.
+
+### Must fix before the next send
+
+1. **"Print everything for real ... before anything goes live."** It's in the template and almost
+   every pitch. The Bambu Lab pitch goes further: "a 50-model / ~197-profile library ... printed for
+   real before anything goes live". That isn't true. We post render-labelled vote posts (Done D6),
+   and `threads/test-print-removals.md` lists models still on MakerWorld waiting on a test print.
+   Bambu Lab runs MakerWorld and can check our page. Use instead: *"We print our designs in our own
+   shop, and anything that's a render is labelled as one."*
+2. **The platform list.** The pitches claim daily posts on Instagram, TikTok, YouTube, Facebook
+   and, in some, Pinterest and X. `muse_log.md` has no Pinterest posts. The first X post is Nov 10,
+   but the Oct 31–Nov 1 pitches already claimed daily X. Name only the platforms with a post in the
+   last seven days on the day you send.
+3. **"We also run a weekly filament & parts price tracker across the brand stores."** It's in the
+   template and in Overture's opener ("already in our weekly filament price tracker"). I can't find
+   a tracker anywhere in this repo. Benson, if it exists on your side, point me to it. If it
+   doesn't, drop the line.
+4. **"Partners" and "partner series".** Protopasta's pitch says *"SUNLU, Overture and BIQU are
+   current partners"*. Several others say *"two series are live now with affiliate partnerships
+   behind them"*. These are self-serve affiliate sign-ups, and none of those companies has
+   written back. A brand reading "partner" assumes they agreed to something. SUNLU or Overture
+   could object to being named as partners to a rival. Use instead: *"we're SUNLU and Overture
+   affiliates, and each has its own series."*
+5. **BIQU, Friday Nov 20.** Our Nov 5 email to BIQU commits in writing to the first episode
+   "planned for Friday, November 20". The update note is still a draft waiting on Scott. This is a
+   promise to a company, due tomorrow. Benson: is episode 1 ready to post tomorrow? If it is, the
+   note goes once Scott approves the words. If it isn't, the note should give an honest new date.
+   Silence breaks the one commitment we've put in writing.
+
+### Suggestions
+
+- **Stats in follow-ups** (the Micro Swiss one: "274 makers", "12,830 total views"): fine if they
+  match the dashboard on the send date. Say "followers", not "makers", and date the numbers.
+- **Micro Swiss got the same follow-up twice on Nov 6**, once in the thread and once as a new
+  email. Never send twice; it reads as automated.
+- **Four matte-filament brands each heard that matte is "the house material"** (eSUN, ERYONE,
+  Overture, Protopasta). If two of them send spools, both expect to be the house material. Say
+  *"matte is our standard finish"* and leave it there.
+- **Capacity.** Nine pitches promise a dedicated episode within a week of arrival. If three
+  brands send at once, can we deliver three episodes in a week? Log each brand's promise as an
+  OPEN row the day its product arrives.
+- **Length.** The template is about 250 words before the ask. A first email gets read when it's
+  short: one line on why this brand, one link, the ask, and the media kit. That's about 120 words.
+- **Wave-3 follow-ups** (Phaetus, FYSETC, Honey Badger, E3D, Darkmoon): one follow-up each is
+  normal, but only after fixes 1–4 are in the wording. Re-send to Darkmoon by email if their
+  site lists one. Their form never confirmed delivery.
+- **Store list:** check that every store named (Etsy, MakerWorld, Printables, Patreon) is selling
+  on the day you send.
+
+**Row 17 closes with this entry.** The fixes become Benson's row 28, due before the next
+outreach send.
