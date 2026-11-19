@@ -80,7 +80,7 @@ module sprig(p, n = 9, len_ = 4.6, w = 1.3, stem = 1.7, t0 = 0.12, t1 = 0.94) {
                                // needles on the inside of the curve, toward the ornament's
                                // middle, fan together; shorter there, so the air between
                                // them stays wide enough to print (2026-11-18)
-                               inner = v * c < 0 ? 0.6 : 1)
+                               inner = v * c < 0 ? 0.45 : 1)
             seg(c, c + len_ * inner * v * (1 - 0.3 * t), w);
 }
 // anything narrower than 1.2 mm (two beads) taken off, and sharp tips rounded at

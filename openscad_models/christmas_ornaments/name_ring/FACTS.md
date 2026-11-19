@@ -3,9 +3,9 @@
 Every number comes from this folder. The source is on each line (STANDARDS 15).
 
 ## Version
-- **v1**, 2026-11-18. Scott's pick, form 1 of 5, to replace the domed Name Ornament.
+- **v1**, 2026-11-18; boughs redrawn 2026-11-19 (four long needle pairs, Scott's ask). Scott's pick, form 1 of 5, to replace the domed Name Ornament.
   The dome's inlaid name printed lumpy on its curve ("Jessee 2026", 2026-11-18).
-- **Not printed yet.** Scott is test printing it (2026-11-18). Every image is a
+- **Not printed yet.** Scott's test print (sent 2026-11-18) has the earlier, shorter needles; everything else is the same. Every image is a
   design-review render, not a photo.
 
 ## What it is

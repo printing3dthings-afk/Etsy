@@ -37,7 +37,7 @@ veins are cut through the white, so the red shows.
   - 3 walls, 15% infill (Scott, 2026-11-12); supports off.
 - **Flat, back on the plate, as it sits in the file.** Nothing overhangs.
 
-**Cost, from Bambu Studio's own slice:** 47 m, 11.7 g (8.6 g red, 3.1 g white), supports 0.
+**Cost, from Bambu Studio's own slice:** 47 m, 11.8 g (8.6 g red, 3.1 g white), supports 0.
 
 These are at Claude's slicer settings. Benson's profiles (OPEN row 20) aren't on
 main yet; re-slice with them when they land.
@@ -78,8 +78,9 @@ is as large as fits 60 mm across, at most 15 mm.
 **What changed while checking, and why:**
 - Sharp tips are rounded at 0.6 mm. A star's point or a holly spike otherwise
   runs down to nothing.
-- The needles are 1.4 mm, six pairs a bough. At eight pairs they stood 0.47 mm
-  apart and would print webbed.
+- **The needles are 1.6 mm, four long pairs a bough** (Scott, 2026-11-19: fewer, so they
+  read as pine; six short pairs looked like a garland). At eight pairs they stood
+  0.47 mm apart and would print webbed.
 - The needles on the inside of each bough's curve are shorter, so the air between
   them stays printable.
 - The bar is 3.4 mm wide. At 2.8 the fragility check put it on watch.
