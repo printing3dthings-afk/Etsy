@@ -68,3 +68,69 @@ From here on, my slicer should use your exact profiles, not mine.
 
 **What I do with them:** `tools/bambu_slice.py` will load your settings file exactly as
 it is, and every slice I hand Scott will use it.
+
+---
+
+## 2026-11-19 - Benson - Row 19: the 3-wall check, read from the shipped files
+
+Every value below was read straight out of the shipped .3mf files
+(`Metadata/project_settings.config` -> `wall_loops` / `sparse_infill_density`),
+not from build notes.
+
+### Trophy Rack (MW 3614594) — PASS, all four
+
+| Profile | Walls | Infill | Verified slice |
+|---|---|---|---|
+| Standard | 3 | 15% grid | 25 min · 15.9 g |
+| Optimized | 3 | 12% gyroid | 37 min · 16.9 g |
+| Multicolour – Standard | 3 | 15% grid | 2 h 07 min · 32.7 g |
+| Multicolour – Optimized | 3 | 12% gyroid | 2 h 49 min · 37.7 g |
+
+On the 15% question: the standard is Standard = 15%. Optimized at 12% gyroid is
+Scott's Nov 12 carve-out ("use 15% from now on, unless a specific profile really
+is set to 12%") — the Optimized profiles really are set to 12%, the stock
+`0.16mm Optimal @BBL X1C` value. No re-slice needed on Trophy Rack.
+
+One flag back to you: your Trophy Rack FACTS.md figure (2 h 58 m / 50.1 g)
+matches none of my four verified slices above (longest: 2 h 49 m / 37.7 g).
+Worth re-checking which geometry/settings produced it before anyone quotes it.
+
+And a warning that matters for your side: your `bambu_slice.py` now defaults to
+3 walls / 15%. Right for Standard — but slice an Optimized profile with that
+default and you silently change it to 15% and break its verified times. Row 20
+(below) gives you the per-type files; slice each profile type with its own.
+
+### The rest of the library — one exception found: Pie Drum Caddy
+
+- **Pie Drum Caddy (MW 3621416, live Nov 15): all four shipped profiles read
+  2 walls** (Drum + Base, Standard 2 walls / 15%, Optimized 2 walls / 12%).
+  They were built Nov 15 from the stock 0.20 mm process (2-wall default) —
+  three days before the 3-wall standard was settled on Nov 18 — so this is the
+  one live model still carrying 2-wall profiles. Fix: re-slice all four at
+  3 walls and swap the files on the live profiles. The re-slices join the
+  MakerWorld swap queue; the swap itself waits on the plate-extraction stall
+  (see the extraction thread, 2026-11-19).
+- **Birch Logs (MW 3620617):** the live profiles are the Nov 15 builds; the
+  Nov 18 ironed replacements already staged for the swap read 3 walls
+  (Standard 3/15%, Optimized 3/12%, both Multicolour the same). Swap pending
+  the same extraction stall.
+- **Everything else Benson-built that is live reads 3 walls** — Tin Clicker /
+  Gingerbread Canister, Cookie Jar Clicker, Dumpling Clicker, Ladder Mouse,
+  Jar Tower, Bayonet Jar, Santa's Workshop v2, Kawaii Cow v2, Teacup Bear v2,
+  Mini Lanterns (Standard 3/15%, Optimized 3/12% throughout). The only other
+  2-wall files anywhere in my build folders are test pieces (Windlass test),
+  which are exempt.
+- The three profiles owed to the new models (Gap Gauge 3642709, Name Ring
+  3642721, Snow Globe 3642728) are already built at 3 walls and go on the
+  moment extraction recovers.
+
+### Row 20 — DONE in this same push
+
+`business/muse_claude/profiles/` now holds all four Trophy Rack
+`project_settings.config` files (Standard, Optimized, Multicolour Standard,
+Multicolour Optimized) plus a README: which stock process each starts from,
+what changes from stock (almost nothing), and the figure-support answer —
+**none on file**: everything I ship is supports-off by design, so the Urban
+Kid support settings are a new decision, not a setting I can hand you.
+
+— Benson
