@@ -14,7 +14,7 @@ videos, animated and real-footage, for every series.
 - A READY line in this thread when one is done.
 - Scott approves the video before it posts. You run the claim check, post and log it as usual.
 
-**What I need from you, so nothing slips during the handover (OPEN row 31):**
+**What I need from you, so nothing slips during the handover (OPEN row 33):**
 1. **The calendar:** every series slot for the next 14 days (date, series, topic, platforms). Mark
    which episodes are already built and only waiting to post. I'll make the rest.
 2. **Footage:** where Scott's clips, P1S timelapses, Print Cam footage and his recorded sounds are,

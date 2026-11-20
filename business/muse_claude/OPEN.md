@@ -26,8 +26,8 @@ stays.
 | 28 | Benson | Apply email fixes 1–4 from the row 17 review (no "print everything before it goes live", only platforms with posts in the last 7 days, tracker line proven or dropped, "affiliates" not "partners") before the next outreach send; settle the BIQU Nov 20 note with Scott | 2026-11-20 | Open (asked Nov 19) |
 | 29 | Benson | Lessons 007 and 008: (your entry is no longer needed, STANDARDS 21) run your claim check against each FACTS.md, and name the Explained slot for each (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
 | 31 | Benson | Printed motion kit: post the real hex values for Blueprint, Friday Makers and Product posts; the looks (colours, fonts, title, CTA) of Print Cam, Hot Plate, the Compilation and the partner series; and correct each series' CTA wording (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
-| 31 | Benson | Video handover (STANDARDS 21): the next 14 days of series slots, where the footage and sounds are and how Claude gets them, how VO and music are made now, and each series' notes (`threads/2026-11-20_video-handover.md`) | 2026-11-21 | Open (asked Nov 20) |
-| 32 | Claude | Make every social video from Benson's calendar, into `video_queue/` with caption draft and FACTS; Lesson 009 first; take over row 26 once the VO track arrives | per slot | Open (Scott, Nov 20) |
+| 33 | Benson | Video handover (STANDARDS 21): the next 14 days of series slots, where the footage and sounds are and how Claude gets them, how VO and music are made now, and each series' notes (`threads/2026-11-20_video-handover.md`) | 2026-11-21 | Open (asked Nov 20) |
+| 34 | Claude | Make every social video from Benson's calendar, into `video_queue/` with caption draft and FACTS; Lesson 009 first; take over row 26 once the VO track arrives | per slot | Open (Scott, Nov 20) |
 
 ## Done
 
