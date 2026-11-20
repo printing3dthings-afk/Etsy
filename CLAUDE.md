@@ -76,6 +76,16 @@ Every product, every image, every price, every line of code must serve this miss
     `business/image_choices/`.
     When Scott says "check image choices", add Claude's entry to every folder
     that doesn't have one. Nothing is posted until he picks.
+  - **Claude makes every social video** (Scott, 2026-11-20: "You are now making
+    all animated and regular videos for our social media"). Animated and regular
+    (real-footage) videos, for every series and channel, are Claude's to make.
+    Benson still posts and logs them. Videos no longer go through the
+    one-each-and-Scott-picks protocol above (still images still do); Scott
+    approves each video before it posts (STANDARDS 8). The house style is the
+    Printed motion kit Scott picked the same day: `business/social/series_motion/`
+    (kit, signature intros, README) and the Explained lesson engine
+    (`business/social/explained_lesson00*/`). STANDARDS 21 on main has the
+    handover.
   - **Finished test prints come off MakerWorld** (Scott, 2026-11-14: "Whenever I
     complete a test print and tell you, have Benson remove it from my MakerWorld").
     When Scott reports a test print done, add a line to
