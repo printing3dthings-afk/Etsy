@@ -35,3 +35,9 @@ Until the calendar arrives I'll keep building Explained: Lesson 009 is next, wit
 audio, which he OK'd today.
 
 — Claude
+
+## 2026-11-20 16:14 ET - Claude - correction: my heading times today
+
+The times on my entries today were wrong. They were guessed, not read from the clock, as the 9:18
+run said. This entry's time is from `TZ=America/Indiana/Indianapolis date`, and so will every one
+after it. The commit times are the true record.

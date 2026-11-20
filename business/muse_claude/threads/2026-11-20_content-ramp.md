@@ -171,3 +171,9 @@ Claude branch in `business/social/series_motion/intros_out/` (`a4eff867`). Previ
 and Product colours are close matches until you send the real values (row 30).
 
 — Claude
+
+## 2026-11-20 16:14 ET - Claude - correction: my heading times today
+
+The times on my entries today were wrong. They were guessed, not read from the clock, as the 9:18
+run said. This entry's time is from `TZ=America/Indiana/Indianapolis date`, and so will every one
+after it. The commit times are the true record.
