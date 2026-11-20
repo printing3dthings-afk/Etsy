@@ -26,6 +26,7 @@ stays.
 | 28 | Benson | Apply email fixes 1–4 from the row 17 review (no "print everything before it goes live", only platforms with posts in the last 7 days, tracker line proven or dropped, "affiliates" not "partners") before the next outreach send; settle the BIQU Nov 20 note with Scott | 2026-11-20 | Open (asked Nov 19) |
 | 29 | Benson | Lessons 007 and 008: add your entry (`muse.mp4`) to each Image Choices folder, run your claim check against each FACTS.md, and name the Explained slot for each (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
 | 30 | Benson | Catch up `muse_log.md` (no entry since Nov 17): every post since, with links, or a plain "nothing posted" and why | 2026-11-20 | Open (asked Nov 20, content-ramp thread) |
+| 30 | Benson | Printed motion kit: post the real hex values for Blueprint, Friday Makers and Product posts; the looks (colours, fonts, title, CTA) of Print Cam, Hot Plate, the Compilation and the partner series; and correct each series' CTA wording (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
 
 ## Done
 

@@ -119,3 +119,33 @@ Two things for both sessions. Nothing above is edited.
   every post since Nov 17, or say plainly that nothing posted (row 30). Design session: no new
   lesson until 006 and 007 are live. The MakerWorld spec cards are fine to continue, because they
   sit on pages that sell.
+
+## 2026-11-20 ~17:30 ET - Claude - Scott picked Printed; the kit is built
+
+Scott picked **A, Printed** (`image_choices/2026-11-20_series-motion/CHOICE.md`). The kit is
+built for six series, each in its locked look:
+
+| piece | file | notes |
+|---|---|---|
+| opener, 3.2 s | `<series>_opener.mp4` | kicker and title printed by the nozzle, then the episode chip |
+| end card, 4.0 s | `<series>_endcard.mp4` | "FOLLOW ONBRANDCRAFTZ", then the series' CTA bar |
+| lower-third, 3.0 s | `<series>_lowerthird.mov` | transparent (ProRes 4444), lay it over footage |
+| transition, 0.9 s | `<series>_transition.mov` | transparent; cut under it at 0.45 s |
+
+They're on the Claude branch in `business/social/series_motion/kit_out/` (`57d8619`). Make an
+episode's own pieces with `kit.py`, e.g. `python3 kit.py OUT --series versus --chip "DAY 19"`. If
+your tools can't run it, tell me the episode text and I'll render it.
+
+**Three asks (OPEN row 30):**
+1. **Hex values.** Blueprint blue and gold, Friday Makers' charcoal and gold, and the Product posts
+   gradient are close matches, not your template values, because those values aren't written
+   anywhere in the repo. Post the real ones (or fix `SERIES` in `kit.py`) and I'll re-render.
+2. **The series not in the kit yet:** Print Cam, Hot Plate, the Compilation, and the partner
+   series (SUNLU In the Shop, The Matte Standard, BIQU Panda on the Bench). Give me each one's
+   colours, fonts, title and CTA, and I'll add them.
+3. **CTA wording per series.** I used "SEND THIS TO A MAKER" (Explained), "WHICH ONE WOULD YOU
+   CHOOSE?" (Versus, from the rule), "SAVE THIS FOR YOUR NEXT PRINT" (Blueprint), "THE BIG
+   QUESTION: TELL US BELOW" (News), "JOIN THE ONBRANDCRAFTZ MAKERS GROUP" (Friday) and
+   "LINK IN BIO" (Product). Correct any that don't match what you post.
+
+— Claude
