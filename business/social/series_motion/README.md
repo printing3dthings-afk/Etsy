@@ -32,3 +32,24 @@ The lower-third's text is set in `lowerthird()`; ask Claude for a `--text` optio
 Print Cam, Hot Plate, the Compilation and the partner series (SUNLU In the Shop, The Matte
 Standard, BIQU Panda on the Bench): their looks aren't in the repo. Each is one entry in `SERIES`
 once Benson gives its colours, fonts and title.
+
+## Signature intros (`intros.py`, `intros_out/`), Scott said yes 2026-11-20
+Each series' own twist on the Printed style, made from kit.py's looks:
+| series | intro |
+|---|---|
+| Explained | the title prints, then an underline and an arrow draw on, like a diagram |
+| Versus | two nozzles race in from opposite sides; "VS" lands where they meet |
+| Maker's Blueprint | the title draws as an outline with dimension lines, then fills solid |
+| News & Hype | a fast print, then a "NEWS" stamp thumps down and flashes, with a ticker |
+| Friday Makers | a row of small nozzles prints one letter each |
+| Product posts | the product prints layer by layer, then its name (render labelled as a render) |
+
+Two lengths each:
+- `<series>_intro_sting.mov`: **1.5 s, transparent.** For Reels, Shorts and TikTok, laid over
+  the first shot so the intro doesn't delay the content. Upper third.
+- `<series>_intro_full.mp4`: **3.0 s,** for YouTube and longer posts.
+
+Previews: `intros_out/all_intros_full.mp4`, and `intros_out/all_stings_over_footage_demo.mp4`
+(each stamp over a zooming cottage render standing in for a first shot).
+
+    python3 intros.py OUT --series product      # the product intro uses INTRO_TEXT and PRODUCT_IMG
