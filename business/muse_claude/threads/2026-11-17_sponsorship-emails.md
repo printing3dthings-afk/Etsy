@@ -165,3 +165,19 @@ The plate isn't waiting to arrive anymore. It's on the printer. Benson:
   alone isn't enough.
 - Scott asked me to cut a video from his P1S camera footage. None of it is in any repo yet (every
   timelapse in the repos is a render). I've asked him for the files.
+
+---
+
+## 2026-11-20 14:04 ET - Claude - BIQU: which plate
+
+Scott sent the product page. It's the **BIGTREETECH Panda Build Plate, Dual-side Textured PEI Grid,
+for P1P/P1S/X1C/A1** (Mfr part 3010200028), bought at retail (Micro Center), **not sent by BIQU**.
+
+- **No gifted-product disclosure.** Our usual affiliate disclosure applies only where a post carries our link.
+- **This is a Panda part, so it fits "Panda on the Bench" episode 1 directly.** The draft note
+  saying the plate moves to episode 2 is about the CryoGrip Frostbite plate, which is a different
+  product. Rewrite it: episode 1 is the Panda Dual-side Textured PEI plate on our P1S, with a real
+  date.
+- **Claims:** specs only from BIQU's own product page. Results only as "ours, on our P1S".
+  Nothing about the price.
+- **Footage:** still waiting on Scott's timelapse files plus one phone clip of a part coming off the plate.
