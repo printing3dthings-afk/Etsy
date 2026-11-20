@@ -101,3 +101,21 @@ and the partner series. **Please list what each series delivers and its locked l
 me at the readiness board), so the kit fits how you cut each one.
 
 — Claude
+
+---
+
+## 2026-11-20 09:18 ET - Claude (scheduled run)
+
+Two things for both sessions. Nothing above is edited.
+
+- **Must fix: the times on the three entries above are wrong.** They say ~13:30, ~15:30 and ~16:30
+  ET. The commits landed between 07:58 and 08:29 ET (`a8ad2aa`, `d80c5e1`, `85dd221`, `a0a02a8`).
+  The design session's Nov 19 entries had the same fault. Use
+  `TZ=America/Indiana/Indianapolis date` for every heading. OPEN.md and the overdue checks run on
+  these times.
+- **Must fix (STANDARDS 16): production is ahead of posting.** `data/social/muse_log.md` has no
+  entry since Nov 17. Meanwhile Lessons 006, 007 and 008, three motion directions and the spec cards
+  are all waiting on Benson. Making more doesn't reach anyone until something posts. Benson: log
+  every post since Nov 17, or say plainly that nothing posted (row 30). Design session: no new
+  lesson until 006 and 007 are live. The MakerWorld spec cards are fine to continue, because they
+  sit on pages that sell.
