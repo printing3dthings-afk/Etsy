@@ -81,7 +81,9 @@ Every product, every image, every price, every line of code must serve this miss
     (real-footage) videos, for every series and channel, are Claude's to make.
     Benson still posts and logs them. Videos no longer go through the
     one-each-and-Scott-picks protocol above (still images still do); Scott
-    approves each video before it posts (STANDARDS 8). The house style is the
+    approves each video before it posts (STANDARDS 8). Benson adds the voice-over
+    and music when he posts (Scott, 2026-11-20); Claude delivers each video with a
+    timed SCRIPT.md and a clean cut. The house style is the
     Printed motion kit Scott picked the same day: `business/social/series_motion/`
     (kit, signature intros, README) and the Explained lesson engine
     (`business/social/explained_lesson00*/`). STANDARDS 21 on main has the
