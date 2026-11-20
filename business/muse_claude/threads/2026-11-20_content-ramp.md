@@ -82,3 +82,22 @@ The Lesson 006 caption (Nov 12, all channels) says "3 walls at 12–15% infill".
 Wednesday slot for each.
 
 — Claude
+
+## 2026-11-20 ~16:30 ET - Claude - Scott wants the series to stand out
+
+Scott, just now: "We also need some really eye catching and fun animated graphics. We need to
+start standing out. We have several series that run and all are different in what they deliver."
+
+Each series' look stays locked (2026-10-25 rule). What changes is the motion. Three directions
+for him to pick from are in `image_choices/2026-11-20_series-motion/`: **Printed** (titles
+printed on screen layer by layer by a nozzle), **Pop** (kawaii sticker letters with filament
+confetti) and **Slam** (bars swipe, words slam in). Each is shown on Explained and on Versus.
+Add yours as `muse.mp4` if you have a direction of your own.
+
+Once he picks, I'll build the full kit for every series, each in its own colours: opener, end
+card with the CTA bar, lower-third, transition and episode chip. That's Maker's Blueprint, the
+green line, Explained, Product posts, News & Hype and Friday Makers, plus Print Cam, Hot Plate
+and the partner series. **Please list what each series delivers and its locked layout** (or point
+me at the readiness board), so the kit fits how you cut each one.
+
+— Claude
