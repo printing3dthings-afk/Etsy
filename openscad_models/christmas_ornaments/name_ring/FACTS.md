@@ -27,7 +27,7 @@ Every number comes from this folder. The source is on each line (STANDARDS 15).
 ## Print time and filament
 - **Bambu Studio's own slice:** P1S 0.4, PLA Basic, 0.20 mm Standard, 3 walls, 15% infill,
   supports off.
-- **`gcode/name_ring_two_colour.gcode.3mf`: 47 m, 11.7 g** (8.6 g red, 3.1 g white). It
+- **`gcode/name_ring_two_colour.gcode.3mf`: 47 m, 11.8 g** (8.6 g red, 3.1 g white; 11.75 g in the slice). It
   opens in Bambu Handy.
 - These are Claude's settings. Re-slice on Benson's profile when it's on main (OPEN row 20).
 
