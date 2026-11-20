@@ -271,14 +271,29 @@ INTROS = {"explained": explained, "versus": versus, "blueprint": blueprint, "new
 LENGTH = {"sting": 1.5, "full": 3.0}
 
 
-def frame(series, kind, t):
-    sp = dict(SERIES[series], **INTRO_TEXT.get(series, {}))
+def titled(im, sp, u, cy, k):
+    """Title-only intro: kicker and title printed, then the chip. For a video whose own
+    footage already shows the product (the assembler's default for Product posts)."""
+    px = fit_px(sp, sp["title"], 900 * k, 200 * k)
+    m, x0, y0 = text_at(sp["title"], title_font(sp, px), 540, cy)
+    print_mask(im, m, x0, y0, sp["title_col"], prog(u, 0.0, 0.5), int(12 * k * SS), head_col=head(sp))
+    km, kx, ky = text_at(sp["kicker"], title_font(sp, 92 * k), 540, cy - 160 * k)
+    print_mask(im, km, kx, ky, sp["kicker_col"], prog(u, 0.5, 0.68), int(9 * k * SS), head_col=head(sp))
+    c = ease_back(prog(u, 0.72, 0.92))
+    chip(im, 540, cy + 190 * k, sp["chip"], sp["acc"], sp["bg"], alpha=clamp(c), scale=max(c, 0.01) * k)
+
+
+def frame(series, kind, t, sp=None, draw=None):
+    """One intro frame. sp/draw override the series' look and its intro function, so the
+    assembler can stamp an episode's own text (or the title-only intro) on any video."""
+    sp = sp or dict(SERIES[series], **INTRO_TEXT.get(series, {}))
+    draw = draw or INTROS[series]
     dur = LENGTH[kind]
     if kind == "full":
         im = background(sp)
         if sp.get("banner"):
             banner(im, sp, t)
-        INTROS[series](im, sp, clamp(t / (dur * 0.9)), 900, 1.0)
+        draw(im, sp, clamp(t / (dur * 0.9)), 900, 1.0)
         return im
     # sting: a panel in the series' own background, upper third, over transparent
     im = background(sp, alpha=True)
@@ -288,12 +303,12 @@ def frame(series, kind, t):
         d = ImageDraw.Draw(im)
         hw, hh = 470 * grow, 330 * grow
         d.rounded_rectangle(((540 - hw) * SS, (cy - hh) * SS, (540 + hw) * SS, (cy + hh) * SS), 36 * SS,
-                            fill=sp["bg"] + (240,))
+                            fill=sp["bg"] + (255,))
         if sp.get("grid"):
             pass
     layer = Image.new("RGBA", im.size, (0, 0, 0, 0))
     canvas = Image.new("RGB", im.size, sp["bg"])
-    INTROS[series](canvas, sp, clamp(t / (dur * 0.85)), cy, k)
+    draw(canvas, sp, clamp(t / (dur * 0.85)), cy, k)
     # only what the intro drew (anything not the plain background) goes onto the panel
     diff = ImageChops.difference(canvas, Image.new("RGB", im.size, sp["bg"])).convert("L").point(
         lambda v: 255 if v > 3 else 0)

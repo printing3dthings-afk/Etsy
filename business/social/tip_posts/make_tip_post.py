@@ -30,6 +30,21 @@ F2 = ROOT / "fonts"
 BG, PANEL, LINE = (12, 13, 16), (22, 24, 29), (52, 55, 62)
 GOLD, GOLD2, WHITE, SOFT = (222, 172, 58), (255, 205, 92), (246, 244, 238), (170, 174, 184)
 LOGO = ROOT / "openscad_models" / "brand" / "icons" / "obc_logo_master_1600.png"
+LAYER, SLOT, GLOW, GRID = (60, 63, 70), (20, 21, 25), (52, 40, 14), None
+
+# A spec's "theme" puts a tip post into one of the locked series looks (Scott's series identity
+# rule, 2026-10-25). "blueprint" is Maker's Blueprint: blueprint blue, white grid, gold. Its blue
+# and gold are close matches to the description until Benson posts his template values (OPEN 31).
+THEMES = {
+    "blueprint": dict(BG=(26, 74, 140), PANEL=(34, 86, 154), LINE=(96, 136, 192), GOLD=(214, 170, 64),
+                      GOLD2=(236, 196, 96), WHITE=(245, 247, 250), SOFT=(200, 214, 234),
+                      LAYER=(70, 112, 172), SLOT=(20, 58, 112), GLOW=(44, 92, 160), GRID=(58, 102, 166)),
+}
+
+
+def apply_theme(name):
+    if name:
+        globals().update(THEMES[name])
 
 
 def font(name, size):
@@ -83,18 +98,18 @@ def diagram(kind, w, h):
     W, H = w * 2, h * 2
     lw = 5
 
-    def layers(x0, x1, y0, n, step, fill=(60, 63, 70, 255)):
+    def layers(x0, x1, y0, n, step, fill=None):
         for i in range(n):
             y = y0 - i * step
-            d.rectangle([x0, y - step + 3, x1, y], fill=fill)
+            d.rectangle([x0, y - step + 3, x1, y], fill=fill or LAYER + (255,))
 
     if kind == "groove_up":       # a wall face with layer lines and one crisp upright groove
         x0, x1, y1 = W * 0.18, W * 0.82, H * 0.88
         for i in range(10):
             y = y1 - i * H * 0.075
-            d.rectangle([x0, y - H * 0.07, x1, y], fill=(60, 63, 70, 255))
+            d.rectangle([x0, y - H * 0.07, x1, y], fill=LAYER + (255,))
         gx = W * 0.5
-        d.rectangle([gx - 14, H * 0.13, gx + 14, y1], fill=(20, 21, 25, 255))
+        d.rectangle([gx - 14, H * 0.13, gx + 14, y1], fill=SLOT + (255,))
         d.line([gx - 14, H * 0.13, gx - 14, y1], fill=GOLD2, width=lw)
         d.line([gx + 14, H * 0.13, gx + 14, y1], fill=GOLD2, width=lw)
         for y in (H * 0.07, H * 0.94):
@@ -166,9 +181,14 @@ def card(spec, size, show=None, t_in=None):
     tall = H / W > 1.5
     im = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(im)
+    if GRID:
+        for gx in range(0, W + 1, 45):
+            d.line([gx, 0, gx, H], fill=GRID, width=1 if gx % 180 else 2)
+        for gy in range(0, H + 1, 45):
+            d.line([0, gy, W, gy], fill=GRID, width=1 if gy % 180 else 2)
     # a faint gold glow behind the headline, the one bit of atmosphere
-    glow = Image.new("RGB", (W, H), BG)
-    ImageDraw.Draw(glow).ellipse([W * 0.1, -H * 0.12, W * 0.9, H * 0.28], fill=(52, 40, 14))
+    glow = im.copy()
+    ImageDraw.Draw(glow).ellipse([W * 0.1, -H * 0.12, W * 0.9, H * 0.28], fill=GLOW)
     im = Image.blend(im, glow.filter(ImageFilter.GaussianBlur(120)), 0.9)
     d = ImageDraw.Draw(im)
     # the reel keeps everything between y 225 and 1440: TikTok/Reels put their top
@@ -237,6 +257,7 @@ def card(spec, size, show=None, t_in=None):
 def main():
     spec_path = Path(sys.argv[1]).resolve()
     spec = json.loads(spec_path.read_text())
+    apply_theme(spec.get("theme"))
     name = spec_path.stem
     card(spec, (1080, 1350)).save(HERE / f"{name}_post.png")
     # the reel: headline alone, then each tip slides in and stays long enough to
