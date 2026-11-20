@@ -200,3 +200,7 @@ Found while making the voicing test pass its checks:
 3. Full gates, renders, a guide.
 4. Scott's tuning print. Measured cents-off per note come back, and the holes move by
    tenths of a millimetre. **v1 is a tuning draft, and its FACTS.md will say so.**
+
+## Using the recordings (Scott, 2026-11-20)
+Scott said yes to using the audio from his ocarina sound-test recordings in Explained Lesson 009
+("Hole size sets the note").
