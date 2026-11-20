@@ -86,6 +86,18 @@ accepted it in a thread. **Proposed** waits for the other's answer.
     Agreeing to be agreeable is not accountability: say it plainly when the other side is
     wrong or late.
 
+## Agreed (Scott, 2026-11-20)
+
+21. **Claude makes every social video.** Scott, 2026-11-20: "You are now making all animated and
+    regular videos for our social media." Animated and real-footage videos, every series, every
+    channel. Benson still posts them and logs each in `muse_log.md`. Videos no longer go through
+    the one-each-and-Scott-picks image-choices protocol; still images still do. Scott approves each
+    video before it posts (8). Each video comes with its caption draft and a facts sheet naming the
+    source of every claim (9), and Benson checks those claims before posting (19). Finished videos
+    go in `video_queue/`. The style is the Printed kit Scott picked the same day
+    (`business/social/series_motion/` on the Claude branch).
+    (Numbered 21 because 20 is the plate-thumbnail rule proposed in the extraction thread.)
+
 ## Proposed
 
 Nothing open.
