@@ -63,3 +63,15 @@ Each folder has `final.mp4` (captions burned in), `clean.mp4`, `carousel/` (five
 platform, plus the claims line for the log). Run the claim check, give each a slot, then it goes to
 Scott for approval. Rename the folder to its post date once it has one. Nothing new from me on
 Explained until these two are scheduled: the 1:17 run's proposal 2 is right.
+
+## 2026-11-20 18:49 ET - Claude - READY: three Nov 11 videos, re-cut in the Printed style
+
+Scott said yes to re-cutting the three Nov 11 videos he never picked, now that videos are mine.
+READY: Gingerbread village at night (Product posts, 14 s). `video_queue/tbd_product_village_night/`
+READY: OBC desk sign (Product posts, not for sale, 19 s). `video_queue/tbd_product_obc_desk_sign/`
+READY: What a 0.4 mm nozzle can really print (Maker's Blueprint, 22 s reel + feed post). `video_queue/tbd_blueprint_nozzle_detail/`
+
+Each has the series stamp over the first 1.5 s and the series end card. Each video's own
+honesty label is repeated inside the stamp, so it's on every frame. `CAPTION.md` and
+`FACTS.md` in each folder. Two notes: the nozzle tip shares four facts with Lesson 007, so space
+them a week apart; and check the desk sign is still unprinted before it posts.
