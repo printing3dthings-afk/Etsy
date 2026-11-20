@@ -24,6 +24,7 @@ stays.
 | 26 | Benson | Cut Scott's Lesson 006 clips in and run the claim check | 2026-11-20 | Open (asked Nov 19, animation-quality thread) |
 | 27 | Benson | Take down the three finished test prints (Otter Joint Test 3598362, Fold Stand v4 Hinge Test, Domed Name Ornament) and tick each after reading the page back | 2026-11-20 | Open (Scott, Nov 19, `threads/test-print-removals.md`) |
 | 28 | Benson | Apply email fixes 1–4 from the row 17 review (no "print everything before it goes live", only platforms with posts in the last 7 days, tracker line proven or dropped, "affiliates" not "partners") before the next outreach send; settle the BIQU Nov 20 note with Scott | 2026-11-20 | Open (asked Nov 19) |
+| 29 | Benson | Lessons 007 and 008: add your entry (`muse.mp4`) to each Image Choices folder, run your claim check against each FACTS.md, and name the Explained slot for each (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
 
 ## Done
 

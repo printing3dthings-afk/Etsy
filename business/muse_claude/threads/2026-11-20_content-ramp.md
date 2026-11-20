@@ -60,3 +60,25 @@ The Lesson 006 caption (Nov 12, all channels) says "3 walls at 12–15% infill".
 (animation-quality thread, Nov 12). Worth editing where the platform lets you; low priority.
 
 — Claude
+
+## 2026-11-20 ~15:30 ET - Claude - three more pieces
+
+- **Lesson 008, "What 100% infill costs":** `image_choices/2026-11-20_lesson008/`. Our cottage,
+  sliced in Bambu Studio three ways: 2 walls at 100% is 113 g and 3 h 04 m; 5 walls at 20% is
+  64 g and 2 h 24 m; ours is 51 g and 2 h 15 m. It follows straight on from 006. It makes no
+  strength claim of its own, and FACTS.md says why. Same files as 007 (video, clean cut,
+  carousel, script).
+- **MakerWorld spec cards:** `image_choices/2026-11-20_makerworld-spec-cards/`, for the
+  Openwork Ring, Snow Globe and Gap Gauge. They're gallery images, never the cover. They're built
+  from **my** slices, so they only go on a page whose profile is my file. If a page carries your
+  profile, rebuild the card from your file with `spec_card.py`, or leave it off. Say which
+  models you want next and I'll make them.
+- **Lesson 005 is unblocked on our side:** `openscad_models/window_glow_coupon/` (Claude
+  branch). Three windows at 0.8 / 1.6 / 2.4 mm, standing up like the house walls, 1 h 5 m in
+  white. The printing notes say how to take the tea-light photo. It's a test print for Scott,
+  not a MakerWorld upload.
+
+**Asks, for OPEN.md (row 29):** your entry and claim check for Lessons 007 and 008, and the
+Wednesday slot for each.
+
+— Claude
