@@ -25,8 +25,7 @@ stays.
 | 27 | Benson | Take down the three finished test prints (Otter Joint Test 3598362, Fold Stand v4 Hinge Test, Domed Name Ornament) and tick each after reading the page back | 2026-11-20 | Open (Scott, Nov 19, `threads/test-print-removals.md`) |
 | 28 | Benson | Apply email fixes 1–4 from the row 17 review (no "print everything before it goes live", only platforms with posts in the last 7 days, tracker line proven or dropped, "affiliates" not "partners") before the next outreach send; settle the BIQU Nov 20 note with Scott | 2026-11-20 | Open (asked Nov 19) |
 | 29 | Benson | Lessons 007 and 008: add your entry (`muse.mp4`) to each Image Choices folder, run your claim check against each FACTS.md, and name the Explained slot for each (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
-| 30 | Benson | Catch up `muse_log.md` (no entry since Nov 17): every post since, with links, or a plain "nothing posted" and why | 2026-11-20 | Open (asked Nov 20, content-ramp thread) |
-| 30 | Benson | Printed motion kit: post the real hex values for Blueprint, Friday Makers and Product posts; the looks (colours, fonts, title, CTA) of Print Cam, Hot Plate, the Compilation and the partner series; and correct each series' CTA wording (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
+| 31 | Benson | Printed motion kit: post the real hex values for Blueprint, Friday Makers and Product posts; the looks (colours, fonts, title, CTA) of Print Cam, Hot Plate, the Compilation and the partner series; and correct each series' CTA wording (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
 
 ## Done
 
@@ -57,8 +56,15 @@ stays.
 | D22 | Benson | Add your Standard and Optimized `project_settings.config` (and any figure support settings) to `business/muse_claude/profiles/` so Claude slices with them (Scott, Nov 18) (row 20) | 2026-11-19 | `profiles/`: four Trophy Rack configs + README (`ed79b5c`) |
 | D23 | Claude | Review each of those emails for wording and claims; suggested corrections (row 17) | 2026-11-19 | Review in `threads/2026-11-17_sponsorship-emails.md`, 13:17 run; fixes become row 28 |
 | D24 | Benson | Check whether the Fidget Toy Challenge entry needs a working print profile and whether the live Tin Clicker has one (row 24) | 2026-11-19 | Tin Clicker 3560658 has 6 working profiles; entry not blocked (`412afba`) |
+| D25 | Benson | Catch up `muse_log.md` (no entry since Nov 17): every post since, with links, or a plain "nothing posted" and why (row 30) | 2026-11-20 | Nov 17–19 entries appended (`e1afcee`) |
 
 ## Misses on record (so they aren't repeated)
+- Claude, 2026-11-19: wrote "Fidget closes Nov 30, 6:59 pm ET" in the extraction thread and the
+  Nov 19 meeting. CONTESTS.md says "Nov 30, 2026 UTC", which can mean 7 pm ET on **Nov 29**. I added a
+  day. Now: safe deadline Nov 29, 6:00 pm ET; read CONTESTS.md, not my own summary.
+- Claude, 2026-11-20: at the 9:17 run I told Scott posting might have stopped, from a stale log
+  alone. Benson had posted every day. Now: say "log is behind", not "posting stopped", until
+  the live accounts are checked.
 
 - Claude, 2026-11-16 to 11-18: sliced at Bambu's stock 2 walls, not Scott's 3, and quoted the
   in-house slicer's times. That made the Dumpling's "1 h 22 m" correction wrong. Now 3 walls
