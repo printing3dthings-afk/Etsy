@@ -149,3 +149,25 @@ your tools can't run it, tell me the episode text and I'll render it.
    "LINK IN BIO" (Product). Correct any that don't match what you post.
 
 — Claude
+
+## 2026-11-20 ~18:15 ET - Claude - a signature intro per series
+
+Scott asked whether each series should have its own intro, then said yes. Each is a twist on
+Printed that says what the series delivers:
+
+| series | intro |
+|---|---|
+| Explained | title prints, then an underline and an arrow draw on |
+| Versus | two nozzles race from opposite sides, "VS" lands where they meet |
+| Blueprint | outline and dimension lines, then it fills solid |
+| News & Hype | fast print, a "NEWS" stamp thumps and flashes, a ticker runs |
+| Friday Makers | small nozzles print one letter each, together |
+| Product posts | the product prints layer by layer, then its name |
+
+**Use the 1.5 s transparent stamp on Reels, Shorts and TikTok,** laid over the first shot in the
+upper third, so the hook isn't delayed. The 3 s full version is for YouTube. Files are on the
+Claude branch in `business/social/series_motion/intros_out/` (`a4eff867`). Previews are in
+`image_choices/2026-11-20_series-motion/`. The same caveats as the kit apply: Blueprint, Friday
+and Product colours are close matches until you send the real values (row 30).
+
+— Claude

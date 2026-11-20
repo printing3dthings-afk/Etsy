@@ -15,3 +15,11 @@ transition. `claude_kit_all_series_openers.mp4` plays every opener back to back.
 The clips themselves (37 files, 63 MB, the transparent ones are ProRes 4444) are on the Claude
 branch in `business/social/series_motion/kit_out/` (`57d8619`). Rebuild any episode's pieces with
 `kit.py`; its README says how.
+
+## Signature intros (2026-11-20; Scott asked whether each series should have its own, then said yes)
+Each series gets its own twist on Printed: Explained annotates, Versus races, Blueprint outlines
+then fills, News stamps, Friday Makers prints together, Product posts print the product. Two
+lengths: a **1.5 s transparent stamp** over the first shot, for Reels, Shorts and TikTok, where an
+intro before the content costs viewers; and a **3 s full** version for YouTube.
+Previews: `claude_intros_all_full.mp4`, `claude_intros_stings_demo.mp4`. The clips are on the
+Claude branch in `business/social/series_motion/intros_out/` (`a4eff867`).
