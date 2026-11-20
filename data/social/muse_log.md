@@ -1376,3 +1376,304 @@ One Bambu Lab P1S built this whole village: four buildings in this cut, a whole 
 Send this to the maker who thinks one printer can't build a whole Christmas village.
 
 #bambulab #3dprinting #christmasvillage #3dprinted #maker"; Links: https://facebook.com/reel/1627443785290437/ (post 122114785545518447); Claims made: every village building was printed on one Bambu Lab P1S; four buildings appear in this cut; matte white PLA; a battery tea light in each building; the design files are OnBrandCraftz's own; Replies/DMs sent: none; Results: posted and verified live on the Onbrandcraftz Page at posting (Public; read-back 2026-11-17 ~13:41 EST, caption verbatim, single copy); Problems: the Instagram leg of the same approved post is still pending — first post-feed attempt was interrupted by a service restart and feed-verified absent, then the Instagram connector approval expired (approval_expired, action not performed); TikTok and YouTube legs not yet posted (browser route).
+
+2026-11-17 (EST, exact time not recorded in run log) — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Horse & Sleigh spotlight / Tuesday product teaser / Versus Day 19 (Bambu PLA Matte vs Inland Matte PLA White deal); Media: 3 story graphics (pipeline-media-2026-11-17/), media 18145478155613274 (Horse & Sleigh spotlight teaser, native link sticker "FILES ON MAKERWORLD" -> MakerWorld) / 18172098559477353 (Tuesday product teaser) / 18442518079194070 (Versus Day 19 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker to https://makerworld.com/en/@P3DT on the spotlight story (MakerWorld CTA under the Etsy-down swap; not an affiliate link); Claims made: none beyond the spotlight/Versus teasers themselves; Replies/DMs sent: none; Results: own-stories read-back verified exactly 3 live on @onbrandcraftz2026; Problems: none.
+2026-11-17 (EST, exact time not recorded in run log) — Facebook — Horse & Sleigh spotlight photo post (Page post); Account: Onbrandcraftz Page (author verified as the Page, page_id 1358962047302375, not Scott's personal profile); Product: Horse & Sleigh; Media: victorian_horse_sleigh_colour_three_quarter.png (colour render); Caption: "3D printed Christmas village — today's spotlight is the Horse & Sleigh 🎄
+
+A grey horse in a salmon harness, green collar, pulling a salmon sleigh with a green seat — loaded with green-and-white presents, all on a white snowy base.
+
+It's the delivery run your village street has been missing: park it outside any of our houses and the scene tells its own story.
+
+🎄 Today's spotlight: the Horse & Sleigh.
+⚔️ Versus Day 19 today: a matte PLA deal matchup — verdict and who should pick which.
+
+Our village files are free on MakerWorld: https://makerworld.com/en/@P3DT
+
+Send this to the village collector who needs a sleigh on their street.
+
+#3DPrinting #ChristmasVillage"; Links: https://www.facebook.com/61595553412715/posts/122114733633518447 (canonical: https://facebook.com/61595553412715/posts/pfbid0EREJHW4ZnniDPofmKNeF4xE8W6CDjBDPqPnQSCZJD692b5zn42Txvzio1YxAEc7Ll/); in-post link https://makerworld.com/en/@P3DT (MakerWorld CTA under the Etsy-down swap; not an affiliate link); Claims made: the sleigh scene description as captioned; our village files are on MakerWorld — no per-file "free" claim for the Horse & Sleigh itself; Replies/DMs sent: none; Results: published, Page-authored, caption verbatim on read-back; Problems: attempt 1 was killed by a service restart; feed-verified absent before the retry, single copy landed.
+2026-11-17 (EST, exact time not recorded in run log) — X — Horse & Sleigh spotlight post; Account: Onbrandcraftz (X); Product: Horse & Sleigh; Media: victorian_horse_sleigh_colour_three_quarter.png (colour render); Caption: "3D printed Christmas village — every village needs a delivery run 🎄 A grey horse in a salmon harness pulls a sleigh loaded with green-and-white presents. Our village files are on MakerWorld — link in bio https://makerworld.com/en/@P3DT #3dprinting #christmasvillage
+(Media: victorian_horse_sleigh_colour_three_quarter.png colour render. MakerWorld CTA under the Etsy-down swap — no Etsy link, no Pinterest pin. No per-file "free" claim for the Horse & Sleigh itself — its individual free status on MakerWorld is not verified in local records.)"; Links: https://x.com/Onbrandcraftz/status/2122722941418799167; in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: our village files are on MakerWorld — no per-file "free" claim for the Horse & Sleigh itself (its individual free status is not verified in local records); Replies/DMs sent: none; Results: posted (265 chars); Problems: none — MakerWorld CTA under the Etsy-down swap, no Etsy link, Pinterest pin skipped under the same swap rule.
+2026-11-17 14:30 EST — YouTube — Toy Shop white Short (neutral banner); Account: OnBrandCraftz (YouTube); Product: Toy Shop (timelapse Short, queue #27); Media: youtube_short_draft_2026-11-10_toy_shop_white_neutral.mp4 (neutral "OnBrandCraftz"-only banner, the pattern Scott approved Nov 15); Caption: Title: "Watch the Toy Shop print layer by layer | 3D Print Timelapse" — description follows the locked Shorts template (incl. the "From Idea to Shelf" long-form link) with the MakerWorld swap under the Etsy-down CTA rule; the full as-posted description wording was not separately recorded word-for-word. The live upload's description music line reads "Jingle Bells" (Kevin MacLeod credit in the template); Links: https://youtube.com/shorts/sNiWiJK-Qa8; in-description link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: none beyond the timelapse itself; Replies/DMs sent: none; Results: Scheduled in YouTube Studio and published Tue Nov 17 2:30 PM EST (Studio-verified in the Nov 17 pipeline run); Problems: none — a Studio duplicate check stopped a re-upload; the neutral file had already been uploaded in the Nov 12 re-export batch.
+2026-11-17 20:30 EST — YouTube — Toy Shop colour Short (neutral banner); Account: OnBrandCraftz (YouTube); Product: Toy Shop (timelapse Short, queue #28); Media: youtube_short_draft_2026-11-11_toy_shop_color_neutral.mp4 (neutral banner); Caption: Title: "Watch the Toy Shop print layer by layer | 3D Print Timelapse" — description follows the locked Shorts template with the MakerWorld swap; the full as-posted description wording was not separately recorded word-for-word. The live upload's description music line reads "Silent Night" (Kevin MacLeod credit in the template); Links: https://youtube.com/shorts/qNOMSDTeUGw; in-description link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: none beyond the timelapse itself; Replies/DMs sent: none; Results: Scheduled in YouTube Studio and published Tue Nov 17 8:30 PM EST (Studio-verified); Problems: none — duplicate check stopped a re-upload, same as the white version.
+2026-11-17 (EST, exact time not recorded in run log) — Instagram — Versus Day 19 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 19 — Bambu PLA Matte $15.99 vs Inland Matte PLA White $10.99 deal (green line, deal matchup); Media: vs-matte-deal-video.mp4 (Ronan voiceover; bed "We Wish You a Merry Christmas" by Kevin MacLeod, credited in caption); Caption: "matte PLA filament — Bambu PLA Matte $15.99 vs Inland Matte PLA White $10.99 for 1 kg. Same village colour, $5.00 apart. Stop overpaying? 💚
+
+Both are 1 kg matte rolls from the brands' own stores. Prices checked Nov 17, 2026. This is a pure price verdict — no print-quality claim for either roll. Matte white is our village colour: we print our Christmas village houses in matte white PLA, so the per-kilo saving adds up fast.
+
+Head-to-head: Inland takes price per kilo, the $5.00 saving and village volume. Bambu takes RFID/AMS convenience and the shade range. 3–2 Inland — on price for the colour we print most.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker printing a whole Christmas village in matte white.
+
+Day 18 — Ironing ON vs OFF is on our profile · Day 20 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store (PLA Matte), Micro Center (Inland Matte PLA White, product 642922). Prices checked Nov 17, 2026.
+
+Music: We Wish You a Merry Christmas by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/Df2N6dlDuN9/ (media 18133501448511769); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: prices as captioned, checked Nov 17, 2026 against Bambu Lab US Store and Micro Center (product 642922) and re-verified the morning of posting; pure price verdict, no print-quality claim for either roll; verdict 3–2 Inland on price, with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: verified live, caption verbatim; Problems: attempt 1 hit an HTTP 500 at finalize; feed-verified absent, then a clean re-encode posted — single copy.
+2026-11-17 11:02 EST — Facebook — Versus Day 19 reel (Page reel); Account: Onbrandcraftz Page (author verified as the Page); Product: Versus Day 19 — Bambu vs Inland matte PLA deal; Media: vs-matte-deal-video.mp4 (same video as the Instagram leg); Caption: "matte PLA filament — Bambu PLA Matte $15.99 vs Inland Matte PLA White $10.99 (1 kg). $5.00 apart. 💚
+
+Pure price verdict, no quality claims: Inland takes price, the $5.00 saving + village volume; Bambu takes RFID/AMS convenience + shade range. 3–2 Inland. Matte white is our village colour — we print our Christmas village houses in it. Prices checked Nov 17, 2026.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker printing a whole Christmas village in matte white.
+
+Day 18 — Ironing ON vs OFF is on our profile · Day 20 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store, Micro Center (product 642922). Prices checked Nov 17, 2026.
+
+Music: We Wish You a Merry Christmas by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/1133728069638676/ (post 122114733735518447); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same verified prices and 3–2 Inland price verdict as the Instagram leg; Replies/DMs sent: none; Results: read-back Public, caption verbatim, owner Onbrandcraftz Page — single copy; Problems: attempt 1 was killed by a service restart (feed-verified absent); the retry client timed out but the locked write landed server-side at 11:02 EST — no further retry was made.
+2026-11-17 (EST, exact time not recorded in run log) — Instagram — Versus Day 19 carousel (5 slides); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 19 — Bambu vs Inland matte PLA deal; Media: 5 slides (vs-daily/2026-11-17-matte-deal/slides/); Caption: "matte PLA filament — Bambu PLA Matte $15.99 vs Inland Matte PLA White $10.99 for 1 kg. Same village colour, $5.00 apart. Stop overpaying? 💚
+
+Both are 1 kg matte rolls from the brands' own stores. Prices checked Nov 17, 2026. This is a pure price verdict — no print-quality claim for either roll. Matte white is our village colour: we print our Christmas village houses in matte white PLA, so the per-kilo saving adds up fast.
+
+Head-to-head: Inland takes price per kilo, the $5.00 saving and village volume. Bambu takes RFID/AMS convenience and the shade range. 3–2 Inland — on price for the colour we print most.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker printing a whole Christmas village in matte white.
+
+Day 18 — Ironing ON vs OFF is on our profile · Day 20 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store (PLA Matte), Micro Center (Inland Matte PLA White, product 642922). Prices checked Nov 17, 2026.
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/p/Df2UTgeiQwp/ (media 18028537280923651); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: same verified prices and verdict as the Day 19 reel entry; Replies/DMs sent: none; Results: verified live carousel, caption verbatim; Problems: MUSIC OWED — carousel posted without music per the Nov 13 route (no credit line in the caption); a Meta Sound Collection track (suggested: a calm festive instrumental) is to be added in-app via Edit → Replace Audio and credited only once added.
+2026-11-17 (EST, exact time not recorded in run log) — TikTok — Versus Day 19 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 19 — Bambu vs Inland matte PLA deal; Media: vs-matte-deal-tiktok.mp4 (TikTok cut; bed "We Wish You a Merry Christmas" by Kevin MacLeod, credited in caption); Caption: "matte PLA filament — Bambu PLA Matte $15.99 vs Inland Matte PLA White $10.99 for 1 kg. Same village colour, $5.00 apart. Stop overpaying? 💚
+
+Both are 1 kg matte rolls from the brands' own stores. Prices checked Nov 17, 2026. This is a pure price verdict — no print-quality claim for either roll. Matte white is our village colour: we print our Christmas village houses in matte white PLA, so the per-kilo saving adds up fast.
+
+Head-to-head: Inland takes price per kilo, the $5.00 saving and village volume. Bambu takes RFID/AMS convenience and the shade range. 3–2 Inland — on price for the colour we print most.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker printing a whole Christmas village in matte white.
+
+Day 18 — Ironing ON vs OFF is on our profile · Day 20 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store (PLA Matte), Micro Center (Inland Matte PLA White, product 642922). Prices checked Nov 17, 2026.
+
+Music: We Wish You a Merry Christmas by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7709212871422463245; in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: same verified prices and verdict as the Day 19 reel entry; Replies/DMs sent: none; Results: posted and verified live (crosspost as-is per the TikTok crosspost-only rule); Problems: none recorded.
+2026-11-18 09:57 EST — Facebook — Versus Day 19 carousel (5 slides, Page) — LATE LANDING of the Nov 17 attempts; Account: Onbrandcraftz Page; Product: Versus Day 19 — Bambu vs Inland matte PLA deal; Media: 5 slides (same set as the Instagram carousel); Caption: "matte PLA filament — Bambu PLA Matte $15.99 vs Inland Matte PLA White $10.99 (1 kg). $5.00 apart. 💚
+
+Pure price verdict, no quality claims: Inland takes price, the $5.00 saving + village volume; Bambu takes RFID/AMS convenience + shade range. 3–2 Inland. Matte white is our village colour — we print our Christmas village houses in it. Prices checked Nov 17, 2026.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker printing a whole Christmas village in matte white.
+
+Day 18 — Ironing ON vs OFF is on our profile · Day 20 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store, Micro Center (product 642922). Prices checked Nov 17, 2026.
+
+#MattePLA #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.facebook.com/61595553412715/posts/122115112875518447 (canonical: https://facebook.com/61595553412715/posts/pfbid09t2xbYRv6k29xsDqgNHmceGdEDJzxTBGh8TefBZGJXzgLfwWJe84XS31kau8QrAvl/); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same verified prices and verdict as the Day 19 reel entry; Replies/DMs sent: none; Results: live and Public per Facebook's own record ("Photo published at Wednesday, November 18, 2026 at 9:57 AM"); Problems: the Nov 17 publish attempts disappeared mid-publish and retries were blocked by the connector write-lock (the original write was still running server-side); feed checks on Nov 17 showed no carousel, and the locked write landed the next morning at 09:57 EST — the Day 13/14 late-landing pattern. Facebook carousels have no music route — posted music-less with no credit line (per the Nov 13 Carousel Music Standard).
+2026-11-18 (EST, exact time not recorded in run log) — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Village Well spotlight / Versus Day 20 (Scarf seam vs Random seam); Media: 3 story graphics (pipeline-media-2026-11-18/), media 18094926056215820 / 17913450879305120 / 18160956070444937; the spotlight story carries the native link sticker to MakerWorld under the Etsy-down swap (per the Link Sticker Standard); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker to https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: none beyond the spotlight/Versus teasers themselves; Replies/DMs sent: none; Results: 3 stories live on @onbrandcraftz2026 per the platform harvest (published.json sync, Nov 19 23:31 EST); Problems: the individual story contents were not separately itemised in the Nov 18 posted log — recorded here at the level the records support.
+2026-11-18 10:00 EST — Facebook — Village Well spotlight photo post (Page post); Account: Onbrandcraftz Page (author verified as the Page); Product: Village Well; Media: victorian_village_well_colour_three_quarter.png (colour render); Caption: "3D printed Christmas village — today's spotlight is the Village Well 🎄
+
+A red-brown banded round well on a white round base plate, with white posts, a dark navy roof, a green wreath with a red bow on the gable, and a small black bucket with a white rim sitting on the rim.
+
+Every village needs a centre — drop the well between the houses and the street has a meeting point.
+
+🎄 Today's spotlight: the Village Well.
+⚔️ Versus Day 20 today: Scarf seam vs Random seam — verdict and who should pick which.
+
+Our village files are on MakerWorld: https://makerworld.com/en/@P3DT — free on MakerWorld — link in bio
+
+Send this to the village collector whose street is missing its centrepiece.
+
+#3DPrinting #ChristmasVillage"; Links: https://www.facebook.com/61595553412715/posts/122115114681518447 (canonical: https://facebook.com/61595553412715/posts/pfbid025WSvFj34zdFV9JYhUBWhpCEdmJaG5wRjM8Mj3ijFE39jTd6aKkcNbH7VeA2kXjPBl/); in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: the well scene description as captioned; our village files are on MakerWorld — no per-file "free" claim for the Village Well itself; Replies/DMs sent: none; Results: live and Public per Facebook's own record ("Photo published at Wednesday, November 18, 2026 at 10:00 AM"); Problems: none.
+2026-11-18 (EST, exact time not recorded in run log) — X — Village Well spotlight post; Account: Onbrandcraftz (X); Product: Village Well; Media: victorian_village_well_colour_three_quarter.png (colour render); Caption: "3D printed Christmas village — today's spotlight is the Village Well 🎄 Red-brown banded round base, white posts, dark navy roof, green wreath with a red bow. Our village files are on MakerWorld https://makerworld.com/en/@P3DT #3dprinting #christmasvillage
+(Media: victorian_village_well_colour_three_quarter.png colour render — ~/workspace/your_files/patreon-media-kits/village-well/images/victorian_village_well_colour_three_quarter.png. MakerWorld CTA under the Etsy-down swap — no Etsy link, no Pinterest pin. No per-file "free" claim for the Village Well itself — its individual free status on MakerWorld is not verified in local records.)"; Links: https://x.com/Onbrandcraftz/status/2123069965154787341; in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: our village files are on MakerWorld — no per-file "free" claim for the Village Well itself (its individual free status is not verified in local records); Replies/DMs sent: none; Results: posted; Problems: none — MakerWorld CTA under the Etsy-down swap, no Etsy link, Pinterest pin skipped under the same swap rule.
+2026-11-18 (EST, exact time not recorded in run log) — Instagram — Versus Day 20 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 20 — Scarf Seam vs Random Seam (green line, question matchup); Media: vs-scarf-vs-random-video.mp4 (Ronan voiceover; bed "Up on a Housetop" by Kevin MacLeod, credited in caption); Caption: "3D print seam settings — Scarf seam vs Random seam for smooth display walls. Blend the seam, or scatter it? 💚
+
+Every wall loop starts and stops somewhere — stacked over hundreds of layers, that's the vertical Z-seam line. This isn't Day 10's Aligned vs Random: aligned just stacks the line in one place. Scarf changes the seam's shape — it ramps extrusion over a tapered overlap, so the line becomes a faint diagonal blend. Random moves the start point every layer: the line disappears, but each point leaves a small blob scattered across the surface. Scarf needs calibrated flow + pressure advance; random needs zero tuning.
+
+Head-to-head: Scarf takes smooth walls, curved pieces with no corner, and the seam itself. Random takes textured surfaces and zero tuning. 3–2 Scarf — for smooth display walls like our Sweet Shop, blending beats scattering.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose prints look like they have freckles.
+
+Day 19 — Bambu vs Inland matte deal is on our profile · Day 21 lands here tomorrow, same time
+
+Sources: OrcaSlicer seam settings guide · Bambu Studio seam settings (v1.9+) — checked Nov 15, 2026. Settings verdict — no OBC A/B print result claimed.
+
+Music: Up on a Housetop by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#SeamSettings #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/Df4ywBwD1sC/ (media 17921746272524974); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: seam-settings verdict as captioned — settings verdict from the OrcaSlicer seam settings guide and Bambu Studio seam settings (v1.9+), checked Nov 15, 2026; NO OBC A/B print result claimed (stated in the caption's Sources line); verdict 3–2 Scarf with the who-should-pick-which split; not a repeat of Day 10 Aligned vs Random — scarf reshapes the seam, aligned stacks it; Replies/DMs sent: none; Results: verified live public, caption verbatim, author @onbrandcraftz2026; Problems: attempt 1 hit an HTTP 500 at finalize (2207027); feed-verified absent, then a clean 48kHz-stereo re-encode posted — single copy.
+2026-11-18 10:21 EST — Facebook — Versus Day 20 reel (Page reel); Account: Onbrandcraftz Page (owner Onbrandcraftz Page 1358962047302375 / profile 61595553412715); Product: Versus Day 20 — Scarf Seam vs Random Seam; Media: vs-scarf-vs-random-video.mp4 (same video as the Instagram leg); Caption: "3D print seam settings — Scarf seam vs Random seam for smooth display walls. Blend it, or scatter it? 💚
+
+Not Day 10's Aligned vs Random — aligned stacks the Z-seam in one line; scarf reshapes it, ramping extrusion over a tapered overlap into a faint diagonal blend. Random moves the start point every layer: no line, but a blob on every layer. Scarf takes smooth walls, curved pieces + the seam; Random takes textured surfaces + zero tuning. 3–2 Scarf.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker whose prints look like they have freckles.
+
+Day 19 — matte deal is on our profile · Day 21 lands here tomorrow, same time
+
+Sources: OrcaSlicer seam guide · Bambu Studio (v1.9+). Settings verdict — no OBC A/B result claimed.
+
+Music: Up on a Housetop by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#SeamSettings #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/1658572375760459/ (post 122115126939518447); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same settings verdict as the Instagram leg (no OBC A/B result claimed); the Facebook caption is the trimmed variant (979 chars) for the connector's 1,024-char limit — wording shortened, claims unchanged; Replies/DMs sent: none; Results: Page post list + posts-get read-backs: Video published 10:21 AM EST, Public, single copy; Problems: attempt 2's wrapper timed out but the locked write landed server-side — no retry was made. No carousel (Wednesday, video only).
+2026-11-18 (EST, exact time not recorded in run log) — TikTok — Versus Day 20 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 20 — Scarf Seam vs Random Seam; Media: vs-scarf-vs-random-tiktok.mp4 (TikTok cut; bed "Up on a Housetop" by Kevin MacLeod, credited in caption); Caption: "3D print seam settings — Scarf seam vs Random seam for smooth display walls. Blend the seam, or scatter it? 💚
+
+Every wall loop starts and stops somewhere — stacked over hundreds of layers, that's the vertical Z-seam line. This isn't Day 10's Aligned vs Random: aligned just stacks the line in one place. Scarf changes the seam's shape — it ramps extrusion over a tapered overlap, so the line becomes a faint diagonal blend. Random moves the start point every layer: the line disappears, but each point leaves a small blob scattered across the surface. Scarf needs calibrated flow + pressure advance; random needs zero tuning.
+
+Head-to-head: Scarf takes smooth walls, curved pieces with no corner, and the seam itself. Random takes textured surfaces and zero tuning. 3–2 Scarf — for smooth display walls like our Sweet Shop, blending beats scattering.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose prints look like they have freckles.
+
+Day 19 — Bambu vs Inland matte deal is on our profile · Day 21 lands here tomorrow, same time
+
+Sources: OrcaSlicer seam settings guide · Bambu Studio seam settings (v1.9+) — checked Nov 15, 2026. Settings verdict — no OBC A/B print result claimed.
+
+Music: Up on a Housetop by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#SeamSettings #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7709534333664546062; in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: same settings verdict as the Day 20 reel entry (no OBC A/B result claimed); Replies/DMs sent: none; Results: posted and verified live (crosspost as-is per the TikTok crosspost-only rule); Problems: none recorded.
+2026-11-18 14:30 EST — YouTube — Turret House white Short (neutral banner); Account: OnBrandCraftz (YouTube); Product: Turret House (timelapse Short, queue #29); Media: youtube_short_draft_2026-11-12_turret_house_white_neutral.mp4 (neutral banner); Caption: Title: "Watch the Turret House print layer by layer | 3D Print Timelapse" — description follows the locked Shorts template with the MakerWorld swap; the full as-posted description wording was not separately recorded word-for-word; Links: https://youtube.com/shorts/H5_G60DngME; in-description link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: none beyond the timelapse itself; Replies/DMs sent: none; Results: Scheduled in YouTube Studio and published Wed Nov 18 2:30 PM EST (Studio-verified in the Nov 18 pipeline run, 09:50–09:57 EST); Problems: none — the neutral file had already been uploaded in the Nov 15 re-export batch.
+2026-11-18 20:30 EST — YouTube — Turret House colour Short (neutral banner); Account: OnBrandCraftz (YouTube); Product: Turret House (timelapse Short, queue #30); Media: youtube_short_draft_2026-11-13_turret_house_color_neutral.mp4 (neutral banner version built Nov 18 from the Nov 13 draft with the approved banner recipe; 720x1280, 5.33s); Caption: Title: "Watch the Turret House print layer by layer | 3D Print Timelapse" — description follows the locked Shorts template with the MakerWorld swap; the full as-posted description wording was not separately recorded word-for-word. Music: "Dance of the Sugar Plum Fairy" by Kevin MacLeod (credited in the template); Links: https://youtube.com/shorts/kVjVzU4oQkg; in-description link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: none beyond the timelapse itself; Replies/DMs sent: none; Results: uploaded via YouTube Studio Nov 18 (duplicate check clean), Scheduled, published Wed Nov 18 8:30 PM EST (Studio-verified), checks no issues; Problems: none. This was queue #30 — the last of the 30 queue sources.
+2026-11-18 20:30 EST — YouTube — Cookie Clock Tower white Short (neutral banner); Account: OnBrandCraftz (YouTube); Product: Cookie Clock Tower (timelapse Short, from the Nov 15 re-make batch); Media: neutral-banner re-export from the Nov 15 batch; Caption: Title: "Cookie Clock Tower Timelapse" (per the platform record) — description follows the locked Shorts template with the MakerWorld swap; the full as-posted description wording was not separately recorded word-for-word; Links: https://youtube.com/shorts/F8HBb2_zE2o; in-description link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: none beyond the timelapse itself; Replies/DMs sent: none; Results: Scheduled and published Wed Nov 18 8:30 PM EST (Studio-verified Nov 18), sharing the 8:30 PM slot with the Turret House colour Short; Problems: none.
+2026-11-18 (EST) — UPDATE to the 2026-11-16 ~12:11 EST You Pick the Print Pilot 001 Instagram entry above; Links: https://www.instagram.com/p/Dfz3PfnjC6S/ ; Change: caption edited Nov 18 at Scott's approval (tap approval ~16:55 EST) — the Dumpling Clicker line "A — Dumpling Clicker: a little bao with a face that clicks like a keyboard switch. 24 minutes on the printer." now reads "A — Dumpling Clicker: a little bao with a face that clicks like a keyboard switch. About 35 minutes in one colour." (the corrected figure is from the 34 m Bambu slice at 3 walls / 15%; the original "24 minutes" came from the older-settings slice). Rest of the caption unchanged; edited and verified live.
+2026-11-18 (EST) — UPDATE to the 2026-11-16 ~12:18 EST You Pick the Print Pilot 001 Facebook entry above; Links: https://www.facebook.com/61595553412715/posts/122114366781518447 ; Change: the same caption edit as the Instagram leg, made Nov 18 via the browser with the Page identity selected and verified — "24 minutes on the printer" corrected to "About 35 minutes in one colour" in the Dumpling Clicker line; rest of the caption unchanged; verified live after the edit, author still the Onbrandcraftz Page.
+2026-11-18 (EST) — UPDATE to the 2026-11-12 23:00 (EST) Compilation Pilot 001 (E-011) Instagram reel entry above; Links: https://www.instagram.com/reel/DfquLacibQf/ ; Change: caption edited Nov 18 and verified live — the closing line "Print files on MakerWorld — @P3DT, link in bio." now reads "Print files on MakerWorld — @P3DT, link in bio: Santa's Workshop, Gingerbread Cottage and Victorian Cottage. No supports, matte PLA." The original caption had implied all seven houses in the compilation were on @P3DT; only those three are. Rest of the caption unchanged. (The Facebook reel, post 122113178331518447, carries the same original caption — its edit was still pending the Page browser route at the time of this update.)
+2026-11-19 10:27 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Sweet Shop spotlight / Thursday maker tea-light teaser / Versus Day 21 (Bambu PLA Basic vs Inland PLA deal); Media: 3 story graphics (pipeline-media-2026-11-19/), media 18140362150646402 (Sweet Shop spotlight teaser, native link sticker "FILES ON MAKERWORLD" -> https://makerworld.com/en/@P3DT) / 18120486341586522 (Thursday maker tea-light teaser) / 18109113203358112 (Versus Day 21 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker to https://makerworld.com/en/@P3DT on the spotlight story (MakerWorld CTA under the Etsy-down swap; not an affiliate link); Claims made: none beyond the spotlight/Versus teasers themselves; Replies/DMs sent: none; Results: own-stories read-back verified exactly 3 live on @onbrandcraftz2026; Problems: none.
+2026-11-19 10:41 EST — X — Gingerbread Sweet Shop spotlight post; Account: Onbrandcraftz (X); Product: Gingerbread Sweet Shop; Media: gingerbread_sweet_shop_colour_three_quarter.png (colour three-quarter image); Caption: "3D printed Christmas village — today's spotlight is the Gingerbread Sweet Shop 🎄 Three-tier gingerbread tower, piped-icing drips, red berries + a cherry on top. Tea-light lantern, no supports. Files on MakerWorld https://makerworld.com/en/@P3DT #3dprinting
+(Media: gingerbread_sweet_shop_colour_three_quarter.png colour three-quarter image — ~/workspace/your_files/patreon-media-kits/sweet-shop/images/gingerbread_sweet_shop_colour_three_quarter.png. MakerWorld CTA under the Etsy-down swap — no Etsy link, no Pinterest pin. No per-file "free" claim for the Sweet Shop itself — its individual free status on MakerWorld is not verified. Post text above is 256 chars.)"; Links: https://x.com/Onbrandcraftz/status/2123441521768779942; in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: the shop description as captioned (three-tier gingerbread tower, tea-light lantern, no supports); files on MakerWorld — no per-file "free" claim for the Sweet Shop itself (its individual free status is not verified in local records); Replies/DMs sent: none; Results: posted via the browser leg 10:39–10:42 EST (256 chars; duplicate check clean; MakerWorld link clickable on viewer check); Problems: none — MakerWorld CTA under the Etsy-down swap, no Etsy link, Pinterest pin skipped under the same swap rule.
+2026-11-19 10:01 EST — Instagram — Versus Day 21 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 21 — Bambu PLA Basic $14.99 vs Inland PLA $11.99 deal (green line, deal matchup); Media: vs-bambu-basic-vs-inland-video.mp4 (Ronan voiceover; bed "Deck the Halls A" by Kevin MacLeod, credited in caption); Caption: "3D printer filament deals — Bambu PLA Basic $14.99 vs Inland PLA $11.99 for 1kg. Stop overpaying $3 a roll? 💚
+
+Prices checked Nov 19, 2026: Bambu PLA Basic is $14.99 MSRP for a 1kg refill on Bambu's US store — RFID auto-loads in the AMS, rated up to 258mm/s, but the refill needs a reusable spool. Inland PLA is $11.99 for 1kg at Micro Center — cardboard spool included, same ±0.03mm tolerance spec, pick it up in store today.
+
+Head-to-head: Inland takes price, the included spool, and pick-up today. Bambu takes RFID and rated speed. 3–2 Inland — for single rolls. Buying 10+? Bambu drops to $9.74/roll and flips it.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker who pays full price for every single roll.
+
+Day 20 — Scarf vs Random seam is on our profile · Day 22 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store — PLA Basic · Micro Center — Inland PLA 1kg (SKU 258079). Prices checked Nov 19, 2026.
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#FilamentDeals #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/Df7WpGdCf6t/ (media 18141115012730256); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: prices as captioned, checked Nov 19, 2026 against the Bambu Lab US Store (PLA Basic MSRP $14.99/refill) and Micro Center (Inland PLA, SKU 258079, $11.99) and re-verified the morning of posting; verdict 3–2 Inland for single rolls, with the bulk-10+ flip ($9.74) and the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: posted clean on the first attempt, verified via the create receipt, caption verbatim; Problems: none on this leg.
+2026-11-19 10:48 EST — TikTok — Versus Day 21 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 21 — Bambu PLA Basic vs Inland PLA deal; Media: vs-bambu-basic-vs-inland-tiktok.mp4 (TikTok cut, spoken keyword 0.3s; bed "Deck the Halls A" by Kevin MacLeod, credited in caption); Caption: "3D printer filament deals — Bambu PLA Basic $14.99 vs Inland PLA $11.99 for 1kg. Stop overpaying $3 a roll? 💚
+
+Prices checked Nov 19, 2026: Bambu PLA Basic is $14.99 MSRP for a 1kg refill on Bambu's US store — RFID auto-loads in the AMS, rated up to 258mm/s, but the refill needs a reusable spool. Inland PLA is $11.99 for 1kg at Micro Center — cardboard spool included, same ±0.03mm tolerance spec, pick it up in store today.
+
+Head-to-head: Inland takes price, the included spool, and pick-up today. Bambu takes RFID and rated speed. 3–2 Inland — for single rolls. Buying 10+? Bambu drops to $9.74/roll and flips it.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker who pays full price for every single roll.
+
+Day 20 — Scarf vs Random seam is on our profile · Day 22 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store — PLA Basic · Micro Center — Inland PLA 1kg (SKU 258079). Prices checked Nov 19, 2026.
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#FilamentDeals #3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7709910063221116173; in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: same verified prices and verdict as the Day 21 reel entry; Replies/DMs sent: none; Results: posted via the browser leg 10:44–10:55 EST and verified live (TikTok Studio count 92→93; copyright check "No issues found"; Everyone/public; voiceover audible on the playback check; caption verbatim); Problems: none.
+2026-11-19 10:59 EST — Facebook — Versus Day 21 reel (Page reel) — LATE LANDING of the morning attempts; Account: Onbrandcraftz Page; Product: Versus Day 21 — Bambu PLA Basic vs Inland PLA deal; Media: vs-bambu-basic-vs-inland-video.mp4 (same video as the Instagram leg); Caption: "3D printer filament deals — Bambu PLA Basic $14.99 vs Inland PLA $11.99 for 1kg. Stop overpaying $3 a roll? 💚
+
+Prices checked Nov 19, 2026: Bambu Basic $14.99 MSRP (1kg refill, Bambu US store) — RFID auto-loads, rated up to 258mm/s, refill needs a spool. Inland PLA $11.99 (1kg, Micro Center) — spool included, same ±0.03mm spec, in store today. Inland takes price, spool + pick-up; Bambu takes RFID + speed. 3–2 Inland for single rolls. Bulk 10+? Bambu drops to $9.74 and flips it.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker who pays full price for every single roll.
+
+Day 20 — Scarf vs Random seam is on our profile · Day 22 lands here tomorrow, same time
+
+Sources: Bambu Lab US Store · Micro Center (SKU 258079). Prices checked Nov 19, 2026.
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#FilamentDeals #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/2399429750822004/ (post 122115518901518447); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same verified prices and verdict as the Day 21 reel entry; Replies/DMs sent: none; Results: live and Public per Facebook's own record ("Video published at Thursday, November 19, 2026 at 10:59 AM"); Problems: attempt 1 (~10:15 EST) disappeared mid-publish and two retries were blocked by the connector write-lock (attempt-1 write still running server-side); Page feed read-backs at 10:24–10:55 EST showed NO Day 21 post (newest was Day 20), so the leg was carried as PENDING all morning — the locked write then landed at 10:59 EST, four minutes after the final check (the Day 13/14 late-landing pattern). No duplicate: the retries never wrote.
+2026-11-19 10:59 EST — Facebook — Gingerbread Sweet Shop spotlight photo post (Page post) — LATE LANDING of the morning attempts; Account: Onbrandcraftz Page; Product: Gingerbread Sweet Shop; Media: gingerbread_sweet_shop_colour_three_quarter.png (colour three-quarter image); Caption: "3D printed Christmas village — today's spotlight is the Gingerbread Sweet Shop 🎄
+
+A three-tier layer-cake tower: gingerbread tiers with white piped-icing drips, red berries on every ledge and a red cherry on top. SWEETS in raised red letters wraps the middle tier, with a little shop at the front, a red lollipop sign in the gable, white arched windows and tiny red gift boxes on the snowy white base.
+
+Drop a battery tea light inside and the windows glow — it's a hollow tea-light lantern, printed with no supports.
+
+🎄 Today's spotlight: the Gingerbread Sweet Shop.
+⚔️ Versus Day 21 today: a filament deal check — prices verified this morning.
+
+Our village files are on MakerWorld: https://makerworld.com/en/@P3DT — free on MakerWorld — link in bio
+
+Send this to the friend who always stops at the sweet shop window first.
+
+#3DPrinting #ChristmasVillage #TeaLight"; Links: https://www.facebook.com/61595553412715/posts/122115518829518447 (canonical: https://facebook.com/61595553412715/posts/pfbid0aftrbsGf1ZvbjpzY8tigEiKut1LUVKMFd9PyYbXAMD7jivYNHeokQgJpnkDrutUMl/); in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: the shop description as captioned (hollow tea-light lantern, no supports); our village files are on MakerWorld — no per-file "free" claim for the Sweet Shop itself; Replies/DMs sent: none; Results: live and Public per Facebook's own record ("Photo published at Thursday, November 19, 2026 at 10:59 AM"); Problems: attempt 1 (09:52 EST) disappeared mid-publish and attempts 2 (10:26) and 3 (10:38) were blocked by the connector write-lock (attempt-1 write still running server-side); Page feed read-backs at 10:24–10:55 EST confirmed no post had landed, so the leg was carried as PENDING — the locked write landed at 10:59 EST alongside the Versus Day 21 reel (burst landing, the Day 13 pattern). No duplicate: the retries never wrote.
+2026-11-19 21:29 EST — UPDATE to the 2026-11-12 13:26 (EST) Instagram Lesson 006 reel entry above; Links: https://www.instagram.com/reel/DfpsGOfiQlA/ ; Change: this original post was DELETED on 2026-11-19 (verified gone) and replaced the same evening with the Claude-scene re-cut of Lesson 006 (lesson006_v2.mp4) carrying the corrected caption — see the 2026-11-19 21:29 EST replacement entries below. The original caption's "35% less plastic" figure was wrong (54 g vs 82 g is 34% less); the replacement caption reads 34%.
+2026-11-19 21:29 EST — UPDATE to the 2026-11-12 13:45 (EST) Facebook Lesson 006 video entry above; Links: https://facebook.com/reel/3000206530372188/ (post 122113079229518447) ; Change: this original post was DELETED on 2026-11-19 (verified gone) and replaced the same evening with the Claude-scene re-cut of Lesson 006 (lesson006_v2.mp4) carrying the corrected caption — see the 2026-11-19 21:29 EST replacement entries below. The original caption's "35% less plastic" figure was wrong (54 g vs 82 g is 34% less); the replacement caption reads 34%.
+2026-11-19 21:29 EST — UPDATE to the 2026-11-12 13:45 (EST) TikTok Lesson 006 video entry above; Links: https://www.tiktok.com/@onbrandcraftz/video/7707357904554200333 ; Change: this original post was DELETED on 2026-11-19 (verified gone) and replaced the same evening with the Claude-scene re-cut of Lesson 006 (lesson006_v2.mp4) carrying the corrected caption — see the 2026-11-19 21:29 EST replacement entries below. The original caption's "35% less plastic" figure was wrong (54 g vs 82 g is 34% less); the replacement caption reads 34%.
+2026-11-19 21:29 EST — UPDATE to the 2026-11-12 13:46 (EST) YouTube Lesson 006 Short entry above; Links: https://youtube.com/shorts/yEE85FspaRU ; Change: this original post was DELETED on 2026-11-19 (verified gone) and replaced the same evening with the Claude-scene re-cut of Lesson 006 (lesson006_v2.mp4) carrying the corrected caption — see the 2026-11-19 21:29 EST replacement entries below. The original caption's "35% less plastic" figure was wrong (54 g vs 82 g is 34% less); the replacement caption reads 34%.
+2026-11-19 21:29 EST — Instagram — 3D Printing, Explained — Lesson 006 reel (REPLACEMENT, Claude-scene v2); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Explained Lesson 006 "100% infill is a myth" (teaching post; no Etsy link); Media: lesson006_v2.mp4 (54.1s, 1080x1920 — Claude's diagram scenes re-cut, Ronan voiceover, labels-only text, mastered −14.1 LUFS); Caption: "Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 34% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted"; Links: https://www.instagram.com/reel/Df8iPsIhI8u/ (media 18078536213770005); in-caption link: none ("Full lesson on YouTube — link in bio"); no affiliate links; Claims made: CNC Kitchen pull-test figures as broken down by @3dmartos — 2 walls at 100% infill snapped at 64 kg using 82 g; 5 walls at 20% infill held 108 kg using 54 g (68% stronger on 34% less plastic — the corrected figure; claim check passed Nov 19, recorded in lesson-006-final/CLAIM-CHECK.md); our own settings stated as ours: 3 walls at 12–15% infill, village houses hollow shells on purpose; Replies/DMs sent: none; Results: 3 likes at the Nov 20 06:00 EST briefing check — the best early showing of that week's posts; Problems: REPLACEMENT post — the Nov 12 original (reel DfpsGOfiQlA) was deleted and verified gone before this posted, on Scott's instruction, so no duplicate exists. Posted via the browser leg after the connector routes proved unable to delete the original.
+2026-11-19 21:29 EST — Facebook — 3D Printing, Explained — Lesson 006 reel (REPLACEMENT, Page reel); Account: Onbrandcraftz Page (acting-as identity verified as the Page before deleting and again before posting; author shown as "Onbrandcraftz"); Product: Explained Lesson 006 "100% infill is a myth" (teaching post); Media: lesson006_v2.mp4 (same video as the Instagram leg); Caption: "Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 34% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted"; Links: https://www.facebook.com/reel/1733411244869171 (post 122115626937518447); in-caption link: none ("Full lesson on YouTube — link in bio"); no affiliate links; Claims made: same claim-checked figures as the Instagram replacement entry (34% corrected); Replies/DMs sent: none; Results: verified at the top of the Page feed and on the reel page, Public; Problems: REPLACEMENT post — the Nov 12 original (reel 3000206530372188, post 122113079229518447) was deleted and verified gone before this posted; posted via the browser leg as the Page.
+2026-11-19 21:29 EST — TikTok — 3D Printing, Explained — Lesson 006 video (REPLACEMENT); Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Explained Lesson 006 "100% infill is a myth" (teaching post); Media: lesson006_v2.mp4 (same video as the Instagram leg); Caption: "Full lesson on YouTube — link in bio 🎓 Lesson 006: 100% infill is the most expensive myth in 3D printing.
+
+Here's the test. Same hook, pulled to breaking (CNC Kitchen's pull rig, broken down by @3dmartos): 2 walls at 100% infill snapped at 64 kg and used 82 g of filament. 5 walls at 20% infill held 108 kg — on 54 g. That's 68% stronger on 34% less plastic.
+
+The physics: when a part bends, the outer skin carries almost all the stress and the middle carries almost none. Bones are built the same way — hard shell, light inside.
+
+Our prints run 3 walls at 12–15% infill, and the village houses are hollow shells on purpose. Strong where it works, air where it doesn't.
+
+Send this to the maker who prints everything at 100% infill.
+
+Question for the comments: what's YOUR wall count and infill on a part that has to hold weight?
+
+#3dprinting #3dprintingtips #maker #filament #3dprinted"; Links: https://www.tiktok.com/@onbrandcraftz/video/7710069697940589855; in-caption link: none; no affiliate links; Claims made: same claim-checked figures as the Instagram replacement entry (34% corrected); Replies/DMs sent: none; Results: posted Nov 19 21:08 EST via TikTok Studio and verified on the @onbrandcraftz profile (first tile under Latest) and on the video page; music copyright check and content check both "No issues found"; visibility Everyone; Problems: REPLACEMENT post — the Nov 12 original (video 7707357904554200333) was deleted in TikTok Studio and verified gone before this posted. Verification of the profile briefly hit a TikTok slider CAPTCHA, which timed out and cleared; the video was verified directly afterward.
+2026-11-19 21:29 EST — YouTube — 3D Printing, Explained — Lesson 006 Short (REPLACEMENT); Account: OnBrandCraftz (YouTube); Product: Explained Lesson 006 "100% infill is a myth" (teaching post); Media: lesson006_v2.mp4 (same video as the Instagram leg; Studio lists 0:55); Caption: Title: "100% Infill Is a Myth — Lesson 006 | 3D Printing, Explained" — description is the corrected lesson caption, word-for-word as in the Instagram replacement entry above; Links: https://www.youtube.com/shorts/1PSFsrQrZqA; in-description link: none (the description carries the lesson caption only); no affiliate links; Claims made: same claim-checked figures as the Instagram replacement entry (34% corrected); Replies/DMs sent: none; Results: published Public Nov 19 via YouTube Studio; copyright and Community Guidelines checks both "No issues found"; not made for kids; verified live on the Shorts page; Problems: REPLACEMENT post — the Nov 12 original (Short yEE85FspaRU, which had 218 views) was deleted forever in Studio and verified gone before this uploaded.
