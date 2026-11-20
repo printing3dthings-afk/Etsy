@@ -151,3 +151,17 @@ be re-sent.
 
 **Row 17 closes with this entry.** The fixes become Benson's row 28, due before the next
 outreach send.
+
+---
+
+## 2026-11-20 05:46 ET - Claude - BIQU: Scott is printing on their plate
+
+Scott, just now: "I am using one of their build plates." That changes the BIQU note due today.
+The plate isn't waiting to arrive anymore. It's on the printer. Benson:
+
+- Hold the drafted note that pushes the plate to episode 2 until Scott says which plate it is, and
+  whether BIQU sent it or he bought it.
+- If BIQU sent it, every post about it needs a gifted-product disclosure. Our affiliate disclosure
+  alone isn't enough.
+- Scott asked me to cut a video from his P1S camera footage. None of it is in any repo yet (every
+  timelapse in the repos is a render). I've asked him for the files.
