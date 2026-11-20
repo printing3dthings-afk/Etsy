@@ -1,0 +1,240 @@
+{
+ "square ridge, 0.6 proud: height": [
+  {
+   "size": 0.1,
+   "printed_height": 0.16,
+   "layers": 1
+  },
+  {
+   "size": 0.2,
+   "printed_height": 0.16,
+   "layers": 1
+  },
+  {
+   "size": 0.3,
+   "printed_height": 0.16,
+   "layers": 1
+  },
+  {
+   "size": 0.4,
+   "printed_height": 0.28,
+   "layers": 2
+  },
+  {
+   "size": 0.6,
+   "printed_height": 0.36,
+   "layers": 3
+  },
+  {
+   "size": 0.8,
+   "printed_height": 0.4,
+   "layers": 4
+  },
+  {
+   "size": 1.2,
+   "printed_height": 0.8,
+   "layers": 6
+  }
+ ],
+ "chamfered ridge, 0.6 proud: height": [
+  {
+   "size": 0.1,
+   "printed_height": 0.15,
+   "layers": 1
+  },
+  {
+   "size": 0.2,
+   "printed_height": 0.25,
+   "layers": 2
+  },
+  {
+   "size": 0.3,
+   "printed_height": 0.25,
+   "layers": 2
+  },
+  {
+   "size": 0.4,
+   "printed_height": 0.3,
+   "layers": 3
+  },
+  {
+   "size": 0.6,
+   "printed_height": 0.5,
+   "layers": 4
+  },
+  {
+   "size": 0.8,
+   "printed_height": 0.7,
+   "layers": 5
+  },
+  {
+   "size": 1.2,
+   "printed_height": 1.1,
+   "layers": 7
+  }
+ ],
+ "groove, 0.6 deep: height": [
+  {
+   "size": 0.1,
+   "printed_height": 0.2,
+   "layers": 1
+  },
+  {
+   "size": 0.2,
+   "printed_height": 0.2,
+   "layers": 1
+  },
+  {
+   "size": 0.3,
+   "printed_height": 0.4,
+   "layers": 2
+  },
+  {
+   "size": 0.4,
+   "printed_height": 0.4,
+   "layers": 2
+  },
+  {
+   "size": 0.6,
+   "printed_height": 0.6,
+   "layers": 3
+  },
+  {
+   "size": 0.8,
+   "printed_height": 0.8,
+   "layers": 4
+  },
+  {
+   "size": 1.2,
+   "printed_height": 1.1,
+   "layers": 6
+  }
+ ],
+ "chamfered ridge, 1.0 tall: proud": [
+  {
+   "size": 0.1,
+   "printed_proud": 0.1
+  },
+  {
+   "size": 0.15,
+   "printed_proud": 0.15
+  },
+  {
+   "size": 0.2,
+   "printed_proud": 0.2
+  },
+  {
+   "size": 0.3,
+   "printed_proud": 0.3
+  },
+  {
+   "size": 0.4,
+   "printed_proud": 0.4
+  },
+  {
+   "size": 0.6,
+   "printed_proud": 0.6
+  },
+  {
+   "size": 1.0,
+   "printed_proud": 1.0
+  }
+ ],
+ "boss: diameter": [
+  {
+   "size": 0.6,
+   "printed_proud": 0.27,
+   "layers_proud": 3
+  },
+  {
+   "size": 0.8,
+   "printed_proud": 0.39,
+   "layers_proud": 3
+  },
+  {
+   "size": 1.0,
+   "printed_proud": 0.47,
+   "layers_proud": 5
+  },
+  {
+   "size": 1.2,
+   "printed_proud": 0.58,
+   "layers_proud": 5
+  },
+  {
+   "size": 1.6,
+   "printed_proud": 0.77,
+   "layers_proud": 7
+  },
+  {
+   "size": 2.0,
+   "printed_proud": 0.99,
+   "layers_proud": 9
+  },
+  {
+   "size": 2.6,
+   "printed_proud": 1.28,
+   "layers_proud": 13
+  }
+ ],
+ "vertical groove 0.4 wide: depth": [
+  {
+   "size": 0.1,
+   "printed_depth": 0.1
+  },
+  {
+   "size": 0.2,
+   "printed_depth": 0.19
+  },
+  {
+   "size": 0.3,
+   "printed_depth": 0.3
+  },
+  {
+   "size": 0.4,
+   "printed_depth": 0.39
+  },
+  {
+   "size": 0.6,
+   "printed_depth": 0.6
+  },
+  {
+   "size": 0.8,
+   "printed_depth": 0.79
+  },
+  {
+   "size": 1.0,
+   "printed_depth": 1.0
+  }
+ ],
+ "vertical rib, 0.6 proud: width": [
+  {
+   "size": 0.2,
+   "printed_proud": 0.69
+  },
+  {
+   "size": 0.3,
+   "printed_proud": 0.64
+  },
+  {
+   "size": 0.4,
+   "printed_proud": 0.6
+  },
+  {
+   "size": 0.5,
+   "printed_proud": 0.6
+  },
+  {
+   "size": 0.6,
+   "printed_proud": 0.6
+  },
+  {
+   "size": 0.8,
+   "printed_proud": 0.6
+  },
+  {
+   "size": 1.0,
+   "printed_proud": 0.6
+  }
+ ]
+}
