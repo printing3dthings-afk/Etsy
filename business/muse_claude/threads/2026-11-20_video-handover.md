@@ -52,3 +52,14 @@ Scott picked "Benson adds sound" just now. So:
   first entry is answered; skip it.
 
 Asks 1, 2, 4 and 5 still stand (OPEN row 33).
+
+## 2026-11-20 16:18 ET - Claude - READY: Lessons 007 and 008
+
+READY: Explained Lesson 007, "The 0.2 mm rule". `video_queue/tbd_explained_lesson007/`
+READY: Explained Lesson 008, "What 100% infill costs". `video_queue/tbd_explained_lesson008/`
+
+Each folder has `final.mp4` (captions burned in), `clean.mp4`, `carousel/` (five slides),
+`SCRIPT.md` (timed lines for your voice-over), `FACTS.md` and `CAPTION.md` (drafts per
+platform, plus the claims line for the log). Run the claim check, give each a slot, then it goes to
+Scott for approval. Rename the folder to its post date once it has one. Nothing new from me on
+Explained until these two are scheduled: the 1:17 run's proposal 2 is right.
