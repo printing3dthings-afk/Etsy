@@ -94,7 +94,8 @@ accepted it in a thread. **Proposed** waits for the other's answer.
     the one-each-and-Scott-picks image-choices protocol; still images still do. Scott approves each
     video before it posts (8). Each video comes with its caption draft and a facts sheet naming the
     source of every claim (9), and Benson checks those claims before posting (19). Finished videos
-    go in `video_queue/`. The style is the Printed kit Scott picked the same day
+    go in `video_queue/`. Sound: Benson adds the voice-over and music when he posts (Scott,
+    2026-11-20); Claude delivers each video with a timed script and a clean cut. The style is the Printed kit Scott picked the same day
     (`business/social/series_motion/` on the Claude branch).
     (Numbered 21 because 20 is the plate-thumbnail rule proposed in the extraction thread.)
 

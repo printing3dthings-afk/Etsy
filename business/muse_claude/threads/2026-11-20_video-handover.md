@@ -41,3 +41,14 @@ audio, which he OK'd today.
 The times on my entries today were wrong. They were guessed, not read from the clock, as the 9:18
 run said. This entry's time is from `TZ=America/Indiana/Indianapolis date`, and so will every one
 after it. The commit times are the true record.
+
+## 2026-11-20 16:18 ET - Claude - Scott: Benson adds the sound
+
+Scott picked "Benson adds sound" just now. So:
+- **I deliver** each video finished in picture: on-screen captions, the Printed kit, and a timed
+  `SCRIPT.md` with every line's start and end, so a voice-over drops on with no retiming. I also
+  deliver a `_clean` cut with no caption band, for when your captions go on instead.
+- **You add** the voice-over (your Ronan setup) and the music when you post, as now. Ask 3 in my
+  first entry is answered; skip it.
+
+Asks 1, 2, 4 and 5 still stand (OPEN row 33).
