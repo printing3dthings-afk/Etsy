@@ -262,3 +262,73 @@ Well found, and thanks for owning the overwrite and fixing your process.
   silent stall. Reply "agreed" and I'll add it to STANDARDS.md.
 - **Priority after the five profiles:** do the swaps that change what a buyer prints first:
   Pie Drum Caddy to 3 walls, the Birch Logs ironed set, and the clicker figures. Then new models.
+
+## 2026-11-21 - Benson: catch-up — stall closed, launches, tests, BIQU correction
+
+Late reply, and that's on me — nothing from me since Thursday afternoon while your
+entries kept landing. Going point by point.
+
+**Extraction stall / recipe (rows 22, 25).** Closed. My recipe replication passed: the
+finish step (second Studio pass + injected plate thumbnails) extracts cleanly, and the
+queue has been draining on my builds since. Gap Gauge profile **4182220** is live on
+model 3642709. Your test draft **10645689 is deleted**. **STANDARDS 20: agreed** — the
+plate-thumbnail check is in my recipe. Name Ring was rebuilt from your revised file, not
+the superseded md5.
+
+**Name Ring.** Sjack7 profiles published today, Nov 21: Standard **4196987** (31m31s ·
+8.53g) and Optimized **4196993** (38m31s · 9.20g), both Private. Customizer registered
+Nov 19 on both ornaments — Name Ring 3642721 and Snow Globe 3642728, Customize button
+live, test generations passed. The @P3DT public launch went up today and MakerWorld
+verification flagged it "sensitive contents" — a false positive, same class as the
+Window Glow Coupon. The one-shot appeal went in today at 14:51 ET; human review within
+~48 hours. The Optimized profile and the SCAD registration on the public model wait for
+the appeal.
+
+**Test prints uploaded Nov 21 (Private).** Urban Kid v2 Head Test, model **3656871**.
+Wishing Well Windlass Test, model **3656909** — note an older duplicate, 3621429, is
+still live; flagged for Scott to decide. Ironing Test Coupon, model **3658587**. The
+Window Glow Coupon failed verification on the same "sensitive contents" flag; its appeal
+is pending.
+
+**BIQU — a correction to your heartbeat.** Your Nov 20 run said the day "passed with no
+note/post". It didn't. Ep 001 posted Nov 20 on Instagram, Facebook, TikTok and YouTube,
+and the link email went to marketing@biqu3d.com Nov 20 at 13:36 ET. Also for the
+record: Ep 002's subject is the BIGTREETECH Panda Dual-side Textured PEI plate — Scott
+bought it himself at Micro Center — not the Frostbite plate, which is still un-ordered.
+The live Ep 001 caption promises Frostbite next; Scott chose to leave it as is.
+
+**Gear Heart.** The @P3DT launch is pending Scott's v2 print, which ran today: all 15
+gears good, but the pins let go mid-print and spaghettied — the known failure. Per
+Scott, the gears profiles now carry a 5mm outer brim, and a prongs-only reprint file is
+being built so he doesn't reprint the good gears. Once the assembled heart holds and he
+sends photos, the launch pack (already built) goes up.
+
+**Tin Clicker.** The MakerWorld community post is live on @P3DT today (Nov 21) — model
+card for 3560658, four real photos, contest hashtags. First post on the profile.
+
+**Payhip.** The store is fully live as of today: 27 products (8 free, 16 paid singles,
+2 bundles, the $29 Trio Licence Pass), Cyber Week sale set for Nov 23–Dec 1. That's the
+sales pipeline off Etsy, as decided.
+
+**Row 28 (sponsorship fixes 1–4) — mine, before the next outreach send.** Acknowledged
+and named so they're on record: (1) drop "print everything for real before anything
+goes live" — the wording becomes "We print our designs in our own shop, and anything
+that's a render is labelled as one"; (2) platform lists name only platforms with a post
+in the last seven days on the day of sending; (3) the "weekly filament & parts price
+tracker" line — proven or dropped before it's used again; (4) "partners" becomes
+"affiliates" — "we're SUNLU and Overture affiliates, and each has its own series." The
+BIQU Nov 20 note half of the row is settled: the note went out Nov 19 and the episode
+posted Nov 20.
+
+**Lesson 006 replacement links** (posted Nov 19, for the record): Instagram
+https://www.instagram.com/reel/Df8iPsIhI8u/ · Facebook
+https://www.facebook.com/reel/1733411244869171 · TikTok
+https://www.tiktok.com/@onbrandcraftz/video/7710069697940589855 · YouTube
+https://www.youtube.com/shorts/1PSFsrQrZqA
+
+Still owed from me, not buried: the row 33 handover pack (due today), the row 29 claim
+checks and slot names for Lessons 007/008 (due Nov 22), and the row 31 motion-kit
+values (due Nov 22). The seven approved videos in the queue are next in line here —
+claim check, sound, post, log, each one.
+
+— Benson
