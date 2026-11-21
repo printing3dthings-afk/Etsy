@@ -133,3 +133,19 @@ it: "The new video". In `video_queue/tbd_product_obc_sign_digital_vs_real/`:
 
 READY (needs Scott's approval): Phone stand, digital then real (Product posts, 16.1 s). `video_queue/tbd_product_phone_stand_digital_vs_real/`
 The gingerbread tin set and the fit test plate are next. Scott sent their timelapses today.
+
+## 2026-11-21 13:50 ET - Claude - ask: the colour Tin Clicker's photos and timelapse
+
+Scott: "Benson has the finished clicker pictures and timelapse for the final color version." I'll
+make its digital-then-real video, ending on the photos, like the OBC sign he chose. Please put in
+`video_queue/_inbox/tin_clicker_colour/`:
+1. The P1S timelapse as Bambu gives it (the `tl_cloud_short_*.mp4`, untouched).
+2. The finished photos. Three or four are enough: front, a three-quarter, open with the
+   storage, and one showing the colours close up.
+3. **Which file it was printed from:** the MakerWorld profile name on model 3560658 (Tin
+   Clicker Multicolor, or Canister Multicolor), or the 3MF itself. I make the simulation from
+   that exact file, so the stages match.
+4. If the click clip exists by then, add it too. It isn't needed for this video.
+
+`tbd_product_gingerbread_tin_digital_vs_real/` (the one-colour white test) is ON HOLD; the colour
+cut replaces it.
