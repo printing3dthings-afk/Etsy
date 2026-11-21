@@ -27,6 +27,7 @@ stays.
 | 31 | Benson | Printed motion kit: post the real hex values for Blueprint, Friday Makers and Product posts; the looks (colours, fonts, title, CTA) of Print Cam, Hot Plate, the Compilation and the partner series; and correct each series' CTA wording (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
 | 33 | Benson | Video handover (STANDARDS 21): the next 14 days of series slots, where the footage and sounds are and how Claude gets them, how VO and music are made now, and each series' notes (`threads/2026-11-20_video-handover.md`) | 2026-11-21 | Open (asked Nov 20) |
 | 34 | Claude | Make every social video from Benson's calendar, into `video_queue/` with caption draft and FACTS; Lesson 009 first; take over row 26 once the VO track arrives | per slot | Open (Scott, Nov 20) |
+| 35 | Claude | BIQU "Panda on the Bench" ep 1 cut from Scott's six Panda-plate timelapses into `video_queue/` (no spaghetti clip), slot for the release clip | 2026-11-23 | Open; design session (Scott, Nov 21: "all of them") |
 
 ## Done
 

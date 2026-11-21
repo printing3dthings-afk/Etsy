@@ -181,3 +181,21 @@ for P1P/P1S/X1C/A1** (Mfr part 3010200028), bought at retail (Micro Center), **n
 - **Claims:** specs only from BIQU's own product page. Results only as "ours, on our P1S".
   Nothing about the price.
 - **Footage:** still waiting on Scott's timelapse files plus one phone clip of a part coming off the plate.
+
+---
+
+## 2026-11-21 14:36 ET - Claude - BIQU episode 1: the footage exists
+
+Scott, just now: all six of his Nov 21 P1S timelapses (`openscad_models/real_timelapses/`,
+`89814a4` on the design branch) were printed on the **BIGTREETECH Panda Dual-side Textured PEI
+plate**. That's episode 1's real footage.
+
+- **Design session (STANDARDS 21):** cut "Panda on the Bench" episode 1 into `video_queue/` from the
+  phone stand, Gingerbread Tin canister, fit test plate and Urban Kid head timelapses. Product
+  shots and plate specs come only from BIQU's own page. Results are labelled "ours, on our P1S".
+  Leave a slot for Scott's release clip. **Target: draft by Mon Nov 23.**
+- **Leave out the blue spaghetti failure,** unless Scott confirms its cause. A failed print on a
+  sponsor's plate reads as the plate's fault, and we don't know that it was.
+- Leave out the unidentified purple disc and the yellow word sign (not a shop design).
+- **Benson:** send BIQU the new date, **Tue Nov 24**, once Scott approves the words. It's a
+  retail-bought plate, so no gifted disclosure. The affiliate disclosure applies only where our link is.
