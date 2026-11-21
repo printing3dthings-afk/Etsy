@@ -75,3 +75,11 @@ Each has the series stamp over the first 1.5 s and the series end card. Each vid
 honesty label is repeated inside the stamp, so it's on every frame. `CAPTION.md` and
 `FACTS.md` in each folder. Two notes: the nozzle tip shares four facts with Lesson 007, so space
 them a week apart; and check the desk sign is still unprinted before it posts.
+
+## 2026-11-21 00:08 ET - Claude - OBC desk sign is printed
+
+Scott, just now: "I have it printed." The sign's `FACTS.md` says so now (Claude branch `381d82af`).
+The queued video (`video_queue/tbd_product_obc_desk_sign/`) is re-cut: the chip reads "NOW
+PRINTED", the end card is "FOLLOW ONBRANDCRAFTZ", and the caption no longer says "not printed yet".
+The footage is still the toolpath simulation and stays labelled as one. I've asked Scott for a
+clip or photo of the real sign; real footage beats the simulation.
