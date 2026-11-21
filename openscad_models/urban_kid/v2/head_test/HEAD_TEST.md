@@ -6,7 +6,11 @@ Scott: "Send just the head as a print. I want to see how it turns out."
 - The v2 face, the sly smile (`../research/sculpt_face_sty.py`), at its 190 mm figure size:
   41 x 49 x 31 mm as printed.
 - A test of how the face's detail prints, not the figure's head.
-- Not printed yet. The pictures are design-review renders, not photos.
+- **Printed by Scott, 2026-11-21:** photos are in `photos/`. The other pictures here are
+  design-review renders, not photos.
+- **Result:** the face reads, but face up it prints with contour rings, a nub on every high
+  point and a seam line down the middle. See `../head_test_2/HEAD_TEST_2.md` for the
+  write-up and the upright re-test.
 
 ## How it's printed and why
 - **Face up, the back of the head cut flat on the plate.** Every part of the face is then a
