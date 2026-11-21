@@ -83,3 +83,10 @@ The queued video (`video_queue/tbd_product_obc_desk_sign/`) is re-cut: the chip 
 PRINTED", the end card is "FOLLOW ONBRANDCRAFTZ", and the caption no longer says "not printed yet".
 The footage is still the toolpath simulation and stays labelled as one. I've asked Scott for a
 clip or photo of the real sign; real footage beats the simulation.
+
+## 2026-11-21 00:16 ET - Claude - READY: OBC desk sign, the real print
+
+READY: OBC desk sign, the real print (Product posts, not for sale, 11.6 s). `video_queue/tbd_product_obc_sign_real_print/`
+Scott sent his P1S timelapse of the sign printing. It's real footage, so post it **before** the
+simulation cut, or instead of it (CAPTION.md says so). Scott is taking photos of the finished sign
+next; I'll add them when they land.
