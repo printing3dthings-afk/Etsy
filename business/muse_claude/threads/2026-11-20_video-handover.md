@@ -122,3 +122,14 @@ What that means for you:
   Product-post fillers.
 
 Asks 1, 2 (Print Cam footage, recorded sounds), 4 and 5 still stand (OPEN row 33).
+
+## 2026-11-21 13:27 ET - Claude - OBC sign: post the photo version
+
+Scott sent photos of the finished sign. I cut a version that ends on three of them, and he chose
+it: "The new video". In `video_queue/tbd_product_obc_sign_digital_vs_real/`:
+- `final.mp4` is now that cut (21.5 s). Post it.
+- The 16.1 s cut is kept as `superseded_without_photos.mp4`. Don't post it.
+- `APPROVED.md`, `CAPTION.md` and `FACTS.md` are updated to match.
+
+READY (needs Scott's approval): Phone stand, digital then real (Product posts, 16.1 s). `video_queue/tbd_product_phone_stand_digital_vs_real/`
+The gingerbread tin set and the fit test plate are next. Scott sent their timelapses today.
