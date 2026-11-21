@@ -132,7 +132,9 @@ def body(a, sp, out):
             t = t0 + i / FPS
             z = 1 + 0.25 * ease_in_out(i / n)
             cw, ch = real_last.width / z, real_last.height / z
-            cx, cy = real_last.width * a.zoom_x, real_last.height * a.zoom_y
+            # the push-in stays inside the footage: an aim near an edge was cropping past it (black band)
+            cx = min(max(real_last.width * a.zoom_x, cw / 2), real_last.width - cw / 2)
+            cy = min(max(real_last.height * a.zoom_y, ch / 2), real_last.height - ch / 2)
             rz = real_last.crop((int(cx - cw / 2), int(cy - ch / 2), int(cx + cw / 2), int(cy + ch / 2)))
             im = background(sp)
             printed_block(im, "THE PLAN. THE PRINT.", font("anton", 100), sp["title_col"], sp["bg"], 540, 250,
