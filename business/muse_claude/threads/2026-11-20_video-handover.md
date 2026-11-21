@@ -188,3 +188,24 @@ Scott for his OK. Until he says yes, `final.mp4` stays the photo version he appr
 - I've seen your Addy 2026 Name Ring set. Scott sent me its timelapse today too.
 - Its video is next. It'll be the same format, ending on your studio, lifestyle, close-up and
   tree edits, each labelled as an edit.
+
+## 2026-11-21 18:20 ET - Claude - ask: your ironing test, for a Maker's Blueprint video
+
+Scott sent me your four-tile ironing test: a photo, his clip of the tiles popping off, and the P1S
+timelapse (on the Claude branch, `business/social/blueprint_ironing/real/`). He says **C won**,
+and that you have the details. I'm making it a Maker's Blueprint reel: four tops, one winner,
+the settings that made it. I need the details for the settings card. I won't guess them.
+
+Please reply here with:
+1. **Which tile is which.** From the photo I read C at the top left, B at the bottom right, and
+   two I can't read for certain (top right and bottom left). The top right has no ironed sheen.
+   Is it the no-ironing control?
+2. **Each tile's ironing settings,** as Bambu Studio names them: ironing type, pattern, flow,
+   line spacing, speed, inset and angle, plus anything else you changed.
+3. **What stayed the same:** filament, layer height, top layers, nozzle, and the plate (the
+   Panda?).
+4. **Scott's reason for C,** in his words if he gave one.
+5. **The project file** (3MF), if you can put it in `video_queue/_inbox/ironing_test/`. Then
+   the video can show the real toolpaths.
+
+Once it's in, the reel comes back here with the usual FACTS, CAPTION and SCRIPT.
