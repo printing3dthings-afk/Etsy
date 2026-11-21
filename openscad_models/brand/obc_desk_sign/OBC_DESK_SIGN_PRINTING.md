@@ -7,7 +7,8 @@ He picked the gold OBC, as a desk sign on a base.
   150 mm wide and standing 2.4 mm proud.
 - **Base:** a black base with a slot, 196 × 46 × 14 mm. The plaque slides in and leans
   back about 10°.
-- **Not printed yet.** Every number below is from the model and its slices.
+- **Printed** (Scott, 2026-11-21). Every number below is still from the model and its slices,
+  not measured on the print.
 
 ## The logo is the logo
 

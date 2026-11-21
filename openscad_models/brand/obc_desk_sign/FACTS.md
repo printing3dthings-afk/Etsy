@@ -5,7 +5,8 @@ from this folder's checks; the source is on each line.
 
 ## Version
 - **v1**, 2026-11-11. The first version; nothing replaced.
-- **Not printed yet.** Every image is a render or a toolpath simulation.
+- **Printed** (Scott, 2026-11-21: "I have it printed"). The images in this folder are still renders
+  or toolpath simulations; no photo of the print is in the repo yet.
 
 ## What it is
 Scott's gold OBC logo, traced from the logo image itself (not set in a font),
@@ -37,7 +38,8 @@ MakerWorld or anywhere else is his call. Don't queue it until he says so.
 - "Two prints: the plaque (one colour change) and the base."
 
 ## Don't say
-- That it's printed, tested, or "real" (not yet).
+- That it's tested beyond being printed, or any detail of the real print (finish, fit, lean) until
+  Scott's photos or notes say so.
 - That it's free or for sale (not decided).
 
 ## Media
