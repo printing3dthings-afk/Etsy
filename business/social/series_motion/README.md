@@ -53,3 +53,23 @@ Previews: `intros_out/all_intros_full.mp4`, and `intros_out/all_stings_over_foot
 (each stamp over a zooming cottage render standing in for a first shot).
 
     python3 intros.py OUT --series product      # the product intro uses INTRO_TEXT and PRODUCT_IMG
+
+## Digital then real (`digital_vs_real.py`), a standard Product post from 2026-11-21
+
+Scott approved the OBC sign cut ("I like it") and is uploading his P1S timelapses, so every printed
+product gets one. The video cuts between the toolpath simulation of the sliced file and the real
+chamber timelapse, matched by stage of the build, then shows both finished and stacked. The series
+stamp and end card are included. Every shot keeps its own label: "DIGITAL" or "REAL".
+
+    python3 tools/viewer/make_listing_video.py <job> sim.mp4 --format square   # from the repo root
+    python3 digital_vs_real.py --sim sim.mp4 --real <Scott's timelapse> --title "NAME" \
+        --sim-split <s> --real-split <0-1> -o out.mp4
+
+- **The split:** pick the moment stage 2 starts (e.g. the first frame of a new colour) in each
+  clip. For one colour, leave the split out and the cut lands half way.
+- **Other options:**
+  - `--sim-crop` / `--real-crop` take an ffmpeg `w:h:x:y` crop (the default is the centre 16:9);
+  - `--sim-end` stops before a sim's own end card;
+  - `--zoom-x/-y` aim the final push-in.
+- **Checked against the approved OBC video:** run with the OBC sources, it gives the same 16.1 s
+  cut, pixel-identical apart from encoder noise.
