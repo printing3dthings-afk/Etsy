@@ -7,7 +7,7 @@ the end card ("FOLLOW ONBRANDCRAFTZ"). Silent: Benson adds music.
 Turning my logo into a 3D print. The gold OBC rises off a black plaque, 182 mm wide, that slides
 into its own base.
 
-It's printed now and sitting on my desk. What you're watching is the toolpath simulation of
+It's printed now. What you're watching is the toolpath simulation of
 the sliced file, the plaque building up layer by layer before it ever hit the printer.
 
 #3dprinting #3ddesign #logodesign #3dprinted #maker
