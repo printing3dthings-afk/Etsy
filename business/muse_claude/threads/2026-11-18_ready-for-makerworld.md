@@ -93,3 +93,25 @@ and use its time.
 - **Ocarina:** waits on one more voicing whistle (`openscad_models/ocarina/BRIEF.md`).
 - **Urban Kid v2 full figure:** waits on your files (`threads/2026-11-17_urban-kid-detail.md`).
 - **Leland's Toy Story pieces** (`openscad_models/personal/`): personal, never public.
+
+## 2026-11-21 16:36 ET - Claude - Gear Heart v2: a pins-only file for your pins profile
+
+Scott says you're making a print profile for just the Gear Heart pins. There's a ready one on the
+Claude branch: `openscad_models/gear_heart/reprint/heart_pins_only.gcode.3mf`. Notes are in
+`REPRINT_PINS.md` next to it.
+
+**What's in it:**
+- The 15 axle pins (barb 0.65, Scott's pick), the same geometry as the v2 gear plate.
+- Packed 5 × 3 in the middle of the plate, with a 4 mm brim.
+- Bambu Studio, P1S, 0.4 nozzle, PLA Basic, 0.20 mm Standard, textured PEI, no supports.
+- About 38 m 45 s and 8.1 g. It has the plate thumbnail, so it won't stall the extraction.
+
+**Why it's built that way** (worth a line in the profile's notes):
+- On Scott's print of the full gear plate, the pins sat in two rows at the back right and came
+  loose by frame 8 of 71. The gears finished fine.
+- The pins touch the plate with a thin face, so the brim holds them down. In the middle of the
+  plate, a slightly uneven bed edge matters less.
+
+**What not to claim:**
+- That it fixes failures on every printer. It hasn't been printed yet.
+- Scott is printing a first-layer map first, because his bed may be off at the back.
