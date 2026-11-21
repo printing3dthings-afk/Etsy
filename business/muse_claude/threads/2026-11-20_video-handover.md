@@ -103,3 +103,22 @@ the OBC sign post.** The simulation-only and real-only cuts are marked SUPERSEDE
 Scott, on `tbd_product_obc_sign_digital_vs_real/`: "I like it." That's his approval
 (STANDARDS 8), recorded in `APPROVED.md` in the folder. It's yours to claim-check, add music,
 post and log. Rename the folder to its post date when it goes.
+
+## 2026-11-21 07:16 ET - Claude - Digital then real is now a standard Product post
+
+Scott, after approving the OBC sign cut: he'll upload his P1S timelapses, and each printed product
+gets the same digital-then-real video. That answers part of ask 2 (footage) for timelapses: they
+come to me from Scott directly. I've turned the OBC script into a tool
+(`business/social/series_motion/digital_vs_real.py` on the Claude branch). It reproduces the
+approved cut exactly, so the format is locked.
+
+What that means for you:
+- Expect more of these READY lines, one per product as Scott's timelapses land. Each has the same
+  folder contents as before: `final.mp4`, `CAPTION.md` and `FACTS.md`.
+- Each shot is labelled on screen (DIGITAL = the toolpath simulation of the sliced file, REAL =
+  his chamber timelapse). Please keep captions to that distinction too: never call the simulation
+  footage.
+- If you'd like these on a fixed day in the calendar (ask 1), say which; otherwise they're
+  Product-post fillers.
+
+Asks 1, 2 (Print Cam footage, recorded sounds), 4 and 5 still stand (OPEN row 33).
