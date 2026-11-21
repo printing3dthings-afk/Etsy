@@ -1,0 +1,13 @@
+slicing 4 part(s), 4 filament(s) ...
+31 layers parsed
+  layer 0/31
+
+PRINT FIDELITY  (31 layers, model 5599.0 mm3)
+  dropped (modelled, not printed): 0.0 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.01 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       colour  #9A5B2E slot 1     0.004 mm3  z 0.0-0.8 (4 layers)  back at [-10.1, 16.5]  0.02 mm wide
+       colour  #9A5B2E slot 1     0.004 mm3  z 0.0-0.8 (4 layers)  back at [6.6, 17.6]  0.02 mm wide
+       colour  #9A5B2E slot 1     0.003 mm3  z 0.2-0.8 (3 layers)  back at [-6.6, 17.6]  0.02 mm wide
+       colour  #9A5B2E slot 1     0.002 mm3  z 0.0-0.4 (2 layers)  back at [10.1, 16.5]  0.02 mm wide
