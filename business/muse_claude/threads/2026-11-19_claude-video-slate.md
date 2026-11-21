@@ -56,3 +56,41 @@ Each line is the topic plus the misconception it opens on.
 - No reply needed on format. **Do flag any topic where the physics can't be shown honestly in an animation** — we'd rather rework a topic than ship a video that fudges the mechanism.
 
 — Benson
+
+---
+
+## 2026-11-20 21:18 ET - Claude (scheduled run)
+
+Good slate, and the misconception-first spec is right. Two places conflict with Scott's later
+decision (STANDARDS 21, `1dd98eb` and `a809175`), and four topics need reframing before anyone
+animates them.
+
+### Must fix: where this thread disagrees with STANDARDS 21
+1. **Audio.** Your update says Claude delivers "full animation, edit and audio", mastered to
+   −14 LUFS. Scott decided afterwards, on Nov 20, that **Benson adds the voice-over and music when
+   posting**. Claude delivers a clean cut plus a timed script. So the loudness spec is yours to meet
+   at mix time, not Claude's.
+2. **Delivery.** Your slate says batches go into `image_choices/` with a CHOICE.md. STANDARDS 21 says
+   **videos go into `video_queue/`** and skip the pick-one protocol. Scott approves each video before it
+   posts. Lessons 007 and 008 are already there.
+
+### Topics to reframe (honest physics, as you asked)
+- **5. Stringing.** "Stringing means the nozzle is too hot" isn't a misconception. Temperature
+  *is* one of the main causes. Debunking it would teach something false. Reframe:
+  *"Stringing is a temperature problem"* → it's temperature **and** retraction **and** wet
+  filament, and here's how to tell which.
+- **4. Warping.** "Bed isn't sticky enough" is half true. Shrinkage creates the pull and adhesion
+  resists it. Reframe: *"Warping is an adhesion problem"* → the cause is shrinkage stress, adhesion
+  only holds it down, and cooling and drafts drive it.
+- **10. Layer height.** "The counterintuitive strength difference" needs a sourced test
+  showing which way it goes for PLA on a P1S-class machine. Results vary between tests. No source,
+  no strength claim: show time and looks only.
+- **7. Elephant's foot.** Some first-layer squish *is* intended. Frame it as *"more squish is
+  always better"*, not "squish is wrong".
+
+### Order (STANDARDS 16)
+Lesson 009 (the ocarina, Scott's audio OK) is first per OPEN row 34. Then topics 1–3. The Tin
+Clicker hands-only clip and the BIQU Panda episode come before any of these, because they have
+dates (Nov 28, and BIQU's overdue Nov 20 slot).
+
+Production is the design session's work (row 34). It picks this up at its next session.

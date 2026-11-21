@@ -21,7 +21,6 @@ stays.
 | 22 | Benson | Upload the four READY designs in `threads/2026-11-18_ready-for-makerworld.md`, private, with your profiles; update the profiles of models already up from the re-sliced files there (Scott, Nov 18) | 2026-11-19 | Models up Nov 18 (3642709, 3642721, 3642728, Private). Five profiles and all profile swaps blocked by the MakerWorld extraction stall since Nov 16, outside Benson's control; no miss while it lasts. Test plan in `threads/2026-11-19_makerworld-extraction-stall-help.md` |
 | 23 | Claude | Reconcile Trophy Rack figures: FACTS.md 2 h 58 m / 50.1 g vs Benson's Multicolour Standard profile 2 h 07 m / 32.7 g; correct FACTS.md | 2026-11-21 | Open; design session (asked Nov 19) |
 | 25 | Benson | Solve the extraction stall: the thumbnail test passed 11:44 ET (draft 10645689). Rebuild your recipe with plate thumbnails, test one file, then build the five owed profiles (Name Ring from `0b7e48d`) | 2026-11-20 | Cause found (`412afba`); the Scott matrix and the ticket aren't needed if the rebuild extracts |
-| 26 | Benson | Cut Scott's Lesson 006 clips in and run the claim check | 2026-11-20 | Open (asked Nov 19, animation-quality thread) |
 | 27 | Benson | Take down the three finished test prints (Otter Joint Test 3598362, Fold Stand v4 Hinge Test, Domed Name Ornament) and tick each after reading the page back | 2026-11-20 | Open (Scott, Nov 19, `threads/test-print-removals.md`) |
 | 28 | Benson | Apply email fixes 1–4 from the row 17 review (no "print everything before it goes live", only platforms with posts in the last 7 days, tracker line proven or dropped, "affiliates" not "partners") before the next outreach send; settle the BIQU Nov 20 note with Scott | 2026-11-20 | Open (asked Nov 19) |
 | 29 | Benson | Lessons 007 and 008: (your entry is no longer needed, STANDARDS 21) run your claim check against each FACTS.md, and name the Explained slot for each (content-ramp thread) | 2026-11-22 | Open (asked Nov 20) |
@@ -59,6 +58,7 @@ stays.
 | D23 | Claude | Review each of those emails for wording and claims; suggested corrections (row 17) | 2026-11-19 | Review in `threads/2026-11-17_sponsorship-emails.md`, 13:17 run; fixes become row 28 |
 | D24 | Benson | Check whether the Fidget Toy Challenge entry needs a working print profile and whether the live Tin Clicker has one (row 24) | 2026-11-19 | Tin Clicker 3560658 has 6 working profiles; entry not blocked (`412afba`) |
 | D25 | Benson | Catch up `muse_log.md` (no entry since Nov 17): every post since, with links, or a plain "nothing posted" and why (row 30) | 2026-11-20 | Nov 17–19 entries appended (`e1afcee`) |
+| D26 | Benson | Cut Scott's Lesson 006 clips in and run the claim check (row 26) | 2026-11-19 | Lesson 006 replacement live on IG, FB, TikTok and YouTube Nov 19 21:29 ET (`muse_log.md`, `e1afcee`) |
 
 ## Misses on record (so they aren't repeated)
 - Claude, 2026-11-19: wrote "Fidget closes Nov 30, 6:59 pm ET" in the extraction thread and the
