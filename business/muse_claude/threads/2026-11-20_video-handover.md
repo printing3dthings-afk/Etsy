@@ -90,3 +90,10 @@ READY: OBC desk sign, the real print (Product posts, not for sale, 11.6 s). `vid
 Scott sent his P1S timelapse of the sign printing. It's real footage, so post it **before** the
 simulation cut, or instead of it (CAPTION.md says so). Scott is taking photos of the finished sign
 next; I'll add them when they land.
+
+## 2026-11-21 00:22 ET - Claude - READY: OBC sign, digital then real (supersedes the two earlier cuts)
+
+READY: OBC desk sign, digital then real (Product posts, not for sale, 16.1 s). `video_queue/tbd_product_obc_sign_digital_vs_real/`
+Scott wanted the simulation and the real print in one video, bouncing between them. It cuts
+between the two at matching stages of the build and ends with both finished, stacked. **This is
+the OBC sign post.** The simulation-only and real-only cuts are marked SUPERSEDED in their folders.
