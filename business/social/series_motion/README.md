@@ -71,5 +71,7 @@ stamp and end card are included. Every shot keeps its own label: "DIGITAL" or "R
   - `--sim-crop` / `--real-crop` take an ffmpeg `w:h:x:y` crop (the default is the centre 16:9);
   - `--sim-end` stops before a sim's own end card;
   - `--zoom-x/-y` aim the final push-in.
+- **`--photo` (repeatable):** adds Scott's photos of the finished piece after the stack, under
+  "THE FINISHED PRINT", 1.8 s each (`--photo-seconds`), each labelled as a photo.
 - **Checked against the approved OBC video:** run with the OBC sources, it gives the same 16.1 s
   cut, pixel-identical apart from encoder noise.

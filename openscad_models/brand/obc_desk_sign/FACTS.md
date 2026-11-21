@@ -5,8 +5,11 @@ from this folder's checks; the source is on each line.
 
 ## Version
 - **v1**, 2026-11-11. The first version; nothing replaced.
-- **Printed** (Scott, 2026-11-21: "I have it printed"). The images in this folder are still renders
-  or toolpath simulations; no photo of the print is in the repo yet.
+- **Printed** (Scott, 2026-11-21: "I have it printed").
+- **Scott's photos of the finished sign** are in `real/photos/` (2026-11-21): front, both
+  three-quarters, and the side.
+- **Scott's P1S timelapse** is in `real/`.
+- Every other image in this folder is a render or toolpath simulation.
 
 ## What it is
 Scott's gold OBC logo, traced from the logo image itself (not set in a font),
