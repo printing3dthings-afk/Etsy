@@ -15,7 +15,8 @@ make_compare_clip.py) is the first; this is the same thing for any product.
      shows in each; for one colour, leave both out and the cut is at half way.
 
 Optional --photo (repeatable): Scott's photos of the finished piece, shown after the stack under
-"THE FINISHED PRINT", each labelled as a photo. Every shot keeps its label (simulation, real
+"THE FINISHED PRINT", each labelled as a photo. --studio adds Benson's studio edits of those photos
+(AI background), labelled as edits, never as plain photos. Every shot keeps its label (simulation, real
 timelapse or photo). Both sources are retimed, scaled and
 cropped to 16:9, never altered. The series stamp and end card are added by assemble.py's pieces.
 """
@@ -33,6 +34,10 @@ import intros
 SIM_LABEL = "Toolpath simulation of the sliced file, not print footage"
 REAL_LABEL = "Real timelapse from our P1S chamber camera"
 PHOTO_LABEL = "Photo of the finished print"
+# Benson's studio versions are AI edits of Scott's photos (background only, per his notes), so they
+# never carry the plain PHOTO label (2026-11-21).
+STUDIO_LABEL = "Our photo, background edited with AI"
+SHOT_TEXT = {"photo": ("PHOTO", PHOTO_LABEL), "studio": ("STUDIO", STUDIO_LABEL)}
 
 
 def ease_in_out(t):
@@ -82,15 +87,16 @@ def crop_to(im, aspect):
     return im.crop((0, (im.height - h) // 2, im.width, (im.height - h) // 2 + h))
 
 
-def photo_box(im, ph, sp, x=150, y=360, w=780):
+def photo_box(im, ph, sp, kind="photo", x=150, y=360, w=780):
     """Scott's photo of the finished piece, framed in the REAL colour with its own label."""
     h = round(w * 4 / 3)
     im.paste(ph.resize((w * SS, h * SS), Image.LANCZOS), (x * SS, y * SS))
     d = ImageDraw.Draw(im)
     d.rounded_rectangle(((x - 6) * SS, (y - 6) * SS, (x + w + 6) * SS, (y + h + 6) * SS), 10 * SS,
                         outline=sp["title_col"], width=int(6 * SS))
-    chip(im, x + 100, y + 44, "PHOTO", sp["title_col"], sp["bg"], fill=True, scale=0.8)
-    d.text(((x + w / 2) * SS, (y + h + 40) * SS), PHOTO_LABEL, font=font("semi", 28),
+    tag, label = SHOT_TEXT[kind]
+    chip(im, x + 100, y + 44, tag, sp["title_col"], sp["bg"], fill=True, scale=0.8)
+    d.text(((x + w / 2) * SS, (y + h + 40) * SS), label, font=font("semi", 28),
            fill=mix(sp["bg"], sp["text"], 0.9), anchor="mm")
 
 
@@ -145,7 +151,7 @@ def body(a, sp, out):
             ff.stdin.write(im.resize((W, H), Image.LANCZOS).tobytes())
         t0 += 3.5
         p0 = t0                                # the heading prints once, over the first photo
-        for path in a.photo or []:
+        for kind, path in a.shots or []:
             ph = crop_to(ImageOps.exif_transpose(Image.open(path)).convert("RGB"), 3 / 4)
             n = int(round(a.photo_seconds * FPS))
             for i in range(n):
@@ -157,7 +163,7 @@ def body(a, sp, out):
                 im = background(sp)
                 printed_block(im, "THE FINISHED PRINT", font("anton", 100), sp["title_col"], sp["bg"], 540, 250,
                               p0, p0 + 0.4, t, 10, nozzle_col=mix(sp["bg"], sp["text"], 0.55))
-                photo_box(im, pz, sp)
+                photo_box(im, pz, sp, kind)
                 ff.stdin.write(im.resize((W, H), Image.LANCZOS).tobytes())
             t0 += a.photo_seconds
         ff.stdin.close()
@@ -180,7 +186,10 @@ def main():
     ap.add_argument("--real-crop", help="the same for the real clip")
     ap.add_argument("--zoom-x", type=float, default=0.5, help="where the final push-in centres, 0-1")
     ap.add_argument("--zoom-y", type=float, default=0.6)
-    ap.add_argument("--photo", action="append", help="a photo of the finished piece, shown after the stack (repeatable)")
+    ap.add_argument("--photo", dest="shots", action="append", type=lambda p: ("photo", p),
+                    help="Scott's photo of the finished piece, shown after the stack (repeatable)")
+    ap.add_argument("--studio", dest="shots", action="append", type=lambda p: ("studio", p),
+                    help="a studio edit of his photo (AI background), labelled as one; in order with --photo")
     ap.add_argument("--photo-seconds", type=float, default=1.8)
     a = ap.parse_args()
     sp = dict(SERIES["product"], title=a.title, kicker=a.kicker, chip=a.chip, cta=a.cta)
