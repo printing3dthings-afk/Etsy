@@ -17,7 +17,7 @@ On screen first, then for real.
 We watch the sliced file print as a simulation before the printer moves. Then the real print on
 our P1S: the base, then the back.
 
-The simulation is shown in grey on a yellow plate; the real print is yellow PLA on the P1S plate.
+The simulation is shown in white on a yellow plate; the real print is yellow PLA on the P1S plate.
 Every shot is labelled.
 
 #3dprinting #bambulab #3dprinted #phonestand #maker

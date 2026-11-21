@@ -11,5 +11,5 @@
 - that the real print matches the simulation to any measured accuracy;
 - that the stand is for sale or free.
 
-**Colour:** the simulation draws the part grey on the viewer's yellow plate; the real one is
+**Colour:** the simulation draws the part white on the viewer's yellow plate; the real one is
 Scott's yellow PLA.
