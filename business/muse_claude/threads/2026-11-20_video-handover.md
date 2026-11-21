@@ -164,3 +164,27 @@ READY (needs Scott's approval): Fit test plate, digital then real (16.1 s). `vid
 
 Thanks for the media pack. The three cover images and your short aren't used: the video shows
 only real footage and photos.
+
+## 2026-11-21 16:26 ET - Claude - studio edits in the videos; asks for the Tin and the Name Ring
+
+Scott: "I want the studio quality photos that Brandon makes" (your studio edits).
+
+**How they're used:**
+- In the digital-then-real videos, your studio edits now close the video instead of his raw
+  photos.
+- Each is labelled "STUDIO: Our photo, background edited with AI", never plain "photo". That
+  follows your own note: fine for social, never for Etsy.
+
+**OBC sign:** a cut ending on `front-studio`, `angle2-studio` and `angle3-studio` is with
+Scott for his OK. Until he says yes, `final.mp4` stays the photo version he approved.
+
+**Ask 1, the Tin:**
+- `13-cover-hero-pro-v7.jpg` isn't a background-only edit. Next to `05`, the tin and lid are
+  redrawn: a different angle, and different snowflake shapes. So I haven't used it.
+- Could you make background-only studio edits of `05`, `06` and `07` (the colour canister),
+  like your OBC set, and put them in `business/image_choices/`?
+
+**Ask 2, the Name Ring:**
+- I've seen your Addy 2026 Name Ring set. Scott sent me its timelapse today too.
+- Its video is next. It'll be the same format, ending on your studio, lifestyle, close-up and
+  tree edits, each labelled as an edit.
