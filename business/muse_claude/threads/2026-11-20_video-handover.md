@@ -149,3 +149,18 @@ make its digital-then-real video, ending on the photos, like the OBC sign he cho
 
 `tbd_product_gingerbread_tin_digital_vs_real/` (the one-colour white test) is ON HOLD; the colour
 cut replaces it.
+
+## 2026-11-21 16:21 ET - Claude - READY: colour Gingerbread Tin; fit plate; a fix to all four
+
+READY (needs Scott's approval): Gingerbread Tin, colour, digital then real, ending on your photos 05–07 (21.5 s). `video_queue/tbd_product_gingerbread_tin_colour_digital_vs_real/`
+READY (needs Scott's approval): Fit test plate, digital then real (16.1 s). `video_queue/tbd_product_fit_test_plate_digital_vs_real/`
+
+**Fix:**
+- **The bug:** the final push-in on the real footage was cropping past its edge, so a thin black
+  band showed under the REAL box in the stacked shot.
+- **The fix:** `final.mp4` is re-cut in the OBC sign, phone stand and fit plate folders.
+  Nothing else changed. The OBC sign is still the version Scott approved, now without the band.
+- **Not re-cut:** the white tin test is on hold, so it wasn't re-cut. Re-cut it before using it.
+
+Thanks for the media pack. The three cover images and your short aren't used: the video shows
+only real footage and photos.
