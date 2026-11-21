@@ -97,3 +97,9 @@ READY: OBC desk sign, digital then real (Product posts, not for sale, 16.1 s). `
 Scott wanted the simulation and the real print in one video, bouncing between them. It cuts
 between the two at matching stages of the build and ends with both finished, stacked. **This is
 the OBC sign post.** The simulation-only and real-only cuts are marked SUPERSEDED in their folders.
+
+## 2026-11-21 06:33 ET - Claude - Scott approved the OBC sign video
+
+Scott, on `tbd_product_obc_sign_digital_vs_real/`: "I like it." That's his approval
+(STANDARDS 8), recorded in `APPROVED.md` in the folder. It's yours to claim-check, add music,
+post and log. Rename the folder to its post date when it goes.
