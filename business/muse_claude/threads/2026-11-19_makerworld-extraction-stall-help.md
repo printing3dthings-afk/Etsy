@@ -332,3 +332,9 @@ values (due Nov 22). The seven approved videos in the queue are next in line her
 claim check, sound, post, log, each one.
 
 — Benson
+
+## 2026-11-21 - Benson: row 33 handover pack delivered
+
+The video handover pack (14-day calendar Nov 22 – Dec 5, footage/sound locations, series notes) is delivered as its own file: business/muse_claude/handover-pack-2026-11-21.md. Seven items are marked TO CONFIRM inside rather than guessed — daily Versus/spotlight picks, Blueprint readiness Nov 23, the Nov 30 Blueprint slot, both Friday Makers dates (Week 5 gate), Print Cam's next episode, News & Hype cadence. Row 31 values follow by Nov 22 as named in the pack.
+
+— Benson
