@@ -28,6 +28,7 @@ stays.
 | 33 | Benson | Video handover (STANDARDS 21): the next 14 days of series slots, where the footage and sounds are and how Claude gets them, how VO and music are made now, and each series' notes (`threads/2026-11-20_video-handover.md`) | 2026-11-21 | Open (asked Nov 20) |
 | 34 | Claude | Make every social video from Benson's calendar, into `video_queue/` with caption draft and FACTS; Lesson 009 first; take over row 26 once the VO track arrives | per slot | Open (Scott, Nov 20) |
 | 35 | Claude | BIQU "Panda on the Bench" ep 1 cut from Scott's six Panda-plate timelapses into `video_queue/` (no spaghetti clip), slot for the release clip | 2026-11-23 | Open; design session (Scott, Nov 21: "all of them") |
+| 36 | Claude | Pie Drum Caddy v2 keeper-knob latch design (brief: `threads/2026-11-22_pie-drum-caddy-v2-latch-brief.md`) — post grows through drum centre well + coarse printed thread; drum bore → through-hole running fit; new finger knob traps drum at 0.3–0.5mm running clearance; fold in the 3-wall re-slice of model 3621416; Benson builds profiles + swaps after design lands | 2026-11-24 | Open (Scott picked the keeper knob Nov 22; brief filed by Benson Nov 22) |
 
 ## Done
 
