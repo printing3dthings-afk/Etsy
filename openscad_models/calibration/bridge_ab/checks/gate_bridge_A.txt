@@ -1,0 +1,13 @@
+parts/bridge_A.stl
+  ok    fits_plate: 194.0 x 6.0 x 6.2 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.91mm, median 8.00mm (floor 1.2mm); 0.00% below one bead
+  FAIL  no_unsupported_overhang: slicer: 0 support moves, 18 overhang perimeters, 6.2mm printed of 6.2mm
+  ok    geometry_survives_slicing: printed height 6.2mm vs modelled 6.2mm
+  ok    flat_base: 11.64 cm2 of contact = 100.0% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 48.9mm widest unsupported span at z=5.2mm; 20 layer(s) under the 4.0s cooling threshold; 1583mm2 on the plate; aspect 0.03
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE FAILED
