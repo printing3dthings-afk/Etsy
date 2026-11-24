@@ -1,0 +1,13 @@
+openscad_models/pie_caddy/parts_v2/coupon_base.stl
+  ok    fits_plate: 32.0 x 32.0 x 29.8 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 2.40mm, median 13.79mm (floor 1.2mm); 0.00% below one bead; 872 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 29.8mm printed of 29.83mm
+  ok    geometry_survives_slicing: printed height 29.8mm vs modelled 29.83mm
+  ok    flat_base: 8.04 cm2 of contact = 78.5% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=5.8mm; 139 layer(s) under the 4.0s cooling threshold; 1003mm2 on the plate; aspect 0.67
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED

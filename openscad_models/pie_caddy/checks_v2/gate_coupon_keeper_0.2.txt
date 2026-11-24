@@ -1,0 +1,13 @@
+openscad_models/pie_caddy/parts_v2/coupon_keeper_0.2.stl
+  ok    fits_plate: 20.8 x 20.8 x 25.8 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.59mm, median 5.70mm (floor 1.2mm); 0.36% below one bead; 4732 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 25.8mm printed of 25.76mm
+  ok    geometry_survives_slicing: printed height 25.8mm vs modelled 25.76mm
+  ok    flat_base: 0.95 cm2 of contact = 21.9% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=25.0mm; 126 layer(s) under the 4.0s cooling threshold; 142mm2 on the plate; aspect 0.78
+  note  texture (advisory, never fails the gate): rugosity 1.0 -- no vertical relief, below the corpus p25
+PRODUCT GATE PASSED

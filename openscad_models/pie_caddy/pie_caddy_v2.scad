@@ -63,7 +63,10 @@ HUB_H = 122;
 LEDGE = 15;                 // the drum's bore runs up to here; above it, the centre well
 WELL_R = HUB_R - HUB_WALL;  // 11.6
 TH_P = 4; TH_D = 1.2; TH_A = 35;           // exactly the jar tower's tested profile (Scott's pick, Nov 13)
-TH_LEN = 12.5;              // over 3 turns on the post
+// The last 1.7 of each thread tapers into the stop cone (a flat end inside the nut is a ceiling,
+// which the gate's slicer supported). 16.5 keeps over 3 turns at full depth: the nut's teeth are
+// whole from 1.9 above its foot (the lead-in) to 1.7 under the stop, 12.4 mm.
+TH_LEN = 16.5;
 // At 3 mm pitch and 1.0 deep, a 0.3 clearance left 0.7 of tooth: 2.98 x the tolerance stack, under
 // the 3x rule. The jar's 4 mm / 1.2 leaves 0.9 (3.9 x) at 0.3 and 1.0 (4.3 x) at 0.2.
 CL = 0.2;                   // radial thread clearance: the jar tower's tested 0.2 (the coupon tries 0.3 too)
@@ -71,13 +74,20 @@ KEEP_GAP = 0.5;             // the cup's foot above the ledge, set by the stop
 KEEP_R = WELL_R - 0.6;      // 11.0: the drum turns round the cup. At 0.5 the worst case left 0.25, under the 0.3 rule
 CAP_LIFT = 1.0;             // the collar's flare starts this far above the hub's top
 COLLAR_H = 8; COLLAR_R = 15;
-FLARE = COLLAR_R - KEEP_R;  // the 45 deg flare from the tube out to the collar, all above the hub
+// The flare from the tube out to the knurl's valleys, 40 deg from upright, all above the hub; the
+// knurl's peaks grow out of the valleys at 40 deg too (knurl()). First drawn to COLLAR_R - 1 at
+// 45 deg: the peaks stood 1.0 past its top, a flat ceiling 111 up, and the gate's slicer hung
+// support from the bed all round it (54,921 moves, 2026-11-24). Flared to the peaks instead, it
+// left a knife-edge lip between them (min_wall 0.5).
+FLARE = (COLLAR_R - 0.8 - KEEP_R) * 1.2;
 CUP_FLOOR = 1.6;            // above the stop cone's apex
 // in the drum's frame (its underside at 0)
-PT = LEDGE + TH_LEN;        // the post's thread ends here; its 45 deg cone tip rises above
-TIP_H = POST_R - TH_D;      // the cone, from just inside the thread's root (0.02: level with it, the
-                            // two surfaces left zero-volume slivers) to a point
-POST_TOP = BASE_T + BALL + PT + TIP_H;     // in the base's frame
+PT = LEDGE + TH_LEN;        // the post's thread ends here; its cone tip rises above
+// The tip: from just inside the thread's root (0.02: level with it, the two surfaces left
+// zero-volume slivers) to a point, 40 deg from upright. Its mirror is the cup's stop roof, which
+// prints as a ceiling: at 45 deg the gate's slicer supported it (as the face-down cookie's edge).
+TIP_H = (POST_R - TH_D) * 1.2;
+POST_TOP = BASE_T + BALL + PT + TIP_H - 1.2;   // in the base's frame: the tip is cut flat 1.2 under its apex
 WELL0 = LEDGE;
 KEEP_Z = LEDGE + KEEP_GAP;  // the cup's foot
 KEEP_H = HUB_H + CAP_LIFT + FLARE + COLLAR_H - KEEP_Z;
@@ -85,10 +95,10 @@ KEEP_H = HUB_H + CAP_LIFT + FLARE + COLLAR_H - KEEP_Z;
 module base() difference() {
     union() {
         linear_extrude(RIM) fluted2d(BASE_R);   // fluted to match the drum
-        // plain up through the drum's bore, threaded above its ledge, a 45 deg tip on top
+        // plain up through the drum's bore, threaded above its ledge, a 40 deg tip on top
         cylinder(h = BASE_T + BALL + LEDGE, r = POST_R);
         translate([0, 0, BASE_T + BALL + LEDGE - 0.01]) post_thread();   // 0.01 into the post: level, the two stayed separate shells
-        translate([0, 0, BASE_T + BALL + PT - 0.03]) cylinder(h = TIP_H, r1 = POST_R - TH_D - 0.02, r2 = 0.01);
+        translate([0, 0, BASE_T + BALL + PT - 0.03]) post_tip();
     }
     translate([0, 0, BASE_T]) difference() {
         cylinder(h = CH_D + 1, r = RING_R + CH_W / 2);
@@ -156,37 +166,56 @@ function th_r(R, u) = let (r0 = R - TH_D)
 module thread(R, h) linear_extrude(h, twist = -360 * h / TH_P, slices = ceil(h / TH_P * 48), convexity = 4)
     polygon([for (i = [0 : 2 : 359]) let (u = i / 360 * TH_P) th_r(R, u) * [cos(i), sin(i)]]);
 // the post's thread, its first tooth eased in from the root at the flank angle
-module post_thread() intersection() {
-    thread(POST_R, TH_LEN);
-    cylinder(h = TH_LEN, r1 = POST_R - TH_D + 0.01, r2 = POST_R - TH_D + 0.01 + TH_LEN * tan(TH_A));
+// and its last tooth tapered into the tip: the tip's cone carried down, TAPER_CL inside it
+TIP_R = POST_R - TH_D - 0.02;   // the tip cone's (and the stop roof's) base, at PT
+TAPER_CL = 0.2;
+module post_thread() union() {
+    cylinder(h = TH_LEN, r = POST_R - TH_D + 0.01);
+    intersection() {
+        thread(POST_R, TH_LEN);
+        cylinder(h = TH_LEN, r1 = POST_R - TH_D + 0.01, r2 = POST_R - TH_D + 0.01 + TH_LEN * tan(TH_A));
+        cylinder(h = TH_LEN, r1 = TIP_R - TAPER_CL + TH_LEN / 1.2, r2 = TIP_R - TAPER_CL);
+    }
 }
+// the tip, cut flat where it's 2 across: a point prints short (the gate measured 0.4 missing)
+module post_tip() cylinder(h = TIP_H - 1.2, r1 = TIP_R, r2 = TIP_R - (TIP_H - 1.2) / 1.2);
 
 // ---- the keeper cup, in its own frame (foot at 0), as it prints: foot on the bed ------------
-// Inside its foot: the thread cut CL out, then a 45 deg cone roof matching the post's tip, so
+// Inside its foot: the thread cut CL out, then a 40 deg cone roof matching the post's tip, so
 // screwing it home lands cone on cone; above, a 1.6 floor and the pen cup.
 module keeper(h = KEEP_H, cl = CL, coupon = false) let (stop = PT - KEEP_Z) difference() {
     if (coupon) union() {           // the test's keeper: no collar, a knurled band at the top to grip
-        cylinder(h = h - 6, r = KEEP_R);
-        translate([0, 0, h - 6.01]) knurl(KEEP_R + 0.2, 6.01);
+        cylinder(h = h - 6, r = C_KEEP_R);
+        translate([0, 0, h - 6.01]) knurl(C_KEEP_R + 0.2, 6.01);
     } else union() {
         cylinder(h = h - COLLAR_H, r = KEEP_R);
-        // the collar: knurled, under it a 45 deg flare from the tube (it prints with no support)
+        // the collar: knurled, under it a 40 deg flare from the tube out to the knurl's valleys
         // (it starts CAP_LIFT above the hub: started below, it cut 328 mm3 into the hub's top)
-        translate([0, 0, h - COLLAR_H - FLARE]) cylinder(h = FLARE + 0.01, r1 = KEEP_R, r2 = COLLAR_R - 1);
+        translate([0, 0, h - COLLAR_H - FLARE]) cylinder(h = FLARE + 0.01, r1 = KEEP_R, r2 = COLLAR_R - 0.8);
         translate([0, 0, h - COLLAR_H]) knurl(COLLAR_R, COLLAR_H);
     }
     // the nut: crests at root + CL, the thread grown CL, a lead-in at the foot
     // 0.02 inside the thread's root: level with it, the two surfaces left zero-volume slivers
-    translate([0, 0, -0.01]) cylinder(h = stop + 0.02, r = POST_R - TH_D + cl - 0.02);
-    translate([0, 0, -0.01]) thread(POST_R + cl, stop + 0.02);
-    translate([0, 0, -0.01]) cylinder(h = 1.0, r1 = POST_R + cl + 0.4, r2 = POST_R - TH_D + cl);
+    // its last turn tapered by the stop roof's cone carried down, so the groove ends in a slope,
+    // not the flat ring of ceiling that drew the gate's support (3,825 moves, 2026-11-24)
+    translate([0, 0, -0.01]) intersection() {
+        union() {
+            cylinder(h = stop + 0.02, r = POST_R - TH_D + cl - 0.02);
+            thread(POST_R + cl, stop + 0.02);
+        }
+        cylinder(h = stop + 0.02, r1 = TIP_R + (stop + 0.01) / 1.2, r2 = TIP_R - 0.01 / 1.2);
+    }
+    // the lead-in, 40 deg from upright (its first cut, 58 deg, was an overhang at the foot)
+    translate([0, 0, -0.01]) cylinder(h = 2.0, r1 = POST_R + cl + 0.4, r2 = POST_R + cl + 0.4 - 2.0 / 1.2);
     // the stop: exactly the post's tip, so cone lands on cone with the foot KEEP_GAP above the
     // ledge. Grown by CL like the thread, it would let the cup sink CL / tan 45 = 0.2 lower.
-    translate([0, 0, stop - 0.01]) cylinder(h = TIP_H + 0.02, r1 = POST_R - TH_D - 0.02, r2 = 0.01);
+    translate([0, 0, stop - 0.01]) cylinder(h = TIP_H + 0.02, r1 = TIP_R, r2 = 0.01);
     // the pen cup, from above the stop's apex to the top
     translate([0, 0, stop + TIP_H + CUP_FLOOR]) cylinder(h = h, r = KEEP_R - 2.0);
 }
+// the peaks grow out of the valleys at 40 deg from upright: started at full size they're a ceiling
 module knurl(r, h, n = 36) intersection() {
+    cylinder(h = h, r1 = r - 0.8, r2 = r - 0.8 + h / 1.2);
     cylinder(h = h, r = r);
     linear_extrude(h) polygon([for (k = [0 : 2 * n - 1]) (k % 2 ? r - 0.8 : r + 0.2) * [cos(180 * k / n), sin(180 * k / n)]]);
 }
@@ -199,15 +228,17 @@ module coupon_base() union() {
     cylinder(h = 2.4, r = 16);
     translate([0, 0, 2.4]) cylinder(h = C_RING_H, r = POST_R);
     translate([0, 0, 2.4 + C_RING_H - 0.01]) post_thread();
-    translate([0, 0, 2.4 + C_RING_H + TH_LEN - 0.03]) cylinder(h = TIP_H, r1 = POST_R - TH_D - 0.02, r2 = 0.01);
+    translate([0, 0, 2.4 + C_RING_H + TH_LEN - 0.03]) post_tip();
 }
 module coupon_ring() difference() {     // the drum's hub round its bore: it must spin under the keeper
-    cylinder(h = C_RING_H, r = HUB_R);
+    cylinder(h = C_RING_H, r = HUB_R - 1.5);   // past the coupon cup's foot (10.2); the hub's full 14 put the plate over 30 min
     translate([0, 0, -1]) cylinder(h = C_RING_H + 2, r = BORE_R);
     translate([0, 0, -0.01]) cylinder(h = 0.51, r1 = BORE_R + 0.5, r2 = BORE_R);
 }
 // the ring stands on the disc and is as tall as the plain stub, so its top is the ledge and the
 // keeper's foot sits KEEP_GAP over it, exactly as on the caddy
+// 2.0 round the nut, not the cup's 2.8: at full size the coupon plate sliced at 31 m 41 s, over 30
+C_KEEP_R = KEEP_R - 0.8;
 C_KEEP_H = (PT - KEEP_Z) + TIP_H + CUP_FLOOR;   // shut at the top: the nut, the stop and the floor only
 
 module balls() for (i = [0 : N_BALLS - 1]) rotate(i * 360 / N_BALLS) translate([RING_R, 0, BASE_T + BALL / 2]) sphere(d = BALL, $fn = 32);
@@ -227,7 +258,7 @@ else if (part == "coupon_base") coupon_base();
 else if (part == "coupon_ring") coupon_ring();
 else if (part == "coupon_keeper") difference() {     // one notch per 0.1 over 0.1: 0.2 one, 0.3 two
     keeper(C_KEEP_H, CL, coupon = true);
-    for (k = [1 : round(CL * 10) - 1]) rotate(k * 12) translate([KEEP_R, 0, C_KEEP_H - 2]) cube([2.4, 1.2, 5], center = true);
+    for (k = [1 : round(CL * 10) - 1]) rotate(k * 30) translate([C_KEEP_R, 0, C_KEEP_H - 2]) cube([2.4, 1.2, 5], center = true);
 }
 else if (part == "keeper_seated") translate([0, 0, BASE_T + BALL + KEEP_Z]) rotate(360 * KEEP_GAP / TH_P) keeper();
 else if (part == "drum_seated") translate([0, 0, BASE_T + BALL]) drum();
