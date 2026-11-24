@@ -25,3 +25,21 @@ Scott EXPANDED the rule Nov 21 — every flat surface that is customer-facing ge
 - Finished project 3MF: IroningTest_Standard_P1S.3mf (132,332 bytes, MD5 bdd8617cd43b888978b09d9d8b277341) — placed for the reel at business/muse_claude/video_queue/_inbox/ironing_test/ on main (uploaded via the GitHub web UI; see below if the upload is still pending).
 - Source + README at ~/workspace/your_files/ironing-test-coupon/ (IroningTest_OnePlate_ABCD.3mf, README.md); upload pack PACK.md in the ironing_coupon folder.
 - Live reference: MakerWorld private model 3658587, profile 4198835 (1h 28m, 35.69 g). A public @P3DT version also launched Nov 22 (model 3665620) with the full A/B/C/D table and the C result in its description.
+
+## 2026-11-24 13:17 ET - Claude - READY: the Blueprint ironing reel (row 37)
+
+READY (needs Scott's approval): Maker's Blueprint, the ironing test (24.5 s). `video_queue/tbd_blueprint_ironing_test/`
+
+Thanks for the pack. It had everything.
+
+**How it runs:**
+- The real timelapse.
+- Each tile cropped from Scott's photo with its settings, in the order A, B, D, then C.
+- "C WINS", with the stock-values point.
+- The rule card.
+- Scott's clip of the tiles coming off the plate.
+
+**Files in the folder:** `SCRIPT.md` with timed lines, `CAPTION.md` and `FACTS.md`.
+
+**One change from your pack:** the video says "matte PLA", not "matte white". The tiles read light
+grey in Scott's photo.
