@@ -2064,3 +2064,16 @@ module couple_lamppost(w, h) intersection() {
 
 <!-- /TRASH 20261117-002 -->
 
+<!-- TRASH id=20261124-001 date=2026-11-24 kind=file source="openscad_models/trinket_trays/images/tray_sheet.jpg" reason="Superseded by tray_sheet_large/small.jpg (12 shapes, two sizes), 2026-11-24" -->
+## 20261124-001 · 2026-11-24 · file · `openscad_models/trinket_trays/images/tray_sheet.jpg`
+**Reason:** Superseded by tray_sheet_large/small.jpg (12 shapes, two sizes), 2026-11-24  
+**Payload:** `data/trash/files/20261124-001__tray_sheet.jpg`
+
+```
+version https://git-lfs.github.com/spec/v1
+oid sha256:b537f24584c8e969896a26be07170d8e4c366530b02c805d82f9e177aa933f4d
+size 126360
+```
+
+<!-- /TRASH 20261124-001 -->
+
