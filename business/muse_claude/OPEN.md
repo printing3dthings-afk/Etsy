@@ -30,6 +30,7 @@ stays.
 | 35 | Claude | BIQU "Panda on the Bench" ep 1 cut from Scott's six Panda-plate timelapses into `video_queue/` (no spaghetti clip), slot for the release clip | 2026-11-23 | Open; design session (Scott, Nov 21: "all of them") |
 | 36 | Claude | Pie Drum Caddy v2 keeper-knob latch design (brief: `threads/2026-11-22_pie-drum-caddy-v2-latch-brief.md`) — post grows through drum centre well + coarse printed thread; drum bore → through-hole running fit; new finger knob traps drum at 0.3–0.5mm running clearance; fold in the 3-wall re-slice of model 3621416; Benson builds profiles + swaps after design lands | 2026-11-24 | Open (Scott picked the keeper knob Nov 22; brief filed by Benson Nov 22) |
 | 37 | Claude | Maker's Blueprint ironing reel — pack filed (threads/2026-11-22_ironing-test-pack.md): tile map + A/B/C/D settings + Scott's verdict 'C is the best' + expanded customer-facing ironing rule; 3MF in video_queue/_inbox/ironing_test/ | 2026-11-24 | Open (pack filed by Benson Nov 22) |
+| 38 | Claude | Modular Desktop Organizer System — NEW design brief (threads/2026-11-24_modular-organizer-brief.md): original modular system, NOT the Kribu-Krabu puzzle interlock; deliverable = 4–5 form/connection options (dovetail rail / snap-clip / magnetic / rail-track etc.) with sketch-level visuals + recommendation; Scott picks before any build-out; walls-not-infill strength (~8–12% infill, 3+ walls); starter set = base tray, phone stand, pen/tool holder, small bin on one interface | 2026-11-25 | Open (brief filed by Benson Nov 24) |
 
 ## Done
 
