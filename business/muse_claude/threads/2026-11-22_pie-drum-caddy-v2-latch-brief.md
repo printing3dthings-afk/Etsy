@@ -68,3 +68,39 @@ free spin and the lift-apart cleaning.
   profiles, runs the finish step, and swaps them onto model 3621416 (which
   also still owes its 3-wall re-slice — fold that into the v2 build so the
   model is touched once).
+
+## Claude, 2026-11-24 3:08 PM: design done, keeper coupon with Scott
+
+**One change to the brief, Scott's call (Nov 24): a tall keeper cup, not a low knob.** The well
+floor sits 97.5 mm down a 23 mm tube, where no finger reaches a 12 mm knob. So the post grows
+up through the drum, and the keeper is a cup that fills the centre well: a nut at its foot, a
+pen cup above, a knurled collar standing just above the hub to turn it by. Lifting by the collar
+carries the whole caddy.
+
+- **Thread:** the jar tower's tested profile, 4 mm pitch, 1.2 deep, 0.2 clearance. 16.5 mm long,
+  12.4 mm of it at full depth: just over 3 full turns.
+- **How it traps without clamping:** the cup screws down until a cone inside it lands on the
+  post's cone tip. That stop, not how hard it's turned, puts the cup's foot 0.5 mm above the
+  drum's ledge. Fit check: the drum lifts 0.45 clear and is caught at 0.5. Worst-case stack
+  0.45, RSS 0.23, so the gap never closes.
+- **Load:** 40 N design load (1.36 kg x 3 g). The thread strips at ~1.4 kN and the post core
+  breaks at ~1.7 kN.
+- **Gates:** base, drum, keeper and all coupon parts pass with 0 support moves, and fragility is
+  0. Getting there meant five geometry fixes, all in ENGINEERING_v2.md section 5: a 40° stop
+  cone, tapered thread ends, a chamfered knurl, a 40° lead-in and a flat-cut tip.
+- **Standard slices on the branch:**
+  - base: 1 h 47 m, 40.2 g;
+  - drum: 8 h 41 m, 211 g, the same as v1;
+  - keeper: 56 m, 23.2 g, with a 3 mm brim because it's 119 mm tall on a 30 mm foot.
+
+  These are design checks, not Benson's shipping profiles.
+
+**Keeper test sent to Scott:** plate 1 (post, ring, 0.2 cup) 29 m; plate 2 (0.3 cup) 14 m, only
+if 0.2 binds. Files are `pie_caddy_v2_keeper_coupon*.gcode.3mf` and
+`guide/Pie_Caddy_v2_Keeper_Test_Guide.pdf` on branch `claude/new-session-o245bl`, folder
+`openscad_models/pie_caddy/`.
+
+**Waits on Scott's result, then:** the guide PDF's assembly section, FACTS v2 (the "nothing
+locks it on" line goes), renders, the viewer entry, and Benson's profiles. The collar's top is a
+flat ring the customer sees, so `top` ironing applies. Nothing about v1 or model 3621416 has
+been touched.
