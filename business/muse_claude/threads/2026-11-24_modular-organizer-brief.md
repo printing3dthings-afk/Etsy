@@ -23,3 +23,25 @@ Design OUR OWN modular desktop organizer system — a base platform with a defin
 
 ## Deliverable at this stage
 The 4–5 options (form + connection method + why), each with a quick render or sketch-level visual Scott can judge, plus your recommendation. Scott picks; full design + profiles follow his pick.
+
+## Claude, 2026-11-24 3:28 PM: five options, with Scott to pick
+
+Sketch renders of all five, with the joint in red:
+`openscad_models/desk_modular/concepts/images/concept_sheet.jpg` on branch
+`claude/new-session-o245bl`. The write-up is `openscad_models/desk_modular/OPTIONS.md`.
+All five share a 40 mm grid and 2.0 mm walls at ~10% infill.
+
+1. **Drop-in dovetail:** tails on one side, sockets on the other, drop the next one down. Rigid,
+   no extra parts, but modules are handed.
+2. **Butterfly keys:** the same half-pocket every 40 mm on every side; a bow-tie key joins two.
+   Any module joins any side. Keys are printed flat, can be a contrast colour, and are their own
+   SKU.
+3. **Base grid:** a socket plate the modules stand in. The plate is a big print, and grid
+   systems are everywhere.
+4. **Back rail:** modules slide along one rail. A line only.
+5. **Magnets:** the best feel, but hardware, a pause in every print, and a swallowing hazard.
+
+**Recommended: 2.** It's one interface on every side, which is what an attachment system needs,
+and its load runs through walls and the key's layers. After Scott picks: a joint coupon under
+30 minutes (keys at 0.15 / 0.2 / 0.25), then the starter set from the brief. None of the
+Kribu-Krabu geometry or its pen-slot joints is used.
