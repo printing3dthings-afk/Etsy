@@ -2,6 +2,15 @@
 
 Original product prototype, September 15, 2026. This is an engineered, digitally checked design, not a physically validated retail release.
 
+**Printed, 2026-11-24.** Scott sent a photo of the base in slate with the tray in light blue,
+assembled on a nightstand (`real/photos/01_assembled_on_nightstand.jpg`). The tray sits in its
+recess and the cradle and cord slot came out as drawn. Asked Scott:
+- does a phone in its case sit on the cradle and stay put with the cable in;
+- does the tray lift out by hand;
+- does the stand sit flat?
+
+Until he answers, it's printed, not validated.
+
 ## Branding revision — September 15, 2026
 
 Both the base and removable tray now have the approved OBC maker's mark engraved into their hidden undersides, 0.7 mm deep. The base mark is 28 mm wide; the tray mark is 24 mm wide. Keep the included `OBC.svg` beside the SCAD when editing. This is the print-ready Montserrat Black mark from the repository, not a substituted font or raised label. Nominal minimum strokes at those sizes exceed the repository's 0.84 mm requirement. Inspect the underside in the actual viewer and on the first print for legibility and orientation.

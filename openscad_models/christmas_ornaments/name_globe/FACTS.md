@@ -4,8 +4,9 @@ Every number comes from this folder. The source is on each line (STANDARDS 15).
 
 ## Version
 - **v1**, 2026-11-18. Scott's pick, form 5 of 5, to replace the domed Name Ornament.
-- **Not printed yet.** Scott is test printing it (2026-11-18). Every image is a
-  design-review render, not a photo.
+- **Printed.** Scott sent photos 2026-11-24 ("These are printed"): "Jesse 2026" in black,
+  lavender and gold, in `real/photos/`. The images under Media are renders unless marked
+  photo.
 
 ## What it is
 - **A flat snow globe on its base.**
@@ -40,6 +41,22 @@ Every number comes from this folder. The source is on each line (STANDARDS 15).
 - **Checked here:** six names build and fit on the base.
 - **Not checked:** PMM's speed. The profile needs **Auto Arrangement on**.
 
+## What the print shows (Scott's photos, 2026-11-24)
+- **Holds:**
+  - the cottage's windows and chimney, the tree's star, the moon and every snowflake dot are
+    clean and separate;
+  - "2026" is crisp;
+  - the name reads in Lobster;
+  - the back is flat on the textured plate, and OBC reads the right way round with the loop
+    at the top.
+- **Weak:**
+  - the snow drift's top shows diagonal top-fill lines;
+  - the name's letters show rough fill on top.
+  `gcode/name_globe_three_colour.gcode.3mf` irons every top face, so either this print came
+  from another profile (its colours aren't the slice's red, blue and white), or the ironing
+  didn't take. Asked Scott which file he printed.
+- **Not yet known:** his verdict.
+
 ## Free or paid, per platform
 - **Not decided.** Scott's call. Until his test print is checked, private only.
 
@@ -49,13 +66,16 @@ Every number comes from this folder. The source is on each line (STANDARDS 15).
 - "Three colours, printed flat, no supports."
 
 ## Don't say
-- That it's printed or tested. Not yet.
+- That it's tested or approved: printed once, verdict not given yet.
 - That the glass is clear or see-through: it's an opaque blue disc. A translucent filament
   is an option for the buyer, untested.
 
 ## Media
 | file | shows | version |
 |---|---|---|
+| `real/photos/01_front_jesse_2026.jpg` | **photo**, front, "Jesse 2026", black / lavender / gold | v1 |
+| `real/photos/02_front_angle.jpg` | **photo**, front at an angle | v1 |
+| `real/photos/03_back_obc_mark.jpg` | **photo**, the back and the OBC mark | v1 |
 | `images/name_globe_colour_top.png` | front, colour render, "Olivia 2026" | v1 |
 | `images/name_globe_colour_three_quarter.png` | angle, render | v1 |
 | `images/name_globe_as_printed_*.png` | rendered from the slice's toolpath | v1 |
