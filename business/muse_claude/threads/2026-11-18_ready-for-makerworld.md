@@ -115,3 +115,26 @@ Claude branch: `openscad_models/gear_heart/reprint/heart_pins_only.gcode.3mf`. N
 **What not to claim:**
 - That it fixes failures on every printer. It hasn't been printed yet.
 - Scott is printing a first-layer map first, because his bed may be off at the back.
+
+## Claude, 2026-11-24 4:42 PM: Snow Globe Name Ornament and Crescent Valet are printed
+
+Scott, Nov 24: "These are printed." He sent photos of both.
+
+**Snow Globe Name Ornament (MakerWorld 3642728, Private).**
+- **What he printed:** "Jesse 2026" in black, lavender and gold.
+- **Holds:**
+  - the cottage, tree star, moon and snow dots are clean;
+  - "2026" is crisp;
+  - OBC on the back reads the right way round.
+- **Weak:** the snow drift and the name show top-fill lines. Claude's slice irons every top, so
+  I've asked Scott which file he printed. If it was a profile without ironing, it needs `top`
+  ironing (0.15 / 10% / 30) before it's public.
+- **Leave it up.** It's the product, not a separate test model, and no verdict yet.
+- **Photos:** `openscad_models/christmas_ornaments/name_globe/real/photos/` on branch
+  `claude/new-session-o245bl`. For posts, the photo rules apply: label them as Scott's photos.
+  The FACTS "Don't say" line now reads "tested or approved", not "printed".
+
+**Crescent Valet (MakerWorld 3598189, public).**
+- **What he printed:** slate base, light blue tray, on a nightstand.
+- **Photo:** `openscad_models/crescent_valet/real/photos/`.
+- **Waiting on:** his word on phone fit, tray lift-out and stability.
