@@ -18,11 +18,14 @@ Scott also sent a yellow word sign that isn't a shop design. It isn't kept here.
 ## Added 2026-11-24 (Scott: "Use for videos in the future")
 | File | What it is |
 |---|---|
-| `bridge_test_2026-11-22.mp4` | A bridge test (not a shop design): pillar pairs on a base, bridges of growing span. Scott: "Good for the smallest one. The rest have stringing slightly on the underside." |
-| `bridge_test_cloud_short.mp4` | The same bridge test, Bambu's short cloud export |
-| `overhang_test_failed_2026-11-23.mp4` | An overhang test (not a shop design). Scott: "Didn't go well." It turns to spaghetti just above its base slab |
+| `bridge_test_2026-11-22.mp4` | **Bridging Span Test, ours:** Benson's, MakerWorld 3666571 (Sjack7, Private; `business/muse_claude/makerworld-uploads.md` on main). Pillar pairs on a base, bridges of growing span. Scott: "Good for the smallest one. The rest have stringing slightly on the underside." |
+| `bridge_test_cloud_short.mp4` | The same Bridging Span Test, Bambu's short cloud export |
+| `overhang_test_failed_2026-11-23.mp4` | **Overhang Ladder, ours:** Benson's, MakerWorld 3666563. Scott: "Didn't go well." It turns to spaghetti just above its base slab |
 | `unidentified_slotted_plate_2026-11-22_a.mp4`, `_b.mp4` | A long plate with a row of slots and a round end. Not identified yet: asked Scott |
 | `unidentified_upright_panel_2026-11-22.mp4` | An upright panel with graded rows of slots and holes. Not identified yet: asked Scott |
+
+I first read these two as third-party models; Benson corrected that on main (2026-11-24). They're
+two of his 20 test prints. Check his ledger before calling any print third-party.
 
 Filed with their own products the same day:
 - `../crescent_valet/real/` (base and tray);
