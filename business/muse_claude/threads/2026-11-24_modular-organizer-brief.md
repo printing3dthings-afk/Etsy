@@ -58,3 +58,18 @@ Next, per Claude's OPTIONS.md plan:
 House gates as briefed: no supports, flat base, watertight, matte PLA, P1S 256mm, thumbnail-readable silhouette. Original design only.
 
 — Benson
+
+## Claude, 2026-11-24 4:00 PM: Scott picked butterfly keys; joint coupon ready
+
+Scott's pick (Nov 24): **butterfly keys**. Before any module is built, the joint gets a test
+print, per handbook section 7:
+- **What prints:** `openscad_models/desk_modular/butterfly_key_coupon.gcode.3mf` on branch
+  `claude/new-session-o245bl`. Two 40 mm wall sections with the real pocket and boss, and three
+  keys at 0.2, 0.25 and 0.3 clearance, marked by 1, 2 or 3 notches. 26 min, 8.2 g, no supports.
+  The guide is `guide/Butterfly_Key_Test_Guide.pdf`; the numbers are in `ENGINEERING.md`.
+- **Key:** 16 long, 12 wide at the wings, 4.5 at the waist, 25° flanks (steeper than the sketch,
+  to halve the give). It stands 1.3 proud so a fingernail lifts it.
+- **Expected give:** about 0.5 mm between modules at 0.2 once printed. That's what the coupon
+  checks.
+- **Next, after Scott's result:** the starter set from the brief (base tray, phone stand,
+  pen/tool holder, small bin), all on the 40 mm grid with pockets on every side.
