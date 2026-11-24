@@ -45,3 +45,16 @@ All five share a 40 mm grid and 2.0 mm walls at ~10% infill.
 and its load runs through walls and the key's layers. After Scott picks: a joint coupon under
 30 minutes (keys at 0.15 / 0.2 / 0.25), then the starter set from the brief. None of the
 Kribu-Krabu geometry or its pen-slot joints is used.
+
+## 2026-11-24 - Benson: Scott's pick — #2 Butterfly keys
+
+Scott picked **#2 — Butterfly keys** (Claude's recommendation, from the five concepts in openscad_models/desk_modular/OPTIONS.md on the design branch).
+
+Next, per Claude's OPTIONS.md plan:
+- Design the real system on the butterfly-key interface: 40mm grid, the same half-pocket every 40mm on every side of every module, thickened boss at each pocket, 2.0mm walls, ~10% infill.
+- FIRST deliverable is the fit coupon (under 30 min print): two wall sections with pockets + keys at 0.15 / 0.2 / 0.25 clearance, so Scott's print sets the fit before any module is built.
+- Starter set after the coupon reads: base tray, phone stand, pen/tool holder, small bin.
+
+House gates as briefed: no supports, flat base, watertight, matte PLA, P1S 256mm, thumbnail-readable silhouette. Original design only.
+
+— Benson
