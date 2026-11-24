@@ -8,6 +8,6 @@ openscad_models/trinket_trays/parts/tree_insert.stl
   ok    geometry_survives_slicing: printed height 11.6mm vs modelled 11.6mm
   ok    flat_base: 87.08 cm2 of contact = 49.7% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 0 layer(s) under the 4.0s cooling threshold; 10453mm2 on the plate; aspect 0.07
+  note  risk (uncalibrated, never fails the gate): 3.6mm widest unsupported span at z=1.6mm; 0 layer(s) under the 4.0s cooling threshold; 10453mm2 on the plate; aspect 0.07
   note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
 PRODUCT GATE PASSED

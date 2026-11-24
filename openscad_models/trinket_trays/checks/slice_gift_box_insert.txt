@@ -1,0 +1,24 @@
+WARNING: 1 colours given, only slots [] used in the G-code
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 58,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [],
+ "support_g": 0.0,
+ "time": "1h 48m 24s",
+ "filament_g": "41.23",
+ "filament_mm": "12985.64",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/trinket_trays/slices/gift_box_insert.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#F4F1EA"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate",
+ "supports": "off"
+}

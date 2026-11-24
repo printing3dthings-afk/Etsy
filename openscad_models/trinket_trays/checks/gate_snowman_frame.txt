@@ -1,0 +1,13 @@
+openscad_models/trinket_trays/parts/snowman_frame.stl
+  ok    fits_plate: 102.2 x 182.4 x 14.0 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  ok    min_wall: 1st pct 1.60mm, median 5.16mm (floor 1.2mm); 0.04% below one bead
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 14.0mm printed of 14.0mm
+  ok    geometry_survives_slicing: printed height 14.0mm vs modelled 14.0mm
+  ok    flat_base: 129.29 cm2 of contact = 69.4% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 3.2mm widest unsupported span at z=13.2mm; 0 layer(s) under the 4.0s cooling threshold; 15437mm2 on the plate; aspect 0.07
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE PASSED
