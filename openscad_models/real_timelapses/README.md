@@ -14,3 +14,20 @@ Product posts (`business/social/series_motion/digital_vs_real.py`).
 | `failed_blue_spaghetti_2026-11-21.mp4` | A blue print that failed into spaghetti. Not identified yet: asked Scott |
 
 Scott also sent a yellow word sign that isn't a shop design. It isn't kept here.
+
+## Added 2026-11-24 (Scott: "Use for videos in the future")
+| File | What it is |
+|---|---|
+| `bridge_test_2026-11-22.mp4` | A bridge test (not a shop design): pillar pairs on a base, bridges of growing span. Scott: "Good for the smallest one. The rest have stringing slightly on the underside." |
+| `bridge_test_cloud_short.mp4` | The same bridge test, Bambu's short cloud export |
+| `overhang_test_failed_2026-11-23.mp4` | An overhang test (not a shop design). Scott: "Didn't go well." It turns to spaghetti just above its base slab |
+| `unidentified_slotted_plate_2026-11-22_a.mp4`, `_b.mp4` | A long plate with a row of slots and a round end. Not identified yet: asked Scott |
+| `unidentified_upright_panel_2026-11-22.mp4` | An upright panel with graded rows of slots and holes. Not identified yet: asked Scott |
+
+Filed with their own products the same day:
+- `../crescent_valet/real/` (base and tray);
+- `../christmas_village/victorian/santas_workshop/v2/real/` (Santa's Workshop v2, Oct 26);
+- `../gear_heart/real/heart_base_on_plate_clip.mov` (a phone clip of the heart base on the plate).
+
+Four of the upload were already here, byte for byte: the Gear Heart pop-off and timelapse, and the
+ironing test's pop-off and timelapse.
