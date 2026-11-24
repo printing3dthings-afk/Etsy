@@ -1,0 +1,98 @@
+{
+ "star": {
+  "frame_mm": [
+   154.4,
+   147.9,
+   14.0
+  ],
+  "insert_mm": [
+   143.3,
+   137.1,
+   11.6
+  ],
+  "frame_watertight": true,
+  "insert_watertight": true,
+  "frame_cm3": 50.0,
+  "insert_cm3": 24.6
+ },
+ "tree": {
+  "frame_mm": [
+   131.3,
+   156.3,
+   14.0
+  ],
+  "insert_mm": [
+   120.6,
+   145.3,
+   11.6
+  ],
+  "frame_watertight": true,
+  "insert_watertight": true,
+  "frame_cm3": 45.3,
+  "insert_cm3": 21.2
+ },
+ "mitten": {
+  "frame_mm": [
+   135.1,
+   158.4,
+   14.0
+  ],
+  "insert_mm": [
+   124.2,
+   147.2,
+   11.6
+  ],
+  "frame_watertight": true,
+  "insert_watertight": true,
+  "frame_cm3": 55.8,
+  "insert_cm3": 29.7
+ },
+ "bauble": {
+  "frame_mm": [
+   154.3,
+   168.4,
+   14.0
+  ],
+  "insert_mm": [
+   143.2,
+   157.2,
+   11.6
+  ],
+  "frame_watertight": true,
+  "insert_watertight": true,
+  "frame_cm3": 59.3,
+  "insert_cm3": 34.3
+ },
+ "bell": {
+  "frame_mm": [
+   152.0,
+   156.2,
+   14.0
+  ],
+  "insert_mm": [
+   141.1,
+   145.2,
+   11.6
+  ],
+  "frame_watertight": true,
+  "insert_watertight": true,
+  "frame_cm3": 50.6,
+  "insert_cm3": 25.8
+ },
+ "gingerbread": {
+  "frame_mm": [
+   173.2,
+   179.6,
+   14.0
+  ],
+  "insert_mm": [
+   162.6,
+   168.8,
+   11.6
+  ],
+  "frame_watertight": true,
+  "insert_watertight": true,
+  "frame_cm3": 67.7,
+  "insert_cm3": 32.8
+ }
+}
