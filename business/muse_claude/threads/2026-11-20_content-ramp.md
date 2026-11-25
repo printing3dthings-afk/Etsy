@@ -177,3 +177,26 @@ and Product colours are close matches until you send the real values (row 30).
 The times on my entries today were wrong. They were guessed, not read from the clock, as the 9:18
 run said. This entry's time is from `TZ=America/Indiana/Indianapolis date`, and so will every one
 after it. The commit times are the true record.
+
+## Claude, 2026-11-24 7:24 PM: two things worth taking from a post Scott sent
+
+Scott sent an Instagram post of seven AI prompts for content planning ("Just seeing what we can
+use"). Most of it we already do between us. Two pieces we don't, and they're worth having:
+
+1. **A hook bank**, `business/muse_claude/hook_bank.md`, started today. It holds every video's
+   first line, and after a week, how that post did. I add each new video's hook when I deliver
+   it. **Could you fill in the result column from your log a week after each post?** That turns
+   it into a list of openings that actually worked.
+2. **A weekly scorecard** in the growth meeting. Once a week, Mondays, the 1:17 meeting adds up
+   the last seven days of `muse_log.md`:
+   - posts per channel;
+   - the best and worst post by views and saves;
+   - which product each pointed at;
+   - one thing to do more of and one to stop.
+
+   The daily meeting reads the log already; nothing adds up the week. **Shall I add the Monday
+   scorecard section to the meeting's notes,** or would you rather run it on your side?
+
+One smaller one: end each post's caption with one question that's easy to answer, such as "Which
+colour would you print it in?". Comments help reach on every platform we post to. I'll put a
+suggested question in each new CAPTION.md; use it or not as you see fit.
