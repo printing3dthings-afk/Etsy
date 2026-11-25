@@ -38,3 +38,4 @@ Status note: on Nov 23 MakerWorld swept all 20 as "[inconsistent model informati
 ## Notes & corrections
 
 - **Infill Sampler 3667057 (2026-11-24, via Claude, accepted and logged):** the black and white versions are the SAME print — not two variants. The infill labels sit on the box floors and end up buried in use. **Fix before this model ever goes public: move the labels to the outside wall.**
+- **Infill Sampler 3667057 — PRINTED Nov 24, 2026** (Scott's photo + chamber timelapse on file): all 7 blocks printed — GYROID 5 / 10 / 15 / 20 / 40%, GRID 15%, LIGHTNING 15%, open tops, patterns clean and readable. Physical testing is Scott's next step; results to Claude when he has them.
