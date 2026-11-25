@@ -48,6 +48,13 @@ SERIES = {
     "friday": dict(name="Friday Makers", bg=(48, 40, 34), title_col=(246, 240, 226), kicker_col=(206, 164, 74),
                    acc=(206, 164, 74), text=(246, 240, 226), kicker="FRIDAY", title="MAKERS", chip="WEEK 5",
                    font="anton", cta="JOIN THE ONBRANDCRAFTZ MAKERS GROUP", banner=True, exact=False),
+    # BIQU "Panda on the Bench" (2026-11-25). Benson hasn't sent the partner series' locked look
+    # (asked 2026-11-20, content-ramp thread), so this is ours to change: panda black and white
+    # with a bamboo-green accent, and no BIQU or BIGTREETECH logo (their marks, not ours to use).
+    "bench": dict(name="Panda on the Bench (BIQU partner series)", bg=(20, 21, 22), title_col=(246, 246, 242),
+                  kicker_col=(126, 190, 88), acc=(126, 190, 88), text=(246, 246, 242),
+                  kicker="PANDA ON", title="THE BENCH", chip="EP 002", font="anton",
+                  cta="WHAT SHOULD WE TEST NEXT?", exact=False),
     "product": dict(name="Product posts", bg=(58, 30, 36), bg2=(196, 98, 58), title_col=(255, 246, 232),
                     kicker_col=(255, 214, 160), acc=(255, 214, 160), text=(255, 246, 232),
                     kicker="NEW PRINT", title="SANTA'S WORKSHOP", chip="DESIGNED BY US", font="anton",
