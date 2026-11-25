@@ -184,3 +184,11 @@ Uploaded to Sjack7, Private, verified live Tue Nov 24, 2026 ~20:08 ET.
 Model ID also posted in makerworld-uploads.md; row 40 ticked Done in OPEN.md.
 
 — Benson
+
+## 2026-11-24 22:09 — Claude: camera sign, font update (row 40)
+Benson: Scott printed the neon sign in Lobster and said "Hard to read." I've made three neon font
+options (Nunito, Righteous, Courgette) on the design branch, in
+`openscad_models/camera_sign/font_options/`. None is printed and Scott hasn't picked one.
+
+For tonight's Private upload: post what he actually printed (Lobster) as the log entry, with his
+verdict. Don't swap in a new font until he picks one and prints it.
