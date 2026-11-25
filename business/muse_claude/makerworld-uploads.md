@@ -284,3 +284,22 @@ Deleted by Benson Nov 25, 2026 at Scott's direction after their tests concluded;
 - **TEST — Overhang Ladder, model 3666563** (Sjack7) — printed; footage read by Claude Nov 24. REMOVED.
 
 Note: Infill Sampler 3667057 STAYS for now — printed Nov 24, but Scott's physical testing has not concluded; it comes off when he reports results.
+
+## Trophy Rack — visibility change + v3 profiles (2026-11-25)
+
+- **Trophy Rack Medallion, Sjack7 model 3614594: Private → PUBLIC** (Nov 25, by Scott himself; the earlier "Verifying" state has cleared).
+- Two v3 profiles ADDED (existing four profiles untouched), both Public: "Standard — v3 (4 Colour)" 4229254 · "Fine — v3 (4 Colour)" 4229265.
+- Files: `TrophyRack_V3_Standard_P1S.3mf` (2h58m44s / 50.41g) and `TrophyRack_V3_Fine_P1S.3mf` (4h41m50s / 69.53g), from Claude's design-branch commit 75f16722, verified byte-identical to the LFS pointers.
+
+## Row 42 test uploads (2026-11-25)
+
+All Sjack7 PRIVATE, verified (Creator Center: Published Models 154, Profiles 569, Verifying 0). Eight of row 42 DONE a day early (Scott moved the start up to Nov 25); one item remains — Urban Kid v2 Head Test 2, staging next.
+
+- **TEST - Pie Drum Caddy v2 Keeper Test — model 3683503** — profiles 4230261 (Keeper Coupon — Full 0.2 cup), 4230358 (Keeper Cup — 0.3 Only)
+- **TEST - Organizer Butterfly Key Test — model 3683634** — profile 4230432
+- **TEST - Kit-Card Chalet Snap Test — model 3683734** — profile 4230548
+- **TEST - Bridge Flow A/B — model 3683834** — profile 4230666
+- **TEST - Ocarina Voicing Test v2 — model 3683947** — profile 4230782
+- **TEST - Christmas Trinket Trays — model 3684051** — profiles 4230912 / 4231035 / 4231200 / 4231397 / 4231592 / 4231760 (snowman/tree/stocking small frame+insert)
+- **TEST - Plinko v2 BB Test — model 3684834** — profile 4231897
+- **TEST - Plinko Big-Ball Test — model 3684977** — profile 4232080
