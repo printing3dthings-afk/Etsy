@@ -4,7 +4,9 @@ Every number comes from this folder (STANDARDS 15).
 
 ## Version
 - **v1**, built 2026-11-18; the slices were re-made 2026-11-25 with the current slicer tool.
-- **Not printed yet.** Every image is a design-review render, not a photo.
+- **Printed once, neon, in Lobster (Scott's photo, 2026-11-25): "Hard to read."** Three
+  neon font options are in `font_options/` (Nunito, Righteous, Courgette), not printed yet.
+  Every image is a design-review render or flat view, not a photo.
 - **For Scott's own printer.** Scott, 2026-11-25: upload it to his **Private** MakerWorld page
   tonight. It isn't public; whether it ever goes public is his call.
 

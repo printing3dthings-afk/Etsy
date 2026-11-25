@@ -30,23 +30,58 @@ THICK  = 2.4;          // PLACEHOLDER until Scott's gaps: total thickness off th
 RAISE  = 0.8;          // the letters stand this far above the base: four layers
 WIDE   = 130;          // the handle's width; the sign is about this plus its margin
 
-SCRIPT = "Lobster:style=Regular";
+// The neon's handle face. Scott printed Lobster (2026-11-25): "Hard to read. Try 3 different
+// fonts in the style not the plaque". Its joined letters run together at 8 mm. The three
+// alternatives keep the neon outline and change only the handle's face:
+//   lobster    the original, joined script
+//   nunito     rounded heavy sans: open counters, the most legible
+//   righteous  retro display, the look of a neon sign, letters stand apart
+//   courgette  a script whose letters stay separate, thickened a little to print
+// Each row: name, font, the handle's width at size 10 (measured by exporting it, 2026-11-25),
+// an outward offset that thickens thin strokes to a printable relief, and a face for the "@"
+// alone ("" for the row's own). Righteous's own "@" has counters too narrow for a nozzle:
+// clean() closed them and it printed as a solid blob, so it borrows Nunito's. At size 10 that
+// "@" is 11.98 wide, then a 0.8 gap, then Righteous's "onbrandcraftz2026", 123.72 wide.
+AT_W = 1.198; AT_GAP = 0.08; REST_W = 12.372;   // per unit of size
+FONTS = [
+    ["lobster",   "Lobster:style=Regular",   11.32, 0,    ""],
+    ["nunito",    "Nunito:style=Black",      13.72, 0,    ""],
+    ["righteous", "Righteous:style=Regular", AT_W + AT_GAP + REST_W, 0, "Nunito:style=Black"],
+    ["courgette", "Courgette:style=Regular", 12.72, 0.25, ""],
+];
+hfont = "lobster";
+FROW = FONTS[search([hfont], FONTS)[0]];
+SCRIPT = FROW[1];
 BOLD   = "Montserrat:style=ExtraBold";
 // The handle's width per unit of text size, measured by exporting it at size 10
 // (2026-11-18: Lobster 113.2 mm, Montserrat ExtraBold 150.1 mm). Re-measure if the
 // handle changes: a width table guessed for the bold face ran it off the plaque.
-W_SCRIPT = 11.32;
+W_SCRIPT = FROW[2];
 W_BOLD   = 15.01;
+THICKEN  = FROW[3];
+AT_FONT  = FROW[4];
 H_SIZE = WIDE / W_SCRIPT;                                   // the neon's handle size
+C_SIZE = 0.42 * WIDE / 11.32;   // FOLLOW, the size it printed at (it read well), whatever the handle's face
 
 // cleaned as a nozzle draws: gaps under 0.85 closed, strokes under a bead opened
 module clean() offset(r = 0.21, $fn = 12) offset(delta = -0.21) offset(r = -0.425, $fn = 12) offset(delta = 0.425) children();
 
-module handle2d(font, w = WIDE) clean() text(HANDLE, size = w / (font == BOLD ? W_BOLD : W_SCRIPT), font = font, halign = "center", valign = "center");
-module call2d(y) clean() translate([0, y]) text(CALL, size = 0.42 * H_SIZE, font = BOLD, halign = "center", valign = "center", spacing = 1.25);
+module handle2d(font, w = WIDE) clean() offset(delta = font == BOLD ? 0 : THICKEN)
+    if (font != BOLD && AT_FONT != "") {
+        sz = w / W_SCRIPT;
+        // the "@" and the rest, side by side, centred together. valign = "baseline" on both, then
+        // lifted by half the rest's x-height-ish centre, so the two faces share one baseline
+        translate([-w / 2, 0]) {
+            translate([-0.064 * sz, -0.33 * sz]) text("@", size = sz, font = AT_FONT, valign = "baseline");
+            translate([(AT_W + AT_GAP - 0.031) * sz, -0.33 * sz]) text(substr1(HANDLE), size = sz, font = font, valign = "baseline");
+        }
+    } else text(HANDLE, size = w / (font == BOLD ? W_BOLD : W_SCRIPT), font = font, halign = "center", valign = "center");
+// the handle without its first character
+function substr1(t) = chr([for (i = [1 : len(t) - 1]) ord(t[i])]);
+module call2d(y) clean() translate([0, y]) text(CALL, size = C_SIZE, font = BOLD, halign = "center", valign = "center", spacing = 1.25);
 
 // ---- form 1: neon ----
-CALL_Y_N = 0.95 * H_SIZE;
+CALL_Y_N = 0.95 * H_SIZE + (C_SIZE - 0.42 * H_SIZE);
 module neon_words2d() { handle2d(SCRIPT); call2d(CALL_Y_N); }
 OUTLINE = 2.2;
 module neon_base2d() offset(r = OUTLINE, $fn = 24) offset(r = 1.6, $fn = 16) offset(delta = -1.6) offset(r = 1.6, $fn = 16) neon_words2d();

@@ -15,3 +15,7 @@ Name Ornament customiser. The originals are in the trash vault (`data/trash/`).
 - DancingScript-Regular.woff2 was removed, not replaced: nothing used it.
 
 Check before trusting a new file: `file fonts/<name>` must say TrueType, not HTML.
+
+**2026-11-25:** `Righteous-Regular.ttf` and `Courgette-Regular.ttf`, static files from
+`github.com/google/fonts` (`ofl/righteous/`, `ofl/courgette/`), for the camera sign's font
+options. Both checked with `file`: TrueType.
