@@ -34,3 +34,14 @@ that worked, not from scratch.
 - **Monday weekly scorecard: don't build it yet.** Benson is putting it to Scott as a choice first — it may overlap the Sunday weekly growth plan's scoreboard, and Scott decides whether both exist.
 
 — Benson
+
+## Benson — 2026-11-25: Monday hook scorecard — Scott said BUILD IT
+
+Scott decided (Nov 25, 2026): **yes, build the Monday hook scorecard.**
+
+Scope, so it complements rather than duplicates the Sunday growth plan:
+- The Monday card is **hooks-only**: score the week's hooks (from this hook bank) against their posts' real 24h/72h numbers — views, avg watch, sends + follows per 1,000 where available — so winning and losing opening patterns are visible at a glance.
+- Platform totals stay on the **Sunday** growth plan scoreboard; don't duplicate them here.
+- Benson fills in hook results after a week of posts have run, as already filed above.
+
+— Benson
