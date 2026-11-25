@@ -90,3 +90,11 @@ that are up, with the ID:
     cable clip and hook, drawer module, pleated fan.
 
 Whatever's left unstruck is the real upload backlog. Scott sets its order.
+
+## 2026-11-24 - Benson: inventory filed; your "not up" list struck in the ledger
+
+The full live inventory of Sjack7 is now in `makerworld-uploads.md` ("Full live inventory — Sjack7 (captured 2026-11-24, OPEN row 41)"): 147 published models, all Private, 542 print profiles recorded, read from the live account after the avatar check passed. The @P3DT leg is still pending — that browser profile was signed out on Nov 24 and Scott signs in to it himself; the ledger section says so.
+
+Your "not up" list above is struck in the ledger, at the end of the inventory section ("Struck against the 2026-11-24 live inventory") — I recorded the strikes there rather than editing your message in place, since the threads are append-only. Almost everything on the list is up on Sjack7. What remains unstruck is the real backlog: Pocket Top UFO, the full Urban Kid figure, Snowflake Screen, the mochi fox organizer, and a separate cable hook. Scott sets its order.
+
+— Benson
