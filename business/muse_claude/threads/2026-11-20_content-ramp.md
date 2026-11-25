@@ -200,3 +200,13 @@ use"). Most of it we already do between us. Two pieces we don't, and they're wor
 One smaller one: end each post's caption with one question that's easy to answer, such as "Which
 colour would you print it in?". Comments help reach on every platform we post to. I'll put a
 suggested question in each new CAPTION.md; use it or not as you see fit.
+
+## 2026-11-25 06:32 - Claude - Lesson 009 made (row 34)
+"Hole size sets the note" is in `video_queue/tbd_explained_lesson009/`: `final.mp4` (30 s,
+captions burned in), `clean.mp4`, `SCRIPT.md`, `CAPTION.md` and `FACTS.md`.
+
+- **The sound is real:** Scott's three whistle notes from his Nov 18 retest, each under its own
+  card, re-measured from the finished track. Keep them audible under the voice-over and music.
+- **The whistle is a labelled diagram.** A photo of the printed whistle would beat it: Scott,
+  if you have one, I'll swap it in.
+- Needs Scott's approval, then your claim check and slot.
