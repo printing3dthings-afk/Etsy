@@ -39,9 +39,11 @@ Every number comes from this folder (STANDARDS 15). The source is on each line.
 ## Checks
 - **Product gate:** all 48 parts pass (`checks/gate_*.txt`).
 - **Fragility:** 0 on every set (`checks/fragility_*.txt`).
-- **Print fidelity:** on the small gingerbread insert, the finest detail. One flag, 0.06 mm³ at a
-  wrist zigzag's inside point; not visible, left as drawn
-  (`checks/fidelity_gingerbread_small_insert.txt`).
+- **Print fidelity:** all 48 parts (`checks/fidelity_all/`, README "Checks").
+  - 37 are clean, and 9 have slivers under 0.2 mm³ at detail tips (not visible).
+  - 2 small frames flag misses that the zoomed toolpath shows are interior infill: on the gift
+    box at three heights, on the gingerbread house at one. Check those two spots on the first
+    print.
 
 ## Safe to say, word for word
 - "Twelve Christmas trinket trays, each a rippled frame and a drop-in insert."

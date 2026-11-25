@@ -33,9 +33,20 @@ They're design-review renders, not photos. Nothing has been printed yet.
 ## Checks
 - **Gate:** all 48 parts pass the product gate (`checks/gate_*.txt`).
 - **Fragility:** 0 on every set.
-- **Detail on the smallest tray:** `print_fidelity` on the small gingerbread insert, the finest
-  detail, flags one spot. 0.06 mm³, 0.22 mm wide, at the inside point of a wrist zigzag: the
-  slicer rounds off a sliver under one bead there. It isn't visible, so it's left as drawn.
+- **Print fidelity on all 48 parts** (2026-11-25, `checks/fidelity_all/`): 37 clean.
+  - **9 parts:** each has 1–4 slivers, 0.06–0.19 mm³ and 0.21–0.59 mm wide. They sit where a
+    raised detail line meets a sharp point (the star's tips, the gingerbread zigzags) or at one
+    ripple crease. The slicer rounds off less than a bead there, which isn't visible, so they're
+    left as drawn. That includes the small gingerbread insert's 0.06 mm³ wrist zigzag, checked
+    on 2026-11-24.
+  - **2 small frames (gift box, gingerbread house)** flag larger misses: 85, 208 and
+    182 mm³ from z 0.8 to 13.0.
+    - On the gift box, the flagged point was drawn model-against-toolpath at z 1.0, 5.9 and
+      12.5 (`print_fidelity --zoom`). The outside and the cavity wall print solid at all three.
+      The only gaps are the sparse infill inside the wide wall in the bow's V.
+    - The gingerbread house's point, at z 5.9, shows the same.
+    - So they're read as interior infill, not missing surface. **Look at those two spots on
+      the first print** to confirm.
 
 ## Slices (`slices/`)
 Standard, matte PLA, with ironing on every flat top: 0.15 spacing, 10% flow, 30 mm/s. No

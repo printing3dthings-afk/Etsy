@@ -1,0 +1,11 @@
+slicing 1 part(s), 1 filament(s) ...
+70 layers parsed
+  layer 0/70
+
+PRINT FIDELITY  (70 layers, model 44607.0 mm3)
+  dropped (modelled, not printed): 0.08 mm3
+  filled  (printed, not modelled): 0.0 mm3
+  colour  (printed, other filament): 0.0 mm3
+  flagged for review (dropped/filled >= 0.5 mm deep and >= 0.2 wide, colour >= 0.4 mm wide): 0
+       dropped #E8DCC8 slot 1     0.082 mm3  z 10.2-14.0 (19 layers)  front at [-10.6, -74.0]  0.18 mm wide, 0.4 mm deep
+       dropped #E8DCC8 slot 1     0.001 mm3  z 6.8-7.0 (1 layers)  front at [6.3, -73.6]  0.07 mm wide, 0.18 mm deep
