@@ -1,0 +1,9 @@
+KIT-CARD CHALET SNAP: an arrow tab, two in-plane prongs, through a 3.0 slot
+  prong 1.3 thick x 2.4 wide x 12.0 long, constant section, bending in the print plane
+  limits (printed PLA, XY): one snap 1.4 %, repeated 0.8 % (a kit is built and taken apart: repeated applies)
+  reach 0.35: strain 0.47 % (ok); a tab pushes in at 1.9 N and pulls out at 4.9 N; a panel edge (2 tabs) 3.9 N in, 9.8 N out; engagement 1.9 x RSS, worst case 0.25 (SHORT)
+  reach 0.45: strain 0.61 % (ok); a tab pushes in at 2.5 N and pulls out at 6.3 N; a panel edge (2 tabs) 5.0 N in, 12.6 N out; engagement 2.5 x RSS, worst case 0.25 (SHORT)
+  reach 0.55: strain 0.74 % (ok); a tab pushes in at 3.0 N and pulls out at 7.7 N; a panel edge (2 tabs) 6.1 N in, 15.4 N out; engagement 3.1 x RSS, worst case 0.25 (ok)
+  grip: the catch starts 3.0 + 0.15 below the shoulder; the stack along it is worst 0.20, RSS 0.14. Thick by the worst case, the catch lands 0.05 inside the floor and its 50 deg flank rides the edge: the nubs stay a little bent and pull the panel down tight. Thin by it, the panel can lift 0.35
+  the rule (3x RSS and over the worst case) passes at 0.55 only; 0.45, the Pocket Top's pick, is 2.5x. The coupon tries all three.
+  centre gap between the prongs 1.6: each closes by the reach, so 0.55 leaves 0.50 at full bend (>= 0.3 stays open)
