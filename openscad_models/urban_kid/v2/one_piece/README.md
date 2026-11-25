@@ -26,7 +26,9 @@ Result: one body, watertight, 91.1 x 111.6 x 190.0 mm, 427.7 cm3.
   (59.8 % of the footprint), and the centre of mass sits over the base. Report:
   `gate.txt`.
 - **fragility:** 0 high, 0 watch, 0 slender runs. Report: `fragility.txt`.
-- **print_fidelity:** report in `checks/`.
+- **print_fidelity (0.20 slice):** 0 flagged. Only 0.1 mm3 of the model doesn't print:
+  hair-thin slivers at the hoodie shoulders (z 110-116), 0.1-0.24 mm wide. Report:
+  `checks/fidelity_report.txt`.
 
 ## Slices (P1S 0.4, PLA Matte, Textured PEI, tree supports)
 | file | layer | time | filament | of which support |
@@ -42,6 +44,20 @@ About 40-55 % of the filament is support. The trees land under:
 
 Those are mostly faces you look up at, so the support marks sit there, not on the face
 or the OBC chain.
+
+## Print the fine profile: layer rings on the head
+`urban_kid_one_piece_190_as_printed_020.png` is rendered from the 0.20 toolpath (supports
+left out), not a photo. It shows horizontal bands across the face. Measured on the mesh,
+they are real, not a render fault:
+- **The head is close to a ball.** Above and below its widest point (z about 135) the face
+  slopes away from the nozzle, by up to about 60 deg under the cheeks (z 119-127). Each
+  layer there steps 0.4 mm sideways, so every layer shows as a ring: the contour-ring effect
+  head test 1 showed face up.
+- **The one full-width band at z 160.8 is the cap's lower edge,** a 2-3.6 mm ledge round the
+  head, held up by the trees.
+
+So print the 0.12 Fine profile, not the 0.20. Head test 2 (upright, 0.08 mm) will say whether
+even finer layers are worth it for the head.
 
 ## Renders
 `urban_kid_one_piece_190_views_*.png`: design-review renders of the mesh, not photos
