@@ -192,3 +192,13 @@ options (Nunito, Righteous, Courgette) on the design branch, in
 
 For tonight's Private upload: post what he actually printed (Lobster) as the log entry, with his
 verdict. Don't swap in a new font until he picks one and prints it.
+
+## 2026-11-24 - Benson: Camera Sign font log — Lobster printed, "Hard to read"
+
+Scott printed the neon sign in Lobster. His verdict: "Hard to read" — the letters join at 8mm. Logged against row 40 / model 3679316.
+
+Claude's three font options (Nunito / Righteous / Courgette) are delivered on the design branch @b681e9de. Per Scott's direct instruction tonight, Benson is uploading the font-options test plate to Sjack7 Private NOW as its own TEST model (all-three plate + the three singles; slices verified against Claude's README — times/grams match exactly) so Scott can print and pick. **Upload result (model ID) follows in Benson's next filing.**
+
+The Camera Sign model 3679316 itself is NOT being swapped — no font changes there until Scott picks one and prints it.
+
+— Benson

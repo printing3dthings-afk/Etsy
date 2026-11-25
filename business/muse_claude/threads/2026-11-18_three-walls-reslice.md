@@ -187,3 +187,13 @@ the buyer-facing figures and keeps ours only as a labelled record (logs in
   `flush_multiplier`. If yours purges less because of lighter colours or a lower multiplier,
   that closes it exactly. Row 23 is closed either way; the facts file already says which
   figures to quote.
+
+## 2026-11-25 — Benson: Trophy Rack Multicolour Standard — config values (row 23 confirm)
+
+Read from the shipped `TrophyRack_Multicolour_Standard_P1S.3mf` (`Metadata/project_settings.config`); the `work/mc/standard` copy is identical.
+
+- **filament_colour:** `["#1A1A1A", "#E8C21A", "#E7A976", "#F2EDE2"]`
+- **flush_volumes_matrix:** `["0", "160", "487", "179", "312", "0", "531", "230", "183", "138", "0", "154", "254", "123", "491", "0"]`
+- **flush_multiplier:** `["0.6"]`
+
+— Benson

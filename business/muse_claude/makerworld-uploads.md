@@ -216,3 +216,50 @@ NOT struck — no matching model in the 2026-11-24 live inventory of either acco
 - Snowflake Screen (no model on Sjack7)
 - mochi fox organizer (no model on Sjack7; the other four desk organizers are up)
 - cable hook (Cable Clip 3561274 and Desk Cable Rail 3561310 are up; no separate hook model found)
+
+## Camera Sign font test — Lobster log + font-options plate (2026-11-24)
+
+- P1S Camera Sign 3679316: Scott printed the neon sign in Lobster; verdict "Hard to read" (letters join at 8mm). Model NOT swapped — no font change until Scott picks and prints a replacement.
+- Font options (Claude, design branch @b681e9de): Nunito / Righteous / Courgette. Font-options test plate (all-three plate + three singles) uploading to Sjack7 Private as its own TEST model on Scott's instruction tonight — model ID to follow in the next filing.
+- **TEST - Camera Sign Font Options — LIVE Private on Sjack7, model 3679928** — https://makerworld.com/en/models/3679928-test-camera-sign-font-options — Profiles (all Private, verified, plates extracted): "All three - one plate" 4225736 · "Nunito" 4225745 · "Righteous" 4225749 · "Courgette" 4225759. Cover = Claude's font_options_sheet.jpg; description states the images are flat views, not photos, and that none of the three is printed yet. MakerWorld shows its own re-estimated times (45m/22m/21m/23m) vs the files' slice times — expected. Pick pending Scott's print of the plate.
+
+## Row 22 Batch A — profile swaps/adds (2026-11-24)
+
+All Private on Sjack7, verified (MakerWorld verification cleared on every one).
+
+- **Tin Clicker 3518210** — file swaps: Clicker Std 4064753, Clicker Opt 4064766, Canister Std 4064782, Canister Opt 4064793 now carry the new one-colour 3-wall builds. Multicolor profiles + drafts untouched.
+- **Dumpling Clicker 3551243** — 4 profiles ADDED: One Colour Std 4225888, One Colour Opt 4225900, AMS Std 4225910, AMS Opt 4225923.
+- **Ladder Mouse Bookmark 3604039** — 2 profiles ADDED: One Colour Std 4225932, One Colour Opt 4225942.
+- **Stacking Jar Tower 3607084** — 6 file swaps: Jar 4133873/4133896, Cap 4133902/4133911, Foot 4133916/4133930.
+- **Trophy Rack Medallion 3614594** — file swaps: Std 4142855, Opt 4146879.
+
+Batches B (Gingerbread village ×7) and C (Victorian ×8 + Santa's Workshop v2) run overnight; filed as they complete.
+
+## Row 22 Batch B — Gingerbread village file swaps (2026-11-25)
+
+All Private on Sjack7, verified; one-colour Std+Opt file swaps; Multicolor profiles untouched.
+
+- **Candy Cane Chapel 3490123:** 3985915 / 3985947
+- **Cocoa Cafe 3490082:** 3985860 / 3985865
+- **Cookie Clock Tower 3489460:** 3985186 / 3985504
+- **Gingerbread Cottage 3489586:** 3985338 / 3985645
+- **Gingerbread Santa's Workshop 3495277:** 3992299 / 3992309
+- **Sweet Shop 3490018:** 3985767 / 3985783
+- **Turret House 3490387:** 3986218 / 3986237
+
+Running total: 32 of 50 Row 22 files live. Batch C (Victorian ×8 + Santa's Workshop v2) underway.
+
+## Row 22 Batch C — Victorian file swaps (2026-11-25)
+
+All Private on Sjack7, verified; one-colour Std+Opt file swaps; Multicolor profiles untouched.
+
+- **Victorian Church 3490474:** 3986326 / 3986354
+- **Victorian Clock Tower 3489517:** 3985247 / 3985628
+- **Coaching Inn 3490436:** 3986287 / 3986294
+- **Victorian Cottage 3489328:** 3985106 / 3985349
+- **Shop House 3490228:** 3986044 / 3986141
+- **Townhouse 3489925:** 3985674 / 3985703
+- **Toy Shop 3490423:** 3986270 / 3986278
+- **Victorian Santa's Workshop 3495451:** v2 pair swapped (3992514 / 3992550 with the V2 matte-white builds); no separate v1 pair existed, so the v1 one-colour pair was ADDED as new profiles 4226556 (Standard) / 4226566 (Optimized).
+
+**ROW 22 COMPLETE: all 50 rebuilt profiles live (batches A + B + C). Nothing left in the upload plan.**
