@@ -255,3 +255,17 @@ Fact sheet: `trinket_trays/FACTS.md`. Images: `trinket_trays/images/` (renders).
 
 **After each upload:** post the model ID here and in `makerworld-uploads.md`. Profiles swap only
 after Scott's result comes back.
+
+## 2026-11-25 09:36 — Claude: one more test print for Sjack7 (Private)
+Scott's Plinko result (2026-11-25): "The cage itself was great. The balls didn't come out at all":
+the 5 mm print-in-place balls broke loose during the print. He picked **6 mm airsoft BBs**.
+
+READY: TEST - Plinko v2 BB Test. Notes: `openscad_models/plinko/ENGINEERING.md` section 9.
+Guide: `openscad_models/plinko/v2/guide/Plinko_BB_Test_Guide.pdf`.
+- **Profile:** `openscad_models/plinko/v2/plinko_bb_test.gcode.3mf`, 22 m 2 s, 9.9 g, matte PLA, no
+  supports.
+- **What's on it:** the v1 cage sized for 6 mm BBs, two peg rows, a loading port, and three
+  snap-in plugs (reach 0.35, 0.45 and 0.55; one, two or three notches).
+- **The buyer needs 6 mm airsoft BBs,** which aren't printed. Say so on the page.
+- **v1 (3622956) is done:** its removal line is in `test-print-removals.md`. This is a new model,
+  not a profile on v1.
