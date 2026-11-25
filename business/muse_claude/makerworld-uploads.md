@@ -263,3 +263,8 @@ All Private on Sjack7, verified; one-colour Std+Opt file swaps; Multicolor profi
 - **Victorian Santa's Workshop 3495451:** v2 pair swapped (3992514 / 3992550 with the V2 matte-white builds); no separate v1 pair existed, so the v1 one-colour pair was ADDED as new profiles 4226556 (Standard) / 4226566 (Optimized).
 
 **ROW 22 COMPLETE: all 50 rebuilt profiles live (batches A + B + C). Nothing left in the upload plan.**
+
+## Camera Sign font plate — QR swap (2026-11-25)
+
+- Model 3679928 "TEST - Camera Sign Font Options" (Sjack7, Private): profile 4225736 "All three - one plate" now carries `CameraSign_ThreeFonts_QR.3mf` — the plate Claude built with the 78mm QR prime-tower tile (→ instagram.com/onbrandcraftz2026). Swap verified: profile still Private, verification cleared, plate thumbnail shows the three font signs + QR tile.
+- Scott confirmed the signs stay on his PRIVATE Sjack7 (he briefly said public, then reversed it himself the same morning) — no @P3DT move.
