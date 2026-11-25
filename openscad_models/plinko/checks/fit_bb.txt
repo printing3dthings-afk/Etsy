@@ -1,0 +1,7 @@
+plug 1 (reach 0.35): seated overlap 0.000 mm3, 0.05 out 0.000; half-way in 3.81 mm3 (the prongs must bend in)
+plug 2 (reach 0.45): seated overlap 0.000 mm3, 0.05 out 0.000; half-way in 5.36 mm3 (the prongs must bend in)
+plug 3 (reach 0.55): seated overlap 0.000 mm3, 0.05 out 0.000; half-way in 6.75 mm3 (the prongs must bend in)
+BB at (0, 5) mid-depth: overlap 0.000 mm3
+BB at (-12, 8) mid-depth: overlap 0.000 mm3
+BB at (12, 8) mid-depth: overlap 0.000 mm3
+BB at (0, -12) mid-depth: overlap 0.000 mm3

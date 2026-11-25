@@ -6,8 +6,8 @@ second set of pegs, so there's no reset. It's one print, with the balls inside.
 ## Status
 - **The test print is ready; the board isn't designed yet.** The risky part is balls that
   print loose inside a closed board, so it's tested first (mechanism handbook section 7).
-- **Test printed by Scott, 2026-11-25:** the cage (bridged front) was great; the balls didn't
-  come free at all, in any variant. Print-in-place balls are dropped (ENGINEERING.md section 8).
+- **Test printed by Scott, 2026-11-25:** the cage (bridged front) was great; the balls broke
+  loose during the print (Scott: "everything is too small for that"). Scott picked 6 mm airsoft BBs instead. Print-in-place balls are dropped (ENGINEERING.md section 8).
 
 ## The test print (`plinko_release_test.gcode.3mf`)
 - **Settings:** Bambu Studio, PLA Matte, 0.20 mm layers, supports off, Bambu's own speeds.

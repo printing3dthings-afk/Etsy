@@ -1,0 +1,8 @@
+BALLS: 6 mm airsoft BBs. Gap rule: a pass >= 7.8, a stop <= 4.2, nothing between
+  chamber depth 6.8 (0.4 each side of a BB); front openings 3.0 (a stop); prong gap 4.0 (a stop)
+PLUG reach 0.35: strain 0.47 % (ok, limit 0.8); 5.1 N in, 13.1 N out; engagement 2.5x RSS (short)
+PLUG reach 0.45: strain 0.61 % (ok, limit 0.8); 6.6 N in, 16.9 N out; engagement 3.2x RSS (ok)
+PLUG reach 0.55: strain 0.74 % (ok, limit 0.8); 8.1 N in, 20.6 N out; engagement 3.9x RSS (ok)
+  the port is a wall drawn in XY (0.10), not a hole (0.15) as the chalet's slot was, so 0.45 now
+  passes the 3x rule too. Prongs are 6.4 wide, not 2.4, so the forces are 2.7x the chalet's.
+LOAD: ~30 BBs at 0.12 g = 3.6 g; on the plug when the board is turned over: 0.035 N, against 16.9 N to pull it at 0.45

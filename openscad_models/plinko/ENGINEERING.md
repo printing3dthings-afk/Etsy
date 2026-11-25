@@ -101,10 +101,47 @@ at all."
 
 - **The cage works.** The bridged lattice front printed well, so bridging a closed front over
   a chamber is proven on this printer. Keep it.
-- **Print-in-place balls failed:** none came free, in any variant.
-- **Why, most likely.** A floating ball's first layer is an island printed over air, with
-  nothing under it. It droops onto the floor and fuses. 0.4–0.6 mm of air (variants 1 and 2)
-  is less than that droop. Variant 3 is joined on purpose; its neck didn't free through the
-  3 mm grid. This reading isn't confirmed by a photo yet.
-- **What changes:** balls can't print loose inside a closed board on this printer. They get
-  printed or bought separately and loaded in. How is Scott's pick (section 9, once picked).
+- **Print-in-place balls failed:** none came out right, in any variant.
+- **Why (Scott, 2026-11-25):** "The balls didn't make it because they broke loose during print. I
+  think everything is too small for that." The 5 mm teardrops broke free of their footing while
+  printing, so the nozzle knocked them about and they never formed. My first guess (welded to the
+  floor) was wrong.
+- **What changes:** balls can't print loose inside a closed board on this printer. Scott picked **6 mm airsoft BBs** (2026-11-25):
+  round, cheap, and they roll best. So the board needs a way to load them (section 9).
+
+## 9. v2: 6 mm airsoft BBs, a loading port and a snap-in plug (2026-11-25, `v2/`)
+- **Requirement:**
+  - BBs load by hand and the board closes with no tools;
+  - the plug holds with the board upside down, and comes out with a firm pull;
+  - every gap a 6 mm BB meets is a pass (≥ 7.8) or a stop (≤ 4.2), the v1 rule scaled.
+- **Concept:**
+  - **The port:** 7.0 wide, through a 3.0 top wall.
+  - **The plug:** the chalet's arrow tab (two in-plane prongs, 1.3 × 12, bending along the
+    layers), 6.4 thick.
+  - **The cage:** the one Scott called great, unchanged: bars 1.4, openings 3.0, ribs every 6.5.
+  - **Inside depth:** 6.8, for 0.4 either side of a BB.
+- **Numbers (`v2/bb_budget.py` → `checks/bb_budget.txt`):**
+  - prong strain 0.47–0.74 % against the 0.8 % repeated limit;
+  - per plug, 5–8 N in and 13–21 N out;
+  - engagement 2.5×, 3.2× and 3.9× RSS: 0.45 and 0.55 pass the 3× rule;
+  - 30 BBs weigh about 0.035 N on the plug, against 17 N to pull it.
+- **Fit (`v2/check_bb.py` → `checks/fit_bb.txt`, manifold3d):**
+  - each plug seated touches nothing, and nothing 0.05 out;
+  - half-way in, the prongs overlap the port (3.8, 5.4 and 6.8 mm³), so they must bend;
+  - a 6 mm sphere fits mid-depth at four places in the chamber.
+- **Gates (`v2/logs/`):**
+  - **Plugs:** pass. Their tab tips were widened to 1.2: at 0.4 the gate read them as sub-floor walls.
+  - **Board:** passes everything except `no_unsupported_overhang`. That's the cage bridging over
+    the chamber: the same exception Scott approved for v1 ("Bridge it, one print"), and v1's cage
+    printed great.
+  - **Print fidelity:** 0 flagged on all four parts.
+  - **Fragility:** 0 high. The board's 18 "watch" are the cage bars, as on v1.
+- **Slice:** `v2/plinko_bb_test.gcode.3mf`, 22 m 2 s, 9.9 g, matte PLA, no supports.
+  - Bambu's own speeds, 3 walls, 15%, as v1's test was.
+  - On the shop's retail settings, the slower outer wall and ironing made it 41 min, over the
+    30-minute coupon limit. This is a function test, not a finish test.
+- **Guide:** `v2/guide/Plinko_BB_Test_Guide.pdf`.
+- **Scott answers:**
+  - do BBs fall through the pegs both ways without sticking;
+  - does any catch between the cage and the back;
+  - which plug holds upside down and still pulls out.
