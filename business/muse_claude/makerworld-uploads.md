@@ -268,3 +268,10 @@ All Private on Sjack7, verified; one-colour Std+Opt file swaps; Multicolor profi
 
 - Model 3679928 "TEST - Camera Sign Font Options" (Sjack7, Private): profile 4225736 "All three - one plate" now carries `CameraSign_ThreeFonts_QR.3mf` — the plate Claude built with the 78mm QR prime-tower tile (→ instagram.com/onbrandcraftz2026). Swap verified: profile still Private, verification cleared, plate thumbnail shows the three font signs + QR tile.
 - Scott confirmed the signs stay on his PRIVATE Sjack7 (he briefly said public, then reversed it himself the same morning) — no @P3DT move.
+
+## Snow Globe — PUBLIC @P3DT launch (2026-11-25)
+
+- **Personalised Snow Globe Ornament — Customizer, model 3682245, @P3DT, PUBLIC** — https://makerworld.com/en/models/3682245-personalised-snow-globe-ornament-customizer
+- Profiles (both Public): Standard 4228657, Optimized 4228688.
+- Customizer registered (`name_globe_pmm.scad`, validation Passed) and generation-tested live ("TEST 2026").
+- Free-sync to Printables + Patreon running; Thangs parked as usual.
