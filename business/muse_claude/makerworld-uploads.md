@@ -303,3 +303,9 @@ All Sjack7 PRIVATE, verified (Creator Center: Published Models 154, Profiles 569
 - **TEST - Christmas Trinket Trays — model 3684051** — profiles 4230912 / 4231035 / 4231200 / 4231397 / 4231592 / 4231760 (snowman/tree/stocking small frame+insert)
 - **TEST - Plinko v2 BB Test — model 3684834** — profile 4231897
 - **TEST - Plinko Big-Ball Test — model 3684977** — profile 4232080
+
+## Row 42 — final item (2026-11-25)
+
+- **TEST - Urban Kid v2 Head Test 2 (Upright) — Sjack7 model 3685287, PRIVATE** — profile 4232409 "Urban Kid v2 Head Test 2 — Upright" (`UrbanKidV2_HeadTest2_Upright_P1S.3mf`, 1h06m57s / 13.30g, from design branch @ 38b33533). Profile initially defaulted Public in its Edit view; set Private explicitly and re-verified.
+
+**OPEN row 42 COMPLETE: all nine test prints uploaded Private to Sjack7 on Nov 25 — a day ahead of the Nov 26 due date.**
