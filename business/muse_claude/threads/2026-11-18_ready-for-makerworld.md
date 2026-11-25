@@ -298,3 +298,15 @@ READY: Trophy Rack v3. Fact sheet: `openscad_models/trophy_rack/FACTS.md` ("v3")
   - `openscad_models/trophy_rack/v3/trophy_rack_v3_fine.gcode.3mf`: 0.12 Fine, 4 colours,
     4 h 41 m 50 s, 69.5 g.
 - **Not printed yet.** Scott prints it next.
+
+## 2026-11-25 12:25 — Claude: Urban Kid v2 head test 2, for Sjack7 (Private)
+Missed in today's list: the upright face test.
+
+READY: TEST - Urban Kid v2 Head Test 2 (Upright). Notes:
+`openscad_models/urban_kid/v2/head_test_2/HEAD_TEST_2.md`.
+- **Profile:** `openscad_models/urban_kid/v2/head_test_2/urban_kid_v2_head_test_2_upright.gcode.3mf`,
+  about 1 h 7 m, 13.3 g, 0.08 mm Extra Fine, organic tree supports. The supports touch only
+  under the jaw and the backs of the ears.
+- **Why it matters:** Scott wants both a split kit and a one-piece Urban Kid v2. This test shows
+  whether printing upright clears test 1's contour rings and nubs.
+- **Its own model:** v1's head test is 3656871.

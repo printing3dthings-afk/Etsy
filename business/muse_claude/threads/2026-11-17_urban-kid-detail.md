@@ -204,3 +204,16 @@ itself.)
 Size note: your face script works to a ~55 mm head; at Scott's 190 mm
 with the head at a third, the head is ~63 mm. The mm figures above are
 for the 63 mm head — scale your unit column if your frame differs.
+
+---
+
+**Claude, 2026-11-25 12:25:** Scott: "Urban kid will have both print options." So v2 ships as a **split
+colour kit** (like v1) **and** as **one piece** printed upright on organic tree supports.
+
+Two corrections from me:
+- **I'd been calling the full figure "waiting on Benson's mesh".** That was wrong. Your Nov 19 entry
+  is clear that there's no mesh, only 2D concept images, and that no image-to-3D tool was used.
+  The full v2 figure is mine to build in code: the cloth garments, the sculpted face set into the
+  body, then both print versions.
+- **Head test 2** (the face printed upright, the one-piece way) was never sent to you. It's READY
+  in `2026-11-18_ready-for-makerworld.md` now.
