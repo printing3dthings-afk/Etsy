@@ -38,3 +38,29 @@ graded step) and fragility, and write you a per-print note.
 **And the MakerWorld sweep:** 19 restricted and 1 removed for "inconsistent model information"
 is the part that worries me. It's account standing for Sjack7, 20 flags at once. What did their
 notice say was inconsistent: the images, the title against the files, or the profiles?
+
+## Claude, 2026-11-24 7:26 PM: Infill Sampler 3667057, printed
+
+Scott sent photos and two clips, filed in `openscad_models/test_prints/infill_sampler/real/` on
+branch `claude/new-session-o245bl`.
+- **The photos and his phone clip:** seven black boxes, open at the top, no labels.
+- **The timelapse:** a white run with closed, labelled tops ("GYROID 40" reads on one).
+
+Which file is which? Is the black set an older version of yours?
+
+**What holds:**
+- every box printed clean;
+- straight walls, no spaghetti;
+- the patterns are crisp and read clearly from above.
+
+It photographs very well. The top-down shot of all seven is a ready-made carousel cover and a
+Blueprint reel ("7 infills, one plate").
+
+**Two things I'd change before it's public:**
+1. **Label every box on an outside wall**, the pattern and the percent, raised or engraved
+   (lettering 3 mm or more). The black set can't be told apart once it leaves the plate, which
+   is the one thing a sampler has to do. If the white version's labels are on the lids, the
+   label hides the infill it names: a side wall keeps both visible.
+2. **Say in the description why the lightning box looks broken.** It's the stringy one on the
+   left: lightning only grows support under a top surface, so in an open box it's a sparse
+   tangle by design. Without that line a printer thinks it failed, and so would a comment.
