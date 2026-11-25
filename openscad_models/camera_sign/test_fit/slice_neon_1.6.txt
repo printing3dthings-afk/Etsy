@@ -1,0 +1,27 @@
+WARNING: 2 colours given, only slots [2] used in the G-code
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 8,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [
+  2
+ ],
+ "support_g": 0.0,
+ "time": "25m 35s",
+ "filament_g": "3.24,1.37",
+ "filament_mm": "1067.86,451.82",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/camera_sign/test_fit/camera_sign_neon_1.6mm.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#1C1C1F",
+  "#F28C28"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate",
+ "supports": "off"
+}

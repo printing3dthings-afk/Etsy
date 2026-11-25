@@ -1,0 +1,13 @@
+test_fit/t1.6/camera_sign_neon_union.stl
+  ok    fits_plate: 137.5 x 28.9 x 1.6 mm vs 256 x 256 x 256
+  ok    watertight: closed
+  ok    winding: normals agree
+  ok    no_floating_geometry: 1 bodies, expected 1
+  FAIL  min_wall: 1st pct 0.80mm, median 18.96mm (floor 1.2mm); 0.00% below one bead; 22240 spans in declared detail, thread or socket regions not counted
+  ok    no_unsupported_overhang: slicer: 0 support moves, 0 overhang perimeters, 1.6mm printed of 1.6mm
+  ok    geometry_survives_slicing: printed height 1.6mm vs modelled 1.6mm
+  ok    flat_base: 27.14 cm2 of contact = 68.3% of footprint (floor 5%)
+  ok    stable: centre of mass sits over the base
+  note  risk (uncalibrated, never fails the gate): 0.0mm widest unsupported span; 0 layer(s) under the 4.0s cooling threshold; 3357mm2 on the plate; aspect 0.01
+  note  texture: not measurable -- plate-like (h/footprint < 0.5); cross-section is not a body
+PRODUCT GATE FAILED
