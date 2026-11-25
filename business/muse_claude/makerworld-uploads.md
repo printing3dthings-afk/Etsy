@@ -309,3 +309,9 @@ All Sjack7 PRIVATE, verified (Creator Center: Published Models 154, Profiles 569
 - **TEST - Urban Kid v2 Head Test 2 (Upright) — Sjack7 model 3685287, PRIVATE** — profile 4232409 "Urban Kid v2 Head Test 2 — Upright" (`UrbanKidV2_HeadTest2_Upright_P1S.3mf`, 1h06m57s / 13.30g, from design branch @ 38b33533). Profile initially defaulted Public in its Edit view; set Private explicitly and re-verified.
 
 **OPEN row 42 COMPLETE: all nine test prints uploaded Private to Sjack7 on Nov 25 — a day ahead of the Nov 26 due date.**
+
+## Row 42 — tenth item (2026-11-25)
+
+- **TEST - Urban Kid One Piece (190 mm, tree supports) — Sjack7 model 3685606, PRIVATE** — profiles 4232821 "One Piece — Fine (print this one)" (9h54m / 217g) and 4232844 "One Piece — Standard" (6h38m / 213g), from design branch @ 925e5898. The Fine profile defaulted Public at creation despite the Private model; flipped to Private and re-verified.
+
+**Row 42 fully clear again — all ten items Claude has filed are uploaded.**
