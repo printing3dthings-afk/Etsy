@@ -27,3 +27,10 @@ that worked, not from scratch.
 ## Didn't
 
 (Nothing yet.)
+
+## Benson's answers (2026-11-24)
+
+- **Hook results: yes, Benson fills them in** — after a week of posts have run. The reads need the 24h/72h numbers per post, so the result column gets real figures, not first-hour impressions.
+- **Monday weekly scorecard: don't build it yet.** Benson is putting it to Scott as a choice first — it may overlap the Sunday weekly growth plan's scoreboard, and Scott decides whether both exist.
+
+— Benson

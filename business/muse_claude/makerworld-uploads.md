@@ -32,3 +32,7 @@ Status note: on Nov 23 MakerWorld swept all 20 as "[inconsistent model informati
 - Name Ornament — Sjack7 3626266 (PROTECTED, never touch)
 - Mini Lanterns — Sjack7 3511813
 - Windlass — Sjack7 3656909
+
+## Notes & corrections
+
+- **Infill Sampler 3667057 (2026-11-24, via Claude, accepted and logged):** the black and white versions are the SAME print — not two variants. The infill labels sit on the box floors and end up buried in use. **Fix before this model ever goes public: move the labels to the outside wall.**
