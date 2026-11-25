@@ -1,0 +1,3 @@
+rendered -> urban_kid_one_piece_190_views_front.png
+rendered -> urban_kid_one_piece_190_views_three_quarter.png
+rendered -> urban_kid_one_piece_190_views_top.png

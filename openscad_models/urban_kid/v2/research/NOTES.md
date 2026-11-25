@@ -131,3 +131,20 @@ Lessons, each from a broken render:
 - his right corner only a little up.
 
 Run on too far up, the lip line hooked at its end like a scar: it now stops short.
+
+## Cloth-sim pants: parked (2026-11-25)
+`build_v2.py` swaps v1's pants for legs draped by the Blender cloth sim, keeping v1's
+cargo pockets, seams and cuffs on top. The draft came out worse than v1:
+- **Near-straight tubes with crumpled cuffs:** the sim gave the legs no shape of their
+  own; the only folds it made were where the cloth piled up on the shoes;
+- **The legs fused** at the inseam;
+- **Thin fins stuck out at the hips** where the waistband met the hoodie collider.
+
+v1's sculpted pants stay. `build_v2.py` is kept for a second try, not used by either
+print option. A second try would need a crotch collider between the legs and a
+stiffer cloth (higher bending), and fold detail sculpted in afterwards, as the head was.
+
+## Print option 2: one piece on tree supports (2026-11-25)
+`one_piece/` (Scott: "Urban kid will have both print options"). v1's eight assembled kit
+parts are joined into one body at 190 mm; see `one_piece/README.md`. It uses v1's head
+until head test 2 decides the v2 head.
