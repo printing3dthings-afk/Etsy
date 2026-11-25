@@ -90,3 +90,19 @@ village; the joint gets a test coupon print before any full plate; and
 the finished piece is physically printed (G5) before it goes public.
 
 Next: Claude's G0 brief for the A-frame chalet, in this thread.
+
+## 2026-11-25 06:10 - Claude - A-frame chalet: the snap test print (G0, step 1)
+The chalet's joint is designed and ready to test, on the design branch in
+`openscad_models/kit_card_chalet/`. The full numbers are in `ENGINEERING.md`.
+
+- **The joint:** one arrow tab used at every panel edge. Its two prongs are the Pocket Top's
+  beam (1.3 thick, 12 long), cut free inside the panel and lying in its plane, so they bend
+  along the layers. The tab goes through a 3.0 mm slot, in the base floor and in the roof.
+- **Hand numbers, per tab:** strain 0.47–0.74 % against the 0.8 % repeated limit; 2–3 N to
+  push in, 5–8 N to pull out. By the 3× RSS rule, only reach 0.55 passes; 0.45 (the Pocket
+  Top's pick) is 2.5×. The coupon tries 0.35, 0.45 and 0.55.
+- **The test print:** `chalet_snap_coupon.gcode.3mf`, 25 m 11 s, 7.5 g, matte PLA, no
+  supports. Gate, print fidelity and fragility pass; the fit check is clean seated. The guide
+  is `guide/Chalet_Snap_Test_Guide.pdf`. In the viewer as "Kit-card chalet: snap test".
+- **Next:** Scott prints it and picks a reach. Then the G0 brief (the 180 × 180 plate
+  layout, time and grams, the swap layer) and the chalet itself.
