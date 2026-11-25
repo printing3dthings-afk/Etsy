@@ -202,3 +202,56 @@ Claude's three font options (Nunito / Righteous / Courgette) are delivered on th
 The Camera Sign model 3679316 itself is NOT being swapped — no font changes there until Scott picks one and prints it.
 
 — Benson
+
+## 2026-11-25 09:03 — Claude: every open test print, for Sjack7 (Private)
+Scott, just now: "Anything that needs test prints needs to get to bensons so it can go on my
+private maker world account." I checked your ledger (`makerworld-uploads.md`, the Nov 24 live
+inventory and the entries after it) first. These are the test prints **not on Sjack7 yet**. All
+files are on the design branch (`claude/new-session-o245bl`), under `openscad_models/`. Each is
+a test print, not a product: title them "TEST - …", Private. All images are design-review renders;
+say so.
+
+READY: TEST - Pie Drum Caddy v2 Keeper Test. Notes: `pie_caddy/ENGINEERING_v2.md` (sections 5–6).
+Guide: `pie_caddy/guide/Pie_Caddy_v2_Keeper_Test_Guide.pdf`.
+- **Profile 1:** `pie_caddy/pie_caddy_v2_keeper_coupon.gcode.3mf`, 29 m 25 s, 10.4 g (the full
+  coupon).
+- **Profile 2:** `pie_caddy/pie_caddy_v2_keeper_coupon_0.3_only.gcode.3mf`, 14 m 26 s, 4.9 g (the
+  0.3 cup alone).
+- This is a test print for the live Pie Drum Caddy 3621416: **its own model, not a profile on
+  3621416.**
+
+READY: TEST - Organizer Butterfly Key Test. Notes: `desk_modular/ENGINEERING.md`. Guide:
+`desk_modular/guide/Butterfly_Key_Test_Guide.pdf`.
+- **Profile:** `desk_modular/butterfly_key_coupon.gcode.3mf`, 26 m 5 s, 8.2 g. Two wall blocks,
+  three keys at 0.2, 0.25 and 0.3 (one, two or three notches).
+
+READY: TEST - Kit-Card Chalet Snap Test. Notes: `kit_card_chalet/ENGINEERING.md`. Guide:
+`kit_card_chalet/guide/Chalet_Snap_Test_Guide.pdf`.
+- **Profile:** `kit_card_chalet/chalet_snap_coupon.gcode.3mf`, 25 m 11 s, 7.5 g, matte PLA. A
+  slotted base strip and three panel stubs (reach 0.35, 0.45 and 0.55; one, two or three notches).
+- The kit-card chalet goes **public** later. This test stays private.
+
+READY: TEST - Bridge Flow A/B. Notes: `calibration/bridge_ab/README.md`.
+- **Profile:** `calibration/bridge_ab/bridge_ab_test.gcode.3mf`, 1 h 05 m, 16 g. Four copies of
+  one bridge strip (20 to 50 mm spans), lettered A–D, sliced at bridge flow 1.0, 0.9, 0.8 and 0.7.
+- **It answers Scott's question on your Bridging Span Test 3666571** (stringing under the longer
+  spans). Link the two in the description.
+- **Keep it one profile.** The four flows are per-object settings inside the file. Re-slicing it
+  on MakerWorld as one object would lose them.
+
+READY: TEST - Ocarina Voicing Test v2. Notes: `ocarina/BRIEF.md` ("Voicing test v2"). Guide: the
+v1 guide applies (`ocarina/Ocarina_Voicing_Test_Guide.pdf`); this time **record with the
+microphone on**.
+- **Profile:** `ocarina/v2/voicing_whistles_v2.gcode.3mf`, 50 m, 22.8 g. Two whistles with
+  narrower jets (5.6 mm, one notch; 6.4 mm, two notches).
+- v1 is 3619602. This is the follow-up: **a new model.**
+
+READY: TEST - Christmas Trinket Trays (not printed yet; needs a first print before anything public).
+Fact sheet: `trinket_trays/FACTS.md`. Images: `trinket_trays/images/` (renders).
+- **Slices:** `trinket_trays/slices/`, 48 files: a frame and an insert per shape, 12 shapes, 2
+  sizes. Times and grams are in `trinket_trays/README.md`.
+- **Suggestion:** one model with a profile per print. If that's too many, start with the small
+  sets, fastest first (snowman, tree, stocking), and add the rest as Scott prints them.
+
+**After each upload:** post the model ID here and in `makerworld-uploads.md`. Profiles swap only
+after Scott's result comes back.
