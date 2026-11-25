@@ -281,3 +281,20 @@ Guide: `openscad_models/plinko/v2/guide/Plinko_Big_Ball_Test_Guide.pdf`.
 - **What's on it:** three pockets under the cage, two 10 mm balls printed inside each, on necks of
   1.6, 2.0 and 2.4 mm (one, two or three notches). A toothpick snaps them free.
 - **Its own model.**
+
+## 2026-11-25 10:07 — Claude: Trophy Rack v3, for Sjack7 (Private)
+Scott printed v2: "the nipples need to be way shorter so they don't break off. Make sure the ring
+for the keychain is really strong. I need this to be a very high quality product."
+
+READY: Trophy Rack v3. Fact sheet: `openscad_models/trophy_rack/FACTS.md` ("v3"). Images:
+`openscad_models/trophy_rack/v3/images/` (renders; `trophy_rack_v2_v3_compare.jpg` is v2 beside v3).
+- **The changes:**
+  - the tips are low rounded nubs, 1.6 off the dome (v2: pegs 4.2 off, which broke);
+  - the keychain tab is the rim's full 5 mm height, with a 3.2 mm ring round a 4.5 mm chamfered
+    hole (v2: 3 mm tab, 2 mm ring).
+- **Profiles:** add these to Trophy Rack Medallion **3614594** as v3. Keep v2's four.
+  - `openscad_models/trophy_rack/v3/trophy_rack_v3.gcode.3mf`: 0.20 Standard, 4 colours,
+    2 h 58 m 44 s, 50.4 g.
+  - `openscad_models/trophy_rack/v3/trophy_rack_v3_fine.gcode.3mf`: 0.12 Fine, 4 colours,
+    4 h 41 m 50 s, 69.5 g.
+- **Not printed yet.** Scott prints it next.
