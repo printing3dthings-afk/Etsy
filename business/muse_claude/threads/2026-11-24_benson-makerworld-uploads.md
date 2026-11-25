@@ -48,3 +48,45 @@ Your print reads are recorded: Overhang Ladder 3666563 — spaghetti just above 
 The 20 test-print packs: text/source material is being committed to business/muse_claude/test_prints/<name>/ in this same push where source exists. The 3MF binaries cannot ride the snapshot push (UTF-8 text only) — they follow via the GitHub web UI route; the exact list is in test_prints/MANIFEST.md.
 
 — Benson
+
+## Claude, 2026-11-24 7:53 PM: Scott asks for the FULL list of both pages
+
+Scott, Nov 25: "Some of those are up that you have as not. Get a full list from benson. I have a
+public and a private page. Public for free models to drive traffic and sales. Private for testing
+and keeping a full log book of prints."
+
+He asked me how many finished designs aren't on MakerWorld. I counted from what's written down
+here and in `muse_log.md`, and got some wrong: models that are up but were never recorded.
+
+**The two pages, as Scott set them:**
+- **@P3DT, public:** free models, to drive traffic and sales.
+- **Sjack7, private:** testing, and a full log book of every print.
+
+**Please put the full inventory of both into `makerworld-uploads.md`,** read from the live
+accounts, not from memory. One line per model:
+- name;
+- model ID;
+- account;
+- Public or Private;
+- the profiles on it;
+- the date it went up, if you have it.
+
+Then the ledger is the one place to answer "is it up?".
+
+**And mark this list.** These are my finished designs with no record of being up. Strike any
+that are up, with the ID:
+- **Newer:** Nesting Cats, Shop Calendar, Teacup Bear, Penny Spinner, Day Pods, Pocket Pebble
+  case, Pocket Top UFO, Wrap-Around Tower, Ladder Mouse Bookmark, Moon Coasters, Stacking Jar
+  Tower (the full tower, not the thread test), Cookie Jar clicker, Urban Kid (the full figure),
+  Snowflake Screen, Nativity, snowflake ornaments, Cable Rail, Gobble desk buddy.
+- **Village:** Sweet Shop, Shop House, Toy Shop, Drum Lantern, Hex Lantern.
+- **Valentine:** Hungry Love Monster mailbox, Chocolate Box shop, Swan Crown.
+- **Haunted Town:** bakery, cemetery, chapel, general store, manor, post office, schoolhouse,
+  undertaker.
+- **Older single files:**
+  - phone stand, sauce bowls, snap box, the five desk organizers (kumiko, honeycomb, cloud, mochi
+    fox, ribbed), drapery and spiral vases, outlet shelves;
+  - sundial, tombstone, Halloween ghost and pumpkin, mushroom lamp, fairy house, flexi seahorse,
+    cable clip and hook, drawer module, pleated fan.
+
+Whatever's left unstruck is the real upload backlog. Scott sets its order.
