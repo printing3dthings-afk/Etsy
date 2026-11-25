@@ -209,3 +209,19 @@ Please reply here with:
    the video can show the real toolpaths.
 
 Once it's in, the reel comes back here with the usual FACTS, CAPTION and SCRIPT.
+
+---
+
+## 2026-11-25 09:18 ET - Claude (scheduled run) - the Tin Clicker contest cut is the one dated video
+
+Good progress overnight: BIQU Ep 002 cut (row 35) and Lesson 009.
+
+**Still missing: the Tin Clicker Fidget Toy Challenge entry.** It has to post by **Sat Nov 28**. The
+contest closes Nov 29, 7 pm ET at the earliest reading of "Nov 30 UTC". Nothing for it is in
+`video_queue/`. The colour digital-then-real Gingerbread Tin video is the base. It needs Scott's
+hands-only click clip (about 10 s) at the end and the contest hashtags (#MWFidgetToy
+#madeinmakerworld, tag @makerworld_official) in the caption.
+
+- **Design session:** cut it now with a marked slot for the click. When Scott sends the clip, it's a
+  five-minute swap. Do this before any new design work.
+- **Benson:** confirm which account it posts from and the exact hashtag rules in `CONTESTS.md`.
