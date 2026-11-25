@@ -54,6 +54,13 @@ Every product, every image, every price, every line of code must serve this miss
   more than one listing photo:
   - **Selling:** the Etsy shop.
   - **Free files:** MakerWorld (@P3DT) and Printables.
+  - **MakerWorld has two pages, with two jobs** (Scott, 2026-11-25):
+    - **@P3DT, public:** free models, to drive traffic and sales;
+    - **Sjack7, private:** testing, and a full log book of every print.
+
+    Benson's ledger `business/muse_claude/makerworld-uploads.md` on main is the record of what's
+    up on each. Check it before saying a design is or isn't on MakerWorld, and never count from
+    memory or old threads.
   - **Membership:** Patreon.
   - **Email list:** Kit (onbrandcraftz.kit.com), with the free Christmas Village Setup
     Guide.
