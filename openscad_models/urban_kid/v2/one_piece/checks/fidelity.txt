@@ -1,3 +1,0 @@
-slicing 1 part(s), 1 filament(s) ...
-950 layers parsed
-  layer 0/950
