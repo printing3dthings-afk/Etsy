@@ -14,6 +14,7 @@ width as before, so each fits the same spot beside the lead screw's slot.
 | 2 | Righteous (its "@" from Nunito) | retro display, the look of a neon sign; letters stand apart | 26 m 5 s, 6.7 g |
 | 3 | Courgette, thickened 0.25 mm | a script, but the letters don't join | 29 m 32 s, 7.3 g |
 | all three on one plate | | to compare them side by side in the printer | 1 h 15 m, 18.3 g |
+| **all three + the QR tile, no prime tower** | | **the plate Scott asked to print** | **2 h 5 m 35 s, 32.2 g (25.9 black, 6.3 orange)** |
 
 - **Righteous's own "@"** has counters too narrow for a nozzle; the cleanup that every face
   goes through closed them into a solid blob. It borrows Nunito's "@".
@@ -23,6 +24,18 @@ width as before, so each fits the same spot beside the lead screw's slot.
   than Lobster's, but open counters read better small than tall joined letters.
 - **Contrast matters as much as the face.** The print in the photo is blue on grey. The file's
   colours, orange on near-black, read further.
+
+## The print plate (Scott, 2026-11-25)
+"I want all 3 on one plate to print. Make the prime tower an object and make it a QR code to
+the instagram." `gcode/camera_sign_three_fonts_qr.gcode.3mf`:
+- **The three signs and the QR tile** (`../qr_tile/`), on one plate.
+- **The prime tower is off** (`enable_prime_tower = 0`, read back from the G-code). The plate
+  has one colour change, black to orange at 1.6 mm, and Bambu's flush for it still goes down
+  the purge chute. The QR tile takes the same change, so it costs no extra swaps.
+- **What to watch:** with no tower to prime on, the first orange layer can start a little thin
+  on whichever object prints first after the swap. Check that layer as it goes down.
+- `plate_toolpath.jpg` is every extrusion in that G-code drawn flat (not a photo). The QR
+  decodes from it.
 
 ## Files
 - `camera_sign.scad` (one folder up) builds them: `-D 'style="neon"' -D 'hfont="nunito"'`
