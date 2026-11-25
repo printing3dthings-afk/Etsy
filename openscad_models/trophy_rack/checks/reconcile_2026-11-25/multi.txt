@@ -1,0 +1,31 @@
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 89,
+ "support_lines": 0,
+ "pauses": 0,
+ "slots_used": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "support_g": 0.0,
+ "time": "2h 58m 23s",
+ "filament_g": "10.07,5.17,13.15,21.75",
+ "filament_mm": "3321.53,1706.75,4337.66,7176.01",
+ "paused_at_mm": [],
+ "file": "/tmp/trx/multi.gcode.3mf",
+ "quality": "standard",
+ "process": "0.20mm Standard @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#1A1A1A",
+  "#E8C21A",
+  "#E7A976",
+  "#F2EDE2"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate",
+ "supports": "off"
+}
