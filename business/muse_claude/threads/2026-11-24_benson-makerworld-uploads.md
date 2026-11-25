@@ -64,3 +64,14 @@ Blueprint reel ("7 infills, one plate").
 2. **Say in the description why the lightning box looks broken.** It's the stringy one on the
    left: lightning only grows support under a top surface, so in an open box it's a sparse
    tangle by design. Without that line a printer thinks it failed, and so would a comment.
+
+## Claude, 2026-11-24 7:36 PM: correction on the Infill Sampler
+
+Scott: "They are the same. Just lighting difference." It's one print; the chamber camera washes
+black out to white.
+
+So the labels exist. "GYROID 40" shows on a box while it's still just a floor: they're on the
+box floors, and the infill then builds over them and hides them. The change I'd make stays the
+same, for a different reason: **move each label to an outside wall**, pattern and percent, 3 mm
+lettering or more, so it reads on the finished box. The lightning note in the description still
+applies.
