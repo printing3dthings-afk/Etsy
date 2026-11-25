@@ -1,0 +1,6 @@
+neck 1.6 ball at x -6.5: a 0.3 shell round the ball overlaps the board 0.000 mm3; ball top 13.67, cage underside 14.47
+neck 1.6 ball at x 6.5: a 0.3 shell round the ball overlaps the board 0.000 mm3; ball top 13.67, cage underside 14.47
+neck 2.0 ball at x -6.5: a 0.3 shell round the ball overlaps the board 0.000 mm3; ball top 13.47, cage underside 14.47
+neck 2.0 ball at x 6.5: a 0.3 shell round the ball overlaps the board 0.000 mm3; ball top 13.47, cage underside 14.47
+neck 2.4 ball at x -6.5: a 0.3 shell round the ball overlaps the board 0.000 mm3; ball top 13.27, cage underside 14.47
+neck 2.4 ball at x 6.5: a 0.3 shell round the ball overlaps the board 0.000 mm3; ball top 13.27, cage underside 14.47

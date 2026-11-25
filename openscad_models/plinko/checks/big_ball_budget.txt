@@ -1,0 +1,6 @@
+BIG BALL: 10 mm teardrop, centre 7.07 above its point; interlayer strength ~22 MPa
+  neck 1.6: holds 0.73 N at the ball's top while printing (vs ~0.5 N of drag, 1.5x); a toothpick at the centre snaps it at 1.25 N
+  neck 2.0: holds 1.43 N at the ball's top while printing (vs ~0.5 N of drag, 2.9x); a toothpick at the centre snaps it at 2.44 N
+  neck 2.4: holds 2.47 N at the ball's top while printing (vs ~0.5 N of drag, 4.9x); a toothpick at the centre snaps it at 4.22 N
+  v1's 0.6 neck on a 5 mm ball held about 0.08 N at its top; its floating balls held nothing. Both far under a nozzle's drag, which fits Scott's result.
+  The drag figure is a rough one: the test print is what decides the neck.

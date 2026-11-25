@@ -145,3 +145,31 @@ at all."
   - do BBs fall through the pegs both ways without sticking;
   - does any catch between the cage and the back;
   - which plug holds upside down and still pulls out.
+
+## 10. Bigger print-in-place balls, tested alongside (2026-11-25, `v2/big_ball_coupon.scad`)
+Scott: "The whole thing might need to be bigger so the balls have a chance to print correct."
+He picked testing both: the BB test (section 9), and this one.
+- **The test:** three pockets under the v1 cage, two 10 mm teardrop balls in each. Each ball
+  stands on a neck to the floor: 1.6, 2.0 or 2.4 mm (one, two or three notches).
+- **Numbers (`v2/big_ball_budget.py` → `checks/big_ball_budget.txt`):**
+  - **While printing,** a neck holds 0.73, 1.43 or 2.47 N at the ball's top, against a
+    nozzle's sideways drag of roughly 0.5 N. That drag is a rough figure, not measured.
+  - **After printing,** a toothpick at the ball's centre snaps it at 1.3, 2.4 or 4.2 N.
+  - **v1's 0.6 neck on a 5 mm ball** held about 0.08 N, and its floating balls held nothing.
+    That fits Scott's result.
+- **Fit (`checks/fit_big_ball.txt`):** a 0.3 shell round every ball clears the board. The
+  tallest ball top sits 0.8 under the cage.
+- **Checks (`v2/logs/*_big.txt`):**
+  - **Gate:** everything passes except `no_unsupported_overhang`, the cage bridging (the v1
+    exception).
+  - **The cage here is 1.4 thick, one layer more than v1's.** At 1.2 the gate read its 1st
+    percentile just under its 1.2 floor.
+  - **Print fidelity:** 0 flagged. **Fragility:** 0 high, 0 watch.
+- **Slice:** `v2/plinko_big_ball_test.gcode.3mf`, 21 m 49 s, 11.9 g. Matte PLA, Bambu's own
+  speeds, 3 walls, 15%, no supports.
+- **Guide:** `v2/guide/Plinko_Big_Ball_Test_Guide.pdf`.
+- **Scott answers:**
+  - which neck printed the balls whole and still snapped free;
+  - whether they roll.
+- **What decides the board:** if a neck works, the board can be printed in one piece, about
+  twice v1's size. If not, it uses BBs (section 9).
