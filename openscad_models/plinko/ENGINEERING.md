@@ -94,3 +94,17 @@ loose inside a closed board.
 - Which balls came free, and how: a shake, a tap, or a poke.
 - Whether they roll smoothly and fall through the pegs.
 - How the bridged lattice looks.
+
+## 8. Scott's result (2026-11-25)
+Scott: "I did the plunk test. Did not work. The cage itself was great. The balls didn't come out
+at all."
+
+- **The cage works.** The bridged lattice front printed well, so bridging a closed front over
+  a chamber is proven on this printer. Keep it.
+- **Print-in-place balls failed:** none came free, in any variant.
+- **Why, most likely.** A floating ball's first layer is an island printed over air, with
+  nothing under it. It droops onto the floor and fuses. 0.4–0.6 mm of air (variants 1 and 2)
+  is less than that droop. Variant 3 is joined on purpose; its neck didn't free through the
+  3 mm grid. This reading isn't confirmed by a photo yet.
+- **What changes:** balls can't print loose inside a closed board on this printer. They get
+  printed or bought separately and loaded in. How is Scott's pick (section 9, once picked).
