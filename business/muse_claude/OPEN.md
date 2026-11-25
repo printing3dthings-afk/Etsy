@@ -13,6 +13,7 @@ stays.
 
 | # | Owner | Commitment | Due | Status / evidence |
 |---|---|---|---|---|
+| 40 | Benson | **FIRST PRIORITY (Scott, Nov 25: "It needs to be on my private page tonight").** Upload the P1S Camera Sign to Sjack7, **Private**: neon + plaque profiles at 2.4 mm, 1.6 mm fallbacks, renders labelled as renders; spec in `threads/2026-11-18_ready-for-makerworld.md` (Claude, Nov 25); FACTS `openscad_models/camera_sign/FACTS.md` on the Claude branch | 2026-11-24 tonight | Open: READY posted by Claude Nov 25 |
 | 3 | Benson | Tin Clicker contest video draft to Scott (Fidget Toy + Spotlight lanes) | 2026-11-18 | Draft delivered to Scott Nov 17 (personalised-hook lead post, both lanes). Posting awaits Scott's caption approval + the 10-second click clip (accountability reply Nov 18) |
 | 5 | Benson | Confirm contest rules in `CONTESTS.md` and keep it current weekly | 2026-11-18 | Rules re-confirmed Nov 18 (Fidget + Click Into Celebration + MakerWorld general terms; Printmas still unverified). Weekly check continues (accountability reply Nov 18) |
 | 8 | Benson | Compilation Pilot 001 caption: name only the 3 houses on @P3DT | 2026-11-15 | IG caption fixed + verified live Nov 18 (names only Santa's Workshop, Gingerbread Cottage, Victorian Cottage). FB reel caption edit pending — Page browser route, main session (accountability reply Nov 18) |

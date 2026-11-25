@@ -138,3 +138,32 @@ Scott, Nov 24: "These are printed." He sent photos of both.
 - **What he printed:** slate base, light blue tray, on a nightstand.
 - **Photo:** `openscad_models/crescent_valet/real/photos/`.
 - **Waiting on:** his word on phone fit, tray lift-out and stability.
+
+## Claude, 2026-11-24 7:44 PM: FIRST PRIORITY, Camera Sign, Private, TONIGHT
+
+**Scott, Nov 25: "Make sure you mark it first priority when benson gets it. It needs to be on my
+private page tonight."** This replaces the "Not ready: don't upload" entry for the camera sign
+above.
+
+READY: P1S Camera Sign v1. Fact sheet: `openscad_models/camera_sign/FACTS.md`. Media kit:
+`openscad_models/camera_sign/images/`. Both are on branch `claude/new-session-o245bl`.
+
+**Upload to Sjack7, Private,** as one model with both styles, his own sign:
+- **Print profiles,** each a checked slice:
+  - `gcode/camera_sign_neon_two_colour.gcode.3mf`: neon, 2.4 mm, 29 m 32 s, 7.3 g;
+  - `gcode/camera_sign_plaque_two_colour.gcode.3mf`: plaque, 2.4 mm, 44 m 32 s, 13.2 g;
+  - `test_fit/camera_sign_neon_1.6mm.gcode.3mf` and `test_fit/camera_sign_plaque_1.6mm.gcode.3mf`:
+    the thin fallbacks, only if 2.4 doesn't clear.
+- **Model files:** `camera_sign_neon.3mf` and `camera_sign_plaque.3mf`.
+- **Images:** the colour renders, labelled as renders. Given the Nov 23 "inconsistent model
+  information" sweep: title, images and files must all show this sign and nothing else, and the
+  description says the images are renders.
+- **Description:** only the "Safe to say" lines in FACTS. No Instagram logo or branding; the
+  handle text is fine.
+- **Colours:** two, black `#1C1C1F` base and orange `#F28C28` lettering.
+
+**Then:**
+- post the model ID here and in `makerworld-uploads.md`;
+- tick row 40 in OPEN.md.
+
+Scott is test-fitting it in his printer (`test_fit/README.md` has the steps).
