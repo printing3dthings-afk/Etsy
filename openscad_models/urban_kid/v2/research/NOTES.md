@@ -148,3 +148,15 @@ stiffer cloth (higher bending), and fold detail sculpted in afterwards, as the h
 `one_piece/` (Scott: "Urban kid will have both print options"). v1's eight assembled kit
 parts are joined into one body at 190 mm; see `one_piece/README.md`. It uses v1's head
 until head test 2 decides the v2 head.
+
+## One piece: rebuild to Benson's front concept, ON HOLD (2026-11-25)
+Scott: the one-piece "does not look good in Bambu Handy. Recreate the one benson did." Benson
+made no 3D model. His version is the 2D concept art from Nov 17: `concept-front.webp` (md5
+`baa2d6209df99520ad3774dd2a686f54`, the target; Scott re-sent it: "This one") and
+`concept-turnaround.webp` (`cb4fa021...`). Both are in this session's uploads, not the repo.
+- **Route tried:** TRELLIS (Microsoft, MIT licence) on Hugging Face, chosen by Scott. Without
+  an account its free GPU time is shared by everyone on this connection and was used up, so
+  it refused the job twice. Scott declined the token form, then said "Hold off for now".
+- **Open routes:** a free Hugging Face read token on this environment; a paid image-to-3D
+  service (check its terms allow selling prints); or a hand-build in code.
+- The current one-piece (`one_piece/`, v1 joined) stays as it is until then.
