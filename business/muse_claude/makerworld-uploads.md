@@ -64,8 +64,8 @@ Caveats: Scarf Seam Test Bar 3668146 is TAKEN DOWN — its record returns an emp
 15. TEST — Layer Height Comparison Set | 3667064 | Private | 2026-11-22 19:56 | 0.08 mm=4209472, 0.12 mm=4209497, 0.16 mm=4209509, 0.20 mm=4209513, 0.28 mm=4209521
 16. TEST — Infill Sampler | 3667057 | Private | 2026-11-22 19:55 | Standard=4209464
 17. TEST — First-Layer Adhesion Map | 3666578 | Private | 2026-11-22 17:39 | Optimized=4208777, Standard=4208815
-18. TEST — Bridging Span Test | 3666571 | Private | 2026-11-22 17:36 | Optimized=4208763, Standard=4208809
-19. TEST — Overhang Ladder | 3666563 | Private | 2026-11-22 17:34 | Optimized=4208752, Standard=4208807
+18. TEST — Bridging Span Test | 3666571 | Private | 2026-11-22 17:36 | Optimized=4208763, Standard=4208809 — **REMOVED 2026-11-25** (Standard 18, test concluded)
+19. TEST — Overhang Ladder | 3666563 | Private | 2026-11-22 17:34 | Optimized=4208752, Standard=4208807 — **REMOVED 2026-11-25** (Standard 18, test concluded)
 20. TEST — Light Transmission Wedge | 3666543 | Private | 2026-11-22 17:30 | Optimized=4208727, Standard=4208801
 21. TEST — Hole Shrink Ladder | 3666528 | Private | 2026-11-22 17:26 | Optimized=4208702, Standard=4208733
 22. TEST — Shrinkage Coupon | 3666201 | Private | 2026-11-22 16:24 | Standard=4208299
@@ -275,3 +275,12 @@ All Private on Sjack7, verified; one-colour Std+Opt file swaps; Multicolor profi
 - Profiles (both Public): Standard 4228657, Optimized 4228688.
 - Customizer registered (`name_globe_pmm.scad`, validation Passed) and generation-tested live ("TEST 2026").
 - Free-sync to Printables + Patreon running; Thangs parked as usual.
+
+## Removals — Standard 18 cleanup (2026-11-25)
+
+Deleted by Benson Nov 25, 2026 at Scott's direction after their tests concluded; deletions verified on the live profile list (model count 148 → 146; neither appears).
+
+- **TEST — Bridging Span Test, model 3666571** (Sjack7) — printed Nov 23, 2026. REMOVED.
+- **TEST — Overhang Ladder, model 3666563** (Sjack7) — printed; footage read by Claude Nov 24. REMOVED.
+
+Note: Infill Sampler 3667057 STAYS for now — printed Nov 24, but Scott's physical testing has not concluded; it comes off when he reports results.
