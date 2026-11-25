@@ -13,7 +13,6 @@ stays.
 
 | # | Owner | Commitment | Due | Status / evidence |
 |---|---|---|---|---|
-| 40 | Benson | **FIRST PRIORITY (Scott, Nov 25: "It needs to be on my private page tonight").** Upload the P1S Camera Sign to Sjack7, **Private**: neon + plaque profiles at 2.4 mm, 1.6 mm fallbacks, renders labelled as renders; spec in `threads/2026-11-18_ready-for-makerworld.md` (Claude, Nov 25); FACTS `openscad_models/camera_sign/FACTS.md` on the Claude branch | 2026-11-24 tonight | Open: READY posted by Claude Nov 25 |
 | 41 | Benson | Full MakerWorld inventory of BOTH pages into `makerworld-uploads.md`, read from the live accounts: @P3DT public (free models, traffic and sales) and Sjack7 private (testing and a full print log book), Scott Nov 25. Name, ID, account, visibility, profiles, date. Then strike Claude's not-up list (`threads/2026-11-24_benson-makerworld-uploads.md`, Nov 25) | 2026-11-26 | Open (Scott: "Get a full list from benson") |
 | 3 | Benson | Tin Clicker contest video draft to Scott (Fidget Toy + Spotlight lanes) | 2026-11-18 | Draft delivered to Scott Nov 17 (personalised-hook lead post, both lanes). Posting awaits Scott's caption approval + the 10-second click clip (accountability reply Nov 18) |
 | 5 | Benson | Confirm contest rules in `CONTESTS.md` and keep it current weekly | 2026-11-18 | Rules re-confirmed Nov 18 (Fidget + Click Into Celebration + MakerWorld general terms; Printmas still unverified). Weekly check continues (accountability reply Nov 18) |
@@ -66,6 +65,7 @@ stays.
 | D27 | Benson | Upload the four READY designs in `threads/2026-11-18_ready-for-makerworld.md`, private, with your profiles; update the profiles of models already up from the re-sliced files there (Scott, Nov 18) (row 22) | 2026-11-21 | Gap Gauge 4182220; Name Ring 4196987 and 4196993 (Private); Snow Globe profiles not reported yet (`9ede685`) |
 | D28 | Benson | Solve the extraction stall: the thumbnail test passed 11:44 ET (draft 10645689). Rebuild your recipe with plate thumbnails, test one file, then build the five owed profiles (Name Ring from `0b7e48d`) (row 25) | 2026-11-21 | Recipe with plate thumbnails extracts; queue draining (`9ede685`) |
 | D29 | Benson | Video handover (STANDARDS 21): the next 14 days of series slots, where the footage and sounds are and how Claude gets them, how VO and music are made now, and each series' notes (`threads/2026-11-20_video-handover.md`) (row 33) | 2026-11-21 | Handover pack `handover-pack-2026-11-21.md` (`9641f3f`) |
+| D30 | Benson | Upload the P1S Camera Sign to Sjack7, Private: neon + plaque profiles at 2.4 mm, 1.6 mm fallbacks, renders labelled as renders (row 40) | 2026-11-24 | Model 3679316 live Private, verified Nov 24 ~20:08 ET; profiles 4225041 / 4225050 / 4225071 / 4225075, all Private; evidence in threads/2026-11-18_ready-for-makerworld.md |
 
 ## Misses on record (so they aren't repeated)
 - Claude, 2026-11-20 and 11-21: told Scott BIQU got no note or post on Nov 20, and set row 35 on that

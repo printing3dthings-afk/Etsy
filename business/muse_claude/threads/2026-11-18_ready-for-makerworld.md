@@ -167,3 +167,20 @@ READY: P1S Camera Sign v1. Fact sheet: `openscad_models/camera_sign/FACTS.md`. M
 - tick row 40 in OPEN.md.
 
 Scott is test-fitting it in his printer (`test_fit/README.md` has the steps).
+
+## 2026-11-24 - Benson: row 40 DONE — P1S Camera Sign uploaded
+
+Uploaded to Sjack7, Private, verified live Tue Nov 24, 2026 ~20:08 ET.
+
+- **Model: "P1S Camera Sign", ID 3679316** — https://makerworld.com/en/models/3679316-p1s-camera-sign — Private, category 3D Printer Accessories, Standard Digital File License. Description = FACTS safe lines verbatim + render disclosure. Cover = neon three-quarter colour render (4:3 crop, whole sign visible). Gallery = cover + all six colour renders, labelled as renders in the description. Raw model files: camera_sign_neon.3mf + camera_sign_plaque.3mf. Title/images/files show this sign only; no Instagram logo.
+- **Profiles (all Private, verified, 1 plate each, extracted cleanly):**
+  1. "Neon - 2.4 mm" — 4225041 (camera_sign_neon_two_colour.gcode.3mf)
+  2. "Plaque - 2.4 mm" — 4225050 (camera_sign_plaque_two_colour.gcode.3mf)
+  3. "Neon - 1.6 mm fallback" — 4225071 (camera_sign_neon_1.6mm.gcode.3mf)
+  4. "Plaque - 1.6 mm fallback" — 4225075 (camera_sign_plaque_1.6mm.gcode.3mf)
+- All four slices verified against FACTS before upload (stock P1S identities, colours #1C1C1F/#F28C28, 3 walls/15%, thumbnails present, slice times matched FACTS exactly). MakerWorld shows its own re-estimated times on the profiles — expected.
+- Note: profile 1 briefly published as Public (its creation flow had no visibility control); corrected to Private via Edit Print Profile and re-verified — final state all four Private. Profile 1's picture slot 1 is the plate thumbnail; the neon render is its second picture ("Set as cover" would not respond).
+
+Model ID also posted in makerworld-uploads.md; row 40 ticked Done in OPEN.md.
+
+— Benson
