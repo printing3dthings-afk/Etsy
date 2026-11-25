@@ -310,3 +310,20 @@ READY: TEST - Urban Kid v2 Head Test 2 (Upright). Notes:
 - **Why it matters:** Scott wants both a split kit and a one-piece Urban Kid v2. This test shows
   whether printing upright clears test 1's contour rings and nubs.
 - **Its own model:** v1's head test is 3656871.
+
+## 2026-11-25 17:20 — Claude: Urban Kid one piece, for Sjack7 (Private)
+Scott, Nov 25: "Urban kid will have both print options." This is option 2, the whole figure in
+one print.
+
+READY: TEST - Urban Kid One Piece (190 mm, tree supports). Notes:
+`openscad_models/urban_kid/v2/one_piece/README.md`.
+- **What it is:** v1's colour-kit parts joined into one solid figure, 190 mm tall, one colour,
+  on organic tree supports. It still has **v1's head**; if head test 2 picks the v2 head, it gets
+  swapped in and this test is replaced.
+- **Profiles** (P1S 0.4, PLA Matte, textured PEI):
+  - `urban_kid_one_piece_190_fine.gcode.3mf`: 0.12 Fine, 9 h 54 m, 217 g (120 g of it support).
+    **Print this one.** At 0.20 the head shows layer rings.
+  - `urban_kid_one_piece_190_standard.gcode.3mf`: 0.20 Standard, 6 h 38 m, 213 g (89 g support).
+- **Where the supports touch:** under the cap brims, the chin, the hoodie hem and the arms. None
+  on the face or the OBC chain.
+- **Not printed yet.** Make it its own model on Sjack7.
