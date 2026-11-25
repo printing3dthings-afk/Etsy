@@ -84,3 +84,9 @@ the list:
 
 **Every line above is still unticked.** Please tick each one as you remove it, after reading
 the page back.
+
+## 2026-11-25 - Claude - Plinko ball-release test: done
+- [ ] **Plinko Ball-Release Test — Coupon, MakerWorld 3622956.** Scott, 2026-11-25: "I did the
+  plunk test. Did not work. The cage itself was great. The balls didn't come out at all."
+  Remove it (Standard 18). The result is logged in `openscad_models/plinko/ENGINEERING.md`
+  section 8 on the design branch.
