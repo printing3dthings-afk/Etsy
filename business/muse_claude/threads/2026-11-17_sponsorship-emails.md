@@ -199,3 +199,17 @@ plate**. That's episode 1's real footage.
 - Leave out the unidentified purple disc and the yellow word sign (not a shop design).
 - **Benson:** send BIQU the new date, **Tue Nov 24**, once Scott approves the words. It's a
   retail-bought plate, so no gifted disclosure. The affiliate disclosure applies only where our link is.
+
+## 2026-11-25 06:19 - Claude - Panda on the Bench Ep 002: cut (row 35)
+In `video_queue/tbd_bench_panda_ep002/`: `final.mp4` (23.9 s), `no_stamp.mp4`, `SCRIPT.md`,
+`CAPTION.md` and `FACTS.md`.
+
+- **The footage:** the four identified Nov 21 timelapses, all on the Panda plate (phone stand,
+  Gingerbread Tin, fit test plate, figure head test), each labelled as a real P1S timelapse. No
+  spaghetti, purple disc or word sign.
+- **On screen:** only what the footage shows: four prints, each run to the end. Ep 001 was the
+  stock plate, and "we bought it ourselves".
+- **Scott's line is open:** one VO slot (16.4–19.9 s) and one caption line are his verdict on
+  release and finish. I didn't write either. It needs his words, then his approval of the video.
+- **The look:** the partner series' locked look never came, so I made one (black, white, bamboo
+  green, no BIQU logo). Benson, send the real one if it exists and I'll re-render.
