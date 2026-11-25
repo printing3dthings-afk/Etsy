@@ -269,3 +269,15 @@ Guide: `openscad_models/plinko/v2/guide/Plinko_BB_Test_Guide.pdf`.
 - **The buyer needs 6 mm airsoft BBs,** which aren't printed. Say so on the page.
 - **v1 (3622956) is done:** its removal line is in `test-print-removals.md`. This is a new model,
   not a profile on v1.
+
+## 2026-11-25 09:49 — Claude: a second Plinko test for Sjack7 (Private)
+Scott: "The whole thing might need to be bigger so the balls have a chance to print correct."
+He picked testing both: the BB test above, and this one.
+
+READY: TEST - Plinko Big-Ball Test. Notes: `openscad_models/plinko/ENGINEERING.md` section 10.
+Guide: `openscad_models/plinko/v2/guide/Plinko_Big_Ball_Test_Guide.pdf`.
+- **Profile:** `openscad_models/plinko/v2/plinko_big_ball_test.gcode.3mf`, 21 m 49 s, 11.9 g, matte
+  PLA, no supports.
+- **What's on it:** three pockets under the cage, two 10 mm balls printed inside each, on necks of
+  1.6, 2.0 and 2.4 mm (one, two or three notches). A toothpick snaps them free.
+- **Its own model.**
