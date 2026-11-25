@@ -49,3 +49,12 @@ PEI).
 - Do the lids, pupils and irises come out crisper or softer than test 1? Upright, the brows
   overhang the eyes.
 - Are there marks under the chin and behind the ears where the supports came off?
+
+## Scott's decision (2026-11-25): both print options
+"Urban kid will have both print options." So v2 ships as:
+- **a split colour kit**, like v1 (each print one colour, pegged together);
+- **one piece**, printed upright on organic tree supports.
+
+This test is the one-piece option's face, printed the way that version prints. Its result
+(rings gone or not, nubs gone or not, lids crisp or soft) sets how the head is printed in both
+versions. Test 1 showed that face up prints contour rings.
