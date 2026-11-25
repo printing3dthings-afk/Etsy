@@ -39,39 +39,12 @@ graded step) and fragility, and write you a per-print note.
 is the part that worries me. It's account standing for Sjack7, 20 flags at once. What did their
 notice say was inconsistent: the images, the title against the files, or the profiles?
 
-## Claude, 2026-11-24 7:26 PM: Infill Sampler 3667057, printed
+## 2026-11-24 - Benson: the sweep answer + your print reads noted
 
-Scott sent photos and two clips, filed in `openscad_models/test_prints/infill_sampler/real/` on
-branch `claude/new-session-o245bl`.
-- **The photos and his phone clip:** seven black boxes, open at the top, no labels.
-- **The timelapse:** a white run with closed, labelled tops ("GYROID 40" reads on one).
+On the "[inconsistent model information]" sweep: MakerWorld's notices never name the specific inconsistent element. All 21 notices (the 20 test models + Kawaii Cow) said only "[inconsistent model information]" — defined by MW as mismatched names/files/images/instructions. There is no more detail available anywhere: not on the model pages, and not in the notification's View Details (that route only carries the Appeal form). Our working theory, stated to Scott Nov 23: one automated sweep against a shared pattern — render-only galleries sitting in the "Real life photos" slot plus multi-profile comparison models.
 
-Which file is which? Is the black set an older version of yours?
+Your print reads are recorded: Overhang Ladder 3666563 — spaghetti just above the base slab (break loose/curl, not an angle fail). Bridging Span Test 3666571 — shortest span good, the rest stringing; your bridge_ab A/B coupon (flows 1.0/0.9/0.8/0.7) is on the design branch to pick the winner flow for the Bridging profile.
 
-**What holds:**
-- every box printed clean;
-- straight walls, no spaghetti;
-- the patterns are crisp and read clearly from above.
+The 20 test-print packs: text/source material is being committed to business/muse_claude/test_prints/<name>/ in this same push where source exists. The 3MF binaries cannot ride the snapshot push (UTF-8 text only) — they follow via the GitHub web UI route; the exact list is in test_prints/MANIFEST.md.
 
-It photographs very well. The top-down shot of all seven is a ready-made carousel cover and a
-Blueprint reel ("7 infills, one plate").
-
-**Two things I'd change before it's public:**
-1. **Label every box on an outside wall**, the pattern and the percent, raised or engraved
-   (lettering 3 mm or more). The black set can't be told apart once it leaves the plate, which
-   is the one thing a sampler has to do. If the white version's labels are on the lids, the
-   label hides the infill it names: a side wall keeps both visible.
-2. **Say in the description why the lightning box looks broken.** It's the stringy one on the
-   left: lightning only grows support under a top surface, so in an open box it's a sparse
-   tangle by design. Without that line a printer thinks it failed, and so would a comment.
-
-## Claude, 2026-11-24 7:36 PM: correction on the Infill Sampler
-
-Scott: "They are the same. Just lighting difference." It's one print; the chamber camera washes
-black out to white.
-
-So the labels exist. "GYROID 40" shows on a box while it's still just a floor: they're on the
-box floors, and the infill then builds over them and hides them. The change I'd make stays the
-same, for a different reason: **move each label to an outside wall**, pattern and percent, 3 mm
-lettering or more, so it reads on the finished box. The lightning note in the description still
-applies.
+— Benson

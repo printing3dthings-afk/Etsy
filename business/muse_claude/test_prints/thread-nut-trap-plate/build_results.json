@@ -1,0 +1,117 @@
+{
+ "Standard": {
+  "file": "ThreadNutTrapPlate_Standard_P1S.3mf",
+  "profile": "Standard",
+  "pass1": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 02:07:08.243566] [0x0000781b84569540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+    "[2026-11-23 02:07:08.243592] [0x0000781b84569540] [error]   glfwInit return error, code 65544"
+   ]
+  },
+  "pass1_verify": {
+   "ok": true,
+   "msg": "instances=7"
+  },
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0
+  },
+  "final_verify": {
+   "ok": true,
+   "msg": "instances=7"
+  },
+  "thumbnails": {
+   "Metadata/plate_1.png": 15180,
+   "Metadata/plate_1_small.png": 2142
+  },
+  "slice": {
+   "prediction_s": 4429.0,
+   "weight_g": 43.61,
+   "filaments": [
+    [
+     "1",
+     "#FFFFFF",
+     "43.61"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "[2026-11-23 02:25:53.921606] [0x000073d260c02540] [error]   ZFiller: encounter idx from clip: 100",
+    "[2026-11-23 02:25:53.922001] [0x000073d260c02540] [error]   ZFiller: encounter idx from clip: 98",
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 02:26:05.803348] [0x000073d260c02540] [error]   error_code 65544, description: Wayland: Failed to connect to display"
+   ]
+  },
+  "roundtrip": {
+   "verify_ok": true,
+   "msg": "instances=7",
+   "prediction_s": 4431.0,
+   "weight_g": 43.62
+  },
+  "ok": true
+ },
+ "Optimized": {
+  "file": "ThreadNutTrapPlate_Optimized_P1S.3mf",
+  "profile": "Optimized",
+  "pass1": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 02:26:25.595857] [0x00007b59d7e80540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+    "[2026-11-23 02:26:25.595890] [0x00007b59d7e80540] [error]   glfwInit return error, code 65544"
+   ]
+  },
+  "pass1_verify": {
+   "ok": true,
+   "msg": "instances=7"
+  },
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0
+  },
+  "final_verify": {
+   "ok": true,
+   "msg": "instances=7"
+  },
+  "thumbnails": {
+   "Metadata/plate_1.png": 15180,
+   "Metadata/plate_1_small.png": 2142
+  },
+  "slice": {
+   "prediction_s": 6084.0,
+   "weight_g": 45.72,
+   "filaments": [
+    [
+     "1",
+     "#FFFFFF",
+     "45.72"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 02:46:01.670046] [0x0000782308008540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+    "[2026-11-23 02:46:01.670070] [0x0000782308008540] [error]   glfwInit return error, code 65544"
+   ]
+  },
+  "roundtrip": {
+   "verify_ok": true,
+   "msg": "instances=7",
+   "prediction_s": 6082.0,
+   "weight_g": 45.72
+  },
+  "ok": true
+ }
+}

@@ -1,0 +1,163 @@
+{
+ "TempTower_T200_P1S.3mf": {
+  "file": "TempTower_T200_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9085,
+   "Metadata/plate_1_small.png": 1834
+  },
+  "slice": {
+   "prediction_s": 3854.0,
+   "weight_g": 40.2,
+   "filaments": [
+    [
+     "1",
+     "40.20",
+     "12.66"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 3856.0,
+   "weight_g": 40.2,
+   "conflicts_in_log": false
+  },
+  "ok": true
+ },
+ "TempTower_T205_P1S.3mf": {
+  "file": "TempTower_T205_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9085,
+   "Metadata/plate_1_small.png": 1834
+  },
+  "slice": {
+   "prediction_s": 3859.0,
+   "weight_g": 40.2,
+   "filaments": [
+    [
+     "1",
+     "40.20",
+     "12.66"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 3855.0,
+   "weight_g": 40.2,
+   "conflicts_in_log": false
+  },
+  "ok": true
+ },
+ "TempTower_T210_P1S.3mf": {
+  "file": "TempTower_T210_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9085,
+   "Metadata/plate_1_small.png": 1834
+  },
+  "slice": {
+   "prediction_s": 3855.0,
+   "weight_g": 40.2,
+   "filaments": [
+    [
+     "1",
+     "40.20",
+     "12.66"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 3856.0,
+   "weight_g": 40.2,
+   "conflicts_in_log": false
+  },
+  "ok": true
+ },
+ "TempTower_T215_P1S.3mf": {
+  "file": "TempTower_T215_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9085,
+   "Metadata/plate_1_small.png": 1834
+  },
+  "slice": {
+   "prediction_s": 3854.0,
+   "weight_g": 40.2,
+   "filaments": [
+    [
+     "1",
+     "40.20",
+     "12.66"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 3854.0,
+   "weight_g": 40.2,
+   "conflicts_in_log": false
+  },
+  "ok": true
+ },
+ "TempTower_T220_P1S.3mf": {
+  "file": "TempTower_T220_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9085,
+   "Metadata/plate_1_small.png": 1834
+  },
+  "slice": {
+   "prediction_s": 3858.0,
+   "weight_g": 40.2,
+   "filaments": [
+    [
+     "1",
+     "40.20",
+     "12.66"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 3855.0,
+   "weight_g": 40.2,
+   "conflicts_in_log": false
+  },
+  "ok": true
+ },
+ "sweep": {
+  "plate_png": [
+   512,
+   512
+  ]
+ }
+}

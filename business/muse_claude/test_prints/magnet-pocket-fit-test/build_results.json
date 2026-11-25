@@ -1,0 +1,118 @@
+{
+ "Standard": {
+  "file": "MagnetPocketFitTest_Standard_P1S.3mf",
+  "profile": "Standard",
+  "pass1": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 01:36:28.649133] [0x00007e46d7255540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+    "[2026-11-23 01:36:28.649166] [0x00007e46d7255540] [error]   glfwInit return error, code 65544"
+   ]
+  },
+  "pass1_verify": {
+   "ok": true,
+   "msg": "instances=1"
+  },
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0
+  },
+  "final_verify": {
+   "ok": true,
+   "msg": "instances=1"
+  },
+  "thumbnails": {
+   "Metadata/plate_1.png": 9402,
+   "Metadata/plate_1_small.png": 1644
+  },
+  "slice": {
+   "prediction_s": 3248.0,
+   "weight_g": 39.6,
+   "filaments": [
+    [
+     "1",
+     "#FFFFFF",
+     "39.60"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "[2026-11-23 01:51:36.313809] [0x0000713867efb6c0] [error]   ZFiller: encounter idx from clip: 1374",
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 01:51:39.198438] [0x00007138689d2540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+    "[2026-11-23 01:51:39.198474] [0x00007138689d2540] [error]   glfwInit return error, code 65544"
+   ]
+  },
+  "roundtrip": {
+   "verify_ok": true,
+   "msg": "instances=1",
+   "prediction_s": 3248.0,
+   "weight_g": 39.6
+  },
+  "ok": true
+ },
+ "Optimized": {
+  "file": "MagnetPocketFitTest_Optimized_P1S.3mf",
+  "profile": "Optimized",
+  "pass1": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+    "[2026-11-23 01:51:49.795210] [0x00007eba65944540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+    "[2026-11-23 01:51:49.795235] [0x00007eba65944540] [error]   glfwInit return error, code 65544"
+   ]
+  },
+  "pass1_verify": {
+   "ok": true,
+   "msg": "instances=1"
+  },
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0
+  },
+  "final_verify": {
+   "ok": true,
+   "msg": "instances=1"
+  },
+  "thumbnails": {
+   "Metadata/plate_1.png": 9402,
+   "Metadata/plate_1_small.png": 1644
+  },
+  "slice": {
+   "prediction_s": 4371.0,
+   "weight_g": 43.97,
+   "filaments": [
+    [
+     "1",
+     "#FFFFFF",
+     "43.97"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": [],
+   "errors": [
+    "[2026-11-23 02:06:46.522179] [0x00007214e0afb6c0] [error]   ZFiller: encounter idx from clip: 480",
+    "[2026-11-23 02:06:46.525959] [0x00007214e0afb6c0] [error]   ZFiller: encounter idx from clip: 414",
+    "[2026-11-23 02:06:46.690032] [0x00007214e0afb6c0] [error]   ZFiller: encounter idx from clip: 2419",
+    "[2026-11-23 02:06:46.693376] [0x00007214e0afb6c0] [error]   ZFiller: encounter idx from clip: 2412"
+   ]
+  },
+  "roundtrip": {
+   "verify_ok": true,
+   "msg": "instances=1",
+   "prediction_s": 4367.0,
+   "weight_g": 43.97
+  },
+  "ok": true
+ }
+}

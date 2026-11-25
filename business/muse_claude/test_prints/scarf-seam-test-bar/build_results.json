@@ -1,0 +1,116 @@
+{
+ "ScarfBar_Aligned_P1S.3mf": {
+  "file": "ScarfBar_Aligned_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9669,
+   "Metadata/plate_1_small.png": 2114
+  },
+  "slice": {
+   "prediction_s": 1539.0,
+   "weight_g": 23.44,
+   "filaments": [
+    [
+     "1",
+     "23.44",
+     "7.38"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 1541.0,
+   "weight_g": 23.44,
+   "conflicts_in_log": false
+  },
+  "ok": true,
+  "extra": {
+   "body_md5": "6ced05d4edc5",
+   "band_segs": 271,
+   "band_path_mm": 4329.0
+  }
+ },
+ "ScarfBar_Random_P1S.3mf": {
+  "file": "ScarfBar_Random_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9669,
+   "Metadata/plate_1_small.png": 2114
+  },
+  "slice": {
+   "prediction_s": 1684.0,
+   "weight_g": 23.44,
+   "filaments": [
+    [
+     "1",
+     "23.44",
+     "7.38"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 1685.0,
+   "weight_g": 23.44,
+   "conflicts_in_log": false
+  },
+  "ok": true,
+  "extra": {
+   "body_md5": "397d55eb773c",
+   "band_segs": 426,
+   "band_path_mm": 4371.5
+  }
+ },
+ "ScarfBar_Scarf_P1S.3mf": {
+  "file": "ScarfBar_Scarf_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 9669,
+   "Metadata/plate_1_small.png": 2114
+  },
+  "slice": {
+   "prediction_s": 1795.0,
+   "weight_g": 23.45,
+   "filaments": [
+    [
+     "1",
+     "23.45",
+     "7.39"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 1792.0,
+   "weight_g": 23.45,
+   "conflicts_in_log": false
+  },
+  "ok": true,
+  "extra": {
+   "body_md5": "9faccb5eb2c9",
+   "band_segs": 2317,
+   "band_path_mm": 6177.1
+  }
+ },
+ "sweep": {
+  "plate_png": [
+   512,
+   512
+  ]
+ }
+}

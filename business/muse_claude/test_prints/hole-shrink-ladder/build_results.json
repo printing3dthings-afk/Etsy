@@ -1,0 +1,27 @@
+{
+ "Standard": {
+  "file": "HoleShrinkLadder_Standard_P1S.3mf",
+  "bb_verify": true,
+  "err": "",
+  "settings_mismatch": {},
+  "thumbnails": true,
+  "time_s": 2989.0,
+  "weight_g": 36.96,
+  "time_fmt": "49m 49s",
+  "images": [
+   "01-plate.png",
+   "02-centre-detail.png",
+   "03-corner-detail.png"
+  ]
+ },
+ "Optimized": {
+  "file": "HoleShrinkLadder_Optimized_P1S.3mf",
+  "bb_verify": true,
+  "err": "",
+  "settings_mismatch": {},
+  "thumbnails": true,
+  "time_s": 4044.0,
+  "weight_g": 40.38,
+  "time_fmt": "1h 07m"
+ }
+}

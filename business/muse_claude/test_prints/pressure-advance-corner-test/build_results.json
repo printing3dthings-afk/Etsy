@@ -1,0 +1,39 @@
+{
+ "PACornerTest_Standard_P1S.3mf": {
+  "file": "PACornerTest_Standard_P1S.3mf",
+  "recovered": true,
+  "thumbnails": {
+   "Metadata/plate_1.png": 6513,
+   "Metadata/plate_1_small.png": 1270
+  },
+  "slice": {
+   "prediction_s": 3315.0,
+   "weight_g": 50.27,
+   "filaments": [
+    [
+     "1",
+     "50.27",
+     "15.83"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "finish": {
+   "ok": true,
+   "settings_diffs": [],
+   "recovered_from": "verify_fixed.stdout"
+  },
+  "roundtrip": {
+   "prediction_s": 3315.0,
+   "weight_g": 50.27,
+   "conflicts_in_log": false
+  },
+  "ok": true
+ },
+ "sweep": {
+  "plate_png": [
+   512,
+   512
+  ]
+ }
+}

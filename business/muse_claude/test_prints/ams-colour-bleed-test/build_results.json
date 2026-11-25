@@ -1,0 +1,232 @@
+{
+ "Flush120": {
+  "file": "AMSColourBleed_Flush120_P1S.3mf",
+  "pass1": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "pass1_expect_failures": [],
+  "inject": {
+   "flush_bw": 120,
+   "preslice": {
+    "rc": 0,
+    "conflicts": false,
+    "plate_error": false
+   }
+  },
+  "preslice_expect_failures": [],
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0,
+   "settings_diffs": []
+  },
+  "final_expect_failures": [],
+  "thumbnails": {
+   "Metadata/plate_1.png": 4101,
+   "Metadata/plate_1_small.png": 758
+  },
+  "slice": {
+   "prediction_s": 3043.0,
+   "weight_g": 15.98,
+   "filaments": [
+    [
+     "1",
+     "7.83",
+     "2.47"
+    ],
+    [
+     "2",
+     "8.15",
+     "2.57"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "roundtrip": {
+   "expect_failures": [],
+   "prediction_s": 3042.0,
+   "weight_g": 15.98
+  },
+  "ok": true
+ },
+ "Flush240": {
+  "file": "AMSColourBleed_Flush240_P1S.3mf",
+  "pass1": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "pass1_expect_failures": [],
+  "inject": {
+   "flush_bw": 240,
+   "preslice": {
+    "rc": 0,
+    "conflicts": false,
+    "plate_error": false
+   }
+  },
+  "preslice_expect_failures": [],
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0,
+   "settings_diffs": []
+  },
+  "final_expect_failures": [],
+  "thumbnails": {
+   "Metadata/plate_1.png": 4101,
+   "Metadata/plate_1_small.png": 758
+  },
+  "slice": {
+   "prediction_s": 3178.0,
+   "weight_g": 17.88,
+   "filaments": [
+    [
+     "1",
+     "7.83",
+     "2.47"
+    ],
+    [
+     "2",
+     "10.05",
+     "3.17"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "roundtrip": {
+   "expect_failures": [],
+   "prediction_s": 3178.0,
+   "weight_g": 17.88
+  },
+  "ok": true
+ },
+ "Flush360": {
+  "file": "AMSColourBleed_Flush360_P1S.3mf",
+  "pass1": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "pass1_expect_failures": [],
+  "inject": {
+   "flush_bw": 360,
+   "preslice": {
+    "rc": 0,
+    "conflicts": false,
+    "plate_error": false
+   }
+  },
+  "preslice_expect_failures": [],
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0,
+   "settings_diffs": []
+  },
+  "final_expect_failures": [],
+  "thumbnails": {
+   "Metadata/plate_1.png": 4101,
+   "Metadata/plate_1_small.png": 758
+  },
+  "slice": {
+   "prediction_s": 3315.0,
+   "weight_g": 19.78,
+   "filaments": [
+    [
+     "1",
+     "7.83",
+     "2.47"
+    ],
+    [
+     "2",
+     "11.95",
+     "3.76"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "roundtrip": {
+   "expect_failures": [],
+   "prediction_s": 3317.0,
+   "weight_g": 19.78
+  },
+  "ok": true
+ },
+ "Flush480": {
+  "file": "AMSColourBleed_Flush480_P1S.3mf",
+  "pass1": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "pass1_expect_failures": [],
+  "inject": {
+   "flush_bw": 480,
+   "preslice": {
+    "rc": 0,
+    "conflicts": false,
+    "plate_error": false
+   }
+  },
+  "preslice_expect_failures": [],
+  "finish": {
+   "ok": true,
+   "verify_fixed_rc": 0,
+   "settings_diffs": []
+  },
+  "final_expect_failures": [],
+  "thumbnails": {
+   "Metadata/plate_1.png": 4101,
+   "Metadata/plate_1_small.png": 758
+  },
+  "slice": {
+   "prediction_s": 3446.0,
+   "weight_g": 21.68,
+   "filaments": [
+    [
+     "1",
+     "7.83",
+     "2.47"
+    ],
+    [
+     "2",
+     "13.85",
+     "4.36"
+    ]
+   ],
+   "support_used": "false"
+  },
+  "roundtrip_cli": {
+   "rc": 0,
+   "conflicts": false,
+   "plate_error": false
+  },
+  "roundtrip": {
+   "expect_failures": [],
+   "prediction_s": 3446.0,
+   "weight_g": 21.68
+  },
+  "ok": true
+ },
+ "sweep": {
+  "plate_png": [
+   512,
+   512
+  ]
+ }
+}

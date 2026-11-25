@@ -1,0 +1,250 @@
+{
+ "file": "InfillSampler_Standard_P1S.3mf",
+ "pass1": {
+  "rc": 0,
+  "conflicts": [],
+  "errors": [
+   "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+   "[2026-11-22 23:04:26.121396] [0x000070960ca7e540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+   "[2026-11-22 23:04:26.121430] [0x000070960ca7e540] [error]   glfwInit return error, code 65544"
+  ]
+ },
+ "pass1_verify": {
+  "ok": true,
+  "msg": "instances=7"
+ },
+ "idmap": {
+  "BLK_G5": "2",
+  "BLK_G10": "6",
+  "BLK_LTG": "14",
+  "BLK_G20": "10",
+  "BLK_G40": "12",
+  "BLK_G15": "8",
+  "BLK_GRID": "4"
+ },
+ "preslice": {
+  "rc": 0,
+  "conflicts": [],
+  "errors": [
+   "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+   "[2026-11-22 23:04:29.662830] [0x00007643b559c540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+   "[2026-11-22 23:04:29.662874] [0x00007643b559c540] [error]   glfwInit return error, code 65544"
+  ]
+ },
+ "preslice_verify": {
+  "ok": true,
+  "msg": "instances=7"
+ },
+ "preslice_readback": {
+  "BLK_G5": {
+   "sparse_infill_density": "5%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G15": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G20": {
+   "sparse_infill_density": "20%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_GRID": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "grid",
+   "top_shell_layers": "0"
+  },
+  "BLK_LTG": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "lightning",
+   "top_shell_layers": "0"
+  },
+  "BLK_G40": {
+   "sparse_infill_density": "40%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G10": {
+   "sparse_infill_density": "10%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  }
+ },
+ "preslice_gcode_stats": {
+  "BLK_G20": [
+   11949.8,
+   3405
+  ],
+  "BLK_G10": [
+   8421.9,
+   1477
+  ],
+  "BLK_G5": [
+   7053.6,
+   1172
+  ],
+  "BLK_GRID": [
+   11417.1,
+   1321
+  ],
+  "BLK_LTG": [
+   6721.0,
+   1228
+  ],
+  "BLK_G15": [
+   10459.9,
+   2014
+  ],
+  "BLK_G40": [
+   18076.8,
+   5076
+  ]
+ },
+ "finish": {
+  "ok": true,
+  "verify_fixed_rc": 0,
+  "settings_diffs": []
+ },
+ "final_verify": {
+  "ok": true,
+  "msg": "instances=7"
+ },
+ "thumbnails": {
+  "Metadata/plate_1.png": 7769,
+  "Metadata/plate_1_small.png": 1402
+ },
+ "slice": {
+  "prediction_s": 4570.0,
+  "weight_g": 51.56,
+  "filaments": [
+   [
+    "1",
+    "#FFFFFF",
+    "51.56"
+   ]
+  ],
+  "support_used": "false"
+ },
+ "final_readback": {
+  "BLK_G5": {
+   "sparse_infill_density": "5%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_GRID": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "grid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G15": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G10": {
+   "sparse_infill_density": "10%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G20": {
+   "sparse_infill_density": "20%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G40": {
+   "sparse_infill_density": "40%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_LTG": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "lightning",
+   "top_shell_layers": "0"
+  }
+ },
+ "final_gcode_stats": {
+  "BLK_G20": [
+   11949.8,
+   3405
+  ],
+  "BLK_G10": [
+   8421.9,
+   1477
+  ],
+  "BLK_G5": [
+   7053.6,
+   1172
+  ],
+  "BLK_GRID": [
+   11417.1,
+   1321
+  ],
+  "BLK_LTG": [
+   6714.4,
+   1229
+  ],
+  "BLK_G15": [
+   10459.9,
+   2014
+  ],
+  "BLK_G40": [
+   18076.8,
+   5076
+  ]
+ },
+ "roundtrip_cli": {
+  "rc": 0,
+  "conflicts": [],
+  "errors": [
+   "error: XDG_RUNTIME_DIR is invalid or not set in the environment.",
+   "[2026-11-22 23:27:52.632764] [0x00007a467a026540] [error]   error_code 65544, description: Wayland: Failed to connect to display",
+   "[2026-11-22 23:27:52.632812] [0x00007a467a026540] [error]   glfwInit return error, code 65544"
+  ]
+ },
+ "roundtrip": {
+  "verify_ok": true,
+  "msg": "instances=7",
+  "prediction_s": 4570.0,
+  "weight_g": 51.56
+ },
+ "roundtrip_readback": {
+  "BLK_G5": {
+   "sparse_infill_density": "5%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_GRID": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "grid",
+   "top_shell_layers": "0"
+  },
+  "BLK_LTG": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "lightning",
+   "top_shell_layers": "0"
+  },
+  "BLK_G10": {
+   "sparse_infill_density": "10%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G15": {
+   "sparse_infill_density": "15%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G20": {
+   "sparse_infill_density": "20%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  },
+  "BLK_G40": {
+   "sparse_infill_density": "40%",
+   "sparse_infill_pattern": "gyroid",
+   "top_shell_layers": "0"
+  }
+ },
+ "ok": true
+}

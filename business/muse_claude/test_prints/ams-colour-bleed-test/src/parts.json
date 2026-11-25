@@ -1,0 +1,14 @@
+{
+ "parts": [
+  {
+   "name": "DARK",
+   "extruder": 1,
+   "file": "PartDark.stl"
+  },
+  {
+   "name": "LIGHT",
+   "extruder": 2,
+   "file": "PartLight.stl"
+  }
+ ]
+}
