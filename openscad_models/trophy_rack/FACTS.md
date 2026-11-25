@@ -1,4 +1,4 @@
-# FACTS: Trophy Rack medallion, v2
+# FACTS: Trophy Rack medallion, v3 (and v2)
 
 Every number comes from this folder. The source is on each line (STANDARDS 15).
 
@@ -14,6 +14,36 @@ Every number comes from this folder. The source is on each line (STANDARDS 15).
 - **For Scott's own use; not a shop product.** It's reproduced from Scott's photos of a
   Mardi Gras bead pendant.
 - **Not printed yet,** as far as this folder knows. Every image here is a render.
+
+## v3 (2026-11-25, `v3/`): Scott's fixes after printing v2
+Scott: "the nipples need to be way shorter so they don't break off. Make sure the ring for the
+keychain is really strong. I need this to be a very high quality product."
+
+| what | v2 | v3 | source |
+|---|---|---|---|
+| Tips | a 3.2 mm peg standing 4.2 off the dome; they broke off | a rounded nub 1.6 off the dome, flaring into a 6.4 mm foot | `v3/trophy_rack_v3.scad` |
+| Keychain tab thickness | 3.0 | 5.0 (the rim's full height) | the same |
+| Ring round the hole | 2.0 wide: 6 mm² at its top, the part's thinnest section | 3.2 wide: 16 mm² | the same; `checks/fragility.txt` |
+| Hole | 4.0, sharp edges | 4.5, edges chamfered | the same |
+| Neck into the shield | 9 wide | 16 wide | the same |
+| Overall thickness | 17.9 | 15.7 | `v3/trophy_rack_v3_union.stl` |
+
+- **Checks (`v3/logs/`):**
+  - **Product gate PASS:** min wall 2.4 at the 1st percentile, no supports. The lettering is
+    declared as detail.
+  - **Print fidelity:** 0 flagged.
+  - **Fragility:** 0 high, 0 watch, 0 slender runs. v2 had one slender run, at the ring.
+- **Slices** (Bambu Studio, P1S 0.4, PLA Basic, 3 walls, 15%, shop retail settings, no supports):
+  - `v3/trophy_rack_v3.gcode.3mf`, 0.20 Standard: **2 h 58 m 44 s, 50.4 g** (black 10.3, yellow
+    5.2, skin 13.1, cream 21.8).
+  - `v3/trophy_rack_v3_fine.gcode.3mf`, 0.12 Fine: **4 h 41 m 50 s, 69.5 g**. Finer layers mean
+    more colour swaps, so more purge.
+  - Most of the grams are purge from the colour swaps, not the medallion (about 12 g): see
+    "What the difference is" below.
+- **Not printed yet.** `v3/images/` are renders.
+  - `trophy_rack_v2_v3_compare.jpg` shows v2 and v3 from the same camera.
+- **Status:** Scott called it "a very high quality product" (2026-11-25). Whether it's sold, and
+  where, is his call. The sections below still describe it as his own piece.
 
 ## What it is
 - **Shield:** a black rim with a hanging tab (2 mm hole for a jump ring) and a yellow field.
