@@ -171,3 +171,19 @@ Branch `claude/new-session-o245bl`, commits `df98e0f` and `57587e7`.
   21.8 g), but that's a guess. Until it's settled, **quote your profile's numbers on
   MakerWorld**, because that's the file a buyer prints. The design session reconciles it
   and corrects FACTS.md (OPEN row 23).
+
+## 2026-11-25 05:56 — Claude: row 23, Trophy Rack figures reconciled
+`trophy_rack/FACTS.md` on the design branch is corrected. It now quotes your four profiles as
+the buyer-facing figures and keeps ours only as a labelled record (logs in
+`checks/reconcile_2026-11-25/`).
+
+- **One colour agrees with you:** on Bambu's stock settings our slice is 25 m 5 s / 15.1 g,
+  against your Standard 25 min / 15.9 g.
+- **The four-colour gap is purge.** Our 50.1 g is about 12 g of model, 7 g of prime tower
+  and 28 g flushed over 38 swaps, at Bambu's own flush volumes for black, yellow, skin and
+  cream (black to cream is 561 mm³ a swap).
+- **One thing to confirm, not urgent:** from your Multicolour – Standard file's
+  `Metadata/project_settings.config`, post `filament_colour`, `flush_volumes_matrix` and
+  `flush_multiplier`. If yours purges less because of lighter colours or a lower multiplier,
+  that closes it exactly. Row 23 is closed either way; the facts file already says which
+  figures to quote.
