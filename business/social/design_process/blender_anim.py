@@ -10,7 +10,7 @@ Spec keys:
   parts: [{path, rgb, keys: [[frame, [dx, dy, dz], rot_z_deg], ...], show: [from, to] (optional),
            clip: true (optional: hide everything with y < the clip value)}]
   camera: {target [x,y,z] / target_z / radius (mm, optional),
-           keys: [[frame, az_deg, el_deg, zoom(, aim_z_mm)], ...]}
+           keys: [[frame, az_deg, el_deg, zoom(, aim: z or [x, y, z] mm)], ...]}
   clip_keys: [[frame, y_mm], ...]   the cut plane's position over time (y: + is away from az 0)
 Positions are in the parts' own frame (mm); the camera is fitted once, to the assembled parts.
 """
@@ -140,8 +140,10 @@ for key in cam_spec["keys"]:
     f, az, el, zoom = key[:4]
     rig.rotation_euler = (math.radians(90 - el), 0, math.radians(az))
     rig.keyframe_insert("rotation_euler", frame=f)
-    if len(key) > 4:                    # a fifth figure aims the camera at this height (mm)
-        rig.location = (target.x, target.y, key[4] * K)
+    if len(key) > 4:                    # a fifth entry aims the camera: a height, or [x, y, z] (mm)
+        aim = key[4]
+        rig.location = ((target.x, target.y, aim * K) if isinstance(aim, (int, float))
+                        else tuple(c * K for c in aim))
         rig.keyframe_insert("location", frame=f)
     cam.location = (0, 0, base_dist / zoom)
     cam.keyframe_insert("location", frame=f)

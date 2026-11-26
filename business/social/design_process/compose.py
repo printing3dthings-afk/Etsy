@@ -11,6 +11,7 @@ and end card. It also returns the timeline, which the storyboard script writes a
 A segment is a dict:
   kind "frames": dir (PNG frames from blender_anim.py), hold_start / hold_end (s)
   kind "video":  path, start (s), dur (s), crop "w:h:x:y" (ffmpeg), speed (default 1)
+  kind "image":  path (a photo), dur (s), zoom [from, to] (a slow push-in), centre [x, y] (0-1)
   every segment: label (the step heading), captions [[t, text], ...] (t from the segment's
                  start), chip ("RENDER" or "REAL"), fade (s, the dissolve into the next one)
 """
@@ -112,8 +113,31 @@ def _video_frames(seg, tmp):
     return sorted(out.glob("f_*.png"))
 
 
+def _image_frames(seg, tmp):
+    """A still photo as a slow push-in, square-cropped round `centre`."""
+    out = Path(tmp) / f"i{abs(hash(seg['path'])) % 10**8}"
+    out.mkdir(exist_ok=True)
+    im = Image.open(seg["path"]).convert("RGB")
+    w, h = im.size
+    cx, cy = seg.get("centre", [0.5, 0.5])
+    z0, z1 = seg.get("zoom", [1.0, 1.08])
+    n = int(round(seg["dur"] * FPS))
+    fs = []
+    for k in range(n):
+        z = z0 + (z1 - z0) * (k / max(1, n - 1))
+        side = min(w, h) / z
+        x0 = min(max(cx * w - side / 2, 0), w - side)
+        y0 = min(max(cy * h - side / 2, 0), h - side)
+        f = out / f"f_{k:04d}.png"
+        im.crop((x0, y0, x0 + side, y0 + side)).resize((1000, 1000), Image.LANCZOS).save(f)
+        fs.append(f)
+    return fs
+
+
 def _segment_frames(seg, tmp):
     """The segment's shot frames, holds included, as a list of paths."""
+    if seg["kind"] == "image":
+        return _image_frames(seg, tmp)
     if seg["kind"] == "frames":
         fs = sorted(Path(seg["dir"]).glob("f_*.png"))
         if not fs:
