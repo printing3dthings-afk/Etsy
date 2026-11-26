@@ -3,11 +3,11 @@ urban_kid_v3_one_piece.stl
   ok    watertight: closed
   ok    winding: normals agree
   ok    no_floating_geometry: 1 bodies, expected 1
-  ok    min_wall: 1st pct 2.48mm, median 17.30mm (floor 1.2mm); 0.00% below one bead; 7 spans in declared detail, thread or socket regions not counted
-  FAIL  no_unsupported_overhang: slicer: 291953 support moves, 4773 overhang perimeters, 190.0mm printed of 190.0mm
+  ok    min_wall: 1st pct 2.49mm, median 17.24mm (floor 1.2mm); 0.00% below one bead; 3 spans in declared detail, thread or socket regions not counted
+  FAIL  no_unsupported_overhang: slicer: 295419 support moves, 4794 overhang perimeters, 190.0mm printed of 190.0mm
   ok    geometry_survives_slicing: printed height 190.0mm vs modelled 190.0mm
   ok    flat_base: 63.60 cm2 of contact = 77.9% of footprint (floor 5%)
   ok    stable: centre of mass sits over the base
-  note  risk (uncalibrated, never fails the gate): 4.0mm widest unsupported span at z=9.2mm; 78 layer(s) under the 4.0s cooling threshold; 7854mm2 on the plate; aspect 1.77
+  note  risk (uncalibrated, never fails the gate): 15.8mm widest unsupported span at z=165.4mm; 91 layer(s) under the 4.0s cooling threshold; 7854mm2 on the plate; aspect 1.77
   note  texture (advisory, never fails the gate): rugosity 1.035 -- light relief, at or above the corpus p25
 PRODUCT GATE FAILED

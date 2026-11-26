@@ -57,7 +57,11 @@ Run `python3 build.py base face tag`.
     `images/obc_plate_face_on.png`.
   - **Nameplate:** 20.5 x 8.6 mm, OBC raised 0.6 mm inside a 1.2 mm rim, set 0.8 mm into the
     hoodie over the blank tag the mesh had.
-  - **Cap badge:** 20 x 9.5 mm, the same OBC, filling the snapback opening on the cap's front.
+  - **Cap badge:** 20 x 9.5 mm, the same OBC, on the back of his head. Scott, 2026-11-26: "The
+    hat is currently backwards so the logo should be on the back side of his head." The cap's
+    front panel, above the brim that hangs over his neck, faces backwards, so the badge sits
+    there and reads from behind. The opening on his forehead is the strap's, left as Benson
+    modelled it. See `images/v3_obc_cap_back.png`.
   - **Both:** a hidden 2.5 mm block behind each plate, so the curved surface never leaves a gap.
   - **Chain:** 18 links (1.8 x 2.0 x 1.6 mm, every 1.4 mm, v1's curb chain) follow the two
     strands from the collar to the plate.
@@ -69,14 +73,16 @@ Run `python3 build.py base face tag`.
   - **Balance:** the centre of mass sits over the base.
   - **min_wall:** 1st percentile 2.48 mm. The raised letters are declared detail, which
     print_fidelity checks instead.
-- **print_fidelity (0.12)** (`checks/fidelity_report.txt`, run on the OBC version): 0 flagged.
+- **print_fidelity (0.12)** (`checks/fidelity_report.txt`, run with the cap badge on the front;
+  the re-run with it on the back is in progress): 0 flagged.
   - **Dropped:** 0.03 mm3 in all, every piece under 0.2 mm wide: specks, not detail.
   - **Filled:** none, so the letters, chain links and face lines all print open.
 
 ## Slice
 `urban_kid_v3_one_piece_fine.gcode.3mf`:
 - **Settings:** P1S 0.4, PLA Matte, textured PEI, 0.12 Fine, organic tree supports.
-- **Result:** 8 h 11 m 59 s, 159.5 g, of which 87.1 g is support.
+- **Result:** 8 h 14 m 17 s, 157.0 g, of which 85.9 g is support (Bambu Studio 2.9.2, the
+  OBC badge on the back of the cap).
 
 ## Not in git
 The meshes (`out/`, `*.stl`). The refined mesh runs to 65 MB, so `build.py` rebuilds it from

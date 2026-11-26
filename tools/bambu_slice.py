@@ -10,7 +10,7 @@ with PrusaSlicer 2.7; this is the slicer Scott prints from. It writes the
 .gcode.3mf the P1S runs, which the bridge (tools/relay/bambu_p1s_bridge.py)
 uploads and starts once Scott approves the job in the Action Center.
 
-THE SLICER. Bambu Studio 2.8.2.61 from Flathub (GitHub downloads are blocked
+THE SLICER. Bambu Studio from Flathub (2.8.2.61 to Nov 2026, 2.9.2 since) (GitHub downloads are blocked
 from these containers; Flathub is not). `flatpak run` cannot start its
 sandbox in a container, so the binary is run directly with the GNOME runtime's
 own loader and libraries -- `ensure_installed()` sets this up, and the CLI
@@ -51,7 +51,7 @@ import zipfile
 from pathlib import Path
 
 FLATPAK_APP = Path("/var/lib/flatpak/app/com.bambulab.BambuStudio/current/active/files")
-FLATPAK_RT = Path("/var/lib/flatpak/runtime/org.gnome.Platform/x86_64/50/active/files")
+FLATPAK_RT_ROOT = Path("/var/lib/flatpak/runtime/org.gnome.Platform/x86_64")
 PROFILES = FLATPAK_APP / "share/BambuStudio/profiles/BBL"
 
 MACHINE = "Bambu Lab P1S 0.4 nozzle"
@@ -122,9 +122,21 @@ def ensure_installed() -> None:
         app.symlink_to(FLATPAK_APP)
 
 
+def _runtime() -> Path:
+    # 2026-11-26: Flathub moved Bambu Studio (2.9.2) onto GNOME runtime 51, and the path this
+    # used to hard-code (.../50/) no longer existed on a fresh install: every slice failed with
+    # "ld-linux-x86-64.so.2: not found". Use the newest runtime flatpak installed.
+    vers = sorted((d for d in FLATPAK_RT_ROOT.glob("*") if (d / "active/files").is_dir()),
+                  key=lambda d: int(d.name) if d.name.isdigit() else -1)
+    if not vers:
+        raise RuntimeError(f"no GNOME runtime under {FLATPAK_RT_ROOT}: run ensure_installed() first")
+    return vers[-1] / "active/files"
+
+
 def _cmd() -> list[str]:
-    loader = FLATPAK_RT / "lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
-    libs = f"{FLATPAK_APP / 'lib'}:{FLATPAK_RT / 'lib/x86_64-linux-gnu'}:{FLATPAK_RT / 'lib'}"
+    rt = _runtime()
+    loader = rt / "lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+    libs = f"{FLATPAK_APP / 'lib'}:{rt / 'lib/x86_64-linux-gnu'}:{rt / 'lib'}"
     return ["xvfb-run", "-a", str(loader), "--library-path", libs, str(FLATPAK_APP / "bin/bambu-studio")]
 
 

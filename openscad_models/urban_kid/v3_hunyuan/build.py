@@ -121,6 +121,7 @@ def stage_face():
 # ---- the OBC nameplate and a chain that reads as chain --------------------------------------
 TAG_C = (0.8, 112.2)          # (x, z) of the blank tag in Benson's mesh, measured on the chest map
 TAG_SINK = 0.8                # the plate's back face this far into the hoodie
+CAP_Z = 170.0                 # the cap's front panel, between the brim (to z 160) and the crown's turn
 CHAIN = [[(-2.8, 128.0), (-1.2, 122.0), (0.8, 116.4)],     # (x, z) along each strand, collar to bail
          [(5.6, 127.4), (3.6, 121.6), (0.8, 116.4)]]
 LINK = 1.4                    # one link per 1.4 mm: v1's curb pitch
@@ -128,12 +129,13 @@ LINK_R = (0.9, 1.0, 0.8)      # half-length, half-width, half-thickness: 1.8 x 2
 LINK_OUT = 0.3                # each link's centre this far proud of the hoodie
 
 
-def surface_at(m, x, z, spread=0.6):
-    """Front-surface point and averaged normal at (x, z), from rays shot along +y."""
+def surface_at(m, x, z, spread=0.6, side="front"):
+    """Surface point and averaged normal at (x, z) on the front (rays along +y) or back (along -y)."""
     from trimesh.ray.ray_triangle import RayMeshIntersector
+    sy = 1.0 if side == "front" else -1.0
     off = np.array([(0, 0), (spread, 0), (-spread, 0), (0, spread), (0, -spread)])
-    o = np.array([[x + a, -120.0, z + b] for a, b in off])
-    d = np.tile([0.0, 1.0, 0.0], (len(o), 1))
+    o = np.array([[x + a, -120.0 * sy, z + b] for a, b in off])
+    d = np.tile([0.0, sy, 0.0], (len(o), 1))
     loc, ray, tri = RayMeshIntersector(m).intersects_location(o, d, multiple_hits=False)
     p = loc[ray == 0][0] if (ray == 0).any() else loc.mean(0)
     n = m.face_normals[tri].mean(0)
@@ -150,16 +152,19 @@ def frame(n, along):
 # Two OBC plates, both from tag.scad. 2026-11-26, Scott: "I want the chain to say OBC and the hat
 # logo to say it also." At v1's 3 mm the mark's B lost both counters to obc_clean() and read as
 # a box ("O[]C"); they first survive at 4.5 mm (counted on the 2D mark), so both use 5 mm.
+# 2026-11-26, Scott: "The hat is currently backwards so the logo should be on the back side of his
+# head." The cap's front panel (above the brim, which hangs over his neck) faces backwards, so the
+# badge goes there, reading from behind. The opening on the forehead is the strap's, left as modelled.
 PLATES = {
-    # name: (x, z) on the front surface, plate width, height, letter height, sink into the surface
-    "tag": (TAG_C, 20.5, 8.6, 5.0, TAG_SINK),
-    "cap": ((-1.0, 177.0), 20.0, 9.5, 5.0, 0.8),   # fills the snapback opening: the cap's badge
+    # name: (x, z), plate width, height, letter height, sink into the surface, side of the figure
+    "tag": (TAG_C, 20.5, 8.6, 5.0, TAG_SINK, "front"),
+    "cap": ((0.0, CAP_Z), 20.0, 9.5, 5.0, 0.8, "back"),
 }
 
 
 def plate_mesh(name, part="all"):
     import subprocess
-    _, w, h, let_h, _ = PLATES[name]
+    _, w, h, let_h, _, _ = PLATES[name]
     out = OUT / f"plate_{name}_{part}.stl"
     subprocess.run(["openscad", "-o", str(out), "-D", f'PART="{part}"', "-D", f"P_W={w}",
                     "-D", f"P_H={h}", "-D", f"LET_H={let_h}", str(HERE / "tag.scad")],
@@ -168,9 +173,10 @@ def plate_mesh(name, part="all"):
 
 
 def place_plate(fig, name):
-    (x, z), w, h, _, sink = PLATES[name]
-    p, n = surface_at(fig, x, z, spread=min(w, h) / 3)
-    xl, yl, zl = frame(n, [1, 0, 0])
+    (x, z), w, h, _, sink, side = PLATES[name]
+    p, n = surface_at(fig, x, z, spread=min(w, h) / 3, side=side)
+    # read from the side it faces: from behind, the reader's right is the figure's -x
+    xl, yl, zl = frame(n, [1, 0, 0] if side == "front" else [-1, 0, 0])
     if yl[2] < 0:                       # keep the letters upright
         xl, yl = -xl, -yl
     T = np.eye(4)
