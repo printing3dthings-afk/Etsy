@@ -95,7 +95,8 @@ and the 0.2 cup; `real/keeper_coupon_timelapse_2026-11-26.mp4`). Plate 2 (the 0.
 only for if 0.2 bound, so it wasn't needed.
 
 **0.2 stands:** it's the clearance `pie_caddy_v2.scad` already uses (`CL = 0.2`), so the full
-keeper, base and drum need no change. Still to do: FACTS v2, renders, the viewer entry, the
-guide's assembly section and Benson's profiles. Nothing on v1 or model 3621416 changes until
+keeper, base and drum need no change. Done the same day: print_fidelity 0 flags on base, drum and
+keeper (`checks_v2/fidelity_*.txt`), FACTS v2, renders (`make_caddy_v2_images.py`), the viewer
+entries and `Pie_Drum_Caddy_v2_Guide.pdf` (`make_caddy_v2_guide.py`). Left: Benson's profiles. Nothing on v1 or model 3621416 changes until
 Scott says to swap.
 
