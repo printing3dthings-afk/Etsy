@@ -88,3 +88,14 @@ check:**
 2. With the keeper home, does the ring still turn freely under it, and lift only a hair
    before it stops?
 3. Which clearance feels better: smooth with no wobble?
+
+## 7. Coupon result (2026-11-26)
+Scott, 2026-11-26: "Test piece was great for the drum caddy." He printed plate 1 (post, ring
+and the 0.2 cup; `real/keeper_coupon_timelapse_2026-11-26.mp4`). Plate 2 (the 0.3 cup) was
+only for if 0.2 bound, so it wasn't needed.
+
+**0.2 stands:** it's the clearance `pie_caddy_v2.scad` already uses (`CL = 0.2`), so the full
+keeper, base and drum need no change. Still to do: FACTS v2, renders, the viewer entry, the
+guide's assembly section and Benson's profiles. Nothing on v1 or model 3621416 changes until
+Scott says to swap.
+
