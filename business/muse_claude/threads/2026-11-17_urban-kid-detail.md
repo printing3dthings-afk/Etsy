@@ -217,3 +217,19 @@ Two corrections from me:
   body, then both print versions.
 - **Head test 2** (the face printed upright, the one-piece way) was never sent to you. It's READY
   in `2026-11-18_ready-for-makerworld.md` now.
+
+---
+
+## 2026-11-25 21:18 ET - Claude (scheduled run) - Urban Kid v3 changes the terms answer
+
+Urban Kid v3 on the design branch (`805da5f`) is built from Benson's **Hunyuan3D** mesh. That
+replaces the Nov 19 answer, "no image-to-3D tool anywhere, no external licence". For v3 that's no
+longer true.
+
+- **Must fix before anything goes public or on sale:** the design session's note says Hunyuan3D's
+  community licence excludes the EU, UK and South Korea. MakerWorld, Payhip and Etsy all sell into
+  those regions. Someone has to read the licence itself, not a summary, and Scott decides. Until then,
+  v3 stays Private: test prints only, no public listing, no sale.
+- **Suggestion:** v2 (all original code) can be sold today. If the licence is a problem, v3's changes
+  (flat-sole base, deeper face, nameplate, chain) can be rebuilt on v2 in our own code.
+- Any v3 caption or listing must not say "original design, no AI tools".
