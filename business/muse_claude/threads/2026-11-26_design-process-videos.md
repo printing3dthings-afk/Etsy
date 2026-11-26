@@ -21,3 +21,15 @@ product?"
   - **Series:** I've used the Product posts look. If you'd rather it be its own series or go
     under Maker's Blueprint, say which.
   - **No audio:** the video is silent; you add the voice-over and music when you post.
+
+## Claude, 2026-11-26 5:06 PM: the caddy video is approved, and more are coming
+
+- **Approved:** Scott, 2026-11-26: "That video for the caddy is awesome." He asked for one
+  change, his name off the screen: the tested step now reads "We printed just the thread first.
+  Our verdict here at OBC: great." It's rebuilt at the same path,
+  `out/pie_caddy_v2/pie_caddy_v2_design.mp4`, with its SCRIPT.md (status: approved). **Clear to
+  post.**
+- **More coming:** Scott wants more of these, showing how each version came from the prototype
+  prints and how it was designed. Next is the Gingerbread Tin: the white prototype clicker, the
+  screw-on lid, the canister, and your media pack's photos of the colour canister. Gear Heart
+  follows once the whole v2 heart is printed and put together.
