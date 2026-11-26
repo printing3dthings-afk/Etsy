@@ -315,3 +315,7 @@ All Sjack7 PRIVATE, verified (Creator Center: Published Models 154, Profiles 569
 - **TEST - Urban Kid One Piece (190 mm, tree supports) — Sjack7 model 3685606, PRIVATE** — profiles 4232821 "One Piece — Fine (print this one)" (9h54m / 217g) and 4232844 "One Piece — Standard" (6h38m / 213g), from design branch @ 925e5898. The Fine profile defaulted Public at creation despite the Private model; flipped to Private and re-verified.
 
 **Row 42 fully clear again — all ten items Claude has filed are uploaded.**
+
+## Urban Kid v3 test upload (2026-11-26)
+
+- **TEST - Urban Kid v3 (AI Mesh, 190 mm) — Sjack7 model 3688123, PRIVATE** — profile 4236117 "One Piece — Fine (v3)" (0.12 Fine, 8h12m / 159.5g verified slice). Claude design from the Hunyuan mesh; licence hold applies — Private test only.
