@@ -49,10 +49,16 @@ Run `python3 build.py base face tag`.
 
   The V brows, heavy lids, the grin and its dimples all deepen together. See
   `images/face_before_after.png` (left: as sent; right: deepened).
-- **tag:**
-  - **Nameplate:** v1's own 13.8 x 7 mm plate (`tag.scad`), with OBC raised 0.6 mm in the shop
-    mark at 3 mm, the detail standard's floor. It's set 0.8 mm into the hoodie over the blank tag
-    the mesh had.
+- **tag:** two OBC plates from `tag.scad`, and the chain.
+  - **Why the letters are 5 mm** (Scott, 2026-11-26: "I want the chain to say OBC and the hat
+    logo to say it also"): at v1's 3 mm the shop mark's B lost both its holes to
+    `obc_clean()` and read as a box ("O[]C"), here and on v1's gold tag. Counted on the 2D mark,
+    the B first keeps both holes at 4.5 mm, so both plates use 5 mm. See
+    `images/obc_plate_face_on.png`.
+  - **Nameplate:** 20.5 x 8.6 mm, OBC raised 0.6 mm inside a 1.2 mm rim, set 0.8 mm into the
+    hoodie over the blank tag the mesh had.
+  - **Cap badge:** 20 x 9.5 mm, the same OBC, filling the snapback opening on the cap's front.
+  - **Both:** a hidden 2.5 mm block behind each plate, so the curved surface never leaves a gap.
   - **Chain:** 18 links (1.8 x 2.0 x 1.6 mm, every 1.4 mm, v1's curb chain) follow the two
     strands from the collar to the plate.
 
@@ -61,14 +67,14 @@ Run `python3 build.py base face tag`.
   `no_unsupported_overhang`. That one fails by design: it prints on tree supports.
   - **Contact:** 63.6 cm2 of base on the plate.
   - **Balance:** the centre of mass sits over the base.
-  - **min_wall:** 1st percentile 2.57 mm. The raised letters are declared detail, which
+  - **min_wall:** 1st percentile 2.48 mm. The raised letters are declared detail, which
     print_fidelity checks instead.
 - **print_fidelity (0.12):** in `checks/` when it finishes.
 
 ## Slice
 `urban_kid_v3_one_piece_fine.gcode.3mf`:
 - **Settings:** P1S 0.4, PLA Matte, textured PEI, 0.12 Fine, organic tree supports.
-- **Result:** 8 h 13 m 47 s, 162.5 g, of which 89.2 g is support.
+- **Result:** 8 h 11 m 59 s, 159.5 g, of which 87.1 g is support.
 
 ## Not in git
 The meshes (`out/`, `*.stl`). The refined mesh runs to 65 MB, so `build.py` rebuilds it from

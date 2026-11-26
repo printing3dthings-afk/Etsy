@@ -147,17 +147,36 @@ def frame(n, along):
     return x, np.cross(n, x), n
 
 
-def place_tag(fig):
-    p, n = surface_at(fig, *TAG_C, spread=2.5)
+# Two OBC plates, both from tag.scad. 2026-11-26, Scott: "I want the chain to say OBC and the hat
+# logo to say it also." At v1's 3 mm the mark's B lost both counters to obc_clean() and read as
+# a box ("O[]C"); they first survive at 4.5 mm (counted on the 2D mark), so both use 5 mm.
+PLATES = {
+    # name: (x, z) on the front surface, plate width, height, letter height, sink into the surface
+    "tag": (TAG_C, 20.5, 8.6, 5.0, TAG_SINK),
+    "cap": ((-1.0, 177.0), 20.0, 9.5, 5.0, 0.8),   # fills the snapback opening: the cap's badge
+}
+
+
+def plate_mesh(name, part="all"):
+    import subprocess
+    _, w, h, let_h, _ = PLATES[name]
+    out = OUT / f"plate_{name}_{part}.stl"
+    subprocess.run(["openscad", "-o", str(out), "-D", f'PART="{part}"', "-D", f"P_W={w}",
+                    "-D", f"P_H={h}", "-D", f"LET_H={let_h}", str(HERE / "tag.scad")],
+                   check=True, capture_output=True)
+    return trimesh.load(out)
+
+
+def place_plate(fig, name):
+    (x, z), w, h, _, sink = PLATES[name]
+    p, n = surface_at(fig, x, z, spread=min(w, h) / 3)
     xl, yl, zl = frame(n, [1, 0, 0])
     if yl[2] < 0:                       # keep the letters upright
         xl, yl = -xl, -yl
     T = np.eye(4)
     T[:3, 0], T[:3, 1], T[:3, 2] = xl, yl, zl
-    T[:3, 3] = p - zl * TAG_SINK
-    tag = trimesh.load(OUT / "tag_all.stl")
-    tag.apply_transform(T)
-    return tag, T
+    T[:3, 3] = p - zl * sink
+    return T
 
 
 def chain_links(fig):
@@ -184,18 +203,25 @@ def chain_links(fig):
 
 def stage_tag():
     fig = sharpen_face(load_figure())
-    tag, _ = place_tag(fig)
+    OUT.mkdir(exist_ok=True)
+    parts, letters = [to_manifold(fig)], []
+    for name in PLATES:
+        T = place_plate(fig, name)
+        pl = plate_mesh(name)
+        pl.apply_transform(T)
+        parts.append(to_manifold(pl))
+        lt = plate_mesh(name, "letters")
+        lt.apply_transform(T)
+        letters.append(lt)
     links = chain_links(fig)
-    man = to_manifold(fig) + to_manifold(tag)
-    man = mf.Manifold.batch_boolean([man] + [to_manifold(l) for l in links], mf.OpType.Add)
+    parts += [to_manifold(l) for l in links]
+    man = mf.Manifold.batch_boolean(parts, mf.OpType.Add)
     m = to_trimesh(man + base_disc())
     m.export(OUT / "tag.stl")
-    # the letters alone, in place, for the product gate's wall check
-    lt = trimesh.load(OUT / "tag_letters.stl")
-    lt.apply_transform(place_tag(fig)[1])
-    lt.export(OUT / "tag_letters_placed.stl")
-    print(f"tag: {len(links)} links; {len(m.split())} body, watertight {m.is_watertight}, "
-          f"{len(m.faces)} faces")
+    # the raised letters alone, in place, for the product gate's wall check
+    trimesh.util.concatenate(letters).export(OUT / "tag_letters_placed.stl")
+    print(f"tag: plates {list(PLATES)}, {len(links)} links; {len(m.split())} body, "
+          f"watertight {m.is_watertight}, {len(m.faces)} faces")
     return m
 
 
