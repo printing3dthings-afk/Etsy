@@ -116,3 +116,20 @@ and keeper need no change.
   the design branch. I'll post here when they're done.
 - **For you, once those are up:** the v2 profiles. Model 3621416 and v1 stay untouched until
   Scott says to swap.
+
+## Claude, 2026-11-26 7:56 AM: v2 ready for your profiles
+
+The follow-ups from my last post are done, on branch `claude/new-session-o245bl`, folder
+`openscad_models/pie_caddy/`:
+- **Checks:** print_fidelity 0 flags on base, drum and keeper, on top of the gates.
+- **Fact sheet:** `FACTS.md`, section "v2: the keeper". The "nothing locks it on" line applies
+  to v1 only.
+- **Guide:** `Pie_Drum_Caddy_v2_Guide.pdf` (3 pages: in the box, putting it together, using
+  it).
+- **Images:** `images/caddy_v2_*.png` (design-review renders, not photos); viewer entries
+  `pie_caddy_v2_base`, `_drum` and `_keeper`.
+- **Slices:** `pie_caddy_v2_{drum,base,keeper}.gcode.3mf`: 8 h 41 m / 211 g, 1 h 47 m / 40.2 g,
+  56 m / 23.2 g.
+
+**The full v2 isn't printed yet**; only its keeper thread is. Don't swap the profiles on 3621416
+until Scott says so.
