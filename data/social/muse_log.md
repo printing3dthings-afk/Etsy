@@ -1677,3 +1677,793 @@ Question for the comments: what's YOUR wall count and infill on a part that has 
 
 #3dprinting #3dprintingtips #maker #filament #3dprinted"; Links: https://www.tiktok.com/@onbrandcraftz/video/7710069697940589855; in-caption link: none; no affiliate links; Claims made: same claim-checked figures as the Instagram replacement entry (34% corrected); Replies/DMs sent: none; Results: posted Nov 19 21:08 EST via TikTok Studio and verified on the @onbrandcraftz profile (first tile under Latest) and on the video page; music copyright check and content check both "No issues found"; visibility Everyone; Problems: REPLACEMENT post — the Nov 12 original (video 7707357904554200333) was deleted in TikTok Studio and verified gone before this posted. Verification of the profile briefly hit a TikTok slider CAPTCHA, which timed out and cleared; the video was verified directly afterward.
 2026-11-19 21:29 EST — YouTube — 3D Printing, Explained — Lesson 006 Short (REPLACEMENT); Account: OnBrandCraftz (YouTube); Product: Explained Lesson 006 "100% infill is a myth" (teaching post); Media: lesson006_v2.mp4 (same video as the Instagram leg; Studio lists 0:55); Caption: Title: "100% Infill Is a Myth — Lesson 006 | 3D Printing, Explained" — description is the corrected lesson caption, word-for-word as in the Instagram replacement entry above; Links: https://www.youtube.com/shorts/1PSFsrQrZqA; in-description link: none (the description carries the lesson caption only); no affiliate links; Claims made: same claim-checked figures as the Instagram replacement entry (34% corrected); Replies/DMs sent: none; Results: published Public Nov 19 via YouTube Studio; copyright and Community Guidelines checks both "No issues found"; not made for kids; verified live on the Shorts page; Problems: REPLACEMENT post — the Nov 12 original (Short yEE85FspaRU, which had 218 views) was deleted forever in Studio and verified gone before this uploaded.
+
+2026-11-20 09:50 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Turret House spotlight / Friday Makers Week 5 teaser / Versus Day 22 (Warm white vs cool white light); Media: 3 story graphics (pipeline-media-2026-11-20/story1_turret.png / story2_friday_makers.png / story3_versus.png), media 17889714069689774 (Turret House teaser) / 18136579108709326 (Friday Makers Week 5 teaser) / 18645313054012661 (Versus Day 22 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker "FILES ON MAKERWORLD" -> https://makerworld.com/en/@P3DT on the Turret House story (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: none beyond the spotlight/Versus teasers themselves; Replies/DMs sent: none; Results: own-stories read-back verified exactly 3 live on @onbrandcraftz2026; sticker render QC pass; Problems: none
+2026-11-20 09:51 EST — X — Gingerbread Turret House spotlight post; Account: Onbrandcraftz (X); Product: Gingerbread Turret House; Media: colour three-quarter render (pipeline-media-2026-11-20); Caption: "3D printed Christmas village — today's spotlight is the Gingerbread Turret House 🎄 Round gingerbread house, tall side turret, icing-drip roof + gumdrops on top. Tea-light lantern, no supports. Files on MakerWorld https://makerworld.com/en/@P3DT #3dprinting"; Links: https://x.com/Onbrandcraftz/status/2123791266093867040; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted via the browser leg 09:48–09:52 EST; duplicate check clean; render displays and MakerWorld link clickable on viewer check; business account only; Problems: none
+2026-11-20 10:07 EST — Instagram — Versus Day 22 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 22 — Warm white vs cool white light (green line, question matchup; hero = Turret House lit real print); Media: vs-warm-vs-cool-video.mp4 (Ronan voiceover; bed "Dance of the Sugar Plum Fairy" by Kevin MacLeod, credited in caption); Caption: "tea light house — warm white vs cool white light. Same house, same light spot. Which glow actually wins? 💚
+
+We lit our Turret House — printed in matte white PLA — both ways and scored what we saw. Warm white (~2700–3000K on the box) glows creamy and golden, matches the tea light flicker these houses are built for, and keeps matte white creamy. Cool white (~5000–6500K) reads brighter and keeps painted colours true — but through our matte white prints it can tip blue-grey.
+
+Head-to-head: warm takes the cosy village look, the tea light match, and matte white. Cool takes brightness and true colours. 3–2 warm white — every score is our observed result from our own prints.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose village glows blue at night.
+
+Day 21 — Bambu Basic vs Inland PLA deal is on our profile · Day 23 lands here tomorrow, same time
+
+Sources: our observed results on our own prints; Kelvin ranges are the ranges LED makers print on the box.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TeaLightHouse #3DPrinting #ChristmasVillage #3DPrintedVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/Df966wKjhuX/ (media 17954529915341107); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: all scores OUR OBSERVED RESULT on our own prints; Kelvin figures are LED box ranges; verdict Warm 3–2 Cool with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: read-back verified present in the account post list; Problems: none on this leg
+2026-11-20 10:10 EST — Instagram — Versus Day 22 carousel (5 slides); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 22 — Warm white vs cool white light (green line); Media: 5 slides (vs-daily/2026-11-20-warm-vs-cool-light/slides/); Caption: "tea light house — warm white vs cool white light. Same house, same light spot. Which glow actually wins? 💚
+
+We lit our Turret House — printed in matte white PLA — both ways and scored what we saw. Warm white (~2700–3000K on the box) glows creamy and golden, matches the tea light flicker these houses are built for, and keeps matte white creamy. Cool white (~5000–6500K) reads brighter and keeps painted colours true — but through our matte white prints it can tip blue-grey.
+
+Head-to-head: warm takes the cosy village look, the tea light match, and matte white. Cool takes brightness and true colours. 3–2 warm white — every score is our observed result from our own prints. Slide 2's cool look is graded from the same photo to show the colour shift.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose village glows blue at night.
+
+Day 21 — Bambu Basic vs Inland PLA deal is on our profile · Day 23 lands here tomorrow, same time
+
+Sources: our observed results on our own prints; Kelvin ranges are the ranges LED makers print on the box.
+
+#TeaLightHouse #3DPrinting #ChristmasVillage #3DPrintedVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/p/Df97FzwjgGX/ (media 17979315663172212); no affiliate links; Claims made: same observed-result scores and verdict as the Day 22 reel entry; Replies/DMs sent: none; Results: read-back verified present in the account post list; Problems: MUSIC OWED: no track attached (instagram-cli cannot attach carousel audio) — add in the IG app via Edit → Replace Audio from the Meta Sound Collection (suggested: a warm festive instrumental, e.g. "Silent Night"-style holiday instrumental), credit only once added
+2026-11-20 10:44 EST — Facebook — Gingerbread Turret House spotlight photo post (Page post); Account: Onbrandcraftz Page; Product: Gingerbread Turret House; Media: colour render (pipeline-media-2026-11-20); Caption: "3D printed Christmas village — today's spotlight is the Gingerbread Turret House 🎄
+
+A round gingerbread house with a tall side turret: dark shingled cone roofs, white icing dripping over the main roof with three red gumdrops on top, a red-and-white candy finial on the turret, white arched windows, candy-cane striped door posts and a tiny red gift on the snowy white base.
+
+Drop a battery tea light inside and the windows glow — it's a hollow tea-light lantern, printed with no supports.
+
+🎄 Today's spotlight: the Gingerbread Turret House.
+⚔️ Versus Day 22 today: a new maker question, video + swipe.
+🎉 Friday Makers Week 5 runs today in our group — the final test.
+
+Our village files are on MakerWorld: https://makerworld.com/en/@P3DT — free on MakerWorld — link in bio
+
+Send this to the friend whose village needs a turret.
+
+#3DPrinting #ChristmasVillage #TeaLight"; Links: https://facebook.com/61595553412715/posts/pfbid028RixUL9weRMr2MVbg4r82AMpQq8Sh8iYT2QhLzgvMAKV2r6LgKftxsfFQpPpJxdUl/ (post 122115888111518447); in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: attempt 1 (10:15 EST) was killed by a service restart before any write landed (feed read-back confirmed absence); attempt 2's locked write landed server-side at 10:44 AM — Page feed read-back confirms a Public, Page-authored photo post, caption verbatim, single copy; no further retry made; Problems: two disrupted attempts before the locked write landed (the Nov 19 late-landing pattern); no duplicate
+2026-11-20 10:47 EST — Facebook — Versus Day 22 reel (Page reel); Account: Onbrandcraftz Page; Product: Versus Day 22 — Warm white vs cool white light (green line); Media: vs-warm-vs-cool-video.mp4 (same video as the Instagram leg); Caption: "tea light house — warm white vs cool white. Same house, same light spot. Which glow wins? 💚
+
+We lit our Turret House (matte white PLA) both ways. Warm white (~2700–3000K) glows creamy, matches the tea light flicker, keeps matte white creamy. Cool white (~5000–6500K) reads brighter, colours stay true — but can tip blue-grey through matte white. Warm takes cosy look, tea light match + matte white; cool takes brightness + true colours. 3–2 warm — all scores our observed result.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker whose village glows blue at night.
+
+Day 21 — Bambu Basic vs Inland deal is on our profile · Day 23 lands here tomorrow
+
+Sources: our observed results; Kelvin = ranges LED makers print on the box.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TeaLightHouse #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/1458679046374382/; in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same observed-result scores and verdict as the Day 22 reel entry; Replies/DMs sent: none; Results: attempt 1 (~10:12 EST) was killed by a service restart mid-publish (feed read-back 10:18 EST confirmed absence); the parent attempt's locked write landed server-side at 10:47 AM — Page feed read-back confirms a Public video post, caption verbatim, single copy; no retry made after the landing; Problems: late landing after a disrupted first attempt; no duplicate
+2026-11-20 10:54 EST — TikTok — Versus Day 22 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 22 — Warm white vs cool white light (green line); Media: vs-warm-vs-cool-tiktok.mp4 (TikTok cut; bed "Dance of the Sugar Plum Fairy" by Kevin MacLeod, credited in caption); Caption: "tea light house — warm white vs cool white light. Same house, same light spot. Which glow actually wins? 💚
+
+We lit our Turret House — printed in matte white PLA — both ways and scored what we saw. Warm white (~2700–3000K on the box) glows creamy and golden, matches the tea light flicker these houses are built for, and keeps matte white creamy. Cool white (~5000–6500K) reads brighter and keeps painted colours true — but through our matte white prints it can tip blue-grey.
+
+Head-to-head: warm takes the cosy village look, the tea light match, and matte white. Cool takes brightness and true colours. 3–2 warm white — every score is our observed result from our own prints.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose village glows blue at night.
+
+Day 21 — Bambu Basic vs Inland PLA deal is on our profile · Day 23 lands here tomorrow, same time
+
+Sources: our observed results on our own prints; Kelvin ranges are the ranges LED makers print on the box.
+
+Music: Dance of the Sugar Plum Fairy by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#TeaLightHouse #3DPrinting #ChristmasVillage #3DPrintedVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7710281741449088270; in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: same observed-result scores and verdict as the Day 22 reel entry; Replies/DMs sent: none; Results: posted via the browser leg 10:47–10:54 EST and verified live (TikTok Studio count 93→94; copyright check "No issues found"; Everyone/public; voiceover audible on the playback check; caption verbatim); Problems: none
+2026-11-20 11:00 EST — Facebook — Versus Day 22 carousel (5 slides) — FAILED, never landed; Account: Onbrandcraftz Page; Product: Versus Day 22 — Warm white vs cool white light (green line); Media: 5 slides (vs-daily/2026-11-20-warm-vs-cool-light/slides/); Caption: "tea light house — warm white vs cool white. Same house, same light spot. Which glow wins? 💚
+
+We lit our Turret House (matte white PLA) both ways. Warm white (~2700–3000K) glows creamy, matches the tea light flicker, keeps matte white creamy. Cool white (~5000–6500K) reads brighter, colours stay true — but can tip blue-grey through matte white. Warm takes cosy look, tea light match + matte white; cool takes brightness + true colours. 3–2 warm — all scores our observed result. Slide 2's cool look is graded from the same photo.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker whose village glows blue at night.
+
+Day 21 — Bambu Basic vs Inland deal is on our profile · Day 23 lands here tomorrow
+
+Sources: our observed results; Kelvin = ranges LED makers print on the box.
+
+#TeaLightHouse #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: none — no post exists; Claims made: same observed-result scores and verdict as the Day 22 reel entry (in the prepared caption); Replies/DMs sent: none; Results: NEVER POSTED: attempt 1 (Nov 20 ~11:00 EST) disappeared mid-publish in a service restart; the retry was blocked by the connector write-lock (attempt-1 write still running server-side); a further retry on Nov 21 09:47 EST also disappeared mid-publish. Page feed checks on Nov 20, Nov 22 09:47 EST and Nov 23 09:46 EST all confirm the carousel never landed; it was left pending and NOT reposted; Problems: Facebook carousel leg of Versus Day 22 does not exist; FB carousels have no music route in any case (music-unavailable)
+2026-11-20 10:14 EST — Facebook — Friday Makers Week 5 — Quick Win Edition — FAILED, not posted; Account: Onbrandcraftz Page; Product: Friday Makers Week 5 community ritual post (OnBrandCraftz Makers group); Media: banner-applied photo (friday-makers-week5-quick-win.jpg); Caption: not recorded in the posting sources (draft package: ~/workspace/goals/grow-onbrandcraftz-social-following/hidden_files/friday-week5-2026-11-20/draft.md); Links: none — no post exists; Claims made: none (community prompt post); Replies/DMs sent: none; Results: NOT POSTED: the publish was blocked at the photo-attach step — the cloud browser's Facebook composer and Business Suite expose no usable file input and the native OS picker cannot be driven; the composer was open as the Onbrandcraftz Page with the exact caption, duplicate check clean, nothing published and nothing posted under Scott's personal profile; the Page post, group share and seed comment were all left undone and the package was left with Scott for a manual Facebook app post; Problems: group photo-upload block (the known Facebook Makers group automation block); Week 5 never went live
+2026-11-20 13:00 EST — Instagram — BIQU Panda on the Bench Ep 001 reel (Partner series premiere); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Panda on the Bench Ep 001 — "The Bench" (BIQU/BigTreeTech partner series; stock build plate baseline test on our P1S); Media: biqu-ep001-reel-v1.mp4 (11.17s, reel-only per Scott's Nov 19 approval — no carousel); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — the run report records the caption as Scott-approved exact text used verbatim on every leg (495 chars, incl. the affiliate disclosure); the caption's first line per the dashboard sync: "PANDA ON THE BENCH · EP 001 🐼 The bench is set. Our Bambu Lab P1S test standard."; Links: https://www.instagram.com/reel/Df-PudMDvOC/ (media 18130595368934762); affiliate disclosure in caption per the Partner Standard (Awin/BIQU programme); no product link in caption; Claims made: the episode's bench/test-standard framing as captioned; the closer promises Ep 002 on the CryoGrip Pro Frostbite plate (Scott ruled Nov 20: leave the caption as it is — the PEI plate is in fact next, the Frostbite plate is not yet ordered); Replies/DMs sent: none; Results: read-back verified public reel, caption verbatim, author @onbrandcraftz2026, original audio; Results update (Nov 25 low-view watch): 1 view on the Facebook leg at 2.3 days — among the week's lowest posts; Problems: none on this leg; the BIQU follow-up link email was still owed at log time
+2026-11-20 13:18 EST — Facebook — BIQU Panda on the Bench Ep 001 reel (Page reel); Account: Onbrandcraftz Page; Product: Panda on the Bench Ep 001 — "The Bench" (BIQU partner series); Media: biqu-ep001-reel-v1.mp4 (same video as the Instagram leg); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — same Scott-approved verbatim caption as the Instagram Ep 001 entry; Links: https://facebook.com/61595553412715/posts/122115936495518447 (post 122115936495518447; reel https://facebook.com/reel/1671951874584324/ per the dashboard sync); affiliate disclosure in caption per the Partner Standard; Claims made: same as the Instagram Ep 001 entry; Replies/DMs sent: none; Results: attempt 1 client timed out at 280s with no receipt; the locked write landed server-side at 1:18 PM — Page posts list + get read-backs confirm a Public video, full caption verbatim, owner Onbrandcraftz Page (1358962047302375 / profile 61595553412715), single copy; no retry made; Problems: late landing after a timed-out attempt (the locked-write pattern); no duplicate
+2026-11-20 13:30 EST — TikTok — BIQU Panda on the Bench Ep 001 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Panda on the Bench Ep 001 — "The Bench" (BIQU partner series); Media: biqu-ep001-reel-v1.mp4 (crosspost as-is); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — same Scott-approved verbatim caption as the Instagram Ep 001 entry; Links: https://www.tiktok.com/@onbrandcraftz/video/7710320560667938062; affiliate disclosure in caption per the Partner Standard; Claims made: same as the Instagram Ep 001 entry; Replies/DMs sent: none; Results: posted via the browser leg 13:18–13:30 EST and verified live on the public page (copyright + content checks "No issues found"; Everyone/public; caption verbatim); Problems: none
+2026-11-20 13:30 EST — YouTube — BIQU Panda on the Bench Ep 001 Short; Account: OnBrandCraftz (YouTube); Product: Panda on the Bench Ep 001 — "The Bench" (BIQU partner series); Media: biqu-ep001-reel-v1.mp4 (same video as the Instagram leg); Caption: Title: "Panda on the Bench — Ep 001: The Bench" — description = the approved Ep 001 caption (not recovered word-for-word from local sources (marked per log rule — not paraphrased)); Links: https://www.youtube.com/shorts/ExSQIihRsXM; affiliate disclosure in description per the Partner Standard; Claims made: same as the Instagram Ep 001 entry; Replies/DMs sent: none; Results: published Public via YouTube Studio and verified live (copyright + Community Guidelines checks "No issues found"; not made for kids); Problems: none
+2026-11-20 14:18 EST — Facebook — UPDATE — caption edit to the 2026-11-12 Christmas village compilation reel; Account: Onbrandcraftz Page; Product: Christmas village compilation video (Nov 12 post); Media: no media change (caption edit only); Caption: closing line edited to name the three @P3DT buildings (see Change); Links: https://www.facebook.com/reel/1124154476908987 (video ID 1124154476908987); Claims made: Change: the closing building-list line now names Santa's Workshop, Gingerbread Cottage and Victorian Cottage — the only three houses from the compilation that are actually on @P3DT; rest of the caption intact. This completes the Nov 18 correction (the Instagram leg was edited Nov 18; the Facebook edit was still pending then); Replies/DMs sent: none; Results: edit saved and verified live, made as the Onbrandcraftz Page via Meta Business Suite; Problems: none
+2026-11-21 09:10 EST — TikTok — OBC desk sign "Digital Then Real" video (Product post); Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: OnBrandCraftz desk sign — digital-then-real product video (16.1s cut); Media: obc_sign_digital_vs_real_master.mp4 (16.1s, −14.17 LUFS; music "Cut and Run" by Kevin MacLeod, credited in caption); Caption: "We print it on screen first, then for real.
+
+The digital run is the toolpath simulation of the sliced file, so we can see every layer before the printer moves. Then the real print on our P1S: the black plaque, then the gold OBC.
+
+Every shot is labelled: simulation or real timelapse.
+
+#3dprinting #bambulab #3dprinted #logodesign #maker
+Music: "Cut and Run" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0"; Links: https://www.tiktok.com/@onbrandcraftz/video/7710626803668372750; Claims made: the sign is designed on screen, then printed for real (as shown in the video); Replies/DMs sent: none; Results: live ~09:10 EST (posted by the parent flow completing the pending browser leg); the daily pipeline's own browser leg duplicate-checked, found it already live, and SKIPPED — no duplicate; Problems: none. UPDATE 2026-11-25: this post was DELETED after the 21.5s replacement verified live (see the Nov 25 replacement entries)
+2026-11-21 09:10 EST — YouTube — OBC desk sign "Digital Then Real" Short (Product post); Account: OnBrandCraftz (YouTube); Product: OnBrandCraftz desk sign — digital-then-real product video (16.1s cut); Media: obc_sign_digital_vs_real_master.mp4 (16.1s; music "Cut and Run" by Kevin MacLeod, credited); Caption: Title: "Printed on Screen First, Then for Real | OnBrandCraftz #shorts" — description = the Nov 21 OBC sign caption (see the Instagram entry below); Links: https://www.youtube.com/shorts/DYQddsXHwNw; Claims made: the sign is designed on screen, then printed for real (as shown in the video); Replies/DMs sent: none; Results: live today (posted by the parent flow completing the pending browser leg; it is the day's YouTube Short — new finished material, the queue being exhausted); the pipeline browser leg duplicate-checked and SKIPPED — no duplicate. The Short had 155 views at deletion; Problems: none. UPDATE 2026-11-25: this Short was DELETED after the 21.5s replacement verified live (see the Nov 25 replacement entries)
+2026-11-21 14:00 EST — Instagram — OBC desk sign "Digital Then Real" reel (Product post); Account: OnBrandCraftz (@onbrandcraftz2026); Product: OnBrandCraftz desk sign — digital-then-real product video (16.1s cut); Media: obc_sign_digital_vs_real_master.mp4 (16.1s, −14.17 LUFS; music "Cut and Run" by Kevin MacLeod, credited in caption); Caption: "We print it on screen first, then for real.
+
+The digital run is the toolpath simulation of the sliced file, so we can see every layer before the printer moves. Then the real print on our P1S: the black plaque, then the gold OBC.
+
+Every shot is labelled: simulation or real timelapse.
+
+#3dprinting #bambulab #3dprinted #logodesign #maker
+Music: "Cut and Run" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0"; Links: https://www.instagram.com/reel/DgAZMW9jobl/ (media 18647816365022880); no affiliate links; Claims made: the sign is designed on screen, then printed for real; every shot labelled simulation or real timelapse (as captioned); Replies/DMs sent: none; Results: read-back verified public reel, author @onbrandcraftz2026, caption verbatim + MacLeod credit line. Approval: Scott approved the post on GitHub main APPROVED.md (2026-11-21); claim check PASS vs FACTS.md; duplicate check clean; Problems: none. UPDATE 2026-11-25: the 21.5s replacement could NOT post to Instagram — Meta's daily publishing limit (HTTP 429) was hit that morning; this 16.1s original stays live until the replacement posts (see the Nov 25 entries)
+2026-11-21 14:01 EST — Facebook — OBC desk sign "Digital Then Real" reel (Page reel); Account: Onbrandcraftz Page; Product: OnBrandCraftz desk sign — digital-then-real product video (16.1s cut); Media: obc_sign_digital_vs_real_master.mp4 (same video as the Instagram leg); Caption: "We print it on screen first, then for real.
+
+The digital run is the toolpath simulation of the sliced file, so we can see every layer before the printer moves. Then the real print on our P1S: the black plaque, then the gold OBC.
+
+Every shot is labelled: simulation or real timelapse.
+
+#3dprinting #bambulab #3dprinted #logodesign #maker
+Music: "Cut and Run" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0"; Links: https://facebook.com/reel/2339595963547166/ (post 122116157109518447); no affiliate links; Claims made: same as the Instagram OBC sign entry; Replies/DMs sent: none; Results: pages-posts read-back: Page 1358962047302375 / profile 61595553412715, Public, caption verbatim (Facebook collapsed the blank line before the Music credit to a single newline; wording unchanged); Problems: none. UPDATE 2026-11-25: this post was DELETED after the 21.5s replacement verified live (see the Nov 25 replacement entries)
+2026-11-21 09:48 EST — X — Victorian Cottage spotlight post; Account: Onbrandcraftz (X); Product: Victorian Cottage; Media: colour three-quarter render; Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) (the run report records the post as live and viewer-checked but does not quote the text); Links: https://x.com/Onbrandcraftz/status/2124152918551019952; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: LIVE — duplicate check clean, colour three-quarter render displays, MakerWorld link clickable on viewer check, business account only; Problems: none
+2026-11-21 10:44 EST — Instagram — Versus Day 23 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 23 — Bambu PLA Matte single roll $15.99 vs 10+ bulk $10.39/roll (green line, deal matchup); Media: vs-single-vs-bulk-video.mp4 (Ronan voiceover; bed "Deck the Halls A" by Kevin MacLeod, credited in caption); Caption: "matte PLA filament — one roll at a time vs buy 10+. Same Bambu PLA Matte roll, two prices. Stop overpaying? 💚
+
+Checked today (Nov 21, 2026) on Bambu Lab's official US store: one refill roll lists at $15.99. Buy 10+ rolls and the same roll is $10.39 — ten rolls $103.90 instead of $159.90, a $56 saving, and bulk clears the $59 free-shipping line on its own.
+
+Head-to-head: bulk takes price per roll, the 10-roll total, and free shipping. One-at-a-time takes cash up front and trying new colours. 3–2 bulk.
+
+Pick bulk for a colour you already burn through — our whole Christmas village prints in this matte white. Pick one roll to test a new colour or keep cash tight: a cheap roll in the wrong colour is no deal.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still buying filament one roll at a time.
+
+Day 22 — Warm white vs cool white light is on our profile · Day 24 lands here tomorrow, same time
+
+Sources: Bambu Lab US store, PLA Matte page, checked Nov 21, 2026 ($15.99 list/roll; $10.39/roll at 10+; free shipping over $59; RFID for AMS on the same page).
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage #3DPrintedVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/DgAksMyjm8-/ (media 18428168197154728); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: prices verified on the day (Nov 21, 2026) on the Bambu Lab US store PLA Matte page: $15.99 list/roll single refill, $10.39/roll at 10+, free shipping $59+, RFID; 10 rolls $103.90 vs $159.90 — save $56; verdict Bulk 3–2 Single with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: read-back verified present in the account post list; Problems: none on this leg
+2026-11-21 11:53 EST — TikTok — Versus Day 23 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 23 — Bambu PLA Matte single vs 10+ bulk deal (green line); Media: vs-single-vs-bulk-tiktok.mp4 (TikTok cut; bed "Deck the Halls A" by Kevin MacLeod, credited in caption); Caption: "matte PLA filament — one roll at a time vs buy 10+. Same Bambu PLA Matte roll, two prices. 💚
+
+Checked today (Nov 21, 2026) on Bambu Lab's official US store: one refill roll lists at $15.99. Buy 10+ rolls and the same roll is $10.39 — ten rolls $103.90 instead of $159.90, a $56 saving.
+
+Bulk takes price per roll, the 10-roll total, and free shipping. One-at-a-time takes cash up front and trying new colours. 3–2 bulk.
+
+Pick bulk for a colour you already burn through — our whole Christmas village prints in this matte white. Pick one roll to test a new colour or keep cash tight.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still buying filament one roll at a time.
+
+Day 22 — Warm white vs cool white light is on our profile · Day 24 lands here tomorrow, same time
+
+Sources: Bambu Lab US store, PLA Matte page, checked Nov 21, 2026 ($15.99 list/roll; $10.39/roll at 10+; free shipping over $59).
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7710668768443125005; in-caption link: none clickable; no affiliate links; Claims made: same verified prices and verdict as the Day 23 reel entry; Replies/DMs sent: none; Results: posted via the browser leg and verified live (TikTok Studio count 96→97; copyright check "No issues found"; Everyone/public; voiceover audible on the public playback check; caption verbatim); Problems: none
+2026-11-21 10:44 EST — Facebook — Versus Day 23 reel (Page reel) — FAILED, never landed; Account: Onbrandcraftz Page; Product: Versus Day 23 — Bambu PLA Matte single vs 10+ bulk deal (green line); Media: vs-single-vs-bulk-video.mp4 (same video as the Instagram leg); Caption: "matte PLA filament — one roll at a time vs buy 10+. Same roll, two prices. 💚
+
+Checked today (Nov 21, 2026) on Bambu Lab's official US store: one Bambu PLA Matte refill lists at $15.99; 10+ rolls drop to $10.39 each — ten rolls $103.90 vs $159.90, saving $56. Bulk takes price, total + free shipping; single takes cash up front + new colours. 3–2 bulk. Pick bulk for a trusted colour (our village prints in this matte white); pick one roll to test a colour or keep cash tight.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker still buying filament one roll at a time.
+
+Day 22 — Warm white vs cool white light is on our profile · Day 24 lands here tomorrow
+
+Sources: Bambu Lab US store, PLA Matte page, checked Nov 21, 2026.
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#MattePLA #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: none — no post exists; Claims made: same verified prices and verdict as the Day 23 reel entry (in the prepared caption); Replies/DMs sent: none; Results: NEVER POSTED: attempt 1 (Nov 21 ~10:44 EST) disappeared mid-publish; Page feed read-backs through Nov 21 11:43 EST, Nov 22 09:47 EST and Nov 23 09:46 EST all confirm no Day 23 reel ever landed (newest Page post stayed the Nov 21 OBC sign reel, then Hot Plate Ep 003); left pending per the no-blind-retry rule and NOT reposted; Problems: Facebook reel leg of Versus Day 23 does not exist
+2026-11-21 11:47 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Victorian Cottage teaser / Weekend Makers / Versus Day 23 teaser; Media: 3 story graphics (pipeline-media-2026-11-21/story1_cottage.png / story2_weekend.png / story3_versus.png), media 18019338407981341 (Cottage teaser) / 18104164187641571 (Weekend Makers) / 18079029815468642 (Versus Day 23 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker "FILES ON MAKERWORLD" -> https://makerworld.com/en/@P3DT on the Cottage story (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: none beyond the teasers themselves; Replies/DMs sent: none; Results: clean CLI receipts; all 3 live on @onbrandcraftz2026; Problems: none
+2026-11-21 11:28 EST — Facebook — Saturday Weekend Makers community post — FAILED, never landed; Account: Onbrandcraftz Page; Product: Weekend Makers community post (OnBrandCraftz Makers group ritual); Media: text post (no media); Caption: "Weekend check-in, makers 🎄👇
+
+What's on your build plate right now?
+
+A finished village building. A print caught mid-layer. A paint job halfway done. All of it counts — that's what this group is for.
+
+Drop a photo in the OnBrandCraftz Makers group this weekend and tell us what you're making:
+https://www.facebook.com/groups/1488065163368472
+
+Printing a village? Painting one? Still picking your first building? I want to see it. 🎄
+
+Our village files are free on MakerWorld — link in bio: https://makerworld.com/en/@P3DT
+
+Send this to the maker who always has something on the plate.
+
+— OnBrandCraftz
+YouTube: https://www.youtube.com/@onbrandcraftz | TikTok: https://www.tiktok.com/@onbrandcraftz
+
+#3DPrinting #ChristmasVillage #MakerCommunity"; Links: none — no post exists; Claims made: none (community post); Replies/DMs sent: none; Results: NEVER POSTED: attempt 1 (Nov 21 ~11:28 EST) was killed by a service restart mid-publish (result files empty); Page feed read-backs on Nov 21, Nov 22 09:47 EST and Nov 23 09:46 EST all confirm it never landed; left pending per the no-blind-retry rule and NOT reposted. The group share was never attempted (the Page post had to land first); Problems: Weekend Makers post for Nov 21 does not exist
+2026-11-21 13:20 EST — Instagram — Hot Plate Ep 003 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Hot Plate Ep 003 — Dry filament vs never-dry (series ballot episode); Media: hot-plate-ep003.mp4 (76.47s, master −14.32 LUFS; Ronan voiceover + Kevin MacLeod "Hidden Agenda" bed, credited in caption); Caption: "HOT PLATE · Episode 003 🔥
+Dry filament — 🔴 DRY IT FIRST or 🔵 JUST PRINT IT?
+🔴 Camp Dry: water turns to steam in the hotend — stringing, oozing, holes, rough surfaces, weaker prints (Bambu Lab + Polymaker).
+🔵 Camp Never-Dry: PLA barely changes with humidity (Prusa), fresh spools ship pre-dried and sealed (Polymaker), and drying PLA takes 12 hours.
+No verdict from us (we dry the TPU and PETG; the PLA often prints straight off the spool — the comments decide). Drop your 🔴 or 🔵 with your best reason — Episode 002 got no votes, so best comment headlines Episode 004.
+Send this to the maker whose printer pops and crackles like breakfast bacon.
+Music: "Hidden Agenda" by Kevin MacLeod (incompetech.com), CC BY 4.0.
+#3dprinting #3dprinter #maker #hotplate"; Links: https://www.instagram.com/reel/DgA1Sb3Dpuf/ (media 18341187913278912); no affiliate links; Claims made: the Ep 002 ballot readback is stated honestly in the caption: Ep 002 drew ZERO comments on all four IG/FB posts, so the scoreboard stays 🔴 0 — 0 🔵 — no comment was invented; the dry-vs-never-dry matchup is answered from our own printing experience; Replies/DMs sent: none; Results: read-back verified public reel, caption verbatim, author @onbrandcraftz2026, original audio not muted. Results update (Nov 26 morning briefing check): 2 likes, 0 comments; Problems: TikTok and YouTube legs were still pending the parent browser route at log time (see Problems on the series entries)
+2026-11-21 13:20 EST — Instagram — Hot Plate Ep 003 carousel (4 slides); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Hot Plate Ep 003 — Dry filament vs never-dry; Media: 4 slides (social-dashboard/hot-plate/episode-003-dry-vs-never-dry/); Caption: "HOT PLATE · Episode 003 🔥
+Dry filament — 🔴 DRY IT FIRST or 🔵 JUST PRINT IT?
+🔴 Camp Dry: water turns to steam in the hotend — stringing, oozing, holes, rough surfaces, weaker prints (Bambu Lab + Polymaker).
+🔵 Camp Never-Dry: PLA barely changes with humidity (Prusa), fresh spools ship pre-dried and sealed (Polymaker), and drying PLA takes 12 hours.
+No verdict from us (we dry the TPU and PETG; the PLA often prints straight off the spool — the comments decide). Drop your 🔴 or 🔵 with your best reason — Episode 002 got no votes, so best comment headlines Episode 004.
+Send this to the maker whose printer pops and crackles like breakfast bacon.
+Music: "Hidden Agenda" by Kevin MacLeod (incompetech.com), CC BY 4.0.
+#3dprinting #3dprinter #maker #hotplate"; Links: https://www.instagram.com/p/DgA2hNijv1_/ (media 17900269374612048); no affiliate links; Claims made: same honest Ep 002 ballot readback as the Ep 003 reel entry; Replies/DMs sent: none; Results: read-back verified public carousel, caption verbatim; Problems: MUSIC OWED: no track attached (instagram-cli cannot attach carousel audio) — add in the IG app via Edit → Replace Audio from the Meta Sound Collection (suggested: sneaky pizzicato / light comedy loop), credit only once added
+2026-11-21 13:27 EST — Facebook — Hot Plate Ep 003 reel (Page reel); Account: Onbrandcraftz Page; Product: Hot Plate Ep 003 — Dry filament vs never-dry; Media: hot-plate-ep003.mp4 (same video as the Instagram leg); Caption: "HOT PLATE · Episode 003 🔥
+Dry filament — 🔴 DRY IT FIRST or 🔵 JUST PRINT IT?
+🔴 Camp Dry: water turns to steam in the hotend — stringing, oozing, holes, rough surfaces, weaker prints (Bambu Lab + Polymaker).
+🔵 Camp Never-Dry: PLA barely changes with humidity (Prusa), fresh spools ship pre-dried and sealed (Polymaker), and drying PLA takes 12 hours.
+No verdict from us (we dry the TPU and PETG; the PLA often prints straight off the spool — the comments decide). Drop your 🔴 or 🔵 with your best reason — Episode 002 got no votes, so best comment headlines Episode 004.
+Send this to the maker whose printer pops and crackles like breakfast bacon.
+Music: "Hidden Agenda" by Kevin MacLeod (incompetech.com), CC BY 4.0.
+#3dprinting #3dprinter #maker #hotplate"; Links: https://facebook.com/reel/1820748615847218/ (post 122116203603518447); no affiliate links; Claims made: same honest Ep 002 ballot readback as the Ep 003 reel entry; Replies/DMs sent: none; Results: create receipt state=published, page_id 1358962047302375; Page post list read-back: owner Onbrandcraftz Page, caption verbatim, single copy; Problems: no navigation comment was posted (facebook-cli comments post under Scott's personal profile — hard rule; the ballot lives in the caption)
+2026-11-21 13:27 EST — Facebook — Hot Plate Ep 003 carousel (4 slides); Account: Onbrandcraftz Page; Product: Hot Plate Ep 003 — Dry filament vs never-dry; Media: 4 slides (same set as the Instagram carousel); Caption: "HOT PLATE · Episode 003 🔥
+Dry filament — 🔴 DRY IT FIRST or 🔵 JUST PRINT IT?
+🔴 Camp Dry: water turns to steam in the hotend — stringing, oozing, holes, rough surfaces, weaker prints (Bambu Lab + Polymaker).
+🔵 Camp Never-Dry: PLA barely changes with humidity (Prusa), fresh spools ship pre-dried and sealed (Polymaker), and drying PLA takes 12 hours.
+No verdict from us (we dry the TPU and PETG; the PLA often prints straight off the spool — the comments decide). Drop your 🔴 or 🔵 with your best reason — Episode 002 got no votes, so best comment headlines Episode 004.
+Send this to the maker whose printer pops and crackles like breakfast bacon.
+Music: "Hidden Agenda" by Kevin MacLeod (incompetech.com), CC BY 4.0.
+#3dprinting #3dprinter #maker #hotplate"; Links: https://facebook.com/61595553412715/posts/pfbid02FBF4hh1wjRtddn5omYKtzoD2yrR6VDQuWGUrfhWmCw9rYd3miyJuVPmnfdPi7iBnl/ (post 122116204041518447); no affiliate links; Claims made: same honest Ep 002 ballot readback as the Ep 003 reel entry; Replies/DMs sent: none; Results: create receipt state=published with 4 media attached; Page post list read-back: owner Onbrandcraftz Page, caption verbatim, single copy; Problems: Facebook carousels have no music route — music-less per standard, no credit claimed (the track is in the video bed and credited in the reel captions)
+2026-11-21 15:32 EST — MakerWorld Community — Tin Clicker contest spotlight post; Account: OnBrandCraftz (@P3DT, MakerWorld); Product: Tin Clicker (MakerWorld model 3560658) — "Click Into Celebration" contest spotlight; Media: 4 real photos of the printed Tin Clicker (in the approved order); Caption: "A 3D printed Christmas tin that CLICKS. 🎄
+
+This is our Gingerbread Tin Clicker — a storage tin with a secret in the lid. The gingerbread man is a working clicker: drop one MX-style keyboard switch into the lid, press the cookie, and you get that crisp keyboard snap. Unscrew the lid and the tin underneath keeps your treats, trinkets or desk bits tidy.
+
+Two jobs, one print. It prints with NO supports and no glue — the switch just presses in. Print it multicolour like ours (red tin, cookie-brown gingerbread man, gold icing), or single colour and paint your own.
+
+The file is FREE here on MakerWorld — it's also our entry in the Click Into Celebration contest. If you print one, we'd love to see it — drop a photo of yours below. 🎄
+
+What would you keep in yours? 👇
+
+#clickerfactory #Contests #madeinmakerworld"; Links: live on the @P3DT profile Posts tab: https://makerworld.com/en/@P3DT/posts (MakerWorld's UI exposes no permalink for community posts); model card 3560658 attached in-post; Claims made: the contest framing and product description as captioned (approved copy); Replies/DMs sent: none; Results: verified live on the profile Posts tab ("Posts (1)"), posted 15:30 EST, exact approved text, 4 photos in order, model card attached, Public; Problems: none
+2026-11-22 09:56 EST — Instagram — Versus Day 24 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 24 — Brim ON vs Brim OFF (green line, question matchup); Media: vs-brim-vs-no-brim-video.mp4 (Ronan voiceover; Kevin MacLeod bed credited in caption); Caption: "3D printed Christmas village — brim ON vs brim OFF for thin-walled village houses. Which call keeps the base edge clean? 💚
+
+A brim is a flat adhesion aid printed around the base, removed after printing. Our result, from our matte white PLA houses on our P1S (flat bases, no supports, textured PEI): brim ON takes first-layer hold on tall, narrow pieces — but it tears away at the visible base edge, adding cleanup and scar risk on every display house. Brim OFF takes cleanup, the clean base edge, and our everyday village houses. 3–1 no brim — OUR RESULT.
+
+Pick brim ON for a tall, narrow piece that keeps lifting. Pick brim OFF for flat-based village houses like ours — clean edge, straight onto the shelf.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still trimming brims off every display house.
+
+Day 23 — Bambu PLA Matte, one roll vs buy 10+, is on our profile · Day 25 lands here tomorrow, same time
+
+Sources: our observed results on our own prints (labelled OUR RESULT); brim definition per Bambu Studio.
+
+Music: Silent Night by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/DgDD-7HjiJm/ (media 18001423305043651); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: answered from our own prints and settings (our observed result), with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: posted clean; media ID verified; Problems: none on this leg
+2026-11-22 10:17 EST — Facebook — Versus Day 24 reel (Page reel); Account: Onbrandcraftz Page; Product: Versus Day 24 — Brim ON vs Brim OFF (green line); Media: vs-brim-vs-no-brim-video.mp4 (same video as the Instagram leg); Caption: "3D printed Christmas village — brim ON vs brim OFF for thin-walled village houses. 💚
+
+Our result (matte white PLA, our P1S, flat bases, no supports): brim ON wins hold on tall, narrow pieces; brim OFF wins cleanup, the clean base edge, and our everyday houses. 3–1 no brim — OUR RESULT. Brim ON for a tall, narrow piece that lifts; brim OFF for flat-based village houses like ours.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker still trimming brims off every display house.
+
+Day 23 — Bambu PLA Matte, one roll vs buy 10+, is on our profile · Day 25 lands here tomorrow
+
+Sources: our observed results on our own prints; brim definition per Bambu Studio.
+
+Music: Silent Night by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: post 122116518603518447 (reel https://facebook.com/reel/1293665862941244/ per the dashboard sync); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same as the Day 24 reel entry; Replies/DMs sent: none; Results: attempt 1 client timed out at 900s with no Day 24 post on the feed read-back; the locked write then landed server-side in the burst — feed-verified single copy, owner Onbrandcraftz Page; Problems: late landing after a timed-out attempt; no duplicate
+2026-11-22 10:14 EST — Facebook — Victorian Shop House spotlight photo post (Page post); Account: Onbrandcraftz Page; Product: Victorian Shop House; Media: colour render (pipeline-media-2026-11-22/shop-house-hero-v1.png); Caption: "3D printed Christmas village — today's spotlight is the Victorian Shop House 🎄
+
+A round little shop house: salmon-pink brick on the ground floor, a white half-timbered upper floor with grey-blue beams, and a steep grey-blue roof capped with snow. There's a small dormer window up top, a tall salmon chimney, green window and door details — and a tiny green wreath on the front door. It all sits on a snowy white oval base.
+
+Drop a battery tea light inside and the windows glow — it's a hollow tea-light lantern, printed with no supports.
+
+🎄 Today's spotlight: the Victorian Shop House — free on MakerWorld — link in bio: https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose high street is still missing its shop.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity"; Links: https://facebook.com/61595553412715/posts/pfbid02UF3yz185grg1whJRms9DaeB8T7ikVW73pcmfa4rLosxZM9nZcj3HTL8kmY5fmEHrl/ (post 122116518729518447); in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted clean; feed object ID confirmed, Page-authored, Public, newest on the Page at the time; Problems: none
+2026-11-22 10:16 EST — Facebook — Sunday BTS text post (Page post); Account: Onbrandcraftz Page; Product: Sunday behind-the-scenes workshop post; Media: text post (no media); Caption: "Sunday in the workshop 🎄
+
+A quiet bench day — here's what's on and what's coming this week:
+
+🎄 Today's spotlight: the Victorian Shop House — the round pink-brick shop with the half-timbered top floor and the wreath on the door.
+⚔️ Versus today: Brim ON vs Brim OFF for thin-walled village houses — our own result from our own prints, no brim is our village standard.
+🛒 The Cyber sale starts tomorrow (Nov 23) — the store and the village sets are the focus all week.
+🎄 The Gingerbread Tin Clicker push rolls on — its MakerWorld contest closes Nov 29, and all promo wraps by Nov 28.
+📹 More village spotlights and Versus matchups land every day this week.
+
+Our village files are free on MakerWorld: https://makerworld.com/en/@P3DT
+
+What are you printing this week? 👇
+
+Send this to the maker planning their village street for December.
+
+— OnBrandCraftz
+#3DPrinting #ChristmasVillage #MakerCommunity"; Links: https://facebook.com/61595553412715/posts/pfbid02xiraLb8R7mv5cykCsGKhrmxkYurW22QrAEFwQmxQdGTyLsHEr5KsDbmwopZRW6gsl/ (post 122116518975518447); Claims made: workshop update as captioned; Replies/DMs sent: none; Results: posted clean, Page-authored, Public; Problems: none
+2026-11-22 10:17 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Victorian Shop House teaser / Sunday BTS / Versus Day 24 teaser; Media: 3 story graphics (pipeline-media-2026-11-22/story1_shophouse.png / story2_sunday_bts.png / story3_versus.png), media 17971609827197208 (Shop House teaser) / 17890986483485459 (Sunday BTS) / 17919603984542556 (Versus Day 24 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker to MakerWorld on the Shop House story (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: none beyond the teasers themselves; Replies/DMs sent: none; Results: all 3 live on @onbrandcraftz2026; Problems: none
+2026-11-22 10:40 EST — X — Victorian Shop House spotlight post; Account: Onbrandcraftz (X); Product: Victorian Shop House; Media: colour render (pipeline-media-2026-11-22/shop-house-hero-v1.png); Caption: "3D printed Christmas village — today's spotlight: the Victorian Shop House 🎄 Round pink-brick shop, half-timbered top floor, snow-capped steep roof, wreath on the door. A no-supports tea-light lantern. Free on MakerWorld https://makerworld.com/en/@P3DT #3DPrinting
+(Media: shop-house-hero-v1.png colour render — the round Victorian Shop House: salmon-pink brick ground floor, white half-timbered upper floor, steep grey-blue snow-capped roof, dormer, tall chimney, green wreath door, snowy oval base. MakerWorld CTA under the Etsy-down swap — no Etsy link, no Pinterest pin.)"; Links: https://x.com/Onbrandcraftz/status/2124528476183032042; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted via the browser leg; duplicate check clean; business account only; Problems: none
+2026-11-22 11:00 EST — TikTok — Versus Day 24 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 24 — Brim ON vs Brim OFF (green line); Media: vs-brim-vs-no-brim-tiktok.mp4 (TikTok cut; Kevin MacLeod bed credited in caption); Caption: "3D printed Christmas village — brim ON vs brim OFF for thin-walled village houses. 💚
+
+Our result (matte white PLA, our P1S, flat bases, no supports): brim ON wins hold on tall, narrow pieces; brim OFF wins cleanup, the clean base edge, and our everyday houses. 3–1 no brim — OUR RESULT.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still trimming brims off every display house.
+
+Day 23 — Bambu PLA Matte, one roll vs buy 10+, is on our profile · Day 25 lands here tomorrow, same time
+
+Sources: our observed results on our own prints; brim definition per Bambu Studio.
+
+Music: Silent Night by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7711025447709969677; in-caption link: none clickable; no affiliate links; Claims made: same as the Day 24 reel entry; Replies/DMs sent: none; Results: posted via the browser leg 10:41–11:00 EST and verified live (duplicate check clean; copyright check "No issues found"; Everyone/public after a review flag cleared; voiceover audible on the playback check; caption verbatim); Problems: none
+2026-11-23 10:18 EST — Facebook — Maker Monday text post (Page post); Account: Onbrandcraftz Page; Product: Maker Monday — tea-light fit, Victorian Townhouse; Media: text post (no media); Caption: "3D printed Christmas village — Maker Monday: the tea light has to FIT 🎄
+
+Every house in our village is built around one simple test: a standard battery tea light drops straight in, no forcing, no trimming. The Victorian Townhouse — today's spotlight — is a hollow tea-light lantern: three storeys of pink brick and white arched windows, printed in one piece with NO supports, and the tea light slides in from underneath so the windows glow from inside.
+
+No supports means no support scars on the brickwork. A flat base means it sits clean on the shelf. And the fit is designed in from the start — not sanded in afterwards.
+
+Our village files are free on MakerWorld: https://makerworld.com/en/@P3DT
+
+Send this to the maker whose tea lights never quite fit the houses they print.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #MakerMonday #MakerCommunity
+
+— OnBrandCraftz"; Links: https://facebook.com/61595553412715/posts/pfbid033A9wfJvYCFV3J3z4SpBV9JNksftviyYnF85iUSFvR5Pw9SdpMmcJCbkmeZ49tzx2l/ (post 122116779213518447); in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the tea-light fit guidance as captioned, from our own Townhouse prints; Replies/DMs sent: none; Results: posted clean, Page-authored, Public; Problems: none
+2026-11-23 10:20 EST — Facebook — Victorian Townhouse spotlight photo post (Page post); Account: Onbrandcraftz Page; Product: Victorian Townhouse; Media: colour render (pipeline-media-2026-11-23/townhouse-hero-v1.png); Caption: "3D printed Christmas village — today's spotlight is the Victorian Townhouse 🎄
+
+Three storeys tall in salmon-pink brick, with white arched windows on every floor and white stone trim up the corners. A round corner turret wraps the front, topped with a grey-blue conical roof dusted with snow. The steep grey-blue main roof carries snow along the top, a small white dormer window, icicle trim under the eaves — and a tall salmon chimney. Down at street level there's a dark front door with a tiny green wreath, a small green window box above it, and the whole house sits on a snowy white base.
+
+Drop a battery tea light inside and the windows glow — it's a hollow tea-light lantern, printed with no supports.
+
+🎄 Today's spotlight: the Victorian Townhouse — free on MakerWorld — link in bio: https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose street is missing its tall townhouse.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity"; Links: https://facebook.com/61595553412715/posts/pfbid037zwAHbzCscoXXq2ifQuWjFFunytP76YA25WUFa877jCttpXqFfvkPWuRr26GW7HUl/ (post 122116779369518447); in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted clean, Page-authored, Public; Problems: none
+2026-11-23 10:22 EST — Instagram — Versus Day 25 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 25 — Enclosed vs Open Frame (green line, question matchup); Media: vs-enclosed-vs-open-video.mp4 (Ronan voiceover; Kevin MacLeod bed credited in caption); Caption: "3D printed Christmas village — enclosed printer vs open frame for matte PLA village houses. Which one keeps first layers even? 💚
+
+Our result, from our own bench: our village houses print on our enclosed P1S (matte white PLA, flat bases, no supports, textured PEI). Enclosed takes temperature stability, first layers, and clean walls — the sealed chamber holds steady temps, so corners stay put and walls come out clean. Open frame takes access — instant reach, quick plate swaps — but a cold draught can lift a corner or mark a smooth wall. 3–1 enclosed — OUR RESULT.
+
+Pick enclosed for village houses printed back to back. Pick open frame for hands-on printing in a warm, draught-free room.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker printing village houses next to a draughty window.
+
+Day 24 — Brim ON vs Brim OFF, is on our profile · Day 26 lands here tomorrow, same time
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+Music: We Wish You a Merry Christmas by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/DgFr2hXjg4b/ (media 18171710587505027); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: answered from our own printers/experience (our observed result), with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: verified live, public reel, caption matches caption-ig.txt verbatim; Problems: none on this leg. Results update (Nov 25 low-view watch): this matchup's Facebook leg sat at 1 view at 2.4 days — among the week's lowest posts
+2026-11-23 10:27 EST — Facebook — Versus Day 25 reel (Page reel); Account: Onbrandcraftz Page; Product: Versus Day 25 — Enclosed vs Open Frame (green line); Media: vs-enclosed-vs-open-video.mp4 (same video as the Instagram leg); Caption: "3D printed Christmas village — enclosed printer vs open frame for matte PLA village houses. 💚
+
+Our result (our enclosed P1S, matte white PLA, flat bases, no supports): enclosed wins temperature stability, first layers, and clean walls; open frame wins access. 3–1 enclosed — OUR RESULT. Enclosed for village houses back to back; open frame for hands-on printing in a warm, draught-free room.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker printing village houses next to a draughty window.
+
+Day 24 — Brim ON vs Brim OFF, is on our profile · Day 26 lands here tomorrow
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+Music: We Wish You a Merry Christmas by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/1846012663334513/ (post 122116782333518447); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same as the Day 25 reel entry; Replies/DMs sent: none; Results: attempt 1 was killed by a service restart (feed read-back confirmed absence); attempt 2 posted clean — receipt state=published, page_id 1358962047302375; Page post list read-back: newest, single copy, caption verbatim; Problems: one disrupted attempt before the clean retry; no duplicate
+2026-11-23 10:29 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Victorian Townhouse teaser / Maker Monday / Versus Day 25 teaser; Media: 3 story graphics (pipeline-media-2026-11-23/story1_townhouse.png / story2_maker_monday.png / story3_versus.png), media 18372571771246449 (Townhouse teaser) / 18122856679767687 (Maker Monday) / 17896229904617963 (Versus Day 25 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker "FILES ON MAKERWORLD" -> https://makerworld.com/en/@P3DT on the Townhouse story (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: none beyond the teasers themselves; Replies/DMs sent: none; Results: own-stories read-back verified all 3 live on @onbrandcraftz2026; Problems: none
+2026-11-23 10:33 EST — X — Victorian Townhouse spotlight post; Account: Onbrandcraftz (X); Product: Victorian Townhouse; Media: colour render (pipeline-media-2026-11-23/townhouse-hero-v1.png); Caption: "3D printed Christmas village — today's spotlight: the Victorian Townhouse 🎄 Three storeys of pink brick, white arched windows, snow-dusted turret roof, wreath on the door. A no-supports tea-light lantern. Free on MakerWorld https://makerworld.com/en/@P3DT #3DPrinting
+(Media: townhouse-hero-v1.png colour render — the Victorian Townhouse: salmon-pink brick, white arched windows and corner trim, round corner turret with grey-blue conical snow-dusted roof, steep grey-blue snow-capped main roof, white dormer, tall salmon chimney, dark door with green wreath, snowy white base. MakerWorld CTA under the Etsy-down swap — no Etsy link, no Pinterest pin.)"; Links: https://x.com/Onbrandcraftz/status/2124888863768543670; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the house description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted via the browser leg; duplicate check clean; business account only; Problems: none
+2026-11-23 10:38 EST — TikTok — Versus Day 25 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 25 — Enclosed vs Open Frame (green line); Media: vs-enclosed-vs-open-tiktok.mp4 (TikTok cut; Kevin MacLeod bed credited in caption); Caption: "3D printed Christmas village — enclosed printer vs open frame for matte PLA village houses. 💚
+
+Our result (our enclosed P1S, matte white PLA, flat bases, no supports): enclosed wins temperature stability, first layers, and clean walls; open frame wins access. 3–1 enclosed — OUR RESULT.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker printing village houses next to a draughty window.
+
+Day 24 — Brim ON vs Brim OFF, is on our profile · Day 26 lands here tomorrow, same time
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+Music: We Wish You a Merry Christmas by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7711391127894560013; in-caption link: none clickable; no affiliate links; Claims made: same as the Day 25 reel entry; Replies/DMs sent: none; Results: posted via the browser leg and verified live (caption verbatim); Problems: none
+2026-11-23 13:39 EST — Facebook — A/B Test 11 — Panda on the Bench Ep 001 reel variant (music swap only); Account: Onbrandcraftz Page; Product: Panda on the Bench Ep 001 — A/B Test 11 variant (same picture as Ep 001; music swapped to "Nouvelle Noel" by Kevin MacLeod); Media: biqu-ep001-reel-v2-nouvelle-noel.mp4 (Ep 001 picture with the Nouvelle Noel bed); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — the variant carries the Ep 001 caption with only the music credit changed to "Nouvelle Noel"; the Ep 001 caption text itself was not recovered word-for-word from local sources; Links: https://facebook.com/reel/999367253243536/; affiliate disclosure in caption per the Partner Standard; Claims made: same as the Ep 001 entries; the ONLY change from the original is the music track (the test variable); Replies/DMs sent: none; Results: first attempt (Nov 23 12:26 EST) timed out at 280s and never landed (feed checks 12:31/12:34/12:58 EST showed no post; not retried under the no-blind-retry rule); Scott approved a retry at 13:38 EST and the retry posted live at 13:39 EST, verified. Baseline for the read: the original Ep 001 Facebook reel. 72h read due Thu Nov 26 ~13:39 EST against the original's 12 views; Problems: one timed-out attempt before the approved retry; no duplicate
+2026-11-24 09:49 EST — X — Victorian Toy Shop spotlight post; Account: Onbrandcraftz (X); Product: Victorian Toy Shop; Media: colour render (pipeline-media-2026-11-24/toy-shop-hero-v1.png — copy calls it a render, never a photo); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) (the run report records the post as live and viewer-checked but does not quote the text); Links: https://x.com/Onbrandcraftz/status/2125240309869130031; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the shop description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted via the browser leg 09:45–09:49 EST; duplicate check clean, profile count 29→30, render displays, MakerWorld link clickable on viewer check; Problems: none
+2026-11-24 09:54 EST — Instagram — Versus Day 26 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 26 — 2 walls vs 3 walls (green line, question matchup, our result); Media: vs-two-walls-vs-three-walls-video.mp4 (Ronan voiceover; Kevin MacLeod bed credited in caption); Caption: "3D printed Christmas village — 2 walls vs 3 walls for tea-light village houses. Which wall count actually glows brighter? 💚
+
+Our result, from our own bench with our matte PLA village houses: 2 walls let more tea-light glow through — brighter glow, stronger window light, and a slightly faster, lighter print. 3 walls are stronger in hand with a crisper surface, and they survive handling and yearly packing — but the glow is softer. On the glow categories that matter for a display village, it's 3–2 to 2 walls — OUR RESULT.
+
+Pick 2 walls for shelf-display houses that live lit. Pick 3 walls for houses handled often, handed to kids, or packed away each year.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose village houses glow dimmer than they should.
+
+Day 25 — Enclosed vs Open Frame, is on our profile · Day 27 lands here tomorrow, same time
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/DgINyEgDos8/ (media 17973673134190331); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: our own measured/observed result on our tea-light houses; verdict 3–2 to 2 walls with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: LIVE, read-back verified; Problems: none on this leg
+2026-11-24 11:10 EST — Instagram — Versus Day 26 carousel (5 slides); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 26 — 2 walls vs 3 walls (green line); Media: 5 slides (vs-daily/2026-11-24-two-walls-vs-three-walls/slides/); Caption: "tea light house — 2 walls vs 3 walls. Same houses, same tea light. Which wall count glows brighter? 💚
+
+Our result, from our own bench with our matte PLA village houses: 2 walls let more tea-light glow through — brighter glow, stronger window light, slightly faster and lighter prints. 3 walls are stronger with a crisper surface and survive handling and yearly packing — but the glow is softer. On glow, it's 3–2 to 2 walls — every score is our observed result from our own prints.
+
+Pick 2 walls for shelf-display houses that live lit. Pick 3 walls for houses handled often, handed to kids, or packed away each year.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose village houses glow dimmer than they should.
+
+Day 25 — Enclosed vs Open Frame, is on our profile · Day 27 lands here tomorrow, same time
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+#TeaLightHouse #3DPrinting #ChristmasVillage #3DPrintedVillage #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/p/DgIWkWhjpdF/ (media 18344740936273449); no affiliate links; Claims made: same our-result verdict as the Day 26 reel entry; Replies/DMs sent: none; Results: LIVE, read-back verified; Problems: MUSIC OWED: no track attached (instagram-cli cannot attach carousel audio) — add in the IG app via Edit → Replace Audio from the Meta Sound Collection (suggested: festive instrumental), credit only once added
+2026-11-24 11:54 EST — Facebook — Versus Day 26 reel (Page reel); Account: Onbrandcraftz Page; Product: Versus Day 26 — 2 walls vs 3 walls (green line); Media: vs-two-walls-vs-three-walls-video.mp4 (same video as the Instagram leg); Caption: "3D printed Christmas village — 2 walls vs 3 walls for tea-light village houses. 💚
+
+Our result (our matte PLA village houses, our own bench): 2 walls win glow brightness, window glow, and print time — thinner walls let more tea-light light through. 3 walls win surface detail and strength — stronger, crisper, survives handling and yearly packing. 3–2 to 2 walls — OUR RESULT. Pick 2 walls for shelf-display houses that live lit; pick 3 walls for houses handled often, kids, or packed away each year.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker whose village houses glow dimmer than they should.
+
+Day 25 — Enclosed vs Open Frame, is on our profile · Day 27 lands here tomorrow
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/1152559420471950/ (post 122117132913518447); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same our-result verdict as the Day 26 reel entry; Replies/DMs sent: none; Results: attempt 1 was killed by a service restart mid-run and attempt 3 was blocked by the connector write-lock; attempt 2's locked write landed server-side at 11:54 AM EST — feed read-back: single copy, Public, caption verbatim, owner Onbrandcraftz Page; Problems: late landing after disrupted attempts; no duplicate
+2026-11-24 11:54 EST — Facebook — Versus Day 26 carousel (5 slides); Account: Onbrandcraftz Page; Product: Versus Day 26 — 2 walls vs 3 walls (green line); Media: 5 slides (same set as the Instagram carousel); Caption: "tea light house — 2 walls vs 3 walls. Same houses, same tea light. Which wall count glows brighter? 💚
+
+Our result (our matte PLA village houses, our own bench): 2 walls win glow brightness, window glow, and print time. 3 walls win detail and strength — stronger, crisper, survives handling and yearly packing. 3–2 to 2 walls — all scores our observed result. Pick 2 walls for shelf-display houses that live lit; pick 3 walls for houses handled often, kids, or packed away each year.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker whose village houses glow dimmer than they should.
+
+Day 25 — Enclosed vs Open Frame, is on our profile · Day 27 lands here tomorrow
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+#TeaLightHouse #3DPrinting #ChristmasVillage
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/61595553412715/posts/pfbid02FcFh73QjgpfL1mtGP2a5V3T82FBtPRzpmDgK6Cua2DKg16tobEB4Xjs1W6cirh1ol/ (post 122117133021518447); no affiliate links; Claims made: same our-result verdict as the Day 26 reel entry; Replies/DMs sent: none; Results: attempt 1 client timed out at 900s; the write landed server-side at 11:54 AM EST — feed read-back: single copy, Public, caption verbatim, owner Onbrandcraftz Page; Problems: late landing after a timed-out attempt; Facebook carousels have no music route (music-unavailable)
+2026-11-24 11:55 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Victorian Toy Shop teaser / Tuesday product teaser / Versus Day 26 teaser; Media: 3 story graphics (pipeline-media-2026-11-24/story1_toyshop.png / story2_tuesday_product.png / story3_versus.png), media 18650658829026905 (Toy Shop teaser) / 18120008641823178 (Tuesday product teaser) / 17934968682161452 (Versus Day 26 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker "FILES ON MAKERWORLD" -> https://makerworld.com/en/@P3DT on the Toy Shop story (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: none beyond the teasers themselves; Replies/DMs sent: none; Results: LIVE, own-stories read-back verified; Problems: none
+2026-11-24 13:11 EST — TikTok — Versus Day 26 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 26 — 2 walls vs 3 walls (green line); Media: vs-two-walls-vs-three-walls-tiktok.mp4 (TikTok cut; Kevin MacLeod bed credited in caption); Caption: "3D printed Christmas village — 2 walls vs 3 walls for tea-light village houses. 💚
+
+Our result (our matte PLA village houses, our own bench): 2 walls win glow brightness, window glow, and print time. 3 walls win detail and strength. 3–2 to 2 walls — OUR RESULT.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker whose village houses glow dimmer than they should.
+
+Day 25 — Enclosed vs Open Frame, is on our profile · Day 27 lands here tomorrow, same time
+
+Sources: our observed results on our own prints (labelled OUR RESULT).
+
+Music: Deck the Halls A by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #ChristmasVillage #TeaLightHouse
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7711802074241027342; in-caption link: none clickable; no affiliate links; Claims made: same our-result verdict as the Day 26 reel entry; Replies/DMs sent: none; Results: posted via the browser leg 13:06–13:18 EST and verified live (TikTok Studio count 99→100; duplicate check clean; copyright check "No issues found"; Everyone/public after a review flag cleared; voiceover audible on the playback check; caption verbatim). NOTE: this post is missing from published.json (the known TikTok sync gap) — posted_log.txt and posting_activity.md are the governing records; Problems: none
+2026-11-24 13:38 EST — Facebook — A/B Test 12 — Victorian Shop House spotlight photo post RE-RUN (post-time swap only); Account: Onbrandcraftz Page; Product: Victorian Shop House — A/B Test 12 (same photo + caption as the Nov 22 spotlight; only the post time changed — Tue 1:38 PM vs Sun 10:34 AM); Media: colour render (pipeline-media-2026-11-22/shop-house-hero-v1.png, same image as the original); Caption: "3D printed Christmas village — today's spotlight is the Victorian Shop House 🎄
+
+A round little shop house: salmon-pink brick on the ground floor, a white half-timbered upper floor with grey-blue beams, and a steep grey-blue roof capped with snow. There's a small dormer window up top, a tall salmon chimney, green window and door details — and a tiny green wreath on the front door. It all sits on a snowy white oval base.
+
+Drop a battery tea light inside and the windows glow — it's a hollow tea-light lantern, printed with no supports.
+
+🎄 Today's spotlight: the Victorian Shop House — free on MakerWorld — link in bio: https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose high street is still missing its shop.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity"; Links: https://facebook.com/61595553412715/posts/pfbid02sG9V5KgCXGyatx5CLjTUagCPgdg2jPC9S8tnYyygUPj7ZiAa4dFfHFfeXmCS1EzCl/ (post 122117150859518447); in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same as the Nov 22 Shop House spotlight entry; the ONLY change from the original is the post time (the test variable); Replies/DMs sent: none; Results: LIVE at 1:38 PM ET, verified Page-authored, Public, caption verbatim. Baseline: the original (Nov 22, post 122116518729518447) had 1 view / 0 likes. 72h read due Fri Nov 27 ~1:38 PM ET; Problems: none
+2026-11-24 13:38 EST — Facebook — Victorian Toy Shop spotlight photo post (Page post); Account: Onbrandcraftz Page; Product: Victorian Toy Shop; Media: colour render (pipeline-media-2026-11-24/toy-shop-hero-v1.png); Caption: "3D printed Christmas village — today's spotlight is the Victorian Toy Shop 🎄
+
+It says TOYS on the front. No guessing what this one sells. 🧸
+
+Meet the Toy Shop from our Victorian Christmas Village: a salmon-pink brick shop with a green bay window and TOYS in white letters on its fascia, and a round corner tower that rises past the roof to a grey-blue flared cone with a finial. The steep slate gable is capped with snow, a tall salmon chimney stands behind it, and the door sits at the tower's foot with a green wreath — all on a snowy white base. (Colour render shown.)
+
+The tower opens into the shop, so one battery tea light inside lights the whole building — bay window included. It's a hollow tea-light lantern, printed with no supports.
+
+Free village files on MakerWorld — link in bio 🎄 https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose high street is missing its toy shop.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity"; Links: post 122117150811518447; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the shop description as captioned; files on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: attempt 1 (12:31 EST) was killed by a service restart and attempt 2's session disappeared mid-publish; attempt 2's locked write landed server-side at 13:38 EST — found on the feed check, Public, Page-authored, single copy; no retry made after the landing; Problems: late landing after disrupted attempts; no duplicate
+2026-11-24 14:24 EST — Instagram — Maker's Blueprint — Ironing test reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Maker's Blueprint SPEC 009 — ironing test (four tops, one print, four ironing settings; Claude row 37); Media: blueprint-ironing-reel-FINAL.mp4 (Ronan voiceover; bed "Wallpaper" by Kevin MacLeod, credited in caption); Caption: "Four tops, one print, four ironing settings. Which is smoothest?
+
+A: no ironing
+B: 0.10 mm spacing, 10% flow, 15 mm/s
+C: 0.15 mm spacing, 10% flow, 30 mm/s
+D: 0.20 mm spacing, 15% flow, 20 mm/s
+
+C won, and C is Bambu Studio's stock ironing. So our rule: every flat face a customer sees gets ironed.
+
+Send this to the maker whose top layers still show every line.
+
+Free test file on MakerWorld (@P3DT): https://makerworld.com/en/models/3665620
+
+Music: "Wallpaper" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3dprinting #bambulab #ironing #3dprintingtips #maker"; Links: https://www.instagram.com/reel/DgIsQItCYGJ/ (media 18136570694486505); in-caption link: the free Ironing Test Coupon file on MakerWorld — https://makerworld.com/en/models/3665620 (not an affiliate link); Claims made: our own test result as captioned: settings B (0.10mm/10%/15mm/s), C (0.15mm/10%/30mm/s — Bambu Studio's stock ironing) and D (0.20mm/15%/20mm/s) compared against no ironing on the same print; C won, and C is the confirmed house standard (0.15mm spacing / 10% flow / 30mm/s); Replies/DMs sent: none; Results: posted clean; author @onbrandcraftz2026 verified. Scott approved the reel at 14:19 EST the same day; Problems: none on this leg
+2026-11-24 14:26 EST — Facebook — Maker's Blueprint — Ironing test reel (Page reel); Account: Onbrandcraftz Page; Product: Maker's Blueprint SPEC 009 — ironing test; Media: blueprint-ironing-reel-FINAL.mp4 (same video as the Instagram leg); Caption: "Four tops, one print, four ironing settings. Which is smoothest?
+
+A: no ironing
+B: 0.10 mm spacing, 10% flow, 15 mm/s
+C: 0.15 mm spacing, 10% flow, 30 mm/s
+D: 0.20 mm spacing, 15% flow, 20 mm/s
+
+C won, and C is Bambu Studio's stock ironing. So our rule: every flat face a customer sees gets ironed.
+
+Send this to the maker whose top layers still show every line.
+
+Free test file on MakerWorld (@P3DT): https://makerworld.com/en/models/3665620
+
+Music: "Wallpaper" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3dprinting #bambulab #ironing #3dprintingtips #maker"; Links: https://facebook.com/reel/1695785465388990/ (post 122117157345518447); in-caption link https://makerworld.com/en/models/3665620 (not an affiliate link); Claims made: same our-result ironing comparison as the Instagram ironing entry; Replies/DMs sent: none; Results: posted clean; caption verbatim verified; author Onbrandcraftz Page; Problems: none
+2026-11-24 14:26 EST — TikTok — Maker's Blueprint — Ironing test video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Maker's Blueprint SPEC 009 — ironing test; Media: blueprint-ironing-reel-FINAL.mp4 (crosspost as-is); Caption: "Four tops, one print, four ironing settings. Which is smoothest?
+
+A: no ironing
+B: 0.10 mm spacing, 10% flow, 15 mm/s
+C: 0.15 mm spacing, 10% flow, 30 mm/s
+D: 0.20 mm spacing, 15% flow, 20 mm/s
+
+C won, and C is Bambu Studio's stock ironing. So our rule: every flat face a customer sees gets ironed.
+
+Send this to the maker whose top layers still show every line.
+
+Free test file on MakerWorld (@P3DT): https://makerworld.com/en/models/3665620
+
+Music: "Wallpaper" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3dprinting #bambulab #ironing #3dprintingtips #maker"; Links: https://www.tiktok.com/@onbrandcraftz/video/7711820820380699918; in-caption link https://makerworld.com/en/models/3665620; Claims made: same our-result ironing comparison as the Instagram ironing entry; Replies/DMs sent: none; Results: verified live (business @onbrandcraftz; copyright check "No issues found"; voiceover audible on the playback check; caption verbatim). NOTE: missing from published.json (the known TikTok sync gap) — posted_log.txt and posting_activity.md govern; Problems: none
+2026-11-24 14:28 EST — YouTube — Maker's Blueprint — Ironing test Short; Account: OnBrandCraftz (YouTube); Product: Maker's Blueprint SPEC 009 — ironing test; Media: blueprint-ironing-reel-FINAL.mp4 (same video as the Instagram leg); Caption: Title: "Which Ironing Setting Is Smoothest?" (per the dashboard sync) — description = the ironing caption (see the Instagram ironing entry); Links: https://youtube.com/shorts/9JtAQyTLgiA; in-description link https://makerworld.com/en/models/3665620; Claims made: same our-result ironing comparison as the Instagram ironing entry; Replies/DMs sent: none; Results: published via YouTube Studio; checks "No issues found"; audio verified on playback; Problems: none
+2026-11-24 20:14 EST — Pinterest — Victorian Toy Shop named-product pin (Payhip Pin Rule — first run); Account: OnBrandCraftz (Pinterest, @printing3dthings); Product: Victorian Toy Shop — daily named-product pin, native upload to the "OnBrandCraftz — 3D Prints" board; Media: colour render (toy-shop-hero-v1.png), direct upload — never save-from-URL; Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) (pin copy was keyword-first per the Payhip Pin Rule; the exact text is not quoted in the run records); Links: https://www.pinterest.com/pin/1129488781590513084/; destination = the product's Payhip page (free file) https://payhip.com/b/hP5a6 (not an affiliate link); Claims made: the file is free on Payhip (as linked); render labelled as a render per the pin rule; Replies/DMs sent: none; Results: LIVE, single copy. NOTE: this pin is missing from published.json (the known Pinterest sync gap) — posted_log.txt and posting_activity.md govern; Problems: none
+2026-11-25 08:40 EST — Instagram — Weekly Draft 1 — Payhip store LIVE + Cyber Week photo post; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Payhip store launch + Cyber Week sale (Victorian Cottage lit studio photo); Media: victorian-cottage-studio-lit-2.jpg (real Victorian Cottage print, lit and glowing against black — glow-first lead); Caption: "3D printed Christmas village files — our new Payhip store is LIVE, and Cyber Week starts today. 🎄
+
+Our Etsy shop is temporarily down, so we opened payhip.com/OnBrandCraftz with the whole village: 27 products — 8 free starter pieces, every paid building at $4.99, the Complete Bundle, and the new Trio Licence Pass.
+
+Nov 23–Dec 1: 25% off 19 products for Cyber Week. The Trio Pass is in the sale too — $21.75 instead of $29 — pick any 3 free models and sell physical prints of those 3, no membership, no expiry. Plus STREET5 takes $5 off $20+ on print files.
+
+Start free, light the first house tonight, add a street at a time. Every building is hollow for a tea light so the whole village glows.
+
+Store link in bio. Send this to the maker who's been waiting for the Etsy shop to come back — the village is here instead.
+
+#3DPrintedChristmas #ChristmasVillage #3DPrinting #TeaLightHouse"; Links: https://www.instagram.com/p/DgKpZhTjBIq/ (media 17981064549160122); store link in bio — https://payhip.com/OnBrandCraftz; Trio Pass https://payhip.com/b/Dajzf (our own store links, not affiliate links); Claims made: store facts as captioned, verified at draft time: Payhip store live Nov 21, 2026 with 27 products (8 free, 16 paid singles $4.99, Complete Bundle $34.99, Starter Bundle $12.99, Trio Licence Pass $29); Cyber Week Nov 23–Dec 1: 25% off 19 products, Trio Pass in the sale at $21.75; STREET5 = $5 off $20+ on print files only, Pass excluded; every building hollow for a standard LED tea light; Replies/DMs sent: none; Results: verified live, caption verbatim, author @onbrandcraftz2026. Scott approved the draft on Nov 25, 2026 (Weekly Drafts 1–3 all approved). Results update (Nov 26 morning briefing check): 1 like, 0 comments; Problems: none
+2026-11-25 08:40 EST — Instagram — Weekly Draft 1 — Story (lit Cottage, link sticker); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Payhip store launch + Cyber Week sale; Media: victorian-cottage-studio-lit-2.jpg (same image as the Draft 1 feed post), media 18130677673866998; Caption: not recorded word-for-word in run log (story graphic); Links: https://instagram.com/stories/onbrandcraftz2026/4038222465960032726; native link sticker "Shop the store" -> https://payhip.com/OnBrandCraftz (our own store link, not an affiliate link); Claims made: same store/sale facts as the Draft 1 feed entry; Replies/DMs sent: none; Results: verified live WITH the native link sticker; Problems: none
+2026-11-25 08:36 EST — Instagram — Weekly Draft 2 — Crescent Valet FREE release carousel (2 photos); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Crescent Valet — free phone stand + nesting tray release; Media: set-front-studio.jpg + set-side-studio.jpg (real-print studio photos); Caption: "3D printed phone stand — meet the Crescent Valet, and it's FREE. 🌙
+
+A crescent-shaped desk valet in two prints: a base with an upright phone stand and a cable slot so your charging cable runs straight out the front, plus a tray that nests right into the base beside it. Keys, coins, earbuds, the ring you take off at your desk — they live in the tray now. Lift it out and use it on its own whenever you like.
+
+No supports, no hardware. Printed here in dark grey + light grey — print yours in any colours. Top surfaces are ironed, so the flats come off the plate smooth.
+
+Free on Printables and as a free post on our Patreon — links in bio. Send this to the maker whose desk is one cable away from chaos.
+
+#3DPrinting #PhoneStand #DeskOrganizer #Free3DPrint"; Links: https://www.instagram.com/p/DgKprz0DCrL/ (media 18004536170812410); the file is free on MakerWorld @P3DT (link in bio; not an affiliate link); Claims made: the Crescent Valet is a free file (phone stand + nesting tray), as captioned; Scott approved the draft Nov 25, 2026; Replies/DMs sent: none; Results: verified live, public carousel on @onbrandcraftz2026, caption verbatim. Results update (Nov 26 morning briefing check): 3 likes, 0 comments; Problems: MUSIC OWED: no track attached (instagram-cli cannot attach carousel audio) — add in the IG app via Edit → Replace Audio from the Meta Sound Collection (suggested: calm acoustic instrumental), credit only once added
+2026-11-25 08:49 EST — Instagram — MakerWorld Promo Ep 1 — Tin Clicker pilot reel (NEW series); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Tin Clicker — MakerWorld Promo series Ep 1 (free on MakerWorld, 6 print profiles); Media: tin-clicker-pilot-FINAL.mp4 (14.9s, master −14.04 LUFS; music "Carefree" by Kevin MacLeod, credited in caption); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — the run records record the caption as Scott-approved verbatim (approved the same morning), incl. the appended credit line: Music: "Carefree" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0; Links: https://www.instagram.com/reel/DgKp3MvMxyy/ (media 18657548941036353); the Tin Clicker is free on MakerWorld (model 3560658, link in bio; not an affiliate link); Claims made: the Tin Clicker is free on MakerWorld with 6 print profiles (as captioned); Scott approved the series format AND the caption verbatim on Nov 25, 2026 — a first-time category posted under his exact approval; Replies/DMs sent: none; Results: verified live, public reel on @onbrandcraftz2026, caption verbatim incl. the "Carefree" credit, audio attached; Problems: none on this leg
+2026-11-25 08:52 EST — Facebook — MakerWorld Promo Ep 1 — Tin Clicker pilot reel (Page reel); Account: Onbrandcraftz Page; Product: Tin Clicker — MakerWorld Promo series Ep 1; Media: tin-clicker-pilot-FINAL.mp4 (same video as the Instagram leg); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — the run records record the caption as Scott-approved verbatim (approved the same morning), incl. the appended credit line: Music: "Carefree" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0; Links: https://facebook.com/reel/1619364653278973/ (post 122117349207518447); the Tin Clicker is free on MakerWorld (model 3560658; not an affiliate link); Claims made: same as the Instagram MW Promo entry; Replies/DMs sent: none; Results: verified live, Public, author verified = Onbrandcraftz Page (owner 61595553412715), caption verbatim incl. the "Carefree" credit; Problems: none
+2026-11-25 08:48 EST — TikTok — MakerWorld Promo Ep 1 — Tin Clicker pilot video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Tin Clicker — MakerWorld Promo series Ep 1; Media: tin-clicker-pilot-FINAL.mp4 (crosspost as-is); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) — the run records record the caption as Scott-approved verbatim (approved the same morning), incl. the appended credit line: Music: "Carefree" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0; Links: https://www.tiktok.com/@onbrandcraftz/video/7712103455816453390; the Tin Clicker is free on MakerWorld (model 3560658); Claims made: same as the Instagram MW Promo entry; Replies/DMs sent: none; Results: verified live via the browser task (published ~08:40 EST; Privacy = Everyone after the "Only me" default was corrected; copyright check "No issues found"); Problems: none
+2026-11-25 08:48 EST — YouTube — MakerWorld Promo Ep 1 — Tin Clicker pilot Short; Account: OnBrandCraftz (YouTube); Product: Tin Clicker — MakerWorld Promo series Ep 1; Media: tin-clicker-pilot-FINAL.mp4 (same video as the Instagram leg); Caption: Title: "Tin Clicker — Free on MakerWorld, 6 Print Profiles | MakerWorld Promo Ep 1" — description = the approved Ep 1 caption (not recovered word-for-word from local sources (marked per log rule — not paraphrased)); Links: https://www.youtube.com/shorts/gnmdp8qROng; the Tin Clicker is free on MakerWorld (model 3560658); Claims made: same as the Instagram MW Promo entry; Replies/DMs sent: none; Results: verified live via the browser task; not made for kids; copyright + Community Guidelines checks clean; Problems: none
+2026-11-25 08:57 EST — Instagram — Weekly Draft 3 — Personalised Snow Globe carousel (2 photos); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Personalised Snow Globe Ornament — Customizer (JESSEE 2026 example; MakerWorld model 3682245 went public the same morning); Media: studio-front.jpg + studio-angled.jpg (real-print studio photos); Caption: "Personalised Christmas ornament — a 3D printed snow globe with YOUR name on it. ❄️
+
+This one's Jessee's: black frame, purple globe, gold house and tree under a gold moon — and her name + 2026 in gold across the base. Yours generates in seconds: open the customizer on MakerWorld, type the name, pick your colours, print it. It stands on a shelf or hangs on the tree from the loop at the top.
+
+A name ornament is the gift that can't be re-gifted to anyone else. Send this to the person who still needs a personalised gift sorted before December.
+
+Customizer link in bio.
+
+#PersonalisedOrnament #ChristmasOrnament #3DPrinted #ChristmasDecor"; Links: https://www.instagram.com/p/DgKsF8UDOyR/ (media 18110843689962022); the customizer is free on MakerWorld @P3DT (model 3682245, link in bio; not an affiliate link); Claims made: the personalised snow globe customizer as captioned; the MakerWorld model 3682245 was public + verified live before this posted; Scott approved the draft Nov 25, 2026; Replies/DMs sent: none; Results: verified live, public carousel on @onbrandcraftz2026, caption verbatim. Results update (Nov 26 morning briefing check): 4 likes, 0 comments; Problems: MUSIC OWED: no track attached (no audio route for IG carousels) — add in the IG app via Edit → Replace Audio from the Meta Sound Collection (suggested: gentle festive instrumental), credit only once added
+2026-11-25 08:59 EST — Instagram — PNG-vs-JPEG re-encode TEST post (Scott-approved test); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Image export test — PNG vs JPEG upload, served-file comparison (slide = Versus "Matte Deal" carousel slide 2; cover = Victorian Cottage studio lit photo); Media: slide.png (PNG upload, 219,994 bytes); Caption: (empty caption — test post); Links: https://www.instagram.com/p/DgKsRDbDNSW/ (media 18110174786206898); Claims made: none (test post, empty caption); Replies/DMs sent: none; Results: posted live and Instagram's served re-encoded file was downloaded for the comparison (kit + results: ~/workspace/your_files/png-jpeg-test/). DELETED the same day via the live browser after the served-image download; the URL now returns "page isn't available"; across the four test deletions the @onbrandcraftz2026 profile count went 161 → 157, exactly four, nothing else touched. Test outcome (Nov 25): JPEG q92 4:4:4 adopted as the locked Instagram export standard; Problems: test post by design — never a content post; deleted once its data was captured
+2026-11-25 09:00 EST — Instagram — PNG-vs-JPEG re-encode TEST post (Scott-approved test); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Image export test — PNG vs JPEG upload, served-file comparison (slide = Versus "Matte Deal" carousel slide 2; cover = Victorian Cottage studio lit photo); Media: slide.jpg (JPEG q92 4:4:4 upload, 171,653 bytes); Caption: (empty caption — test post); Links: https://www.instagram.com/p/DgKsZs3jPsj/ (media 18111482939257040); Claims made: none (test post, empty caption); Replies/DMs sent: none; Results: posted live and Instagram's served re-encoded file was downloaded for the comparison (kit + results: ~/workspace/your_files/png-jpeg-test/). DELETED the same day via the live browser after the served-image download; the URL now returns "page isn't available"; across the four test deletions the @onbrandcraftz2026 profile count went 161 → 157, exactly four, nothing else touched. Test outcome (Nov 25): JPEG q92 4:4:4 adopted as the locked Instagram export standard; Problems: test post by design — never a content post; deleted once its data was captured
+2026-11-25 09:01 EST — Instagram — PNG-vs-JPEG re-encode TEST post (Scott-approved test); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Image export test — PNG vs JPEG upload, served-file comparison (slide = Versus "Matte Deal" carousel slide 2; cover = Victorian Cottage studio lit photo); Media: cover.png (PNG upload, 725,617 bytes); Caption: (empty caption — test post); Links: https://www.instagram.com/p/DgKshybDLqY/ (media 17934913716167032); Claims made: none (test post, empty caption); Replies/DMs sent: none; Results: posted live and Instagram's served re-encoded file was downloaded for the comparison (kit + results: ~/workspace/your_files/png-jpeg-test/). DELETED the same day via the live browser after the served-image download; the URL now returns "page isn't available"; across the four test deletions the @onbrandcraftz2026 profile count went 161 → 157, exactly four, nothing else touched. Test outcome (Nov 25): JPEG q92 4:4:4 adopted as the locked Instagram export standard; Problems: test post by design — never a content post; deleted once its data was captured
+2026-11-25 09:04 EST — Instagram — PNG-vs-JPEG re-encode TEST post (Scott-approved test); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Image export test — PNG vs JPEG upload, served-file comparison (slide = Versus "Matte Deal" carousel slide 2; cover = Victorian Cottage studio lit photo); Media: cover.jpg (JPEG q92 4:4:4 upload, 152,289 bytes); Caption: (empty caption — test post); Links: https://www.instagram.com/p/DgKs1_iDD5g/ (media 18094251083495803); Claims made: none (test post, empty caption); Replies/DMs sent: none; Results: posted live and Instagram's served re-encoded file was downloaded for the comparison (kit + results: ~/workspace/your_files/png-jpeg-test/). DELETED the same day via the live browser after the served-image download; the URL now returns "page isn't available"; across the four test deletions the @onbrandcraftz2026 profile count went 161 → 157, exactly four, nothing else touched. Test outcome (Nov 25): JPEG q92 4:4:4 adopted as the locked Instagram export standard; Problems: test post by design — never a content post; deleted once its data was captured
+2026-11-25 09:07 EST — Facebook — OBC sign video REPLACEMENT reel — 21.5s with-photos cut (Page reel); Account: Onbrandcraftz Page; Product: OnBrandCraftz desk sign — digital-then-real product video (21.5s replacement cut); Media: obc-sign-21s-FINAL.mp4 (21.5s, master −14.04 LUFS; music "Cut and Run" by Kevin MacLeod, credited in caption); Caption: "We print it on screen first, then for real.
+
+The digital run is the toolpath simulation of the sliced file, so we can see every layer before the printer moves. Then the real print on our P1S: the black plaque, then the gold OBC.
+
+Every shot is labelled: simulation or real timelapse.
+
+#3dprinting #bambulab #3dprinted #logodesign #maker
+Music: "Cut and Run" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0"; Links: https://facebook.com/reel/1418317843717577/ (post 122117353611518447); no affiliate links; Claims made: same as the Nov 21 OBC sign entries; the 21.5s cut adds the finished-print photo segment the 16.1s cut lacked. Scott approved the replacement Nov 25, 2026 (the view cost of deleting the old posts was put to him before he decided); Replies/DMs sent: none; Results: verified live, Public, caption verbatim, author verified = Onbrandcraftz Page (owner 61595553412715). REPLACES the Nov 21 16.1s post 122116157109518447, which was deleted and verified gone the same day; Problems: none
+2026-11-25 (EST, exact time not recorded in run log) — TikTok — OBC sign video REPLACEMENT video — 21.5s with-photos cut; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: OnBrandCraftz desk sign — digital-then-real product video (21.5s replacement cut); Media: obc-sign-21s-FINAL.mp4 (same master as the Facebook replacement leg); Caption: "We print it on screen first, then for real.
+
+The digital run is the toolpath simulation of the sliced file, so we can see every layer before the printer moves. Then the real print on our P1S: the black plaque, then the gold OBC.
+
+Every shot is labelled: simulation or real timelapse.
+
+#3dprinting #bambulab #3dprinted #logodesign #maker
+Music: "Cut and Run" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0"; Links: https://www.tiktok.com/@onbrandcraftz/video/7712109602556431629; no affiliate links; Claims made: same as the Nov 21 OBC sign entries; Replies/DMs sent: none; Results: verified live (copyright check clean; privacy set to Everyone after Studio initially listed it "Only me" during review). REPLACES the Nov 21 video 7710626803668372750, which was deleted and verified gone the same day. NOTE: this leg is missing from posting_activity.md and posted_log.txt — the day's memory log is the governing record (a source gap found in the Nov 26 catch-up); Problems: a first browser brief carried a paraphrased caption; it was caught against PREP.md within a minute, the verbatim Nov 21 caption was sent as a correction, and the browser confirmed the leg published with the corrected verbatim caption read back on the live page
+2026-11-25 (EST, exact time not recorded in run log) — YouTube — OBC sign video REPLACEMENT Short — 21.5s with-photos cut; Account: OnBrandCraftz (YouTube); Product: OnBrandCraftz desk sign — digital-then-real product video (21.5s replacement cut); Media: obc-sign-21s-FINAL.mp4 (same master as the Facebook replacement leg); Caption: Title: "Printed on Screen First, Then for Real | OnBrandCraftz #shorts" (the exact Nov 21 title) — description = the Nov 21 OBC sign caption (see the Facebook replacement entry); Links: https://www.youtube.com/shorts/ljUuE7xucSU; no affiliate links; Claims made: same as the Nov 21 OBC sign entries; Replies/DMs sent: none; Results: verified live, checks clean. REPLACES the Nov 21 Short DYQddsXHwNw, which was deleted and verified gone the same day (its 155 views were lost, as approved). NOTE: this leg is missing from posting_activity.md and posted_log.txt — the day's memory log governs (a source gap found in the Nov 26 catch-up); Problems: the same paraphrased-caption brief issue as the TikTok replacement leg — corrected within a minute and confirmed verbatim on the live page
+2026-11-25 09:06 EST — Instagram — OBC sign video REPLACEMENT reel — BLOCKED (HTTP 429); Account: OnBrandCraftz (@onbrandcraftz2026); Product: OnBrandCraftz desk sign — 21.5s replacement cut; Media: obc-sign-21s-FINAL.mp4 (ready, not posted); Caption: "We print it on screen first, then for real.
+
+The digital run is the toolpath simulation of the sliced file, so we can see every layer before the printer moves. Then the real print on our P1S: the black plaque, then the gold OBC.
+
+Every shot is labelled: simulation or real timelapse.
+
+#3dprinting #bambulab #3dprinted #logodesign #maker
+Music: "Cut and Run" by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0" (prepared caption — not posted); Links: none — no post exists; the Nov 21 original remains live at https://www.instagram.com/reel/DgAZMW9jobl/ (media 18647816365022880); Claims made: n/a (not posted); Replies/DMs sent: none; Results: BLOCKED: instagram-cli returned HTTP 429 "Daily Limit Reached" — the morning's volume (Drafts 1–3, MW Promo Ep 1, the 4 PNG/JPEG test posts) consumed the account's daily publishing quota. Per the 429 rule no retry was made and no duplicate/uncertain post exists. The IG replacement is still owed once the limit resets; the 16.1s original stays live until then; Problems: Meta daily publishing limit hit; Instagram is the one platform still running the 16.1s cut
+2026-11-25 10:00 EST — Instagram — Versus Day 27 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 27 — Bambu PLA Basic refill single $14.99 vs 10+ bulk $9.74/roll (green line, deal matchup); Media: vs-pla-basic-single-vs-bulk-video.mp4 (Ronan voiceover; bed "Jingle Bells (Calm)" by Kevin MacLeod, credited in caption); Caption: "3D printer PLA filament deal — Bambu PLA Basic single roll vs 10-roll bulk. Stop overpaying per roll? 💚
+
+Prices checked this morning, Nov 25, 2026, on Bambu Lab's US store: PLA Basic refill is $14.99 for one roll — and $9.74/roll when you buy 10 or more in one order (35% off, Black Friday bulk sale, Oct 27–Dec 1). Ten rolls: $97.40 instead of $149.90 — $52.50 saved, plus 1 complimentary filament at 10 in the sale terms. Bulk takes price, saving, and the free roll; single takes upfront cost ($14.99, not $97.40) and flexibility. 3–2 to bulk. Honest catch: a refill needs a reusable spool.
+
+Pick 10+ bulk if you print through rolls every week. Pick a single roll for one project or a new colour to try.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still paying full price roll by roll.
+
+Day 26 — 2 Walls vs 3 Walls, is on our profile · Day 28 lands here tomorrow, same time
+
+Sources: Bambu Lab US store — PLA Basic product page ($9.74/roll lowest at 10+, MSRP $14.99; free shipping $59+) and Black Friday sale terms (35% off at 10+ rolls; 1 complimentary filament per 10), checked Nov 25, 2026.
+
+Music: Jingle Bells (Calm) by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #FilamentDeal #PLA #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/DgKzPEWs5ya/ (media 18038956115899664); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: prices re-verified the morning of posting (Nov 25, 2026) on the Bambu Lab US store: PLA Basic MSRP $14.99 single refill, $9.74/roll at 10+ rolls (Black Friday terms: 35% off at 10+, sale Oct 27–Dec 1, 2026, 1 complimentary filament per 10, free shipping $59+); check date stamped on the visual and in the caption; verdict Bulk 3–2 Single with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: posted clean on the SINGLE permitted attempt (no 429 despite the 09:06 EST daily-limit warning); read-back verified present in the @onbrandcraftz2026 account post list; caption verbatim; frame-1 keyword "PLA filament deal"; Problems: none on this leg
+2026-11-25 10:01 EST — Facebook — Versus Day 27 reel (Page reel); Account: Onbrandcraftz Page; Product: Versus Day 27 — Bambu PLA Basic single vs 10+ bulk deal (green line); Media: vs-pla-basic-single-vs-bulk-video.mp4 (same video as the Instagram leg); Caption: "3D printer PLA filament deal — Bambu PLA Basic single roll vs 10-roll bulk. 💚
+
+Checked Nov 25, 2026, Bambu Lab US store: single refill $14.99; 10+ in one order $9.74/roll (35% off bulk sale to Dec 1). Ten rolls $97.40 vs $149.90 — save $52.50, plus 1 complimentary filament at 10 (sale terms). Bulk wins price/saving/free roll; single wins upfront cost and flexibility. 3–2 bulk. Refill needs a reusable spool.
+
+Pick bulk if you print weekly; pick single for one project or a new colour.
+
+Free village files: https://makerworld.com/en/@P3DT — free on MakerWorld
+
+Send this to the maker still paying full price roll by roll.
+
+Day 26 — 2 Walls vs 3 Walls, is on our profile · Day 28 lands here tomorrow
+
+Sources: Bambu Lab US store PLA Basic page + Black Friday terms, checked Nov 25, 2026.
+
+Music: Jingle Bells (Calm) by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #FilamentDeal #PLA
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://facebook.com/reel/1788739215742301/ (post 122117363697518447); in-caption link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same re-verified prices and verdict as the Day 27 reel entry; Replies/DMs sent: none; Results: clean first-attempt receipt, state=published, media captions verified, page_id 1358962047302375 (Onbrandcraftz Page) before and after; Problems: none
+2026-11-25 10:05 EST — TikTok — Versus Day 27 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 27 — Bambu PLA Basic single vs 10+ bulk deal (green line); Media: vs-pla-basic-single-vs-bulk-tiktok.mp4 (TikTok cut; bed "Jingle Bells (Calm)" by Kevin MacLeod, credited in caption); Caption: "3D printer PLA filament deal — Bambu PLA Basic single roll vs 10-roll bulk. 💚
+
+Checked Nov 25, 2026, Bambu Lab US store: single refill $14.99; 10+ in one order $9.74/roll (35% off to Dec 1). Save $52.50 on ten, plus 1 complimentary filament at 10 (terms). 3–2 to bulk. Refill needs a reusable spool.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still paying full price roll by roll.
+
+Day 26 — 2 Walls vs 3 Walls, is on our profile · Day 28 lands here tomorrow, same time
+
+Sources: Bambu Lab US store PLA Basic page + Black Friday terms, checked Nov 25, 2026.
+
+Music: Jingle Bells (Calm) by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #FilamentDeal #PLA
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7712125434766413069; in-caption link: none clickable; no affiliate links; Claims made: same re-verified prices and verdict as the Day 27 reel entry; Replies/DMs sent: none; Results: posted via the browser leg 10:02–10:10 EST and verified live (Studio posts checked first — no duplicate; copyright "No issues found"; Everyone/public; voiceover audible on the playback check; caption verbatim); Problems: none
+2026-11-25 09:51 EST — X — Gingerbread Cookie Clock Tower spotlight post; Account: Onbrandcraftz (X); Product: Gingerbread Cookie Clock Tower; Media: colour render (pipeline-media-2026-11-25/cookie-clock-tower-hero.png); Caption: "3D printed Christmas village — today's spotlight is the Gingerbread Cookie Clock Tower 🎄 Round gingerbread tower, cookie clock face, chocolate cone roof, candy-cane finial. A no-supports tea-light lantern. Village files on MakerWorld — link in bio https://makerworld.com/en/@P3DT #3DPrinting
+(Media: cookie-clock-tower-hero.png colour render — round gingerbread tower in 3 tiers with white icing bands, white clock face with red hands, dark chocolate cone roof with red/white gumdrop trim, candy-cane finial, white arched windows, tiny red gifts on a snowy round base. Render visually verified by parent before copy. MakerWorld CTA under the Etsy-down swap — no Etsy link. No per-file "free" claim: Cookie Clock Tower is a paid single on Payhip ($4.99, $3.74 in Cyber Week); the MakerWorld link points at the free village set per the swap rule.)"; Links: https://x.com/Onbrandcraftz/status/2125603272891544028; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the product description as captioned; the file is priced on Payhip ($4.99 / $3.74 Cyber Week) and the village files are on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: posted via the browser leg 09:47–10:01 EST; duplicate check clean; render displays, MakerWorld link clickable on viewer check; Problems: the supplied text was 4 chars over X's 280 limit, so it posted verbatim minus the trailing " #3DPrinting" per the standing over-length fallback (noted in the run report)
+2026-11-25 10:01 EST — Pinterest — Gingerbread Cookie Clock Tower named-product pin (Payhip Pin Rule); Account: OnBrandCraftz (Pinterest, @printing3dthings); Product: Gingerbread Cookie Clock Tower — daily named-product pin, native upload to the "OnBrandCraftz — 3D Prints" board; Media: colour render (cookie-clock-tower-hero.png), direct upload — never save-from-URL; Caption: Title: "Cookie Clock Tower — 3D Printed Christmas Village Tea Light House | 3MF Print File" — Description: "3D printed Christmas village tea light house — the Gingerbread Cookie Clock Tower print file. A round gingerbread tower in three tiers with white icing bands, a cookie clock face with red hands, a chocolate cone roof with gumdrop trim and a candy-cane finial. Hollow for an LED tea light so the windows glow; prints with no supports. Colour render shown. Priced file: $4.99 — Cyber Week 25% off makes it $3.74 (Nov 23–Dec 1) on Payhip. #3dprinting #christmasvillage #tealighthouse"; Links: https://www.pinterest.com/pin/1170708000201122011/; destination = the product's Payhip page https://payhip.com/b/4mKwf (priced file, $4.99 / $3.74 Cyber Week; not an affiliate link); Claims made: priced file as linked, with the Cyber Week price stated; render labelled as a render per the pin rule; Replies/DMs sent: none; Results: LIVE, single copy (the first publish attempt stalled at 17%; the board was verified to hold no pin before the recreate; board count 186→187). NOTE: missing from published.json (the known Pinterest sync gap) — posted_log.txt and posting_activity.md govern; Problems: none
+2026-11-25 10:09 EST — X — Tips video — Versus Day 27 Bambu PLA Basic deal video (first X tips-video leg under the Nov 24 rule); Account: Onbrandcraftz (X); Product: Versus Day 27 — Bambu PLA Basic single vs 10+ bulk deal (green line video, cross-platform use); Media: vs-pla-basic-single-vs-bulk-video.mp4 (the Day 27 Versus video); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) (the run report records the caption at exactly 280 chars, keyword-first with the MakerWorld CTA under the Etsy-down swap, but does not quote it); Links: https://x.com/Onbrandcraftz/status/2125607823396733339; in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same re-verified prices and verdict as the Day 27 reel entry; Replies/DMs sent: none; Results: LIVE; viewer check: video attached + plays. First X tips-video leg under the Nov 24 per-platform rule; Problems: none
+2026-11-25 10:05 EST — Instagram — Stories x3 — FAILED (HTTP 429); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Cookie Clock Tower teaser / Wednesday village showcase / Versus Day 27 teaser; Media: 3 story cards built and ready (pipeline-media-2026-11-25/story1_cookie_clock_tower.png / story2_wednesday_showcase.png / story3_versus.png) — NOT posted; Caption: not recorded word-for-word in run log (story graphics); Links: the teaser card carried the native link sticker "FILES ON MAKERWORLD" -> https://makerworld.com/en/@P3DT (prepared, not posted); Claims made: none (not posted); Replies/DMs sent: none; Results: FAILED: Story 1's single attempt (10:05 EST) returned HTTP 429 "Daily Limit Reached" — the limit had NOT cleared despite the Versus Day 27 reel posting ~10:00 EST; stories 2 and 3 were not attempted per the stop rule and no retry was made; own-stories read-back verified no new story landed. The three Nov 25 stories were never posted (Nov 26's stories are new cards); Problems: Meta daily publishing limit; the owed Nov 25 item that DID post the next day was the Cookie Clock Tower feed carousel (see Nov 26)
+2026-11-25 (EST) — Instagram — Gingerbread Cookie Clock Tower feed spotlight — BLOCKED (HTTP 429); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Cookie Clock Tower — daily named-product feed spotlight; Media: 2 colour renders (cookie-clock-tower-hero.png / cookie-clock-tower-front.png) — prepared, not posted on Nov 25; Caption: "3D printed Christmas village tea light house — today's spotlight is the Gingerbread Cookie Clock Tower 🎄
+
+A clock tower you could eat. Almost. 🍪
+
+Meet the Cookie Clock Tower from our Gingerbread Christmas Village: a round gingerbread tower in three tiers with white icing bands, a big cookie clock face with red hands up top, and a dark chocolate cone roof trimmed with red-and-white gumdrops and finished with a candy-cane finial. White arched windows, a dark door at the base, and tiny red gifts scattered on its snowy round base. (Colour render shown.)
+
+It's hollow for a battery tea light, so the windows glow — a no-supports tea-light lantern for the village square.
+
+Free village files on MakerWorld — link in bio 🎄 https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose square is still missing its clock tower.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity" (prepared caption; posted Nov 26 — see the Nov 26 entry); Links: none on Nov 25 — no post existed until Nov 26 (media 18648159580033464); Claims made: the product description as captioned (prepared); Replies/DMs sent: none; Results: BLOCKED on Nov 25: instagram-cli hit the HTTP 429 daily limit at 09:06 EST (consumed by parallel flows) and the leg was not retried per the 429 rule. The Facebook photo leg was CUT the same day (Facebook video-only trial Nov 25–Dec 8), so the spotlight ran on X + Pinterest only on Nov 25; the Instagram carousel posted on Nov 26 (see below); Problems: Meta daily publishing limit
+2026-11-25 21:22 EST — YouTube — A/B Test 8 — Santa's Workshop (white) Short, music swap variant; Account: OnBrandCraftz (YouTube); Product: Santa's Workshop (Victorian, white) — A/B Test 8: same picture as the original Short, music swapped from "Nouvelle Noel" to "Up on a Housetop" (both Kevin MacLeod, CC BY 4.0); Media: test8-santas-workshop-white-up-on-a-housetop.mp4 (5.33s, picture byte-identical to the original, master −14.00 LUFS); Caption: Title: "Watch Santa's Workshop print layer by layer 🎄" — description: "Watch the Santa's Workshop from the OnBrandCraftz Christmas village print layer by layer. Get the 3D print files on Etsy and print your own Christmas village at home! https://www.etsy.com/shop/OnBrandCraftz — Watch how a 3D print is developed, start to finish: https://www.youtube.com/watch?v=tSv9EVdMtrs
+Music: Up on a Housetop by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+#3dprinting #christmasvillage #shorts" (Studio-verified Nov 25, 2026 — single line breaks, no blank lines; only the music credit differs from the original); Links: https://www.youtube.com/shorts/BRszG4QfEeo; original Short: https://www.youtube.com/shorts/Bc68l19QgtA (98 views / 1 like at pick); Claims made: none beyond the print timelapse itself; the ONLY change from the original is the music track (the test variable); post time is a known second variable (evening window per the locked YouTube routine); Replies/DMs sent: none; Results: the first attempt (20:45 EST) failed — YouTube Studio's file upload returned "outcome unknown" four times and nothing landed; the channel was re-checked ~21:10 EST (no draft/published entry, no duplicate) and the description was corrected to the Studio-verified single-line-break version before the retry; the retry posted live at 21:22 EST, checks "No issues found", Public, not made for kids. 72h read due ~Nov 28 evening against the original's 98 views / 1 like; Problems: one failed upload attempt before the successful retry; no duplicate created
+2026-11-26 10:00 EST — Instagram — Gingerbread Candy Cane Chapel feed spotlight (single image); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Candy Cane Chapel — daily named-product spotlight; Media: colour render (pipeline-media-2026-11-26/candy-cane-chapel-hero.png), single image; Caption: "3D printed Christmas village tea light house — today's spotlight is the Gingerbread Candy Cane Chapel 🎄
+
+A chapel with a candy-cane tower. Stripes and all. 🍬
+
+Meet the Candy Cane Chapel from our Gingerbread Christmas Village: a gingerbread chapel with a tall tower wrapped in red-and-white candy-cane stripes, a striped cone spire, candy-cane posts at the door, a brown shingled roof with white icing and red gumdrops along the ridge, and white arched windows over a snowy base. (Colour render shown.)
+
+It's hollow for a battery tea light, so the windows glow — a no-supports tea-light lantern for the village. This one is FREE on MakerWorld — link in bio 🎄 https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose street still needs a chapel.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity"; Links: https://www.instagram.com/p/DgNWsoBjvqc/ (media 18154163302553849); the file is free on MakerWorld @P3DT (link in bio; not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the product description as captioned; Replies/DMs sent: none; Results: LIVE, read-back verified; Problems: none
+2026-11-26 10:01 EST — Instagram — Gingerbread Cookie Clock Tower feed spotlight carousel (2 renders) — OWED from Nov 25, posted today; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Cookie Clock Tower — the Nov 25 spotlight leg held by the IG 429 limit; Media: 2 colour renders (cookie-clock-tower-hero.png / cookie-clock-tower-front.png); Caption: "3D printed Christmas village tea light house — today's spotlight is the Gingerbread Cookie Clock Tower 🎄
+
+A clock tower you could eat. Almost. 🍪
+
+Meet the Cookie Clock Tower from our Gingerbread Christmas Village: a round gingerbread tower in three tiers with white icing bands, a big cookie clock face with red hands up top, and a dark chocolate cone roof trimmed with red-and-white gumdrops and finished with a candy-cane finial. White arched windows, a dark door at the base, and tiny red gifts scattered on its snowy round base. (Colour render shown.)
+
+It's hollow for a battery tea light, so the windows glow — a no-supports tea-light lantern for the village square.
+
+Free village files on MakerWorld — link in bio 🎄 https://makerworld.com/en/@P3DT
+
+Send this to the village collector whose square is still missing its clock tower.
+
+#3DPrinting #ChristmasVillage #TeaLightHouse #3DPrintedVillage #MakerCommunity"; Links: https://www.instagram.com/p/DgNWvU6Dtq5/ (media 18648159580033464); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: the product description as captioned; the file is priced on Payhip ($4.99 / $3.74 Cyber Week); Replies/DMs sent: none; Results: LIVE, read-back verified — this clears the Nov 25 owed spotlight leg; Problems: MUSIC OWED: no track attached (instagram-cli cannot attach carousel audio) — add in the IG app via Edit → Replace Audio from the Meta Sound Collection, credit only once added
+2026-11-26 10:03 EST — Instagram — Stories x3; Account: OnBrandCraftz (@onbrandcraftz2026); Product: Gingerbread Candy Cane Chapel teaser / Thursday maker tea-light / Versus Day 28 teaser; Media: 3 story graphics (pipeline-media-2026-11-26), media 17996288649117618 (Candy Cane Chapel teaser) / 17961808233254939 (Thursday maker tea-light) / 18102671087387767 (Versus Day 28 teaser); Caption: not recorded word-for-word in run log (story graphics); Links: native link sticker to https://makerworld.com/en/@P3DT on the Candy Cane Chapel story (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: none beyond the teasers themselves; Replies/DMs sent: none; Results: LIVE, read-back verified; Problems: none
+2026-11-26 09:50 EST — X — Gingerbread Candy Cane Chapel spotlight post; Account: Onbrandcraftz (X); Product: Gingerbread Candy Cane Chapel; Media: colour render (pipeline-media-2026-11-26/candy-cane-chapel-hero.png); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) (the run report records the post as live and viewer-checked but does not quote the text); Links: https://x.com/Onbrandcraftz/status/2125965392527155396; in-post link https://makerworld.com/en/@P3DT (not an affiliate link; MakerWorld CTA under the Etsy-down swap (Etsy shop suspended for non-payment; swap applied all week)); Claims made: the product description as captioned; the file is free on MakerWorld under the Etsy-down swap; Replies/DMs sent: none; Results: LIVE, viewer-checked (image displays, MakerWorld link clickable); duplicate check clean; Problems: none
+2026-11-26 09:56 EST — Pinterest — Gingerbread Candy Cane Chapel named-product pin (Payhip Pin Rule); Account: OnBrandCraftz (Pinterest, @printing3dthings); Product: Gingerbread Candy Cane Chapel — daily named-product pin, direct upload to the "OnBrandCraftz — 3D Prints" board; Media: colour render (candy-cane-chapel-hero.png), direct upload — never save-from-URL; Caption: Title: "Candy Cane Chapel — 3D Printed Christmas Village Tea Light House | FREE 3MF Print File" — Description: "3D printed Christmas village tea light house — the Gingerbread Candy Cane Chapel print file. A gingerbread chapel with a red-and-white candy-cane striped tower and spire, candy-cane door posts, a shingled roof with white icing and gumdrops, and white arched windows. Hollow for an LED tea light so the windows glow; prints with no supports. Colour render shown. FREE print file on Payhip. #3dprinting #christmasvillage #tealighthouse"; Links: https://www.pinterest.com/pin/1129488781590637379/; destination = the product's Payhip page https://payhip.com/b/yLDma (FREE product; not an affiliate link); Claims made: the file is free on Payhip (as linked); render labelled as a render per the pin rule; Replies/DMs sent: none; Results: LIVE, destination verified. NOTE: missing from published.json (the known Pinterest sync gap) — posted_log.txt and posting_activity.md govern; Problems: none
+2026-11-26 15:01 EST — Instagram — Versus Day 28 reel (video); Account: OnBrandCraftz (@onbrandcraftz2026); Product: Versus Day 28 — Tree Supports vs Normal (grid/snug) Supports (green line, question matchup — never run in Versus before); Media: vs-tree-vs-normal-supports-video.mp4 (Ronan voiceover; bed "Up on a Housetop" by Kevin MacLeod, credited in caption); Caption: "Tree supports vs normal supports for 3D printing — which should you use? 💚
+
+Honest start: our Christmas village files are designed to print with NO supports at all. When a print does need support, here is the split — Bambu Lab's own support docs plus our bench. Normal supports project the overhang straight down (grid squares it off, snug follows the outline): stronger, more stable, and the better finish under large flat overhangs. Tree supports grow branches that touch the part only at their tips: less material, less contact, and a cleaner peel on curved, organic shapes — our observed result on our P1S. Tree takes contact, material and removal; normal takes flat-overhang finish and stability. 3–2 to tree.
+
+Pick tree for curved, organic or detailed shapes. Pick normal for large flat overhangs and heavy parts that cannot wobble.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still ripping grid supports off curved prints.
+
+Day 27 — Bambu PLA Basic single vs bulk deal, is on our profile · Day 29 lands here tomorrow, same time
+
+Sources: Bambu Lab Wiki — Support (Bambu Studio): normal (grid/snug) vs tree (slim/strong/organic/hybrid) support types; scores are our observed result.
+
+Music: Up on a Housetop by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #Supports #BambuStudio #MakerCommunity
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.instagram.com/reel/DgNYBesuT7u/ (media 18134596288852574); in-caption link: none clickable ("free on MakerWorld — link in bio"); no affiliate links; Claims made: sources: Bambu Lab Wiki — Support (Bambu Studio) only; material/removal comparisons labelled OUR observed result, no invented numbers; verdict Tree 3–2 Normal with the who-should-pick-which split in the caption; Replies/DMs sent: none; Results: posted clean on the SINGLE permitted attempt (no 429); read-back verified present in the @onbrandcraftz2026 account post list; caption verbatim; frame-1 keyword "tree supports vs normal supports"; Problems: none on this leg
+2026-11-26 10:54 EST — TikTok — Versus Day 28 video; Account: OnBrandCraftz (@onbrandcraftz, TikTok); Product: Versus Day 28 — Tree Supports vs Normal Supports (green line); Media: vs-tree-vs-normal-supports-tiktok.mp4 (TikTok cut; bed "Up on a Housetop" by Kevin MacLeod, credited in caption); Caption: "Tree supports vs normal supports for 3D printing — which should you use? 💚
+
+Our village files are designed for no supports at all. When a print needs them: tree touches only at branch tips — less material, cleaner peel on curved shapes. Normal (grid/snug) is the solid scaffold — stronger, more stable, better finish under large flat overhangs. 3–2 to tree.
+
+Free village files: free on MakerWorld — link in bio
+
+Send this to the maker still ripping grid supports off curved prints.
+
+Day 27 — Bambu PLA Basic single vs bulk deal, is on our profile · Day 29 lands here tomorrow, same time
+
+Sources: Bambu Lab Wiki — Support (Bambu Studio); scores are our observed result.
+
+Music: Up on a Housetop by Kevin MacLeod (incompetech.com), Licensed under Creative Commons: By Attribution 4.0
+
+#3DPrinting #Supports #BambuStudio
+
+WHICH ONE WOULD YOU CHOOSE?"; Links: https://www.tiktok.com/@onbrandcraftz/video/7712508025285758222; in-caption link: none clickable; no affiliate links; Claims made: same sourced verdict as the Day 28 reel entry; Replies/DMs sent: none; Results: posted via the browser leg 10:48–10:54 EST and verified live (copyright "No issues found"; Everyone/public; voiceover audible; corrected verbatim caption); Problems: none
+2026-11-26 11:27 EST — X — Tips video — Versus Day 28 Tree vs Normal supports video; Account: Onbrandcraftz (X); Product: Versus Day 28 — Tree Supports vs Normal Supports (green line video, cross-platform use); Media: vs-tree-vs-normal-supports-video.mp4 (the Day 28 Versus video); Caption: not recovered word-for-word from local sources (marked per log rule — not paraphrased) (the run report records the caption at 262 chars, keyword-first with the MakerWorld CTA and the Kevin MacLeod attribution, but does not quote it); Links: https://x.com/Onbrandcraftz/status/2125989773663982073; in-post link https://makerworld.com/en/@P3DT (not an affiliate link); Claims made: same sourced verdict as the Day 28 reel entry; Replies/DMs sent: none; Results: LIVE, viewer-checked (video plays, link clickable); Problems: none
+2026-11-26 15:01 EST — Facebook — Versus Day 28 reel (Page reel) — FAILED / outcome unknown; Account: Onbrandcraftz Page; Product: Versus Day 28 — Tree Supports vs Normal Supports (green line); Media: vs-tree-vs-normal-supports-video.mp4 (same video as the Instagram leg); Caption: the posted caption (if the write landed) was a trimmed 952-char variant of the prepared Facebook caption — the trimmed text was not saved to a file, so it is not recovered word-for-word from local sources (marked per log rule — not paraphrased); the prepared full caption is on file at vs-daily/2026-11-26-tree-vs-normal-supports/work/caption-fb.txt; Links: none confirmed — no post verified; Claims made: same sourced verdict as the Day 28 reel entry (in the prepared caption); Replies/DMs sent: none; Results: OUTCOME UNKNOWN at log time: attempt 1 was rejected pre-publish by facebook-cli (the prepared caption exceeded the 1,024-char complete-preview limit; no post created); the caption was trimmed to 952 chars and attempt 2's exec session disappeared mid-publish with no receipt; a parent lock-probe at 10:53 EST also disappeared mid-publish. Fresh feed reads through 11:28 EST show the newest Page post still Versus Day 27 (post 122117363697518447) — neither locked write had landed by then; NOT retried per the no-blind-retry rule, parent to verify on a fresh feed read before any repost; Problems: two disappeared publish sessions; the Facebook leg of Versus Day 28 is unconfirmed — it may yet land as a locked write (the Nov 19 pattern) or not at all
