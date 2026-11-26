@@ -60,7 +60,7 @@ Caveats: Scarf Seam Test Bar 3668146 is TAKEN DOWN — its record returns an emp
 11. TEST — Living Hinge Strip | 3667639 | Private | 2026-11-22 21:54 | Standard=4210076, Optimized=4210099
 12. TEST — Snap-Fit Coupon | 3667636 | Private | 2026-11-22 21:52 | Standard=4210073, Optimized=4210096
 13. TEST — Support Interface Test | 3667080 | Private | 2026-11-22 20:01 | Stock=4209494, Tuned interface=4209523
-14. TEST — Fuzzy Skin Sampler | 3667075 | Private | 2026-11-22 19:59 | Standard=4209486
+14. TEST — Fuzzy Skin Sampler | 3667075 | Private | 2026-11-22 19:59 | Standard=4209486 — **REMOVED 2026-11-26** (Standard 18, test concluded)
 15. TEST — Layer Height Comparison Set | 3667064 | Private | 2026-11-22 19:56 | 0.08 mm=4209472, 0.12 mm=4209497, 0.16 mm=4209509, 0.20 mm=4209513, 0.28 mm=4209521
 16. TEST — Infill Sampler | 3667057 | Private | 2026-11-22 19:55 | Standard=4209464
 17. TEST — First-Layer Adhesion Map | 3666578 | Private | 2026-11-22 17:39 | Optimized=4208777, Standard=4208815
@@ -77,7 +77,7 @@ Caveats: Scarf Seam Test Bar 3668146 is TAKEN DOWN — its record returns an emp
 28. Openwork Name Ring | 3642721 | Private | 2026-11-18 23:34 | Standard — Openwork Name Ring=4196987, Optimized — Openwork Name Ring=4196993
 29. Camera Sign Gap Gauge | 3642709 | Private | 2026-11-18 23:30 | 0.2mm layer, 3 walls, 15% infill=4182220
 30. Name Ornament | 3626266 | Private | 2026-11-16 12:44 | NONE (0 profiles)
-31. Plinko Ball-Release Test — Coupon | 3622956 | Private | 2026-11-16 00:27 | Standard — Ball-Release Test Coupon=4153369
+31. Plinko Ball-Release Test — Coupon | 3622956 | Private | 2026-11-16 00:27 | Standard — Ball-Release Test Coupon=4153369 — **REMOVED 2026-11-26** (Standard 18, test concluded)
 32. Pie Drum Caddy | 3621416 | Private | 2026-11-15 18:08 | Drum — Standard=4151378, Drum — Optimized=4151402, Base — Standard=4151410, Base — Optimized=4151420
 33. Technique Samplers — Fuzzy Skin + Vase Tests | 3621330 | Private | 2026-11-15 17:52 | Texture Sampler — Fuzzy Skin (4 cylinders)=4151261, Vase Ribbed — Spiral Vase slit Test=4151320, Vase Plain — Spiral Vase Control=4151337
 34. Birch Log Tea-Light Trio | 3620617 | Private | 2026-11-15 16:25 | Standard=4150318, Multicolour - Standard=4151214, Optimized=4151217, Multicolour - Optimized=4151238
@@ -85,7 +85,7 @@ Caveats: Scarf Seam Test Bar 3668146 is TAKEN DOWN — its record returns an emp
 36. Fine Detail Test Piece for a 0.4 mm Nozzle | 3620578 | Private | 2026-11-15 16:23 | Standard — Detail Coupon=4150209
 37. Zero-Gap Joint Test — Coupon | 3620446 | Private | 2026-11-15 16:16 | Standard — Zero-Gap Coupon (2 materials)=4150114
 38. Iris Box Clearance Test — Coupons | 3619785 | Private | 2026-11-15 15:15 | Coupon — 0.40 mm Clearance=4149345, Coupon — 0.55 mm Clearance=4150469
-39. Ocarina Voicing Test — Whistles | 3619602 | Private | 2026-11-15 14:29 | Whistle 1 — Windway 1.0 mm=4149152, Whistle 2 — Windway 1.3 mm=4149610
+39. Ocarina Voicing Test — Whistles | 3619602 | Private | 2026-11-15 14:29 | Whistle 1 — Windway 1.0 mm=4149152, Whistle 2 — Windway 1.3 mm=4149610 — **REMOVED 2026-11-26** (Standard 18, test concluded)
 40. Trophy Rack Medallion | 3614594 | Private | 2026-11-14 21:24 | Standard=4142855, Optimized=4146879, Multicolour - Standard=4146890, Multicolour - Optimized=4146913
 41. Stacking Jar Tower | 3607084 | Private | 2026-11-13 19:25 | Jar - Standard=4133873, Jar - Optimized=4133896, Cap - Standard=4133902, Cap - Optimized=4133911, Foot - Standard=4133916, Foot - Optimized=4133930
 42. Gear Heart | 3604645 | Private | 2026-11-13 12:14 | Heart Plate - Standard=4130779, Heart Plate - Optimized=4130833, Gears - Standard=4130838, Gears - Optimized=4130844, Prongs Only — Reprint Pins (Brim)=4200102
@@ -295,7 +295,7 @@ Note: Infill Sampler 3667057 STAYS for now — printed Nov 24, but Scott's physi
 
 All Sjack7 PRIVATE, verified (Creator Center: Published Models 154, Profiles 569, Verifying 0). Eight of row 42 DONE a day early (Scott moved the start up to Nov 25); one item remains — Urban Kid v2 Head Test 2, staging next.
 
-- **TEST - Pie Drum Caddy v2 Keeper Test — model 3683503** — profiles 4230261 (Keeper Coupon — Full 0.2 cup), 4230358 (Keeper Cup — 0.3 Only)
+- **TEST - Pie Drum Caddy v2 Keeper Test — model 3683503** — profiles 4230261 (Keeper Coupon — Full 0.2 cup), 4230358 (Keeper Cup — 0.3 Only) — **REMOVED 2026-11-26** (Standard 18, test concluded)
 - **TEST - Organizer Butterfly Key Test — model 3683634** — profile 4230432
 - **TEST - Kit-Card Chalet Snap Test — model 3683734** — profile 4230548
 - **TEST - Bridge Flow A/B — model 3683834** — profile 4230666
@@ -319,3 +319,17 @@ All Sjack7 PRIVATE, verified (Creator Center: Published Models 154, Profiles 569
 ## Urban Kid v3 test upload (2026-11-26)
 
 - **TEST - Urban Kid v3 (AI Mesh, 190 mm) — Sjack7 model 3688123, PRIVATE** — profile 4236117 "One Piece — Fine (v3)" (0.12 Fine, 8h12m / 159.5g verified slice). Claude design from the Hunyuan mesh; licence hold applies — Private test only.
+
+## Removals — Standard 18 cleanup (2026-11-26)
+
+Executed Nov 26, 2026 on Sjack7. DELETED (verified gone, Published count 157 → 154):
+
+- **TEST - Pie Drum Caddy v2 Keeper Test — 3683503** — removed (Standard 18, test concluded).
+- **Plinko Ball-Release Test — Coupon — 3622956** — removed (Standard 18, test concluded).
+- **Ocarina Voicing Test — Whistles (v1) — 3619602** — removed (Standard 18, test concluded).
+
+FILED BUT NOT FOUND on the account (checked Published + Draft + Failed lists by name and ID, Nov 26) — already absent, nothing deleted: Otter Joint Test 3598362 · Pie Caddy Bearing Test 3597810 · Jar Tower Thread Test 3597781 · Gear Heart Test 3598021 · Snowflake Hinge Test 3598379 · Printed 6 mm Balls 10549018. Identify-only filings also resolved as not existing as separate models: Fold Stand v4 Hinge Test, Pocket Top Snap Test, Gear Heart Clip Test. No model named "Domed Name Ornament" exists on the account; protected Name Ornament 3626266 untouched.
+
+## Test result — Fuzzy Skin (2026-11-26)
+
+Printed and read by Scott, Nov 26, 2026. Tags printed: 0.08 / 0.12 / 0.18. Scott's verdict, verbatim: "I like both .12 and .18" — **0.12 and 0.18 both pass as approved fuzzy values; 0.08 was not picked.** Evidence filed locally at `~/workspace/your_files/test-evidence/fuzzy-skin-2026-11-26/` (photo of the four cups on the plate + two clips, 8.7s and 11.6s). Test concluded — Fuzzy Skin Sampler 3667075 removed Nov 26 under Standard 18 (see the annotation on its inventory line above).
