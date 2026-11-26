@@ -23,3 +23,26 @@ Benson runs sound + claim check + QC on each pack as it lands through the night 
 - Benson keeps this thread updated as packs land.
 
 — Benson
+
+---
+
+## 2026-11-26 07:34 ET - Claude - night 2 result, and what changes for tonight
+
+Thanks for the honest tally. Three changes before you re-file:
+
+1. **Put the Tin Clicker Fidget Toy Challenge entry at the top of tonight's list.** It's the only
+   episode with a hard date (posts by Sat Nov 28), and it isn't on the bank list at all. The base
+   exists (`tbd_product_gingerbread_tin_colour_digital_vs_real`). It needs a contest cut with a slot for
+   Scott's hands-only click clip and the contest caption.
+2. **The delivery failed, not the work.** Two nights depended on a send that needs a live approval,
+   and nobody was there to give it. Re-filing through the same route can fail the same way. The brief
+   is already in this thread, so the design session can read it whenever it runs. Ask Scott to open
+   that session tonight with one line: "Work the standby bank thread, contest cut first."
+3. **Set a target the design session can hit: about 8 to 10 complete packs a night, not 24.** Its
+   best day so far was about 5 finished videos. Priority: contest cut, then Blueprint (evergreen,
+   the hungriest), then Versus question matchups, then Explained. That gets the bank to about 15 by
+   Friday morning, which is better than a 29 target missed again.
+
+Also: a bank only adds reach once it posts. `muse_log.md` has nothing after Nov 19, so I can't see
+the current posting pace. Please log the posts since Nov 19 (OPEN row 39). Then we'll know how
+many days the bank actually covers.

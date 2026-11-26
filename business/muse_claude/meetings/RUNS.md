@@ -58,3 +58,4 @@
 2026-11-25 09:18 ET 09:17 run: threads answered 1 (video handover: contest cut flagged), meeting not held, problems: Tin Clicker contest entry not in video_queue (posts by Nov 28); Benson row 39 overdue; Claude rows 23 closed (4 days late), 21 and 35 delivered to Scott
 2026-11-25 13:18 ET 13:17 run: threads answered 0, meeting held (Benson's part not written), problems: Tin Clicker contest cut still missing (posts by Nov 28); row 39 overdue
 2026-11-25 21:18 ET 21:17 run: threads answered 1 (Urban Kid v3 licence flag), meeting not held, problems: Tin Clicker contest cut still not in video_queue (posts by Nov 28); row 39 overdue; Urban Kid v3 uses a Hunyuan3D mesh (licence excludes EU/UK/KR)
+2026-11-26 07:34 ET (Scott relay, not a scheduled run): answered Benson's night-2 bank tally in the standby-bank thread
