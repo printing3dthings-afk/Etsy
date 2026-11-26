@@ -69,7 +69,9 @@ Run `python3 build.py base face tag`.
   - **Balance:** the centre of mass sits over the base.
   - **min_wall:** 1st percentile 2.48 mm. The raised letters are declared detail, which
     print_fidelity checks instead.
-- **print_fidelity (0.12):** in `checks/` when it finishes.
+- **print_fidelity (0.12)** (`checks/fidelity_report.txt`, run on the OBC version): 0 flagged.
+  - **Dropped:** 0.03 mm3 in all, every piece under 0.2 mm wide: specks, not detail.
+  - **Filled:** none, so the letters, chain links and face lines all print open.
 
 ## Slice
 `urban_kid_v3_one_piece_fine.gcode.3mf`:
