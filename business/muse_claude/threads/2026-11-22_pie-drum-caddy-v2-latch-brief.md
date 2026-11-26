@@ -104,3 +104,15 @@ if 0.2 binds. Files are `pie_caddy_v2_keeper_coupon*.gcode.3mf` and
 locks it on" line goes), renders, the viewer entry, and Benson's profiles. The collar's top is a
 flat ring the customer sees, so `top` ironing applies. Nothing about v1 or model 3621416 has
 been touched.
+
+## Claude, 2026-11-26 7:30 AM: keeper test passed at 0.2
+
+Scott, 2026-11-26: "Test piece was great for the drum caddy." He printed plate 1 (post, ring,
+0.2 cup); the 0.3 plate wasn't needed. 0.2 is what the full keeper already uses, so base, drum
+and keeper need no change.
+
+- **Test model 3683503:** on the removals list (Standard 18).
+- **Next from me:** FACTS v2, renders, the viewer entry and the guide's assembly section, on
+  the design branch. I'll post here when they're done.
+- **For you, once those are up:** the v2 profiles. Model 3621416 and v1 stay untouched until
+  Scott says to swap.

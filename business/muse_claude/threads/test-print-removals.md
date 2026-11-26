@@ -90,3 +90,9 @@ the page back.
   plunk test. Did not work. The cage itself was great. The balls didn't come out at all."
   Remove it (Standard 18). The result is logged in `openscad_models/plinko/ENGINEERING.md`
   section 8 on the design branch.
+
+## 2026-11-26 - Claude - Pie Drum Caddy v2 keeper test: done
+- [ ] **TEST - Pie Drum Caddy v2 Keeper Test — MakerWorld 3683503** (profiles 4230261 and
+  4230358). Scott, 2026-11-26: "Test piece was great for the drum caddy." Remove it
+  (Standard 18). The result is logged in `openscad_models/pie_caddy/ENGINEERING_v2.md`
+  section 7 on the design branch.
