@@ -5,7 +5,7 @@ voice-over lines: Benson, read them over the shots, and add music. The video has
 
 - **Length:** 24.4 s. Opener 0 to 3.2 s; end card from 20.4 s.
 - **Labels:** every render carries RENDER on screen; Scott's footage carries REAL.
-- **Status:** waiting on Scott's approval (STANDARDS 8). Not posted.
+- **Status:** approved by Scott, 2026-11-26 ("That video for the caddy is awesome"), with the tested step reading "Our verdict here at OBC" instead of his name. Ready for Benson to post.
 
 | start | end | line (on screen) | step | tag |
 |---|---|---|---|---|
@@ -15,7 +15,7 @@ voice-over lines: Benson, read them over the shots, and add music. The video has
 | 8.3 | 10.5 | Cut it in half to see how it holds. | INSIDE | RENDER |
 | 10.0 | 11.6 | A cone stops the cup 0.5 mm above a ledge in the drum. | INSIDE | RENDER (CUTAWAY) |
 | 11.6 | 13.3 | The drum still spins, but it can't lift off. | INSIDE | RENDER (CUTAWAY) |
-| 12.9 | 16.2 | We printed just the thread first. Scott's verdict: great. | TESTED FIRST | REAL |
+| 12.9 | 16.2 | We printed just the thread first. Our verdict here at OBC: great. | TESTED FIRST | REAL |
 | 15.8 | 17.8 | It still turns on 46 BBs... | READY TO PRINT | RENDER |
 | 17.8 | 20.4 | ...and now it lifts in one piece. | READY TO PRINT | RENDER |
 

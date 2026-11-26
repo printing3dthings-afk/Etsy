@@ -42,7 +42,7 @@ posts it with voice-over and music.
 ## Videos
 | product | storyboard | status |
 |---|---|---|
-| Pie Drum Caddy v2 | `pie_caddy_v2.py` | pilot, waiting on Scott |
+| Pie Drum Caddy v2 | `pie_caddy_v2.py` | approved 2026-11-26, for Benson to post |
 
 ## Not in git
 `out/*/shots/` (rendered frames), `out/*/meshes/`, `out/*/kit/`. Each storyboard rebuilds them.
