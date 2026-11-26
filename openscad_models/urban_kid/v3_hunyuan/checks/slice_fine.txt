@@ -1,0 +1,24 @@
+WARNING: 1 colours given, only slots [] used in the G-code
+{
+ "plate_gcode": "Metadata/plate_1.gcode",
+ "layers": 1583,
+ "support_lines": 1589,
+ "pauses": 0,
+ "slots_used": [],
+ "support_g": 89.2,
+ "time": "8h 13m 47s",
+ "filament_g": "162.47",
+ "filament_mm": "51170.80",
+ "paused_at_mm": [],
+ "file": "/home/user/Etsy/openscad_models/urban_kid/v3_hunyuan/urban_kid_v3_one_piece_fine.gcode.3mf",
+ "quality": "fine",
+ "process": "0.12mm Fine @BBL X1C",
+ "retail_settings": true,
+ "filament": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
+ "slot_colours": [
+  "#9AA3AE"
+ ],
+ "brim_mm": null,
+ "bed": "Textured PEI Plate",
+ "supports": "tree"
+}

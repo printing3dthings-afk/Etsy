@@ -1,0 +1,6 @@
+# rebuilt by build.py from source/ (the refined meshes run to 65 MB+)
+out/
+*.stl
+__pycache__/
+checks/fidelity/
+checks/fidelity.txt
