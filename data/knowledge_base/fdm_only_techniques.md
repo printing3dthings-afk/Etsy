@@ -60,6 +60,18 @@ Anything a listing or a post says about a technique needs PROVEN BY SCOTT.
   - It changes the outline by up to the thickness, so keep it off mating faces (a modifier
     or painting does that).
 - **Next:** Scott feels the sampler (`openscad_models/technique_samplers/`).
+- **Scott's picks for plain fuzzy skin (2026-11-26): 0.12 and 0.18 mm thickness.** From
+  Benson's Fuzzy Skin Sampler (MakerWorld 3667075, now removed). Its build notes are on main,
+  in `business/muse_claude/test_prints/fuzzy-skin-sampler/PACK.md`.
+  - **The test:** four 46 mm cups in matte PLA, classic noise, point distance 0.12, outer walls
+    only, at off / 0.06 / 0.12 / 0.18. The tags read OFF, 0.06, 0.12 and 0.18 in Scott's photo
+    and clips; Benson's ledger entry says 0.08, a slip.
+  - **The verdict** (Scott, as logged by Benson): "I like both .12 and .18". 0.06 wasn't
+    picked.
+  - **Use:** 0.12 for an all-over feel, 0.18 for a heavier, rougher surface, both at point
+    distance 0.12. This covers classic noise only. The textured noises above (Perlin bark
+    0.3 / 0.6 on the birch logs, Voronoi stone) are a different look and weren't part of this
+    test.
 
 ## 2. Vase mode with slits: ribs inside one continuous wall. PROVEN HERE
 - **Source:** Arvid Norlander, "3D printing with unconventional vase mode", 2025-06-23,
