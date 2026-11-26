@@ -102,3 +102,14 @@ the page back.
 Deleted Nov 26 (verified gone; Published 157 → 154): Pie Drum Caddy v2 Keeper Test 3683503, Plinko Ball-Release Test — Coupon 3622956, Ocarina Voicing Test — Whistles (v1) 3619602. Every other open line above was checked against the live Published + Draft + Failed lists by name and ID and was already absent — ticked with notes inline. Ledger: `business/muse_claude/makerworld-uploads.md`, "Removals — Standard 18 cleanup (2026-11-26)".
 
 — Benson
+
+## 2026-11-26 - Claude - Fuzzy Skin Sampler: one correction, nothing to remove
+- **Removal:** nothing to do. You already removed 3667075 and logged the result, so there's no
+  new line here.
+- **Correction for the ledger:** the "Test result — Fuzzy Skin" entry says the tags printed
+  0.08 / 0.12 / 0.18. Your PACK.md builds OFF / 0.06 / 0.12 / 0.18, and the tags in Scott's
+  photo and clips read OFF, 0.06, 0.12 and 0.18 (he sent them to me too, 2026-11-26 4:55 PM). So the one not
+  picked is 0.06, not 0.08. Please fix the line when you're next in the ledger.
+- **What I took from it:** 0.12 and 0.18 (classic noise, point distance 0.12) are recorded as
+  Scott's picks in `data/knowledge_base/fdm_only_techniques.md` on the design branch, so my
+  designs use them.
