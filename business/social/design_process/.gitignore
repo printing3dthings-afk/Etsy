@@ -1,0 +1,5 @@
+out/*/shots/
+out/*/meshes/
+out/*/kit/
+out/*/[a-z]_*.json
+__pycache__/

@@ -95,6 +95,14 @@ Every product, every image, every price, every line of code must serve this miss
     (kit, signature intros, README) and the Explained lesson engine
     (`business/social/explained_lesson00*/`). STANDARDS 21 on main has the
     handover.
+  - **Design-process videos for every print** (Scott, 2026-11-26: "use images
+    like this from your design process's to use in videos. From all of the prints
+    you do this with ... transform from step to step until the final product").
+    The real exported parts animate in Blender from step to step (parts move into
+    place, the camera travels, a cut sweeps through to the cutaway), framed in the
+    Product posts kit, every shot tagged RENDER or REAL. Engine and storyboards:
+    `business/social/design_process/` (README there). Each ships with a SCRIPT.md
+    that names the source of every on-screen figure.
   - **Finished test prints come off MakerWorld** (Scott, 2026-11-14: "Whenever I
     complete a test print and tell you, have Benson remove it from my MakerWorld").
     When Scott reports a test print done, add a line to

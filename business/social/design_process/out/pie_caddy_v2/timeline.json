@@ -1,0 +1,91 @@
+{
+ "opener": 3.2,
+ "body_end": 20.366666666666678,
+ "total": 24.366667,
+ "steps": [
+  {
+   "label": "THE PROBLEM",
+   "chip": "RENDER",
+   "start": 3.2,
+   "end": 5.533333333333337,
+   "captions": [
+    [
+     3.2,
+     "It turns on BBs. But without a keeper, pick it up and the drum comes straight off."
+    ]
+   ]
+  },
+  {
+   "label": "THE FIX: A KEEPER CUP",
+   "chip": "RENDER",
+   "start": 5.133333333333336,
+   "end": 8.733333333333325,
+   "captions": [
+    [
+     5.133333333333336,
+     "A pen cup that drops into the middle..."
+    ],
+    [
+     6.333333333333336,
+     "...and screws onto the post. About three turns."
+    ]
+   ]
+  },
+  {
+   "label": "INSIDE",
+   "chip": "RENDER",
+   "start": 8.333333333333325,
+   "end": 10.533333333333319,
+   "captions": [
+    [
+     8.333333333333325,
+     "Cut it in half to see how it holds."
+    ]
+   ]
+  },
+  {
+   "label": "INSIDE",
+   "chip": "RENDER (CUTAWAY)",
+   "start": 10.033333333333319,
+   "end": 13.266666666666644,
+   "captions": [
+    [
+     10.033333333333319,
+     "A cone stops the cup 0.5 mm above a ledge in the drum."
+    ],
+    [
+     11.633333333333319,
+     "The drum still spins, but it can't lift off."
+    ]
+   ]
+  },
+  {
+   "label": "TESTED FIRST",
+   "chip": "REAL",
+   "start": 12.866666666666642,
+   "end": 16.2333333333333,
+   "captions": [
+    [
+     12.866666666666642,
+     "We printed just the thread first. Scott's verdict: great."
+    ]
+   ]
+  },
+  {
+   "label": "READY TO PRINT",
+   "chip": "RENDER",
+   "start": 15.8333333333333,
+   "end": 20.366666666666678,
+   "captions": [
+    [
+     15.8333333333333,
+     "It still turns on 46 BBs..."
+    ],
+    [
+     17.8333333333333,
+     "...and now it lifts in one piece."
+    ]
+   ]
+  }
+ ]
+}
