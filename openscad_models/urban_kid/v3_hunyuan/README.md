@@ -35,6 +35,10 @@ Hugging Face).
 This is a reading of the licence text, not legal advice. Scott decides before any listing or
 public post.
 
+**Scott's decision, 2026-11-26:** "Use it as is. Put it on my private for now." v3 is used as it
+stands, on Sjack7 PRIVATE only (already up as model 3688123). It is not public, not listed and not
+in posts or videos until he says otherwise.
+
 ## What build.py does
 Run `python3 build.py base face tag`.
 - **base:**
