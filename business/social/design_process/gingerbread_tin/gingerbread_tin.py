@@ -17,7 +17,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
-from storyboard import cut, kit, part, render_shots, write_script  # noqa: E402
+from storyboard import cut, kit, part, render_shots, save_stills, write_script  # noqa: E402
 
 ROOT = HERE.parents[3]
 OUT = HERE.parent / "out" / "gingerbread_tin"
@@ -175,5 +175,6 @@ if __name__ == "__main__":
     op, ec = kit(OUT, "GINGERBREAD TIN")
     tl = compose(SEGMENTS, OUT / "gingerbread_tin_design.mp4", opener=op, endcard=ec)
     (OUT / "timeline.json").write_text(json.dumps(tl, indent=1))
+    save_stills(SEGMENTS, OUT / "stills")
     write_script(tl, OUT / "SCRIPT.md", "Gingerbread Tin", STATUS, SOURCES)
     print(f"{tl['total']:.1f} s")

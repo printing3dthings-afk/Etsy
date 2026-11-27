@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
-from storyboard import cut, kit, part, render_shots, write_script
+from storyboard import cut, kit, part, render_shots, save_stills, write_script
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
@@ -129,5 +129,6 @@ if __name__ == "__main__":
     op, ec = kit(OUT, "PIE DRUM CADDY V2")
     tl = compose(SEGMENTS, OUT / "pie_caddy_v2_design.mp4", opener=op, endcard=ec)
     (OUT / "timeline.json").write_text(json.dumps(tl, indent=1))
+    save_stills(SEGMENTS, OUT / "stills")
     write_script(tl, OUT / "SCRIPT.md", "Pie Drum Caddy v2", STATUS, SOURCES)
     print(f"{tl['total']:.1f} s")

@@ -83,3 +83,24 @@ def write_script(tl, path, title, status, sources):
         "",
     ]
     Path(path).write_text("\n".join(md))
+
+
+def save_stills(segments, dst):
+    """Keep one still per animated step (its last frame: the state it holds on), beside the video.
+    The frames themselves aren't in git, so these are what the media library keeps of the design
+    animation. Named by order and step, e.g. 03_inside.jpg."""
+    from PIL import Image
+    dst = Path(dst)
+    dst.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for seg in segments:
+        if seg["kind"] != "frames":
+            continue
+        fs = sorted(Path(seg["dir"]).glob("f_*.png"))
+        if not fs:
+            continue
+        n += 1
+        tag = "cutaway" if "CUTAWAY" in seg.get("chip", "") else "render"
+        name = "_".join(w for w in seg.get("label", "").lower().replace(":", "").split())
+        Image.open(fs[-1]).convert("RGB").save(dst / f"{n:02d}_{name}_{tag}.jpg", quality=90)
+    return n
