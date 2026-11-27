@@ -48,7 +48,8 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 | #36 Pie Drum Caddy v2 | Claude files ready Nov 26; Benson profiles after | Scott prints full v2. Benson builds profiles; **do not** swap 3621416 until Scott says so | Scott's full v2 print + swap OK | 2026-11-24 (waits on print) |
 | #38 Modular organizer (butterfly keys) | Claude | Fit coupon already with Scott; starter set after his result | Scott's coupon print | 2026-11-25 (waits on print) |
 | #41 Full MW inventory of both accounts | Benson | Sjack7 inventory filed Nov 24 (147 models). Strike remaining not-up list | @P3DT inventory pending — Scott must sign in to that profile | 2026-11-26 (partial) |
-| Design-process: Gingerbread Tin + Fold Stand videos | Claude | Files on design branch with SCRIPT.md | Scott approval (do not post first) | ? |
+| Design-process first cuts: Gingerbread Tin, Fold Stand, Gear Heart | Claude | On the design branch with SCRIPT.md, kept as they are (not overwritten) | Scott approval (do not post first) | ? |
+| Design-process v2 cuts (template v2): Fold Stand v2, Gear Heart v2 | Claude | Rendering (Scott via Greg, Nov 27). Saved beside the first cuts as `fold_stand_design_v2.mp4` / `gear_heart_design_v2.mp4` with SCRIPT_v2 + timeline_v2. Template v2 checklist is in `business/social/design_process/README.md` on the design branch | Render; then Scott's approval. Each ends on a PLACEHOLDER slate, so **not postable** until Scott's real clips land (the stand holding a phone; a hand turning the heart's knob) | ? |
 | Design-process: Pie Caddy v2 video | Benson | Scott approved Nov 26 ("clear to post") | Benson post + log | ? |
 | Monday hook scorecard | Claude | Scott approved Nov 25; Claude to build | — | ? |
 | FB Versus Day 28 reel | Benson | Logged FAILED / outcome unknown; no receipt. Fresh feed read before any repost (no-blind-retry) | Confirm whether a locked write landed | 2026-11-26 |
@@ -58,7 +59,7 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 
 - **Benson → Claude:** #29 claim checks + Explained slots; #31 motion-kit values/looks/CTAs; #28 apply email fixes before the next send; #41 @P3DT inventory; #8 FB caption edit; Fidget entry posts once Scott’s click clip lands (caption approved Nov 26); Day 28 FB receipt; post approved caddy design-process video.
 - **Claude → Benson:** village times vs saved listing text (#10); contest cut in `video_queue/` (requested by 2026-11-27 midday ET; faster IG-repost route should not wait on it); hook scorecard; videos already in the queue (Ep 002, Lessons 007–009, other `tbd_*` packs) kept current with FACTS/captions.
-- **Both waiting on Scott:** Fidget click clip; Gingerbread Tin and Fold Stand video approvals; prints for #21, #36, #38; @P3DT sign-in; Etsy return.
+- **Both waiting on Scott:** Fidget click clip; Gingerbread Tin, Fold Stand and Gear Heart video approvals (first cuts and v2 cuts); real clips for the v2 placeholders; prints for #21, #36, #38; @P3DT sign-in; Etsy return.
 
 ## Posting queue (from `muse_log.md`, catch-up through 2026-11-26)
 
