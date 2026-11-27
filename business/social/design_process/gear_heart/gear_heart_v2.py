@@ -9,6 +9,10 @@ gear_heart_design.mp4). Same parts, same facts, same gear placement and ratios (
 gear_heart.py); the template v2 rules are in ../README.md. The whole v2 heart isn't printed yet, so
 the real footage stops at the plate and gears, and a marked placeholder holds the place for Scott's
 clip of a hand turning the knob.
+
+Update, same day: Scott's clip of the printed v2 heart turned by hand arrived (Benson's cleaned
+copy, real/gear_heart_hand_turn.mp4). It is now the payoff and the ending, tagged REAL · EDITED; the
+placeholder is gone.
 """
 import json
 import sys
@@ -84,9 +88,13 @@ def shots():
     }
 
 
+HAND = HERE.parent / "real" / "gear_heart_hand_turn.mp4"     # Scott's clip, Benson's cleaned copy (real/README.md)
+EDITED = "REAL · EDITED"                                     # stabilised + colour-lifted: not plain REAL
+
 SEGMENTS = [
-    dict(kind="frames", dir=str(SHOTS / "p_payoff"), hold_end=0.6, chip="RENDER", fade=0.2,
-         big=[[1.0, "2 VERSIONS + 2 TEST PRINTS TO GET HERE"]]),
+    # the payoff is real: Scott's hand turning the printed heart
+    dict(kind="video", path=str(HAND), start=1.0, dur=2.4, chip=EDITED, fade=0.2,
+         big=[[0.9, "2 VERSIONS + 2 TEST PRINTS TO GET HERE"]]),
     dict(kind="rewind", dirs=[str(SHOTS / s) for s in ("a_test", "b_v1", "c_clip", "d_v2")], dur=0.8,
          chip="RENDER", fade=0.15, big=[[0, "REWIND"]]),
     dict(kind="frames", dir=str(SHOTS / "a_test"), hold_end=0.3, chip="RENDER", label="TEST PRINT 1",
@@ -100,19 +108,20 @@ SEGMENTS = [
     dict(kind="video", path=str(REAL / "heart_base_on_plate_clip.mov"), start=2.8, dur=2.2, speed=0.8,
          chip="REAL", label="ON OUR PRINTER", captions=[[0, "Our real version 2 plate."]]),
     dict(kind="video", path=str(REAL / "v2_gears_popping_off_2026-11-21.mov"), start=3.4, dur=2.6, speed=0.6,
-         chip="REAL", label="ON OUR PRINTER", captions=[[0, "The gears printed clean. The pins are reprinting."]]),
-    dict(kind="placeholder", dur=2.8, chip="PLACEHOLDER", label="COMING NEXT",
-         lines=["OUR REAL CLIP GOES HERE", "A hand turning the knob on the printed heart. 9:16, about 3 s."]),
+         chip="REAL", label="ON OUR PRINTER", captions=[[0, "The gears printed clean. The pins came loose, so we printed them again."]]),
+    dict(kind="video", path=str(HAND), start=4.0, dur=5.4, chip=EDITED, label="VERSION 2, PRINTED",
+         captions=[[0, "Our printed version 2 heart, turned by hand."]]),
 ]
 
-STATUS = ("waiting on Scott's approval (STANDARDS 8). Not posted. Not postable until the placeholder "
-          "holds Scott's hand-turn clip: the whole v2 heart isn't printed yet.")
+STATUS = ("waiting on Scott's approval (STANDARDS 8). Not posted. Opens and ends on Scott's real hand-turn "
+          "clip (Benson's cleaned copy, tagged REAL · EDITED); no placeholder.")
 SOURCES = v1.SOURCES + [
     ("2 versions + 2 test prints", "ENGINEERING.md sections 5-9: the gear test, v1, the clip test, v2"),
     ("Our real version 2 plate", "gear_heart/real/heart_base_on_plate_clip.mov (Scott's phone clip; v2's pin bosses, no posts)"),
-    ("The gears printed clean; the pins are reprinting", "gear_heart/reprint/REPRINT_PINS.md"),
+    ("The pins came loose, so we printed them again", "gear_heart/reprint/REPRINT_PINS.md; the hand-turn clip shows the heart assembled with its pins"),
+    ("Our printed version 2 heart, turned by hand", "business/social/design_process/real/gear_heart_hand_turn.mp4: Scott's clip, "
+     "Benson's cleaned copy (trimmed, stabilised, colour lift; real/README.md). Tagged REAL · EDITED"),
 ]
-
 
 if __name__ == "__main__":
     for name, (s, cam) in shots().items():

@@ -4,7 +4,10 @@ Fourteen gears round a heart-shaped plate and a knob gear in the middle, all tur
 together. Scott's form 9A. Engineering: ENGINEERING.md (section 9 for v2).
 
 ## Status
-- **v2 is designed and checked, not printed as a whole heart.**
+- **v2 is printed and assembled (2026-11-26).** Scott's clip shows the whole heart, gears on their
+  pins, turned by hand at the knob, the gears round it turning with it
+  (`business/social/design_process/real/gear_heart_hand_turn.mp4`, Benson's cleaned copy). No
+  verdict from Scott yet beyond the clip, so the "Not known until a print" list below stands.
 - Its axle pin, boss, washer and gear are the clip test's. Scott printed that test
   (2026-11-16) and picked clip 3, the 0.65 barb: "Number 3 seems to feel the best."
 - **v1** (`gear_heart_plate.3mf`, `gear_heart_gears.3mf`) has the snap posts, one of which
