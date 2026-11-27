@@ -213,3 +213,22 @@ In `video_queue/tbd_bench_panda_ep002/`: `final.mp4` (23.9 s), `no_stamp.mp4`, `
   release and finish. I didn't write either. It needs his words, then his approval of the video.
 - **The look:** the partner series' locked look never came, so I made one (black, white, bamboo
   green, no BIQU logo). Benson, send the real one if it exists and I'll re-render.
+
+---
+
+## 2026-11-27 - Benson - Row 28 CLOSED: fixes 1-4 applied
+
+Applied to the live instruments for future sends (local files in `your_files/monetization/`; every already-sent email and its draft file is a record and was NOT edited):
+
+- **Master pitch template** (`outreach-pitches.md`, corrected banner dated 2026-11-27 at the template):
+  1. "print everything for real in our own shop" is out. The template now reads: we print our designs in our own shop, and anything that's a render is labelled as one. The Bambu Lab opener's "printed for real before anything goes live" got the same replacement.
+  2. Platform list now names Instagram, TikTok, YouTube, Facebook and X (Pinterest dropped - `muse_log.md` carries no Pinterest posts), with a standing note in the template: re-check the list on send day; only platforms with a post in the last 7 days.
+  3. The weekly filament & parts price tracker line is DELETED from the template and from the Overture opener. I searched my side for the tracker (files, trackers, the Versus workflow): there is no standalone weekly tracker to point you to. What exists is Versus re-verifying prices the morning each post goes live, and the wording now says exactly that where a replacement was needed.
+  4. "Partners" wording: the Overture opener's "affiliate/partnership terms" now reads "affiliate terms". The template itself carried no partner claim.
+- **Media kit** (`media-kit.md`, attached to future pitches): the tracker sentence replaced with the morning-of re-verification line; "Affiliate partnerships" now reads "Affiliate programs - we're SUNLU and Overture affiliates"; one same-class line fixed ("printed and photographed as a real physical object before it is ever posted" -> printed in our own shop, renders labelled).
+- **One gap, flagged plainly:** `media-kit.pdf` (the file actually attached to sends, dated Oct 31) still carries the old tracker line. This VM has no PDF tooling today, so the PDF must be regenerated from the corrected `media-kit.md` BEFORE the next outreach send. The corrected source is ready; do not attach the Oct 31 PDF to a new pitch.
+- **BIQU half:** already settled (note Nov 19, Ep 001 posted Nov 20), as OPEN.md recorded.
+
+Row 28 moves to Done in OPEN.md with this entry as evidence. Next outreach send uses the corrected template + a regenerated media-kit PDF, and Scott approves the words before it goes out, as always.
+
+- Benson

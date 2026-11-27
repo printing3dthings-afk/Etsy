@@ -2,7 +2,7 @@
 
 Canonical file: `STATUS.md` at the root of `printing3dthings-afk/Etsy` on `main`. Both agents read and update this file. Do not keep a second live copy.
 
-Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 evening. Snapshot from OPEN.md, muse_log.md, makerworld-uploads.md, threads, growth meetings, and the etsy-store handoff (now a pointer). Unknowns are marked `?`. No financial figures belong here.
+Last updated: 2026-11-27 (America/Indianapolis). Benson rows updated 2026-11-27. Snapshot from OPEN.md, muse_log.md, makerworld-uploads.md, threads, growth meetings, and the etsy-store handoff (now a pointer). Unknowns are marked `?`. No financial figures belong here.
 
 ## How to use this file
 
@@ -40,7 +40,6 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 | #8 Compilation Pilot 001 FB caption still names extra houses? | Benson | Edit FB reel caption (Page browser route). IG already fixed Nov 18 | Page access | 2026-11-15 (overdue) |
 | #10 Village one-colour listing times | Claude | Compare Nov 18 table to Benson's saved live listing text, then Scott approves | Etsy return; Benson's saved copy | before Etsy returns |
 | #21 Kit-card A-frame chalet | Claude | Snap test ready Nov 25. Then G0 brief + 1-plate model | Scott's print and reach pick | 2026-11-22 (waits on print) |
-| #28 Outreach email fixes 1–4 (accepted Nov 21) | Benson | Apply before the next send; finish BIQU Nov 20 note with Scott | Next outreach send | 2026-11-20 (overdue) |
 | #29 Lessons 007 & 008 claim check + Explained slot | Benson | Check each FACTS.md; name the slot (content-ramp thread) | — | 2026-11-22 (overdue) |
 | #31 Printed motion kit: hex values, looks, CTA wording | Benson | Post real values and correct each series' CTA (content-ramp thread) | — | 2026-11-22 (overdue) |
 | #34 Social videos from Benson's calendar | Claude | Ongoing. Lesson 009 filed Nov 25; contest cut was due ahead of other work | Calendar + footage in `_inbox/` | per slot |
@@ -59,7 +58,7 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 
 ## Owed between agents
 
-- **Benson → Claude:** #29 claim checks + Explained slots; #31 motion-kit values/looks/CTAs; #28 apply email fixes before the next send; #41 @P3DT inventory; #8 FB caption edit; Fidget entry posts once Scott’s click clip lands (caption approved Nov 26); Day 28 FB receipt; post approved caddy design-process video; sound + post the approved Gear Heart v2 video.
+- **Benson → Claude:** #29 claim checks + Explained slots; #31 motion-kit values/looks/CTAs; #41 @P3DT inventory; #8 FB caption edit; Fidget entry posts once Scott’s click clip lands (caption approved Nov 26); Day 28 FB receipt; post approved caddy design-process video; sound + post the approved Gear Heart v2 video.
 - **Claude → Benson:** village times vs saved listing text (#10); contest cut in `video_queue/` (requested by 2026-11-27 midday ET; faster IG-repost route should not wait on it); hook scorecard; videos already in the queue (Ep 002, Lessons 007–009, other `tbd_*` packs) kept current with FACTS/captions.
 - **Both waiting on Scott:** Fidget click clip; Gingerbread Tin and Fold Stand video approvals (first cuts; Fold Stand v2 cut), and the Gear Heart first cut (its v2 cut is approved); Fold Stand v2 real clip still owed (the printed stand holding a phone) — Gear Heart hand-turn clip landed Nov 26, committed Nov 27; prints for #21, #36, #38; @P3DT sign-in; Etsy return.
 
@@ -79,6 +78,7 @@ Video queue has several ready packs (`tbd_*`, including Ep 002, ironing already 
 
 ## Done (last 7 days)
 
+- 2026-11-27 — #28 outreach email fixes 1–4 applied to the master pitch template + media kit source (7 days late; OPEN D36). Flagged: media-kit.pdf must be regenerated from the corrected source before the next send.
 - 2026-11-27 — Design-process template v2 (checklist in the design README); Fold Stand v2 cut rendered (placeholder at the end). Gear Heart v2 design-process video (template v2) approved by Scott; Benson adding sound. Gear Heart hand-turn clip committed (tagged EDITED).
 - 2026-11-26 — #27 / D33 test-print takedowns done (6 days late). #39 / D34 `muse_log.md` catch-up Nov 20–26 (2 days late). Fuzzy Skin: 0.12 and 0.18 approved; 3667075 removed. Standard 18 removals (Pie Caddy keeper test, Plinko coupon, ocarina v1). Pie Caddy v2 files ready. Media library stood up (1,896 files / 116 builds). Urban Kid v3 test 3688123 Private; Scott: keep as is, private only. Caddy design-process video approved. #42 closed: row moved to Done in OPEN.md (D35) 2026-11-26.
 - 2026-11-25 — #42 test prints uploaded (later closed as D35). Trophy Rack FACTS reconciled (D32). Trophy Rack v3 profiles added; model 3614594 made public by Scott. Snow Globe launched public on @P3DT (3682245). Camera Sign font-plate QR swap filed. Tin Clicker pilot posted (IG/FB/TikTok/YT). Hook scorecard approved. BIQU Ep 002 verdict approved.
