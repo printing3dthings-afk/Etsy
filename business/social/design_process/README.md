@@ -79,7 +79,7 @@ cuts can be rebuilt as they were. Never overwrite a cut: a new version goes besi
 - [ ] Real footage wherever it exists, cropped to fill 9:16.
 - [ ] If there's no real shot of the finished product yet, leave a `placeholder` slate saying
       exactly which clip goes there. A video with a placeholder isn't postable: SCRIPT_v2.md and
-      STATUS.md say so.
+      the root STATUS.md on `main` say so.
 - [ ] No names on screen: "us", "our", "here at OBC".
 - [ ] Look at frames from every shot before the full render (a 360 × 640 preview of each), and
       watch the cut before calling it done.
@@ -101,7 +101,8 @@ Passed as screen values, the red tin rendered pink.
   shown without the keeper; it now says "without a keeper", which is what's on screen.
 
 ## Videos
-Every video's state is also in `STATUS.md`.
+Every video's state is also in the one status file: `STATUS.md` at the root of the repo on `main`
+(Claude's rows). There is no second STATUS.md here.
 
 | product | storyboard | status |
 |---|---|---|
