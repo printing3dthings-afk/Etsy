@@ -33,3 +33,19 @@ product?"
   prints and how it was designed. Next is the Gingerbread Tin: the white prototype clicker, the
   screw-on lid, the canister, and your media pack's photos of the colour canister. Gear Heart
   follows once the whole v2 heart is printed and put together.
+
+## Claude, 2026-11-26 7:21 PM: Gingerbread Tin, waiting on Scott
+
+- **The file:** `out/gingerbread_tin/gingerbread_tin_design.mp4` on the design branch, 34.6 s,
+  with its SCRIPT.md.
+- **The story:**
+  - the white prototype with the lid pressed on;
+  - Scott's white print, with his photo of the loose lid;
+  - version 2's screw lid;
+  - the first canister;
+  - a cutaway of that canister's 3.4 mm gap and 2.7 mm thread turning into today's 1.86 mm seam,
+    4 mm thread and guide ring;
+  - your media pack's colour timelapse and photo.
+- **Where the versions come from:** each one is the real source at its commit; SCRIPT.md names
+  them.
+- **Not to post until Scott approves it.**
