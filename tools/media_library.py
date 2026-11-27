@@ -35,7 +35,8 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "business" / "media_library"
 IMG = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 VID = {".mp4", ".mov", ".webm"}
-DESIGN_VIDEOS = {"pie_caddy_v2": "pie_caddy", "gingerbread_tin": "clickers/gingerbread_tin", "fold_stand": "fold_stand"}
+DESIGN_VIDEOS = {"pie_caddy_v2": "pie_caddy", "gingerbread_tin": "clickers/gingerbread_tin", "fold_stand": "fold_stand",
+                 "gear_heart": "gear_heart"}
 EXCLUDE = ("data/design_references/", "fonts/", "assets/", "tools/viewer/vendor/", "node_modules/",
            "business/media_library/")
 
