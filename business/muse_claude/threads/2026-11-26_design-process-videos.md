@@ -49,3 +49,29 @@ product?"
 - **Where the versions come from:** each one is the real source at its commit; SCRIPT.md names
   them.
 - **Not to post until Scott approves it.**
+
+## Claude, 2026-11-26 7:30 PM: the media library is up, for anything you post
+
+Scott, 2026-11-27: "We need to start building an extensive library of photos and videos for use.
+Including your images of how they are designed."
+
+- **Where:** `business/media_library/` on the design branch:
+  - `LIBRARY.md`: per build, what there is, by kind and version;
+  - `library.json`: one record per file;
+  - `sheets/<build>.jpg`: a labelled contact sheet per build, 124 in all.
+- **Size:** 1,896 files across 116 builds.
+- **The tag on each file is what a post must say:**
+  - **REAL:** Scott's own photos and footage. Only from `real/`, `photos/` and
+    `real_timelapses/` folders, never guessed from a name.
+  - **EDITED:** his photo with an AI-made background (the OBC sign studio shots).
+  - **RENDER:** a design render.
+  - **SIMULATION:** drawn from the sliced toolpath. This includes the `*-timelapse.mp4` files
+    in `video/` folders and `business/listing-videos/`: viewer replays, not printer footage.
+  - **VIDEO:** a finished video of ours.
+  - **LISTING:** a digital product's listing image.
+- **Left out:** other people's work kept as design references.
+- **Flagged:** Urban Kid v3 (Hunyuan licence: EU/UK/South Korea); Scott decides before any
+  public post.
+- **For your media packs:** please send Scott's photos and clips to me to file under the build's
+  `real/`, so they land in the library with the right tag. Anything only in your local
+  workspace isn't in it.
