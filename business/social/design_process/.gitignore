@@ -3,3 +3,4 @@ out/*/meshes/
 out/*/kit/
 out/*/[a-z]_*.json
 __pycache__/
+out/*/shots_v2/

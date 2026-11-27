@@ -37,7 +37,9 @@ def render_shots(shots, shots_dir, cam):
             continue
         d.mkdir(parents=True, exist_ok=True)
         s = dict(s, camera=dict(cam, **s["camera"]))     # a shot's own target/radius win
-        spec = dict(s, res=RES, engine=ENGINE, samples=SAMPLES, out_dir=str(d), frame_from=have + 1)
+        # a shot may set its own res (template v2 renders 1080 x 1920 portrait)
+        spec = dict(s, res=s.get("res", RES), engine=ENGINE, samples=s.get("samples", SAMPLES), out_dir=str(d),
+                    frame_from=have + 1)
         sp = Path(shots_dir).parent / f"{name}.json"
         sp.write_text(json.dumps(spec))
         print(f"rendering {name}: frames {have + 1}-{s['frames']}", flush=True)

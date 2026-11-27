@@ -17,6 +17,8 @@ Spec keys:
   camera: {target [x,y,z] / target_z / radius (mm, optional),
            keys: [[frame, az_deg, el_deg, zoom(, aim: z or [x, y, z] mm)], ...]}
   clip_keys: [[frame, y_mm], ...]   the cut plane's position over time (y: + is away from az 0)
+  look: "soft" (optional, template v2): matte PLA (roughness 0.8), a wide high key so shadows
+        fall soft and close under the parts, more fill. A part may set its own "roughness".
 Positions are in the parts' own frame (mm); the camera is fitted once, to the assembled parts.
 """
 import json
@@ -38,15 +40,19 @@ bpy.ops.object.delete(use_global=False)
 clip_node_values = []
 
 
-def material(name, rgb, clip):
+SOFT = spec.get("look") == "soft"
+
+
+def material(name, rgb, clip, roughness=None):
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     nt = mat.node_tree
     bsdf = nt.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = (*rgb, 1.0)
-    bsdf.inputs["Roughness"].default_value = 0.35
+    # template v2 (2026-11-27, Scott via Greg: "matte PLA roughness"): 0.35 read as glossy plastic
+    bsdf.inputs["Roughness"].default_value = roughness if roughness is not None else (0.8 if SOFT else 0.35)
     if "Specular IOR Level" in bsdf.inputs:
-        bsdf.inputs["Specular IOR Level"].default_value = 0.5
+        bsdf.inputs["Specular IOR Level"].default_value = 0.3 if SOFT else 0.5
     if clip:
         # alpha = 1 where the surface is behind the cut plane (world y > clip), else 0
         geo = nt.nodes.new("ShaderNodeNewGeometry")
@@ -86,7 +92,7 @@ for i, p in enumerate(spec["parts"]):
     if hasattr(o.data, "use_auto_smooth"):
         o.data.use_auto_smooth = True
         o.data.auto_smooth_angle = math.radians(30)
-    o.data.materials.append(material(f"m{i}", p["rgb"], p.get("clip", False)))
+    o.data.materials.append(material(f"m{i}", p["rgb"], p.get("clip", False), p.get("roughness")))
     # the mesh's own origin stays at the parts' frame origin: keys move it from there
     for f, (dx, dy, dz), rot in p.get("keys", [[1, [0, 0, 0], 0]]):
         o.location = base + mathutils.Vector((dx * K, dy * K, dz * K))
@@ -197,9 +203,17 @@ if eevee:
         l.rotation_euler = (-mathutils.Vector(direction)).to_track_quat("-Z", "Y").to_euler()
     # The key comes from the side, not from behind the camera: from there (the stills' direction)
     # every shadow fell behind the model and it rendered flat (tested 2026-11-26).
-    sun((2.0, -0.4, 1.6), 3.2, 4)
-    sun((-1.5, -1.5, 1.0), 0.6, 30, shadow=False)
-    sun((-0.5, 2.2, 1.6), 1.0, 20, shadow=False)
+    if SOFT:
+        # template v2 (2026-11-27): the 4-degree side key threw long hard shadows off anything
+        # lifted (Gear Heart 0:15-0:23, a stray shadow at the left). A high, wide key keeps each
+        # shadow soft and close under its part; more fill lifts the dark sides.
+        sun((0.7, -0.6, 2.6), 2.6, 18)
+        sun((-1.5, -1.5, 1.0), 1.0, 40, shadow=False)
+        sun((-0.5, 2.2, 1.6), 0.8, 30, shadow=False)
+    else:
+        sun((2.0, -0.4, 1.6), 3.2, 4)
+        sun((-1.5, -1.5, 1.0), 0.6, 30, shadow=False)
+        sun((-0.5, 2.2, 1.6), 1.0, 20, shadow=False)
 else:
     s = size / K / 60.0 * K * K
     c = target

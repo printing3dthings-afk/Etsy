@@ -105,9 +105,7 @@ def shots():
             *[gear(m, i, 4 + 3 * k, [[60, 0], [110, 90]]) for k, i in enumerate(order())]]),
          heart_cam),
         # 3. the pin test: the plate held up, three pins push up into it, three gears go on
-        # (v2: closer, the aim following the parts down; v1 sat small in the frame)
-        "c_clip_v2": (dict(frames=84, camera=dict(keys=[[1, -28, 12, 1.3, [26, 0, 26]], [56, -20, 14, 1.3, [26, 0, 30]],
-                                                       [84, -10, 34, 1.5, [26, 0, 8]]]),
+        "c_clip": (dict(frames=84, camera=dict(keys=[[1, -28, 10, 1.0], [56, -20, 12, 1.0], [84, -10, 34, 1.0]]),
                         parts=[
             part(P / "clip" / "base.stl", PLATE, [[1, [0, 0, 36], 0], [52, [0, 0, 36], 0], [72, [0, 0, 0], 0]]),
             *[part(P / "clip" / f"pin_use_{k}.stl", PIN, [[1, [0, 0, 6], 0], [10 + 8 * k, [0, 0, 6], 0],
@@ -119,8 +117,7 @@ def shots():
          dict(target=[26, 0, 22], radius=46)),
         # 4. version 2: the plate held up, fifteen pins push up into it, it sets down, the gears
         #    drop on, and the knob turns them all
-        # (b: closer on the pins going in; at 0.9 the plate sat small in the frame)
-        "d_v2b": (dict(frames=150, camera=dict(keys=[[1, -20, 10, 1.12, [0, -7, 34]], [40, -22, 12, 1.12, [0, -7, 36]],
+        "d_v2": (dict(frames=150, camera=dict(keys=[[1, -20, 8, 0.9, [0, -7, 40]], [40, -22, 10, 0.9, [0, -7, 40]],
                                                     [64, -26, 40, 1.0, [0, -7, 12]], [150, 10, 44, 1.05, [0, -7, 12]]]), parts=[
             part(P / "heart_plate_v2.stl", PLATE, [[1, [0, 0, 40], 0], [42, [0, 0, 40], 0], [60, [0, 0, 0], 0]]),
             *[part(m[i][1], PIN, [[1, [0, 0, 8], 0], [6 + 2 * k, [0, 0, 8], 0], [18 + 2 * k, [0, 0, 40], 0],
@@ -138,10 +135,10 @@ SEGMENTS = [
          captions=[[0, "Then the heart: 14 gears round the edge, and a knob in the middle."],
                    [2.4, "One knob turns all fifteen."],
                    [4.0, "Our first print turned, but one of the snap posts snapped."]]),
-    dict(kind="frames", dir=str(SHOTS / "c_clip_v2"), hold_end=2.4, chip="RENDER", label="THE FIX, TESTED",
+    dict(kind="frames", dir=str(SHOTS / "c_clip"), hold_end=2.4, chip="RENDER", label="THE FIX, TESTED",
          captions=[[0, "So each gear got its own pin, printed lying down so it flexes along its layers."],
                    [2.6, "We tested three barb sizes. Number 3 felt best."]]),
-    dict(kind="frames", dir=str(SHOTS / "d_v2b"), hold_end=1.8, chip="RENDER", label="VERSION 2",
+    dict(kind="frames", dir=str(SHOTS / "d_v2"), hold_end=1.8, chip="RENDER", label="VERSION 2",
          captions=[[0, "Version 2: fifteen of those pins..."],
                    [2.0, "...the gears go on..."],
                    [3.6, "...and in the design file, all fifteen turn together. Nothing rubs."]]),
