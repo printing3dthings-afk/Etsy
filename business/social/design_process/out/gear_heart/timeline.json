@@ -1,0 +1,107 @@
+{
+ "opener": 3.2,
+ "body_end": 28.66666666666709,
+ "total": 32.666667,
+ "steps": [
+  {
+   "label": "TESTED FIRST",
+   "chip": "RENDER",
+   "start": 3.2,
+   "end": 7.999999999999995,
+   "captions": [
+    [
+     3.2,
+     "Before the heart, a test: two gears, on bars set two spacings apart."
+    ],
+    [
+     5.6,
+     "Our pick: the tighter one, 0.20 mm."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 1",
+   "chip": "RENDER",
+   "start": 7.599999999999994,
+   "end": 13.466666666666644,
+   "captions": [
+    [
+     7.599999999999994,
+     "Then the heart: 14 gears round the edge, and a knob in the middle."
+    ],
+    [
+     9.999999999999993,
+     "One knob turns all fifteen."
+    ],
+    [
+     11.599999999999994,
+     "Our first print turned, but one of the snap posts snapped."
+    ]
+   ]
+  },
+  {
+   "label": "THE FIX, TESTED",
+   "chip": "RENDER",
+   "start": 13.066666666666642,
+   "end": 18.266666666666627,
+   "captions": [
+    [
+     13.066666666666642,
+     "So each gear got its own pin, printed lying down so it flexes along its layers."
+    ],
+    [
+     15.666666666666643,
+     "We tested three barb sizes. Number 3 felt best."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 2",
+   "chip": "RENDER",
+   "start": 17.866666666666625,
+   "end": 24.66666666666687,
+   "captions": [
+    [
+     17.866666666666625,
+     "Version 2: fifteen of those pins..."
+    ],
+    [
+     19.866666666666625,
+     "...the gears go on..."
+    ],
+    [
+     21.466666666666626,
+     "...and in the design file, all fifteen turn together. Nothing rubs."
+    ]
+   ]
+  },
+  {
+   "label": "ON OUR PRINTER",
+   "chip": "REAL",
+   "start": 24.266666666666872,
+   "end": 26.66666666666697,
+   "captions": [
+    [
+     24.266666666666872,
+     "The real version 2 plate, fresh off our printer."
+    ]
+   ]
+  },
+  {
+   "label": "ON OUR PRINTER",
+   "chip": "REAL",
+   "start": 26.26666666666697,
+   "end": 28.66666666666709,
+   "captions": [
+    [
+     26.26666666666697,
+     "The gears came out clean. The pins came loose, so they're printing again on their own."
+    ],
+    [
+     28.866666666666973,
+     "Next: the whole heart, turning for real."
+    ]
+   ]
+  }
+ ]
+}
