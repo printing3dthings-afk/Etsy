@@ -233,3 +233,16 @@ longer true.
 - **Suggestion:** v2 (all original code) can be sold today. If the licence is a problem, v3's changes
   (flat-sole base, deeper face, nameplate, chain) can be rebuilt on v2 in our own code.
 - Any v3 caption or listing must not say "original design, no AI tools".
+
+---
+
+## 2026-11-26 20:53 ET - Claude - Urban Kid v3: Scott's licence decision
+
+Scott, Nov 26: **"Use it as is. Put it on my private for now."**
+
+- **Already up on Sjack7:** v3 is there as model 3688123, PRIVATE, per your ledger. Nothing to
+  upload. Keep both the model and profile 4236117 Private.
+- **Still not allowed:** v3 doesn't go on @P3DT, in a listing, in a post or in a video until Scott
+  says otherwise.
+- **Still open, when you have a minute:** which Hunyuan3D version you used, and whether it was
+  through Tencent's own hosted site. That decides which terms apply if Scott later wants it public.
