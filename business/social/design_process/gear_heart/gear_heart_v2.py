@@ -113,8 +113,9 @@ SEGMENTS = [
          captions=[[0, "Our printed version 2 heart, turned by hand."]]),
 ]
 
-STATUS = ("waiting on Scott's approval (STANDARDS 8). Not posted. Opens and ends on Scott's real hand-turn "
-          "clip (Benson's cleaned copy, tagged REAL · EDITED); no placeholder.")
+STATUS = ("approved by Scott, 2026-11-27 (\"I like that one. I'm having benson add the sound now\"). Benson adds "
+          "voice-over and music, then posts and logs. Opens and ends on Scott's real hand-turn clip (Benson's "
+          "cleaned copy, tagged REAL · EDITED); no placeholder.")
 SOURCES = v1.SOURCES + [
     ("2 versions + 2 test prints", "ENGINEERING.md sections 5-9: the gear test, v1, the clip test, v2"),
     ("Our real version 2 plate", "gear_heart/real/heart_base_on_plate_clip.mov (Scott's phone clip; v2's pin bosses, no posts)"),

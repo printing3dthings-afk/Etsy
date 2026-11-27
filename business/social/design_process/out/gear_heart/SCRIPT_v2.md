@@ -5,7 +5,7 @@ voice-over lines: Benson, read them over the shots, and add music. The video has
 
 - **Length:** 23.6 s. No title card: it opens on the finished product. The follow line fades in over the last 1.5 s (22.1 s on).
 - **Labels:** every render carries RENDER; Scott's footage and photos carry REAL, or REAL · EDITED where the clip was stabilised or graded; a slate for footage still to come carries PLACEHOLDER.
-- **Status:** waiting on Scott's approval (STANDARDS 8). Not posted. Opens and ends on Scott's real hand-turn clip (Benson's cleaned copy, tagged REAL · EDITED); no placeholder.
+- **Status:** approved by Scott, 2026-11-27 ("I like that one. I'm having benson add the sound now"). Benson adds voice-over and music, then posts and logs. Opens and ends on Scott's real hand-turn clip (Benson's cleaned copy, tagged REAL · EDITED); no placeholder.
 
 | start | end | line (on screen) | step | tag |
 |---|---|---|---|---|
