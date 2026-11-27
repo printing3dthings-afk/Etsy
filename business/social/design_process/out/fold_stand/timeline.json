@@ -1,0 +1,91 @@
+{
+ "opener": 3.2,
+ "body_end": 29.00000000000044,
+ "total": 33.0,
+ "steps": [
+  {
+   "label": "VERSION 1",
+   "chip": "RENDER",
+   "start": 3.2,
+   "end": 8.133333333333328,
+   "captions": [
+    [
+     3.2,
+     "Two plates on a hinge that should click at five angles."
+    ],
+    [
+     5.300000000000001,
+     "Our first print: no click at all, and the pin fell out."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 2",
+   "chip": "RENDER",
+   "start": 7.733333333333327,
+   "end": 12.666666666666647,
+   "captions": [
+    [
+     7.733333333333327,
+     "A ratchet, with buttons to release it. Still no click."
+    ],
+    [
+     9.933333333333326,
+     "Its teeth were 0.45 mm deep. Printing errors can add up to 0.75 mm."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 3",
+   "chip": "RENDER",
+   "start": 12.266666666666644,
+   "end": 17.866666666666628,
+   "captions": [
+    [
+     12.266666666666644,
+     "So we started from the numbers: an easel, its angles set by deep notches."
+    ],
+    [
+     15.066666666666645,
+     "Our test print: good, but it needs to be 3 pieces that stay together."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 4",
+   "chip": "RENDER",
+   "start": 17.466666666666626,
+   "end": 24.40000000000019,
+   "captions": [
+    [
+     17.466666666666626,
+     "The prop is hinged inside the plate, and the plate is pinned to the base."
+    ],
+    [
+     20.266666666666627,
+     "Six angles, from 80 down to 55 degrees..."
+    ],
+    [
+     21.766666666666627,
+     "...and it folds flat to 34 mm, with nothing to lose."
+    ]
+   ]
+  },
+  {
+   "label": "TESTED FIRST",
+   "chip": "RENDER",
+   "start": 24.000000000000192,
+   "end": 29.00000000000044,
+   "captions": [
+    [
+     24.000000000000192,
+     "We printed just the two hinges first. Our verdict: it works well."
+    ],
+    [
+     26.600000000000193,
+     "Next: the whole stand goes on the printer."
+    ]
+   ]
+  }
+ ]
+}

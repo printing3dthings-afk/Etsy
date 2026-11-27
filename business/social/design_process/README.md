@@ -18,6 +18,9 @@ posts it with voice-over and music.
    - a cut plane sweeps through the model and lands on the cutaway (the clipped surfaces hand
      over to the solid cut faces).
 
+   - parts can turn about their own hinge axes and ride on other parts (`pivot`, `parent`), so a
+     mechanism moves the way the design says it does (Fold Stand v4's prop in its folding plate).
+
    Same studio as `tools/blender_render.py`: floor, matte filament colours, light grey world.
    Rendered in EEVEE, about 12 s a frame at 1080. Cycles takes about 2 minutes a frame, too slow
    for animation; it's kept for stills.
@@ -53,6 +56,7 @@ Passed as screen values, the red tin rendered pink.
 |---|---|---|
 | Pie Drum Caddy v2 | `pie_caddy_v2.py` | approved 2026-11-26, for Benson to post |
 | Gingerbread Tin | `gingerbread_tin/gingerbread_tin.py` (versions from git: `export_versions.py`) | waiting on Scott |
+| Fold Stand | `fold_stand/fold_stand.py` (four versions: `export_parts.py`) | waiting on Scott |
 
 ## Not in git
 `out/*/shots/` (rendered frames), `out/*/meshes/`, `out/*/kit/`. Each storyboard rebuilds them.

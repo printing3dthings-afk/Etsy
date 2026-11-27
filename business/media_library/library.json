@@ -288,6 +288,66 @@
 "bytes": 1126403
 },
 {
+"path": "business/social/design_process/out/fold_stand/fold_stand_design.mp4",
+"build": "fold_stand",
+"kind": "video",
+"tag": "VIDEO",
+"version": "",
+"note": "",
+"added": "",
+"media": "video",
+"pulled": true,
+"bytes": 3241188
+},
+{
+"path": "business/social/design_process/out/fold_stand/stills/01_version_1_render.jpg",
+"build": "fold_stand",
+"kind": "render",
+"tag": "RENDER",
+"version": "",
+"note": "",
+"added": "",
+"media": "image",
+"pulled": true,
+"bytes": 42671
+},
+{
+"path": "business/social/design_process/out/fold_stand/stills/02_version_2_render.jpg",
+"build": "fold_stand",
+"kind": "render",
+"tag": "RENDER",
+"version": "",
+"note": "",
+"added": "",
+"media": "image",
+"pulled": true,
+"bytes": 40401
+},
+{
+"path": "business/social/design_process/out/fold_stand/stills/03_version_3_render.jpg",
+"build": "fold_stand",
+"kind": "render",
+"tag": "RENDER",
+"version": "",
+"note": "",
+"added": "",
+"media": "image",
+"pulled": true,
+"bytes": 41893
+},
+{
+"path": "business/social/design_process/out/fold_stand/stills/04_version_4_render.jpg",
+"build": "fold_stand",
+"kind": "render",
+"tag": "RENDER",
+"version": "",
+"note": "",
+"added": "",
+"media": "image",
+"pulled": true,
+"bytes": 34758
+},
+{
 "path": "business/social/design_process/out/gingerbread_tin/gingerbread_tin_design.mp4",
 "build": "clickers/gingerbread_tin",
 "kind": "video",

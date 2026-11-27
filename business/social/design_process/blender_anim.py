@@ -7,8 +7,13 @@ design-review stills it cuts to look like one camera.
 Spec keys:
   res [w, h], frames N, engine "CYCLES"|"EEVEE", samples, lens, out_dir,
   frame_from/frame_to (optional, to render part of a shot)
-  parts: [{path, rgb, keys: [[frame, [dx, dy, dz], rot_z_deg], ...], show: [from, to] (optional),
-           clip: true (optional: hide everything with y < the clip value)}]
+  parts: [{path, rgb, keys: [[frame, [dx, dy, dz], rot], ...], show: [from, to] (optional),
+           clip: true (optional: hide everything with y < the clip value),
+           pivot: [x, y, z] (optional, mm in the mesh's own coordinates: it turns about this point,
+                  and keys move the point),
+           parent: index (optional, an earlier part: this one rides on it, its pivot and keys in
+                   the parent's frame, e.g. a prop hinged in a plate that itself folds)}]
+  rot is degrees about z, or [rx, ry, rz] (Euler XYZ).
   camera: {target [x,y,z] / target_z / radius (mm, optional),
            keys: [[frame, az_deg, el_deg, zoom(, aim: z or [x, y, z] mm)], ...]}
   clip_keys: [[frame, y_mm], ...]   the cut plane's position over time (y: + is away from az 0)
@@ -68,6 +73,14 @@ for i, p in enumerate(spec["parts"]):
     o.data = o.data.copy()          # its own mesh, then mm -> m in the vertices themselves
     o.data.transform(mathutils.Matrix.Scale(K, 4))
     o.scale = (1, 1, 1)
+    piv = mathutils.Vector(p.get("pivot", [0, 0, 0])) * K
+    o.data.transform(mathutils.Matrix.Translation(-piv))      # the mesh turns about its pivot
+    base = piv.copy()
+    if "parent" in p:                                         # placed in the parent's (pivoted) frame
+        par = spec["parts"][p["parent"]]
+        base = piv - mathutils.Vector(par.get("pivot", [0, 0, 0])) * K
+        o.parent = objs[p["parent"]]
+        o.matrix_parent_inverse = mathutils.Matrix.Identity(4)
     for poly in o.data.polygons:
         poly.use_smooth = True
     if hasattr(o.data, "use_auto_smooth"):
@@ -75,9 +88,10 @@ for i, p in enumerate(spec["parts"]):
         o.data.auto_smooth_angle = math.radians(30)
     o.data.materials.append(material(f"m{i}", p["rgb"], p.get("clip", False)))
     # the mesh's own origin stays at the parts' frame origin: keys move it from there
-    for f, (dx, dy, dz), rz in p.get("keys", [[1, [0, 0, 0], 0]]):
-        o.location = (dx * K, dy * K, dz * K)
-        o.rotation_euler = (0, 0, math.radians(rz))
+    for f, (dx, dy, dz), rot in p.get("keys", [[1, [0, 0, 0], 0]]):
+        o.location = base + mathutils.Vector((dx * K, dy * K, dz * K))
+        o.rotation_euler = ((0, 0, math.radians(rot)) if isinstance(rot, (int, float))
+                            else tuple(math.radians(a) for a in rot))
         o.keyframe_insert("location", frame=f)
         o.keyframe_insert("rotation_euler", frame=f)
     if "show" in p:
@@ -100,7 +114,8 @@ vs = []
 for o, p in zip(objs, spec["parts"]):
     if p.get("fit", True):
         step = max(1, len(o.data.vertices) // 40000)
-        vs += [o.data.vertices[k].co.copy() for k in range(0, len(o.data.vertices), step)]
+        piv = mathutils.Vector(p.get("pivot", [0, 0, 0])) * K
+        vs += [o.data.vertices[k].co + piv for k in range(0, len(o.data.vertices), step)]
 xs, ys, zs = zip(*[(v.x, v.y, v.z) for v in vs])
 size = max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs))
 cam_spec = spec["camera"]
