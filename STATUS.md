@@ -49,7 +49,8 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 | #38 Modular organizer (butterfly keys) | Claude | Fit coupon already with Scott; starter set after his result | Scott's coupon print | 2026-11-25 (waits on print) |
 | #41 Full MW inventory of both accounts | Benson | Sjack7 inventory filed Nov 24 (147 models). Strike remaining not-up list | @P3DT inventory pending — Scott must sign in to that profile | 2026-11-26 (partial) |
 | Design-process first cuts: Gingerbread Tin, Fold Stand, Gear Heart | Claude | On the design branch with SCRIPT.md, kept as they are (not overwritten) | Scott approval (do not post first) | ? |
-| Design-process v2 cuts (template v2): Fold Stand v2, Gear Heart v2 | Claude | Rendering (Scott via Greg, Nov 27). Saved beside the first cuts as `fold_stand_design_v2.mp4` / `gear_heart_design_v2.mp4` with SCRIPT_v2 + timeline_v2. Template v2 checklist in `business/social/design_process/README.md` on the design branch. **Gear Heart v2** opens and ends on Scott's hand-turn clip: no placeholder. **Fold Stand v2** still ends on a PLACEHOLDER slate | Render; then Scott's approval. Fold Stand v2 **not postable** until Scott's clip of the printed stand holding a phone lands | 2026-11-27 |
+| Design-process v2 cut (template v2): Fold Stand v2 | Claude | Rendering (Scott via Greg, Nov 27). Saved beside the first cut as `fold_stand_design_v2.mp4` with SCRIPT_v2 + timeline_v2. Template v2 checklist in `business/social/design_process/README.md` on the design branch. Ends on a PLACEHOLDER slate | Render; then Scott's approval. **Not postable** until Scott's clip of the printed stand holding a phone lands | 2026-11-27 |
+| Design-process: Gear Heart v2 video | Benson | **Approved by Scott 2026-11-27** ("I like that one. I'm having benson add the sound now"). File: `business/social/design_process/out/gear_heart/gear_heart_design_v2.mp4` (23.6 s, LFS) on the design branch; timed lines + claim sources in `SCRIPT_v2.md` beside it. Add VO + music, post, log | — | ? |
 | Gear Heart hand-turn clip | Claude | **Done 2026-11-27:** Benson's cleaned copy committed to the design branch at `business/social/design_process/real/gear_heart_hand_turn.mp4` (LFS; MD5 ccea6d32688fb0590386d4c390e51c06; what was done to it is in `real/README.md`). Tagged **EDITED** (REAL · EDITED on screen), not plain REAL: it's trimmed, stabilised and colour-lifted. The untouched 18.7 s original (MD5 7ce4b849...) isn't in the repo. Gear Heart FACTS.md now records v2 as printed and assembled | — | done |
 | Design-process: Pie Caddy v2 video | Benson | Scott approved Nov 26 ("clear to post") | Benson post + log | ? |
 | Monday hook scorecard | Claude | Scott approved Nov 25; Claude to build | — | ? |
@@ -58,9 +59,9 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 
 ## Owed between agents
 
-- **Benson → Claude:** #29 claim checks + Explained slots; #31 motion-kit values/looks/CTAs; #28 apply email fixes before the next send; #41 @P3DT inventory; #8 FB caption edit; Fidget entry posts once Scott’s click clip lands (caption approved Nov 26); Day 28 FB receipt; post approved caddy design-process video.
+- **Benson → Claude:** #29 claim checks + Explained slots; #31 motion-kit values/looks/CTAs; #28 apply email fixes before the next send; #41 @P3DT inventory; #8 FB caption edit; Fidget entry posts once Scott’s click clip lands (caption approved Nov 26); Day 28 FB receipt; post approved caddy design-process video; sound + post the approved Gear Heart v2 video.
 - **Claude → Benson:** village times vs saved listing text (#10); contest cut in `video_queue/` (requested by 2026-11-27 midday ET; faster IG-repost route should not wait on it); hook scorecard; videos already in the queue (Ep 002, Lessons 007–009, other `tbd_*` packs) kept current with FACTS/captions.
-- **Both waiting on Scott:** Fidget click clip; Gingerbread Tin, Fold Stand and Gear Heart video approvals (first cuts and v2 cuts); Fold Stand v2 real clip still owed (the printed stand holding a phone) — Gear Heart hand-turn clip landed Nov 26, committed Nov 27; prints for #21, #36, #38; @P3DT sign-in; Etsy return.
+- **Both waiting on Scott:** Fidget click clip; Gingerbread Tin and Fold Stand video approvals (first cuts; Fold Stand v2 cut), and the Gear Heart first cut (its v2 cut is approved); Fold Stand v2 real clip still owed (the printed stand holding a phone) — Gear Heart hand-turn clip landed Nov 26, committed Nov 27; prints for #21, #36, #38; @P3DT sign-in; Etsy return.
 
 ## Posting queue (from `muse_log.md`, catch-up through 2026-11-26)
 
@@ -74,10 +75,11 @@ Last updated: 2026-11-26 (America/Indianapolis). Benson rows updated 2026-11-26 
 | Pinterest | 2026-11-26 Candy Cane Chapel named-product pin | Daily Payhip Pin Rule pins logged Nov 24–26. |
 | MakerWorld | Tin Clicker Click Into Celebration community post Nov 21 | Fidget entry still not logged. @P3DT public uploads continue (Snow Globe 3682245 Nov 25). |
 
-Video queue has several ready packs (`tbd_*`, including Ep 002, ironing already posted Nov 24, Lessons 007–009, product digital-vs-real). Exact which unposted files are approved: `?` except Ep 002 (Scott approved Nov 25; Benson posts Nov 27) and the caddy design-process video (approved).
+Video queue has several ready packs (`tbd_*`, including Ep 002, ironing already posted Nov 24, Lessons 007–009, product digital-vs-real). Exact which unposted files are approved: `?` except Ep 002 (Scott approved Nov 25; Benson posts Nov 27) the caddy design-process video (approved) and the Gear Heart v2 design-process video (approved Nov 27).
 
 ## Done (last 7 days)
 
+- 2026-11-27 — Gear Heart v2 design-process video (template v2) approved by Scott; Benson adding sound. Gear Heart hand-turn clip committed (tagged EDITED).
 - 2026-11-26 — #27 / D33 test-print takedowns done (6 days late). #39 / D34 `muse_log.md` catch-up Nov 20–26 (2 days late). Fuzzy Skin: 0.12 and 0.18 approved; 3667075 removed. Standard 18 removals (Pie Caddy keeper test, Plinko coupon, ocarina v1). Pie Caddy v2 files ready. Media library stood up (1,896 files / 116 builds). Urban Kid v3 test 3688123 Private; Scott: keep as is, private only. Caddy design-process video approved. #42 closed: row moved to Done in OPEN.md (D35) 2026-11-26.
 - 2026-11-25 — #42 test prints uploaded (later closed as D35). Trophy Rack FACTS reconciled (D32). Trophy Rack v3 profiles added; model 3614594 made public by Scott. Snow Globe launched public on @P3DT (3682245). Camera Sign font-plate QR swap filed. Tin Clicker pilot posted (IG/FB/TikTok/YT). Hook scorecard approved. BIQU Ep 002 verdict approved.
 - 2026-11-24 — Camera Sign 3679316 Private on Sjack7 (D30). Ironing Blueprint reel posted (D31 pack). Sjack7 live inventory filed (row 41 partial). Pinterest Payhip pins started.
