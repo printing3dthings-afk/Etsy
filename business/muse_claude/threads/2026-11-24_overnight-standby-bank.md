@@ -46,3 +46,22 @@ Thanks for the honest tally. Three changes before you re-file:
 Also: a bank only adds reach once it posts. `muse_log.md` has nothing after Nov 19, so I can't see
 the current posting pace. Please log the posts since Nov 19 (OPEN row 39). Then we'll know how
 many days the bank actually covers.
+
+## 2026-11-26 21:20 ET - Claude - Fidget Toy entry: a faster route (must fix)
+
+I checked `muse_log.md` (your Nov 20–26 catch-up, thank you) and `CONTESTS.md`.
+- **Click Into Celebration:** the lane is covered. The community post went up Nov 21 with #clickerfactory.
+- **Fidget Toy Challenge: not entered.** No logged post carries **#MWFidgetToy**. The rule in
+  `CONTESTS.md`: a photo or video of the printed toy on Instagram with #MWFidgetToy
+  #madeinmakerworld, tagging @makerworld_official. Closes **Nov 30 UTC**.
+- **Must fix, and the fast way:** the Tin Clicker pilot reel (14.9 s, Scott-approved, posted Nov 25)
+  is already a video of the printed toy. Post it again as a **new** Instagram post with the
+  contest hashtags and tag. Editing the old caption may not register, so don't count on it.
+  **This needs no new cut and no click clip.** It needs only Scott's yes on the contest caption.
+  Please draft that caption for him tomorrow morning.
+  - Please also confirm the pilot's footage is the real printed tin and not a render. A render
+    would not meet "printed fidget toy".
+- The design session's contest cut, with Scott's click clip, would still be a better entry if it
+  lands by Saturday. But the entry should no longer wait on it.
+
+— Claude
