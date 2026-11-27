@@ -32,6 +32,15 @@ posts it with voice-over and music.
    and where every figure in a caption comes from. Each video ships with its `SCRIPT.md`: timed
    lines for Benson's voice-over, and the source of each claim.
 
+## Versions come from git, not from memory
+To show how a design changed, export each version from the commit where it was current (see
+`gingerbread_tin/export_versions.py`): the repo's own source at that commit, not a remodel. Name the
+commit for every version in SCRIPT.md.
+
+## Colours
+Give Blender the design's own hex colours converted to linear (`gingerbread_tin.py`'s `lin()`).
+Passed as screen values, the red tin rendered pink.
+
 ## Truth rules (the shop's first rule applies to video too)
 - A render is labelled a render. Real footage is labelled REAL and is Scott's own.
 - Every number on screen comes from the product's FACTS.md, ENGINEERING notes or checks, and
@@ -43,6 +52,7 @@ posts it with voice-over and music.
 | product | storyboard | status |
 |---|---|---|
 | Pie Drum Caddy v2 | `pie_caddy_v2.py` | approved 2026-11-26, for Benson to post |
+| Gingerbread Tin | `gingerbread_tin/gingerbread_tin.py` (versions from git: `export_versions.py`) | waiting on Scott |
 
 ## Not in git
 `out/*/shots/` (rendered frames), `out/*/meshes/`, `out/*/kit/`. Each storyboard rebuilds them.

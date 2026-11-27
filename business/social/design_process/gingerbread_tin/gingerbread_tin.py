@@ -25,12 +25,20 @@ MESH = OUT / "meshes"
 SHOTS = OUT / "shots"
 REAL = ROOT / "openscad_models" / "clickers" / "gingerbread_tin" / "real"
 
-RED, WHITE, GREEN, BROWN, SW = [0.70, 0.15, 0.18], [0.96, 0.95, 0.92], [0.24, 0.56, 0.29], [0.60, 0.36, 0.18], [0.42, 0.42, 0.45]
+def lin(hexcol):
+    """A design colour (sRGB hex) as the linear RGB a Blender material takes. Given the sRGB
+    numbers directly, the red tin rendered pink (2026-11-26)."""
+    c = [int(hexcol[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    return [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in c]
+
+
+# the clicker's own filament colours (CLICKERS_PRINTING.md): red, white, green, brown; the switch grey
+RED, WHITE, GREEN, BROWN, SW = lin("#B3262E"), lin("#F4F1EA"), lin("#3E8E4A"), lin("#9A5B2E"), lin("#8A8A90")
 PROTO = [0.95, 0.94, 0.91]                   # the white prototype, printed in one white
 PRESS = 4.0                                  # mx_travel: the cookie's press
 CAM = {"target": [0, 0, 16], "radius": 40}  # the clicker
 CAN_CAM = {"target": [0, 0, 32], "radius": 52}
-SEAM = [28.0, 0, 47.0]                       # aims at the collar: the seam (z ~50), thread and guide ring below it
+SEAM = [26.5, 0, 47.5]                       # aims at the collar: the seam (z ~50), thread and guide ring below it
 
 LID_GROUP = ["lid", "lid_holly", "lid_snow", "mx", "cookie", "cookie_icing", "cookie_red", "cookie_green"]
 COLOURS = {"tin": RED, "tin_snow": WHITE, "canister": RED, "canister_snow": WHITE, "lid": RED,
@@ -38,7 +46,10 @@ COLOURS = {"tin": RED, "tin_snow": WHITE, "canister": RED, "canister_snow": WHIT
            "cookie_red": RED, "cookie_green": GREEN}
 
 
-def parts(ver, names, keys=None, white=False, clip=False, cutaway=False):
+CUT_LID = lin("#F4F1EA")   # in the cutaways the lid is shown white: red on red, the seam and thread vanished
+
+
+def parts(ver, names, keys=None, white=False, clip=False, cutaway=False, lid_tint=None):
     """`keys` maps a name (or "lid_group") to its keyframes."""
     out = []
     for n in names:
@@ -48,7 +59,10 @@ def parts(ver, names, keys=None, white=False, clip=False, cutaway=False):
         if cutaway:
             p = cut(p, MESH / ver / f"cut_{n}.stl")
         k = (keys or {}).get(n) or ((keys or {}).get("lid_group") if n in LID_GROUP else None)
-        out.append(part(p, SW if n == "mx" else (PROTO if white else COLOURS[n]), k, clip))
+        rgb = SW if n == "mx" else (PROTO if white else COLOURS[n])
+        if lid_tint and n == "lid":
+            rgb = lid_tint
+        out.append(part(p, rgb, k, clip))
     return out
 
 
@@ -77,22 +91,22 @@ def shots():
                    [51, [0, 0, -PRESS], 0], [56, [0, 0, 0], 0]]
                for c in ("cookie", "cookie_icing", "cookie_red", "cookie_green")}}, white=True)),
         # 3. version 2: the same clicker, its lid now screws on (2.7 pitch, 1.6 turns)
-        "c_v2": dict(frames=70, camera=dict(keys=[[1, 24, 26, 0.9], [70, 34, 30, 1.0]]), parts=parts("v2", CLICKER, {
+        "c_v2_lin": dict(frames=70, camera=dict(keys=[[1, 24, 26, 0.9], [70, 34, 30, 1.0]]), parts=parts("v2", CLICKER, {
             "lid_group": screw(18, 66, 1.6, 2.7, z_above=40, f_drop=1)})),
         # 4. the canister: the clicker becomes its lid (the first canister, 2026-11-03)
-        "d_can1": dict(frames=70, camera=dict(keys=[[1, 30, 24, 0.9], [70, 36, 20, 1.0]]), parts=parts("can1", CANISTER, {
+        "d_can1_lin": dict(frames=70, camera=dict(keys=[[1, 30, 24, 0.9], [70, 36, 20, 1.0]]), parts=parts("can1", CANISTER, {
             "lid_group": screw(18, 66, 1.6, 2.7, z_above=50, f_drop=1)})),
         # 5. swing to face it and cut through
-        "e_can1_cut": dict(frames=64, camera=dict(keys=[[1, 36, 20, 1.0], [28, 0, 6, 1.0]]),
-                           clip_keys=[[1, -200], [28, -40], [60, 0]], parts=parts("can1", CANISTER, clip=True)),
+        "e_can1_cut_w": dict(frames=64, camera=dict(keys=[[1, 36, 20, 1.0], [28, 0, 6, 1.0]]),
+                           clip_keys=[[1, -200], [28, -40], [60, 0]], parts=parts("can1", CANISTER, clip=True, lid_tint=CUT_LID)),
         # 5b. the cut faces, then in close on the seam and the thread
-        "f_can1_seam": dict(frames=40, camera=dict(keys=[[1, 0, 6, 1.0], [8, 0, 6, 1.0], [40, 0, 4, 3.0, SEAM]]),
-                            parts=parts("can1", CANISTER, cutaway=True)),
+        "f_can1_seam_w": dict(frames=40, camera=dict(keys=[[1, 0, 6, 1.0], [8, 0, 6, 1.0], [40, 0, 4, 4.0, SEAM]]),
+                            parts=parts("can1", CANISTER, cutaway=True, lid_tint=CUT_LID)),
         # 6. the same close-up of today's: the picture dissolves from the old to this
-        "g_now_seam": dict(frames=1, camera=dict(keys=[[1, 0, 4, 3.0, SEAM]]), parts=parts("now", CANISTER, cutaway=True)),
+        "g_now_seam_w": dict(frames=1, camera=dict(keys=[[1, 0, 4, 4.0, SEAM]]), parts=parts("now", CANISTER, cutaway=True, lid_tint=CUT_LID)),
         # 6b. pull back from today's cut, and close it up whole again
-        "h_now_out": dict(frames=36, camera=dict(keys=[[1, 0, 4, 3.0, SEAM], [36, 0, 6, 1.0]]),
-                          parts=parts("now", CANISTER, cutaway=True)),
+        "h_now_out_w": dict(frames=36, camera=dict(keys=[[1, 0, 4, 4.0, SEAM], [36, 0, 6, 1.0]]),
+                          parts=parts("now", CANISTER, cutaway=True, lid_tint=CUT_LID)),
         # 7. today's canister, whole: turn it, then press the cookie
         "i_now": dict(frames=70, camera=dict(keys=[[1, 0, 6, 1.0], [40, 32, 22, 0.95], [70, 40, 26, 1.0]]),
                       parts=parts("now", CANISTER, {
@@ -102,7 +116,7 @@ def shots():
 
 
 def cams():
-    return {k: (CAM if k in ("a_v1", "c_v2") else CAN_CAM) for k in shots()}
+    return {k: (CAM if k in ("a_v1", "c_v2_lin") else CAN_CAM) for k in shots()}
 
 
 SEGMENTS = [
@@ -110,23 +124,23 @@ SEGMENTS = [
          captions=[[0, "A gingerbread cookie you press into a Christmas tin..."],
                    [1.4, "...and it clicks on a real keyboard switch."]]),
     dict(kind="video", path=str(REAL / "tin_clicker_white_timelapse_2026-10-30.mp4"), start=0, dur=2.6,
-         crop="420:420:420:120", chip="REAL", label="FIRST PRINT",
+         crop="480:480:380:90", chip="REAL", label="FIRST PRINT",
          captions=[[0, "The first print, all in white, to test it."]]),
     dict(kind="image", path=str(REAL / "photos" / "02-photo-lid-and-base.jpg"), dur=2.4, zoom=[1.0, 1.1],
          centre=[0.5, 0.42], chip="REAL", label="FIRST PRINT",
          captions=[[0, "It clicked fine, but the lid just sat on top, loose."]]),
-    dict(kind="frames", dir=str(SHOTS / "c_v2"), hold_end=0.4, chip="RENDER", label="VERSION 2",
+    dict(kind="frames", dir=str(SHOTS / "c_v2_lin"), hold_end=0.4, chip="RENDER", label="VERSION 2",
          captions=[[0, "So version 2 got a thread: the lid screws down."]]),
-    dict(kind="frames", dir=str(SHOTS / "d_can1"), hold_end=0.4, chip="RENDER", label="THEN A CANISTER",
+    dict(kind="frames", dir=str(SHOTS / "d_can1_lin"), hold_end=0.4, chip="RENDER", label="THEN A CANISTER",
          captions=[[0, "Then a tin that holds things, with the clicker as its lid."]]),
-    dict(kind="frames", dir=str(SHOTS / "e_can1_cut"), chip="RENDER", fade=0.4, label="THE FIRST CANISTER",
+    dict(kind="frames", dir=str(SHOTS / "e_can1_cut_w"), chip="RENDER", fade=0.4, label="THE FIRST CANISTER",
          captions=[[0, "We printed it, then cut the design in half to look closer."]]),
-    dict(kind="frames", dir=str(SHOTS / "f_can1_seam"), hold_end=1.8, chip="RENDER (CUTAWAY)", fade=0.7,
+    dict(kind="frames", dir=str(SHOTS / "f_can1_seam_w"), hold_end=1.8, chip="RENDER (CUTAWAY)", fade=0.7,
          label="THE FIRST CANISTER", captions=[[0, "A 3.4 mm gap under the lid, on a fine 2.7 mm thread."]]),
-    dict(kind="frames", dir=str(SHOTS / "g_now_seam"), hold_end=2.6, chip="RENDER (CUTAWAY)", fade=0.3,
+    dict(kind="frames", dir=str(SHOTS / "g_now_seam_w"), hold_end=3.8, chip="RENDER (CUTAWAY)", fade=0.3,
          label="AFTER THAT PRINT", captions=[[0, "Now: a 1.86 mm seam and a deeper, coarser 4 mm thread..."],
-                                             [1.5, "...and a guide ring, so the lid can't cross-thread."]]),
-    dict(kind="frames", dir=str(SHOTS / "h_now_out"), chip="RENDER (CUTAWAY)", fade=0.3, label="AFTER THAT PRINT",
+                                             [2.2, "...and a guide ring, so the lid can't cross-thread."]]),
+    dict(kind="frames", dir=str(SHOTS / "h_now_out_w"), chip="RENDER (CUTAWAY)", fade=0.3, label="AFTER THAT PRINT",
          captions=[[0, "...and a guide ring, so the lid can't cross-thread."]]),
     dict(kind="frames", dir=str(SHOTS / "i_now"), hold_end=0.4, chip="RENDER", label="TODAY",
          captions=[[0, "62 mm across, it holds your sweets, and it still clicks."]]),

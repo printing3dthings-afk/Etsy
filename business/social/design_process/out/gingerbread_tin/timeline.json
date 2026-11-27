@@ -1,0 +1,159 @@
+{
+ "opener": 3.2,
+ "body_end": 30.633333333333855,
+ "total": 34.633333,
+ "steps": [
+  {
+   "label": "THE IDEA",
+   "chip": "RENDER",
+   "start": 3.2,
+   "end": 5.833333333333336,
+   "captions": [
+    [
+     3.2,
+     "A gingerbread cookie you press into a Christmas tin..."
+    ],
+    [
+     4.6,
+     "...and it clicks on a real keyboard switch."
+    ]
+   ]
+  },
+  {
+   "label": "FIRST PRINT",
+   "chip": "REAL",
+   "start": 5.433333333333335,
+   "end": 8.033333333333328,
+   "captions": [
+    [
+     5.433333333333335,
+     "The first print, all in white, to test it."
+    ]
+   ]
+  },
+  {
+   "label": "FIRST PRINT",
+   "chip": "REAL",
+   "start": 7.6333333333333275,
+   "end": 10.03333333333332,
+   "captions": [
+    [
+     7.6333333333333275,
+     "It clicked fine, but the lid just sat on top, loose."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 2",
+   "chip": "RENDER",
+   "start": 9.63333333333332,
+   "end": 12.366666666666646,
+   "captions": [
+    [
+     9.63333333333332,
+     "So version 2 got a thread: the lid screws down."
+    ]
+   ]
+  },
+  {
+   "label": "THEN A CANISTER",
+   "chip": "RENDER",
+   "start": 11.966666666666647,
+   "end": 14.69999999999997,
+   "captions": [
+    [
+     11.966666666666647,
+     "Then a tin that holds things, with the clicker as its lid."
+    ]
+   ]
+  },
+  {
+   "label": "THE FIRST CANISTER",
+   "chip": "RENDER",
+   "start": 14.299999999999972,
+   "end": 16.433333333333298,
+   "captions": [
+    [
+     14.299999999999972,
+     "We printed it, then cut the design in half to look closer."
+    ]
+   ]
+  },
+  {
+   "label": "THE FIRST CANISTER",
+   "chip": "RENDER (CUTAWAY)",
+   "start": 16.0333333333333,
+   "end": 19.16666666666662,
+   "captions": [
+    [
+     16.0333333333333,
+     "A 3.4 mm gap under the lid, on a fine 2.7 mm thread."
+    ]
+   ]
+  },
+  {
+   "label": "AFTER THAT PRINT",
+   "chip": "RENDER (CUTAWAY)",
+   "start": 18.466666666666622,
+   "end": 22.300000000000093,
+   "captions": [
+    [
+     18.466666666666622,
+     "Now: a 1.86 mm seam and a deeper, coarser 4 mm thread..."
+    ],
+    [
+     20.66666666666662,
+     "...and a guide ring, so the lid can't cross-thread."
+    ]
+   ]
+  },
+  {
+   "label": "AFTER THAT PRINT",
+   "chip": "RENDER (CUTAWAY)",
+   "start": 22.000000000000092,
+   "end": 23.200000000000138,
+   "captions": [
+    [
+     22.000000000000092,
+     "...and a guide ring, so the lid can't cross-thread."
+    ]
+   ]
+  },
+  {
+   "label": "TODAY",
+   "chip": "RENDER",
+   "start": 22.900000000000137,
+   "end": 25.633333333333585,
+   "captions": [
+    [
+     22.900000000000137,
+     "62 mm across, it holds your sweets, and it still clicks."
+    ]
+   ]
+  },
+  {
+   "label": "IN COLOUR",
+   "chip": "REAL",
+   "start": 25.233333333333587,
+   "end": 28.233333333333714,
+   "captions": [
+    [
+     25.233333333333587,
+     "Printed in colour: red, gold snowflakes..."
+    ]
+   ]
+  },
+  {
+   "label": "IN COLOUR",
+   "chip": "REAL",
+   "start": 27.833333333333716,
+   "end": 30.633333333333855,
+   "captions": [
+    [
+     27.833333333333716,
+     "...and the gingerbread cookie on top."
+    ]
+   ]
+  }
+ ]
+}
