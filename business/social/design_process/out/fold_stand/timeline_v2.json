@@ -1,0 +1,106 @@
+{
+ "opener": 0.0,
+ "end_from": 17.966667,
+ "total": 19.466667,
+ "steps": [
+  {
+   "label": "",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 0.0,
+   "end": 2.8000000000000007,
+   "captions": [
+    [
+     1.0,
+     "4 VERSIONS TO GET HERE"
+    ]
+   ]
+  },
+  {
+   "label": "",
+   "chip": "RENDER",
+   "kind": "rewind",
+   "start": 2.6000000000000005,
+   "end": 3.399999999999998,
+   "captions": [
+    [
+     2.6000000000000005,
+     "REWIND"
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 1",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 3.266666666666665,
+   "end": 6.066666666666656,
+   "captions": [
+    [
+     3.266666666666665,
+     "A hinge meant to click at five angles. On our print: no click, and the pin fell out."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 2",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 5.766666666666656,
+   "end": 8.566666666666649,
+   "captions": [
+    [
+     5.766666666666656,
+     "A ratchet. Its teeth were 0.45 mm deep; printing errors can add up to 0.75 mm. No click."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 3",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 8.266666666666648,
+   "end": 11.266666666666639,
+   "captions": [
+    [
+     8.266666666666648,
+     "An easel set by deep notches. Our test: good, but the 3 pieces need to stay together."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 4",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 10.966666666666638,
+   "end": 14.866666666666626,
+   "captions": [
+    [
+     10.966666666666638,
+     "Folds flat, then six angles: 80 down to 55 degrees."
+    ]
+   ]
+  },
+  {
+   "label": "TESTED FIRST",
+   "chip": "RENDER",
+   "kind": "image",
+   "start": 14.566666666666626,
+   "end": 16.966666666666654,
+   "captions": [
+    [
+     14.566666666666626,
+     "We printed just the hinges first. Our verdict: it works well."
+    ]
+   ]
+  },
+  {
+   "label": "COMING NEXT",
+   "chip": "PLACEHOLDER",
+   "kind": "placeholder",
+   "start": 16.666666666666654,
+   "end": 19.466666666666793,
+   "captions": []
+  }
+ ]
+}
