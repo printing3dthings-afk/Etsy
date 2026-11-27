@@ -137,8 +137,10 @@ def _video_frames(seg, tmp):
     vf = f"setpts=PTS/{speed},fps={FPS},scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}"
     if seg.get("crop"):
         vf = f"crop={seg['crop']}," + vf
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(seg["start"]), "-i", seg["path"],
-                    "-t", str(seg["dur"] * speed), "-vf", vf, str(out / "f_%04d.png")], check=True)
+    # -t before -i limits the SOURCE read (dur x speed); after -i it limits the output, which cut
+    # every slowed clip short (Gear Heart v2, first build: 2.6 s asked, 1.6 s on screen)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(seg["start"]), "-t", str(seg["dur"] * speed),
+                    "-i", seg["path"], "-vf", vf, str(out / "f_%04d.png")], check=True)
     return sorted(out.glob("f_*.png"))
 
 
@@ -319,7 +321,8 @@ def write_script(tl, path, title, status, sources):
         "",
         f"- **Length:** {tl['total']:.1f} s. No title card: it opens on the finished product. The follow"
         f" line fades in over the last {END_DUR:.1f} s ({tl['end_from']:.1f} s on).",
-        "- **Labels:** every render carries RENDER; Scott's footage and photos carry REAL.",
+        "- **Labels:** every render carries RENDER; Scott's footage and photos carry REAL, or REAL · EDITED where"
+        " the clip was stabilised or graded; a slate for footage still to come carries PLACEHOLDER.",
         f"- **Status:** {status}",
     ]
     if ph:

@@ -1,0 +1,124 @@
+{
+ "opener": 0.0,
+ "end_from": 22.1,
+ "total": 23.6,
+ "steps": [
+  {
+   "label": "",
+   "chip": "REAL \u00b7 EDITED",
+   "kind": "video",
+   "start": 0.0,
+   "end": 2.8000000000000007,
+   "captions": [
+    [
+     0.9,
+     "2 VERSIONS + 2 TEST PRINTS TO GET HERE"
+    ]
+   ]
+  },
+  {
+   "label": "",
+   "chip": "RENDER",
+   "kind": "rewind",
+   "start": 2.6000000000000005,
+   "end": 3.399999999999998,
+   "captions": [
+    [
+     2.6000000000000005,
+     "REWIND"
+    ]
+   ]
+  },
+  {
+   "label": "TEST PRINT 1",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 3.266666666666665,
+   "end": 5.966666666666656,
+   "captions": [
+    [
+     3.266666666666665,
+     "Two gears, two spacings. We picked the tighter one: 0.20 mm."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 1",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 5.666666666666656,
+   "end": 8.666666666666648,
+   "captions": [
+    [
+     5.666666666666656,
+     "One knob turns all 15 gears. But on our print, a snap post snapped."
+    ]
+   ]
+  },
+  {
+   "label": "TEST PRINT 2",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 8.366666666666648,
+   "end": 11.366666666666639,
+   "captions": [
+    [
+     8.366666666666648,
+     "So each gear gets its own pin. Of 3 barb sizes, number 3 felt best."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 2",
+   "chip": "RENDER",
+   "kind": "frames",
+   "start": 11.066666666666638,
+   "end": 14.266666666666628,
+   "captions": [
+    [
+     11.066666666666638,
+     "All 15 gears on pins, turning together in the design file."
+    ]
+   ]
+  },
+  {
+   "label": "ON OUR PRINTER",
+   "chip": "REAL",
+   "kind": "video",
+   "start": 13.966666666666628,
+   "end": 16.16666666666662,
+   "captions": [
+    [
+     13.966666666666628,
+     "Our real version 2 plate."
+    ]
+   ]
+  },
+  {
+   "label": "ON OUR PRINTER",
+   "chip": "REAL",
+   "kind": "video",
+   "start": 15.866666666666621,
+   "end": 18.500000000000064,
+   "captions": [
+    [
+     15.866666666666621,
+     "The gears printed clean. The pins came loose, so we printed them again."
+    ]
+   ]
+  },
+  {
+   "label": "VERSION 2, PRINTED",
+   "chip": "REAL \u00b7 EDITED",
+   "kind": "video",
+   "start": 18.200000000000063,
+   "end": 23.600000000000332,
+   "captions": [
+    [
+     18.200000000000063,
+     "Our printed version 2 heart, turned by hand."
+    ]
+   ]
+  }
+ ]
+}

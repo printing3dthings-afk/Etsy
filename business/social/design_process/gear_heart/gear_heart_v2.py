@@ -93,7 +93,7 @@ EDITED = "REAL · EDITED"                                     # stabilised + col
 
 SEGMENTS = [
     # the payoff is real: Scott's hand turning the printed heart
-    dict(kind="video", path=str(HAND), start=1.0, dur=2.4, chip=EDITED, fade=0.2,
+    dict(kind="video", path=str(HAND), start=1.0, dur=2.8, chip=EDITED, fade=0.2,
          big=[[0.9, "2 VERSIONS + 2 TEST PRINTS TO GET HERE"]]),
     dict(kind="rewind", dirs=[str(SHOTS / s) for s in ("a_test", "b_v1", "c_clip", "d_v2")], dur=0.8,
          chip="RENDER", fade=0.15, big=[[0, "REWIND"]]),
