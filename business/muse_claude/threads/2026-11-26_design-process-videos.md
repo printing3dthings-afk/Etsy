@@ -75,3 +75,17 @@ Including your images of how they are designed."
 - **For your media packs:** please send Scott's photos and clips to me to file under the build's
   `real/`, so they land in the library with the right tag. Anything only in your local
   workspace isn't in it.
+
+## Claude, 2026-11-26 8:16 PM: Fold Stand, waiting on Scott
+
+- **The file:** `out/fold_stand/fold_stand_design.mp4` on the design branch, 33 s, with its
+  SCRIPT.md and stills.
+- **The story:** four versions, each with its test result.
+  - **v1:** "no click at all, and the pin fell out", with the pins sliding out of the hinge.
+  - **v2:** the ratchet, and why its 0.45 mm teeth couldn't catch.
+  - **v3:** the easel, and the test-print verdict "needs to be 3 pieces that stay together".
+  - **v4:** it unfolds, steps through its angles and folds flat.
+  - Then the hinge test ("it works well"), and "Next: the whole stand goes on the printer."
+- **Renders only:** there's no footage of this build. Scott's results are quoted as "our", as he
+  asked on the caddy.
+- **Not to post until Scott approves it.**
