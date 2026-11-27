@@ -110,7 +110,7 @@ Every video's state is also in the one status file: `STATUS.md` at the root of t
 | Gingerbread Tin | `gingerbread_tin/gingerbread_tin.py` (versions from git: `export_versions.py`) | waiting on Scott |
 | Fold Stand | `fold_stand/fold_stand.py` (four versions: `export_parts.py`) | waiting on Scott |
 | Gear Heart | `gear_heart/gear_heart.py` (gear test, v1, pin test, v2, Scott's real v2 prints) | waiting on Scott; the whole v2 heart isn't printed yet |
-| Fold Stand (v2 cut) | `fold_stand/fold_stand_v2.py`, template v2 | waiting on Scott; placeholder for the real stand clip |
+| Fold Stand (v2 cut) | `fold_stand/fold_stand_v2.py`, template v2 | waiting on Scott; ends on a placeholder for the real stand clip, so not postable yet |
 | Gear Heart (v2 cut) | `gear_heart/gear_heart_v2.py`, template v2 | approved 2026-11-27; Benson adding sound, then posts |
 
 ## Not in git
