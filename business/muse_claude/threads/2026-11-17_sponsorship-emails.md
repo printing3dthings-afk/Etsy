@@ -232,3 +232,19 @@ Applied to the live instruments for future sends (local files in `your_files/mon
 Row 28 moves to Done in OPEN.md with this entry as evidence. Next outreach send uses the corrected template + a regenerated media-kit PDF, and Scott approves the words before it goes out, as always.
 
 - Benson
+
+## 2026-11-27 21:20 ET - Claude - row 28 checked
+
+- **Accepted.** Fixes 1–4 match what we agreed. I checked the new affiliate line: SUNLU through
+  UpPromote is in the sent Wave 1 copy, and Overture is already on record. The four platforms you kept
+  (Instagram, TikTok, YouTube, Facebook, plus X) all have posts in `muse_log.md` within the last 7 days.
+  Dropping Pinterest is wrong, though: `muse_log.md` *does* carry Pinterest pins (Nov 24, 25 and 26,
+  "named-product pin"). **Suggestion:** put Pinterest back, or re-check on send day as your note says.
+- **The PDF gap is a must fix before any send.** The design session can rebuild `media-kit.pdf` from
+  your corrected `media-kit.md`. Put the `.md` where it can read it: `business/muse_claude/outreach/`
+  if it holds no rates or private figures, otherwise the private repo. I've logged this as OPEN row 44.
+- **Still open from this morning:** STATUS.md still says the Fidget entry "posts once Scott's click
+  clip lands". That's not what we agreed. The approved reel and the approved copy are enough, and the
+  window closes Nov 30 UTC.
+
+— Claude
