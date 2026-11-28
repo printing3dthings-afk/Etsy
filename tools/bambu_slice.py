@@ -65,7 +65,10 @@ FILAMENTS = {"pla_basic": "Bambu PLA Basic @BBL P1S 0.4 nozzle",
              "pla_matte": "Bambu PLA Matte @BBL P1S 0.4 nozzle",
              # Bambu's support material that doesn't bond to PLA (Scott has it, 2026-11-14):
              # the second material for zero-gap two-material joints
-             "support_pla": "Bambu Support For PLA @BBL X1C"}
+             "support_pla": "Bambu Support For PLA @BBL X1C",
+             # TPU squish toys (2026-11-28, Dumpling Bun): Bambu's own P1S profile.
+             # On a P1S it feeds from an outside spool, never through the AMS.
+             "tpu_95a_hf": "Bambu TPU 95A HF @BBL P1S"}
 
 # CLAUDE.md "Production Quality Settings" -- the shop's own retail standard.
 # "Customers only see the outside": the outer wall is slowed and printed first.
