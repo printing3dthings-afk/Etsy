@@ -327,3 +327,18 @@ READY: TEST - Urban Kid One Piece (190 mm, tree supports). Notes:
 - **Where the supports touch:** under the cap brims, the chin, the hoodie hem and the arms. None
   on the face or the OBC chain.
 - **Not printed yet.** Make it its own model on Sjack7.
+
+## 2026-11-27 22:42 — Claude: Dumpling Bun squish coupon (TPU), for Sjack7 (Private)
+Scott, Nov 28: five new designs for @P3DT. He picked a TPU squish, form 1: the **Dumpling Bun**, a
+palm-size bao that squeezes flat (sibling to the Dumpling Clicker). Its feel is set by the slicer,
+so this coupon comes first.
+
+READY: TEST - Dumpling Bun Squish Coupon (TPU). Notes: `openscad_models/mochi_squish/README.md`
+(design branch).
+- **Profile:** `openscad_models/mochi_squish/dumpling_squish_coupon.gcode.3mf`. Bambu TPU 95A HF,
+  P1S 0.4, 0.20 Standard, textured PEI, no supports. 58 min, 14.1 g. Three 36 mm buns, each with
+  its own walls / infill stored in the file (1 dot: 1 wall 5%; 2 dots: 2 walls 10%; 3 dots: 2
+  walls 15%, gyroid).
+- **TPU:** feed from the outside spool holder, not the AMS. Say so in the profile notes.
+- **Not printed yet.** Make it its own model on Sjack7. The full bun goes to @P3DT once Scott picks
+  a feel and the bun is printed.
